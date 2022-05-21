@@ -78,13 +78,13 @@ class ConnectionManager {
         } else {
             // if (sacp) {
             // this.socket = ;
-            log.debug('serialSacp');
-            this.socket = socketSerialNew;
-            this.protocol = 'SACP';
-            this.socket.connectionOpen(socket, options);
+            // log.debug('serialSacp');
+            // this.socket = socketSerialNew;
+            // this.protocol = 'SACP';
+            // this.socket.connectionOpen(socket, options);
             // } else {
-            // this.socket = socketSerial;
-            // this.socket.serialportOpen(socket, options);
+            this.socket = socketSerial;
+            this.socket.serialportOpen(socket, options);
             // }
         }
         log.debug(`connectionOpen connectionType=${connectionType} this.socket=${this.socket}`);
@@ -537,8 +537,12 @@ class ConnectionManager {
     };
 
     updateZOffset = (socket, options) => {
-        const { extruderIndex, direction, distance } = options;
-        this.socket.updateZOffset(extruderIndex, direction, distance);
+        if (this.protocol === SACP_PROTOCOL) {
+            const { extruderIndex, direction, zOffset } = options;
+            this.socket.updateZOffset(extruderIndex, direction, zOffset);
+        } else {
+            this.socket.updateZOffset(options);
+        }
     };
 
     getLaserMaterialThickness = (socket, options) => {

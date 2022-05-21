@@ -87,11 +87,11 @@ class Printing extends PureComponent {
                 zOffsetValue: value
             });
         },
-        onClickPlusZOffset: () => {
+        onClickPlusZOffset: (extruderIndex) => {
             const zOffset = this.state.zOffsetValue;
             controller.emitEvent(CONNECTION_Z_OFFSET, {
-                distance: zOffset,
-                extruderIndex: 0,
+                zOffset,
+                extruderIndex,
             }).once(CONNECTION_Z_OFFSET, ({ msg }) => {
                 if (msg) {
                     return;
@@ -99,10 +99,11 @@ class Printing extends PureComponent {
                 this.props.addConsoleLogs([`Z Offset ${zOffset} ok`]);
             });
         },
-        onClickMinusZOffset: () => {
+        onClickMinusZOffset: (extruderIndex) => {
             const zOffset = 0 - this.state.zOffsetValue;
             controller.emitEvent(CONNECTION_Z_OFFSET, {
-                zOffset
+                zOffset,
+                extruderIndex,
             }).once(CONNECTION_Z_OFFSET, ({ msg }) => {
                 if (msg) {
                     return;
@@ -315,14 +316,14 @@ class Printing extends PureComponent {
                         </Anchor>
                         <Anchor
                             className="sm-parameter-row__input2-check fa fa-plus"
-                            onClick={actions.onClickPlusZOffset}
+                            onClick={() => actions.onClickPlusZOffset(0)}
                         />
                         <Anchor
                             className="sm-parameter-row__input2-check fa fa-minus"
                             style={{
                                 right: '152px'
                             }}
-                            onClick={actions.onClickMinusZOffset}
+                            onClick={() => actions.onClickMinusZOffset(0)}
                         />
                     </div>
                 )}
