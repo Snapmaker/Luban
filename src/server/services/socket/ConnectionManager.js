@@ -78,13 +78,13 @@ class ConnectionManager {
         } else {
             // if (sacp) {
             // this.socket = ;
-            // log.debug('serialSacp');
-            // this.socket = socketSerialNew;
-            // this.protocol = 'SACP';
-            // this.socket.connectionOpen(socket, options);
+            log.debug('serialSacp');
+            this.socket = socketSerialNew;
+            this.protocol = 'SACP';
+            this.socket.connectionOpen(socket, options);
             // } else {
-            this.socket = socketSerial;
-            this.socket.serialportOpen(socket, options);
+            // this.socket = socketSerial;
+            // this.socket.serialportOpen(socket, options);
             // }
         }
         log.debug(`connectionOpen connectionType=${connectionType} this.socket=${this.socket}`);
