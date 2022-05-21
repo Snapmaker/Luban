@@ -82,7 +82,7 @@ class Printing extends PureComponent {
                         <ParamsWrapper
                             handleSubmit={(value) => { console.log('update toolhead speed', value); this.actions.updateToolHeadSpeed(value); }}
                             initValue={this.props.cncTargetSpindleSpeed}
-                            title={i18n._('key-Workspace/Marlin-Spindle Speed')}
+                            title={isLevelTwoCNC ? i18n._('key-Workspace/Marlin-Spindle Speed') : i18n._('key-unused-Toolhead')}
                             suffix="rpm"
                             inputMax={18000}
                             inputMin={8000}
