@@ -326,8 +326,8 @@ class ConnectionManager {
 
     updateNozzleTemperature = (socket, options) => {
         if (this.protocol === SACP_PROTOCOL) {
-            const { extruderIndex, temperature } = options;
-            this.socket.updateNozzleTemperature(extruderIndex, temperature);
+            const { extruderIndex, nozzleTemperatureValue } = options;
+            this.socket.updateNozzleTemperature(extruderIndex, nozzleTemperatureValue);
         } else {
             if (this.connectionType === CONNECTION_TYPE_WIFI) {
                 this.socket.updateNozzleTemperature(options);
@@ -342,9 +342,9 @@ class ConnectionManager {
 
     updateBedTemperature = (socket, options) => {
         if (this.protocol === SACP_PROTOCOL) {
-            const { /* zoneIndex, */temperature } = options;
-            this.socket.updateBedTemperature(0, temperature);
-            this.socket.updateBedTemperature(1, temperature);
+            const { /* zoneIndex, */heatedBedTemperatureValue } = options;
+            this.socket.updateBedTemperature(0, heatedBedTemperatureValue);
+            this.socket.updateBedTemperature(1, heatedBedTemperatureValue);
         } else {
             if (this.connectionType === CONNECTION_TYPE_WIFI) {
                 this.socket.updateBedTemperature(options);
@@ -390,8 +390,8 @@ class ConnectionManager {
 
     updateWorkSpeedFactor = (socket, options) => {
         if (this.protocol === SACP_PROTOCOL) {
-            const { toolHead, workSpeed, extruderIndex } = options;
-            this.socket.updateWorkSpeed(toolHead, workSpeed, extruderIndex);
+            const { toolHead, workSpeedValue, extruderIndex } = options;
+            this.socket.updateWorkSpeed(toolHead, workSpeedValue, extruderIndex);
         } else {
             if (this.connectionType === CONNECTION_TYPE_WIFI) {
                 this.socket.updateWorkSpeedFactor(options);

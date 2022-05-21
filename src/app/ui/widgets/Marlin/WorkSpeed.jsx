@@ -23,7 +23,6 @@ class WorkSpeed extends PureComponent {
 
 
     state = {
-        workSpeed: 100,
         workSpeedValue: 100
     };
 
@@ -38,13 +37,12 @@ class WorkSpeed extends PureComponent {
                 workSpeedValue: value
             });
         },
-        onClickWorkSpeed: () => {
-            const workSpeedValue = this.state.workSpeedValue;
+        onClickWorkSpeed: (value) => {
             this.setState({
-                workSpeed: workSpeedValue
+                workSpeedValue: value
             });
             controller.emitEvent(CONNECTION_WORKSPEED_FACTOR, {
-                workSpeed: workSpeedValue,
+                workSpeedValue: value,
                 toolHead: this.props.toolHead, // DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
                 // extruderIndex: ,
             });
@@ -58,16 +56,16 @@ class WorkSpeed extends PureComponent {
     };
 
     render() {
-        const { workSpeed, workSpeedValue } = this.state;
+        const { workSpeedValue } = this.state;
         const actions = this.actions;
         return (
             <ParamsWrapper
                 handleSubmit={(value) => { console.log('onChangeWorkSpeedValue', value); actions.onClickWorkSpeed(value); }}
-                initValue={workSpeed}
+                initValue={workSpeedValue}
                 title={i18n._('key-Workspace/Marlin-Work Speed')}
                 suffix="%"
-                inputMax={1}
-                inputMin={500}
+                inputMax={500}
+                inputMin={1}
             >
                 <div className="width-40 sm-flex align-center margin-left-16 ">
                     <span>{workSpeedValue} %</span>

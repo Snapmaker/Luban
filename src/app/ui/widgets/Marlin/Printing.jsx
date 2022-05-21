@@ -129,22 +129,16 @@ class Printing extends PureComponent {
             console.log(`${CONNECTION_NOZZLE_TEMPERATURE}, side: [${extruderIndex}], temperature: [${temp}]`);
             controller.emitEvent(CONNECTION_NOZZLE_TEMPERATURE, {
                 extruderIndex, // RIGHT_EXTRUDER_MAP_NUMBER
-                temperature: temp
+                nozzleTemperatureValue: temp
             });
         },
         updateHeatedBedTemp: (temp) => {
             console.log(`${CONNECTION_BED_TEMPERATURE}, temperature: [${temp}]`);
             controller.emitEvent(CONNECTION_BED_TEMPERATURE, {
-                temperature: temp
+                heatedBedTemperatureValue: temp
             });
         },
 
-        setNozzleZOffset: (value) => {
-            console.log(`${CONNECTION_Z_OFFSET}, z offset: [${value}]`);
-            controller.emitEvent(CONNECTION_Z_OFFSET, {
-                offset: value
-            });
-        }
     };
 
     getSnapshotBeforeUpdate(prevProps) {
