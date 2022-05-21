@@ -34,7 +34,6 @@ class Printing extends PureComponent {
 
     state = {
         headStatus: this.props.headStatus,
-        toolHeadSpeed: 8000,
     };
 
     actions = {
@@ -60,21 +59,18 @@ class Printing extends PureComponent {
                 //     this.props.addConsoleLogs(result);
                 // }
             });
-            this.setState({
-                toolHeadSpeed: speed
-            });
         },
         isPrinting: () => {
             const { workflowStatus, workflowState, connectionType } = this.props;
-            const a = (_.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus) && connectionType === CONNECTION_TYPE_WIFI)
-                || (_.includes([WORKFLOW_STATE_PAUSED, WORKFLOW_STATE_RUNNING], workflowState) && connectionType === CONNECTION_TYPE_SERIAL);
-            console.log('isPrinting', a);
-            return a;
+            const _isPrinting = (_.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus) && connectionType === CONNECTION_TYPE_WIFI)
+            || (_.includes([WORKFLOW_STATE_PAUSED, WORKFLOW_STATE_RUNNING], workflowState) && connectionType === CONNECTION_TYPE_SERIAL);
+            console.log('isPrinting', _isPrinting);
+            return _isPrinting;
         }
     };
 
     render() {
-        const { headStatus, toolHeadSpeed } = this.state;
+        const { headStatus } = this.state;
         const isPrinting = this.actions.isPrinting();
         const isLevelTwoCNC = this.props.toolHead === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2;
 
@@ -102,6 +98,7 @@ class Printing extends PureComponent {
                         <div className="sm-flex margin-left-24 overflow-visible align-center">
                             <Switch
                                 className="sm-flex-auto"
+                                style={{ order: 0 }}
                                 onClick={this.actions.onClickToolHead}
                                 checked={headStatus}
                                 disabled={isPrinting}
@@ -109,14 +106,14 @@ class Printing extends PureComponent {
 
                             {/* //  <div className="sm-flex align-center"> */}
                             { isLevelTwoCNC && (
-                                <div className=" sm-flex sm-flex-direction-c">
-                                    <span>{toolHeadSpeed}rpm</span>
+                                <div className=" sm-flex sm-flex-direction-c  margin-right-16  margin-left-16">
+                                    <span>{this.props.cncTargetSpindleSpeed}rpm</span>
                                 </div>
                             )}
                             { isLevelTwoCNC && (
                                 <EditComponent
                                     handleSubmit={(value) => { console.log('update toolhead speed', value); this.actions.updateToolHeadSpeed(value); }}
-                                    initValue={toolHeadSpeed}
+                                    initValue={this.props.cncTargetSpindleSpeed}
                                     suffix="rpm"
                                     inputMax={18000}
                                     inputMin={8000}
