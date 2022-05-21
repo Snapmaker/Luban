@@ -42,8 +42,15 @@ class SocketSerialNew extends SocketBASE {
             });
             this.sacpClient = new Business('serialport', this.serialport);
             this.serialport.on('data', (data) => {
-                // console.log('data', data);
                 this.sacpClient.read(data);
+            });
+            this.serialport.on('error', (err) => {
+                log.error(`Serial connection error: ${err}`);
+                this.socket.emit('connection:connected', { err: 'this machine is not ready' });
+            });
+            this.serialport.on('close', () => {
+                log.info('serial close');
+                this.socket.emit('connection:close');
             });
             this.serialport.once('open', () => {
                 log.debug(`${options.port ?? this.availPorts[0].path} opened`);
@@ -82,43 +89,18 @@ class SocketSerialNew extends SocketBASE {
                     await this.sacpClient.getCurrentCoordinateInfo().then(({ data: coordinateInfos }) => {
                         const isHomed = !(coordinateInfos?.coordinateSystemInfo?.homed); // 0: homed, 1: need to home
                         state.isHomed = isHomed;
+                        state.isMoving = false;
                     });
                     await this.sacpClient.getMachineInfo().then(({ data: machineInfos }) => {
-                        Object.keys(machineInfos).forEach(key => {
-                            log.debug(`key: ${key}, value: ${machineInfos[key]}`);
-                        });
-
                         state = {
                             ...state,
                             series: SERIAL_MAP_SACP[machineInfos.type]
                         };
                         log.debug(`serial, ${SERIAL_MAP_SACP[machineInfos.type]}`);
                     });
-                    // const getCurrentCoordinateInfo = this.sacpClient.getCurrentCoordinateInfo();
-                    // const getMachineInfo = this.sacpClient.getMachineInfo();
-                    // Promise.allSettled([this.sacpClient.getCurrentCoordinateInfo(), this.sacpClient.getMachineInfo()]).then((
-                    //     res
-                    // //         [
-                    // //     { data: coordinateInfos },
-                    // //     { data: machineInfos }
-                    // // ]
-                    // ) => {
-                    //     // let state = {};
-                    //     log.debug(`getMachineInfo, ${res}`);
-                    //     // const coordinateInfos = resArr[0];
-                    //     // const machineInfos = resArr[1];
-                    //     // const isHomed = !(coordinateInfos?.coordinateSystemInfo?.homed); // 0: homed, 1: need to home
-                    //     // state = {
-                    //     //     series: SERIAL_MAP_SACP[machineInfos.type],
-                    //     //     isHomed
-                    //     // };
-                    // }).catch(err => {
-                    //     log.debug(`errArr, ${err}`);
-                    // });
-                    // this.socket && this.socket.emit('Marlin:state', result)
-                    this.socket && this.socket.emit('connection:connected', { state: state });
+                    this.socket && this.socket.emit('connection:connected', { state: state, err: '' });
                     this.startHeartbeatBase(this.sacpClient);
-                }, 2000);
+                }, 200);
             });
             this.serialport.open();
         }

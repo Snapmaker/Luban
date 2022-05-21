@@ -223,7 +223,6 @@ export class Server extends events.EventEmitter {
         isNotNull(data.airPurifierFilterHealth) && (this.state.airPurifierFilterHealth = data.airPurifierFilterHealth);
         isNotNull(data.moduleList) && (this.state.moduleStatusList = data.moduleList);
         // this._updateGcodePrintingInfo(data);
-
         if (this.waitConfirm) {
             this.waitConfirm = false;
             this.isConnected = true;

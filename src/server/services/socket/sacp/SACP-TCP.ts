@@ -2,11 +2,13 @@ import net from 'net';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import os from 'os';
+import { includes } from 'lodash';
 import wifiServerManager from '../WifiServerManager';
 import type SocketServer from '../../../lib/SocketManager';
-import { EventOptions } from '../types';
+import { ConnectedData, EventOptions } from '../types';
 import logger from '../../../lib/logger';
-import { CONNECTION_TYPE_WIFI, DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, WORKFLOW_STATE_PAUSED } from '../../../constants';
+import { CONNECTION_TYPE_WIFI, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
 import Business, { CoordinateType, RequestPhotoInfo, ToolHeadType } from './Business';
 import CalibrationInfo from '../../../lib/SACP-SDK/SACP/business/models/CalibrationInfo';
 import DataStorage from '../../../DataStorage';
@@ -14,6 +16,7 @@ import DataStorage from '../../../DataStorage';
 import CoordinateInfo, { Direction } from '../../../lib/SACP-SDK/SACP/business/models/CoordinateInfo';
 import MovementInstruction, { MoveDirection } from '../../../lib/SACP-SDK/SACP/business/models/MovementInstruction';
 import SocketBASE from './SACP-BASE';
+import { CNC_MODULE, EMERGENCY_STOP_BUTTON, LASER_MODULE, MODULEID_TOOLHEAD_MAP, PRINTING_MODULE, ROTARY_MODULES, SERIAL_MAP_SACP } from '../../../../app/constants';
 
 const log = logger('lib:SocketTCP');
 
@@ -41,7 +44,13 @@ class SocketTCP extends SocketBASE {
         });
         this.client.on('close', () => {
             log.info('TCP connection closed');
-            this.socket && this.socket.emit('connection:close');
+            const result = {
+                code: 200,
+                data: {},
+                msg: '',
+                text: ''
+            };
+            this.socket && this.socket.emit('connection:close', result);
         });
         this.client.on('error', (err) => {
             log.error(`TCP connection error: ${err}`);
@@ -63,60 +72,61 @@ class SocketTCP extends SocketBASE {
 
     public connectionOpen = (socket: SocketServer, options: EventOptions) => {
         this.socket = socket;
-        this.sacpClient.setHandler(0x01, 0x03, (data) => {
-            const state = {
-                toolHead: DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
-                series: 'A400',
-                status: WORKFLOW_STATE_PAUSED,
-                headType: HEAD_PRINTING,
-                isHomed: true,
-                err: null
-            };
-            this.socket && this.socket.emit('connection:connected', {
-                state,
-                err: state?.err,
-                type: CONNECTION_TYPE_WIFI
-            });
-            this.sacpClient.ack(0x01, 0x03, data.packet, Buffer.alloc(1, 0));
-            // setTimeout(() => {
-            //     this.sacpClient.requestHome().then((res) => {
-            //         log.info(`request homing: ${res.response}`);
-            //     }).then(() => {
-            //     });
-            // }, 2000);
-            this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
-                const info = moduleInfos.find(moduleInfo => moduleInfo.moduleId === 14);
-                this.sacpClient.getLaserToolHeadInfo(info.key).then(({ laserToolHeadInfo }) => {
-                    this.laserFocalLength = laserToolHeadInfo.laserFocalLength;
-                    log.debug(`laserToolHeadInfo.laserFocalLength, ${laserToolHeadInfo.laserFocalLength}`);
-                    this.socket && this.socket.emit('Marlin:state', {
-                        state: {
-                            isHomed: true,
-                            temperature: {
-                                t: 0,
-                                tTarget: 0,
-                                b: 0,
-                                bTarget: 0
-                            },
-                            laserFocalLength: laserToolHeadInfo.laserFocalLength,
-                            pos: {
-                                x: 0,
-                                y: 0,
-                                z: 0,
-                                b: 0,
-                                isFourAxis: false
-                            },
-                            originOffset: {
-                                x: 0,
-                                y: 0,
-                                z: 0,
-                            }
-                        },
-                        type: CONNECTION_TYPE_WIFI
-                    });
-                });
-            });
-        });
+        // this.sacpClient.setHandler(0x01, 0x05, (data) => {
+        //     // this.sacpClient.getCurrentCoordinateInfo()
+        //     const state = {
+        //         // toolHead: DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+        //         // series: 'A400',
+        //         // status: WORKFLOW_STATE_PAUSED,
+        //         // headType: HEAD_PRINTING,
+        //         isHomed: true,
+        //         err: null
+        //     };
+        //     this.socket && this.socket.emit('connection:connected', {
+        //         state,
+        //         err: state?.err,
+        //         type: CONNECTION_TYPE_WIFI
+        //     });
+        //     this.sacpClient.ack(0x01, 0x03, data.packet, Buffer.alloc(1, 0));
+        //     // setTimeout(() => {
+        //     //     this.sacpClient.requestHome().then((res) => {
+        //     //         log.info(`request homing: ${res.response}`);
+        //     //     }).then(() => {
+        //     //     });
+        //     // }, 2000);
+        //     this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
+        //         const info = moduleInfos.find(moduleInfo => moduleInfo.moduleId === 14);
+        //         info && this.sacpClient.getLaserToolHeadInfo(info.key).then(({ laserToolHeadInfo }) => {
+        //             this.laserFocalLength = laserToolHeadInfo.laserFocalLength;
+        //             log.debug(`laserToolHeadInfo.laserFocalLength, ${laserToolHeadInfo.laserFocalLength}`);
+        //             this.socket && this.socket.emit('Marlin:state', {
+        //                 state: {
+        //                     // isHomed: true,
+        //                     temperature: {
+        //                         t: 0,
+        //                         tTarget: 0,
+        //                         b: 0,
+        //                         bTarget: 0
+        //                     },
+        //                     laserFocalLength: laserToolHeadInfo.laserFocalLength,
+        //                     pos: {
+        //                         x: 0,
+        //                         y: 0,
+        //                         z: 0,
+        //                         b: 0,
+        //                         isFourAxis: false
+        //                     },
+        //                     originOffset: {
+        //                         x: 0,
+        //                         y: 0,
+        //                         z: 0,
+        //                     }
+        //                 },
+        //                 type: CONNECTION_TYPE_WIFI
+        //             });
+        //         });
+        //     });
+        // });
         // this.sacpClient.setHandler(0x01, 0x36, (data) => {
         //     console.log('0x0136', data);
         // });
@@ -125,33 +135,163 @@ class SocketTCP extends SocketBASE {
             port: 8888
         }, () => {
             log.info('TCP connected');
-            const result = {
-                msg: '',
-                data: {
-                    hasEnclosure: false,
-                    headType: 2,
-                    readonly: false,
-                    series: 'Snapmaker A400',
-                    token: '415344a6-f7b7-4900-a391-aa6695e2dfdb'
-                },
-                text: '{"token":"415344a6-f7b7-4900-a391-aa6695e2dfdb","readonly":false,"series":"Snapmaker A400","headType":2,"hasEnclosure":false}'
-            };
-            this.socket && this.socket.emit('connection:open', result);
+
+            // const result = {
+            //     msg: '',
+            //     data: {
+            //         hasEnclosure: false,
+            //         headType: 2,
+            //         readonly: false,
+            //         series: 'Snapmaker A400',
+            //         // token: '415344a6-f7b7-4900-a391-aa6695e2dfdb'
+            //         token: ''
+            //     },
+            //     text: '{"token":"","readonly":false,"series":"Snapmaker A400","headType":2,"hasEnclosure":false}'
+            // };
+            this.socket && this.socket.emit('connection:open', {});
+            const hostName = os.hostname();
+            log.info(`os hostname: ${hostName}`);
+            this.sacpClient.wifiConnection(hostName, 'Luban', options.token, () => {
+                this.client.destroy();
+                if (this.client.destroyed) {
+                    log.info('TCP manually closed');
+                    const result = {
+                        code: 200,
+                        data: {},
+                        msg: '',
+                        text: ''
+                    };
+                    socket && socket.emit('connection:close', result);
+                }
+            }).then(async ({ response }) => {
+                if (response.result === 0) {
+                    let state: ConnectedData = {
+                        // toolHead: DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+                        // series: 'A400',
+                        // status: WORKFLOW_STATE_IDLE,
+                        // headType: HEAD_PRINTING,
+                        isHomed: true,
+                        err: null
+                    };
+                    await this.sacpClient.getMachineInfo().then(({ data: machineInfos }) => {
+                        state = {
+                            ...state,
+                            series: SERIAL_MAP_SACP[machineInfos.type]
+                        };
+                        // log.debug(`serial, ${SERIAL_MAP_SACP[machineInfos.type]}`);
+                    });
+                    await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
+                        const moduleListStatus = {
+                            // airPurifier: false,
+                            emergencyStopButton: false,
+                            // enclosure: false,
+                            rotaryModule: false
+                        };
+                        moduleInfos.forEach(module => {
+                            // let ariPurifier = false;
+                            if (includes(PRINTING_MODULE, module.moduleId)) {
+                                state.headType = HEAD_PRINTING;
+                                state.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
+                            } else if (includes(LASER_MODULE, module.moduleId)) {
+                                state.headType = HEAD_LASER;
+                                state.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
+                            } else if (includes(CNC_MODULE, module.moduleId)) {
+                                state.headType = HEAD_CNC;
+                                state.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
+                            }
+                            if (includes(ROTARY_MODULES, module.moduleId)) {
+                                moduleListStatus.rotaryModule = true;
+                            }
+                            if (includes(EMERGENCY_STOP_BUTTON, module.moduleId)) {
+                                moduleListStatus.emergencyStopButton = true;
+                            }
+                            if (module.moduleId === 14) {
+                                this.sacpClient.getLaserToolHeadInfo(module.key).then(({ laserToolHeadInfo }) => {
+                                    this.laserFocalLength = laserToolHeadInfo.laserFocalLength;
+                                    log.debug(`laserToolHeadInfo.laserFocalLength, ${laserToolHeadInfo.laserFocalLength}`);
+                                    this.socket && this.socket.emit('Marlin:state', {
+                                        state: {
+                                            // isHomed: true,
+                                            temperature: {
+                                                t: 0,
+                                                tTarget: 0,
+                                                b: 0,
+                                                bTarget: 0
+                                            },
+                                            laserFocalLength: laserToolHeadInfo.laserFocalLength,
+                                            pos: {
+                                                x: 0,
+                                                y: 0,
+                                                z: 0,
+                                                b: 0,
+                                                isFourAxis: false
+                                            },
+                                            originOffset: {
+                                                x: 0,
+                                                y: 0,
+                                                z: 0,
+                                            }
+                                        },
+                                        type: CONNECTION_TYPE_WIFI
+                                    });
+                                });
+                            }
+                        });
+                        state.moduleStatusList = moduleListStatus;
+                    });
+                    this.socket && this.socket.emit('connection:connected', {
+                        state,
+                        err: state?.err,
+                        type: CONNECTION_TYPE_WIFI
+                    });
+                    this.startHeartbeatBase(this.sacpClient);
+                } else {
+                    this.client.destroy();
+                    if (this.client.destroyed) {
+                        log.info('TCP manually closed');
+                        const result = {
+                            code: 200,
+                            data: {},
+                            msg: '',
+                            text: ''
+                        };
+                        socket && socket.emit('connection:close', result);
+                    }
+                }
+            });
         });
     }
 
     public connectionClose = (socket: SocketServer, options: EventOptions) => {
-        this.client.destroy();
-        if (this.client.destroyed) {
-            log.info('TCP manually closed');
-            const result = {
-                code: 200,
-                data: {},
-                msg: '',
-                text: ''
-            };
-            socket && socket.emit(options.eventName, result);
-        }
+        this.sacpClient.wifiConnectionClose().then(({ response }) => {
+            console.log('response ===== ', response);
+            if (response.result === 0) {
+                setTimeout(() => {
+                    this.client.destroy();
+                    if (this.client.destroyed) {
+                        log.info('TCP manually closed');
+                        const result = {
+                            code: 200,
+                            data: {},
+                            msg: '',
+                            text: ''
+                        };
+                        socket && socket.emit(options.eventName, result);
+                    }
+                }, 3000);
+            }
+        });
+        // this.client.destroy();
+        // if (this.client.destroyed) {
+        //     log.info('TCP manually closed');
+        //     const result = {
+        //         code: 200,
+        //         data: {},
+        //         msg: '',
+        //         text: ''
+        //     };
+        //     socket && socket.emit(options.eventName, result);
+        // }
     }
 
     public startHeartbeat = () => {

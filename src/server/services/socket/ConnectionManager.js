@@ -289,7 +289,7 @@ class ConnectionManager {
             this.socket.stopGcode(options);
         } else {
             if (this.protocol === SACP_PROTOCOL) {
-                this.socket.stopPrint();
+                this.socket.stopGcode();
             } else {
                 this.socket.command(this.socket, {
                     cmd: 'gcode:pause',

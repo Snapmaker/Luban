@@ -29,10 +29,19 @@ class SocketBASE {
             emergencyStopButton: false,
             enclosure: false
         };
+        this.sacpClient.setHandler(0x01, 0x36, ({ param }) => {
+            const isHomed = readUint8(param, 0);
+            stateData = {
+                ...stateData,
+                isHomed: !isHomed
+            };
+        });
         this.sacpClient.subscribeHeartbeat({ interval: 1000 }, async (data) => {
-            // log.info(`receive heartbeat: ${data.response}`);
+            log.info(`receive heartbeat: ${data.response}`);
             statusKey = readUint8(data.response.data, 0);
+            stateData.airPurifier = false;
             await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
+                log.info(`revice moduleInfo: ${data.response}`);
                 moduleInfos.forEach(module => {
                     if (includes(EMERGENCY_STOP_BUTTON, module.moduleId)) {
                         moduleStatusList.emergencyStopButton = true;
@@ -45,7 +54,7 @@ class SocketBASE {
                     }
                     if (includes(AIR_PURIFIER_MODULES, module.moduleId)) {
                         stateData.airPurifier = true;
-                        // new to update airPurifier status
+                        // need to update airPurifier status
                     }
                 });
             });
@@ -54,7 +63,7 @@ class SocketBASE {
                 ...stateData,
                 status: WORKFLOW_STATUS_MAP[statusKey],
                 headType: HEAD_PRINTING,
-                moduleStatusList,
+                moduleList: moduleStatusList,
             } });
             // clearTimeout(this.heartbeatTimer);
             // this.heartbeatTimer = setTimeout(() => {
@@ -144,11 +153,13 @@ class SocketBASE {
         });
         await this.sacpClient.requestHome().then(({ response }) => {
             log.info(`Go-Home, ${response}`);
+            this.socket && this.socket.emit('serialport:read', { data: response.result === 0 ? 'OK' : 'WARNING' });
         });
     }
 
     public coordinateMove = async ({ moveOrders, jogSpeed, headType }) => {
         log.info(`coordinate: ${moveOrders}, ${headType}`);
+        this.socket && this.socket.emit('move:status', { isMoving: true });
         const distances = [];
         const directions = [];
         moveOrders.forEach(item => {
@@ -159,7 +170,10 @@ class SocketBASE {
         //     log.info(`Update CoordinateType: ${res}`);
         // });
         await this.sacpClient.requestAbsoluteCooridateMove(directions, distances, jogSpeed, CoordinateType.MACHINE).then(res => {
-            log.info(`Coordinate Move: ${res}`);
+            log.info(`Coordinate Move: ${res.response.result}`);
+            this.socket && this.socket.emit('serialport:read', { data: res.response.result === 0 ? 'OK' : 'WARNING' });
+            // console.log('coordinate move', res);
+            this.socket && this.socket.emit('move:status', { isMoving: false });
         });
     }
 
@@ -178,7 +192,7 @@ class SocketBASE {
         });
     }
 
-    public stopPrint = () => {
+    public stopGcode = () => {
         this.sacpClient.stopPrint().then(res => {
             log.info(`Stop Print: ${res}`);
         });

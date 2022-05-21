@@ -210,7 +210,9 @@ const INITIAL_STATE = {
     // connect info
     moduleStatusList: {},
     // wifi connection, home button in control widget
-    homingModal: false
+    homingModal: false,
+    // if XYZ axis move finished, value is false, else moving, value is true
+    isMoving: false
 };
 
 export const actions = {
@@ -348,7 +350,6 @@ export const actions = {
             'Marlin:state': (options) => {
                 // Note: serialPort & Wifi -> for heartBeat
                 const { state } = options;
-                console.log({ state });
                 const { headType, pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
                 const machineState = getState().machine;
                 if ((machineState.isRotate !== pos?.isFourAxis) && (headType === HEAD_LASER || headType === HEAD_CNC)) {
@@ -436,9 +437,13 @@ export const actions = {
                 } = state;
                 dispatch(baseActions.updateState({
                     laser10WErrorState,
-                    workflowStatus: status,
-                    isHomed
+                    workflowStatus: status
                 }));
+                if (!isNil(isHomed)) {
+                    dispatch(baseActions.updateState({
+                        isHomed
+                    }));
+                }
                 if (!isNil(laserFocalLength)) {
                     dispatch(baseActions.updateState({
                         laserFocalLength
@@ -476,15 +481,17 @@ export const actions = {
                     }));
                 }
                 if (!isNil(moduleStatusList)) {
-                    dispatch(baseActions.updateState(moduleStatusList));
+                    const enclosureOnline = moduleStatusList.enclosure;
+                    const rotateModuleOnline = moduleStatusList.rotateModuleOnline;
+                    dispatch(baseActions.updateState({ moduleStatusList, enclosureOnline, rotateModuleOnline }));
                 }
                 if (!isNil(doorSwitchCount)) {
-                    dispatch(baseActions.updateState(doorSwitchCount));
+                    dispatch(baseActions.updateState({ doorSwitchCount }));
                 }
-                !isNil(isEnclosureDoorOpen) && dispatch(baseActions.updateState(isEnclosureDoorOpen));
-                !isNil(zAxisModule) && dispatch(baseActions.updateState(zAxisModule));
-                !isNil(headStatus) && dispatch(baseActions.updateState(headStatus));
-                !isNil(laserCamera) && dispatch(baseActions.updateState(laserCamera));
+                !isNil(isEnclosureDoorOpen) && dispatch(baseActions.updateState({ isEnclosureDoorOpen }));
+                !isNil(zAxisModule) && dispatch(baseActions.updateState({ zAxisModule }));
+                !isNil(headStatus) && dispatch(baseActions.updateState({ headStatus }));
+                !isNil(laserCamera) && dispatch(baseActions.updateState({ laserCamera }));
                 if (!isNil(airPurifier)) {
                     dispatch(baseActions.updateState({
                         airPurifier: airPurifier,
@@ -551,11 +558,12 @@ export const actions = {
                 }
                 let machineSeries = '';
                 console.log({ state });
-                const { toolHead, series, headType, status, isHomed, moduleStatusList } = state;
+                const { toolHead, series, headType, status, isHomed, moduleStatusList, isMoving } = state;
                 const { seriesSize } = state;
                 console.log('connection', state);
                 dispatch(baseActions.updateState({
-                    isHomed: isHomed
+                    isHomed: isHomed,
+                    isMoving
                 }));
                 if (!isNil(seriesSize)) {
                     machineSeries = valueOf(
@@ -667,28 +675,25 @@ export const actions = {
             },
             'sender:status': (options) => {
                 const { data } = options;
-                const {
-                    total,
-                    sent,
-                    received,
-                    startTime,
-                    finishTime,
-                    elapsedTime,
-                    remainingTime
-                } = data;
-                dispatch(
-                    baseActions.updateState({
-                        gcodePrintingInfo: {
-                            total,
-                            sent,
-                            received,
-                            startTime,
-                            finishTime,
-                            elapsedTime,
-                            remainingTime
-                        }
-                    })
-                );
+                const { total, sent, received, startTime, finishTime, elapsedTime, remainingTime } = data;
+                dispatch(baseActions.updateState({
+                    gcodePrintingInfo: {
+                        total,
+                        sent,
+                        received,
+                        startTime,
+                        finishTime,
+                        elapsedTime,
+                        remainingTime
+                    }
+                }));
+            },
+            'move:status': (options) => {
+                const { isMoving } = options;
+                console.log({ options });
+                dispatch(baseActions.updateState({
+                    isMoving
+                }));
             }
         };
 

@@ -56,6 +56,7 @@ class SerialPortClient {
         'Marlin:settings': [],
         'machine:settings': [],
         'transfer:hex': [],
+        'move:status': [],
 
         'slice:started': [],
         'slice:completed': [],

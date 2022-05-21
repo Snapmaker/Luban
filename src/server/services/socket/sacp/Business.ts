@@ -29,6 +29,7 @@ import LaserToolHeadInfo from '../../../lib/SACP-SDK/SACP/business/models/LaserT
 import BatchBufferInfo from '../../../lib/SACP-SDK/SACP/business/models/BatchBufferInfo';
 import PrintBatchGcode from '../../../lib/SACP-SDK/SACP/business/models/PrintBatchGcode';
 import Response from '../../../lib/SACP-SDK/SACP/communication/Response';
+import WifiConnectionInfo from '../../../lib/SACP-SDK/SACP/business/models/WifiConnectionInfo';
 // @ts-ignore
 // import { pathWithRandomSuffix } from '../../../random-utils';
 // import CoordinateInfo from './models/CoordinateInfo';
@@ -283,6 +284,7 @@ export default class Business extends Dispatcher {
     }
 
     getMachineInfo() {
+        console.log('sendsend');
         return this.send(0x01, 0x21, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             const machineInfo = new MachineInfo().fromBuffer(response.data);
             return { code: response.result, packet, data: machineInfo as MachineInfo };
@@ -324,8 +326,7 @@ export default class Business extends Dispatcher {
     }
 
     requestAbsoluteCooridateMove(directions: MoveDirection[] = [0], distances: number[] = [0], jogSpeed: number = 0.1, coordinateType: CoordinateType) {
-        const paramBuffer = new MovementInstruction(directions[0], distances[0], jogSpeed, directions, distances, coordinateType).toArrayBuffer();
-        console.log('absolute', directions, distances, jogSpeed, paramBuffer);
+        const paramBuffer = new MovementInstruction(undefined, undefined, jogSpeed, directions, distances, coordinateType).toArrayBuffer();
         return this.send(0x01, 0x34, PeerId.CONTROLLER, paramBuffer).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
@@ -513,7 +514,6 @@ export default class Business extends Dispatcher {
     uploadFile(filePath: string) {
         const sizePerChunk = 60 * 1024;
         this.setHandler(0xb0, 0x01, (data) => {
-            console.log(data.param);
             const { nextOffset, result: md5HexStr } = readString(data.param);
             // console.log('>>', md5HexStr, nextOffset);
             const index = readUint16(data.param, nextOffset);
@@ -606,11 +606,9 @@ export default class Business extends Dispatcher {
         }).on('error', (e: any) => {
             console.log('e', e);
         });
-        console.log(content);
         this.setHandler(0xac, 0x02, async ({ param, packet }: RequestData) => {
             const batchBufferInfo = new BatchBufferInfo().fromBuffer(param);
             // const content = await readGcodeFileByLines(filePath);
-            console.log('lineNumber', batchBufferInfo.lineNumber, content.length);
             let result = 0;
             const printBatchGcode = new PrintBatchGcode(batchBufferInfo.lineNumber, batchBufferInfo.lineNumber, content[batchBufferInfo.lineNumber]);
             if (batchBufferInfo.lineNumber === content.length - 1) {
@@ -621,7 +619,31 @@ export default class Business extends Dispatcher {
             callback && callback({ lineNumber: batchBufferInfo.lineNumber, length: content.length, elapsedTime });
         });
         this.setHandler(0xac, 0x01, (request: RequestData) => {
-            console.log({ request });
+            console.log({ request }); // get printing issue
+        });
+    }
+
+    wifiConnection(hostName: string, clientName: string, token: string, callback: any) {
+        const info = new WifiConnectionInfo(hostName, clientName, token).toBuffer();
+        console.log('wifiConnectionInfo', info);
+        this.setHandler(0x01, 0x06, ({ param, packet }: RequestData) => {
+            console.log({ param, packet });
+            const res = new Response(0);
+            this.ack(0x01, 0x06, packet, res.toBuffer());
+            callback && callback();
+        });
+        return this.send(0x01, 0x05, PeerId.SCREEN, info).then(({ response, packet }) => {
+            // return res;
+            console.log('resresres', response, packet);
+            return { response, packet };
+        });
+    }
+
+    wifiConnectionClose() {
+        console.log('get wifi connection close');
+        return this.send(0x01, 0x06, PeerId.SCREEN, Buffer.alloc(0)).then(({ response, packet }) => {
+            console.log('close response');
+            return { response, packet };
         });
     }
 }

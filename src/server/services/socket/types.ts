@@ -28,7 +28,9 @@ export type ConnectedData = {
     status?: string,
     isHomed?: boolean,
     moduleStatusList?: object,
-    seriesSize?: string
+    seriesSize?: string,
+    isMoving?: boolean,
+    err?: string
 };
 
 export type MarlinStateData = {
@@ -50,5 +52,6 @@ export type MarlinStateData = {
     moduleStatusList?: object,
     laserCamera?: boolean,
     pos?: object,
-    originOffset?: object
+    originOffset?: object,
+    isHomed?: boolean
 };
