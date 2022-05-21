@@ -2,10 +2,10 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import _ from 'lodash';
-import Slider from '../../components/Slider';
+// import Slider from '../../components/Slider';
 import Switch from '../../components/Switch';
 import i18n from '../../../lib/i18n';
-import { NumberInput as Input } from '../../components/Input';
+// import { NumberInput as Input } from '../../components/Input';
 import SvgIcon from '../../components/SvgIcon';
 import WorkSpeed from './WorkSpeed';
 import { actions as machineActions } from '../../../flux/machine';
@@ -19,6 +19,7 @@ import {
     CONNECTION_SWITCH_LASER_POWER,
 } from '../../../constants';
 import { controller } from '../../../lib/controller';
+import ParamsWrapper from './ParamsWrapper';
 
 class Laser extends PureComponent {
     static propTypes = {
@@ -35,15 +36,15 @@ class Laser extends PureComponent {
     state = {
         laserPowerOpen: this.props.headStatus,
         laserPower: this.props.laserPower || 1,
-        laserPowerMarks: {
-            0: 0,
-            // 5: 5,
-            // 20: 20,
-            // 40: 40,
-            // 60: 60,
-            // 80: 80,
-            100: 100
-        }
+        // laserPowerMarks: {
+        //     0: 0,
+        //     // 5: 5,
+        //     // 20: 20,
+        //     // 40: 40,
+        //     // 60: 60,
+        //     // 80: 80,
+        //     100: 100
+        // }
     };
 
     actions = {
@@ -104,59 +105,38 @@ class Laser extends PureComponent {
 
 
     render() {
-        const { laserPowerOpen, laserPowerMarks, laserPower } = this.state;
-        const { toolHead } = this.props;
-        const actions = this.actions;
+        const { laserPowerOpen, laserPower } = this.state; // laserPowerMarks,
+        // const { toolHead } = this.props;
+        // const actions = this.actions;
         const isPrinting = this.actions.isPrinting();
 
         return (
             <div>
+                {isPrinting && (
+                    <ParamsWrapper
+                        handleSubmit={(value) => { console.log('update temp', value); this.actions.onClickLaserPower(value); }}
+                        initValue={laserPower}
+                        title={i18n._('key-unused-Laser Power')}
+                        suffix="%"
+                        inputMax={100}
+                        inputMin={1}
+                    >
+                        <div className="width-40 sm-flex sm-flex-direction-c margin-left-16">
+                            <span>{Math.floor(laserPower)}°C</span>
+                        </div>
+                    </ParamsWrapper>
+                )}
                 {isPrinting && <WorkSpeed />}
-                <div className="sm-flex justify-space-between margin-vertical-8">
-                    <span>{i18n._('key-unused-Laser Power')}</span>
-                    {!isPrinting && (
+
+                {!isPrinting && (
+                    <div className="sm-flex justify-space-between margin-vertical-8">
+                        <span>{i18n._('key-unused-Laser Power')}</span>
+
                         <Switch
                             className="sm-flex-auto"
                             onClick={this.actions.onClickLaserPower}
                             checked={Boolean(laserPowerOpen)}
                         />
-                    )}
-                </div>
-                {(toolHead !== LEVEL_TWO_POWER_LASER_FOR_SM2
-                    || (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 && isPrinting)) && (
-                    <div className="sm-flex justify-space-between margin-vertical-8">
-                        <Slider
-                            max={100}
-                            min={0}
-                            size="middle"
-                            className="height-56"
-                            marks={laserPowerMarks}
-                            value={laserPower}
-                            onChange={actions.onChangeLaserPower}
-                        />
-                        <div className="sm-flex">
-                            <div className="height-32 margin-right-4">
-                                <span>{this.props.laserPower}/</span>
-                                <Input
-                                    suffix="%"
-                                    value={laserPower}
-                                    max={100}
-                                    min={0}
-                                    size="small"
-                                    onChange={actions.onChangeLaserPower}
-                                />
-                            </div>
-                            <div className="height-only-32 width-32 sm-flex-auto">
-                                <SvgIcon
-                                    name="Reset"
-                                    hoversize={30}
-                                    className="border-default-black-5 border-radius-8"
-                                    onClick={actions.onSaveLaserPower}
-                                    size={24}
-                                    borderRadius={8}
-                                />
-                            </div>
-                        </div>
                     </div>
                 )}
                 {!isPrinting && this.props.toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 && (

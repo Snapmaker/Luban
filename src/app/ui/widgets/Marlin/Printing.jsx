@@ -22,7 +22,10 @@ import { CONNECTION_TYPE_WIFI,
     CONNECTION_NOZZLE_TEMPERATURE,
     RIGHT_EXTRUDER_MAP_NUMBER,
     CONNECTION_BED_TEMPERATURE,
-    CONNECTION_WORK_NOZZLE
+    CONNECTION_WORK_NOZZLE,
+    WORKFLOW_STATUS_PAUSING,
+    LEFT_EXTRUDER,
+    // RIGHT_EXTRUDER,
 } from '../../../constants';
 import { controller } from '../../../lib/controller';
 import ParamsWrapper from './ParamsWrapper';
@@ -87,7 +90,8 @@ class Printing extends PureComponent {
         onClickPlusZOffset: () => {
             const zOffset = this.state.zOffsetValue;
             controller.emitEvent(CONNECTION_Z_OFFSET, {
-                zOffset
+                distance: zOffset,
+                extruderIndex: 0,
             }).once(CONNECTION_Z_OFFSET, ({ msg }) => {
                 if (msg) {
                     return;
@@ -106,15 +110,15 @@ class Printing extends PureComponent {
                 this.props.addConsoleLogs([`Z Offset ${zOffset} ok`]);
             });
         },
-        onClickLoad: () => {
-            controller.emitEvent(CONNECTION_LOAD_FILAMENT);
+        onClickLoad: (extruderIndex) => {
+            controller.emitEvent(CONNECTION_LOAD_FILAMENT, { extruderIndex: extruderIndex });
         },
-        onClickUnload: () => {
-            controller.emitEvent(CONNECTION_UNLOAD_FILAMENT);
+        onClickUnload: (extruderIndex) => {
+            controller.emitEvent(CONNECTION_UNLOAD_FILAMENT, { extruderIndex: extruderIndex });
         },
 
         siwtchWorkNozzle: (extruderIndex) => {
-            console.log(`${CONNECTION_WORK_NOZZLE}, switch to nozzle left:[${extruderIndex ? 'left' : 'right'}]]`);
+            console.log(`${CONNECTION_WORK_NOZZLE}, switch to nozzle :[${extruderIndex}]]`);
             controller.emitEvent(CONNECTION_WORK_NOZZLE, {
                 extruderIndex, // RIGHT_EXTRUDER_MAP_NUMBER
             });
@@ -158,6 +162,11 @@ class Printing extends PureComponent {
 
     }
 
+    isPrinting() {
+        const { workflowStatus } = this.props;
+        return workflowStatus === WORKFLOW_STATUS_RUNNING || workflowStatus === WORKFLOW_STATUS_PAUSING || workflowStatus === WORKFLOW_STATUS_PAUSED;
+    }
+
     render() {
         const {
             isConnected, heatedBedTemperature, heatedBedTargetTemperature, nozzleTemperature, nozzleTargetTemperature, currentWorkNozzle,
@@ -167,23 +176,26 @@ class Printing extends PureComponent {
         const { zOffsetMarks, zOffsetValue } = this.state;
         const actions = this.actions;
 
+        console.log(currentWorkNozzle);
         // console.log('printingToolhead', this.props.printingToolhead);
         // const workflowStatus = 'running';
         // const printingToolhead = DUAL_EXTRUDER_TOOLHEAD_FOR_SM2;
-        const nozzleTempratureTitle = i18n._(`${printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? 'key-Workspace/Marlin-Nozzle Temp' : 'key-Workspace/Marlin-Left Nozzle Temp'}`);
+        const nozzleTempratureTitle = i18n._(`${printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? 'key-Workspace/Marlin-Left Nozzle Temp' : 'key-Workspace/Marlin-Nozzle Temp'}`);
         const nozzleRightTempratureTitle = i18n._('key-Workspace/Marlin-Right Nozzle Temp');
         // console.log(isConnected, heatedBedTemperature, heatedBedTargetTemperature, nozzleTemperature, nozzleTargetTemperature, currentWorkNozzle);
+
+
 
         return (
             <div>
                 {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
                     <div>
-                        <div>
-                            <span>{i18n._('key-unused-Current Work Nozzle')}</span>
-                            <span>{i18n._(`key-unused-Nozzle-${currentWorkNozzle}`)}</span>
+                        <div className="sm-flex-overflow-visible justify-space-between margin-top-24 margin-bottom-16">
+                            <span>{i18n._('key-Workspace/Marlin-Current Work Nozzle')}</span>
+                            <span>{i18n._(`key-Workspace/Marlin-Nozzle ${currentWorkNozzle}`)}</span>
                         </div>
-                        <Button onClick={() => this.actions.siwtchWorkNozzle(1)}>
-                            {i18n._('key-unused-Switch working nozzle')}
+                        <Button onClick={() => this.actions.siwtchWorkNozzle(currentWorkNozzle === LEFT_EXTRUDER ? RIGHT_EXTRUDER_MAP_NUMBER : LEFT_EXTRUDER_MAP_NUMBER)}>
+                            {i18n._('key-Workspace/Marlin-Switch working nozzle')}
                         </Button>
                         <div className="dashed-border-use-background" />
                     </div>
@@ -198,23 +210,23 @@ class Printing extends PureComponent {
                     <div className="width-40 sm-flex sm-flex-direction-c">
                         {/* <span>{i18n._('key-unused-{i18n._('key-Workspace/Marlin-Actual Data Title')}')}</span> */}
                         <span>{i18n._('key-Workspace/Marlin-Actual Data Title')}</span>
-                        <span>{Math.floor(nozzleTemperature)} °C</span>
+                        <span>{Math.floor(nozzleTemperature)}°C</span>
                     </div>
                     <div className="width-40 sm-flex sm-flex-direction-c margin-left-16">
                         {/* <span>{i18n._('key-unused-{i18n._('key-Workspace/Marlin-Target Data Title')}')}</span> */}
                         <span>{i18n._('key-Workspace/Marlin-Target Data Title')}</span>
-                        <span>{Math.floor(nozzleTargetTemperature)} °C</span>
+                        <span>{Math.floor(nozzleTargetTemperature)}°C</span>
                     </div>
                 </ParamsWrapper>
 
-                {workflowStatus !== 'running' && (
+                {!this.isPrinting() && (
                     <div className="sm-flex justify-flex-end margin-vertical-8">
                         <div>
                             <Button
                                 priority="level-three"
                                 width="96px"
                                 className="display-inline"
-                                onClick={actions.onClickUnload}
+                                onClick={() => actions.onClickUnload(LEFT_EXTRUDER_MAP_NUMBER)}
                             >
                                 {i18n._('key-unused-Unload')}
                             </Button>
@@ -222,7 +234,7 @@ class Printing extends PureComponent {
                                 className="margin-left-4 display-inline"
                                 priority="level-three"
                                 width="96px"
-                                onClick={actions.onClickLoad}
+                                onClick={() => actions.onClickLoad(LEFT_EXTRUDER_MAP_NUMBER)}
                             >
                                 {i18n._('key-unused-Load')}
                             </Button>
@@ -240,23 +252,23 @@ class Printing extends PureComponent {
                         <div className="width-40 sm-flex sm-flex-direction-c">
                             {/* <span>{i18n._('key-unused-{i18n._('key-Workspace/Marlin-Actual Data Title')}')}</span> */}
                             <span>{i18n._('key-Workspace/Marlin-Actual Data Title')}</span>
-                            <span>{Math.floor(this.props.nozzleRightTemperature)} °C</span>
+                            <span>{Math.floor(this.props.nozzleRightTemperature)}°C</span>
                         </div>
                         <div className="width-40 sm-flex sm-flex-direction-c margin-left-16">
                             {/* <span>{i18n._('key-unused-{i18n._('key-Workspace/Marlin-Target Data Title')}')}</span> */}
                             <span>{i18n._('key-Workspace/Marlin-Target Data Title')}</span>
-                            <span>{Math.floor(this.props.nozzleRightTargetTemperature)} °C</span>
+                            <span>{Math.floor(this.props.nozzleRightTargetTemperature)}°C</span>
                         </div>
                     </ParamsWrapper>
                 )}
-                {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && workflowStatus !== 'running' && (
+                {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && !this.isPrinting() && (
                     <div className="sm-flex justify-flex-end margin-vertical-8">
                         <div>
                             <Button
                                 priority="level-three"
                                 width="96px"
                                 className="display-inline"
-                                onClick={actions.onClickUnload}
+                                onClick={() => actions.onClickUnload(RIGHT_EXTRUDER_MAP_NUMBER)}
                             >
                                 {i18n._('key-unused-Unload')}
                             </Button>
@@ -264,7 +276,7 @@ class Printing extends PureComponent {
                                 className="margin-left-4 display-inline"
                                 priority="level-three"
                                 width="96px"
-                                onClick={actions.onClickLoad}
+                                onClick={() => actions.onClickLoad(RIGHT_EXTRUDER_MAP_NUMBER)}
                             >
                                 {i18n._('key-unused-Load')}
                             </Button>
@@ -342,6 +354,7 @@ const mapStateToProps = (state) => {
         // },
         currentWorkNozzle
     } = machine;
+    // const currentWorkNozzle = 'left';
     const { toolHead: printingToolhead } = workspace;
     return {
         isConnected,

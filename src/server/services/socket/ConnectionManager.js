@@ -360,7 +360,8 @@ class ConnectionManager {
 
     loadFilament = (socket, options) => {
         if (this.protocol === SACP_PROTOCOL) {
-            this.socket.loadFilament();
+            const { extruderIndex } = options;
+            this.socket.loadFilament(extruderIndex);
         } else {
             if (this.connectionType === CONNECTION_TYPE_WIFI) {
                 this.socket.loadFilament(options);
@@ -374,7 +375,8 @@ class ConnectionManager {
 
     unloadFilament = (socket, options) => {
         if (this.protocol === SACP_PROTOCOL) {
-            this.socket.unloadFilament();
+            const { extruderIndex } = options;
+            this.socket.unloadFilament(extruderIndex);
         } else {
             if (this.connectionType === CONNECTION_TYPE_WIFI) {
                 this.socket.unloadFilament(options);
@@ -388,8 +390,8 @@ class ConnectionManager {
 
     updateWorkSpeedFactor = (socket, options) => {
         if (this.protocol === SACP_PROTOCOL) {
-            const { headType, workSpeed, extruderIndex } = options;
-            this.socket.updateWorkSpeed(headType, workSpeed, extruderIndex);
+            const { toolHead, workSpeed, extruderIndex } = options;
+            this.socket.updateWorkSpeed(toolHead, workSpeed, extruderIndex);
         } else {
             if (this.connectionType === CONNECTION_TYPE_WIFI) {
                 this.socket.updateWorkSpeedFactor(options);
@@ -535,7 +537,8 @@ class ConnectionManager {
     };
 
     updateZOffset = (socket, options) => {
-        this.socket.updateZOffset(options);
+        const { extruderIndex, direction, distance } = options;
+        this.socket.updateZOffset(extruderIndex, direction, distance);
     };
 
     getLaserMaterialThickness = (socket, options) => {

@@ -18,7 +18,7 @@ class WorkSpeed extends PureComponent {
         workflowStatus: PropTypes.string,
         connectionType: PropTypes.string,
         // server: PropTypes.object,
-        headType: PropTypes.string.isRequired,
+        toolHead: PropTypes.string.isRequired,
     };
 
 
@@ -43,11 +43,9 @@ class WorkSpeed extends PureComponent {
             this.setState({
                 workSpeed: workSpeedValue
             });
-            console.log(this.props.headType);
-
             controller.emitEvent(CONNECTION_WORKSPEED_FACTOR, {
                 workSpeed: workSpeedValue,
-                headType: this.props.headType,
+                toolHead: this.props.toolHead, // DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
                 // extruderIndex: ,
             });
             // DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
@@ -66,8 +64,10 @@ class WorkSpeed extends PureComponent {
             <ParamsWrapper
                 handleSubmit={(value) => { console.log('onChangeWorkSpeedValue', value); actions.onClickWorkSpeed(value); }}
                 initValue={workSpeed}
-                title={i18n._('key-Workspace/Marlin-Target Data Title')}
+                title={i18n._('key-Workspace/Marlin-Work Speed')}
                 suffix="%"
+                inputMax={1}
+                inputMin={500}
             >
                 <div className="width-40 sm-flex align-center margin-left-16 ">
                     <span>{workSpeedValue} %</span>
@@ -101,13 +101,13 @@ class WorkSpeed extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
     const { workflowStatus, connectionType, server } = machine;
-    const { headType } = state.workspace;
+    const { toolHead } = state.workspace;
 
     return {
         workflowStatus,
         connectionType,
         server,
-        headType
+        toolHead
     };
 };
 

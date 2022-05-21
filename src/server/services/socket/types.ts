@@ -35,6 +35,8 @@ export type MarlinStateData = {
     status?: string, // for workflow status
     laserFocalLength?: number,
     laserPower?: number,
+    nozzleStatus?: number,
+    nozzleRightStatus?: number
     nozzleTemperature?: number,
     nozzleTargetTemperature?: number,
     nozzleRightTemperature?: number,
@@ -50,5 +52,8 @@ export type MarlinStateData = {
     moduleStatusList?: object,
     laserCamera?: boolean,
     pos?: object,
-    originOffset?: object
+    originOffset?: object,
+    cncCurrentSpindleSpeed?: number,
+    cncTargetSpindleSpeed?: number,
+    currentWorkNozzle?: string,
 };

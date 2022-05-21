@@ -14,7 +14,7 @@ import ModuleInfo from '../../../lib/SACP-SDK/SACP/business/models/ModuleInfo';
 import MovementInstruction, { MoveDirection } from '../../../lib/SACP-SDK/SACP/business/models/MovementInstruction';
 import LaserCalibration from '../../../lib/SACP-SDK/SACP/business/models/LaserCalibration';
 import SetLaserPower from '../../../lib/SACP-SDK/SACP/business/models/SetLaserPower';
-import { readFloat, readString, readUint16, readUint32, readUint8, stringToBuffer, writeFloat, writeInt16, writeInt8, writeUint16, writeUint32, writeUint8 } from '../../../lib/SACP-SDK/SACP/helper';
+import { readFloat, readString, readUint16, readUint32, readUint8, stringToBuffer, writeBool, writeFloat, writeInt16, writeInt8, writeUint16, writeUint32, writeUint8 } from '../../../lib/SACP-SDK/SACP/helper';
 import FdmToolHeadInfo from '../../../lib/SACP-SDK/SACP/business/models/FdmToolHeadInfo';
 import GetHotBed from '../../../lib/SACP-SDK/SACP/business/models/GetHotBed';
 import ExtruderOffset from '../../../lib/SACP-SDK/SACP/business/models/ExtruderOffset';
@@ -333,6 +333,7 @@ export default class Business extends Dispatcher {
 
     startPrint(md5: string, gcodeName: string, headType: number) {
         const info = new GcodeFileInfo(md5, gcodeName, headType);
+
         return this.send(0xac, 0x03, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
@@ -432,6 +433,8 @@ export default class Business extends Dispatcher {
 
     subscribeNozzleInfo({ interval = 1000 }, callback: ResponseCallback) {
         return this.subscribe(0x10, 0xa0, interval, callback).then(({ response, packet }) => {
+            console.log('response', JSON.stringify(response));
+            console.log('packet', JSON.stringify(packet));
             return { response, packet, data: {} };
         });
     }
@@ -525,7 +528,7 @@ export default class Business extends Dispatcher {
             let finalBuf = Buffer.alloc(0);
             inputStream.on('data', (buf) => {
                 // console.log('>-', buf);
-                //@ts-ignore
+                // @ts-ignore
                 finalBuf = Buffer.concat([finalBuf, buf]);
             });
             inputStream.on('end', () => {
@@ -610,7 +613,7 @@ export default class Business extends Dispatcher {
         this.setHandler(0xac, 0x02, async ({ param, packet }: RequestData) => {
             const batchBufferInfo = new BatchBufferInfo().fromBuffer(param);
             // const content = await readGcodeFileByLines(filePath);
-            console.log('lineNumber', batchBufferInfo.lineNumber, content.length);
+            // console.log('lineNumber', batchBufferInfo.lineNumber, content.length);
             let result = 0;
             const printBatchGcode = new PrintBatchGcode(batchBufferInfo.lineNumber, batchBufferInfo.lineNumber, content[batchBufferInfo.lineNumber]);
             if (batchBufferInfo.lineNumber === content.length - 1) {
@@ -622,6 +625,53 @@ export default class Business extends Dispatcher {
         });
         this.setHandler(0xac, 0x01, (request: RequestData) => {
             console.log({ request });
+        });
+    }
+
+    // TODO
+    setHotBedTemperature(key: number, zoneIndex: number, temperature: number) {
+        const buffer = Buffer.alloc(1 + 1 + 2, 0);
+        writeUint8(buffer, 0, key);
+        writeUint8(buffer, 1, zoneIndex);
+        writeInt16(buffer, 2, temperature);
+        return this.send(0x14, 0x02, PeerId.CONTROLLER, buffer).then(({ response, packet }) => {
+            // const hotBedInfo = new GetHotBed().fromBuffer(response.data);
+            return { response, packet, data: { } };
+        });
+    }
+
+    subscribeCncSpeedState({ interval = 1000 }, callback: ResponseCallback) {
+        return this.subscribe(0x11, 0xa0, interval, callback).then(({ response, packet }) => {
+            return { response, packet, data: {} };
+        });
+    }
+
+    setToolHeadSpeed(key: number, targetSpeed:number) {
+        const buffer = Buffer.alloc(1 + 4, 0);
+        writeUint8(buffer, 0, key);
+        writeUint32(buffer, 1, targetSpeed);
+        return this.send(0x11, 0x03, PeerId.CONTROLLER, buffer).then(({ response, packet }) => {
+            return { response, packet, data: {} };
+        });
+    }
+
+    switchCNC(key:number, status: boolean) {
+        const buffer = Buffer.alloc(1 + 1, 0);
+        writeUint8(buffer, 0, key);
+        writeBool(buffer, 1, status ? 1 : 0);
+        return this.send(0x11, 0x05, PeerId.CONTROLLER, buffer).then(({ response, packet }) => {
+            return { response, packet, data: {} };
+        });
+    }
+
+
+    setWorkSpeed(key: number, extruderIndex: number, targetSpeed:number) {
+        const buffer = Buffer.alloc(1 + 1 + 2, 0);
+        writeUint8(buffer, 0, key);
+        writeUint8(buffer, 1, extruderIndex);
+        writeInt16(buffer, 2, targetSpeed);
+        return this.send(0xac, 0x0e, PeerId.CONTROLLER, buffer).then(({ response, packet }) => {
+            return { response, packet, data: {} };
         });
     }
 }

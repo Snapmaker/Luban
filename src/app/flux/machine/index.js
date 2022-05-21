@@ -138,6 +138,10 @@ const INITIAL_STATE = {
     nozzleRightTargetTemperature: 0,
     heatedBedTemperature: 0,
     heatedBedTargetTemperature: 0,
+    nozzleStatus: 0,
+    nozzleRightStatus: 0,
+    cncTargetSpindleSpeed: 8000,
+    cncCurrentSpindleSpeed: 8000,
     laserCamera: false,
     isFilamentOut: false,
 
@@ -311,6 +315,9 @@ export const actions = {
             'Marlin:state': (options) => {
                 // Note: serialPort & Wifi -> for heartBeat
                 const { state } = options;
+                // console.log('==========================', state);
+                // console.log(state.moduleList);
+                // console.log(state.moduleStatusList);
                 const { headType, pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
                 const machineState = getState().machine;
                 if ((machineState.isRotate !== pos?.isFourAxis) && (headType === HEAD_LASER || headType === HEAD_CNC)) {
@@ -378,8 +385,14 @@ export const actions = {
                     moduleList: moduleStatusList,
                     laserCamera,
                     nozzleRightTargetTemperature,
-                    nozzleRightTemperature
+                    nozzleRightTemperature,
+                    cncTargetSpindleSpeed,
+                    cncCurrentSpindleSpeed,
+                    nozzleStatus,
+                    nozzleRightStatus,
+                    currentWorkNozzle,
                 } = state;
+                // console.log('************', moduleStatusList);
                 dispatch(baseActions.updateState({
                     laser10WErrorState,
                     workflowStatus: status,
@@ -421,12 +434,26 @@ export const actions = {
                         heatedBedTargetTemperature: heatedBedTargetTemperature
                     }));
                 }
+
+
                 if (!isNil(moduleStatusList)) {
                     dispatch(baseActions.updateState(moduleStatusList));
+                    const { airPurifier: sacpAirPurifier, enclosureOnline, emergencyStopOnline } = moduleStatusList;
+                    !isNil(sacpAirPurifier) && dispatch(baseActions.updateState({ airPurifier: sacpAirPurifier }));
+                    !isNil(enclosureOnline) && dispatch(baseActions.updateState({ enclosureOnline }));
+                    !isNil(emergencyStopOnline) && dispatch(baseActions.updateState({ emergencyStopOnline }));
                 }
                 if (!isNil(doorSwitchCount)) {
                     dispatch(baseActions.updateState(doorSwitchCount));
                 }
+
+
+                !isNil(cncTargetSpindleSpeed) && dispatch(baseActions.updateState({ cncTargetSpindleSpeed }));
+                !isNil(cncCurrentSpindleSpeed) && dispatch(baseActions.updateState({ cncCurrentSpindleSpeed }));
+                !isNil(nozzleStatus) && dispatch(baseActions.updateState({ nozzleStatus }));
+                !isNil(nozzleRightStatus) && dispatch(baseActions.updateState({ nozzleRightStatus }));
+                !isNil(currentWorkNozzle) && dispatch(baseActions.updateState({ currentWorkNozzle }));
+
                 !isNil(isEnclosureDoorOpen) && dispatch(baseActions.updateState(isEnclosureDoorOpen));
                 !isNil(zAxisModule) && dispatch(baseActions.updateState(zAxisModule));
                 !isNil(headStatus) && dispatch(baseActions.updateState(headStatus));
