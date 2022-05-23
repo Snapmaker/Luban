@@ -11,7 +11,7 @@ import api from '../api';
 import { checkIsImageSuffix } from '../../shared/lib/utils';
 import Resource from './Resource';
 import { SOURCE_TYPE, SVG_MOVE_MINI_DISTANCE } from '../constants';
-import BaseModel, { ModelTransformation, ModelInfo, TSize, TElem, TMode } from './BaseModel';
+import BaseModel, { ModelTransformation, ModelInfo, TSize, SvgModelElement, TMode } from './BaseModel';
 import ModelGroup from './ModelGroup';
 
 type TElementAttributes = {
@@ -67,24 +67,20 @@ function setElementTransformToList(transformList: SVGTransformList, transformati
     const center = pointModelToSvg({ x: positionX, y: positionY });
 
     const translateOrigin = svg.createSVGTransform();
-    // translateOrigin.tag = 'translateOrigin';
     translateOrigin.setTranslate(-center.x, -center.y);
     transformList.insertItemBefore(translateOrigin, 0);
 
     const scale = svg.createSVGTransform();
-    // scale.tag = 'scale';
     scale.setScale(scaleX, scaleY);
     transformList.insertItemBefore(scale, 0);
 
     const rotate = svg.createSVGTransform();
-    // rotate.tag = 'rotate';
     rotate.setRotate(-rotationZ / Math.PI * 180, 0, 0);
     transformList.insertItemBefore(rotate, 0);
 
     const translateBack = svg.createSVGTransform();
     translateBack.setTranslate(center.x, center.y);
     transformList.insertItemBefore(translateBack, 0);
-    // transformList.getItem(0).tag = 'translateBack';
 }
 
 type TVertexPoint = [number, number]
@@ -182,7 +178,7 @@ class SvgModel extends BaseModel {
         return -this.y + this.size.y;
     }
 
-    public static getTransformList(elem: TElem) {
+    public static getTransformList(elem: SvgModelElement) {
         const transform = elem.transform;
         if (!transform) {
             elem.setAttribute('transform', 'translate(0,0)');
@@ -190,7 +186,7 @@ class SvgModel extends BaseModel {
         return transform.baseVal;
     }
 
-    public static getElementTransform(element: TElem) {
+    public static getElementTransform(element: SvgModelElement) {
         const { x, y, width, height } = element.getBBox();
 
         const transformList = SvgModel.getTransformList(element);
@@ -210,7 +206,7 @@ class SvgModel extends BaseModel {
         };
     }
 
-    public static initializeElementTransform(element: TElem) {
+    public static initializeElementTransform(element: SvgModelElement) {
         // if (element.transform) {
         //     return;
         // }
@@ -237,7 +233,7 @@ class SvgModel extends BaseModel {
     /**
      * On transform complete, normalize transform list.
      */
-    public static completeElementTransform(element: TElem) {
+    public static completeElementTransform(element: SvgModelElement) {
         // normalize transform list
         const transformList = SvgModel.getTransformList(element);
 
@@ -350,7 +346,7 @@ class SvgModel extends BaseModel {
         // emit event?
     }
 
-    public static recalculateElementAttributes(element: TElem, t: TElementAttributes) {
+    public static recalculateElementAttributes(element: SvgModelElement, t: TElementAttributes) {
         const { x, y, width = 0, height = 0, angle } = t;
         let { scaleX, scaleY } = t;
         let { imageWidth = 0, imageHeight = 0 } = t;
@@ -419,7 +415,7 @@ class SvgModel extends BaseModel {
         SvgModel.updatePathPreSelectionArea(element);
     }
 
-    public static recalculateElementTransformList(element: TElem, t: TElementTransformList) {
+    public static recalculateElementTransformList(element: SvgModelElement, t: TElementTransformList) {
         const { x, y, scaleX, scaleY, angle } = t;
         const transformList = SvgModel.getTransformList(element);
 
@@ -446,7 +442,7 @@ class SvgModel extends BaseModel {
         transformList.insertItemBefore(translateToPosition, 0);
     }
 
-    public static updatePathPreSelectionArea(element: TElem) {
+    public static updatePathPreSelectionArea(element: SvgModelElement) {
         if (element && element.nodeName === 'path') {
             const d = element.getAttribute('d');
             const id = element.getAttribute('id');
@@ -1234,7 +1230,7 @@ class SvgModel extends BaseModel {
 
         // clone.setMatrix(this.meshObject.matrixWorld);
         clone.meshObject.parent = this.meshObject.parent;
-        clone.elem = this.elem.cloneNode(true) as TElem; // <text> element has a text child node
+        clone.elem = this.elem.cloneNode(true) as SvgModelElement; // <text> element has a text child node
 
         return clone;
     }

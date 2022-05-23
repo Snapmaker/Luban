@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { Box2, Mesh, Object3D } from 'three';
 import { v4 as uuid } from 'uuid';
 import { PROCESS_MODE_BW, PROCESS_MODE_GREYSCALE, PROCESS_MODE_HALFTONE, PROCESS_MODE_MESH, PROCESS_MODE_VECTOR } from '../../server/constants';
-import { SOURCE_TYPE } from '../constants';
+import { HEAD_CNC, HEAD_LASER, SOURCE_TYPE } from '../constants';
 import type ModelGroup from './ModelGroup';
 
 export interface ModelTransformation {
@@ -39,7 +39,7 @@ export type TSize = {
     z: number;
 };
 
-export type TElem = SVGRectElement | SVGCircleElement | SVGPathElement | SVGImageElement;
+export type SvgModelElement = SVGRectElement | SVGCircleElement | SVGPathElement | SVGImageElement;
 
 export type TMode = typeof PROCESS_MODE_BW
     | typeof PROCESS_MODE_HALFTONE
@@ -51,8 +51,8 @@ export type ModelInfo = {
     modelID?: string,
     parentModelID?: string,
     limitSize?: Object,
-    headType?: string,
-    sourceType: '2d',
+    headType?: typeof HEAD_LASER | typeof HEAD_CNC,
+    sourceType: 'svg' | 'image3d' | 'raster' | 'dxf' | '3d',
     sourceHeight?: number,
     sourceWidth?: number,
     originalName?: string,
@@ -77,7 +77,7 @@ export type ModelInfo = {
     color?: string;
     width?: number;
     height?: number;
-    elem: TElem;
+    elem: SvgModelElement;
     size: TSize
 };
 
@@ -85,40 +85,37 @@ export type ModelInfo = {
 // BaseModel only do data process
 // isolated from Model.js which renamed to ThreeModel.js
 abstract class BaseModel {
-    public visible: boolean = true;
+    public headType: typeof HEAD_LASER | typeof HEAD_CNC;
 
     public modelGroup: ModelGroup = null;
 
     public modelID: string = '';
     public originModelID: string = '';
+    public originalName: string;
     public modelName: string = '';
     public uploadImageName: string = '';
     public sourceType: SOURCE_TYPE;
-    public modelObject3D?: Object3D;
+    public sourceHeight: number;
+    public sourceWidth: number;
     public processObject3D?: Object3D;
-
-    public transformation: ModelTransformation = DEFAULT_TRANSFORMATION;
-
+    public modelObject3D?: Object3D;
     public meshObject: THREE.Mesh & { uniformScalingState?: boolean };
+    public parent: SVGGElement;
+
+    public mode: TMode;
 
     public width: number;
     public height: number;
-    public elem: TElem;
+    public elem: SvgModelElement;
     public size: TSize
-    public sourceHeight: number;
-    public sourceWidth: number;
+    public transformation: ModelTransformation = DEFAULT_TRANSFORMATION;
+    public visible: boolean = true;
 
     public boundingBox: Box2;
-
-    public headType: string;
-    public originalName: string;
     public limitSize: number
 
-    // TODO
     public config: Record<string, string | number | boolean> = {}
-    public mode: TMode;
 
-    public parent: SVGGElement;
 
     /**
      * for cnc model visualizer

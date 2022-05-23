@@ -10,12 +10,11 @@ import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
 import { ModelInfo as SVGModelInfo, TMode, TSize } from './BaseModel';
 import ThreeModel from './ThreeModel';
 import SvgModel from './SvgModel';
-import { EPSILON, SELECTEVENT } from '../constants';
+import { EPSILON, SELECTEVENT, HEAD_TYPE, HEAD_PRINTING } from '../constants';
 
 import ThreeUtils from '../three-extensions/ThreeUtils';
 import ThreeGroup from './ThreeGroup';
 import PrimeTowerModel from './PrimeTowerModel';
-import { HEAD_PRINTING } from '../../server/constants';
 import { calculateUvVector } from '../lib/threejs/ThreeStlCalculation';
 
 const EVENTS = {
@@ -53,41 +52,28 @@ type TMaterials = {
 }
 
 class ModelGroup extends EventEmitter {
-    public _bbox: Box3;
-
     public object: Group;
     public grayModeObject: Group;
     public models: (TModel | PrimeTowerModel)[];
     public selectedModelArray: TModel[];
-
+    public _bbox: Box3;
     public materials: TMaterials;
-
     private groupsChildrenMap: Map<ThreeGroup, (string | ThreeModel)[]> = new Map();
-
     private brushMesh: Mesh<SphereBufferGeometry, MeshStandardMaterial> = null;
-
-    private headType: 'printing' | 'laser' | 'cnc';
-
-    private selectedGroup: Group;
-
+    private headType: HEAD_TYPE;
     private clipboard: TModel[];
-
     private estimatedTime: number;
-
+    private selectedGroup: Group;
+    private selectedModelConvexMeshGroup: Group;
+    private selectedToolPathModelIDs: string[];
+    private onDataChangedCallback: () => void;
+    private primeTowerHeightCallback: (height: number) => void;
     private candidatePoints: {
         x: number;
         y: number;
     }[];
 
-    private selectedModelConvexMeshGroup: Group;
-
-    private selectedToolPathModelIDs: string[];
-
-    private onDataChangedCallback: () => void;
-
-    private primeTowerHeightCallback: (height: number) => void;
-
-    public constructor(headType: 'printing' | 'laser' | 'cnc') {
+    public constructor(headType: HEAD_TYPE) {
         super();
 
         this.headType = headType;
@@ -118,7 +104,7 @@ class ModelGroup extends EventEmitter {
 
     // model factory
     public newModel(modelInfo: ModelInfo | SVGModelInfo) {
-        if (this.headType === 'printing') {
+        if (this.headType === HEAD_PRINTING) {
             return new ThreeModel(modelInfo as ModelInfo, this);
         } else {
             return new SvgModel(modelInfo as unknown as SVGModelInfo, this);
@@ -160,7 +146,7 @@ class ModelGroup extends EventEmitter {
             estimatedTime: this.estimatedTime,
             hasModel: this.hasModel()
         };
-        if (this.headType === 'printing' && shouldCheckOverStep) {
+        if (this.headType === HEAD_PRINTING && shouldCheckOverStep) {
             return {
                 ...baseState,
                 isAnyModelOverstepped: this._checkAnyModelOversteppedOrSelected()
@@ -896,7 +882,7 @@ class ModelGroup extends EventEmitter {
     public unselectAllModels() {
         const cancelSelectedModels = this.selectedModelArray.slice(0) as Model3D[];
         this.selectedModelArray = [];
-        if (this.headType === 'printing') {
+        if (this.headType === HEAD_PRINTING) {
             this.models.forEach((model) => {
                 if (model instanceof ThreeGroup) {
                     model.children.forEach((subModel) => {
@@ -1631,7 +1617,7 @@ class ModelGroup extends EventEmitter {
      * @returns {TModel}
      */
     public addModel(modelInfo: ModelInfo | SVGModelInfo) {
-        if (modelInfo.sourceType === '3d' && modelInfo.isGroup) {
+        if (modelInfo.headType === HEAD_PRINTING && modelInfo.isGroup) {
             const group = new ThreeGroup(modelInfo, this);
             group.updateTransformation(modelInfo.transformation);
             this.groupsChildrenMap.set(group, modelInfo.children.map((item) => {
@@ -1641,7 +1627,7 @@ class ModelGroup extends EventEmitter {
         }
         if (!modelInfo.modelName) {
             modelInfo.modelName = this._createNewModelName({
-                sourceType: modelInfo.sourceType,
+                sourceType: modelInfo.sourceType as '3d' | '2d',
                 mode: modelInfo?.mode as unknown as TMode,
                 originalName: modelInfo.originalName,
                 config: modelInfo.config as {
@@ -1750,13 +1736,10 @@ class ModelGroup extends EventEmitter {
      * @returns modelName
      */
     public _createNewModelName(model: {
-        sourceType: '3d',
-        originalName: string,
-    } | {
-        sourceType: '2d',
+        sourceType: string,
         originalName: string,
         config?: { svgNodeName: string },
-        mode: TMode
+        mode?: unknown
     }) {
         let baseName = '';
         if (model.sourceType === '3d') {

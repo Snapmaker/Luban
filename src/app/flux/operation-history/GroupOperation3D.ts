@@ -5,6 +5,8 @@ import type ModelGroup from '../../models/ModelGroup';
 import { ModelTransformation } from '../../models/ThreeBaseModel';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 
+type Model = ThreeGroup | ThreeModel
+
 type ModelSnapshot = {
     groupModelID: string,
     modelTransformation: ModelTransformation,
@@ -12,8 +14,8 @@ type ModelSnapshot = {
 }
 
 type GroupState = {
-    modelsBeforeGroup: (ThreeGroup | ThreeModel)[],
-    modelsAfterGroup: (ThreeGroup | ThreeModel)[],
+    modelsBeforeGroup: Model[],
+    modelsAfterGroup: Model[],
     selectedModels: Array<ThreeModel | ThreeGroup>,
     target: ThreeGroup,
     modelGroup: ModelGroup,

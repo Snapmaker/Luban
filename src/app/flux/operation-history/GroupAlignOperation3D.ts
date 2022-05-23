@@ -4,10 +4,12 @@ import ThreeGroup from '../../models/ThreeGroup';
 import type ModelGroup from '../../models/ModelGroup';
 import { ModelTransformation } from '../../models/ThreeBaseModel';
 
+type Model = ThreeGroup | ThreeModel;
+
 type GroupState = {
-    modelsbeforeGroup: (ThreeGroup | ThreeModel)[],
-    modelsafterGroup: (ThreeGroup | ThreeModel)[],
-    selectedModels: ThreeModel[] | ThreeGroup[],
+    modelsbeforeGroup: Model[],
+    modelsafterGroup: Model[],
+    selectedModels: Model[],
     groupChildrenMap: Map<ThreeGroup, ThreeModel[]>
     selectedModelsPositionMap: Map<string, ModelTransformation>
     target: ThreeGroup,
@@ -78,7 +80,7 @@ export default class GroupAlginOperation3D extends Operation<GroupState> {
         this.state.selectedModelsPositionMap.forEach((position: ModelTransformation, modelID: string) => {
             modelGroup.selectModelById(modelID);
             modelGroup.updateSelectedGroupTransformation(position);
-            const model = modelGroup.selectedModelArray[0] as ThreeGroup | ThreeModel;
+            const model = modelGroup.selectedModelArray[0] as Model;
             const overstepped = modelGroup._checkOverstepped(model);
             model.setOversteppedAndSelected(overstepped, model.isSelected);
 

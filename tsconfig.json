@@ -11,10 +11,7 @@
         "preserveConstEnums": true,
         "useDefineForClassFields": true,
         "noEmit": false,
-        "strictFunctionTypes": true,
-        "typeRoots": [
-            "types"
-        ]
+        "strictFunctionTypes": true
     },
     "include": [
         "./src/**/*"

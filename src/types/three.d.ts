@@ -11,12 +11,7 @@ declare module 'three' {
         public uniformScalingState?: boolean;
         public boundingBox?: Box3[];
         public shouldUpdateBoundingbox?: boolean
-
         public children: MyObject3D[]
-        // THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial | THREE.MeshLambertMaterial> & { uniformScalingState?: boolean }
-        // public children: (Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial | THREE.MeshLambertMaterial> & {
-        //     uniformScalingState?: boolean;
-        // })[];
         constructor();
     }
 }

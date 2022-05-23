@@ -881,6 +881,7 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
     }
 };
 
+// @ts-ignore
 const publicPath = global.PUBLIC_PATH || '';
 export const DATA_PATH = `${publicPath}/data`;
 
@@ -925,6 +926,8 @@ export const HEAD_PRINTING = 'printing';
 export const HEAD_LASER = 'laser';
 export const HEAD_CNC = 'cnc';
 export const HEAD_UNKNOWN = 'unknown';
+export type HEAD_TYPE = typeof HEAD_PRINTING | typeof HEAD_LASER | typeof HEAD_CNC;
+
 
 export const CONNECTION_TYPE_SERIAL = 'serial';
 export const CONNECTION_TYPE_WIFI = 'wifi';
@@ -1251,7 +1254,8 @@ export enum SOURCE_TYPE {
     SVG = 'svg',
     TEXT = 'text',
     RASTER = 'raster',
-    IMAGE3D = 'image3d'
+    IMAGE3D = 'image3d',
+    DXF = 'dxf'
 }
 
 export const PROCESS_MODE_BW = 'bw';

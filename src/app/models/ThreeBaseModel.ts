@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { v4 as uuid } from 'uuid';
-import { TElem } from './BaseModel';
+import { HEAD_PRINTING } from '../constants';
+import { SvgModelElement } from './BaseModel';
 import type ModelGroup from './ModelGroup';
 import type ThreeGroup from './ThreeGroup';
 
@@ -34,7 +35,7 @@ export type ModelInfo = {
     modelID?: string,
     parentModelID?: string,
     limitSize?: Object,
-    headType?: 'printing',
+    headType?: typeof HEAD_PRINTING,
     sourceType?: '3d',
     sourceHeight?: number,
     sourceWidth?: number,
@@ -59,7 +60,7 @@ export type ModelInfo = {
     height?: number;
     isGroup?: boolean;
     // svg
-    elem?: TElem;
+    elem?: SvgModelElement;
     size?: TSize;
 };
 
@@ -81,8 +82,8 @@ const DEFAULT_TRANSFORMATION: ModelTransformation = {
 // BaseModel only do data process
 // isolated from Model.js which renamed to ThreeModel.js
 export default class BaseModel {
-    public headType: 'printing' = 'printing';
-    public sourceType: '3d' = '3d'; // TODO remove
+    public headType: typeof HEAD_PRINTING = HEAD_PRINTING;
+    public sourceType: '3d' = '3d';
 
     public modelID: string;
     public originModelID: string;
@@ -111,7 +112,7 @@ export default class BaseModel {
 
     public extruderConfig: ExtruderConfig;
 
-    public mode: string; // TODO
+    public mode: '3d';
 
     protected displayedType: string = 'model';
 
