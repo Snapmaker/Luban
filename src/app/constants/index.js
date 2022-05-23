@@ -1497,7 +1497,7 @@ export const SERIAL_MAP_SACP = {
     '3': 'A400'
 };
 
-export const PRINTING_MODULE = [1, 13];
+export const PRINTING_MODULE = [0, 13];
 export const LASER_MODULE = [2, 14];
 export const CNC_MODULE = [1, 15];
 export const EMERGENCY_STOP_BUTTON = [8, 517];

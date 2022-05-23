@@ -10,13 +10,15 @@ import SvgIcon from '../../components/SvgIcon';
 import WorkSpeed from './WorkSpeed';
 import { actions as machineActions } from '../../../flux/machine';
 import {
-    CONNECTION_TYPE_WIFI,
+    // CONNECTION_TYPE_WIFI,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
     WORKFLOW_STATUS_PAUSED,
     WORKFLOW_STATUS_RUNNING,
-    WORKFLOW_STATE_PAUSED,
-    WORKFLOW_STATE_RUNNING, CONNECTION_TYPE_SERIAL, CONNECTION_LASER_POWER,
+    // WORKFLOW_STATE_PAUSED,
+    // WORKFLOW_STATE_RUNNING, CONNECTION_TYPE_SERIAL,
+    CONNECTION_LASER_POWER,
     CONNECTION_SWITCH_LASER_POWER,
+    WORKFLOW_STATUS_PAUSING,
 } from '../../../constants';
 import { controller } from '../../../lib/controller';
 import ParamsWrapper from './ParamsWrapper';
@@ -26,8 +28,8 @@ class Laser extends PureComponent {
         headStatus: PropTypes.bool,
         laserPower: PropTypes.number,
         workflowStatus: PropTypes.string,
-        workflowState: PropTypes.string,
-        connectionType: PropTypes.string,
+        // workflowState: PropTypes.string,
+        // connectionType: PropTypes.string,
         isConnected: PropTypes.bool,
         toolHead: PropTypes.string,
         addConsoleLogs: PropTypes.func.isRequired,
@@ -49,9 +51,8 @@ class Laser extends PureComponent {
 
     actions = {
         isPrinting: () => {
-            const { workflowStatus, workflowState, connectionType } = this.props;
-            return (_.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus) && connectionType === CONNECTION_TYPE_WIFI)
-                || (_.includes([WORKFLOW_STATE_PAUSED, WORKFLOW_STATE_RUNNING], workflowState) && connectionType === CONNECTION_TYPE_SERIAL);
+            const { workflowStatus } = this.props;
+            return (_.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_PAUSING], workflowStatus));
         },
         onChangeLaserPower: (value) => {
             this.setState({

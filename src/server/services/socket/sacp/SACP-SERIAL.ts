@@ -132,6 +132,15 @@ class SocketSerialNew extends SocketBASE {
     }
 
     public startGcode = async (options: EventOptions) => {
+        const { headType } = options;
+        let type = 0;
+        if (headType === HEAD_PRINTING) {
+            type = 0;
+        } else if (headType === HEAD_LASER) {
+            type = 2;
+        } else if (headType === HEAD_CNC) {
+            type = 1;
+        }
         const gcodeFilePath = `${DataStorage.tmpDir}/${options.uploadName}`;
         await this.goHome();
         await this.sacpClient.startPrintSerial(gcodeFilePath, ({ lineNumber, length, elapsedTime: sliceTime }) => {
@@ -153,11 +162,13 @@ class SocketSerialNew extends SocketBASE {
             md5.update(buf);
         });
         readStream.once('end', () => {
-            this.sacpClient.startPrint(md5.digest().toString('hex'), options.uploadName, 0).then(({ response }) => {
+            this.sacpClient.startPrint(md5.digest().toString('hex'), options.uploadName, type).then(({ response }) => {
+                log.info(`startPrinting: ${response.result}`);
                 this.startTime = new Date().getTime();
             });
         });
     }
 }
+
 
 export default new SocketSerialNew();

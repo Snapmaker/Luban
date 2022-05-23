@@ -336,6 +336,7 @@ class SocketBASE {
             return;
         }
 
+        log.info(`updateWorkSpeed headModule.key: ${headModule.key}, extruderIndex: ${extruderIndex}, workSpeed: ${workSpeed}}`);
         const leftResponse = await this.sacpClient.setWorkSpeed(headModule.key, extruderIndex, workSpeed);
         log.info(`updateWorkSpeed leftResponse, ${JSON.stringify(leftResponse)}`);
 

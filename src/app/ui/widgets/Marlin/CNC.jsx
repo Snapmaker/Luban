@@ -8,12 +8,13 @@ import i18n from '../../../lib/i18n';
 import Switch from '../../components/Switch';
 import {
     CONNECTION_SWITCH_CNC,
-    CONNECTION_TYPE_SERIAL,
-    CONNECTION_TYPE_WIFI,
+    // CONNECTION_TYPE_SERIAL,
+    // CONNECTION_TYPE_WIFI,
     CONNECTION_UPDATE_TOOLHEAD_SPEED,
     LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
-    WORKFLOW_STATE_PAUSED, WORKFLOW_STATE_RUNNING,
+    // WORKFLOW_STATE_PAUSED, WORKFLOW_STATE_RUNNING,
     WORKFLOW_STATUS_PAUSED,
+    WORKFLOW_STATUS_PAUSING,
     WORKFLOW_STATUS_RUNNING
 } from '../../../constants';
 import { controller } from '../../../lib/controller';
@@ -24,8 +25,8 @@ class Printing extends PureComponent {
     static propTypes = {
         headStatus: PropTypes.bool,
         workflowStatus: PropTypes.string,
-        workflowState: PropTypes.string,
-        connectionType: PropTypes.string,
+        // workflowState: PropTypes.string,
+        // connectionType: PropTypes.string,
         toolHead: PropTypes.string.isRequired,
         cncCurrentSpindleSpeed: PropTypes.number.isRequired,
         cncTargetSpindleSpeed: PropTypes.number.isRequired
@@ -61,9 +62,8 @@ class Printing extends PureComponent {
             });
         },
         isPrinting: () => {
-            const { workflowStatus, workflowState, connectionType } = this.props;
-            const _isPrinting = (_.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus) && connectionType === CONNECTION_TYPE_WIFI)
-            || (_.includes([WORKFLOW_STATE_PAUSED, WORKFLOW_STATE_RUNNING], workflowState) && connectionType === CONNECTION_TYPE_SERIAL);
+            const { workflowStatus } = this.props;
+            const _isPrinting = _.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_PAUSING], workflowStatus);
             console.log('isPrinting', _isPrinting);
             return _isPrinting;
         }
@@ -94,7 +94,7 @@ class Printing extends PureComponent {
                     )}
                 {!isPrinting && (
                     <div className="sm-flex-overflow-visible margin-vertical-8 justify-space-between">
-                        <div className="height-32 width-176 display-inline text-overflow-ellipsis">{i18n._('key-Workspace/Marlin-Toolhead Speed')}</div>
+                        <div className="height-32 width-176 display-inline text-overflow-ellipsis">{i18n._('key-unused-Toolhead')}</div>
                         <div className="sm-flex margin-left-24 overflow-visible align-center">
                             <Switch
                                 className="sm-flex-auto"
