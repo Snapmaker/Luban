@@ -98,20 +98,25 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
         }
     }, [isConnected, currentWorkflowStatus, sent, total, widgetActions]);
     const handleMachine = (type) => {
-        switch (type) {
-            case 'run':
-                controlActions.onCallBackRun();
-                break;
-            case 'pause':
-                setIsPausing(true);
-                controlActions.onCallBackPause();
-                break;
-            case 'stop':
-                setShowStopComfirmModal(true);
-                // controlActions.onCallBackStop();
-                break;
-            default:
-                break;
+        try {
+            switch (type) {
+                case 'run':
+                    controlActions.onCallBackRun();
+                    break;
+                case 'pause':
+                    setIsPausing(true);
+                    controlActions.onCallBackPause();
+                    break;
+                case 'stop':
+                    setShowStopComfirmModal(true);
+                    // controlActions.onCallBackStop();
+                    break;
+                default:
+                    break;
+            }
+        } catch (e) {
+            console.error(e);
+            setIsPausing(false);
         }
     };
 

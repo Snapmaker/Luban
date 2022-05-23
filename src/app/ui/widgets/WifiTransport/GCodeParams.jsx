@@ -14,6 +14,7 @@ const GCodeParams = (props) => {
         let tmpGcodeFile;
         const defaultGcodeFile = {
             type: { key: 'key-Workspace/GCodeParams-GCode Type', value: props.gcodeFile.type },
+            nozzle_temperature: { key: 'key-Workspace/GCodeParams-Nozzle temperature', value: `${props.gcodeFile.nozzle_temperature}°C` },
             work_speed: { key: 'key-Workspace/GCodeParams-Work speed', value: `${props.gcodeFile.work_speed}mm/min` },
             estimated_time: { key: 'key-Workspace/GCodeParams-Estimated time', value: `${humanReadableTime(props.gcodeFile.estimated_time)}s` },
         };
@@ -21,29 +22,36 @@ const GCodeParams = (props) => {
         switch (props.gcodeFile.type) {
             case '3dp': {
                 tmpGcodeFile = {
-                    ...defaultGcodeFile,
+                    type: defaultGcodeFile.type,
+                    nozzle_temperature: { key: 'key-Workspace/GCodeParams-Left nozzle temperature', value: `${props.gcodeFile.nozzle_temperature}°C` },
+                    nozzle_1_temperature: { key: 'key-Workspace/GCodeParams-Right nozzle temperature', value: `${props.gcodeFile.nozzle_1_temperature}°C` },
+                    work_speed: defaultGcodeFile.work_speed,
+                    estimated_time: defaultGcodeFile.estimated_time,
                     build_plate_temperature: { key: 'key-Workspace/GCodeParams-Build plate temperature', value: `${props.gcodeFile.build_plate_temperature}°C` },
-                    nozzle_temperature: { key: 'key-Workspace/GCodeParams-Nozzle temperature', value: `${props.gcodeFile.nozzle_temperature}°C` },
                     matierial_weight: { key: 'key-Workspace/GCodeParams-Matierial weight', value: `${props.gcodeFile.matierial_weight.toFixed(1)}g` },
                 };
                 if (isDualExture) {
-                    tmpGcodeFile.nozzle_temperature = { key: 'key-Workspace/GCodeParams-Left nozzle temperature', value: `${props.gcodeFile.nozzle_1_temperature}°C` };
+                    // tmpGcodeFile.nozzle_temperature = { key: 'key-Workspace/GCodeParams-Left nozzle temperature', value: `${props.gcodeFile.nozzle_1_temperature}°C` };
                     tmpGcodeFile.nozzle_1_temperature = { key: 'key-Workspace/GCodeParams-Right nozzle temperature', value: `${props.gcodeFile.nozzle_1_temperature}°C` };
                 }
                 break;
             }
             case 'laser': {
                 tmpGcodeFile = {
-                    ...defaultGcodeFile,
-                    jog_speed: { key: 'key-Workspace/GCodeParams-Jog speed', value: `${props.gcodeFile.jog_speed}s` },
+                    type: defaultGcodeFile.type,
                     power: { key: 'key-Workspace/GCodeParams-Power', value: `${props.gcodeFile.power}%` },
+                    work_speed: defaultGcodeFile.work_speed,
+                    jog_speed: { key: 'key-Workspace/GCodeParams-Jog speed', value: `${props.gcodeFile.jog_speed}mm/min` },
+                    estimated_time: defaultGcodeFile.estimated_time,
                 };
                 break;
             }
             case 'cnc': {
                 tmpGcodeFile = {
-                    ...defaultGcodeFile,
+                    type: defaultGcodeFile.type,
+                    work_speed: defaultGcodeFile.work_speed,
                     jog_speed: { key: 'key-Workspace/GCodeParams-Jog speed', value: `${props.gcodeFile.jog_speed}mm/min` },
+                    estimated_time: defaultGcodeFile.estimated_time,
                 };
                 break;
             }
