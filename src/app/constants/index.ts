@@ -1108,9 +1108,9 @@ export const MACHINE_SERIES = {
         label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A400',
         setting: {
             size: {
-                x: 400,
-                y: 400,
-                z: 400
+                x: 410,
+                y: 410,
+                z: 420
             },
             laserSize: {
                 x: 410,
@@ -1307,6 +1307,18 @@ export const MACHINE_TOOL_HEADS = {
         pathname: 'standard',
         label: 'key-App/Settings/MachineSettings-Standard CNC',
         // mock offset data
+        offset: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    },
+    [LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2]: {
+        platform: [MACHINE_SERIES.A400.value],
+        value: LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
+        key: 'levelTwoCNCToolheadForSM2',
+        pathname: 'standard', // if have high power cnc profiles, should be update
+        label: 'key-App/Settings/MachineSettings-High CNC',
         offset: {
             x: 0,
             y: 0,

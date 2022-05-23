@@ -476,7 +476,8 @@ class SocketTCP extends SocketBASE {
         readStream.once('end', () => {
             this.sacpClient.startScreenPrint({
                 headType: type, filename: uploadName, hash: md5.digest().toString('hex')
-            }).then(() => {
+            }).then((res) => {
+                log.info(`start printing: ${res.response.result}`);
                 this.socket && this.socket.emit(eventName, {
                     msg: '', res: null
                 });

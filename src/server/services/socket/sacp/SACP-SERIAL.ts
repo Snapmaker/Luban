@@ -54,6 +54,7 @@ class SocketSerialNew extends SocketBASE {
             });
             this.serialport.once('open', () => {
                 log.debug(`${options.port ?? this.availPorts[0].path} opened`);
+                // this.serialport.write('M1006\r\n');
                 this.serialport.write('M2000 S5 P1\r\n');
                 setTimeout(async () => {
                     // TO DO: Need to get seriesSize for 'connection:connected' event
@@ -114,6 +115,15 @@ class SocketSerialNew extends SocketBASE {
     }
 
     public startGcode = async (options: EventOptions) => {
+        const { headType } = options;
+        let type = 0;
+        if (headType === HEAD_PRINTING) {
+            type = 0;
+        } else if (headType === HEAD_LASER) {
+            type = 2;
+        } else if (headType === HEAD_CNC) {
+            type = 1;
+        }
         const gcodeFilePath = `${DataStorage.tmpDir}/${options.uploadName}`;
         await this.goHome();
         await this.sacpClient.startPrintSerial(gcodeFilePath, ({ lineNumber, length, elapsedTime: sliceTime }) => {
@@ -135,7 +145,8 @@ class SocketSerialNew extends SocketBASE {
             md5.update(buf);
         });
         readStream.once('end', () => {
-            this.sacpClient.startPrint(md5.digest().toString('hex'), options.uploadName, 0).then(({ response }) => {
+            this.sacpClient.startPrint(md5.digest().toString('hex'), options.uploadName, type).then(({ response }) => {
+                log.info(`startPrinting: ${response.result}`);
                 this.startTime = new Date().getTime();
             });
         });

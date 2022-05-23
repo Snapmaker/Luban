@@ -200,7 +200,9 @@ export default class Business extends Dispatcher {
     startScreenPrint({ headType = HeadType.PRINTING, filename = '', hash = '' }) {
         const filenameBuffer = stringToBuffer(filename);
         const hashBuffer = stringToBuffer(hash);
-        return this.send(0xb0, 0x08, PeerId.SCREEN, Buffer.concat([Buffer.alloc(1, headType), filenameBuffer, hashBuffer]));
+        return this.send(0xb0, 0x08, PeerId.SCREEN, Buffer.concat([Buffer.alloc(1, headType), filenameBuffer, hashBuffer])).then(res => {
+            return res;
+        });
     }
 
     getLaserMaterialThickness({ token = '', x = 0, y = 0, feedRate = 0 }) {

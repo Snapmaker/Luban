@@ -494,7 +494,8 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
                     type="primary"
                     level="level-three"
                     width="96px"
-                    disabled={!_canClick}
+                    // disabled={!_canClick}
+                    disabled={false}
                     onClick={() => dispatch(machineActions.executeGcodeAutoHome(true))}
                 >
                     {i18n._('key-Workspace/Console-Home')}
