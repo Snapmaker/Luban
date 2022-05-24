@@ -88,9 +88,9 @@ export const actions = {
     autoSaveEnvironment: (headType) => async (dispatch, getState) => {
         const editorState = getState()[headType];
         const { initState } = getState().project[headType];
-        const models = editorState.modelGroup.getModels();
+        const { modelGroup } = editorState;
+        const models = modelGroup.getModels();
         if (!models.length && initState) return;
-        if (models.length === 1 && models[0].type === 'primeTower') return;
         const machineState = getState().machine;
         const { size, series, toolHead } = machineState;
         const machineInfo = {};
@@ -110,6 +110,7 @@ export const actions = {
             envObj.defaultMaterialId = defaultMaterialId;
             envObj.defaultMaterialIdRight = defaultMaterialIdRight;
             envObj.defaultQualityId = defaultQualityId;
+            envObj.models.push(modelGroup.primeTower.getSerializableConfig());
         }
         for (let key = 0; key < models.length; key++) {
             const model = models[key];
@@ -162,7 +163,23 @@ export const actions = {
 
             promiseArray.push(
                 dispatch(modActions.generateModel(headType, {
-                    loadFrom: LOAD_MODEL_FROM_OUTER, originalName, uploadName, modelName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, extruderConfig, isGroup: !!children, parentModelID, children, primeTowerTag
+                    loadFrom: LOAD_MODEL_FROM_OUTER,
+                    originalName,
+                    uploadName,
+                    modelName,
+                    sourceWidth,
+                    sourceHeight,
+                    mode,
+                    sourceType,
+                    config,
+                    gcodeConfig,
+                    transformation,
+                    modelID,
+                    extruderConfig,
+                    isGroup: !!children,
+                    parentModelID,
+                    children,
+                    primeTowerTag
                 }))
             );
             if (children && children.length > 0) {
@@ -195,7 +212,7 @@ export const actions = {
             allModels.forEach((model) => {
                 model.extruderConfig = {
                     infill: '0',
-                    shell: '0',
+                    shell: '0'
                 };
             });
         }
@@ -427,12 +444,10 @@ export const actions = {
 
     },
 
-    openProject: (file, history, unReload = false, isGuideTours = false) => async (dispatch, getState) => {
+    openProject: (file, history, unReload = false, isGuideTours = false) => async (dispatch) => {
         if (checkIsSnapmakerProjectFile(file.name)) {
             const formData = new FormData();
             let shouldSetFileName = true;
-            const { modelGroup: { models } } = getState().printing;
-            const isOnlyPrimeTower = models.length && models?.every(modelItem => modelItem.type === 'primeTower');
             if (!(file instanceof File)) {
                 if (new RegExp(/^\.\//).test(file?.path)) {
                     shouldSetFileName = false;
@@ -468,7 +483,7 @@ export const actions = {
             // End of Compatible with old project file
 
             const oldHeadType = getCurrentHeadType(history?.location?.pathname) || headType;
-            !isGuideTours && !isOnlyPrimeTower && await dispatch(actions.save(oldHeadType, {
+            !isGuideTours && await dispatch(actions.save(oldHeadType, {
                 message: i18n._('key-Project/Save-Save the changes you made in the {{headType}} G-code Generator? Your changes will be lost if you don’t save them.', { headType: i18n._(HEAD_TYPE_ENV_NAME[oldHeadType]) })
             }));
             await dispatch(actions.closeProject(oldHeadType));
@@ -502,13 +517,11 @@ export const actions = {
     startProject: (from, to, history, restartGuide = false, isRotate = false) => async (dispatch, getState) => {
         const newHeadType = getCurrentHeadType(to);
         const oldHeadType = getCurrentHeadType(from) || newHeadType;
-        const { modelGroup: { models } } = getState().printing;
-        const isOnlyPrimeTower = models.length && models?.every(modelItem => modelItem.type === 'primeTower');
         if (oldHeadType === null) {
             history.push(to);
             return;
         }
-        !isOnlyPrimeTower && await dispatch(actions.save(oldHeadType, {
+        await dispatch(actions.save(oldHeadType, {
             message: i18n._('key-Project/Save-Save the changes you made in the {{headType}} G-code Generator? Your changes will be lost if you don’t save them.', { headType: i18n._(HEAD_TYPE_ENV_NAME[oldHeadType]) })
         }));
         await dispatch(actions.closeProject(oldHeadType));

@@ -1094,12 +1094,12 @@ class SvgModel extends BaseModel {
         if (!width) {
             this.vertexPoints = [
                 [x, y + height / 2],
-                [x, y - height / 2],
+                [x, y - height / 2]
             ];
         } else if (!height) {
             this.vertexPoints = [
                 [x - width / 2, y],
-                [x + width / 2, y],
+                [x + width / 2, y]
             ];
         } else {
             const modelBoxPoints = [

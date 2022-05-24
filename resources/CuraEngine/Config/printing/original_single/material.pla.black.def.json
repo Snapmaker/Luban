@@ -54,5 +54,6 @@
         "retraction_hop_enabled": {
             "default_value": false
         }
-    }
+    },
+    "isRecommended": true
 }

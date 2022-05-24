@@ -3,6 +3,7 @@
     "version": "4.2.0",
     "inherits": "snapmaker2",
     "category": "Default",
+    "isRecommended": true,
     "i18nName": "key-default_name-Fast Print",
     "i18nCategory": "key-default_category-Default",
     "overrides": {
