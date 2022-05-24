@@ -125,8 +125,21 @@ export default class Business extends Dispatcher {
     }
 
     executeGcode(gcode: string) {
+        console.log('executeGcode', gcode, stringToBuffer(gcode));
         return this.send(0x01, 0x02, PeerId.CONTROLLER, stringToBuffer(gcode)).then(({ response, packet }) => {
             return { response, packet, data: {} };
+        });
+    }
+
+    logFeedbackLevel(level: number = 2) {
+        return this.send(0x01, 0x10, PeerId.CONTROLLER, Buffer.alloc(1, level)).then(({ response, packet }) => {
+            return { response, packet, data: {} };
+        });
+    }
+
+    subscribeLogFeedback({ interval = 3600000 }, callback: ResponseCallback) {
+        return this.subscribe(0x01, 0xa1, interval, callback).then(({ response, packet }) => {
+            return { code: response.result, packet, data: {} };
         });
     }
 

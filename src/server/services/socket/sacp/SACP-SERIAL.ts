@@ -26,12 +26,6 @@ class SocketSerialNew extends SocketBASE {
 
     // public total: number;
 
-    static async getAvailPost() {
-        const list = await SerialPort.list();
-        log.debug(`static ${list[0]}`);
-        return list;
-    }
-
     public connectionOpen = async (socket: SocketServer, options) => {
         this.availPorts = await SerialPort.list();
         this.socket = socket;
@@ -42,6 +36,7 @@ class SocketSerialNew extends SocketBASE {
             });
             this.sacpClient = new Business('serialport', this.serialport);
             this.serialport.on('data', (data) => {
+                // console.log(data.toString());
                 this.sacpClient.read(data);
             });
             this.serialport.on('error', (err) => {
@@ -54,7 +49,7 @@ class SocketSerialNew extends SocketBASE {
             });
             this.serialport.once('open', () => {
                 log.debug(`${options.port ?? this.availPorts[0].path} opened`);
-                // this.serialport.write('M1006\r\n');
+                // this.serialport.write('M1006\n');
                 this.serialport.write('M2000 S5 P1\r\n');
                 setTimeout(async () => {
                     // TO DO: Need to get seriesSize for 'connection:connected' event

@@ -9,8 +9,8 @@ import {
     MACHINE_SERIES,
     HEAD_CNC,
     HEAD_LASER,
-    WORKFLOW_STATE_IDLE,
-    // WORKFLOW_STATUS_IDLE,
+    // WORKFLOW_STATE_IDLE,
+    WORKFLOW_STATUS_IDLE,
     WORKFLOW_STATUS_PAUSED,
     WORKFLOW_STATUS_RUNNING,
     WORKFLOW_STATUS_UNKNOWN,
@@ -109,7 +109,7 @@ const INITIAL_STATE = {
     // Serial port
 
     // from workflowState: idle, running, paused/ for serial connection?
-    workflowState: WORKFLOW_STATE_IDLE,
+    // workflowState: WORKFLOW_STATE_IDLE,
     isHomed: null,
 
     enclosureDoorDetection: false,
@@ -350,6 +350,7 @@ export const actions = {
             'Marlin:state': (options) => {
                 // Note: serialPort & Wifi -> for heartBeat
                 const { state } = options;
+                console.log('marlin:state', state);
                 const { headType, pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
                 const machineState = getState().machine;
                 if ((machineState.isRotate !== pos?.isFourAxis) && (headType === HEAD_LASER || headType === HEAD_CNC)) {
@@ -437,8 +438,13 @@ export const actions = {
                 } = state;
                 dispatch(baseActions.updateState({
                     laser10WErrorState,
-                    workflowStatus: status
+                    // workflowStatus: status
                 }));
+                if (!isNil(status)) {
+                    dispatch(baseActions.updateState({
+                        workflowStatus: status
+                    }));
+                }
                 if (!isNil(isHomed)) {
                     dispatch(baseActions.updateState({
                         isHomed
@@ -557,7 +563,6 @@ export const actions = {
                     return;
                 }
                 let machineSeries = '';
-                console.log({ state });
                 const { toolHead, series, headType, status, isHomed, moduleStatusList, isMoving } = state;
                 const { seriesSize } = state;
                 console.log('connection', state);
@@ -581,8 +586,13 @@ export const actions = {
                 } else {
                     const _isRotate = moduleStatusList?.rotaryModule;
                     const emergency = moduleStatusList?.emergencyStopButton;
+                    if (!isNil(status)) {
+                        dispatch(baseActions.updateState({
+                            workflowStatus: status
+                        }));
+                    }
                     dispatch(baseActions.updateState({
-                        workflowStatus: status,
+                        // workflowStatus: status,
                         emergencyStopOnline: emergency
                     }));
                     dispatch(workspaceActions.updateMachineState({
@@ -667,11 +677,9 @@ export const actions = {
             },
             'workflow:state': (options) => {
                 const { workflowState } = options;
-                dispatch(
-                    baseActions.updateState({
-                        workflowState
-                    })
-                );
+                dispatch(baseActions.updateState({
+                    workflowStatus: workflowState
+                }));
             },
             'sender:status': (options) => {
                 const { data } = options;
@@ -898,33 +906,31 @@ export const actions = {
         dispatch(workspaceActions.unloadGcode());
     },
 
-    resetMachineState: () => (dispatch) => {
-        dispatch(
-            baseActions.updateState({
-                isOpen: false,
-                isConnected: false,
-                connectionStatus: CONNECTION_STATUS_IDLE,
-                isHomed: null,
-                workflowStatus: WORKFLOW_STATUS_UNKNOWN,
-                workflowState: WORKFLOW_STATE_IDLE,
-                laserFocalLength: null,
-                workPosition: {
-                    // work position
-                    x: '0.000',
-                    y: '0.000',
-                    z: '0.000',
-                    b: '0.000',
-                    isFourAxis: false,
-                    a: '0.000'
-                },
+    resetMachineState: (connectionType = CONNECTION_TYPE_WIFI) => (dispatch) => {
+        console.log('resetMachineState');
+        dispatch(baseActions.updateState({
+            isOpen: false,
+            isConnected: false,
+            connectionStatus: CONNECTION_STATUS_IDLE,
+            isHomed: null,
+            workflowStatus: connectionType === CONNECTION_TYPE_WIFI ? WORKFLOW_STATUS_UNKNOWN : WORKFLOW_STATUS_IDLE,
+            // workflowState: WORKFLOW_STATE_IDLE,
+            laserFocalLength: null,
+            workPosition: { // work position
+                x: '0.000',
+                y: '0.000',
+                z: '0.000',
+                b: '0.000',
+                isFourAxis: false,
+                a: '0.000'
+            },
 
-                originOffset: {
-                    x: 0,
-                    y: 0,
-                    z: 0
-                }
-            })
-        );
+            originOffset: {
+                x: 0,
+                y: 0,
+                z: 0
+            }
+        }));
     },
 
     // Execute G54 based on series and headType

@@ -804,8 +804,8 @@ class MarlinController {
             callback(); // register controller
 
             // Make sure machine is ready.
-            setTimeout(() => this.writeln('M1005'));
-            setTimeout(() => this.writeln('M1006'), 100);
+            setTimeout(() => this.writeln('M1006'));
+            setTimeout(() => this.writeln('M1005'), 100);
             setTimeout(() => this.writeln('M1007'), 150);
             setTimeout(() => this.writeln('M1010'), 200);
             setTimeout(() => this.writeln('M1011'), 200);
@@ -819,8 +819,8 @@ class MarlinController {
                 }
 
                 // send M1005 to get firmware version (only support versions >= '2.2')
-                setTimeout(() => this.writeln('M1005'));
-                setTimeout(() => this.writeln('M1006'), 100);
+                setTimeout(() => this.writeln('M1006'));
+                setTimeout(() => this.writeln('M1005'), 100);
                 setTimeout(() => this.writeln('M1007'), 150);
                 setTimeout(() => this.writeln('M1010'), 200);
                 setTimeout(() => this.writeln('M1011'), 200);
@@ -933,7 +933,10 @@ class MarlinController {
         //
         const { dataSource } = this.options;
         if (!isEmpty(this.state)) {
-            socket.emit('Marlin:state', { state: this.state, dataSource });
+            socket.emit('Marlin:state', { state: {
+                ...this.state,
+                status: this.workflow.state
+            }, dataSource });
         }
         if (!isEmpty(this.settings)) {
             socket.emit('Marlin:settings', { settings: this.settings, dataSource });

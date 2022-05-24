@@ -45,6 +45,8 @@ function SerialConnection() {
         if (_err) {
             setErr(i18n._('key-workspace_open_port-The machine is not ready'));
             return;
+        } else {
+            setErr(null);
         }
 
         log.debug(`Connected to ${portState}.`);
@@ -64,6 +66,7 @@ function SerialConnection() {
 
     function openPort() {
         server.openServer(({ msg }) => {
+            console.log({ msg });
             if (msg && msg !== 'inuse') {
                 setErr(i18n._('key-workspace_open_port-Can not open this port'));
                 log.error('Error opening serial port', msg);

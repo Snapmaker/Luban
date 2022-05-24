@@ -1,4 +1,5 @@
 import net from 'net';
+import SerialPort from 'serialport';
 import logger from '../../lib/logger';
 // import workerManager from '../task-manager/workerManager';
 import socketSerial from './socket-serial';
@@ -9,11 +10,14 @@ import { HEAD_PRINTING, HEAD_LASER, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIE
     CONNECTION_TYPE_WIFI, CONNECTION_TYPE_SERIAL, WORKFLOW_STATE_PAUSED, PORT_SCREEN_HTTP, PORT_SCREEN_SACP, SACP_PROTOCOL } from '../../constants';
 import DataStorage from '../../DataStorage';
 import ScheduledTasks from '../../lib/ScheduledTasks';
+import SerialPortClient from '../../../app/lib/controller';
+import { prototype } from 'events';
 
 const log = logger('lib:ConnectionManager');
 const ensureRange = (value, min, max) => {
     return Math.max(min, Math.min(max, value));
 };
+let timer = null;
 
 /**
  * A singleton to manage devices connection.
@@ -76,16 +80,40 @@ class ConnectionManager {
 
             this.socket.connectionOpen(socket, options);
         } else {
+            const protocol = await this.inspectProtocol('', CONNECTION_TYPE_SERIAL, options, (protocol) => {
+                console.log({ protocol })
+                if (protocol === SACP_PROTOCOL) {
+                    this.socket = socketSerialNew;
+                    this.protocol = SACP_PROTOCOL;
+                    this.socket.connectionOpen(socket, options);
+                } else {
+                    this.socket = socketSerial;
+                    this.protocol = '';
+                    this.socket.serialportOpen(socket, options);
+                }
+            });
             // if (sacp) {
                 // this.socket = ;
-                log.debug('serialSacp');
-                this.socket = socketSerialNew;
-                this.protocol = 'SACP';
-                this.socket.connectionOpen(socket, options);
+                // try {
+                    // log.debug('serialSacp');
+                    // this.socket = socketSerialNew;
+                    // this.protocol = 'SACP';
+                    // // this.socket.checkProtocol(options);
+                    // this.socket.connectionOpen(socket, options);
+                // } catch(err) {
+                //     log.debug(`serial connection err: ${err}`);
+                // }
             // } else {
                 // this.socket = socketSerial;
                 // this.socket.serialportOpen(socket, options);
             // }
+            // const serialport = new SerialPort(options.port, {
+            //     autoOpen: false,
+            //     baudRate: 115200
+            // });
+            // serialport.once('open', () => {
+            //     log.debug(`${options.port ?? this.availPorts[0].path} opened`);
+            // });
         }
         log.debug(`connectionOpen connectionType=${connectionType} this.socket=${this.socket}`);
     };
@@ -94,17 +122,84 @@ class ConnectionManager {
         this.socket && this.socket.connectionClose(socket, options);
     };
 
-    inspectProtocol = async (address) => {
-        const [resSACP, resHTTP] = await Promise.allSettled([
-            this.tryConnect(address, PORT_SCREEN_SACP),
-            this.tryConnect(address, PORT_SCREEN_HTTP)
-        ]);
-        if (resHTTP.value) {
-            return 'HTTP';
-        } else if (resSACP.value) {
-            return 'SACP';
+    inspectProtocol = async (address, connectionType = CONNECTION_TYPE_WIFI, options, callback) => {
+        if (connectionType === CONNECTION_TYPE_WIFI) {
+            const [resSACP, resHTTP] = await Promise.allSettled([
+                this.tryConnect(address, PORT_SCREEN_SACP),
+                this.tryConnect(address, PORT_SCREEN_HTTP)
+            ]);
+            if (resHTTP.value) {
+                return 'HTTP';
+            } else if (resSACP.value) {
+                return 'SACP';
+            }
+            return '';
+        } else if (connectionType === CONNECTION_TYPE_SERIAL) {
+            console.log('come in serial', options);
+            let protocol = 'HTTP';
+            let hasData = false;
+            const trySerialConnect = new SerialPort(options.port, {
+                autoOpen: false,
+                baudRate: 115200
+            });
+            if (timer) clearTimeout(timer);
+            timer = setTimeout(() => {
+                if (!hasData) {
+                    console.log('timeout', hasData);
+                    callback && callback(protocol);
+                }
+            }, 1500);
+            // trySerialConnect.setTimeout(1000);
+            // trySerialConnect.on('timeout', () => {
+            //     console.log('timeout');
+            //     trySerialConnect?.close();
+            //     trySerialConnect?.destroy();
+            //     // callback && callback('SACP');
+            // })
+            // console.log(trySerialConnect);
+            trySerialConnect.on('data', (data) => {
+                hasData = true;
+                // console.log('data', data[0].toString(16), data[1].toString(16));
+                const machineData = data.toString();
+                if (data[0].toString(16) === 'aa' && data[1].toString(16) === '55') {
+                    protocol = 'SACP';
+                    trySerialConnect?.close();
+                }
+                // if (machineData.match(/Tool Head/g)) {
+                //     console.log('headType', machineData);
+                if (machineData.match(/SACP/g)) {
+                    console.log('SACP', machineData);
+                    protocol = 'SACP';
+                    trySerialConnect?.close();
+                    // trySerialConnect?.destroy();
+                    // callback && callback('SACP');
+                }
+                if (machineData.match(/ok/g)) {
+                    console.log('OK', machineData);
+                    trySerialConnect?.close();
+                }
+                //  else {
+                //     protocol = 'HTTP';
+                //     trySerialConnect?.close();
+                //     // trySerialConnect?.destroy();
+                //     // callback && callback('HTTP');
+                // }
+                // }
+            });
+            trySerialConnect.on('close', () => {
+                console.log('close 1');
+                callback && callback(protocol);
+            })
+            trySerialConnect.on('error', (err) => {
+                console.log({ err });
+            })
+            trySerialConnect.once('open', () => {
+                console.log('open');
+                trySerialConnect.write('M1006\r\n');
+            });
+            trySerialConnect.open();
+            // return '';
         }
-        return '';
     }
 
     tryConnect = (host, port) => {
@@ -306,6 +401,7 @@ class ConnectionManager {
     // when using executeGcode, the cmd param is always 'gcode'
     executeGcode = (socket, options, callback) => {
         const { gcode, context, cmd = 'gcode' } = options;
+        log.info(`executeGcode: ${gcode}, ${this.protocol}`);
         if (this.protocol === SACP_PROTOCOL || this.connectionType === CONNECTION_TYPE_WIFI) {
             this.socket.executeGcode(options, callback);
         }else {

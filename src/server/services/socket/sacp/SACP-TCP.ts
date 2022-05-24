@@ -36,11 +36,24 @@ class SocketTCP extends SocketBASE {
     constructor() {
         super();
         this.client = new net.Socket();
+        this.client.setTimeout(3000);
         this.sacpClient = new Business('tcp', this.client);
         this.sacpClient.setLogger(log);
 
         this.client.on('data', (buffer) => {
             this.sacpClient.read(buffer);
+        });
+        this.client.on('timeout', () => {
+            const result = {
+                code: 200,
+                data: {},
+                msg: '',
+                text: ''
+            };
+            log.info(`timeout: ${result}`);
+            this.sacpClient.dispose();
+            this.client.destroy();
+            this.socket && this.socket.emit('connection:close', result);
         });
         this.client.on('close', () => {
             log.info('TCP connection closed');
@@ -267,6 +280,7 @@ class SocketTCP extends SocketBASE {
             console.log('response ===== ', response);
             if (response.result === 0) {
                 setTimeout(() => {
+                    this.sacpClient.dispose();
                     this.client.destroy();
                     if (this.client.destroyed) {
                         log.info('TCP manually closed');

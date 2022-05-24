@@ -3,7 +3,7 @@ import Business, { CoordinateType } from './Business';
 import SocketServer from '../../../lib/SocketManager';
 import logger from '../../../lib/logger';
 import { COORDINATE_AXIS, WORKFLOW_STATUS_MAP, HEAD_PRINTING, EMERGENCY_STOP_BUTTON, ENCLOSURE_MODULES, AIR_PURIFIER_MODULES, ROTARY_MODULES } from '../../../../app/constants';
-import { readUint8 } from '../../../lib/SACP-SDK/SACP/helper';
+import { readString, readUint8 } from '../../../lib/SACP-SDK/SACP/helper';
 import GetHotBed from '../../../lib/SACP-SDK/SACP/business/models/GetHotBed';
 import CoordinateSystemInfo from '../../../lib/SACP-SDK/SACP/business/models/CoordinateSystemInfo';
 import { EventOptions, MarlinStateData } from '../types';
@@ -21,7 +21,7 @@ class SocketBASE {
 
     public startHeartbeatBase = (sacpClient: Business) => {
         this.sacpClient = sacpClient;
-        let stateData: MarlinStateData;
+        let stateData: MarlinStateData = {};
         let statusKey = 0;
         const moduleStatusList = {
             rotaryModule: false,
@@ -29,6 +29,18 @@ class SocketBASE {
             emergencyStopButton: false,
             enclosure: false
         };
+        this.sacpClient.logFeedbackLevel(2).then(({ response }) => {
+            console.log('logLevel', response);
+            if (response.result === 0) {
+                this.sacpClient.subscribeLogFeedback({ interval: 3600000 }, (data) => {
+                    console.log('logFeedback', readString(data.response.data, 1));
+                    const result = readString(data.response.data, 1).result;
+                    this.socket && this.socket.emit('serialport:read', { data: result });
+                    // const stringData = data.response.data.toString();
+                    // console.log('stringData', stringData);
+                });
+            }
+        });
         this.sacpClient.setHandler(0x01, 0x36, ({ param }) => {
             const isHomed = readUint8(param, 0);
             stateData = {
@@ -37,11 +49,11 @@ class SocketBASE {
             };
         });
         this.sacpClient.subscribeHeartbeat({ interval: 1000 }, async (data) => {
-            log.info(`receive heartbeat: ${data.response}`);
+            // log.info(`receive heartbeat: ${data.response}`);
             statusKey = readUint8(data.response.data, 0);
             stateData.airPurifier = false;
             await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
-                log.info(`revice moduleInfo: ${data.response}`);
+                // log.info(`revice moduleInfo: ${data.response}`);
                 moduleInfos.forEach(module => {
                     if (includes(EMERGENCY_STOP_BUTTON, module.moduleId)) {
                         moduleStatusList.emergencyStopButton = true;
@@ -71,7 +83,7 @@ class SocketBASE {
             //     this.socket && this.socket.emit('connection:close');
             // }, 60000); // TODO: should change this after file transfer ready
         }).then((res) => {
-            log.info(`subscribe heartbeat success: ${res}`);
+            log.info(`subscribe heartbeat success: ${res.code}`);
         });
         this.sacpClient.subscribeHotBedTemperature({ interval: 1000 }, (data) => {
             // log.info(`revice hotbed: ${data.response}`);

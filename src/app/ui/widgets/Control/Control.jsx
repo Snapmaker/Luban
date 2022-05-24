@@ -464,7 +464,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
 
     return (
         <div>
-            {console.log({ isMoving })}
+            {console.log({ isMoving, _canClick, isConnected, workflowStatus })}
             <DisplayPanel
                 workPosition={workPosition}
                 originOffset={state.originOffset}
@@ -494,8 +494,8 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
                     type="primary"
                     level="level-three"
                     width="96px"
-                    // disabled={!_canClick}
-                    disabled={false}
+                    disabled={!_canClick}
+                    // disabled={false}
                     onClick={() => dispatch(machineActions.executeGcodeAutoHome(true))}
                 >
                     {i18n._('key-Workspace/Console-Home')}

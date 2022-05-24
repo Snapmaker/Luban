@@ -84,7 +84,7 @@ export class Server extends events.EventEmitter {
                     controller.emitEvent(CONNECTION_HEARTBEAT);
                     callback && callback({ msg, text });
                 } else {
-                    dispatch(machineActions.resetMachineState());
+                    dispatch(machineActions.resetMachineState(CONNECTION_TYPE_SERIAL));
                     machineStore.set('port', this.port);
                 }
             });
