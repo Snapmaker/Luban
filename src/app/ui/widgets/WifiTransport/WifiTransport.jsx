@@ -37,6 +37,7 @@ import { actions as machineActions } from '../../../flux/machine';
 import Checkbox from '../../components/Checkbox';
 import { NumberInput as Input } from '../../components/Input';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
+import LaserStartModal from './LaserStartModal';
 
 const changeNameInput = [];
 const suffixLength = 7;
@@ -595,6 +596,14 @@ function WifiTransport({ widgetActions, controlActions }) {
                     </Button>
                 </div>
             </div>
+            <LaserStartModal
+                showStartModal={showStartModal || true}
+                isHeightPower={toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2}
+                isRotate={isRotate}
+                isSerialConnect={connectionType && connectionType === CONNECTION_TYPE_SERIAL}
+                onClose={() => setShowStartModal(false)}
+                onConfirm={() => actions.loadGcodeToWorkspace()}
+            />
             {showStartModal && (
                 <Modal
                     centered
