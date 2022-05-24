@@ -9,7 +9,7 @@ import ReliefParameters from './config/ReliefParameters';
 import SvgIcon from '../../components/SvgIcon';
 // import Checkbox from '../../components/Checkbox';
 // import TipTrigger from '../../components/TipTrigger';
-import { PROCESS_MODE_GREYSCALE, SOURCE_TYPE_SVG } from '../../../constants';
+import { PROCESS_MODE_GREYSCALE, SOURCE_TYPE } from '../../../constants';
 
 const ImageProcessMode = ({ changeSelectedModelMode, disabled }) => {
     const mode = useSelector(state => state?.cnc?.modelGroup?.getSelectedModel()?.mode);
@@ -17,7 +17,7 @@ const ImageProcessMode = ({ changeSelectedModelMode, disabled }) => {
     const originalName = useSelector(state => state?.cnc?.modelGroup?.getSelectedModel()?.originalName);
     const [expanded, setExpanded] = useState(true);
     const isGreyscale = mode === PROCESS_MODE_GREYSCALE;
-    const isSvg = sourceType === SOURCE_TYPE_SVG;
+    const isSvg = sourceType === SOURCE_TYPE.SVG;
     const isDXF = (originalName ? (originalName.substr(originalName.length - 4, 4).toLowerCase() === '.dxf') : false);
 
     const actions = {
@@ -46,7 +46,7 @@ const ImageProcessMode = ({ changeSelectedModelMode, disabled }) => {
                 {expanded && (
                     <React.Fragment>
                         <div className={classNames('sm-flex', 'margin-vertical-8', 'align-c', 'justify-space-between', 'width-percent-50')}>
-                            { !isDXF && (
+                            {!isDXF && (
                                 <div className={classNames(mode === 'greyscale' ? styles.selected : styles.unselected)}>
                                     <Anchor
                                         disabled={disabled}

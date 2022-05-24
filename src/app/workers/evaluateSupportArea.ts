@@ -86,7 +86,7 @@ const evaluateSupportArea = (data) => {
     }
     points.forEach((value) => {
         if (value.isSupport && ((value.normal.angleTo(zUp) / Math.PI * 180) > 90)) {
-            value.faceIds.forEach(faceId => {
+            value.faceIds.forEach((faceId) => {
                 colors[faceId] = SupportArea.POINT;
             });
         }

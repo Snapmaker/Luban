@@ -1,5 +1,6 @@
 import request from 'superagent';
 import sendMessage from '../utils/sendMessage';
+
 type IParam = { token: string, host: string, stop?: boolean }
 
 let errorCount = 0;
@@ -12,7 +13,7 @@ const stopBeat = (msg?: string) => {
     sendMessage({ status: 'offline', msg });
 };
 
-const heartBeat = (param: IParam) => {
+const heartBeat = async (param: IParam) => {
     return new Promise((resolve) => {
         const { token, host, stop } = param;
         if (stop && intervalHandle) {

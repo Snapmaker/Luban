@@ -23,25 +23,27 @@ class Task {
 
     public finishTime: number;
 
-    public filenames = ''
+    public filenames: string = ''
 
-    public gcodeFile = ''
+    public gcodeFile: string = ''
 
-    public viewPathFile = ''
+    public viewPathFile: string = ''
 
-    public filename = ''
+    public filename: string = ''
 
-    public width = ''
+    public width: string = ''
 
-    public height = ''
+    public height: string = ''
 
-    public stlInfo = ''
+    public stlInfo: string = ''
 
-    public svgInfo = ''
+    public svgInfo: string = ''
 
-    public terminateFn: Function = () => {};
+    public terminateFn: () => void;
 
-    constructor(taskId, socket, data, taskType, headType, modelId = '') {
+    public constructor(taskId: string, socket: Socket, data: {
+        taskAsyncFor: unknown
+    }, taskType: string, headType: string, modelId: string = '') {
         this.taskId = taskId;
         this.modelId = modelId;
         this.socket = socket;
@@ -53,7 +55,7 @@ class Task {
         this.finishTime = 0;
     }
 
-    public equal(task) {
+    public equal(task: Task) {
         return task && task.taskId === this.taskId && task.taskType === this.taskType && task.modelId === this.modelId;
     }
 

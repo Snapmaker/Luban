@@ -30,14 +30,14 @@ const boxSelect = (bbox: TBbox, modelsBbox: TBbox[], onlyContainSelect: boolean,
             return;
         }
         if (onlyContainSelect) {
-            const isContain = vertexPoints.every(point => {
+            const isContain = vertexPoints.every((point) => {
                 return isInside(point, selectBoxPoints);
             });
             if (isContain) {
                 selectedIndex.push(index);
             }
         } else {
-            const isIntersect = vertexPoints.length === 2 ? vertexPoints.some(point => {
+            const isIntersect = vertexPoints.length === 2 ? vertexPoints.some((point) => {
                 return isInside(point, selectBoxPoints);
             }) : getOverlapSize(selectBoxPoints, vertexPoints);
             if (isIntersect) {

@@ -1,14 +1,15 @@
 import Operation from './Operation';
-import type Model from '../../models/ThreeBaseModel';
 import type ThreeModel from '../../models/ThreeModel';
 import ThreeGroup from '../../models/ThreeGroup';
 import type ModelGroup from '../../models/ModelGroup';
 import { ModelTransformation } from '../../models/ThreeBaseModel';
 
+type Model = ThreeGroup | ThreeModel;
+
 type GroupState = {
     modelsbeforeGroup: Model[],
     modelsafterGroup: Model[],
-    selectedModels: ThreeModel[] | ThreeGroup[],
+    selectedModels: Model[],
     groupChildrenMap: Map<ThreeGroup, ThreeModel[]>
     selectedModelsPositionMap: Map<string, ModelTransformation>
     target: ThreeGroup,
@@ -18,9 +19,7 @@ type GroupState = {
 };
 
 export default class GroupAlginOperation3D extends Operation<GroupState> {
-    state: GroupState;
-
-    constructor(state) {
+    public constructor(state: GroupState) {
         super();
         this.state = {
             modelsbeforeGroup: [],
@@ -35,7 +34,7 @@ export default class GroupAlginOperation3D extends Operation<GroupState> {
         };
     }
 
-    redo() {
+    public redo() {
         const target = this.state.target;
         const modelGroup = this.state.modelGroup;
         const newPosition = this.state.newPosition;
@@ -58,7 +57,7 @@ export default class GroupAlginOperation3D extends Operation<GroupState> {
         target.updateGroupExtruder();
     }
 
-    undo() {
+    public undo() {
         const target = this.state.target;
         const modelGroup = this.state.modelGroup;
 
@@ -81,7 +80,7 @@ export default class GroupAlginOperation3D extends Operation<GroupState> {
         this.state.selectedModelsPositionMap.forEach((position: ModelTransformation, modelID: string) => {
             modelGroup.selectModelById(modelID);
             modelGroup.updateSelectedGroupTransformation(position);
-            const model = modelGroup.selectedModelArray[0];
+            const model = modelGroup.selectedModelArray[0] as Model;
             const overstepped = modelGroup._checkOverstepped(model);
             model.setOversteppedAndSelected(overstepped, model.isSelected);
 

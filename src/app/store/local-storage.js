@@ -90,7 +90,7 @@ if (semver.gte(settings.version, '4.2.2')) {
     if (printingCustomConfigs && Object.prototype.toString.call(printingCustomConfigs) === '[object String]') {
         const customConfigsArray = printingCustomConfigs.split('-');
         const excludeConfigs = ['retraction_enable', 'retract_at_layer_change', 'retraction_amount', 'retraction_speed', 'retraction_hop_enabled', 'retraction_hop'];
-        const modifiedCustomConfigs = customConfigsArray.filter(str => excludeConfigs.indexOf(str) === -1);
+        const modifiedCustomConfigs = customConfigsArray.filter((str) => excludeConfigs.indexOf(str) === -1);
         machineStore.set('printingCustomConfigs', modifiedCustomConfigs.join('-'));
     }
 }

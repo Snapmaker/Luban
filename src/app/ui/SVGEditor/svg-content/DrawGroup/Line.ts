@@ -21,7 +21,7 @@ class Line {
 
     private model: Bezier;
 
-    constructor(data: TCoordinate[] | SVGPathElement, scale: number, closedLoop = false, fragmentID) {
+    public constructor(data: TCoordinate[] | SVGPathElement, scale: number, closedLoop: boolean = false, fragmentID: number) {
         this.scale = scale;
         this.closedLoop = closedLoop;
         this.fragmentID = fragmentID;
@@ -52,7 +52,7 @@ class Line {
     }
 
     private updateModel(points: TCoordinate[]) {
-        const params = points.map(item => {
+        const params = points.map((item) => {
             return {
                 x: item[0],
                 y: item[1]
@@ -143,7 +143,7 @@ class Line {
             if (!item || !item[0]) {
                 return;
             }
-            const circle = Array.from(document.querySelectorAll<SVGRectElement>('rect[type="end-point"]')).find(elem => {
+            const circle = Array.from(document.querySelectorAll<SVGRectElement>('rect[type="end-point"]')).find((elem) => {
                 return elem.getAttribute('x') === `${item[0] - pointRadiusWithScale}` && elem.getAttribute('y') === `${item[1] - pointRadiusWithScale}`;
             })
                 || this.createCircle(item);

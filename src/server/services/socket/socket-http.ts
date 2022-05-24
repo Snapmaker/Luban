@@ -258,8 +258,8 @@ class SocketHttp {
             });
     };
 
-    public executeGcode = (options: EventOptions, callback) => {
-        return new Promise(resolve => {
+    public executeGcode = async (options: EventOptions, callback) => {
+        return new Promise((resolve) => {
             const { gcode, eventName } = options;
             const split = gcode.split('\n');
             this.gcodeInfos.push({
@@ -273,7 +273,7 @@ class SocketHttp {
         });
     };
 
-    public startExecuteGcode = async (eventName:string) => {
+    public startExecuteGcode = async (eventName: string) => {
         if (this.isGcodeExecuting) {
             return;
         }
@@ -294,7 +294,7 @@ class SocketHttp {
         this.isGcodeExecuting = false;
     };
 
-    public _executeGcode = (gcode: string) => {
+    public _executeGcode = async (gcode: string) => {
         const api = `${this.host}/api/v1/execute_code`;
         return new Promise((resolve) => {
             const req = request.post(api);
@@ -409,7 +409,7 @@ class SocketHttp {
                     });
                 } else {
                     let gcodeStr = '';
-                    res.on('data', chunk => {
+                    res.on('data', (chunk) => {
                         gcodeStr += chunk;
                     });
                     res.once('end', () => {

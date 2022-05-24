@@ -27,7 +27,7 @@ class WorkerManager {
 
 Object.entries(WorkerMethods).forEach(([, method]) => {
     // eslint-disable-next-line func-names
-    WorkerManager.prototype[method] = function (data: any, onmessage?: (payload: unknown) => void) {
+    WorkerManager.prototype[method] = function (data: unknown[], onmessage?: (payload: unknown) => void) {
         const pool = (
             this.pool || (
                 this.pool = workerpool.pool('./Pool.worker.js', {

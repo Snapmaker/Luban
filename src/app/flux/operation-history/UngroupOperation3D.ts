@@ -18,7 +18,7 @@ type UngroupState = {
     modelGroup: ModelGroup
 };
 export default class UngroupOperation3D extends Operation<UngroupState> {
-    constructor(props: UngroupState) {
+    public constructor(props: UngroupState) {
         super();
         this.state = {
             modelsBeforeUngroup: props.modelsBeforeUngroup || [],
@@ -48,12 +48,12 @@ export default class UngroupOperation3D extends Operation<UngroupState> {
         modelGroup.unselectAllModels();
         ThreeUtils.setObjectParent(target.meshObject, modelGroup.object);
         const subModels = [];
-        subModelStates.forEach(item => {
+        subModelStates.forEach((item) => {
             subModels.push(item.target);
         });
         target.add(subModels);
 
-        subModelStates.forEach(item => {
+        subModelStates.forEach((item) => {
             item.target.updateTransformation(item.transformation);
         });
         target.updateTransformation(this.state.groupTransformation);

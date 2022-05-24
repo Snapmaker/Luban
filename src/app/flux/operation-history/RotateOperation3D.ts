@@ -16,7 +16,7 @@ type RotateOperationState = RotateOperationProp & {
 }
 
 export default class RotateOperation3D extends Operation<RotateOperationState> {
-    constructor(props: RotateOperationProp) {
+    public constructor(props: RotateOperationProp) {
         super();
         this.state = {
             target: props.target,

@@ -2941,24 +2941,7 @@ export const actions = {
             dispatch(actions.gcodeRenderingCallback(data, extruderColors));
         });
     },
-    /**
-     * deprecated
-     */
-    // saveSupport: (model) => (dispatch, getState) => {
-    //     const { modelGroup } = getState().printing;
-    //     modelGroup.saveSupportModel(model);
-    //     if (!model.isInitSupport) {
-    //         // save generated support into operation history
-    //         const operation = new AddOperation3D({
-    //             target: model,
-    //             parent: model.target
-    //         });
-    //         operation.description = 'AddSupport';
-    //         const operations = new Operations();
-    //         operations.push(operation);
-    //         dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
-    //     }
-    // },
+
     clearAllManualSupport: (combinedOperations) => (dispatch, getState) => {
         dispatch(actions.exitPreview());
 
@@ -3744,7 +3727,9 @@ export const actions = {
 export default function reducer(state = INITIAL_STATE, action) {
     switch (action.type) {
         case ACTION_UPDATE_STATE: {
-            return Object.assign({}, state, action.state);
+            const s = Object.assign({}, state, action.state);
+            window.pp = s;
+            return s;
         }
         case ACTION_UPDATE_TRANSFORMATION: {
             return Object.assign({}, state, {

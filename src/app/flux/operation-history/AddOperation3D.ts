@@ -17,11 +17,11 @@ type AddOperationState = {
         scale: THREE.Vector3,
         rotation: THREE.Euler
     }>,
-    childrens?: ThreeModel[]
+    childrens?: (ThreeGroup | ThreeModel)[]
 }
 
 export default class AddOperation3D extends Operation<AddOperationState> {
-    constructor(props: AddOperationProp) {
+    public constructor(props: AddOperationProp) {
         super();
         this.state = {
             target: props.target,
@@ -34,12 +34,7 @@ export default class AddOperation3D extends Operation<AddOperationState> {
         const modelGroup = this.state.modelGroup;
         const model = this.state.target;
 
-        if (model instanceof ThreeModel && model.supportTag) {
-            if (!model.target) return;
-            model.target.meshObject.add(model.meshObject); // restore the parent-child relationship
-        } else {
-            modelGroup.object.add(model.meshObject);
-        }
+        modelGroup.object.add(model.meshObject);
 
         if (model instanceof ThreeGroup) {
             const children = this.state.childrens;
@@ -73,16 +68,12 @@ export default class AddOperation3D extends Operation<AddOperationState> {
 
         if (model.isSelected) {
             ThreeUtils.removeObjectParent(model.meshObject);
-            if (model instanceof ThreeModel && model.supportTag) {
-                ThreeUtils.setObjectParent(model.meshObject, model.target.meshObject);
-            } else {
-                ThreeUtils.setObjectParent(model.meshObject, modelGroup.object);
-            }
+            ThreeUtils.setObjectParent(model.meshObject, modelGroup.object);
         }
 
         if (model instanceof ThreeGroup) {
             this.state.childrens = [];
-            model.children.forEach((subModel: ThreeModel) => {
+            model.children.forEach((subModel) => {
                 this.state.childrens.push(subModel);
                 this.state.transform.set(subModel.modelID, {
                     position: subModel.meshObject.position.clone(),
