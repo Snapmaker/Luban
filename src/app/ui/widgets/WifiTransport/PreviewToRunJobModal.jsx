@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import Modal from '../../components/Modal';
 import { Button } from '../../components/Buttons';
@@ -6,7 +6,18 @@ import i18n from '../../../lib/i18n';
 
 const PreviewToRunJobModal = (props) => {
     const headerTextKey = props.isMismatchHead ? 'key-Workspace/RunJobWarningModal-Mismatch header' : 'key-Workspace/RunJobWarningModal-Unknown header';
-    const bodyTextKey = props.isMismatchHead ? 'key-Workspace/RunJobWarningModal-Mismatch body' : 'key-Workspace/RunJobWarningModal-Unknown body';
+    const [bodyTextKey, setBodyTextKey] = useState('--');
+
+    useEffect(() => {
+        if (props.isUnKownHead) {
+            setBodyTextKey('key-Workspace/RunJobWarningModal-Unknown toolhead');
+        } else if (props.isMismatchHead) {
+            setBodyTextKey('key-Workspace/RunJobWarningModal-Mismatch body');
+        } else {
+            setBodyTextKey('key-Workspace/RunJobWarningModal-Unknown body');
+        }
+    }, [props.isUnKownHead, props.isMismatchHead]);
+
 
     return (
         <Modal
@@ -45,6 +56,7 @@ const PreviewToRunJobModal = (props) => {
 
 PreviewToRunJobModal.propTypes = {
     isMismatchHead: PropTypes.bool.isRequired,
+    isUnKownHead: PropTypes.bool.isRequired,
     gcodeType: PropTypes.string,
     headType: PropTypes.string,
     onClose: PropTypes.func.isRequired,

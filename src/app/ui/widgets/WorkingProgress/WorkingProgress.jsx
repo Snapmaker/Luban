@@ -97,6 +97,7 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
             widgetActions.setDisplay(false);
         }
     }, [isConnected, currentWorkflowStatus, sent, total, widgetActions]);
+
     const handleMachine = (type) => {
         try {
             switch (type) {
@@ -161,7 +162,7 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
                 </div>
             )}
             {showStopComfirmModal && (
-                <StopConfirmModal onClose={() => setShowStopComfirmModal(false)} onConfirm={() => { controlActions.onCallBackStop(); }} />
+                <StopConfirmModal onClose={() => { setShowStopComfirmModal(false); console.log('on close'); }} onConfirm={() => { controlActions.onCallBackStop(); }} />
             )}
         </div>
     );

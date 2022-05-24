@@ -1210,6 +1210,7 @@
     "key-Workspace/GCodeParams-Right nozzle temperature": "右喷嘴温度",
     "key-Workspace/RunJobWarningModal-Mismatch header": "Gcode 文件类型不符",
     "key-Workspace/RunJobWarningModal-Unknown header": "Gcode 文件类型未知",
+    "key-Workspace/RunJobWarningModal-Unknown toolhead": "未检测到执行头，请确定是否继续",
     "key-Workspace/RunJobWarningModal-Mismatch body": "当前 Gcode 文件类型{{gcodeType}}与当前连接机器的执行头类型{{headType}}不一致，请确认是否开始执行 Gcode?",
     "key-Workspace/RunJobWarningModal-Unknown body": "当前 Gcode 文件类型未知，请确认是否使用当前连接机器的执行头{{headType}}开始作业?",
     

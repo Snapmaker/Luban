@@ -832,6 +832,7 @@ function WifiTransport({ widgetActions, controlActions }) {
             {showPreviewToRunJobModal && (
                 <PreviewToRunJobModal
                     isMismatchHead={!isUnknownGCodeType}
+                    isUnKownHead={headType !== HEAD_CNC && headType !== HEAD_LASER && headType !== HEAD_PRINTING}
                     gcodeType={gcodeFiles[selectFileIndex] && gcodeFiles[selectFileIndex].type}
                     headType={headType}
                     onClose={() => { setShowPreviewToRunJobModal(false); }}
