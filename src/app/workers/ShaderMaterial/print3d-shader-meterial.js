@@ -32,14 +32,14 @@ export const PRINT3D_UNIFORMS = {
 };
 export const PRINT3D_VERT_SHADER = `
 varying vec3 v_normal;
-varying vec3 v_eye_vector;
+// varying vec3 v_eye_vector;
 
 void main(){
-    vec4 vertex = vec4(position, 1.0);
+    // vec4 vertex = vec4(position, 1.0);
     // vec4 vertex = viewMatrix * vec4(position, 1.0);
     v_normal = normal;
     // v_normal = normalMatrix * normal;
-    v_eye_vector = vec3(vertex);
+    // v_eye_vector = vec3(vertex);
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }`;
 export const PRINT3D_FRAG_SHADER = `
@@ -67,7 +67,7 @@ uniform int u_r_travel_visible;
 uniform int u_r_unknown_visible;
 
 varying vec3 v_normal;
-varying vec3 v_eye_vector;
+// varying vec3 v_eye_vector;
 
 uniform vec3 u_color_extruder;
 uniform vec3 u_color_line_type;
@@ -152,15 +152,15 @@ void main(){
         return;
     }
 
-    float shininess = 60.0;
+    // float shininess = 60.0;
     float light_ambient = 0.4;
     float light_diffuse = 1.0;
-    float light_specular = 1.0;
+    // float light_specular = 1.0;
     vec3 light_direction = cameraPosition;
 
     vec4 material_ambient = vec4(0.0);
     vec4 material_diffuse = vec4(0.0);
-    vec4 material_specular = vec4(0.0);
+    // vec4 material_specular = vec4(0.0);
 
     if(u_middle_layer_set_gray == 1){
         if(u_layer_index != u_visible_layer_range_end){
@@ -180,7 +180,7 @@ void main(){
 
     // https://en.wikipedia.org/wiki/Phong_shading
     material_ambient = vec4(material_diffuse);
-    material_specular = vec4(material_diffuse);
+    // material_specular = vec4(material_diffuse);
     material_diffuse = vec4(material_diffuse * 0.8);
 
     vec3 L = normalize(light_direction);
@@ -193,10 +193,10 @@ void main(){
 
     if (lambert_term > 0.0) {
         Id = light_diffuse * material_diffuse * lambert_term;
-        vec3 E = normalize(-v_eye_vector);
-        vec3 R = reflect(-L, N);
-        float specular = pow(max(dot(R, E), 0.0), shininess);
-        Is = light_specular * material_specular * specular;
+        // vec3 E = normalize(-v_eye_vector);
+        // vec3 R = reflect(-L, N);
+        // float specular = pow(max(dot(R, E), 0.0), shininess);
+        // Is = light_specular * material_specular * specular;
     }
     gl_FragColor = vec4(vec3(Ia + Id), 1.0);
 }`;
