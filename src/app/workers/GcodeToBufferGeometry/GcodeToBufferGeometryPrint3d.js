@@ -232,7 +232,6 @@ class GcodeToBufferGeometryPrint3d {
         // bufferGeometry.setAttribute('a_tool_code', toolCodeAttribute);
 
         // onParsed(bufferGeometry, layerCount, bounds);
-        // console.log(this.gcodeEntityLayers);
         onParsed(this.gcodeEntityLayers, layerCount, bounds);
     }
 

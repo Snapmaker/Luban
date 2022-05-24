@@ -12,8 +12,7 @@ function elementToVector3(arr) {
 }
 
 function lineToGeometry(originalPositions, breakPositionsIndex, width, height) {
-    const positions = elementToVector3(originalPositions);
-    const line = positions;
+    const line = elementToVector3(originalPositions);
     const zUp = new THREE.Vector3(0, 0, 1), zDown = new THREE.Vector3(0, 0, -1);
     const vertices = [], indices = [], normals = [];
     const halfHeight = height / 2;
