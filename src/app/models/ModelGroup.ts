@@ -10,7 +10,7 @@ import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
 import { ModelInfo as SVGModelInfo, TMode, TSize } from './BaseModel';
 import ThreeModel from './ThreeModel';
 import SvgModel from './SvgModel';
-import { EPSILON, SELECTEVENT, HEAD_TYPE, HEAD_PRINTING } from '../constants';
+import { EPSILON, SELECTEVENT, HEAD_PRINTING, HEAD_LASER, HEAD_CNC } from '../constants';
 
 import ThreeUtils from '../three-extensions/ThreeUtils';
 import ThreeGroup from './ThreeGroup';
@@ -51,6 +51,8 @@ type TMaterials = {
     z: number;
 }
 
+type THeadType = typeof HEAD_PRINTING | typeof HEAD_LASER | typeof HEAD_CNC;
+
 class ModelGroup extends EventEmitter {
     public object: Group;
     public grayModeObject: Group;
@@ -60,7 +62,7 @@ class ModelGroup extends EventEmitter {
     public materials: TMaterials;
     private groupsChildrenMap: Map<ThreeGroup, (string | ThreeModel)[]> = new Map();
     private brushMesh: Mesh<SphereBufferGeometry, MeshStandardMaterial> = null;
-    private headType: HEAD_TYPE;
+    private headType: THeadType;
     private clipboard: TModel[];
     private estimatedTime: number;
     private selectedGroup: Group;
@@ -73,7 +75,7 @@ class ModelGroup extends EventEmitter {
         y: number;
     }[];
 
-    public constructor(headType: HEAD_TYPE) {
+    public constructor(headType: THeadType) {
         super();
 
         this.headType = headType;
@@ -315,12 +317,6 @@ class ModelGroup extends EventEmitter {
                 this.removeModel(child, true);
             });
         }
-        // TODO ts remove
-        // if (!model.supportTag && model instanceof ThreeModel) { // remove support children
-        //     this.models
-        //         .filter((i) => i.supportTag && i.target === model)
-        //         .map((m) => this.removeModel(m));
-        // }
         if (model.meshObject && model.parent instanceof ThreeGroup) {
             // Reset the model to be deleted to the object
             // Then update the tran of the model to the coordinates based on the world coordinate system
@@ -811,9 +807,6 @@ class ModelGroup extends EventEmitter {
         model.setSelected(false);
         ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().copy(this.selectedGroup.matrix).invert());
         let parent = this.object;
-        // if (model.supportTag) { // support parent should be the target model
-        //     parent = model.target.meshObject;
-        // }
         if (model.parent) {
             parent = model.parent.meshObject;
         }
@@ -857,7 +850,6 @@ class ModelGroup extends EventEmitter {
         this.selectedModelArray = [];
         this.getModels<Model3D>().forEach((model) => {
             if (model.type === 'primeTower') return;
-            // if (model.supportTag || model.type === 'primeTower') return;
             if (model.visible) {
                 this.addModelToSelectedGroup(model);
             }

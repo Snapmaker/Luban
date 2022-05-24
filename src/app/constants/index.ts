@@ -926,8 +926,6 @@ export const HEAD_PRINTING = 'printing';
 export const HEAD_LASER = 'laser';
 export const HEAD_CNC = 'cnc';
 export const HEAD_UNKNOWN = 'unknown';
-export type HEAD_TYPE = typeof HEAD_PRINTING | typeof HEAD_LASER | typeof HEAD_CNC;
-
 
 export const CONNECTION_TYPE_SERIAL = 'serial';
 export const CONNECTION_TYPE_WIFI = 'wifi';

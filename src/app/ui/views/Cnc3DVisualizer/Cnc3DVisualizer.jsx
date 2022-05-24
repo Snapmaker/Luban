@@ -217,6 +217,8 @@ class Cnc3DVisualizer extends Component {
     //         }
     //     }
     // }
+    componentDidUpdate() {
+    }
 
     getSnapshotBeforeUpdate(prevProps) {
         if (this.props.hasModel) {
