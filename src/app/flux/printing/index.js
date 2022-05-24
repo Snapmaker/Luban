@@ -286,12 +286,12 @@ const INITIAL_STATE = {
     supportBrushStatus: 'add', // add | remove
 
     gcodeEntity: {
-        extruderLlineWidth0: 1.5,
-        extruderLlineWidth: 1,
-        extruderRlineWidth0: 2,
-        extruderRlineWidth: 1.6,
-        layerHeight0: 0.5,
-        layerHeight: 0.4,
+        extruderLlineWidth0: 0,
+        extruderLlineWidth: 0,
+        extruderRlineWidth0: 0,
+        extruderRlineWidth: 0,
+        layerHeight0: 0,
+        layerHeight: 0,
     }
 };
 
