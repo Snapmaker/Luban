@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import classNames from 'classnames';
-import { map } from 'lodash';
+import { map, isObject } from 'lodash';
 import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
 import { Button } from '../../components/Buttons';
@@ -67,7 +67,7 @@ function SerialConnection() {
     function openPort() {
         server.openServer(({ msg }) => {
             console.log({ msg });
-            if (msg && msg !== 'inuse') {
+            if (!isObject(msg) && msg !== 'inuse') {
                 setErr(i18n._('key-workspace_open_port-Can not open this port'));
                 log.error('Error opening serial port', msg);
                 return;

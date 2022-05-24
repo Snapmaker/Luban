@@ -143,6 +143,12 @@ export default class Business extends Dispatcher {
         });
     }
 
+    unSubscribeLogFeedback(callback: ResponseCallback) {
+        return this.unsubscribe(0x01, 0xa1, callback).then(({ response, packet }) => {
+            return { code: response.result, packet, data: {} };
+        });
+    }
+
     getEmergencyStopInfo() {
         return this.send(0x01, 0x3b, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             // const isTouch = readBool(response.data);
@@ -327,6 +333,12 @@ export default class Business extends Dispatcher {
         });
     }
 
+    unSubscribeCurrentCoordinateInfo(callback: ResponseCallback) {
+        return this.unsubscribe(0x01, 0xa2, callback).then(({ response, packet }) => {
+            return { code: response.result, packet, data: {} };
+        });
+    }
+
     movementInstruction(direction: MoveDirection, distance: number, speed: number) {
         const info = new MovementInstruction(direction, distance, speed);
         return this.send(0x01, 0x34, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
@@ -452,6 +464,12 @@ export default class Business extends Dispatcher {
         });
     }
 
+    unSubscribeNozzleInfo(callback: ResponseCallback) {
+        return this.unsubscribe(0x10, 0xa0, callback).then(({ response, packet }) => {
+            return { code: response.result, packet, data: {} };
+        });
+    }
+
     GetHotBed(key: number) {
         const info = new GetHotBed(key);
         return this.send(0x14, 0x01, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
@@ -463,6 +481,12 @@ export default class Business extends Dispatcher {
     subscribeHotBedTemperature({ interval = 1000 }, callback: ResponseCallback) {
         return this.subscribe(0x14, 0xa0, interval, callback).then(({ response, packet }) => {
             return { response, packet, data: {} };
+        });
+    }
+
+    unSubscribeHotBedTemperature(callback: ResponseCallback) {
+        return this.unsubscribe(0x14, 0xa0, callback).then(({ response, packet }) => {
+            return { code: response.result, packet, data: {} };
         });
     }
 

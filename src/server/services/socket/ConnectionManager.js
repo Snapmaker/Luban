@@ -146,9 +146,11 @@ class ConnectionManager {
             timer = setTimeout(() => {
                 if (!hasData) {
                     console.log('timeout', hasData);
-                    callback && callback(protocol);
+                    protocol = SACP_PROTOCOL;
+                    // callback && callback('SACP');
+                    trySerialConnect?.close();
                 }
-            }, 1500);
+            }, 1000);
             // trySerialConnect.setTimeout(1000);
             // trySerialConnect.on('timeout', () => {
             //     console.log('timeout');

@@ -102,7 +102,22 @@ class SocketSerialNew extends SocketBASE {
         }
     }
 
-    public connectionClose = () => {
+    public connectionClose = async () => {
+        await this.sacpClient.unSubscribeLogFeedback(this.subscribeLogCallback).then(res => {
+            log.info(`unsubscribeLog: ${res}`);
+        });
+        await this.sacpClient.unSubscribeCurrentCoordinateInfo(this.subscribeCoordinateCallback).then(res => {
+            log.info(`unSubscribeCoordinate: ${res}`);
+        });
+        await this.sacpClient.unSubscribeHotBedTemperature(this.subscribeHotBedCallback).then(res => {
+            log.info(`unSubscribeHotBed, ${res}`);
+        });
+        await this.sacpClient.unSubscribeNozzleInfo(this.subscribeNozzleCallback).then(res => {
+            log.info(`unSubscribeNozzle: ${res}`);
+        });
+        await this.sacpClient.unsubscribeHeartbeat(this.subscribeHeartCallback).then(res => {
+            log.info(`unSubscribeHeart, ${res}`);
+        });
         this.serialport?.close();
         this.serialport?.destroy();
         this.sacpClient?.dispose();

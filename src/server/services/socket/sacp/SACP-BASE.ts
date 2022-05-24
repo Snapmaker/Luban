@@ -9,6 +9,7 @@ import CoordinateSystemInfo from '../../../lib/SACP-SDK/SACP/business/models/Coo
 import { EventOptions, MarlinStateData } from '../types';
 import ExtruderInfo from '../../../lib/SACP-SDK/SACP/business/models/ExtruderInfo';
 import CoordinateInfo, { Direction } from '../../../lib/SACP-SDK/SACP/business/models/CoordinateInfo';
+import { ResponseCallback } from '../../../lib/SACP-SDK/SACP/communication/Dispatcher';
 
 const log = logger('lib:SocketBASE');
 
@@ -18,6 +19,16 @@ class SocketBASE {
     socket: SocketServer;
 
     sacpClient: Business;
+
+    subscribeLogCallback: ResponseCallback;
+
+    subscribeHeartCallback: ResponseCallback;
+
+    subscribeNozzleCallback: ResponseCallback;
+
+    subscribeHotBedCallback: ResponseCallback;
+
+    subscribeCoordinateCallback: ResponseCallback;
 
     public startHeartbeatBase = (sacpClient: Business) => {
         this.sacpClient = sacpClient;
@@ -29,16 +40,15 @@ class SocketBASE {
             emergencyStopButton: false,
             enclosure: false
         };
-        this.sacpClient.logFeedbackLevel(2).then(({ response }) => {
+        this.sacpClient.logFeedbackLevel(5).then(({ response }) => {
             console.log('logLevel', response);
             if (response.result === 0) {
-                this.sacpClient.subscribeLogFeedback({ interval: 3600000 }, (data) => {
-                    console.log('logFeedback', readString(data.response.data, 1));
+                this.subscribeLogCallback = (data) => {
+                    // console.log('logFeedback', data, data.response.data, readString(data.response.data, 1));
                     const result = readString(data.response.data, 1).result;
                     this.socket && this.socket.emit('serialport:read', { data: result });
-                    // const stringData = data.response.data.toString();
-                    // console.log('stringData', stringData);
-                });
+                };
+                this.sacpClient.subscribeLogFeedback({ interval: 3600000 }, this.subscribeLogCallback);
             }
         });
         this.sacpClient.setHandler(0x01, 0x36, ({ param }) => {
@@ -48,12 +58,11 @@ class SocketBASE {
                 isHomed: !isHomed
             };
         });
-        this.sacpClient.subscribeHeartbeat({ interval: 1000 }, async (data) => {
-            // log.info(`receive heartbeat: ${data.response}`);
+        this.subscribeHeartCallback = async (data) => {
             statusKey = readUint8(data.response.data, 0);
             stateData.airPurifier = false;
             await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
-                // log.info(`revice moduleInfo: ${data.response}`);
+                log.info(`revice moduleInfo: ${data.response}`);
                 moduleInfos.forEach(module => {
                     if (includes(EMERGENCY_STOP_BUTTON, module.moduleId)) {
                         moduleStatusList.emergencyStopButton = true;
@@ -77,28 +86,71 @@ class SocketBASE {
                 headType: HEAD_PRINTING,
                 moduleList: moduleStatusList,
             } });
-            // clearTimeout(this.heartbeatTimer);
-            // this.heartbeatTimer = setTimeout(() => {
-            //     log.info('TCP connection closed');
-            //     this.socket && this.socket.emit('connection:close');
-            // }, 60000); // TODO: should change this after file transfer ready
-        }).then((res) => {
+        };
+        this.sacpClient.subscribeHeartbeat({ interval: 1000 }, this.subscribeHeartCallback).then((res) => {
             log.info(`subscribe heartbeat success: ${res.code}`);
         });
-        this.sacpClient.subscribeHotBedTemperature({ interval: 1000 }, (data) => {
-            // log.info(`revice hotbed: ${data.response}`);
+        // async (data) => {
+        // // log.info(`receive heartbeat: ${data.response}`);
+        // statusKey = readUint8(data.response.data, 0);
+        // stateData.airPurifier = false;
+        // await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
+        //     // log.info(`revice moduleInfo: ${data.response}`);
+        //     moduleInfos.forEach(module => {
+        //         if (includes(EMERGENCY_STOP_BUTTON, module.moduleId)) {
+        //             moduleStatusList.emergencyStopButton = true;
+        //         }
+        //         if (includes(ENCLOSURE_MODULES, module.moduleId)) {
+        //             moduleStatusList.enclosure = true;
+        //         }
+        //         if (includes(ROTARY_MODULES, module.moduleId)) {
+        //             moduleStatusList.rotaryModule = true;
+        //         }
+        //         if (includes(AIR_PURIFIER_MODULES, module.moduleId)) {
+        //             stateData.airPurifier = true;
+        //             // need to update airPurifier status
+        //         }
+        //     });
+        // });
+        // // stateData.status = WORKFLOW_STATUS_MAP[statusKey];
+        // this.socket && this.socket.emit('Marlin:state', { state: {
+        //     ...stateData,
+        //     status: WORKFLOW_STATUS_MAP[statusKey],
+        //     headType: HEAD_PRINTING,
+        //     moduleList: moduleStatusList,
+        // } });
+        // clearTimeout(this.heartbeatTimer);
+        // this.heartbeatTimer = setTimeout(() => {
+        //     log.info('TCP connection closed');
+        //     this.socket && this.socket.emit('connection:close');
+        // }, 60000); // TODO: should change this after file transfer ready
+        // }
+        this.subscribeHotBedCallback = (data) => {
             const hotBedInfo = new GetHotBed().fromBuffer(data.response.data);
+            log.info(`hotbedInfo, ${hotBedInfo}`);
             stateData = {
                 ...stateData,
                 heatedBedTargetTemperature: hotBedInfo?.zoneList[0]?.targetTemzperature || 0,
                 heatedBedTemperature: hotBedInfo?.zoneList[0]?.currentTemperature || 0
             };
-        }).then(res => {
+        };
+        this.sacpClient.subscribeHotBedTemperature({ interval: 1000 }, this.subscribeHotBedCallback).then(res => {
             log.info(`subscribe hotbed success: ${res}`);
         });
-        this.sacpClient.subscribeNozzleInfo({ interval: 1000 }, (data) => {
-            // log.info(`revice nozzle: ${data.response}`);
+        //     (data) => {
+        //     // log.info(`revice hotbed: ${data.response}`);
+        //     const hotBedInfo = new GetHotBed().fromBuffer(data.response.data);
+        //     stateData = {
+        //         ...stateData,
+        //         heatedBedTargetTemperature: hotBedInfo?.zoneList[0]?.targetTemzperature || 0,
+        //         heatedBedTemperature: hotBedInfo?.zoneList[0]?.currentTemperature || 0
+        //     };
+        // }).then(res => {
+        //     log.info(`subscribe hotbed success: ${res}`);
+        // });
+        this.subscribeNozzleCallback = (data) => {
             const nozzleInfo = new ExtruderInfo().fromBuffer(data.response.data);
+            log.info(`nozzleInfo, ${nozzleInfo}`);
             const leftInfo = find(nozzleInfo.extruderList, { index: 0 });
             const rightInfo = find(nozzleInfo.extruderList, { index: 1 });
             stateData = {
@@ -108,11 +160,25 @@ class SocketBASE {
                 nozzleRightTargetTemperature: rightInfo?.targetTemperature || 0,
                 nozzleRightTemperature: rightInfo?.currentTemperature || 0
             };
-        }).then(res => {
+        };
+        this.sacpClient.subscribeNozzleInfo({ interval: 1000 }, this.subscribeNozzleCallback).then(res => {
             log.info(`subscribe nozzle success: ${res}`);
         });
-        this.sacpClient.subscribeCurrentCoordinateInfo({ interval: 1000 }, (data) => {
-            // log.info(`revice coordinate: ${data.response}`);
+        //     (data) => {
+        //     // log.info(`revice nozzle: ${data.response}`);
+        //     const nozzleInfo = new ExtruderInfo().fromBuffer(data.response.data);
+        //     const leftInfo = find(nozzleInfo.extruderList, { index: 0 });
+        //     const rightInfo = find(nozzleInfo.extruderList, { index: 1 });
+        //     stateData = {
+        //         ...stateData,
+        //         nozzleTemperature: leftInfo.currentTemperature,
+        //         nozzleTargetTemperature: leftInfo.targetTemperature,
+        //         nozzleRightTargetTemperature: rightInfo?.targetTemperature || 0,
+        //         nozzleRightTemperature: rightInfo?.currentTemperature || 0
+        //     };
+        // }
+        this.subscribeCoordinateCallback = (data) => {
+            log.info(`revice coordinate: ${data.response}`);
             const response = data.response;
             const coordinateInfos = new CoordinateSystemInfo().fromBuffer(response.data);
             const currentCoordinate = coordinateInfos.coordinates;
@@ -130,15 +196,52 @@ class SocketBASE {
                 z: originCoordinate[2].value,
                 b: originCoordinate[3].value
             };
+            const isHomed = !(coordinateInfos?.homed); // 0: homed, 1: need to home
+            // state.isHomed = isHomed;
+            // state.isMoving = false;
             stateData = {
                 ...stateData,
                 pos,
-                originOffset
+                originOffset,
+                isHomed,
+                // isMoving: false
             };
             // console.log('originOffset', originOffset, pos);
-        }).then(res => {
+        };
+        this.sacpClient.subscribeCurrentCoordinateInfo({ interval: 1000 }, this.subscribeCoordinateCallback).then(res => {
             log.info(`subscribe coordination success: ${res}`);
         });
+        //     (data) => {
+        //     // log.info(`revice coordinate: ${data.response}`);
+        //     const response = data.response;
+        //     const coordinateInfos = new CoordinateSystemInfo().fromBuffer(response.data);
+        //     const currentCoordinate = coordinateInfos.coordinates;
+        //     const originCoordinate = coordinateInfos.originOffset;
+        //     const pos = {
+        //         x: currentCoordinate[0].value,
+        //         y: currentCoordinate[1].value,
+        //         z: currentCoordinate[2].value,
+        //         b: currentCoordinate[3].value,
+        //         isFourAxis: moduleStatusList.rotaryModule
+        //     };
+        //     const originOffset = {
+        //         x: originCoordinate[0].value,
+        //         y: originCoordinate[1].value,
+        //         z: originCoordinate[2].value,
+        //         b: originCoordinate[3].value
+        //     };
+        //     const isHomed = !(coordinateInfos?.homed); // 0: homed, 1: need to home
+        //     // state.isHomed = isHomed;
+        //     // state.isMoving = false;
+        //     stateData = {
+        //         ...stateData,
+        //         pos,
+        //         originOffset,
+        //         isHomed,
+        //         // isMoving: false
+        //     };
+        //     // console.log('originOffset', originOffset, pos);
+        // }
     };
 
     public executeGcode = async (options: EventOptions, callback: () => void) => {
