@@ -1,8 +1,8 @@
 import _ from 'lodash';
-import { Vector2 } from '../../../shared/lib/math/Vector2';
+import { Vector2 } from '../math/Vector2';
 
-import { isEqual } from '../../../shared/lib/utils';
-import { polyDiff, polyIntersection, polyOffset, recursivePolyUnion } from '../clipper/cLipper-adapter';
+import { isEqual } from '../utils';
+import { polyDiff, polyIntersection, polyOffset, recursivePolyUnion } from './cLipper-adapter';
 
 function getDist2FromLine(p, a, b) {
     const vba = Vector2.sub(b, a);
@@ -289,7 +289,7 @@ export class Polygons {
             const isDegenerate = function (last, now, next) {
                 const lastLine = Vector2.sub(now, last);
                 const nextLine = Vector2.sub(next, now);
-                return isEqual(Vector2.dot(lastLine, nextLine), -1 * Vector2.length(lastLine) * Vector2.length(nextLine));
+                return isEqual(Vector2.dot(lastLine, nextLine), -1 * Vector2._length(lastLine) * Vector2._length(nextLine));
             };
 
             let isChanged = false;

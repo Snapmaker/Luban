@@ -6,7 +6,7 @@ import CncToolPathGenerator from '../../../lib/ToolPathGenerator/CncToolPathGene
 import CncReliefToolPathGenerator from '../../../lib/ToolPathGenerator/CncReliefToolPathGenerator';
 import logger from '../../../lib/logger';
 import { PROCESS_MODE_MESH } from '../../../constants';
-import { polyUnion } from '../../../lib/clipper/cLipper-adapter';
+import { polyUnion } from '../../../../shared/lib/clipper/cLipper-adapter';
 import CncMeshToolPathGenerator from '../../../lib/ToolPathGenerator/MeshToolPath/CncMeshToolPathGenerator';
 import sendMessage from '../utils/sendMessage';
 

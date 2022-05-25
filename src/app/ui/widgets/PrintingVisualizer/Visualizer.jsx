@@ -35,6 +35,9 @@ import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 import { emitUpdateControlInputEvent } from '../../components/SMCanvas/TransformControls';
 import ModeToggleBtn from './ModeToggleBtn';
 import { logModelViewOperation } from '../../../lib/gaEvent';
+import VisualizerClippingControl from './VisualizerClippingControl';
+// import { Polygons } from '../../../../server/lib/MeshProcess/Polygons';
+import { polyOffset } from '../../../../shared/lib/clipper/cLipper-adapter';
 
 const initQuaternion = new Quaternion();
 const modeSuffix = {
@@ -42,6 +45,24 @@ const modeSuffix = {
     [TRANSLATE_MODE]: 'mm',
     [SCALE_MODE]: '%'
 };
+
+const _path = [-111, 0, -111, -111, -111, -111, 0, -111, 0, -111, 111, -111, 111, -111, 111, 0, 111, 0, 111, 111, 111, 111, 0, 111, 0, 111, -111, 111, -111, 111, -111, 0];
+
+const polygon = [];
+for (let index = 0; index < _path.length; index += 2) {
+    polygon.push({
+        x: _path[index],
+        y: _path[index + 1]
+    });
+}
+const _paths = polyOffset([polygon], -10, 1);
+const arr = _paths[0].reduce((p, c) => {
+    p.push(c.x);
+    p.push(c.y);
+    return p;
+}, []);
+JSON.stringify(arr);
+
 class Visualizer extends PureComponent {
     static propTypes = {
         isActive: PropTypes.bool.isRequired,
@@ -60,6 +81,7 @@ class Visualizer extends PureComponent {
         leftBarOverlayVisible: PropTypes.bool.isRequired,
         displayedType: PropTypes.string,
         menuDisabledCount: PropTypes.number,
+        clippingOutlines: PropTypes.object,
         // allModel: PropTypes.array,
 
         hideSelectedModel: PropTypes.func.isRequired,
@@ -221,6 +243,7 @@ class Visualizer extends PureComponent {
             this.canvas.current.updateBoundingBox();
         },
         setTransformMode: (value) => {
+            console.log('-------------------- ', value);
             this.props.setTransformMode(value);
             this.canvas.current.setTransformMode(value);
             document.getElementById('control-input') && (document.getElementById('control-input').style.display = 'none');
@@ -514,6 +537,7 @@ class Visualizer extends PureComponent {
 
                 <div className={styles['visualizer-preview-control']}>
                     <VisualizerPreviewControl />
+                    <VisualizerClippingControl />
                 </div>
 
                 <ModeToggleBtn />
@@ -532,6 +556,7 @@ class Visualizer extends PureComponent {
                         modelGroup={modelGroup}
                         displayedType={displayedType}
                         printableArea={this.printableArea}
+                        clippingOutlines={this.props.clippingOutlines}
                         cameraInitialPosition={new Vector3(0, -Math.max(size.x, size.y, size.z) * 2, size.z / 2)}
                         cameraInitialTarget={new Vector3(0, 0, size.z / 2)}
                         cameraUp={new Vector3(0, 0, 1)}
@@ -681,7 +706,8 @@ const mapStateToProps = (state, ownProps) => {
         primeTowerHeight,
         qualityDefinitions,
         defaultQualityId,
-        stopArea
+        stopArea,
+        clippingOutlines
     } = printing;
     const activeQualityDefinition = find(qualityDefinitions, { definitionId: defaultQualityId });
     const enablePrimeTower = activeQualityDefinition?.settings?.prime_tower_enable?.default_value;
@@ -717,7 +743,8 @@ const mapStateToProps = (state, ownProps) => {
         progressStatesManager,
         enablePrimeTower,
         primeTowerHeight,
-        printingToolhead
+        printingToolhead,
+        clippingOutlines
     };
 };
 

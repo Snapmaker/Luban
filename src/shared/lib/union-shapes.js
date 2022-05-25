@@ -1,5 +1,5 @@
 import { Vector2 } from './math/Vector2';
-import { recursivePolyUnion } from '../../server/lib/clipper/cLipper-adapter';
+import { recursivePolyUnion } from './clipper/cLipper-adapter';
 
 function isPointInPolygon(point, polygon) {
     let inside = false;

@@ -3,8 +3,8 @@ import { PolygonUtils, PolygonsUtils } from '../math/PolygonsUtils';
 import AngleRange from './AngleRange';
 import { Line, TYPE_SEGMENT } from '../math/Line';
 import { isEqual } from '../utils';
-import { polyDiff, polyIntersection, polyOffset, simplifyPolygons } from '../../../server/lib/clipper/cLipper-adapter';
-import * as ClipperLib from '../../../server/lib/clipper/clipper';
+import { polyDiff, polyIntersection, polyOffset, simplifyPolygons } from '../clipper/cLipper-adapter';
+import * as ClipperLib from '../clipper/clipper';
 
 const roundAndMulPoint = (point, n = 1) => {
     point.x = Math.round(point.x * n);
@@ -145,10 +145,12 @@ export class Nest {
     }
 
     sortParts() {
+        if (this.parts.length === 0) {
+            return;
+        }
         this.parts.sort((part1, part2) => {
             return part2.absArea - part1.absArea;
         });
-
         let minPartArea = this.parts[0].absArea;
         for (let i = 1; i < this.parts.length; i++) {
             minPartArea = Math.min(minPartArea, this.parts[0].absArea);
@@ -592,6 +594,19 @@ export class Nest {
         return newTraceLines;
     }
 
+    /**
+     *
+
+    traceLines: {
+        sp: {
+            x: number, y: number
+        },
+        ep: {
+            x: number, y: number
+        }
+    }[]
+
+     */
     traverTraceLines(traceLines) {
         const newTraceLines = [];
 

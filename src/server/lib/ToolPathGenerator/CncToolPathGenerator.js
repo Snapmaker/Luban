@@ -11,9 +11,9 @@ import XToBToolPath from '../ToolPath/XToBToolPath';
 import { angleToPi, round } from '../../../shared/lib/utils';
 import { Vector2 } from '../../../shared/lib/math/Vector2';
 import { bresenhamLine } from '../bresenham-line';
-import { polyOffset } from '../clipper/cLipper-adapter';
+import { polyOffset } from '../../../shared/lib/clipper/cLipper-adapter';
 import { EPS } from '../../constants';
-import * as ClipperLib from '../clipper/clipper';
+import * as ClipperLib from '../../../shared/lib/clipper/clipper';
 
 function distance(p, q) {
     return Math.sqrt((p[0] - q[0]) * (p[0] - q[0]) + (p[1] - q[1]) * (p[1] - q[1]));

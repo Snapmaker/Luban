@@ -1722,14 +1722,19 @@ export const actions = {
         actions.__loadModel(fileNames)(dispatch, getState);
     },
 
-    setTransformMode: value => dispatch => {
+    setTransformMode: (value) => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+
         // dispatch(actions.destroyGcodeLine());
         // dispatch(actions.displayModel());
-        dispatch(
-            actions.updateState({
-                transformMode: value
-            })
-        );
+        if (value) {
+            modelGroup.updateClippingPlane(99999);
+        } else {
+            modelGroup.calaClippingMap();
+        }
+        dispatch(actions.updateState({
+            transformMode: value
+        }));
     },
 
     destroyGcodeLine: () => (dispatch, getState) => {
@@ -3637,6 +3642,7 @@ export const actions = {
                     dispatch(actions.updateState(modelState));
                     dispatch(actions.displayModel());
                     dispatch(actions.destroyGcodeLine());
+
                     resolve();
                 } else if (
                     primeTowerTag
@@ -3658,7 +3664,10 @@ export const actions = {
                                 const material = new THREE.MeshPhongMaterial({
                                     color: 0xa0a0a0,
                                     specular: 0xb0b0b0,
-                                    shininess: 0
+                                    shininess: 0,
+                                    side: THREE.DoubleSide,
+                                    clipIntersection: true,
+                                    // wireframe: true
                                 });
 
                                 bufferGeometry.setAttribute(
@@ -4504,6 +4513,12 @@ export const actions = {
             dispatch(actions.destroyGcodeLine());
             dispatch(actions.displayModel());
         }
+    },
+
+    updateClippingPlane: (height) => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.updateClippingPlane(height);
+        dispatch(actions.render());
     }
 };
 

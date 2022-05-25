@@ -192,6 +192,12 @@ class Canvas extends PureComponent {
         this.props.printableArea.addEventListener('update', () => this.renderScene()); // TODO: another way to trigger re-render
 
         this.group.add(this.modelGroup.object);
+        this.group.add(this.modelGroup.clippingGroup);
+        this.group.add(this.modelGroup.clippingWallGroup);
+        this.group.add(this.modelGroup.surfaceLineGroup);
+        this.group.add(this.modelGroup.clippingSkinGroup);
+        this.group.add(this.modelGroup.clippingInfillGroup);
+
         this.toolPathGroupObject && this.group.add(this.toolPathGroupObject);
         this.gcodeLineGroup && this.group.add(this.gcodeLineGroup);
         this.backgroundGroup && this.group.add(this.backgroundGroup);

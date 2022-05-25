@@ -12,14 +12,18 @@ export enum WorkerMethods {
     gcodeToBufferGeometry = 'gcodeToBufferGeometry',
     loadModel = 'loadModel',
     scaleToFitWithRotate = 'scaleToFitWithRotate',
-    toolpathRenderer = 'toolpathRenderer'
+    toolpathRenderer = 'toolpathRenderer',
+    sortUnorderedLine = 'sortUnorderedLine',
+    translatePolygons = 'translatePolygons',
+    calaClippingWall= 'calaClippingWall',
+    calaClippingSkin = 'calaClippingSkin'
     // LUBAN worker methods END
 }
 
 type IWorkerManager = {
-    [method in WorkerMethods]: (
+    [method in WorkerMethods]: <T>(
         data: unknown[],
-        onmessage: (data: unknown) => void
+        onmessage: (data: T) => void
     ) => {
         terminate(): void;
     };

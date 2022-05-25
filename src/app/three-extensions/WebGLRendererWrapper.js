@@ -13,6 +13,11 @@ class WebGLRendererWrapper {
             this.renderer = new WebGLRenderer(options);
             this.renderer.setClearColor(new Color(0xF5F5F7), 1);
             this.renderer.shadowMap.enabled = true;
+            // this.renderer.shadowMap.type = PCFSoftShadowMap;
+            // this.renderer.outputEncoding = sRGBEncoding;
+            this.renderer.localClippingEnabled = true;
+            // const localPlane = new Plane(new Vector3(0, 0, -1), 15);
+            // this.renderer.clippingPlanes = [localPlane];
         } else {
             this.renderer = null;
         }

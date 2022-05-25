@@ -5,7 +5,7 @@ import { round } from '../../../../shared/lib/utils';
 import { MeshProcess } from '../../MeshProcess/MeshProcess';
 import { Slicer } from '../../MeshProcess/Slicer';
 import ToolPath from '../../ToolPath';
-import { Polygon } from '../../MeshProcess/Polygons';
+import { Polygon } from '../../../../shared/lib/clipper/Polygons';
 
 export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
     constructor(modelInfo) {

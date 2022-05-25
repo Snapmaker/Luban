@@ -55,7 +55,7 @@ export class Vector2 {
         return isEqual(v0.x, v1.x) && isEqual(v0.y, v1.y);
     }
 
-    static length(v) {
+    static _length(v) {
         return Math.sqrt(v.x * v.x + v.y * v.y);
     }
 
@@ -72,7 +72,7 @@ export class Vector2 {
     }
 
     static normalize(v) {
-        const length = Vector2.length(v);
+        const length = Vector2._length(v);
         return {
             x: v.x / length,
             y: v.y / length

@@ -1,9 +1,10 @@
-import { Sphere, SphereBufferGeometry, MeshStandardMaterial, Vector3, Group, Matrix4, BufferGeometry, Mesh, DoubleSide, Float32BufferAttribute, MeshBasicMaterial, Box3, Intersection, Object3D, Plane, Geometry } from 'three';
+import { Sphere, SphereBufferGeometry, MeshStandardMaterial, Vector3, Group, Matrix4, BufferGeometry, MeshPhongMaterial, Mesh, DoubleSide, Float32BufferAttribute, MeshBasicMaterial, Line3, Plane, BufferAttribute, DynamicDrawUsage, LineBasicMaterial, LineSegments, Vector2, PlaneBufferGeometry, NotEqualStencilFunc, ZeroStencilOp, PlaneGeometry, Box3, Object3D, Intersection, Geometry } from 'three';
 import EventEmitter from 'events';
 import { CONTAINED, INTERSECTED, NOT_INTERSECTED } from 'three-mesh-bvh';
 // import { EPSILON } from '../../constants';
 import { v4 as uuid } from 'uuid';
 import _ from 'lodash';
+import { now } from 'moment';
 import i18n from '../lib/i18n';
 
 import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
@@ -16,6 +17,14 @@ import ThreeUtils from '../three-extensions/ThreeUtils';
 import ThreeGroup from './ThreeGroup';
 import PrimeTowerModel from './PrimeTowerModel';
 import { calculateUvVector } from '../lib/threejs/ThreeStlCalculation';
+// import sortUnorderedLine from '../workers/sort-unordered-line';
+import { Polygon, Polygons } from '../../shared/lib/clipper/Polygons';
+import calculateSectionPoints from '../lib/calculate-section-points';
+
+import workerManager from '../lib/manager/workerManager';
+import sortUnorderedLine from './sortUnorderedLine';
+import generateSkin from '../lib/generate-skin';
+import { polyDiff, polyIntersection, polyOffset } from '../../shared/lib/clipper/cLipper-adapter';
 
 const EVENTS = {
     UPDATE: { type: 'update' }
@@ -75,6 +84,14 @@ class ModelGroup extends EventEmitter {
         x: number;
         y: number;
     }[];
+    private clippingGroup = new Group();
+    private clippingWallGroup = new Group();
+    private clippingSkinGroup = new Group();
+    private clippingInfillGroup = new Group();
+    private surfaceLineGroup = new Group();
+    private planeMesh
+    private maxHeight = 0;
+    private clippingHeight: number;
 
     public constructor(headType: THeadType) {
         super();
@@ -94,12 +111,27 @@ class ModelGroup extends EventEmitter {
         this.clipboard = [];
         this.estimatedTime = 0;
         // this.selectedModelIDArray = [];
-
+        this.clippingGroup.name = 'clippingGroup';
         this.candidatePoints = null;
         this._bbox = null;
         this.selectedModelConvexMeshGroup = new Group();
         // The selectedToolPathModelIDs is used to generate the toolpath
         this.selectedToolPathModelIDs = [];
+
+        // const planeGeom = new PlaneBufferGeometry();
+        const planeGeom = new PlaneGeometry(300, 300);
+        this.planeMesh = new Mesh(planeGeom, new MeshBasicMaterial({
+            side: DoubleSide,
+            stencilWrite: true,
+            // stencilFunc: NotEqualStencilFunc,
+            stencilFail: ZeroStencilOp,
+            stencilZFail: ZeroStencilOp,
+            stencilZPass: ZeroStencilOp
+        }));
+        // planeMesh.scale.setScalar(1.5);
+        this.planeMesh.position.set(0, 0, 5);
+        this.planeMesh.material.color.set(0x80deea).convertLinearToSRGB();
+        this.planeMesh.renderOrder = 2;
     }
 
     // TODO: save last value and compare changes
@@ -1374,6 +1406,7 @@ class ModelGroup extends EventEmitter {
         this.prepareSelectedGroup();
         this.updatePrimeTowerHeight();
         recovery();
+        // this.calaClippingMap();
 
         if (selectedModelArray.length === 0) {
             return {};
@@ -1658,7 +1691,7 @@ class ModelGroup extends EventEmitter {
                 // todo, use this to refresh obj list
                 this.models = [...this.models];
                 this.object.add(model.meshObject);
-
+                this.clippingGroup.add(model.clippingGroup);
                 this.selectModelById(model.modelID);
             }
         } else {
@@ -2058,6 +2091,7 @@ class ModelGroup extends EventEmitter {
                 maxHeight = Math.max(maxHeight, modelItemHeight);
             }
         });
+        this.maxHeight = maxHeight;
         if (typeof this.primeTowerHeightCallback === 'function') {
             this.primeTowerHeightCallback(Math.min(maxHeight, maxBoundingBoxHeight));
         }
@@ -2350,6 +2384,195 @@ class ModelGroup extends EventEmitter {
                 return model.children.every((subModel) => subModel.visible);
             }
             return true;
+        });
+    }
+
+    intersectionSkin(model, layerIndex = this.clippingHeight, subPaths) {
+        const vectorsArray = model.clippingMap.get(layerIndex);
+        if (!subPaths && vectorsArray) {
+            return vectorsArray;
+        }
+        if (!vectorsArray && subPaths) {
+            return subPaths;
+        }
+        return polyIntersection(subPaths, vectorsArray);
+    }
+
+    updateClippingInfill(model, clippingInner) {
+        const posAttr = clippingInner.geometry.attributes.position;
+        const inverseMatrix = new Matrix4();
+        inverseMatrix.copy(model.meshObject.matrixWorld).invert();
+        // const res = skinArea.length === 0 ? innerWall : polyDiff(innerWall, skinArea);
+        const res = model.infillMap.get(this.clippingHeight);
+        if (res && res.length !== 0) {
+            const arr = [];
+            res.forEach((vectors) => {
+                for (let i = 0; i < vectors.length; i++) {
+                    const begin = vectors[i];
+                    const end = vectors[i + 1];
+                    arr.push(begin, end);
+                }
+            });
+
+            // console.log(this.clippingHeight);
+            // console.log('-------------inner --------------', (this.clippingHeight / 0.24).toFixed(0) % 2);
+            const skinLines = generateSkin([...arr], 1, 60, model.boundingBox);
+            if (!skinLines.length) {
+                return [];
+            }
+            let j = 0;
+            skinLines.forEach((point) => {
+                posAttr.setXYZ(j, point.x, point.y, this.clippingHeight);
+                j++;
+            });
+            clippingInner.geometry.setDrawRange(0, j);
+            posAttr.needsUpdate = true;
+            clippingInner.visible = true;
+        } else {
+            clippingInner.visible = false;
+        }
+    }
+
+    updateClippingSkin(model, clippingSkin) {
+        const posAttr = clippingSkin.geometry.attributes.position;
+        const inverseMatrix = new Matrix4();
+        inverseMatrix.copy(model.meshObject.matrixWorld).invert();
+
+        const skinArea = model.skinMap.get(this.clippingHeight);
+        if (!skinArea || skinArea.length === 0) {
+            clippingSkin.visible = false;
+            return [];
+        }
+
+        const arr = [];
+        skinArea.forEach((vectors) => {
+            for (let k = 0; k < vectors.length; k++) {
+                const begin = vectors[k];
+                const end = vectors[k + 1];
+                arr.push(begin, end);
+            }
+        });
+
+        const skinLines = generateSkin([...arr], 1, Number(
+            (this.clippingHeight / 0.24).toFixed(0)
+        ) % 2 ? 135 : 45, model.boundingBox);
+        if (!skinLines.length) {
+            return [];
+        }
+        let j = 0;
+        skinLines.forEach((point) => {
+            posAttr.setXYZ(j, point.x, point.y, this.clippingHeight);
+            j++;
+        });
+        clippingSkin.geometry.setDrawRange(0, j);
+        posAttr.needsUpdate = true;
+        clippingSkin.visible = true;
+        return skinArea;
+    }
+
+    updateClippingWall(model, clippingWall) {
+        const posAttr = clippingWall.geometry.attributes.position;
+        const inverseMatrix = new Matrix4();
+        inverseMatrix.copy(model.meshObject.matrixWorld).invert();
+
+        const vectorsArray = model.clippingMap.get(this.clippingHeight);
+        if (this.clippingHeight <= model.boundingBox.max.z && vectorsArray && vectorsArray.length > 0) {
+            let index = 0;
+            vectorsArray.forEach((vectors) => {
+                vectors.forEach((point) => {
+                    posAttr.setXYZ(index++, point.x, point.y, this.clippingHeight);
+                });
+            });
+
+            const res = model.innerWallMap.get(this.clippingHeight);
+            res.forEach((vectors) => {
+                for (let i = 0; i < vectors.length; i++) {
+                    const begin = vectors[i];
+                    const end = vectors[i + 1];
+                    if (end) {
+                        posAttr.setXYZ(index++, begin.x, begin.y, this.clippingHeight);
+                        posAttr.setXYZ(index++, end.x, end.y, this.clippingHeight);
+                    }
+                }
+            });
+
+            clippingWall.geometry.setDrawRange(0, index);
+            posAttr.needsUpdate = true;
+            clippingWall.visible = true;
+            return res;
+        } else {
+            clippingWall.visible = false;
+            return [];
+        }
+    }
+
+    createLine(color) {
+        const lineGeometry = new BufferGeometry();
+        const linePosAttr = new BufferAttribute(new Float32Array(300000), 3, false);
+        linePosAttr.setUsage(DynamicDrawUsage);
+        lineGeometry.setAttribute('position', linePosAttr);
+        const line = new LineSegments(lineGeometry, new LineBasicMaterial({
+            linewidth: 2
+        }));
+        line.material.color.set(color).convertSRGBToLinear();
+        line.frustumCulled = false;
+        line.visible = true;
+        return line;
+    }
+
+    getLineByIndex(group, index) {
+        let line = group.children[index];
+        if (!line) {
+            let color;
+            if (group === this.surfaceLineGroup) {
+                color = 0xE9F3FE;
+            } else if (group === this.clippingWallGroup) {
+                color = 0x3B83F6;
+            } else if (group === this.clippingSkinGroup) {
+                color = 0xFFFF00;
+            } else if (group === this.clippingInfillGroup) {
+                color = 0x8D4bbb;
+            }
+            line = this.createLine(color);
+            group.add(line);
+        }
+        return line;
+    }
+
+    resetPlanes() {
+        // this.models.forEach((model) => {
+        //     model.setLocalPlane(this.clippingHeight);
+        // });
+    }
+
+    calaClippingMap() {
+        this.getModels<ThreeModel>().forEach((model) => {
+            model.updateClippingMap();
+        });
+    }
+
+    updateClippingPlane(height) {
+        this.planeMesh.position.set(0, 0, height);
+
+
+        !height && (height = this.maxHeight);
+        this.clippingHeight = height;
+        this.getModels<ThreeModel>().forEach((model, index) => {
+            const _now = new Date().getTime();
+            // console.log('===========');
+            const clippingWall = this.getLineByIndex(this.clippingWallGroup, index);
+            this.updateClippingWall(model, clippingWall);
+            const now2 = new Date().getTime();
+            console.log('-- wall ', now2 - _now);
+            const clippingSkin = this.getLineByIndex(this.clippingSkinGroup, index);
+            this.updateClippingSkin(model, clippingSkin);
+            const now3 = new Date().getTime();
+            console.log('-- skin ', now3 - now2);
+            const clippingInfill = this.getLineByIndex(this.clippingInfillGroup, index);
+            this.updateClippingInfill(model, clippingInfill);
+            const now4 = new Date().getTime();
+            console.log('-- fill ', now4 - now3);
+            model.setLocalPlane(this.clippingHeight);
         });
     }
 }
