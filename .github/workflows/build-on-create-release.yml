@@ -15,19 +15,16 @@ jobs:
 
     steps:
       - name: Prepare VC++ Runtime
-        run: |
-            choco install -y vcredist2017
-            echo ${secrets.SACP_TOKEN}
+        run: choco install -y vcredist2017
 
       - name: Checkout Code
         uses: actions/checkout@v2
-
-      - name: Checkout submodules
-        run: git submodule update --init --recursive
         with:
             token: ${{ secrets.SACP_TOKEN }}
             submodules: 'true'
 
+      - name: Checkout submodules
+        run: git submodule update --init --recursive
 
       - name: Use Node.js 12.x
         uses: actions/setup-node@v2
@@ -141,12 +138,12 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
-
-      - name: Checkout submodules
-        run: git submodule update --init --recursive
         with:
             token: ${{ secrets.SACP_TOKEN }}
             submodules: 'true'
+
+      - name: Checkout submodules
+        run: git submodule update --init --recursive
 
       - name: Use Node.js 12.x
         uses: actions/setup-node@v2
@@ -230,12 +227,12 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
-
-      - name: Checkout submodules
-        run: git submodule update --init --recursive
         with:
             token: ${{ secrets.SACP_TOKEN }}
             submodules: 'true'
+
+      - name: Checkout submodules
+        run: git submodule update --init --recursive
 
       - name: Use Node.js 12.x
         uses: actions/setup-node@v2
