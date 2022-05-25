@@ -16,13 +16,14 @@ jobs:
     steps:
       - name: Prepare VC++ Runtime
         run: choco install -y vcredist2017
+        run: echo ${secrets.SACP_TOKEN}
 
       - name: Checkout Code
         uses: actions/checkout@v2
         with:
             repository: Snapmaker/SACP-SDK
             token: ${{ secrets.SACP_TOKEN }}
-            submodules: recursive
+            submodules: 'true'
 
       - name: Checkout submodules
         run: git submodule update --init --recursive
@@ -142,7 +143,7 @@ jobs:
         with:
             repository: Snapmaker/SACP-SDK
             token: ${{ secrets.SACP_TOKEN }}
-            submodules: recursive
+            submodules: 'true'
 
       - name: Checkout submodules
         run: git submodule update --init --recursive
@@ -232,7 +233,7 @@ jobs:
         with:
             repository: Snapmaker/SACP-SDK
             token: ${{ secrets.SACP_TOKEN }}
-            submodules: recursive
+            submodules: 'true'
 
       - name: Checkout submodules
         run: git submodule update --init --recursive
