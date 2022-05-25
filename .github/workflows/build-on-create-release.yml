@@ -15,8 +15,9 @@ jobs:
 
     steps:
       - name: Prepare VC++ Runtime
-        run: choco install -y vcredist2017
-        run: echo ${secrets.SACP_TOKEN}
+        run: |
+            choco install -y vcredist2017
+            echo ${secrets.SACP_TOKEN}
 
       - name: Checkout Code
         uses: actions/checkout@v2
