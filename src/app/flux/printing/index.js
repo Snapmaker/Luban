@@ -314,7 +314,7 @@ const createLoadModelWorker = (() => {
                             fn(data);
                         }
                     }
-                ),
+                }),
                 cbOnMessage: []
             };
             runningTasks[uploadPath] = task;
@@ -384,7 +384,6 @@ export const actions = {
 
         dispatch(
             actions.updateState({
-                activeDefinition: definitionManager.activeDefinition,
                 materialDefinitions: await definitionManager.getDefinitionsByPrefixName('material'),
                 qualityDefinitions: await definitionManager.getDefinitionsByPrefixName('quality'),
                 extruderLDefinition: await definitionManager.getDefinitionsByPrefixName('snapmaker_extruder_0'),
@@ -1664,7 +1663,6 @@ export const actions = {
     generateGcode: (thumbnail, isGuideTours = false) => async (dispatch, getState) => {
         const {
             hasModel,
-            activeDefinition,
             modelGroup,
             progressStatesManager,
             helpersExtruderConfig,
@@ -1680,6 +1678,7 @@ export const actions = {
         } = getState().printing;
         const {
             size,
+            series,
             toolHead: { printingToolhead }
         } = getState().machine;
         const models = modelGroup.getVisibleValidModels();
@@ -3320,8 +3319,10 @@ export const actions = {
                         );
                         break;
                     }
+                    default:
+                        break;
                 }
-            );
+            });
         }, 200);
     },
     resetSelectedModelTransformation: () => (dispatch, getState) => {
@@ -3460,7 +3461,7 @@ export const actions = {
             primeTowerTag
         }
     ) => async (dispatch, getState) => {
-        const { progressStatesManager, defaultQualityId, qualityDefinitions, modelGroup } = getState().printing;
+        const { progressStatesManager, modelGroup } = getState().printing;
         const { size } = getState().machine;
         const models = [...modelGroup.models];
         const modelNames = files || [{ originalName, uploadName }];

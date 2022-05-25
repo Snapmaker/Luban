@@ -6,7 +6,7 @@ export enum WorkerMethods {
     arrangeModels = 'arrangeModels',
     autoRotateModels = 'autoRotateModels',
     boxSelect = 'boxSelect',
-    evaluateSupportArea = 'evaluateSupportArea',
+    // evaluateSupportArea = 'evaluateSupportArea',
     gcodeToArraybufferGeometry = 'gcodeToArraybufferGeometry',
     gcodeToBufferGeometry = 'gcodeToBufferGeometry',
     loadModel = 'loadModel',

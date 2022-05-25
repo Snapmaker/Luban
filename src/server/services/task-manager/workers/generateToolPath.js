@@ -69,7 +69,6 @@ const generateLaserToolPathFromEngine = (allTasks, onProgress) => {
 
 const generateToolPath = allTasks => {
     const { headType } = allTasks[0];
-    console.log('generateToolPath', allTasks);
     if (!['laser', 'cnc'].includes(headType)) {
         return sendMessage({ status: 'fail', value: `Unsupported type: ${headType}` });
     }

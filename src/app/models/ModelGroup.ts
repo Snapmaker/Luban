@@ -1500,9 +1500,10 @@ class ModelGroup extends EventEmitter {
         return { x: 0, y: 0 };
     }
 
-    public _checkAnyModelOversteppedOrSelected(shouldCheckPrime = true) {
+    public _checkAnyModelOversteppedOrSelected(shouldCheckPrime = false) {
         let isAnyModelOverstepped = false;
-        for (const model of this.getModels<Model3D>()) {
+        const primeTower = this.primeTower;
+        for (const model of this.getModels<Model3D>().concat(primeTower)) {
             if (model.sourceType === '3d' && model.visible) {
                 const overstepped = this._checkOverstepped(model);
                 model.setOversteppedAndSelected(overstepped, model.isSelected);
@@ -1510,7 +1511,6 @@ class ModelGroup extends EventEmitter {
             }
         }
         if (shouldCheckPrime) {
-            const primeTower = this.primeTower;
             const overstepped = this._checkOverstepped(primeTower);
             primeTower.setOversteppedAndSelected(overstepped, primeTower.isSelected);
             isAnyModelOverstepped = (isAnyModelOverstepped || overstepped);
