@@ -21,13 +21,13 @@ jobs:
 
       - name: Checkout Code
         uses: actions/checkout@v2
-        with:
-            repository: Snapmaker/SACP-SDK
-            token: ${{ secrets.SACP_TOKEN }}
-            submodules: 'true'
 
       - name: Checkout submodules
         run: git submodule update --init --recursive
+        with:
+            token: ${{ secrets.SACP_TOKEN }}
+            submodules: 'true'
+
 
       - name: Use Node.js 12.x
         uses: actions/setup-node@v2
@@ -141,13 +141,12 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
-        with:
-            repository: Snapmaker/SACP-SDK
-            token: ${{ secrets.SACP_TOKEN }}
-            submodules: 'true'
 
       - name: Checkout submodules
         run: git submodule update --init --recursive
+        with:
+            token: ${{ secrets.SACP_TOKEN }}
+            submodules: 'true'
 
       - name: Use Node.js 12.x
         uses: actions/setup-node@v2
@@ -231,13 +230,12 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
-        with:
-            repository: Snapmaker/SACP-SDK
-            token: ${{ secrets.SACP_TOKEN }}
-            submodules: 'true'
 
       - name: Checkout submodules
         run: git submodule update --init --recursive
+        with:
+            token: ${{ secrets.SACP_TOKEN }}
+            submodules: 'true'
 
       - name: Use Node.js 12.x
         uses: actions/setup-node@v2
