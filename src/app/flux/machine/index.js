@@ -60,6 +60,7 @@ const INITIAL_STATE = {
     connectionType: CONNECTION_TYPE_WIFI,
     connectionStatus: CONNECTION_STATUS_IDLE,
     connectionTimeout: 3000,
+    connectLoading: false,
     printingArrangeSettings: {
         angle: 30,
         offset: 5,
@@ -558,6 +559,12 @@ export const actions = {
                     );
                 }
             },
+            'connection:connecting': (options) => {
+                const { isConnecting } = options;
+                dispatch(baseActions.updateState({
+                    connectLoading: isConnecting
+                }));
+            },
             'connection:connected': ({ state, err: _err }) => {
                 if (_err) {
                     return;
@@ -568,7 +575,8 @@ export const actions = {
                 console.log('connection', state);
                 dispatch(baseActions.updateState({
                     isHomed: isHomed,
-                    isMoving
+                    isMoving,
+                    connectLoading: false
                 }));
                 if (!isNil(seriesSize)) {
                     machineSeries = valueOf(
@@ -683,6 +691,7 @@ export const actions = {
             },
             'sender:status': (options) => {
                 const { data } = options;
+                console.log({ data });
                 const { total, sent, received, startTime, finishTime, elapsedTime, remainingTime } = data;
                 dispatch(baseActions.updateState({
                     gcodePrintingInfo: {
@@ -913,6 +922,7 @@ export const actions = {
             isConnected: false,
             connectionStatus: CONNECTION_STATUS_IDLE,
             isHomed: null,
+            connectLoading: false,
             workflowStatus: connectionType === CONNECTION_TYPE_WIFI ? WORKFLOW_STATUS_UNKNOWN : WORKFLOW_STATUS_IDLE,
             // workflowState: WORKFLOW_STATE_IDLE,
             laserFocalLength: null,

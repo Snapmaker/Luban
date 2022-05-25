@@ -305,7 +305,6 @@ export default class Business extends Dispatcher {
     }
 
     getMachineInfo() {
-        console.log('sendsend');
         return this.send(0x01, 0x21, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             const machineInfo = new MachineInfo().fromBuffer(response.data);
             return { code: response.result, packet, data: machineInfo as MachineInfo };

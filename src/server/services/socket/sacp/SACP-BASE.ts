@@ -48,7 +48,7 @@ class SocketBASE {
                     const result = readString(data.response.data, 1).result;
                     this.socket && this.socket.emit('serialport:read', { data: result });
                 };
-                this.sacpClient.subscribeLogFeedback({ interval: 3600000 }, this.subscribeLogCallback);
+                this.sacpClient.subscribeLogFeedback({ interval: 60000 }, this.subscribeLogCallback);
             }
         });
         this.sacpClient.setHandler(0x01, 0x36, ({ param }) => {
@@ -62,7 +62,7 @@ class SocketBASE {
             statusKey = readUint8(data.response.data, 0);
             stateData.airPurifier = false;
             await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
-                log.info(`revice moduleInfo: ${data.response}`);
+                // log.info(`revice moduleInfo: ${data.response}`);
                 moduleInfos.forEach(module => {
                     if (includes(EMERGENCY_STOP_BUTTON, module.moduleId)) {
                         moduleStatusList.emergencyStopButton = true;
@@ -127,7 +127,7 @@ class SocketBASE {
         // }
         this.subscribeHotBedCallback = (data) => {
             const hotBedInfo = new GetHotBed().fromBuffer(data.response.data);
-            log.info(`hotbedInfo, ${hotBedInfo}`);
+            // log.info(`hotbedInfo, ${hotBedInfo}`);
             stateData = {
                 ...stateData,
                 heatedBedTargetTemperature: hotBedInfo?.zoneList[0]?.targetTemzperature || 0,
@@ -135,7 +135,7 @@ class SocketBASE {
             };
         };
         this.sacpClient.subscribeHotBedTemperature({ interval: 1000 }, this.subscribeHotBedCallback).then(res => {
-            log.info(`subscribe hotbed success: ${res}`);
+            // log.info(`subscribe hotbed success: ${res}`);
         });
         //     (data) => {
         //     // log.info(`revice hotbed: ${data.response}`);
@@ -150,7 +150,7 @@ class SocketBASE {
         // });
         this.subscribeNozzleCallback = (data) => {
             const nozzleInfo = new ExtruderInfo().fromBuffer(data.response.data);
-            log.info(`nozzleInfo, ${nozzleInfo}`);
+            // log.info(`nozzleInfo, ${nozzleInfo}`);
             const leftInfo = find(nozzleInfo.extruderList, { index: 0 });
             const rightInfo = find(nozzleInfo.extruderList, { index: 1 });
             stateData = {
@@ -178,9 +178,10 @@ class SocketBASE {
         //     };
         // }
         this.subscribeCoordinateCallback = (data) => {
-            log.info(`revice coordinate: ${data.response}`);
+            // log.info(`revice coordinate: ${data.response}`);
             const response = data.response;
             const coordinateInfos = new CoordinateSystemInfo().fromBuffer(response.data);
+            // console.log('coordinateInfos', coordinateInfos);
             const currentCoordinate = coordinateInfos.coordinates;
             const originCoordinate = coordinateInfos.originOffset;
             const pos = {
@@ -250,8 +251,10 @@ class SocketBASE {
         const gcodeLines = gcode.split('\n');
         // callback && callback();
         log.debug(`executeGcode, ${gcodeLines}`);
-        this.sacpClient.executeGcode(gcode).then(res => {
-            log.info(`execute gcode: ${res}`);
+        gcodeLines.forEach(_gcode => {
+            this.sacpClient.executeGcode(_gcode).then(res => {
+                log.info(`execute gcode: ${res}`);
+            });
         });
         try {
             callback && callback();

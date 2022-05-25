@@ -37,8 +37,8 @@ class SocketTCP extends SocketBASE {
         super();
         this.client = new net.Socket();
         this.client.setTimeout(3000);
-        this.sacpClient = new Business('tcp', this.client);
-        this.sacpClient.setLogger(log);
+        // this.sacpClient = new Business('tcp', this.client);
+        // this.sacpClient.setLogger(log);
 
         this.client.on('data', (buffer) => {
             this.sacpClient.read(buffer);
@@ -51,7 +51,7 @@ class SocketTCP extends SocketBASE {
                 text: ''
             };
             log.info(`timeout: ${result}`);
-            this.sacpClient.dispose();
+            this.sacpClient?.dispose();
             this.client.destroy();
             this.socket && this.socket.emit('connection:close', result);
         });
@@ -85,6 +85,7 @@ class SocketTCP extends SocketBASE {
 
     public connectionOpen = (socket: SocketServer, options: EventOptions) => {
         this.socket = socket;
+        this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
         // this.sacpClient.setHandler(0x01, 0x05, (data) => {
         //     // this.sacpClient.getCurrentCoordinateInfo()
         //     const state = {
@@ -161,6 +162,8 @@ class SocketTCP extends SocketBASE {
             //     },
             //     text: '{"token":"","readonly":false,"series":"Snapmaker A400","headType":2,"hasEnclosure":false}'
             // };
+            this.sacpClient = new Business('tcp', this.client);
+            this.sacpClient.setLogger(log);
             this.socket && this.socket.emit('connection:open', {});
             const hostName = os.hostname();
             log.info(`os hostname: ${hostName}`);
@@ -276,6 +279,7 @@ class SocketTCP extends SocketBASE {
     }
 
     public connectionClose = async (socket: SocketServer, options: EventOptions) => {
+        this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
         await this.sacpClient.unSubscribeLogFeedback(this.subscribeLogCallback).then(res => {
             log.info(`unsubscribeLog: ${res}`);
         });
@@ -292,9 +296,10 @@ class SocketTCP extends SocketBASE {
             log.info(`unSubscribeHeart, ${res}`);
         });
         this.sacpClient.wifiConnectionClose().then(({ response }) => {
+            console.log('wifiClose', response);
             if (response.result === 0) {
                 setTimeout(() => {
-                    this.sacpClient.dispose();
+                    this.sacpClient?.dispose();
                     this.client.destroy();
                     if (this.client.destroyed) {
                         log.info('TCP manually closed');

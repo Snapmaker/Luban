@@ -72,7 +72,6 @@ function Connection({ widgetId, widgetActions }) {
     const isOriginal = series === MACHINE_SERIES.ORIGINAL.value;
     return (
         <div>
-            {console.log({ isHomed })}
             {alertMessage && (
                 <Notifications bsStyle="danger" onDismiss={actions.clearAlert}>
                     {alertMessage}

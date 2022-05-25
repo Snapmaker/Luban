@@ -26,7 +26,7 @@ function SerialConnection() {
         isOpen, enclosureOnline, isConnected, server, servers,
         // connectionTimeout, airPurifier, airPurifierHasPower,
         airPurifier, airPurifierHasPower,
-        heatedBedTemperature, laserCamera, workflowStatus, emergencyStopOnline
+        heatedBedTemperature, laserCamera, workflowStatus, emergencyStopOnline, connectLoading
     } = useSelector(state => state.machine);
     const {
         toolHead, headType, series: seriesInfo
@@ -38,8 +38,13 @@ function SerialConnection() {
     // UI state
     const [loadingPorts, setLoadingPorts] = useState(false);
     const [moduleStatusList, setModuleStatusList] = useState(null);
+    const [loading, setConnectLoading] = useState(connectLoading);
     const dispatch = useDispatch();
 
+    useEffect(() => {
+        console.log(connectLoading);
+        setConnectLoading(connectLoading);
+    }, [connectLoading]);
     function onPortReady(data) {
         const { err: _err } = data;
         if (_err) {
@@ -66,7 +71,6 @@ function SerialConnection() {
 
     function openPort() {
         server.openServer(({ msg }) => {
-            console.log({ msg });
             if (!isObject(msg) && msg !== 'inuse') {
                 setErr(i18n._('key-workspace_open_port-Can not open this port'));
                 log.error('Error opening serial port', msg);
@@ -92,9 +96,12 @@ function SerialConnection() {
             listPorts();
         },
         onOpenPort: () => {
+            // setConnectLoading(true);
+            // dispatch(machineActions.updateMachineState)
             openPort();
         },
         onClosePort: () => {
+            // setConnectLoading(true);
             closePort();
         }
 
@@ -217,6 +224,7 @@ function SerialConnection() {
 
     return (
         <div>
+            {console.log({ connectLoading })}
             {!isConnected && (
                 <div className="sm-flex justify-space-between margin-bottom-16">
                     <Select
@@ -282,8 +290,9 @@ function SerialConnection() {
                         priority="level-two"
                         disabled={!canOpenPort}
                         onClick={actions.onOpenPort}
+                        loading={loading}
                     >
-                        {i18n._('key-Workspace/Connection-Connect')}
+                        {!loading && i18n._('key-Workspace/Connection-Connect')}
                     </Button>
                 )}
                 {isConnected && (
@@ -292,8 +301,9 @@ function SerialConnection() {
                         type="default"
                         priority="level-two"
                         onClick={actions.onClosePort}
+                        loading={loading}
                     >
-                        {i18n._('key-Workspace/Connection-Disconnect')}
+                        {!loading && i18n._('key-Workspace/Connection-Disconnect')}
                     </Button>
                 )}
                 {err && (

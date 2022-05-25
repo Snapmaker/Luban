@@ -464,7 +464,6 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
 
     return (
         <div>
-            {console.log({ isMoving, _canClick, isConnected, workflowStatus })}
             <DisplayPanel
                 workPosition={workPosition}
                 originOffset={state.originOffset}

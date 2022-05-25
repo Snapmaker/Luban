@@ -30,6 +30,7 @@ class SocketSerialNew extends SocketBASE {
         this.availPorts = await SerialPort.list();
         this.socket = socket;
         if (this.availPorts.length > 0) {
+            this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
             this.serialport = new SerialPort(options.port ?? this.availPorts[0].path, {
                 autoOpen: false,
                 baudRate: 115200
@@ -103,6 +104,7 @@ class SocketSerialNew extends SocketBASE {
     }
 
     public connectionClose = async () => {
+        this.socket && this.socket.emit('connection:connecting', { isConnecting: true })
         await this.sacpClient.unSubscribeLogFeedback(this.subscribeLogCallback).then(res => {
             log.info(`unsubscribeLog: ${res}`);
         });
@@ -120,7 +122,7 @@ class SocketSerialNew extends SocketBASE {
         });
         this.serialport?.close();
         this.serialport?.destroy();
-        this.sacpClient?.dispose();
+        // this.sacpClient?.dispose();
         this.socket.emit('connection:close');
     }
 
