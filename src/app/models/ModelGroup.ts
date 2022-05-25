@@ -1,10 +1,8 @@
-import { Sphere, SphereBufferGeometry, MeshStandardMaterial, Vector3, Group, Matrix4, BufferGeometry, MeshPhongMaterial, Mesh, DoubleSide, Float32BufferAttribute, MeshBasicMaterial, Line3, Plane, BufferAttribute, DynamicDrawUsage, LineBasicMaterial, LineSegments, Vector2, PlaneBufferGeometry, NotEqualStencilFunc, ZeroStencilOp, PlaneGeometry, Box3, Object3D, Intersection, Geometry } from 'three';
+import { Sphere, SphereBufferGeometry, MeshStandardMaterial, Vector3, Group, Matrix4, BufferGeometry, Mesh, DoubleSide, Float32BufferAttribute, MeshBasicMaterial, Plane, BufferAttribute, DynamicDrawUsage, LineBasicMaterial, LineSegments, Box3, Object3D, Intersection, Geometry } from 'three';
 import EventEmitter from 'events';
 import { CONTAINED, INTERSECTED, NOT_INTERSECTED } from 'three-mesh-bvh';
-// import { EPSILON } from '../../constants';
 import { v4 as uuid } from 'uuid';
 import _ from 'lodash';
-import { now } from 'moment';
 import i18n from '../lib/i18n';
 
 import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
@@ -17,14 +15,7 @@ import ThreeUtils from '../three-extensions/ThreeUtils';
 import ThreeGroup from './ThreeGroup';
 import PrimeTowerModel from './PrimeTowerModel';
 import { calculateUvVector } from '../lib/threejs/ThreeStlCalculation';
-// import sortUnorderedLine from '../workers/sort-unordered-line';
-import { Polygon, Polygons } from '../../shared/lib/clipper/Polygons';
-import calculateSectionPoints from '../lib/calculate-section-points';
-
-import workerManager from '../lib/manager/workerManager';
-import sortUnorderedLine from './sortUnorderedLine';
 import generateSkin from '../lib/generate-skin';
-import { polyDiff, polyIntersection, polyOffset } from '../../shared/lib/clipper/cLipper-adapter';
 
 const EVENTS = {
     UPDATE: { type: 'update' }
@@ -84,12 +75,12 @@ class ModelGroup extends EventEmitter {
         x: number;
         y: number;
     }[];
+
     private clippingGroup = new Group();
     private clippingWallGroup = new Group();
     private clippingSkinGroup = new Group();
     private clippingInfillGroup = new Group();
     private surfaceLineGroup = new Group();
-    private planeMesh
     private maxHeight = 0;
     private clippingHeight: number;
 
@@ -111,27 +102,11 @@ class ModelGroup extends EventEmitter {
         this.clipboard = [];
         this.estimatedTime = 0;
         // this.selectedModelIDArray = [];
-        this.clippingGroup.name = 'clippingGroup';
         this.candidatePoints = null;
         this._bbox = null;
         this.selectedModelConvexMeshGroup = new Group();
         // The selectedToolPathModelIDs is used to generate the toolpath
         this.selectedToolPathModelIDs = [];
-
-        // const planeGeom = new PlaneBufferGeometry();
-        const planeGeom = new PlaneGeometry(300, 300);
-        this.planeMesh = new Mesh(planeGeom, new MeshBasicMaterial({
-            side: DoubleSide,
-            stencilWrite: true,
-            // stencilFunc: NotEqualStencilFunc,
-            stencilFail: ZeroStencilOp,
-            stencilZFail: ZeroStencilOp,
-            stencilZPass: ZeroStencilOp
-        }));
-        // planeMesh.scale.setScalar(1.5);
-        this.planeMesh.position.set(0, 0, 5);
-        this.planeMesh.material.color.set(0x80deea).convertLinearToSRGB();
-        this.planeMesh.renderOrder = 2;
     }
 
     // TODO: save last value and compare changes
@@ -1406,7 +1381,6 @@ class ModelGroup extends EventEmitter {
         this.prepareSelectedGroup();
         this.updatePrimeTowerHeight();
         recovery();
-        // this.calaClippingMap();
 
         if (selectedModelArray.length === 0) {
             return {};
@@ -2387,22 +2361,10 @@ class ModelGroup extends EventEmitter {
         });
     }
 
-    intersectionSkin(model, layerIndex = this.clippingHeight, subPaths) {
-        const vectorsArray = model.clippingMap.get(layerIndex);
-        if (!subPaths && vectorsArray) {
-            return vectorsArray;
-        }
-        if (!vectorsArray && subPaths) {
-            return subPaths;
-        }
-        return polyIntersection(subPaths, vectorsArray);
-    }
-
-    updateClippingInfill(model, clippingInner) {
+    private updateClippingInfill(model: ThreeModel, clippingInner) {
         const posAttr = clippingInner.geometry.attributes.position;
         const inverseMatrix = new Matrix4();
         inverseMatrix.copy(model.meshObject.matrixWorld).invert();
-        // const res = skinArea.length === 0 ? innerWall : polyDiff(innerWall, skinArea);
         const res = model.infillMap.get(this.clippingHeight);
         if (res && res.length !== 0) {
             const arr = [];
@@ -2413,12 +2375,9 @@ class ModelGroup extends EventEmitter {
                     arr.push(begin, end);
                 }
             });
-
-            // console.log(this.clippingHeight);
-            // console.log('-------------inner --------------', (this.clippingHeight / 0.24).toFixed(0) % 2);
             const skinLines = generateSkin([...arr], 1, 60, model.boundingBox);
             if (!skinLines.length) {
-                return [];
+                return;
             }
             let j = 0;
             skinLines.forEach((point) => {
@@ -2433,7 +2392,7 @@ class ModelGroup extends EventEmitter {
         }
     }
 
-    updateClippingSkin(model, clippingSkin) {
+    private updateClippingSkin(model, clippingSkin) {
         const posAttr = clippingSkin.geometry.attributes.position;
         const inverseMatrix = new Matrix4();
         inverseMatrix.copy(model.meshObject.matrixWorld).invert();
@@ -2470,7 +2429,7 @@ class ModelGroup extends EventEmitter {
         return skinArea;
     }
 
-    updateClippingWall(model, clippingWall) {
+    private updateClippingWall(model, clippingWall) {
         const posAttr = clippingWall.geometry.attributes.position;
         const inverseMatrix = new Matrix4();
         inverseMatrix.copy(model.meshObject.matrixWorld).invert();
@@ -2506,7 +2465,7 @@ class ModelGroup extends EventEmitter {
         }
     }
 
-    createLine(color) {
+    private createLine(color) {
         const lineGeometry = new BufferGeometry();
         const linePosAttr = new BufferAttribute(new Float32Array(300000), 3, false);
         linePosAttr.setUsage(DynamicDrawUsage);
@@ -2520,7 +2479,7 @@ class ModelGroup extends EventEmitter {
         return line;
     }
 
-    getLineByIndex(group, index) {
+    private getLineByIndex(group, index) {
         let line = group.children[index];
         if (!line) {
             let color;
@@ -2539,20 +2498,14 @@ class ModelGroup extends EventEmitter {
         return line;
     }
 
-    resetPlanes() {
-        // this.models.forEach((model) => {
-        //     model.setLocalPlane(this.clippingHeight);
-        // });
-    }
-
-    calaClippingMap() {
+    public calaClippingMap() {
         this.getModels<ThreeModel>().forEach((model) => {
             model.updateClippingMap();
         });
     }
 
-    updateClippingPlane(height) {
-        this.planeMesh.position.set(0, 0, height);
+    public updateClippingPlane(height) {
+        // this.planeMesh.position.set(0, 0, height);
 
 
         !height && (height = this.maxHeight);

@@ -145,9 +145,6 @@ export class Nest {
     }
 
     sortParts() {
-        if (this.parts.length === 0) {
-            return;
-        }
         this.parts.sort((part1, part2) => {
             return part2.absArea - part1.absArea;
         });
@@ -594,19 +591,6 @@ export class Nest {
         return newTraceLines;
     }
 
-    /**
-     *
-
-    traceLines: {
-        sp: {
-            x: number, y: number
-        },
-        ep: {
-            x: number, y: number
-        }
-    }[]
-
-     */
     traverTraceLines(traceLines) {
         const newTraceLines = [];
 

@@ -3642,7 +3642,6 @@ export const actions = {
                     dispatch(actions.updateState(modelState));
                     dispatch(actions.displayModel());
                     dispatch(actions.destroyGcodeLine());
-
                     resolve();
                 } else if (
                     primeTowerTag
@@ -3664,10 +3663,7 @@ export const actions = {
                                 const material = new THREE.MeshPhongMaterial({
                                     color: 0xa0a0a0,
                                     specular: 0xb0b0b0,
-                                    shininess: 0,
-                                    side: THREE.DoubleSide,
-                                    clipIntersection: true,
-                                    // wireframe: true
+                                    shininess: 0
                                 });
 
                                 bufferGeometry.setAttribute(

@@ -9,7 +9,7 @@ import {
 } from '../constants';
 import ThreeUtils from '../three-extensions/ThreeUtils';
 import ThreeGroup from './ThreeGroup';
-import BaseModel, { ModelInfo, TSize } from './ThreeBaseModel';
+import BaseModel, { ModelInfo, ModelTransformation, TSize } from './ThreeBaseModel';
 import { machineStore } from '../store/local-storage';
 import type ModelGroup from './ModelGroup';
 import calculateSectionPoints from '../lib/calculate-section-points';
@@ -22,8 +22,6 @@ type TPoint = {
     y: number,
     z?: number
 }
-
-type VoidFun = () => void
 
 class ThreeModel extends BaseModel {
     public isThreeModel = true;
@@ -50,18 +48,17 @@ class ThreeModel extends BaseModel {
     private _materialSelected: THREE.Color;
 
     private localPlane = new THREE.Plane(new THREE.Vector3(0, 0, -1), 50);
-    private colliderBvh;
-    private colliderBvhTransform;
-    private clippingMap = new Map<number, TPoint[]>();
-    private innerWallMap = new Map<number, TPoint[]>();
-    private skinMap = new Map<number, TPoint[]>();
-    private infillMap = new Map<number, TPoint[]>();
-    private clippingWorkerMap = new Map<number, VoidFun>();
-
-    private meshObjectGroup
+    private colliderBvh: MeshBVH;
+    private colliderBvhTransform: ModelTransformation;
+    private clippingMap = new Map<number, TPoint[][]>();
+    private innerWallMap = new Map<number, TPoint[][]>();
+    private skinMap = new Map<number, TPoint[][]>();
+    public infillMap = new Map<number, TPoint[][]>();
+    private clippingWorkerMap: Map<number, () => void> = new Map();
+    private meshObjectGroup: THREE.Group;
     private bvhGeometry: THREE.BufferGeometry;
     private sectionMesh: THREE.Mesh;
-    private observable: Observable<Map<number, VoidFun>>;
+    private observable: Observable<Map<number, () => void>>;
 
     public constructor(modelInfo: ModelInfo, modelGroup: ModelGroup) {
         super(modelInfo, modelGroup);
@@ -347,7 +344,7 @@ class ThreeModel extends BaseModel {
         this.observable = new Observable(subscriber => {
             for (const [index, vectors] of this.clippingMap.entries()) {
                 this.clippingMap.delete(index);
-                const { terminate } = workerManager.translatePolygons<TPoint[]>([vectors, {
+                const { terminate } = workerManager.translatePolygons<TPoint[][]>([vectors, {
                     x: 10,
                     y: 10
                 }], (res) => {
@@ -373,7 +370,8 @@ class ThreeModel extends BaseModel {
         for (let index = 0; index <= height; index = Number((index + 0.24).toFixed(2))) {
             plane.constant = index;
             const vectors = calculateSectionPoints(this.colliderBvh, plane, { x: 0, y: 0, z: 0 });
-            this.clippingMap.set(index, vectors);
+            // Intermediate state
+            this.clippingMap.set(index, vectors as unknown as TPoint[][]);
         }
 
         this.observable = new Observable(subscriber => {
@@ -381,7 +379,7 @@ class ThreeModel extends BaseModel {
                 this.clippingMap.delete(index);
                 const actionID = Math.random().toFixed(4);
                 const m = new Date().getTime();
-                const { terminate } = workerManager.sortUnorderedLine<TPoint[]>([vectors, actionID, m], (res) => {
+                const { terminate } = workerManager.sortUnorderedLine<TPoint[][]>([vectors, actionID, m], (res) => {
                     this.clippingMap.set(index, res);
                     this.clippingWorkerMap.delete(index);
                     subscriber.next(this.clippingWorkerMap);
@@ -405,7 +403,7 @@ class ThreeModel extends BaseModel {
         const now = new Date().getTime();
         this.observable = new Observable(subscriber => {
             for (const [index, vectors] of this.clippingMap.entries()) {
-                const { terminate } = workerManager.calaClippingWall<TPoint[]>([index, vectors], (res) => {
+                const { terminate } = workerManager.calaClippingWall<TPoint[][]>([index, vectors], (res) => {
                     this.innerWallMap.set(index, res);
                     this.clippingWorkerMap.delete(index);
                     subscriber.next(this.clippingWorkerMap);
@@ -441,8 +439,8 @@ class ThreeModel extends BaseModel {
                     i++;
                 }
                 const { terminate } = workerManager.calaClippingSkin<{
-                    skin: TPoint[],
-                    infill: TPoint[]
+                    skin: TPoint[][],
+                    infill: TPoint[][]
                 }>([index, vectors, otherLayers], (res) => {
                     this.skinMap.set(index, res.skin);
                     this.infillMap.set(index, res.infill);

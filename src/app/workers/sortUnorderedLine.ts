@@ -124,7 +124,7 @@ const search = (latest: TPoint, currentConnectedPoints: TPoint[], currentConnect
     }
 };
 
-const sortUnorderedLine = (fragments: TPoint[], actionID: string) => {
+const sortUnorderedLine = async (fragments: TPoint[], actionID: string) => {
     const m3 = new Date().getTime();
     // console.log(`[${actionID}] worker exec 2, cost=`, m3 - m);
 

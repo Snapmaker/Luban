@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-// import PropTypes from 'prop-types';
 import { useSelector, shallowEqual, useDispatch } from 'react-redux';
 import { throttle } from 'lodash';
 import Slider from '../../components/Slider';
