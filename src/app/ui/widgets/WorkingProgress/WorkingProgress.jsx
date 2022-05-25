@@ -25,6 +25,7 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
         isConnected, workflowStatus,
         gcodePrintingInfo: { progress, elapsedTime, remainingTime, total, sent, printStatus }
     } = useSelector(state => state.machine);
+    console.log(progress, total, sent);
     const gcodeFile = useSelector(state => state.workspace.gcodeFile);
     const fileName = gcodeFile?.renderGcodeFileName ?? gcodeFile?.name;
     const [currentWorkflowStatus, setCurrentWorkflowStatus] = useState(null);

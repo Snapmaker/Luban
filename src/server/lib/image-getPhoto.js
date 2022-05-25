@@ -19,7 +19,7 @@ export const takePhoto = (options) => {
     if (connectionManager.protocol === 'SACP') {
         return new Promise((resolve) => {
             const params = {
-                index, x: 260, y: 194, z: 330, feedRate
+                index, x: 265, y: 205, z: 330, feedRate
             };
             if (photoQuality >= 0 && photoQuality <= 255) {
                 params.photoQuality = photoQuality;

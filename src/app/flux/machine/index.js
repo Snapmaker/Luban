@@ -435,7 +435,8 @@ export const actions = {
                     moduleList: moduleStatusList,
                     laserCamera,
                     nozzleRightTargetTemperature,
-                    nozzleRightTemperature
+                    nozzleRightTemperature,
+                    gcodePrintingInfo
                 } = state;
                 dispatch(baseActions.updateState({
                     laser10WErrorState,
@@ -506,6 +507,11 @@ export const actions = {
                         airPurifierFanSpeed: airPurifierFanSpeed,
                         airPurifierFilterHealth: airPurifierFilterHealth
                     }));
+                    // dispatch(baseActions.updateState({
+                    //     gcodePrintingInfo: machineState.server.getGcodePrintingInfo(state)
+                    // }));
+                }
+                if (!isNil(gcodePrintingInfo)) {
                     dispatch(baseActions.updateState({
                         gcodePrintingInfo: machineState.server.getGcodePrintingInfo(state)
                     }));

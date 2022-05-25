@@ -42,7 +42,6 @@ function SerialConnection() {
     const dispatch = useDispatch();
 
     useEffect(() => {
-        console.log(connectLoading);
         setConnectLoading(connectLoading);
     }, [connectLoading]);
     function onPortReady(data) {
@@ -224,7 +223,6 @@ function SerialConnection() {
 
     return (
         <div>
-            {console.log({ connectLoading })}
             {!isConnected && (
                 <div className="sm-flex justify-space-between margin-bottom-16">
                     <Select

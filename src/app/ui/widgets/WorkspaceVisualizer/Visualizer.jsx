@@ -184,6 +184,7 @@ class Visualizer extends PureComponent {
                 return;
             }
             const { name, size, total, sent, received } = data;
+            console.log('sender:status', data);
             this.setState({
                 gcode: {
                     ...this.state.gcode,

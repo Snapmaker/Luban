@@ -134,8 +134,10 @@ class ExtractSquareTrace extends PureComponent {
                 } else {
                     if (this.props.series === MACHINE_SERIES.A250.value) {
                         centerDis = 90;
-                    } else {
+                    } else if (this.props.series === MACHINE_SERIES.A350.value) {
                         centerDis = 106;
+                    } else {
+                        centerDis = 110;
                     }
                     for (let j = 1; j >= -1; j--) {
                         if (j === 1 || j === -1) {
