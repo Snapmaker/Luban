@@ -142,7 +142,7 @@ class SocketSerialNew extends SocketBASE {
             type = 1;
         }
         const gcodeFilePath = `${DataStorage.tmpDir}/${options.uploadName}`;
-        await this.goHome();
+        headType === HEAD_PRINTING && await this.goHome();
         await this.sacpClient.startPrintSerial(gcodeFilePath, ({ lineNumber, length, elapsedTime: sliceTime }) => {
             const elapsedTime = new Date().getTime() - this.startTime;
             const progress = lineNumber / length;
