@@ -52,7 +52,7 @@ class SocketController {
         if (callbacks) {
             callbacks.push(callback);
         }
-        this.socket && this.socket.on(eventName, (...args) => {
+        this.socket.on(eventName, (...args) => {
             for (const callback1 of callbacks) {
                 callback1(...args);
             }
@@ -60,7 +60,7 @@ class SocketController {
     }
 
     once(eventName, callback) {
-        this.socket && this.socket.once(eventName, (...args) => {
+        this.socket.once(eventName, (...args) => {
             callback(...args);
         });
 

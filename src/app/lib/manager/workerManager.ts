@@ -1,4 +1,4 @@
-import workerpool, { WorkerPool } from 'workerpool';
+import { spawn, Worker, Pool } from 'threads';
 import './Pool.worker';
 
 export enum WorkerMethods {
@@ -6,7 +6,7 @@ export enum WorkerMethods {
     arrangeModels = 'arrangeModels',
     autoRotateModels = 'autoRotateModels',
     boxSelect = 'boxSelect',
-    evaluateSupportArea = 'evaluateSupportArea',
+    // evaluateSupportArea = 'evaluateSupportArea',
     gcodeToArraybufferGeometry = 'gcodeToArraybufferGeometry',
     gcodeToBufferGeometry = 'gcodeToBufferGeometry',
     loadModel = 'loadModel',
@@ -16,44 +16,42 @@ export enum WorkerMethods {
 }
 
 type IWorkerManager = {
-    [method in WorkerMethods]: (data: unknown[], onmessage: (data: unknown) => void) => {
+    [method in WorkerMethods]: (
+        data: unknown[],
+        onmessage: (data: unknown) => void
+    ) => {
         terminate(): void;
     };
-}
+};
+type PayloadData = {
+    status?: String;
+    type?: String;
+    value?: any;
+};
 
 class WorkerManager {
-    public pool: WorkerPool
+    public pool;
 }
 
 Object.entries(WorkerMethods).forEach(([, method]) => {
-    // eslint-disable-next-line func-names
-    WorkerManager.prototype[method] = function (data: unknown[], onmessage?: (payload: unknown) => void) {
-        const pool = (
-            this.pool || (
-                this.pool = workerpool.pool('./Pool.worker.js', {
-                    minWorkers: 'max',
-                    workerType: 'web'
-                })
-            )
-        ) as WorkerPool;
-
-        const handle = pool.exec(method, data, {
-            on: (payload) => {
+    // eslint-disable-next-line
+    WorkerManager.prototype[method] = async function(data: any, onmessage?: (payload: unknown) => void | Promise<unknown>) {
+        this.pool || (this.pool = Pool(async () => spawn(new Worker('./Pool.worker.js'))));
+        const task = this.pool.queue(eachPool => {
+            eachPool[method](data).subscribe((payload: PayloadData) => {
                 if (onmessage) {
                     onmessage(payload);
-                } else {
-                    WorkerManager.prototype[method].onmessage(payload);
                 }
-            },
+            });
         });
         return {
             terminate: () => {
-                handle.cancel();
+                task.cancel();
             }
         };
     };
 });
 
-const manager = new WorkerManager() as unknown as IWorkerManager;
+const manager = (new WorkerManager() as unknown) as IWorkerManager;
 
 export default manager;

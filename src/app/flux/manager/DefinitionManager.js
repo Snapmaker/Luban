@@ -7,7 +7,7 @@ import {
     PRINTING_MATERIAL_CONFIG_KEYS_SINGLE,
     MACHINE_EXTRUDER_X,
     MACHINE_EXTRUDER_Y,
-    KEY_DEFAULT_CATEGORY_CUSTOM
+    KEY_DEFAULT_CATEGORY_CUSTOM,
 } from '../../constants';
 
 const primeTowerDefinitionKeys = [
@@ -15,8 +15,8 @@ const primeTowerDefinitionKeys = [
     'prime_tower_size',
     'prime_tower_position_x',
     'prime_tower_position_y',
-    'prime_tower_brim_enbale',
-    'prime_tower_wipe_enabled'
+    'prime_tower_brim_enabled',
+    'prime_tower_wipe_enabled',
 ];
 
 class DefinitionManager {
@@ -380,7 +380,7 @@ class DefinitionManager {
         return {
             settings,
             extruderLDefinitionSettings,
-            extruderRDefinitionSettings
+            extruderRDefinitionSettings,
         };
     }
 
@@ -398,8 +398,8 @@ class DefinitionManager {
             metadata: {
                 machine_extruder_trains: {
                     0: 'snapmaker_extruder_0',
-                    1: 'snapmaker_extruder_1'
-                }
+                    1: 'snapmaker_extruder_1',
+                },
             },
             settings: {
                 machine_width: {
@@ -465,7 +465,7 @@ class DefinitionManager {
             definitionId: 'model_final',
             name: 'Model Profile',
             settings: {},
-            ownKeys: []
+            ownKeys: [],
         };
         Object.keys(qualityDefinition.settings).forEach((key) => {
             const setting = qualityDefinition.settings[key];
@@ -491,11 +491,11 @@ class DefinitionManager {
             'skin_material_flow',
             'roofing_material_flow',
             'infill_material_flow',
-            'material_flow_layer_0'
+            'material_flow_layer_0',
         ];
         meshKeys.forEach((key) => {
             definition.settings[key] = {
-                default_value: 0
+                default_value: 0,
             };
             definition.ownKeys.push(key);
         });
@@ -549,7 +549,7 @@ class DefinitionManager {
         primeTowerYDefinition
     }) {
         const definition = {
-            ...extruderDefinition
+            ...extruderDefinition,
         };
         const settings = definition.settings;
         const materialFlow = materialDefinition.settings.material_flow;
@@ -605,7 +605,7 @@ class DefinitionManager {
             const setting = materialDefinition.settings[key];
             if (setting) {
                 definition.settings[key] = {
-                    default_value: setting.default_value
+                    default_value: setting.default_value,
                 };
             }
         });
@@ -687,7 +687,7 @@ class DefinitionManager {
             `G1 Z${z} E-1 F3000 ;move Z up a bit and retract filament even more`,
             `G1 X${0} F3000 ;move X to min endstops, so the head is out of the way`,
             `G1 Y${y} F3000 ;so the head is out of the way and Plate is moved forward`,
-            ';End GCode end'
+            ';End GCode end',
         ];
 
         definition.settings.machine_end_gcode = {
