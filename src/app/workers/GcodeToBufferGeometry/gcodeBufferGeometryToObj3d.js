@@ -17,6 +17,7 @@ function lineToGeometry(originalPositions, breakPositionsIndex, width, height) {
     const vertices = [], indices = [], normals = [];
     const halfHeight = height / 2;
     const halfWidth = width / 2;
+    const zDownHalfHeightVec = zDown.normalize().multiplyScalar(halfHeight);
 
     let currentIndex = 0;
     for (let i = 0; i < line.length - 1; i++) {
@@ -40,35 +41,37 @@ function lineToGeometry(originalPositions, breakPositionsIndex, width, height) {
         const pointStart = line[i];
         const pointEnd = line[i + 1];
         const lineSegmentVector = new THREE.Vector3().subVectors(pointEnd, pointStart);
+        const pointStartDownHalfHeightVec = new THREE.Vector3().addVectors(pointStart, zDownHalfHeightVec);
+        const pointEndDownHalfHeightVec = new THREE.Vector3().addVectors(pointEnd, zDownHalfHeightVec);
 
         // point start expanded 4 points
-        const down = new THREE.Vector3(pointStart.x, pointStart.y, pointStart.z - halfHeight);
-        const up = new THREE.Vector3(pointStart.x, pointStart.y, pointStart.z + halfHeight);
+        const down = new THREE.Vector3().addVectors(pointStart, zDownHalfHeightVec).add(zDownHalfHeightVec);
+        const up = new THREE.Vector3().addVectors(pointStart, zUp.normalize().multiplyScalar(halfHeight)).add(zDownHalfHeightVec);
         const leftN = new THREE.Vector3().crossVectors(zUp, lineSegmentVector).normalize().multiplyScalar(halfWidth);
-        const left = new THREE.Vector3(leftN.x + pointStart.x, leftN.y + pointStart.y, leftN.z + pointStart.z);
+        const left = new THREE.Vector3().addVectors(leftN, pointStart).add(zDownHalfHeightVec);
         const rightN = new THREE.Vector3().crossVectors(zDown, lineSegmentVector).normalize().multiplyScalar(halfWidth);
-        const right = new THREE.Vector3(rightN.x + pointStart.x, rightN.y + pointStart.y, rightN.z + pointStart.z);
+        const right = new THREE.Vector3().addVectors(rightN, pointStart).add(zDownHalfHeightVec);
 
         // same as CSS top right down left
         vertices.push(...up.toArray(), ...right.toArray(), ...down.toArray(), ...left.toArray());
 
-        normals.push(...new THREE.Vector3().subVectors(up, pointStart).toArray());
-        normals.push(...new THREE.Vector3().subVectors(right, pointStart).toArray());
-        normals.push(...new THREE.Vector3().subVectors(down, pointStart).toArray());
-        normals.push(...new THREE.Vector3().subVectors(left, pointStart).toArray());
+        normals.push(...new THREE.Vector3().subVectors(up, pointStartDownHalfHeightVec).toArray());
+        normals.push(...new THREE.Vector3().subVectors(right, pointStartDownHalfHeightVec).toArray());
+        normals.push(...new THREE.Vector3().subVectors(down, pointStartDownHalfHeightVec).toArray());
+        normals.push(...new THREE.Vector3().subVectors(left, pointStartDownHalfHeightVec).toArray());
 
         // point end expanded 4 points
-        const down1 = new THREE.Vector3(pointEnd.x, pointEnd.y, pointEnd.z - halfHeight);
-        const up1 = new THREE.Vector3(pointEnd.x, pointEnd.y, pointEnd.z + halfHeight);
-        const left1 = new THREE.Vector3(leftN.x + pointEnd.x, leftN.y + pointEnd.y, leftN.z + pointEnd.z);
-        const right1 = new THREE.Vector3(rightN.x + pointEnd.x, rightN.y + pointEnd.y, rightN.z + pointEnd.z);
+        const down1 = new THREE.Vector3().addVectors(pointEnd, zDownHalfHeightVec).add(zDownHalfHeightVec);
+        const up1 = new THREE.Vector3().addVectors(pointEnd, zUp.normalize().multiplyScalar(halfHeight)).add(zDownHalfHeightVec);
+        const left1 = new THREE.Vector3().addVectors(leftN, pointEnd).add(zDownHalfHeightVec);
+        const right1 = new THREE.Vector3().addVectors(rightN, pointEnd).add(zDownHalfHeightVec);
 
         vertices.push(...up1.toArray(), ...right1.toArray(), ...down1.toArray(), ...left1.toArray());
 
-        normals.push(...new THREE.Vector3().subVectors(up1, pointEnd).toArray());
-        normals.push(...new THREE.Vector3().subVectors(right1, pointEnd).toArray());
-        normals.push(...new THREE.Vector3().subVectors(down1, pointEnd).toArray());
-        normals.push(...new THREE.Vector3().subVectors(left1, pointEnd).toArray());
+        normals.push(...new THREE.Vector3().subVectors(up1, pointEndDownHalfHeightVec).toArray());
+        normals.push(...new THREE.Vector3().subVectors(right1, pointEndDownHalfHeightVec).toArray());
+        normals.push(...new THREE.Vector3().subVectors(down1, pointEndDownHalfHeightVec).toArray());
+        normals.push(...new THREE.Vector3().subVectors(left1, pointEndDownHalfHeightVec).toArray());
 
         // generate faces for start and end points
         if (i === 0) {
