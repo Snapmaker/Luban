@@ -36,25 +36,25 @@ class SocketTCP extends SocketBASE {
     constructor() {
         super();
         this.client = new net.Socket();
-        this.client.setTimeout(3000);
+        // this.client.setTimeout(3000);
         // this.sacpClient = new Business('tcp', this.client);
         // this.sacpClient.setLogger(log);
 
         this.client.on('data', (buffer) => {
             this.sacpClient.read(buffer);
         });
-        this.client.on('timeout', () => {
-            const result = {
-                code: 200,
-                data: {},
-                msg: '',
-                text: ''
-            };
-            log.info(`timeout: ${result}`);
-            this.sacpClient?.dispose();
-            this.client.destroy();
-            this.socket && this.socket.emit('connection:close', result);
-        });
+        // this.client.on('timeout', () => {
+        //     const result = {
+        //         code: 200,
+        //         data: {},
+        //         msg: '',
+        //         text: ''
+        //     };
+        //     log.info(`timeout: ${result}`);
+        //     this.sacpClient?.dispose();
+        //     this.client.destroy();
+        //     this.socket && this.socket.emit('connection:close', result);
+        // });
         this.client.on('close', () => {
             log.info('TCP connection closed');
             const result = {
@@ -360,7 +360,7 @@ class SocketTCP extends SocketBASE {
         });
     }
 
-    public getCameraCalibration = (callback: (matrix: CalibrationInfo) => void) => {
+    public getCameraCalibration = async (callback: (matrix: CalibrationInfo) => void) => {
         return this.sacpClient.getCameraCalibration(ToolHeadType.LASER10000mW).then(({ response }) => {
             if (response.result === 0) {
                 const calibrationInfo = new CalibrationInfo().fromBuffer(response.data);
@@ -371,7 +371,7 @@ class SocketTCP extends SocketBASE {
         });
     }
 
-    public getPhoto = (callback: (result: { success: boolean, filename: string }) => void) => {
+    public getPhoto = async (callback: (result: { success: boolean, filename: string }) => void) => {
         return this.sacpClient.getPhoto(0).then(({ response, data }) => {
             let success = false;
             let filename = '';
@@ -386,7 +386,7 @@ class SocketTCP extends SocketBASE {
         });
     }
 
-    public getCalibrationPhoto = (callback: (result: { success: boolean, filename: string }) => void) => {
+    public getCalibrationPhoto = async (callback: (result: { success: boolean, filename: string }) => void) => {
         return this.sacpClient.getCalibrationPhoto(ToolHeadType.LASER10000mW).then(({ response, data }) => {
             let success = false;
             let filename = '';
@@ -401,7 +401,7 @@ class SocketTCP extends SocketBASE {
         });
     }
 
-    public setMatrix = (params: { matrix: CalibrationInfo }, callback: (result: string) => void) => {
+    public setMatrix = async (params: { matrix: CalibrationInfo }, callback: (result: string) => void) => {
         return this.sacpClient.setMatrix(ToolHeadType.LASER10000mW, params.matrix).then(({ response }) => {
             if (response.result === 0) {
                 callback('');

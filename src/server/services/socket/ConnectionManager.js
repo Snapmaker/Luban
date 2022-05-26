@@ -10,8 +10,7 @@ import { HEAD_PRINTING, HEAD_LASER, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIE
     CONNECTION_TYPE_WIFI, CONNECTION_TYPE_SERIAL, WORKFLOW_STATE_PAUSED, PORT_SCREEN_HTTP, PORT_SCREEN_SACP, SACP_PROTOCOL } from '../../constants';
 import DataStorage from '../../DataStorage';
 import ScheduledTasks from '../../lib/ScheduledTasks';
-import SerialPortClient from '../../../app/lib/controller';
-import { prototype } from 'events';
+// import SerialPortClient from '../../../app/lib/controller';
 
 const log = logger('lib:ConnectionManager');
 const ensureRange = (value, min, max) => {
@@ -80,8 +79,8 @@ class ConnectionManager {
 
             this.socket.connectionOpen(socket, options);
         } else {
-            const protocol = await this.inspectProtocol('', CONNECTION_TYPE_SERIAL, options, (protocol) => {
-                console.log({ protocol })
+            await this.inspectProtocol('', CONNECTION_TYPE_SERIAL, options, (protocol) => {
+                console.log({ protocol });
                 if (protocol === SACP_PROTOCOL) {
                     this.socket = socketSerialNew;
                     this.protocol = SACP_PROTOCOL;
@@ -93,19 +92,19 @@ class ConnectionManager {
                 }
             });
             // if (sacp) {
-                // this.socket = ;
-                // try {
-                    // log.debug('serialSacp');
-                    // this.socket = socketSerialNew;
-                    // this.protocol = 'SACP';
-                    // // this.socket.checkProtocol(options);
-                    // this.socket.connectionOpen(socket, options);
-                // } catch(err) {
-                //     log.debug(`serial connection err: ${err}`);
-                // }
+            // this.socket = ;
+            // try {
+            // log.debug('serialSacp');
+            // this.socket = socketSerialNew;
+            // this.protocol = 'SACP';
+            // // this.socket.checkProtocol(options);
+            // this.socket.connectionOpen(socket, options);
+            // } catch(err) {
+            //     log.debug(`serial connection err: ${err}`);
+            // }
             // } else {
-                // this.socket = socketSerial;
-                // this.socket.serialportOpen(socket, options);
+            // this.socket = socketSerial;
+            // this.socket.serialportOpen(socket, options);
             // }
             // const serialport = new SerialPort(options.port, {
             //     autoOpen: false,
@@ -133,7 +132,6 @@ class ConnectionManager {
             } else if (resSACP.value) {
                 return 'SACP';
             }
-            return '';
         } else if (connectionType === CONNECTION_TYPE_SERIAL) {
             console.log('come in serial', options);
             let protocol = 'HTTP';
@@ -187,14 +185,15 @@ class ConnectionManager {
                 //     // callback && callback('HTTP');
                 // }
                 // }
+                return '';
             });
             trySerialConnect.on('close', () => {
                 console.log('close 1');
                 callback && callback(protocol);
-            })
+            });
             trySerialConnect.on('error', (err) => {
                 console.log({ err });
-            })
+            });
             trySerialConnect.once('open', () => {
                 console.log('open');
                 trySerialConnect.write('M1006\r\n');
@@ -202,6 +201,7 @@ class ConnectionManager {
             trySerialConnect.open();
             // return '';
         }
+        return '';
     }
 
     tryConnect = (host, port) => {
@@ -406,7 +406,7 @@ class ConnectionManager {
         log.info(`executeGcode: ${gcode}, ${this.protocol}`);
         if (this.protocol === SACP_PROTOCOL || this.connectionType === CONNECTION_TYPE_WIFI) {
             this.socket.executeGcode(options, callback);
-        }else {
+        } else {
             this.socket.command(this.socket, {
                 cmd: cmd,
                 args: [gcode, context]
@@ -624,17 +624,18 @@ class ConnectionManager {
         } else {
             this.executeGcode(this.socket, {
                 gcode: 'G53'
-            })
+            });
             this.executeGcode(this.socket, {
                 gcode: 'G28'
-            })
+            });
         }
     }
 
     coordinateMove = (socket, options) => {
-        const { moveOrders, gcode, context, cmd, jogSpeed, headType } = options;
+        const { moveOrders, gcode, jogSpeed, headType } = options;
+        // const { moveOrders, gcode, context, cmd, jogSpeed, headType } = options;
         if (this.protocol === SACP_PROTOCOL) {
-            this.socket.coordinateMove({ moveOrders, jogSpeed, headType })
+            this.socket.coordinateMove({ moveOrders, jogSpeed, headType });
         } else {
             this.executeGcode(this.socket, { gcode });
         }

@@ -936,7 +936,8 @@ class MarlinController {
             socket.emit('Marlin:state', { state: {
                 ...this.state,
                 status: this.workflow.state
-            }, dataSource });
+            },
+            dataSource });
         }
         if (!isEmpty(this.settings)) {
             socket.emit('Marlin:settings', { settings: this.settings, dataSource });
