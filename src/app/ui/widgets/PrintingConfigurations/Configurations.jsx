@@ -92,7 +92,6 @@ function Configurations({ widgetActions }) {
             newDefinitionForManager.settings[
                 definitionKey
             ].default_value = value;
-            console.log('value', typeof value);
             const shouldUpdateIsOversteped = definitionKey === 'prime_tower_enable' && value === true;
 
             await dispatch(

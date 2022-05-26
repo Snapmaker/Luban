@@ -10,7 +10,6 @@ type ToolpathRendererData = {
 };
 const toolpathRenderer = (taskResult: ToolpathRendererData) => {
     return new Observable(subscriber => {
-        console.log('taskResult', taskResult, taskResult.data);
         if (isEmpty(taskResult.data)) {
             subscriber.next({
                 status: 'err',

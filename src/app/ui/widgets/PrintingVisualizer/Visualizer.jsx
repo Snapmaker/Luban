@@ -454,7 +454,6 @@ class Visualizer extends PureComponent {
         }
 
         if (enablePrimeTower !== prevProps.enablePrimeTower && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
-            console.log('enablePrimeTower', enablePrimeTower);
             modelGroup.primeTower.visible = enablePrimeTower;
         }
         if (!Number.isNaN(primeTowerHeight) && !Number.isNaN(this.props.primeTowerHeight) && primeTowerHeight !== prevProps.primeTowerHeight) {
