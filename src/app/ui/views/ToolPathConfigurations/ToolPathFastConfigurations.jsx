@@ -155,7 +155,7 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
             const newSettings = activeToolDefinition?.settings;
             if (headType === HEAD_CNC) {
                 if (newSettings.angle) newSettings.angle.default_value = toolParams?.toolAngle;
-                if (newSettings.diameter) newSettings.diameter22.default_value = toolParams?.toolDiameter;
+                if (newSettings.diameter) newSettings.diameter.default_value = toolParams?.toolDiameter;
                 if (newSettings.shaft_diameter) newSettings.shaft_diameter.default_value = toolParams?.toolShaftDiameter;
                 if (newSettings.jog_speed) newSettings.jog_speed.default_value = gcodeConfig?.jogSpeed;
                 if (newSettings.plunge_speed) newSettings.plunge_speed.default_value = gcodeConfig?.plungeSpeed;

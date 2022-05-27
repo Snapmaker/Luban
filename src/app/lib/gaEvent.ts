@@ -68,7 +68,6 @@ const sendMessage = (messageType: string, category: string, data: Record<string,
 };
 
 export const lubanVisit = () => {
-    console.log('isElectron()', isElectron());
     return sendMessage('luban_visit', 'user', {
         message: isElectron() ? 'electron' : 'web'
     });
