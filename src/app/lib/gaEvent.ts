@@ -1,6 +1,7 @@
 import i18next from 'i18next';
 import ReactGA from 'react-ga4';
 import { v4 as uuid } from 'uuid';
+import isElectron from 'is-electron';
 import { machineStore } from '../store/local-storage';
 
 type THeadType = 'printing' | 'laser' | 'cnc'
@@ -67,12 +68,21 @@ const sendMessage = (messageType: string, category: string, data: Record<string,
 };
 
 export const lubanVisit = () => {
-    return sendMessage('luban_visit', 'user');
+    console.log('isElectron()', isElectron());
+    return sendMessage('luban_visit', 'user', {
+        message: isElectron() ? 'electron' : 'web'
+    });
 };
 
 export const logLubanQuit = () => {
     machineStore.set('projectId', '');
     return sendMessage('luban_quit', 'user');
+};
+
+export const logErrorToGA = (errorInfo) => {
+    return sendMessage('error_boundaries', 'system', {
+        message: errorInfo?.componentStack
+    });
 };
 
 export const logModuleVisit = (headType: THeadType, isRotate?: boolean) => {
