@@ -15,12 +15,18 @@ const calculateSectionPoints = (colliderBvh: MeshBVH, plane: Plane, offset: {
     const positions: TPoint[] = [];
 
     colliderBvh.shapecast({
+        // traverseBoundsOrder: (box: Box3) => {
+        //     console.log(box);
+        //     return 1;
+        // },
         // @ts-ignore
         intersectsBounds: (box) => {
             return plane.intersectsBox(box);
         },
         // @ts-ignore
-        intersectsTriangle: (tri) => {
+        intersectsTriangle: (tri, target) => {
+            console.log(target);
+
             // check each triangle edge to see if it intersects with the plane. If so then
             // add it to the list of segments.
             let count = 0;

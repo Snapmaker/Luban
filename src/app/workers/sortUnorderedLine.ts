@@ -1,4 +1,4 @@
-import { simplifyPolygons } from '../../shared/lib/clipper/cLipper-adapter';
+import { PolygonsUtils } from '../../shared/lib/math/PolygonsUtils';
 import sendMessage from './utils/sendMessage';
 
 type TPoint = { x: number, y: number, z?: number }
@@ -185,7 +185,7 @@ const sortUnorderedLine = async (fragments: TPoint[], actionID: string) => {
             // const m4 = new Date().getTime();
             // console.log(`[${actionID}] worker complete, cost=`, m4 - m3);
 
-            const res = simplifyPolygons(polygons);
+            const res = PolygonsUtils.simplify(polygons, 0.2);
             const ret = res.map((vectors) => {
                 const arr = [];
                 for (let k = 0; k < vectors.length; k++) {

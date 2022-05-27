@@ -1,12 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSelector, shallowEqual, useDispatch } from 'react-redux';
-import { throttle } from 'lodash';
+import { find as lodashFind, throttle } from 'lodash';
 import Slider from '../../components/Slider';
 import styles from './styles.styl';
 import { actions as printingActions } from '../../../flux/printing';
 
 function ClippingControlLayout() {
     const primeTowerHeight = useSelector(state => state?.printing?.primeTowerHeight, shallowEqual);
+    const qualityDefinitions = useSelector(state => state?.printing?.qualityDefinitions, shallowEqual);
+    const defaultQualityId = useSelector(state => state?.printing?.defaultQualityId, shallowEqual);
+
+    const activeQualityDefinition = lodashFind(qualityDefinitions, {
+        definitionId: defaultQualityId
+    });
+    const qualitySetting = activeQualityDefinition.settings;
+
     const dispatch = useDispatch();
 
     const [value, setValue] = useState(0);
@@ -38,7 +46,7 @@ function ClippingControlLayout() {
                     vertical
                     min={0}
                     max={primeTowerHeight}
-                    step={0.24}
+                    step={qualitySetting.layer_height.default_value}
                     value={value}
                     onChange={(v) => {
                         onChange(v);
@@ -51,14 +59,11 @@ function ClippingControlLayout() {
 
 function VisualizerClippingControl() {
     const transformMode = useSelector(state => state?.printing?.transformMode, shallowEqual);
-    const modelGroup = useSelector(state => state?.printing?.modelGroup, shallowEqual);
+    const models = useSelector(state => state?.printing?.modelGroup.models);
+    const clipped = useSelector(state => state?.printing?.modelGroup.hasClipped(), shallowEqual);
     const displayedType = useSelector(state => state?.printing?.displayedType, shallowEqual);
 
-    const clipping = modelGroup.models.some((model) => {
-        return model.clippingWorkerMap.size !== 0;
-    });
-
-    if (!clipping && displayedType === 'model' && !transformMode && modelGroup.models.length && !(modelGroup.models.length === 1 && modelGroup.models[0].type === 'primeTower')) {
+    if (clipped && displayedType === 'model' && !transformMode && models.length && !(models.length === 1 && models[0].type === 'primeTower')) {
         return (
             <React.Fragment>
                 <ClippingControlLayout />

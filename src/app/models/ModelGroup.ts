@@ -1,4 +1,4 @@
-import { Sphere, SphereBufferGeometry, MeshStandardMaterial, Vector3, Group, Matrix4, BufferGeometry, Mesh, DoubleSide, Float32BufferAttribute, MeshBasicMaterial, Plane, BufferAttribute, DynamicDrawUsage, LineBasicMaterial, LineSegments, Box3, Object3D, Intersection, Geometry } from 'three';
+import { Sphere, SphereBufferGeometry, MeshStandardMaterial, Vector3, Group, Matrix4, BufferGeometry, Mesh, DoubleSide, Float32BufferAttribute, MeshBasicMaterial, Plane, Box3, Object3D, Intersection, Geometry, Vector2, Shape, ShapeGeometry, MeshPhongMaterial, BufferAttribute, DynamicDrawUsage, LineSegments, LineBasicMaterial } from 'three';
 import EventEmitter from 'events';
 import { CONTAINED, INTERSECTED, NOT_INTERSECTED } from 'three-mesh-bvh';
 import { v4 as uuid } from 'uuid';
@@ -15,11 +15,12 @@ import ThreeUtils from '../three-extensions/ThreeUtils';
 import ThreeGroup from './ThreeGroup';
 import PrimeTowerModel from './PrimeTowerModel';
 import { calculateUvVector } from '../lib/threejs/ThreeStlCalculation';
-import generateSkin from '../lib/generate-skin';
+import { polyOffset, polyUnion } from '../../shared/lib/clipper/cLipper-adapter';
 
 const EVENTS = {
     UPDATE: { type: 'update' }
 };
+
 const INDEXMARGIN = 0.02;
 const SUPPORT_AVAIL_AREA_COLOR = [0.5725490196078431, 0.32941176470588235, 0.8705882352941177];
 const SUPPORT_ADD_AREA_COLOR = [0.2980392156862745, 0, 0.5098039215686274];
@@ -77,12 +78,11 @@ class ModelGroup extends EventEmitter {
     }[];
 
     private clippingGroup = new Group();
-    private clippingWallGroup = new Group();
-    private clippingSkinGroup = new Group();
-    private clippingInfillGroup = new Group();
-    private surfaceLineGroup = new Group();
     private maxHeight = 0;
     private clippingHeight: number;
+    public plateAdhesion = new Group();
+    public clipping: 'true' | 'false' = 'true';
+    public adhesionType: 'skirt' | 'brim' | 'raft' | 'none';
 
     public constructor(headType: THeadType) {
         super();
@@ -285,6 +285,13 @@ class ModelGroup extends EventEmitter {
         models.forEach((model) => {
             model.visible = visible;
             model.meshObject.visible = visible;
+            if (model instanceof ThreeModel) {
+                model.clippingGroup.visible = visible;
+                model.clippingWall.visible = visible;
+                model.clippingSkin.visible = visible;
+                model.clippingSkinArea.visible = visible;
+                model.clippingInfill.visible = visible;
+            }
             if (model instanceof ThreeGroup) {
                 model.traverse((subModel) => {
                     subModel.visible = visible;
@@ -301,6 +308,7 @@ class ModelGroup extends EventEmitter {
         });
         // Make the reference of 'models' change to re-render
         this.models = [...this.models];
+        this.updatePlateAdhesion(this.adhesionType);
         return this.getState();
     }
 
@@ -321,7 +329,24 @@ class ModelGroup extends EventEmitter {
         });
     }
 
+    public recoverModelClippingGroup(model: TModel) {
+        this.updateClippingPlane(99999);
+        if (model instanceof ThreeModel) {
+            this.clippingGroup.add(model.clippingGroup);
+            this.clippingGroup.add(model.clippingWall);
+            this.clippingGroup.add(model.clippingSkin);
+            this.clippingGroup.add(model.clippingSkinArea);
+            this.clippingGroup.add(model.clippingInfill);
+        } else if (model instanceof ThreeGroup) {
+            model.children.forEach((m) => {
+                this.recoverModelClippingGroup(m);
+            });
+        }
+        this.updatePlateAdhesion(this.adhesionType);
+    }
+
     public removeModel(model: TModel, loop = false) {
+        this.updateClippingPlane(99999);
         if (model instanceof PrimeTowerModel) return;
         if (!(model instanceof SvgModel)) {
             model.setSelected(false);
@@ -343,6 +368,13 @@ class ModelGroup extends EventEmitter {
         if (model instanceof SvgModel) {
             model.meshObject.remove(model.modelObject3D);
             model.meshObject.remove(model.processObject3D);
+        }
+        if (model instanceof ThreeModel) {
+            this.clippingGroup.remove(model.clippingGroup);
+            this.clippingGroup.remove(model.clippingWall);
+            this.clippingGroup.remove(model.clippingSkin);
+            this.clippingGroup.remove(model.clippingSkinArea);
+            this.clippingGroup.remove(model.clippingInfill);
         }
         model.meshObject.removeEventListener('update', this.onModelUpdate);
         if (model.parent instanceof ThreeGroup) {
@@ -939,6 +971,7 @@ class ModelGroup extends EventEmitter {
     }
 
     public duplicateSelectedModel(modelID) {
+        this.updateClippingPlane(99999);
         const modelsToCopy = this.selectedModelArray;
         if (modelsToCopy.length === 0) return this._getEmptyState();
 
@@ -987,13 +1020,15 @@ class ModelGroup extends EventEmitter {
      * Copy action: copy selected models (simply save the objects without their current positions).
      */
     public copy() {
-        this.clipboard = this.selectedModelArray.filter((model) => model instanceof PrimeTowerModel).map(model => model.clone(this));
+        this.clipboard = this.selectedModelArray.filter((model) => !(model instanceof PrimeTowerModel)).map(model => model.clone(this));
+        console.log('this.clipboard = ', this.clipboard);
     }
 
     /**
      * Paste action: paste(duplicate) models in clipboard.
      */
     public paste() {
+        this.updateClippingPlane(99999);
         const modelsToCopy = this.clipboard;
         if (modelsToCopy.length === 0) return this._getEmptyState();
 
@@ -1018,13 +1053,20 @@ class ModelGroup extends EventEmitter {
                 // Once the position of selectedGroup is changed, updateMatrix must be called
                 newModel.meshObject.updateMatrix();
                 newModel.computeBoundingBox();
-
+                newModel.onTransform();
                 newModel.modelID = uuid();
 
                 this.models.push(newModel);
                 this.object.add(newModel.meshObject);
                 this.addModelToSelectedGroup(newModel);
                 this.updatePrimeTowerHeight();
+                if (newModel instanceof ThreeModel) {
+                    this.clippingGroup.add(newModel.clippingGroup);
+                    this.clippingGroup.add(newModel.clippingWall);
+                    this.clippingGroup.add(newModel.clippingSkin);
+                    this.clippingGroup.add(newModel.clippingSkinArea);
+                    this.clippingGroup.add(newModel.clippingInfill);
+                }
             }
         });
 
@@ -1666,6 +1708,10 @@ class ModelGroup extends EventEmitter {
                 this.models = [...this.models];
                 this.object.add(model.meshObject);
                 this.clippingGroup.add(model.clippingGroup);
+                this.clippingGroup.add(model.clippingWall);
+                this.clippingGroup.add(model.clippingSkin);
+                this.clippingGroup.add(model.clippingSkinArea);
+                this.clippingGroup.add(model.clippingInfill);
                 this.selectModelById(model.modelID);
             }
         } else {
@@ -1961,6 +2007,7 @@ class ModelGroup extends EventEmitter {
         this.models = this.getModels<Model3D>().filter((model) => {
             return !model.parent || model.parent.modelID !== group.modelID;
         });
+        this.recoverModelClippingGroup(group);
         return this.getState();
     }
 
@@ -2361,172 +2408,119 @@ class ModelGroup extends EventEmitter {
         });
     }
 
-    private updateClippingInfill(model: ThreeModel, clippingInner) {
-        const posAttr = clippingInner.geometry.attributes.position;
-        const inverseMatrix = new Matrix4();
-        inverseMatrix.copy(model.meshObject.matrixWorld).invert();
-        const res = model.infillMap.get(this.clippingHeight);
-        if (res && res.length !== 0) {
-            const arr = [];
-            res.forEach((vectors) => {
-                for (let i = 0; i < vectors.length; i++) {
-                    const begin = vectors[i];
-                    const end = vectors[i + 1];
-                    arr.push(begin, end);
-                }
-            });
-            const skinLines = generateSkin([...arr], 1, 60, model.boundingBox);
-            if (!skinLines.length) {
-                return;
-            }
-            let j = 0;
-            skinLines.forEach((point) => {
-                posAttr.setXYZ(j, point.x, point.y, this.clippingHeight);
-                j++;
-            });
-            clippingInner.geometry.setDrawRange(0, j);
-            posAttr.needsUpdate = true;
-            clippingInner.visible = true;
-        } else {
-            clippingInner.visible = false;
-        }
-    }
-
-    private updateClippingSkin(model, clippingSkin) {
-        const posAttr = clippingSkin.geometry.attributes.position;
-        const inverseMatrix = new Matrix4();
-        inverseMatrix.copy(model.meshObject.matrixWorld).invert();
-
-        const skinArea = model.skinMap.get(this.clippingHeight);
-        if (!skinArea || skinArea.length === 0) {
-            clippingSkin.visible = false;
-            return [];
-        }
-
-        const arr = [];
-        skinArea.forEach((vectors) => {
-            for (let k = 0; k < vectors.length; k++) {
-                const begin = vectors[k];
-                const end = vectors[k + 1];
-                arr.push(begin, end);
+    private getThreeModels() {
+        const models: ThreeModel[] = [];
+        this.traverseModels(this.models, (model) => {
+            if (model instanceof ThreeModel) {
+                models.push(model);
             }
         });
-
-        const skinLines = generateSkin([...arr], 1, Number(
-            (this.clippingHeight / 0.24).toFixed(0)
-        ) % 2 ? 135 : 45, model.boundingBox);
-        if (!skinLines.length) {
-            return [];
-        }
-        let j = 0;
-        skinLines.forEach((point) => {
-            posAttr.setXYZ(j, point.x, point.y, this.clippingHeight);
-            j++;
-        });
-        clippingSkin.geometry.setDrawRange(0, j);
-        posAttr.needsUpdate = true;
-        clippingSkin.visible = true;
-        return skinArea;
+        return models;
     }
 
-    private updateClippingWall(model, clippingWall) {
-        const posAttr = clippingWall.geometry.attributes.position;
-        const inverseMatrix = new Matrix4();
-        inverseMatrix.copy(model.meshObject.matrixWorld).invert();
+    public updatePlateAdhesion(adhesionType: 'skirt' | 'brim' | 'raft' | 'none' = this.adhesionType) {
+        this.plateAdhesion.visible = true;
+        // if (this.adhesionType === adhesionType) {
+        //     return;
+        // }
+        this.adhesionType = adhesionType;
+        this.plateAdhesion.clear();
+        if (this.adhesionType === 'none') {
+            this.adhesionType = adhesionType;
+            return;
+        }
+        const paths = [];
+        this.getThreeModels().filter((model) => {
+            return model.visible;
+        }).forEach((model) => {
+            if (model instanceof ThreeModel) {
+                const lines = model.clippingMap.get(model.clippingConfig.layerHeight);
+                const path = polyOffset(lines, 3);
+                paths.push(path);
+            }
+        });
+        if (paths.length === 0) {
+            return;
+        }
+        const res = paths.reduce((p, c) => {
+            return polyUnion(p, c);
+        }, paths.pop());
+        res.forEach((vectors) => {
+            if (this.adhesionType === 'skirt') {
+                const lineGeometry = new BufferGeometry();
+                const linePosAttr = new BufferAttribute(new Float32Array(300000), 3, false);
+                linePosAttr.setUsage(DynamicDrawUsage);
+                lineGeometry.setAttribute('position', linePosAttr);
 
-        const vectorsArray = model.clippingMap.get(this.clippingHeight);
-        if (this.clippingHeight <= model.boundingBox.max.z && vectorsArray && vectorsArray.length > 0) {
-            let index = 0;
-            vectorsArray.forEach((vectors) => {
-                vectors.forEach((point) => {
-                    posAttr.setXYZ(index++, point.x, point.y, this.clippingHeight);
-                });
-            });
-
-            const res = model.innerWallMap.get(this.clippingHeight);
-            res.forEach((vectors) => {
+                let index = 0;
                 for (let i = 0; i < vectors.length; i++) {
                     const begin = vectors[i];
                     const end = vectors[i + 1];
                     if (end) {
-                        posAttr.setXYZ(index++, begin.x, begin.y, this.clippingHeight);
-                        posAttr.setXYZ(index++, end.x, end.y, this.clippingHeight);
+                        linePosAttr.setXYZ(index++, begin.x, begin.y, 0.002);
+                        linePosAttr.setXYZ(index++, end.x, end.y, 0.002);
                     }
                 }
-            });
-
-            clippingWall.geometry.setDrawRange(0, index);
-            posAttr.needsUpdate = true;
-            clippingWall.visible = true;
-            return res;
-        } else {
-            clippingWall.visible = false;
-            return [];
-        }
-    }
-
-    private createLine(color) {
-        const lineGeometry = new BufferGeometry();
-        const linePosAttr = new BufferAttribute(new Float32Array(300000), 3, false);
-        linePosAttr.setUsage(DynamicDrawUsage);
-        lineGeometry.setAttribute('position', linePosAttr);
-        const line = new LineSegments(lineGeometry, new LineBasicMaterial({
-            linewidth: 2
-        }));
-        line.material.color.set(color).convertSRGBToLinear();
-        line.frustumCulled = false;
-        line.visible = true;
-        return line;
-    }
-
-    private getLineByIndex(group, index) {
-        let line = group.children[index];
-        if (!line) {
-            let color;
-            if (group === this.surfaceLineGroup) {
-                color = 0xE9F3FE;
-            } else if (group === this.clippingWallGroup) {
-                color = 0x3B83F6;
-            } else if (group === this.clippingSkinGroup) {
-                color = 0xFFFF00;
-            } else if (group === this.clippingInfillGroup) {
-                color = 0x8D4bbb;
+                const line = new LineSegments(lineGeometry, new LineBasicMaterial({
+                    linewidth: 2
+                }));
+                line.material.color.set(0x9254DE).convertSRGBToLinear();
+                line.frustumCulled = false;
+                line.visible = true;
+                this.plateAdhesion.add(line);
+            } else {
+                const californiaPts = [];
+                for (let i = 0; i < vectors.length; i++) {
+                    californiaPts.push(new Vector2(vectors[i].x, vectors[i].y));
+                }
+                const californiaShape = new Shape(californiaPts);
+                const geometry = new ShapeGeometry(californiaShape);
+                const mesh = new Mesh(geometry, new MeshPhongMaterial({ color: 0x9254DE, side: DoubleSide }));
+                this.plateAdhesion.add(mesh);
             }
-            line = this.createLine(color);
-            group.add(line);
-        }
-        return line;
+        });
     }
 
     public calaClippingMap() {
-        this.getModels<ThreeModel>().forEach((model) => {
+        this.plateAdhesion.visible = true;
+
+        this.getThreeModels().forEach((model) => {
             model.updateClippingMap();
         });
     }
 
     public updateClippingPlane(height) {
         // this.planeMesh.position.set(0, 0, height);
-
-
         !height && (height = this.maxHeight);
         this.clippingHeight = height;
-        this.getModels<ThreeModel>().forEach((model, index) => {
-            const _now = new Date().getTime();
-            // console.log('===========');
-            const clippingWall = this.getLineByIndex(this.clippingWallGroup, index);
-            this.updateClippingWall(model, clippingWall);
-            const now2 = new Date().getTime();
-            console.log('-- wall ', now2 - _now);
-            const clippingSkin = this.getLineByIndex(this.clippingSkinGroup, index);
-            this.updateClippingSkin(model, clippingSkin);
-            const now3 = new Date().getTime();
-            console.log('-- skin ', now3 - now2);
-            const clippingInfill = this.getLineByIndex(this.clippingInfillGroup, index);
-            this.updateClippingInfill(model, clippingInfill);
-            const now4 = new Date().getTime();
-            console.log('-- fill ', now4 - now3);
+        this.getThreeModels().forEach((model) => {
             model.setLocalPlane(this.clippingHeight);
         });
+    }
+
+    public hasClipped() {
+        let flag = true;
+        this.traverseModels(this.models, (model) => {
+            if (model instanceof ThreeModel && model.clippingWorkerMap.size !== 0) {
+                flag = false;
+            }
+        });
+        return flag;
+    }
+
+    public clippingFinish(flag: boolean) {
+        this.plateAdhesion.visible = false;
+        if (!flag) {
+            this.clipping = 'true';
+            this.plateAdhesion.clear();
+            return;
+        }
+        const allDone = this.hasClipped();
+        if (allDone) {
+            this.updatePlateAdhesion();
+            this.onModelUpdate();
+            this.models = [...this.models];
+        }
     }
 }
 

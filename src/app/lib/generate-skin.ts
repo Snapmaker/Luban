@@ -46,7 +46,7 @@ const generateEdgeTable = (points: TPoint[], angle: number, center: TPoint) => {
     return { edgeTable, boundingBox };
 };
 
-const generateSkin = (points: TPoint[], step: number, angle: number, boundingBox: Box3) => {
+const generateSkin = (points: TPoint[], step: number, angle: number, boundingBox: Box3, clippingHeight: number, offset = 0) => {
     if (points.length === 0) {
         return [];
     }
@@ -59,6 +59,9 @@ const generateSkin = (points: TPoint[], step: number, angle: number, boundingBox
 
 
     let startMin = centerY;
+    if (offset) {
+        startMin -= clippingHeight * offset;
+    }
     while (startMin - step >= newBoundingBox.minY) {
         startMin -= step;
     }

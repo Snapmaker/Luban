@@ -453,8 +453,7 @@ export const actions = {
         const defaultConfigId = machineStore.get('defaultConfigId');
         if (
             defaultConfigId
-            && Object.prototype.toString.call(defaultConfigId)
-                === '[object String]'
+            && Object.prototype.toString.call(defaultConfigId) === '[object String]'
         ) {
             const newConfigId = JSON.parse(defaultConfigId);
             if (newConfigId[series]) {
@@ -1277,7 +1276,7 @@ export const actions = {
             );
             dispatch(actions.updateState({ isAnyModelOverstepped }));
         }
-        dispatch(actions.updateAllModelColors());
+        dispatch(actions.applyProfileToAllModels());
     },
 
     onUploadManagerDefinition: (file, type) => (dispatch, getState) => {
@@ -1478,9 +1477,9 @@ export const actions = {
                 {
                     ...activeToolList,
                     name:
-                          type === PRINTING_MANAGER_TYPE_MATERIAL
-                              ? i18n._('key-default_category-Default Material')
-                              : i18n._('key-default_category-Default Preset'),
+                        type === PRINTING_MANAGER_TYPE_MATERIAL
+                            ? i18n._('key-default_category-Default Material')
+                            : i18n._('key-default_category-Default Preset'),
                     settings: definitions[0]?.settings
                 }
             ]
@@ -1665,7 +1664,7 @@ export const actions = {
                 [defaultId]: newDefinitionId
             })
         );
-        dispatch(actions.updateAllModelColors());
+        dispatch(actions.applyProfileToAllModels());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
@@ -1729,12 +1728,14 @@ export const actions = {
         // dispatch(actions.displayModel());
         if (value) {
             modelGroup.updateClippingPlane(99999);
+            modelGroup.plateAdhesion.visible = false;
         } else {
             modelGroup.calaClippingMap();
         }
         dispatch(actions.updateState({
             transformMode: value
         }));
+        dispatch(actions.render());
     },
 
     destroyGcodeLine: () => (dispatch, getState) => {
@@ -1826,12 +1827,12 @@ export const actions = {
                 - (primeTowerModel.boundingBox.max.x
                     + primeTowerModel.boundingBox.min.x
                     + primeTowerWidth)
-                    / 2;
+                / 2;
             const primeTowerPositionY = modelGroupBBox.max.y
                 - (primeTowerModel.boundingBox.max.y
                     + primeTowerModel.boundingBox.min.y
                     - primeTowerWidth)
-                    / 2;
+                / 2;
             primeTowerXDefinition = size.x - primeTowerPositionX - left;
             primeTowerYDefinition = size.y - primeTowerPositionY - front;
             activeQualityDefinition.settings.prime_tower_position_x.default_value = primeTowerXDefinition;
@@ -2693,7 +2694,7 @@ export const actions = {
         }
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
-        dispatch(actions.updateAllModelColors());
+        dispatch(actions.applyProfileToAllModels());
         dispatch(actions.updateBoundingBox());
         modelGroup.models = [...models];
         // dispatch(actions.updateState({
@@ -3082,7 +3083,7 @@ export const actions = {
         );
 
         dispatch(actions.updateState(modelState));
-        dispatch(actions.updateAllModelColors());
+        dispatch(actions.applyProfileToAllModels());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
@@ -3123,7 +3124,7 @@ export const actions = {
         );
 
         dispatch(actions.updateState(modelState));
-        dispatch(actions.updateAllModelColors());
+        dispatch(actions.applyProfileToAllModels());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
@@ -3187,6 +3188,7 @@ export const actions = {
                 modelItem.meshObject.updateMatrixWorld();
                 geometry.computeBoundingBox();
                 const inverseNormal = modelItem.transformation.scaleX / Math.abs(modelItem.transformation.scaleX) < 0;
+
                 const modelItemInfo = {
                     matrixWorld: modelItem.meshObject.matrixWorld,
                     convexGeometry: modelItem.convexGeometry,
@@ -3699,7 +3701,7 @@ export const actions = {
                                     }
                                 );
                                 dispatch(actions.updateState(modelState));
-                                dispatch(actions.updateAllModelColors());
+                                dispatch(actions.applyProfileToAllModels());
                                 dispatch(actions.displayModel());
                                 dispatch(actions.destroyGcodeLine());
                                 if (modelNames.length > 1) {
@@ -3923,7 +3925,7 @@ export const actions = {
                     dispatch(actions.destroyGcodeLine());
                     dispatch(actions.displayModel());
                 })
-                .catch(() => {});
+                .catch(() => { });
         }
     },
 
@@ -4116,34 +4118,48 @@ export const actions = {
         logToolBarOperation(HEAD_PRINTING, 'ungroup');
     },
 
-    setModelsMeshColor: (direction, color) => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
+    getModelMaterialSettings: (model) => (dispatch, getState) => {
+        const {
+            materialDefinitions,
+            defaultMaterialId,
+            defaultMaterialIdRight
+        } = getState().printing;
+        const materialID = model.extruderConfig.shell === '0' ? defaultMaterialId : defaultMaterialIdRight;
+        const index = materialDefinitions.findIndex((d) => {
+            return d.definitionId === materialID;
+        });
+        return materialDefinitions[index] ? materialDefinitions[index].settings : materialDefinitions[0].settings;
+    },
+
+    applyProfileToAllModels: () => (dispatch, getState) => {
+        const { qualityDefinitions, defaultQualityId, modelGroup } = getState().printing;
+        const activeQualityDefinition = lodashFind(qualityDefinitions, {
+            definitionId: defaultQualityId
+        });
+        const qualitySetting = activeQualityDefinition.settings;
+        modelGroup.updatePlateAdhesion(qualitySetting.adhesion_type.default_value);
         const models = modelGroup.getModels();
-        modelGroup.traverseModels(models, model => {
-            if (model.extruderConfig.shell === (direction === LEFT_EXTRUDER ? '0' : '1')) {
-                model.updateMaterialColor(color);
-            }
+        modelGroup.getThreeModels().forEach((model) => {
+            const materialSettings = dispatch(actions.getModelMaterialSettings(model));
+            model.updateMaterialColor(materialSettings.color.default_value);
+
+            const layerHeight = qualitySetting.layer_height.default_value;
+            const bottomThickness = qualitySetting.bottom_thickness.default_value;
+            const bottomLayers = Math.ceil(Math.round(bottomThickness / layerHeight));
+            const topThickness = qualitySetting.top_thickness.default_value;
+            const topLayers = Math.ceil(Math.round(topThickness / layerHeight));
+            model.updateClipperConfig({
+                lineWidth: materialSettings.machine_nozzle_size.default_value,
+                wallThickness: qualitySetting.wall_thickness.default_value,
+                topLayers,
+                bottomLayers,
+                layerHeight,
+                infillSparseDensity: qualitySetting.infill_sparse_density.default_value,
+                infillPattern: qualitySetting.infill_pattern.default_value,
+            });
         });
         modelGroup.models = models.concat();
         dispatch(actions.render());
-    },
-
-    getMeshColor: direction => (dispatch, getState) => {
-        const { materialDefinitions, defaultMaterialId, defaultMaterialIdRight } = getState().printing;
-        const materialID = direction === LEFT_EXTRUDER ? defaultMaterialId : defaultMaterialIdRight;
-        const index = materialDefinitions.findIndex(d => d.definitionId === materialID);
-        if (index >= 0) {
-            return materialDefinitions[index].settings.color.default_value;
-        } else {
-            return materialDefinitions[0].settings.color.default_value;
-        }
-    },
-
-    updateAllModelColors: () => dispatch => {
-        const leftColor = dispatch(actions.getMeshColor(LEFT_EXTRUDER));
-        dispatch(actions.setModelsMeshColor(LEFT_EXTRUDER, leftColor));
-        const rightColor = dispatch(actions.getMeshColor(RIGHT_EXTRUDER));
-        dispatch(actions.setModelsMeshColor(RIGHT_EXTRUDER, rightColor));
     },
 
     checkNewUser: () => dispatch => {
@@ -4223,8 +4239,8 @@ export const actions = {
                     // https://stackoverflow.com/questions/16469270/transforming-vertex-normals-in-three-js/16469913#16469913
                     if (
                         model.transformation.scaleX
-                            * model.transformation.scaleY
-                            * model.transformation.scaleZ
+                        * model.transformation.scaleY
+                        * model.transformation.scaleZ
                         < 0
                     ) {
                         mesh.geometry = mesh.geometry.clone();
@@ -4322,7 +4338,7 @@ export const actions = {
                                 model.meshObject.add(mesh);
                                 resolve();
                             },
-                            () => {},
+                            () => { },
                             (err) => {
                                 reject(err);
                             }

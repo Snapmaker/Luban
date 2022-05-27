@@ -3,10 +3,12 @@ import sendMessage from './utils/sendMessage';
 
 type TPoint = { x: number, y: number, z?: number }
 
-const calaClippingWall = (clippingHeight: number, polygons: TPoint[][]) => {
+const calaClippingWall = (polygons: TPoint[][], innerWallCount: number, lineWidth: number) => {
     // let index = 0;
     // const ret = [];
-    const res = polyOffset(polygons, -0.5);
+    const res = Array(innerWallCount).fill('').map((_, index) => {
+        return polyOffset(polygons, -lineWidth * (index + 1));
+    });
     // res.forEach((vectors) => {
     //     for (let i = 0; i < vectors.length; i++) {
     //         const begin = vectors[i];
