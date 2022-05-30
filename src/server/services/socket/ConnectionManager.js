@@ -619,7 +619,7 @@ class ConnectionManager {
     // only for Wifi
 
     goHome = (socket, options) => {
-        const { hasHomingModel } = options
+        const { hasHomingModel } = options;
         if (this.protocol === SACP_PROTOCOL) {
             this.socket.goHome(hasHomingModel);
         } else {
