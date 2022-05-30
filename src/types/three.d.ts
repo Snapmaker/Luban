@@ -16,11 +16,3 @@ declare module 'three' {
     }
 
 }
-
-declare module 'three/src/core/BufferGeometry' {
-    export interface BufferGeometry {
-      boundsTree?: MeshBVH;
-      computeBoundsTree: typeof computeBoundsTree;
-      disposeBoundsTree: typeof disposeBoundsTree;
-    }
-  }
