@@ -24,9 +24,7 @@ const calculateSectionPoints = (colliderBvh: MeshBVH, plane: Plane, offset: {
             return plane.intersectsBox(box);
         },
         // @ts-ignore
-        intersectsTriangle: (tri, target) => {
-            console.log(target);
-
+        intersectsTriangle: (tri) => {
             // check each triangle edge to see if it intersects with the plane. If so then
             // add it to the list of segments.
             let count = 0;

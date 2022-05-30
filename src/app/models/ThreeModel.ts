@@ -485,19 +485,25 @@ class ThreeModel extends BaseModel {
         this.observable = new Observable((subscriber) => {
             for (const [index, vectors] of this.clippingMap.entries()) {
                 this.clippingMap.delete(index);
-                const { terminate } = workerManager.translatePolygons<TPoint[][]>([vectors, {
-                    x: 10,
-                    y: 10
-                }], (res) => {
+                workerManager.translatePolygons<TPoint[][]>({
+                    polygons: vectors,
+                    translate: {
+                        x: 10,
+                        y: 10
+                    }
+                }, (res) => {
                     this.clippingMap.set(index, res);
                     this.clippingWorkerMap.delete(index);
                     subscriber.next(this.clippingWorkerMap);
                     if (this.clippingWorkerMap.size === 0) {
                         subscriber.complete();
                     }
+                }).then((ret) => {
+                    console.log('ret = ', ret);
+
+                    this.clippingWorkerMap.set(index, ret.terminate);
+                    subscriber.next(this.clippingWorkerMap);
                 });
-                this.clippingWorkerMap.set(index, terminate);
-                subscriber.next(this.clippingWorkerMap);
             }
         });
         this.observable.subscribe();
@@ -522,16 +528,21 @@ class ThreeModel extends BaseModel {
                 this.clippingMap.delete(index);
                 const actionID = Math.random().toFixed(4);
                 const m = new Date().getTime();
-                const { terminate } = workerManager.sortUnorderedLine<TPoint[][]>([vectors, actionID, m], (res) => {
+                workerManager.sortUnorderedLine<TPoint[][]>({
+                    fragments: vectors,
+                    actionID,
+                    m
+                }, (res) => {
                     this.clippingMap.set(index, res);
                     this.clippingWorkerMap.delete(index);
                     subscriber.next(this.clippingWorkerMap);
                     if (this.clippingWorkerMap.size === 0) {
                         subscriber.complete();
                     }
+                }).then((ret) => {
+                    this.clippingWorkerMap.set(index, ret.terminate);
+                    subscriber.next(this.clippingWorkerMap);
                 });
-                this.clippingWorkerMap.set(index, terminate);
-                subscriber.next(this.clippingWorkerMap);
             }
         });
         this.observable.subscribe({
@@ -551,16 +562,21 @@ class ThreeModel extends BaseModel {
                 if (wallCount === 1) {
                     this.innerWallMap.set(index, [vectors]);
                 } else {
-                    const { terminate } = workerManager.calaClippingWall<TPoint[][][]>([vectors, wallCount, this.clippingConfig.lineWidth], (res) => {
+                    workerManager.calaClippingWall<TPoint[][][]>({
+                        polygons: vectors,
+                        innerWallCount: wallCount,
+                        lineWidth: this.clippingConfig.lineWidth
+                    }, (res) => {
                         this.innerWallMap.set(index, res);
                         this.clippingWorkerMap.delete(index);
                         subscriber.next(this.clippingWorkerMap);
                         if (this.clippingWorkerMap.size === 0) {
                             subscriber.complete();
                         }
+                    }).then((ret) => {
+                        this.clippingWorkerMap.set(index, ret.terminate);
+                        subscriber.next(this.clippingWorkerMap);
                     });
-                    this.clippingWorkerMap.set(index, terminate);
-                    subscriber.next(this.clippingWorkerMap);
                 }
             }
             if (wallCount === 1) {
@@ -600,10 +616,15 @@ class ThreeModel extends BaseModel {
                     bottomLayerWalls && otherLayers.push(bottomLayerWalls[bottomLayerWalls.length - 1]);
                     i++;
                 }
-                const { terminate } = workerManager.calaClippingSkin<{
+                workerManager.calaClippingSkin<{
                     skin: TPoint[][],
                     infill: TPoint[][]
-                }>([index, vectorsArray[vectorsArray.length - 1], otherLayers, this.clippingConfig.lineWidth], (res) => {
+                }>({
+                    index,
+                    currentInnerWall: vectorsArray[vectorsArray.length - 1],
+                    otherLayers,
+                    lineWidth: this.clippingConfig.lineWidth
+                }, (res) => {
                     this.skinMap.set(index, res.skin);
                     this.infillMap.set(index, res.infill);
                     this.clippingWorkerMap.delete(index);
@@ -611,9 +632,10 @@ class ThreeModel extends BaseModel {
                     if (this.clippingWorkerMap.size === 0) {
                         subscriber.complete();
                     }
+                }).then((ret) => {
+                    this.clippingWorkerMap.set(index, ret.terminate);
+                    subscriber.next(this.clippingWorkerMap);
                 });
-                this.clippingWorkerMap.set(index, terminate);
-                subscriber.next(this.clippingWorkerMap);
             }
         });
         this.observable.subscribe({
@@ -759,16 +781,13 @@ class ThreeModel extends BaseModel {
             // rotation = new THREE.Euler().setFromQuaternion(quaternion, undefined, false);
         }
 
-        const position2 = new THREE.Vector3();
-        this.meshObject.getWorldPosition(position);
-        const scale2 = new THREE.Vector3();
-        this.meshObject.getWorldScale(scale);
-        const quaternion = new THREE.Quaternion();
-        this.meshObject.getWorldQuaternion(quaternion);
-        const rotation2 = new THREE.Euler().setFromQuaternion(quaternion, undefined);
-
-        console.log('111', { position2, scale2, rotation2 });
-        console.log({ position, scale, rotation });
+        // const position2 = new THREE.Vector3();
+        // this.meshObject.getWorldPosition(position);
+        // const scale2 = new THREE.Vector3();
+        // this.meshObject.getWorldScale(scale);
+        // const quaternion = new THREE.Quaternion();
+        // this.meshObject.getWorldQuaternion(quaternion);
+        // const rotation2 = new THREE.Euler().setFromQuaternion(quaternion, undefined);
 
 
         this.meshObjectGroup?.position.copy(position);

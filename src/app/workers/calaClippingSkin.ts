@@ -1,5 +1,5 @@
+import { Observable } from 'rxjs';
 import { polyDiff, polyIntersection, polyOffset } from '../../shared/lib/clipper/cLipper-adapter';
-import sendMessage from './utils/sendMessage';
 
 type TPoint = { x: number, y: number, z?: number }
 
@@ -21,27 +21,34 @@ const intersectionSkin = (subPaths, vectorsArray) => {
     // return [];
 };
 
-const calaClippingSkin = (index: string, currentInnerWall: TPoint[], otherLayers: TPoint[][], lineWidth: number) => {
-    const commonArea = otherLayers.reduce((p, c) => {
-        return intersectionSkin(c, p);
-    }, otherLayers[0]);
+type TMessage = {
+    index: string, currentInnerWall: TPoint[], otherLayers: TPoint[][], lineWidth: number
+}
 
-    let skin;
-    let infill;
+const calaClippingSkin = ({ currentInnerWall, otherLayers, lineWidth }: TMessage) => {
+    return new Observable((observer) => {
+        const commonArea = otherLayers.reduce((p, c) => {
+            return intersectionSkin(c, p);
+        }, otherLayers[0]);
 
-    if (commonArea.length === 0) {
-        skin = currentInnerWall;
-        infill = [];
-    } else {
-        skin = polyDiff(currentInnerWall, commonArea);
-        infill = commonArea;
-    }
-    if (skin && skin.length > 0) {
-        skin = polyOffset(skin, -lineWidth);
-    }
-    return sendMessage({
-        infill,
-        skin
+        let skin;
+        let infill;
+
+        if (commonArea.length === 0) {
+            skin = currentInnerWall;
+            infill = [];
+        } else {
+            skin = polyDiff(currentInnerWall, commonArea);
+            infill = commonArea;
+        }
+        if (skin && skin.length > 0) {
+            skin = polyOffset(skin, -lineWidth);
+        }
+        observer.next({
+            infill,
+            skin
+        });
+        observer.complete();
     });
 };
 

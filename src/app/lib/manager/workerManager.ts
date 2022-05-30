@@ -15,18 +15,18 @@ export enum WorkerMethods {
     toolpathRenderer = 'toolpathRenderer',
     sortUnorderedLine = 'sortUnorderedLine',
     translatePolygons = 'translatePolygons',
-    calaClippingWall= 'calaClippingWall',
+    calaClippingWall = 'calaClippingWall',
     calaClippingSkin = 'calaClippingSkin'
     // LUBAN worker methods END
 }
 
 type IWorkerManager = {
     [method in WorkerMethods]: <T>(
-        data: unknown[],
+        data: unknown,
         onmessage: (data: T) => void
-    ) => {
+    ) => Promise<{
         terminate(): void;
-    };
+    }>;
 };
 type PayloadData = {
     status?: string;

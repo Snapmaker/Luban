@@ -1,5 +1,5 @@
+import { Observable } from 'rxjs';
 import { PolygonsUtils } from '../../shared/lib/math/PolygonsUtils';
-import sendMessage from './utils/sendMessage';
 
 type TPoint = { x: number, y: number, z?: number }
 
@@ -124,11 +124,15 @@ const search = (latest: TPoint, currentConnectedPoints: TPoint[], currentConnect
     }
 };
 
-const sortUnorderedLine = async (fragments: TPoint[], actionID: string) => {
-    const m3 = new Date().getTime();
-    // console.log(`[${actionID}] worker exec 2, cost=`, m3 - m);
+type TMessage = {
+    fragments: TPoint[],
+    actionID: string
+}
 
-    return new Promise((resolve) => {
+const sortUnorderedLine = ({ fragments, actionID }: TMessage) => {
+    return new Observable((observer) => {
+        const m3 = new Date().getTime();
+        // console.log(`[${actionID}] worker exec 2, cost=`, m3 - m);
         try {
             // console.log('=========== ', fragments.length);
 
@@ -198,12 +202,13 @@ const sortUnorderedLine = async (fragments: TPoint[], actionID: string) => {
                 return arr;
             });
 
-            sendMessage(ret);
-            resolve(true);
+            observer.next(ret);
         } catch (error) {
             const m4 = new Date().getTime();
             console.error(`[${actionID}] worker error, time=`, m4 - m3, error);
-            resolve(error);
+            observer.error(error);
+        } finally {
+            observer.complete();
         }
         // return polygons;
     });
