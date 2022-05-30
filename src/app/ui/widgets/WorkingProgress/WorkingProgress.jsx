@@ -6,6 +6,7 @@ import i18n from '../../../lib/i18n';
 import { formatDuration } from '../GCode/GCode';
 import { Button } from '../../components/Buttons';
 import SvgIcon from '../../components/SvgIcon';
+import { WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_PAUSING, WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_STOPPING } from '../../../constants';
 
 const Text = ({ name, value }) => {
     return (
@@ -25,7 +26,6 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
         isConnected, workflowStatus,
         gcodePrintingInfo: { progress, elapsedTime, remainingTime, total, sent, printStatus }
     } = useSelector(state => state.machine);
-    console.log(progress, total, sent);
     const gcodeFile = useSelector(state => state.workspace.gcodeFile);
     const fileName = gcodeFile?.renderGcodeFileName ?? gcodeFile?.name;
     const [currentWorkflowStatus, setCurrentWorkflowStatus] = useState(null);
@@ -35,12 +35,12 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
     useEffect(() => {
         // const newCurrent = connectionType === 'wifi' ? workflowStatus : workflowState;
         setCurrentWorkflowStatus(workflowStatus);
-        console.log({ workflowStatus });
     }, [workflowStatus]);
     useEffect(() => {
         if (
             isConnected
-            && (currentWorkflowStatus === 'running' || currentWorkflowStatus === 'paused' || (total !== 0 && sent >= total))
+            && (currentWorkflowStatus === WORKFLOW_STATUS_RUNNING || currentWorkflowStatus === WORKFLOW_STATUS_PAUSED
+                || currentWorkflowStatus === WORKFLOW_STATUS_PAUSING || currentWorkflowStatus === WORKFLOW_STATUS_STOPPING || (total !== 0 && sent >= total))
         ) {
             widgetActions.setDisplay(true);
         } else {

@@ -19,6 +19,7 @@ import { actions as machineActions } from '../../../flux/machine';
 import { actions as widgetActions } from '../../../flux/widget';
 import {
     HEAD_CNC,
+    HEAD_PRINTING,
     // Units
     IMPERIAL_UNITS,
     METRIC_UNITS, WORKFLOW_STATUS_IDLE,
@@ -76,12 +77,12 @@ const normalizeToRange = (n, min, max) => {
 function Control({ widgetId, widgetActions: _widgetActions }) {
     const machine = useSelector(state => state.machine);
     const { widgets } = useSelector(state => state.widget);
-    const { boundingBox } = useSelector(state => state.workspace);
+    const { boundingBox, headType } = useSelector(state => state.workspace);
     const workPosition = useSelector(state => state.machine.workPosition);
     const originOffset = useSelector(state => state.machine.originOffset) || {};
     const { jog, axes, dataSource } = widgets[widgetId];
     const { speed = 1500, keypad, selectedDistance, customDistance, selectedAngle, customAngle } = jog;
-    const { headType, isConnected, workflowStatus, homingModal, isMoving } = machine;
+    const { isConnected, workflowStatus, homingModal, isMoving } = machine;
     const dispatch = useDispatch();
     function getInitialState() {
         const jogSpeed = speed;
@@ -232,6 +233,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
             dispatch(machineActions.coordinateMove(gcode, moveOrders, jogSpeed));
         },
         setWorkOrigin: () => {
+            if (headType === HEAD_PRINTING) return;
             const xPosition = parseFloat(workPosition.x);
             const yPosition = parseFloat(workPosition.y);
             const zPosition = parseFloat(workPosition.z);
@@ -456,8 +458,8 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
     }, [homingModal, isConnected]);
 
     function canClick() {
-        return (isConnected
-            && includes([WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_UNKNOWN], workflowStatus)) && !isMoving;
+        return ((isConnected
+            && includes([WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_UNKNOWN], workflowStatus)) && !isMoving) || !isConnected;
     }
 
     const _canClick = canClick();

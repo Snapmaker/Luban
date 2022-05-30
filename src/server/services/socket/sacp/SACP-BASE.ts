@@ -40,11 +40,10 @@ class SocketBASE {
             emergencyStopButton: false,
             enclosure: false
         };
-        this.sacpClient.logFeedbackLevel(5).then(({ response }) => {
-            console.log('logLevel', response);
+        this.sacpClient.logFeedbackLevel(2).then(({ response }) => {
+            log.info(`logLevel, ${response}`);
             if (response.result === 0) {
                 this.subscribeLogCallback = (data) => {
-                    // console.log('logFeedback', data, data.response.data, readString(data.response.data, 1));
                     const result = readString(data.response.data, 1).result;
                     this.socket && this.socket.emit('serialport:read', { data: result });
                 };
@@ -57,6 +56,7 @@ class SocketBASE {
                 ...stateData,
                 isHomed: !isHomed
             };
+            this.socket && this.socket.emit('move:status', { isHoming: false });
         });
         this.subscribeHeartCallback = async (data) => {
             statusKey = readUint8(data.response.data, 0);
@@ -181,7 +181,6 @@ class SocketBASE {
             // log.info(`revice coordinate: ${data.response}`);
             const response = data.response;
             const coordinateInfos = new CoordinateSystemInfo().fromBuffer(response.data);
-            // console.log('coordinateInfos', coordinateInfos);
             const currentCoordinate = coordinateInfos.coordinates;
             const originCoordinate = coordinateInfos.originOffset;
             const pos = {
@@ -207,7 +206,6 @@ class SocketBASE {
                 isHomed,
                 // isMoving: false
             };
-            // console.log('originOffset', originOffset, pos);
         };
         this.sacpClient.subscribeCurrentCoordinateInfo({ interval: 1000 }, this.subscribeCoordinateCallback).then(res => {
             log.info(`subscribe coordination success: ${res}`);
@@ -264,8 +262,9 @@ class SocketBASE {
         }
     };
 
-    public goHome = async () => {
+    public goHome = async (hasHomingModel) => {
         log.info('onClick gohome');
+        hasHomingModel && this.socket && this.socket.emit('move:status', { isHoming: true });
         await this.sacpClient.updateCoordinate(CoordinateType.MACHINE).then(res => {
             log.info(`Update Coordinate: ${res}`);
         });
@@ -290,7 +289,6 @@ class SocketBASE {
         await this.sacpClient.requestAbsoluteCooridateMove(directions, distances, jogSpeed, CoordinateType.MACHINE).then(res => {
             log.info(`Coordinate Move: ${res.response.result}`);
             this.socket && this.socket.emit('serialport:read', { data: res.response.result === 0 ? 'OK' : 'WARNING' });
-            // console.log('coordinate move', res);
             this.socket && this.socket.emit('move:status', { isMoving: false });
         });
     }
@@ -306,7 +304,6 @@ class SocketBASE {
         });
         await this.sacpClient.setWorkOrigin(coordinateInfos).then(res => {
             log.info(`Set Work Origin: ${res.data}`);
-            // console.log(res);
         });
     }
 

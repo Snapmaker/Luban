@@ -1552,9 +1552,9 @@ export const INITIAL_TOOL_HEAD_FOR_SM2 = {
 export const LASER_10W_TAKE_PHOTO_POSITION = {
     A400: {
         // TODO: need to test
-        x: 290,
-        y: 210,
-        z: 350
+        x: 265,
+        y: 205,
+        z: 330
     },
     A350: {
         x: 232,

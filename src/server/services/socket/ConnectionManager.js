@@ -618,9 +618,10 @@ class ConnectionManager {
     };
     // only for Wifi
 
-    goHome = () => {
+    goHome = (socket, options) => {
+        const { hasHomingModel } = options
         if (this.protocol === SACP_PROTOCOL) {
-            this.socket.goHome();
+            this.socket.goHome(hasHomingModel);
         } else {
             this.executeGcode(this.socket, {
                 gcode: 'G53'

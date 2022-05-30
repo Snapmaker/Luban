@@ -296,7 +296,6 @@ class SocketTCP extends SocketBASE {
             log.info(`unSubscribeHeart, ${res}`);
         });
         this.sacpClient.wifiConnectionClose().then(({ response }) => {
-            console.log('wifiClose', response);
             if (response.result === 0) {
                 setTimeout(() => {
                     this.sacpClient?.dispose();

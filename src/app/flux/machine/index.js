@@ -351,7 +351,6 @@ export const actions = {
             'Marlin:state': (options) => {
                 // Note: serialPort & Wifi -> for heartBeat
                 const { state } = options;
-                console.log('marlin:state', state);
                 const { headType, pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
                 const machineState = getState().machine;
                 if ((machineState.isRotate !== pos?.isFourAxis) && (headType === HEAD_LASER || headType === HEAD_CNC)) {
@@ -578,7 +577,6 @@ export const actions = {
                 let machineSeries = '';
                 const { toolHead, series, headType, status, isHomed, moduleStatusList, isMoving } = state;
                 const { seriesSize } = state;
-                console.log('connection', state);
                 dispatch(baseActions.updateState({
                     isHomed: isHomed,
                     isMoving,
@@ -697,7 +695,6 @@ export const actions = {
             },
             'sender:status': (options) => {
                 const { data } = options;
-                console.log({ data });
                 const { total, sent, received, startTime, finishTime, elapsedTime, remainingTime } = data;
                 dispatch(baseActions.updateState({
                     gcodePrintingInfo: {
@@ -712,11 +709,17 @@ export const actions = {
                 }));
             },
             'move:status': (options) => {
-                const { isMoving } = options;
-                console.log({ options });
-                dispatch(baseActions.updateState({
-                    isMoving
-                }));
+                const { isMoving, isHoming } = options;
+                if (!isNil(isMoving)) {
+                    dispatch(baseActions.updateState({
+                        isMoving
+                    }));
+                }
+                if (!isNil(isHoming)) {
+                    dispatch(baseActions.updateState({
+                        homingModal: isHoming
+                    }));
+                }
             }
         };
 
@@ -922,7 +925,6 @@ export const actions = {
     },
 
     resetMachineState: (connectionType = CONNECTION_TYPE_WIFI) => (dispatch) => {
-        console.log('resetMachineState');
         dispatch(baseActions.updateState({
             isOpen: false,
             isConnected: false,
@@ -1014,7 +1016,7 @@ export const actions = {
         });
     },
 
-    executeGcodeAutoHome: (homingModal = false) => (dispatch, getState) => {
+    executeGcodeAutoHome: (hasHomingModel = false) => (dispatch, getState) => {
         // const { series, headType } = getState().workspace;
         // const { connectionType, server } = getState().machine;
         const { server } = getState().machine;
@@ -1026,8 +1028,7 @@ export const actions = {
         // }
         // dispatch(actions.executeGcode('G28'));
         // dispatch(actions.executeGcodeG54(series, headType));
-        console.log(homingModal);
-        server.goHome();
+        server.goHome(hasHomingModel);
     },
 
     // region Enclosure
