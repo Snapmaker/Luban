@@ -29,7 +29,7 @@ const calaClippingSkin = ({ currentInnerWall, otherLayers, lineWidth }: TMessage
     return new Observable((observer) => {
         const commonArea = otherLayers.reduce((p, c) => {
             return intersectionSkin(c, p);
-        }, otherLayers[0]);
+        }, otherLayers[0] || []);
 
         let skin;
         let infill;
