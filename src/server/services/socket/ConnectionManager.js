@@ -313,9 +313,9 @@ class ConnectionManager {
         }
     }
 
-    resumeGcode = (socket, options) => {
+    resumeGcode = (socket, options, callback) => {
         if (this.protocol === SACP_PROTOCOL || this.connectionType === CONNECTION_TYPE_WIFI) {
-            this.socket.resumeGcode(options);
+            this.socket.resumeGcode(options, callback);
         } else {
             const { headType, pause3dpStatus, pauseStatus } = options;
             if (headType === HEAD_PRINTING) {

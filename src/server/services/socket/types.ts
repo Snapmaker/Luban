@@ -53,5 +53,7 @@ export type MarlinStateData = {
     laserCamera?: boolean,
     pos?: object,
     originOffset?: object,
-    isHomed?: boolean
+    isHomed?: boolean,
+    headType?: string,
+    toolHead?: string
 };

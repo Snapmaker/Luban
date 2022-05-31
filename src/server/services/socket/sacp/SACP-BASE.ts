@@ -2,7 +2,7 @@ import { includes, find } from 'lodash';
 import Business, { CoordinateType } from './Business';
 import SocketServer from '../../../lib/SocketManager';
 import logger from '../../../lib/logger';
-import { COORDINATE_AXIS, WORKFLOW_STATUS_MAP, HEAD_PRINTING, EMERGENCY_STOP_BUTTON, ENCLOSURE_MODULES, AIR_PURIFIER_MODULES, ROTARY_MODULES } from '../../../../app/constants';
+import { COORDINATE_AXIS, WORKFLOW_STATUS_MAP, HEAD_PRINTING, EMERGENCY_STOP_BUTTON, ENCLOSURE_MODULES, AIR_PURIFIER_MODULES, ROTARY_MODULES, MODULEID_TOOLHEAD_MAP, CNC_MODULE, LASER_MODULE, PRINTING_MODULE, HEAD_CNC, HEAD_LASER } from '../../../../app/constants';
 import { readString, readUint8 } from '../../../lib/SACP-SDK/SACP/helper';
 import GetHotBed from '../../../lib/SACP-SDK/SACP/business/models/GetHotBed';
 import CoordinateSystemInfo from '../../../lib/SACP-SDK/SACP/business/models/CoordinateSystemInfo';
@@ -56,6 +56,11 @@ class SocketBASE {
                 ...stateData,
                 isHomed: !isHomed
             };
+            if (stateData.headType !== HEAD_PRINTING) {
+                this.sacpClient.updateCoordinate(CoordinateType.WORKSPACE).then(({ response }) => {
+                    log.info(`updateCoordinateType, ${response.result}`);
+                });
+            }
             this.socket && this.socket.emit('move:status', { isHoming: false });
         });
         this.subscribeHeartCallback = async (data) => {
@@ -77,13 +82,22 @@ class SocketBASE {
                         stateData.airPurifier = true;
                         // need to update airPurifier status
                     }
+                    if (includes(PRINTING_MODULE, module.moduleId)) {
+                        stateData.headType = HEAD_PRINTING;
+                        stateData.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
+                    } else if (includes(LASER_MODULE, module.moduleId)) {
+                        stateData.headType = HEAD_LASER;
+                        stateData.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
+                    } else if (includes(CNC_MODULE, module.moduleId)) {
+                        stateData.headType = HEAD_CNC;
+                        stateData.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
+                    }
                 });
             });
             // stateData.status = WORKFLOW_STATUS_MAP[statusKey];
             this.socket && this.socket.emit('Marlin:state', { state: {
                 ...stateData,
                 status: WORKFLOW_STATUS_MAP[statusKey],
-                headType: HEAD_PRINTING,
                 moduleList: moduleStatusList,
             } });
         };
@@ -319,9 +333,10 @@ class SocketBASE {
         });
     }
 
-    public resumeGcode = () => {
+    public resumeGcode = (options, callback) => {
         this.sacpClient.resumePrint().then(res => {
             log.info(`Resume Print: ${res}`);
+            callback && callback({ msg: res.response.result, code: res.response.result })
         });
     }
 }

@@ -676,7 +676,8 @@ export const actions = {
                     baseActions.updateState({
                         isConnected: true,
                         isOpen: true,
-                        connectionStatus: CONNECTION_STATUS_CONNECTED
+                        connectionStatus: CONNECTION_STATUS_CONNECTED,
+                        isSendedOnWifi: true
                     })
                 );
             },

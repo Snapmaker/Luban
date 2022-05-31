@@ -121,11 +121,12 @@ export default class Business extends Dispatcher {
     }
 
     updateCoordinate(coordinateType: CoordinateType) {
-        return this.send(0x01, 0x31, PeerId.CONTROLLER, Buffer.alloc(1, coordinateType));
+        return this.send(0x01, 0x31, PeerId.CONTROLLER, Buffer.alloc(1, coordinateType)).then(({ response, packet }) => {
+            return { response, packet, data: {} };
+        });
     }
 
     executeGcode(gcode: string) {
-        console.log('executeGcode', gcode, stringToBuffer(gcode));
         return this.send(0x01, 0x02, PeerId.CONTROLLER, stringToBuffer(gcode)).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });

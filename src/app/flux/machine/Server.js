@@ -135,7 +135,7 @@ export class Server extends events.EventEmitter {
     }
 
     resumeServerGcode(args, callback) {
-        controller.emitEvent(CONNECTION_RESUME_GCODE, args)
+        controller.emitEvent(CONNECTION_RESUME_GCODE, args, callback)
             .once(CONNECTION_RESUME_GCODE, (options) => {
                 callback && callback(options);
             });
@@ -158,7 +158,8 @@ export class Server extends events.EventEmitter {
                     return;
                 }
                 dispatch(baseActions.updateState({
-                    workflowStatus: WORKFLOW_STATUS_IDLE
+                    workflowStatus: WORKFLOW_STATUS_IDLE,
+                    isSendedOnWifi: true
                 }));
             });
     }

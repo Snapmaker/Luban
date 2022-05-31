@@ -502,7 +502,6 @@ function WifiTransport({ widgetActions, controlActions }) {
     const isWifi = connectionType && connectionType === CONNECTION_TYPE_WIFI;
     // TODO: what is isSendedOnWifi?
     const isSended = isWifi ? isSendedOnWifi : true;
-    // console.log({ currentWorkflowStatus, isConnected, isSended });
     const canPlay = hasFile && isConnected && isSended && _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE], currentWorkflowStatus);
     const canSend = hasFile && isConnected && isHeadType && isWifi && isSendedOnWifi;
     return (
