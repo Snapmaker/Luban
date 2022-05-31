@@ -317,7 +317,7 @@ export const dxfToSvg = (dxf, strokeWidth = 0.72) => {
         } else if (entities.type === 'ELLIPSE') {
             const xrad = Math.sqrt(
                 entities.majorAxisEndPoint.x ** 2
-                    + entities.majorAxisEndPoint.y ** 2
+                + entities.majorAxisEndPoint.y ** 2
             );
             const yrad = xrad * entities.axisRatio;
             const rotation = Math.atan2(
@@ -571,8 +571,6 @@ export const parseDxf = async (originalPath) => {
     //         }
     //     }
     // );
-    dxfToSvg(dxfStr, 0.1);
-
     return {
         svg: dxfStr,
         width: dxfStr.width,
