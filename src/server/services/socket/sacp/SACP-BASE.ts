@@ -1,4 +1,5 @@
 import { includes, find } from 'lodash';
+import net from 'net';
 import Business, { CoordinateType } from './Business';
 import SocketServer from '../../../lib/SocketManager';
 import logger from '../../../lib/logger';
@@ -14,7 +15,7 @@ import { ResponseCallback } from '../../../lib/SACP-SDK/SACP/communication/Dispa
 const log = logger('lib:SocketBASE');
 
 class SocketBASE {
-    // private heartbeatTimer;
+    private heartbeatTimer;
 
     socket: SocketServer;
 
@@ -30,7 +31,7 @@ class SocketBASE {
 
     subscribeCoordinateCallback: ResponseCallback;
 
-    public startHeartbeatBase = (sacpClient: Business) => {
+    public startHeartbeatBase = (sacpClient: Business, client?: net.Socket) => {
         this.sacpClient = sacpClient;
         let stateData: MarlinStateData = {};
         let statusKey = 0;
@@ -66,6 +67,12 @@ class SocketBASE {
         this.subscribeHeartCallback = async (data) => {
             statusKey = readUint8(data.response.data, 0);
             stateData.airPurifier = false;
+            if (this.heartbeatTimer) clearTimeout(this.heartbeatTimer);
+            this.heartbeatTimer = setTimeout(() => {
+                client && client.destroy();
+                log.info('TCP close');
+                this.socket && this.socket.emit('connection:close')
+            }, 10000);
             await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
                 // log.info(`revice moduleInfo: ${data.response}`);
                 moduleInfos.forEach(module => {
@@ -149,7 +156,7 @@ class SocketBASE {
             };
         };
         this.sacpClient.subscribeHotBedTemperature({ interval: 1000 }, this.subscribeHotBedCallback).then(res => {
-            // log.info(`subscribe hotbed success: ${res}`);
+            log.info(`subscribe hotbed success: ${res}`);
         });
         //     (data) => {
         //     // log.info(`revice hotbed: ${data.response}`);

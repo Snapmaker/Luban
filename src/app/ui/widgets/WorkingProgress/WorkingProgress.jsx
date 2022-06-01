@@ -6,7 +6,7 @@ import i18n from '../../../lib/i18n';
 import { formatDuration } from '../GCode/GCode';
 import { Button } from '../../components/Buttons';
 import SvgIcon from '../../components/SvgIcon';
-import { WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_PAUSING, WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_STOPPING } from '../../../constants';
+import { WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_PAUSING, WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_STOPPING, WROKFLOW_STATUS_RESUMING } from '../../../constants';
 
 const Text = ({ name, value }) => {
     return (
@@ -40,7 +40,8 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
         if (
             isConnected
             && (currentWorkflowStatus === WORKFLOW_STATUS_RUNNING || currentWorkflowStatus === WORKFLOW_STATUS_PAUSED
-                || currentWorkflowStatus === WORKFLOW_STATUS_PAUSING || currentWorkflowStatus === WORKFLOW_STATUS_STOPPING || (total !== 0 && sent >= total))
+                || currentWorkflowStatus === WORKFLOW_STATUS_PAUSING || currentWorkflowStatus === WORKFLOW_STATUS_STOPPING
+                || currentWorkflowStatus === WROKFLOW_STATUS_RESUMING || (total !== 0 && sent >= total))
         ) {
             widgetActions.setDisplay(true);
         } else {

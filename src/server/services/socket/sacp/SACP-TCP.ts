@@ -260,7 +260,7 @@ class SocketTCP extends SocketBASE {
                         err: state?.err,
                         type: CONNECTION_TYPE_WIFI
                     });
-                    this.startHeartbeatBase(this.sacpClient);
+                    this.startHeartbeatBase(this.sacpClient, this.client);
                 } else {
                     this.client.destroy();
                     if (this.client.destroyed) {

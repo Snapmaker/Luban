@@ -384,6 +384,7 @@ class ConnectionManager {
     stopGcode = (socket, options) => {
         if (this.connectionType === CONNECTION_TYPE_WIFI) {
             this.socket.stopGcode(options);
+            socket && socket.emit(options.eventName, {});
         } else {
             if (this.protocol === SACP_PROTOCOL) {
                 this.socket.stopGcode();
