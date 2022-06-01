@@ -56,6 +56,7 @@ class SocketServer extends EventEmitter {
 
             next();
         });
+        console.log('start SocketServer');
 
         this.io.on('connection', this.onConnection);
     }
@@ -72,6 +73,8 @@ class SocketServer extends EventEmitter {
 
     // established a new socket connection
     onConnection = (socket) => {
+        if (this.sockets.length > 2) this.sockets = [];
+        console.log('onConnection', 'dddd', this.sockets.length, this.sockets.indexOf(socket));
         const address = socket.handshake.address;
         const token = socket.decoded_token || {};
         log.debug(`New connection from ${address}: id=${socket.id}, token.id=${token.id}, token.name=${token.name}`);
@@ -81,7 +84,6 @@ class SocketServer extends EventEmitter {
 
         // connection startup
         socket.emit('startup');
-
         this.emit('connection', socket);
 
         if (this.events && this.events.length > 0) {

@@ -55,6 +55,7 @@ class WifiServerManager extends EventEmitter {
             }
 
             this.devices.push(device);
+            console.log('this.sockets', this.sockets?.length);
             for (const socket of this.sockets) {
                 socket.emit('machine:discover', {
                     devices: this.devices,
@@ -108,7 +109,7 @@ class WifiServerManager extends EventEmitter {
 
     onConnection = (socket) => {
         this.sockets.push(socket);
-        intervalHandle = setInterval(this.refreshDevices, 1000);
+        intervalHandle = setInterval(this.refreshDevices, 3000);
     };
 
     onDisconnection = (socket) => {

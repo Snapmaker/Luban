@@ -49,9 +49,9 @@ function startServices(server) {
     // Start socket server
     const socketServer = new SocketServer();
 
-    socketServer.on('connection', connectionManager.onConnection);
+    socketServer.once('connection', connectionManager.onConnection);
 
-    socketServer.on('disconnection', connectionManager.onDisconnection);
+    socketServer.once('disconnection', connectionManager.onDisconnection);
 
     // slice
     socketServer.registerEvent('slice', socketSlice.handleSlice);

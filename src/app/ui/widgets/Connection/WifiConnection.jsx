@@ -264,11 +264,7 @@ function WifiConnection() {
                 timer = null;
             }
         } else {
-            if (connectionAuto) {
-                if (!timer) {
-                    timer = setInterval(() => actions.onRefreshServers(), 5000);
-                }
-            } else {
+            if (!connectionAuto) {
                 autoSetServer(servers, server);
                 if (timer) {
                     clearInterval(timer);

@@ -123,7 +123,7 @@ export const set = async (req, res) => {
                 }
             });
         } else {
-            jimp.read(tempPath).then((image) => {
+            await jimp.read(tempPath).then((image) => {
                 res.send({
                     originalName: originalName,
                     uploadName: tempName,
