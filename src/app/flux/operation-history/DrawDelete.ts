@@ -13,7 +13,7 @@ type DrawDeleteProp = {
 }
 
 export default class DrawDelete extends Operation<DrawDeleteProp> {
-    constructor(props: DrawDeleteProp) {
+    public constructor(props: DrawDeleteProp) {
         super();
         this.state = {
             target: props.target,
@@ -23,14 +23,14 @@ export default class DrawDelete extends Operation<DrawDeleteProp> {
 
     public redo() {
         const drawGroup = this.state.drawGroup;
-        this.state.target.forEach(item => {
+        this.state.target.forEach((item) => {
             const line = drawGroup.getLine(item.fragmentID);
             drawGroup.delLine(line);
         });
     }
 
     public undo() {
-        this.state.target.forEach(line => {
+        this.state.target.forEach((line) => {
             this.state.drawGroup.appendLine(line.points, line.closedLoop, line.fragmentID);
         });
     }

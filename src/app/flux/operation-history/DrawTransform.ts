@@ -9,7 +9,7 @@ type DrawTransformProp = {
 }
 
 export default class DrawTransform extends Operation<DrawTransformProp> {
-    constructor(props: DrawTransformProp) {
+    public constructor(props: DrawTransformProp) {
         super();
         this.state = {
             before: props.before,
@@ -19,7 +19,7 @@ export default class DrawTransform extends Operation<DrawTransformProp> {
     }
 
     public redo() {
-        this.state.after.forEach(record => {
+        this.state.after.forEach((record) => {
             const line = this.state.drawGroup.getLine(record.fragmentID);
             line.updatePosition(record.points);
             line.updatePosition([], true);
@@ -28,7 +28,7 @@ export default class DrawTransform extends Operation<DrawTransformProp> {
     }
 
     public undo() {
-        this.state.before.forEach(record => {
+        this.state.before.forEach((record) => {
             const line = this.state.drawGroup.getLine(record.fragmentID);
             line.updatePosition(record.points);
         });

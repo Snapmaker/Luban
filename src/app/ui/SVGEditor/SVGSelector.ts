@@ -10,23 +10,19 @@ type TBbox = {
 }
 
 class SVGSelector {
+    public scale: number;
+    public visible: boolean;
+
     private x: number = 0;
-
     private y: number = 0;
-
     private width: number = 0;
-
     private height: number = 0;
 
     private elem: SVGRectElement;
 
-    public scale: number;
-
     private onlyContainSelect: boolean;
 
-    public visible: boolean;
-
-    constructor(contentGroup: SVGGElement, scale: number) {
+    public constructor(contentGroup: SVGGElement, scale: number) {
         this.scale = scale;
         this.elem = createSVGElement({
             element: 'rect',

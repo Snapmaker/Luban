@@ -36,5 +36,6 @@
         "tool_extension_enabled": {
             "default_value": true
         }
-    }
+    },
+    "isRecommended": true
 }

@@ -15,7 +15,7 @@ type ScaleToFitWithRotateOperationState = ScaleToFitWithRotateOperationProp & {
 }
 
 export default class ScaleToFitWithRotateOpeartion3D extends Operation<ScaleToFitWithRotateOperationState> {
-    constructor(props: ScaleToFitWithRotateOperationProp) {
+    public constructor(props: ScaleToFitWithRotateOperationProp) {
         super();
         this.state = {
             target: props.target,

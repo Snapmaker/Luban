@@ -501,13 +501,6 @@ class SVGContentGroup {
         }
     }
 
-    translateSelectedElementsOnMouseMove(transform) {
-        for (const elem of this.selectedElements) {
-            const transformList = getTransformList(elem);
-            transformList.replaceItem(transform, 0);
-        }
-    }
-
     /**
      * Move selector start.
      */

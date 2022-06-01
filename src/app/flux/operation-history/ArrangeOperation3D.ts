@@ -16,7 +16,7 @@ type ArrangeOperationState = ArrangeOperationProp & {
 }
 
 export default class ArrangeOperation3D extends Operation<ArrangeOperationState> {
-    constructor(props: ArrangeOperationProp) {
+    public constructor(props: ArrangeOperationProp) {
         super();
         this.state = {
             target: props.target,

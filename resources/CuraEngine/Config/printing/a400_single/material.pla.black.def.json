@@ -19,7 +19,7 @@
             "default_value": 205
         },
         "material_final_print_temperature": {
-          "default_value": 100
+            "default_value": 100
         },
         "material_print_temperature": {
             "default_value": 205
@@ -57,5 +57,6 @@
         "retraction_hop_enabled": {
             "default_value": false
         }
-    }
+    },
+    "isRecommended": true
 }

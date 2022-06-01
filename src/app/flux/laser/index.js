@@ -18,8 +18,7 @@ import SVGActionsFactory from '../../models/SVGActionsFactory';
 
 import {
     ACTION_UPDATE_CONFIG,
-    ACTION_UPDATE_STATE,
-    ACTION_UPDATE_TRANSFORMATION
+    ACTION_UPDATE_STATE
 } from '../actionType';
 import { actions as editorActions } from '../editor';
 import { actions as machineActions } from '../machine';
@@ -377,12 +376,6 @@ export default function reducer(state = INITIAL_STATE, action) {
         switch (type) {
             case ACTION_UPDATE_STATE: {
                 return Object.assign({}, state, { ...action.state });
-            }
-            case ACTION_UPDATE_TRANSFORMATION: {
-                return Object.assign({}, state, {
-                    transformation: { ...state.transformation, ...action.transformation },
-                    transformationUpdateTime: +new Date()
-                });
             }
             case ACTION_UPDATE_CONFIG: {
                 return Object.assign({}, state, {

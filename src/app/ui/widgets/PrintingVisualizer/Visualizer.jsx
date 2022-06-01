@@ -21,8 +21,8 @@ import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';
 import Canvas from '../../components/SMCanvas';
 import { NumberInput as Input } from '../../components/Input';
-import { actions as printingActions } from '../../../flux/printing';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
+import { actions as printingActions } from '../../../flux/printing';
 import VisualizerLeftBar from './VisualizerLeftBar';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
 import VisualizerBottomLeft from './VisualizerBottomLeft';
@@ -95,8 +95,6 @@ class Visualizer extends PureComponent {
         setRotationPlacementFace: PropTypes.func.isRequired,
         enablePrimeTower: PropTypes.bool,
         primeTowerHeight: PropTypes.number.isRequired,
-        hidePrimeTower: PropTypes.func,
-        showPrimeTower: PropTypes.func,
         printingToolhead: PropTypes.string,
         stopArea: PropTypes.object,
         controlAxis: PropTypes.array,
@@ -456,30 +454,15 @@ class Visualizer extends PureComponent {
         }
 
         if (enablePrimeTower !== prevProps.enablePrimeTower && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
-            let primeTowerModel = find(modelGroup.models, { type: 'primeTower' });
-            if (!primeTowerModel) {
-                primeTowerModel = modelGroup.initPrimeTower();
-            }
-            if (enablePrimeTower) {
-                this.props.showPrimeTower(primeTowerModel);
-            } else {
-                this.props.hidePrimeTower(primeTowerModel);
-            }
+            modelGroup.primeTower.visible = enablePrimeTower;
         }
         if (!Number.isNaN(primeTowerHeight) && !Number.isNaN(this.props.primeTowerHeight) && primeTowerHeight !== prevProps.primeTowerHeight) {
-            const primeTowerModel = find(modelGroup.models, { type: 'primeTower' });
+            const primeTowerModel = modelGroup.primeTower;
             if (primeTowerModel) {
-                const isSelected = primeTowerModel.isSelected;
-                if (isSelected) {
-                    modelGroup.removeModelFromSelectedGroup(primeTowerModel);
-                }
                 primeTowerModel.updateTransformation({
-                    scaleZ: primeTowerHeight / 1,
+                    scaleZ: primeTowerHeight / 1
                 });
                 primeTowerModel.stickToPlate();
-                this.canvas.current.renderScene();
-            } else if (!primeTowerModel && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
-                modelGroup.initPrimeTower();
                 this.canvas.current.renderScene();
             }
         }
@@ -772,8 +755,6 @@ const mapDispatchToProps = (dispatch) => ({
     moveSupportBrush: (raycastResult) => dispatch(printingActions.moveSupportBrush(raycastResult)),
     applySupportBrush: (raycastResult) => dispatch(printingActions.applySupportBrush(raycastResult)),
     setRotationPlacementFace: (userData) => dispatch(printingActions.setRotationPlacementFace(userData)),
-    hidePrimeTower: (targetModel) => dispatch(printingActions.hideSelectedModel(targetModel)),
-    showPrimeTower: (targetModel) => dispatch(printingActions.showSelectedModel(targetModel)),
     displayModel: () => dispatch(printingActions.displayModel())
 });
 

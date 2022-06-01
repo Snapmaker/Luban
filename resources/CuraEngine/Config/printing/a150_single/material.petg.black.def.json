@@ -2,6 +2,7 @@
     "version": "4.2.0",
     "name": "PETG-Black",
     "inherits": "snapmaker",
+    "isRecommended": true,
     "category": "PETG",
     "i18nName": "key-default_name-PETG_Black",
     "i18nCategory": "key-default_category-PETG",

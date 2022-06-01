@@ -131,7 +131,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
         },
 
         onChangeUniformScalingState: (newUniformScalingState) => {
-            updateSelectedModelUniformScalingState({ uniformScalingState: newUniformScalingState });
+            updateSelectedModelUniformScalingState(newUniformScalingState);
         }
     };
 

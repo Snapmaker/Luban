@@ -8,7 +8,12 @@ import workerManager from '../../lib/manager/workerManager';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as machineActions } from '../machine';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
-import { CONNECTION_STATUS_CONNECTED, EPSILON, MACHINE_SERIES, PROTOCOL_TEXT } from '../../constants';
+import {
+    CONNECTION_STATUS_CONNECTED,
+    EPSILON,
+    MACHINE_SERIES,
+    PROTOCOL_TEXT,
+} from '../../constants';
 import { logGcodeExport } from '../../lib/gaEvent';
 
 // Actions
@@ -18,7 +23,7 @@ export const WORKSPACE_STAGE = {
     EMPTY: 0,
     LOADING_GCODE: 1,
     LOAD_GCODE_SUCCEED: 2,
-    LOAD_GCODE_FAILED: 3
+    LOAD_GCODE_FAILED: 3,
 };
 
 const INITIAL_STATE = {
@@ -39,22 +44,41 @@ const INITIAL_STATE = {
     renderingTimestamp: 0,
     stage: WORKSPACE_STAGE.EMPTY,
     previewStage: WORKSPACE_STAGE.EMPTY,
-    progress: 0
+    progress: 0,
 };
 
 export const actions = {
     gcodeToArraybufferGeometryCallback: (data) => (dispatch, getState) => {
-        const { status, value, renderMethod, isDone, boundingBox, gcodeFilename, isPreview = false } = data;
+        const {
+            status,
+            value,
+            renderMethod,
+            isDone,
+            boundingBox,
+            gcodeFilename,
+            isPreview = false,
+        } = data;
         switch (status) {
             case 'succeed': {
                 const { modelGroup, previewModelGroup } = getState().workspace;
                 const { positions, colors, index, indexColors } = value;
-
                 const bufferGeometry = new THREE.BufferGeometry();
-                const positionAttribute = new THREE.Float32BufferAttribute(positions, 3);
-                const indexAttribute = new THREE.Float32BufferAttribute(index, 1);
-                const colorAttribute = new THREE.Uint8BufferAttribute(colors, 3);
-                const indexColorAttribute = new THREE.Uint8BufferAttribute(indexColors, 3);
+                const positionAttribute = new THREE.Float32BufferAttribute(
+                    positions.send,
+                    3
+                );
+                const indexAttribute = new THREE.Float32BufferAttribute(
+                    index.send,
+                    1
+                );
+                const colorAttribute = new THREE.Uint8BufferAttribute(
+                    colors.send,
+                    3
+                );
+                const indexColorAttribute = new THREE.Uint8BufferAttribute(
+                    indexColors.send,
+                    3
+                );
                 // this will map the buffer values to 0.0f - +1.0f in the shader
                 colorAttribute.normalized = true;
                 indexColorAttribute.normalized = true;
@@ -62,9 +86,16 @@ export const actions = {
                 bufferGeometry.setAttribute('position', positionAttribute);
                 bufferGeometry.setAttribute('a_color', colorAttribute);
                 bufferGeometry.setAttribute('a_index', indexAttribute);
-                bufferGeometry.setAttribute('a_index_color', indexColorAttribute);
+                bufferGeometry.setAttribute(
+                    'a_index_color',
+                    indexColorAttribute
+                );
 
-                const object3D = gcodeBufferGeometryToObj3d('WORKSPACE', bufferGeometry, renderMethod);
+                const object3D = gcodeBufferGeometryToObj3d(
+                    'WORKSPACE',
+                    bufferGeometry,
+                    renderMethod
+                );
                 // object3D.material.uniforms.u_visible_index_count.value = 20000;
                 object3D.name = `${gcodeFilename}-${uuid()}`;
 
@@ -77,17 +108,22 @@ export const actions = {
 
                 if (isDone) {
                     if (isPreview) {
-                        dispatch(actions.updateState({
-                            previewRenderState: 'rendered',
-                            previewBoundingBox: boundingBox,
-                            previewStage: WORKSPACE_STAGE.LOAD_GCODE_SUCCEED
-                        }));
+                        dispatch(
+                            actions.updateState({
+                                previewRenderState: 'rendered',
+                                previewBoundingBox: boundingBox,
+                                previewStage:
+                                    WORKSPACE_STAGE.LOAD_GCODE_SUCCEED,
+                            })
+                        );
                     } else {
-                        dispatch(actions.updateState({
-                            renderState: 'rendered',
-                            boundingBox: boundingBox,
-                            stage: WORKSPACE_STAGE.LOAD_GCODE_SUCCEED
-                        }));
+                        dispatch(
+                            actions.updateState({
+                                renderState: 'rendered',
+                                boundingBox: boundingBox,
+                                stage: WORKSPACE_STAGE.LOAD_GCODE_SUCCEED,
+                            })
+                        );
                     }
                 }
 
@@ -97,16 +133,19 @@ export const actions = {
             case 'progress': {
                 const state = getState().printing;
                 if (value - state.progress > 0.01 || value > 1 - EPSILON) {
-                    !isPreview && dispatch(actions.updateState({ progress: value }));
+                    !isPreview
+                        && dispatch(actions.updateState({ progress: value }));
                 }
                 break;
             }
             case 'err': {
-                dispatch(actions.updateState({
-                    renderState: 'idle',
-                    stage: WORKSPACE_STAGE.LOAD_GCODE_FAILED,
-                    progress: 1
-                }));
+                dispatch(
+                    actions.updateState({
+                        renderState: 'idle',
+                        stage: WORKSPACE_STAGE.LOAD_GCODE_FAILED,
+                        progress: 1,
+                    })
+                );
                 break;
             }
             default:
@@ -124,16 +163,16 @@ export const actions = {
     updateState: (state) => {
         return {
             type: ACTION_SET_STATE,
-            state
+            state,
         };
     },
 
     render: () => (dispatch) => {
-        dispatch(actions.updateState(
-            {
-                renderingTimestamp: +new Date()
-            }
-        ));
+        dispatch(
+            actions.updateState({
+                renderingTimestamp: +new Date(),
+            })
+        );
     },
 
     /**
@@ -165,7 +204,7 @@ export const actions = {
                             x: header[';max_x(mm)'],
                             y: header[';max_y(mm)'],
                             z: header[';max_z(mm)'],
-                            b: header[';max_b(mm)']
+                            b: header[';max_b(mm)'],
                         },
                         min: {
                             x: header[';min_x(mm)'],
@@ -175,8 +214,6 @@ export const actions = {
                         }
                     },
 
-                    // TODO: add what header preview need
-                    // single extruder
                     type: header[';header_type'],
                     tool_head: header[';tool_head'],
                     nozzle_temperature: header[';nozzle_temperature(°C)'],
@@ -189,7 +226,8 @@ export const actions = {
                     power: header[';power(%)'],
                 };
                 dispatch(actions.addGcodeFiles(gcodeFile));
-                shouldAutoPreviewGcode && dispatch(actions.renderPreviewGcodeFile(gcodeFile));
+                shouldAutoPreviewGcode
+                    && dispatch(actions.renderPreviewGcodeFile(gcodeFile));
             })
             .catch(() => {
                 // Ignore error
@@ -206,7 +244,10 @@ export const actions = {
      */
     uploadGcodeFile: (file) => (dispatch) => {
         const formData = new FormData();
-        formData.append('file', (file instanceof File) ? file : JSON.stringify(file));
+        formData.append(
+            'file',
+            file instanceof File ? file : JSON.stringify(file)
+        );
         const uploadName = generateRandomPathName(file.name);
         formData.append('uploadName', uploadName);
 
@@ -220,7 +261,7 @@ export const actions = {
                     size: file.size,
                     lastModified: +file.lastModified,
                     thumbnail: header[';thumbnail'] || '',
-                    renderGcodeFileName: file.renderGcodeFileName || file.name
+                    renderGcodeFileName: file.renderGcodeFileName || file.name,
                 };
                 dispatch(actions.renderGcodeFile(gcodeFile));
             })
@@ -236,13 +277,15 @@ export const actions = {
         } else {
             modelGroup.remove(...modelGroup.children);
         }
-        dispatch(actions.updateState({
-            renderState: 'idle',
-            gcodeFile: null,
-            boundingBox: null,
-            stage: WORKSPACE_STAGE.EMPTY,
-            progress: 0
-        }));
+        dispatch(
+            actions.updateState({
+                renderState: 'idle',
+                gcodeFile: null,
+                boundingBox: null,
+                stage: WORKSPACE_STAGE.EMPTY,
+                progress: 0,
+            })
+        );
         dispatch(actions.render());
     },
 
@@ -265,7 +308,9 @@ export const actions = {
     //     }));
     // },
 
-    renderGcode: (name, gcode, shouldRenderGcode = false, isRepeat = false) => (dispatch) => {
+    renderGcode: (name, gcode, shouldRenderGcode = false, isRepeat = false) => (
+        dispatch
+    ) => {
         dispatch(actions.clearGcode());
         const blob = new Blob([gcode], { type: 'text/plain' });
         const file = new File([blob], name);
@@ -279,13 +324,19 @@ export const actions = {
                 uploadName: response.uploadName,
                 size: file.size,
                 lastModified: +file.lastModified,
-                thumbnail: ''
+                thumbnail: '',
             };
-            dispatch(actions.renderGcodeFile(gcodeFile, !isRepeat, shouldRenderGcode));
+            dispatch(
+                actions.renderGcodeFile(gcodeFile, !isRepeat, shouldRenderGcode)
+            );
         });
     },
 
-    renderGcodeFile: (gcodeFile, needToList = true, shouldRenderGcode = false) => async (dispatch, getState) => {
+    renderGcodeFile: (
+        gcodeFile,
+        needToList = true,
+        shouldRenderGcode = false
+    ) => async (dispatch, getState) => {
         const { shouldAutoPreviewGcode } = getState().machine;
         const { headType, isRotate } = getState().workspace;
 
@@ -298,37 +349,54 @@ export const actions = {
         // }
         if (shouldRenderGcode) {
             await dispatch(actions.clearGcode());
-            await dispatch(actions.updateState({
-                gcodeFile,
-                stage: WORKSPACE_STAGE.LOADING_GCODE,
-                renderState: 'rendering',
-                progress: 0
-            }));
+            await dispatch(
+                actions.updateState({
+                    gcodeFile,
+                    stage: WORKSPACE_STAGE.LOADING_GCODE,
+                    renderState: 'rendering',
+                    progress: 0,
+                })
+            );
             // TODO:  used for serialport
             await dispatch(actions.loadGcode(gcodeFile));
             logGcodeExport(headType, 'workspace', isRotate);
 
-            workerManager.gcodeToArraybufferGeometry([{ func: 'WORKSPACE', gcodeFilename: gcodeFile.uploadName }], (data) => {
-                dispatch(actions.gcodeToArraybufferGeometryCallback(data));
-            });
+            workerManager.gcodeToArraybufferGeometry(
+                { func: 'WORKSPACE', gcodeFilename: gcodeFile.uploadName },
+                (data) => {
+                    dispatch(actions.gcodeToArraybufferGeometryCallback(data));
+                }
+            );
         } else {
-            shouldAutoPreviewGcode && dispatch(actions.renderPreviewGcodeFile(gcodeFile));
-            await dispatch(actions.updateState({
-                boundingBox: gcodeFile?.boundingBox
-            }));
+            shouldAutoPreviewGcode
+                && dispatch(actions.renderPreviewGcodeFile(gcodeFile));
+            await dispatch(
+                actions.updateState({
+                    boundingBox: gcodeFile?.boundingBox,
+                })
+            );
         }
     },
 
     renderPreviewGcodeFile: (gcodeFile) => async (dispatch) => {
         await dispatch(actions.clearGcode(true));
-        dispatch(actions.updateState({
-            previewStage: WORKSPACE_STAGE.LOADING_GCODE,
-            previewRenderState: 'rendering',
-            progress: 0
-        }));
-        workerManager.gcodeToArraybufferGeometry([{ func: 'WORKSPACE', gcodeFilename: gcodeFile.uploadName, isPreview: true }], (data) => {
-            dispatch(actions.gcodeToArraybufferGeometryCallback(data));
-        });
+        dispatch(
+            actions.updateState({
+                previewStage: WORKSPACE_STAGE.LOADING_GCODE,
+                previewRenderState: 'rendering',
+                progress: 0,
+            })
+        );
+        workerManager.gcodeToArraybufferGeometry(
+            {
+                func: 'WORKSPACE',
+                gcodeFilename: gcodeFile.uploadName,
+                isPreview: true,
+            },
+            (data) => {
+                dispatch(actions.gcodeToArraybufferGeometryCallback(data));
+            }
+        );
     },
 
     addGcodeFiles: (fileInfo) => (dispatch, getState) => {
@@ -337,7 +405,8 @@ export const actions = {
         fileInfo.isRenaming = false;
         fileInfo.newName = fileInfo.name;
         files.push(fileInfo);
-        let added = 1, i = 0;
+        let added = 1,
+            i = 0;
         while (added < 5 && i < gcodeFiles.length) {
             const gcodeFile = gcodeFiles[i];
             // G-code file with the same uploadName will be replaced with current one
@@ -347,15 +416,20 @@ export const actions = {
             }
             i++;
         }
-        dispatch(actions.updateState({
-            boundingBox: fileInfo.boundingBox,
-            gcodeFiles: files
-        }));
+        dispatch(
+            actions.updateState({
+                boundingBox: fileInfo.boundingBox,
+                gcodeFiles: files,
+            })
+        );
     },
 
-    renameGcodeFile: (uploadName, newName = null, isRenaming = null) => (dispatch, getState) => {
+    renameGcodeFile: (uploadName, newName = null, isRenaming = null) => (
+        dispatch,
+        getState
+    ) => {
         const { gcodeFiles } = getState().workspace;
-        const find = gcodeFiles.find(e => e.uploadName === uploadName);
+        const find = gcodeFiles.find((e) => e.uploadName === uploadName);
         if (!find) {
             return;
         }
@@ -367,11 +441,13 @@ export const actions = {
         if (isRenaming !== null) {
             find.isRenaming = isRenaming;
         }
-        const files = gcodeFiles.map(e => e);
+        const files = gcodeFiles.map((e) => e);
 
-        dispatch(actions.updateState({
-            gcodeFiles: files
-        }));
+        dispatch(
+            actions.updateState({
+                gcodeFiles: files,
+            })
+        );
     },
 
     removeGcodeFile: (fileInfo) => (dispatch, getState) => {
@@ -381,9 +457,11 @@ export const actions = {
             return item.uploadName !== fileInfo.uploadName;
         });
 
-        dispatch(actions.updateState({
-            gcodeFiles: files
-        }));
+        dispatch(
+            actions.updateState({
+                gcodeFiles: files,
+            })
+        );
     },
 
     /**
@@ -395,12 +473,19 @@ export const actions = {
     loadGcode: (gcodeFile) => async (dispatch, getState) => {
         const { connectionStatus, server } = getState().machine;
         gcodeFile = gcodeFile || getState().workspace.gcodeFile;
-        if (connectionStatus !== CONNECTION_STATUS_CONNECTED || gcodeFile === null) {
+        if (
+            connectionStatus !== CONNECTION_STATUS_CONNECTED
+            || gcodeFile === null
+        ) {
             return;
         }
         dispatch(actions.updateState({ uploadState: 'uploading' }));
         try {
-            await api.loadGCode({ port: server?.port, dataSource: PROTOCOL_TEXT, uploadName: gcodeFile.uploadName });
+            await api.loadGCode({
+                port: server?.port,
+                dataSource: PROTOCOL_TEXT,
+                uploadName: gcodeFile.uploadName,
+            });
 
             dispatch(actions.updateState({ uploadState: 'uploaded' }));
         } catch (e) {
@@ -421,7 +506,7 @@ export const actions = {
             options.size = MACHINE_SERIES[options.series.toUpperCase()].setting.size;
         }
         dispatch(actions.updateState(options));
-    }
+    },
 };
 
 export default function reducer(state = INITIAL_STATE, action) {

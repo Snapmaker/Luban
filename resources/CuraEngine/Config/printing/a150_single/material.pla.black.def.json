@@ -1,6 +1,7 @@
 {
     "name": "PLA-Black",
     "version": "4.2.0",
+    "isRecommended": true,
     "inherits": "snapmaker",
     "category": "PLA",
     "i18nName": "key-default_name-PLA_Black",

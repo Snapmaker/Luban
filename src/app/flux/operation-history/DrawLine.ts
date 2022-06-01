@@ -8,7 +8,7 @@ type DrawLineProp = {
 }
 
 export default class DrawLine extends Operation<DrawLineProp> {
-    constructor(props: DrawLineProp) {
+    public constructor(props: DrawLineProp) {
         super();
         this.state = {
             target: props.target,

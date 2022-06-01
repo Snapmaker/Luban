@@ -25,7 +25,7 @@
             "default_value": 0
         },
         "cool_fan_full_layer": {
-          "default_value": 2
+            "default_value": 2
         },
         "cool_fan_speed": {
             "default_value": 0
@@ -60,5 +60,6 @@
         "retraction_hop_enabled": {
             "default_value": false
         }
-    }
+    },
+    "isRecommended": true
 }

@@ -35,7 +35,6 @@ import { actions as workspaceActions } from '../workspace';
 import MachineSelectModal from '../../ui/modals/modal-machine-select';
 import setting from '../../config/settings';
 
-
 import baseActions, { ACTION_UPDATE_STATE } from './action-base';
 /* eslint-disable import/no-cycle */
 import discoverActions from './action-discover';
@@ -86,9 +85,12 @@ const INITIAL_STATE = {
     // Machine Info
     series: MACHINE_SERIES.ORIGINAL.value,
     toolHead: {
-        printingToolhead: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
-        laserToolhead: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value,
-        cncToolhead: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value
+        printingToolhead:
+            MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
+        laserToolhead:
+            MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value,
+        cncToolhead:
+            MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value
     },
     canReselectMachine: false,
     // currentMachine: INITIAL_MACHINE_SERIES_WITH_HEADTOOL,
@@ -139,7 +141,8 @@ const INITIAL_STATE = {
     // 2 byte: angel error
     laser10WErrorState: 0,
 
-    workPosition: { // work position
+    workPosition: {
+        // work position
         x: '0.000',
         y: '0.000',
         z: '0.000',
@@ -205,7 +208,6 @@ const INITIAL_STATE = {
     homingModal: false
 };
 
-
 export const actions = {
     // Initialize machine, get machine configurations via API
     init: () => (dispatch, getState) => {
@@ -224,33 +226,47 @@ export const actions = {
 
         if (machineStore.get('shouldCheckForUpdate') === false) {
             const shouldCheckForUpdate = false;
-            dispatch(baseActions.updateState({
-                shouldCheckForUpdate: shouldCheckForUpdate
-            }));
+            dispatch(
+                baseActions.updateState({
+                    shouldCheckForUpdate: shouldCheckForUpdate
+                })
+            );
         }
-        const printingArrangeSettings = printingStore.get('printingArrangeSettings');
+        const printingArrangeSettings = printingStore.get(
+            'printingArrangeSettings'
+        );
         if (printingArrangeSettings) {
             try {
                 const newArrangeSettings = JSON.parse(printingArrangeSettings);
-                dispatch(baseActions.updateState({
-                    printingArrangeSettings: newArrangeSettings
-                }));
+                dispatch(
+                    baseActions.updateState({
+                        printingArrangeSettings: newArrangeSettings
+                    })
+                );
             } catch (e) {
                 console.error(e);
             }
         }
         const printingCustomConfigs = machineStore.get('printingCustomConfigs');
-        if (printingCustomConfigs && Object.prototype.toString.call(printingCustomConfigs) === '[object String]') {
+        if (
+            printingCustomConfigs
+            && Object.prototype.toString.call(printingCustomConfigs)
+                === '[object String]'
+        ) {
             const customConfigsArray = printingCustomConfigs.split('-');
-            dispatch(baseActions.updateState({
-                printingCustomConfigs: customConfigsArray
-            }));
+            dispatch(
+                baseActions.updateState({
+                    printingCustomConfigs: customConfigsArray
+                })
+            );
         }
 
         if (machineStore.get('shouldAutoPreviewGcode') === false) {
-            dispatch(baseActions.updateState({
-                shouldAutoPreviewGcode: false
-            }));
+            dispatch(
+                baseActions.updateState({
+                    shouldAutoPreviewGcode: false
+                })
+            );
         }
         if (machineStore.get('shouldHideConsole') === false) {
             dispatch(baseActions.updateState({
@@ -271,12 +287,14 @@ export const actions = {
         // serial port
         const machinePort = machineStore.get('port') || '';
 
-        dispatch(baseActions.updateState({
-            savedServerAddress: serverAddress,
-            savedServerToken: serverToken,
-            port: machinePort,
-            manualIp: manualIp
-        }));
+        dispatch(
+            baseActions.updateState({
+                savedServerAddress: serverAddress,
+                savedServerToken: serverToken,
+                port: machinePort,
+                manualIp: manualIp
+            })
+        );
     },
 
     /**
@@ -284,7 +302,12 @@ export const actions = {
      */
     __initMachineStatus: (dispatch) => {
         // Machine
-        const { series = INITIAL_STATE.series, size = INITIAL_STATE.size, laserSize = INITIAL_STATE.laserSize, toolHead = INITIAL_STATE.toolHead } = machineStore.get('machine') || {};
+        const {
+            series = INITIAL_STATE.series,
+            size = INITIAL_STATE.size,
+            laserSize = INITIAL_STATE.laserSize,
+            toolHead = INITIAL_STATE.toolHead
+        } = machineStore.get('machine') || {};
 
         const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
         // const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
@@ -293,16 +316,30 @@ export const actions = {
             seriesInfo.setting.laserSize = seriesInfo.setting.size;
         }
 
-        dispatch(baseActions.updateState({
-            series: series,
-            size: seriesInfo ? seriesInfo.setting.size : size,
-            laserSize: seriesInfo ? seriesInfo.setting.laserSize : laserSize,
-            toolHead: toolHead
-            // currentMachine
-        }));
+        dispatch(
+            baseActions.updateState({
+                series: series,
+                size: seriesInfo ? seriesInfo.setting.size : size,
+                laserSize: seriesInfo
+                    ? seriesInfo.setting.laserSize
+                    : laserSize,
+                toolHead: toolHead
+                // currentMachine
+            })
+        );
 
-        dispatch(editorActions.onSizeUpdated('laser', seriesInfo ? seriesInfo.setting.size : size));
-        dispatch(editorActions.onSizeUpdated('cnc', seriesInfo ? seriesInfo.setting.size : size));
+        dispatch(
+            editorActions.onSizeUpdated(
+                'laser',
+                seriesInfo ? seriesInfo.setting.size : size
+            )
+        );
+        dispatch(
+            editorActions.onSizeUpdated(
+                'cnc',
+                seriesInfo ? seriesInfo.setting.size : size
+            )
+        );
     },
 
     __initControllerEvents: (dispatch, getState) => {
@@ -311,57 +348,89 @@ export const actions = {
             'Marlin:state': (options) => {
                 // Note: serialPort & Wifi
                 const { state } = options;
-                const { headType, pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
+                const {
+                    headType,
+                    pos,
+                    originOffset,
+                    headStatus,
+                    headPower,
+                    temperature,
+                    zFocus,
+                    isHomed,
+                    zAxisModule,
+                    laser10WErrorState
+                } = state;
                 const machineState = getState().machine;
-                if ((machineState.isRotate !== pos.isFourAxis) && (headType === HEAD_LASER || headType === HEAD_CNC)) {
-                    dispatch(workspaceActions.updateMachineState({
-                        isRotate: pos.isFourAxis
-                    }));
+                if (
+                    machineState.isRotate !== pos.isFourAxis
+                    && (headType === HEAD_LASER || headType === HEAD_CNC)
+                ) {
+                    dispatch(
+                        workspaceActions.updateMachineState({
+                            isRotate: pos.isFourAxis
+                        })
+                    );
                 }
                 if (pos.isFourAxis) {
-                    if (Number(machineState.workPosition.x) !== Number(pos.x)
+                    if (
+                        Number(machineState.workPosition.x) !== Number(pos.x)
                         || Number(machineState.workPosition.y) !== Number(pos.y)
                         || Number(machineState.workPosition.z) !== Number(pos.z)
-                        || Number(machineState.workPosition.b) !== Number(pos.b)) {
-                        dispatch(baseActions.updateState({
-                            workPosition: {
-                                x: `${Number(pos.x).toFixed(3)}`,
-                                y: `${Number(pos.y).toFixed(3)}`,
-                                z: `${Number(pos.z).toFixed(3)}`,
-                                b: `${Number(pos.b).toFixed(3)}`,
-                                isFourAxis: true,
-                                a: '0.000'
-                            }
-                        }));
+                        || Number(machineState.workPosition.b) !== Number(pos.b)
+                    ) {
+                        dispatch(
+                            baseActions.updateState({
+                                workPosition: {
+                                    x: `${Number(pos.x).toFixed(3)}`,
+                                    y: `${Number(pos.y).toFixed(3)}`,
+                                    z: `${Number(pos.z).toFixed(3)}`,
+                                    b: `${Number(pos.b).toFixed(3)}`,
+                                    isFourAxis: true,
+                                    a: '0.000'
+                                }
+                            })
+                        );
                     }
                 } else {
-                    if (Number(machineState.workPosition.x) !== Number(pos.x)
+                    if (
+                        Number(machineState.workPosition.x) !== Number(pos.x)
                         || Number(machineState.workPosition.y) !== Number(pos.y)
-                        || Number(machineState.workPosition.z) !== Number(pos.z)) {
-                        dispatch(baseActions.updateState({
-                            workPosition: {
-                                x: `${Number(pos.x).toFixed(3)}`,
-                                y: `${Number(pos.y).toFixed(3)}`,
-                                z: `${Number(pos.z).toFixed(3)}`,
-                                isFourAxis: false,
-                                a: '0.000'
-                            }
-                        }));
+                        || Number(machineState.workPosition.z) !== Number(pos.z)
+                    ) {
+                        dispatch(
+                            baseActions.updateState({
+                                workPosition: {
+                                    x: `${Number(pos.x).toFixed(3)}`,
+                                    y: `${Number(pos.y).toFixed(3)}`,
+                                    z: `${Number(pos.z).toFixed(3)}`,
+                                    isFourAxis: false,
+                                    a: '0.000'
+                                }
+                            })
+                        );
                     }
                 }
-                if (Number(machineState.originOffset.x) !== Number(originOffset.x)
-                    || Number(machineState.originOffset.y) !== Number(originOffset.y)
-                    || Number(machineState.originOffset.z) !== Number(originOffset.z)) {
-                    dispatch(baseActions.updateState({
-                        originOffset: {
-                            x: `${Number(originOffset.x).toFixed(3)}`,
-                            y: `${Number(originOffset.y).toFixed(3)}`,
-                            z: `${Number(originOffset.z).toFixed(3)}`,
-                            a: '0.000'
-                        }
-                    }));
+                if (
+                    Number(machineState.originOffset.x)
+                        !== Number(originOffset.x)
+                    || Number(machineState.originOffset.y)
+                        !== Number(originOffset.y)
+                    || Number(machineState.originOffset.z)
+                        !== Number(originOffset.z)
+                ) {
+                    dispatch(
+                        baseActions.updateState({
+                            originOffset: {
+                                x: `${Number(originOffset.x).toFixed(3)}`,
+                                y: `${Number(originOffset.y).toFixed(3)}`,
+                                z: `${Number(originOffset.z).toFixed(3)}`,
+                                a: '0.000'
+                            }
+                        })
+                    );
                 }
-                const { status,
+                const {
+                    status,
                     laserFocalLength,
                     laserPower,
                     nozzleTemperature,
@@ -376,78 +445,108 @@ export const actions = {
                     airPurifierFilterHealth,
                     isEmergencyStopped,
                     moduleList: moduleStatusList,
-                    laserCamera,
+                    laserCamera
                 } = state;
-                dispatch(baseActions.updateState({
-                    laser10WErrorState,
-                    isHomed
-                }));
+                dispatch(
+                    baseActions.updateState({
+                        laser10WErrorState,
+                        isHomed
+                    })
+                );
                 if (!isNil(airPurifier)) {
-                    dispatch(baseActions.updateState({
-                        laserFocalLength: laserFocalLength,
-                        laserPower: laserPower,
-                        nozzleTemperature: nozzleTemperature,
-                        nozzleTargetTemperature: nozzleTargetTemperature,
-                        heatedBedTemperature: heatedBedTemperature,
-                        doorSwitchCount: doorSwitchCount,
-                        heatedBedTargetTemperature: heatedBedTargetTemperature,
-                        // Note: Wifi indiviual
-                        moduleStatusList,
-                        airPurifier: airPurifier,
-                        airPurifierSwitch: airPurifierSwitch,
-                        airPurifierFanSpeed: airPurifierFanSpeed,
-                        airPurifierFilterHealth: airPurifierFilterHealth,
-                        isEmergencyStopped: isEmergencyStopped,
-                        isEnclosureDoorOpen: isEnclosureDoorOpen,
-                        workflowStatus: status,
-                        laserCamera
-                    }));
-                    dispatch(baseActions.updateState({
-                        gcodePrintingInfo: machineState.server.getGcodePrintingInfo(state)
-                    }));
+                    dispatch(
+                        baseActions.updateState({
+                            laserFocalLength: laserFocalLength,
+                            laserPower: laserPower,
+                            nozzleTemperature: nozzleTemperature,
+                            nozzleTargetTemperature: nozzleTargetTemperature,
+                            heatedBedTemperature: heatedBedTemperature,
+                            doorSwitchCount: doorSwitchCount,
+                            heatedBedTargetTemperature: heatedBedTargetTemperature,
+                            // Note: Wifi indiviual
+                            moduleStatusList,
+                            airPurifier: airPurifier,
+                            airPurifierSwitch: airPurifierSwitch,
+                            airPurifierFanSpeed: airPurifierFanSpeed,
+                            airPurifierFilterHealth: airPurifierFilterHealth,
+                            isEmergencyStopped: isEmergencyStopped,
+                            isEnclosureDoorOpen: isEnclosureDoorOpen,
+                            workflowStatus: status,
+                            laserCamera
+                        })
+                    );
+                    dispatch(
+                        baseActions.updateState({
+                            gcodePrintingInfo: machineState.server.getGcodePrintingInfo(
+                                state
+                            )
+                        })
+                    );
                 } else {
-                    dispatch(baseActions.updateState({
-                        headStatus: headStatus,
-                        laserFocalLength: zFocus + LASER_MOCK_PLATE_HEIGHT,
-                        laserPower: headPower,
-                        nozzleTemperature: parseFloat(temperature.t),
-                        nozzleTargetTemperature: parseFloat(temperature.tTarget),
-                        heatedBedTemperature: parseFloat(temperature.b),
-                        heatedBedTargetTemperature: parseFloat(temperature.bTarget),
-                        zAxisModule: zAxisModule
-                    }));
+                    dispatch(
+                        baseActions.updateState({
+                            headStatus: headStatus,
+                            laserFocalLength: zFocus + LASER_MOCK_PLATE_HEIGHT,
+                            laserPower: headPower,
+                            nozzleTemperature: parseFloat(temperature.t),
+                            nozzleTargetTemperature: parseFloat(
+                                temperature.tTarget
+                            ),
+                            heatedBedTemperature: parseFloat(temperature.b),
+                            heatedBedTargetTemperature: parseFloat(
+                                temperature.bTarget
+                            ),
+                            zAxisModule: zAxisModule
+                        })
+                    );
                 }
                 // TODO: wifi emergencyStop goes there
                 if (isEmergencyStopped) {
-                    dispatch(baseActions.updateState({
-                        isEmergencyStopped
-                    }));
+                    dispatch(
+                        baseActions.updateState({
+                            isEmergencyStopped
+                        })
+                    );
                     machineState.server.closeServer();
                 }
             },
             'Marlin:settings': (options) => {
-                const { enclosureDoorDetection, enclosureOnline, enclosureFan = 0, enclosureLight = 0,
-                    airPurifierHasPower, airPurifier, airPurifierSwitch, airPurifierFanSpeed, airPurifierFilterHealth, emergencyStopOnline } = options.settings;
+                const {
+                    enclosureDoorDetection,
+                    enclosureOnline,
+                    enclosureFan = 0,
+                    enclosureLight = 0,
+                    airPurifierHasPower,
+                    airPurifier,
+                    airPurifierSwitch,
+                    airPurifierFanSpeed,
+                    airPurifierFilterHealth,
+                    emergencyStopOnline
+                } = options.settings;
                 if (!isNil(airPurifier)) {
-                    dispatch(baseActions.updateState({
-                        enclosureDoorDetection,
-                        enclosureOnline,
-                        enclosureFan,
-                        enclosureLight,
-                        airPurifier,
-                        airPurifierSwitch,
-                        airPurifierFanSpeed,
-                        airPurifierFilterHealth,
-                        airPurifierHasPower,
-                        emergencyStopOnline
-                    }));
+                    dispatch(
+                        baseActions.updateState({
+                            enclosureDoorDetection,
+                            enclosureOnline,
+                            enclosureFan,
+                            enclosureLight,
+                            airPurifier,
+                            airPurifierSwitch,
+                            airPurifierFanSpeed,
+                            airPurifierFilterHealth,
+                            airPurifierHasPower,
+                            emergencyStopOnline
+                        })
+                    );
                 } else {
-                    dispatch(baseActions.updateState({
-                        enclosureDoorDetection,
-                        enclosureOnline,
-                        enclosureFan,
-                        enclosureLight
-                    }));
+                    dispatch(
+                        baseActions.updateState({
+                            enclosureDoorDetection,
+                            enclosureOnline,
+                            enclosureFan,
+                            enclosureLight
+                        })
+                    );
                 }
             },
             'connection:connected': ({ state, err: _err }) => {
@@ -455,34 +554,64 @@ export const actions = {
                     return;
                 }
                 let machineSeries = '';
-                const { toolHead, series, headType, status, isHomed, moduleStatusList } = state;
+                const {
+                    toolHead,
+                    series,
+                    headType,
+                    status,
+                    isHomed,
+                    moduleStatusList
+                } = state;
                 const { seriesSize } = state;
-                dispatch(baseActions.updateState({
-                    isHomed: isHomed
-                }));
+                dispatch(
+                    baseActions.updateState({
+                        isHomed: isHomed
+                    })
+                );
                 if (!isNil(seriesSize)) {
-                    machineSeries = valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`)
-                        ? valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`).value : null;
+                    machineSeries = valueOf(
+                        MACHINE_SERIES,
+                        'alias',
+                        `${series}-${seriesSize}`
+                    )
+                        ? valueOf(
+                            MACHINE_SERIES,
+                            'alias',
+                            `${series}-${seriesSize}`
+                        ).value
+                        : null;
                     dispatch(workspaceActions.loadGcode());
                 } else {
                     const _isRotate = moduleStatusList?.rotaryModule;
-                    dispatch(baseActions.updateState({
-                        workflowStatus: status,
-                    }));
-                    dispatch(workspaceActions.updateMachineState({
-                        isRotate: _isRotate
-                    }));
+                    dispatch(
+                        baseActions.updateState({
+                            workflowStatus: status
+                        })
+                    );
+                    dispatch(
+                        workspaceActions.updateMachineState({
+                            isRotate: _isRotate
+                        })
+                    );
                     machineSeries = series;
                 }
                 if (machineSeries && headType && headType !== 'UNKNOWN') {
-                    dispatch(workspaceActions.updateMachineState({
-                        series: machineSeries,
-                        headType,
-                        toolHead,
-                    }));
+                    dispatch(
+                        workspaceActions.updateMachineState({
+                            series: machineSeries,
+                            headType,
+                            toolHead
+                        })
+                    );
                     dispatch(actions.executeGcodeG54(series, headType));
-                    if (_.includes([WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING], status)) {
-                        controller.emitEvent(CONNECTION_GET_GCODEFILE)
+                    if (
+                        _.includes(
+                            [WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING],
+                            status
+                        )
+                    ) {
+                        controller
+                            .emitEvent(CONNECTION_GET_GCODEFILE)
                             .once(CONNECTION_GET_GCODEFILE, (res) => {
                                 const { msg: error, text: gcode } = res;
                                 if (error) {
@@ -495,31 +624,44 @@ export const actions = {
                                     suffix = 'cnc';
                                 }
                                 dispatch(workspaceActions.clearGcode());
-                                dispatch(workspaceActions.renderGcode(`print.${suffix}`, gcode, true, true));
+                                dispatch(
+                                    workspaceActions.renderGcode(
+                                        `print.${suffix}`,
+                                        gcode,
+                                        true,
+                                        true
+                                    )
+                                );
                             });
                     }
                 } else {
-                // TODO: Why is modal code here???
+                    // TODO: Why is modal code here???
                     MachineSelectModal({
                         series: machineSeries,
                         headType: headType,
                         toolHead: toolHead,
                         onConfirm: (seriesT, headTypeT, toolHeadT) => {
-                            dispatch(workspaceActions.updateMachineState({
-                                series: seriesT,
-                                headType: headTypeT,
-                                toolHead: toolHeadT,
-                                canReselectMachine: true
-                            }));
-                            dispatch(actions.executeGcodeG54(seriesT, headTypeT));
+                            dispatch(
+                                workspaceActions.updateMachineState({
+                                    series: seriesT,
+                                    headType: headTypeT,
+                                    toolHead: toolHeadT,
+                                    canReselectMachine: true
+                                })
+                            );
+                            dispatch(
+                                actions.executeGcodeG54(seriesT, headTypeT)
+                            );
                         }
                     });
                 }
-                dispatch(baseActions.updateState({
-                    isConnected: true,
-                    isOpen: true,
-                    connectionStatus: CONNECTION_STATUS_CONNECTED
-                }));
+                dispatch(
+                    baseActions.updateState({
+                        isConnected: true,
+                        isOpen: true,
+                        connectionStatus: CONNECTION_STATUS_CONNECTED
+                    })
+                );
             },
             'connection:close': () => {
                 dispatch(actions.resetMachineState());
@@ -530,28 +672,40 @@ export const actions = {
             },
             'workflow:state': (options) => {
                 const { workflowState } = options;
-                dispatch(baseActions.updateState({
-                    workflowState
-                }));
+                dispatch(
+                    baseActions.updateState({
+                        workflowState
+                    })
+                );
             },
             'sender:status': (options) => {
                 const { data } = options;
-                const { total, sent, received, startTime, finishTime, elapsedTime, remainingTime } = data;
-                dispatch(baseActions.updateState({
-                    gcodePrintingInfo: {
-                        total,
-                        sent,
-                        received,
-                        startTime,
-                        finishTime,
-                        elapsedTime,
-                        remainingTime
-                    }
-                }));
+                const {
+                    total,
+                    sent,
+                    received,
+                    startTime,
+                    finishTime,
+                    elapsedTime,
+                    remainingTime
+                } = data;
+                dispatch(
+                    baseActions.updateState({
+                        gcodePrintingInfo: {
+                            total,
+                            sent,
+                            received,
+                            startTime,
+                            finishTime,
+                            elapsedTime,
+                            remainingTime
+                        }
+                    })
+                );
             }
         };
 
-        Object.keys(controllerEvents).forEach(event => {
+        Object.keys(controllerEvents).forEach((event) => {
             controller.on(event, controllerEvents[event]);
         });
     },
@@ -570,17 +724,21 @@ export const actions = {
             }
         }
 
-        dispatch(baseActions.updateState({
-            shouldShowCncWarning
-        }));
+        dispatch(
+            baseActions.updateState({
+                shouldShowCncWarning
+            })
+        );
     },
 
     __init4Axis: (dispatch) => {
         const use4Axis = machineStore.get('settings.use4Axis');
 
-        dispatch(baseActions.updateState({
-            use4Axis: use4Axis === 'true' || use4Axis === true
-        }));
+        dispatch(
+            baseActions.updateState({
+                use4Axis: use4Axis === 'true' || use4Axis === true
+            })
+        );
     },
 
     // discover actions
@@ -591,13 +749,18 @@ export const actions = {
 
     updateMachineState: (state) => (dispatch) => {
         const { series, headType, canReselectMachine } = state;
-        headType && dispatch(baseActions.updateState({
-            headType: headType
-        }));
+        headType
+            && dispatch(
+                baseActions.updateState({
+                    headType: headType
+                })
+            );
         if (canReselectMachine !== undefined && canReselectMachine !== null) {
-            dispatch(baseActions.updateState({
-                canReselectMachine
-            }));
+            dispatch(
+                baseActions.updateState({
+                    canReselectMachine
+                })
+            );
         }
         series && dispatch(actions.updateMachineSeries(series));
     },
@@ -616,17 +779,26 @@ export const actions = {
             }
             //  Do not need to 'initSize' just use 'switchSize' function
             await dispatch(printingActions.switchSize());
-            seriesInfo && dispatch(actions.updateMachineSize(seriesInfo.setting.size));
-            seriesInfo && dispatch(actions.updateLaserSize(seriesInfo.setting.laserSize));
+            seriesInfo
+                && dispatch(actions.updateMachineSize(seriesInfo.setting.size));
+            seriesInfo
+                && dispatch(actions.updateLaserSize(seriesInfo.setting.laserSize));
             dispatch(widgetActions.updateMachineSeries(series));
         }
     },
 
-    updateMachineToolHead: (toolHead, series, headType = null) => (dispatch, getState) => {
+    updateMachineToolHead: (toolHead, series, headType = null) => (
+        dispatch,
+        getState
+    ) => {
         machineStore.set('machine.toolHead', toolHead);
         const oldToolHead = getState().machine.toolHead;
         const oldSeries = getState().machine.series;
-        if (!_.isEqual(oldToolHead, toolHead) || oldSeries !== series || headType) {
+        if (
+            !_.isEqual(oldToolHead, toolHead)
+            || oldSeries !== series
+            || headType
+        ) {
             // const currentMachine = getMachineSeriesWithToolhead(series, toolHead, headType);
             // dispatch(baseActions.updateState({ currentMachine }));
             if (!_.isEqual(oldToolHead, toolHead)) {
@@ -647,8 +819,6 @@ export const actions = {
         }
 
         dispatch(baseActions.updateState({ size: { ...size } }));
-
-        dispatch(printingActions.updateActiveDefinitionMachineSize(size));
 
         dispatch(editorActions.onSizeUpdated('laser', size));
         dispatch(editorActions.onSizeUpdated('cnc', size));
@@ -688,78 +858,90 @@ export const actions = {
             if (portIndex !== -1) {
                 ports.splice(portIndex, 1);
             }
-            dispatch(baseActions.updateState({
-                port: ports[0],
-                ports,
-                isOpen: false,
-                isConnected: false,
-                isEmergencyStopped: isEmergencyStopped ?? false,
-                connectionStatus: CONNECTION_STATUS_IDLE
-            }));
+            dispatch(
+                baseActions.updateState({
+                    port: ports[0],
+                    ports,
+                    isOpen: false,
+                    isConnected: false,
+                    isEmergencyStopped: isEmergencyStopped ?? false,
+                    connectionStatus: CONNECTION_STATUS_IDLE
+                })
+            );
         } else {
             // this.port = '';
-            dispatch(baseActions.updateState({
-                port: '',
-                ports,
-                isOpen: false,
-                isConnected: false,
-                isEmergencyStopped: isEmergencyStopped ?? false,
-                connectionStatus: CONNECTION_STATUS_IDLE
-            }));
+            dispatch(
+                baseActions.updateState({
+                    port: '',
+                    ports,
+                    isOpen: false,
+                    isConnected: false,
+                    isEmergencyStopped: isEmergencyStopped ?? false,
+                    connectionStatus: CONNECTION_STATUS_IDLE
+                })
+            );
         }
-        dispatch(workspaceActions.updateMachineState({
-            headType: '',
-            toolHead: ''
-        }));
-        dispatch(baseActions.updateState({
-            workPosition: {
-                x: '0.000',
-                y: '0.000',
-                z: '0.000',
-                a: '0.000'
-            },
+        dispatch(
+            workspaceActions.updateMachineState({
+                headType: '',
+                toolHead: ''
+            })
+        );
+        dispatch(
+            baseActions.updateState({
+                workPosition: {
+                    x: '0.000',
+                    y: '0.000',
+                    z: '0.000',
+                    a: '0.000'
+                },
 
-            originOffset: {
-                x: 0,
-                y: 0,
-                z: 0
-            }
-        }));
+                originOffset: {
+                    x: 0,
+                    y: 0,
+                    z: 0
+                }
+            })
+        );
         dispatch(workspaceActions.unloadGcode());
     },
 
     resetMachineState: () => (dispatch) => {
-        dispatch(baseActions.updateState({
-            isOpen: false,
-            isConnected: false,
-            connectionStatus: CONNECTION_STATUS_IDLE,
-            isHomed: null,
-            workflowStatus: WORKFLOW_STATUS_UNKNOWN,
-            workflowState: WORKFLOW_STATE_IDLE,
-            laserFocalLength: null,
-            workPosition: { // work position
-                x: '0.000',
-                y: '0.000',
-                z: '0.000',
-                b: '0.000',
-                isFourAxis: false,
-                a: '0.000'
-            },
+        dispatch(
+            baseActions.updateState({
+                isOpen: false,
+                isConnected: false,
+                connectionStatus: CONNECTION_STATUS_IDLE,
+                isHomed: null,
+                workflowStatus: WORKFLOW_STATUS_UNKNOWN,
+                workflowState: WORKFLOW_STATE_IDLE,
+                laserFocalLength: null,
+                workPosition: {
+                    // work position
+                    x: '0.000',
+                    y: '0.000',
+                    z: '0.000',
+                    b: '0.000',
+                    isFourAxis: false,
+                    a: '0.000'
+                },
 
-            originOffset: {
-                x: 0,
-                y: 0,
-                z: 0
-            }
-        }));
+                originOffset: {
+                    x: 0,
+                    y: 0,
+                    z: 0
+                }
+            })
+        );
     },
 
     // Execute G54 based on series and headType
     executeGcodeG54: (series, headType) => (dispatch) => {
-        if (series !== MACHINE_SERIES.ORIGINAL.value
+        if (
+            series !== MACHINE_SERIES.ORIGINAL.value
             && series !== MACHINE_SERIES.CUSTOM.value
-            && (headType === HEAD_LASER
-                || headType === HEAD_CNC)) {
+            && (headType === HEAD_LASER || headType === HEAD_CNC)
+        ) {
             dispatch(actions.executeGcode('G54'));
         }
     },
@@ -769,23 +951,30 @@ export const actions = {
         const { homingModal, isConnected } = machine;
         if (!isConnected) {
             if (homingModal) {
-                dispatch(baseActions.updateState({
-                    homingModal: false
-                }));
+                dispatch(
+                    baseActions.updateState({
+                        homingModal: false
+                    })
+                );
             }
             return;
         }
-        controller
-            .emitEvent(CONNECTION_EXECUTE_GCODE, { gcode, context, cmd }, (gcodeArray) => {
+        controller.emitEvent(
+            CONNECTION_EXECUTE_GCODE,
+            { gcode, context, cmd },
+            (gcodeArray) => {
                 if (gcodeArray) {
                     if (homingModal && gcode === 'G28') {
-                        dispatch(baseActions.updateState({
-                            homingModal: false
-                        }));
+                        dispatch(
+                            baseActions.updateState({
+                                homingModal: false
+                            })
+                        );
                     }
                     dispatch(actions.addConsoleLogs(gcodeArray));
                 }
-            });
+            }
+        );
     },
 
     executeGcodeAutoHome: (homingModal = false) => (dispatch, getState) => {
@@ -793,9 +982,11 @@ export const actions = {
         const { connectionType } = getState().machine;
         dispatch(actions.executeGcode('G53'));
         if (homingModal && connectionType === CONNECTION_TYPE_WIFI) {
-            dispatch(baseActions.updateState({
-                homingModal
-            }));
+            dispatch(
+                baseActions.updateState({
+                    homingModal
+                })
+            );
         }
         dispatch(actions.executeGcode('G28'));
         dispatch(actions.executeGcodeG54(series, headType));
@@ -806,7 +997,9 @@ export const actions = {
         controller.writeln('M1010', { source: 'query' });
     },
     setEnclosureState: (doorDetection) => () => {
-        controller.writeln(`M1010 S${(doorDetection ? '1' : '0')}`, { source: 'query' });
+        controller.writeln(`M1010 S${doorDetection ? '1' : '0'}`, {
+            source: 'query'
+        });
     },
     // endregion
 
@@ -823,35 +1016,53 @@ export const actions = {
 
     addConsoleLogs: (consoleLogs) => (dispatch) => {
         if (Array.isArray(consoleLogs)) {
-            dispatch(baseActions.updateState({
-                consoleLogs: consoleLogs
-            }));
+            dispatch(
+                baseActions.updateState({
+                    consoleLogs: consoleLogs
+                })
+            );
         }
     },
 
     setShouldShowCncWarning: (value) => (dispatch) => {
         const version = setting.version;
-        machineStore.set('settings.shouldShowCncWarning', `${version}|${value}`);
-        dispatch(baseActions.updateState({
-            shouldShowCncWarning: value
-        }));
+        machineStore.set(
+            'settings.shouldShowCncWarning',
+            `${version}|${value}`
+        );
+        dispatch(
+            baseActions.updateState({
+                shouldShowCncWarning: value
+            })
+        );
     },
 
     // region Auto Update (need refactor)
     // TODO: Move Auto-Update code somewhere else.
     updateAutoupdateMessage: (autoupdateMessage) => (dispatch) => {
-        dispatch(baseActions.updateState({ autoupdateMessage: i18n._(autoupdateMessage) }));
+        dispatch(
+            baseActions.updateState({
+                autoupdateMessage: i18n._(autoupdateMessage)
+            })
+        );
     },
     updateIsDownloading: (isDownloading) => (dispatch) => {
         dispatch(baseActions.updateState({ isDownloading: isDownloading }));
     },
     updateShouldCheckForUpdate: (shouldCheckForUpdate) => (dispatch) => {
-        dispatch(baseActions.updateState({ shouldCheckForUpdate: shouldCheckForUpdate }));
+        dispatch(
+            baseActions.updateState({
+                shouldCheckForUpdate: shouldCheckForUpdate
+            })
+        );
         machineStore.set('shouldCheckForUpdate', shouldCheckForUpdate);
     },
     updateArrangeSettings: (printingArrangeSettings) => (dispatch) => {
         dispatch(baseActions.updateState({ printingArrangeSettings }));
-        printingStore.set('printingArrangeSettings', JSON.stringify(printingArrangeSettings));
+        printingStore.set(
+            'printingArrangeSettings',
+            JSON.stringify(printingArrangeSettings)
+        );
     },
     updatePrintingCustomConfigs: (printingCustomConfigs) => (dispatch) => {
         dispatch(baseActions.updateState({ printingCustomConfigs }));
@@ -863,7 +1074,11 @@ export const actions = {
         dispatch(baseActions.updateState({ multipleEngine: !multipleEngine }));
     },
     updateShouldAutoPreviewGcode: (shouldAutoPreviewGcode) => (dispatch) => {
-        dispatch(baseActions.updateState({ shouldAutoPreviewGcode: shouldAutoPreviewGcode }));
+        dispatch(
+            baseActions.updateState({
+                shouldAutoPreviewGcode: shouldAutoPreviewGcode
+            })
+        );
         machineStore.set('shouldAutoPreviewGcode', shouldAutoPreviewGcode);
     },
     updateShouldHideConsole: (shouldHideConsole) => (dispatch) => {

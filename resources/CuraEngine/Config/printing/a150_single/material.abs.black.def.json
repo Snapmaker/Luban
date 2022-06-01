@@ -1,6 +1,7 @@
 {
     "name": "ABS-Black",
     "version": "4.2.0",
+    "isRecommended": true,
     "inherits": "snapmaker",
     "category": "ABS",
     "i18nName": "key-default_name-ABS_Black",

@@ -8,10 +8,9 @@ import webpack from 'webpack';
 // Development Copy
 //
 export function serverCopyDevelopment() {
-    const files = [
-        'src/server/{i18n,views}/**/*'
-    ];
-    return gulp.src(files, { base: 'src/server' })
+    const files = ['src/server/{i18n,views}/**/*'];
+    return gulp
+        .src(files, { base: 'src/server' })
         .pipe(gulp.dest('output/server'));
 }
 
@@ -36,46 +35,49 @@ export function serverStartDevelopment(cb) {
         script: './output/main',
         // script: './bin/cli',
         args: args,
-        ignore: [
-            '.git',
-            'node_modules/**/node_modules'
-        ],
+        ignore: ['.git', 'node_modules/**/node_modules'],
+        delay: 4000,
         verbose: true,
         exec: 'electron --inspect',
         // exec: 'electron --inspect-brk',
         execMap: {
-            'js': 'node --harmony'
+            js: 'node --harmony',
         },
         events: {
-            'restart': "osascript -e 'display notification \"App restarted due to:\n'$FILENAME'\" with title \"nodemon\"'"
+            restart:
+                "osascript -e 'display notification \"App restarted due to:\n'$FILENAME'\" with title \"nodemon\"'",
         },
-        watch: [
-            'src/server/',
-            'src/shared/'
-        ],
+        watch: ['src/server/', 'src/shared/'],
         env: {
-            'NODE_ENV': 'development'
+            NODE_ENV: 'development',
         },
         ext: 'js json ts',
         // tasks: ['serverBuildDevelopment'],
         tasks: [],
         done: cb,
-        stdout: false
-    }).on('readable', function () {
-        this.stdout.pipe(process.stdout);
-        this.stderr.pipe(process.stderr);
-    });
+        stdout: false,
+    })
+        .once('quit', (code) => {
+            log('nodedmon has quit with code', code);
+            process.exit();
+        })
+        .on('restart', (files) => {
+            log('App restarted due to: ', files);
+        })
+        .on('readable', function () {
+            this.stdout.pipe(process.stdout);
+            this.stderr.pipe(process.stderr);
+        });
 }
 
 //
 // Production Copy
 //
 export function serverCopyProduction() {
-    const files = [
-        'src/server/{i18n,views}/**/*'
-    ];
+    const files = ['src/server/{i18n,views}/**/*'];
 
-    return gulp.src(files, { base: 'src/server' })
+    return gulp
+        .src(files, { base: 'src/server' })
         .pipe(gulp.dest('dist/Luban/server'));
 }
 

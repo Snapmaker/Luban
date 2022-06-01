@@ -13,7 +13,7 @@ import ConfigRasterVector from './config/ConfigRasterVector';
 import ConfigHalftone from './config/ConfigHalftone';
 // import TipTrigger from '../../components/TipTrigger';
 import { actions as editorActions } from '../../../flux/editor';
-import { HEAD_LASER, PROCESS_MODE_GREYSCALE, PROCESS_MODE_BW, SOURCE_TYPE_RASTER, PROCESS_MODE_VECTOR, PROCESS_MODE_HALFTONE } from '../../../constants';
+import { HEAD_LASER, PROCESS_MODE_GREYSCALE, PROCESS_MODE_BW, SOURCE_TYPE, PROCESS_MODE_VECTOR, PROCESS_MODE_HALFTONE } from '../../../constants';
 
 const ImageProcessMode = ({ disabled }) => {
     const dispatch = useDispatch();
@@ -23,7 +23,7 @@ const ImageProcessMode = ({ disabled }) => {
     const originalName = useSelector(state => state?.laser?.modelGroup?.getSelectedModel()?.originalName);
     const isBW = mode === PROCESS_MODE_BW;
     const isGreyscale = mode === PROCESS_MODE_GREYSCALE;
-    const isRasterVector = sourceType === SOURCE_TYPE_RASTER && mode === PROCESS_MODE_VECTOR;
+    const isRasterVector = sourceType === SOURCE_TYPE.RASTER && mode === PROCESS_MODE_VECTOR;
     const isHalftone = mode === PROCESS_MODE_HALFTONE;
     const isDXF = (originalName ? (originalName.substr(originalName.length - 4, 4).toLowerCase() === '.dxf') : false);
 
@@ -55,7 +55,7 @@ const ImageProcessMode = ({ disabled }) => {
                 {expanded && (
                     <React.Fragment>
                         <div className={classNames('sm-flex', 'margin-vertical-8', 'align-c', 'justify-space-between')}>
-                            { !isDXF && (
+                            {!isDXF && (
                                 <div className={classNames(mode === 'bw' ? styles.selected : styles.unselected)}>
                                     <Anchor
                                         disabled={disabled}
@@ -66,7 +66,7 @@ const ImageProcessMode = ({ disabled }) => {
                                     <span className="max-width-76 text-overflow-ellipsis-line-2">{i18n._('key-Laser/ProcessingModeSection/ImageProcessMode-B&W')}</span>
                                 </div>
                             )}
-                            { !isDXF && (
+                            {!isDXF && (
                                 <div className={classNames(mode === 'greyscale' ? styles.selected : styles.unselected)}>
                                     <Anchor
                                         disabled={disabled}
@@ -86,7 +86,7 @@ const ImageProcessMode = ({ disabled }) => {
                                 </Anchor>
                                 <span className="max-width-76 text-overflow-ellipsis-line-2">{i18n._('key-Laser/ProcessingModeSection/ImageProcessMode-VECTOR')}</span>
                             </div>
-                            { !isDXF && (
+                            {!isDXF && (
                                 <div className={classNames(mode === 'halftone' ? styles.selected : styles.unselected)}>
                                     <Anchor
                                         disabled={disabled}

@@ -7,7 +7,7 @@ type DrawStartProp = {
 }
 
 export default class DrawStart extends Operation<DrawStartProp> {
-    constructor(props: DrawStartProp) {
+    public constructor(props: DrawStartProp) {
         super();
         this.state = {
             elemID: props.elemID,
