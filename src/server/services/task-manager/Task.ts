@@ -1,6 +1,21 @@
 import { Socket } from 'socket.io-client';
 
 const TASK_STATUS_IDLE = 'idle';
+export type TGcodeFile = {
+    estimatedTime: string;
+    boundingBox: string;
+    name: string;
+    size: string;
+    lastModified: string;
+    thumbnail: string;
+    header: {
+        type: string,
+        'work_speed': string,
+        'estimated_time': string,
+        'jog_speed': string,
+        power: string,
+    }
+}
 
 class Task {
     public taskId: string;
@@ -25,7 +40,7 @@ class Task {
 
     public filenames: string = ''
 
-    public gcodeFile: string = ''
+    public gcodeFile: TGcodeFile = {} as TGcodeFile
 
     public viewPathFile: string = ''
 
