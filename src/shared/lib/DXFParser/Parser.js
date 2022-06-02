@@ -424,7 +424,6 @@ export const measureBoundary = (dxfString) => {
         minY: minY,
         maxY: maxY
     };
-    console.log('dxf.boundary', dxf.boundary);
     dxf.width = dxf.boundary.maxX - dxf.boundary.minX;
     dxf.height = dxf.boundary.maxY - dxf.boundary.minY;
     return dxf;
