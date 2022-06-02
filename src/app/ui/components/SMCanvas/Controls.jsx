@@ -56,7 +56,7 @@ class Controls extends EventEmitter {
 
     lastQuaternion = new THREE.Quaternion();
 
-    minDistance = 50;
+    minDistance = 10;
 
     // calculation temporary variables
     // spherical rotation
@@ -231,7 +231,6 @@ class Controls extends EventEmitter {
     panUp(distance, matrix) {
         const v = new THREE.Vector3().setFromMatrixColumn(matrix, 1); // Get Y column
         v.multiplyScalar(distance);
-        console.log('Y', distance, v);
         this.panOffset.add(v);
     }
 
@@ -719,8 +718,6 @@ class Controls extends EventEmitter {
             this.spherical.makeSafe();
 
             const prevRadius = this.spherical.radius;
-            const zColumn = this.spherical.radius * Math.cos(this.spherical.theta);
-            console.log('zColumn', zColumn);
             this.spherical.radius *= this.scale;
             this.spherical.radius = Math.max(this.spherical.radius, 0.05);
             if (this.maxScale > 0 && this.spherical.radius < this.scaleSize / this.maxScale) {
@@ -729,7 +726,7 @@ class Controls extends EventEmitter {
             if (this.minScale > 0 && (this.spherical.radius > this.scaleSize / this.minScale)) {
                 this.spherical.radius = this.scaleSize / this.minScale;
             }
-            // this.spherical.radius = Math.max(this.minDistance, Math.min(this.maxDistance, this.spherical.radius));
+            this.spherical.radius = Math.max(this.minDistance, Math.min(this.maxDistance, this.spherical.radius));
             // suport zoomToCursor (mouse only)
             if (this.zoomToCursor && shouldUpdateTarget) {
                 this.target.lerp(this.mouse3D, 1 - this.spherical.radius / prevRadius);
@@ -747,24 +744,13 @@ class Controls extends EventEmitter {
 
         // pan
         if (this.panOffset.x || this.panOffset.y) {
-            // console.log('before', this.target, this.panOffset);
-            this.target.x += this.panOffset.x;
-            this.target.y += this.panOffset.y;
-            this.target.z += this.panOffset.z;
-            // this.target.z = Math.max(0, this.target.z + this.panOffset.z);
-            // this.target.add(this.panOffset);
+            this.target.add(this.panOffset);
             this.panOffset.set(0, 0, 0);
         }
 
 
         // re-position camera
         this.camera.position.copy(this.target).add(this.offset);
-        // const copyCamera = this.camera.position.copy(this.target);
-        // console.log(copyCamera);
-        // this.camera.position.x = copyCamera.x + this.offset.x;
-        // this.camera.position.y = copyCamera.y + this.offset.y;
-        // this.camera.position.z = Math.max(50, this.camera.position.z);
-        // this.camera.position.z = this.target.z;
         this.camera.lookAt(this.target);
 
         // need to update scale after camera position setted,
@@ -773,7 +759,6 @@ class Controls extends EventEmitter {
             this.onScale();
             this.scale = 1;
         }
-        console.log('camera', this.camera.position, this.target);
         // using small-angle approximation cos(x/2) = 1 - x^2 / 8
         if (this.lastPosition.distanceToSquared(this.camera.position) > EPS
             || 8 * (1 - this.lastQuaternion.dot(this.camera.quaternion)) > EPS) {

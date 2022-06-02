@@ -230,7 +230,6 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
             dispatch(machineActions.executeGcode(gcode));
         },
         coordinateMove: (gcode, moveOrders, jogSpeed) => {
-            // dispatch(machineActions.coordinateMove(gcode, moveOrders, jogSpeed));
             server.coordinateMove(moveOrders, gcode, jogSpeed, headType, homingModel);
         },
         setWorkOrigin: () => {
