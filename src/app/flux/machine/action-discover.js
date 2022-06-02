@@ -3,6 +3,7 @@ import { isEqualWith, cloneDeep } from 'lodash';
 import { controller } from '../../lib/controller';
 import { Server } from './Server';
 import baseActions from './action-base';
+import { CUSTOM_SERVER_NAME } from '../../constants/index';
 
 const checkIfEqual = (objArray, othArray) => {
     if (objArray.length !== othArray.length) {
@@ -12,7 +13,6 @@ const checkIfEqual = (objArray, othArray) => {
         const l = othArray.find(v => {
             return v.address === server.address && v.name === server.name;
         });
-        console.log(l?.address, othArray, objArray);
         return !!l;
     });
 };
@@ -23,17 +23,16 @@ const init = () => (dispatch, getState) => {
         'machine:discover': ({ devices, type }) => {
             // Note that we may receive this event many times.
             const { servers, connectionType } = getState().machine;
-            console.log('isEqualWith(resultServers, servers, checkIfEqual)');
             if (connectionType === type) {
                 const resultServers = cloneDeep(servers.filter(v => v.address));
-                // resultServers.forEach((item) => {
-                //     const index = devices.findIndex(v => {
-                //         return v.address === item.address && v.name === item.name;
-                //     });
-                //     if (index < 0) {
-                //         resultServers.splice(index, 1);
-                //     }
-                // });
+                resultServers.forEach((item, index) => {
+                    const idx = devices.findIndex(v => {
+                        return v.address === item.address && v.name === item.name;
+                    });
+                    if (idx < 0 && item.name !== CUSTOM_SERVER_NAME) {
+                        resultServers.splice(index, 1);
+                    }
+                });
 
                 for (const object of devices) {
                     const find = servers.find(v => {
@@ -45,7 +44,6 @@ const init = () => (dispatch, getState) => {
                     }
                 }
                 const rest = isEqualWith(resultServers, servers, checkIfEqual);
-                console.log('isEqualWith(resultServers, servers, checkIfEqual)', devices, resultServers, servers, rest);
                 if (!rest) {
                     dispatch(baseActions.updateState({ servers: resultServers }));
                 }

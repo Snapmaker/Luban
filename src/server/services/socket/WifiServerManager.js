@@ -54,14 +54,7 @@ class WifiServerManager extends EventEmitter {
                 device[key.toLowerCase()] = value;
             }
 
-            this.devices.push(device);
-            console.log('this.sockets', this.sockets?.length);
-            for (const socket of this.sockets) {
-                socket.emit('machine:discover', {
-                    devices: this.devices,
-                    type: CONNECTION_TYPE_WIFI
-                });
-            }
+            this.devices.add(device);
         });
     };
 
@@ -73,7 +66,7 @@ class WifiServerManager extends EventEmitter {
         }
 
         this.refreshing = true;
-        this.devices = [];
+        this.devices = new Set();
 
         const message = Buffer.from('discover');
 
@@ -89,6 +82,7 @@ class WifiServerManager extends EventEmitter {
                             return (p | (~q & 255));
                         }
                     ).join('.');
+                    // log.debug(`broadcastAddress=${broadcastAddress}`);
 
                     this.client.send(message, DISCOVER_SERVER_PORT, broadcastAddress, (err) => {
                         if (err) {
@@ -104,11 +98,18 @@ class WifiServerManager extends EventEmitter {
         // Note: 500ms reaction time, 3000ms is too long.
         setTimeout(() => {
             this.refreshing = false;
-        }, 500);
+            for (const socket of this.sockets) {
+                socket.emit('machine:discover', {
+                    devices: Array.from(this.devices),
+                    type: CONNECTION_TYPE_WIFI
+                });
+            }
+        }, 3000);
     };
 
     onConnection = (socket) => {
         this.sockets.push(socket);
+        this.refreshDevices();
         intervalHandle = setInterval(this.refreshDevices, 3000);
     };
 

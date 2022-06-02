@@ -73,7 +73,6 @@ class SocketServer extends EventEmitter {
 
     // established a new socket connection
     onConnection = (socket) => {
-        if (this.sockets.length > 2) this.sockets = [];
         console.log('onConnection', 'dddd', this.sockets.length, this.sockets.indexOf(socket));
         const address = socket.handshake.address;
         const token = socket.decoded_token || {};
