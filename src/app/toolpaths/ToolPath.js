@@ -197,6 +197,7 @@ class ToolPath {
             taskId: this.id,
             modelId: '',
             headType: this.headType,
+            visible: this.visible,
             data: data
         };
 
