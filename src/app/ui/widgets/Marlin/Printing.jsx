@@ -3,10 +3,11 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 import Anchor from '../../components/Anchor';
-import SvgIcon from '../../components/SvgIcon';
+// import SvgIcon from '../../components/SvgIcon';
 import { Button } from '../../components/Buttons';
+import EditComponent from '../../components/Edit';
 import i18n from '../../../lib/i18n';
-import { NumberInput as Input } from '../../components/Input';
+// import { NumberInput as Input } from '../../components/Input';
 import { actions as machineActions } from '../../../flux/machine';
 import JogDistance from './JogDistance';
 import WorkSpeed from './WorkSpeed';
@@ -15,7 +16,8 @@ import { CONNECTION_TYPE_WIFI,
     WORKFLOW_STATUS_RUNNING,
     CONNECTION_Z_OFFSET,
     CONNECTION_LOAD_FILAMENT,
-    CONNECTION_UNLOAD_FILAMENT
+    CONNECTION_UNLOAD_FILAMENT,
+    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
 } from '../../../constants';
 import { controller } from '../../../lib/controller';
 
@@ -29,7 +31,9 @@ class Printing extends PureComponent {
         nozzleTemperature: PropTypes.number.isRequired,
         addConsoleLogs: PropTypes.func.isRequired,
         executeGcode: PropTypes.func.isRequired,
-        heatedBedTemperature: PropTypes.number.isRequired
+        heatedBedTemperature: PropTypes.number.isRequired,
+        printingToolhead: PropTypes.string.isRequired,
+        currentWorkNozzle: PropTypes.string.isRequired
     };
 
     state = {
@@ -118,36 +122,106 @@ class Printing extends PureComponent {
     }
 
     render() {
-        const { isConnected, heatedBedTemperature, heatedBedTargetTemperature, nozzleTemperature, nozzleTargetTemperature, workflowStatus } = this.props;
+        const { isConnected, heatedBedTemperature, heatedBedTargetTemperature, nozzleTemperature, nozzleTargetTemperature, workflowStatus, currentWorkNozzle, printingToolhead } = this.props;
         const { zOffsetMarks, zOffsetValue } = this.state;
         const actions = this.actions;
         return (
             <div>
                 {workflowStatus === 'running' && <WorkSpeed />}
-                <div className="sm-flex justify-space-between margin-vertical-8">
-                    <span className="height-32 max-width-160 display-inline text-overflow-ellipsis">{i18n._('key-unused-Nozzle Temp.')}</span>
-                    <div className="sm-flex-auto">
-                        <span className="height-32">{nozzleTemperature} / </span>
-                        <Input
-                            suffix="°C"
-                            size="small"
-                            defaultValue={nozzleTargetTemperature}
-                            value={this.state.nozzleTemperatureValue}
-                            max={250}
-                            min={0}
-                            onChange={actions.onChangeNozzleTemperatureValue}
-                        />
-                        <SvgIcon
-                            name="Reset"
-                            size={24}
-                            className="border-default-black-5 margin-left-4 border-radius-8"
-                            onClick={actions.onClickNozzleTemperature}
-                            borderRadius={8}
-                        />
+                {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
+                    <div>
+                        <div>
+                            <span>{i18n._('key-unused-Current Work Nozzle')}</span>
+                            <span>{i18n._(`key-unused-Nozzle-${currentWorkNozzle}`)}</span>
+                        </div>
+                        <Button>
+                            {i18n._('key-unused-Switch working nozzle')}
+                        </Button>
+                        <div className="dashed-border-use-background" />
+                    </div>
+                )}
+                <div className="sm-flex-overflow-visible margin-vertical-8">
+                    <div className="height-32 width-176 display-inline text-overflow-ellipsis">{i18n._(`${printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? 'key-unused-Left Nozzle Temp' : 'key-unused-Nozzle Temp.'}`)}</div>
+                    <div className="sm-flex margin-left-24 overflow-visible">
+                        <div className="width-40 sm-flex sm-flex-direction-c">
+                            {/* <span>{i18n._('key-unused-Actual')}</span> */}
+                            <span>Actual</span>
+                            <span>{nozzleTemperature} °C</span>
+                        </div>
+                        <div className="width-40 sm-flex sm-flex-direction-c margin-left-16">
+                            {/* <span>{i18n._('key-unused-Target')}</span> */}
+                            <span>Target</span>
+                            <span>{nozzleTargetTemperature} °C</span>
+                        </div>
+                        <EditComponent />
                     </div>
                 </div>
+                {workflowStatus !== 'running' && (
+                    <div className="sm-flex justify-flex-end margin-vertical-8">
+                        <div>
+                            <Button
+                                priority="level-three"
+                                width="96px"
+                                className="display-inline"
+                                onClick={actions.onClickUnload}
+                            >
+                                {i18n._('key-unused-Unload')}
+                            </Button>
+                            <Button
+                                className="margin-left-4 display-inline"
+                                priority="level-three"
+                                width="96px"
+                                onClick={actions.onClickLoad}
+                            >
+                                {i18n._('key-unused-Load')}
+                            </Button>
+                        </div>
+                    </div>
+                )}
 
-                <div className="sm-flex justify-space-between margin-vertical-8">
+                {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
+                    <div>
+                        <div className="sm-flex-overflow-visible margin-vertical-8">
+                            <div className="height-32 width-176 display-inline text-overflow-ellipsis">{i18n._('key-unused-Right Nozzle Temp')}</div>
+                            <div className="sm-flex margin-left-24 overflow-visible">
+                                <div className="width-40 sm-flex sm-flex-direction-c">
+                                    {/* <span>{i18n._('key-unused-Actual')}</span> */}
+                                    <span>Actual</span>
+                                    <span>{nozzleTemperature} °C</span>
+                                </div>
+                                <div className="width-40 sm-flex sm-flex-direction-c margin-left-16">
+                                    {/* <span>{i18n._('key-unused-Target')}</span> */}
+                                    <span>Target</span>
+                                    <span>{nozzleTargetTemperature} °C</span>
+                                </div>
+                                <EditComponent />
+                            </div>
+                        </div>
+                        {workflowStatus !== 'running' && (
+                            <div className="sm-flex justify-flex-end margin-vertical-8">
+                                <div>
+                                    <Button
+                                        priority="level-three"
+                                        width="96px"
+                                        className="display-inline"
+                                        onClick={actions.onClickUnload}
+                                    >
+                                        {i18n._('key-unused-Unload')}
+                                    </Button>
+                                    <Button
+                                        className="margin-left-4 display-inline"
+                                        priority="level-three"
+                                        width="96px"
+                                        onClick={actions.onClickLoad}
+                                    >
+                                        {i18n._('key-unused-Load')}
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+                {/* <div className="sm-flex justify-space-between margin-vertical-8">
                     <span className="height-32 max-width-160 display-inline text-overflow-ellipsis">{i18n._('key-Workspace/Connection-Build Plate Temp.')}</span>
                     <div className="sm-flex-auto">
                         <span className="height-32">{heatedBedTemperature} / </span>
@@ -168,9 +242,25 @@ class Printing extends PureComponent {
                             borderRadius={8}
                         />
                     </div>
+                </div> */}
+                <div className="sm-flex-overflow-visible margin-vertical-8">
+                    <div className="height-32 width-176 display-inline text-overflow-ellipsis">{i18n._('key-Workspace/Connection-Build Plate Temp.')}</div>
+                    <div className="sm-flex margin-left-24 overflow-visible">
+                        <div className="width-40 sm-flex sm-flex-direction-c">
+                            {/* <span>{i18n._('key-unused-Actual')}</span> */}
+                            <span>Actual</span>
+                            <span>{heatedBedTemperature}°C</span>
+                        </div>
+                        <div className="width-40 sm-flex sm-flex-direction-c margin-left-16">
+                            {/* <span>{i18n._('key-unused-Target')}</span> */}
+                            <span>Target</span>
+                            <span>{heatedBedTargetTemperature}°C</span>
+                        </div>
+                        <EditComponent />
+                    </div>
                 </div>
 
-                {workflowStatus !== 'running' && (
+                {/* {workflowStatus !== 'running' && (
                     <div className="sm-flex justify-space-between margin-vertical-8">
                         <span className="height-32">{i18n._('key-unused-Filament')}</span>
                         <div>
@@ -192,7 +282,7 @@ class Printing extends PureComponent {
                             </Button>
                         </div>
                     </div>
-                )}
+                )} */}
 
                 {isConnected && _.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus) && (
                     <div className="sm-parameter-row">
@@ -229,14 +319,20 @@ class Printing extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
+    const workspace = state.workspace;
     const { isConnected,
         connectionType,
         nozzleTemperature,
         nozzleTargetTemperature,
         heatedBedTemperature,
         heatedBedTargetTemperature,
-        workflowStatus } = machine;
-
+        workflowStatus,
+        // toolHead: {
+        //     printingToolhead
+        // },
+        currentWorkNozzle
+    } = machine;
+    const { toolHead: printingToolhead } = workspace;
     return {
         isConnected,
         connectionType,
@@ -244,7 +340,9 @@ const mapStateToProps = (state) => {
         nozzleTargetTemperature,
         heatedBedTemperature,
         heatedBedTargetTemperature,
-        workflowStatus
+        workflowStatus,
+        printingToolhead,
+        currentWorkNozzle
     };
 };
 

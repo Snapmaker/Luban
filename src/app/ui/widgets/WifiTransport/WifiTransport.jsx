@@ -218,7 +218,7 @@ function WifiTransport({ widgetActions, controlActions }) {
     const originOffset = useSelector(state => state?.machine?.originOffset);
     const toolHeadName = useSelector(state => state?.workspace?.toolHead);
     const { previewBoundingBox, headType, gcodeFiles, previewModelGroup, previewRenderState, previewStage, isRotate } = useSelector(state => state.workspace);
-    const { isConnected, connectionType, size, workflowStatus, workflowState, isSendedOnWifi } = useSelector(state => state.machine);
+    const { isConnected, connectionType, size, workflowStatus, isSendedOnWifi } = useSelector(state => state.machine);
     const [loadToWorkspaceOnLoad, setLoadToWorkspaceOnLoad] = useState(true);
     const [selectFileName, setSelectFileName] = useState('');
     const [selectFileType, setSelectFileType] = useState('');
@@ -472,9 +472,9 @@ function WifiTransport({ widgetActions, controlActions }) {
     }, [selectFileName]);
 
     useEffect(() => {
-        const newCurrent = connectionType === 'wifi' ? workflowStatus : workflowState;
-        setCurrentWorkflowStatus(newCurrent);
-    }, [workflowState, workflowStatus, connectionType]);
+        // const newCurrent = connectionType === 'wifi' ? workflowStatus : workflowState;
+        setCurrentWorkflowStatus(workflowStatus);
+    }, [workflowStatus]);
 
     useEffect(() => {
         if (prevProps) {
