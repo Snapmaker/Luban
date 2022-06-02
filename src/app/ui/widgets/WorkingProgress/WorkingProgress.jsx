@@ -8,6 +8,7 @@ import { Button } from '../../components/Buttons';
 import SvgIcon from '../../components/SvgIcon';
 import Modal from '../../components/Modal';
 import Loading from './Loading';
+import { WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_PAUSING, WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_STOPPING, WROKFLOW_STATUS_RESUMING } from '../../../constants';
 
 const Text = ({ name, value }) => {
     return (
@@ -70,8 +71,7 @@ StopConfirmModal.propTypes = {
 const WorkingProgress = ({ widgetActions, controlActions }) => {
     const {
         isConnected, workflowStatus,
-        gcodePrintingInfo: { progress, elapsedTime, remainingTime, total, sent, printStatus },
-        connectionType, workflowState
+        gcodePrintingInfo: { progress, elapsedTime, remainingTime, total, sent, printStatus }
     } = useSelector(state => state.machine);
     const gcodeFile = useSelector(state => state.workspace.gcodeFile);
     const fileName = gcodeFile?.renderGcodeFileName ?? gcodeFile?.name;
@@ -83,13 +83,15 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
         widgetActions.setTitle(i18n._('key-Workspace/Workprogress-Working'));
     }, []);
     useEffect(() => {
-        const newCurrent = connectionType === 'wifi' ? workflowStatus : workflowState;
-        setCurrentWorkflowStatus(newCurrent);
-    }, [workflowState, workflowStatus, connectionType]);
+        // const newCurrent = connectionType === 'wifi' ? workflowStatus : workflowState;
+        setCurrentWorkflowStatus(workflowStatus);
+    }, [workflowStatus]);
     useEffect(() => {
         if (
             isConnected
-            && (currentWorkflowStatus === 'running' || currentWorkflowStatus === 'paused' || (total !== 0 && sent >= total))
+            && (currentWorkflowStatus === WORKFLOW_STATUS_RUNNING || currentWorkflowStatus === WORKFLOW_STATUS_PAUSED
+                || currentWorkflowStatus === WORKFLOW_STATUS_PAUSING || currentWorkflowStatus === WORKFLOW_STATUS_STOPPING
+                || currentWorkflowStatus === WROKFLOW_STATUS_RESUMING || (total !== 0 && sent >= total))
         ) {
             widgetActions.setDisplay(true);
             setIsPausing(false);

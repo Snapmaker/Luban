@@ -14,4 +14,5 @@ declare module 'three' {
         public children: MyObject3D[]
         constructor();
     }
+
 }

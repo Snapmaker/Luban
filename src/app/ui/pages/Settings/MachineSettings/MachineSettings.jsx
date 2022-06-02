@@ -23,7 +23,8 @@ import {
     LEVEL_TWO_POWER_LASER_FOR_SM2,
     STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
     STANDARD_CNC_TOOLHEAD_FOR_SM2,
-    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
+    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+    LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2
 } from '../../../../constants';
 import UniApi from '../../../../lib/uni-api';
 
@@ -82,6 +83,9 @@ const cncToolHeadOption = [
     {
         value: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value,
         label: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].label
+    }, {
+        value: MACHINE_TOOL_HEADS[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2].value,
+        label: MACHINE_TOOL_HEADS[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2].label
     }
 ];
 
@@ -242,6 +246,9 @@ function MachineSettings() {
                 case 'laser':
                     setLaserToolheadSelected(nextValue);
                     break;
+                case 'cnc':
+                    setCncToolheadSelected(nextValue);
+                    break;
                 default:
                     break;
             }
@@ -362,7 +369,7 @@ function MachineSettings() {
                         }))}
                         onChange={e => actions.handleToolheadChange(e, 'cnc')}
                         size="large"
-                        disabled={cncOptions.length <= 1}
+                        disabled={state.series !== MACHINE_SERIES.A400.value}
                     />
                 </div>
             </div>

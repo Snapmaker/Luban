@@ -39,6 +39,7 @@ class SerialPortClient {
 
         // Serial Port events
         'connection:connected': [],
+        'connection:connecting': [],
         'serialport:emergencyStop': [],
         'serialport:read': [],
         'serialport:write': [],
@@ -56,6 +57,7 @@ class SerialPortClient {
         'Marlin:settings': [],
         'machine:settings': [],
         'transfer:hex': [],
+        'move:status': [],
 
         'slice:started': [],
         'slice:completed': [],

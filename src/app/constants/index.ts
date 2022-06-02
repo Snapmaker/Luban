@@ -31,6 +31,9 @@ export const CONNECTION_ENCLOSURE_FAN = 'connection:setEnclosureFan';
 export const CONNECTION_DOOR_DETECTION = 'connection:setDoorDetection';
 export const CONNECTION_FILTER_SWITCH = 'connection:setFilterSwitch';
 export const CONNECTION_FILTER_WORKSPEED = 'connection:setFilterWorkSpeed';
+export const CONNECTION_GO_HOME = 'connection:goHome';
+export const CONNECTION_COORDINATE_MOVE = 'connection:coordinateMove';
+export const CONNECTION_SET_WORK_ORIGIN = 'connection:setWorkOrigin';
 
 export const SVG_MOVE_MINI_DISTANCE = 1e-4;
 export const MINIMUM_WIDTH_AND_HEIGHT = 0.01;
@@ -46,8 +49,37 @@ export const WORKFLOW_STATE_IDLE = 'idle';
 // Workflow status
 export const WORKFLOW_STATUS_UNKNOWN = 'unknown';
 export const WORKFLOW_STATUS_IDLE = 'idle';
+export const WORKFLOW_STATUS_STARTING = 'starting';
 export const WORKFLOW_STATUS_RUNNING = 'running';
+export const WORKFLOW_STATUS_PAUSING = 'pausing';
 export const WORKFLOW_STATUS_PAUSED = 'paused';
+export const WORKFLOW_STATUS_STOPPING = 'stopping';
+export const WORKFLOW_STATUS_STOPPED = 'stopped';
+export const WORKFLOW_STATUS_FINISHING = 'finishing';
+export const WORKFLOW_STATUS_COMPLETED = 'completed';
+export const WORKFLOW_STATUS_RECOVERING = 'recovering';
+export const WROKFLOW_STATUS_RESUMING = 'resuming';
+
+export const WORKFLOW_STATUS_MAP = {
+    '0': WORKFLOW_STATE_IDLE,
+    '1': WORKFLOW_STATUS_STARTING,
+    '2': WORKFLOW_STATUS_RUNNING,
+    '3': WORKFLOW_STATUS_PAUSING,
+    '4': WORKFLOW_STATUS_PAUSED,
+    '5': WORKFLOW_STATUS_STOPPING,
+    '6': WORKFLOW_STATUS_STOPPED,
+    '7': WORKFLOW_STATUS_FINISHING,
+    '8': WORKFLOW_STATUS_COMPLETED,
+    '9': WORKFLOW_STATUS_RECOVERING,
+    '10': WROKFLOW_STATUS_RESUMING
+};
+
+export const COORDINATE_AXIS = {
+    'X': 0,
+    'Y': 1,
+    'Z': 2,
+    'B': 4
+};
 
 // Workflow State
 
@@ -1076,9 +1108,9 @@ export const MACHINE_SERIES = {
         label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A400',
         setting: {
             size: {
-                x: 400,
-                y: 400,
-                z: 400
+                x: 410,
+                y: 410,
+                z: 420
             },
             laserSize: {
                 x: 410,
@@ -1116,6 +1148,7 @@ export const LEVEL_ONE_POWER_LASER_FOR_SM2 = 'levelOneLaserToolheadForSM2';
 export const LEVEL_TWO_POWER_LASER_FOR_SM2 = 'levelTwoLaserToolheadForSM2';
 export const STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL = 'standardCNCToolheadForOriginal';
 export const STANDARD_CNC_TOOLHEAD_FOR_SM2 = 'standardCNCToolheadForSM2';
+export const LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2 = 'levelTwoCNCToolheadForSM2';
 
 export const DUAL_EXTRUDER_LIMIT_WIDTH_L = 20;
 export const DUAL_EXTRUDER_LIMIT_WIDTH_R = 20;
@@ -1274,6 +1307,18 @@ export const MACHINE_TOOL_HEADS = {
         pathname: 'standard',
         label: 'key-App/Settings/MachineSettings-Standard CNC',
         // mock offset data
+        offset: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    },
+    [LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2]: {
+        platform: [MACHINE_SERIES.A400.value],
+        value: LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
+        key: 'levelTwoCNCToolheadForSM2',
+        pathname: 'standard', // if have high power cnc profiles, should be update
+        label: 'key-App/Settings/MachineSettings-High CNC',
         offset: {
             x: 0,
             y: 0,
@@ -1507,9 +1552,9 @@ export const INITIAL_TOOL_HEAD_FOR_SM2 = {
 export const LASER_10W_TAKE_PHOTO_POSITION = {
     A400: {
         // TODO: need to test
-        x: 290,
-        y: 210,
-        z: 350
+        x: 265,
+        y: 205,
+        z: 330
     },
     A350: {
         x: 232,
@@ -1544,4 +1589,27 @@ export const longLangWithType = {
     fr: [HEAD_LASER, HEAD_CNC],
     it: [HEAD_LASER, HEAD_CNC],
     ru: [HEAD_PRINTING, HEAD_LASER, HEAD_CNC]
+};
+
+export const SERIAL_MAP_SACP = {
+    '0': 'A150',
+    '1': 'A250',
+    '2': 'A350',
+    '3': 'A400'
+};
+
+export const PRINTING_MODULE = [0, 13];
+export const LASER_MODULE = [2, 14];
+export const CNC_MODULE = [1, 15];
+export const EMERGENCY_STOP_BUTTON = [8, 517];
+export const ENCLOSURE_MODULES = [5, 16];
+export const ROTARY_MODULES = [6];
+export const AIR_PURIFIER_MODULES = [7];
+export const MODULEID_TOOLHEAD_MAP = {
+    '0': SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+    '1': STANDARD_CNC_TOOLHEAD_FOR_SM2,
+    '2': LEVEL_ONE_POWER_LASER_FOR_SM2,
+    '13': DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+    '14': LEVEL_TWO_POWER_LASER_FOR_SM2,
+    '15': LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2
 };

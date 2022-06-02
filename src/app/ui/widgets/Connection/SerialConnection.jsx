@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import classNames from 'classnames';
-import { map } from 'lodash';
+import { map, isObject } from 'lodash';
 import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
 import { Button } from '../../components/Buttons';
@@ -15,7 +15,7 @@ import {
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATE_PAUSED,
     WORKFLOW_STATE_RUNNING, LEVEL_TWO_POWER_LASER_FOR_SM2,
-    HEAD_LASER, HEAD_CNC, HEAD_PRINTING
+    HEAD_LASER, HEAD_CNC, HEAD_PRINTING, DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2
 } from '../../../constants';
 import { actions as machineActions } from '../../../flux/machine';
 import styles from './index.styl';
@@ -26,7 +26,7 @@ function SerialConnection() {
         isOpen, enclosureOnline, isConnected, server, servers,
         // connectionTimeout, airPurifier, airPurifierHasPower,
         airPurifier, airPurifierHasPower,
-        heatedBedTemperature, laserCamera, workflowState, emergencyStopOnline
+        heatedBedTemperature, laserCamera, workflowStatus, emergencyStopOnline, connectLoading
     } = useSelector(state => state.machine);
     const {
         toolHead, headType, series: seriesInfo
@@ -38,13 +38,19 @@ function SerialConnection() {
     // UI state
     const [loadingPorts, setLoadingPorts] = useState(false);
     const [moduleStatusList, setModuleStatusList] = useState(null);
+    const [loading, setConnectLoading] = useState(connectLoading);
     const dispatch = useDispatch();
 
+    useEffect(() => {
+        setConnectLoading(connectLoading);
+    }, [connectLoading]);
     function onPortReady(data) {
         const { err: _err } = data;
         if (_err) {
             setErr(i18n._('key-workspace_open_port-The machine is not ready'));
             return;
+        } else {
+            setErr(null);
         }
 
         log.debug(`Connected to ${portState}.`);
@@ -64,7 +70,7 @@ function SerialConnection() {
 
     function openPort() {
         server.openServer(({ msg }) => {
-            if (msg && msg !== 'inuse') {
+            if (!isObject(msg) && msg !== 'inuse') {
                 setErr(i18n._('key-workspace_open_port-Can not open this port'));
                 log.error('Error opening serial port', msg);
                 return;
@@ -89,9 +95,12 @@ function SerialConnection() {
             listPorts();
         },
         onOpenPort: () => {
+            // setConnectLoading(true);
+            // dispatch(machineActions.updateMachineState)
             openPort();
         },
         onClosePort: () => {
+            // setConnectLoading(true);
             closePort();
         }
 
@@ -145,17 +154,33 @@ function SerialConnection() {
                     status: true
                 });
             } else if (headType === HEAD_PRINTING) {
-                newModuleStatusList.push({
-                    key: 'headtype',
-                    moduleName: i18n._('key-Workspace/Connection-3dp'),
-                    status: true
-                });
+                if (toolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+                    newModuleStatusList.push({
+                        key: 'headtype',
+                        moduleName: i18n._('key-App/Settings/MachineSettings-Dual Extruder Toolhead'),
+                        status: true
+                    });
+                } else {
+                    newModuleStatusList.push({
+                        key: 'headtype',
+                        moduleName: i18n._('key-App/Settings/MachineSettings-Single Extruder Toolhead'),
+                        status: true
+                    });
+                }
             } else if (headType === HEAD_CNC) {
-                newModuleStatusList.push({
-                    key: 'headtype',
-                    moduleName: i18n._('key-Workspace/Connection-CNC'),
-                    status: true
-                });
+                if (toolHead === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2) {
+                    newModuleStatusList.push({
+                        key: 'headtype',
+                        moduleName: i18n._('key-Workspace/High CNC'),
+                        status: true
+                    });
+                } else {
+                    newModuleStatusList.push({
+                        key: 'headtype',
+                        moduleName: i18n._('key-Workspace/Connection-CNC'),
+                        status: true
+                    });
+                }
             }
             headType === HEAD_PRINTING && newModuleStatusList.push({
                 key: 'heatedBed',
@@ -188,7 +213,7 @@ function SerialConnection() {
         }
         setModuleStatusList(newModuleStatusList);
     }, [
-        headType, airPurifier, airPurifierHasPower,
+        headType, airPurifier, airPurifierHasPower, toolHead,
         enclosureOnline, heatedBedTemperature > 0, laserCamera, emergencyStopOnline, seriesInfo
     ]);
 
@@ -237,11 +262,11 @@ function SerialConnection() {
                             {i18n._(MACHINE_SERIES[seriesInfo.toUpperCase()].label)}
                         </span>
                         <span className={styles['connection-state-icon']}>
-                            {workflowState === WORKFLOW_STATE_IDLE
+                            {workflowStatus === WORKFLOW_STATE_IDLE
                             && <i className="sm-icon-14 sm-icon-idle" />}
-                            {workflowState === WORKFLOW_STATE_PAUSED
+                            {workflowStatus === WORKFLOW_STATE_PAUSED
                             && <i className="sm-icon-14 sm-icon-paused" />}
-                            {workflowState === WORKFLOW_STATE_RUNNING
+                            {workflowStatus === WORKFLOW_STATE_RUNNING
                             && <i className="sm-icon-14 sm-icon-running" />}
                         </span>
                     </div>
@@ -263,8 +288,9 @@ function SerialConnection() {
                         priority="level-two"
                         disabled={!canOpenPort}
                         onClick={actions.onOpenPort}
+                        loading={loading}
                     >
-                        {i18n._('key-Workspace/Connection-Connect')}
+                        {!loading && i18n._('key-Workspace/Connection-Connect')}
                     </Button>
                 )}
                 {isConnected && (
@@ -273,8 +299,9 @@ function SerialConnection() {
                         type="default"
                         priority="level-two"
                         onClick={actions.onClosePort}
+                        loading={loading}
                     >
-                        {i18n._('key-Workspace/Connection-Disconnect')}
+                        {!loading && i18n._('key-Workspace/Connection-Disconnect')}
                     </Button>
                 )}
                 {err && (

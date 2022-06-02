@@ -19,10 +19,11 @@ import { actions as machineActions } from '../../../flux/machine';
 import { actions as widgetActions } from '../../../flux/widget';
 import {
     HEAD_CNC,
+    HEAD_PRINTING,
     // Units
     IMPERIAL_UNITS,
     METRIC_UNITS, WORKFLOW_STATUS_IDLE,
-    WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_UNKNOWN
+    WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_UNKNOWN, WORKFLOW_STATUS_STOPPED
 } from '../../../constants';
 import {
     DISTANCE_MIN,
@@ -76,12 +77,12 @@ const normalizeToRange = (n, min, max) => {
 function Control({ widgetId, widgetActions: _widgetActions }) {
     const machine = useSelector(state => state.machine);
     const { widgets } = useSelector(state => state.widget);
-    const { boundingBox } = useSelector(state => state.workspace);
+    const { boundingBox, headType } = useSelector(state => state.workspace);
     const workPosition = useSelector(state => state.machine.workPosition);
     const originOffset = useSelector(state => state.machine.originOffset) || {};
     const { jog, axes, dataSource } = widgets[widgetId];
     const { speed = 1500, keypad, selectedDistance, customDistance, selectedAngle, customAngle } = jog;
-    const { headType, isConnected, workflowState, workflowStatus, homingModal } = machine;
+    const { isConnected, workflowStatus, homingModal, isMoving, server, homingModel } = machine;
     const dispatch = useDispatch();
     function getInitialState() {
         const jogSpeed = speed;
@@ -183,19 +184,24 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
 
         // actions
         jog: (params = {}) => {
+            const sArr = [];
             const s = map(params, (value, axis) => {
                 const axisMoved = axis.toUpperCase();
                 let signNumber = 1;
-                if (axisMoved === 'Y' && workPosition.isFourAxis) {
+                if (axisMoved === 'Y' && state.workPosition.isFourAxis) {
                     signNumber = -1;
                 } else {
                     signNumber = 1;
                 }
+                sArr.push({
+                    axis: axisMoved,
+                    distance: parseFloat(state.workPosition[axisMoved.toLowerCase()]) + (signNumber * value)
+                });
                 return (`${axisMoved}${signNumber * value}`);
             }).join(' ');
-            if (s) {
+            if (s || !!sArr.length) {
                 const gcode = ['G91', `G0 ${s} F${state.jogSpeed}`, 'G90'];
-                actions.executeGcode(gcode.join('\n'));
+                actions.coordinateMove(gcode.join('\n'), sArr, state.jogSpeed);
             }
         },
         selectAngle: (angle = '') => {
@@ -206,13 +212,34 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
         },
 
         move: (params = {}) => {
-            const s = map(params, (value, axis) => (`${axis.toUpperCase()}${value}`)).join(' ');
+            const sArr = [];
+            const s = map(params, (value, axis) => {
+                sArr.push({
+                    axis: axis.toUpperCase(),
+                    distance: value
+                });
+                return `${axis.toUpperCase()}${value}`;
+            }).join(' ');
             if (s) {
-                actions.executeGcode(`G0 ${s} F${state.jogSpeed}`);
+                const gcode = `G0 ${s} F${state.jogSpeed}`;
+                // actions.executeGcode(`G0 ${s} F${state.jogSpeed}`);
+                actions.coordinateMove(gcode, sArr, state.jogSpeed);
             }
         },
         executeGcode: (gcode) => {
             dispatch(machineActions.executeGcode(gcode));
+        },
+        coordinateMove: (gcode, moveOrders, jogSpeed) => {
+            server.coordinateMove(moveOrders, gcode, jogSpeed, headType, homingModel);
+        },
+        setWorkOrigin: () => {
+            if (headType === HEAD_PRINTING) return;
+            const xPosition = parseFloat(workPosition.x);
+            const yPosition = parseFloat(workPosition.y);
+            const zPosition = parseFloat(workPosition.z);
+            const bPosition = workPosition.isFourAxis ? parseFloat(workPosition.b) : null;
+            // dispatch(machineActions.setWorkOrigin(xPosition, yPosition, zPosition, bPosition));
+            server.setWorkOrigin(xPosition, yPosition, zPosition, bPosition);
         },
         toggleKeypadJogging: () => {
             setState(stateBefore => ({
@@ -342,10 +369,11 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
         // This prevents accidental movement while sending G-code commands.
         setState({
             ...state,
-            keypadJogging: (workflowState === WORKFLOW_STATE_IDLE) ? keypadJogging : false,
-            selectedAxis: (workflowState === WORKFLOW_STATE_IDLE) ? selectedAxis : ''
+            keypadJogging: (workflowStatus === WORKFLOW_STATE_IDLE) ? keypadJogging : false,
+            selectedAxis: (workflowStatus === WORKFLOW_STATE_IDLE) ? selectedAxis : '',
+            canClick: (workflowStatus === WORKFLOW_STATE_IDLE || workflowStatus === WORKFLOW_STATUS_STOPPED) && !isMoving
         });
-    }, [workflowState]);
+    }, [workflowStatus, isMoving]);
 
     useEffect(() => {
         setState({
@@ -431,9 +459,8 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
     }, [homingModal, isConnected]);
 
     function canClick() {
-        return (isConnected
-            && includes([WORKFLOW_STATE_IDLE], workflowState)
-            && includes([WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_UNKNOWN], workflowStatus));
+        return ((isConnected
+            && includes([WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_UNKNOWN], workflowStatus)) && !isMoving) || !isConnected;
     }
 
     const _canClick = canClick();
@@ -470,6 +497,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
                     level="level-three"
                     width="96px"
                     disabled={!_canClick}
+                    // disabled={false}
                     onClick={() => dispatch(machineActions.executeGcodeAutoHome(true))}
                 >
                     {i18n._('key-Workspace/Console-Home')}
@@ -485,6 +513,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
                         options={state.jogSpeedOptions}
                         onNewOptionClick={actions.onCreateJogSpeedOption}
                         searchable
+                        disabled={!_canClick}
                         value={state.jogSpeed}
                         onChange={actions.onChangeJogSpeed}
                     />

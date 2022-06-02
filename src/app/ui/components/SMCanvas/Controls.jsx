@@ -660,7 +660,7 @@ class Controls extends EventEmitter {
             this.dollyOut();
         }
 
-        this.updateCamera(true);
+        this.updateCamera();
     };
 
     setSelectableObjects(objects) {
@@ -696,6 +696,8 @@ class Controls extends EventEmitter {
 
     updateCamera(shouldUpdateTarget = false) {
         this.offset.copy(this.camera.position).sub(this.target);
+        // const vector = new THREE.Vector3(0, 0, 0);
+        // this.offset.copy(this.camera.position).sub(vector);
 
         const spherialOffset = new THREE.Vector3();
 

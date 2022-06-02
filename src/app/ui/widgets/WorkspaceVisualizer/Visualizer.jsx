@@ -24,7 +24,6 @@ import {
     WORKFLOW_STATUS_UNKNOWN,
     IMAGE_WIFI_ERROR,
     IMAGE_WIFI_WARNING,
-    CONNECTION_TYPE_WIFI,
     HEAD_CNC,
     HEAD_PRINTING,
     HEAD_LASER
@@ -267,7 +266,7 @@ class Visualizer extends PureComponent {
         },
         handleRun: () => {
             const { server,
-                workflowStatus, connectionType,
+                workflowStatus,
                 headType, isLaserPrintAutoMode,
                 materialThickness,
                 isRotate,
@@ -279,9 +278,10 @@ class Visualizer extends PureComponent {
                 size,
                 workPosition,
                 originOffset } = this.props;
-            const { workflowState } = this.state;
-            if ((connectionType === CONNECTION_TYPE_WIFI && workflowStatus === WORKFLOW_STATUS_IDLE)
-                || (connectionType === CONNECTION_TYPE_SERIAL && workflowState === WORKFLOW_STATE_IDLE)) {
+            // const { workflowState } = this.state;
+            // if ((connectionType === CONNECTION_TYPE_WIFI && workflowStatus === WORKFLOW_STATUS_IDLE)
+            //     || (connectionType === CONNECTION_TYPE_SERIAL && workflowState === WORKFLOW_STATE_IDLE)) {
+            if (workflowStatus === WORKFLOW_STATUS_IDLE) {
                 server.startServerGcode({
                     headType,
                     workflowStatus,
@@ -297,8 +297,8 @@ class Visualizer extends PureComponent {
                     size,
                     workPosition,
                     originOffset,
-                    // for serialport indiviual
-                    workflowState,
+                    // // for serialport indiviual
+                    // workflowStatus,
                 }, (res) => {
                     if (res) {
                         const { msg, code } = res;
@@ -328,15 +328,14 @@ class Visualizer extends PureComponent {
                 });
             }
 
-            if ((connectionType === CONNECTION_TYPE_WIFI && workflowStatus === WORKFLOW_STATUS_PAUSED)
-                || (connectionType === CONNECTION_TYPE_SERIAL && workflowState === WORKFLOW_STATE_PAUSED)) {
+            if (workflowStatus === WORKFLOW_STATUS_PAUSED) {
                 server.resumeServerGcode({
                     headType: this.props.headType,
                     pause3dpStatus: this.props.pause3dpStatus,
                     pauseStatus: this.pauseStatus
                 }, ({ msg, code }) => {
                     if (msg) {
-                        if (code === 202) {
+                        if (code === 202 || code === 222) {
                             modalSmallHOC({
                                 title: i18n._('key-Workspace/Page-Filament Runout Recovery'),
                                 text: i18n._('key-Workspace/Page-Filament has run out. Please load new filament to continue printing.'),
@@ -402,15 +401,14 @@ class Visualizer extends PureComponent {
         },
         handlePause: () => {
             const { workflowStatus, connectionType, server } = this.props;
-            const { workflowState } = this.state;
+            // const { workflowState } = this.state;
             if (this.actions.is3DP()) {
                 this.props.updatePause3dpStatus({
                     pausing: true,
                     pos: null
                 });
             }
-            if (connectionType === CONNECTION_TYPE_WIFI && workflowStatus === WORKFLOW_STATUS_RUNNING
-                || connectionType === CONNECTION_TYPE_SERIAL && workflowState === WORKFLOW_STATE_RUNNING) {
+            if (workflowStatus === WORKFLOW_STATUS_RUNNING) {
                 server.pauseServerGcode(() => {
                     if (connectionType === CONNECTION_TYPE_SERIAL) {
                         this.actions.tryPause();
@@ -419,7 +417,7 @@ class Visualizer extends PureComponent {
             }
         },
         handleStop: () => {
-            const { workflowState } = this.state;
+            // const { workflowState } = this.state;
             const { workflowStatus, server, connectionType } = this.props;
             if (this.actions.is3DP()) {
                 this.props.updatePause3dpStatus({
@@ -427,8 +425,7 @@ class Visualizer extends PureComponent {
                     pos: null
                 });
             }
-            if (connectionType === CONNECTION_TYPE_WIFI && workflowStatus !== WORKFLOW_STATUS_IDLE
-                || connectionType === CONNECTION_TYPE_SERIAL && workflowState !== WORKFLOW_STATE_IDLE) {
+            if (workflowStatus !== WORKFLOW_STATE_IDLE) {
                 server.stopServerGcode(() => {
                     if (connectionType === CONNECTION_TYPE_SERIAL) {
                         this.actions.tryPause();

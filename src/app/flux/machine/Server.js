@@ -21,6 +21,9 @@ import {
     CONNECTION_STOP_GCODE,
     CONNECTION_TYPE_SERIAL,
     CONNECTION_TYPE_WIFI,
+    CONNECTION_GO_HOME,
+    CONNECTION_COORDINATE_MOVE,
+    CONNECTION_SET_WORK_ORIGIN
 } from '../../constants';
 import { controller } from '../../lib/controller';
 import { actions as workspaceActions } from '../workspace';
@@ -83,7 +86,7 @@ export class Server extends events.EventEmitter {
                     controller.emitEvent(CONNECTION_HEARTBEAT);
                     callback && callback({ msg, text });
                 } else {
-                    dispatch(machineActions.resetMachineState());
+                    dispatch(machineActions.resetMachineState(CONNECTION_TYPE_SERIAL));
                     machineStore.set('port', this.port);
                 }
             });
@@ -98,6 +101,27 @@ export class Server extends events.EventEmitter {
                     toolHead: ''
                 }));
             });
+    }
+
+    coordinateMove(moveOrders, gcode, jogSpeed, headType, homingModel) {
+        controller.emitEvent(CONNECTION_COORDINATE_MOVE, { moveOrders, gcode, jogSpeed, headType }, (gcodeArray) => {
+            if (gcodeArray) {
+                if (homingModel && gcode === 'G28') {
+                    dispatch(baseActions.updateState({
+                        homingModel: false
+                    }));
+                }
+                dispatch(machineActions.addConsoleLogs(gcodeArray));
+            }
+        });
+    }
+
+    setWorkOrigin(xPosition, yPosition, zPosition, bPosition) {
+        controller.emitEvent(CONNECTION_SET_WORK_ORIGIN, { xPosition, yPosition, zPosition, bPosition }, (gcodeArray) => {
+            if (gcodeArray) {
+                dispatch(machineActions.addConsoleLogs(gcodeArray));
+            }
+        });
     }
 
     executeGcode(gcode, context, cmd) {
@@ -134,7 +158,7 @@ export class Server extends events.EventEmitter {
     }
 
     resumeServerGcode(args, callback) {
-        controller.emitEvent(CONNECTION_RESUME_GCODE, args)
+        controller.emitEvent(CONNECTION_RESUME_GCODE, args, callback)
             .once(CONNECTION_RESUME_GCODE, (options) => {
                 callback && callback(options);
             });
@@ -148,7 +172,7 @@ export class Server extends events.EventEmitter {
     }
 
     stopServerGcode(callback) {
-        controller.emitEvent(CONNECTION_STOP_GCODE)
+        controller.emitEvent(CONNECTION_STOP_GCODE, { eventName: CONNECTION_STOP_GCODE })
             .once(CONNECTION_STOP_GCODE, (options) => {
                 callback && callback();
                 const { msg, code, data } = options;
@@ -157,8 +181,16 @@ export class Server extends events.EventEmitter {
                     return;
                 }
                 dispatch(baseActions.updateState({
-                    workflowStatus: WORKFLOW_STATUS_IDLE
+                    workflowStatus: WORKFLOW_STATUS_IDLE,
+                    isSendedOnWifi: true
                 }));
+            });
+    }
+
+    goHome(hasHomingModel, callback) {
+        controller.emitEvent(CONNECTION_GO_HOME, { hasHomingModel })
+            .once(CONNECTION_GO_HOME, (options) => {
+                callback && callback(options);
             });
     }
 
@@ -215,7 +247,6 @@ export class Server extends events.EventEmitter {
         isNotNull(data.airPurifierFilterHealth) && (this.state.airPurifierFilterHealth = data.airPurifierFilterHealth);
         isNotNull(data.moduleList) && (this.state.moduleStatusList = data.moduleList);
         // this._updateGcodePrintingInfo(data);
-
         if (this.waitConfirm) {
             this.waitConfirm = false;
             this.isConnected = true;

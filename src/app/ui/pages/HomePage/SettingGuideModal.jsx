@@ -17,7 +17,8 @@ import { MACHINE_SERIES,
     LEVEL_ONE_POWER_LASER_FOR_SM2,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
     STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
-    STANDARD_CNC_TOOLHEAD_FOR_SM2
+    STANDARD_CNC_TOOLHEAD_FOR_SM2,
+    LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2
 } from '../../../constants';
 import { actions as machineActions } from '../../../flux/machine';
 import { machineStore } from '../../../store/local-storage';
@@ -140,6 +141,10 @@ const cncToolHeadOption = [
     {
         value: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value,
         label: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].label
+    },
+    {
+        value: MACHINE_TOOL_HEADS[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2].value,
+        label: MACHINE_TOOL_HEADS[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2].label
     }
 ];
 const SettingGuideModal = (props) => {
@@ -181,7 +186,7 @@ const SettingGuideModal = (props) => {
     };
     const handleSubmit = () => {
         // if update guide content, change the version
-        machineStore.set('settings.guideVersion', 2);
+        machineStore.set('settings.guideVersion', 3);
         machineStore.set('settings.finishGuide', true);
         i18next.changeLanguage(lang, () => {
             const uri = new Uri(window.location.search);
@@ -209,7 +214,7 @@ const SettingGuideModal = (props) => {
         };
         dispatch(machineActions.updateMachineSeries('A350'));
         dispatch(machineActions.updateMachineToolHead(toolHead, 'A350'));
-        machineStore.set('settings.guideVersion', 2);
+        machineStore.set('settings.guideVersion', 3);
         machineStore.set('settings.finishGuide', true);
         i18next.changeLanguage(props.initLanguage, () => {
             const uri = new Uri(window.location.search);
@@ -224,11 +229,11 @@ const SettingGuideModal = (props) => {
             setZAxis(false);
         }
         if (type === 'up') {
-            newMachineSeries = (machineSeries + 1) % 4;
+            newMachineSeries = (machineSeries + 1) % 5;
             setMachineSeries(newMachineSeries);
         } else if (type === 'down') {
             if (newMachineSeries <= 0) {
-                newMachineSeries = 3;
+                newMachineSeries = 4;
             } else {
                 newMachineSeries -= 1;
             }
@@ -243,6 +248,9 @@ const SettingGuideModal = (props) => {
                 break;
             case 'laser':
                 setLaserToolheadSelected(nextValue);
+                break;
+            case 'cnc':
+                setCncToolheadSelected(nextValue);
                 break;
             default:
                 break;
@@ -370,7 +378,7 @@ const SettingGuideModal = (props) => {
                                                     }))}
                                                     onChange={e => handleToolheadChange(e, 'cnc')}
                                                     size="large"
-                                                    disabled
+                                                    disabled={machineSeries !== 4}
                                                 />
                                             </div>
                                         </div>
