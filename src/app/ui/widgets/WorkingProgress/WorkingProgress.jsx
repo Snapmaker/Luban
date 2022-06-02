@@ -30,13 +30,13 @@ const StopConfirmModal = (props) => {
             onClose={() => { props.onClose(); }}
         >
             <Modal.Header>
-                停止作业
-                {/* {i18n._(headerTextKey)} */}
+                {/* 停止作业 */}
+                {i18n._('key-Workspace/Workprogress-StopJobConfirmModal title')}
             </Modal.Header>
             <Modal.Body>
                 {props.children}
-                你确定要停止打印作业吗？
-                {/* {i18n._(bodyTextKey)} */}
+                {/* 你确定要停止打印作业吗？ */}
+                {i18n._('key-Workspace/Workprogress-StopJobConfirmModal body')}
             </Modal.Body>
             <Modal.Footer>
                 <Button
@@ -46,7 +46,7 @@ const StopConfirmModal = (props) => {
                     width="96px"
                     onClick={() => { props.onClose(); }}
                 >
-                    <div className="align-c">Cancel</div>
+                    <div className="align-c">{i18n._('key-Workspace/Workprogress-StopJobConfirmModal Cancel')}</div>
                 </Button>
                 <Button
                     priority="level-two"
@@ -54,7 +54,7 @@ const StopConfirmModal = (props) => {
                     width="96px"
                     onClick={() => { props.onConfirm(); props.onClose(); }}
                 >
-                    <div className="align-c">Yes</div>
+                    <div className="align-c">{i18n._('key-Workspace/Workprogress-StopJobConfirmModal Yes')}</div>
                 </Button>
             </Modal.Footer>
         </Modal>

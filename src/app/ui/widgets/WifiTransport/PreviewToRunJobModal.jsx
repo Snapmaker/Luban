@@ -5,16 +5,16 @@ import { Button } from '../../components/Buttons';
 import i18n from '../../../lib/i18n';
 
 const PreviewToRunJobModal = (props) => {
-    const headerTextKey = props.isMismatchHead ? 'key-Workspace/RunJobWarningModal-Mismatch header' : 'key-Workspace/RunJobWarningModal-Unknown header';
+    const headerTextKey = props.isMismatchHead ? i18n._('key-Workspace/RunJobWarningModal-Mismatch header') : i18n._('key-Workspace/RunJobWarningModal-Unknown header');
     const [bodyTextKey, setBodyTextKey] = useState('--');
 
     useEffect(() => {
         if (props.isUnKownHead) {
-            setBodyTextKey('key-Workspace/RunJobWarningModal-Unknown toolhead');
+            setBodyTextKey(i18n._('key-Workspace/RunJobWarningModal-Unknown toolhead', { gcodeType: props.gcodeType, headType: props.headType }));
         } else if (props.isMismatchHead) {
-            setBodyTextKey('key-Workspace/RunJobWarningModal-Mismatch body');
+            setBodyTextKey(i18n._('key-Workspace/RunJobWarningModal-Mismatch body', { gcodeType: props.gcodeType, headType: props.headType }));
         } else {
-            setBodyTextKey('key-Workspace/RunJobWarningModal-Unknown body');
+            setBodyTextKey(i18n._('key-Workspace/RunJobWarningModal-Unknown body', { gcodeType: props.gcodeType, headType: props.headType }));
         }
     }, [props.isUnKownHead, props.isMismatchHead]);
 
@@ -26,10 +26,10 @@ const PreviewToRunJobModal = (props) => {
             onClose={() => { props.onClose(); }}
         >
             <Modal.Header>
-                {i18n._(headerTextKey)}
+                {headerTextKey}
             </Modal.Header>
             <Modal.Body>
-                {i18n._(bodyTextKey, { gcodeType: props.gcodeType, headType: props.headType })}
+                {bodyTextKey}
             </Modal.Body>
             <Modal.Footer>
                 <Button

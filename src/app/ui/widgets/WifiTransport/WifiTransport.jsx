@@ -323,7 +323,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                 setShowPreviewToRunJobModal(true);
                 return;
             }
-            actions.startPrint();
+            await actions.startPrint();
         },
 
         loadGcodeToWorkspace: async () => {

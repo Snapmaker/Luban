@@ -282,10 +282,9 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
     }, [isConnected, port, server]);
 
     useEffect(() => {
-        const wifiWorking = workflowStatus === WORKFLOW_STATUS_RUNNING || workflowStatus === WORKFLOW_STATUS_PAUSED;
-        const serialWoking = workflowState === WORKFLOW_STATE_RUNNING || workflowState === WORKFLOW_STATE_PAUSED;
+        const isWorking = workflowStatus === WORKFLOW_STATUS_RUNNING || workflowStatus === WORKFLOW_STATUS_PAUSED || workflowStatus === WORKFLOW_STATUS_RUNNING;
 
-        if ((wifiWorking || serialWoking) && shouldHideConsole) {
+        if (isWorking && shouldHideConsole) {
             widgetActions.setDisplay(false);
         } else {
             widgetActions.setDisplay(true);
