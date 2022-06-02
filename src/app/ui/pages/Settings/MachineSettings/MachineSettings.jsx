@@ -247,7 +247,6 @@ function MachineSettings() {
                     setLaserToolheadSelected(nextValue);
                     break;
                 case 'cnc':
-                    console.log(nextValue);
                     setCncToolheadSelected(nextValue);
                     break;
                 default:

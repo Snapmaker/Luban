@@ -4,9 +4,7 @@ import path from 'path';
 import program from 'commander';
 import isElectron from 'is-electron';
 import pkg from './package.json';
-// import logger from './server/lib/logger';
 
-// const log = logger('init');
 const SERVER_DATA = 'serverData';
 // Defaults to 'production'
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
@@ -45,7 +43,6 @@ const launchServer = () => new Promise((resolve, reject) => {
 
     // Change working directory to 'server' before require('./server')
     process.chdir(path.resolve(__dirname, 'server'));
-    console.log('launchServer ===');
 
     require('./server').createServer({
         port: program.port,
@@ -58,8 +55,6 @@ const launchServer = () => new Promise((resolve, reject) => {
         controller: program.controller
     }, (err, data) => {
         if (err) {
-            // log.info(`err === ${err}`);
-            console.log('err======', err);
             reject(err);
             return;
         }

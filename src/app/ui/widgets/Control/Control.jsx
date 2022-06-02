@@ -82,7 +82,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
     const originOffset = useSelector(state => state.machine.originOffset) || {};
     const { jog, axes, dataSource } = widgets[widgetId];
     const { speed = 1500, keypad, selectedDistance, customDistance, selectedAngle, customAngle } = jog;
-    const { isConnected, workflowStatus, homingModal, isMoving } = machine;
+    const { isConnected, workflowStatus, homingModal, isMoving, server, homingModel } = machine;
     const dispatch = useDispatch();
     function getInitialState() {
         const jogSpeed = speed;
@@ -230,7 +230,8 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
             dispatch(machineActions.executeGcode(gcode));
         },
         coordinateMove: (gcode, moveOrders, jogSpeed) => {
-            dispatch(machineActions.coordinateMove(gcode, moveOrders, jogSpeed));
+            // dispatch(machineActions.coordinateMove(gcode, moveOrders, jogSpeed));
+            server.coordinateMove(moveOrders, gcode, jogSpeed, headType, homingModel);
         },
         setWorkOrigin: () => {
             if (headType === HEAD_PRINTING) return;
@@ -238,7 +239,8 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
             const yPosition = parseFloat(workPosition.y);
             const zPosition = parseFloat(workPosition.z);
             const bPosition = workPosition.isFourAxis ? parseFloat(workPosition.b) : null;
-            dispatch(machineActions.setWorkOrigin(xPosition, yPosition, zPosition, bPosition));
+            // dispatch(machineActions.setWorkOrigin(xPosition, yPosition, zPosition, bPosition));
+            server.setWorkOrigin(xPosition, yPosition, zPosition, bPosition);
         },
         toggleKeypadJogging: () => {
             setState(stateBefore => ({

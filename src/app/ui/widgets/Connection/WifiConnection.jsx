@@ -190,7 +190,7 @@ function WifiConnection() {
         },
         onCloseWifiConnectionMessage: () => {
             actions.hideWifiConnectionMessage();
-            server.closeServer();
+            // server.closeServer();
         },
 
         /**

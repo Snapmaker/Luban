@@ -20,8 +20,6 @@ import {
     STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
     CONNECTION_EXECUTE_GCODE,
     CONNECTION_GET_GCODEFILE,
-    CONNECTION_COORDINATE_MOVE,
-    CONNECTION_SET_WORK_ORIGIN,
     LEFT_EXTRUDER
 } from '../../constants';
 
@@ -994,41 +992,9 @@ export const actions = {
         );
     },
 
-    coordinateMove: (gcode, moveOrders, jogSpeed, context, cmd) => (dispatch, getState) => {
-        const { homingModal } = getState().machine;
-        const { headType } = getState().workspace;
-        controller.emitEvent(CONNECTION_COORDINATE_MOVE, { moveOrders, gcode, jogSpeed, headType, context, cmd }, (gcodeArray) => {
-            if (gcodeArray) {
-                if (homingModal && gcode === 'G28') {
-                    dispatch(baseActions.updateState({
-                        homingModal: false
-                    }));
-                }
-                dispatch(actions.addConsoleLogs(gcodeArray));
-            }
-        });
-    },
-
-    setWorkOrigin: (xPosition, yPosition, zPosition, bPosition) => (dispatch) => {
-        controller.emitEvent(CONNECTION_SET_WORK_ORIGIN, { xPosition, yPosition, zPosition, bPosition }, (gcodeArray) => {
-            if (gcodeArray) {
-                dispatch(actions.addConsoleLogs(gcodeArray));
-            }
-        });
-    },
 
     executeGcodeAutoHome: (hasHomingModel = false) => (dispatch, getState) => {
-        // const { series, headType } = getState().workspace;
-        // const { connectionType, server } = getState().machine;
         const { server } = getState().machine;
-        // dispatch(actions.executeGcode('G53'));
-        // if (homingModal && connectionType === CONNECTION_TYPE_WIFI) {
-        //     dispatch(baseActions.updateState({
-        //         homingModal
-        //     }));
-        // }
-        // dispatch(actions.executeGcode('G28'));
-        // dispatch(actions.executeGcodeG54(series, headType));
         server.goHome(hasHomingModel);
     },
 

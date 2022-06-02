@@ -91,28 +91,6 @@ class ConnectionManager {
                     this.socket.serialportOpen(socket, options);
                 }
             });
-            // if (sacp) {
-            // this.socket = ;
-            // try {
-            // log.debug('serialSacp');
-            // this.socket = socketSerialNew;
-            // this.protocol = 'SACP';
-            // // this.socket.checkProtocol(options);
-            // this.socket.connectionOpen(socket, options);
-            // } catch(err) {
-            //     log.debug(`serial connection err: ${err}`);
-            // }
-            // } else {
-            // this.socket = socketSerial;
-            // this.socket.serialportOpen(socket, options);
-            // }
-            // const serialport = new SerialPort(options.port, {
-            //     autoOpen: false,
-            //     baudRate: 115200
-            // });
-            // serialport.once('open', () => {
-            //     log.debug(`${options.port ?? this.availPorts[0].path} opened`);
-            // });
         }
         log.debug(`connectionOpen connectionType=${connectionType} this.socket=${this.socket}`);
     };
@@ -145,61 +123,37 @@ class ConnectionManager {
                 if (!hasData) {
                     console.log('timeout', hasData);
                     protocol = SACP_PROTOCOL;
-                    // callback && callback('SACP');
                     trySerialConnect?.close();
                 }
             }, 1000);
-            // trySerialConnect.setTimeout(1000);
-            // trySerialConnect.on('timeout', () => {
-            //     console.log('timeout');
-            //     trySerialConnect?.close();
-            //     trySerialConnect?.destroy();
-            //     // callback && callback('SACP');
-            // })
-            // console.log(trySerialConnect);
             trySerialConnect.on('data', (data) => {
                 hasData = true;
-                // console.log('data', data[0].toString(16), data[1].toString(16));
                 const machineData = data.toString();
                 if (data[0].toString(16) === 'aa' && data[1].toString(16) === '55') {
                     protocol = 'SACP';
                     trySerialConnect?.close();
                 }
-                // if (machineData.match(/Tool Head/g)) {
-                //     console.log('headType', machineData);
                 if (machineData.match(/SACP/g)) {
                     console.log('SACP', machineData);
                     protocol = 'SACP';
                     trySerialConnect?.close();
-                    // trySerialConnect?.destroy();
-                    // callback && callback('SACP');
                 }
                 if (machineData.match(/ok/g)) {
                     console.log('OK', machineData);
                     trySerialConnect?.close();
                 }
-                //  else {
-                //     protocol = 'HTTP';
-                //     trySerialConnect?.close();
-                //     // trySerialConnect?.destroy();
-                //     // callback && callback('HTTP');
-                // }
-                // }
                 return '';
             });
             trySerialConnect.on('close', () => {
-                console.log('close 1');
                 callback && callback(protocol);
             });
             trySerialConnect.on('error', (err) => {
                 console.log({ err });
             });
             trySerialConnect.once('open', () => {
-                console.log('open');
                 trySerialConnect.write('M1006\r\n');
             });
             trySerialConnect.open();
-            // return '';
         }
         return '';
     }

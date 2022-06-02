@@ -188,7 +188,6 @@ class MarlinReplyParserReleaseDate {
 
 class MarlinReplyParserToolHead {
     static parse(line) {
-        console.log({ line });
         const r = line.match(/^Tool Head: ([a-zA-Z0-9 ]+)$/);
         if (!r) {
             return null;

@@ -21,7 +21,9 @@ import {
     CONNECTION_STOP_GCODE,
     CONNECTION_TYPE_SERIAL,
     CONNECTION_TYPE_WIFI,
-    CONNECTION_GO_HOME
+    CONNECTION_GO_HOME,
+    CONNECTION_COORDINATE_MOVE,
+    CONNECTION_SET_WORK_ORIGIN
 } from '../../constants';
 import { controller } from '../../lib/controller';
 import { actions as workspaceActions } from '../workspace';
@@ -99,6 +101,27 @@ export class Server extends events.EventEmitter {
                     toolHead: ''
                 }));
             });
+    }
+
+    coordinateMove(moveOrders, gcode, jogSpeed, headType, homingModel) {
+        controller.emitEvent(CONNECTION_COORDINATE_MOVE, { moveOrders, gcode, jogSpeed, headType }, (gcodeArray) => {
+            if (gcodeArray) {
+                if (homingModel && gcode === 'G28') {
+                    dispatch(baseActions.updateState({
+                        homingModel: false
+                    }));
+                }
+                dispatch(machineActions.addConsoleLogs(gcodeArray));
+            }
+        });
+    }
+
+    setWorkOrigin(xPosition, yPosition, zPosition, bPosition) {
+        controller.emitEvent(CONNECTION_SET_WORK_ORIGIN, { xPosition, yPosition, zPosition, bPosition }, (gcodeArray) => {
+            if (gcodeArray) {
+                dispatch(machineActions.addConsoleLogs(gcodeArray));
+            }
+        });
     }
 
     executeGcode(gcode, context, cmd) {

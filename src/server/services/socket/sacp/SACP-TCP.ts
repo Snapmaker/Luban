@@ -21,13 +21,8 @@ import { CNC_MODULE, EMERGENCY_STOP_BUTTON, LASER_MODULE, MODULEID_TOOLHEAD_MAP,
 const log = logger('lib:SocketTCP');
 
 class SocketTCP extends SocketBASE {
-    // private heartbeatTimer;
-
-    // private socket: SocketServer;
 
     private client: net.Socket;
-
-    // private sacpClient: Business;
 
     private laserFocalLength: number = 0;
 
@@ -36,25 +31,10 @@ class SocketTCP extends SocketBASE {
     constructor() {
         super();
         this.client = new net.Socket();
-        // this.client.setTimeout(3000);
-        // this.sacpClient = new Business('tcp', this.client);
-        // this.sacpClient.setLogger(log);
 
         this.client.on('data', (buffer) => {
             this.sacpClient.read(buffer);
         });
-        // this.client.on('timeout', () => {
-        //     const result = {
-        //         code: 200,
-        //         data: {},
-        //         msg: '',
-        //         text: ''
-        //     };
-        //     log.info(`timeout: ${result}`);
-        //     this.sacpClient?.dispose();
-        //     this.client.destroy();
-        //     this.socket && this.socket.emit('connection:close', result);
-        // });
         this.client.on('close', () => {
             log.info('TCP connection closed');
             const result = {
@@ -72,7 +52,6 @@ class SocketTCP extends SocketBASE {
 
     public onConnection = (socket: SocketServer) => {
         wifiServerManager.onConnection(socket);
-        // this.heartBeatWorker && this.heartBeatWorker.terminate();
     }
 
     public onDisconnection = (socket: SocketServer) => {
@@ -86,82 +65,12 @@ class SocketTCP extends SocketBASE {
     public connectionOpen = (socket: SocketServer, options: EventOptions) => {
         this.socket = socket;
         this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
-        // this.sacpClient.setHandler(0x01, 0x05, (data) => {
-        //     // this.sacpClient.getCurrentCoordinateInfo()
-        //     const state = {
-        //         // toolHead: DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
-        //         // series: 'A400',
-        //         // status: WORKFLOW_STATE_PAUSED,
-        //         // headType: HEAD_PRINTING,
-        //         isHomed: true,
-        //         err: null
-        //     };
-        //     this.socket && this.socket.emit('connection:connected', {
-        //         state,
-        //         err: state?.err,
-        //         type: CONNECTION_TYPE_WIFI
-        //     });
-        //     this.sacpClient.ack(0x01, 0x03, data.packet, Buffer.alloc(1, 0));
-        //     // setTimeout(() => {
-        //     //     this.sacpClient.requestHome().then((res) => {
-        //     //         log.info(`request homing: ${res.response}`);
-        //     //     }).then(() => {
-        //     //     });
-        //     // }, 2000);
-        //     this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
-        //         const info = moduleInfos.find(moduleInfo => moduleInfo.moduleId === 14);
-        //         info && this.sacpClient.getLaserToolHeadInfo(info.key).then(({ laserToolHeadInfo }) => {
-        //             this.laserFocalLength = laserToolHeadInfo.laserFocalLength;
-        //             log.debug(`laserToolHeadInfo.laserFocalLength, ${laserToolHeadInfo.laserFocalLength}`);
-        //             this.socket && this.socket.emit('Marlin:state', {
-        //                 state: {
-        //                     // isHomed: true,
-        //                     temperature: {
-        //                         t: 0,
-        //                         tTarget: 0,
-        //                         b: 0,
-        //                         bTarget: 0
-        //                     },
-        //                     laserFocalLength: laserToolHeadInfo.laserFocalLength,
-        //                     pos: {
-        //                         x: 0,
-        //                         y: 0,
-        //                         z: 0,
-        //                         b: 0,
-        //                         isFourAxis: false
-        //                     },
-        //                     originOffset: {
-        //                         x: 0,
-        //                         y: 0,
-        //                         z: 0,
-        //                     }
-        //                 },
-        //                 type: CONNECTION_TYPE_WIFI
-        //             });
-        //         });
-        //     });
-        // });
-        // this.sacpClient.setHandler(0x01, 0x36, (data) => {
-        //     console.log('0x0136', data);
-        // });
         this.client.connect({
             host: options.address,
             port: 8888
         }, () => {
             log.info('TCP connected');
 
-            // const result = {
-            //     msg: '',
-            //     data: {
-            //         hasEnclosure: false,
-            //         headType: 2,
-            //         readonly: false,
-            //         series: 'Snapmaker A400',
-            //         // token: '415344a6-f7b7-4900-a391-aa6695e2dfdb'
-            //         token: ''
-            //     },
-            //     text: '{"token":"","readonly":false,"series":"Snapmaker A400","headType":2,"hasEnclosure":false}'
-            // };
             this.sacpClient = new Business('tcp', this.client);
             this.sacpClient.setLogger(log);
             this.socket && this.socket.emit('connection:open', {});
@@ -182,10 +91,6 @@ class SocketTCP extends SocketBASE {
             }).then(async ({ response }) => {
                 if (response.result === 0) {
                     let state: ConnectedData = {
-                        // toolHead: DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
-                        // series: 'A400',
-                        // status: WORKFLOW_STATE_IDLE,
-                        // headType: HEAD_PRINTING,
                         isHomed: true,
                         err: null
                     };
@@ -198,9 +103,7 @@ class SocketTCP extends SocketBASE {
                     });
                     await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
                         const moduleListStatus = {
-                            // airPurifier: false,
                             emergencyStopButton: false,
-                            // enclosure: false,
                             rotaryModule: false
                         };
                         moduleInfos.forEach(module => {
@@ -227,7 +130,6 @@ class SocketTCP extends SocketBASE {
                                     log.debug(`laserToolHeadInfo.laserFocalLength, ${laserToolHeadInfo.laserFocalLength}`);
                                     this.socket && this.socket.emit('Marlin:state', {
                                         state: {
-                                            // isHomed: true,
                                             temperature: {
                                                 t: 0,
                                                 tTarget: 0,
@@ -313,17 +215,6 @@ class SocketTCP extends SocketBASE {
                 }, 3000);
             }
         });
-        // this.client.destroy();
-        // if (this.client.destroyed) {
-        //     log.info('TCP manually closed');
-        //     const result = {
-        //         code: 200,
-        //         data: {},
-        //         msg: '',
-        //         text: ''
-        //     };
-        //     socket && socket.emit(options.eventName, result);
-        // }
     }
 
     public startHeartbeat = () => {
@@ -463,19 +354,6 @@ class SocketTCP extends SocketBASE {
     public abortLaserMaterialThickness = () => {
         // this.getLaserMaterialThicknessReq && this.getLaserMaterialThicknessReq.abort();
     };
-
-    // public executeGcode = async (options: EventOptions, callback: () => void) => {
-    //     const { gcode } = options;
-    //     const gcodeLines = gcode.split('\n');
-    //     // callback && callback();
-    //     log.debug(`executeGcode, ${gcodeLines}`);
-    //     try {
-    //         callback && callback();
-    //         this.socket && this.socket.emit('connection:executeGcode', { msg: '', res: null });
-    //     } catch (e) {
-    //         log.error(`execute gcode error: ${e}`);
-    //     }
-    // };
 
     public uploadGcodeFile = (gcodeFilePath: string, type: string, callback: (msg: string, data: boolean) => void) => {
         this.sacpClient.uploadFile(gcodeFilePath).then(({ response }) => {
