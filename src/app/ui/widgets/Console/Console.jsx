@@ -12,7 +12,7 @@ import { actions as machineActions } from '../../../flux/machine';
 import { controller } from '../../../lib/controller';
 import Terminal from './Terminal';
 import { ABSENT_OBJECT, CONNECTION_TYPE_SERIAL,
-    WORKFLOW_STATE_RUNNING, WORKFLOW_STATE_PAUSED, WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED
+    WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_PAUSING
 } from '../../../constants';
 
 let pubsubTokens = [];
@@ -282,7 +282,7 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
     }, [isConnected, port, server]);
 
     useEffect(() => {
-        const isWorking = workflowStatus === WORKFLOW_STATUS_RUNNING || workflowStatus === WORKFLOW_STATUS_PAUSED || workflowStatus === WORKFLOW_STATUS_RUNNING;
+        const isWorking = workflowStatus === WORKFLOW_STATUS_RUNNING || workflowStatus === WORKFLOW_STATUS_PAUSED || workflowStatus === WORKFLOW_STATUS_PAUSING;
 
         if (isWorking && shouldHideConsole) {
             widgetActions.setDisplay(false);
