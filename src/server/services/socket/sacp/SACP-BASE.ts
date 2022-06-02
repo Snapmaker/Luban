@@ -46,7 +46,6 @@ class SocketBASE {
             if (response.result === 0) {
                 this.subscribeLogCallback = (data) => {
                     const result = readString(data.response.data, 1).result;
-                    console.log('logData', result, data);
                     this.socket && this.socket.emit('serialport:read', { data: result });
                 };
                 this.sacpClient.subscribeLogFeedback({ interval: 60000 }, this.subscribeLogCallback);
