@@ -480,6 +480,34 @@ export class Polygons {
         return polygons;
     }
 
+    getPolygonssByPolyTree2() {
+        const polygonAreasIndex = this.data
+            .map((polygon, index) => { return { area: polygon.area(), index: index, inner: 0 }; })
+            .sort((o1, o2) => (Math.abs(o1.area) > Math.abs(o2.area) ? -1 : 1));
+        for (let i = 0; i < polygonAreasIndex.length; i++) {
+            const areaIndex1 = polygonAreasIndex[i];
+            const poly = this.data[areaIndex1.index];
+            for (let j = i + 1; j < polygonAreasIndex.length; j++) {
+                const areaIndex2 = polygonAreasIndex[j];
+                if (poly.isPointInPolygon(this.data[areaIndex2.index].path[0])) {
+                    areaIndex2.inner++;
+                }
+            }
+        }
+
+        for (let i = 0; i < polygonAreasIndex.length; i++) {
+            const poly = this.data[polygonAreasIndex[i].index];
+            if (polygonAreasIndex[i].inner % 2 === 0 && polygonAreasIndex[i].area < 0) {
+                poly.path.reverse();
+            }
+            if (polygonAreasIndex[i].inner % 2 === 1 && polygonAreasIndex[i].area > 0) {
+                poly.path.reverse();
+            }
+        }
+
+        return this.getPolygonssByPolyTree();
+    }
+
     /**
      * Separate into multiple disjoint polygons with holes or not
      *

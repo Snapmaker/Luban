@@ -286,11 +286,7 @@ class ModelGroup extends EventEmitter {
             model.visible = visible;
             model.meshObject.visible = visible;
             if (model instanceof ThreeModel) {
-                model.clippingGroup.visible = visible;
-                model.clippingWall.visible = visible;
-                model.clippingSkin.visible = visible;
-                model.clippingSkinArea.visible = visible;
-                model.clippingInfill.visible = visible;
+                model.clipper.group.visible = visible;
             }
             if (model instanceof ThreeGroup) {
                 model.traverse((subModel) => {
@@ -332,11 +328,7 @@ class ModelGroup extends EventEmitter {
     public recoverModelClippingGroup(model: TModel) {
         this.updateClippingPlane(99999);
         if (model instanceof ThreeModel) {
-            this.clippingGroup.add(model.clippingGroup);
-            this.clippingGroup.add(model.clippingWall);
-            this.clippingGroup.add(model.clippingSkin);
-            this.clippingGroup.add(model.clippingSkinArea);
-            this.clippingGroup.add(model.clippingInfill);
+            this.clippingGroup.add(model.clipper.group);
         } else if (model instanceof ThreeGroup) {
             model.children.forEach((m) => {
                 this.recoverModelClippingGroup(m);
@@ -370,11 +362,7 @@ class ModelGroup extends EventEmitter {
             model.meshObject.remove(model.processObject3D);
         }
         if (model instanceof ThreeModel) {
-            this.clippingGroup.remove(model.clippingGroup);
-            this.clippingGroup.remove(model.clippingWall);
-            this.clippingGroup.remove(model.clippingSkin);
-            this.clippingGroup.remove(model.clippingSkinArea);
-            this.clippingGroup.remove(model.clippingInfill);
+            this.clippingGroup.remove(model.clipper.group);
         }
         model.meshObject.removeEventListener('update', this.onModelUpdate);
         if (model.parent instanceof ThreeGroup) {
@@ -396,6 +384,7 @@ class ModelGroup extends EventEmitter {
         } else {
             this.models = this.models.filter((item) => item !== model);
         }
+        this.updatePlateAdhesion();
         this.modelChanged();
         model.sourceType === '3d' && this.updatePrimeTowerHeight();
     }
@@ -408,6 +397,7 @@ class ModelGroup extends EventEmitter {
     public removeSelectedModel() {
         this._removeSelectedModels();
         this.unselectAllModels();
+        this.updatePlateAdhesion();
         return this.getState();
     }
 
@@ -1061,11 +1051,8 @@ class ModelGroup extends EventEmitter {
                 this.addModelToSelectedGroup(newModel);
                 this.updatePrimeTowerHeight();
                 if (newModel instanceof ThreeModel) {
-                    this.clippingGroup.add(newModel.clippingGroup);
-                    this.clippingGroup.add(newModel.clippingWall);
-                    this.clippingGroup.add(newModel.clippingSkin);
-                    this.clippingGroup.add(newModel.clippingSkinArea);
-                    this.clippingGroup.add(newModel.clippingInfill);
+                    newModel.clipper.init();
+                    this.clippingGroup.add(newModel.clipper.group);
                 }
             }
         });
@@ -1707,11 +1694,8 @@ class ModelGroup extends EventEmitter {
                 // todo, use this to refresh obj list
                 this.models = [...this.models];
                 this.object.add(model.meshObject);
-                this.clippingGroup.add(model.clippingGroup);
-                this.clippingGroup.add(model.clippingWall);
-                this.clippingGroup.add(model.clippingSkin);
-                this.clippingGroup.add(model.clippingSkinArea);
-                this.clippingGroup.add(model.clippingInfill);
+                model.clipper.init();
+                this.clippingGroup.add(model.clipper.group);
                 this.selectModelById(model.modelID);
             }
         } else {
@@ -1865,6 +1849,7 @@ class ModelGroup extends EventEmitter {
         this.getModels<Model3D>().forEach((model) => {
             model.updateDisplayedType(displayedType);
         });
+        this.updatePlateAdhesion();
     }
 
     public stickToPlateAndCheckOverstepped(model: Model3D) {
@@ -2434,9 +2419,11 @@ class ModelGroup extends EventEmitter {
             return model.visible;
         }).forEach((model) => {
             if (model instanceof ThreeModel) {
-                const lines = model.clippingMap.get(model.clippingConfig.layerHeight);
-                const path = polyOffset(lines, 3);
-                paths.push(path);
+                const polygonss = model.clipper.clippingMap.get(model.clipper.clippingConfig.layerHeight);
+                polygonss && polygonss.forEach((polygons) => {
+                    const path = polyOffset(polygons, 3);
+                    paths.push(path);
+                });
             }
         });
         if (paths.length === 0) {
@@ -2501,7 +2488,7 @@ class ModelGroup extends EventEmitter {
     public hasClipped() {
         let flag = true;
         this.traverseModels(this.models, (model) => {
-            if (model instanceof ThreeModel && model.clippingWorkerMap.size !== 0) {
+            if (model instanceof ThreeModel && model.clipper.busy) {
                 flag = false;
             }
         });
@@ -2517,6 +2504,7 @@ class ModelGroup extends EventEmitter {
         }
         const allDone = this.hasClipped();
         if (allDone) {
+            this.emit('test12', true);
             this.updatePlateAdhesion();
             this.onModelUpdate();
             this.models = [...this.models];

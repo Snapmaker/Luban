@@ -59,11 +59,23 @@ function ClippingControlLayout() {
 
 function VisualizerClippingControl() {
     const transformMode = useSelector(state => state?.printing?.transformMode, shallowEqual);
-    const models = useSelector(state => state?.printing?.modelGroup.models);
+    const modelGroup = useSelector(state => state?.printing?.modelGroup);
     const clipped = useSelector(state => state?.printing?.modelGroup.hasClipped(), shallowEqual);
     const displayedType = useSelector(state => state?.printing?.displayedType, shallowEqual);
 
-    if (clipped && displayedType === 'model' && !transformMode && models.length && !(models.length === 1 && models[0].type === 'primeTower')) {
+    const [_clipped, setClipped] = useState(clipped);
+    useEffect(() => {
+        setClipped(clipped);
+    }, [clipped]);
+
+    useEffect(() => {
+        modelGroup.on('test12', () => {
+            setClipped(true);
+        });
+    }, [modelGroup]);
+
+
+    if (_clipped && displayedType === 'model' && !transformMode && modelGroup.models.length && !(modelGroup.models.length === 1 && modelGroup.models[0].type === 'primeTower')) {
         return (
             <React.Fragment>
                 <ClippingControlLayout />

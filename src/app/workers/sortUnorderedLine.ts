@@ -1,4 +1,6 @@
 import { Observable } from 'rxjs';
+// import { polyDiff } from '../../shared/lib/clipper/cLipper-adapter';
+import { Polygon, Polygons } from '../../shared/lib/clipper/Polygons';
 import { PolygonsUtils } from '../../shared/lib/math/PolygonsUtils';
 
 type TPoint = { x: number, y: number, z?: number }
@@ -140,7 +142,7 @@ const sortUnorderedLine = ({ fragments, actionID }: TMessage) => {
 
             let latest;
             const polygons = [];
-
+            // const stack = [];
             // let num = 0;
 
             while (pointsMap.size) {
@@ -200,9 +202,21 @@ const sortUnorderedLine = ({ fragments, actionID }: TMessage) => {
                     }
                 }
                 return arr;
-            });
+            }) as TPoint[][];
 
-            observer.next(ret);
+            const _polygons = new Polygons();
+            ret.forEach((line) => {
+                const polygon = new Polygon();
+                polygon.path = line;
+                _polygons.add(polygon);
+            });
+            const tree = _polygons.getPolygonssByPolyTree2();
+            const marged = tree.map((t) => {
+                return t.data.map((polygon) => {
+                    return polygon.path;
+                });
+            });
+            observer.next(marged);
         } catch (error) {
             const m4 = new Date().getTime();
             console.error(`[${actionID}] worker error, time=`, m4 - m3, error);

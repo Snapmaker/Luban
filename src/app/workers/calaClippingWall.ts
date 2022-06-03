@@ -12,7 +12,9 @@ const calaClippingWall = ({ polygons, innerWallCount, lineWidth }: TMessage) => 
         // let index = 0;
         // const ret = [];
         const res = Array(innerWallCount).fill('').map((_, index) => {
-            return polyOffset(polygons, -lineWidth * (index + 1));
+            return polygons.map((polygon) => {
+                return polyOffset(polygon, -lineWidth * (index + 1));
+            });
         });
         // res.forEach((vectors) => {
         //     for (let i = 0; i < vectors.length; i++) {

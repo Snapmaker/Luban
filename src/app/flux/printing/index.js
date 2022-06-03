@@ -4148,7 +4148,7 @@ export const actions = {
             const bottomLayers = Math.ceil(Math.round(bottomThickness / layerHeight));
             const topThickness = qualitySetting.top_thickness.default_value;
             const topLayers = Math.ceil(Math.round(topThickness / layerHeight));
-            model.updateClipperConfig({
+            model.clipper.updateClipperConfig({
                 lineWidth: materialSettings.machine_nozzle_size.default_value,
                 wallThickness: qualitySetting.wall_thickness.default_value,
                 topLayers,

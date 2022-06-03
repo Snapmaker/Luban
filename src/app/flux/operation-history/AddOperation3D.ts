@@ -57,8 +57,8 @@ export default class AddOperation3D extends Operation<AddOperationState> {
         model.meshObject.rotation.copy(transform.rotation);
 
         model.meshObject.addEventListener('update', modelGroup.onModelUpdate);
-        modelGroup.recoverModelClippingGroup(model);
         modelGroup.models = modelGroup.models.concat(model); // trigger <ModelItem> component to show the unselected model
+        modelGroup.recoverModelClippingGroup(model);
         modelGroup.updatePrimeTowerHeight();
         modelGroup.modelChanged();
     }
