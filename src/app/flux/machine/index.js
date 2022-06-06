@@ -205,6 +205,8 @@ const INITIAL_STATE = {
     multipleEngine: false,
     // Whether auto preview file when import G code to workspace
     shouldAutoPreviewGcode: true,
+    // Whether hide console when machine is working
+    shouldHideConsole: true,
 
     // connect info
     moduleStatusList: {},
@@ -273,6 +275,11 @@ export const actions = {
                     shouldAutoPreviewGcode: false
                 })
             );
+        }
+        if (machineStore.get('shouldHideConsole') === false) {
+            dispatch(baseActions.updateState({
+                shouldHideConsole: false
+            }));
         }
     },
 
@@ -1086,6 +1093,10 @@ export const actions = {
             })
         );
         machineStore.set('shouldAutoPreviewGcode', shouldAutoPreviewGcode);
+    },
+    updateShouldHideConsole: (shouldHideConsole) => (dispatch) => {
+        dispatch(baseActions.updateState({ shouldHideConsole: shouldHideConsole }));
+        machineStore.set('shouldHideConsole', shouldHideConsole);
     }
     // endregion
 };

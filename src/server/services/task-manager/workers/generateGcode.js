@@ -40,8 +40,9 @@ const addHeaderToFile = (header, name, tmpFilePath, filePath, thumbnail, estimat
                     size: ws.bytesWritten,
                     lastModified: +new Date(),
                     estimatedTime,
-                    thumbnail: thumbnail
-                }
+                    thumbnail: thumbnail,
+                },
+                filePath
             });
         });
     });

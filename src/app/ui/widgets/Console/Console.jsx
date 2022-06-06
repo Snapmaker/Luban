@@ -11,14 +11,14 @@ import usePrevious from '../../../lib/hooks/previous';
 import { actions as machineActions } from '../../../flux/machine';
 import { controller } from '../../../lib/controller';
 import Terminal from './Terminal';
-import { ABSENT_OBJECT, CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI,
-    WORKFLOW_STATE_RUNNING, WORKFLOW_STATE_PAUSED
+import { ABSENT_OBJECT, CONNECTION_TYPE_SERIAL,
+    WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_PAUSING
 } from '../../../constants';
 
 let pubsubTokens = [];
 let unlisten = null;
 function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderStamp }) {
-    const { port, server, isConnected, connectionType, terminalHistory, consoleHistory, consoleLogs, workflowStatus } = useSelector(state => state.machine, shallowEqual);
+    const { port, server, isConnected, connectionType, terminalHistory, consoleHistory, consoleLogs, workflowStatus, workflowState, shouldHideConsole } = useSelector(state => state.machine, shallowEqual);
     const [shouldRenderFitaddon, setShouldRenderFitaddon] = useState(false);
     const history = useHistory();
     const dispatch = useDispatch();
@@ -218,6 +218,7 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
         pubsubTokens = [];
     }
 
+
     useEffect(() => {
         widgetActions.setTitle(i18n._('key-Workspace/Console-Console'));
         widgetActions.setControlButtons([
@@ -281,16 +282,14 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
     }, [isConnected, port, server]);
 
     useEffect(() => {
-        if (connectionType === CONNECTION_TYPE_SERIAL) {
+        const isWorking = workflowStatus === WORKFLOW_STATUS_RUNNING || workflowStatus === WORKFLOW_STATUS_PAUSED || workflowStatus === WORKFLOW_STATUS_PAUSING;
+
+        if (isWorking && shouldHideConsole) {
+            widgetActions.setDisplay(false);
+        } else {
             widgetActions.setDisplay(true);
-        } else if (connectionType === CONNECTION_TYPE_WIFI) {
-            if (workflowStatus === WORKFLOW_STATE_RUNNING || workflowStatus === WORKFLOW_STATE_PAUSED) {
-                widgetActions.setDisplay(false);
-            } else {
-                widgetActions.setDisplay(true);
-            }
         }
-    }, [workflowStatus, connectionType]);
+    }, [workflowState, workflowStatus, connectionType]);
 
     useEffect(() => {
         if (prevProps && prevProps.clearRenderStamp !== clearRenderStamp) {

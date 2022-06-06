@@ -210,9 +210,20 @@ export const actions = {
                             x: header[';min_x(mm)'],
                             y: header[';min_y(mm)'],
                             z: header[';min_z(mm)'],
-                            b: header[';min_b(mm)'],
-                        },
+                            b: header[';min_b(mm)']
+                        }
                     },
+
+                    type: header[';header_type'],
+                    tool_head: header[';tool_head'],
+                    nozzle_temperature: header[';nozzle_temperature(°C)'],
+                    build_plate_temperature: header[';build_plate_temperature(°C)'],
+                    work_speed: header[';work_speed(mm/minute)'],
+                    estimated_time: header[';estimated_time(s)'],
+                    matierial_weight: header[';matierial_weight'],
+                    nozzle_1_temperature: header[';nozzle_1_temperature(°C)'],
+                    jog_speed: header[';jog_speed(mm/minute)'],
+                    power: header[';power(%)'],
                 };
                 dispatch(actions.addGcodeFiles(gcodeFile));
                 shouldAutoPreviewGcode

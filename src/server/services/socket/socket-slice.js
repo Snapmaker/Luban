@@ -1,3 +1,4 @@
+import { parseLubanGcodeHeader } from '../../lib/parseGcodeHeader';
 import slice, { generateSupport } from '../../slicer/slice';
 
 const handleSlice = (socket, params) => {
@@ -9,6 +10,8 @@ const handleSlice = (socket, params) => {
         },
         (sliceResult) => {
             const { gcodeFilename, gcodeFileLength, printTime, filamentLength, filamentWeight, gcodeFilePath, renderGcodeFileName } = { ...sliceResult };
+
+            const gcodeHeader = parseLubanGcodeHeader(gcodeFilePath);
             socket.emit('slice:completed', {
                 gcodeFilename,
                 gcodeFileLength,
@@ -16,7 +19,8 @@ const handleSlice = (socket, params) => {
                 filamentLength,
                 filamentWeight,
                 gcodeFilePath,
-                renderGcodeFileName
+                renderGcodeFileName,
+                gcodeHeader
             });
         },
         (err) => {

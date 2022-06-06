@@ -37,6 +37,8 @@ import { actions as machineActions } from '../../../flux/machine';
 import Checkbox from '../../components/Checkbox';
 import { NumberInput as Input } from '../../components/Input';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
+import GCodeParams from './GCodeParams';
+import PreviewToRunJobModal from './PreviewToRunJobModal';
 
 const changeNameInput = [];
 const suffixLength = 7;
@@ -224,6 +226,10 @@ function WifiTransport({ widgetActions, controlActions }) {
     const [selectFileType, setSelectFileType] = useState('');
     const [selectFileIndex, setSelectFileIndex] = useState(-1);
 
+    const [isUnknownGCodeType, setIsUnknownGCodeType] = useState(false);
+    const [isGCdoeFileMatchToolHead, setIsGCdoeFileMatchToolHead] = useState(false);
+    const [showPreviewToRunJobModal, setShowPreviewToRunJobModal] = useState(false);
+
     const [showPreviewModal, setShowPreviewModal] = useState(false);
     useEffect(() => {
         if (previewStage === WORKSPACE_STAGE.LOADING_GCODE) {
@@ -311,6 +317,13 @@ function WifiTransport({ widgetActions, controlActions }) {
             } else {
                 actions.loadGcodeToWorkspace();
             }
+        },
+        matchingGCodeTypeAndHeadType: async () => {
+            if (isUnknownGCodeType || !isGCdoeFileMatchToolHead) {
+                setShowPreviewToRunJobModal(true);
+                return;
+            }
+            await actions.startPrint();
         },
 
         loadGcodeToWorkspace: async () => {
@@ -504,6 +517,22 @@ function WifiTransport({ widgetActions, controlActions }) {
     const isSended = isWifi ? isSendedOnWifi : true;
     const canPlay = hasFile && isConnected && isSended && _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE], currentWorkflowStatus);
     const canSend = hasFile && isConnected && isHeadType && isWifi && isSendedOnWifi;
+
+
+
+
+    useEffect(() => {
+        const matchMap = {
+            '3dp': HEAD_PRINTING, //  'printing';
+            'laser': HEAD_LASER,
+            'cnc': HEAD_CNC,
+        };
+        const gcodeType = gcodeFiles[selectFileIndex] && gcodeFiles[selectFileIndex].type;
+
+        setIsUnknownGCodeType(!Object.keys(matchMap).includes(gcodeType));
+        setIsGCdoeFileMatchToolHead(headType === matchMap[gcodeType]);
+    }, [headType, selectFileIndex]);
+
     return (
         <div className="border-default-grey-1 border-radius-8">
             <input
@@ -589,7 +618,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                         priority="level-two"
                         width="144px"
                         disabled={!canPlay}
-                        onClick={actions.startPrint}
+                        onClick={actions.matchingGCodeTypeAndHeadType}
                     >
                         {i18n._('key-Workspace/Transport-Start Print')}
                     </Button>
@@ -607,6 +636,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                         {i18n._('key-Workspace/LaserStartJob-start_job')}
                     </Modal.Header>
                     <Modal.Body>
+                        {/* TODO: in one modal */}
                         <div className="width-438">
                             {!isRotate && toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 && (
                                 <Trans i18nKey="key-Workspace/LaserStartJob-3axis_start_job_prompt">
@@ -741,6 +771,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                     <Spin />
                                 </div>
                             )}
+                            <GCodeParams gcodeFile={gcodeFiles[selectFileIndex] || {}} />
                         </div>
                     </Modal.Body>
                     <Modal.Footer>
@@ -762,7 +793,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                             </Menu.Item>
                                         )}
                                         <Menu.Item onClick={() => {
-                                            actions.startPrint();
+                                            actions.matchingGCodeTypeAndHeadType();
                                             closePreviewModal();
                                         }}
                                         >
@@ -788,7 +819,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                 type="primary"
                                 width="200px"
                                 onClick={() => {
-                                    actions.startPrint();
+                                    actions.matchingGCodeTypeAndHeadType();
                                     closePreviewModal();
                                 }}
                             >
@@ -797,6 +828,16 @@ function WifiTransport({ widgetActions, controlActions }) {
                         )}
                     </Modal.Footer>
                 </Modal>
+            )}
+            {showPreviewToRunJobModal && (
+                <PreviewToRunJobModal
+                    isMismatchHead={!isUnknownGCodeType}
+                    isUnKownHead={headType !== HEAD_CNC && headType !== HEAD_LASER && headType !== HEAD_PRINTING}
+                    gcodeType={gcodeFiles[selectFileIndex] && gcodeFiles[selectFileIndex].type}
+                    headType={headType}
+                    onClose={() => { setShowPreviewToRunJobModal(false); }}
+                    onConfirm={() => { actions.startPrint(); }}
+                />
             )}
         </div>
     );

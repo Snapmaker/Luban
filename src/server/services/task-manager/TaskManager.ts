@@ -1,8 +1,10 @@
 import logger from '../../lib/logger';
 import { EPS } from '../../constants';
-import Task from './Task';
+import Task, { TGcodeFile } from './Task';
 import { asyncFor } from '../../../shared/lib/array-async';
 import workerManager, { IWorkerManager } from './workerManager';
+import { parseLubanGcodeHeader } from '../../lib/parseGcodeHeader';
+
 
 // const TASK_STATUS_IDLE = 'idle';
 const TASK_STATUS_DEPRECATED = 'deprecated';
@@ -16,6 +18,17 @@ export const TASK_TYPE_PROCESS_IMAGE = 'processImage';
 export const TASK_TYPE_CUT_MODEL = 'cutModel';
 
 const log = logger('service:TaskManager');
+
+type TPayload = {
+    gcodeFile: {
+        estimatedTime: string;
+        boundingBox: string;
+        name: string;
+        size: string;
+        lastModified: string;
+        thumbnail: string;
+    }
+}
 
 class TaskManager {
     private workerManager: IWorkerManager = workerManager;
@@ -46,7 +59,9 @@ class TaskManager {
         if (task.taskType === TASK_TYPE_GENERATE_TOOLPATH) {
             task.filenames = res as string;
         } else if (task.taskType === TASK_TYPE_GENERATE_GCODE) {
-            task.gcodeFile = (res as { gcodeFile: string }).gcodeFile;
+            const gcodeHeader = parseLubanGcodeHeader((res as { filePath: string }).filePath);
+            const gcodeFile = { ...(res as TPayload).gcodeFile, header: gcodeHeader };
+            task.gcodeFile = gcodeFile as TGcodeFile;
         } else if (task.taskType === TASK_TYPE_GENERATE_VIEWPATH) {
             task.viewPathFile = (res as { viewPathFile: string }).viewPathFile;
         } else if (task.taskType === TASK_TYPE_PROCESS_IMAGE) {
