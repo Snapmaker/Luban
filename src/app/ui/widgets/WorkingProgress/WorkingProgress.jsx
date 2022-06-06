@@ -31,12 +31,10 @@ const StopConfirmModal = (props) => {
             onClose={() => { props.onClose(); }}
         >
             <Modal.Header>
-                {/* 停止作业 */}
                 {i18n._('key-Workspace/Workprogress-StopJobConfirmModal title')}
             </Modal.Header>
             <Modal.Body>
                 {props.children}
-                {/* 你确定要停止打印作业吗？ */}
                 {i18n._('key-Workspace/Workprogress-StopJobConfirmModal body')}
             </Modal.Body>
             <Modal.Footer>
