@@ -17,7 +17,7 @@ let intervalHandle = null;
 class WifiServerManager extends EventEmitter {
     client = createSocket('udp4');
 
-    devices = [];
+    devices = new Map();
 
     sockets = [];
 
@@ -53,8 +53,10 @@ class WifiServerManager extends EventEmitter {
 
                 device[key.toLowerCase()] = value;
             }
+            const time = new Date();
+            device.time = time;
 
-            this.devices.add(device);
+            this.devices.set(address, device);
         });
     };
 
@@ -66,7 +68,6 @@ class WifiServerManager extends EventEmitter {
         }
 
         this.refreshing = true;
-        this.devices = new Set();
 
         const message = Buffer.from('discover');
 
@@ -98,13 +99,20 @@ class WifiServerManager extends EventEmitter {
         // Note: 500ms reaction time, 3000ms is too long.
         setTimeout(() => {
             this.refreshing = false;
+            const newTime = new Date();
+            const result = [];
+            for (const server of this.devices.values()) {
+                if (newTime - server.time <= 3000) {
+                    result.push(server);
+                }
+            }
             for (const socket of this.sockets) {
                 socket.emit('machine:discover', {
-                    devices: Array.from(this.devices),
+                    devices: result,
                     type: CONNECTION_TYPE_WIFI
                 });
             }
-        }, 3000);
+        }, 1000);
     };
 
     onConnection = (socket) => {
