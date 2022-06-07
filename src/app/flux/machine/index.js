@@ -385,7 +385,6 @@ export const actions = {
                         doorSwitchCount: doorSwitchCount,
                         heatedBedTargetTemperature: heatedBedTargetTemperature,
                         // Note: Wifi indiviual
-                        moduleStatusList,
                         airPurifier: airPurifier,
                         airPurifierSwitch: airPurifierSwitch,
                         airPurifierFanSpeed: airPurifierFanSpeed,
@@ -408,6 +407,11 @@ export const actions = {
                         heatedBedTemperature: parseFloat(temperature.b),
                         heatedBedTargetTemperature: parseFloat(temperature.bTarget),
                         zAxisModule: zAxisModule
+                    }));
+                }
+                if (!isNil(moduleStatusList)) {
+                    dispatch(baseActions.updateState({
+                        moduleStatusList
                     }));
                 }
                 // TODO: wifi emergencyStop goes there
