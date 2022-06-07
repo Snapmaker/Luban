@@ -904,6 +904,9 @@ export const actions = {
             if (defaultMaterialL === '0') {
                 defaultMaterialL = PRINTING_MATERIAL_CONFIG_GROUP_SINGLE.some(item => {
                     return item.fields.some(key => {
+                        if (!extruderLDefaultDefinition.settings[key] || !extruderLDefinition.settings[key]) {
+                            return false;
+                        }
                         return extruderLDefaultDefinition?.settings[key]?.default_value !== extruderLDefinition.settings[key]?.default_value;
                     });
                 })
@@ -913,6 +916,9 @@ export const actions = {
             if (defaultMaterialQuality === '0') {
                 defaultMaterialQuality = PRINTING_QUALITY_CONFIG_GROUP_SINGLE.some(item => {
                     return item.fields.some(key => {
+                        if (!activeActiveQualityDefinition.settings[key] || !defaultQualityDefinition.settings[key]) {
+                            return false;
+                        }
                         return activeActiveQualityDefinition.settings[key]?.default_value !== defaultQualityDefinition.settings[key]?.default_value;
                     });
                 })
@@ -939,6 +945,9 @@ export const actions = {
             if (defaultMaterialL === '0') {
                 defaultMaterialL = PRINTING_MATERIAL_CONFIG_GROUP_SINGLE.some(item => {
                     return item.fields.some(key => {
+                        if (!extruderLDefaultDefinition.settings[key] || !extruderLDefinition.settings[key]) {
+                            return false;
+                        }
                         return extruderLDefaultDefinition.settings[key].default_value !== extruderLDefinition.settings[key].default_value;
                     });
                 })
@@ -952,6 +961,9 @@ export const actions = {
             if (defaultMaterialR === '0') {
                 defaultMaterialR = PRINTING_MATERIAL_CONFIG_GROUP_DUAL.some(item => {
                     return item.fields.some(key => {
+                        if (!extruderRDefaultDefinition.settings[key] || !extruderRDefinition.settings[key]) {
+                            return false;
+                        }
                         return extruderRDefaultDefinition?.settings[key].default_value !== extruderRDefinition.settings[key].default_value;
                     });
                 })
@@ -962,6 +974,9 @@ export const actions = {
             if (defaultMaterialQuality === '0') {
                 defaultMaterialQuality = PRINTING_QUALITY_CONFIG_GROUP_DUAL.some(item => {
                     return item.fields.some(key => {
+                        if (!activeActiveQualityDefinition.settings[key] || !defaultQualityDefinition.settings[key]) {
+                            return false;
+                        }
                         return activeActiveQualityDefinition.settings[key].default_value !== defaultQualityDefinition.settings[key].default_value;
                     });
                 })
