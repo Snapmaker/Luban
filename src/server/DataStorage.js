@@ -368,11 +368,12 @@ class DataStorage {
         mkdirp.sync(this.scenesDir);
 
         const SCENES_LOCAL = '../resources/scenes/';
+        const resultPath = path.resolve(__dirname, this.scenesDir);
         if (fs.existsSync(SCENES_LOCAL)) {
             const files = fs.readdirSync(SCENES_LOCAL);
             for (const file of files) {
                 const src = path.join(SCENES_LOCAL, file);
-                const dst = path.join(this.scenesDir, file);
+                const dst = path.join(resultPath, file);
                 if (fs.statSync(src)
                     .isFile()) {
                     fs.copyFileSync(src, dst, () => {

@@ -81,7 +81,6 @@ class SocketServer extends EventEmitter {
 
         // connection startup
         socket.emit('startup');
-
         this.emit('connection', socket);
 
         if (this.events && this.events.length > 0) {

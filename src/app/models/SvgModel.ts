@@ -1,6 +1,7 @@
 import { v4 as uuid } from 'uuid';
 import * as THREE from 'three';
 import Canvg from 'canvg';
+import path from 'path';
 import svgPath from 'svgpath';
 import { cloneDeep } from 'lodash';
 import { coordGmSvgToModel, createSVGElement } from '../ui/SVGEditor/element-utils';
@@ -516,9 +517,9 @@ class SvgModel extends BaseModel {
         }
     }
 
-    public calculationPath(path: string) {
+    public calculationPath(pathss: string) {
         const allPoints: [number, number][][] = [];
-        svgPath(path).iterate((segment, __, x, y) => {
+        svgPath(pathss).iterate((segment, __, x, y) => {
             const arr = cloneDeep(segment);
             const mark = arr.shift();
 
@@ -652,8 +653,8 @@ class SvgModel extends BaseModel {
         const isDraw = elem.getAttribute('id')?.includes('graph');
 
         if (elem instanceof SVGPathElement && isDraw) {
-            const path = elem.getAttribute('d');
-            const paths = this.calculationPath(path);
+            const dPath = elem.getAttribute('d');
+            const paths = this.calculationPath(dPath);
             const segments = paths.map((item) => {
                 const clone = elem.cloneNode(true) as SVGPathElement;
                 clone.setAttribute('d', item);

@@ -78,7 +78,7 @@ class ThreeModel extends BaseModel {
             //     polygonOffsetUnits: -5
             // });
         } catch (e) {
-            console.error('error', e);
+            console.warn('error', e);
         }
         if (modelInfo.geometry) {
             const clonedGeometry = modelInfo.geometry.clone();

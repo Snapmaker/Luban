@@ -425,12 +425,13 @@ class Visualizer extends PureComponent {
                     pos: null
                 });
             }
+            if (connectionType === CONNECTION_TYPE_SERIAL) {
+                this.actions.tryPause();
+            }
             if (workflowStatus !== WORKFLOW_STATE_IDLE) {
-                server.stopServerGcode(() => {
-                    if (connectionType === CONNECTION_TYPE_SERIAL) {
-                        this.actions.tryPause();
-                    }
-                });
+                setTimeout(() => {
+                    server.stopServerGcode();
+                }, 60);
             }
         },
         handleClose: () => {
