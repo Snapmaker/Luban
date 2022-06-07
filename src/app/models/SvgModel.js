@@ -505,27 +505,33 @@ class SvgModel extends BaseModel {
         if (this.resource.originalFile.name.indexOf('.svg') === -1) {
             return;
         }
-        const content = await fetch(this.resource.originalFile.path, { method: 'GET' })
-            .then(res => res.text());
+        if (this?.mode !== 'vector') {
+            const content = await fetch(this.resource.originalFile.path, { method: 'GET' })
+                .then(res => res.text());
 
-        const canvas = document.createElement('canvas');
-        // set canvas size to get image of exactly same size
-        canvas.width = this.width;
-        canvas.height = this.height;
-        canvas.style.font = '16px Arial';
-        document.body.appendChild(canvas);
-        const ctx = canvas.getContext('2d');
-        ctx.font = canvas.style.font;
-        const v = await Canvg.fromString(ctx, content);
-        await v.render();
-        const blob = await new Promise(resolve => canvas.toBlob(resolve));
-        const file = new File([blob], 'gen.png');
-        document.body.removeChild(canvas);
-        const formData = new FormData();
-        formData.append('image', file);
-        const res = await api.uploadImage(formData);
+            const canvas = document.createElement('canvas');
+            // set canvas size to get image of exactly same size
+            canvas.width = this.width;
+            canvas.height = this.height;
+            canvas.style.font = '16px Arial';
+            document.body.appendChild(canvas);
+            const ctx = canvas.getContext('2d');
+            ctx.font = canvas.style.font;
+            const v = await Canvg.fromString(ctx, content);
+            await v.render();
+            const blob = await new Promise(resolve => canvas.toBlob(resolve));
+            if (blob) {
+                const file = new File([blob], 'gen.png');
+                document.body.removeChild(canvas);
+                const formData = new FormData();
+                formData.append('image', file);
+                const res = await api.uploadImage(formData);
 
-        this.uploadImageName = res.body.uploadName;
+                this.uploadImageName = res.body.uploadName;
+            } else {
+                this.uploadImageName = '';
+            }
+        }
         this.generateModelObject3D();
         this.generateProcessObject3D();
     }
