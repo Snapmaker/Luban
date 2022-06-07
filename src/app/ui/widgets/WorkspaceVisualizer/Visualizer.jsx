@@ -531,13 +531,11 @@ class Visualizer extends PureComponent {
         }
 
         if (this.props.workflowStatus !== WORKFLOW_STATUS_IDLE && nextProps.workflowStatus === WORKFLOW_STATUS_IDLE) {
-            console.log('WORKFLOW_STATUS_IDLE');
             this.stopToolheadRotationAnimation();
             this.updateWorkPositionToZero();
             this.props.setGcodePrintingIndex(0);
         }
         if (this.props.workflowStatus !== WORKFLOW_STATUS_UNKNOWN && nextProps.workflowStatus === WORKFLOW_STATUS_UNKNOWN) {
-            console.log('WORKFLOW_STATUS_UNKNOWN');
             this.stopToolheadRotationAnimation();
             this.updateWorkPositionToZero();
             this.props.setGcodePrintingIndex(0);
