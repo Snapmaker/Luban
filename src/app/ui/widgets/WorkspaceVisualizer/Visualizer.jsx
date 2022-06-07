@@ -427,13 +427,14 @@ class Visualizer extends PureComponent {
                     pos: null
                 });
             }
+            if (connectionType === CONNECTION_TYPE_SERIAL) {
+                this.actions.tryPause();
+            }
             if (connectionType === CONNECTION_TYPE_WIFI && workflowStatus !== WORKFLOW_STATUS_IDLE
                 || connectionType === CONNECTION_TYPE_SERIAL && workflowState !== WORKFLOW_STATE_IDLE) {
-                server.stopServerGcode(() => {
-                    if (connectionType === CONNECTION_TYPE_SERIAL) {
-                        this.actions.tryPause();
-                    }
-                });
+                setTimeout(() => {
+                    server.stopServerGcode();
+                }, 60);
             }
         },
         handleClose: () => {
@@ -530,11 +531,13 @@ class Visualizer extends PureComponent {
         }
 
         if (this.props.workflowStatus !== WORKFLOW_STATUS_IDLE && nextProps.workflowStatus === WORKFLOW_STATUS_IDLE) {
+            console.log('WORKFLOW_STATUS_IDLE');
             this.stopToolheadRotationAnimation();
             this.updateWorkPositionToZero();
             this.props.setGcodePrintingIndex(0);
         }
         if (this.props.workflowStatus !== WORKFLOW_STATUS_UNKNOWN && nextProps.workflowStatus === WORKFLOW_STATUS_UNKNOWN) {
+            console.log('WORKFLOW_STATUS_UNKNOWN');
             this.stopToolheadRotationAnimation();
             this.updateWorkPositionToZero();
             this.props.setGcodePrintingIndex(0);
