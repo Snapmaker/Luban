@@ -699,22 +699,40 @@ export const actions = {
             settings.nozzle_diameter_L = extruderLDefinition.settings?.machine_nozzle_size?.default_value;
 
             if (defaultMaterialL === '0') {
+<<<<<<< HEAD
                 defaultMaterialL = PRINTING_MATERIAL_CONFIG_GROUP_SINGLE.some((item) => {
                     return item.fields.some((key) => {
                         return (
                             extruderLDefaultDefinition?.settings[key]?.default_value
                             !== extruderLDefinition.settings[key]?.default_value
                         );
+=======
+                defaultMaterialL = PRINTING_MATERIAL_CONFIG_GROUP_SINGLE.some(item => {
+                    return item.fields.some(key => {
+                        if (!extruderLDefaultDefinition.settings[key] || !extruderLDefinition.settings[key]) {
+                            return false;
+                        }
+                        return extruderLDefaultDefinition?.settings[key]?.default_value !== extruderLDefinition.settings[key]?.default_value;
+>>>>>>> e38c71cdd... Fix: Fix GA event logger error (#1613)
                     });
                 }) ? '1' : '0';
             }
             if (defaultMaterialQuality === '0') {
+<<<<<<< HEAD
                 defaultMaterialQuality = PRINTING_QUALITY_CONFIG_GROUP_SINGLE.some((item) => {
                     return item.fields.some((key) => {
                         return (
                             activeActiveQualityDefinition.settings[key]?.default_value
                             !== defaultQualityDefinition.settings[key]?.default_value
                         );
+=======
+                defaultMaterialQuality = PRINTING_QUALITY_CONFIG_GROUP_SINGLE.some(item => {
+                    return item.fields.some(key => {
+                        if (!activeActiveQualityDefinition.settings[key] || !defaultQualityDefinition.settings[key]) {
+                            return false;
+                        }
+                        return activeActiveQualityDefinition.settings[key]?.default_value !== defaultQualityDefinition.settings[key]?.default_value;
+>>>>>>> e38c71cdd... Fix: Fix GA event logger error (#1613)
                     });
                 }) ? '1' : '0';
             }
@@ -730,35 +748,62 @@ export const actions = {
             settings.nozzle_diameter_R = extruderRDefinition.settings?.machine_nozzle_size?.default_value;
 
             if (defaultMaterialL === '0') {
+<<<<<<< HEAD
                 defaultMaterialL = PRINTING_MATERIAL_CONFIG_GROUP_SINGLE.some((item) => {
                     return item.fields.some((key) => {
                         return (
                             extruderLDefaultDefinition.settings[key].default_value
                             !== extruderLDefinition.settings[key].default_value
                         );
+=======
+                defaultMaterialL = PRINTING_MATERIAL_CONFIG_GROUP_SINGLE.some(item => {
+                    return item.fields.some(key => {
+                        if (!extruderLDefaultDefinition.settings[key] || !extruderLDefinition.settings[key]) {
+                            return false;
+                        }
+                        return extruderLDefaultDefinition.settings[key].default_value !== extruderLDefinition.settings[key].default_value;
+>>>>>>> e38c71cdd... Fix: Fix GA event logger error (#1613)
                     });
                 }) ? '1' : '0';
             }
 
             let defaultMaterialR = extruderRDefaultDefinition?.isDefault ? '0' : '2';
             if (defaultMaterialR === '0') {
+<<<<<<< HEAD
                 defaultMaterialR = PRINTING_MATERIAL_CONFIG_GROUP_DUAL.some((item) => {
                     return item.fields.some((key) => {
                         return (
                             extruderRDefaultDefinition?.settings[key].default_value
                             !== extruderRDefinition.settings[key].default_value
                         );
+=======
+                defaultMaterialR = PRINTING_MATERIAL_CONFIG_GROUP_DUAL.some(item => {
+                    return item.fields.some(key => {
+                        if (!extruderRDefaultDefinition.settings[key] || !extruderRDefinition.settings[key]) {
+                            return false;
+                        }
+                        return extruderRDefaultDefinition?.settings[key].default_value !== extruderRDefinition.settings[key].default_value;
+>>>>>>> e38c71cdd... Fix: Fix GA event logger error (#1613)
                     });
                 }) ? '1' : '0';
             }
 
             if (defaultMaterialQuality === '0') {
+<<<<<<< HEAD
                 defaultMaterialQuality = PRINTING_QUALITY_CONFIG_GROUP_DUAL.some((item) => {
                     return item.fields.some((key) => {
                         return (
                             activeActiveQualityDefinition.settings[key].default_value
                             !== defaultQualityDefinition.settings[key].default_value
                         );
+=======
+                defaultMaterialQuality = PRINTING_QUALITY_CONFIG_GROUP_DUAL.some(item => {
+                    return item.fields.some(key => {
+                        if (!activeActiveQualityDefinition.settings[key] || !defaultQualityDefinition.settings[key]) {
+                            return false;
+                        }
+                        return activeActiveQualityDefinition.settings[key].default_value !== defaultQualityDefinition.settings[key].default_value;
+>>>>>>> e38c71cdd... Fix: Fix GA event logger error (#1613)
                     });
                 }) ? '1' : '0';
             }
