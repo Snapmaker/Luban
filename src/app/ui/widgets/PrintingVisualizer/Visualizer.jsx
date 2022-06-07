@@ -36,6 +36,7 @@ import { emitUpdateControlInputEvent } from '../../components/SMCanvas/Transform
 import ModeToggleBtn from './ModeToggleBtn';
 import { logModelViewOperation } from '../../../lib/gaEvent';
 import VisualizerClippingControl from './VisualizerClippingControl';
+import { ModelEvents } from '../../../models/events';
 
 const initQuaternion = new Quaternion();
 const modeSuffix = {
@@ -384,7 +385,7 @@ class Visualizer extends PureComponent {
             this.actions.fitViewIn,
             false
         );
-        this.props.modelGroup.on('add', this.props.recordAddOperation);
+        this.props.modelGroup.on(ModelEvents.AddModel, this.props.recordAddOperation);
     }
 
     componentDidUpdate(prevProps) {

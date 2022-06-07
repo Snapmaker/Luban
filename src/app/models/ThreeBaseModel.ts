@@ -5,6 +5,7 @@ import { HEAD_PRINTING } from '../constants';
 import { SvgModelElement } from './BaseModel';
 import type ModelGroup from './ModelGroup';
 import type ThreeGroup from './ThreeGroup';
+import { TDisplayedType } from './ModelGroup';
 
 export type ModelTransformation = {
     positionX?: number;
@@ -95,6 +96,7 @@ export default class BaseModel extends EventEmitter {
     public sourceHeight: number;
     public sourceWidth: number;
     public originalName: string;
+    public originalPosition: TSize;
     public uploadName: string;
     public meshObject: (THREE.Mesh | THREE.Group) & {
         uniformScalingState?: boolean
@@ -117,7 +119,7 @@ export default class BaseModel extends EventEmitter {
 
     public mode: '3d';
 
-    protected displayedType = 'model';
+    protected displayedType: TDisplayedType = 'model';
 
     protected gcodeModeMaterial: THREE.MeshLambertMaterial;
 
@@ -160,7 +162,7 @@ export default class BaseModel extends EventEmitter {
         this.meshObject.applyQuaternion(quaternion);
     }
 
-    public updateDisplayedType(value: string) {
+    public updateDisplayedType(value: TDisplayedType) {
         this.displayedType = value;
         this.setSelectedGroup();
     }

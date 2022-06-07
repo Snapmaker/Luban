@@ -82,5 +82,6 @@ export default class MoveOperation3D extends Operation<MoveOperationState> {
             model.parent.computeBoundingBox();
         }
         modelGroup.updatePrimeTowerHeight();
+        modelGroup.calaClippingMap();
     }
 }

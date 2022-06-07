@@ -82,6 +82,7 @@ import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWith
 import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import VisibleOperation3D from '../operation-history/VisibleOperation3D';
 import { resolveDefinition } from '../../../shared/lib/definitionResolver';
+import ThreeModel from '../../models/ThreeModel';
 
 // register methods for three-mesh-bvh
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
@@ -503,7 +504,7 @@ export const actions = {
                     activeMaterialType,
                     definitionManager.extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
                 );
-                return  paramModel
+                return paramModel
             }
             return eachDefinition
         })
@@ -666,74 +667,74 @@ export const actions = {
 
     updateDefaultConfigId: (type,
         defaultId, direction = LEFT_EXTRUDER) => (
-        dispatch,
-        getState
-    ) => {
-        let { series } = getState().machine;
-        series = getRealSeries(series);
-        const printingState = getState().printing;
-        const {
-            defaultMaterialId,
-            defaultMaterialIdRight,
-            defaultQualityId,
-            materialDefinitions,
-            qualityDefinitions
-        } = printingState;
-        let activeMaterialType = dispatch(actions.getActiveMaterialType());
+            dispatch,
+            getState
+        ) => {
+            let { series } = getState().machine;
+            series = getRealSeries(series);
+            const printingState = getState().printing;
+            const {
+                defaultMaterialId,
+                defaultMaterialIdRight,
+                defaultQualityId,
+                materialDefinitions,
+                qualityDefinitions
+            } = printingState;
+            let activeMaterialType = dispatch(actions.getActiveMaterialType());
 
-        let originalConfigId = {};
-        if (machineStore.get('defaultConfigId')) {
-            originalConfigId = JSON.parse(machineStore.get('defaultConfigId'));
-        }
-        if (originalConfigId[series]) {
-            if (type === PRINTING_MANAGER_TYPE_MATERIAL) {
-                switch (direction) {
-                    case LEFT_EXTRUDER:
-                        originalConfigId[series].material = defaultId;
-                        activeMaterialType = dispatch(actions.getActiveMaterialType(defaultId));
-                        if (defaultMaterialId !== defaultId) {
-                            logProfileChange(HEAD_PRINTING, 'material');
-                        }
-                        break;
-                    case RIGHT_EXTRUDER:
-                        originalConfigId[series].materialRight = defaultId;
-                        if (defaultMaterialIdRight !== defaultId) {
-                            logProfileChange(HEAD_PRINTING, 'materialRight');
-                        }
-                        break;
-                    default:
-                        break;
+            let originalConfigId = {};
+            if (machineStore.get('defaultConfigId')) {
+                originalConfigId = JSON.parse(machineStore.get('defaultConfigId'));
+            }
+            if (originalConfigId[series]) {
+                if (type === PRINTING_MANAGER_TYPE_MATERIAL) {
+                    switch (direction) {
+                        case LEFT_EXTRUDER:
+                            originalConfigId[series].material = defaultId;
+                            activeMaterialType = dispatch(actions.getActiveMaterialType(defaultId));
+                            if (defaultMaterialId !== defaultId) {
+                                logProfileChange(HEAD_PRINTING, 'material');
+                            }
+                            break;
+                        case RIGHT_EXTRUDER:
+                            originalConfigId[series].materialRight = defaultId;
+                            if (defaultMaterialIdRight !== defaultId) {
+                                logProfileChange(HEAD_PRINTING, 'materialRight');
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                } else {
+                    originalConfigId[series][type] = defaultId;
+                    if (defaultQualityId !== defaultId) {
+                        logProfileChange(HEAD_PRINTING, type);
+                    }
                 }
             } else {
-                originalConfigId[series][type] = defaultId;
-                if (defaultQualityId !== defaultId) {
-                    logProfileChange(HEAD_PRINTING, type);
-                }
+                originalConfigId[series] = {
+                    ...CONFIG_ID,
+                    [type]: defaultId
+                };
             }
-        } else {
-            originalConfigId[series] = {
-                ...CONFIG_ID,
-                [type]: defaultId
-            };
-        }
-        dispatch(actions.updateDefinitionModelAndCheckVisible({
-            activeMaterialType,
-            direction,
-            type,
-            series,
-            originalConfigId
-        }))
+            dispatch(actions.updateDefinitionModelAndCheckVisible({
+                activeMaterialType,
+                direction,
+                type,
+                series,
+                originalConfigId
+            }))
 
-        machineStore.set('defaultConfigId', JSON.stringify(originalConfigId));
+            machineStore.set('defaultConfigId', JSON.stringify(originalConfigId));
 
 
-    },
+        },
 
     // when switch 'materialType' or 'nozzleSize', has to check defintion visible
     updateDefinitionModelAndCheckVisible: (
-        {activeMaterialType, machineNozzleSize, direction, type, originalConfigId, series}
-    ) =>  (dispatch, getState) => {
-        const {qualityDefinitions, defaultQualityId} = getState().printing;
+        { activeMaterialType, machineNozzleSize, direction, type, originalConfigId, series }
+    ) => (dispatch, getState) => {
+        const { qualityDefinitions, defaultQualityId } = getState().printing;
         let isSelectedModelVisible = true;
         qualityDefinitions.forEach((item) => {
             item?.updateParams && item.updateParams(activeMaterialType, machineNozzleSize);
@@ -1724,14 +1725,7 @@ export const actions = {
     setTransformMode: (value) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
 
-        // dispatch(actions.destroyGcodeLine());
-        // dispatch(actions.displayModel());
-        if (value) {
-            modelGroup.updateClippingPlane(99999);
-            modelGroup.plateAdhesion.visible = false;
-        } else {
-            modelGroup.calaClippingMap();
-        }
+        modelGroup.setTransformMode(value);
         dispatch(actions.updateState({
             transformMode: value
         }));
@@ -3663,6 +3657,7 @@ export const actions = {
                                 const bufferGeometry = new THREE.BufferGeometry();
                                 const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
                                 const material = new THREE.MeshPhongMaterial({
+                                    side: THREE.DoubleSide,
                                     color: 0xa0a0a0,
                                     specular: 0xb0b0b0,
                                     shininess: 0
@@ -3784,6 +3779,9 @@ export const actions = {
             return !models.includes(model);
         });
         newModels.forEach((model) => {
+            if (model instanceof ThreeModel) {
+                model.initClipper(modelGroup.localPlane);
+            }
             const modelSize = new Vector3();
             model.boundingBox.getSize(modelSize);
             const isLarge = ['x', 'y', 'z'].some(key => modelSize[key] >= size[key]);
@@ -3795,6 +3793,7 @@ export const actions = {
                 });
             }
         });
+        dispatch(actions.applyProfileToAllModels());
         if (modelNames.length === 1 && newModels.length === 0) {
             progressStatesManager.finishProgress(false);
             dispatch(
@@ -4009,6 +4008,7 @@ export const actions = {
                 operations
             )
         );
+        modelGroup.calaClippingMap();
         dispatch(actions.updateState(modelState));
         logToolBarOperation(HEAD_PRINTING, 'align');
     },
@@ -4139,7 +4139,9 @@ export const actions = {
         const qualitySetting = activeQualityDefinition.settings;
         modelGroup.updatePlateAdhesion(qualitySetting.adhesion_type.default_value);
         const models = modelGroup.getModels();
-        modelGroup.getThreeModels().forEach((model) => {
+        modelGroup.getThreeModels().filter((model) => {
+            return model.clipper;
+        }).forEach((model) => {
             const materialSettings = dispatch(actions.getModelMaterialSettings(model));
             model.updateMaterialColor(materialSettings.color.default_value);
 
@@ -4329,13 +4331,8 @@ export const actions = {
                         new ModelLoader().load(
                             `${DATA_PREFIX}/${info.supportStlFilename}`,
                             (geometry) => {
-                                const mesh = modelGroup.generateSupportMesh(
-                                    geometry,
-                                    model.meshObject
-                                );
-
+                                const mesh = model.generateSupportMesh(geometry);
                                 operation.state.currentSupport = mesh;
-                                model.meshObject.add(mesh);
                                 resolve();
                             },
                             () => { },

@@ -1,4 +1,4 @@
-import { Sphere, SphereBufferGeometry, MeshStandardMaterial, Vector3, Group, Matrix4, BufferGeometry, Mesh, DoubleSide, Float32BufferAttribute, MeshBasicMaterial, Plane, Box3, Object3D, Intersection, Geometry, Vector2, Shape, ShapeGeometry, MeshPhongMaterial, BufferAttribute, DynamicDrawUsage, LineSegments, LineBasicMaterial } from 'three';
+import { Sphere, SphereBufferGeometry, MeshStandardMaterial, Vector3, Group, Matrix4, BufferGeometry, Mesh, DoubleSide, Float32BufferAttribute, MeshBasicMaterial, Plane, Box3, Object3D, Intersection, Vector2, Shape, ShapeGeometry, MeshPhongMaterial, BufferAttribute, DynamicDrawUsage, LineSegments, LineBasicMaterial, PlaneGeometry, NotEqualStencilFunc, ReplaceStencilOp } from 'three';
 import EventEmitter from 'events';
 import { CONTAINED, INTERSECTED, NOT_INTERSECTED } from 'three-mesh-bvh';
 import { v4 as uuid } from 'uuid';
@@ -16,8 +16,9 @@ import ThreeGroup from './ThreeGroup';
 import PrimeTowerModel from './PrimeTowerModel';
 import { calculateUvVector } from '../lib/threejs/ThreeStlCalculation';
 import { polyOffset, polyUnion } from '../../shared/lib/clipper/cLipper-adapter';
+import { ModelEvents } from './events';
 
-const EVENTS = {
+const CUSTOM_EVENTS = {
     UPDATE: { type: 'update' }
 };
 
@@ -26,12 +27,13 @@ const SUPPORT_AVAIL_AREA_COLOR = [0.5725490196078431, 0.32941176470588235, 0.870
 const SUPPORT_ADD_AREA_COLOR = [0.2980392156862745, 0, 0.5098039215686274];
 const SUPPORT_UNAVAIL_AREA_COLOR = [0.9, 0.9, 0.9];
 const AVAIL = -1, NONE = 0, FACE = 1/* , POINT = 2, LINE = 3 */;
+export const planeMaxHeight = 99999;
 
 type TModel = ThreeGroup | ThreeModel | SvgModel
 
 type Model3D = Exclude<TModel, SvgModel>;
 
-type TDisplayedType = 'model' | 'gcode'
+export type TDisplayedType = 'model' | 'gcode'
 
 type TRotationAnalysisTable = {
     faceId: number;
@@ -64,6 +66,7 @@ class ModelGroup extends EventEmitter {
     public materials: TMaterials;
     private groupsChildrenMap: Map<ThreeGroup, (string | ThreeModel)[]> = new Map();
     private brushMesh: Mesh<SphereBufferGeometry, MeshStandardMaterial> = null;
+    private sectionMesh: Mesh = null;
     private headType: THeadType;
     private clipboard: TModel[];
     private estimatedTime: number;
@@ -77,9 +80,14 @@ class ModelGroup extends EventEmitter {
         y: number;
     }[];
 
-    private clippingGroup = new Group();
+    private displayedType: TDisplayedType = 'model';
+    private transformMode = ''
+
+    public clippingGroup = new Group();
     private maxHeight = 0;
     private clippingHeight: number;
+    public localPlane = new Plane(new Vector3(0, 0, -1), planeMaxHeight);
+    public clippingFaceGroup = new Group();
     public plateAdhesion = new Group();
     public clipping: 'true' | 'false' = 'true';
     public adhesionType: 'skirt' | 'brim' | 'raft' | 'none';
@@ -147,7 +155,7 @@ class ModelGroup extends EventEmitter {
     // }
 
     public onModelUpdate() {
-        this.object.dispatchEvent(EVENTS.UPDATE);
+        this.object.dispatchEvent(CUSTOM_EVENTS.UPDATE);
     }
 
     public getState(shouldCheckOverStep = true) {
@@ -326,7 +334,7 @@ class ModelGroup extends EventEmitter {
     }
 
     public recoverModelClippingGroup(model: TModel) {
-        this.updateClippingPlane(99999);
+        this.updateClippingPlane();
         if (model instanceof ThreeModel) {
             this.clippingGroup.add(model.clipper.group);
         } else if (model instanceof ThreeGroup) {
@@ -338,7 +346,7 @@ class ModelGroup extends EventEmitter {
     }
 
     public removeModel(model: TModel, loop = false) {
-        this.updateClippingPlane(99999);
+        this.updateClippingPlane();
         if (model instanceof PrimeTowerModel) return;
         if (!(model instanceof SvgModel)) {
             model.setSelected(false);
@@ -564,7 +572,7 @@ class ModelGroup extends EventEmitter {
                 model.setConvexGeometry(convexGeometry);
             }
         }
-        this.emit('set-convex');
+        this.emit(ModelEvents.SetConvex);
     }
 
     public updateBoundingBox(bbox: Box3) {
@@ -654,7 +662,7 @@ class ModelGroup extends EventEmitter {
                 return this._getEmptyState();
             }
         })();
-        this.emit('select', modelArray);
+        this.emit(ModelEvents.ModelSelect, modelArray);
         this.modelChanged();
 
         return state;
@@ -680,9 +688,6 @@ class ModelGroup extends EventEmitter {
             if (selectModel) {
                 const objectIndex = this.selectedGroup.children.indexOf(selectModel.meshObject);
                 if (objectIndex === -1) {
-                    if (this.selectedModelArray.length === 1) {
-                        this.unselectAllModels();
-                    }
                     let isModelAcrossGroup = false;
                     for (const selectedModel of this.selectedModelArray) {
                         if (selectedModel.parent !== selectModel.parent) {
@@ -719,12 +724,12 @@ class ModelGroup extends EventEmitter {
         return this.getState(false);
     }
 
-    public traverseModels(models: TModel[], callback: (model: TModel) => void) {
+    public traverseModels(models: TModel[], callback: (model: ThreeModel) => void) {
         models.forEach((model) => {
             if (model instanceof ThreeGroup) {
                 this.traverseModels(model.children, callback);
             }
-            (typeof callback === 'function') && callback(model);
+            (typeof callback === 'function') && callback(model as unknown as ThreeModel);
         });
     }
 
@@ -825,7 +830,7 @@ class ModelGroup extends EventEmitter {
         }
 
         this.modelChanged();
-        this.emit('select');
+        this.emit(ModelEvents.ModelSelect);
         return this.getState(false);
     }
 
@@ -961,14 +966,14 @@ class ModelGroup extends EventEmitter {
     }
 
     public duplicateSelectedModel(modelID) {
-        this.updateClippingPlane(99999);
+        this.updateClippingPlane();
         const modelsToCopy = this.selectedModelArray;
         if (modelsToCopy.length === 0) return this._getEmptyState();
 
         // Unselect all models
         this.unselectAllModels();
 
-        modelsToCopy.forEach((model) => {
+        const newModels = modelsToCopy.map((model) => {
             let newModel;
 
             if (model instanceof ThreeModel || model instanceof ThreeGroup) {
@@ -1001,7 +1006,14 @@ class ModelGroup extends EventEmitter {
             this.models.push(newModel);
             this.object.add(newModel.meshObject);
             this.addModelToSelectedGroup(newModel);
+            return newModel;
         });
+        if (this.headType === HEAD_PRINTING) {
+            this.traverseModels(newModels, (model: ThreeModel) => {
+                model.onTransform();
+                model.initClipper(this.localPlane);
+            });
+        }
 
         return this.getState();
     }
@@ -1018,7 +1030,7 @@ class ModelGroup extends EventEmitter {
      * Paste action: paste(duplicate) models in clipboard.
      */
     public paste() {
-        this.updateClippingPlane(99999);
+        this.updateClippingPlane();
         const modelsToCopy = this.clipboard;
         if (modelsToCopy.length === 0) return this._getEmptyState();
 
@@ -1051,8 +1063,7 @@ class ModelGroup extends EventEmitter {
                 this.addModelToSelectedGroup(newModel);
                 this.updatePrimeTowerHeight();
                 if (newModel instanceof ThreeModel) {
-                    newModel.clipper.init();
-                    this.clippingGroup.add(newModel.clipper.group);
+                    newModel.initClipper(this.localPlane);
                 }
             }
         });
@@ -1409,6 +1420,7 @@ class ModelGroup extends EventEmitter {
 
         this.prepareSelectedGroup();
         this.updatePrimeTowerHeight();
+        this.calaClippingMap();
         recovery();
 
         if (selectedModelArray.length === 0) {
@@ -1694,8 +1706,7 @@ class ModelGroup extends EventEmitter {
                 // todo, use this to refresh obj list
                 this.models = [...this.models];
                 this.object.add(model.meshObject);
-                model.clipper.init();
-                this.clippingGroup.add(model.clipper.group);
+                // model.initClipper(this.localPlane);
                 this.selectModelById(model.modelID);
             }
         } else {
@@ -1706,7 +1717,7 @@ class ModelGroup extends EventEmitter {
             this.object.add(model.meshObject);
         }
 
-        this.emit('add', model);
+        this.emit(ModelEvents.AddModel, model);
         // refresh view
         this.modelChanged();
         modelInfo.sourceType === '3d' && this.updatePrimeTowerHeight();
@@ -1848,7 +1859,11 @@ class ModelGroup extends EventEmitter {
     public setDisplayType(displayedType: TDisplayedType) {
         this.getModels<Model3D>().forEach((model) => {
             model.updateDisplayedType(displayedType);
+            if (model instanceof ThreeModel && model.clipper) {
+                model.clipper.group.visible = this.displayedType === 'model';
+            }
         });
+        this.displayedType = displayedType;
         this.updatePlateAdhesion();
     }
 
@@ -1868,7 +1883,7 @@ class ModelGroup extends EventEmitter {
                     resolve(result);
                 } else {
                     if (!model.convexGeometry) {
-                        this.once('set-convex', () => {
+                        this.once(ModelEvents.SetConvex, () => {
                             const result = this.analyzeSelectedModelRotation();
                             resolve(result);
                         });
@@ -2101,24 +2116,6 @@ class ModelGroup extends EventEmitter {
         if (typeof this.primeTowerHeightCallback === 'function') {
             this.primeTowerHeightCallback(Math.min(maxHeight, maxBoundingBoxHeight));
         }
-    }
-
-    // model support
-    public generateSupportMesh(geometry: Geometry, parentMesh: Mesh) {
-        const material = new MeshBasicMaterial({
-            side: DoubleSide,
-            transparent: true,
-            opacity: 0.5,
-            color: 0x6485AB,
-            depthWrite: false,
-            polygonOffset: true,
-            polygonOffsetFactor: -1,
-            polygonOffsetUnits: -5
-        });
-        const mesh = new Mesh(geometry, material);
-        mesh.renderOrder = 99999;
-        mesh.applyMatrix4(parentMesh.matrixWorld.clone().invert());
-        return mesh;
     }
 
     public filterModelsCanAttachSupport(models: TModel[] = this.models) {
@@ -2404,6 +2401,10 @@ class ModelGroup extends EventEmitter {
     }
 
     public updatePlateAdhesion(adhesionType: 'skirt' | 'brim' | 'raft' | 'none' = this.adhesionType) {
+        if (this.displayedType === 'gcode' || this.transformMode) {
+            this.plateAdhesion.visible = false;
+            return;
+        }
         this.plateAdhesion.visible = true;
         // if (this.adhesionType === adhesionType) {
         //     return;
@@ -2416,7 +2417,7 @@ class ModelGroup extends EventEmitter {
         }
         const paths = [];
         this.getThreeModels().filter((model) => {
-            return model.visible;
+            return model.visible && model.clipper;
         }).forEach((model) => {
             if (model instanceof ThreeModel) {
                 const polygonss = model.clipper.clippingMap.get(model.clipper.clippingConfig.layerHeight);
@@ -2469,26 +2470,79 @@ class ModelGroup extends EventEmitter {
     }
 
     public calaClippingMap() {
-        this.plateAdhesion.visible = true;
-
         this.getThreeModels().forEach((model) => {
             model.updateClippingMap();
         });
     }
 
-    public updateClippingPlane(height) {
+    public setSectionMesh() {
+        if (!this.sectionMesh) {
+            const planeGeom = new PlaneGeometry();
+            const planeMat = new MeshStandardMaterial({
+                color: 0xE9F3FE, // 0x7CFC00
+                metalness: 0.1,
+                roughness: 0.75,
+                clippingPlanes: [],
+                stencilWrite: true,
+                stencilRef: 0,
+                stencilFunc: NotEqualStencilFunc,
+                stencilFail: ReplaceStencilOp,
+                stencilZFail: ReplaceStencilOp,
+                stencilZPass: ReplaceStencilOp
+            });
+            this.sectionMesh = new Mesh(planeGeom, planeMat);
+            this.sectionMesh.onAfterRender = (renderer) => {
+                renderer.clearStencil();
+            };
+            this.sectionMesh.renderOrder = 1200;
+            this.object.add(this.sectionMesh);
+        }
+
+        // let maxX = 0;
+        // let maxY = 0;
+        // this.getThreeModels().forEach((model) => {
+        //     maxX = Math.max(maxX, Math.abs(model.boundingBox.max.x));
+        //     maxX = Math.max(maxX, Math.abs(model.boundingBox.min.x));
+        //     maxY = Math.max(maxY, Math.abs(model.boundingBox.max.y));
+        //     maxY = Math.max(maxY, Math.abs(model.boundingBox.min.y));
+        // });
+        this.sectionMesh.geometry = new PlaneGeometry(planeMaxHeight, planeMaxHeight);
+        const position = new Vector3();
+        this.object.getWorldPosition(position);
+        this.sectionMesh.position.copy(position);
+        this.sectionMesh.position.setZ(planeMaxHeight);
+
+        this.updateClippingPlane();
+    }
+
+    public updateClippingPlane(height = planeMaxHeight) {
+        if (height === planeMaxHeight) {
+            this.emit(ModelEvents.ClippingReset);
+        }
         // this.planeMesh.position.set(0, 0, height);
         !height && (height = this.maxHeight);
         this.clippingHeight = height;
-        this.getThreeModels().forEach((model) => {
+
+        this.sectionMesh.position.setZ(height);
+        // this.localPlane.coplanarPoint(this.sectionMesh.position);
+        // this.sectionMesh.lookAt(
+        //     this.sectionMesh.position.x - this.localPlane.normal.x,
+        //     this.sectionMesh.position.y - this.localPlane.normal.y,
+        //     this.sectionMesh.position.z - this.localPlane.normal.z
+        // );
+
+        this.getThreeModels().filter((model) => {
+            return model.visible && model.clipper;
+        }).forEach((model) => {
             model.setLocalPlane(this.clippingHeight);
         });
+        this.localPlane.constant = height;
     }
 
     public hasClipped() {
         let flag = true;
         this.traverseModels(this.models, (model) => {
-            if (model instanceof ThreeModel && model.clipper.busy) {
+            if (model instanceof ThreeModel && model.clipper?.busy) {
                 flag = false;
             }
         });
@@ -2504,11 +2558,17 @@ class ModelGroup extends EventEmitter {
         }
         const allDone = this.hasClipped();
         if (allDone) {
-            this.emit('test12', true);
+            this.emit(ModelEvents.ClippingFinish, true);
             this.updatePlateAdhesion();
             this.onModelUpdate();
             this.models = [...this.models];
         }
+    }
+
+    public setTransformMode(value: string) {
+        this.transformMode = value;
+        this.updatePlateAdhesion();
+        this.updateClippingPlane();
     }
 }
 

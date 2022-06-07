@@ -66,6 +66,7 @@ export default class GroupOperation3D extends Operation<GroupState> {
         modelGroup.object.add(target.meshObject);
         modelGroup.models = [...this.state.modelsAfterGroup];
         modelGroup.updatePrimeTowerHeight();
+        modelGroup.calaClippingMap();
     }
 
     public undo() {
@@ -101,5 +102,6 @@ export default class GroupOperation3D extends Operation<GroupState> {
 
         modelGroup.models = [...this.state.modelsBeforeGroup];
         modelGroup.updatePrimeTowerHeight();
+        modelGroup.calaClippingMap();
     }
 }
