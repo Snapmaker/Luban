@@ -17,7 +17,7 @@ let intervalHandle = null;
 class WifiServerManager extends EventEmitter {
     client = createSocket('udp4');
 
-    devices = [];
+    devices = new Map();
 
     sockets = [];
 
@@ -53,14 +53,10 @@ class WifiServerManager extends EventEmitter {
 
                 device[key.toLowerCase()] = value;
             }
+            const time = new Date();
+            device.time = time;
 
-            this.devices.push(device);
-            for (const socket of this.sockets) {
-                socket.emit('machine:discover', {
-                    devices: this.devices,
-                    type: CONNECTION_TYPE_WIFI
-                });
-            }
+            this.devices.set(address, device);
         });
     };
 
@@ -72,7 +68,6 @@ class WifiServerManager extends EventEmitter {
         }
 
         this.refreshing = true;
-        this.devices = [];
 
         const message = Buffer.from('discover');
 
@@ -88,6 +83,7 @@ class WifiServerManager extends EventEmitter {
                             return (p | (~q & 255));
                         }
                     ).join('.');
+                    // log.debug(`broadcastAddress=${broadcastAddress}`);
 
                     this.client.send(message, DISCOVER_SERVER_PORT, broadcastAddress, (err) => {
                         if (err) {
@@ -103,12 +99,26 @@ class WifiServerManager extends EventEmitter {
         // Note: 500ms reaction time, 3000ms is too long.
         setTimeout(() => {
             this.refreshing = false;
-        }, 500);
+            const newTime = new Date();
+            const result = [];
+            for (const server of this.devices.values()) {
+                if (newTime - server.time <= 3000) {
+                    result.push(server);
+                }
+            }
+            for (const socket of this.sockets) {
+                socket.emit('machine:discover', {
+                    devices: result,
+                    type: CONNECTION_TYPE_WIFI
+                });
+            }
+        }, 1000);
     };
 
     onConnection = (socket) => {
         this.sockets.push(socket);
-        intervalHandle = setInterval(this.refreshDevices, 1000);
+        this.refreshDevices();
+        intervalHandle = setInterval(this.refreshDevices, 3000);
     };
 
     onDisconnection = (socket) => {

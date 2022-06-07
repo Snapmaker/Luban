@@ -427,13 +427,14 @@ class Visualizer extends PureComponent {
                     pos: null
                 });
             }
+            if (connectionType === CONNECTION_TYPE_SERIAL) {
+                this.actions.tryPause();
+            }
             if (connectionType === CONNECTION_TYPE_WIFI && workflowStatus !== WORKFLOW_STATUS_IDLE
                 || connectionType === CONNECTION_TYPE_SERIAL && workflowState !== WORKFLOW_STATE_IDLE) {
-                server.stopServerGcode(() => {
-                    if (connectionType === CONNECTION_TYPE_SERIAL) {
-                        this.actions.tryPause();
-                    }
-                });
+                setTimeout(() => {
+                    server.stopServerGcode();
+                }, 60);
             }
         },
         handleClose: () => {
