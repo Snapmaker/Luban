@@ -695,7 +695,7 @@ class SvgModel extends BaseModel {
 
     // just for svg file
     public async uploadSourceImage() {
-        if (this.resource.originalFile.name.indexOf('.svg') === -1) {
+        if (path.basename(this.resource.originalFile.name) !== '.svg' || this?.mode !== 'vector') {
             return;
         }
         const content = await fetch(this.resource.originalFile.path, { method: 'GET' })
@@ -712,13 +712,17 @@ class SvgModel extends BaseModel {
         const v = await Canvg.fromString(ctx, content);
         await v.render();
         const blob = await new Promise<Blob>((resolve) => canvas.toBlob(resolve));
-        const file = new File([blob], 'gen.png');
-        document.body.removeChild(canvas);
-        const formData = new FormData();
-        formData.append('image', file);
-        const res = await api.uploadImage(formData);
+        if (blob) {
+            const file = new File([blob], 'gen.png');
+            document.body.removeChild(canvas);
+            const formData = new FormData();
+            formData.append('image', file);
+            const res = await api.uploadImage(formData);
 
-        this.uploadImageName = res.body.uploadName;
+            this.uploadImageName = res.body.uploadName;
+        } else {
+            this.uploadImageName = '';
+        }
         this.generateModelObject3D();
         this.generateProcessObject3D();
     }
