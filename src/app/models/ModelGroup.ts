@@ -83,13 +83,11 @@ class ModelGroup extends EventEmitter {
         this.object = new Group();
         this.grayModeObject = new Group();
         this.models = [];
-        this.primeTower = new PrimeTowerModel(0.01, this);
         this.selectedGroup = new Group();
         this.selectedGroup.uniformScalingState = true;
         this.selectedGroup.boundingBox = [];
         this.selectedGroup.shouldUpdateBoundingbox = true;
         this.object.add(this.selectedGroup);
-        this.object.add(this.primeTower.meshObject);
         this.selectedModelArray = [];
         this.clipboard = [];
         this.estimatedTime = 0;
@@ -1503,6 +1501,9 @@ class ModelGroup extends EventEmitter {
     public _checkAnyModelOversteppedOrSelected(shouldCheckPrime = false) {
         let isAnyModelOverstepped = false;
         const primeTower = this.primeTower;
+        if (!primeTower) {
+            return false;
+        }
         for (const model of this.getModels<Model3D>().concat(primeTower)) {
             if (model.sourceType === '3d' && model.visible) {
                 const overstepped = this._checkOverstepped(model);
@@ -2046,7 +2047,8 @@ class ModelGroup extends EventEmitter {
 
     // prime tower
     public initPrimeTower(initHeight: number = 0.1, transformation: ModelTransformation) {
-        return new PrimeTowerModel(initHeight, this, transformation);
+        this.primeTower = new PrimeTowerModel(initHeight, this, transformation);
+        this.object.add(this.primeTower.meshObject);
     }
 
     public updatePrimeTowerHeight() {
