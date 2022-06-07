@@ -78,7 +78,6 @@ const _getResult = (err, res) => {
     };
 };
 // let timeoutHandle = null;
-let intervalHandle = null;
 
 export type StateOptions = {
     headType?: string,
@@ -140,7 +139,6 @@ class SocketHttp {
         this.init();
         log.debug(`wifi host="${this.host}" : token=${this.token}`);
         const api = `${this.host}/api/v1/connect`;
-        intervalHandle = setInterval(this.getEnclosureStatus, 1000);
         request
             .post(api)
             .timeout(3000)
@@ -151,6 +149,8 @@ class SocketHttp {
                 }
                 if (err) {
                     log.debug(`err="${err}"`);
+                } else {
+                    this.getEnclosureStatus();
                 }
                 const result = _getResult(err, res);
                 const { data } = result;
@@ -204,7 +204,6 @@ class SocketHttp {
             this.host = '';
             this.token = '';
             this.heartBeatWorker && this.heartBeatWorker.terminate();
-            clearInterval(intervalHandle);
         } else {
             socket && socket.emit(eventName, _getResult(new Error('connection not exist'), null));
         }
