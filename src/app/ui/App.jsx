@@ -20,6 +20,7 @@ import Settings from './pages/Settings';
 import UniApi from '../lib/uni-api';
 import AppLayout from './layouts/AppLayout';
 import { Server } from '../flux/machine/Server';
+import { logErrorToGA } from '../lib/gaEvent';
 
 class App extends PureComponent {
     static propTypes = {
@@ -32,6 +33,8 @@ class App extends PureComponent {
         updateMultipleEngine: PropTypes.func.isRequired,
         menuDisabledCount: PropTypes.number
     };
+
+    state = { hasError: false };
 
     router = React.createRef();
 
@@ -116,7 +119,21 @@ class App extends PureComponent {
         Server.closeServerAfterWindowReload();
     }
 
+    static getDerivedStateFromError() {
+        // Update state so the next render will show the fallback UI.
+        return { hasError: true };
+    }
+
+    componentDidCatch(error, errorInfo) {
+        console.error('error', error, errorInfo);
+        logErrorToGA(errorInfo);
+    }
+
     render() {
+        if (this.state.hasError) {
+            // You can render any custom fallback UI
+            return <h1>Something went wrong. Please reload the app</h1>;
+        }
         return (
             <HashRouter ref={this.router}>
                 <AppLayout>
