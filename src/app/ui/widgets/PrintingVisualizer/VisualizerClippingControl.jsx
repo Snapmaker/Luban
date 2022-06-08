@@ -9,12 +9,12 @@ import { ModelEvents } from '../../../models/events';
 function VisualizerClippingControl() {
     const transformMode = useSelector(state => state?.printing?.transformMode, shallowEqual);
     const modelGroup = useSelector(state => state?.printing?.modelGroup);
-    const clipped = useSelector(state => state?.printing?.modelGroup.hasClipped(), shallowEqual);
+    const clipped = useSelector(state => state?.printing?.modelGroup?.hasClipped(), shallowEqual);
     const displayedType = useSelector(state => state?.printing?.displayedType, shallowEqual);
-
     const primeTowerHeight = useSelector(state => state?.printing?.primeTowerHeight, shallowEqual);
     const qualityDefinitions = useSelector(state => state?.printing?.qualityDefinitions, shallowEqual);
     const defaultQualityId = useSelector(state => state?.printing?.defaultQualityId, shallowEqual);
+
     const dispatch = useDispatch();
 
     const activeQualityDefinition = lodashFind(qualityDefinitions, {
@@ -58,7 +58,7 @@ function VisualizerClippingControl() {
         return (
             <React.Fragment>
                 <div className={styles['layer-wrapper']}>
-                    {/* <span className={styles['layer-label']}>{value}</span> */}
+                    <span className={styles['layer-label']}>{value || ''}</span>
                     <div
                         style={{
                             position: 'relative',

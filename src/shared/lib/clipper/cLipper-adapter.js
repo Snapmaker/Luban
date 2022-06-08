@@ -64,7 +64,8 @@ const polyOffset = (paths, offset, joinType = ClipperLib.JoinType.jtSquare, EndT
 
     const cPaths = preClipperPaths(paths, type);
 
-    const clipperOffset = new ClipperLib.ClipperOffset(3 * SCALE, 0.25 * SCALE);
+    // TODO 有其他影响面
+    const clipperOffset = new ClipperLib.ClipperOffset(0 * SCALE, 0.0 * SCALE);
 
     clipperOffset.AddPaths(cPaths, joinType, EndType);
 

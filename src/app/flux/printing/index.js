@@ -4137,7 +4137,16 @@ export const actions = {
             definitionId: defaultQualityId
         });
         const qualitySetting = activeQualityDefinition.settings;
-        modelGroup.updatePlateAdhesion(qualitySetting.adhesion_type.default_value);
+        modelGroup.updatePlateAdhesion({
+            adhesionType: qualitySetting.adhesion_type.default_value,
+            skirtLineCount: qualitySetting?.skirt_line_count?.default_value,
+            brimLineCount: qualitySetting?.brim_line_count?.default_value,
+            brimWidth: qualitySetting?.brim_width?.default_value,
+            skirtBrimLineWidth: qualitySetting?.skirt_brim_line_width?.default_value,
+            raftMargin: qualitySetting?.raft_margin?.default_value,
+            skirtGap: qualitySetting?.skirt_gap?.default_value,
+            brimGap: qualitySetting?.brim_gap?.default_value
+        });
         const models = modelGroup.getModels();
         modelGroup.getThreeModels().filter((model) => {
             return model.clipper;

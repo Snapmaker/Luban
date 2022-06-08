@@ -16,7 +16,7 @@ type TPoint = {
     z?: number
 }
 
-type TPolygon = TPoint[][]
+export type TPolygon = TPoint[][]
 
 type TInfillPattern = 'lines' | 'grid' | 'triangles' | 'trihexagon' | 'cubic'
 
@@ -125,7 +125,7 @@ class ClippingModel {
         // }));
         // this.group.add(this.colliderMesh);
 
-        // this.createPlaneStencilGroup();
+        this.createPlaneStencilGroup();
         this.clippingWall = this.createLine(0x3B83F6);
         this.clippingSkin = this.createLine(0xFFFF00);
         this.clippingSkinArea = this.createLine(0xFFFF00);
@@ -251,6 +251,12 @@ class ClippingModel {
         this.observable.subscribe();
     }
 
+    public test(height) {
+        const plane = new THREE.Plane(new THREE.Vector3(0, 0, -1), height);
+        const vectors = calculateSectionPoints(this.colliderBvh, plane, { x: 0, y: 0, z: 0 });
+        console.log(JSON.stringify(vectors));
+    }
+
     public async calaClippingMap() {
         this.modelGroup.clippingFinish(false);
 
@@ -305,7 +311,7 @@ class ClippingModel {
                 } else {
                     workerManager.calaClippingWall<TPolygon[][]>({
                         polygons,
-                        innerWallCount: 2,
+                        innerWallCount: wallCount,
                         lineWidth: this.clippingConfig.lineWidth
                     }, (res) => {
                         this.innerWallMap.set(index, res);
@@ -577,6 +583,7 @@ class ClippingModel {
         if (clippingHeight <= this.modelBoundingBox.max.z && polygons && polygons.length !== 0) {
             const skinLines = this.generateLineInfill(clippingHeight, polygons);
             if (!skinLines.length) {
+                this.clippingInfill.visible = false;
                 return;
             }
             let j = 0;

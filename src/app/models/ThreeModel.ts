@@ -141,8 +141,6 @@ class ThreeModel extends BaseModel {
         }
 
         this.updateMaterialColor(modelInfo.color ?? '#cecece');
-        const stencilGroup = this.createPlaneStencilGroup(this.geometry);
-        this.meshObject.add(stencilGroup);
     }
 
     public get visible() {
@@ -585,7 +583,7 @@ class ThreeModel extends BaseModel {
         };
     }
 
-    private createPlaneStencilGroup(geometry) {
+    public createPlaneStencilGroup(geometry) {
         const group = new THREE.Group();
         const baseMat = new THREE.MeshBasicMaterial();
         baseMat.depthWrite = false;
