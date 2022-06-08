@@ -17,7 +17,7 @@ export enum WorkerMethods {
     // LUBAN worker methods END
 }
 
-type IWorkerManager = {
+export type IWorkerManager = {
     [method in WorkerMethods]: (data: unknown[], onmessage: (data: unknown) => void) => {
         terminate(): void;
     };
@@ -50,7 +50,7 @@ class WorkerManager {
 
 Object.entries(WorkerMethods).forEach(([, method]) => {
     // eslint-disable-next-line func-names
-    WorkerManager.prototype[method] = function (data: any, onmessage?: (payload: unknown) => void) {
+    WorkerManager.prototype[method] = function (data: unknown[], onmessage?: (payload: unknown) => void) {
         const pool = this.getPool() as WorkerPool;
         const handle = pool.exec(method, data, {
             on: (payload) => {

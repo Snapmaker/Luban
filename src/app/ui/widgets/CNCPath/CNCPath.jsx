@@ -3,10 +3,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import {
     PAGE_EDITOR,
-    SOURCE_TYPE_IMAGE3D,
     HEAD_CNC,
-    SOURCE_TYPE_RASTER,
-    SOURCE_TYPE_SVG,
+    SOURCE_TYPE,
     SVG_NODE_NAME_IMAGE,
     SVG_NODE_NAME_TEXT
 } from '../../../constants';
@@ -31,9 +29,9 @@ const CNCPath = ({ widgetActions }) => {
     const selectedNotHide = selectedModelArray && selectedModelArray.length === 1 && selectedModelVisible;
 
     const isTextVector = (config.svgNodeName === SVG_NODE_NAME_TEXT);
-    const isImage3d = (sourceType === SOURCE_TYPE_IMAGE3D);
+    const isImage3d = (sourceType === SOURCE_TYPE.IMAGE3D);
     const isEditor = page === PAGE_EDITOR;
-    const showImageProcessMode = (sourceType === SOURCE_TYPE_RASTER || sourceType === SOURCE_TYPE_SVG) && config.svgNodeName === SVG_NODE_NAME_IMAGE;
+    const showImageProcessMode = (sourceType === SOURCE_TYPE.RASTER || sourceType === SOURCE_TYPE.SVG) && config.svgNodeName === SVG_NODE_NAME_IMAGE;
 
     const dispatch = useDispatch();
     useEffect(() => {
@@ -60,7 +58,7 @@ const CNCPath = ({ widgetActions }) => {
                     disabled={!hasSelectedModels}
                     headType={HEAD_CNC}
                     updateSelectedModelUniformScalingState={
-                        (params) => dispatch(editorActions.updateSelectedModelTransformation('cnc', params))
+                        (params) => dispatch(editorActions.updateSelectedModelUniformScalingState('cnc', params))
                     }
                 />
             )}

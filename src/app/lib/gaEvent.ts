@@ -1,7 +1,7 @@
 import i18next from 'i18next';
-// @ts-ignore
 import ReactGA from 'react-ga4';
 import { v4 as uuid } from 'uuid';
+import isElectron from 'is-electron';
 import { machineStore } from '../store/local-storage';
 
 type THeadType = 'printing' | 'laser' | 'cnc'
@@ -38,7 +38,7 @@ export function logPageView({ pathname }: { pathname: string, isRotate: boolean 
 
 const getToolHead = (headType: THeadType) => {
     const toolHead = machineStore.get('machine.toolHead');
-    return toolHead[`${headType}Toolhead`];
+    return toolHead[`${headType}Toolhead`] as string;
 };
 
 const getProjectType = (headType: THeadType, isRotate?: boolean) => {
@@ -68,12 +68,20 @@ const sendMessage = (messageType: string, category: string, data: Record<string,
 };
 
 export const lubanVisit = () => {
-    return sendMessage('luban_visit', 'user');
+    return sendMessage('luban_visit', 'user', {
+        message: isElectron() ? 'electron' : 'web'
+    });
 };
 
 export const logLubanQuit = () => {
     machineStore.set('projectId', '');
     return sendMessage('luban_quit', 'user');
+};
+
+export const logErrorToGA = (errorInfo) => {
+    return sendMessage('error_boundaries', 'system', {
+        message: errorInfo?.componentStack
+    });
 };
 
 export const logModuleVisit = (headType: THeadType, isRotate?: boolean) => {
@@ -109,9 +117,9 @@ export const logModelViewOperation = (headType: THeadType, type: 'isometric' | '
 };
 
 export const logPritingSlice = (headType: THeadType, profileStatus: {
-    defaultMaterialL,
-    defaultMaterialR,
-    defaultMaterialQuality
+    defaultMaterialL: string,
+    defaultMaterialR: string,
+    defaultMaterialQuality: string
 }, sliceSetting?: string) => {
     return sendMessage(`${headType}_slice`, 'slice', {
         headType,

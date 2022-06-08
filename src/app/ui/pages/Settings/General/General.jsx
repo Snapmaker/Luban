@@ -14,6 +14,8 @@ import Select from '../../../components/Select';
 // import styles from './index.styl';
 import UniApi from '../../../../lib/uni-api';
 import { actions as machineActions } from '../../../../flux/machine';
+import SubMenuitemWrapper from './SubMenuItemWrapper';
+
 
 // const About = () => {
 //     return (
@@ -82,10 +84,12 @@ function General({ state: generalState, actions }) {
     const isDownloading = useSelector(state => state?.machine?.isDownloading, shallowEqual);
     const shouldCheckForUpdate = useSelector(state => state?.machine?.shouldCheckForUpdate, shallowEqual);
     const shouldAutoPreviewGcode = useSelector(state => state?.machine?.shouldAutoPreviewGcode, shallowEqual);
+    const shouldHideConsole = useSelector(state => state?.machine?.shouldHideConsole, shallowEqual);
     const autoupdateMessage = useSelector(state => state?.machine?.autoupdateMessage, shallowEqual);
     const dispatch = useDispatch();
     const updateShouldCheckForUpdate = (shouldAutoUpdate) => dispatch(machineActions.updateShouldCheckForUpdate(shouldAutoUpdate));
     const updateShouldAutoPreviewGcode = (bool) => dispatch(machineActions.updateShouldAutoPreviewGcode(bool));
+    const updateShouldHideConsole = (bool) => dispatch(machineActions.updateShouldHideConsole(bool));
 
     const handlers = {
         changeLanguage: (option) => {
@@ -134,6 +138,7 @@ function General({ state: generalState, actions }) {
         );
     }
     // NOTHING a b
+
 
     return (
         <div>
@@ -203,6 +208,15 @@ function General({ state: generalState, actions }) {
                             </span>
                         </div>
                     </div>
+                    <SubMenuitemWrapper title={i18n._('key-App/Settings/General-Workspace Settting')}>
+                        <Checkbox
+                            checked={shouldHideConsole}
+                            onChange={(event) => { updateShouldHideConsole(event.target.checked); }}
+                        />
+                        <span className="margin-left-4">
+                            {i18n._('key-App/Settings/General-Workspace Hide the console when working')}
+                        </span>
+                    </SubMenuitemWrapper>
                 </div>
             </form>
         </div>

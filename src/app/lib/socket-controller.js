@@ -24,7 +24,7 @@ class SocketController {
         this.socket && this.socket.destroy();
 
         this.socket = io.connect('', {
-            query: `token=${token}`
+            query: `token=${token}`,
         });
 
         this.socket.on('startup', () => {
@@ -52,7 +52,7 @@ class SocketController {
         if (callbacks) {
             callbacks.push(callback);
         }
-        this.socket && this.socket.on(eventName, (...args) => {
+        this.socket.on(eventName, (...args) => {
             for (const callback1 of callbacks) {
                 callback1(...args);
             }
@@ -60,9 +60,10 @@ class SocketController {
     }
 
     once(eventName, callback) {
-        this.socket && this.socket.once(eventName, (...args) => {
+        this.socket.once(eventName, (...args) => {
             callback(...args);
         });
+
         return this;
     }
 }

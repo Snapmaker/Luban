@@ -1,33 +1,46 @@
 import { includes, find } from 'lodash';
+import net from 'net';
 import Business, { CoordinateType } from './Business';
 import SocketServer from '../../../lib/SocketManager';
 import logger from '../../../lib/logger';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2,
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, CNC_MODULE, LASER_MODULE, PRINTING_MODULE, HEAD_CNC, HEAD_LASER,
     COORDINATE_AXIS, WORKFLOW_STATUS_MAP, HEAD_PRINTING, EMERGENCY_STOP_BUTTON, ENCLOSURE_MODULES, AIR_PURIFIER_MODULES, ROTARY_MODULES, MODULEID_TOOLHEAD_MAP, A400_HEADT_BED_FOR_SM2, HEADT_BED_FOR_SM2, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_SM2, RIGHT_EXTRUDER, LEFT_EXTRUDER } from '../../../../app/constants';
-import { readUint8 } from '../../../lib/SACP-SDK/SACP/helper';
+import { readString, readUint8 } from '../../../lib/SACP-SDK/SACP/helper';
 import GetHotBed from '../../../lib/SACP-SDK/SACP/business/models/GetHotBed';
 import CoordinateSystemInfo from '../../../lib/SACP-SDK/SACP/business/models/CoordinateSystemInfo';
 import { EventOptions, MarlinStateData } from '../types';
 import ExtruderInfo from '../../../lib/SACP-SDK/SACP/business/models/ExtruderInfo';
 import CoordinateInfo, { Direction } from '../../../lib/SACP-SDK/SACP/business/models/CoordinateInfo';
 import CncSpeedState from '../../../lib/SACP-SDK/SACP/business/models/CncSpeedState';
+import { ResponseCallback } from '../../../lib/SACP-SDK/SACP/communication/Dispatcher';
 
 const log = logger('lib:SocketBASE');
 
 class SocketBASE {
-    // private heartbeatTimer;
+    private heartbeatTimer;
 
-    socket: SocketServer;
+    public socket: SocketServer;
 
-    sacpClient: Business;
+    public sacpClient: Business;
 
-    moduleInfos: any = {};
+    public moduleInfos: any = {};
 
-    currentWorkNozzle:number = 0
+    public currentWorkNozzle:number = 0
 
-    public startHeartbeatBase = (sacpClient: Business) => {
+
+    public subscribeLogCallback: ResponseCallback;
+
+    public subscribeHeartCallback: ResponseCallback;
+
+    public subscribeNozzleCallback: ResponseCallback;
+
+    public subscribeHotBedCallback: ResponseCallback;
+
+    public subscribeCoordinateCallback: ResponseCallback;
+
+    public startHeartbeatBase = (sacpClient: Business, client?: net.Socket) => {
         this.sacpClient = sacpClient;
-        let stateData: MarlinStateData;
+        let stateData: MarlinStateData = {};
         let statusKey = 0;
         const moduleStatusList = {
             rotaryModule: false,
@@ -35,15 +48,40 @@ class SocketBASE {
             emergencyStopButton: false,
             enclosure: false
         };
-        let a = true;
-        let b = true;
-        this.sacpClient.subscribeHeartbeat({ interval: 1000 }, async (data) => {
-            // log.info(`receive heartbeat: ${data.response}`);
+        this.sacpClient.logFeedbackLevel(2).then(({ response }) => {
+            log.info(`logLevel, ${response}`);
+            if (response.result === 0) {
+                this.subscribeLogCallback = (data) => {
+                    const result = readString(data.response.data, 1).result;
+                    this.socket && this.socket.emit('serialport:read', { data: result });
+                };
+                this.sacpClient.subscribeLogFeedback({ interval: 60000 }, this.subscribeLogCallback);
+            }
+        });
+        this.sacpClient.setHandler(0x01, 0x36, ({ param }) => {
+            const isHomed = readUint8(param, 0);
+            stateData = {
+                ...stateData,
+                isHomed: !isHomed
+            };
+            if (stateData.headType !== HEAD_PRINTING) {
+                this.sacpClient.updateCoordinate(CoordinateType.WORKSPACE).then(({ response }) => {
+                    log.info(`updateCoordinateType, ${response.result}`);
+                });
+            }
+            this.socket && this.socket.emit('move:status', { isHoming: false });
+        });
+        this.subscribeHeartCallback = async (data) => {
             statusKey = readUint8(data.response.data, 0);
+            stateData.airPurifier = false;
+            if (this.heartbeatTimer) clearTimeout(this.heartbeatTimer);
+            this.heartbeatTimer = setTimeout(() => {
+                client && client.destroy();
+                log.info('TCP close');
+                this.socket && this.socket.emit('connection:close');
+            }, 10000);
             await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
-                a && console.log('==================moduleInfos start=======================');
-                a && console.log(moduleInfos);
-                a && console.log('==================moduleInfos end=======================');
+                // log.info(`revice moduleInfo: ${data.response}`);
                 moduleInfos.forEach(module => {
                     if (includes(EMERGENCY_STOP_BUTTON, module.moduleId)) {
                         moduleStatusList.emergencyStopButton = true;
@@ -56,71 +94,73 @@ class SocketBASE {
                     }
                     if (includes(AIR_PURIFIER_MODULES, module.moduleId)) {
                         stateData.airPurifier = true;
-                        // new to update airPurifier status
+                        // need to update airPurifier status
+                    }
+                    if (includes(PRINTING_MODULE, module.moduleId)) {
+                        stateData.headType = HEAD_PRINTING;
+                        stateData.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
+                    } else if (includes(LASER_MODULE, module.moduleId)) {
+                        stateData.headType = HEAD_LASER;
+                        stateData.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
+                    } else if (includes(CNC_MODULE, module.moduleId)) {
+                        stateData.headType = HEAD_CNC;
+                        stateData.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
                     }
 
-                    a && console.log(module.moduleId);
-                    a && console.log(module);
+
                     const keys = Object.keys(MODULEID_TOOLHEAD_MAP);
                     if (includes(keys, String(module.moduleId))) {
                         this.moduleInfos[MODULEID_TOOLHEAD_MAP[module.moduleId]] = module;
                     }
                 });
             });
-            a = false;
             // stateData.status = WORKFLOW_STATUS_MAP[statusKey];
             this.socket && this.socket.emit('Marlin:state', { state: {
                 ...stateData,
                 status: WORKFLOW_STATUS_MAP[statusKey],
                 headType: HEAD_PRINTING,
                 moduleStatusList,
+                moduleList: moduleStatusList,
             } });
-            // clearTimeout(this.heartbeatTimer);
-            // this.heartbeatTimer = setTimeout(() => {
-            //     log.info('TCP connection closed');
-            //     this.socket && this.socket.emit('connection:close');
-            // }, 60000); // TODO: should change this after file transfer ready
-        }).then((res) => {
-            log.info(`subscribe heartbeat success: ${res}`);
+        };
+        this.sacpClient.subscribeHeartbeat({ interval: 1000 }, this.subscribeHeartCallback).then((res) => {
+            log.info(`subscribe heartbeat success: ${res.code}`);
         });
-        this.sacpClient.subscribeHotBedTemperature({ interval: 1000 }, (data) => {
-            // log.info(`revice hotbed: ${data.response}`);
+        this.subscribeHotBedCallback = (data) => {
             const hotBedInfo = new GetHotBed().fromBuffer(data.response.data);
-            // console.log(hotBedInfo);
+            // log.info(`hotbedInfo, ${hotBedInfo}`);
             stateData = {
                 ...stateData,
                 heatedBedTargetTemperature: hotBedInfo?.zoneList[0]?.targetTemzperature || 0,
                 heatedBedTemperature: hotBedInfo?.zoneList[0]?.currentTemperature || 0
             };
-        }).then(res => {
+        };
+        this.sacpClient.subscribeHotBedTemperature({ interval: 1000 }, this.subscribeHotBedCallback).then(res => {
             log.info(`subscribe hotbed success: ${res}`);
         });
-        this.sacpClient.subscribeNozzleInfo({ interval: 1000 }, (data) => {
-            // log.info(`revice nozzle: ${data.response}`);
-            b && console.log('resp', JSON.stringify(data.response.data));
-            b && console.log('resp', data.response.data);
+        this.subscribeNozzleCallback = (data) => {
             const nozzleInfo = new ExtruderInfo().fromBuffer(data.response.data);
+            // log.info(`nozzleInfo, ${nozzleInfo}`);
             const leftInfo = find(nozzleInfo.extruderList, { index: 0 });
             const rightInfo = find(nozzleInfo.extruderList, { index: 1 });
-            b && console.log('leftInfo', leftInfo);
-            b && console.log('rightInfo', rightInfo);
-            this.currentWorkNozzle = rightInfo.status === 1 ? 1 : 0;
 
-            b = false;
+            this.currentWorkNozzle = rightInfo.status === 1 ? 1 : 0;
             stateData = {
                 ...stateData,
                 currentWorkNozzle: rightInfo.status === 1 ? RIGHT_EXTRUDER : LEFT_EXTRUDER,
                 nozzleStatus: leftInfo.status,
                 nozzleRightStatus: rightInfo.status,
+
                 nozzleTemperature: leftInfo.currentTemperature,
                 nozzleTargetTemperature: leftInfo.targetTemperature,
                 nozzleRightTargetTemperature: rightInfo?.targetTemperature || 0,
                 nozzleRightTemperature: rightInfo?.currentTemperature || 0
             };
-        }).then(res => {
-            log.info(`subscribe nozzle success: ${JSON.stringify(res)}`);
+        };
+        this.sacpClient.subscribeNozzleInfo({ interval: 1000 }, this.subscribeNozzleCallback).then(res => {
+            log.info(`subscribe nozzle success: ${res}`);
         });
-        this.sacpClient.subscribeCurrentCoordinateInfo({ interval: 1000 }, (data) => {
+        this.subscribeCoordinateCallback = (data) => {
             // log.info(`revice coordinate: ${data.response}`);
             const response = data.response;
             const coordinateInfos = new CoordinateSystemInfo().fromBuffer(response.data);
@@ -139,15 +179,16 @@ class SocketBASE {
                 z: originCoordinate[2].value,
                 b: originCoordinate[3].value
             };
+            const isHomed = !(coordinateInfos?.homed); // 0: homed, 1: need to home
+
             stateData = {
                 ...stateData,
                 pos,
-                originOffset
+                originOffset,
+                isHomed,
+                // isMoving: false
             };
-        }).then(res => {
-            log.info(`subscribe coordination success: ${res}`);
-        });
-
+        };
         this.sacpClient.subscribeCncSpeedState({ interval: 1000 }, (data) => {
             // log.info(`revice coordinate: ${data.response}`);
             const response = data.response;
@@ -161,6 +202,9 @@ class SocketBASE {
         }).then(res => {
             log.info(`subscribe coordination success: ${res}`);
         });
+        this.sacpClient.subscribeCurrentCoordinateInfo({ interval: 1000 }, this.subscribeCoordinateCallback).then(res => {
+            log.info(`subscribe coordination success: ${res}`);
+        });
     };
 
     public executeGcode = async (options: EventOptions, callback: () => void) => {
@@ -169,8 +213,10 @@ class SocketBASE {
         const gcodeLines = gcode.split('\n');
         // callback && callback();
         log.debug(`executeGcode, ${gcodeLines}`);
-        this.sacpClient.executeGcode(gcode).then(res => {
-            log.info(`execute gcode: ${res}`);
+        gcodeLines.forEach(_gcode => {
+            this.sacpClient.executeGcode(_gcode).then(res => {
+                log.info(`execute gcode: ${res}`);
+            });
         });
         try {
             callback && callback();
@@ -180,29 +226,32 @@ class SocketBASE {
         }
     };
 
-    public goHome = async () => {
+    public goHome = async (hasHomingModel = false) => {
         log.info('onClick gohome');
+        hasHomingModel && this.socket && this.socket.emit('move:status', { isHoming: true });
         await this.sacpClient.updateCoordinate(CoordinateType.MACHINE).then(res => {
             log.info(`Update Coordinate: ${res}`);
         });
         await this.sacpClient.requestHome().then(({ response }) => {
             log.info(`Go-Home, ${response}`);
+            this.socket && this.socket.emit('serialport:read', { data: response.result === 0 ? 'OK' : 'WARNING' });
         });
     }
 
     public coordinateMove = async ({ moveOrders, jogSpeed, headType }) => {
         log.info(`coordinate: ${moveOrders}, ${headType}`);
+        this.socket && this.socket.emit('move:status', { isMoving: true });
         const distances = [];
         const directions = [];
         moveOrders.forEach(item => {
             directions.push(COORDINATE_AXIS[item.axis]);
             distances.push(item.distance);
         });
-        // await this.sacpClient.updateCoordinate(headType === HEAD_PRINTING ? CoordinateType.MACHINE : CoordinateType.WORKSPACE).then(res => {
-        //     log.info(`Update CoordinateType: ${res}`);
-        // });
+
         await this.sacpClient.requestAbsoluteCooridateMove(directions, distances, jogSpeed, CoordinateType.MACHINE).then(res => {
-            log.info(`Coordinate Move: ${res}`);
+            log.info(`Coordinate Move: ${res.response.result}`);
+            this.socket && this.socket.emit('serialport:read', { data: res.response.result === 0 ? 'OK' : 'WARNING' });
+            this.socket && this.socket.emit('move:status', { isMoving: false });
         });
     }
 
@@ -221,21 +270,26 @@ class SocketBASE {
         });
     }
 
-    public stopPrint = () => {
+    public stopGcode = (options) => {
         this.sacpClient.stopPrint().then(res => {
             log.info(`Stop Print: ${res}`);
+            const { eventName } = options;
+            eventName && this.socket && this.socket.emit(eventName, {});
         });
     }
 
-    public pauseGcode = () => {
+    public pauseGcode = (options) => {
         this.sacpClient.pausePrint().then(res => {
             log.info(`Pause Print: ${res}`);
+            const { eventName } = options;
+            eventName && this.socket && this.socket.emit(eventName, {});
         });
     }
 
-    public resumeGcode = () => {
+    public resumeGcode = (options, callback) => {
         this.sacpClient.resumePrint().then(res => {
             log.info(`Resume Print: ${res}`);
+            callback && callback({ msg: res.response.result, code: res.response.result });
         });
     }
 

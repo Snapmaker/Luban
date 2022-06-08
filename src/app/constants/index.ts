@@ -164,9 +164,42 @@ export const GCODEPREVIEWMODES_ICONS = [
 
 export const PRINTING_MATERIAL_CONFIG_COLORS = [
     [WHITE_COLOR, BLACK_COLOR],
-    ['#E70008', '#b36100', '#d4cc00', '#35a000', '#00685a', '#006a99', '#003c7c', '#4c2868', '#b3196f', '#767676'],
-    ['#ff5257', '#ff8b00', '#fff500', '#7bf93c', '#00bea6', '#0092d3', '#0053aa', '#753fa0', '#f9239b', '#a6a6a6'],
-    ['#ffd2d3', '#ffca8a', '#fbfb74', '#baff79', '#68d7c9', '#71cdec', '#7eadd8', '#bba4d3', '#ef9fd0', '#cccccc']
+    [
+        '#E70008',
+        '#b36100',
+        '#d4cc00',
+        '#35a000',
+        '#00685a',
+        '#006a99',
+        '#003c7c',
+        '#4c2868',
+        '#b3196f',
+        '#767676'
+    ],
+    [
+        '#ff5257',
+        '#ff8b00',
+        '#fff500',
+        '#7bf93c',
+        '#00bea6',
+        '#0092d3',
+        '#0053aa',
+        '#753fa0',
+        '#f9239b',
+        '#a6a6a6'
+    ],
+    [
+        '#ffd2d3',
+        '#ffca8a',
+        '#fbfb74',
+        '#baff79',
+        '#68d7c9',
+        '#71cdec',
+        '#7eadd8',
+        '#bba4d3',
+        '#ef9fd0',
+        '#cccccc'
+    ]
 ];
 
 export const PRINTING_MATERIAL_CONFIG_KEYS_SINGLE = [
@@ -189,6 +222,7 @@ export const PRINTING_MATERIAL_CONFIG_KEYS_SINGLE = [
     'retract_at_layer_change',
     'retraction_amount',
     'retraction_speed',
+    'switch_extruder_retraction_amount',
     'retraction_hop_enabled',
     'retraction_hop'
 ];
@@ -297,14 +331,18 @@ export const PRINTING_QUALITY_CONFIG_KEYS_DUAL = [
     // 'switch_extruder_retraction_amount',
     // 'switch_extruder_retraction_speeds'
 ];
-export const MACHINE_EXTRUDER_X = ['machine_extruder_start_pos_x', 'machine_extruder_end_pos_x'];
-export const MACHINE_EXTRUDER_Y = ['machine_extruder_start_pos_y', 'machine_extruder_end_pos_y'];
+export const MACHINE_EXTRUDER_X = [
+    'machine_extruder_start_pos_x',
+    'machine_extruder_end_pos_x'
+];
+export const MACHINE_EXTRUDER_Y = [
+    'machine_extruder_start_pos_y',
+    'machine_extruder_end_pos_y'
+];
 export const PRINTING_MATERIAL_CONFIG_GROUP_SINGLE = [
     {
         name: 'Color',
-        fields: [
-            'color'
-        ]
+        fields: ['color']
     },
     {
         name: 'key-printing/material_settings-Temperature',
@@ -324,7 +362,7 @@ export const PRINTING_MATERIAL_CONFIG_GROUP_SINGLE = [
     {
         name: 'key-printing/material_settings-Extrusion',
         fields: [
-            'material_flow',
+            'material_flow'
             // 'material_flow_layer_0'
         ]
     },
@@ -343,9 +381,7 @@ export const PRINTING_MATERIAL_CONFIG_GROUP_SINGLE = [
 export const PRINTING_MATERIAL_CONFIG_GROUP_DUAL = [
     {
         name: 'Color',
-        fields: [
-            'color'
-        ]
+        fields: ['color']
     },
     {
         name: 'key-printing/material_settings-Temperature',
@@ -366,7 +402,7 @@ export const PRINTING_MATERIAL_CONFIG_GROUP_DUAL = [
     {
         name: 'key-printing/material_settings-Extrusion',
         fields: [
-            'material_flow',
+            'material_flow'
             // 'material_flow_layer_0'
         ]
     },
@@ -405,10 +441,7 @@ export const PRINTING_QUALITY_CONFIG_GROUP_SINGLE = [
     },
     {
         name: 'Infill',
-        fields: [
-            'infill_sparse_density',
-            'infill_pattern'
-        ]
+        fields: ['infill_sparse_density', 'infill_pattern']
     },
     {
         name: 'Speed',
@@ -425,10 +458,7 @@ export const PRINTING_QUALITY_CONFIG_GROUP_SINGLE = [
     },
     {
         name: 'Surface',
-        fields: [
-            'magic_spiralize',
-            'magic_mesh_surface_mode'
-        ]
+        fields: ['magic_spiralize', 'magic_mesh_surface_mode']
     },
     {
         name: 'Build Plate Adhesion Type',
@@ -474,10 +504,7 @@ export const PRINTING_QUALITY_CONFIG_GROUP_DUAL = [
     },
     {
         name: 'Infill',
-        fields: [
-            'infill_sparse_density',
-            'infill_pattern'
-        ]
+        fields: ['infill_sparse_density', 'infill_pattern']
     },
     {
         name: 'Speed',
@@ -494,10 +521,7 @@ export const PRINTING_QUALITY_CONFIG_GROUP_DUAL = [
     },
     {
         name: 'Surface',
-        fields: [
-            'magic_spiralize',
-            'magic_mesh_surface_mode'
-        ]
+        fields: ['magic_spiralize', 'magic_mesh_surface_mode']
     },
     {
         name: 'Build Plate Adhesion Type',
@@ -543,17 +567,18 @@ export const PRINTING_QUALITY_CUSTOMIZE_FIELDS = [
     'support_enable'
 ];
 export const PRINTING_QUALITY_CONFIG_INDEX = {
-    'retraction_amount': 1,
-    'retraction_speed': 1,
-    'retraction_hop_enabled': 1,
-    'retraction_hop': 2,
-    'support_type': 1,
-    'skirt_line_count': 1,
-    'brim_line_count': 1,
-    'raft_margin': 1
+    retraction_amount: 1,
+    retraction_speed: 1,
+    retraction_hop_enabled: 1,
+    retraction_hop: 2,
+    support_type: 1,
+    skirt_line_count: 1,
+    brim_line_count: 1,
+    raft_margin: 1
 };
 export const PRINTING_MANAGER_TYPE_MATERIAL = 'material';
 export const PRINTING_MANAGER_TYPE_QUALITY = 'quality';
+export const PRINTING_MANAGER_TYPE_EXTRUDER = 'extruder';
 
 export const DEFAULT_CNC_CONFIG_IDS = [
     'tool.default_CVbit',
@@ -575,50 +600,30 @@ export const DEFAULT_LASER_CONFIG_IDS = [
 export const LASER_PRESENT_CONFIG_GROUP = [
     {
         name: 'key-Laser/ToolpathParameters-Method',
-        fields: [
-            'path_type'
-        ]
+        fields: ['path_type']
     },
     {
         name: 'key-Laser/ToolpathParameters-Fill',
-        fields: [
-            'movement_mode',
-            'direction',
-            'fill_interval'
-        ]
+        fields: ['movement_mode', 'direction', 'fill_interval']
     },
     {
         name: 'key-Laser/ToolpathParameters-Speed',
-        fields: [
-            'jog_speed',
-            'work_speed',
-            'dwell_time'
-        ]
+        fields: ['jog_speed', 'work_speed', 'dwell_time']
     },
     {
         name: 'key-Laser/ToolpathParameters-Repetition',
-        fields: [
-            'multi_passes',
-            'multi_pass_depth'
-        ]
+        fields: ['multi_passes', 'multi_pass_depth']
     },
     {
         name: 'key-Laser/ToolpathParameters-Power',
-        fields: [
-            'fixed_power'
-        ]
+        fields: ['fixed_power']
     }
 ];
 
 export const CNC_TOOL_CONFIG_GROUP = [
     {
         name: 'Carving Tool',
-        fields: [
-            'tool_type',
-            'diameter',
-            'angle',
-            'shaft_diameter'
-        ]
+        fields: ['tool_type', 'diameter', 'angle', 'shaft_diameter']
     },
     {
         name: 'Parameters',
@@ -633,9 +638,10 @@ export const CNC_TOOL_CONFIG_GROUP = [
 ];
 
 export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
-    'allowance': {
+    allowance: {
         label: 'Allowance',
-        description: 'Set the amount of the material remaining on the object that needs to be carved in future operations.',
+        description:
+            'Set the amount of the material remaining on the object that needs to be carved in future operations.',
         min: 0,
         step: 0.1,
         unit: 'mm',
@@ -643,30 +649,32 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         default_value: 0.1,
         value: 'allowance'
     },
-    'sliceMode': {
+    sliceMode: {
         label: 'Method',
         description: 'Select the slicing mode of the mesh toolpath',
         type: 'enum',
         options: {
-            'rotation': 'key-Cnc/ToolpathParameters-Rotation', // TODO
-            'linkage': 'key-Cnc/ToolpathParameters-Linkage' // TODO
+            rotation: 'key-Cnc/ToolpathParameters-Rotation', // TODO
+            linkage: 'key-Cnc/ToolpathParameters-Linkage' // TODO
         },
         default_value: 'rotation'
     },
-    'pathType': {
+    pathType: {
         label: 'Method',
-        description: 'Set the processing method of the object.\n -On the Path: Carves along the shape of the object. \n -Outline: Carves along the outline of the object.\n -Fill: Carves away the inner area of the object.',
+        description:
+            'Set the processing method of the object.\n -On the Path: Carves along the shape of the object. \n -Outline: Carves along the outline of the object.\n -Fill: Carves away the inner area of the object.',
         type: 'enum',
         options: {
-            'path': 'On the Path',
-            'outline': 'Outline',
-            'pocket': 'Fill'
+            path: 'On the Path',
+            outline: 'Outline',
+            pocket: 'Fill'
         },
         default_value: 'path'
     },
-    'targetDepth': {
+    targetDepth: {
         label: 'Target Depth',
-        description: 'Set the depth of the object to be carved. The depth should be smaller than the flute length.',
+        description:
+            'Set the depth of the object to be carved. The depth should be smaller than the flute length.',
         min: 0.01,
         step: 0.1,
         max: 100,
@@ -675,9 +683,10 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         type: 'float',
         unit: 'mm'
     },
-    'safetyHeight': {
+    safetyHeight: {
         label: 'Jog Height',
-        description: 'Set the distance between the tool and the material when the tool is not carving.',
+        description:
+            'Set the distance between the tool and the material when the tool is not carving.',
         min: 0.1,
         step: 1,
         max: 100,
@@ -686,9 +695,10 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         type: 'float',
         unit: 'mm'
     },
-    'stopHeight': {
+    stopHeight: {
         label: 'Stop Height',
-        description: 'Set the distance between the tool and the material when the tool stops.',
+        description:
+            'Set the distance between the tool and the material when the tool stops.',
         min: 0.1,
         step: 0.1,
         max: 100,
@@ -697,14 +707,14 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         type: 'float',
         unit: 'mm'
     },
-    'enableTab': {
+    enableTab: {
         label: 'Use Tab',
         description: 'Use tabs to hold the pieces in place.',
         type: 'bool-switch', // bool type use switch component
         default_value: false,
         value: 'enableTab'
     },
-    'tabHeight': {
+    tabHeight: {
         label: 'Tab Height',
         description: 'Set the height of tabs.',
         // min: '-targetDepth',
@@ -715,7 +725,7 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         type: 'float',
         unit: 'mm'
     },
-    'tabSpace': {
+    tabSpace: {
         label: 'Tab Space',
         description: 'Set the distance between each tab.',
         min: 1,
@@ -725,7 +735,7 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         type: 'float',
         unit: 'mm'
     },
-    'tabWidth': {
+    tabWidth: {
         label: 'Tab Width',
         description: 'Set the width of tabs.',
         min: 1,
@@ -735,7 +745,7 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         type: 'float',
         unit: 'mm'
     },
-    'stepOver': {
+    stepOver: {
         label: 'Stepover',
         description: 'Set the space between parallel toolpaths.',
         min: 0.01,
@@ -745,8 +755,9 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         type: 'float',
         unit: 'mm'
     },
-    'workSpeed': {
-        description: 'Set the speed at which the tool moves on the material when it is carving.',
+    workSpeed: {
+        description:
+            'Set the speed at which the tool moves on the material when it is carving.',
         label: 'Work Speed',
         min: 0.01,
         step: 0.01,
@@ -755,7 +766,7 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         unit: 'mm/min',
         type: 'float'
     },
-    'plungeSpeed': {
+    plungeSpeed: {
         default_value: 300,
         type: 'float',
         min: 0.1,
@@ -763,9 +774,10 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         step: 0.01,
         label: 'Plunge Speed',
         unit: 'mm/min',
-        description: 'Set the speed at which the tool is driven down into the material.'
+        description:
+            'Set the speed at which the tool is driven down into the material.'
     },
-    'jogSpeed': {
+    jogSpeed: {
         default_value: 1500,
         type: 'float',
         min: 1,
@@ -773,33 +785,37 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         step: 0.01,
         label: 'Jog Speed',
         unit: 'mm/min',
-        description: 'Set the speed at which the tool moves on the material when it is not carving.'
+        description:
+            'Set the speed at which the tool moves on the material when it is not carving.'
     },
-    'stepDown': {
+    stepDown: {
         default_value: 0.5,
         type: 'float',
         min: 0.01,
         step: 0.01,
         label: 'Stepdown',
-        description: 'Set the distance along the Z axis per step that the tool is plunged into the material.',
+        description:
+            'Set the distance along the Z axis per step that the tool is plunged into the material.',
         unit: 'mm'
     }
 };
 
 export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
-    'pathType': {
+    pathType: {
         default_value: 'path',
-        description: 'Set the processing method of the object. \n - Fill: Fills the object with lines or dots.\n - On the Path: Engraves along the shape of the object.',
+        description:
+            'Set the processing method of the object. \n - Fill: Fills the object with lines or dots.\n - On the Path: Engraves along the shape of the object.',
         label: 'Method',
         type: 'enum',
         options: {
-            'path': 'On the Path',
-            'fill': 'Fill'
+            path: 'On the Path',
+            fill: 'Fill'
         }
     },
-    'workSpeed': {
+    workSpeed: {
         label: 'Work Speed',
-        description: 'Set the speed at which the toolhead moves on the material when it is engraving or cutting.',
+        description:
+            'Set the speed at which the toolhead moves on the material when it is engraving or cutting.',
         type: 'float',
         min: 1,
         max: 6000,
@@ -807,24 +823,26 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         default_value: 'workSpeed',
         unit: 'mm/min'
     },
-    'multiPasses': {
+    multiPasses: {
         label: 'Number of Passes',
-        description: 'Set how many times the laser will trace the same path in a G-code file.',
+        description:
+            'Set how many times the laser will trace the same path in a G-code file.',
         type: 'float',
         min: 1,
         max: 50,
         default_value: 'passes'
     },
-    'multiPassDepth': {
+    multiPassDepth: {
         label: 'Z Step per Pass',
-        description: 'Set the amount at which the Laser Module is lowered with each pass.',
+        description:
+            'Set the amount at which the Laser Module is lowered with each pass.',
         type: 'float',
         min: 0.01,
         max: 10,
         default_value: 'passDepth',
         unit: 'mm'
     },
-    'fixedPower': {
+    fixedPower: {
         label: 'Laser Power',
         description: 'Set the laser power.',
         type: 'float',
@@ -833,11 +851,11 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         default_value: 'fixedPower',
         unit: '%'
     },
-    'fixedPowerEnabled': {
+    fixedPowerEnabled: {
         type: 'bool',
         default_value: true
     },
-    'movementMode': {
+    movementMode: {
         label: 'Movement Mode',
         description: 'Set whether the object is filled with lines or dots.',
         type: 'enum',
@@ -847,9 +865,10 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         },
         default_value: 'greyscale-line'
     },
-    'fillInterval': {
+    fillInterval: {
         label: 'Fill Interval',
-        description: 'Set the degree to which an area is filled with laser lines or dots. The minimal interval is 0.05 mm.',
+        description:
+            'Set the degree to which an area is filled with laser lines or dots. The minimal interval is 0.05 mm.',
         type: 'float',
         min: 0.05,
         // max: 1,
@@ -858,9 +877,10 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         value: 'fillInterval',
         unit: 'mm'
     },
-    'fillDensity': {
+    fillDensity: {
         label: 'Fill Density',
-        description: 'Set the precision at which an area is carved. The highest density is 0.05 mm (20 dot/mm). When it is set to 0, the SVG image will be carved without fill.',
+        description:
+            'Set the precision at which an area is carved. The highest density is 0.05 mm (20 dot/mm). When it is set to 0, the SVG image will be carved without fill.',
         type: 'float',
         min: 1,
         max: 10,
@@ -868,9 +888,10 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         default_value: 1,
         unit: 'dot/mm'
     },
-    'density': {
+    density: {
         label: 'Density',
-        description: 'Determines how fine and smooth the engraved picture will be. \
+        description:
+            'Determines how fine and smooth the engraved picture will be. \
 The bigger this value is, the better quality you will get. The range is 1-10 dot/mm and 10 is recommended.',
         type: 'float',
         min: 1,
@@ -879,9 +900,10 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
         default_value: 'density',
         unit: 'dot/mm'
     },
-    'dwellTime': {
+    dwellTime: {
         label: 'Dwell Time',
-        description: 'Determines how long the laser keeps on when it’s engraving a dot.',
+        description:
+            'Determines how long the laser keeps on when it’s engraving a dot.',
         type: 'float',
         min: 0.1,
         max: 1000,
@@ -890,9 +912,10 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
         value: 'dwellTime',
         unit: 'ms/dot'
     },
-    'jogSpeed': {
+    jogSpeed: {
         label: 'Jog Speed',
-        description: 'Set the speed at which the toolhead moves on the material when it is not engraving or cutting.',
+        description:
+            'Set the speed at which the toolhead moves on the material when it is not engraving or cutting.',
         min: 1,
         max: 6000,
         step: 1,
@@ -901,9 +924,10 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
         default_value: 1500,
         value: 'jogSpeed'
     },
-    'direction': {
+    direction: {
         label: 'Line Direction',
-        description: 'Set the direction of the engraved path. Engraves the path in a horizontal, vertical, or diagonal direction.',
+        description:
+            'Set the direction of the engraved path. Engraves the path in a horizontal, vertical, or diagonal direction.',
         options: {
             Horizontal: 'Horizontal',
             Vertical: 'Vertical',
@@ -916,21 +940,42 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
     }
 };
 
+// @ts-ignore
 const publicPath = global.PUBLIC_PATH || '';
 export const DATA_PATH = `${publicPath}/data`;
 
 export const DATA_PREFIX = `${publicPath}/data/Tmp`;
 
 export const CNC_TOOL_SNAP_V_BIT = 'snap.v-bit';
-export const CNC_TOOL_SNAP_V_BIT_CONFIG = { diameter: 0.2, angle: 30, shaftDiameter: 3.175 };
+export const CNC_TOOL_SNAP_V_BIT_CONFIG = {
+    diameter: 0.2,
+    angle: 30,
+    shaftDiameter: 3.175
+};
 export const CNC_TOOL_SNAP_FLAT_END_MILL = 'snap.flat-end-mill';
-export const CNC_TOOL_SNAP_FLAT_END_MILL_CONFIG = { diameter: 1.5, angle: 180, shaftDiameter: 1.5 };
+export const CNC_TOOL_SNAP_FLAT_END_MILL_CONFIG = {
+    diameter: 1.5,
+    angle: 180,
+    shaftDiameter: 1.5
+};
 export const CNC_TOOL_SNAP_BALL_END_MILL = 'snap.ball-end-mill';
-export const CNC_TOOL_SNAP_BALL_END_MILL_CONFIG = { diameter: 3.175, angle: 180, shaftDiameter: 3.175 };
+export const CNC_TOOL_SNAP_BALL_END_MILL_CONFIG = {
+    diameter: 3.175,
+    angle: 180,
+    shaftDiameter: 3.175
+};
 export const CNC_TOOL_SNAP_S_F_S = 'snap.straight-flute-sharp';
-export const CNC_TOOL_SNAP_S_F_S_CONFIG = { diameter: 0.3, angle: 20, shaftDiameter: 3.715 };
+export const CNC_TOOL_SNAP_S_F_S_CONFIG = {
+    diameter: 0.3,
+    angle: 20,
+    shaftDiameter: 3.715
+};
 export const CNC_TOOL_CUSTOM = 'custom';
-export const CNC_TOOL_CUSTOM_CONFIG = { diameter: 0.1, angle: 180, shaftDiameter: 3.175 };
+export const CNC_TOOL_CUSTOM_CONFIG = {
+    diameter: 0.1,
+    angle: 180,
+    shaftDiameter: 3.175
+};
 
 export const LASER_GCODE_SUFFIX = '.nc';
 export const CNC_GCODE_SUFFIX = '.cnc';
@@ -995,7 +1040,8 @@ export const MACHINE_SERIES = {
     ORIGINAL_LZ: {
         value: 'Original Long Z-axis',
         configPath: 'Original',
-        label: 'key-Luban/Machine/MachineSeries-Snapmaker Original with Z-axis Extension Module',
+        label:
+            'key-Luban/Machine/MachineSeries-Snapmaker Original with Z-axis Extension Module',
         setting: {
             size: {
                 x: 125,
@@ -1042,7 +1088,6 @@ export const MACHINE_SERIES = {
             }
         },
         alias: ['SM2-M', 'Snapmaker 2.0 A250']
-
     },
     A350: {
         value: 'A350',
@@ -1066,9 +1111,9 @@ export const MACHINE_SERIES = {
         label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A400',
         setting: {
             size: {
-                x: 400,
-                y: 400,
-                z: 400
+                x: 410,
+                y: 410,
+                z: 420
             },
             laserSize: {
                 x: 410,
@@ -1113,7 +1158,10 @@ export const DUAL_EXTRUDER_LIMIT_WIDTH_R = 20;
 
 export const MACHINE_TOOL_HEADS = {
     [SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL]: {
-        platform: [MACHINE_SERIES.ORIGINAL.value, MACHINE_SERIES.ORIGINAL_LZ.value],
+        platform: [
+            MACHINE_SERIES.ORIGINAL.value,
+            MACHINE_SERIES.ORIGINAL_LZ.value
+        ],
         value: SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
         key: 'singleExtruderToolheadForOriginal',
         pathname: 'single',
@@ -1127,7 +1175,10 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [LEVEL_ONE_POWER_LASER_FOR_ORIGINAL]: {
-        platform: [MACHINE_SERIES.ORIGINAL.value, MACHINE_SERIES.ORIGINAL_LZ.value],
+        platform: [
+            MACHINE_SERIES.ORIGINAL.value,
+            MACHINE_SERIES.ORIGINAL_LZ.value
+        ],
         value: LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
         label: 'key-App/Settings/MachineSettings-200mW Laser',
         pathname: '200mw',
@@ -1140,7 +1191,10 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [LEVEL_TWO_POWER_LASER_FOR_ORIGINAL]: {
-        platform: [MACHINE_SERIES.ORIGINAL.value, MACHINE_SERIES.ORIGINAL_LZ.value],
+        platform: [
+            MACHINE_SERIES.ORIGINAL.value,
+            MACHINE_SERIES.ORIGINAL_LZ.value
+        ],
         value: LEVEL_TWO_POWER_LASER_FOR_ORIGINAL,
         label: 'key-App/Settings/MachineSettings-1600mW Laser',
         pathname: '1600mw',
@@ -1153,7 +1207,10 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL]: {
-        platform: [MACHINE_SERIES.ORIGINAL.value, MACHINE_SERIES.ORIGINAL_LZ.value],
+        platform: [
+            MACHINE_SERIES.ORIGINAL.value,
+            MACHINE_SERIES.ORIGINAL_LZ.value
+        ],
         value: STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
         key: 'standardCNCToolheadForOriginal',
         label: 'key-App/Settings/MachineSettings-Standard CNC',
@@ -1166,7 +1223,12 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]: {
-        platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value, MACHINE_SERIES.A400.value],
+        platform: [
+            MACHINE_SERIES.A150.value,
+            MACHINE_SERIES.A250.value,
+            MACHINE_SERIES.A350.value,
+            MACHINE_SERIES.A400.value
+        ],
         value: SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
         key: 'singleExtruderToolheadForSM2',
         pathname: 'single',
@@ -1183,7 +1245,12 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [DUAL_EXTRUDER_TOOLHEAD_FOR_SM2]: {
-        platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value, MACHINE_SERIES.A400.value],
+        platform: [
+            MACHINE_SERIES.A150.value,
+            MACHINE_SERIES.A250.value,
+            MACHINE_SERIES.A350.value,
+            MACHINE_SERIES.A400.value
+        ],
         value: DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
         pathname: 'dual',
         key: 'dualExtruderToolheadForSM2',
@@ -1196,7 +1263,12 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [LEVEL_ONE_POWER_LASER_FOR_SM2]: {
-        platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value, MACHINE_SERIES.A400.value],
+        platform: [
+            MACHINE_SERIES.A150.value,
+            MACHINE_SERIES.A250.value,
+            MACHINE_SERIES.A350.value,
+            MACHINE_SERIES.A400.value
+        ],
         value: LEVEL_ONE_POWER_LASER_FOR_SM2,
         pathname: '1600mw',
         key: 'levelOneLaserToolheadForSM2',
@@ -1209,7 +1281,12 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [LEVEL_TWO_POWER_LASER_FOR_SM2]: {
-        platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value, MACHINE_SERIES.A400.value],
+        platform: [
+            MACHINE_SERIES.A150.value,
+            MACHINE_SERIES.A250.value,
+            MACHINE_SERIES.A350.value,
+            MACHINE_SERIES.A400.value
+        ],
         value: LEVEL_TWO_POWER_LASER_FOR_SM2,
         pathname: '10w',
         label: 'key-App/Settings/MachineSettings-10W Laser',
@@ -1222,12 +1299,29 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [STANDARD_CNC_TOOLHEAD_FOR_SM2]: {
-        platform: [MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value, MACHINE_SERIES.A400.value],
+        platform: [
+            MACHINE_SERIES.A150.value,
+            MACHINE_SERIES.A250.value,
+            MACHINE_SERIES.A350.value,
+            MACHINE_SERIES.A400.value
+        ],
         value: STANDARD_CNC_TOOLHEAD_FOR_SM2,
         key: 'standardCNCToolheadForSM2',
         pathname: 'standard',
         label: 'key-App/Settings/MachineSettings-Standard CNC',
         // mock offset data
+        offset: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    },
+    [LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2]: {
+        platform: [MACHINE_SERIES.A400.value],
+        value: LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
+        key: 'levelTwoCNCToolheadForSM2',
+        pathname: 'standard', // if have high power cnc profiles, should be update
+        label: 'key-App/Settings/MachineSettings-High CNC',
         offset: {
             x: 0,
             y: 0,
@@ -1271,22 +1365,24 @@ export const IMAGE_WIFI_WAITING = '/resources/images/connection/ic_WI-FI_64x64.p
 export const IMAGE_WIFI_WARNING = '/resources/images/ic_warning-64x64.png';
 export const IMAGE_EMERGENCY_STOP = '/resources/images/connection/ic_emergency_stop.png';
 export const HEAD_TYPE_ENV_NAME = {
-    'printing': 'key-machine_selection-3D Printing',
-    'laser': 'key-machine_selection-Laser',
-    'cnc': 'key-machine_selection-CNC'
+    printing: 'key-machine_selection-3D Printing',
+    laser: 'key-machine_selection-Laser',
+    cnc: 'key-machine_selection-CNC'
 };
 export const LASER_MOCK_PLATE_HEIGHT = 6;
-
 
 // Model
 export const SVG_NODE_NAME_TEXT = 'text';
 export const SVG_NODE_NAME_IMAGE = 'image';
 
-export const SOURCE_TYPE_3DP = '3dp';
-export const SOURCE_TYPE_SVG = 'svg';
-export const SOURCE_TYPE_TEXT = 'text';
-export const SOURCE_TYPE_RASTER = 'raster';
-export const SOURCE_TYPE_IMAGE3D = 'image3d';
+export enum SOURCE_TYPE {
+    '3DP' = '3dp',
+    SVG = 'svg',
+    TEXT = 'text',
+    RASTER = 'raster',
+    IMAGE3D = 'image3d',
+    DXF = 'dxf'
+}
 
 export const PROCESS_MODE_BW = 'bw';
 export const PROCESS_MODE_HALFTONE = 'halftone';
@@ -1383,23 +1479,25 @@ export const COORDINATE_MODE_BOTTOM_CENTER = {
         }
     }
 };
-export function getCurrentHeadType(pathname) {
+export function getCurrentHeadType(pathname: string) {
     if (!pathname) {
         return null;
     }
-    let headType = null;
+    let headType: string;
     if (pathname.indexOf(HEAD_CNC) >= 0) headType = HEAD_CNC;
     if (pathname.indexOf(HEAD_LASER) >= 0) headType = HEAD_LASER;
     if (pathname.indexOf(HEAD_PRINTING) >= 0) headType = HEAD_PRINTING;
     return headType;
 }
 
-export function getMachineSeriesWithToolhead(platform, toolhead) {
+export function getMachineSeriesWithToolhead(platform: string, toolhead: string) {
     const seriesInfo = valueOf(MACHINE_SERIES, 'value', platform) || MACHINE_SERIES.ORIGINAL;
-    const size = seriesInfo ? seriesInfo.setting?.size : MACHINE_SERIES.ORIGINAL.setting.size;
+    const size = seriesInfo
+        ? seriesInfo.setting?.size
+        : MACHINE_SERIES.ORIGINAL.setting.size;
     const workSize = {};
     const configPathname = {};
-    Object.keys(toolhead).forEach(key => {
+    Object.keys(toolhead).forEach((key: string) => {
         const type = key.split('Toolhead')[0];
         const headToolInfo = MACHINE_TOOL_HEADS[toolhead[key]];
         workSize[type] = {
@@ -1407,7 +1505,11 @@ export function getMachineSeriesWithToolhead(platform, toolhead) {
             y: size.y - headToolInfo.offset.y,
             z: size.z - headToolInfo.offset.z
         };
-        configPathname[type] = `${platform === 'Original Long Z-axis' ? 'original' : platform.toLowerCase()}_${headToolInfo?.pathname}`;
+        configPathname[type] = `${
+            platform === 'Original Long Z-axis'
+                ? 'original'
+                : platform.toLowerCase()
+        }_${headToolInfo?.pathname}`;
     });
     return {
         series: platform,
@@ -1437,23 +1539,25 @@ export const MAX_RECENT_FILES_LENGTH = 12;
 
 // Default toolHead for original
 export const INITIAL_TOOL_HEAD_FOR_ORIGINAL = {
-    printingToolhead: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
+    printingToolhead:
+        MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
     laserToolhead: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value,
     cncToolhead: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value
 };
 
 export const INITIAL_TOOL_HEAD_FOR_SM2 = {
-    printingToolhead: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value,
+    printingToolhead:
+        MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value,
     laserToolhead: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value,
     cncToolhead: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value
 };
 
-
 export const LASER_10W_TAKE_PHOTO_POSITION = {
-    A400: { // TODO: need to test
-        x: 290,
-        y: 210,
-        z: 350
+    A400: {
+        // TODO: need to test
+        x: 265,
+        y: 205,
+        z: 330
     },
     A350: {
         x: 232,
@@ -1484,10 +1588,10 @@ export const LOAD_MODEL_FROM_OUTER = 1;
 export const longLang = ['de', 'es', 'fr', 'it', 'ru', 'uk', 'ja'];
 
 export const longLangWithType = {
-    'es': [HEAD_LASER, HEAD_CNC],
-    'fr': [HEAD_LASER, HEAD_CNC],
-    'it': [HEAD_LASER, HEAD_CNC],
-    'ru': [HEAD_PRINTING, HEAD_LASER, HEAD_CNC]
+    es: [HEAD_LASER, HEAD_CNC],
+    fr: [HEAD_LASER, HEAD_CNC],
+    it: [HEAD_LASER, HEAD_CNC],
+    ru: [HEAD_PRINTING, HEAD_LASER, HEAD_CNC]
 };
 
 export const SERIAL_MAP_SACP = {
@@ -1504,15 +1608,15 @@ export const EMERGENCY_STOP_BUTTON = [8, 517];
 export const ENCLOSURE_MODULES = [5, 16];
 export const ROTARY_MODULES = [6];
 export const AIR_PURIFIER_MODULES = [7];
+
 export const HEADT_BED_FOR_SM2 = 'heatBedForSM2';
 export const A400_HEADT_BED_FOR_SM2 = 'a400HeatBedForSM2';
+
 export const MODULEID_TOOLHEAD_MAP = {
     '0': SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     '1': STANDARD_CNC_TOOLHEAD_FOR_SM2,
     '2': LEVEL_ONE_POWER_LASER_FOR_SM2,
     '13': DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
     '14': LEVEL_TWO_POWER_LASER_FOR_SM2,
-    '15': LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
-    '512': HEADT_BED_FOR_SM2,
-    '515': A400_HEADT_BED_FOR_SM2
+    '15': LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2
 };

@@ -26,7 +26,7 @@ const OperationDropdown = ({
                 {
                     menus.map((menu) => {
                         return <Menu.Item
-                            onClick={onClick}
+                            onClick={e => onClick(e, menu.isSetOrigin)}
                             key={menu.key}
                             disabled={disabled || menu.disabled}
                         >
@@ -65,10 +65,19 @@ class DisplayPanel extends PureComponent {
     };
 
     actions = {
-        onClick: (event) => {
+        onClick: (event, isSetOrigin = false) => {
             const data = event.key;
-            if (data) {
-                this.props.executeGcode(data);
+            if (this.props.headType === HEAD_PRINTING) {
+                if (isSetOrigin) return;
+                else {
+                    if (data) {
+                        this.props.executeGcode(data);
+                    }
+                }
+            } else {
+                if (data) {
+                    this.props.executeGcode(data);
+                }
             }
         }
     };
@@ -126,7 +135,7 @@ class DisplayPanel extends PureComponent {
                                         disabled={!canClick}
                                         menus={[
                                             { key: "G0 X0", title: i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On X Axis (G0 X0)') },
-                                            { key: "G92 X0", title: i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary X Axis (G92 X0)') }
+                                            { key: "G92 X0", title: i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary X Axis (G92 X0)'), isSetOrigin: true }
                                         ]} />
                                 </td>
                             </tr>
@@ -155,7 +164,7 @@ class DisplayPanel extends PureComponent {
                                         disabled={!canClick}
                                         menus={[
                                             { key: "G0 Y0", title: i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On Y Axis (G0 Y0)') },
-                                            { key: "G92 Y0", title: i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary Y Axis (G92 Y0)') }
+                                            { key: "G92 Y0", title: i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary Y Axis (G92 Y0)'), isSetOrigin: true }
                                         ]} />
                                 </td>
                             </tr>
@@ -184,7 +193,7 @@ class DisplayPanel extends PureComponent {
                                         disabled={!canClick}
                                         menus={[
                                             { key: "G0 Z0", title: i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On Z Axis (G0 Z0)') },
-                                            { key: "G92 Z0", title: i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary Z Axis (G92 Z0)') }
+                                            { key: "G92 Z0", title: i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary Z Axis (G92 Z0)'), isSetOrigin: true }
                                         ]} />
                                 </td>
                             </tr>
@@ -213,7 +222,7 @@ class DisplayPanel extends PureComponent {
                                         disabled={!canClick}
                                         menus={[
                                             { key: "G0 B0", title: i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On B Axis (G0 B0)') },
-                                            { key: "G92 B0", title: i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary B Axis (G92 B0)') }
+                                            { key: "G92 B0", title: i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary B Axis (G92 B0)'), isSetOrigin: true }
                                         ]} />
                                 </td>
                             </tr>

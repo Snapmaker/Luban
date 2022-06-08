@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { v4 as uuid } from 'uuid';
+import { HEAD_PRINTING } from '../constants';
+import { SvgModelElement } from './BaseModel';
 import type ModelGroup from './ModelGroup';
 import type ThreeGroup from './ThreeGroup';
 
@@ -18,12 +20,23 @@ export type ModelTransformation = {
     height?: number;
 };
 
+export type TSize = {
+    x: number;
+    y: number;
+    z: number;
+}
+
+export type ExtruderConfig = {
+    infill: '0' | '1' | '2',
+    shell: '0' | '1' | '2',
+};
+
 export type ModelInfo = {
     modelID?: string,
     parentModelID?: string,
     limitSize?: Object,
-    headType?: string,
-    sourceType?: string,
+    headType?: typeof HEAD_PRINTING,
+    sourceType?: '3d',
     sourceHeight?: number,
     sourceWidth?: number,
     originalName?: string,
@@ -35,11 +48,20 @@ export type ModelInfo = {
     transformation?: ModelTransformation,
     processImageName?: string,
     supportTag?: boolean,
-    extruderConfig?: any,
+    extruderConfig?: ExtruderConfig,
     children?: Array<ModelInfo>
     geometry?: THREE.BufferGeometry,
-    material?: THREE.Material,
-    type?: string
+    material?: THREE.MeshStandardMaterial,
+    type?: string,
+    convexGeometry?: THREE.BufferGeometry,
+    loadFrom?: 0 | 1,
+    color?: string;
+    width?: number;
+    height?: number;
+    isGroup?: boolean;
+    // svg
+    elem?: SvgModelElement;
+    size?: TSize;
 };
 
 const DEFAULT_TRANSFORMATION: ModelTransformation = {
@@ -60,35 +82,56 @@ const DEFAULT_TRANSFORMATION: ModelTransformation = {
 // BaseModel only do data process
 // isolated from Model.js which renamed to ThreeModel.js
 export default class BaseModel {
-    parent: ThreeGroup;
+    public headType: typeof HEAD_PRINTING = HEAD_PRINTING;
+    public sourceType: '3d' = '3d';
 
-    modelGroup: ModelGroup;
+    public modelID: string;
+    public originModelID: string;
+    public modelName: string;
+    public sourceHeight: number;
+    public sourceWidth: number;
+    public originalName: string;
+    public uploadName: string;
+    public meshObject: (THREE.Mesh | THREE.Group) & {
+        uniformScalingState?: boolean
+    };
 
-    modelID: string;
+    public parent: ThreeGroup;
+    public overstepped: boolean;
 
-    modelName: string;
+    public estimatedTime: number = 0
 
-    transformation: ModelTransformation;
+    public transformation: ModelTransformation;
+    public boundingBox: THREE.Box3;
+    public limitSize: number; // TODO ts remove?
+    public isSelected: boolean = false;
 
-    meshObject: THREE.Object3D;
+    public modelGroup: ModelGroup;
+    public type: string;
 
-    type: string;
+    public extruderConfig: ExtruderConfig;
 
-    canAttachSupport: boolean = true; // PrimeTowerModel should set false
+    public mode: '3d';
 
-    displayedType: string = 'model';
+    protected displayedType: string = 'model';
 
-    isSelected: boolean = false;
+    protected gcodeModeMaterial: THREE.MeshLambertMaterial;
 
-    gcodeModeMaterial: THREE.Material;
+    protected modelModeMaterial: THREE.MeshStandardMaterial = new THREE.MeshStandardMaterial({ color: 0xe0e0e0, visible: false });
 
-    modelModeMaterial: THREE.Material = new THREE.MeshStandardMaterial({ color: 0xe0e0e0, visible: false });
-
-    constructor(modelInfo, modelGroup) {
+    public constructor(modelInfo: ModelInfo, modelGroup: ModelGroup) {
         this.modelGroup = modelGroup;
 
-        // eslint-disable-next-line no-return-assign
-        Object.keys(modelInfo).map(key => this[key] = modelInfo[key]);
+        Object.keys(modelInfo).forEach((key) => {
+            this[key] = modelInfo[key];
+        });
+
+        if (!this.extruderConfig) {
+            this.extruderConfig = {
+                infill: '0',
+                shell: '0'
+            };
+        }
 
         this.modelID = this.modelID || `id${uuid()}`;
         this.modelName = this.modelName ?? 'unnamed';
@@ -106,11 +149,22 @@ export default class BaseModel {
         });
     }
 
-    updateTransformation(transformation: ModelTransformation): ModelTransformation {
+    public rotateModelByZaxis(angle: number = 0) {
+        const unitZ = new THREE.Vector3(0, 0, 1);
+        const quaternion = new THREE.Quaternion().setFromAxisAngle(unitZ, angle * Math.PI / 180);
+        this.meshObject.applyQuaternion(quaternion);
+    }
+
+    public updateDisplayedType(value: string) {
+        this.displayedType = value;
+        this.setSelectedGroup();
+    }
+
+    public updateTransformation(transformation: ModelTransformation): ModelTransformation {
         const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, uniformScalingState } = transformation;
 
         if (uniformScalingState !== undefined) {
-            (this.meshObject as any).uniformScalingState = uniformScalingState;
+            this.meshObject.uniformScalingState = uniformScalingState;
             this.transformation.uniformScalingState = uniformScalingState;
         }
 
@@ -154,26 +208,17 @@ export default class BaseModel {
         return this.transformation;
     }
 
-    rotateModelByZaxis(angle = 0) {
-        const unitZ = new THREE.Vector3(0, 0, 1);
-        const quaternion = new THREE.Quaternion().setFromAxisAngle(unitZ, angle * Math.PI / 180);
-        this.meshObject.applyQuaternion(quaternion);
-    }
-
-    updateDisplayedType(value) {
-        this.displayedType = value;
-        this.setSelectedGroup();
-    }
-
-    setSelectedGroup(isSelected?: boolean) {
-        if (typeof isSelected === 'boolean') {
-            this.isSelected = isSelected;
-        }
-        if (this.displayedType !== 'model') {
-            (this.meshObject as any).material = this.gcodeModeMaterial;
-        } else {
-            (this.meshObject as any).material = this.modelModeMaterial;
-            (this.meshObject as any).material.color.set(new THREE.Color('#cecece'));
+    private setSelectedGroup(isSelected?: boolean) {
+        if (this.meshObject instanceof THREE.Mesh) {
+            if (typeof isSelected === 'boolean') {
+                this.isSelected = isSelected;
+            }
+            if (this.displayedType !== 'model') {
+                this.meshObject.material = this.gcodeModeMaterial;
+            } else {
+                this.meshObject.material = this.modelModeMaterial;
+                (this.meshObject.material as THREE.MeshStandardMaterial).color.set(new THREE.Color('#cecece'));
+            }
         }
     }
 }

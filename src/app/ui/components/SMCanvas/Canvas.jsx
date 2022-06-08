@@ -8,7 +8,17 @@
 import noop from 'lodash/noop';
 import React, { PureComponent } from 'react';
 import { isNil, throttle } from 'lodash';
-import { Vector3, PerspectiveCamera, Scene, Group, AmbientLight, PointLight, HemisphereLight, DirectionalLight, Object3D } from 'three';
+import {
+    Vector3,
+    PerspectiveCamera,
+    Scene,
+    Group,
+    AmbientLight,
+    PointLight,
+    HemisphereLight,
+    DirectionalLight,
+    Object3D
+} from 'three';
 import PropTypes from 'prop-types';
 import TWEEN from '@tweenjs/tween.js';
 
@@ -126,7 +136,6 @@ class Canvas extends PureComponent {
         this.group.add(this.props.printableArea);
         this.props.printableArea.addEventListener('update', () => this.renderScene()); // TODO: another way to trigger re-render
 
-
         this.group.add(this.modelGroup.object);
         this.toolPathGroupObject && this.group.add(this.toolPathGroupObject);
         this.gcodeLineGroup && this.group.add(this.gcodeLineGroup);
@@ -149,7 +158,8 @@ class Canvas extends PureComponent {
         if (nextProps.scale && nextProps.scale !== this.lastScale) {
             if (!this.isCanvasInitialized()) return;
 
-            const currentScale = this.initialDistance / (this.camera.position.distanceTo(this.controls.target));
+            const currentScale = this.initialDistance
+                / this.camera.position.distanceTo(this.controls.target);
             this.controls.setScale(currentScale / nextProps.scale);
             this.lastScale = nextProps.scale;
             this.controls.updateCamera();
@@ -159,7 +169,13 @@ class Canvas extends PureComponent {
             if (!this.isCanvasInitialized()) return;
 
             const { x, y } = nextProps.target;
-            this.controls.panOffset.add(new Vector3(x - this.controls.target.x, y - this.controls.target.y, 0));
+            this.controls.panOffset.add(
+                new Vector3(
+                    x - this.controls.target.x,
+                    y - this.controls.target.y,
+                    0
+                )
+            );
             this.controls.updateCamera();
         }
 
@@ -174,20 +190,32 @@ class Canvas extends PureComponent {
                 this.group.remove(this.modelGroup.object);
                 this.group.add(this.modelGroup.grayModeObject);
             } else {
-                this.controls.recoverTransformControls(nextProps.primeTowerSelected, nextProps.transformMode);
+                this.controls.recoverTransformControls(
+                    nextProps.primeTowerSelected,
+                    nextProps.transformMode
+                );
                 this.group.remove(this.modelGroup.grayModeObject);
                 this.group.add(this.modelGroup.object);
             }
             this.renderScene();
         }
 
-        if (nextProps.primeTowerSelected !== this.props.primeTowerSelected && nextProps.displayedType !== 'gcode') {
+        if (
+            nextProps.primeTowerSelected !== this.props.primeTowerSelected
+            && nextProps.displayedType !== 'gcode'
+        ) {
             this.controls.removeTransformControls();
             if (nextProps.primeTowerSelected) {
-                this.controls.recoverTransformControls(true, nextProps.transformMode);
+                this.controls.recoverTransformControls(
+                    true,
+                    nextProps.transformMode
+                );
                 this.controls.setPrimeTower(true);
             } else {
-                this.controls.recoverTransformControls(false, nextProps.transformMode);
+                this.controls.recoverTransformControls(
+                    false,
+                    nextProps.transformMode
+                );
                 this.controls.setPrimeTower(false);
             }
             this.renderScene();
@@ -208,7 +236,8 @@ class Canvas extends PureComponent {
         if (typeof this.props.updateScale !== 'function') {
             return;
         }
-        let currentScale = this.initialDistance / (this.camera.position.distanceTo(this.controls.target));
+        let currentScale = this.initialDistance
+            / this.camera.position.distanceTo(this.controls.target);
         if (Math.abs(currentScale - this.lastScale) > EPS) {
             if (this.props.minScale && currentScale < this.props.minScale) {
                 currentScale = this.props.minScale;
@@ -235,7 +264,9 @@ class Canvas extends PureComponent {
     }
 
     getVisibleHeight() {
-        return this.node.current && this.node.current.parentElement.clientHeight;
+        return (
+            this.node.current && this.node.current.parentElement.clientHeight
+        );
     }
 
     setupScene() {
@@ -250,7 +281,7 @@ class Canvas extends PureComponent {
         }
         if (this.transformSourceType === '3D') {
             this.light = new DirectionalLight(0x666666, 0.4);
-            const pLight = new PointLight(0xffffff, 0.60, 0, 0.60);
+            const pLight = new PointLight(0xffffff, 0.6, 0, 0.6);
             this.camera.add(pLight);
             pLight.position.copy(new Vector3(-4000, 7000, 50000));
         }
@@ -272,7 +303,7 @@ class Canvas extends PureComponent {
         this.scene.add(this.group);
 
         if (this.transformSourceType === '3D') {
-            const lightTop = new HemisphereLight(0xA3A3A3, 0x545454, 0.5);
+            const lightTop = new HemisphereLight(0xa3a3a3, 0x545454, 0.5);
             const lightInside = new AmbientLight(0x666666);
             lightTop.position.copy(new Vector3(0, 0, -49000));
             lightInside.position.copy(new Vector3(0, 0, 0));
@@ -290,8 +321,19 @@ class Canvas extends PureComponent {
         this.initialTarget = this.props.cameraInitialTarget;
 
         const sourceType = this.props.transformSourceType === '2D' ? '2D' : '3D';
-        this.controls = new Controls(sourceType, this.props.displayedType, this.camera, this.group, this.renderer.domElement, this.onScale, this.onChangeTarget,
-            this.props.supportActions, this.props.minScale, this.props.maxScale, this.props.scaleSize);
+        this.controls = new Controls(
+            sourceType,
+            this.props.displayedType,
+            this.camera,
+            this.group,
+            this.renderer.domElement,
+            this.onScale,
+            this.onChangeTarget,
+            this.props.supportActions,
+            this.props.minScale,
+            this.props.maxScale,
+            this.props.scaleSize
+        );
         this.controls.canOperateModel = this.props.canOperateModel;
         this.setCamera(this.cameraInitialPosition, this.initialTarget);
 
@@ -314,7 +356,10 @@ class Canvas extends PureComponent {
             this.onModelBeforeTransform(this.controls.transformControl.mode);
         });
         this.controls.on(EVENTS.AFTER_TRANSFORM_OBJECT, () => {
-            this.onModelAfterTransform(this.controls.transformControl.mode, this.controls.transformControl.axis);
+            this.onModelAfterTransform(
+                this.controls.transformControl.mode,
+                this.controls.transformControl.axis
+            );
         });
         this.controls.on(EVENTS.SELECT_PLACEMENT_FACE, (userData) => {
             this.onRotationPlacementSelect(userData);
@@ -322,7 +367,15 @@ class Canvas extends PureComponent {
     }
 
     setTransformMode(mode) {
-        if (['translate', 'scale', 'rotate', 'mirror', 'rotate-placement'].includes(mode)) {
+        if (
+            [
+                'translate',
+                'scale',
+                'rotate',
+                'mirror',
+                'rotate-placement'
+            ].includes(mode)
+        ) {
             this.controls && this.controls.setTransformMode(mode);
         } else {
             this.controls && this.controls.setTransformMode(null);
@@ -346,7 +399,7 @@ class Canvas extends PureComponent {
         this.renderScene();
 
         if (position.x === 0 && position.y === 0) {
-            this.initialDistance = (position.z - target.z);
+            this.initialDistance = position.z - target.z;
         }
     };
 
@@ -417,7 +470,10 @@ class Canvas extends PureComponent {
     autoFocus(model, isWorkspaceAutoFocus = false) {
         const target = model ? model.position.clone() : this.initialTarget;
         // const target = model ? model.position.clone() : new Vector3();
-        this.setCamera(this.cameraInitialPosition, isWorkspaceAutoFocus ? new Vector3() : target);
+        this.setCamera(
+            this.cameraInitialPosition,
+            isWorkspaceAutoFocus ? new Vector3() : target
+        );
 
         const object = {
             positionX: this.camera.position.x,
@@ -445,13 +501,25 @@ class Canvas extends PureComponent {
     _getCameraPositionByRotation(positionStart, target, angleEW, angleNS) {
         const positionRotateNS = {
             x: positionStart.x,
-            y: target.y + (positionStart.y - target.y) * Math.cos(angleNS) - (positionStart.z - target.z) * Math.sin(angleNS),
-            z: target.z + (positionStart.y - target.y) * Math.sin(angleNS) + (positionStart.z - target.z) * Math.cos(angleNS)
+            y:
+                target.y
+                + (positionStart.y - target.y) * Math.cos(angleNS)
+                - (positionStart.z - target.z) * Math.sin(angleNS),
+            z:
+                target.z
+                + (positionStart.y - target.y) * Math.sin(angleNS)
+                + (positionStart.z - target.z) * Math.cos(angleNS)
         };
 
         const positionRotateEW = {
-            x: target.x + (positionRotateNS.x - target.x) * Math.cos(angleEW) - (positionRotateNS.y - target.y) * Math.sin(angleEW),
-            y: target.y + (positionRotateNS.x - target.x) * Math.sin(angleEW) + (positionRotateNS.y - target.y) * Math.cos(angleEW),
+            x:
+                target.x
+                + (positionRotateNS.x - target.x) * Math.cos(angleEW)
+                - (positionRotateNS.y - target.y) * Math.sin(angleEW),
+            y:
+                target.y
+                + (positionRotateNS.x - target.x) * Math.sin(angleEW)
+                + (positionRotateNS.y - target.y) * Math.cos(angleEW),
             z: positionRotateNS.z
         };
 
@@ -461,11 +529,18 @@ class Canvas extends PureComponent {
     toTopFrontRight() {
         const positionStart = this.props.cameraInitialPosition;
         const target = { x: 0, y: 0, z: this.props.cameraInitialPosition.z };
-        const position = this._getCameraPositionByRotation(positionStart, target, Math.PI / 6, -Math.PI / 10);
+        const position = this._getCameraPositionByRotation(
+            positionStart,
+            target,
+            Math.PI / 6,
+            -Math.PI / 10
+        );
         this.camera.position.x = position.x;
         this.camera.position.y = position.y;
         this.camera.position.z = position.z;
-        this.controls.setTarget(new Vector3(0, 0, this.props.cameraInitialPosition.z));
+        this.controls.setTarget(
+            new Vector3(0, 0, this.props.cameraInitialPosition.z)
+        );
         this.controls.panScale = 1;
         this.renderScene();
     }
@@ -474,7 +549,9 @@ class Canvas extends PureComponent {
         this.camera.position.x = this.props.cameraInitialPosition.x;
         this.camera.position.y = this.props.cameraInitialPosition.y;
         this.camera.position.z = this.props.cameraInitialPosition.z;
-        this.controls.setTarget(new Vector3(0, 0, this.props.cameraInitialPosition.z));
+        this.controls.setTarget(
+            new Vector3(0, 0, this.props.cameraInitialPosition.z)
+        );
         // this.camera.lookAt(new Vector3(0, 0, this.cameraInitialPosition.z));
         this.controls.panScale = 1;
         this.renderScene();
@@ -483,11 +560,18 @@ class Canvas extends PureComponent {
     toLeft() {
         const positionStart = this.props.cameraInitialPosition;
         const target = { x: 0, y: 0, z: this.props.cameraInitialPosition.z };
-        const position = this._getCameraPositionByRotation(positionStart, target, -Math.PI / 2, 0);
+        const position = this._getCameraPositionByRotation(
+            positionStart,
+            target,
+            -Math.PI / 2,
+            0
+        );
         this.camera.position.x = position.x;
         this.camera.position.y = position.y;
         this.camera.position.z = position.z;
-        this.controls.setTarget(new Vector3(0, 0, this.props.cameraInitialPosition.z));
+        this.controls.setTarget(
+            new Vector3(0, 0, this.props.cameraInitialPosition.z)
+        );
         this.controls.panScale = 1;
         this.renderScene();
     }
@@ -495,11 +579,18 @@ class Canvas extends PureComponent {
     toRight() {
         const positionStart = this.props.cameraInitialPosition;
         const target = { x: 0, y: 0, z: this.props.cameraInitialPosition.z };
-        const position = this._getCameraPositionByRotation(positionStart, target, Math.PI / 2, 0);
+        const position = this._getCameraPositionByRotation(
+            positionStart,
+            target,
+            Math.PI / 2,
+            0
+        );
         this.camera.position.x = position.x;
         this.camera.position.y = position.y;
         this.camera.position.z = position.z;
-        this.controls.setTarget(new Vector3(0, 0, this.props.cameraInitialPosition.z));
+        this.controls.setTarget(
+            new Vector3(0, 0, this.props.cameraInitialPosition.z)
+        );
         this.controls.panScale = 1;
         this.renderScene();
     }
@@ -507,11 +598,18 @@ class Canvas extends PureComponent {
     toTop() {
         const positionStart = this.props.cameraInitialPosition;
         const target = { x: 0, y: 0, z: this.props.cameraInitialPosition.z };
-        const position = this._getCameraPositionByRotation(positionStart, target, 0, -Math.PI / 2);
+        const position = this._getCameraPositionByRotation(
+            positionStart,
+            target,
+            0,
+            -Math.PI / 2
+        );
         this.camera.position.x = position.x;
         this.camera.position.y = position.y;
         this.camera.position.z = position.z;
-        this.controls.setTarget(new Vector3(0, 0, this.props.cameraInitialPosition.z));
+        this.controls.setTarget(
+            new Vector3(0, 0, this.props.cameraInitialPosition.z)
+        );
         this.controls.panScale = 1;
         this.renderScene();
     }
@@ -536,11 +634,21 @@ class Canvas extends PureComponent {
             z: this.camera.position.z + center.z - this.controls.target.z
         };
         const multiple = 1.8;
-        const p1c = Math.sqrt((p1.x - center.x) * (p1.x - center.x) + (p1.y - center.y) * (p1.y - center.y) + (p1.z - center.z) * (p1.z - center.z));
+        const p1c = Math.sqrt(
+            (p1.x - center.x) * (p1.x - center.x)
+                + (p1.y - center.y) * (p1.y - center.y)
+                + (p1.z - center.z) * (p1.z - center.z)
+        );
         const o2 = {
-            x: multiple * (p1.x - center.x) * Math.sqrt(2) * r / p1c + center.x,
-            y: multiple * (p1.y - center.y) * Math.sqrt(2) * r / p1c + center.y,
-            z: multiple * (p1.z - center.z) * Math.sqrt(2) * r / p1c + center.z,
+            x:
+                (multiple * (p1.x - center.x) * Math.sqrt(2) * r) / p1c
+                + center.x,
+            y:
+                (multiple * (p1.y - center.y) * Math.sqrt(2) * r) / p1c
+                + center.y,
+            z:
+                (multiple * (p1.z - center.z) * Math.sqrt(2) * r) / p1c
+                + center.z
         };
 
         // to
@@ -562,7 +670,9 @@ class Canvas extends PureComponent {
             this.camera.position.x = o2.x;
             this.camera.position.y = o2.y;
             this.camera.position.z = o2.z;
-            this.controls.setTarget(new Vector3(newTarget.x, newTarget.y, newTarget.z));
+            this.controls.setTarget(
+                new Vector3(newTarget.x, newTarget.y, newTarget.z)
+            );
             this.renderScene();
         }, ANIMATION_DURATION);
     }
@@ -576,7 +686,10 @@ class Canvas extends PureComponent {
         };
         const dist = this.camera.position.distanceTo(this.controls.target);
         const to = {
-            rotationX: Math.round(this.camera.rotation.x / (Math.PI / 2)) * (Math.PI / 2) + Math.PI / 2
+            rotationX:
+                Math.round(this.camera.rotation.x / (Math.PI / 2))
+                    * (Math.PI / 2)
+                + Math.PI / 2
         };
         const tween = new TWEEN.Tween(object)
             .to(to, ANIMATION_DURATION)
@@ -668,8 +781,12 @@ class Canvas extends PureComponent {
             if (this.transformSourceType === '2D') {
                 this.light.position.copy(this.camera.position);
             }
-            if (this.transformSourceType === '3D' && this.controls.transformControl.mode !== 'mirror' && this.modelGroup?.selectedModelArray
-            && this.modelGroup.selectedModelArray[0]?.type !== 'primeTower') {
+            if (
+                this.transformSourceType === '3D'
+                && this.controls.transformControl.mode !== 'mirror'
+                && this.modelGroup?.selectedModelArray
+                && this.modelGroup.selectedModelArray[0]?.type !== 'primeTower'
+            ) {
                 switch (this.controls.transformControl.mode) {
                     case 'translate':
                         this.cloneControlPeripheral = this.controls.transformControl.translatePeripheral.clone();
@@ -685,7 +802,9 @@ class Canvas extends PureComponent {
                         break;
                 }
                 this.cloneControlPeripheral.updateMatrixWorld();
-                this.controlFrontLeftTop.setFromMatrixPosition(this.cloneControlPeripheral.matrixWorld);
+                this.controlFrontLeftTop.setFromMatrixPosition(
+                    this.cloneControlPeripheral.matrixWorld
+                );
                 this.controlFrontLeftTop.project(this.camera);
                 inputDOM = document.getElementById('control-input');
                 inputDOM2 = document.getElementById('control-input-2');
@@ -693,22 +812,59 @@ class Canvas extends PureComponent {
                 this.inputLeftOffset = inputDOM2 ? 104 : 48; // one input width is 96, if has inputDOM2, inputDOM has marginRight 16px
                 this.canvasWidthHalf = parentDOM.clientWidth * 0.5;
                 this.canvasHeightHalf = parentDOM.clientHeight * 0.5;
-                if (Math.abs(parseFloat(this.inputPositionLeft) - (this.controlFrontLeftTop.x * this.canvasWidthHalf + this.canvasWidthHalf - this.inputLeftOffset)) > 10
-                || Math.abs(parseFloat(this.inputPositionTop) - (-(this.controlFrontLeftTop.y * this.canvasHeightHalf) + this.canvasHeightHalf - 220)) > 10
+                if (
+                    Math.abs(
+                        parseFloat(this.inputPositionLeft)
+                            - (this.controlFrontLeftTop.x * this.canvasWidthHalf
+                                + this.canvasWidthHalf
+                                - this.inputLeftOffset)
+                    ) > 10
+                    || Math.abs(
+                        parseFloat(this.inputPositionTop)
+                            - (-(
+                                this.controlFrontLeftTop.y
+                                * this.canvasHeightHalf
+                            )
+                                + this.canvasHeightHalf
+                                - 220)
+                    ) > 10
                 ) {
-                    this.inputPositionLeft = `${this.controlFrontLeftTop.x * this.canvasWidthHalf + this.canvasWidthHalf - this.inputLeftOffset}px`;
-                    this.inputPositionTop = `${-(this.controlFrontLeftTop.y * this.canvasHeightHalf) + this.canvasHeightHalf - 220}px`;
+                    this.inputPositionLeft = `${
+                        this.controlFrontLeftTop.x * this.canvasWidthHalf
+                        + this.canvasWidthHalf
+                        - this.inputLeftOffset
+                    }px`;
+                    this.inputPositionTop = `${
+                        -(this.controlFrontLeftTop.y * this.canvasHeightHalf)
+                        + this.canvasHeightHalf
+                        - 220
+                    }px`;
                 }
                 inputDOM && (inputDOM.style.top = this.inputPositionTop);
                 inputDOM && (inputDOM.style.left = this.inputPositionLeft);
-                if (this.controls.transformControl.mode === TRANSLATE_MODE && (this.controls.transformControl.axis === 'XY' || this.controls.transformControl.axis === null)) {
+                if (
+                    this.controls.transformControl.mode === TRANSLATE_MODE
+                    && (this.controls.transformControl.axis === 'XY'
+                        || this.controls.transformControl.axis === null)
+                ) {
                     inputDOM2 && (inputDOM2.style.top = this.inputPositionTop);
-                    inputDOM2 && (inputDOM2.style.left = `${parseFloat(this.inputPositionLeft) + 120}px`);
-                    inputDOM2 && this.controls.transformControl.dragging && (inputDOM2.style.display = 'block');
+                    inputDOM2
+                        && (inputDOM2.style.left = `${
+                            parseFloat(this.inputPositionLeft) + 120
+                        }px`);
+                    inputDOM2
+                        && this.controls.transformControl.dragging
+                        && (inputDOM2.style.display = 'block');
                 }
-                this.controls.transformControl.dragging && inputDOM && (inputDOM.style.display = 'block');
+                this.controls.transformControl.dragging
+                    && inputDOM
+                    && (inputDOM.style.display = 'block');
             }
-            if (this.transformSourceType === '3D' && (!this.modelGroup.selectedModelArray?.length || !this.modelGroup.isSelectedModelAllVisible())) {
+            if (
+                this.transformSourceType === '3D'
+                && (!this.modelGroup.selectedModelArray?.length
+                    || !this.modelGroup.isSelectedModelAllVisible())
+            ) {
                 inputDOM && (inputDOM.style.display = 'none');
                 inputDOM2 && (inputDOM2.style.display = 'none');
             }

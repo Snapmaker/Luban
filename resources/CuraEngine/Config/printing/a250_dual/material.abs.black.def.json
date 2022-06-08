@@ -1,6 +1,7 @@
 {
     "name": "ABS-Black",
     "version": "4.2.0",
+    "isRecommended": true,
     "inherits": "snapmaker",
     "category": "ABS",
     "i18nName": "key-default_name-ABS_Black",
@@ -28,7 +29,7 @@
             "default_value": 0
         },
         "cool_fan_full_layer": {
-          "default_value": 2
+            "default_value": 2
         },
         "material_bed_temperature_layer_0": {
             "default_value": 80

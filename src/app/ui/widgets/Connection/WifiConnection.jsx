@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import { useDispatch, useSelector } from 'react-redux';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { map } from 'lodash';
 // import { InputGroup } from 'react-bootstrap';
 import { Button } from '../../components/Buttons';
@@ -30,7 +30,9 @@ import {
     LEVEL_TWO_POWER_LASER_FOR_SM2,
     HEAD_PRINTING,
     HEAD_LASER,
-    HEAD_CNC
+    HEAD_CNC,
+    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+    LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2
 } from '../../../constants';
 // import widgetStyles from '../styles.styl';
 import styles from './index.styl';
@@ -70,8 +72,7 @@ function WifiConnection() {
         // airPurifierStatus,
         heatedBedTemperature,
         laserCamera
-    } = useSelector(state => state.machine);
-    console.log({ servers });
+    } = useSelector(state => state.machine, shallowEqual);
     const {
         toolHead, headType, series
     } = useSelector(state => state?.workspace);
@@ -189,7 +190,6 @@ function WifiConnection() {
         },
         onCloseWifiConnectionMessage: () => {
             actions.hideWifiConnectionMessage();
-            server.closeServer();
         },
 
         /**
@@ -319,11 +319,19 @@ function WifiConnection() {
     const updateModuleStatusList = useMemo(() => {
         const newModuleStatusList = [];
         if (headType === HEAD_PRINTING) {
-            newModuleStatusList.push({
-                key: `${headType}-${toolHead}`,
-                status: true,
-                moduleName: i18n._('key-Workspace/Connection-3dp')
-            });
+            if (toolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+                newModuleStatusList.push({
+                    key: 'headtype',
+                    moduleName: i18n._('key-App/Settings/MachineSettings-Dual Extruder Toolhead'),
+                    status: true
+                });
+            } else {
+                newModuleStatusList.push({
+                    key: 'headtype',
+                    moduleName: i18n._('key-App/Settings/MachineSettings-Single Extruder Toolhead'),
+                    status: true
+                });
+            }
             newModuleStatusList.push({
                 key: 'heatedBed',
                 moduleName: i18n._('key-Workspace/Connection-Heated bed'),
@@ -346,13 +354,20 @@ function WifiConnection() {
             }
         }
         if (headType === HEAD_CNC) {
-            newModuleStatusList.push({
-                key: `${headType}-${toolHead}`,
-                status: true,
-                moduleName: i18n._('key-Workspace/Connection-CNC')
-            });
+            if (toolHead === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2) {
+                newModuleStatusList.push({
+                    key: 'headtype',
+                    moduleName: i18n._('key-Workspace/High CNC'),
+                    status: true
+                });
+            } else {
+                newModuleStatusList.push({
+                    key: 'headtype',
+                    moduleName: i18n._('key-Workspace/Connection-CNC'),
+                    status: true
+                });
+            }
         }
-
         Object.keys(moduleStatusList).forEach((key) => {
             if (moduleStatusList[key]) {
                 newModuleStatusList.push({
@@ -374,7 +389,7 @@ function WifiConnection() {
     }, [
         airPurifier, heatedBedTemperature, headType, toolHead,
         emergencyStopButtonStatus, airPurifierStatus, rotaryModuleStatus,
-        enclosureStatus, laserCamera
+        enclosureStatus, laserCamera, toolHead
     ]);
 
     useEffect(() => {

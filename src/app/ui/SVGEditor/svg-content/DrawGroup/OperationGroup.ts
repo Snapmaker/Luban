@@ -20,7 +20,7 @@ class OperationGroup {
 
     private scale: number;
 
-    constructor(container: SVGGElement, scale: number) {
+    public constructor(container: SVGGElement, scale: number) {
         this.scale = scale;
 
         this.connectLines = createSVGElement({
@@ -150,7 +150,7 @@ class OperationGroup {
         const lineEndPoints = controlsArray.reduce((p, item, index) => {
             // render end points
             if (item instanceof EndPoint) {
-                const circle = Array.from(document.querySelectorAll<SVGRectElement>('rect[type="end-point"]')).find(elem => {
+                const circle = Array.from(document.querySelectorAll<SVGRectElement>('rect[type="end-point"]')).find((elem) => {
                     return elem.getAttribute('x') === `${item.x - pointRadiusWithScale}` && elem.getAttribute('y') === `${item.y - pointRadiusWithScale}`;
                 });
                 !circle && pointData.push(item);
@@ -279,7 +279,7 @@ class OperationGroup {
 
     public updateOperation(elem: SVGPathElement | SVGPathElement[]) {
         if (Array.isArray(elem)) {
-            const points = elem.map(item => {
+            const points = elem.map((item) => {
                 return this.parseLine(item);
             }).reduce((p, c) => {
                 p.push(...c);
@@ -320,10 +320,10 @@ class OperationGroup {
 
     public clearOperation() {
         this.controlsArray = [];
-        Array.from(this.controlPoints.children).forEach(elem => {
+        Array.from(this.controlPoints.children).forEach((elem) => {
             elem.setAttribute('visibility', 'hidden');
         });
-        Array.from(this.connectLines.children).forEach(elem => {
+        Array.from(this.connectLines.children).forEach((elem) => {
             elem.setAttribute('visibility', 'hidden');
         });
         this.previewLine.setAttribute('visibility', 'hidden');
@@ -332,7 +332,7 @@ class OperationGroup {
     public updateScale(scale: number) { // just change the engineer scale
         this.scale = scale;
 
-        Array.from(this.controlPoints.children).forEach(elem => {
+        Array.from(this.controlPoints.children).forEach((elem) => {
             elem.setAttribute('width', `${POINT_SIZE / this.scale}`);
             elem.setAttribute('height', `${POINT_SIZE / this.scale}`);
             elem.setAttribute('stroke-width', `${1 / this.scale}`);
@@ -345,7 +345,7 @@ class OperationGroup {
             }
         });
 
-        Array.from(this.connectLines.children).forEach(elem => {
+        Array.from(this.connectLines.children).forEach((elem) => {
             elem.setAttribute('stroke-width', `${1 / this.scale}`);
         });
 

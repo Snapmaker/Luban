@@ -5,7 +5,7 @@ import _ from 'lodash';
 import Anchor from '../../components/Anchor';
 // import SvgIcon from '../../components/SvgIcon';
 import { Button } from '../../components/Buttons';
-// import EditComponent from '../../components/Edit';
+
 import i18n from '../../../lib/i18n';
 // import { NumberInput as Input } from '../../components/Input';
 import { actions as machineActions } from '../../../flux/machine';
@@ -349,7 +349,6 @@ const mapStateToProps = (state) => {
         // },
         currentWorkNozzle
     } = machine;
-    // const currentWorkNozzle = 'left';
     const { toolHead: printingToolhead } = workspace;
     return {
         isConnected,

@@ -15,7 +15,7 @@ type ScaleOperationState = ScaleOperationProp & {
 }
 
 export default class ScaleOperation3D extends Operation<ScaleOperationState> {
-    constructor(props: ScaleOperationProp) {
+    public constructor(props: ScaleOperationProp) {
         super();
         this.state = {
             target: props.target,
@@ -38,24 +38,15 @@ export default class ScaleOperation3D extends Operation<ScaleOperationState> {
         const modelGroup = this.state.modelGroup;
         modelGroup.unselectAllModels();
 
-        if (model instanceof ThreeModel && model.supportTag) {
-            modelGroup.addModelToSelectedGroup(model);
-            modelGroup.updateSelectedGroupTransformation({ ...transform }, false);
-            modelGroup.unselectAllModels();
-            model.onTransform();
-            model.computeBoundingBox();
-            model.target.stickToPlate();
-            model.target.computeBoundingBox();
-        } else {
-            modelGroup.addModelToSelectedGroup(model);
-            modelGroup.updateSelectedGroupTransformation({ ...transform }, false);
-            modelGroup.unselectAllModels();
-            model.onTransform();
 
-            model.stickToPlate();
-            model.computeBoundingBox();
-            modelGroup.updatePrimeTowerHeight();
-        }
+        modelGroup.addModelToSelectedGroup(model);
+        modelGroup.updateSelectedGroupTransformation({ ...transform }, false);
+        modelGroup.unselectAllModels();
+        model.onTransform();
+
+        model.stickToPlate();
+        model.computeBoundingBox();
+        modelGroup.updatePrimeTowerHeight();
         const overstepped = modelGroup._checkOverstepped(model);
         model.setOversteppedAndSelected(overstepped, model.isSelected);
     }

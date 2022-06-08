@@ -127,6 +127,7 @@ function Output() {
             </Menu.Item>
         </Menu>
     );
+    console.log('hasAnyModelVisible || isSlicing || isAnyModelOverstepped || leftBarOverlayVisible', hasAnyModelVisible, isSlicing, isAnyModelOverstepped, leftBarOverlayVisible);
 
     return (
         <div className={classNames('position-fixed', 'border-radius-bottom-8', 'bottom-8', 'background-color-white', 'width-360', 'module-default-shadow', 'print-output-intro')}>

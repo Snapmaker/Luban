@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import i18n from '../../../lib/i18n';
 import TextParameters from '../CncLaserShared/TextParameters';
 import TransformationSection from '../CncLaserShared/TransformationSection';
-import { HEAD_LASER, PAGE_EDITOR, SVG_NODE_NAME_TEXT, SOURCE_TYPE_RASTER, SOURCE_TYPE_SVG, SVG_NODE_NAME_IMAGE } from '../../../constants';
+import { HEAD_LASER, PAGE_EDITOR, SOURCE_TYPE, SVG_NODE_NAME_IMAGE, SVG_NODE_NAME_TEXT } from '../../../constants';
 
 
 import ImageProcessMode from './ImageProcessMode';
@@ -27,7 +27,7 @@ const LaserParameters = ({ widgetActions }) => {
     const isTextVector = (config.svgNodeName === SVG_NODE_NAME_TEXT);
     const isEditor = page === PAGE_EDITOR;
 
-    const showImageProcessMode = (sourceType === SOURCE_TYPE_RASTER || sourceType === SOURCE_TYPE_SVG) && config.svgNodeName === SVG_NODE_NAME_IMAGE;
+    const showImageProcessMode = (sourceType === SOURCE_TYPE.RASTER || sourceType === SOURCE_TYPE.SVG) && config.svgNodeName === SVG_NODE_NAME_IMAGE;
 
     useEffect(() => {
         widgetActions.setTitle(i18n._('key-Laser/TransformationSection-Transformation'));
@@ -47,7 +47,7 @@ const LaserParameters = ({ widgetActions }) => {
                 <TransformationSection
                     headType={HEAD_LASER}
                     updateSelectedModelUniformScalingState={
-                        (params) => dispatch(editorActions.updateSelectedModelTransformation(HEAD_LASER, params))
+                        (params) => dispatch(editorActions.updateSelectedModelUniformScalingState(HEAD_LASER, params))
                     }
                     disabled={!hasSelectedModels}
                 />

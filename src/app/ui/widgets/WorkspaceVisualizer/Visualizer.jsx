@@ -335,7 +335,7 @@ class Visualizer extends PureComponent {
                     pauseStatus: this.pauseStatus
                 }, ({ msg, code }) => {
                     if (msg) {
-                        if (code === 202) {
+                        if (code === 202 || code === 222) {
                             modalSmallHOC({
                                 title: i18n._('key-Workspace/Page-Filament Runout Recovery'),
                                 text: i18n._('key-Workspace/Page-Filament has run out. Please load new filament to continue printing.'),

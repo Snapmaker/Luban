@@ -32,7 +32,7 @@ const setGlobalTransform = (modelGroup, model, modelTransformation) => {
 };
 
 export default class DeleteOperation3D extends Operation<DeleteOperationState> {
-    constructor(props: DeleteOperationProp) {
+    public constructor(props: DeleteOperationProp) {
         super();
 
         const model = props.target;
@@ -57,7 +57,7 @@ export default class DeleteOperation3D extends Operation<DeleteOperationState> {
         if (model instanceof ThreeModel) {
             this.state.modelTransformation.set(model.modelID, { ...getGlobalTransform(props.target.modelGroup, model) });
             if (model.parent && model.parent instanceof ThreeGroup) {
-                model.parent.children.forEach(subModel => {
+                model.parent.children.forEach((subModel) => {
                     this.state.modelTransformation.set(subModel.modelID, {
                         ...getGlobalTransform(props.target.modelGroup, subModel)
                     });
@@ -68,7 +68,7 @@ export default class DeleteOperation3D extends Operation<DeleteOperationState> {
                 });
             }
         } else if (model instanceof ThreeGroup) {
-            model.children.forEach(subModel => {
+            model.children.forEach((subModel) => {
                 this.state.childrens.push(subModel);
 
                 this.state.modelTransformation.set(subModel.modelID, {
@@ -97,13 +97,9 @@ export default class DeleteOperation3D extends Operation<DeleteOperationState> {
         const model = this.state.target;
         const modelGroup = this.state.modelGroup;
 
-        if (model instanceof ThreeModel && model.supportTag) {
-            if (!model.target) return;
-            modelGroup.models = modelGroup.models.concat(model);
-            model.target.meshObject.add(model.meshObject); // restore the parent-child relationship
-        } else if (model instanceof ThreeModel) {
+        if (model instanceof ThreeModel) {
             if (model.parent && model.parent instanceof ThreeGroup) {
-                if (modelGroup.models.find(m => m.modelID === model.parent.modelID)) {
+                if (modelGroup.models.find((m) => m.modelID === model.parent.modelID)) {
                     modelGroup.recoveryGroup(model.parent, model);
                     model.parent.children.forEach((subModel) => {
                         setGlobalTransform(modelGroup, subModel, this.state.modelTransformation.get(subModel.modelID));
@@ -118,7 +114,7 @@ export default class DeleteOperation3D extends Operation<DeleteOperationState> {
             model.children = this.state.childrens;
             modelGroup.models = modelGroup.models.concat(model);
             ThreeUtils.setObjectParent(model.meshObject, modelGroup.object);
-            model.children.forEach(subModel => {
+            model.children.forEach((subModel) => {
                 setGlobalTransform(modelGroup, subModel, this.state.modelTransformation.get(subModel.modelID));
             });
         }

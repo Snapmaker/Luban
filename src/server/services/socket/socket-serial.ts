@@ -39,17 +39,17 @@ class SocketSerial {
         // const { dataSource = 'text' } = options;
 
         serialport.list()
-            .then(ports => {
+            .then((ports) => {
                 const allPorts = ports.concat(ensureArray(config.get('ports', [])));
 
                 const controllers = store.get('controllers', {});
                 const portsInUse = Object.keys(controllers)
-                    .filter(port => {
+                    .filter((port) => {
                         const controller = controllers[port];
                         return controller && controller.isOpen();
                     });
 
-                const availablePorts = allPorts.map(port => {
+                const availablePorts = allPorts.map((port) => {
                     return {
                         port: port.path,
                         manufacturer: port.manufacturer,
@@ -58,7 +58,7 @@ class SocketSerial {
                 });
                 socket.emit('machine:serial-discover', { devices: availablePorts, type: CONNECTION_TYPE_SERIAL });
             })
-            .catch(err => {
+            .catch((err) => {
                 log.error(err);
             });
     };

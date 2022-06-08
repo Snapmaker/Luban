@@ -10,7 +10,7 @@ type DrawTransformCompleteProp = {
 }
 
 export default class DrawTransformComplete extends Operation<DrawTransformCompleteProp> {
-    constructor(props: DrawTransformCompleteProp) {
+    public constructor(props: DrawTransformCompleteProp) {
         super();
         this.state = {
             svgModel: props.svgModel,

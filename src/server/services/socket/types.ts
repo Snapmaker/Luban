@@ -28,7 +28,9 @@ export type ConnectedData = {
     status?: string,
     isHomed?: boolean,
     moduleStatusList?: object,
-    seriesSize?: string
+    seriesSize?: string,
+    isMoving?: boolean,
+    err?: string
 };
 
 export type MarlinStateData = {
@@ -56,4 +58,7 @@ export type MarlinStateData = {
     cncCurrentSpindleSpeed?: number,
     cncTargetSpindleSpeed?: number,
     currentWorkNozzle?: string,
+    isHomed?: boolean,
+    headType?: string,
+    toolHead?: string
 };

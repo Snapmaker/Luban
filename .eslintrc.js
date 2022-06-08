@@ -7,7 +7,9 @@ module.exports = {
         'requireConfigFile': false,
         'babelOptions': {
             'presets': ['@babel/preset-react']
-        }
+        },
+        project: ['./tsconfig.json']
+
     },
     env: {
         browser: true,
@@ -68,8 +70,16 @@ module.exports = {
         'no-multi-str': 0,
         'no-lonely-if': 0,
         'no-bitwise': 0,
-        'max-classes-per-file': 0
+        'max-classes-per-file': 0,
+        'lines-between-class-members': [
+            2,
+            'always', {
+                'exceptAfterSingleLine': true // skip checking empty lines after single-line class members
+            }
+        ],
+        'semi': [2, 'always']
     },
+    ignorePatterns: ['*.d.ts'],
     overrides: [{
         files: ['*.ts', '*.tsx'],
         parser: '@typescript-eslint/parser',
@@ -77,8 +87,14 @@ module.exports = {
         rules: {
             'no-shadow': 'off',
             '@typescript-eslint/no-shadow': ['error'],
+            'no-empty-function': 'off',
+            '@typescript-eslint/no-empty-function': ['error'],
+            'no-extra-semi': 'off',
+            '@typescript-eslint/no-extra-semi': ['error'],
             'no-unused-vars': 'off',
-            '@typescript-eslint/no-unused-vars': ['error']
+            '@typescript-eslint/no-unused-vars': ['error'],
+            '@typescript-eslint/explicit-member-accessibility': ['error'], // Require explicit accessibility modifiers on class properties and methods
+            '@typescript-eslint/promise-function-async': 'error'
         }
     }]
 };

@@ -26,27 +26,31 @@ class SocketSerialNew extends SocketBASE {
 
     // public total: number;
 
-    static async getAvailPost() {
-        const list = await SerialPort.list();
-        log.debug(`static ${list[0]}`);
-        return list;
-    }
-
     public connectionOpen = async (socket: SocketServer, options) => {
         this.availPorts = await SerialPort.list();
         this.socket = socket;
         if (this.availPorts.length > 0) {
+            this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
             this.serialport = new SerialPort(options.port ?? this.availPorts[0].path, {
                 autoOpen: false,
                 baudRate: 115200
             });
             this.sacpClient = new Business('serialport', this.serialport);
             this.serialport.on('data', (data) => {
-                // console.log('data', data);
+                // console.log(data.toString());
                 this.sacpClient.read(data);
+            });
+            this.serialport.on('error', (err) => {
+                log.error(`Serial connection error: ${err}`);
+                this.socket.emit('connection:connected', { err: 'this machine is not ready' });
+            });
+            this.serialport.on('close', () => {
+                log.info('serial close');
+                this.socket.emit('connection:close');
             });
             this.serialport.once('open', () => {
                 log.debug(`${options.port ?? this.availPorts[0].path} opened`);
+                // this.serialport.write('M1006\n');
                 this.serialport.write('M2000 S5 P1\r\n');
                 setTimeout(async () => {
                     // TO DO: Need to get seriesSize for 'connection:connected' event
@@ -82,52 +86,43 @@ class SocketSerialNew extends SocketBASE {
                     await this.sacpClient.getCurrentCoordinateInfo().then(({ data: coordinateInfos }) => {
                         const isHomed = !(coordinateInfos?.coordinateSystemInfo?.homed); // 0: homed, 1: need to home
                         state.isHomed = isHomed;
+                        state.isMoving = false;
                     });
                     await this.sacpClient.getMachineInfo().then(({ data: machineInfos }) => {
-                        Object.keys(machineInfos).forEach(key => {
-                            log.debug(`key: ${key}, value: ${machineInfos[key]}`);
-                        });
-
                         state = {
                             ...state,
                             series: SERIAL_MAP_SACP[machineInfos.type]
                         };
                         log.debug(`serial, ${SERIAL_MAP_SACP[machineInfos.type]}`);
                     });
-                    // const getCurrentCoordinateInfo = this.sacpClient.getCurrentCoordinateInfo();
-                    // const getMachineInfo = this.sacpClient.getMachineInfo();
-                    // Promise.allSettled([this.sacpClient.getCurrentCoordinateInfo(), this.sacpClient.getMachineInfo()]).then((
-                    //     res
-                    // //         [
-                    // //     { data: coordinateInfos },
-                    // //     { data: machineInfos }
-                    // // ]
-                    // ) => {
-                    //     // let state = {};
-                    //     log.debug(`getMachineInfo, ${res}`);
-                    //     // const coordinateInfos = resArr[0];
-                    //     // const machineInfos = resArr[1];
-                    //     // const isHomed = !(coordinateInfos?.coordinateSystemInfo?.homed); // 0: homed, 1: need to home
-                    //     // state = {
-                    //     //     series: SERIAL_MAP_SACP[machineInfos.type],
-                    //     //     isHomed
-                    //     // };
-                    // }).catch(err => {
-                    //     log.debug(`errArr, ${err}`);
-                    // });
-                    // this.socket && this.socket.emit('Marlin:state', result)
-                    this.socket && this.socket.emit('connection:connected', { state: state });
+                    this.socket && this.socket.emit('connection:connected', { state: state, err: '' });
                     this.startHeartbeatBase(this.sacpClient);
-                }, 2000);
+                }, 200);
             });
             this.serialport.open();
         }
     }
 
-    public connectionClose = () => {
+    public connectionClose = async () => {
+        this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
+        await this.sacpClient.unSubscribeLogFeedback(this.subscribeLogCallback).then(res => {
+            log.info(`unsubscribeLog: ${res}`);
+        });
+        await this.sacpClient.unSubscribeCurrentCoordinateInfo(this.subscribeCoordinateCallback).then(res => {
+            log.info(`unSubscribeCoordinate: ${res}`);
+        });
+        await this.sacpClient.unSubscribeHotBedTemperature(this.subscribeHotBedCallback).then(res => {
+            log.info(`unSubscribeHotBed, ${res}`);
+        });
+        await this.sacpClient.unSubscribeNozzleInfo(this.subscribeNozzleCallback).then(res => {
+            log.info(`unSubscribeNozzle: ${res}`);
+        });
+        await this.sacpClient.unsubscribeHeartbeat(this.subscribeHeartCallback).then(res => {
+            log.info(`unSubscribeHeart, ${res}`);
+        });
         this.serialport?.close();
         this.serialport?.destroy();
-        this.sacpClient?.dispose();
+        // this.sacpClient?.dispose();
         this.socket.emit('connection:close');
     }
 
@@ -169,6 +164,5 @@ class SocketSerialNew extends SocketBASE {
         });
     }
 }
-
 
 export default new SocketSerialNew();

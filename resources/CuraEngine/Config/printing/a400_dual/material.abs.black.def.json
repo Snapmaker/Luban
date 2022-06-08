@@ -28,7 +28,7 @@
             "default_value": 0
         },
         "cool_fan_full_layer": {
-          "default_value": 2
+            "default_value": 2
         },
         "material_bed_temperature_layer_0": {
             "default_value": 80
@@ -60,5 +60,6 @@
         "retraction_hop_enabled": {
             "default_value": false
         }
-    }
+    },
+    "isRecommended": true
 }

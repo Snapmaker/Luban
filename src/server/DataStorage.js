@@ -438,6 +438,12 @@ class DataStorage {
         rmDir(this.defaultConfigDir, true);
         rmDir(this.fontDir, true);
         rmDir(this.envDir, true);
+        if (!fs.existsSync(settings.rcfile)) {
+            log.error(`The path:[${settings.rcfile}] not exists.`);
+            return;
+        }
+        fs.unlinkSync(settings.rcfile);
+        log.info(`rm file:[${settings.rcfile}]`);
     }
 }
 

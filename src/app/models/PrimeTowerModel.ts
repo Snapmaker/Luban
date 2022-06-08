@@ -4,16 +4,12 @@ import type ModelGroup from './ModelGroup';
 import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
 
 class PrimeTowerModel extends ThreeModel {
-    type: string;
-
-    canAttachSupport: boolean;
-
-    constructor(initHeight: Number, modelGroup: ModelGroup, transformation?: ModelTransformation) {
+    public constructor(initHeight: number, modelGroup: ModelGroup, transformation: ModelTransformation = { positionX: 100, positionY: 100 }) {
         const geometry = new THREE.CylinderBufferGeometry(10, 10, 1, 60);
         const material = new THREE.MeshPhongMaterial({
             side: THREE.DoubleSide,
             color: 0xB9BCBF
-        });
+        }) as unknown as THREE.MeshStandardMaterial;
         geometry.rotateX(Math.PI / 2);
         const originalName = `prime_tower_${(Math.random() * 1000).toFixed(0)}`;
         const modelName = modelGroup._createNewModelName({
@@ -35,7 +31,6 @@ class PrimeTowerModel extends ThreeModel {
         };
 
         super(modelInfo, modelGroup);
-        this.canAttachSupport = false;
 
         const positionX = transformation?.positionX || Math.max(modelGroup._bbox.max.x - 50, modelGroup._bbox.min.x - 50);
         const positionY = transformation?.positionY || Math.max(modelGroup._bbox.max.y - 50, modelGroup._bbox.min.y - 50);
@@ -50,9 +45,21 @@ class PrimeTowerModel extends ThreeModel {
             uniformScalingState: false
         });
         this.stickToPlate();
-        // model.computeBoundingBox();
-        modelGroup.models = [this, ...modelGroup.models];
-        modelGroup.object.add(this.meshObject);
+    }
+
+
+    public updateHeight(height: number, transformation: ModelTransformation = this.transformation) {
+        const positionX = transformation?.positionX;
+        const positionY = transformation?.positionY;
+        const scaleX = transformation?.scaleX;
+        const scaleY = transformation?.scaleY;
+        this.updateTransformation({
+            positionX,
+            positionY,
+            scaleX,
+            scaleY,
+            scaleZ: height
+        });
     }
 }
 

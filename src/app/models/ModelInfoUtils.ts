@@ -4,9 +4,8 @@ import {
     PROCESS_MODE_GREYSCALE,
     PROCESS_MODE_HALFTONE,
     PROCESS_MODE_VECTOR,
-    SOURCE_TYPE_IMAGE3D,
-    SOURCE_TYPE_RASTER,
-    SOURCE_TYPE_SVG, SOURCE_TYPE_TEXT, PROCESS_MODE_MESH, SOURCE_TYPE_3DP
+    SOURCE_TYPE,
+    PROCESS_MODE_MESH
 } from '../constants';
 import { round } from '../../shared/lib/utils';
 
@@ -75,7 +74,7 @@ const checkParams = (headType, sourceType, mode) => {
     if (headType !== HEAD_LASER && headType !== HEAD_CNC && headType !== HEAD_PRINTING) {
         return false;
     }
-    if (![SOURCE_TYPE_3DP, SOURCE_TYPE_RASTER, SOURCE_TYPE_SVG, SOURCE_TYPE_TEXT, SOURCE_TYPE_IMAGE3D].includes(sourceType)) {
+    if (![SOURCE_TYPE['3DP'], SOURCE_TYPE.RASTER, SOURCE_TYPE.SVG, SOURCE_TYPE.TEXT, SOURCE_TYPE.IMAGE3D].includes(sourceType)) {
         return false;
     }
     if (![PROCESS_MODE_BW, PROCESS_MODE_GREYSCALE, PROCESS_MODE_VECTOR, PROCESS_MODE_HALFTONE, PROCESS_MODE_MESH].includes(mode)) {
@@ -111,15 +110,15 @@ const defaultConfigs = {
         bwThreshold: 168,
         algorithm: 'Atkinson'
     },
-    [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, SOURCE_TYPE_RASTER)]: {
+    [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, SOURCE_TYPE.RASTER)]: {
         vectorThreshold: 128,
         invert: false,
         turdSize: 2
     },
-    [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, SOURCE_TYPE_SVG)]: {
+    [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, SOURCE_TYPE.SVG)]: {
         'stroke-width': '0.25'
     },
-    [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, SOURCE_TYPE_TEXT)]: {
+    [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, SOURCE_TYPE.TEXT)]: {
         ...DEFAULT_TEXT_CONFIG,
         invert: false,
         contrast: 50,
@@ -133,7 +132,7 @@ const defaultConfigs = {
     [toKey(HEAD_CNC, PROCESS_MODE_GREYSCALE)]: {
         invert: false
     },
-    [toKey(HEAD_CNC, PROCESS_MODE_MESH, SOURCE_TYPE_IMAGE3D)]: {
+    [toKey(HEAD_CNC, PROCESS_MODE_MESH, SOURCE_TYPE.IMAGE3D)]: {
         direction: FRONT,
         placement: BOTTOM,
         minGray: 0,
@@ -142,15 +141,15 @@ const defaultConfigs = {
         extensionX: 0,
         extensionY: 0
     },
-    [toKey(HEAD_CNC, PROCESS_MODE_VECTOR, SOURCE_TYPE_RASTER)]: {
+    [toKey(HEAD_CNC, PROCESS_MODE_VECTOR, SOURCE_TYPE.RASTER)]: {
         vectorThreshold: 128,
         invert: false,
         turdSize: 2
     },
-    [toKey(HEAD_CNC, PROCESS_MODE_VECTOR, SOURCE_TYPE_SVG)]: {
+    [toKey(HEAD_CNC, PROCESS_MODE_VECTOR, SOURCE_TYPE.SVG)]: {
         'stroke-width': '0.25'
     },
-    [toKey(HEAD_CNC, PROCESS_MODE_VECTOR, SOURCE_TYPE_TEXT)]: {
+    [toKey(HEAD_CNC, PROCESS_MODE_VECTOR, SOURCE_TYPE.TEXT)]: {
         ...DEFAULT_TEXT_CONFIG
     }
 };
@@ -263,7 +262,7 @@ const defaultGcodeConfigs = {
         multiPasses: 1,
         multiPassDepth: 1
     },
-    [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, SOURCE_TYPE_RASTER)]: {
+    [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, SOURCE_TYPE.RASTER)]: {
         optimizePath: true,
         movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
         pathType: 'path',
@@ -278,7 +277,7 @@ const defaultGcodeConfigs = {
         multiPasses: 2,
         multiPassDepth: 0.6
     },
-    [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, SOURCE_TYPE_RASTER, true)]: {
+    [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, SOURCE_TYPE.RASTER, true)]: {
         optimizePath: true,
         movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
         pathType: 'path',
@@ -308,7 +307,7 @@ const defaultGcodeConfigs = {
         enableTab: false,
         dwellTime: 5
     },
-    [toKey(HEAD_CNC, PROCESS_MODE_MESH, SOURCE_TYPE_IMAGE3D)]: {
+    [toKey(HEAD_CNC, PROCESS_MODE_MESH, SOURCE_TYPE.IMAGE3D)]: {
         sliceMode: CNC_MESH_SLICE_MODE_ROTATION,
         smoothY: true,
         targetDepth: 2.0,
@@ -324,7 +323,7 @@ const defaultGcodeConfigs = {
         dwellTime: 5,
         isModel: true
     },
-    [toKey(HEAD_CNC, PROCESS_MODE_MESH, SOURCE_TYPE_IMAGE3D, true)]: {
+    [toKey(HEAD_CNC, PROCESS_MODE_MESH, SOURCE_TYPE.IMAGE3D, true)]: {
         sliceMode: CNC_MESH_SLICE_MODE_ROTATION,
         smoothY: true,
         targetDepth: 2.0,

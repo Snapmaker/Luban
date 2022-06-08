@@ -5,7 +5,10 @@ import jimp from 'jimp';
 import jpegAutoRotate from 'jpeg-autorotate';
 import logger from '../../lib/logger';
 import SVGParser from '../../../shared/lib/SVGParser';
-import { parseDxf, generateSvgFromDxf } from '../../../shared/lib/DXFParser/Parser';
+import {
+    parseDxf,
+    generateSvgFromDxf,
+} from '../../../shared/lib/DXFParser/Parser';
 import { unzipFile } from '../../lib/archive';
 import { editorProcess } from '../../lib/editor/process';
 import stockRemap from '../../lib/stock-remap';
@@ -13,7 +16,13 @@ import trace from '../../lib/image-trace';
 import { ERR_INTERNAL_SERVER_ERROR } from '../../constants';
 import DataStorage from '../../DataStorage';
 import { stitch, stitchEach } from '../../lib/image-stitch';
-import { calibrationPhoto, getCameraCalibration, getPhoto, setMatrix, takePhoto } from '../../lib/image-getPhoto';
+import {
+    calibrationPhoto,
+    getCameraCalibration,
+    getPhoto,
+    setMatrix,
+    takePhoto,
+} from '../../lib/image-getPhoto';
 import { generateRandomPathName } from '../../../shared/lib/random-utils';
 import workerManager from '../task-manager/workerManager';
 
@@ -62,7 +71,9 @@ export const set = async (req, res) => {
             if (/jpe?g$/.test(extname)) {
                 // according to EXIF data, rotate image to a correct orientation
                 try {
-                    const { buffer: imageBuffer } = await jpegAutoRotate.rotate(originalPath);
+                    const { buffer: imageBuffer } = await jpegAutoRotate.rotate(
+                        originalPath
+                    );
                     await fs.writeFile(tempPath, imageBuffer, (err) => {
                         if (err) {
                             throw new Error(err);
@@ -88,18 +99,22 @@ export const set = async (req, res) => {
                 originalName: originalName,
                 uploadName: tempName,
                 width: svg.width,
-                height: svg.height
+                height: svg.height,
             });
         } else if (extname === '.dxf') {
             const result = await parseDxf(tempPath);
-            const svg = await generateSvgFromDxf(result.svg, tempPath, tempName);
+            const svg = await generateSvgFromDxf(
+                result.svg,
+                tempPath,
+                tempName
+            );
             const { width, height } = result;
 
             res.send({
                 originalName: originalName,
                 uploadName: svg.uploadName,
                 width,
-                height
+                height,
             });
         } else if (extname === '.stl' || extname === '.zip') {
             if (extname === '.zip') {
@@ -107,32 +122,35 @@ export const set = async (req, res) => {
                 originalName = originalName.replace(/\.zip$/, '');
                 tempName = originalName;
             }
-            workerManager.loadSize([
-                { tempName, isRotate }, DataStorage.tmpDir
-            ], (payload) => {
-                if (payload.status === 'complete') {
-                    const { width, height } = payload;
+            workerManager.loadSize(
+                [{ tempName, isRotate }, DataStorage.tmpDir],
+                (payload) => {
+                    if (payload.status === 'complete') {
+                        const { width, height } = payload;
+                        res.send({
+                            originalName: originalName,
+                            uploadName: tempName,
+                            width: width,
+                            height: height,
+                        });
+                    } else if (payload.status === 'fail') {
+                        throw new Error(payload.error);
+                    }
+                }
+            );
+        } else {
+            jimp.read(tempPath)
+                .then((image) => {
                     res.send({
                         originalName: originalName,
                         uploadName: tempName,
-                        width: width,
-                        height: height
+                        width: image.bitmap.width,
+                        height: image.bitmap.height,
                     });
-                } else if (payload.status === 'fail') {
-                    throw new Error(payload.error);
-                }
-            });
-        } else {
-            jimp.read(tempPath).then((image) => {
-                res.send({
-                    originalName: originalName,
-                    uploadName: tempName,
-                    width: image.bitmap.width,
-                    height: image.bitmap.height
+                })
+                .catch((err) => {
+                    throw new Error(err);
                 });
-            }).catch((err) => {
-                throw new Error(err);
-            });
         }
     } catch (err) {
         log.error(`Failed to read image ${tempName} ,${err.message} `);
@@ -155,7 +173,7 @@ export const process = (req, res) => {
         .catch((err) => {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({
                 msg: 'Unable to process image',
-                error: String(err)
+                error: String(err),
             });
         });
 };
@@ -167,7 +185,7 @@ export const stockRemapProcess = (req, res) => {
     if (options.image) {
         imageOptions = {
             ...options,
-            image: `${DataStorage.tmpDir}/${path.parse(options.image).base}`
+            image: `${DataStorage.tmpDir}/${path.parse(options.image).base}`,
         };
     } else {
         imageOptions = options;
@@ -180,7 +198,7 @@ export const stockRemapProcess = (req, res) => {
         .catch((err) => {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({
                 msg: 'Unable to process image',
-                error: String(err)
+                error: String(err),
             });
         });
 };
@@ -192,7 +210,7 @@ export const processTrace = (req, res) => {
     if (options.image) {
         imageOptions = {
             ...options,
-            image: `${DataStorage.tmpDir}/${path.parse(options.image).base}`
+            image: `${DataStorage.tmpDir}/${path.parse(options.image).base}`,
         };
     } else {
         imageOptions = options;
@@ -211,7 +229,7 @@ export const processTrace = (req, res) => {
         .catch((err) => {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({
                 msg: 'Unable to process image',
-                error: String(err)
+                error: String(err),
             });
         });
 };
@@ -224,7 +242,7 @@ export const processStitch = (req, res) => {
     if (options.image) {
         imageOptions = {
             ...options,
-            image: `${DataStorage.tmpDir}/${path.parse(options.image).base}`
+            image: `${DataStorage.tmpDir}/${path.parse(options.image).base}`,
         };
     } else {
         imageOptions = options;
@@ -237,7 +255,7 @@ export const processStitch = (req, res) => {
         .catch((err) => {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({
                 msg: 'Unable to process image',
-                error: String(err)
+                error: String(err),
             });
         });
 };
@@ -249,7 +267,7 @@ export const processStitchEach = (req, res) => {
     if (options.image) {
         imageOptions = {
             ...options,
-            image: `${DataStorage.tmpDir}/${path.parse(options.image).base}`
+            image: `${DataStorage.tmpDir}/${path.parse(options.image).base}`,
         };
     } else {
         imageOptions = options;
@@ -262,7 +280,7 @@ export const processStitchEach = (req, res) => {
         .catch((err) => {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({
                 msg: 'Unable to process image',
-                error: String(err)
+                error: String(err),
             });
         });
 };
@@ -277,7 +295,7 @@ export const processGetPhoto = (req, res) => {
         .catch((err) => {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({
                 msg: 'Unable to process image',
-                error: String(err)
+                error: String(err),
             });
         });
 };
@@ -292,7 +310,7 @@ export const cameraCalibrationPhoto = (req, res) => {
         .catch((err) => {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({
                 msg: 'Unable to process image',
-                error: String(err)
+                error: String(err),
             });
         });
 };
@@ -307,7 +325,7 @@ export const getCameraCalibrationApi = (req, res) => {
         .catch((err) => {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({
                 msg: 'Unable to process image',
-                error: String(err)
+                error: String(err),
             });
         });
 };
@@ -322,7 +340,7 @@ export const processTakePhoto = (req, res) => {
         .catch((err) => {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({
                 msg: 'Unable to process image',
-                error: String(err)
+                error: String(err),
             });
         });
 };
@@ -335,7 +353,7 @@ export const setCameraCalibrationMatrix = (req, res) => {
         .catch((err) => {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({
                 msg: 'Unable to process image',
-                error: String(err)
+                error: String(err),
             });
         });
 };

@@ -19,10 +19,11 @@ import { actions as machineActions } from '../../../flux/machine';
 import { actions as widgetActions } from '../../../flux/widget';
 import {
     HEAD_CNC,
+    HEAD_PRINTING,
     // Units
     IMPERIAL_UNITS,
     METRIC_UNITS, WORKFLOW_STATUS_IDLE,
-    WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_UNKNOWN
+    WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_UNKNOWN, WORKFLOW_STATUS_STOPPED
 } from '../../../constants';
 import {
     DISTANCE_MIN,
@@ -76,12 +77,12 @@ const normalizeToRange = (n, min, max) => {
 function Control({ widgetId, widgetActions: _widgetActions }) {
     const machine = useSelector(state => state.machine);
     const { widgets } = useSelector(state => state.widget);
-    const { boundingBox } = useSelector(state => state.workspace);
+    const { boundingBox, headType } = useSelector(state => state.workspace);
     const workPosition = useSelector(state => state.machine.workPosition);
     const originOffset = useSelector(state => state.machine.originOffset) || {};
     const { jog, axes, dataSource } = widgets[widgetId];
     const { speed = 1500, keypad, selectedDistance, customDistance, selectedAngle, customAngle } = jog;
-    const { headType, isConnected, workflowState, workflowStatus, homingModal } = machine;
+    const { isConnected, workflowStatus, homingModal, isMoving, server, homingModel } = machine;
     const dispatch = useDispatch();
     function getInitialState() {
         const jogSpeed = speed;
@@ -213,7 +214,6 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
         move: (params = {}) => {
             const sArr = [];
             const s = map(params, (value, axis) => {
-                console.log('moveOffset', axis, state.originOffset, state.originOffset[axis.toLowerCase()], state.workPosition[axis.toLowerCase()]);
                 sArr.push({
                     axis: axis.toUpperCase(),
                     distance: value
@@ -230,15 +230,16 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
             dispatch(machineActions.executeGcode(gcode));
         },
         coordinateMove: (gcode, moveOrders, jogSpeed) => {
-            dispatch(machineActions.coordinateMove(gcode, moveOrders, jogSpeed));
+            server.coordinateMove(moveOrders, gcode, jogSpeed, headType, homingModel);
         },
         setWorkOrigin: () => {
-            console.log(workPosition, state.workPosition);
+            if (headType === HEAD_PRINTING) return;
             const xPosition = parseFloat(workPosition.x);
             const yPosition = parseFloat(workPosition.y);
             const zPosition = parseFloat(workPosition.z);
             const bPosition = workPosition.isFourAxis ? parseFloat(workPosition.b) : null;
-            dispatch(machineActions.setWorkOrigin(xPosition, yPosition, zPosition, bPosition));
+            // dispatch(machineActions.setWorkOrigin(xPosition, yPosition, zPosition, bPosition));
+            server.setWorkOrigin(xPosition, yPosition, zPosition, bPosition);
         },
         toggleKeypadJogging: () => {
             setState(stateBefore => ({
@@ -368,10 +369,11 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
         // This prevents accidental movement while sending G-code commands.
         setState({
             ...state,
-            keypadJogging: (workflowState === WORKFLOW_STATE_IDLE) ? keypadJogging : false,
-            selectedAxis: (workflowState === WORKFLOW_STATE_IDLE) ? selectedAxis : ''
+            keypadJogging: (workflowStatus === WORKFLOW_STATE_IDLE) ? keypadJogging : false,
+            selectedAxis: (workflowStatus === WORKFLOW_STATE_IDLE) ? selectedAxis : '',
+            canClick: (workflowStatus === WORKFLOW_STATE_IDLE || workflowStatus === WORKFLOW_STATUS_STOPPED) && !isMoving
         });
-    }, [workflowState]);
+    }, [workflowStatus, isMoving]);
 
     useEffect(() => {
         setState({
@@ -457,9 +459,8 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
     }, [homingModal, isConnected]);
 
     function canClick() {
-        return (isConnected
-            && includes([WORKFLOW_STATE_IDLE], workflowState)
-            && includes([WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_UNKNOWN], workflowStatus));
+        return ((isConnected
+            && includes([WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_UNKNOWN], workflowStatus)) && !isMoving) || !isConnected;
     }
 
     const _canClick = canClick();
@@ -496,6 +497,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
                     level="level-three"
                     width="96px"
                     disabled={!_canClick}
+                    // disabled={false}
                     onClick={() => dispatch(machineActions.executeGcodeAutoHome(true))}
                 >
                     {i18n._('key-Workspace/Console-Home')}
@@ -511,6 +513,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
                         options={state.jogSpeedOptions}
                         onNewOptionClick={actions.onCreateJogSpeedOption}
                         searchable
+                        disabled={!_canClick}
                         value={state.jogSpeed}
                         onChange={actions.onChangeJogSpeed}
                     />

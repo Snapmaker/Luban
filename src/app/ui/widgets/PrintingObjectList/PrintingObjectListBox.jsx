@@ -70,7 +70,7 @@ function PrintingObjectListBox() {
             }
         }
     };
-    const allModels = (models) && models.filter(model => !model.supportTag && model.type !== 'primeTower');
+    const allModels = (models) && models.filter(model => !model.supportTag);
     // const prevProps = usePrevious({
     //     allModels
     // });
@@ -96,7 +96,7 @@ function PrintingObjectListBox() {
             'width-264',
             'background-color-white',
             styles['object-list-box'],
-            allModels.length > 0 ? 'border-radius-8 border-default-grey-1 padding-vertical-4' : '',
+            allModels.length > 0 ? 'border-radius-8 border-default-grey-1 padding-vertical-4' : ''
         )}
         >
             {allModels && allModels.map((model) => {
