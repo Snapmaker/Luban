@@ -62,7 +62,6 @@ const ModalWrapper = React.memo(({
 
     return (
         <Modal
-            {...rest}
             width="auto"
             visible={visible}
             title={renderSection('modalTitle')}
@@ -76,6 +75,7 @@ const ModalWrapper = React.memo(({
             maskStyle={{
                 background: '#2A2C2E30'
             }}
+            {...rest}
         >
             {renderSection('modalBody')}
         </Modal>
