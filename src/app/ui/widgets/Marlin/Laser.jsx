@@ -22,7 +22,6 @@ import { controller } from '../../../lib/controller';
 
 class Laser extends PureComponent {
     static propTypes = {
-        // headStatus: PropTypes.bool,
         laserPower: PropTypes.number,
         workflowStatus: PropTypes.string,
         workflowState: PropTypes.string,

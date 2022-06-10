@@ -361,7 +361,6 @@ class SocketHttp {
                     z: data.offsetZ,
                 }
             };
-            console.log('isEmergencyStopped', state.isEmergencyStopped);
             if (waitConfirm) {
                 waitConfirm = false;
                 this.socket && this.socket.emit('connection:connected', {

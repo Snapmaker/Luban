@@ -106,7 +106,6 @@ function Configurations({ widgetActions }) {
         updateActiveDefinition: (definition, shouldSaveEnv = true) => {
             dispatch(printingActions.updateActiveDefinition(definition));
             shouldSaveEnv && dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
-            // dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
         },
         /**
          * Select `definition`.

@@ -293,7 +293,6 @@ export const saveEnv = async (req, res) => {
         const machineInfo = config?.machineInfo;
         const headType = machineInfo?.headType;
         const envDir = `${DataStorage.envDir}/${headType}`;
-        console.log('saveEnv', headType, envDir);
         // TODO: not just remove the category but only change the file when model changed
         rmDir(envDir, false);
         const currentSeriesPath = getSeriesPathFromMachineInfo(machineInfo);
