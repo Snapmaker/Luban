@@ -103,31 +103,26 @@ function Configurations({ widgetActions }) {
             dispatch(printingActions.updateManagerDisplayType(PRINTING_MANAGER_TYPE_QUALITY));
             dispatch(printingActions.updateShowPrintingManager(true));
         },
-        updateActiveDefinition: (definition) => {
+        updateActiveDefinition: (definition, shouldSaveEnv = true) => {
             dispatch(printingActions.updateActiveDefinition(definition));
-            dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
+            shouldSaveEnv && dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
+            // dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
         },
         /**
          * Select `definition`.
          *
          * @param definition
          */
-        onSelectOfficialDefinition: (definition) => {
+        onSelectOfficialDefinition: (definition, shouldSaveEnv = true) => {
             actions.onChangeSelectedDefinition(definition);
             dispatch(printingActions.updateDefaultQualityId(definition.definitionId));
-            actions.updateActiveDefinition(definition);
+            actions.updateActiveDefinition(definition, shouldSaveEnv);
         },
         onSelectCustomDefinitionById: (definitionId) => {
             const definition = qualityDefinitions.find(d => d.definitionId === definitionId);
-            // has to update defaultQualityId
-            dispatch(printingActions.updateDefaultQualityId(definitionId));
-            actions.onSelectCustomDefinition(definition);
+            actions.onSelectOfficialDefinition(definition);
             actions.displayModel();
         },
-        onSelectCustomDefinition: (definition) => {
-            actions.onChangeSelectedDefinition(definition);
-            actions.updateActiveDefinition(definition);
-        }
     };
 
     const onChangeCustomConfig = useCallback((key, value) => {
@@ -151,9 +146,9 @@ function Configurations({ widgetActions }) {
             const definition = qualityDefinitions.find(d => d.definitionId === defaultQualityId);
             if (!definition) {
                 // definition no found, select first official definition
-                actions.onSelectOfficialDefinition(qualityDefinitions[0]);
+                actions.onSelectOfficialDefinition(qualityDefinitions[0], false);
             } else {
-                actions.onSelectCustomDefinition(definition);
+                actions.onSelectOfficialDefinition(definition, false);
             }
         }
     }, [defaultQualityId, qualityDefinitions]);

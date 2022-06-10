@@ -373,6 +373,7 @@ export const actions = {
                 } = state;
                 dispatch(baseActions.updateState({
                     laser10WErrorState,
+                    isEmergencyStopped,
                     isHomed
                 }));
                 if (!isNil(airPurifier)) {
@@ -389,7 +390,6 @@ export const actions = {
                         airPurifierSwitch: airPurifierSwitch,
                         airPurifierFanSpeed: airPurifierFanSpeed,
                         airPurifierFilterHealth: airPurifierFilterHealth,
-                        isEmergencyStopped: isEmergencyStopped,
                         isEnclosureDoorOpen: isEnclosureDoorOpen,
                         workflowStatus: status,
                         laserCamera
@@ -399,7 +399,7 @@ export const actions = {
                     }));
                 } else {
                     dispatch(baseActions.updateState({
-                        headStatus: headStatus,
+                        headStatus: Boolean(headStatus),
                         laserFocalLength: zFocus + LASER_MOCK_PLATE_HEIGHT,
                         laserPower: headPower,
                         nozzleTemperature: parseFloat(temperature.t),
@@ -439,6 +439,7 @@ export const actions = {
                         emergencyStopOnline
                     }));
                 } else {
+                    // Note: Wifi indiviual
                     dispatch(baseActions.updateState({
                         enclosureDoorDetection,
                         enclosureOnline,

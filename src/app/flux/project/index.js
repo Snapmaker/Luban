@@ -420,6 +420,7 @@ export const actions = {
                 }
             });
         }
+        dispatch(actions.autoSaveEnvironment(headType));
     },
 
     // Note: add progress bar when saving project file

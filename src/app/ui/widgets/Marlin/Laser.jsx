@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import _ from 'lodash';
+import { includes, isNil } from 'lodash';
 import Slider from '../../components/Slider';
 import Switch from '../../components/Switch';
 import i18n from '../../../lib/i18n';
@@ -22,7 +22,7 @@ import { controller } from '../../../lib/controller';
 
 class Laser extends PureComponent {
     static propTypes = {
-        headStatus: PropTypes.bool,
+        // headStatus: PropTypes.bool,
         laserPower: PropTypes.number,
         workflowStatus: PropTypes.string,
         workflowState: PropTypes.string,
@@ -33,7 +33,7 @@ class Laser extends PureComponent {
     };
 
     state = {
-        laserPowerOpen: this.props.headStatus,
+        laserPowerOpen: this.props.laserPower > 0,
         laserPower: this.props.laserPower || 1,
         laserPowerMarks: {
             0: 0,
@@ -49,8 +49,8 @@ class Laser extends PureComponent {
     actions = {
         isPrinting: () => {
             const { workflowStatus, workflowState, connectionType } = this.props;
-            return (_.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus) && connectionType === CONNECTION_TYPE_WIFI)
-                || (_.includes([WORKFLOW_STATE_PAUSED, WORKFLOW_STATE_RUNNING], workflowState) && connectionType === CONNECTION_TYPE_SERIAL);
+            return (includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus) && connectionType === CONNECTION_TYPE_WIFI)
+                || (includes([WORKFLOW_STATE_PAUSED, WORKFLOW_STATE_RUNNING], workflowState) && connectionType === CONNECTION_TYPE_SERIAL);
         },
         onChangeLaserPower: (value) => {
             this.setState({
@@ -94,6 +94,11 @@ class Laser extends PureComponent {
                     laserPower: 1
                 });
             }
+        }
+        if (prevProps.laserPower !== this.props.laserPower && !isNil(this.props.laserPower)) {
+            this.setState({
+                laserPowerOpen: this.props.laserPower > 0
+            });
         }
         return prevProps;
     }

@@ -165,7 +165,7 @@ class ThreeModel extends BaseModel {
 
     updateDisplayedType(value) {
         this.displayedType = value;
-        this.setSelected(false);
+        this.setSelected(this.isSelected);
     }
 
     updateModelName(newName) {
@@ -175,7 +175,7 @@ class ThreeModel extends BaseModel {
     updateMaterialColor(color) {
         this._materialNormal = new THREE.Color(color);
         this._materialSelected = new THREE.Color(color);
-        this.setSelected();
+        this.setSelected(this.isSelected);
     }
 
     onTransform() {
