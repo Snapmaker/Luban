@@ -36,12 +36,12 @@ class WorkerManager {
                     }
                 }
             };
-            if (process.env.NODE_ENV === 'development') {
-                config.maxWorkers = 1;
-                config.forkOpts.execArgv = ['--inspect=8888'];
-            } else {
-                config.minWorkers = 'max';
-            }
+            // if (process.env.NODE_ENV === 'development') {
+            //     config.maxWorkers = 2;
+            //     config.forkOpts.execArgv = ['--inspect=8888'];
+            // } else {
+            config.minWorkers = 'max';
+            // }
             this.pool = workerpool.pool('./Pool.worker.js', config);
         }
         return this.pool;

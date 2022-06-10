@@ -108,13 +108,8 @@ function PrintingManager() {
         },
         onUpdateDefaultDefinition: (definitionForManager) => {
             const definitionId = definitionForManager.definitionId;
-            dispatch(
-                printingActions.updateDefaultIdByType(
-                    managerDisplayType,
-                    definitionId,
-                    materialManagerDirection
-                )
-            );
+            dispatch(printingActions.updateDefaultIdByType(managerDisplayType, definitionId, materialManagerDirection));
+            dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
         },
         onSaveDefinitionForManager: async (
             newDefinition,
