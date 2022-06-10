@@ -83,6 +83,7 @@ function PrintingManager() {
         onUpdateDefaultDefinition: (definitionForManager) => {
             const definitionId = definitionForManager.definitionId;
             dispatch(printingActions.updateDefaultIdByType(managerDisplayType, definitionId, materialManagerDirection));
+            dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
         },
         onSaveDefinitionForManager: async (newDefinition, shouldUpdateActive) => {
             // now setDefinitionState is synchronize, so remove setTimeout
