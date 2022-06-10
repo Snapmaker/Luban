@@ -248,7 +248,7 @@ function SerialConnection() {
                     {moduleStatusList && moduleStatusList.length && (
                         <div className={classNames('sm-flex', 'flex-wrap')}>
                             {moduleStatusList.map(item => (
-                                <ModuleStatus moduleName={item.moduleName} status={item.status} />
+                                <ModuleStatus key={item.moduleName} moduleName={item.moduleName} status={item.status} />
                             ))}
                         </div>
                     )}

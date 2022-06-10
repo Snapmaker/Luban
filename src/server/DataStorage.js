@@ -31,6 +31,8 @@ export const rmDir = (dirPath, removeSelf) => {
     if (files.length > 0) {
         for (let i = 0; i < files.length; i++) {
             const filePath = `${dirPath}/${files[i]}`;
+            const isFile = fs.statSync(filePath).isFile();
+            log.info(`Removing files2: ${isFile}`);
             if (fs.statSync(filePath).isFile()) {
                 fs.unlinkSync(filePath);
             } else {
@@ -132,26 +134,28 @@ class DataStorage {
         srcDir, dstDir,
         overwriteTag = false, inherit = false
     }) {
-        mkdirp.sync(dstDir);
-        if (fs.existsSync(srcDir)) {
-            const files = fs.readdirSync(srcDir);
-            for (const file of files) {
-                const src = path.join(srcDir, file);
-                const dst = path.join(dstDir, file);
-                if (fs.statSync(src).isFile()) {
-                    if (fs.existsSync(dst) && !overwriteTag) {
-                        return;
+        if (dstDir && srcDir) {
+            mkdirp.sync(dstDir);
+            if (fs.existsSync(srcDir)) {
+                const files = fs.readdirSync(srcDir);
+                for (const file of files) {
+                    const src = path.join(srcDir, file);
+                    const dst = path.join(dstDir, file);
+                    if (fs.statSync(src).isFile()) {
+                        if (fs.existsSync(dst) && !overwriteTag) {
+                            return;
+                        }
+                        fs.copyFileSync(src, dst, (err) => {
+                            console.error('err', err);
+                        });
+                    } else {
+                        await this.copyDirForInitSlicer({
+                            srcDir: src,
+                            dstDir: dst,
+                            overwriteTag: inherit ? overwriteTag : false,
+                            inherit
+                        });
                     }
-                    fs.copyFileSync(src, dst, (err) => {
-                        console.error('err', err);
-                    });
-                } else {
-                    await this.copyDirForInitSlicer({
-                        srcDir: src,
-                        dstDir: dst,
-                        overwriteTag: inherit ? overwriteTag : false,
-                        inherit
-                    });
                 }
             }
         }
