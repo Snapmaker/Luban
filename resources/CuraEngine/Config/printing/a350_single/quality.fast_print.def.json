@@ -127,7 +127,7 @@
                     "label": "Printing Speed"
                 },
                 "speed_print_layer_0": {
-                    "default_value": 40,
+                    "default_value": 24,
                     "label": "Initial Layer Printing Speed"
                 },
                 "speed_travel_layer_0": {
