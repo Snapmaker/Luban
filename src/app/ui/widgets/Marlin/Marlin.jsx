@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import Printing from './Printing';
 import Laser from './Laser';
+import Printing from './Printing';
 import CNC from './CNC';
 import {
     HEAD_CNC,
@@ -14,7 +14,7 @@ import {
 function MarlinWidget({ widgetActions }) {
     const { isConnected } = useSelector(state => state.machine);
     const { headType } = useSelector(state => state?.workspace);
-    // const headType = HEAD_LASER;
+    // const headType = HEAD_PRINTING;
 
     const actions = {
         setTitle: (_headType) => {
@@ -51,7 +51,7 @@ function MarlinWidget({ widgetActions }) {
     }, [headType]);
 
     return (
-        <div>
+        <div className="font-roboto">
             {(headType === HEAD_PRINTING) && <Printing />}
             {headType === HEAD_LASER && <Laser />}
             {headType === HEAD_CNC && <CNC />}

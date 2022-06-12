@@ -35,12 +35,15 @@ class Printing extends PureComponent {
 
     state = {
         headStatus: this.props.headStatus,
+        // toolHeadSpeepd: 0
     };
 
     actions = {
         onClickToolHead: () => {
             controller.emitEvent(CONNECTION_SWITCH_CNC, {
-                headStatus: this.state.headStatus
+                headStatus: this.state.headStatus,
+                // toolHeadSpeepd: this.state.toolHeadSpeepd,
+                toolHead: this.props.toolHead,
             }).once(CONNECTION_SWITCH_CNC, (result) => {
                 console.log(`${CONNECTION_SWITCH_CNC} ok, get${JSON.stringify(result)}`);
                 // if (result) {
@@ -60,6 +63,7 @@ class Printing extends PureComponent {
                 //     this.props.addConsoleLogs(result);
                 // }
             });
+            // this.setState({ toolHeadSpeepd: speed });
         },
         isPrinting: () => {
             const { workflowStatus } = this.props;

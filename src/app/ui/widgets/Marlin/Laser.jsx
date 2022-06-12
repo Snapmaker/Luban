@@ -82,13 +82,14 @@ class Laser extends PureComponent {
                 laserPower: value,
                 laserPowerOpen: this.state.laserPowerOpen
             }).once(CONNECTION_LASER_POWER, (result) => {
-                this.setState({
-                    laserPower: value
-                });
+                console.log('update laser power');
 
                 if (result) {
                     this.props.addConsoleLogs(result);
                 }
+            });
+            this.setState({
+                laserPower: value
             });
         }
     };
@@ -124,6 +125,7 @@ class Laser extends PureComponent {
                         title={i18n._('key-unused-Laser Power')}
                         suffix="%"
                         inputMax={100}
+                        hasSlider
                         inputMin={1}
                     >
                         <div className="width-40 sm-flex sm-flex-direction-c margin-left-16">

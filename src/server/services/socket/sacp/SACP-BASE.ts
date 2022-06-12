@@ -4,7 +4,7 @@ import Business, { CoordinateType } from './Business';
 import SocketServer from '../../../lib/SocketManager';
 import logger from '../../../lib/logger';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, CNC_MODULE, LASER_MODULE, PRINTING_MODULE, HEAD_CNC, HEAD_LASER,
-    COORDINATE_AXIS, WORKFLOW_STATUS_MAP, HEAD_PRINTING, EMERGENCY_STOP_BUTTON, ENCLOSURE_MODULES, AIR_PURIFIER_MODULES, ROTARY_MODULES, MODULEID_TOOLHEAD_MAP, A400_HEADT_BED_FOR_SM2, HEADT_BED_FOR_SM2, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_SM2, RIGHT_EXTRUDER, LEFT_EXTRUDER } from '../../../../app/constants';
+    COORDINATE_AXIS, WORKFLOW_STATUS_MAP, HEAD_PRINTING, EMERGENCY_STOP_BUTTON, ENCLOSURE_MODULES, AIR_PURIFIER_MODULES, ROTARY_MODULES, MODULEID_TOOLHEAD_MAP, A400_HEADT_BED_FOR_SM2, HEADT_BED_FOR_SM2, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_SM2, RIGHT_EXTRUDER, LEFT_EXTRUDER, MODULEID_MAP } from '../../../../app/constants';
 import { readString, readUint8 } from '../../../lib/SACP-SDK/SACP/helper';
 import GetHotBed from '../../../lib/SACP-SDK/SACP/business/models/GetHotBed';
 import CoordinateSystemInfo from '../../../lib/SACP-SDK/SACP/business/models/CoordinateSystemInfo';
@@ -108,9 +108,9 @@ class SocketBASE {
                     }
 
 
-                    const keys = Object.keys(MODULEID_TOOLHEAD_MAP);
+                    const keys = Object.keys(MODULEID_MAP);
                     if (includes(keys, String(module.moduleId))) {
-                        this.moduleInfos[MODULEID_TOOLHEAD_MAP[module.moduleId]] = module;
+                        this.moduleInfos[MODULEID_MAP[module.moduleId]] = module;
                     }
                 });
             });
@@ -205,6 +205,7 @@ class SocketBASE {
         this.sacpClient.subscribeCurrentCoordinateInfo({ interval: 1000 }, this.subscribeCoordinateCallback).then(res => {
             log.info(`subscribe coordination success: ${res}`);
         });
+        // this.getWorkSpeed({ toolHead: stateData.toolHead });
     };
 
     public executeGcode = async (options: EventOptions, callback: () => void) => {
@@ -366,10 +367,6 @@ class SocketBASE {
         });
     }
 
-    public async updateZOffset(extruderIndex, direction, distance) {
-        this.updateNozzleOffset(extruderIndex, 2, distance);
-    }
-
     public async updateNozzleOffset(extruderIndex, direction, distance) {
         const toolHead = this.moduleInfos && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2]);// || this.moduleInfos[HEADT_BED_FOR_SM2]); //
         if (!toolHead) {
@@ -377,7 +374,7 @@ class SocketBASE {
             return;
         }
 
-        log.info(`SetExtruderOffset key:${toolHead.key} extruderIndex:${extruderIndex} direction:${direction} distance:${distance}`);
+        log.info(`SetExtruderOffset key:${toolHead.key} extruderIndex: ${extruderIndex}, direction: ${direction}, distance:${distance}`);
         const response = await this.sacpClient.SetExtruderOffset(toolHead.key, extruderIndex, direction, distance);
         log.info(`SetExtruderOffset, ${JSON.stringify(response)}`);
     }
@@ -415,22 +412,21 @@ class SocketBASE {
         });
     }
 
-    public switchCNC = (headStatus) => {
+    public switchCNC = async function (headStatus) {
         const toolhead = this.moduleInfos && (this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2] || this.moduleInfos[STANDARD_CNC_TOOLHEAD_FOR_SM2]);
-        console.log(this.moduleInfos);
         if (!toolhead) {
-            log.error(`no match ${LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2}:15 or ${STANDARD_CNC_TOOLHEAD_FOR_SM2}:1 , moduleInfos:${this.moduleInfos}`,);
+            log.error(`no match ${LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2} or ${STANDARD_CNC_TOOLHEAD_FOR_SM2}:1 , moduleInfos:${this.moduleInfos}`,);
             return;
         }
 
-        this.sacpClient.switchCNC(toolhead.key, !headStatus).then(({ response }) => {
-            log.info(`switchCNC to [${!headStatus}], ${JSON.stringify(response)}`);
-        });
+        // return
+        const { response } = await this.sacpClient.switchCNC(toolhead.key, !headStatus);
+        log.info(`switchCNC to [${!headStatus}], ${JSON.stringify(response)}`);
+        // return response;
     }
 
     public updateToolHeadSpeed = (speed) => {
         const toolhead = this.moduleInfos && this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2];
-        console.log(this.moduleInfos);
         if (!toolhead) {
             log.error(`no match ${LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2}, moduleInfos:${this.moduleInfos}`,);
             return;
@@ -438,6 +434,18 @@ class SocketBASE {
 
         this.sacpClient.setToolHeadSpeed(toolhead.key, speed).then(({ response }) => {
             log.info(`updateToolHeadSpeed Speed:[${speed}], ${JSON.stringify(response)}`);
+        });
+    }
+
+    public setCncPower = (targetPower) => {
+        const toolhead = this.moduleInfos && (this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2] || this.moduleInfos[STANDARD_CNC_TOOLHEAD_FOR_SM2]);
+        if (!toolhead) {
+            log.error(`no match cnc tool head, moduleInfos:${JSON.stringify(this.moduleInfos)}`,);
+            return;
+        }
+
+        this.sacpClient.setCncPower(toolhead.key, targetPower).then(({ response }) => {
+            log.info(`setCncPower setCncPower:[${targetPower}]%, ${JSON.stringify(response)}`);
         });
     }
 
@@ -477,6 +485,17 @@ class SocketBASE {
         const { laserToolHeadInfo } = await this.sacpClient.getLaserToolHeadInfo(headModule.key);
         log.debug(`laserFocalLength:${laserToolHeadInfo.laserFocalLength}, materialThickness: ${materialThickness}, platformHeight:${laserToolHeadInfo.platformHeight}`);
         await this.setAbsoluteWorkOrigin({ x: 0, y: 0, z: laserToolHeadInfo.laserFocalLength + laserToolHeadInfo.platformHeight + materialThickness });
+    }
+
+    public async getWorkSpeed(options) {
+        const { toolHead } = options;
+        const headModule = this.moduleInfos && (this.moduleInfos[toolHead]); //
+        if (!headModule) {
+            log.error(`non-eixst toolhead[${toolHead}], moduleInfos:${JSON.stringify(this.moduleInfos)}`,);
+            return;
+        }
+        await this.sacpClient.getWorkSpeed(headModule.key);
+        // console.log(res);
     }
 }
 
