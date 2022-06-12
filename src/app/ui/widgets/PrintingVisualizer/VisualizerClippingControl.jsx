@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSelector, shallowEqual, useDispatch } from 'react-redux';
-import { find as lodashFind, noop, throttle } from 'lodash';
+import { find as lodashFind, noop, debounce } from 'lodash';
 import Slider from '../../components/Slider';
 import styles from './styles.styl';
 import { actions as printingActions } from '../../../flux/printing';
@@ -45,7 +45,7 @@ function VisualizerClippingControl() {
         };
     }, [modelGroup, primeTowerHeight, qualitySetting]);
 
-    const update = useRef(throttle((v) => {
+    const update = useRef(debounce((v) => {
         return dispatch(printingActions.updateClippingPlane(v));
     }));
 

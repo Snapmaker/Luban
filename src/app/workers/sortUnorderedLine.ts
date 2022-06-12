@@ -80,50 +80,51 @@ const removePoint = (traceLine: ITraceLine, pointsMap: IPointsMap) => {
     return pointsMap;
 };
 
-const search = (latest: TPoint, currentConnectedPoints: TPoint[], currentConnectedKeys: Set<string>, pointsMap: IPointsMap): [TPoint[], boolean] => {
-    const pointKey = toPointHash(latest);
-    // console.log(currentConnectedKeys.toString(), ' => ', pointKey);
+type TStackItem = {
+    depth: number;
+    latest: TPoint;
+    connectedKeys: Set<string>;
+    connectedPoints: TPoint[]
+}
 
-    const linesMap = pointsMap.get(pointKey);
-    if (linesMap && !linesMap.visited) {
-        let max: TPoint[] = [];
-        let isCircle = false;
-        linesMap.visited = true;
-        for (const [, line] of linesMap.value.entries()) {
-            // linesMap.value.forEach((line) => {
-            const spKey = toPointHash(line[0]);
+const search = (stack: TStackItem[], pointsMap: IPointsMap): [TPoint[], boolean] => {
+    let max: TPoint[] = [];
+    let isCircle = false;
 
-            const next = pointKey === spKey ? line[1] : line[0];
-            const nextHash = toPointHash(next);
+    while (stack.length) {
+        const current = stack.pop();
+        const currentHash = toPointHash(current.latest);
 
-            if (currentConnectedKeys.has(toPointHash(next))) {
-                const index = currentConnectedPoints.findIndex(i => toPointHash(i) === nextHash);
-                if (max.length < currentConnectedKeys.size - index - 1) {
-                    max = currentConnectedPoints;
-                    isCircle = true;
+        if (current.connectedKeys.has(currentHash)) {
+            const index = current.connectedPoints.findIndex(i => toPointHash(i) === currentHash);
+            if (max.length < current.connectedKeys.size - index - 1) {
+                max = current.connectedPoints;
+                isCircle = true;
+            }
+        } else {
+            current.connectedPoints.push(current.latest);
+            current.connectedKeys.add(currentHash);
+
+            const linesMap = pointsMap.get(currentHash);
+            if (linesMap && !linesMap.visited) {
+                linesMap.visited = true;
+
+                for (const [, line] of linesMap.value.entries()) {
+                    const spKey = toPointHash(line[0]);
+                    const next = currentHash === spKey ? line[1] : line[0];
+                    stack.push({
+                        depth: current.depth + 1,
+                        latest: next,
+                        connectedPoints: current.connectedPoints,
+                        connectedKeys: current.connectedKeys
+                    });
                 }
             } else {
-                currentConnectedPoints.push(next);
-                currentConnectedKeys.add(nextHash);
-                const [res, _isCircle] = search(
-                    next,
-                    currentConnectedPoints,
-                    currentConnectedKeys,
-                    pointsMap
-                );
-                if (res && max.length < res.length) {
-                    max = res;
-                    isCircle = _isCircle;
-                }
+            // return [connectedPoints, false];
             }
-            // });
         }
-
-
-        return [max, isCircle];
-    } else {
-        return [currentConnectedPoints, false];
     }
+    return [max, isCircle];
 };
 
 type TMessage = {
@@ -158,16 +159,19 @@ const sortUnorderedLine = ({ fragments, actionID }: TMessage) => {
                     break;
                 }
 
-                const connected = [
-                    initial[0], initial[1]
-                ];
-                const allConnectedPoints = new Set([
-                    toPointHash(initial[0]),
-                    toPointHash(initial[1])
-                ]);
+                const connected:TPoint[] = [];
+                const allConnectedPoints = new Set<string>();
                 latest = initial[1];
+
+                const stack: TStackItem[] = [{
+                    depth: 0,
+                    latest: latest,
+                    connectedKeys: allConnectedPoints,
+                    connectedPoints: connected
+                }];
+
                 // const m2 = new Date().getTime();
-                const [arr, isCircle] = search(latest, connected, allConnectedPoints, removePoint(initial, pointsMap));
+                const [arr, isCircle] = search(stack, removePoint(initial, pointsMap));
                 // console.log(`=>> ${num++}: ${arr.length}, isCircle=${isCircle} ,cost=`, new Date().getTime() - m2);
 
                 if (isCircle) {

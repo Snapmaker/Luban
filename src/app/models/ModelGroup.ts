@@ -4,7 +4,6 @@ import { CONTAINED, INTERSECTED, NOT_INTERSECTED } from 'three-mesh-bvh';
 import { v4 as uuid } from 'uuid';
 import _ from 'lodash';
 import i18n from '../lib/i18n';
-import { PolygonsUtils } from '../../shared/lib/math/PolygonsUtils';
 
 import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
 import { ModelInfo as SVGModelInfo, TMode, TSize } from './BaseModel';
@@ -20,6 +19,7 @@ import { polyOffset, polyUnion } from '../../shared/lib/clipper/cLipper-adapter'
 import * as ClipperLib from '../../shared/lib/clipper/clipper';
 import { ModelEvents } from './events';
 import { TPolygon } from './ClipperModel';
+import { PolygonsUtils } from '../../shared/lib/math/PolygonsUtils';
 
 const CUSTOM_EVENTS = {
     UPDATE: { type: 'update' }
@@ -30,7 +30,7 @@ const SUPPORT_AVAIL_AREA_COLOR = [0.5725490196078431, 0.32941176470588235, 0.870
 const SUPPORT_ADD_AREA_COLOR = [0.2980392156862745, 0, 0.5098039215686274];
 const SUPPORT_UNAVAIL_AREA_COLOR = [0.9, 0.9, 0.9];
 const AVAIL = -1, NONE = 0, FACE = 1/* , POINT = 2, LINE = 3 */;
-export const planeMaxHeight = 99999;
+export const planeMaxHeight = 100;
 
 type TModel = ThreeGroup | ThreeModel | SvgModel
 
@@ -2440,10 +2440,14 @@ class ModelGroup extends EventEmitter {
         }).forEach((model) => {
             const polygonss = model.clipper.clippingMap.get(model.clipper.clippingConfig.layerHeight);
             polygonss && polygonss.forEach((polygons) => {
-                const _paths = PolygonsUtils.simplify(polygons, 0.2);
-
-                // const path = polyOffset(polygons, 3);
-                // paths.push(path);
+                const _paths = (() => {
+                    const res = PolygonsUtils.simplify(polygons, 0.2);
+                    if (this.adhesionConfig.adhesionType === 'skirt') {
+                        return polyOffset(res, 100, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon, 0.12, 0.1);
+                    } else {
+                        return PolygonsUtils.simplify(res, 0.2);
+                    }
+                })();
                 if (paths.length === 0) {
                     paths = _paths;
                 } else {
@@ -2454,62 +2458,79 @@ class ModelGroup extends EventEmitter {
         if (paths.length === 0) {
             return;
         }
-        paths = polyOffset(paths, 20);
-        paths = polyOffset(paths, -20);
+        if (this.adhesionConfig.adhesionType === 'skirt') {
+            paths = polyOffset(paths, -100, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon, 0, 0);
+        } else {
+            // paths = polyOffset(paths, 20);
+            // paths = polyOffset(paths, -20);
 
-        paths = paths.map((path) => {
-            const vectors = PolygonsUtils.simplify2(path, 200, 50);
-            const arr = [];
-            for (let k = 0; k < vectors.length; k++) {
-                const begin = vectors[k];
-                const end = vectors[k + 1];
-                if (end) {
-                    arr.push(begin, end);
-                }
-            }
-            return arr;
-        });
+            // paths = PolygonsUtils.simplify(paths, 0.2);
+        }
+        // paths = polyOffset(paths, -20);
 
-        if (paths.length === 0) {
-            return;
-        }
-        switch (this.adhesionConfig.adhesionType) {
-            case 'skirt':
-                this.generateSkirt(paths);
-                break;
-            case 'brim':
-                this.generateBrim(paths);
-                break;
-            case 'raft':
-                this.generateRaft(paths);
-                break;
-            default:
-                break;
-        }
+        // paths = PolygonsUtils.simplify(paths, 0.2);
+        // console.log(vectors);
+
+        // paths = paths.map((path) => {
+        //     const vectors = PolygonsUtils.simplify(path, 20);
+        //     const arr = [];
+        //     for (let k = 0; k < vectors.length; k++) {
+        //         const begin = vectors[k];
+        //         const end = vectors[k + 1];
+        //         if (end) {
+        //             arr.push(begin, end);
+        //         }
+        //     }
+        //     return arr;
+        // });
+
+        // if (paths.length === 0) {
+        //     return;
+        // }
+        // switch (this.adhesionConfig.adhesionType) {
+        //     case 'skirt':
+        //         this.generateSkirt(paths);
+        //         break;
+        //     case 'brim':
+        //         this.generateBrim(paths);
+        //         break;
+        //     case 'raft':
+        //         this.generateRaft(paths);
+        //         break;
+        //     default:
+        //         break;
+        // }
     }
 
-    private generateSkirt(polygons: TPolygon[]) {
+    public generateSkirt(polygons: TPolygon[]) {
         const lineGeometry = new BufferGeometry();
         const linePosAttr = new BufferAttribute(new Float32Array(300000), 3, false);
         linePosAttr.setUsage(DynamicDrawUsage);
         lineGeometry.setAttribute('position', linePosAttr);
 
         let j = 0;
-        const _polygons = polyOffset(polygons, this.adhesionConfig.skirtGap + this.adhesionConfig.skirtBrimLineWidth / 2, ClipperLib.JoinType.jtRound);
+        const _polygons = polyOffset(
+            polygons,
+            this.adhesionConfig.skirtGap + this.adhesionConfig.skirtBrimLineWidth / 2,
+            ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon, 0, 0
+        );
         Array(this.adhesionConfig.skirtLineCount).fill(0).forEach((_item, index) => {
             let skirtArea;
             if (index === 0) {
                 skirtArea = _polygons;
             } else {
-                skirtArea = polyOffset(_polygons, 0.4 * index, ClipperLib.JoinType.jtRound);
+                skirtArea = polyOffset(
+                    _polygons, 0.4 * index, ClipperLib.JoinType.jtRound,
+                    ClipperLib.EndType.etClosedPolygon, 0, 0
+                );
             }
             skirtArea.forEach((vectors) => {
                 for (let i = 0; i < vectors.length; i++) {
                     const begin = vectors[i];
                     const end = vectors[i + 1];
                     if (end) {
-                        linePosAttr.setXYZ(j++, begin.x, begin.y, 0.002);
-                        linePosAttr.setXYZ(j++, end.x, end.y, 0.002);
+                        linePosAttr.setXYZ(j++, begin.x, begin.y, 0.001);
+                        linePosAttr.setXYZ(j++, end.x, end.y, 0.001);
                     }
                 }
             });
@@ -2523,28 +2544,32 @@ class ModelGroup extends EventEmitter {
         this.plateAdhesion.add(line);
     }
 
-    private generateBrim(polygons: TPolygon[]) {
+    public generateBrim(polygons: TPolygon[]) {
         const lineGeometry = new BufferGeometry();
-        const linePosAttr = new BufferAttribute(new Float32Array(300000), 3, false);
+        const linePosAttr = new BufferAttribute(new Float32Array(30000000), 3, false);
         linePosAttr.setUsage(DynamicDrawUsage);
         lineGeometry.setAttribute('position', linePosAttr);
 
         let j = 0;
-        const _polygons = polyOffset(polygons, this.adhesionConfig.skirtBrimLineWidth / 2, ClipperLib.JoinType.jtRound);
+        const _polygons = polyOffset(
+            polygons, this.adhesionConfig.skirtBrimLineWidth / 2, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon, 0, 0
+        );
         Array(this.adhesionConfig.brimLineCount).fill(0).forEach((_item, index) => {
             let skirtArea;
             if (index === 0) {
                 skirtArea = _polygons;
             } else {
-                skirtArea = polyOffset(_polygons, this.adhesionConfig.skirtBrimLineWidth * index, ClipperLib.JoinType.jtRound);
+                skirtArea = polyOffset(
+                    _polygons, this.adhesionConfig.skirtBrimLineWidth * index, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon, 0, 0
+                );
             }
             skirtArea.forEach((vectors) => {
                 for (let i = 0; i < vectors.length; i++) {
                     const begin = vectors[i];
                     const end = vectors[i + 1];
                     if (end) {
-                        linePosAttr.setXYZ(j++, begin.x, begin.y, 0.002);
-                        linePosAttr.setXYZ(j++, end.x, end.y, 0.002);
+                        linePosAttr.setXYZ(j++, begin.x, begin.y, 0.001);
+                        linePosAttr.setXYZ(j++, end.x, end.y, 0.001);
                     }
                 }
             });
@@ -2552,13 +2577,14 @@ class ModelGroup extends EventEmitter {
         const line = new LineSegments(lineGeometry, new LineBasicMaterial({
             linewidth: 2
         }));
+        line.geometry.setDrawRange(0, j);
         line.material.color.set(0x9254DE).convertSRGBToLinear();
         line.frustumCulled = false;
         line.visible = true;
         this.plateAdhesion.add(line);
     }
 
-    private generateRaft(polygons: TPolygon[]) {
+    public generateRaft(polygons: TPolygon[]) {
         const lineGeometry = new BufferGeometry();
         const linePosAttr = new BufferAttribute(new Float32Array(300000), 3, false);
         linePosAttr.setUsage(DynamicDrawUsage);
@@ -2590,7 +2616,7 @@ class ModelGroup extends EventEmitter {
         if (!this.sectionMesh) {
             const planeGeom = new PlaneGeometry();
             const planeMat = new MeshStandardMaterial({
-                color: 0xE9F3FE, // 0x7CFC00
+                // color: 0xF8F8FF, // 0x7CFC00
                 metalness: 0.1,
                 roughness: 0.75,
                 clippingPlanes: [],

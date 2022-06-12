@@ -14,6 +14,7 @@ export enum WorkerMethods {
     scaleToFitWithRotate = 'scaleToFitWithRotate',
     toolpathRenderer = 'toolpathRenderer',
     sortUnorderedLine = 'sortUnorderedLine',
+    sortUnorderedLine2 = 'sortUnorderedLine2',
     translatePolygons = 'translatePolygons',
     calaClippingWall = 'calaClippingWall',
     calaClippingSkin = 'calaClippingSkin'
@@ -42,6 +43,8 @@ Object.entries(WorkerMethods).forEach(([, method]) => {
     // eslint-disable-next-line
     WorkerManager.prototype[method] = async function (data: any, onmessage?: (payload: unknown) => void | Promise<unknown>) {
         this.pool || (this.pool = Pool(async () => spawn(new Worker('./Pool.worker.js'))));
+        // @ts-ignore
+        window.pool = this.pool;
         const task = this.pool.queue(eachPool => {
             eachPool[method](data).subscribe((payload: PayloadData) => {
                 if (onmessage) {

@@ -55,7 +55,7 @@ const toResult = (solution, type) => {
     }
 };
 
-const polyOffset = (paths, offset, joinType = ClipperLib.JoinType.jtSquare, EndType = ClipperLib.EndType.etClosedPolygon) => {
+const polyOffset = (paths, offset, joinType = ClipperLib.JoinType.jtSquare, EndType = ClipperLib.EndType.etClosedPolygon, miterLimit, roundPrecision) => {
     const type = checkPathsType(paths);
 
     if (!type) {
@@ -64,8 +64,10 @@ const polyOffset = (paths, offset, joinType = ClipperLib.JoinType.jtSquare, EndT
 
     const cPaths = preClipperPaths(paths, type);
 
-    // TODO 有其他影响面
-    const clipperOffset = new ClipperLib.ClipperOffset(0 * SCALE, 0.0 * SCALE);
+    const clipperOffset = new ClipperLib.ClipperOffset(
+        (miterLimit !== undefined ? miterLimit : 3) * SCALE,
+        (roundPrecision !== undefined ? roundPrecision : 0.25) * SCALE
+    );
 
     clipperOffset.AddPaths(cPaths, joinType, EndType);
 
