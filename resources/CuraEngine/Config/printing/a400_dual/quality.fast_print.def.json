@@ -3,223 +3,1388 @@
     "version": "4.2.0",
     "inherits": "snapmaker2",
     "category": "Default",
+    "isRecommended": true,
     "i18nName": "key-default_name-Fast Print",
     "i18nCategory": "key-default_category-Default",
     "overrides": {
-        "resolution": {
+        "Quality & Speed": {
             "type": "category",
             "children": {
                 "layer_height": {
                     "default_value": 0.24,
-                    "label": "Layer Height"
+                    "label": "Layer Height",
+                    "filter": [
+                        "all",
+                        "basic",
+                        "advanced"
+                    ],
+                    "step": "0.001"
                 },
-                "layer_height_0": {
+                "line_width": {
+                    "label": "Line Width",
                     "default_value": 0.2,
-                    "label": "Initial Layer Height"
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ],
+                    "step": "0.001",
+                    "children": {
+                        "wall_line_width_0": {
+                            "label": "Outer Wall Line Width",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ],
+                            "step": "0.001"
+                        },
+                        "wall_line_width_x": {
+                            "label": "Inner Wall(s) Line Width",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ],
+                            "step": "0.001"
+                        },
+                        "skin_line_width": {
+                            "label": "Top/Bottom Line Width",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ],
+                            "step": "0.001"
+                        },
+                        "infill_line_width": {
+                            "label": "Infill Line Width",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ],
+                            "step": "0.001"
+                        },
+                        "skirt_brim_line_width": {
+                            "label": "Skirt/Brim Line Width",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ],
+                            "step": "0.001"
+                        },
+                        "support_line_width": {
+                            "label": "Support Line Width",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ],
+                            "step": "0.001"
+                        },
+                        "initial_layer_line_width_factor": {
+                            "label": "Initial Layer Line Width",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ],
+                            "step": "0.001"
+                        }
+                    }
                 },
-                "initial_layer_line_width_factor": {
-                    "default_value": 100,
-                    "label": "Initial Layer Line Width"
+                "speed_print": {
+                    "label": "Print Speed",
+                    "default_value": 0.2,
+                    "filter": [
+                        "all",
+                        "basic",
+                        "advanced"
+                    ],
+                    "children": {
+                        "speed_wall_0": {
+                            "label": "Outer Wall Speed",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        },
+                        "speed_wall_x": {
+                            "label": "Inner Wall Speed",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        },
+                        "speed_topbottom": {
+                            "label": "Top/Bottom Speed",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        },
+                        "speed_infill": {
+                            "label": "Infill Speed",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        },
+                        "speed_support": {
+                            "label": "Support Speed",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        },
+                        "speed_support_interface": {
+                            "label": "Support Interface Speed",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all"
+                            ]
+                        },
+                        "speed_prime_tower": {
+                            "label": "Prime Tower Speed",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        },
+                        "speed_print_layer_0": {
+                            "label": "Initial Layer Print Speed",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        },
+                        "speed_travel": {
+                            "label": "Travel Speed",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        },
+                        "speed_travel_layer_0": {
+                            "label": "Initial Layer Travel Speed",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        }
+                    }
+                },
+                "acceleration_enabled": {
+                    "label": "Enable Acceleration Control",
+                    "default_value": false,
+                    "filter": [
+                        "all"
+                    ],
+                    "children": {
+                        "acceleration_wall_0": {
+                            "label": "Outer Wall Acceleration",
+                            "default_value": false,
+                            "filter": [
+                                "all"
+                            ]
+                        },
+                        "acceleration_wall_x": {
+                            "label": "Inner Wall Acceleration",
+                            "default_value": 2,
+                            "filter": [
+                                "all"
+                            ]
+                        },
+                        "acceleration_topbottom": {
+                            "label": "Top/Bottom Acceleration",
+                            "default_value": 2,
+                            "filter": [
+                                "all"
+                            ]
+                        },
+                        "acceleration_infill": {
+                            "label": "Infill Acceleration",
+                            "default_value": 2,
+                            "filter": [
+                                "all"
+                            ]
+                        },
+                        "acceleration_support_interface": {
+                            "label": "Support Interface Acceleration",
+                            "default_value": 2,
+                            "filter": [
+                                "all"
+                            ]
+                        },
+                        "acceleration_support_infill": {
+                            "label": "Support Infill Acceleration",
+                            "default_value": 2,
+                            "filter": [
+                                "all"
+                            ]
+                        },
+                        "acceleration_layer_0": {
+                            "label": "Initial Layer Acceleration",
+                            "default_value": 2,
+                            "filter": [
+                                "all"
+                            ]
+                        },
+                        "acceleration_travel": {
+                            "label": "Travel Acceleration",
+                            "default_value": 2,
+                            "filter": [
+                                "all"
+                            ]
+                        },
+                        "acceleration_travel_layer_0": {
+                            "label": "Initial Layer Travel Acceleration",
+                            "default_value": 2,
+                            "filter": [
+                                "all"
+                            ]
+                        }
+                    }
+                },
+                "jerk_enabled": {
+                    "label": "Enable Jerk Control",
+                    "default_value": false,
+                    "filter": [
+                        "all"
+                    ],
+                    "children": {
+                        "jerk_wall_0": {
+                            "label": "Outer Wall Jerk",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all"
+                            ]
+                        },
+                        "jerk_wall_x": {
+                            "label": "Inner Wall Jerk",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all"
+                            ]
+                        },
+                        "jerk_topbottom": {
+                            "label": "Top/Bottom Jerk",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all"
+                            ]
+                        },
+                        "jerk_infill": {
+                            "label": "Infill Jerk",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all"
+                            ]
+                        },
+                        "jerk_support": {
+                            "label": "Support Jerk",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all"
+                            ]
+                        },
+                        "jerk_support_interface": {
+                            "label": "Support Interface Jerk",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all"
+                            ]
+                        },
+                        "jerk_layer_0": {
+                            "label": "Initial Layer Jerk",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all"
+                            ]
+                        },
+                        "jerk_travel": {
+                            "label": "Travel Jerk",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all"
+                            ]
+                        },
+                        "jerk_travel_layer_0": {
+                            "label": "Initial Layer Travel Jerk",
+                            "default_value": 0.2,
+                            "filter": [
+                                "all"
+                            ]
+                        }
+                    }
                 }
             }
         },
-        "shell": {
+        "Model Structure": {
             "type": "category",
             "children": {
+                "model_structure_type": {
+                    "label": "Model Structure Type",
+                    "default_value": "Normal",
+                    "filter": [
+                        "all",
+                        "basic"
+                    ]
+                },
                 "wall_thickness": {
-                    "default_value": 0.8,
-                    "label": "Wall Thickness"
+                    "label": "Wall Thickness",
+                    "default_value": "Normal",
+                    "filter": [
+                        "all",
+                        "basic"
+                    ],
+                    "children": {
+                        "wall_line_count": {
+                            "label": "Wall Line Count",
+                            "default_value": "Normal",
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ],
+                            "step": 1
+                        }
+                    }
                 },
                 "top_thickness": {
                     "default_value": 0.8,
-                    "label": "Top Thickness"
-                },
-                "top_layers": {
-                    "default_value": 4,
-                    "label": "Top Layers"
+                    "label": "Top Thickness",
+                    "filter": [
+                        "all",
+                        "basic"
+                    ],
+                    "step": 1,
+                    "children": {
+                        "top_layers": {
+                            "label": "Top Layers",
+                            "default_value": 1,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ],
+                            "step": 1
+                        }
+                    }
                 },
                 "bottom_thickness": {
                     "default_value": 0.8,
-                    "label": "Bottom Thickness"
+                    "label": "Bottom Thickness",
+                    "filter": [
+                        "all",
+                        "basic"
+                    ],
+                    "step": 1,
+                    "children": {
+                        "bottom_layers": {
+                            "label": "Bottom Layers",
+                            "default_value": 1,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ],
+                            "step": 1
+                        }
+                    }
                 },
-                "bottom_layers": {
-                    "default_value": 4,
-                    "label": "Bottom Layers"
+                "infill_pattern": {
+                    "label": "Infill Pattern",
+                    "default_value": "grid",
+                    "filter": [
+                        "all",
+                        "basic"
+                    ]
+                },
+                "infill_sparse_density": {
+                    "label": "Infill Density",
+                    "default_value": 20,
+                    "filter": [
+                        "all",
+                        "basic"
+                    ],
+                    "step": 1,
+                    "children": {
+                        "infill_line_distance": {
+                            "label": "Infill Line Distance",
+                            "default_value": 1,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ],
+                            "step": 0.001
+                        }
+                    }
+                },
+                "top_bottom_pattern": {
+                    "label": "Top/Bottom Pattern",
+                    "default_value": "lines",
+                    "filter": [
+                        "all"
+                    ]
+                },
+                "skin_angles": {
+                    "label": "Top/Bottom Line Directions",
+                    "default_value": "[ ]",
+                    "filter": [
+                        "all"
+                    ],
+                    "step": 1
                 },
                 "outer_inset_first": {
-                    "default_value": false
+                    "default_value": false,
+                    "label": "Outer Before Inner Walls",
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
                 },
-                "skin_outline_count": {
-                    "label": "Extra Skin Wall Count",
-                    "default_value": 0
-                }
-            }
-        },
-        "infill": {
-            "type": "category",
-            "children": {
-                "infill_sparse_density": {
-                    "default_value": 15,
-                    "label": "Infill Density"
+                "alternate_extra_perimeter": {
+                    "default_value": false,
+                    "label": "Alternate Extra Wall",
+                    "filter": [
+                        "all"
+                    ]
+                },
+                "optimize_wall_printing_order": {
+                    "default_value": false,
+                    "label": "Optimize Wall Printing Order",
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
+                },
+                "fill_outline_gaps": {
+                    "default_value": false,
+                    "label": "Print Thin Walls",
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
+                },
+                "z_seam_type": {
+                    "default_value": "sharpest_corner",
+                    "label": "Z Seam Alignment",
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
+                },
+                "z_seam_corner": {
+                    "label": "Seam Corner Preference",
+                    "default_value": "sharpest_corner",
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
+                },
+                "wall_0_wipe_dist": {
+                    "label": "Outer Wall Wipe Distance",
+                    "default_value": "sharpest_corner",
+                    "filter": [
+                        "all"
+                    ],
+                    "step": 0.01
+                },
+                "skin_overlap": {
+                    "default_value": 5,
+                    "label": "Skin Overlap Percentage",
+                    "filter": [
+                        "all"
+                    ],
+                    "step": 1
+                },
+                "skin_overlap_mm": {
+                    "default_value": 5,
+                    "label": "Skin Overlap",
+                    "filter": [
+                        "all"
+                    ],
+                    "step": 0.0001
+                },
+                "travel_compensate_overlapping_walls_enabled": {
+                    "default_value": false,
+                    "label": "Compensate Wall Overlaps",
+                    "filter": [
+                        "all"
+                    ],
+                    "children": {
+                        "travel_compensate_overlapping_walls_0_enabled": {
+                            "label": "Compensate Outer Wall Overlaps",
+                            "default_value": false,
+                            "filter": [
+                                "all"
+                            ]
+                        },
+                        "travel_compensate_overlapping_walls_x_enabled": {
+                            "label": "Compensate Inner Wall Overlaps",
+                            "default_value": true,
+                            "filter": [
+                                "all"
+                            ]
+                        },
+                        "wall_min_flow": {
+                            "label": "Minimum Wall Flow",
+                            "default_value": true,
+                            "filter": [
+                                "all"
+                            ]
+                        },
+                        "fill_perimeter_gaps": {
+                            "label": "Fill Gaps Between Walls",
+                            "default_value": true,
+                            "filter": [
+                                "all"
+                            ]
+                        },
+                        "filter_out_tiny_gaps": {
+                            "label": "Filter Out Tiny Gaps",
+                            "default_value": true,
+                            "filter": [
+                                "all"
+                            ]
+                        }
+                    }
+                },
+                "infill_multiplier": {
+                    "label": "Infill Line Multiplier",
+                    "default_value": true,
+                    "filter": [
+                        "all"
+                    ]
+                },
+                "infill_wall_line_count": {
+                    "label": "Extra Infill Wall Count",
+                    "default_value": true,
+                    "filter": [
+                        "all"
+                    ]
+                },
+                "infill_wipe_dist": {
+                    "label": "Infill Wipe Distance",
+                    "default_value": true,
+                    "filter": [
+                        "all"
+                    ]
+                },
+                "infill_overlap_mm": {
+                    "label": "Infill Overlap",
+                    "default_value": true,
+                    "filter": [
+                        "all"
+                    ]
                 },
                 "infill_sparse_thickness": {
                     "label": "Infill Layer Thickness",
-                    "default_value": 0.24
+                    "default_value": true,
+                    "filter": [
+                        "all"
+                    ]
                 },
-                "skin_preshrink": {
-                    "label": "Skin Removal Width",
-                    "default_value": 0.8
+                "infill_before_walls": {
+                    "label": "Infill Before Walls",
+                    "default_value": true,
+                    "filter": [
+                        "all"
+                    ]
                 },
-                "top_skin_preshrink": {
-                    "label": "Top Skin Removal Width",
-                    "default_value": 0.8
+                "min_infill_area": {
+                    "label": "Minimum Infill Area",
+                    "default_value": true,
+                    "filter": [
+                        "all"
+                    ]
                 },
-                "bottom_skin_preshrink": {
-                    "label": "Bottom Skin Removal Width",
-                    "default_value": 0.8
+                "roofing_layer_count": {
+                    "label": "Top Surface Skin Layers",
+                    "default_value": true
                 },
-                "expand_skins_expand_distance": {
-                    "label": "Skin Expand Distance",
-                    "default_value": 0.8
+                "wall_0_inset": {
+                    "label": "Outer Wall Inset",
+                    "default_value": true
                 },
-                "top_skin_expand_distance": {
-                    "label": "Top Skin Expand Distance",
-                    "default_value": 0.8
+                "skin_no_small_gaps_heuristic": {
+                    "label": "No Skin in Z Gaps",
+                    "default_value": true
                 },
-                "bottom_skin_expand_distance": {
-                    "label": "Bottom Skin Expand Distance",
-                    "default_value": 0.8
+                "skin_outline_count": {
+                    "label": "Extra Skin Wall Count",
+                    "default_value": true
+                },
+                "zig_zaggify_infill": {
+                    "label": "Connect Infill Lines",
+                    "default_value": true
+                },
+                "infill_angles": {
+                    "label": "Infill Line Directions",
+                    "default_value": true
+                },
+                "infill_offset_x": {
+                    "label": "Infill X Offset",
+                    "default_value": true
+                },
+                "infill_offset_y": {
+                    "label": "Infill Y Offset",
+                    "default_value": true
+                },
+                "infill_randomize_start_location": {
+                    "label": "Randomize Infill Start",
+                    "default_value": true
+                },
+                "infill_overlap": {
+                    "label": "Infill Overlap Percentage",
+                    "default_value": true
+                },
+                "gradual_infill_steps": {
+                    "label": "Gradual Infill Steps",
+                    "default_value": true
+                },
+                "infill_support_enabled": {
+                    "label": "Infill Support",
+                    "default_value": true
+                },
+                "skin_edge_support_layers": {
+                    "label": "Skin Edge Support Layers",
+                    "default_value": true
+                },
+                "xy_offset": {
+                    "label": "Horizontal Expansion",
+                    "default_value": true,
+                    "filter": [
+                        "all"
+                    ]
+                },
+                "xy_offset_layer_0": {
+                    "label": "Initial Layer Horizontal Expansion",
+                    "default_value": true,
+                    "filter": [
+                        "all"
+                    ]
+                },
+                "hole_xy_offset": {
+                    "label": "Hole Horizontal Expansion",
+                    "default_value": true,
+                    "filter": [
+                        "all"
+                    ]
+                },
+                "ironing_enabled": {
+                    "label": "Enable Ironing",
+                    "default_value": true,
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
                 }
             }
         },
-        "speed": {
+        "Support": {
             "type": "category",
             "children": {
-                "speed_travel": {
-                    "default_value": 80,
-                    "label": "Travel Speed"
+                "support_type": {
+                    "label": "Support Placement",
+                    "default_value": "None",
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
                 },
-                "speed_topbottom": {
-                    "default_value": 30,
-                    "label": "Top/Bottom Speed"
+                "support_angle": {
+                    "label": "Support Overhang Angle",
+                    "default_value": "None",
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
                 },
-                "speed_wall_x": {
-                    "default_value": 25,
-                    "label": "Inner Wall Speed"
-                },
-                "speed_wall_0": {
-                    "default_value": 20,
-                    "label": "Outer Wall Speed"
-                },
-                "speed_wall": {
-                    "default_value": 40
-                },
-                "speed_infill": {
-                    "default_value": 60,
-                    "label": "Infill Speed"
-                },
-                "speed_print": {
-                    "default_value": 60,
-                    "label": "Printing Speed"
-                },
-                "speed_print_layer_0": {
-                    "default_value": 18,
-                    "label": "Initial Layer Printing Speed"
-                },
-                "speed_travel_layer_0": {
-                    "default_value": 24,
-                    "label": "Initial Layer Travel Speed"
-                },
-                "skirt_brim_speed": {
-                    "default_value": 18,
-                    "label": "Skirt/Brim Speed"
-                }
-            }
-        },
-        "blackmagic": {
-            "type": "category",
-            "children": {
-                "magic_spiralize": {
-                    "default_value": false
-                },
-                "magic_mesh_surface_mode": {
-                    "default_value": "normal"
-                }
-            }
-        },
-        "platform_adhesion": {
-            "type": "category",
-            "children": {
-                "adhesion_type": {
-                    "default_value": "skirt"
-                },
-                "skirt_line_count": {
-                    "default_value": 1
-                },
-                "brim_width": {
-                    "default_value": 8,
+                "support_pattern": {
+                    "default_value": "None",
+                    "label": "Support Pattern",
                     "children": {
-                        "brim_line_count": {
+                        "support_wall_count": {
+                            "label": "Support Wall Line Count",
+                            "default_value": "None",
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        },
+                        "support_infill_rate": {
+                            "label": "Support Density",
+                            "default_value": "None",
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ],
+                            "children": {
+                                "support_line_distance": {
+                                    "label": "Support Line Distance",
+                                    "default_value": "None",
+                                    "filter": [
+                                        "all"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "support_top_distance": {
+                    "label": "Support Top Distance",
+                    "default_value": "None",
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
+                },
+                "support_bottom_distance": {
+                    "label": "Support Bottom Distance",
+                    "default_value": "None",
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
+                },
+                "support_xy_distance": {
+                    "label": "Support X/Y Distance",
+                    "default_value": "None",
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
+                },
+                "support_xy_overrides_z": {
+                    "label": "Support Distance Priority",
+                    "default_value": "None",
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ],
+                    "children": {
+                        "support_xy_distance_overhang": {
+                            "label": "Minimum Support X/Y Distance",
+                            "default_value": "None",
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        }
+                    }
+                },
+                "minimum_support_area": {
+                    "label": "Minimum Support Area",
+                    "default_value": "None",
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
+                },
+                "support_roof_enable": {
+                    "label": "Enable Support Roof",
+                    "default_value": "None",
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ],
+                    "children": {
+                        "support_roof_height": {
+                            "label": "Support Roof Thickness",
+                            "default_value": "None",
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        },
+                        "support_roof_line_distance": {
+                            "label": "Support Roof Line Distance",
+                            "default_value": "None",
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        },
+                        "support_roof_pattern": {
+                            "label": "Support Roof Pattern",
+                            "default_value": "None",
+                            "filter": [
+                                "all"
+                            ]
+                        },
+                        "minimum_roof_area": {
+                            "label": "Minimum Support Roof Area",
+                            "default_value": "None",
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        },
+                        "support_roof_offset": {
+                            "label": "Support Roof Horizontal Expansion",
+                            "default_value": "None",
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        }
+                    }
+                },
+                "support_bottom_enable": {
+                    "label": "Enable Support Floor",
+                    "default_value": "None",
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ],
+                    "children": {
+                        "support_roof_height": {
+                            "label": "Support Roof Thickness",
+                            "default_value": "None",
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        },
+                        "support_bottom_line_distance": {
+                            "label": "Support Floor Line Distance",
+                            "default_value": "None",
+                            "filter": [
+                                "all"
+                            ]
+                        },
+                        "support_bottom_pattern": {
+                            "label": "Support Floor Pattern",
+                            "default_value": "None",
+                            "filter": [
+                                "all"
+                            ]
+                        },
+                        "minimum_bottom_area": {
+                            "label": "Minimum Support Floor Area",
+                            "default_value": "None",
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        },
+                        "support_roof_offset": {
+                            "label": "Support Roof Horizontal Expansion",
+                            "default_value": "None",
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        }
+                    }
+                },
+                "support_bottom_stair_step_height": {
+                    "label": "Support Stair Step Height",
+                    "default_value": "None",
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
+                },
+                "support_bottom_stair_step_width": {
+                    "label": "Support Stair Step Maximum Width",
+                    "default_value": "None",
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
+                },
+                "support_bottom_stair_step_min_slope": {
+                    "label": "Support Stair Step Minimum Slope Angle",
+                    "default_value": "None",
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
+                },
+                "support_join_distance": {
+                    "label": "Support Join Distance",
+                    "default_value": "None",
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
+                },
+                "support_offset": {
+                    "label": "Support Horizontal Expansion",
+                    "default_value": "None",
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
+                },
+                "support_infill_sparse_thickness": {
+                    "label": "Support Infill Layer Thickness",
+                    "default_value": "None",
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
+                },
+                "support_use_towers": {
+                    "label": "Use Towers",
+                    "default_value": "None",
+                    "filter": [
+                        "all"
+                    ]
+                },
+                "support_tower_diameter": {
+                    "label": "Tower Diameter",
+                    "default_value": "None",
+                    "filter": [
+                        "all"
+                    ]
+                },
+                "support_tower_maximum_supported_diameter": {
+                    "label": "Maximum Tower-Supported Diameter",
+                    "default_value": "None",
+                    "filter": [
+                        "all"
+                    ]
+                },
+                "support_tower_roof_angle": {
+                    "label": "Tower Roof Angle",
+                    "default_value": "None",
+                    "filter": [
+                        "all"
+                    ]
+                },
+                "gradual_support_infill_steps": {
+                    "label": "Gradual Support Infill Steps",
+                    "default_value": "None",
+                    "filter": [
+                        "all"
+                    ]
+                },
+                "gradual_support_infill_step_height": {
+                    "label": "Gradual Support Infill Step Height",
+                    "default_value": "None",
+                    "filter": [
+                        "all"
+                    ]
+                },
+                "support_enable": {
+                    "label": "Generate Support",
+                    "default_value": "None"
+                },
+                "support_structure": {
+                    "label": "Support Structure",
+                    "default_value": "None"
+                },
+                "support_initial_layer_line_distance": {
+                    "label": "Initial Layer Support Line Distance",
+                    "default_value": "None"
+                },
+                "support_infill_angles": {
+                    "label": "Support Infill Line Directions",
+                    "default_value": "None"
+                },
+                "support_brim_enable": {
+                    "label": "Enable Support Brim",
+                    "default_value": "None"
+                }
+            }
+        },
+        "Adhesion": {
+            "type": "category",
+            "children": {
+                "layer_height_0": {
+                    "label": "Initial Layer Height",
+                    "default_value": "None",
+                    "filter": [
+                        "all",
+                        "basic"
+                    ]
+                },
+                "speed_slowdown_layers": {
+                    "label": "Number of Slower Layers",
+                    "default_value": "None",
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
+                },
+                "cool_fan_full_layer": {
+                    "label": "Regular Fan Speed at Layer",
+                    "default_value": "None",
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
+                },
+                "adhesion_type": {
+                    "label": "Build Plate Adhesion Type",
+                    "default_value": "None",
+                    "filter": [
+                        "all",
+                        "basic"
+                    ],
+                    "children": {
+                        "skirt_line_count": {
+                            "label": "Skirt Line Count",
+                            "default_value": "None",
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        },
+                        "skirt_gap": {
+                            "label": "Skirt Distance",
+                            "default_value": "None",
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        },
+                        "brim_width": {
+                            "label": "Brim Width",
+                            "default_value": 8,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ],
+                            "children": {
+                                "brim_line_count": {
+                                    "label": "Brim Line Count",
+                                    "default_value": 20,
+                                    "filter": [
+                                        "all",
+                                        "advanced"
+                                    ]
+                                }
+                            }
+                        },
+                        "brim_gap": {
+                            "label": "Brim Distance",
+                            "default_value": 20
+                        },
+                        "brim_outside_only": {
+                            "label": "Brim Only on Outside",
+                            "default_value": 20
+                        },
+                        "raft_margin": {
+                            "label": "Raft Extra Margin",
                             "default_value": 20
                         }
                     }
                 },
-                "raft_margin": {
-                    "default_value": 15
+                "top_bottom_pattern_0": {
+                    "label": "Bottom Pattern Initial Layer",
+                    "default_value": 20
+                },
+                "cool_fan_speed_0": {
+                    "label": "Initial Fan Speed",
+                    "default_value": 20
+                },
+                "raft_smoothing": {
+                    "label": "Raft Smoothing",
+                    "default_value": 20
+                },
+                "raft_airgap": {
+                    "label": "Raft Air Gap",
+                    "default_value": 20
+                },
+                "layer_0_z_overlap": {
+                    "label": "Initial Layer Z Overlap",
+                    "default_value": 20
+                },
+                "raft_surface_thickness": {
+                    "label": "Raft Top Layer Thickness",
+                    "default_value": 20
+                },
+                "raft_surface_line_width": {
+                    "label": "Raft Top Line Width",
+                    "default_value": 20
+                },
+                "raft_surface_line_spacing": {
+                    "label": "Raft Top Spacing",
+                    "default_value": 20
+                },
+                "raft_interface_thickness": {
+                    "label": "Raft Middle Thickness",
+                    "default_value": 20
+                },
+                "raft_interface_line_width": {
+                    "label": "Raft Middle Line Width",
+                    "default_value": 20
+                },
+                "raft_interface_line_spacing": {
+                    "label": "Raft Middle Spacing",
+                    "default_value": 20
+                },
+                "raft_base_thickness": {
+                    "label": "Raft Base Thickness",
+                    "default_value": 20
+                },
+                "raft_base_line_width": {
+                    "label": "Raft Base Line Width",
+                    "default_value": 20
+                },
+                "raft_base_line_spacing": {
+                    "label": "Raft Base Line Spacing",
+                    "default_value": 20
+                },
+                "raft_surface_speed": {
+                    "label": "Raft Top Print Speed",
+                    "default_value": 20
+                },
+                "raft_surface_acceleration": {
+                    "label": "Raft Top Print Acceleration",
+                    "default_value": 20
+                },
+                "raft_surface_jerk": {
+                    "label": "Raft Top Print Jerk",
+                    "default_value": 20
+                },
+                "raft_interface_fan_speed": {
+                    "label": "Raft Middle Fan Speed",
+                    "default_value": 20
+                },
+                "raft_interface_acceleration": {
+                    "label": "Raft Middle Print Acceleration",
+                    "default_value": 20
+                },
+                "raft_interface_jerk": {
+                    "label": "Raft Middle Print Jerk",
+                    "default_value": 20
+                },
+                "raft_base_speed": {
+                    "label": "Raft Base Print Speed",
+                    "default_value": 20
+                },
+                "raft_base_acceleration": {
+                    "label": "Raft Base Print Acceleration",
+                    "default_value": 20
+                },
+                "raft_base_jerk": {
+                    "label": "Raft Base Print Jerk",
+                    "default_value": 20
+                },
+                "raft_surface_fan_speed": {
+                    "label": "Raft Top Fan Speed",
+                    "default_value": 20
+                },
+                "raft_base_fan_speed": {
+                    "label": "Raft Base Fan Speed",
+                    "default_value": 20
+                },
+                "skirt_brim_minimal_length": {
+                    "label": "Skirt/Brim Minimum Length",
+                    "default_value": 20
                 }
             }
         },
-        "support": {
+        "Dual Extrusion": {
             "type": "category",
             "children": {
-                "support_enable": {
-                    "default_value": false
-                },
-                "support_type": {
-                    "default_value": "everywhere"
-                },
-                "support_pattern": {
-                    "default_value": "zigzag"
-                },
-                "support_angle": {
-                    "default_value": 50
-                },
-                "support_infill_rate": {
-                    "default_value": 15,
-                    "children": {
-                        "support_line_distance": {
-                            "default_value": 2.66
-                        },
-                        "support_initial_layer_line_distance": {
-                            "default_value": 2.66
-                        }
-                    }
-                }
-            }
-        },
-        "dual": {
-            "type": "category",
-            "children": {
-                "extruders_enabled_count": {
-                    "default_value": 2
+                "dual_extrusion_helper_type": {
+                    "label": "Dual Extrusion Helper Type",
+                    "default_value": "None",
+                    "filter": [
+                        "all"
+                    ]
                 },
                 "prime_tower_enable": {
-                    "default_value": false
-                },
-                "prime_tower_wipe_enabled": {
-                    "default_value": true
+                    "label": "Enable Prime Tower",
+                    "default_value": false,
+                    "children": {
+                        "prime_tower_min_volume": {
+                            "label": "Prime Tower Minimum Volume",
+                            "default_value": false,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        },
+                        "prime_tower_wipe_enabled": {
+                            "label": "Wipe Inactive Nozzle on Prime Tower",
+                            "default_value": false,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        },
+                        "prime_tower_brim_enable": {
+                            "label": "Prime Tower Brim",
+                            "default_value": false,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        }
+                    }
                 },
                 "ooze_shield_enabled": {
+                    "label": "Enable Ooze Shield",
+                    "default_value": false,
+                    "children": {
+                        "ooze_shield_angle": {
+                            "label": "Ooze Shield Angle",
+                            "default_value": false,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        },
+                        "ooze_shield_dist": {
+                            "label": "Ooze Shield Distance",
+                            "default_value": false,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        }
+                    }
+                },
+                "extruders_enabled_count": {
+                    "default_value": 2,
+                    "todo": 1
+                }
+            }
+        },
+        "Cooling": {
+            "type": "category",
+            "children": {
+                "cool_min_speed": {
+                    "label": "Minimum Speed",
+                    "default_value": 15,
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
+                },
+                "cool_lift_head": {
+                    "label": "Lift Head",
+                    "default_value": false,
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
+                }
+            }
+        },
+        "Optimization": {
+            "type": "category",
+            "children": {
+                "retraction_hop_enabled": {
+                    "label": "Z Hop When Retracted",
+                    "default_value": false,
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ],
+                    "children": {
+                        "retraction_hop_only_when_collides": {
+                            "label": "Z Hop Only Over Printed Parts",
+                            "default_value": false,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        },
+                        "retraction_hop": {
+                            "label": "Z Hop Height",
+                            "default_value": false,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        },
+                        "speed_z_hop": {
+                            "label": "Z Hop Speed",
+                            "default_value": false,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        }
+                    }
+                },
+                "retraction_hop_after_extruder_switch": {
+                    "label": "Z Hop After Extruder Switch",
+                    "default_value": false,
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ],
+                    "children": {
+                        "retraction_hop_after_extruder_switch_height": {
+                            "label": "Z Hop After Extruder Switch Height",
+                            "default_value": false,
+                            "filter": [
+                                "all",
+                                "advanced"
+                            ]
+                        }
+                    }
+                },
+                "speed_equalize_flow_enabled": {
+                    "label": "Equalize Filament Flow",
+                    "default_value": false,
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
+                },
+                "retraction_combing": {
+                    "label": "Combing Mode",
+                    "default_value": false,
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
+                },
+                "travel_avoid_other_parts": {
+                    "label": "Avoid Printed Parts When Traveling",
+                    "default_value": false,
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
+                },
+                "travel_avoid_distance": {
+                    "label": "Travel Avoid Distance",
+                    "default_value": false,
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
+                },
+                "travel_retract_before_outer_wall": {
+                    "label": "Retract Before Outer Wall",
+                    "default_value": false,
+                    "filter": [
+                        "all",
+                        "advanced"
+                    ]
+                },
+                "retraction_combing_max_distance": {
+                    "label": "Max Comb Distance With No Retract",
                     "default_value": false
                 },
-                "ooze_shield_angle": {
-                    "default_value": 60
+                "layer_start_x": {
+                    "label": "Layer Start X",
+                    "default_value": false
                 },
-                "ooze_shield_dist": {
-                    "default_value": 2
+                "layer_start_y": {
+                    "label": "Layer Start Y",
+                    "default_value": false
                 }
             }
         }
-    },
-    "isRecommended": true
+    }
 }
