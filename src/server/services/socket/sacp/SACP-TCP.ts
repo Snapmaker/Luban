@@ -30,7 +30,7 @@ class SocketTCP extends SocketBASE {
 
     private thickness: number = 0;
 
-    constructor() {
+    public constructor() {
         super();
         this.client = new net.Socket();
         this.sacpClient = new Business('tcp', this.client);
@@ -187,7 +187,7 @@ class SocketTCP extends SocketBASE {
         });
     }
 
-    public getCameraCalibration = (callback: (matrix: CalibrationInfo) => void) => {
+    public getCameraCalibration = async (callback: (matrix: CalibrationInfo) => void) => {
         return this.sacpClient.getCameraCalibration(ToolHeadType.LASER10000mW).then(({ response }) => {
             if (response.result === 0) {
                 const calibrationInfo = new CalibrationInfo().fromBuffer(response.data);
@@ -198,7 +198,7 @@ class SocketTCP extends SocketBASE {
         });
     }
 
-    public getPhoto = (callback: (result: { success: boolean, filename: string }) => void) => {
+    public getPhoto = async (callback: (result: { success: boolean, filename: string }) => void) => {
         return this.sacpClient.getPhoto(0).then(({ response, data }) => {
             let success = false;
             let filename = '';
@@ -213,7 +213,7 @@ class SocketTCP extends SocketBASE {
         });
     }
 
-    public getCalibrationPhoto = (callback: (result: { success: boolean, filename: string }) => void) => {
+    public getCalibrationPhoto = async (callback: (result: { success: boolean, filename: string }) => void) => {
         return this.sacpClient.getCalibrationPhoto(ToolHeadType.LASER10000mW).then(({ response, data }) => {
             let success = false;
             let filename = '';
@@ -228,7 +228,7 @@ class SocketTCP extends SocketBASE {
         });
     }
 
-    public setMatrix = (params: { matrix: CalibrationInfo }, callback: (result: string) => void) => {
+    public setMatrix = async (params: { matrix: CalibrationInfo }, callback: (result: string) => void) => {
         return this.sacpClient.setMatrix(ToolHeadType.LASER10000mW, params.matrix).then(({ response }) => {
             if (response.result === 0) {
                 callback('');
@@ -304,6 +304,29 @@ class SocketTCP extends SocketBASE {
     //         log.error(`execute gcode error: ${e}`);
     //     }
     // };
+    // set z workoringin: laserFocalLength + platformHeight + laserMaterialThickness
+    public async laseAutoSetMaterialHeight(options) {
+        const { x, y, feedRate, toolHead } = options;
+        const { response, thickness } = await this.sacpClient.getLaserMaterialThickness({
+            token: '',
+            x,
+            y,
+            feedRate
+        });
+        const result = {
+            status: false,
+            thickness: 0
+        };
+        if (response.result !== 0) {
+            log.error(`useLaseAutoMode error: ${JSON.stringify(response)}`);
+            return;
+        }
+        result.status = true;
+        result.thickness = thickness;
+        this.thickness = result.thickness;
+
+        await this.laserSetWorkHeight({ toolHead: toolHead, materialThickness: this.thickness });
+    }
 
     public uploadGcodeFile = (gcodeFilePath: string, type: string, callback: (msg: string, data: boolean) => void) => {
         this.sacpClient.uploadFile(gcodeFilePath).then(({ response }) => {

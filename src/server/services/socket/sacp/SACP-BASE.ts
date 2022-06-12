@@ -441,7 +441,43 @@ class SocketBASE {
         });
     }
 
+    public async setAbsoluteWorkOrigin({ x, y, z }) {
+        try {
+            const res1 = await this.sacpClient.updateCoordinate(CoordinateType.MACHINE);
+            log.debug(`updateCoordinate CoordinateType.MACHINE res: ${JSON.stringify(res1)}`);
+            await this.sacpClient.getCurrentCoordinateInfo().then(async ({ coordinateSystemInfo }) => {
+                const xNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.X1).value;
+                const yNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.Y1).value;
+                const zNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.Z1).value;
+                log.debug(`current positions, ${xNow}, ${yNow}, ${zNow}`);
+
+                await this.sacpClient.updateCoordinate(CoordinateType.WORKSPACE);
+                const newX = new CoordinateInfo(Direction.X1, xNow - x);
+                const newY = new CoordinateInfo(Direction.Y1, yNow - y);
+                const newZ = new CoordinateInfo(Direction.Z1, zNow - z);
+                const newCoord = [newX, newY, newZ];
+                log.debug(`new positions, ${JSON.stringify(newCoord)}`);
+
+                const res = await this.sacpClient.setWorkOrigin(newCoord);
+                log.debug(`setAbsoluteWorkOrigin res:${JSON.stringify(res)}`);
+            });
+        } catch (e) {
+            log.error(`getLaserMaterialThickness error: ${e}`);
+        }
+    }
+
     //
+    public async laserSetWorkHeight(options) {
+        const { toolHead, materialThickness } = options;
+        const headModule = this.moduleInfos && (this.moduleInfos[toolHead]); //
+        if (!headModule) {
+            log.error(`non-eixst toolhead[${toolHead}], moduleInfos:${JSON.stringify(this.moduleInfos)}`,);
+            return;
+        }
+        const { laserToolHeadInfo } = await this.sacpClient.getLaserToolHeadInfo(headModule.key);
+        log.debug(`laserFocalLength:${laserToolHeadInfo.laserFocalLength}, materialThickness: ${materialThickness}, platformHeight:${laserToolHeadInfo.platformHeight}`);
+        await this.setAbsoluteWorkOrigin({ x: 0, y: 0, z: laserToolHeadInfo.laserFocalLength + laserToolHeadInfo.platformHeight + materialThickness });
+    }
 }
 
 export default SocketBASE;

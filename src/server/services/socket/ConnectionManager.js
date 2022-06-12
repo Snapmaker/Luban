@@ -6,8 +6,10 @@ import socketSerial from './socket-serial';
 import socketHttp from './socket-http';
 import socketTcp from './sacp/SACP-TCP';
 import socketSerialNew from './sacp/SACP-SERIAL';
-import { HEAD_PRINTING, HEAD_LASER, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES,
-    CONNECTION_TYPE_WIFI, CONNECTION_TYPE_SERIAL, WORKFLOW_STATE_PAUSED, PORT_SCREEN_HTTP, PORT_SCREEN_SACP, SACP_PROTOCOL } from '../../constants';
+import {
+    HEAD_PRINTING, HEAD_LASER, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES,
+    CONNECTION_TYPE_WIFI, CONNECTION_TYPE_SERIAL, WORKFLOW_STATE_PAUSED, PORT_SCREEN_HTTP, PORT_SCREEN_SACP, SACP_PROTOCOL
+} from '../../constants';
 import DataStorage from '../../DataStorage';
 import ScheduledTasks from '../../lib/ScheduledTasks';
 // import SerialPortClient from '../../../app/lib/controller';
@@ -182,13 +184,25 @@ class ConnectionManager {
         });
     }
 
-    startGcode = (socket, options) => {
+    startGcode = async (socket, options) => {
         const { headType, isRotate, toolHead, isLaserPrintAutoMode, materialThickness, eventName } = options;
         if (this.connectionType === CONNECTION_TYPE_WIFI) {
             const { uploadName, series, laserFocalLength, background, size, workPosition, originOffset } = options;
             const gcodeFilePath = `${DataStorage.tmpDir}/${uploadName}`;
             const promises = [];
-            if (series !== MACHINE_SERIES.ORIGINAL.value && series !== MACHINE_SERIES.CUSTOM.value && headType === HEAD_LASER && !isRotate) {
+            if (this.protocol === SACP_PROTOCOL && headType === HEAD_LASER) {
+                if (laserFocalLength && toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isRotate) {
+                    await this.socket.laseAutoSetMaterialHeight({ toolHead });
+                }
+                if (!isLaserPrintAutoMode || materialThickness !== 0) {
+                    await this.socket.laserSetWorkHeight({ toolHead, materialThickness });
+                }
+                const { gcode, jogSpeed = 1500 } = options;
+                const moveOrders = [
+                    { axis: 'Z', distance: 0 }
+                ];
+                await this.socket.coordinateMove({ moveOrders, gcode, jogSpeed, headType });
+            } else if (series !== MACHINE_SERIES.ORIGINAL.value && series !== MACHINE_SERIES.CUSTOM.value && headType === HEAD_LASER && !isRotate) {
                 if (laserFocalLength) {
                     const promise = new Promise((resolve) => {
                         if (isLaserPrintAutoMode) {
@@ -239,6 +253,16 @@ class ConnectionManager {
         } else {
             const { workflowState } = options;
             if (this.protocol === SACP_PROTOCOL) {
+                if (headType === HEAD_LASER) {
+                    if (!isLaserPrintAutoMode || materialThickness !== 0) {
+                        await this.socket.laserSetWorkHeight({ toolHead, materialThickness });
+                    }
+                    const { gcode, jogSpeed = 1500 } = options;
+                    const moveOrders = [
+                        { axis: 'Z', distance: 0 }
+                    ];
+                    await this.socket.coordinateMove({ moveOrders, gcode, jogSpeed, headType });
+                }
                 this.socket.startGcode(options);
             } else {
                 if (headType === HEAD_LASER && workflowState !== WORKFLOW_STATE_PAUSED) {
