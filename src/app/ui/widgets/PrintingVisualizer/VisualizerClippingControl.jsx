@@ -37,6 +37,7 @@ function VisualizerClippingControl() {
             setClipped(true);
         });
         modelGroup.on(ModelEvents.ClippingReset, () => {
+            setClipped(false);
             setValue(primeTowerHeight + qualitySetting?.layer_height?.default_value);
         });
         return () => {

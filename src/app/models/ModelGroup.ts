@@ -1,8 +1,9 @@
-import { Sphere, SphereBufferGeometry, MeshStandardMaterial, Vector3, Group, Matrix4, BufferGeometry, Mesh, Float32BufferAttribute, MeshBasicMaterial, Plane, Box3, Object3D, Intersection, BufferAttribute, DynamicDrawUsage, LineSegments, LineBasicMaterial, PlaneGeometry, NotEqualStencilFunc, ReplaceStencilOp, Vector2, Shape, ShapeGeometry, MeshPhongMaterial, DoubleSide } from 'three';
+import { Sphere, SphereBufferGeometry, MeshStandardMaterial, Vector3, Group, Matrix4, BufferGeometry, Mesh, Float32BufferAttribute, MeshBasicMaterial, Plane, Box3, Object3D, Intersection, BufferAttribute, DynamicDrawUsage, LineSegments, LineBasicMaterial, PlaneGeometry, NotEqualStencilFunc, ReplaceStencilOp, MeshPhongMaterial, DoubleSide, Vector2, Shape, ShapeGeometry } from 'three';
 import EventEmitter from 'events';
 import { CONTAINED, INTERSECTED, NOT_INTERSECTED } from 'three-mesh-bvh';
 import { v4 as uuid } from 'uuid';
 import _ from 'lodash';
+import { Transfer } from 'threads';
 import i18n from '../lib/i18n';
 
 import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
@@ -15,11 +16,11 @@ import ThreeUtils from '../three-extensions/ThreeUtils';
 import ThreeGroup from './ThreeGroup';
 import PrimeTowerModel from './PrimeTowerModel';
 import { calculateUvVector } from '../lib/threejs/ThreeStlCalculation';
-import { polyOffset, polyUnion } from '../../shared/lib/clipper/cLipper-adapter';
-import * as ClipperLib from '../../shared/lib/clipper/clipper';
+import { polyUnion } from '../../shared/lib/clipper/cLipper-adapter';
 import { ModelEvents } from './events';
 import { TPolygon } from './ClipperModel';
 import { PolygonsUtils } from '../../shared/lib/math/PolygonsUtils';
+import workerManager from '../lib/manager/workerManager';
 
 const CUSTOM_EVENTS = {
     UPDATE: { type: 'update' }
@@ -30,13 +31,29 @@ const SUPPORT_AVAIL_AREA_COLOR = [0.5725490196078431, 0.32941176470588235, 0.870
 const SUPPORT_ADD_AREA_COLOR = [0.2980392156862745, 0, 0.5098039215686274];
 const SUPPORT_UNAVAIL_AREA_COLOR = [0.9, 0.9, 0.9];
 const AVAIL = -1, NONE = 0, FACE = 1/* , POINT = 2, LINE = 3 */;
-export const planeMaxHeight = 100;
+export const planeMaxHeight = 9999;
 
 type TModel = ThreeGroup | ThreeModel | SvgModel
 
 type Model3D = Exclude<TModel, SvgModel>;
 
 export type TDisplayedType = 'model' | 'gcode'
+
+type TPoint = {
+    x: number,
+    y: number,
+    z?: number
+}
+
+type AttributeObject = {
+    array: number[];
+    itemSize: number;
+    normalized: boolean;
+};
+
+type AttributeData = {
+    send: AttributeObject;
+};
 
 type TRotationAnalysisTable = {
     faceId: number;
@@ -98,7 +115,6 @@ class ModelGroup extends EventEmitter {
     private transformMode = ''
 
     public clippingGroup = new Group();
-    private maxHeight = 0;
     private clippingHeight: number;
     public localPlane = new Plane(new Vector3(0, 0, -1), planeMaxHeight);
     public clippingFaceGroup = new Group();
@@ -1436,7 +1452,7 @@ class ModelGroup extends EventEmitter {
 
         this.prepareSelectedGroup();
         this.updatePrimeTowerHeight();
-        this.calaClippingMap();
+        // this.calaClippingMap();
         recovery();
 
         if (selectedModelArray.length === 0) {
@@ -1880,7 +1896,11 @@ class ModelGroup extends EventEmitter {
             }
         });
         this.displayedType = displayedType;
-        this.updatePlateAdhesion();
+        if (this.displayedType === 'gcode' || this.transformMode) {
+            this.plateAdhesion.visible = false;
+        } else {
+            this.plateAdhesion.visible = true;
+        }
     }
 
     public stickToPlateAndCheckOverstepped(model: Model3D) {
@@ -2128,7 +2148,6 @@ class ModelGroup extends EventEmitter {
                 maxHeight = Math.max(maxHeight, modelItemHeight);
             }
         });
-        this.maxHeight = maxHeight;
         if (typeof this.primeTowerHeightCallback === 'function') {
             this.primeTowerHeightCallback(Math.min(maxHeight, maxBoundingBoxHeight));
         }
@@ -2418,18 +2437,25 @@ class ModelGroup extends EventEmitter {
 
     public updatePlateAdhesion(config?: TAdhesionConfig) {
         if (config) {
-            console.log(config);
-
-            this.adhesionConfig = config;
+            // init
+            if (!this.adhesionConfig) {
+                this.adhesionConfig = config;
+                return;
+            }
+            // 判断是否需要更新
+            let needUpdate = false;
+            for (const [, key] of Object.keys(this.adhesionConfig).entries()) {
+                needUpdate = needUpdate || this.adhesionConfig[key] !== config[key];
+            }
+            if (needUpdate) {
+                this.adhesionConfig = config;
+                this.clippingFinish(true);
+            }
+            return;
         }
         if (!this.adhesionConfig) {
             return;
         }
-        if (this.displayedType === 'gcode' || this.transformMode) {
-            this.plateAdhesion.visible = false;
-            return;
-        }
-        this.plateAdhesion.visible = true;
         this.plateAdhesion.clear();
         if (this.adhesionConfig.adhesionType === 'none') {
             return;
@@ -2443,7 +2469,7 @@ class ModelGroup extends EventEmitter {
                 const _paths = (() => {
                     const res = PolygonsUtils.simplify(polygons, 0.2);
                     if (this.adhesionConfig.adhesionType === 'skirt') {
-                        return polyOffset(res, 100, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon, 0.12, 0.1);
+                        return res;
                     } else {
                         return PolygonsUtils.simplify(res, 0.2);
                     }
@@ -2458,151 +2484,102 @@ class ModelGroup extends EventEmitter {
         if (paths.length === 0) {
             return;
         }
-        if (this.adhesionConfig.adhesionType === 'skirt') {
-            paths = polyOffset(paths, -100, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon, 0, 0);
-        } else {
-            // paths = polyOffset(paths, 20);
-            // paths = polyOffset(paths, -20);
-
-            // paths = PolygonsUtils.simplify(paths, 0.2);
+        switch (this.adhesionConfig.adhesionType) {
+            case 'skirt':
+                this.generateSkirt(paths);
+                break;
+            case 'brim':
+                this.generateBrim(paths);
+                break;
+            case 'raft':
+                this.generateRaft(paths);
+                break;
+            default:
+                break;
         }
-        // paths = polyOffset(paths, -20);
-
-        // paths = PolygonsUtils.simplify(paths, 0.2);
-        // console.log(vectors);
-
-        // paths = paths.map((path) => {
-        //     const vectors = PolygonsUtils.simplify(path, 20);
-        //     const arr = [];
-        //     for (let k = 0; k < vectors.length; k++) {
-        //         const begin = vectors[k];
-        //         const end = vectors[k + 1];
-        //         if (end) {
-        //             arr.push(begin, end);
-        //         }
-        //     }
-        //     return arr;
-        // });
-
-        // if (paths.length === 0) {
-        //     return;
-        // }
-        // switch (this.adhesionConfig.adhesionType) {
-        //     case 'skirt':
-        //         this.generateSkirt(paths);
-        //         break;
-        //     case 'brim':
-        //         this.generateBrim(paths);
-        //         break;
-        //     case 'raft':
-        //         this.generateRaft(paths);
-        //         break;
-        //     default:
-        //         break;
-        // }
     }
 
     public generateSkirt(polygons: TPolygon[]) {
-        const lineGeometry = new BufferGeometry();
-        const linePosAttr = new BufferAttribute(new Float32Array(300000), 3, false);
-        linePosAttr.setUsage(DynamicDrawUsage);
-        lineGeometry.setAttribute('position', linePosAttr);
+        const now = performance.now();
+        workerManager.generateSkirt({
+            polygons: Transfer(polygons as unknown as ArrayBuffer),
+            skirtGap: this.adhesionConfig.skirtGap,
+            skirtBrimLineWidth: this.adhesionConfig.skirtBrimLineWidth,
+            skirtLineCount: this.adhesionConfig.skirtLineCount
+        }, (res: AttributeData) => {
+            const positionObject = res.send;
+            const linePosAttr = new BufferAttribute(
+                positionObject.array,
+                positionObject.itemSize,
+                positionObject.normalized
+            );
+            const lineGeometry = new BufferGeometry();
+            lineGeometry.setAttribute('position', linePosAttr);
+            linePosAttr.setUsage(DynamicDrawUsage);
 
-        let j = 0;
-        const _polygons = polyOffset(
-            polygons,
-            this.adhesionConfig.skirtGap + this.adhesionConfig.skirtBrimLineWidth / 2,
-            ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon, 0, 0
-        );
-        Array(this.adhesionConfig.skirtLineCount).fill(0).forEach((_item, index) => {
-            let skirtArea;
-            if (index === 0) {
-                skirtArea = _polygons;
-            } else {
-                skirtArea = polyOffset(
-                    _polygons, 0.4 * index, ClipperLib.JoinType.jtRound,
-                    ClipperLib.EndType.etClosedPolygon, 0, 0
-                );
-            }
-            skirtArea.forEach((vectors) => {
-                for (let i = 0; i < vectors.length; i++) {
-                    const begin = vectors[i];
-                    const end = vectors[i + 1];
-                    if (end) {
-                        linePosAttr.setXYZ(j++, begin.x, begin.y, 0.001);
-                        linePosAttr.setXYZ(j++, end.x, end.y, 0.001);
-                    }
-                }
-            });
+            const line = new LineSegments(lineGeometry, new LineBasicMaterial({
+                linewidth: 2
+            }));
+            line.material.color.set(0x9254DE).convertSRGBToLinear();
+            line.frustumCulled = false;
+            line.visible = true;
+            this.plateAdhesion.add(line);
+            this.onModelUpdate();
+            console.log(`===>>> generateSkirt cost=${performance.now() - now}`);
         });
-        const line = new LineSegments(lineGeometry, new LineBasicMaterial({
-            linewidth: 2
-        }));
-        line.material.color.set(0x9254DE).convertSRGBToLinear();
-        line.frustumCulled = false;
-        line.visible = true;
-        this.plateAdhesion.add(line);
     }
 
     public generateBrim(polygons: TPolygon[]) {
-        const lineGeometry = new BufferGeometry();
-        const linePosAttr = new BufferAttribute(new Float32Array(30000000), 3, false);
-        linePosAttr.setUsage(DynamicDrawUsage);
-        lineGeometry.setAttribute('position', linePosAttr);
+        const now = performance.now();
+        workerManager.generateBrim({
+            polygons,
+            skirtBrimLineWidth: this.adhesionConfig.skirtBrimLineWidth,
+            brimLineCount: this.adhesionConfig.brimLineCount
+        }, (res: {linePosAttr: AttributeData, length: number}) => {
+            const positionObject = res.linePosAttr.send;
+            const linePosAttr = new BufferAttribute(
+                positionObject.array,
+                positionObject.itemSize,
+                positionObject.normalized
+            );
+            const lineGeometry = new BufferGeometry();
+            lineGeometry.setAttribute('position', linePosAttr);
+            linePosAttr.setUsage(DynamicDrawUsage);
 
-        let j = 0;
-        const _polygons = polyOffset(
-            polygons, this.adhesionConfig.skirtBrimLineWidth / 2, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon, 0, 0
-        );
-        Array(this.adhesionConfig.brimLineCount).fill(0).forEach((_item, index) => {
-            let skirtArea;
-            if (index === 0) {
-                skirtArea = _polygons;
-            } else {
-                skirtArea = polyOffset(
-                    _polygons, this.adhesionConfig.skirtBrimLineWidth * index, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon, 0, 0
-                );
-            }
-            skirtArea.forEach((vectors) => {
-                for (let i = 0; i < vectors.length; i++) {
-                    const begin = vectors[i];
-                    const end = vectors[i + 1];
-                    if (end) {
-                        linePosAttr.setXYZ(j++, begin.x, begin.y, 0.001);
-                        linePosAttr.setXYZ(j++, end.x, end.y, 0.001);
-                    }
-                }
-            });
+            const line = new LineSegments(lineGeometry, new LineBasicMaterial({
+                linewidth: 2
+            }));
+            line.geometry.setDrawRange(0, res.length);
+            line.material.color.set(0x9254DE).convertSRGBToLinear();
+            line.frustumCulled = false;
+            line.visible = true;
+            this.plateAdhesion.add(line);
+            this.onModelUpdate();
+            console.log(`===>>> generateBrim cost=${performance.now() - now}`);
         });
-        const line = new LineSegments(lineGeometry, new LineBasicMaterial({
-            linewidth: 2
-        }));
-        line.geometry.setDrawRange(0, j);
-        line.material.color.set(0x9254DE).convertSRGBToLinear();
-        line.frustumCulled = false;
-        line.visible = true;
-        this.plateAdhesion.add(line);
     }
 
     public generateRaft(polygons: TPolygon[]) {
-        const lineGeometry = new BufferGeometry();
-        const linePosAttr = new BufferAttribute(new Float32Array(300000), 3, false);
-        linePosAttr.setUsage(DynamicDrawUsage);
-        lineGeometry.setAttribute('position', linePosAttr);
+        const now = performance.now();
+        workerManager.generateRaft({
+            polygons,
+            raftMargin: this.adhesionConfig.raftMargin,
+            skirtBrimLineWidth: this.adhesionConfig.skirtBrimLineWidth
+        }, (arr: {send: TPoint[][]}) => {
+            arr.send.forEach((vectors) => {
+                const points = [];
+                for (let i = 0; i < vectors.length; i++) {
+                    points.push(new Vector2(vectors[i].x, vectors[i].y));
+                }
+                const RaftShape = new Shape(points);
+                const geometry = new ShapeGeometry(RaftShape);
 
-        const _polygons = polyOffset(polygons, this.adhesionConfig.raftMargin, ClipperLib.JoinType.jtRound);
-
-
-        _polygons.forEach((vectors) => {
-            const points = [];
-            for (let i = 0; i < vectors.length; i++) {
-                points.push(new Vector2(vectors[i].x, vectors[i].y));
-            }
-            const RaftShape = new Shape(points);
-            const geometry = new ShapeGeometry(RaftShape);
-            const mesh = new Mesh(geometry, new MeshPhongMaterial({ color: 0x9254DE, side: DoubleSide }));
-            mesh.position.setZ(0.02);
-            this.plateAdhesion.add(mesh);
+                const mesh = new Mesh(geometry, new MeshPhongMaterial({ color: 0x9254DE, side: DoubleSide }));
+                mesh.position.setZ(0.02);
+                this.plateAdhesion.add(mesh);
+                console.log(`===>>> generateRaft cost=${performance.now() - now}`);
+            });
+            this.onModelUpdate();
         });
     }
 
@@ -2652,12 +2629,12 @@ class ModelGroup extends EventEmitter {
         this.updateClippingPlane();
     }
 
-    public updateClippingPlane(height = planeMaxHeight) {
-        if (height === planeMaxHeight) {
+    public updateClippingPlane(height?: number) {
+        if (!height) {
             this.emit(ModelEvents.ClippingReset);
         }
         // this.planeMesh.position.set(0, 0, height);
-        !height && (height = this.maxHeight);
+        !height && (height = planeMaxHeight);
         this.clippingHeight = height;
 
         this.sectionMesh?.position?.setZ(height);
@@ -2686,28 +2663,32 @@ class ModelGroup extends EventEmitter {
         return flag;
     }
 
-    public clippingFinish(flag: boolean) {
-        this.plateAdhesion.visible = false;
-        if (!flag) {
+    public clippingFinish(finished: boolean) {
+        if (finished) {
+            const allDone = this.hasClipped();
+            if (allDone) {
+                this.emit(ModelEvents.ClippingFinish, true);
+                this.updatePlateAdhesion();
+                this.models = [...this.models];
+            }
+        } else {
             this.clipping = 'true';
             this.plateAdhesion.clear();
-            this.emit(ModelEvents.ClippingReset);
-            this.updateClippingPlane();
-            return;
-        }
-        const allDone = this.hasClipped();
-        if (allDone) {
-            this.emit(ModelEvents.ClippingFinish, true);
-            this.updatePlateAdhesion();
             this.onModelUpdate();
-            this.models = [...this.models];
+            this.updateClippingPlane();
         }
     }
 
     public setTransformMode(value: string) {
         this.transformMode = value;
-        this.updatePlateAdhesion();
-        this.updateClippingPlane();
+        this.updateClippingPlane(planeMaxHeight);
+        this.emit(ModelEvents.ClippingFinish, true);
+        if (this.displayedType === 'gcode' || this.transformMode) {
+            this.plateAdhesion.visible = false;
+        } else {
+            this.plateAdhesion.visible = true;
+            this.calaClippingMap();
+        }
     }
 }
 
