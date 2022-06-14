@@ -62,6 +62,7 @@ export type ModelInfo = {
     // svg
     elem?: SvgModelElement;
     size?: TSize;
+    reloadSimplifyModel?: boolean;
 };
 
 const DEFAULT_TRANSFORMATION: ModelTransformation = {

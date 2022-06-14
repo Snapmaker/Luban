@@ -100,7 +100,14 @@ class Visualizer extends PureComponent {
         controlAxis: PropTypes.array,
         controlInputValue: PropTypes.object,
         controlMode: PropTypes.string,
-        displayModel: PropTypes.func
+        displayModel: PropTypes.func,
+        simplifying: PropTypes.bool,
+        setSimplifying: PropTypes.func,
+        simplifyOriginModelInfo: PropTypes.object,
+        loadSimplifyModel: PropTypes.func,
+        modelSimplify: PropTypes.func,
+        resetSimplifyOriginModelInfo: PropTypes.func,
+        recordSimplifyModel: PropTypes.func
     };
 
     printableArea = null;
@@ -155,6 +162,7 @@ class Visualizer extends PureComponent {
             }
         },
         onSelectModels: (intersect, selectEvent) => {
+            if (this.props.setSimplifying) return;
             this.props.selectMultiModel(intersect, selectEvent);
         },
         onModelBeforeTransform: () => {
@@ -484,6 +492,23 @@ class Visualizer extends PureComponent {
         !this.props.leftBarOverlayVisible && this.contextMenuRef.current.show(event);
     }
 
+    handleCancelSimplify = () => {
+        const { selectedModelArray, simplifyOriginModelInfo: { uploadName } } = this.props;
+        this.props.loadSimplifyModel(selectedModelArray[0].modelID, uploadName);
+        this.props.resetSimplifyOriginModelInfo();
+        this.props.setSimplifying(false);
+    }
+
+    handleApplySimplify = () => {
+        this.props.recordSimplifyModel();
+        this.props.resetSimplifyOriginModelInfo();
+        this.props.setSimplifying(false);
+    }
+
+    handleUpdateSimplifyConfig = (type, percent) => {
+        this.props.modelSimplify(type, percent);
+    }
+
     render() {
         const { size, selectedModelArray, modelGroup, gcodeLineGroup, inProgress, hasModel, displayedType, transformMode } = this.props; // transformMode
 
@@ -507,6 +532,10 @@ class Visualizer extends PureComponent {
                     autoRotateSelectedModel={this.actions.autoRotateSelectedModel}
                     setHoverFace={this.actions.setHoverFace}
                     arrangeAllModels={this.actions.arrangeAllModels}
+                    simplifying={this.props.simplifying}
+                    handleApplySimplify={this.handleApplySimplify}
+                    handleCancelSimplify={this.handleCancelSimplify}
+                    handleUpdateSimplifyConfig={this.handleUpdateSimplifyConfig}
                 />
                 <div className={styles['visualizer-bottom-left']}>
                     <VisualizerBottomLeft actions={this.actions} />
@@ -681,7 +710,8 @@ const mapStateToProps = (state, ownProps) => {
         primeTowerHeight,
         qualityDefinitions,
         defaultQualityId,
-        stopArea
+        stopArea,
+        simplifyOriginModelInfo
     } = printing;
     const activeQualityDefinition = find(qualityDefinitions, { definitionId: defaultQualityId });
     const enablePrimeTower = activeQualityDefinition?.settings?.prime_tower_enable?.default_value;
@@ -717,7 +747,8 @@ const mapStateToProps = (state, ownProps) => {
         progressStatesManager,
         enablePrimeTower,
         primeTowerHeight,
-        printingToolhead
+        printingToolhead,
+        simplifyOriginModelInfo
     };
 };
 
@@ -755,7 +786,11 @@ const mapDispatchToProps = (dispatch) => ({
     moveSupportBrush: (raycastResult) => dispatch(printingActions.moveSupportBrush(raycastResult)),
     applySupportBrush: (raycastResult) => dispatch(printingActions.applySupportBrush(raycastResult)),
     setRotationPlacementFace: (userData) => dispatch(printingActions.setRotationPlacementFace(userData)),
-    displayModel: () => dispatch(printingActions.displayModel())
+    displayModel: () => dispatch(printingActions.displayModel()),
+    loadSimplifyModel: (modelID, modelOutputName) => dispatch(printingActions.loadSimplifyModel({ modelID, modelOutputName })),
+    modelSimplify: (type, percent) => dispatch(printingActions.modelSimplify(type, percent)),
+    resetSimplifyOriginModelInfo: () => dispatch(printingActions.resetSimplifyOriginModelInfo()),
+    recordSimplifyModel: () => dispatch(printingActions.recordSimplifyModel())
 });
 
 export default withRouter(connect(mapStateToProps, mapDispatchToProps)(Visualizer));

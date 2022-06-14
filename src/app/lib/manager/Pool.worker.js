@@ -1,3 +1,4 @@
+// import { expose } from 'threads/worker';
 import { expose } from 'threads/worker';
 
 const methods = require

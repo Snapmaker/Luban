@@ -79,6 +79,7 @@ import ScaleOperation3D from '../operation-history/ScaleOperation3D';
 import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWithRotateOperation3D';
 import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import VisibleOperation3D from '../operation-history/VisibleOperation3D';
+import SimplifyModelOperation from '../operation-history/SimplifyModelOperation';
 
 // register methods for three-mesh-bvh
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
@@ -283,7 +284,10 @@ const INITIAL_STATE = {
 
     tmpSupportFaceMarks: {},
     supportOverhangAngle: 50,
-    supportBrushStatus: 'add' // add | remove
+    supportBrushStatus: 'add', // add | remove
+    simplifyType: 0, // 0: low-polygon, 1: length
+    simplifyPercent: 80, // only for low polygon
+    simplifyOriginModelInfo: {},
 };
 
 const ACTION_UPDATE_STATE = 'printing/ACTION_UPDATE_STATE';
@@ -292,9 +296,10 @@ const ACTION_UPDATE_TRANSFORMATION = 'printing/ACTION_UPDATE_TRANSFORMATION';
 // avoid parallel loading of same file
 const createLoadModelWorker = (() => {
     const runningTasks = {};
-    return (uploadPath, onMessage) => {
+    return (uploadPath, onMessage, reloadSimplifyModel = false) => {
         let task = runningTasks[uploadPath];
-        if (!task) {
+        if (reloadSimplifyModel) {
+            !!task && delete runningTasks[uploadPath];
             task = {
                 worker: workerManager.loadModel(uploadPath, data => {
                     const { type } = data;
@@ -306,6 +311,7 @@ const createLoadModelWorker = (() => {
                             });
                             delete runningTasks[uploadPath];
                             break;
+                            // case 'LOAD_MODEL_'
                         default:
                             break;
                     }
@@ -318,6 +324,32 @@ const createLoadModelWorker = (() => {
                 cbOnMessage: []
             };
             runningTasks[uploadPath] = task;
+        } else {
+            if (!task) {
+                task = {
+                    worker: workerManager.loadModel(uploadPath, data => {
+                        const { type } = data;
+
+                        switch (type) {
+                            case 'LOAD_MODEL_FAILED':
+                                task.worker.then(result => {
+                                    result.terminate();
+                                });
+                                delete runningTasks[uploadPath];
+                                break;
+                            default:
+                                break;
+                        }
+                        for (const fn of task.cbOnMessage) {
+                            if (typeof fn === 'function') {
+                                fn(data);
+                            }
+                        }
+                    }),
+                    cbOnMessage: []
+                };
+                runningTasks[uploadPath] = task;
+            }
         }
 
         task.cbOnMessage.push(onMessage);
@@ -336,10 +368,10 @@ function stateEqual(model, stateFrom, stateTo) {
     return true;
 }
 
-async function uploadMesh(mesh, stlFileName) {
-    const stl = new ModelExporter().parse(mesh, 'stl', true);
+async function uploadMesh(mesh, fileName, fileType = 'stl') {
+    const stl = new ModelExporter().parse(mesh, fileType, true);
     const blob = new Blob([stl], { type: 'text/plain' });
-    const fileOfBlob = new File([blob], stlFileName);
+    const fileOfBlob = new File([blob], fileName);
 
     const formData = new FormData();
     formData.append('file', fileOfBlob);
@@ -849,7 +881,69 @@ export const actions = {
                     })
                 );
             });
+
+            // for simplify-model
+            controller.on('simplify-model:started', ({ firstTime, modelName, fileType, transformation }) => {
+                const { progressStatesManager, simplifyOriginModelInfo } = getState().printing;
+                // progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SIMPLIFY_MODEL);
+                if (firstTime && modelName && fileType) {
+                    dispatch(actions.updateState({
+                        simplifyOriginModelInfo: {
+                            ...simplifyOriginModelInfo,
+                            uploadName: `${modelName}.${fileType}`,
+                            transformation: transformation,
+                        }
+                    }));
+                }
+                dispatch(actions.updateState({
+                    stage: STEP_STAGE.PRINTING_SIMPLIFY_MODEL,
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SIMPLIFY_MODEL, 0.3),
+                }));
+            });
+
+            controller.on('simplify-model:progress', _progress => {
+                const { progressStatesManager, progress } = getState().printing;
+                if (_progress - progress > 0.01 || progress > 1 - EPSILON) {
+                    dispatch(actions.updateState({
+                        progress: progressStatesManager.updateProgress(
+                            STEP_STAGE.PRINTING_SIMPLIFY_MODEL,
+                            _progress
+                        )
+                    }));
+                }
+            });
+
+            controller.on('simplify-model:error', () => {
+                const { progressStatesManager } = getState().printing;
+                progressStatesManager.finishProgress(false);
+                dispatch(actions.updateState({
+                    stage: STEP_STAGE.PRINTING_SIMPLIFY_MODEL_FAILED
+                }));
+            });
+
+            controller.on('simplify-model:completed', (params) => {
+                const { modelOutputName, modelID } = params;
+                actions.loadSimplifyModel({ modelID, modelOutputName })(dispatch, getState);
+            });
         }
+    },
+
+    loadSimplifyModel: ({ modelID, modelOutputName }) => (dispatch, getState) => {
+        const { progressStatesManager, modelGroup } = getState().printing;
+        dispatch(
+            actions.updateState({
+                stage: STEP_STAGE.PRINTING_SIMPLIFY_MODEL,
+                progress: progressStatesManager.updateProgress(
+                    STEP_STAGE.PRINTING_SIMPLIFY_MODEL,
+                    1
+                ),
+            })
+        );
+        const originModel = modelGroup.getModel(modelID);
+        modelGroup.removeModel(originModel);
+        // const repiarModelOriginalName = removeSpecialChars(modelOutputName);
+        const uploadName = modelOutputName;
+        actions.__loadModel([{ originalName: modelOutputName, uploadName: uploadName }], true)(dispatch, getState);
     },
 
     logGenerateGcode: () => (dispatch, getState) => {
@@ -1594,13 +1688,17 @@ export const actions = {
      * @returns {Function}
      * @private
      */
-    __loadModel: files => async dispatch => {
+    __loadModel: (files, simplifyModel = false) => async (dispatch, getState) => {
         const headType = 'printing';
         const sourceType = '3d';
         const mode = '3d';
         const width = 0;
         const height = 0;
-
+        const { simplifyOriginModelInfo } = getState().printing;
+        let transformation = {};
+        if (simplifyModel) {
+            transformation = simplifyOriginModelInfo.transformation;
+        }
         await dispatch(
             actions.generateModel(headType, {
                 files,
@@ -1608,7 +1706,8 @@ export const actions = {
                 sourceHeight: height,
                 mode,
                 sourceType,
-                transformation: {}
+                transformation: transformation,
+                reloadSimplifyModel: simplifyModel,
             })
         );
     },
@@ -3485,7 +3584,8 @@ export const actions = {
             parentModelID = '',
             modelName,
             children,
-            primeTowerTag
+            primeTowerTag,
+            reloadSimplifyModel = false
         }
     ) => async (dispatch, getState) => {
         const { progressStatesManager, modelGroup } = getState().printing;
@@ -3493,7 +3593,7 @@ export const actions = {
         const models = [...modelGroup.models];
         const modelNames = files || [{ originalName, uploadName }];
         let _progress = 0;
-        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
+        !reloadSimplifyModel && progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
         const promptTasks = [];
         const promises = modelNames.map((model) => {
             return new Promise(async (resolve, reject) => {
@@ -3501,7 +3601,7 @@ export const actions = {
                     toolHead: { printingToolhead }
                 } = getState().machine;
                 _progress = modelNames.length === 1 ? 0.25 : 0.001;
-                dispatch(
+                !reloadSimplifyModel && dispatch(
                     actions.updateState({
                         stage: STEP_STAGE.PRINTING_LOADING_MODEL,
                         progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress)
@@ -3587,7 +3687,8 @@ export const actions = {
                                         originalPosition,
                                         modelID,
                                         extruderConfig,
-                                        parentModelID
+                                        parentModelID,
+                                        reloadSimplifyModel
                                     }
                                 );
                                 dispatch(actions.updateState(modelState));
@@ -3600,6 +3701,14 @@ export const actions = {
                                         actions.updateState({
                                             stage: STEP_STAGE.PRINTING_LOADING_MODEL,
                                             progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress)
+                                        })
+                                    );
+                                }
+                                if (reloadSimplifyModel) {
+                                    dispatch(
+                                        actions.updateState({
+                                            stage: STEP_STAGE.PRINTING_SIMPLIFY_MODEL,
+                                            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SIMPLIFY_MODEL, 1)
                                         })
                                     );
                                 }
@@ -3631,7 +3740,7 @@ export const actions = {
                                 if (modelNames.length === 1) {
                                     const state = getState().printing;
                                     const progress = 0.25 + data.progress * 0.5;
-                                    if (progress - state.progress > 0.01 || progress > 0.75 - EPSILON) {
+                                    if (progress - state.progress > 0.01 || progress > 0.75 - EPSILON && !reloadSimplifyModel) {
                                         dispatch(
                                             actions.updateState({
                                                 stage: STEP_STAGE.PRINTING_LOADING_MODEL,
@@ -3663,7 +3772,7 @@ export const actions = {
                                 break;
                         }
                     };
-                    createLoadModelWorker(uploadPath, onMessage);
+                    createLoadModelWorker(uploadPath, onMessage, reloadSimplifyModel);
                 }
             });
         });
@@ -4401,6 +4510,82 @@ export const actions = {
             dispatch(actions.destroyGcodeLine());
             dispatch(actions.displayModel());
         }
+    },
+
+    modelSimplify: (simplifyType = 0, simplifyPercent = 80, isFirstTime = false) => async (dispatch, getState) => {
+        dispatch(actions.updateState({
+            enableShortcut: false,
+            leftBarOverlayVisible: true,
+            transformMode: 'simplify-model'
+        }));
+        const { progressStatesManager, modelGroup, simplifyOriginModelInfo, defaultQualityId, qualityDefinitions } = getState().printing;
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SIMPLIFY_MODEL);
+        dispatch(actions.updateState({
+            stage: STEP_STAGE.PRINTING_SIMPLIFY_MODEL,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SIMPLIFY_MODEL, 0.1),
+            simplifyType,
+            simplifyPercent
+        }));
+        const layerHeight = lodashFind(qualityDefinitions, { definitionId: defaultQualityId })?.settings?.layer_height?.default_value;
+        let uploadResult = {};
+        let transformation = {};
+        if (isFirstTime) {
+            const simplifyModel = modelGroup.selectedModelArray[0];
+            transformation = simplifyModel.transformation;
+            const basenameWithoutExt = path.basename(
+                `${DATA_PREFIX}/${simplifyModel.originalName}`,
+                path.extname(`${DATA_PREFIX}/${simplifyModel.originalName}`)
+            );
+            const plyFileName = `${basenameWithoutExt}.stl`;
+            const mesh = simplifyModel.meshObject.clone(false);
+            mesh.clear();
+            mesh.applyMatrix4(simplifyModel.meshObject.parent.matrix);
+            uploadResult = await uploadMesh(mesh, plyFileName, 'stl');
+            dispatch(actions.updateState({
+                simplifyOriginModelInfo: {
+                    originModel: modelGroup.selectedModelArray[0]
+                }
+            }));
+        }
+        const tempUploadName = simplifyOriginModelInfo.uploadName || uploadResult?.body?.uploadName;
+        const selectedModelNameArr = tempUploadName.split('.');
+        const params = {
+            modelName: selectedModelNameArr[0],
+            fileType: selectedModelNameArr[1],
+            modelID: modelGroup.selectedModelArray[0]?.modelID,
+            simplifyType,
+            simplifyPercent,
+            isFirstTime,
+            transformation: transformation,
+            layerHeight: layerHeight,
+        };
+        controller.simplifyModel(params);
+    },
+
+    recordSimplifyModel: () => (dispatch, getState) => {
+        const { simplifyOriginModelInfo: { originModel, transformation }, modelGroup } = getState().printing;
+        const operations = new Operations();
+        const operation = new SimplifyModelOperation({
+            originModel: originModel,
+            target: modelGroup.selectedModelArray[0],
+            modelGroup: modelGroup,
+            transformation: transformation
+        });
+        operations.push(operation);
+        dispatch(
+            operationHistoryActions.setOperations(
+                INITIAL_STATE.name,
+                operations
+            )
+        );
+    },
+
+    resetSimplifyOriginModelInfo: () => (dispatch) => {
+        dispatch(actions.updateState({
+            simplifyOriginModelInfo: {},
+            enableShortcut: true,
+            leftBarOverlayVisible: false
+        }));
     }
 };
 

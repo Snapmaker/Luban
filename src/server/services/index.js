@@ -59,6 +59,9 @@ function startServices(server) {
     socketServer.registerEvent('slice', socketSlice.handleSlice);
     socketServer.registerEvent('generate-support', socketSlice.handleGenerateSupport);
 
+    // simplify model
+    socketServer.registerEvent('simplify-model', socketSlice.handleSimplifyModel);
+
     // communication: http & serial port
     socketServer.registerEvent('machine:discover', connectionManager.refreshDevices);
 

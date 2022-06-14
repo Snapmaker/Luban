@@ -1,8 +1,10 @@
 import noop from 'lodash/noop';
 import * as THREE from 'three';
-import { Transfer } from 'threads';
+// import { Transfer } from 'threads';
 import { Vector2 } from '../../../shared/lib/math/Vector2';
 import { DATA_PREFIX } from '../../constants';
+
+const { Transfer } = require('threads');
 
 class ToolpathToBufferGeometry {
     parse(filename, onProgress = noop) {

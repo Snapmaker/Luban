@@ -89,7 +89,7 @@ const allWidgets = {
 
 
 const pageHeadType = HEAD_PRINTING;
-function useRenderMainToolBar() {
+function useRenderMainToolBar(setSimplifying) {
     const unSaved = useSelector(state => state?.project[pageHeadType]?.unSaved, shallowEqual);
     const inProgress = useSelector(state => state?.printing?.inProgress, shallowEqual);
     const enableShortcut = useSelector(state => state?.printing?.enableShortcut, shallowEqual);
@@ -98,6 +98,7 @@ function useRenderMainToolBar() {
     const canGroup = useSelector(state => state?.printing?.modelGroup?.canGroup());
     const canMerge = useSelector(state => state?.printing?.modelGroup?.canMerge());
     const canUngroup = useSelector(state => state?.printing?.modelGroup?.canUngroup());
+    const canSimplify = useSelector(state => state?.printing?.modelGroup?.canSimplify());
     const [showHomePage, setShowHomePage] = useState(false);
     const [showWorkspace, setShowWorkspace] = useState(false);
     const dispatch = useDispatch();
@@ -204,6 +205,16 @@ function useRenderMainToolBar() {
                 action: () => {
                     dispatch(printingActions.ungroup());
                 }
+            },
+            {
+                title: i18n._('key-3DP/MainToolBar-Model Simplify'),
+                disabled: !canSimplify || !enableShortcut,
+                type: 'button',
+                name: 'MainToolbarSimplifiedModel',
+                action: () => {
+                    setSimplifying(true);
+                    dispatch(printingActions.modelSimplify(0, 80, true));
+                }
             }
         ];
         return (
@@ -229,9 +240,11 @@ function Printing({ location }) {
     const [controlInputValue, setControlInputValue] = useState(null);
     const [controlAxis, setControlAxis] = useState(['x']);
     const [controlMode, setControlMode] = useState(null);
+    // for simplify model, if true, visaulizerLeftbar and main tool bar can't be use
+    const [simplifying, setSimplifying] = useState(false);
     const dispatch = useDispatch();
     const history = useHistory();
-    const [renderHomepage, renderMainToolBar, renderWorkspace] = useRenderMainToolBar();
+    const [renderHomepage, renderMainToolBar, renderWorkspace] = useRenderMainToolBar(setSimplifying);
     const modelGroup = useSelector(state => state.printing.modelGroup);
     const isNewUser = useSelector(state => state.printing.isNewUser);
     const thumbnail = useRef();
@@ -370,7 +383,14 @@ function Printing({ location }) {
                 onDropAccepted={onDropAccepted}
                 onDropRejected={onDropRejected}
             >
-                <PrintingVisualizer widgetId="printingVisualizer" controlInputValue={controlInputValue} controlAxis={controlAxis} controlMode={controlMode} />
+                <PrintingVisualizer
+                    widgetId="printingVisualizer"
+                    controlInputValue={controlInputValue}
+                    controlAxis={controlAxis}
+                    controlMode={controlMode}
+                    simplifying={simplifying}
+                    setSimplifying={setSimplifying}
+                />
                 {renderHomepage()}
                 {renderWorkspace()}
                 {enabledIntro && (

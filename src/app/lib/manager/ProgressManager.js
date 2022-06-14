@@ -54,7 +54,10 @@ export const STEP_STAGE = {
     PRINTING_AUTO_ROTATE_SUCCESSED: 44,
     PRINTING_SCALE_TO_FIT_WITH_ROTATE: 45,
     PRINTING_SCALE_TO_FIT_WITH_ROTATE_SUCCESS: 46,
-    PRINTING_SCALE_TO_FIT_WITH_ROTATE_FAILED: 47
+    PRINTING_SCALE_TO_FIT_WITH_ROTATE_FAILED: 47,
+    PRINTING_SIMPLIFY_MODEL: 48,
+    PRINTING_SIMPLIFY_MODEL_SUCCESS: 49,
+    PRINTING_SIMPLIFY_MODEL_FAILED: 50
 };
 
 export const PROCESS_STAGE = {
@@ -76,7 +79,8 @@ export const PROCESS_STAGE = {
     PRINTING_GENERATE_SUPPORT: 9,
     PRINTING_ARRANGE_MODELS: 10,
     PRINTING_AUTO_ROTATE: 11,
-    PRINTING_SCALE_TO_FIT_WITH_ROTATE: 12
+    PRINTING_SCALE_TO_FIT_WITH_ROTATE: 12,
+    PRINTING_SIMPLIFY_MODEL: 13
 };
 
 const _STATE = {
@@ -276,6 +280,15 @@ class ProgressStatesManager {
             'key-Progress/3DP-Scale to fit...{{progress}}%',
             'key-Progress/3DP-Scale to fit successfully.',
             'key-Progress/3DP-Scale to fit failed.');
+        this.push(PROCESS_STAGE.PRINTING_SIMPLIFY_MODEL, [
+            {
+                stageID: STEP_STAGE.PRINTING_SIMPLIFY_MODEL,
+                percent: 1
+            }
+        ],
+        'key-Progress/3DP-Simplify model...{{prgress}}%',
+        'key-Progress/3DP-Simplify model successfully.',
+        'key-Progress/3DP-Simplify model failed.');
     }
 
     push(processStageID, stages, notice, successNotice, failedNotice) {

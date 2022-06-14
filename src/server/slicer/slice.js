@@ -3,6 +3,7 @@ import path from 'path';
 import childProcess from 'child_process';
 
 import lubanEngine, { getPath } from 'snapmaker-luban-engine';
+import lunar, { getPath as lunarGetPath } from 'snapmaker-lunar';
 import logger from '../lib/logger';
 import DataStorage from '../DataStorage';
 import settings from '../config/settings';
@@ -14,7 +15,7 @@ import { convertObjectKeyNameToUnderScoreCase } from '../lib/utils';
 const log = logger('service:print3d-slice');
 
 const enginePath = getPath();
-
+const lunarPath = lunarGetPath('Slicer');
 
 /**
      * callCuraEngine
@@ -29,6 +30,7 @@ const enginePath = getPath();
      * @returns process
      */
 function callCuraEngine(modelConfig, supportConfig, outputPath) {
+
     const args = ['slice', '-v', '-p', '-o', outputPath];
 
     if (modelConfig && modelConfig.path.length) {
@@ -305,6 +307,55 @@ export function generateSupport(modelInfo, onProgress, onSucceed, onError) {
                 log.info(`slice progress closed with code ${res.code}`);
             }
         });
+}
+
+export function simplifyModel(params, onProgress, onSucceed, onError) {
+    // onSucceed();
+    // onProgress(0.8);
+    // const process =
+    const { modelName, fileType, modelID, simplifyType, simplifyPercent, layerHeight } = params;
+    const simplifyConfigPath = `${DataStorage.configDir}/${HEAD_PRINTING}/simplify_model.def.json`;
+    const data = fs.readFileSync(simplifyConfigPath, 'utf8');
+    const config = JSON.parse(data);
+    config.config.simplify_type = simplifyType === 0 ? 'edge_ratio_stop' : 'edge_length_stop';
+    simplifyType === 0 && (config.config.edge_ratio_threshold = Math.pow((100 - simplifyPercent) / 100, 3));
+    simplifyType === 1 && (config.config.edge_length_threshold = layerHeight);
+    const outputPath = `${DataStorage.tmpDir}/${modelName}-repiar.stl`;
+    // fs.exists() && fs.rmdirSync(outputPath);
+    if (fs.existsSync(outputPath)) {
+        fs.unlinkSync(outputPath);
+    }
+    fs.writeFile(simplifyConfigPath, JSON.stringify(config), 'utf8', (err) => {
+        if (err) {
+            console.log({ err });
+            onError()
+        } else {
+            const simplifyConfig = {
+                // configFilePath: `${DataStorage.configDir}/${HEAD_PRINTING}/simplify_model.def.json`,
+                modelPath: `${DataStorage.tmpDir}/${modelName}.${fileType}`,
+                configFilePath: simplifyConfigPath,
+                outputPath: outputPath
+            }
+            // console.log(lunarGetPath('MP') + ' -v -j ' + simplifyConfig.configFilePath + ' -l ' + simplifyConfig.modelPath + ' -o ' + simplifyConfig.outputPath);
+            lunar.modelSimplify(simplifyConfig.modelPath, simplifyConfig.outputPath, simplifyConfig.configFilePath).onStderr('data', res => {
+                log.info(`response: ${res}`);
+            }).end((err, res) => {
+                if (err) {
+                    log.error(`fail to simplify model: ${err}`);
+                } else {
+                    log.info(`lunar code: ${res.code}`);
+                    if (res.code === 0) onSucceed({ modelID: modelID, modelUploadName: `${modelName}.${fileType}`, modelOutputName: `${modelName}-repiar.stl`});
+                }
+            });
+        }
+    });
+    // const process = simplifyModelEngine(simplifyConfig);
+    // process.stderr.on('data', (data) => {
+    //     console.log('data', data);
+    // });
+    // process.stderr.on('close', (data) => {
+    //     console.log('close', data);
+    // })
 }
 
 export default slice;

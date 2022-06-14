@@ -78,7 +78,8 @@ export type ModelInfo = {
     width?: number;
     height?: number;
     elem: SvgModelElement;
-    size: TSize
+    size: TSize,
+    reloadSimplifyModel?: boolean
 };
 
 

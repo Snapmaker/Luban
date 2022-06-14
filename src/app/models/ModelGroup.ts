@@ -1669,7 +1669,7 @@ class ModelGroup extends EventEmitter {
             this.object.add(model.meshObject);
         }
 
-        this.emit('add', model);
+        !modelInfo.reloadSimplifyModel && this.emit('add', model);
         // refresh view
         this.modelChanged();
         modelInfo.sourceType === '3d' && this.updatePrimeTowerHeight();
@@ -2042,6 +2042,20 @@ class ModelGroup extends EventEmitter {
         }
         this.updatePrimeTowerHeight();
         return this.getState();
+    }
+
+    // for model simplify, only select a visible model.
+    public canSimplify() {
+        if (this.selectedModelArray.length === 1) {
+            const model = this.selectedModelArray[0];
+            if (model instanceof ThreeModel && model.visible) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 
     // prime tower
