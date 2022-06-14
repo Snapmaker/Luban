@@ -1,72 +1,50 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { OverlayTrigger, Popover } from 'react-bootstrap';
+import { Popover } from 'antd';
+import { isEqual } from 'lodash';
+// import { Tooltip, Popover } from 'antd';
+function isValidElement(object) {
+    return (
+        typeof object === 'object'
+      && object !== null
+      && object.$$typeof === Symbol.for('react.element')
+    );
+}
+function checkIsEqual(newObj, oldObj) {
+    return Object.entries(newObj).every(([key, item]) => {
+        if (Array.isArray(item) && isValidElement(item[0])) {
+            return true;
+        } else if (isValidElement(item)) {
+            return true;
+        } else {
+            return isEqual(item, oldObj[key]);
+        }
+    });
+}
 
-
-const TipTrigger = (props) => {
+const TipTrigger = React.memo((props) => {
     const { placement = 'left', title = '', content, isIcon = false, children, ...rest } = props;
     let placementValue = 'left';
-    let getOverlay;
     if (isIcon) {
         placementValue = 'bottom';
-        getOverlay = () => {
-            return (
-                <Popover
-                    id={`tip-popover-${title}`}
-                    style={{
-                        backgroundColor: '#FFFFCD',
-                        padding: '2px 10px',
-                        color: '#272829',
-                        border: '1px solid #D5D6D9',
-                        borderRadius: 3
-                    }}
-                >
-                    <Popover.Title style={{
-                        backgroundColor: '#F5F5F7',
-                        borderRadius: '7px 7px 0px 0px'
-                    }}
-                    >
-                        {title}
-                    </Popover.Title>
-                    <Popover.Content style={{ backgroundColor: '#FFFFCD' }}>{content}</Popover.Content>
-                </Popover>
-            );
-        };
     } else {
         placementValue = placement;
-        getOverlay = () => {
-            return (
-                <Popover
-                    id={`tip-popover-${title}`}
-                >
-                    <Popover.Title>{title}</Popover.Title>
-                    <Popover.Content>{content}</Popover.Content>
-                </Popover>
-            );
-        };
     }
+    console.log('111');
 
-    if (content) {
-        const overlay = getOverlay();
-        return (
-            <OverlayTrigger
-                placement={placementValue}
-                overlay={overlay}
-                delayShow={500}
-            >
-                <div {...rest}>
-                    {children}
-                </div>
-            </OverlayTrigger>
-        );
-    } else {
-        return (
+    return (
+        <Popover
+            placement={placementValue}
+            content={content}
+            title={title}
+            arrowPointAtCenter
+        >
             <div {...rest}>
                 {children}
             </div>
-        );
-    }
-};
+        </Popover>
+    );
+}, checkIsEqual);
 
 
 TipTrigger.propTypes = {
