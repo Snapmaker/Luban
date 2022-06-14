@@ -10,39 +10,11 @@ const intersectionSkin = (subPaths, vectorsArray) => {
         return [];
     }
     return polyIntersection(subPaths, vectorsArray);
-
-    // if (subPaths && vectorsArray) {
-    //     return polyIntersection(subPaths, vectorsArray);
-    // }
-    // if (!vectorsArray && subPaths) {
-    //     return subPaths;
-    // }
-    // if (vectorsArray && !subPaths) {
-    //     return vectorsArray;
-    // }
-    // return [];
 };
 
 type TMessage = {
-    index: string, currentInnerWall: TPolygon[], otherLayers: TPolygon[][], lineWidth: number
+     currentInnerWall: TPolygon[], otherLayers: TPolygon[][], lineWidth: number
 }
-
-// const unionPolygons = (polygons: TPolygon[], area?: TPolygon) => {
-//     if (polygons.length === 0) {
-//         return area;
-//     }
-//     let polygon = polygons.shift();
-//     if (!area) {
-//         area = polygon;
-//         polygon = polygons.shift();
-
-//         if (polygons.length === 0) {
-//             return area;
-//         }
-//     }
-//     const _area = polyUnion(area, [polygon]);
-//     return unionPolygons(polygons, _area);
-// };
 
 const unionPolygons = (polygons: TPolygon[]): TPolygon => {
     return polygons.reduce((p, c) => {

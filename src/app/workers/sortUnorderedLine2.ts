@@ -1,4 +1,6 @@
 import { Observable } from 'rxjs';
+import { Box3 } from 'three';
+import { polyOffset } from '../../shared/lib/clipper/cLipper-adapter';
 import { Polygon, Polygons } from '../../shared/lib/clipper/Polygons';
 import { PolygonsUtils } from '../../shared/lib/math/PolygonsUtils';
 // import { PolygonsUtils } from '../../shared/lib/math/PolygonsUtils';
@@ -7,7 +9,12 @@ type TPoint = { x: number, y: number, z?: number }
 
 type TMessage = {
     fragments: TPoint[],
-    layerHeight: number
+    layerHeight: number,
+    innerWallCount: number,
+    lineWidth: number,
+    bottomLayers: number,
+    topLayers: number,
+    modelBoundingBox: Box3
 }
 
 type TPointValue = {
@@ -90,7 +97,7 @@ const cleanStack = (stack: TPointValue[], ringIndex: number) => {
     });
 };
 
-const sortUnorderedLine = ({ fragments, layerHeight }: TMessage) => {
+const sortUnorderedLine = ({ fragments, layerHeight, innerWallCount, lineWidth, }: TMessage) => {
     return new Observable((observer) => {
         // console.log(`[${actionID}] worker exec 2, cost=`, m3 - m);
         try {
@@ -189,7 +196,16 @@ const sortUnorderedLine = ({ fragments, layerHeight }: TMessage) => {
                 });
             });
 
-            observer.next(marged);
+            const innerWall = Array(innerWallCount).fill('').map((_, index) => {
+                return marged.map((polygon) => {
+                    return polyOffset(polygon, -lineWidth * (index + 1));
+                });
+            });
+
+            observer.next({
+                outWall: marged,
+                innerWall
+            });
             // console.log(JSON.stringify(paths));
         } catch (error) {
             console.error('layerHeight=', layerHeight, 'error=', error);

@@ -20,7 +20,8 @@ export enum WorkerMethods {
     generateSkirt = 'generateSkirt',
     generateBrim = 'generateBrim',
     generateRaft = 'generateRaft',
-    calculateSectionPoints = 'calculateSectionPoints'
+    calculateSectionPoints = 'calculateSectionPoints',
+    mapClippingSkinArea = 'mapClippingSkinArea'
     // LUBAN worker methods END
 }
 

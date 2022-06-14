@@ -27,17 +27,17 @@ const generateBrim = ({ polygons, skirtBrimLineWidth, brimLineCount }: IMessage)
         linePosAttr.setUsage(DynamicDrawUsage);
 
         let j = 0;
-        const _polygons = polyOffset(
-            polygons, skirtBrimLineWidth * 0.75, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon, 0, 0
-        );
-        const offset = skirtBrimLineWidth * 1.5;
+        // const _polygons = polyOffset(
+        //     polygons, skirtBrimLineWidth, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon, 0.12, 0.1
+        // );
+        const offset = skirtBrimLineWidth;
         Array(brimLineCount).fill(0).forEach((_item, index) => {
             let skirtArea;
             if (index === 0) {
-                skirtArea = _polygons;
+                skirtArea = polygons;
             } else {
                 skirtArea = polyOffset(
-                    _polygons, offset * index, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon, 0, 0
+                    polygons, offset * index, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon, 0.12, 0.1
                 );
             }
             skirtArea.forEach((vectors) => {

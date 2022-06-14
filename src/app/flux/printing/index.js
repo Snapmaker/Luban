@@ -2916,6 +2916,7 @@ export const actions = {
     recordModelBeforeTransform: modelGroup => dispatch => {
         dispatch(operationHistoryActions.clearTargetTmpState(INITIAL_STATE.name));
         const selectedModelArray = modelGroup.selectedModelArray.concat();
+        modelGroup.onModelBeforeTransform();
         const { recovery } = modelGroup.unselectAllModels();
         for (const model of selectedModelArray) {
             modelGroup.unselectAllModels();
@@ -4136,6 +4137,9 @@ export const actions = {
         const activeQualityDefinition = lodashFind(qualityDefinitions, {
             definitionId: defaultQualityId
         });
+        if (!activeQualityDefinition) {
+            return;
+        }
         const qualitySetting = activeQualityDefinition.settings;
         modelGroup.updatePlateAdhesion({
             adhesionType: qualitySetting.adhesion_type.default_value,

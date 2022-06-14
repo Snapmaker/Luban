@@ -7,9 +7,7 @@ import { actions as printingActions } from '../../../flux/printing';
 import { ModelEvents } from '../../../models/events';
 
 function VisualizerClippingControl() {
-    const transformMode = useSelector(state => state?.printing?.transformMode, shallowEqual);
     const modelGroup = useSelector(state => state?.printing?.modelGroup);
-    const clipped = useSelector(state => state?.printing?.modelGroup?.hasClipped(), shallowEqual);
     const displayedType = useSelector(state => state?.printing?.displayedType, shallowEqual);
     const primeTowerHeight = useSelector(state => state?.printing?.primeTowerHeight, shallowEqual);
     const qualityDefinitions = useSelector(state => state?.printing?.qualityDefinitions, shallowEqual);
@@ -22,10 +20,6 @@ function VisualizerClippingControl() {
     });
     const qualitySetting = activeQualityDefinition?.settings;
 
-    const [_clipped, setClipped] = useState(clipped);
-    useEffect(() => {
-        setClipped(clipped);
-    }, [clipped]);
 
     const [value, setValue] = useState(0);
     useEffect(() => {
@@ -34,10 +28,8 @@ function VisualizerClippingControl() {
     useEffect(() => {
         modelGroup.on(ModelEvents.ClippingFinish, () => {
             setValue(primeTowerHeight + qualitySetting?.layer_height?.default_value);
-            setClipped(true);
         });
         modelGroup.on(ModelEvents.ClippingReset, () => {
-            setClipped(false);
             setValue(primeTowerHeight + qualitySetting?.layer_height?.default_value);
         });
         return () => {
@@ -55,7 +47,7 @@ function VisualizerClippingControl() {
         update.current(v);
     };
 
-    if (_clipped && displayedType === 'model' && !transformMode && modelGroup.models.length && !(modelGroup.models.length === 1 && modelGroup.models[0].type === 'primeTower')) {
+    if (displayedType === 'model' && modelGroup.models.length && !(modelGroup.models.length === 1 && modelGroup.models[0].type === 'primeTower')) {
         return (
             <React.Fragment>
                 <div className={styles['layer-wrapper']}>

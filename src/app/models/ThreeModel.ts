@@ -57,7 +57,6 @@ class ThreeModel extends BaseModel {
             material = newMaterial;
             this.localPlane = modelGroup.localPlane;
             material.clippingPlanes = [this.localPlane];
-
             // material.side = THREE.FrontSide;
             // material.stencilWrite = true;
             // material.stencilFail = THREE.DecrementWrapStencilOp;
@@ -601,7 +600,6 @@ class ThreeModel extends BaseModel {
         mat0.stencilZPass = THREE.IncrementWrapStencilOp;
 
         const mesh0 = new THREE.Mesh(geometry, mat0);
-        mesh0.renderOrder = 100;
         group.add(mesh0);
 
         // front faces
@@ -613,7 +611,6 @@ class ThreeModel extends BaseModel {
         mat1.stencilZPass = THREE.DecrementWrapStencilOp;
 
         const mesh1 = new THREE.Mesh(geometry, mat1);
-        mesh1.renderOrder = 100;
 
         group.add(mesh1);
 

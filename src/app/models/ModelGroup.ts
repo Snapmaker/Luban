@@ -112,8 +112,6 @@ class ModelGroup extends EventEmitter {
     }[];
 
     private displayedType: TDisplayedType = 'model';
-    private transformMode = ''
-
     public clippingGroup = new Group();
     private clippingHeight: number;
     public localPlane = new Plane(new Vector3(0, 0, -1), planeMaxHeight);
@@ -1432,6 +1430,12 @@ class ModelGroup extends EventEmitter {
         });
     }
 
+    public onModelBeforeTransform() {
+        this.updateClippingPlane(planeMaxHeight);
+        this.emit(ModelEvents.ClippingFinish, true);
+        this.plateAdhesion.clear();
+    }
+
     // model transformation triggered by controls
     // Note: the function is only useful for 3D object operations on Canvas
     public onModelAfterTransform(shouldStickToPlate = true) {
@@ -1452,7 +1456,7 @@ class ModelGroup extends EventEmitter {
 
         this.prepareSelectedGroup();
         this.updatePrimeTowerHeight();
-        // this.calaClippingMap();
+        this.calaClippingMap();
         recovery();
 
         if (selectedModelArray.length === 0) {
@@ -1896,7 +1900,7 @@ class ModelGroup extends EventEmitter {
             }
         });
         this.displayedType = displayedType;
-        if (this.displayedType === 'gcode' || this.transformMode) {
+        if (this.displayedType === 'gcode') {
             this.plateAdhesion.visible = false;
         } else {
             this.plateAdhesion.visible = true;
@@ -2464,7 +2468,7 @@ class ModelGroup extends EventEmitter {
         this.getThreeModels().filter((model) => {
             return model.visible && model.clipper;
         }).forEach((model) => {
-            const polygonss = model.clipper.clippingMap.get(model.clipper.clippingConfig.layerHeight);
+            const polygonss = model.clipper.clippingMap.get(model.clipper.clippingConfig.layerHeight) || [];
             polygonss && polygonss.forEach((polygons) => {
                 const _paths = (() => {
                     const res = PolygonsUtils.simplify(polygons, 0.2);
@@ -2593,10 +2597,11 @@ class ModelGroup extends EventEmitter {
         if (!this.sectionMesh) {
             const planeGeom = new PlaneGeometry();
             const planeMat = new MeshStandardMaterial({
-                // color: 0xF8F8FF, // 0x7CFC00
+                color: 0xF8F8FF, // 0x7CFC00
                 metalness: 0.1,
                 roughness: 0.75,
                 clippingPlanes: [],
+                // side: DoubleSide,
                 stencilWrite: true,
                 stencilRef: 0,
                 stencilFunc: NotEqualStencilFunc,
@@ -2605,10 +2610,12 @@ class ModelGroup extends EventEmitter {
                 stencilZPass: ReplaceStencilOp
             });
             this.sectionMesh = new Mesh(planeGeom, planeMat);
+            this.sectionMesh.frustumCulled = false;
+
             this.sectionMesh.onAfterRender = (renderer) => {
                 renderer.clearStencil();
             };
-            this.sectionMesh.renderOrder = 1200;
+            // this.sectionMesh.renderOrder = 1200;
             this.object.add(this.sectionMesh);
         }
 
@@ -2680,14 +2687,9 @@ class ModelGroup extends EventEmitter {
     }
 
     public setTransformMode(value: string) {
-        this.transformMode = value;
-        this.updateClippingPlane(planeMaxHeight);
-        this.emit(ModelEvents.ClippingFinish, true);
-        if (this.displayedType === 'gcode' || this.transformMode) {
-            this.plateAdhesion.visible = false;
-        } else {
-            this.plateAdhesion.visible = true;
-            this.calaClippingMap();
+        if (value) {
+            this.updateClippingPlane(planeMaxHeight);
+            this.emit(ModelEvents.ClippingFinish, true);
         }
     }
 }

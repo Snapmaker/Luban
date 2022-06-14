@@ -22,7 +22,7 @@ const generateRaft = ({ polygons, raftMargin, skirtBrimLineWidth }: IMessage) =>
     return new Observable((observer) => {
         const _polygons = polyOffset(
             polygons, raftMargin - skirtBrimLineWidth * 0.5, ClipperLib.JoinType.jtRound,
-            ClipperLib.EndType.etClosedPolygon, 0, 0
+            ClipperLib.EndType.etClosedPolygon, 0.12, 0.1
         );
         const arr = [];
         _polygons.forEach((vectors) => {

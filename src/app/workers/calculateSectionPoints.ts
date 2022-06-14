@@ -40,8 +40,6 @@ const calculateSectionPoints = ({ positionAttribute, modelMatrix, height, layerH
         bvhGeometry.setAttribute('position', position);
         const colliderBvh = new MeshBVH(bvhGeometry, { maxLeafTris: 3 });
 
-        const sections = [];
-
         const plane = new Plane(new Vector3(0, 0, -1), 0);
         for (let layerTop = 0; layerTop <= height; layerTop = Number((layerTop + layerHeight).toFixed(2))) {
             plane.constant = layerTop;
@@ -93,10 +91,11 @@ const calculateSectionPoints = ({ positionAttribute, modelMatrix, height, layerH
                     }
                 }
             });
-
-            sections.push([layerTop, positions]);
+            observer.next({
+                layerTop,
+                vectors: Transfer(positions as unknown as ArrayBuffer)
+            });
         }
-        observer.next(Transfer(sections as unknown as ArrayBuffer));
     });
 };
 
