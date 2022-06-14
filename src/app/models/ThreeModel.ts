@@ -39,7 +39,6 @@ class ThreeModel extends BaseModel {
 
     public clipper: ClipperModel;
 
-    // private infillDensity = 0
     public constructor(modelInfo: ModelInfo, modelGroup: ModelGroup) {
         super(modelInfo, modelGroup);
         const { width, height, processImageName } = modelInfo;
@@ -284,6 +283,10 @@ class ThreeModel extends BaseModel {
     public setOversteppedAndSelected(overstepped: boolean, isSelected: boolean) {
         this.overstepped = overstepped;
         this.setSelected(isSelected);
+    }
+
+    public setSourcePly(fileName: string) {
+        this.sourcePly = fileName;
     }
 
     public setSelected(isSelected?: boolean) {

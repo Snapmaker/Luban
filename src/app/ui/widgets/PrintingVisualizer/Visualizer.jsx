@@ -23,13 +23,14 @@ import Canvas from '../../components/SMCanvas';
 import { NumberInput as Input } from '../../components/Input';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import { actions as printingActions } from '../../../flux/printing';
+import { actions as machineActions } from '../../../flux/machine';
 import VisualizerLeftBar from './VisualizerLeftBar';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
 import VisualizerBottomLeft from './VisualizerBottomLeft';
 import VisualizerInfo from './VisualizerInfo';
 import PrintableCube from './PrintableCube';
 import styles from './styles.styl';
-import { loadModelFailPopup, scaletoFitPopup, sliceFailPopup } from './VisualizerPopup';
+import { loadModelFailPopup, scaletoFitPopup, sliceFailPopup, repairModelFailPopup, repairModelPopup, repairModelBeforSimplifyPopup } from './VisualizerPopup';
 
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 import { emitUpdateControlInputEvent } from '../../components/SMCanvas/TransformControls';
@@ -96,6 +97,8 @@ class Visualizer extends PureComponent {
         resetSelectedModelTransformation: PropTypes.func.isRequired,
         progressStatesManager: PropTypes.object.isRequired,
         setRotationPlacementFace: PropTypes.func.isRequired,
+        repairSelectedModels: PropTypes.func.isRequired,
+        updatePromptDamageModel: PropTypes.func.isRequired,
         enablePrimeTower: PropTypes.bool,
         primeTowerHeight: PropTypes.number.isRequired,
         printingToolhead: PropTypes.string,
@@ -103,7 +106,14 @@ class Visualizer extends PureComponent {
         controlAxis: PropTypes.array,
         controlInputValue: PropTypes.object,
         controlMode: PropTypes.string,
-        displayModel: PropTypes.func
+        displayModel: PropTypes.func,
+        simplifying: PropTypes.bool,
+        setSimplifying: PropTypes.func,
+        simplifyOriginModelInfo: PropTypes.object,
+        loadSimplifyModel: PropTypes.func,
+        modelSimplify: PropTypes.func,
+        resetSimplifyOriginModelInfo: PropTypes.func,
+        recordSimplifyModel: PropTypes.func
     };
 
     printableArea = null;
@@ -158,6 +168,7 @@ class Visualizer extends PureComponent {
             }
         },
         onSelectModels: (intersect, selectEvent) => {
+            if (this.props.simplifying) return;
             this.props.selectMultiModel(intersect, selectEvent);
         },
         onModelBeforeTransform: () => {
@@ -441,7 +452,7 @@ class Visualizer extends PureComponent {
         if (stage !== prevProps.stage) {
             if (promptTasks.length > 0) {
                 if (stage === STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE) {
-                    promptTasks.filter(item => item.status === 'fail').forEach(item => {
+                    promptTasks.filter(item => item.status === 'load-model-fail').forEach(item => {
                         loadModelFailPopup(item.originalName);
                     });
                     promptTasks.filter(item => item.status === 'needScaletoFit').forEach(item => {
@@ -450,8 +461,32 @@ class Visualizer extends PureComponent {
                             this.actions.scaleToFitSelectedModel([item.model]);
                         });
                     });
+                    const needRepairModels = promptTasks.filter(item => item.status === 'need-repair-model').map((i) => {
+                        return i.model;
+                    });
+                    repairModelPopup(needRepairModels).then((ignore) => {
+                        modelGroup.unselectAllModels();
+                        modelGroup.addModelToSelectedGroup(...needRepairModels);
+                        this.props.repairSelectedModels();
+                        this.props.updatePromptDamageModel(!ignore);
+                    }).catch((ignore) => {
+                        this.props.updatePromptDamageModel(!ignore);
+                    });
                 } else if (stage === STEP_STAGE.PRINTING_SLICE_FAILED) {
                     sliceFailPopup();
+                } else if (stage === STEP_STAGE.PRINTING_REPAIRING_MODEL) {
+                    promptTasks.filter(item => item.status === 'repair-model-fail').forEach(item => {
+                        repairModelFailPopup(item.originalName);
+                    });
+                } else if (stage === STEP_STAGE.PRINTING_EMIT_REPAIRING_MODEL) {
+                    const needRepair = promptTasks.find(item => item.status === 'repair-model-before-simplify');
+                    if (needRepair) {
+                        repairModelBeforSimplifyPopup().then(() => {
+                            needRepair.resolve();
+                        }).catch(() => {
+                            needRepair.reject();
+                        });
+                    }
                 }
             }
         }
@@ -487,6 +522,23 @@ class Visualizer extends PureComponent {
         !this.props.leftBarOverlayVisible && this.contextMenuRef.current.show(event);
     }
 
+    handleCancelSimplify = () => {
+        const { selectedModelArray, simplifyOriginModelInfo: { sourceSimplifyName } } = this.props;
+        this.props.loadSimplifyModel(selectedModelArray[0].modelID, sourceSimplifyName, true);
+        this.props.resetSimplifyOriginModelInfo();
+        this.props.setSimplifying(false);
+    }
+
+    handleApplySimplify = () => {
+        this.props.recordSimplifyModel();
+        this.props.resetSimplifyOriginModelInfo();
+        this.props.setSimplifying(false);
+    }
+
+    handleUpdateSimplifyConfig = (type, percent) => {
+        this.props.modelSimplify(type, percent);
+    }
+
     render() {
         const { size, selectedModelArray, modelGroup, gcodeLineGroup, inProgress, hasModel, displayedType, transformMode } = this.props; // transformMode
 
@@ -510,6 +562,10 @@ class Visualizer extends PureComponent {
                     autoRotateSelectedModel={this.actions.autoRotateSelectedModel}
                     setHoverFace={this.actions.setHoverFace}
                     arrangeAllModels={this.actions.arrangeAllModels}
+                    simplifying={this.props.simplifying}
+                    handleApplySimplify={this.handleApplySimplify}
+                    handleCancelSimplify={this.handleCancelSimplify}
+                    handleUpdateSimplifyConfig={this.handleUpdateSimplifyConfig}
                 />
                 <div className={styles['visualizer-bottom-left']}>
                     <VisualizerBottomLeft actions={this.actions} />
@@ -685,7 +741,8 @@ const mapStateToProps = (state, ownProps) => {
         primeTowerHeight,
         qualityDefinitions,
         defaultQualityId,
-        stopArea
+        stopArea,
+        simplifyOriginModelInfo
     } = printing;
     const activeQualityDefinition = find(qualityDefinitions, { definitionId: defaultQualityId });
     const enablePrimeTower = activeQualityDefinition?.settings?.prime_tower_enable?.default_value;
@@ -721,7 +778,8 @@ const mapStateToProps = (state, ownProps) => {
         progressStatesManager,
         enablePrimeTower,
         primeTowerHeight,
-        printingToolhead
+        printingToolhead,
+        simplifyOriginModelInfo
     };
 };
 
@@ -755,11 +813,17 @@ const mapDispatchToProps = (dispatch) => ({
     resetSelectedModelTransformation: () => dispatch(printingActions.resetSelectedModelTransformation()),
     autoRotateSelectedModel: () => dispatch(printingActions.autoRotateSelectedModel()),
     scaleToFitSelectedModel: (models) => dispatch(printingActions.scaleToFitSelectedModel(models)),
+    repairSelectedModels: () => dispatch(printingActions.repairSelectedModels()),
+    updatePromptDamageModel: (bool) => dispatch(machineActions.updatePromptDamageModel(bool)),
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value)),
     moveSupportBrush: (raycastResult) => dispatch(printingActions.moveSupportBrush(raycastResult)),
     applySupportBrush: (raycastResult) => dispatch(printingActions.applySupportBrush(raycastResult)),
     setRotationPlacementFace: (userData) => dispatch(printingActions.setRotationPlacementFace(userData)),
-    displayModel: () => dispatch(printingActions.displayModel())
+    displayModel: () => dispatch(printingActions.displayModel()),
+    loadSimplifyModel: (modelID, modelOutputName, isCancelSimplify) => dispatch(printingActions.loadSimplifyModel({ modelID, modelOutputName, isCancelSimplify })),
+    modelSimplify: (type, percent) => dispatch(printingActions.modelSimplify(type, percent)),
+    resetSimplifyOriginModelInfo: () => dispatch(printingActions.resetSimplifyOriginModelInfo()),
+    recordSimplifyModel: () => dispatch(printingActions.recordSimplifyModel())
 });
 
 export default withRouter(connect(mapStateToProps, mapDispatchToProps)(Visualizer));

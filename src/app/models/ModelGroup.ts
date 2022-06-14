@@ -719,6 +719,9 @@ class ModelGroup extends EventEmitter {
             if (selectModel) {
                 const objectIndex = this.selectedGroup.children.indexOf(selectModel.meshObject);
                 if (objectIndex === -1) {
+                    if (this.selectedModelArray.length === 1 && this.selectedModelArray[0] instanceof PrimeTowerModel) {
+                        this.unselectAllModels();
+                    }
                     let isModelAcrossGroup = false;
                     for (const selectedModel of this.selectedModelArray) {
                         if (selectedModel.parent !== selectModel.parent) {
@@ -865,15 +868,17 @@ class ModelGroup extends EventEmitter {
         return this.getState(false);
     }
 
-    public addModelToSelectedGroup(model: Model3D) {
-        if (model.isSelected) return;
-        if (model instanceof PrimeTowerModel && !model.visible) return;
-        model.setSelected(true);
-        ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().copy(this.selectedGroup.matrix).invert());
-        this.selectedModelArray = [...this.selectedModelArray, model];
+    public addModelToSelectedGroup(...models: Model3D[]) {
+        models.forEach((model) => {
+            if (model.isSelected) return;
+            if (model instanceof PrimeTowerModel && !model.visible) return;
+            model.setSelected(true);
+            ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().copy(this.selectedGroup.matrix).invert());
+            this.selectedModelArray = [...this.selectedModelArray, model];
 
-        ThreeUtils.setObjectParent(model.meshObject, this.selectedGroup);
-        this.prepareSelectedGroup();
+            ThreeUtils.setObjectParent(model.meshObject, this.selectedGroup);
+            this.prepareSelectedGroup();
+        });
     }
 
     public removeModelFromSelectedGroup(model: TModel) {
@@ -2183,6 +2188,20 @@ class ModelGroup extends EventEmitter {
         }
         this.updatePrimeTowerHeight();
         return this.getState();
+    }
+
+    // for model simplify, only select a visible model.
+    public canSimplify() {
+        if (this.selectedModelArray.length === 1) {
+            const model = this.selectedModelArray[0];
+            if (model instanceof ThreeModel && model.visible) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 
     // prime tower

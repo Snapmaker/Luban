@@ -1,6 +1,6 @@
 // mock function i18n to force variables to be counted as i18n words
 const i18n = {
-    _: () => {}
+    _: () => { }
 };
 
 // machine size name
@@ -310,6 +310,9 @@ i18n._('key-Printing/LeftBar-Auto Rotate All Models');
 i18n._('key-Progress/3DP-Scale to fit...{{progress}}%');
 i18n._('key-Printing/3DP-Scale to fit successfully.');
 i18n._('key-Printing/3DP-scale to fit failed.');
+i18n._('key-Progress/3DP-Repairing model... {{progress}}%');
+i18n._('key-Progress/3DP-Repair model successfully.');
+i18n._('key-Progress/3DP-Failed to repair model.');
 
 
 // Machine Settings

@@ -1,6 +1,7 @@
 import STLExporter from '../../../../shared/lib/STL/STLExporter';
 // import STLBinaryExporter from '../../components/three-extensions/STLBinaryExporter';
 import OBJExporter from '../../../three-extensions/OBJExporter';
+// import { PLYExporter } from '../../../three-extensions/PLYExporter';
 
 class ModelExporter {
     // default: binary stl
@@ -23,6 +24,9 @@ class ModelExporter {
         } else if (format === 'obj') {
             return this.parseToObj(object3d);
         }
+        // else if (format === 'ply') {
+        //     return this.parseToPly(object3d);
+        // }
         return null;
     }
 
@@ -37,6 +41,12 @@ class ModelExporter {
     parseToObj(object3d) {
         return new OBJExporter().parse(object3d);
     }
+
+    // parseToPly(object3d) {
+    //     const exporter = new PLYExporter();
+    //     const data = exporter.parse(object3d, null);
+    //     return data;
+    // }
 }
 
 export default ModelExporter;

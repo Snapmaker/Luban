@@ -920,6 +920,10 @@ class Canvas extends PureComponent {
                 inputDOM && (inputDOM.style.display = 'none');
                 inputDOM2 && (inputDOM2.style.display = 'none');
             }
+            if (this.controls.transformControl.mode === null) {
+                inputDOM && (inputDOM.style.display = 'none');
+                inputDOM2 && (inputDOM2.style.display = 'none');
+            }
             this.renderer.render(this.scene, this.camera);
             TWEEN.update();
         }, renderT)();

@@ -1,5 +1,6 @@
 import noop from 'lodash/noop';
 import io from 'socket.io-client';
+import { v4 as uuid } from 'uuid';
 
 class SocketController {
     socket = null;
@@ -67,6 +68,25 @@ class SocketController {
         });
 
         return this;
+    }
+
+    channel(topic, params, onMessage) {
+        return new Promise((resolve, reject) => {
+            const actionid = uuid();
+            const listener = (_actionid, _STATUS_, result) => {
+                if (actionid === _actionid) {
+                    if (_STATUS_ === 'next') {
+                        onMessage && onMessage(result);
+                    } else if (_STATUS_ === 'complete') {
+                        resolve();
+                    } else if (_STATUS_ === 'error') {
+                        reject();
+                    }
+                }
+            };
+            this.socket.on(topic, listener);
+            this.emit(topic, actionid, params);
+        });
     }
 }
 

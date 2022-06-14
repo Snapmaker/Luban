@@ -91,9 +91,9 @@ const allWidgets = {
 
 
 const pageHeadType = HEAD_PRINTING;
-function useRenderMainToolBar() {
+function useRenderMainToolBar(setSimplifying) {
     const unSaved = useSelector(state => state?.project[pageHeadType]?.unSaved, shallowEqual);
-    const inProgress = useSelector(state => state?.printing?.inProgress, shallowEqual);
+    const { inProgress, simplifyType, simplifyPercent } = useSelector(state => state?.printing, shallowEqual);
     const enableShortcut = useSelector(state => state?.printing?.enableShortcut, shallowEqual);
     const canRedo = useSelector(state => state?.printing?.history?.canRedo, shallowEqual);
     const canUndo = useSelector(state => state?.printing?.history?.canUndo, shallowEqual);
@@ -101,6 +101,8 @@ function useRenderMainToolBar() {
     const canMerge = useSelector(state => state?.printing?.modelGroup?.canMerge());
     const canUngroup = useSelector(state => state?.printing?.modelGroup?.canUngroup());
     // const toolHeadObj = useSelector(state => state?.machine?.toolHead);
+    const canSimplify = useSelector(state => state?.printing?.modelGroup?.canSimplify());
+    const hasModelWhole = useSelector(state => state?.printing?.modelGroup?.hasModelWhole());
     const [showHomePage, setShowHomePage] = useState(false);
     const [showWorkspace, setShowWorkspace] = useState(false);
     const [showMachineMaterialSettings, setShowMachineMaterialSettings] = useState(false);
@@ -235,6 +237,28 @@ function useRenderMainToolBar() {
                 action: () => {
                     dispatch(printingActions.ungroup());
                 }
+            },
+            {
+                title: i18n._('key-3DP/MainToolBar-Model Simplify'),
+                disabled: !canSimplify || !enableShortcut,
+                type: 'button',
+                name: 'MainToolbarSimplifiedModel',
+                action: async () => {
+                    const repaired = await dispatch(printingActions.isModelsRepaired());
+                    if (repaired) {
+                        setSimplifying(true);
+                        dispatch(printingActions.modelSimplify(simplifyType, simplifyPercent, true));
+                    }
+                }
+            },
+            {
+                title: i18n._('key-3DP/MainToolBar-Model repair'),
+                disabled: !hasModelWhole || !enableShortcut,
+                type: 'button',
+                name: 'MainToolbarFixModel',
+                action: () => {
+                    dispatch(printingActions.repairSelectedModels());
+                }
             }
         ];
         return (
@@ -273,9 +297,11 @@ function Printing({ location }) {
     const [controlMode, setControlMode] = useState(null);
     const [machineInfo, setMachineInfo] = useState({});
     const [materialInfo, setMaterialInfo] = useState({});
+    // for simplify model, if true, visaulizerLeftbar and main tool bar can't be use
+    const [simplifying, setSimplifying] = useState(false);
     const dispatch = useDispatch();
     const history = useHistory();
-    const [renderHomepage, renderMainToolBar, renderWorkspace, renderMachineMaterialSettings] = useRenderMainToolBar();
+    const [renderHomepage, renderMainToolBar, renderWorkspace, renderMachineMaterialSettings] = useRenderMainToolBar(setSimplifying);
     const modelGroup = useSelector(state => state.printing.modelGroup);
     const isNewUser = useSelector(state => state.printing.isNewUser);
     const thumbnail = useRef();
@@ -440,7 +466,14 @@ function Printing({ location }) {
                 onDropAccepted={onDropAccepted}
                 onDropRejected={onDropRejected}
             >
-                <PrintingVisualizer widgetId="printingVisualizer" controlInputValue={controlInputValue} controlAxis={controlAxis} controlMode={controlMode} />
+                <PrintingVisualizer
+                    widgetId="printingVisualizer"
+                    controlInputValue={controlInputValue}
+                    controlAxis={controlAxis}
+                    controlMode={controlMode}
+                    simplifying={simplifying}
+                    setSimplifying={setSimplifying}
+                />
                 {renderHomepage()}
                 {renderWorkspace()}
                 {renderMachineMaterialSettings()}
