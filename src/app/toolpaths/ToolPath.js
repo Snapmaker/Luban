@@ -237,7 +237,8 @@ class ToolPath {
             taskId: this.id,
             modelId: '',
             headType: this.headType,
-            data: data,
+            visible: this.visible,
+            data: data
         };
 
         this.checkoutStatus();

@@ -272,12 +272,7 @@ export const dxfToSvg = (dxf, strokeWidth = 0.72) => {
             const { radius, startAngle, endAngle, angleLength } = entities;
 
             if (startAngle <= endAngle) {
-                const geometry = new THREE.CircleGeometry(
-                    radius,
-                    32,
-                    startAngle,
-                    angleLength
-                );
+                const geometry = new THREE.CircleGeometry(radius, 64, startAngle, angleLength);
                 geometry.vertices.shift();
                 geometry.vertices.forEach((item) => {
                     pathsObj.points.push([
@@ -286,12 +281,7 @@ export const dxfToSvg = (dxf, strokeWidth = 0.72) => {
                     ]);
                 });
             } else {
-                const geometry2 = new THREE.CircleGeometry(
-                    radius,
-                    32,
-                    startAngle,
-                    Math.PI * 2 + angleLength
-                );
+                const geometry2 = new THREE.CircleGeometry(radius, 64, startAngle, Math.PI * 2 + angleLength);
                 geometry2.vertices.shift();
                 geometry2.vertices.forEach((item) => {
                     pathsObj.points.push([
@@ -474,19 +464,20 @@ export const measureBoundary = (dxfString) => {
             maxY = Math.max(center.y + radius, maxY);
             minY = Math.min(center.y - radius, minY);
         } else if (entities.type === 'ARC') {
-            const { center, radius, startAngle, endAngle } = entities;
-            const anglePer = 180 / Math.PI;
-            const startRadians = anglePer * startAngle,
-                endRadians = anglePer * endAngle;
-
-            for (let i = startRadians; i <= endRadians; i++) {
-                const newX = center.x + radius * Math.cos(i / anglePer),
-                    newY = center.y + radius * Math.sin(i / anglePer);
-                maxX = Math.max(newX, maxX);
-                minX = Math.min(newX, minX);
-                maxY = Math.max(newY, maxY);
-                minY = Math.min(newY, minY);
+            const { center, radius, startAngle, endAngle, angleLength } = entities;
+            let geometry;
+            if (startAngle <= endAngle) {
+                geometry = new THREE.CircleGeometry(radius, 64, startAngle, angleLength);
+            } else {
+                geometry = new THREE.CircleGeometry(radius, 64, startAngle, Math.PI * 2 + angleLength);
             }
+            geometry.vertices.shift();
+            geometry.vertices.forEach((item) => {
+                maxX = Math.max(item.x + center.x, maxX);
+                minX = Math.min(item.x + center.x, minX);
+                maxY = Math.max(item.y + center.y, maxY);
+                minY = Math.min(item.y + center.y, minY);
+            });
         } else if (entities.type === 'ELLIPSE') {
             const centerX = entities.center.x;
             const centerY = entities.center.y;

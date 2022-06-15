@@ -1,9 +1,21 @@
 /* eslint-disable import/no-cycle */
-import { isEqual, cloneDeep } from 'lodash';
+import { isEqualWith, cloneDeep } from 'lodash';
 import { controller } from '../../lib/controller';
 import { Server } from './Server';
 import baseActions from './action-base';
+import { CUSTOM_SERVER_NAME } from '../../constants/index';
 
+const checkIfEqual = (objArray, othArray) => {
+    if (objArray.length !== othArray.length) {
+        return false;
+    }
+    return objArray.every((server) => {
+        const l = othArray.find(v => {
+            return v.address === server.address && v.name === server.name;
+        });
+        return !!l;
+    });
+};
 
 const init = () => (dispatch, getState) => {
     const controllerEvents = {
@@ -13,6 +25,15 @@ const init = () => (dispatch, getState) => {
             const { servers, connectionType } = getState().machine;
             if (connectionType === type) {
                 const resultServers = cloneDeep(servers.filter(v => v.address));
+                resultServers.forEach((item, index) => {
+                    const idx = devices.findIndex(v => {
+                        return v.address === item.address && v.name === item.name;
+                    });
+                    if (idx < 0 && item.name !== CUSTOM_SERVER_NAME) {
+                        resultServers.splice(index, 1);
+                    }
+                });
+
                 for (const object of devices) {
                     const find = servers.find(v => {
                         return v.address === object.address && v.name === object.name;
@@ -22,7 +43,8 @@ const init = () => (dispatch, getState) => {
                         resultServers.unshift(server);
                     }
                 }
-                if (!isEqual(resultServers, servers)) {
+                const rest = isEqualWith(resultServers, servers, checkIfEqual);
+                if (!rest) {
                     dispatch(baseActions.updateState({ servers: resultServers }));
                 }
             }
@@ -42,8 +64,7 @@ const init = () => (dispatch, getState) => {
                         resultServers.unshift(server);
                     }
                 }
-                // console.log({ servers, resultServers, series });
-                if (!isEqual(resultServers, servers)) {
+                if (!isEqualWith(resultServers, servers)) {
                     dispatch(baseActions.updateState({ servers: resultServers }));
                 }
             }

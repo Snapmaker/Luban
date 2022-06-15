@@ -10,7 +10,7 @@ export type EventOptions = {
     gcodePath?: string,
     value?: number,
     enable?: boolean,
-    workSpeedFactor?: number,
+    workSpeedValue?: number,
     laserPower?: number,
     nozzleTemperatureValue?: number,
     heatedBedTemperatureValue?: number,

@@ -11,26 +11,26 @@ import i18n from '../../../lib/i18n';
 import { actions as machineActions } from '../../../flux/machine';
 import JogDistance from './JogDistance';
 import WorkSpeed from './WorkSpeed';
-import { CONNECTION_TYPE_WIFI,
+import {
     WORKFLOW_STATUS_PAUSED,
     WORKFLOW_STATUS_RUNNING,
     CONNECTION_Z_OFFSET,
     CONNECTION_LOAD_FILAMENT,
     CONNECTION_UNLOAD_FILAMENT,
-    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
+    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+    CONNECTION_NOZZLE_TEMPERATURE,
+    CONNECTION_BED_TEMPERATURE
 } from '../../../constants';
 import { controller } from '../../../lib/controller';
 
 class Printing extends PureComponent {
     static propTypes = {
         isConnected: PropTypes.bool,
-        connectionType: PropTypes.string,
         nozzleTargetTemperature: PropTypes.number.isRequired,
         heatedBedTargetTemperature: PropTypes.number.isRequired,
         workflowStatus: PropTypes.string.isRequired,
         nozzleTemperature: PropTypes.number.isRequired,
         addConsoleLogs: PropTypes.func.isRequired,
-        executeGcode: PropTypes.func.isRequired,
         heatedBedTemperature: PropTypes.number.isRequired,
         printingToolhead: PropTypes.string.isRequired,
         currentWorkNozzle: PropTypes.string.isRequired
@@ -44,21 +44,15 @@ class Printing extends PureComponent {
     };
 
     actions = {
-        isWifiPrinting: () => {
-            const { workflowStatus, connectionType } = this.props;
-            return _.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus)
-                && connectionType === CONNECTION_TYPE_WIFI;
-        },
         onChangeNozzleTemperatureValue: (value) => {
             this.setState({
                 nozzleTemperatureValue: value
             });
         },
         onClickNozzleTemperature: () => {
-            // controller.emitEvent(CONNECTION_NOZZLE_TEMPERATURE, {
-            //     nozzleTemperatureValue: this.state.nozzleTemperatureValue
-            // });
-            this.props.executeGcode(`M104 S${this.state.nozzleTemperatureValue}`);
+            controller.emitEvent(CONNECTION_NOZZLE_TEMPERATURE, {
+                nozzleTemperatureValue: this.state.nozzleTemperatureValue
+            });
         },
         onChangeHeatedBedTemperatureValue: (value) => {
             this.setState({
@@ -66,10 +60,9 @@ class Printing extends PureComponent {
             });
         },
         onClickHeatedBedTemperature: () => {
-            // controller.emitEvent(CONNECTION_BED_TEMPERATURE, {
-            //     heatedBedTemperatureValue: this.state.heatedBedTemperatureValue
-            // });
-            this.props.executeGcode(`M140 S${this.state.heatedBedTemperatureValue}`);
+            controller.emitEvent(CONNECTION_BED_TEMPERATURE, {
+                heatedBedTemperatureValue: this.state.heatedBedTemperatureValue
+            });
         },
         onChangeZOffset: (value) => {
             this.setState({

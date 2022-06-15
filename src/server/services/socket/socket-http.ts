@@ -140,7 +140,6 @@ class SocketHttp {
         this.init();
         log.debug(`wifi host="${this.host}" : token=${this.token}`);
         const api = `${this.host}/api/v1/connect`;
-        intervalHandle = setInterval(this.getEnclosureStatus, 1000);
         request
             .post(api)
             .timeout(3000)
@@ -151,6 +150,8 @@ class SocketHttp {
                 }
                 if (err) {
                     log.debug(`err="${err}"`);
+                } else {
+                    intervalHandle = setInterval(this.getEnclosureStatus, 1000);
                 }
                 const result = _getResult(err, res);
                 const { data } = result;
@@ -204,10 +205,10 @@ class SocketHttp {
             this.host = '';
             this.token = '';
             this.heartBeatWorker && this.heartBeatWorker.terminate();
-            clearInterval(intervalHandle);
         } else {
             socket && socket.emit(eventName, _getResult(new Error('connection not exist'), null));
         }
+        clearInterval(intervalHandle);
     };
 
     public startGcode = (options: EventOptions) => {
@@ -500,12 +501,12 @@ class SocketHttp {
     };
 
     public updateWorkSpeedFactor = (options: EventOptions) => {
-        const { eventName, workSpeedFactor } = options;
+        const { eventName, workSpeedValue } = options;
         const api = `${this.host}/api/v1/override_work_speed`;
         request
             .post(api)
             .send(`token=${this.token}`)
-            .send(`workSpeed=${workSpeedFactor}`)
+            .send(`workSpeed=${workSpeedValue}`)
             .end((err, res) => {
                 this.socket && this.socket.emit(eventName, _getResult(err, res));
             });

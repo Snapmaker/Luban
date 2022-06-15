@@ -132,14 +132,17 @@ export const set = async (req, res) => {
                             uploadName: tempName,
                             width: width,
                             height: height,
-                        });
+                        })
+                            .catch((err) => {
+                                throw new Error(err);
+                            });
                     } else if (payload.status === 'fail') {
                         throw new Error(payload.error);
                     }
                 }
             );
         } else {
-            jimp.read(tempPath)
+            await jimp.read(tempPath)
                 .then((image) => {
                     res.send({
                         originalName: originalName,

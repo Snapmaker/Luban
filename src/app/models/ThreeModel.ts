@@ -78,7 +78,7 @@ class ThreeModel extends BaseModel {
             //     polygonOffsetUnits: -5
             // });
         } catch (e) {
-            console.error('error', e);
+            console.warn('error', e);
         }
         if (modelInfo.geometry) {
             const clonedGeometry = modelInfo.geometry.clone();
@@ -141,7 +141,7 @@ class ThreeModel extends BaseModel {
 
     public updateDisplayedType(value: string) {
         this.displayedType = value;
-        this.setSelected(false);
+        this.setSelected(this.isSelected);
     }
 
     public updateModelName(newName: string) {
@@ -151,7 +151,7 @@ class ThreeModel extends BaseModel {
     public updateMaterialColor(color: string) {
         this._materialNormal = new THREE.Color(color);
         this._materialSelected = new THREE.Color(color);
-        this.setSelected();
+        this.setSelected(this.isSelected);
     }
 
     public onTransform() {

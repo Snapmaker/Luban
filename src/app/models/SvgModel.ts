@@ -1,6 +1,7 @@
 import { v4 as uuid } from 'uuid';
 import * as THREE from 'three';
 import Canvg from 'canvg';
+import path from 'path';
 import svgPath from 'svgpath';
 import { cloneDeep } from 'lodash';
 import { coordGmSvgToModel, createSVGElement } from '../ui/SVGEditor/element-utils';
@@ -516,9 +517,9 @@ class SvgModel extends BaseModel {
         }
     }
 
-    public calculationPath(path: string) {
+    public calculationPath(pathss: string) {
         const allPoints: [number, number][][] = [];
-        svgPath(path).iterate((segment, __, x, y) => {
+        svgPath(pathss).iterate((segment, __, x, y) => {
             const arr = cloneDeep(segment);
             const mark = arr.shift();
 
@@ -652,8 +653,8 @@ class SvgModel extends BaseModel {
         const isDraw = elem.getAttribute('id')?.includes('graph');
 
         if (elem instanceof SVGPathElement && isDraw) {
-            const path = elem.getAttribute('d');
-            const paths = this.calculationPath(path);
+            const dPath = elem.getAttribute('d');
+            const paths = this.calculationPath(dPath);
             const segments = paths.map((item) => {
                 const clone = elem.cloneNode(true) as SVGPathElement;
                 clone.setAttribute('d', item);
@@ -695,7 +696,7 @@ class SvgModel extends BaseModel {
 
     // just for svg file
     public async uploadSourceImage() {
-        if (this.resource.originalFile.name.indexOf('.svg') === -1) {
+        if (path.basename(this.resource.originalFile.name) !== '.svg' || this?.mode !== 'vector') {
             return;
         }
         const content = await fetch(this.resource.originalFile.path, { method: 'GET' })
@@ -712,13 +713,17 @@ class SvgModel extends BaseModel {
         const v = await Canvg.fromString(ctx, content);
         await v.render();
         const blob = await new Promise<Blob>((resolve) => canvas.toBlob(resolve));
-        const file = new File([blob], 'gen.png');
-        document.body.removeChild(canvas);
-        const formData = new FormData();
-        formData.append('image', file);
-        const res = await api.uploadImage(formData);
+        if (blob) {
+            const file = new File([blob], 'gen.png');
+            document.body.removeChild(canvas);
+            const formData = new FormData();
+            formData.append('image', file);
+            const res = await api.uploadImage(formData);
 
-        this.uploadImageName = res.body.uploadName;
+            this.uploadImageName = res.body.uploadName;
+        } else {
+            this.uploadImageName = '';
+        }
         this.generateModelObject3D();
         this.generateProcessObject3D();
     }

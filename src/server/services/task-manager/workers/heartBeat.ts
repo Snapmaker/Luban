@@ -54,6 +54,7 @@ const heartBeat = async (param: IParam) => {
                     }
                 });
         }
+        beat();
         intervalHandle = setInterval(beat, 1000);
     });
 };
