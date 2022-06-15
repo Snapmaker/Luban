@@ -30,7 +30,6 @@ const TipTrigger = React.memo((props) => {
     } else {
         placementValue = placement;
     }
-    console.log('111');
 
     return (
         <Popover
