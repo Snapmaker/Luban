@@ -49,7 +49,7 @@ const handleGenerateSupport = (socket, params) => {
 
 const handleSimplifyModel = (socket, params) => {
     console.log('params', params);
-    socket.emit('simplify-model:started',{
+    socket.emit('simplify-model:started', {
         firstTime: params.isFirstTime,
         modelName: params.modelName,
         fileType: params.fileType,
@@ -65,10 +65,10 @@ const handleSimplifyModel = (socket, params) => {
             socket.emit('simplify-model:completed', simplifyConfig);
         },
         (err) => {
-            socket.emit('simplify-model:error', err)
+            socket.emit('simplify-model:error', err);
         }
     );
-}
+};
 
 export default {
     handleSlice,
