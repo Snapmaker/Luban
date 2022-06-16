@@ -53,10 +53,10 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
     const logicalWidth = width * Math.abs(scaleX);
     const logicalHeight = height * Math.abs(scaleY);
     const logicalAngle = -angle;
-    const canResize = ((isTextVector ? config?.text?.length > 0 : true) && selectedModelArray.length === 1 && !selectedModelArray[0].isStraightLine());
+    const canResize = ((isTextVector ? config?.text?.length > 0 : true) && selectedModelArray.length === 1 && !selectedModelArray[0].isStraightLine);
     const canRotate = selectedModelArray.length === 1;
     const selectedNotHide = (selectedModelArray.length === 1) && selectedModelArray[0].visible || selectedModelArray.length > 1;
-    const canFlip = (selectedModelArray.length === 1 && !selectedModelArray[0].isStraightLine());
+    const canFlip = (selectedModelArray.length === 1 && !selectedModelArray[0].isStraightLine);
 
     const SVGCanvasMode = useSelector(state => state[headType]?.SVGCanvasMode);
     const SVGCanvasExt = useSelector(state => state[headType]?.SVGCanvasExt);

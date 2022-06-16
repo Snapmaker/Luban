@@ -1,7 +1,10 @@
 import fs from 'fs';
+import svg2path from 'path-that-svg';
 import path from 'path';
 import xml2js from 'xml2js';
 import { cloneDeep, isNil } from 'lodash';
+import svgPath from 'svgpath';
+import { Helper } from 'dxf';
 import AttributesParser from './AttributesParser';
 import SVGTagParser from './SVGTagParser';
 // import DefsTagParser from './DefsTagParser';
@@ -13,8 +16,10 @@ import PolygonTagParser from './PolygonTagParser';
 import PolylineTagParser from './PolylineTagParser';
 import RectTagParser from './RectTagParser';
 import TextParser from './TextParser';
-import { SVG_ATTR_ID, XLINK_HREF, SVG_ATTR_HREF,
-    SVG_ATTR_TRANSFORM, SVG_TAG_USE, SVG_TAG_SVG } from './constants';
+import {
+    SVG_ATTR_ID, XLINK_HREF, SVG_ATTR_HREF,
+    SVG_ATTR_TRANSFORM, SVG_TAG_USE, SVG_TAG_SVG
+} from './constants';
 // const DEFAULT_DPI = 72;
 const DEFAULT_MILLIMETER_PER_PIXEL = 25.4 / 72;
 // TODO: General tolerance does not work well if original drawing is small,
@@ -24,7 +29,7 @@ const TOLERANCE = 0.3 * DEFAULT_MILLIMETER_PER_PIXEL;
 
 
 class SVGParser {
-    constructor() {
+    constructor(options) {
         this.attributeParser = new AttributesParser(this);
         this.tagParses = {
             'circle': new CircleTagParser(TOLERANCE),
@@ -41,9 +46,11 @@ class SVGParser {
         };
         this.defs = {
         };
+        this.size = options.size;
     }
 
     readFile(filePath) {
+        const extname = path.extname(filePath).toLowerCase();
         return new Promise((resolve, reject) => {
             fs.readFile(filePath, 'utf8', async (err, xml) => {
                 if (err) {
@@ -51,10 +58,31 @@ class SVGParser {
                     return;
                 }
                 try {
-                    resolve(await this.readString(xml));
+                    if (extname === '.dxf') {
+                        xml = new Helper(xml).toSVG();
+                    }
+                    const pathsString = await svg2path(xml);
+                    let isRenderWithImage = false;
+                    if (xml.length > 512000) {
+                        isRenderWithImage = true;
+                    }
+                    const node = await this.readString(pathsString);
+                    resolve({
+                        node,
+                        isRenderWithImage
+                    });
                 } catch (e) {
                     reject(e);
                 }
+            });
+        });
+    }
+
+    wirteFile(filePath, content) {
+        return new Promise((resolve, reject) => {
+            fs.writeFile(filePath, content, (error) => {
+                if (error) reject(error);
+                resolve(filePath);
             });
         });
     }
@@ -92,18 +120,11 @@ class SVGParser {
         });
     }
 
-    generateString(newNode, filePath) {
-        return new Promise((resolve, reject) => {
-            const builder = new xml2js.Builder();
-            let result = builder.buildObject(newNode);
-            /* eslint no-useless-escape: "error"*/
-            result = result.replace(/^<\?xml.+\?>/, '');
-            const newUploadName = filePath.replace(/\.svg$/i, 'parsed.svg');
-            fs.writeFile(newUploadName, result, (error) => {
-                if (error) reject(error);
-                resolve(newUploadName);
-            });
-        });
+    generateString(newNode) {
+        const builder = new xml2js.Builder();
+        let result = builder.buildObject(newNode);
+        result = result.replace(/^<\?xml.+\?>/, '');
+        return result;
     }
 
     async parse(s, element = SVG_TAG_SVG) {
@@ -112,15 +133,25 @@ class SVGParser {
     }
 
     async parseFile(filePath) {
-        const node = await this.readFile(filePath);
+        const {
+            node,
+            isRenderWithImage
+        } = await this.readFile(filePath);
         const result = await this.parseObject(node);
-        const newUploadName = await this.generateString(result.parsedNode, filePath);
+        if (isRenderWithImage) {
+            result.paths = null;
+        }
+        const newUploadName = filePath.replace(/\.(svg|dxf)$/i, 'parsed.svg');
+        const svgContent = this.generateString(result.parsedNode);
+        await this.wirteFile(newUploadName, svgContent);
         result.uploadName = path.basename(newUploadName);
+        result.svgContent = svgContent;
         return result;
     }
 
-    dragTextPathToParent(parent) {
+    compressionLevel(parent) {
         const textElement = parent.text || parent.tspan;
+        const pathElement = parent.path;
         const gElement = parent.g;
         let gArray = [];
         if (textElement) {
@@ -132,7 +163,7 @@ class SVGParser {
                         }
                     }
                     if (variable === 'tspan') {
-                        const childPaths = this.dragTextPathToParent(item);
+                        const childPaths = this.compressionLevel(item);
                         gArray = gArray.concat(childPaths);
                     }
                 }
@@ -141,15 +172,28 @@ class SVGParser {
         }
         if (gElement) {
             gElement.forEach((item) => {
-                const childPaths = this.dragTextPathToParent(item);
+                const childPaths = this.compressionLevel(item);
                 gArray = gArray.concat(childPaths);
             });
+            delete parent.g;
+        }
+        if (pathElement) {
+            pathElement.forEach((item) => {
+                if (item.$._d) {
+                    item.$.d = item.$._d;
+                    item.$.transform = '';
+                    delete item.$._d;
+                }
+            });
+            gArray = gArray.concat(pathElement);
+            delete parent.path;
         }
         return gArray;
     }
 
 
     async parseObject(node, element = SVG_TAG_SVG) {
+        const paths = [];
         const initialAttributes = {
             fill: '#000000',
             stroke: null,
@@ -164,12 +208,10 @@ class SVGParser {
         const parsedNode = cloneDeep(node);
         const root = await this.parseNode(element, parsedNode[element], parsedNode, initialAttributes);
         const newSvg = root.parsedSvg;
-        const gArray = this.dragTextPathToParent(newSvg);
-        if (newSvg.g && Array.isArray(newSvg.g)) {
-            newSvg.g = newSvg.g.concat(gArray);
-        } else {
-            newSvg.g = gArray;
-        }
+        const gArray = this.compressionLevel(newSvg);
+        newSvg.g = {
+            path: gArray
+        };
         if (element === SVG_TAG_SVG) {
             newSvg.$.preserveAspectRatio = 'none';
         }
@@ -191,13 +233,30 @@ class SVGParser {
                 boundingBox.maxY = Math.max(boundingBox.maxY, shape.boundingBox.maxY);
             }
         }
+        const width = boundingBox.maxX - boundingBox.minX;
+        const height = boundingBox.maxY - boundingBox.minY;
+        const center = { x: (boundingBox.maxX + boundingBox.minX) / 2, y: (boundingBox.maxY + boundingBox.minY) / 2 };
+        const offsetX = this.size.x - center.x;
+        const offsetY = this.size.y - center.y;
+
+
+        gArray.forEach((item) => {
+            const d = svgPath(item.$.d).translate(offsetX, offsetY).toString();
+            item.$.d = d;
+            paths.push(d);
+        });
+        const viewBox = [boundingBox.minX + offsetX, boundingBox.minY + offsetY, width, height];
+
+        newSvg.$.viewBox = viewBox.join(' ');
         return {
+            shapesViewBox: root.attributes.viewBox,
             shapes: root.shapes,
             boundingBox: boundingBox,
             parsedNode: parsedNode,
-            viewBox: root.attributes.viewBox,
-            width: root.attributes.width,
-            height: root.attributes.height
+            viewBox: viewBox,
+            width: width,
+            height: height,
+            paths
         };
     }
 
@@ -218,9 +277,9 @@ class SVGParser {
                         y = attributes.y;
                         transform = true;
                     }
-                    if (this.defs[url]) {
+                    if (this.defs[url] && !this.defs[url].solt) {
                         const shadowTag = this.defs[url].shadowTag;
-                        shadowNode = this.defs[url].shadowNode;
+                        shadowNode = cloneDeep(this.defs[url].shadowNode);
                         if (transform) {
                             if (!shadowNode.$) {
                                 shadowNode.$ = {};
@@ -233,23 +292,38 @@ class SVGParser {
                                 shadowNode.$[SVG_ATTR_TRANSFORM] = `translate(${x}, ${y})`;
                             }
                         }
-
+                        if (shadowNode.$._d) {
+                            shadowNode.$._d = shadowNode.$.d;
+                        }
                         if (parent[shadowTag] && Array.isArray(parent[shadowTag])) {
                             parent[shadowTag].push(shadowNode);
                         } else {
                             parent[shadowTag] = [shadowNode];
                         }
+                        delete parent[SVG_TAG_USE];
                     } else {
                         console.log(`def which id is ${url} doesn't exist`);
+                        this.defs[url] = {
+                            solt: [tag, node, parent, attributes]
+                        };
                     }
                 }
             }
             // If we have an ID, we save the node.
             if (SVG_ATTR_ID in attributes) {
-                this.defs[attributes[SVG_ATTR_ID]] = {
+                const url = attributes[SVG_ATTR_ID];
+                let solt;
+                if (this.defs[url] && this.defs[url].solt) {
+                    solt = this.defs[url].solt;
+                    delete this.defs[url].solt;
+                }
+                this.defs[url] = {
                     shadowTag: tag,
                     shadowNode: node
                 };
+                if (solt) {
+                    this.parseUseStructure(...solt);
+                }
             }
         }
     }
@@ -278,6 +352,7 @@ class SVGParser {
                     break;
                 }
                 case 'path': {
+                    node.$._d = svgPath(node.$.d).matrix(attributes.xform).toString();
                     shapes.push(this.tagParses.path.parse(node, attributes));
                     break;
                 }
@@ -356,7 +431,6 @@ class SVGParser {
                     break;
             }
             // parse childrend
-            // eslint-disable-next-line guard-for-in
             for (const variable of Object.keys(node)) {
                 if (shouldParseChildren && Array.isArray(node[variable])) {
                     for (let i = 0; i < node[variable].length; i++) {

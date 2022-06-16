@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import i18n from '../../../lib/i18n';
 import TextParameters from '../CncLaserShared/TextParameters';
 import TransformationSection from '../CncLaserShared/TransformationSection';
-import { HEAD_LASER, PAGE_EDITOR, SOURCE_TYPE, SVG_NODE_NAME_IMAGE, SVG_NODE_NAME_TEXT } from '../../../constants';
+import { HEAD_LASER, PAGE_EDITOR, SOURCE_TYPE, SVG_NODE_NAME_IMAGE } from '../../../constants';
 
 
 import ImageProcessMode from './ImageProcessMode';
@@ -18,16 +18,24 @@ const LaserParameters = ({ widgetActions }) => {
     const selectedModelVisible = useSelector(state => state?.laser?.modelGroup?.getSelectedModel()?.visible);
     const selectedModel = useSelector(state => state?.laser?.modelGroup?.getSelectedModel());
     const hasSelectedModels = useSelector(state => state?.laser?.modelGroup.getSelectedModelArray().length > 0);
+    const SVGCanvasMode = useSelector(state => state?.laser?.SVGCanvasMode);
+    const SVGCanvasExt = useSelector(state => state?.laser?.SVGCanvasExt);
 
     const {
         sourceType,
         config
     } = selectedModel;
 
-    const isTextVector = (config.svgNodeName === SVG_NODE_NAME_TEXT);
+    const isTextVector = config.isText;
     const isEditor = page === PAGE_EDITOR;
+    const isDrawing = SVGCanvasMode === 'draw' || (
+        SVGCanvasMode === 'select' && SVGCanvasExt?.elem
+    );
 
-    const showImageProcessMode = (sourceType === SOURCE_TYPE.RASTER || sourceType === SOURCE_TYPE.SVG) && config.svgNodeName === SVG_NODE_NAME_IMAGE;
+    const showImageProcessMode = (sourceType === SOURCE_TYPE.RASTER || sourceType === SOURCE_TYPE.SVG) && (
+        config.svgNodeName === SVG_NODE_NAME_IMAGE
+        || !config.drawn
+    );
 
     useEffect(() => {
         widgetActions.setTitle(i18n._('key-Laser/TransformationSection-Transformation'));
@@ -52,13 +60,13 @@ const LaserParameters = ({ widgetActions }) => {
                     disabled={!hasSelectedModels}
                 />
             )}
-            {isEditor && showImageProcessMode && (selectedModelArray.length === 1) && (
+            {isEditor && showImageProcessMode && !isDrawing && (selectedModelArray.length === 1) && (
                 <ImageProcessMode
                     disabled={!selectedModelVisible}
                 />
             )}
 
-            {isEditor && isTextVector && (selectedModelArray.length === 1) && (
+            {isEditor && isTextVector && !isDrawing && (selectedModelArray.length === 1) && (
                 <TextParameters
                     disabled={!selectedModelVisible}
                     headType={HEAD_LASER}

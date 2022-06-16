@@ -13,22 +13,7 @@ const updateState = (headType, state) => {
 };
 
 export const actions = {
-    excludeModelById: (headType, id) => (dispatch, getState) => {
-        const { excludeModelIDs } = getState()[headType];
-        excludeModelIDs[id] = true;
-        dispatch(updateState(headType, {
-            excludeModelIDs
-        }));
-    },
     setOperations: (headType, operations) => (dispatch, getState) => {
-        const { excludeModelIDs } = getState()[headType];
-        for (let i = operations.length() - 1; i > -1; i--) {
-            const modelID = operations.getItem(i).state.target.modelID;
-            if (modelID in excludeModelIDs) {
-                delete excludeModelIDs[modelID];
-                operations.removeItem(i);
-            }
-        }
         if (!operations.isEmpty()) {
             const { history } = getState()[headType];
             history.push(operations);

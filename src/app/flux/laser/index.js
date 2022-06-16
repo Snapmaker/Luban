@@ -84,11 +84,6 @@ const INITIAL_STATE = {
 
     history: operationHistory,
     targetTmpState: {},
-    // When project recovered, the operation history should be cleared,
-    // however we can not identify while the recovery is done, just exclude
-    // them when the models loaded at the first time.
-    excludeModelIDs: {},
-
     // modelGroup state
     hasModel: false,
     isAnyModelOverstepped: false,
@@ -375,7 +370,9 @@ export default function reducer(state = INITIAL_STATE, action) {
     if (headType === 'laser') {
         switch (type) {
             case ACTION_UPDATE_STATE: {
-                return Object.assign({}, state, { ...action.state });
+                const ss = Object.assign({}, state, { ...action.state });
+                window.ss = ss;
+                return ss;
             }
             case ACTION_UPDATE_CONFIG: {
                 return Object.assign({}, state, {

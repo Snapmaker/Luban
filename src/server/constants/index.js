@@ -237,3 +237,5 @@ export const KEY_DEFAULT_CATEGORY_DEFAULT = 'key-default_category-Default';
 export const PORT_SCREEN_HTTP = 8080;
 export const PORT_SCREEN_SACP = 8888;
 export const SACP_PROTOCOL = 'SACP';
+
+export const MINIMUM_WIDTH_AND_HEIGHT = 0.01;

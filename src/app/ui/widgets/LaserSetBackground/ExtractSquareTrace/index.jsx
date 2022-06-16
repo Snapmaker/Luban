@@ -40,6 +40,7 @@ class ExtractSquareTrace extends PureComponent {
 
             const formData = new FormData();
             formData.append('image', file);
+            formData.append('size', JSON.stringify(this.props.size));
             api.uploadImage(formData)
                 .then((res) => {
                     const { width, height, uploadName } = res.body;

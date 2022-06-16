@@ -1,9 +1,22 @@
+import { ModelTransformation } from '../../models/BaseModel';
+import SVGActionsFactory from '../../models/SVGActionsFactory';
+import SvgModel from '../../models/SvgModel';
 import Operation from './Operation';
 
-export default class RotateOperation2D extends Operation {
-    state = {};
+type TState = {
+    target: SvgModel,
+    from: ModelTransformation,
+    to: ModelTransformation,
+    machine: {
+        size: { x: number, y: number }
+    },
+    svgActions: SVGActionsFactory,
+    oldPaths?: string[];
+    newPaths?: string[];
+}
 
-    constructor(state) {
+export default class RotateOperation2D extends Operation<TState> {
+    public constructor(state) {
         super();
         this.state = {
             target: null, // SvgModel
@@ -13,9 +26,24 @@ export default class RotateOperation2D extends Operation {
             svgActions: null, // SVGActionsFactory instance
             ...state
         };
+
+        this.updateSvgPaths(this.state.from);
     }
 
-    redo() {
+    /**
+     * When SVG is displayed as a picture, the path needs to be updated to change the location.
+     * To ensure that the position is correct when switching to vector
+     * @param preTransform Based on last location information
+     */
+    private updateSvgPaths(preTransform: ModelTransformation) {
+        const svgModel = this.state.target;
+
+        if (svgModel.config.editable && svgModel.type === 'image') {
+            svgModel.updateSvgPaths(preTransform);
+        }
+    }
+
+    public redo() {
         const model = this.state.target;
         const svgActions = this.state.svgActions;
         svgActions.rotateElementsImmediately([model.elem], {
@@ -26,9 +54,10 @@ export default class RotateOperation2D extends Operation {
             newY: -this.state.to.positionY + this.state.machine.size.y
         });
         svgActions.clearSelection();
+        this.updateSvgPaths(this.state.from);
     }
 
-    undo() {
+    public undo() {
         const model = this.state.target;
         const svgActions = this.state.svgActions;
         svgActions.rotateElementsImmediately([model.elem], {
@@ -39,5 +68,6 @@ export default class RotateOperation2D extends Operation {
             newY: -this.state.from.positionY + this.state.machine.size.y
         });
         svgActions.clearSelection();
+        this.updateSvgPaths(this.state.to);
     }
 }

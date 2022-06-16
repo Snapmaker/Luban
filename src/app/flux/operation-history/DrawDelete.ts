@@ -7,7 +7,7 @@ type DrawDeleteProp = {
     target: {
         points: TCoordinate[],
         closedLoop: boolean,
-        fragmentID: number
+        fragmentID: string
     }[]
     drawGroup: DrawGroup,
 }
@@ -31,7 +31,9 @@ export default class DrawDelete extends Operation<DrawDeleteProp> {
 
     public undo() {
         this.state.target.forEach((line) => {
-            this.state.drawGroup.appendLine(line.points, line.closedLoop, line.fragmentID);
+            this.state.drawGroup.appendLine({
+                points: line.points, closedLoop: line.closedLoop, fragmentID: line.fragmentID
+            });
         });
     }
 }

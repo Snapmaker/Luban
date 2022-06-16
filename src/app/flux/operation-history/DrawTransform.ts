@@ -18,12 +18,22 @@ export default class DrawTransform extends Operation<DrawTransformProp> {
         };
     }
 
+    private updateRelationLinesPoints(records: TransformRecord[]) {
+        records.forEach((record) => {
+            const line = this.state.drawGroup.getLine(record.fragmentID);
+            this.state.drawGroup.getSelectedRelationLines('line', line).forEach((item) => {
+                item.updatePosition([], true);
+            });
+        });
+    }
+
     public redo() {
         this.state.after.forEach((record) => {
             const line = this.state.drawGroup.getLine(record.fragmentID);
             line.updatePosition(record.points);
             line.updatePosition([], true);
         });
+        this.updateRelationLinesPoints(this.state.after);
         this.state.drawGroup.resetOperationByselect();
     }
 
@@ -32,7 +42,7 @@ export default class DrawTransform extends Operation<DrawTransformProp> {
             const line = this.state.drawGroup.getLine(record.fragmentID);
             line.updatePosition(record.points);
         });
-        this.state.drawGroup.updateAllLinePosition();
+        this.updateRelationLinesPoints(this.state.before);
         this.state.drawGroup.resetOperationByselect();
     }
 }

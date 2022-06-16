@@ -237,7 +237,7 @@ const SVGEditor = forwardRef((props, ref) => {
                     <SVGLeftBar
                         ref={leftBarRef}
                         mode={props.SVGCanvasMode}
-                        selectEditing={!!props.SVGCanvasExt.elem}
+                        selectEditing={!!props.SVGCanvasExt?.elem}
                         insertDefaultTextVector={insertDefaultTextVector}
                         setMode={changeCanvasMode}
                         onChangeFile={props.onChangeFile}
