@@ -8,7 +8,6 @@ import SvgIcon from '../../components/SvgIcon';
 import {
     MODAL_RUN_MACRO,
     MODAL_EDIT_MACRO,
-    WORKFLOW_STATE_IDLE
 } from '../../../constants';
 import api from '../../../api';
 // import { Button } from '../../components/Buttons';
@@ -20,8 +19,9 @@ import styles from './index.styl';
 
 const STATUS_IDLE = 'idle';
 
-function Macro({ updateModal, openModal, macros }) {
-    const { workflowState, workflowStatus, isConnected } = useSelector(state => state.machine);
+const Macro = (({ updateModal, openModal, macros }) => {
+    const workflowStatus = useSelector(state => state.machine.workflowStatus);
+    const isConnected = useSelector(state => state.machine.isConnected);
     const [macrosState, setMacrosState] = useState([]);
     const dispatch = useDispatch();
 
@@ -58,7 +58,7 @@ function Macro({ updateModal, openModal, macros }) {
                 return false;
             }
 
-            if (workflowState !== WORKFLOW_STATE_IDLE && workflowStatus !== STATUS_IDLE) {
+            if (workflowStatus !== STATUS_IDLE) {
                 return false;
             }
             return true;
@@ -70,7 +70,6 @@ function Macro({ updateModal, openModal, macros }) {
             setMacrosState(macros);
         }
     }, [macros]);
-
     const canClick = actions.canClick();
     return (
         <div className="padding-horizontal-16 height-176 padding-vertical-4
@@ -118,7 +117,7 @@ function Macro({ updateModal, openModal, macros }) {
             ))}
         </div>
     );
-}
+});
 Macro.propTypes = {
     macros: PropTypes.array,
     updateModal: PropTypes.func.isRequired,

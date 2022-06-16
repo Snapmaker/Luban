@@ -1,0 +1,29 @@
+
+:global(div.ant-segmented).small {
+    border-radius: $px-grade-4;
+
+    :global(label.ant-segmented-item) {
+        border-radius: $px-grade-4;
+        margin: $px-grade-1;
+    }
+}
+
+:global(div.ant-segmented).middle {
+    border-radius: $px-grade-6;
+
+    :global(label.ant-segmented-item) {
+        border-radius: $px-grade-8;
+        margin: $px-grade-2;
+    }
+}
+:global(.ant-segmented) {
+    box-shadow: none!important;
+    background-color: $grey-3;
+    :global(label.ant-segmented-item) {
+        margin-bottom: 0;
+    }
+}
+
+:global(.ant-segmented):hover, :global(.ant-segmented:focus) {
+    background-color: $grey-2!important;
+}
