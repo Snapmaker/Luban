@@ -162,7 +162,7 @@ class Visualizer extends PureComponent {
             }
         },
         onSelectModels: (intersect, selectEvent) => {
-            if (this.props.setSimplifying) return;
+            if (this.props.simplifying) return;
             this.props.selectMultiModel(intersect, selectEvent);
         },
         onModelBeforeTransform: () => {
