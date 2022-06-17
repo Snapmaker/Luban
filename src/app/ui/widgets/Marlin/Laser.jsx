@@ -81,8 +81,6 @@ class Laser extends PureComponent {
                 laserPower: value,
                 laserPowerOpen: this.state.laserPowerOpen
             }).once(CONNECTION_LASER_POWER, (result) => {
-                console.log('update laser power');
-
                 if (result) {
                     this.props.addConsoleLogs(result);
                 }
@@ -124,7 +122,7 @@ class Laser extends PureComponent {
             <div>
                 {isPrinting && (
                     <ParamsWrapper
-                        handleSubmit={(value) => { console.log('update temp', value); this.actions.onSaveLaserPower(value); }}
+                        handleSubmit={(value) => { this.actions.onSaveLaserPower(value); }}
                         initValue={laserPower}
                         title={i18n._('key-unused-Laser Power')}
                         suffix="%"

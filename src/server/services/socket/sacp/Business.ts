@@ -724,7 +724,6 @@ export default class Business extends Dispatcher {
         const buffer = Buffer.alloc(1, 0);
         writeUint8(buffer, 0, key);
         return this.send(0xac, 0x0f, PeerId.CONTROLLER, buffer).then(({ response, packet }) => {
-            // console.log('===================', response);
             return { response, packet, data: { } };
         });
     }

@@ -484,7 +484,7 @@ class ConnectionManager {
     updateLaserPower = (socket, options) => {
         if (this.protocol === SACP_PROTOCOL) {
             const { laserPower } = options;
-            console.log('set laser power', laserPower);
+            log.info(`updateLaserPower set laser power:[${laserPower}]`);
 
             this.socket.updateLaserPower(laserPower);
         } else {
@@ -516,7 +516,6 @@ class ConnectionManager {
     switchLaserPower = (socket, options) => {
         const { isSM2, laserPower, laserPowerOpen, eventName } = options;
         if (this.protocol === SACP_PROTOCOL) {
-            console.log('switch set laser power', laserPower);
             if (laserPowerOpen) {
                 this.socket.updateLaserPower(0);
             } else {
@@ -696,7 +695,7 @@ class ConnectionManager {
         const { headStatus, speed, toolHead } = options;
         if (this.protocol === SACP_PROTOCOL) {
             if (toolHead === STANDARD_CNC_TOOLHEAD_FOR_SM2) {
-                await this.socket.setCncPower(10); // default 10
+                await this.socket.setCncPower(100); // default 10
             } else {
                 await this.socket.updateToolHeadSpeed(speed);
             }

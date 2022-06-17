@@ -51,7 +51,7 @@ const EditComponent = React.memo(({
                     hoversize={24}
                     name="Edit"
                     type={['hoverNormal', 'pressNormal']}
-                    onClick={() => { setShowOverlay(!showOverlay); console.log(showOverlay); }}
+                    onClick={() => { setShowOverlay(!showOverlay); }}
                 />
             </div>
             {showOverlay && (

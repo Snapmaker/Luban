@@ -69,7 +69,6 @@ class Printing extends PureComponent {
         isPrinting: () => {
             const { workflowStatus } = this.props;
             const _isPrinting = includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_PAUSING], workflowStatus);
-            console.log('isPrinting', _isPrinting);
             return _isPrinting;
         }
 
@@ -99,7 +98,7 @@ class Printing extends PureComponent {
                 {isPrinting && isLevelTwoCNC
                     && (
                         <ParamsWrapper
-                            handleSubmit={(value) => { console.log('update toolhead speed', value); this.actions.updateToolHeadSpeed(value); }}
+                            handleSubmit={(value) => { this.actions.updateToolHeadSpeed(value); }}
                             initValue={this.props.cncTargetSpindleSpeed}
                             title={isLevelTwoCNC ? i18n._('key-Workspace/Marlin-Spindle Speed') : i18n._('key-unused-Toolhead')}
                             suffix="rpm"
@@ -131,7 +130,7 @@ class Printing extends PureComponent {
                             )}
                             { isLevelTwoCNC && (
                                 <EditComponent
-                                    handleSubmit={(value) => { console.log('update toolhead speed', value); this.actions.updateToolHeadSpeed(value); }}
+                                    handleSubmit={(value) => { this.actions.updateToolHeadSpeed(value); }}
                                     initValue={this.props.cncTargetSpindleSpeed}
                                     suffix="rpm"
                                     inputMax={18000}

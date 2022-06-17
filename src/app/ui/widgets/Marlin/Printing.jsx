@@ -118,22 +118,21 @@ class Printing extends PureComponent {
         },
 
         siwtchWorkNozzle: (extruderIndex) => {
-            console.log(`${CONNECTION_WORK_NOZZLE}, switch to nozzle :[${extruderIndex}]]`);
+            // console.log(`${CONNECTION_WORK_NOZZLE}, switch to nozzle :[${extruderIndex}]]`);
             controller.emitEvent(CONNECTION_WORK_NOZZLE, {
                 extruderIndex, // RIGHT_EXTRUDER_MAP_NUMBER
             });
         },
 
         updateNozzleTemp: (extruderIndex, temp) => {
-            // this.actions.onChangeNozzleTemperatureValue(temp);
-            console.log(`${CONNECTION_NOZZLE_TEMPERATURE}, side: [${extruderIndex}], temperature: [${temp}]`);
+            // console.log(`${CONNECTION_NOZZLE_TEMPERATURE}, side: [${extruderIndex}], temperature: [${temp}]`);
             controller.emitEvent(CONNECTION_NOZZLE_TEMPERATURE, {
                 extruderIndex, // RIGHT_EXTRUDER_MAP_NUMBER
                 nozzleTemperatureValue: temp
             });
         },
         updateHeatedBedTemp: (temp) => {
-            console.log(`${CONNECTION_BED_TEMPERATURE}, temperature: [${temp}]`);
+            // console.log(`${CONNECTION_BED_TEMPERATURE}, temperature: [${temp}]`);
             controller.emitEvent(CONNECTION_BED_TEMPERATURE, {
                 heatedBedTemperatureValue: temp
             });
@@ -170,14 +169,8 @@ class Printing extends PureComponent {
         const { zOffsetMarks, leftZOffsetValue, rightZOffsetValue } = this.state;
         const actions = this.actions;
 
-        // console.log('printingToolhead', this.props.printingToolhead);
-        // const workflowStatus = 'running';
-        // const printingToolhead = DUAL_EXTRUDER_TOOLHEAD_FOR_SM2;
         const nozzleTempratureTitle = i18n._(`${printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? 'key-Workspace/Marlin-Left Nozzle Temp' : 'key-Workspace/Marlin-Nozzle Temp'}`);
         const nozzleRightTempratureTitle = i18n._('key-Workspace/Marlin-Right Nozzle Temp');
-        // console.log(isConnected, heatedBedTemperature, heatedBedTargetTemperature, nozzleTemperature, nozzleTargetTemperature, currentWorkNozzle);
-
-
 
         return (
             <div>
@@ -195,7 +188,7 @@ class Printing extends PureComponent {
                 )}
 
                 <ParamsWrapper
-                    handleSubmit={(value) => { console.log('update temp', value); this.actions.updateNozzleTemp(LEFT_EXTRUDER_MAP_NUMBER, value); }}
+                    handleSubmit={(value) => { this.actions.updateNozzleTemp(LEFT_EXTRUDER_MAP_NUMBER, value); }}
                     initValue={nozzleTargetTemperature}
                     title={nozzleTempratureTitle}
                     suffix="°C"
@@ -237,7 +230,7 @@ class Printing extends PureComponent {
 
                 {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
                     <ParamsWrapper
-                        handleSubmit={(value) => { console.log('update temp', value); this.actions.updateNozzleTemp(RIGHT_EXTRUDER_MAP_NUMBER, value); }}
+                        handleSubmit={(value) => { this.actions.updateNozzleTemp(RIGHT_EXTRUDER_MAP_NUMBER, value); }}
                         initValue={this.props.nozzleRightTargetTemperature}
                         title={nozzleRightTempratureTitle}
                         suffix="°C"
@@ -279,7 +272,7 @@ class Printing extends PureComponent {
 
 
                 <ParamsWrapper
-                    handleSubmit={(value) => { console.log('update temp', value); this.actions.updateHeatedBedTemp(value); }}
+                    handleSubmit={(value) => { this.actions.updateHeatedBedTemp(value); }}
                     initValue={heatedBedTargetTemperature}
                     title={i18n._('key-Workspace/Marlin-Heated Bed Temp')}
                     suffix="°C"
