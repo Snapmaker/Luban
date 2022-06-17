@@ -161,7 +161,7 @@ class SocketBASE {
             const nozzleInfo = new ExtruderInfo().fromBuffer(data.response.data);
             // log.info(`nozzleInfo, ${nozzleInfo}`);
             const leftInfo = find(nozzleInfo.extruderList, { index: 0 });
-            const rightInfo = find(nozzleInfo.extruderList, { index: 1 });
+            const rightInfo = find(nozzleInfo.extruderList, { index: 1 }) || {};
 
             this.currentWorkNozzle = rightInfo.status === 1 ? 1 : 0;
             stateData = {

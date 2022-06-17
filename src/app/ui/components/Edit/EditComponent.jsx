@@ -34,10 +34,13 @@ const EditComponent = React.memo(({
         if (!showOverlay) return;
         handleSubmit(inputValue);
         setShowOverlay(false);
-    }, [showOverlay]);
+    }, [showOverlay, handleSubmit, inputValue]);
 
     useEffect(() => {
         window.addEventListener('click', handleGlobalClick);
+        return () => {
+            window.removeEventListener('click', handleGlobalClick);
+        };
     }, [handleGlobalClick]);
 
     return (
