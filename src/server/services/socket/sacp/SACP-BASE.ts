@@ -13,6 +13,7 @@ import ExtruderInfo from '../../../lib/SACP-SDK/SACP/business/models/ExtruderInf
 import CoordinateInfo, { Direction } from '../../../lib/SACP-SDK/SACP/business/models/CoordinateInfo';
 import CncSpeedState from '../../../lib/SACP-SDK/SACP/business/models/CncSpeedState';
 import { ResponseCallback } from '../../../lib/SACP-SDK/SACP/communication/Dispatcher';
+import { SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 } from '../../../constants';
 
 const log = logger('lib:SocketBASE');
 
@@ -115,6 +116,24 @@ class SocketBASE {
                 });
             });
             // stateData.status = WORKFLOW_STATUS_MAP[statusKey];
+
+
+            // public async getWorkSpeed(options) {
+            //     const { toolHead } = options;
+            //     const headModule = this.moduleInfos && (this.moduleInfos[toolHead]); //
+            //     if (!headModule) {
+            //         log.error(`non-eixst toolhead[${toolHead}], moduleInfos:${JSON.stringify(this.moduleInfos)}`,);
+            //         return;
+            //     }
+            //     return this.sacpClient.getWorkSpeed(headModule.key);
+            //     // console.log(res);
+            // }
+            // console.log(stateData);
+            // await this.getWorkSpeed({ toolHead: stateData.toolHead }).then(res => {
+            //     console.log('get workspeed', res);
+            //     log.debug(`get workspeed ${JSON.stringify(res)}`);
+            // });
+
             this.socket && this.socket.emit('Marlin:state', { state: {
                 ...stateData,
                 status: WORKFLOW_STATUS_MAP[statusKey],
@@ -205,7 +224,6 @@ class SocketBASE {
         this.sacpClient.subscribeCurrentCoordinateInfo({ interval: 1000 }, this.subscribeCoordinateCallback).then(res => {
             log.info(`subscribe coordination success: ${res}`);
         });
-        // this.getWorkSpeed({ toolHead: stateData.toolHead });
     };
 
     public executeGcode = async (options: EventOptions, callback: () => void) => {
@@ -296,7 +314,6 @@ class SocketBASE {
 
     public async switchExtruder(extruderIndex) {
         const toolhead = this.moduleInfos && this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2];
-        console.log(this.moduleInfos);
         if (!toolhead) {
             log.error(`no match toolhead 3dp, moduleInfos:${this.moduleInfos}`,);
             return;
@@ -305,26 +322,23 @@ class SocketBASE {
         await this.goHome();
         const key = toolhead && toolhead.key;
         const response = await this.sacpClient.SwitchExtruder(key, extruderIndex);
-        log.info(`SwitchExtruder, ${JSON.stringify(response)}`);
+        log.info(`SwitchExtruder to extruderIndex:${extruderIndex}, ${JSON.stringify(response)}`);
     }
 
     public updateNozzleTemperature = (extruderIndex, temperature) => {
-        // TODO: single extruder?
-        const toolhead = this.moduleInfos && this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2];
-        console.log(this.moduleInfos);
+        const toolhead = this.moduleInfos && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2] || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);
         if (!toolhead) {
-            log.error(`no match toolhead 3dp, moduleInfos:${this.moduleInfos}`,);
+            log.error(`no match toolhead 3dp:[${toolhead}], moduleInfos:${this.moduleInfos}`,);
             return;
         }
         const key = toolhead && toolhead.key;
         this.sacpClient.SetExtruderTemperature(key, extruderIndex, temperature).then(({ response }) => {
-            log.info(`SetExtruderTemperature, ${JSON.stringify(response)}`);
+            log.info(`SetExtruderTemperature,key:[${key}], extruderIndex:[${extruderIndex}], temperature:[${temperature}] ${JSON.stringify(response)}`);
         });
     }
 
     public async loadFilament(extruderIndex) {
-        console.log(this.moduleInfos);
-        const toolHead = this.moduleInfos && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2]);// || this.moduleInfos[HEADT_BED_FOR_SM2]); //
+        const toolHead = this.moduleInfos && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2] || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);// || this.moduleInfos[HEADT_BED_FOR_SM2]); //
         if (!toolHead) {
             log.error(`non-eixst toolHead, moduleInfos:${this.moduleInfos}`,);
             return;
@@ -338,8 +352,7 @@ class SocketBASE {
     }
 
     public async unloadFilament(extruderIndex) {
-        console.log(this.moduleInfos);
-        const toolHead = this.moduleInfos && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2]);// || this.moduleInfos[HEADT_BED_FOR_SM2]); //
+        const toolHead = this.moduleInfos && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2] || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);
         if (!toolHead) {
             log.error(`non-eixst toolHead, moduleInfos:${this.moduleInfos}`,);
             return;
@@ -353,9 +366,7 @@ class SocketBASE {
     }
 
 
-    // TODO
     public updateBedTemperature = (zoneIndex, temperature) => {
-        console.log(this.moduleInfos);
         const heatBed = this.moduleInfos && (this.moduleInfos[A400_HEADT_BED_FOR_SM2] || this.moduleInfos[HEADT_BED_FOR_SM2]); //
         if (!heatBed) {
             log.error(`non-eixst heatBed, moduleInfos:${this.moduleInfos}`,);
@@ -368,7 +379,7 @@ class SocketBASE {
     }
 
     public async updateNozzleOffset(extruderIndex, direction, distance) {
-        const toolHead = this.moduleInfos && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2]);// || this.moduleInfos[HEADT_BED_FOR_SM2]); //
+        const toolHead = this.moduleInfos && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2] || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);// || this.moduleInfos[HEADT_BED_FOR_SM2]); //
         if (!toolHead) {
             log.error(`non-eixst toolHead 3dp, moduleInfos:${this.moduleInfos}`,);
             return;
@@ -485,17 +496,6 @@ class SocketBASE {
         const { laserToolHeadInfo } = await this.sacpClient.getLaserToolHeadInfo(headModule.key);
         log.debug(`laserFocalLength:${laserToolHeadInfo.laserFocalLength}, materialThickness: ${materialThickness}, platformHeight:${laserToolHeadInfo.platformHeight}`);
         await this.setAbsoluteWorkOrigin({ x: 0, y: 0, z: laserToolHeadInfo.laserFocalLength + laserToolHeadInfo.platformHeight + materialThickness });
-    }
-
-    public async getWorkSpeed(options) {
-        const { toolHead } = options;
-        const headModule = this.moduleInfos && (this.moduleInfos[toolHead]); //
-        if (!headModule) {
-            log.error(`non-eixst toolhead[${toolHead}], moduleInfos:${JSON.stringify(this.moduleInfos)}`,);
-            return;
-        }
-        await this.sacpClient.getWorkSpeed(headModule.key);
-        // console.log(res);
     }
 }
 
