@@ -43,6 +43,7 @@ class Printing extends PureComponent {
             controller.emitEvent(CONNECTION_SWITCH_CNC, {
                 headStatus: this.state.headStatus,
                 // toolHeadSpeepd: this.state.toolHeadSpeepd,
+                speed: this.props.cncTargetSpindleSpeed,
                 toolHead: this.props.toolHead,
             }).once(CONNECTION_SWITCH_CNC, (result) => {
                 console.log(`${CONNECTION_SWITCH_CNC} ok, get${JSON.stringify(result)}`);
@@ -91,7 +92,7 @@ class Printing extends PureComponent {
                             inputMax={18000}
                             inputMin={8000}
                         >
-                            <div className="width-40 sm-flex align-center margin-left-16 ">
+                            <div className="width-44 sm-flex align-center margin-left-16 ">
                                 <span>{this.props.cncCurrentSpindleSpeed} rpm</span>
                             </div>
                         </ParamsWrapper>

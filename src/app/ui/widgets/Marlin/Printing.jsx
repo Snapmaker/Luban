@@ -50,7 +50,8 @@ class Printing extends PureComponent {
     state = {
         nozzleTemperatureValue: this.props.nozzleTargetTemperature,
         heatedBedTemperatureValue: this.props.heatedBedTargetTemperature,
-        zOffsetValue: 0.05,
+        leftZOffsetValue: 0.05,
+        rightZOffsetValue: 0.05,
         zOffsetMarks: [0.05, 0.1, 0.2]
     };
 
@@ -82,13 +83,19 @@ class Printing extends PureComponent {
             // });
             this.props.executeGcode(`M140 S${this.state.heatedBedTemperatureValue}`);
         },
-        onChangeZOffset: (value) => {
-            this.setState({
-                zOffsetValue: value
-            });
+        onChangeZOffset: (direction, value) => {
+            if (direction === LEFT_EXTRUDER) {
+                this.setState({
+                    leftZOffsetValue: value
+                });
+            } else {
+                this.setState({
+                    rightZOffsetValue: value
+                });
+            }
         },
         onClickPlusZOffset: (extruderIndex) => {
-            const zOffset = this.state.zOffsetValue;
+            const zOffset = extruderIndex === RIGHT_EXTRUDER_MAP_NUMBER ? this.state.rightZOffsetValue : this.state.leftZOffsetValue;
             controller.emitEvent(CONNECTION_Z_OFFSET, {
                 zOffset,
                 extruderIndex,
@@ -100,7 +107,7 @@ class Printing extends PureComponent {
             });
         },
         onClickMinusZOffset: (extruderIndex) => {
-            const zOffset = 0 - this.state.zOffsetValue;
+            const zOffset = 0 - (extruderIndex === RIGHT_EXTRUDER_MAP_NUMBER ? this.state.rightZOffsetValue : this.state.leftZOffsetValue);
             controller.emitEvent(CONNECTION_Z_OFFSET, {
                 zOffset,
                 extruderIndex,
@@ -168,10 +175,9 @@ class Printing extends PureComponent {
             printingToolhead,
             workflowStatus
         } = this.props;
-        const { zOffsetMarks, zOffsetValue } = this.state;
+        const { zOffsetMarks, leftZOffsetValue, rightZOffsetValue } = this.state;
         const actions = this.actions;
 
-        console.log(currentWorkNozzle);
         // console.log('printingToolhead', this.props.printingToolhead);
         // const workflowStatus = 'running';
         // const printingToolhead = DUAL_EXTRUDER_TOOLHEAD_FOR_SM2;
@@ -202,12 +208,12 @@ class Printing extends PureComponent {
                     title={nozzleTempratureTitle}
                     suffix="°C"
                 >
-                    <div className="width-40 sm-flex sm-flex-direction-c">
+                    <div className="width-44 sm-flex sm-flex-direction-c">
                         {/* <span>{i18n._('key-unused-{i18n._('key-Workspace/Marlin-Actual Data Title')}')}</span> */}
                         <span>{i18n._('key-Workspace/Marlin-Actual Data Title')}</span>
                         <span>{Math.floor(nozzleTemperature)}°C</span>
                     </div>
-                    <div className="width-40 sm-flex sm-flex-direction-c margin-left-16">
+                    <div className="width-44 sm-flex sm-flex-direction-c margin-left-16">
                         {/* <span>{i18n._('key-unused-{i18n._('key-Workspace/Marlin-Target Data Title')}')}</span> */}
                         <span>{i18n._('key-Workspace/Marlin-Target Data Title')}</span>
                         <span>{Math.floor(nozzleTargetTemperature)}°C</span>
@@ -244,12 +250,12 @@ class Printing extends PureComponent {
                         title={nozzleRightTempratureTitle}
                         suffix="°C"
                     >
-                        <div className="width-40 sm-flex sm-flex-direction-c">
+                        <div className="width-44 sm-flex sm-flex-direction-c">
                             {/* <span>{i18n._('key-unused-{i18n._('key-Workspace/Marlin-Actual Data Title')}')}</span> */}
                             <span>{i18n._('key-Workspace/Marlin-Actual Data Title')}</span>
                             <span>{Math.floor(this.props.nozzleRightTemperature)}°C</span>
                         </div>
-                        <div className="width-40 sm-flex sm-flex-direction-c margin-left-16">
+                        <div className="width-44 sm-flex sm-flex-direction-c margin-left-16">
                             {/* <span>{i18n._('key-unused-{i18n._('key-Workspace/Marlin-Target Data Title')}')}</span> */}
                             <span>{i18n._('key-Workspace/Marlin-Target Data Title')}</span>
                             <span>{Math.floor(this.props.nozzleRightTargetTemperature)}°C</span>
@@ -286,12 +292,12 @@ class Printing extends PureComponent {
                     title={i18n._('key-Workspace/Marlin-Heated Bed Temp')}
                     suffix="°C"
                 >
-                    <div className="width-40 sm-flex sm-flex-direction-c">
+                    <div className="width-44 sm-flex sm-flex-direction-c">
                         {/* <span>{i18n._('key-unused-{i18n._('key-Workspace/Marlin-Actual Data Title')}')}</span> */}
                         <span>{i18n._('key-Workspace/Marlin-Actual Data Title')}</span>
                         <span>{Math.floor(heatedBedTemperature)}°C</span>
                     </div>
-                    <div className="width-40 sm-flex sm-flex-direction-c margin-left-16">
+                    <div className="width-44 sm-flex sm-flex-direction-c margin-left-16">
                         {/* <span>{i18n._('key-unused-{i18n._('key-Workspace/Marlin-Target Data Title')}')}</span> */}
                         <span>{i18n._('key-Workspace/Marlin-Target Data Title')}</span>
                         <span>{Math.floor(heatedBedTargetTemperature)}°C</span>
@@ -299,7 +305,7 @@ class Printing extends PureComponent {
                 </ParamsWrapper>
 
                 {workflowStatus === 'running' && <WorkSpeed />}
-                {isConnected && _.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus) && (
+                {isConnected && this.isPrinting() && (
                     <div className="sm-parameter-row">
                         <span className="sm-parameter-row__label">{i18n._('key-unused-Z Offset')}</span>
                         <Anchor
@@ -311,19 +317,47 @@ class Printing extends PureComponent {
                             <JogDistance
                                 marks={zOffsetMarks}
                                 onChange={actions.onChangeZOffset}
-                                defaultValue={zOffsetValue}
+                                defaultValue={leftZOffsetValue}
                             />
                         </Anchor>
                         <Anchor
                             className="sm-parameter-row__input2-check fa fa-plus"
-                            onClick={() => actions.onClickPlusZOffset(0)}
+                            onClick={() => actions.onClickPlusZOffset(LEFT_EXTRUDER_MAP_NUMBER)}
                         />
                         <Anchor
                             className="sm-parameter-row__input2-check fa fa-minus"
                             style={{
                                 right: '152px'
                             }}
-                            onClick={() => actions.onClickMinusZOffset(0)}
+                            onClick={() => actions.onClickMinusZOffset(LEFT_EXTRUDER_MAP_NUMBER)}
+                        />
+                    </div>
+                )}
+                {isConnected && this.isPrinting() && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
+                    <div className="sm-parameter-row">
+                        <span className="sm-parameter-row__label">{i18n._('key-unused-Z Offset')}</span>
+                        <Anchor
+                            className="sm-parameter-row__input2"
+                            style={{
+                                marginRight: '84px'
+                            }}
+                        >
+                            <JogDistance
+                                marks={zOffsetMarks}
+                                onChange={actions.onChangeZOffset}
+                                defaultValue={rightZOffsetValue}
+                            />
+                        </Anchor>
+                        <Anchor
+                            className="sm-parameter-row__input2-check fa fa-plus"
+                            onClick={() => actions.onClickPlusZOffset(RIGHT_EXTRUDER_MAP_NUMBER)}
+                        />
+                        <Anchor
+                            className="sm-parameter-row__input2-check fa fa-minus"
+                            style={{
+                                right: '152px'
+                            }}
+                            onClick={() => actions.onClickMinusZOffset(RIGHT_EXTRUDER_MAP_NUMBER)}
                         />
                     </div>
                 )}

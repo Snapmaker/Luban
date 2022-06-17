@@ -67,7 +67,7 @@ class WorkSpeed extends PureComponent {
                 inputMax={500}
                 inputMin={1}
             >
-                <div className="width-40 sm-flex align-center margin-left-16 ">
+                <div className="width-44 sm-flex align-center margin-left-16 ">
                     <span>{workSpeedValue} %</span>
                 </div>
             </ParamsWrapper>

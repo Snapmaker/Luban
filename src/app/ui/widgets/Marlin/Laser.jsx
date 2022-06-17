@@ -128,7 +128,7 @@ class Laser extends PureComponent {
                         hasSlider
                         inputMin={1}
                     >
-                        <div className="width-40 sm-flex sm-flex-direction-c margin-left-16">
+                        <div className="width-44 sm-flex sm-flex-direction-c margin-left-16">
                             <span>{Math.floor(laserPower)}°C</span>
                         </div>
                     </ParamsWrapper>
