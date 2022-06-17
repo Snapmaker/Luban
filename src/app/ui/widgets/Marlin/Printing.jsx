@@ -1,7 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import _ from 'lodash';
 import Anchor from '../../components/Anchor';
 // import SvgIcon from '../../components/SvgIcon';
 import { Button } from '../../components/Buttons';
@@ -11,7 +10,7 @@ import i18n from '../../../lib/i18n';
 import { actions as machineActions } from '../../../flux/machine';
 import JogDistance from './JogDistance';
 import WorkSpeed from './WorkSpeed';
-import { CONNECTION_TYPE_WIFI,
+import {
     WORKFLOW_STATUS_PAUSED,
     WORKFLOW_STATUS_RUNNING,
     CONNECTION_Z_OFFSET,
@@ -33,7 +32,7 @@ import ParamsWrapper from './ParamsWrapper';
 class Printing extends PureComponent {
     static propTypes = {
         isConnected: PropTypes.bool,
-        connectionType: PropTypes.string,
+        // connectionType: PropTypes.string,
         nozzleTemperature: PropTypes.number.isRequired,
         nozzleTargetTemperature: PropTypes.number.isRequired,
         nozzleRightTemperature: PropTypes.number,
@@ -41,7 +40,6 @@ class Printing extends PureComponent {
         heatedBedTargetTemperature: PropTypes.number.isRequired,
         workflowStatus: PropTypes.string.isRequired,
         addConsoleLogs: PropTypes.func.isRequired,
-        executeGcode: PropTypes.func.isRequired,
         heatedBedTemperature: PropTypes.number.isRequired,
         printingToolhead: PropTypes.string.isRequired,
         currentWorkNozzle: PropTypes.string.isRequired
@@ -56,11 +54,6 @@ class Printing extends PureComponent {
     };
 
     actions = {
-        isWifiPrinting: () => {
-            const { workflowStatus, connectionType } = this.props;
-            return _.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus)
-                && connectionType === CONNECTION_TYPE_WIFI;
-        },
         onChangeNozzleTemperatureValue: (value) => {
             this.setState({
                 nozzleTemperatureValue: value
@@ -78,10 +71,9 @@ class Printing extends PureComponent {
             });
         },
         onClickHeatedBedTemperature: () => {
-            // controller.emitEvent(CONNECTION_BED_TEMPERATURE, {
-            //     heatedBedTemperatureValue: this.state.heatedBedTemperatureValue
-            // });
-            this.props.executeGcode(`M140 S${this.state.heatedBedTemperatureValue}`);
+            controller.emitEvent(CONNECTION_BED_TEMPERATURE, {
+                heatedBedTemperatureValue: this.state.heatedBedTemperatureValue
+            });
         },
         onChangeZOffset: (direction, value) => {
             if (direction === LEFT_EXTRUDER) {

@@ -863,7 +863,7 @@ class Marlin extends events.EventEmitter {
         enclosureLight: 0,
         enclosureFan: 0,
 
-        airPurifier: true,
+        airPurifier: false,
         airPurifierSwitch: false,
         airPurifierFanSpeed: 3,
         airPurifierFilterHealth: 2,

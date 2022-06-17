@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import _ from 'lodash';
+import { isNil, includes } from 'lodash';
 import { actions as machineActions } from '../../../flux/machine';
 import WorkSpeed from './WorkSpeed';
 import i18n from '../../../lib/i18n';
@@ -68,11 +68,25 @@ class Printing extends PureComponent {
         },
         isPrinting: () => {
             const { workflowStatus } = this.props;
-            const _isPrinting = _.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_PAUSING], workflowStatus);
+            const _isPrinting = includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_PAUSING], workflowStatus);
             console.log('isPrinting', _isPrinting);
             return _isPrinting;
         }
+
     };
+
+    getSnapshotBeforeUpdate(prevProps) {
+        if (prevProps.headStatus !== this.props.headStatus && !isNil(this.props.headStatus)) {
+            this.setState({
+                headStatus: this.props.headStatus
+            });
+        }
+        return prevProps;
+    }
+
+    componentDidUpdate() {
+
+    }
 
     render() {
         const { headStatus } = this.state;

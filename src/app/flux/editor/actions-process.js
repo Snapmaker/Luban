@@ -40,8 +40,8 @@ export const processActions = {
             toolPathPromiseArray.push(toolPathGroup.commitToolPathPromise(toolPath?.id, { materials }));
         });
 
-        Promise.all(toolPathPromiseArray).then(taskArray => {
-            taskArray = taskArray.filter(d => !!d);
+        Promise.all(toolPathPromiseArray).then((taskArray) => {
+            taskArray = taskArray.filter(d => !!d && d.visible);
             controller.commitToolPathTaskArray(taskArray);
         });
     },

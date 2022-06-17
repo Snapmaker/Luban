@@ -32,7 +32,8 @@ import {
     HEAD_LASER,
     HEAD_CNC,
     DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
-    LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2
+    LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
+    CUSTOM_SERVER_NAME
 } from '../../../constants';
 // import widgetStyles from '../styles.styl';
 import styles from './index.styl';
@@ -207,7 +208,7 @@ function WifiConnection() {
                 onConfirm: (text) => {
                     dispatch(machineActions.connect.setManualIP(text));
                     const newServer = new Server({
-                        name: 'Manual',
+                        name: CUSTOM_SERVER_NAME,
                         address: text,
                         addByUser: true
                     });
@@ -266,11 +267,7 @@ function WifiConnection() {
                 timer = null;
             }
         } else {
-            if (connectionAuto) {
-                if (!timer) {
-                    timer = setInterval(() => actions.onRefreshServers(), 5000);
-                }
-            } else {
+            if (!connectionAuto) {
                 autoSetServer(servers, server);
                 if (timer) {
                     clearInterval(timer);
@@ -291,7 +288,7 @@ function WifiConnection() {
     }, [JSON.stringify(servers), server]);
 
     useEffect(() => {
-        if (serverState?.address === savedServerAddressState && connectionAuto) {
+        if (serverState?.address === savedServerAddressState && connectionAuto && !isConnected) {
             if (timer) {
                 clearInterval(timer);
                 timer = null;

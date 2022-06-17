@@ -456,7 +456,7 @@ export const actions = {
                 // console.log('************', moduleStatusList);
                 dispatch(baseActions.updateState({
                     laser10WErrorState,
-                    // workflowStatus: status
+                    isEmergencyStopped
                 }));
                 if (!isNil(status)) {
                     dispatch(baseActions.updateState({
@@ -530,9 +530,6 @@ export const actions = {
                         airPurifierFanSpeed: airPurifierFanSpeed,
                         airPurifierFilterHealth: airPurifierFilterHealth
                     }));
-                    // dispatch(baseActions.updateState({
-                    //     gcodePrintingInfo: machineState.server.getGcodePrintingInfo(state)
-                    // }));
                 }
                 if (!isNil(gcodePrintingInfo)) {
                     dispatch(baseActions.updateState({
@@ -578,14 +575,13 @@ export const actions = {
                         })
                     );
                 } else {
-                    dispatch(
-                        baseActions.updateState({
-                            enclosureDoorDetection,
-                            enclosureOnline,
-                            enclosureFan,
-                            enclosureLight
-                        })
-                    );
+                    // Note: Wifi indiviual
+                    dispatch(baseActions.updateState({
+                        enclosureDoorDetection,
+                        enclosureOnline,
+                        enclosureFan,
+                        enclosureLight
+                    }));
                 }
             },
             'connection:connecting': (options) => {

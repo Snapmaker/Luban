@@ -41,7 +41,9 @@ class SocketController {
     }
 
     emit(event, ...args) {
-        this.socket && this.socket.emit(event, ...args);
+        setTimeout(() => {
+            this.socket && this.socket.emit(event, ...args);
+        }, 200);
     }
 
     on(eventName, callback) {
