@@ -417,9 +417,18 @@ class DefinitionManager {
             .forEach(key => {
                 const setting = materialDefinition.settings[key];
                 if (setting) {
-                    definition.settings[key] = {
-                        default_value: setting.default_value
-                    };
+                    if (key === 'retraction_speed') {
+                        definition.settings.retraction_retract_speed = {
+                            default_value: setting.default_value
+                        };
+                        definition.settings.retraction_prime_speed = {
+                            default_value: setting.default_value
+                        };
+                    } else {
+                        definition.settings[key] = {
+                            default_value: setting.default_value
+                        };
+                    }
                 }
             });
         extruderKey.forEach(key => {
