@@ -125,13 +125,16 @@ export class Server extends events.EventEmitter {
     }
 
     executeGcode(gcode, context, cmd) {
-        controller
-            .emitEvent(CONNECTION_EXECUTE_GCODE, { gcode, context, cmd })
-            .once(CONNECTION_EXECUTE_GCODE, (gcodeArray) => {
-                if (gcodeArray) {
-                    dispatch(baseActions.addConsoleLogs(gcodeArray));
-                }
-            });
+        return new Promise((resolve) => {
+            controller
+                .emitEvent(CONNECTION_EXECUTE_GCODE, { gcode, context, cmd })
+                .once(CONNECTION_EXECUTE_GCODE, (gcodeArray) => {
+                    resolve();
+                    if (gcodeArray) {
+                        dispatch(baseActions.addConsoleLogs(gcodeArray));
+                    }
+                });
+        });
     }
 
     startServerGcode(args, callback) {
