@@ -153,10 +153,10 @@ void main(){
     }
 
     // float shininess = 60.0;
-    float light_ambient = 0.4;
+    float light_ambient = 0.5;
     float light_diffuse = 1.0;
     // float light_specular = 1.0;
-    vec3 light_direction = cameraPosition;
+    vec3 light_direction = cameraPosition - v_normal;
 
     vec4 material_ambient = vec4(0.0);
     vec4 material_diffuse = vec4(0.0);
@@ -181,7 +181,7 @@ void main(){
     // https://en.wikipedia.org/wiki/Phong_shading
     material_ambient = vec4(material_diffuse);
     // material_specular = vec4(material_diffuse);
-    material_diffuse = vec4(material_diffuse * 0.8);
+    material_diffuse = vec4(material_diffuse);
 
     vec3 L = normalize(light_direction);
     vec3 N = normalize(v_normal);
