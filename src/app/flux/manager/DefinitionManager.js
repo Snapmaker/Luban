@@ -146,13 +146,19 @@ class DefinitionManager {
     }
 
     async createDefinition(definition) {
-        const actualDefinition = definition.getSerializableDefinition() || definition;
+        let actualDefinition = definition;
+        if (definition instanceof PresetDefinitionModel) {
+            actualDefinition = definition.getSerializableDefinition()
+        }
         const res = await api.profileDefinitions.createDefinition(this.headType, actualDefinition, this.configPathname);
         return res.body.definition;
     }
 
     async createTmpDefinition(definition, definitionName) {
-        const actualDefinition = definition.getSerializableDefinition() || definition;
+        let actualDefinition = definition;
+        if (definition instanceof PresetDefinitionModel) {
+            actualDefinition = definition.getSerializableDefinition()
+        }
         const res = await api.profileDefinitions.createTmpDefinition(
             actualDefinition,
             definitionName

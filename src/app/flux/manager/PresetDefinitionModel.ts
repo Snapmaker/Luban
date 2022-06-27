@@ -587,12 +587,14 @@ const DEFAULE_PARAMS_FOR_TPU = {
         'default_value': 'None'
     }
 };
-const OTHER_MATERISL_TYPES = ['PLA', 'ABS', 'PETG'];
+const OTHER_MATERISL_TYPES = ['pla', 'abs', 'petg'];
+const ALL_PRINTING_TYPES = ['universal', 'quik', 'fine', 'engineering'];
 const DEFAULT_KEYS = [
     'definitionId',
     'name',
     'inherits',
     'category',
+    'i18nName',
     'i18nName',
     'i18nCategory',
     'typeOfPrinting',
@@ -621,13 +623,13 @@ type ParamsModelType = {
     'adhesion_type': ParamsObjectType;
 }
 
-
 class PresetDefinitionModel {
     public headType:string = HEAD_PRINTING;
-    public typeOfPrinting = 'engineering';
-    public nozzleSize = 0.4;
+    public typeOfPrinting;
+    public nozzleSize;
     public params: ParamsModelType;
     public materialType: string;
+    private visible = false;
     private activeMaterialDefinition;
 
     public definitionId = '';
@@ -640,193 +642,208 @@ class PresetDefinitionModel {
     public ownKeys:any;
 
     // init definitionId and definition
-    public constructor(definition, activeMaterialDefinition) {
+    public constructor(definition, activeMaterialDefinition, defaultNozzleSize) {
         Object.keys(definition).filter(a => {
             return !(a in DEFAULT_KEYS);
         })
             .forEach((key) => {
                 this[key] = definition[key];
             });
-        this.updateParams(activeMaterialDefinition, true);
+        this.updateParams(activeMaterialDefinition, defaultNozzleSize, true);
     }
 
-    public updateParams(activeMaterialDefinition = this.activeMaterialDefinition, shouldUpdateDefault = false) {
-        const materialType = activeMaterialDefinition?.settings?.material_type?.default_value || 'PLA';
+    public updateParams(
+        activeMaterialDefinition = this.activeMaterialDefinition,
+        nozzleSize = this.nozzleSize,
+        shouldUpdateDefault = false
+    ) {
+        const materialType = activeMaterialDefinition?.settings?.material_type?.default_value;
         const settings = this.settings;
-        const nozzleSize = settings?.machine_nozzle_size?.default_value || 0.4;
-
         if ((materialType && materialType !== this.materialType) || (nozzleSize && nozzleSize !== this.nozzleSize)) {
             this.materialType = materialType;
             this.nozzleSize = nozzleSize;
             this.activeMaterialDefinition = activeMaterialDefinition;
             // todo change getting 'typeOfPrinting' from setting's param
-            if (materialType === 'TPU' && nozzleSize === 0.4 || this.typeOfPrinting) {
-                this.params = cloneDeep(DEFAULE_PARAMS_FOR_TPU);
-            } else if ((OTHER_MATERISL_TYPES.includes(materialType) && nozzleSize === 0.4)) {
+            if (materialType === 'tpu' && nozzleSize === 0.4) {
+                if (this.typeOfPrinting === ALL_PRINTING_TYPES[0]) {
+                    this.visible = true;
+                    this.params = cloneDeep(DEFAULE_PARAMS_FOR_TPU);
+                } else {
+                    this.visible = false;
+                }
+            } else if (OTHER_MATERISL_TYPES.includes(materialType) && nozzleSize === 0.4 && this.typeOfPrinting) {
+                this.visible = true;
                 this.params = cloneDeep(DEFAULE_PARAMS_FOR_OTHERS);
             } else {
-                this.params = {
-                    'layer_height': {
-                        'options': {
-                            'fine': {
-                                'affect': {
-                                    'layer_height': this.nozzleSize * 0.3,
+                if (this.typeOfPrinting === ALL_PRINTING_TYPES[0]) {
+                    this.visible = true;
+                    this.params = {
+                        'layer_height': {
+                            'options': {
+                                'fine': {
+                                    'affect': {
+                                        'layer_height': this.nozzleSize * 0.3,
+                                    },
+                                    'value': this.nozzleSize * 0.3,
+                                    'label': 'fine'
                                 },
-                                'value': this.nozzleSize * 0.3,
-                                'label': 'fine'
+                                'balanced': {
+                                    'affect': {
+                                        'layer_height': this.nozzleSize * 0.5,
+                                    },
+                                    'value': this.nozzleSize * 0.5,
+                                    'label': 'balanced'
+                                },
+                                'rough': {
+                                    'affect': {
+                                        'layer_height': this.nozzleSize * 0.7
+                                    },
+                                    'value': this.nozzleSize * 0.7,
+                                    'label': 'rough'
+                                }
                             },
-                            'balanced': {
-                                'affect': {
-                                    'layer_height': this.nozzleSize * 0.5,
-                                },
-                                'value': this.nozzleSize * 0.5,
-                                'label': 'balanced'
-                            },
-                            'rough': {
-                                'affect': {
-                                    'layer_height': this.nozzleSize * 0.7
-                                },
-                                'value': this.nozzleSize * 0.7,
-                                'label': 'rough'
-                            }
+                            'current_value': this.nozzleSize * 0.5,
+                            'default_value': 'rough'
                         },
-                        'current_value': this.nozzleSize * 0.5,
-                        'default_value': 'rough'
-                    },
-                    'speed_print': {
-                        'options': {
-                            'low': {
-                                'affect': {
-                                    'speed_print': 20
+                        'speed_print': {
+                            'options': {
+                                'low': {
+                                    'affect': {
+                                        'speed_print': 20
+                                    },
+                                    'value': 20,
+                                    'label': 'low'
                                 },
-                                'value': 20,
-                                'label': 'low'
-                            },
-                            'middle': {
-                                'affect': {
-                                    'speed_print': 40
+                                'middle': {
+                                    'affect': {
+                                        'speed_print': 40
+                                    },
+                                    'value': 40,
+                                    'label': 'middle'
                                 },
-                                'value': 40,
-                                'label': 'middle'
-                            },
-                            'high': {
-                                'affect': {
-                                    'speed_print': 60
+                                'high': {
+                                    'affect': {
+                                        'speed_print': 60
+                                    },
+                                    'value': 60,
+                                    'label': 'high'
                                 },
-                                'value': 60,
-                                'label': 'high'
                             },
+                            'current_value': 40,
+                            'default_value': 'middle'
                         },
-                        'current_value': 40,
-                        'default_value': 'middle'
-                    },
-                    'infill_sparse_density': {
-                        'options': {
-                            'normal_weak': {
-                                'affect': {
-                                    'infill_sparse_density': 10
+                        'infill_sparse_density': {
+                            'options': {
+                                'normal_weak': {
+                                    'affect': {
+                                        'infill_sparse_density': 10
+                                    },
+                                    'value': 10,
+                                    'label': 'normal_weak'
                                 },
-                                'value': 10,
-                                'label': 'normal_weak'
+                                'normal_normal': {
+                                    'affect': {
+                                        'infill_sparse_density': 15
+                                    },
+                                    'value': 15,
+                                    'label': 'normal_normal'
+                                },
+                                'normal_strong': {
+                                    'affect': {
+                                        'infill_sparse_density': 25
+                                    },
+                                    'value': 25,
+                                    'label': 'normal_strong'
+                                }
                             },
-                            'normal_normal': {
-                                'affect': {
-                                    'infill_sparse_density': 15
-                                },
-                                'value': 15,
-                                'label': 'normal_normal'
-                            },
-                            'normal_strong': {
-                                'affect': {
-                                    'infill_sparse_density': 25
-                                },
-                                'value': 25,
-                                'label': 'normal_strong'
-                            }
+                            'current_value': 10,
+                            'default_value': 10
                         },
-                        'current_value': 10,
-                        'default_value': 10
-                    },
-                    // Support Type
-                    'support_type': {
-                        'options': {
-                            'Normal': {
-                                'affect': {
-                                    'support_type': 'Normal',
-                                    'support_roof_enable': true,
-                                    'support_roof_height': 2,
-                                    'support_roof_pattern': 'Zig Zag',
-                                    'minimum_roof_area': 4,
-                                    'support_roof_offset': 2
+                        // Support Type
+                        'support_type': {
+                            'options': {
+                                'Normal': {
+                                    'affect': {
+                                        'support_type': 'Normal',
+                                        'support_roof_enable': true,
+                                        'support_roof_height': 2,
+                                        'support_roof_pattern': 'Zig Zag',
+                                        'minimum_roof_area': 4,
+                                        'support_roof_offset': 2
+                                    },
+                                    'value': 'Normal',
+                                    'label': 'Normal'
                                 },
-                                'value': 'Normal',
-                                'label': 'Normal'
-                            },
-                            'None': {
-                                'affect': {
-                                    'support_type': 'None'
+                                'None': {
+                                    'affect': {
+                                        'support_type': 'None'
+                                    },
+                                    'value': 'None',
+                                    'label': 'None'
                                 },
-                                'value': 'None',
-                                'label': 'None'
                             },
+                            'current_value': 'Normal',
+                            'default_value': 'None'
                         },
-                        'current_value': 'Normal',
-                        'default_value': 'None'
-                    },
-                    'adhesion_type': {
-                        'options': {
-                            'skirt': {
-                                'affect': {
-                                    'adhesion_type': 'skirt'
+                        'adhesion_type': {
+                            'options': {
+                                'skirt': {
+                                    'affect': {
+                                        'adhesion_type': 'skirt'
+                                    },
+                                    'value': 'skirt',
+                                    'label': 'Skirt'
                                 },
-                                'value': 'skirt',
-                                'label': 'Skirt'
+                                'brim': {
+                                    'affect': {
+                                        'adhesion_type': 'brim'
+                                    },
+                                    'value': 'brim',
+                                    'label': 'Brim'
+                                },
+                                'raft': {
+                                    'affect': {
+                                        'adhesion_type': 'raft'
+                                    },
+                                    'value': 'raft',
+                                    'label': 'Raft'
+                                },
+                                'none': {
+                                    'affect': {
+                                        'adhesion_type': 'none'
+                                    },
+                                    'value': 'none',
+                                    'label': 'None'
+                                }
                             },
-                            'brim': {
-                                'affect': {
-                                    'adhesion_type': 'brim'
-                                },
-                                'value': 'brim',
-                                'label': 'Brim'
-                            },
-                            'raft': {
-                                'affect': {
-                                    'adhesion_type': 'raft'
-                                },
-                                'value': 'raft',
-                                'label': 'Raft'
-                            },
-                            'none': {
-                                'affect': {
-                                    'adhesion_type': 'none'
-                                },
-                                'value': 'none',
-                                'label': 'None'
-                            }
-                        },
-                        'current_value': 'skirt',
-                        'default_value': 'none'
-                    }
-                };
+                            'current_value': 'skirt',
+                            'default_value': 'none'
+                        }
+                    };
+                } else {
+                    this.visible = false;
+                }
             }
         }
-        Object.entries(this.params).forEach(([paramName, paramItem]) => {
-            const actualValue = settings[paramName]?.default_value;
-            const actualOptions = paramItem.affectByType ? paramItem[this.typeOfPrinting] : paramItem.options;
-            const isDefautValue = Object.entries(actualOptions).some(([optionName, optionItem]) => {
-                if (optionItem.value === actualValue) {
-                    paramItem.current_value = optionName;
-                    if (shouldUpdateDefault) paramItem.default_value = optionName;
-                    return true;
-                } else {
-                    return false;
+        if (this.visible) {
+            Object.entries(this.params).forEach(([paramName, paramItem]) => {
+                const actualValue = settings[paramName]?.default_value;
+                const actualOptions = paramItem.affectByType ? paramItem[this.typeOfPrinting] : paramItem.options;
+                const isDefautValue = Object.entries(actualOptions).some(([optionName, optionItem]) => {
+                    if (optionItem.value === actualValue) {
+                        paramItem.current_value = optionName;
+                        if (shouldUpdateDefault) paramItem.default_value = optionName;
+                        return true;
+                    } else {
+                        return false;
+                    }
+                });
+                if (!isDefautValue) {
+                    paramItem.current_value = actualValue;
+                    if (shouldUpdateDefault) paramItem.default_value = actualValue;
                 }
             });
-            if (!isDefautValue) {
-                paramItem.current_value = actualValue;
-                if (shouldUpdateDefault) paramItem.default_value = actualValue;
-            }
-        });
+        }
     }
 
     // public

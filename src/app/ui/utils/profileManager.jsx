@@ -42,11 +42,14 @@ function getPresetOptions(definitionModels) {
         optionsObject.definitionId = preset.definitionId;
         optionsObject.value = preset.definitionId;
         if (typeOfPrinting) {
-            optionsObject.typeOfPrinting = preset.typeOfPrinting;
-            recommendedOptions.push(optionsObject);
+            if (preset.visible) {
+                optionsObject.typeOfPrinting = preset.typeOfPrinting;
+                recommendedOptions.push(optionsObject);
+            }
         } else {
             // TODO:
             optionsObject.i18nName = preset.i18nName;
+            optionsObject.name = preset.name;
             customizedOptions.push(optionsObject);
         }
     });

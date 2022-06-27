@@ -27,7 +27,7 @@ import {
 import SettingItem from '../../views/ProfileManager/SettingItem';
 import ConfigValueBox from '../../views/ProfileManager/ConfigValueBox';
 import styles from './styles.styl';
-import { getSelectOptions, getPresetOptions } from '../../utils/profileManager';
+import { getPresetOptions } from '../../utils/profileManager';
 
 const newKeys = cloneDeep(PRINTING_QUALITY_CONFIG_INDEX);
 const PRESET_DISPLAY_TYPES = ['Recommended', 'Customized'];
@@ -85,6 +85,10 @@ function ParamItem({ selectedDefinitionModel, allParams }) {
                     SegmentedValue = paramSetting.current_value;
                 }
                 const eachParamObject = selectedDefinitionSettings[paramName];
+                // // TODO: add 'model_structure_type' select
+                // if (paramName === 'infill_sparse_density') {
+                //     eachParamObject = selectedDefinitionSettings['model_structure_type']
+                // }
                 return (
                     <div key={paramName} className="margin-vertical-16">
                         <div className="height-24 margin-bottom-4">
@@ -117,7 +121,7 @@ ParamItem.propTypes = {
     selectedDefinitionModel: PropTypes.object,
     allParams: PropTypes.object
 };
-
+// {i18n._(`key-Printing/PrintingConfigurations-${optionItem.typeOfPrinting}`)}
 function Configurations() {
     const [selectedDefinition, setSelectedDefinition] = useState(null);
     const [minimized, setMinimized] = useState(false);
@@ -125,6 +129,7 @@ function Configurations() {
     const [presetDisplayType, setPresetDisplayType] = useState(PRESET_DISPLAY_TYPES[0]);
     const [configDisplayType, setConfigDisplayType] = useState(CONFIG_DISPLAY_TYPES[1]);
     const defaultQualityId = useSelector((state) => state?.printing?.defaultQualityId);
+    const defaultMaterialId = useSelector((state) => state?.printing?.defaultMaterialId);
     const qualityDefinitionModels = useSelector((state) => state?.printing?.qualityDefinitions);
 
     let printingCustomConfigs = useSelector(
@@ -141,6 +146,9 @@ function Configurations() {
     const dispatch = useDispatch();
 
     const actions = {
+        showMenu: (event) => {
+            console.log(event);
+        },
         onShowMaterialManager: () => {
             dispatch(
                 printingActions.updateManagerDisplayType(
@@ -246,12 +254,13 @@ function Configurations() {
         }
     }, [defaultQualityId, qualityDefinitionModels]);
 
+    useEffect(() => {
+        console.log('defaultMaterialId');
+    }, [defaultMaterialId]);
+    const { recommendedOptions, customizedOptions } = getPresetOptions(qualityDefinitionModels);
     if (!selectedDefinition) {
         return null;
     }
-    const toolDefinitionOptions = getSelectOptions(qualityDefinitionModels);
-    const { recommendedOptions, customizedOptions } = getPresetOptions(qualityDefinitionModels);
-    console.log('toolDefinitionOptions', toolDefinitionOptions, configDisplayType);
     return (
         <div>
             <div
@@ -281,10 +290,24 @@ function Configurations() {
                                     <Anchor
                                         onClick={() => actions.onSelectCustomDefinitionById(optionItem.definitionId)}
                                     >
-                                        <i className={styles[`preset-recommended__icon-${optionItem.typeOfPrinting}`]} />
+                                        <div className={classNames(
+                                            styles[`preset-recommended__icon-${optionItem.typeOfPrinting}`],
+                                            styles['preset-recommended__icon']
+                                        )}
+                                        >
+                                            <SvgIcon
+                                                className={classNames(
+                                                    styles['preset-hover'],
+                                                )}
+                                                type={['static']}
+                                                size={24}
+                                                name="PrintingSettingNormal"
+                                                onClick={actions.showMenu}
+                                            />
+                                        </div>
                                     </Anchor>
                                     <span className="max-width-76 text-overflow-ellipsis-line-2 height-16 margin-top-4 margin-bottom-8">
-                                        {i18n._(`key-Printing/PrintingConfigurations-${optionItem.typeOfPrinting}`)}
+                                        {optionItem.typeOfPrinting}
                                     </span>
                                 </div>
                             );
@@ -296,7 +319,7 @@ function Configurations() {
                         {customizedOptions.map((optionItem) => {
                             return (
                                 <div
-                                    key={optionItem.i18nName}
+                                    key={optionItem.i18nName || optionItem.name}
                                     className={classNames(
                                         optionItem.definitionId === selectedDefinition.definitionId ? styles.selected : null,
                                         'border-radius-4',
@@ -313,13 +336,14 @@ function Configurations() {
                                         onClick={() => actions.onSelectCustomDefinitionById(optionItem.definitionId)}
                                     >
                                         <span>
-                                            {i18n._(optionItem.i18nName)}
+                                            {i18n._(optionItem.i18nName || optionItem.name)}
                                         </span>
                                         <SvgIcon
                                             className={classNames(
                                                 styles['preset-hover'],
                                                 'float-right'
                                             )}
+                                            type={['static']}
                                             size={24}
                                             name="PrintingSettingNormal"
                                         />
