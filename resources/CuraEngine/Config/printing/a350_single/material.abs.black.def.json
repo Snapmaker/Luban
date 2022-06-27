@@ -6,6 +6,9 @@
     "i18nName": "key-default_name-ABS_Black",
     "i18nCategory": "key-default_category-ABS",
     "overrides": {
+        "material_type": {
+            "default_value": "abs"
+        },
         "color": {
             "default_value": "#464646"
         },

@@ -4,6 +4,7 @@
     "name": "Normal Quality",
     "i18nName": "key-default_name-Normal Quality",
     "i18nCategory": "key-default_category-Default",
+    "typeOfPrinting": "fine",
     "inherits": "snapmaker2",
     "overrides": {
         "resolution": {

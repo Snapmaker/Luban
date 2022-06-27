@@ -6,6 +6,9 @@
     "i18nName": "key-default_name-PLA_Yellow",
     "i18nCategory": "key-default_category-PLA",
     "overrides": {
+        "material_type": {
+            "default_value": "pla"
+        },
         "color": {
             "default_value": "#fff500"
         },

@@ -669,6 +669,10 @@
             "icon": "category_layer_height",
             "description": "All settings that influence the resolution of the print. These settings have a large impact on the quality (and print time)",
             "children": {
+                "material_type": {
+                    "label": "Material Type",
+                    "default_value": "abs"
+                },
                 "layer_height": {
                     "label": "Layer Height",
                     "description": "The height of each layer in mm. Higher values produce faster prints in lower resolution, lower values produce slower prints in higher resolution.",

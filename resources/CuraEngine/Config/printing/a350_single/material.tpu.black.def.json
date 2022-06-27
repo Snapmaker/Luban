@@ -6,6 +6,9 @@
     "i18nName": "key-default_name-TPU_Black",
     "i18nCategory": "key-default_category-TPU",
     "overrides": {
+        "material_type": {
+            "default_value": "tpu"
+        },
         "color": {
             "default_value": "#000000"
         },
