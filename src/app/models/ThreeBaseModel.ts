@@ -34,7 +34,7 @@ export type ExtruderConfig = {
 export type ModelInfo = {
     modelID?: string,
     parentModelID?: string,
-    limitSize?: Object,
+    limitSize?: number,
     headType?: typeof HEAD_PRINTING,
     sourceType?: '3d',
     sourceHeight?: number,
@@ -42,7 +42,9 @@ export type ModelInfo = {
     originalName?: string,
     uploadName?: string,
     modelName?: string,
-    config?: Object,
+    config?: {
+        [key: string]: number | boolean | string
+    },
     mode?: string,
     visible?: boolean,
     transformation?: ModelTransformation,
@@ -99,12 +101,12 @@ export default class BaseModel {
     public parent: ThreeGroup;
     public overstepped: boolean;
 
-    public estimatedTime: number = 0
+    public estimatedTime = 0
 
     public transformation: ModelTransformation;
     public boundingBox: THREE.Box3;
     public limitSize: number; // TODO ts remove?
-    public isSelected: boolean = false;
+    public isSelected = false;
 
     public modelGroup: ModelGroup;
     public type: string;
@@ -113,7 +115,7 @@ export default class BaseModel {
 
     public mode: '3d';
 
-    protected displayedType: string = 'model';
+    protected displayedType = 'model';
 
     protected gcodeModeMaterial: THREE.MeshLambertMaterial;
 
@@ -149,7 +151,7 @@ export default class BaseModel {
         });
     }
 
-    public rotateModelByZaxis(angle: number = 0) {
+    public rotateModelByZaxis(angle = 0) {
         const unitZ = new THREE.Vector3(0, 0, 1);
         const quaternion = new THREE.Quaternion().setFromAxisAngle(unitZ, angle * Math.PI / 180);
         this.meshObject.applyQuaternion(quaternion);

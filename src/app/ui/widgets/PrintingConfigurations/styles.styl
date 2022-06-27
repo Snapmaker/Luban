@@ -1,4 +1,5 @@
 @import "../../../styles/variables.styl"
+@import "../../../styles/global-var.styl"
 .manager-body {
     text-align: left;
     .manager-type-wrapper {
@@ -37,7 +38,71 @@
     background: url("../../../resources/images/18x18/printing-manager_18x18@2x.png") no-repeat center / 18px 18px;
     margin-bottom: 10px;
 }
+.preset-recommended
+    .unselected, .selected
+        > a
+            display: block
+            width: 76px
+            border-radius: $border-radius
+            border: 1px solid #B9BCBF;
 
+            > i
+                display: block
+                border-radius: $border-radius
+                width: 74px
+                height: 74px
+    .selected
+        > a
+            border: 1px solid #1890FF;
+        > span
+            color: #1890FF;
+
+    &__icon-fine
+        background: url("../../../resources/images/cnc-laser/laser-mode-bw-88x88.png") no-repeat 0 0
+        background-size: 100%
+
+.preset-customized {
+    .selected {
+       background-color: $blue-6;
+        .preset-item:hover {
+            .preset-hover{
+                display: inline-block;
+            }
+        }
+    }
+    .preset-hover{
+        display: none;
+    }
+}
+.divided-line{
+  height: 1px;
+  margin-left: -16px;
+  margin-right: -16px;
+  &.opacity-0 {
+    opacity: 0;
+  }
+  &.opacity-1 {
+    opacity: 1;
+  }
+}
+.printing-settings-wrapper {
+  position: relative;
+  .printing-settings {
+     margin-bottom: -16px;
+     border-radius: 100px;
+     border: 1px $grey-1 solid;
+     position: absolute;
+     width: 200px;
+     top: -16px;
+     left: 50%;
+     transform: translateX(-50%);
+     box-shadow: 0px 2px 4px rgba(44, 38, 37, 0.1);
+     .printing-settings-text {
+         max-width: 150px;
+         text-overflow: ellipsis;
+     }
+  }
+}
 .material-select {
     width: 86%;
     display: inline-block;

@@ -1,6 +1,6 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
-import { app, BrowserWindow, protocol, screen, session, ipcMain, shell, Menu } from 'electron';
+import { app, powerSaveBlocker, BrowserWindow, protocol, screen, session, ipcMain, shell, Menu } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import Store from 'electron-store';
 import url from 'url';
@@ -23,6 +23,7 @@ let mainWindow = null;
 // https://www.electronjs.org/docs/latest/breaking-changes#planned-breaking-api-changes-100
 // console.log('getCrashesDirectory', app.getPath('crashDumps'));
 let loadUrl = '';
+let powerId = 0;
 const loadingMenu = [{
     id: 'file',
     label: '',
@@ -260,6 +261,8 @@ const showMainWindow = async () => {
     const windowOptions = getBrowserWindowOptions();
     const window = new BrowserWindow(windowOptions);
     mainWindow = window;
+    powerId = powerSaveBlocker.start('prevent-display-sleep');
+
     if (process.platform === 'win32') {
         const menu = Menu.buildFromTemplate(loadingMenu);
         Menu.setApplicationMenu(menu);
@@ -322,6 +325,7 @@ const showMainWindow = async () => {
             });
         }
     }
+
 
     window.on('close', (e) => {
         e.preventDefault();
@@ -421,6 +425,8 @@ app.on('window-all-closed', () => {
     // after all windows have been closed.
     // if (process.platform !== 'darwin') {
     // }
+
+    powerSaveBlocker.stop(powerId);
 
     app.quit();
 });

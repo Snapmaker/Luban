@@ -33,6 +33,29 @@ function getSelectOptions(printingDefinitions) {
     return toolDefinitionOptions;
 }
 
+function getPresetOptions(definitionModels) {
+    const recommendedOptions = [];
+    const customizedOptions = [];
+    definitionModels.forEach(preset => {
+        const optionsObject = {};
+        const typeOfPrinting = preset.typeOfPrinting;
+        optionsObject.definitionId = preset.definitionId;
+        optionsObject.value = preset.definitionId;
+        if (typeOfPrinting) {
+            optionsObject.typeOfPrinting = preset.typeOfPrinting;
+            recommendedOptions.push(optionsObject);
+        } else {
+            // TODO:
+            optionsObject.i18nName = preset.i18nName;
+            customizedOptions.push(optionsObject);
+        }
+    });
+    return {
+        recommendedOptions,
+        customizedOptions
+    };
+}
+
 function getMaterialSelectOptions(materialDefinitions) {
     const materialDefinitionOptionsObj = {};
     const materialDefinitionOptions = [];
@@ -67,5 +90,6 @@ function getMaterialSelectOptions(materialDefinitions) {
 
 export {
     getSelectOptions,
-    getMaterialSelectOptions
+    getMaterialSelectOptions,
+    getPresetOptions
 };

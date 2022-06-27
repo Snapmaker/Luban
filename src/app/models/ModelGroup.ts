@@ -143,7 +143,7 @@ class ModelGroup extends EventEmitter {
         this.object.dispatchEvent(EVENTS.UPDATE);
     }
 
-    public getState(shouldCheckOverStep: boolean = true) {
+    public getState(shouldCheckOverStep = true) {
         const baseState = {
             allModelIDs: this.models.map((m) => m.modelID),
             selectedModelArray: this.selectedModelArray,
@@ -314,7 +314,7 @@ class ModelGroup extends EventEmitter {
         });
     }
 
-    public removeModel(model: TModel, loop: boolean = false) {
+    public removeModel(model: TModel, loop = false) {
         if (model instanceof PrimeTowerModel) return;
         if (!(model instanceof SvgModel)) {
             model.setSelected(false);
@@ -556,7 +556,7 @@ class ModelGroup extends EventEmitter {
         return totalEstimatedTime_;
     }
 
-    public getModels<T>(filterKey: string = '') {
+    public getModels<T>(filterKey = '') {
         const models = [];
         for (const model of this.models) {
             if (model.type === filterKey) {
@@ -639,7 +639,7 @@ class ModelGroup extends EventEmitter {
     // TODO: model or modelID, need rename this method and add docs
     // use for widget
     // If isMultiSelect is equal to true, it is mutually exclusive
-    public selectModelById(modelID: string, isMultiSelect: boolean = false) {
+    public selectModelById(modelID: string, isMultiSelect = false) {
         let selectModel = null;
         this.traverseModels(this.models, (model) => {
             if (model.modelID === modelID) {
@@ -1086,7 +1086,7 @@ class ModelGroup extends EventEmitter {
         return this.getState();
     }
 
-    public scaleToFitFromModel(size: TSize, offsetX: number = 0, offsetY: number = 0, models: TModel[]) {
+    public scaleToFitFromModel(size: TSize, offsetX = 0, offsetY = 0, models: TModel[]) {
         models.forEach((model) => {
             if (!(model instanceof SvgModel)) {
                 model.scaleToFit(size, offsetX, offsetY);
@@ -1097,7 +1097,7 @@ class ModelGroup extends EventEmitter {
         return this.getState();
     }
 
-    public scaleToFitSelectedModel(size: TSize, offsetX: number = 0, offsetY: number = 0) {
+    public scaleToFitSelectedModel(size: TSize, offsetX = 0, offsetY = 0) {
         const selected = this.getSelectedModelArray<Model3D>();
         if (selected.length === 0) {
             return null;
@@ -1216,7 +1216,7 @@ class ModelGroup extends EventEmitter {
     public updateSelectedGroupTransformation(
         transformation: ModelTransformation,
         newUniformScalingState: boolean = this.selectedGroup.uniformScalingState,
-        isAllRotate: boolean = false
+        isAllRotate = false
     ) {
         const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, uniformScalingState } = transformation;
         const shouldUniformScale = newUniformScalingState ?? this.selectedGroup.uniformScalingState;
@@ -1355,7 +1355,7 @@ class ModelGroup extends EventEmitter {
 
     // model transformation triggered by controls
     // Note: the function is only useful for 3D object operations on Canvas
-    public onModelAfterTransform(shouldStickToPlate: boolean = true) {
+    public onModelAfterTransform(shouldStickToPlate = true) {
         const selectedModelArray = this.selectedModelArray;
         const { recovery } = this.unselectAllModels();
         // update model's boundingbox which has supports
@@ -2045,7 +2045,7 @@ class ModelGroup extends EventEmitter {
     }
 
     // prime tower
-    public initPrimeTower(initHeight: number = 0.1, transformation: ModelTransformation) {
+    public initPrimeTower(initHeight = 0.1, transformation: ModelTransformation) {
         return new PrimeTowerModel(initHeight, this, transformation);
     }
 
@@ -2091,7 +2091,7 @@ class ModelGroup extends EventEmitter {
         return modelsToAddSupport;
     }
 
-    public getModelsAttachedSupport(defaultSelectAllModels: boolean = true) {
+    public getModelsAttachedSupport(defaultSelectAllModels = true) {
         if (defaultSelectAllModels) {
             return this.filterModelsCanAttachSupport(this.models);
         } else {

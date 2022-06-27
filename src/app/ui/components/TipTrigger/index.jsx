@@ -30,10 +30,16 @@ const TipTrigger = React.memo((props) => {
     } else {
         placementValue = placement;
     }
+    // function getPopupContainer(node) {
+    //     console.log('node', node);
+    //     return node.parentNode;
+    // }
 
     return (
         <Popover
             placement={placementValue}
+            autoAdjustOverflow={false}
+            zIndex={9999}
             content={content}
             title={title}
             arrowPointAtCenter

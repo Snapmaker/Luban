@@ -938,7 +938,6 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
     }
 };
 
-// @ts-ignore
 const publicPath = global.PUBLIC_PATH || '';
 export const DATA_PATH = `${publicPath}/data`;
 
@@ -1490,9 +1489,7 @@ export function getCurrentHeadType(pathname: string) {
 
 export function getMachineSeriesWithToolhead(platform: string, toolhead: string) {
     const seriesInfo = valueOf(MACHINE_SERIES, 'value', platform) || MACHINE_SERIES.ORIGINAL;
-    const size = seriesInfo
-        ? seriesInfo.setting?.size
-        : MACHINE_SERIES.ORIGINAL.setting.size;
+    const size = seriesInfo ? seriesInfo.setting?.size : MACHINE_SERIES.ORIGINAL.setting.size;
     const workSize = {};
     const configPathname = {};
     Object.keys(toolhead).forEach((key: string) => {
@@ -1503,10 +1500,9 @@ export function getMachineSeriesWithToolhead(platform: string, toolhead: string)
             y: size.y - headToolInfo.offset.y,
             z: size.z - headToolInfo.offset.z
         };
-        configPathname[type] = `${
-            platform === 'Original Long Z-axis'
-                ? 'original'
-                : platform.toLowerCase()
+        configPathname[type] = `${platform === 'Original Long Z-axis'
+            ? 'original'
+            : platform.toLowerCase()
         }_${headToolInfo?.pathname}`;
     });
     return {

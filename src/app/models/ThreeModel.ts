@@ -15,11 +15,11 @@ import type ModelGroup from './ModelGroup';
 const materialOverstepped = new THREE.Color(0xa80006);
 
 class ThreeModel extends BaseModel {
-    public isThreeModel: boolean = true;
+    public isThreeModel = true;
 
     public target: unknown = null;
     public originalPosition: TSize;
-    public supportTag: boolean = false;
+    public supportTag = false;
     public supportFaceMarks: number[] = [];
     public convexGeometry: THREE.Geometry;
 
@@ -29,7 +29,7 @@ class ThreeModel extends BaseModel {
     // declare public meshObject: THREE.Mesh;
     declare public meshObject: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial | THREE.MeshLambertMaterial> & { uniformScalingState?: boolean };
 
-    public isEditingSupport: boolean = false;
+    public isEditingSupport = false;
 
     private geometry: THREE.BufferGeometry;
 

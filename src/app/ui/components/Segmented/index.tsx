@@ -1,17 +1,18 @@
 import PropTypes from 'prop-types';
-import { Segmented } from 'antd';
+/* why use customized ‘Segmented’
+See the antd's source code, it will tigger 'setRawValue' in
+inside function 'handleChange', which will not tigger by 'value' changed
+*/
 import React from 'react';
+import Segmented from './Segmented';
+// import { Segmented } from 'antd';
 import styles from './styles.styl';
 
-const SmallSegment = (props) => {
-    const { block = true, options, size = 'small', ...rest } = props;
-
+const SmallSegment = ({ block = true, size = 'small', ...rest }) => {
     return (
-
         <Segmented
             className={styles[size]}
             block={block}
-            options={options}
             {...rest}
         />
     );
@@ -19,7 +20,6 @@ const SmallSegment = (props) => {
 
 
 SmallSegment.propTypes = {
-    options: PropTypes.array,
     size: PropTypes.string,
     block: PropTypes.bool
 };

@@ -61,7 +61,7 @@ function PrintingManager() {
     );
     // TODO: Update materialDifinitions Data, for TreeSelect
     // const [materialOptions, setMaterialOptions] = useState(materialDefinitions);
-    const qualityDefinitions = useSelector(
+    const qualityDefinitionsModels = useSelector(
         (state) => state?.printing?.qualityDefinitions
     );
     const series = useSelector((state) => state?.machine?.series);
@@ -116,6 +116,7 @@ function PrintingManager() {
             shouldUpdateActive
         ) => {
             // now setDefinitionState is synchronize, so remove setTimeout
+            newDefinition.updateParams && newDefinition.updateParams();
             await dispatch(
                 printingActions.updateCurrentDefinition(
                     newDefinition,
@@ -249,7 +250,7 @@ function PrintingManager() {
         : printingQualityConfigGroup;
     const allDefinitions = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL
         ? materialDefinitions
-        : qualityDefinitions;
+        : qualityDefinitionsModels;
 
     const selectedIds = {
         [PRINTING_MANAGER_TYPE_MATERIAL]: {

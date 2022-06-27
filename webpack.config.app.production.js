@@ -40,7 +40,7 @@ module.exports = {
             path.resolve(__dirname, 'src/app'),
             'node_modules'
         ],
-        extensions: ['.js', '.json', '.jsx', '.styl', '.ts']
+        extensions: ['.js', '.json', '.jsx', '.styl', '.ts', '.tsx']
     },
     entry: {
         polyfill: path.resolve(__dirname, 'src/app/polyfill/index.js'),
@@ -106,11 +106,29 @@ module.exports = {
                 },
             },
             {
-                test: /\.ts$/,
+                test: /\.tsx?$/,
+                use: [
+                    {
+                        loader: 'babel-loader',
+                        options: {
+                            presets: [
+                                '@babel/preset-env',
+                                [
+                                    '@babel/preset-react',
+                                    { pragma: 'createElement' },
+                                ],
+                            ],
+                        },
+                    },
+                    { loader: 'ts-loader' },
+                ]
+            },
+            {
+                test: /\.tsx?$/,
                 loader: 'ts-loader'
             },
             {
-                test: /\.jsx?$|\.ts$/,
+                test: /\.jsx?$|\.tsx?$/,
                 loader: 'eslint-loader',
                 enforce: 'pre',
                 exclude: /node_modules/

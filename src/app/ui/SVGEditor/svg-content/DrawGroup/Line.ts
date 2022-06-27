@@ -21,7 +21,7 @@ class Line {
 
     private model: Bezier;
 
-    public constructor(data: TCoordinate[] | SVGPathElement, scale: number, closedLoop: boolean = false, fragmentID: number) {
+    public constructor(data: TCoordinate[] | SVGPathElement, scale: number, closedLoop = false, fragmentID: number) {
         this.scale = scale;
         this.closedLoop = closedLoop;
         this.fragmentID = fragmentID;

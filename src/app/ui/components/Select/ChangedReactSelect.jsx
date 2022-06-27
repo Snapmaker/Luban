@@ -20,6 +20,7 @@ class ChangedReactSelect extends PureComponent {
         ]),
         showSearch: PropTypes.bool,
         disabled: PropTypes.bool,
+        disableBorder: PropTypes.bool,
         options: PropTypes.array.isRequired,
         size: PropTypes.string,
         className: PropTypes.string,
@@ -128,6 +129,7 @@ class ChangedReactSelect extends PureComponent {
             className,
             isGroup,
             showSearch = true,
+            disableBorder = false,
             disabled = true
         } = this.props;
         let defaultValue = {};
@@ -166,10 +168,12 @@ class ChangedReactSelect extends PureComponent {
             return (
                 <div className={classNames(styles['override-select'], className)} style={{ width: size }}>
                     <TreeSelect
-                        className={styles[size]}
                         onTreeExpand={this.actions.onTreeExpand}
                         showSearch
-                        style={{ width: size }}
+                        className={classNames(
+                            styles[size],
+                            disableBorder ? 'disable-border' : null
+                        )}
                         onDropdownVisibleChange={this.actions.onDropdownVisibleChange}
                         treeExpandedKeys={this.state.expandedKeys}
                         value={defaultValue?.definitionId}
@@ -193,7 +197,10 @@ class ChangedReactSelect extends PureComponent {
                 <div className={classNames(styles['override-select'], className)}>
                     <Select
                         dropdownRender={this.props.dropdownRender}
-                        className={styles[size]}
+                        className={classNames(
+                            styles[size],
+                            disableBorder ? 'disable-border' : null
+                        )}
                         value={defaultValue?.value}
                         showSearch={showSearch}
                         optionFilterProp="children"

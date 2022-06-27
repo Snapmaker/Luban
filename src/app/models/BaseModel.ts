@@ -50,7 +50,7 @@ export type TMode = typeof PROCESS_MODE_BW
 export type ModelInfo = {
     modelID?: string,
     parentModelID?: string,
-    limitSize?: Object,
+    limitSize?: number,
     headType?: typeof HEAD_LASER | typeof HEAD_CNC,
     sourceType: 'svg' | 'image3d' | 'raster' | 'dxf' | '3d',
     sourceHeight?: number,
@@ -89,11 +89,11 @@ abstract class BaseModel {
 
     public modelGroup: ModelGroup = null;
 
-    public modelID: string = '';
-    public originModelID: string = '';
+    public modelID = '';
+    public originModelID = '';
     public originalName: string;
-    public modelName: string = '';
-    public uploadImageName: string = '';
+    public modelName = '';
+    public uploadImageName = '';
     public sourceType: SOURCE_TYPE;
     public sourceHeight: number;
     public sourceWidth: number;
@@ -109,7 +109,7 @@ abstract class BaseModel {
     public elem: SvgModelElement;
     public size: TSize
     public transformation: ModelTransformation = DEFAULT_TRANSFORMATION;
-    public visible: boolean = true;
+    public visible = true;
 
     public boundingBox: Box2;
     public limitSize: number
