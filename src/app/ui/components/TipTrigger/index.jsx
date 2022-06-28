@@ -2,7 +2,9 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Popover } from 'antd';
 import { isEqual } from 'lodash';
-// import { Tooltip, Popover } from 'antd';
+import classNames from 'classnames';
+import styles from './styles.styl';
+
 function isValidElement(object) {
     return (
         typeof object === 'object'
@@ -23,30 +25,28 @@ function checkIsEqual(newObj, oldObj) {
 }
 
 const TipTrigger = React.memo((props) => {
-    const { placement = 'left', title = '', content, isIcon = false, children, ...rest } = props;
+    const { placement = 'left', style = {}, title = '', content, isIcon = false, children, ...rest } = props;
     let placementValue = 'left';
     if (isIcon) {
         placementValue = 'bottom';
     } else {
         placementValue = placement;
     }
-    // function getPopupContainer(node) {
-    //     console.log('node', node);
-    //     return node.parentNode;
-    // }
-
     return (
         <Popover
             placement={placementValue}
+            className={classNames(
+                styles['popover-wrapper']
+            )}
+            style={style}
             autoAdjustOverflow={false}
             zIndex={9999}
             content={content}
             title={title}
             arrowPointAtCenter
+            {...rest}
         >
-            <div {...rest}>
-                {children}
-            </div>
+            {children}
         </Popover>
     );
 }, checkIsEqual);
@@ -56,6 +56,7 @@ TipTrigger.propTypes = {
     placement: PropTypes.string,
     title: PropTypes.string,
     children: PropTypes.node,
+    style: PropTypes.object,
     content: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
     isIcon: PropTypes.bool
 };

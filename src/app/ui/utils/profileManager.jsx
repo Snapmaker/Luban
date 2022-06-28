@@ -34,29 +34,35 @@ function getSelectOptions(printingDefinitions) {
 }
 
 function getPresetOptions(definitionModels) {
-    const recommendedOptions = [];
-    const customizedOptions = [];
+    const presetOptionsObj = {};
     definitionModels.forEach(preset => {
-        const optionsObject = {};
         const typeOfPrinting = preset.typeOfPrinting;
-        optionsObject.definitionId = preset.definitionId;
-        optionsObject.value = preset.definitionId;
-        if (typeOfPrinting) {
-            if (preset.visible) {
-                optionsObject.typeOfPrinting = preset.typeOfPrinting;
-                recommendedOptions.push(optionsObject);
+        const category = preset.category && typeOfPrinting ? preset.category : 'Custom';
+        const definitionId = preset.definitionId;
+        if (Object.keys(preset?.settings).length > 0) {
+            const checkboxAndSelectGroup = {};
+            const name = preset.name;
+            checkboxAndSelectGroup.name = name;
+            checkboxAndSelectGroup.definitionId = definitionId;
+            checkboxAndSelectGroup.typeOfPrinting = typeOfPrinting;
+            checkboxAndSelectGroup.label = `${name}`;
+            checkboxAndSelectGroup.value = `${definitionId}-${name}`;
+            if (presetOptionsObj[category]) {
+                preset.visible && presetOptionsObj[category].options.push(checkboxAndSelectGroup);
+            } else {
+                const i18nCategory = preset.i18nCategory;
+                const groupOptions = {
+                    label: category,
+                    category: category,
+                    i18nCategory: i18nCategory,
+                    options: []
+                };
+                presetOptionsObj[category] = groupOptions;
+                preset.visible && groupOptions.options.push(checkboxAndSelectGroup);
             }
-        } else {
-            // TODO:
-            optionsObject.i18nName = preset.i18nName;
-            optionsObject.name = preset.name;
-            customizedOptions.push(optionsObject);
         }
     });
-    return {
-        recommendedOptions,
-        customizedOptions
-    };
+    return presetOptionsObj;
 }
 
 function getMaterialSelectOptions(materialDefinitions) {

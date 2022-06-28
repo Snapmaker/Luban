@@ -20,7 +20,7 @@ class ChangedReactSelect extends PureComponent {
         ]),
         showSearch: PropTypes.bool,
         disabled: PropTypes.bool,
-        disableBorder: PropTypes.bool,
+        bordered: PropTypes.bool,
         options: PropTypes.array.isRequired,
         size: PropTypes.string,
         className: PropTypes.string,
@@ -129,8 +129,8 @@ class ChangedReactSelect extends PureComponent {
             className,
             isGroup,
             showSearch = true,
-            disableBorder = false,
-            disabled = true
+            disabled = true,
+            bordered = true
         } = this.props;
         let defaultValue = {};
         if (isGroup) {
@@ -171,14 +171,14 @@ class ChangedReactSelect extends PureComponent {
                         onTreeExpand={this.actions.onTreeExpand}
                         showSearch
                         className={classNames(
-                            styles[size],
-                            disableBorder ? 'disable-border' : null
+                            styles[size]
                         )}
                         onDropdownVisibleChange={this.actions.onDropdownVisibleChange}
                         treeExpandedKeys={this.state.expandedKeys}
                         value={defaultValue?.definitionId}
                         treeData={treeData}
                         onChange={(option) => this.actions.handleTreeChange(option)}
+                        bordered={bordered}
                     />
                 </div>
             );
@@ -198,8 +198,7 @@ class ChangedReactSelect extends PureComponent {
                     <Select
                         dropdownRender={this.props.dropdownRender}
                         className={classNames(
-                            styles[size],
-                            disableBorder ? 'disable-border' : null
+                            styles[size]
                         )}
                         value={defaultValue?.value}
                         showSearch={showSearch}
@@ -207,6 +206,7 @@ class ChangedReactSelect extends PureComponent {
                         style={{ width: size }}
                         disabled={disabled}
                         onChange={this.actions.handleChange}
+                        bordered={bordered}
                     >
                         {(options.map((option) => {
                             return (<Option key={option.value + option.label} value={option.value}>{i18n._(option.label)}</Option>);

@@ -194,9 +194,7 @@ class CncParameters extends PureComponent {
                                             className={classNames(
                                                 'sm-parameter-row__select-md',
                                             )}
-                                            backspaceRemoves={false}
                                             clearable={false}
-                                            menuContainerStyle={{ zIndex: 5 }}
                                             name="carvePath"
                                             options={[
                                                 {

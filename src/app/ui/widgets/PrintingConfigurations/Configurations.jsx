@@ -1,14 +1,17 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
 import classNames from 'classnames';
-import { cloneDeep, includes, isNil } from 'lodash';
-// import { Segmented as OriginSegmented } from 'antd';
+import { cloneDeep, includes, isNil, uniqWith } from 'lodash';
+import modal from '../../../lib/modal';
+import DefinitionCreator from '../../views/DefinitionCreator';
 import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
 import Modal from '../../components/Modal';
 import Anchor from '../../components/Anchor';
 import { Button } from '../../components/Buttons';
+import TipTrigger from '../../components/TipTrigger';
+
 import Segmented from '../../components/Segmented/index';
 import i18n from '../../../lib/i18n';
 import { actions as printingActions } from '../../../flux/printing';
@@ -30,10 +33,7 @@ import styles from './styles.styl';
 import { getPresetOptions } from '../../utils/profileManager';
 
 const newKeys = cloneDeep(PRINTING_QUALITY_CONFIG_INDEX);
-const PRESET_DISPLAY_TYPES = ['Recommended', 'Customized'];
-const PRESET_DISPLAY_TYPES_OPTIONS = PRESET_DISPLAY_TYPES.map((item) => {
-    return { value: item, label: item };
-});
+const PRESET_DISPLAY_TYPE = 'Default';
 const CONFIG_DISPLAY_TYPES = ['Recommended', 'Customized'];
 const CONFIG_DISPLAY_TYPES_OPTIONS = CONFIG_DISPLAY_TYPES.map((item) => {
     return { value: item, label: item };
@@ -44,6 +44,7 @@ function isOfficialDefinitionKey(key) {
 function calculateTextIndex(key) {
     return `${newKeys[key] * 20}px`;
 }
+
 
 function ParamItem({ selectedDefinitionModel, allParams }) {
     const selectedDefinitionSettings = selectedDefinitionModel.settings;
@@ -121,16 +122,19 @@ ParamItem.propTypes = {
     selectedDefinitionModel: PropTypes.object,
     allParams: PropTypes.object
 };
+
+
 // {i18n._(`key-Printing/PrintingConfigurations-${optionItem.typeOfPrinting}`)}
 function Configurations() {
     const [selectedDefinition, setSelectedDefinition] = useState(null);
     const [minimized, setMinimized] = useState(false);
     const [showCustomConfigPannel, setShowCustomConfigPannel] = useState(false);
-    const [presetDisplayType, setPresetDisplayType] = useState(PRESET_DISPLAY_TYPES[0]);
+    const [presetDisplayType, setPresetDisplayType] = useState(PRESET_DISPLAY_TYPE);
     const [configDisplayType, setConfigDisplayType] = useState(CONFIG_DISPLAY_TYPES[1]);
     const defaultQualityId = useSelector((state) => state?.printing?.defaultQualityId);
     const defaultMaterialId = useSelector((state) => state?.printing?.defaultMaterialId);
     const qualityDefinitionModels = useSelector((state) => state?.printing?.qualityDefinitions);
+    const refSelectedDefinition = useRef(selectedDefinition);
 
     let printingCustomConfigs = useSelector(
         (state) => state?.machine?.printingCustomConfigs
@@ -143,11 +147,99 @@ function Configurations() {
     const printingQualityConfigGroup = toolHead.printingToolhead === SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2
         ? PRINTING_QUALITY_CONFIG_GROUP_SINGLE
         : PRINTING_QUALITY_CONFIG_GROUP_DUAL;
+    const refCreateModal = useRef(null);
     const dispatch = useDispatch();
 
+
+    const presetOptionsObj = getPresetOptions(qualityDefinitionModels);
+    const presetDisplayTypeOptions = Object.entries(presetOptionsObj).map(([key, item]) => {
+        return { value: key, label: key, category: item.category, i18nCategory: item.i18nCategory };
+    });
+
     const actions = {
-        showMenu: (event) => {
-            console.log(event);
+        onChangePresetDisplayType: (options) => {
+            setPresetDisplayType(options.value);
+            const firstDefinitionId = presetOptionsObj[options.value]?.options[0]?.definitionId;
+            firstDefinitionId && actions.onSelectCustomDefinitionById(firstDefinitionId);
+        },
+        resetPreset: () => {
+            setTimeout(() => {
+                dispatch(
+                    printingActions.resetDefinitionById(
+                        'quality',
+                        selectedDefinition?.definitionId
+                    )
+                );
+            }, 50);
+        },
+        showInputModal: () => {
+            const newSelectedDefinition = cloneDeep(selectedDefinition.getSerializableDefinition());
+            const title = i18n._('key-Printing/ProfileManager-Copy Profile');
+            const copyType = 'Item';
+
+            const copyCategoryName = newSelectedDefinition.category;
+            const copyCategoryI18n = newSelectedDefinition.i18nCategory;
+            const copyItemName = newSelectedDefinition.name;
+            const isCreate = false;
+            let materialOptions = presetDisplayTypeOptions
+                .filter((option) => {
+                    return option.category !== 'Default';
+                })
+                .map(option => {
+                    return {
+                        label: option.category,
+                        value: option.category,
+                        i18n: option.i18nCategory
+                    };
+                });
+            materialOptions = uniqWith(materialOptions, (a, b) => {
+                return a.label === b.label;
+            });
+
+            const popupActions = modal({
+                title: title,
+                body: (
+                    <React.Fragment>
+                        <DefinitionCreator
+                            managerType="quality"
+                            isCreate={isCreate}
+                            ref={refCreateModal}
+                            materialOptions={materialOptions}
+                            copyType={copyType}
+                            copyCategoryName={copyCategoryName}
+                            copyCategoryI18n={copyCategoryI18n}
+                            copyItemName={copyItemName}
+                        />
+                    </React.Fragment>
+                ),
+                footer: (
+                    <Button
+                        priority="level-two"
+                        className="margin-left-8"
+                        width="96px"
+                        onClick={async () => {
+                            const data = refCreateModal.current.getData();
+                            const newName = data.itemName;
+                            popupActions.close();
+                            newSelectedDefinition.category = data.categoryName === 'Default' ? 'Custom' : data.categoryName;
+                            newSelectedDefinition.i18nCategory = data.categoryI18n;
+                            newSelectedDefinition.name = newName;
+
+                            // TODO: need update
+                            await dispatch(
+                                printingActions.duplicateDefinitionByType(
+                                    'quality',
+                                    newSelectedDefinition,
+                                    undefined,
+                                    newName
+                                )
+                            );
+                        }}
+                    >
+                        {i18n._('key-Printing/ProfileManager-Save')}
+                    </Button>
+                )
+            });
         },
         onShowMaterialManager: () => {
             dispatch(
@@ -167,6 +259,7 @@ function Configurations() {
                     )
                 );
                 setSelectedDefinition(definition);
+                refSelectedDefinition.current = definition;
             }
         },
         toggleShowCustomConfigPannel: () => {
@@ -237,10 +330,31 @@ function Configurations() {
             machineActions.updatePrintingCustomConfigs(printingCustomConfigs)
         );
     }, []);
-
+    const renderProfileMenu = (displayType) => {
+        const hasResetButton = displayType === 'Default';
+        return (
+            <div>
+                {hasResetButton && (
+                    <Button
+                        priority="level-two"
+                        width="128px"
+                        onClick={actions.resetPreset}
+                    >
+                        {i18n._('key-Printing/ProfileManager-Reset')}
+                    </Button>
+                )}
+                <Button
+                    priority="level-two"
+                    width="128px"
+                    onClick={actions.showInputModal}
+                >
+                    {i18n._('key-Printing/ProfileManager-Copy')}
+                </Button>
+            </div>
+        );
+    };
     useEffect(() => {
         // re-select definition based on new properties
-
         if (qualityDefinitionModels.length > 0) {
             const definition = qualityDefinitionModels.find(
                 (d) => d.definitionId === defaultQualityId
@@ -257,7 +371,6 @@ function Configurations() {
     useEffect(() => {
         console.log('defaultMaterialId');
     }, [defaultMaterialId]);
-    const { recommendedOptions, customizedOptions } = getPresetOptions(qualityDefinitionModels);
     if (!selectedDefinition) {
         return null;
     }
@@ -271,15 +384,13 @@ function Configurations() {
                 <Select
                     clearable={false}
                     size="328px"
-                    options={PRESET_DISPLAY_TYPES_OPTIONS}
+                    options={presetDisplayTypeOptions}
                     value={presetDisplayType}
-                    onChange={(options) => {
-                        setPresetDisplayType(options.value);
-                    }}
+                    onChange={actions.onChangePresetDisplayType}
                 />
-                {presetDisplayType === PRESET_DISPLAY_TYPES[0] && (
+                {presetDisplayType === 'Default' && (
                     <div className={classNames(styles['preset-recommended'], 'sm-flex', 'margin-vertical-16', 'align-c', 'justify-space-between')}>
-                        {recommendedOptions.map((optionItem) => {
+                        {presetOptionsObj[presetDisplayType].options.map((optionItem) => {
                             return (
                                 <div
                                     key={optionItem.typeOfPrinting}
@@ -295,15 +406,21 @@ function Configurations() {
                                             styles['preset-recommended__icon']
                                         )}
                                         >
-                                            <SvgIcon
-                                                className={classNames(
-                                                    styles['preset-hover'],
-                                                )}
-                                                type={['static']}
-                                                size={24}
-                                                name="PrintingSettingNormal"
-                                                onClick={actions.showMenu}
-                                            />
+                                            <TipTrigger
+                                                placement="bottom"
+                                                style={{ maxWidth: '160px' }}
+                                                content={renderProfileMenu(presetDisplayType)}
+                                                trigger="click"
+                                            >
+                                                <SvgIcon
+                                                    className={classNames(
+                                                        styles['preset-hover'],
+                                                    )}
+                                                    type={['static']}
+                                                    size={24}
+                                                    name="PrintingSettingNormal"
+                                                />
+                                            </TipTrigger>
                                         </div>
                                     </Anchor>
                                     <span className="max-width-76 text-overflow-ellipsis-line-2 height-16 margin-top-4 margin-bottom-8">
@@ -314,9 +431,9 @@ function Configurations() {
                         })}
                     </div>
                 )}
-                {presetDisplayType === PRESET_DISPLAY_TYPES[1] && (
+                {presetDisplayType !== 'Default' && (
                     <div className={classNames(styles['preset-customized'], 'margin-top-8')}>
-                        {customizedOptions.map((optionItem) => {
+                        {presetOptionsObj[presetDisplayType] && presetOptionsObj[presetDisplayType].options.map((optionItem) => {
                             return (
                                 <div
                                     key={optionItem.i18nName || optionItem.name}
@@ -338,15 +455,21 @@ function Configurations() {
                                         <span>
                                             {i18n._(optionItem.i18nName || optionItem.name)}
                                         </span>
-                                        <SvgIcon
-                                            className={classNames(
-                                                styles['preset-hover'],
-                                                'float-right'
-                                            )}
-                                            type={['static']}
-                                            size={24}
-                                            name="PrintingSettingNormal"
-                                        />
+                                        <TipTrigger
+                                            placement="left"
+                                            content={renderProfileMenu(presetDisplayType)}
+                                            trigger="click"
+                                        >
+                                            <SvgIcon
+                                                className={classNames(
+                                                    styles['preset-hover'],
+                                                    'float-right'
+                                                )}
+                                                type={['static']}
+                                                size={24}
+                                                name="PrintingSettingNormal"
+                                            />
+                                        </TipTrigger>
                                     </Anchor>
                                 </div>
                             );
@@ -407,7 +530,7 @@ function Configurations() {
                                     clearable={false}
                                     style={{ border: 'none' }}
                                     size="100px"
-                                    disableBorder
+                                    bordered={false}
                                     options={CONFIG_DISPLAY_TYPES_OPTIONS}
                                     value={configDisplayType}
                                     onChange={(options) => {
@@ -504,7 +627,7 @@ function Configurations() {
                             )}
                             onClick={actions.onShowMaterialManager}
                         >
-                            {i18n._('key-unused-More Parameters >')}
+                            {i18n._('key-Printing/PrintingConfigurations-More Parameters >')}
                         </Anchor>
                     </div>
 
