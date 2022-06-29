@@ -1481,17 +1481,28 @@ export const actions = {
                 }
             ]
             : state[definitionsKey].filter((d) => d.category === oldCategory);
+
+        const { extruderLDefinition } = state;
+        const activeMaterialType = dispatch(actions.getActiveMaterialType());
+
         for (let i = 0; i < definitionModelsWithSameCategory.length; i++) {
             const newDefinition = definitionModelsWithSameCategory[i];
             newDefinition.category = newCategoryName;
             newDefinition.i18nCategory = '';
             const definitionId = `${newDefinition.definitionId}${timestamp()}`;
             newDefinition.definitionId = definitionId;
-            const createdDefinition = await definitionManager.createDefinition(
+            const createdDefinitionModel = await definitionManager.createDefinition(
                 newDefinition
             );
-            if (createdDefinition) {
-                allDupliateDefinitions.push(createdDefinition);
+            if (createdDefinitionModel.definitionId.indexOf('quality.') === 0) {
+                createdDefinitionModel = new PresetDefinitionModel(
+                    createdDefinitionModel,
+                    activeMaterialType,
+                    extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
+                );
+            }
+            if (createdDefinitionModel) {
+                allDupliateDefinitions.push(createdDefinitionModel);
             }
         }
         dispatch(
