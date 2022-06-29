@@ -1,5 +1,3 @@
-/* eslint no-var: 0 */
-/* eslint prefer-arrow-callback: 0 */
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
@@ -74,7 +72,10 @@ module.exports = {
             },
             {
                 test: /\.ts$/,
-                loader: 'ts-loader'
+                loader: 'ts-loader',
+                options: {
+                    transpileOnly: true
+                }
             },
             {
                 test: /\.jsx?$/,
