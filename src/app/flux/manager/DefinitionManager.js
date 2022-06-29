@@ -4,6 +4,7 @@ import api from '../../api';
 import i18n from '../../lib/i18n';
 import {
     HEAD_CNC,
+    HEAD_PRINTING,
     RIGHT_EXTRUDER_MAP_NUMBER,
     PRINTING_MATERIAL_CONFIG_KEYS_SINGLE,
     MACHINE_EXTRUDER_X,
@@ -56,12 +57,17 @@ class DefinitionManager {
             }
             return item;
         });
+        if (headType === HEAD_PRINTING) {
+            res = await this.getDefinition('machine');
+            this.machineDefinition = res;
 
-        res = await this.getDefinition('snapmaker_extruder_0', false);
-        this.extruderLDefinition = res;
+            res = await this.getDefinition('snapmaker_extruder_0', false);
+            this.extruderLDefinition = res;
 
-        res = await this.getDefinition('snapmaker_extruder_1', false);
-        this.extruderRDefinition = res;
+            res = await this.getDefinition('snapmaker_extruder_1', false);
+            this.extruderRDefinition = res;
+        }
+
     }
 
     /**
