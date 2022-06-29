@@ -3,7 +3,7 @@ import CSSMotion from 'rc-motion';
 import classNames from 'classnames';
 import useLayoutEffect from 'rc-util/lib/hooks/useLayoutEffect';
 import { composeRef } from 'rc-util/lib/ref';
-import type { SegmentedValue } from '.';
+import { SegmentedValue } from './RcSegmented';
 
 type ThumbReact = {
     left: number;

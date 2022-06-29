@@ -601,16 +601,19 @@ const DEFAULT_KEYS = [
     'settings',
     'ownKeys'
 ];
+
+type ParamsObjectOption = {
+    [key: string]: {
+        affect: {
+            [option: string]: string | number | boolean
+        },
+        value: string | number | boolean;
+        label: string | number | boolean
+    }
+}
+
 type ParamsObjectType = {
-    options: {
-        [key: string]: {
-            affect:{
-                [option: string]: string | number | boolean
-            },
-            value: string | number | boolean;
-            label: string | number | boolean
-        }
-    };
+    options?: ParamsObjectOption;
     'current_value': number | string | boolean;
     'default_value': number | string | boolean;
     affectByType?: boolean;
@@ -624,21 +627,21 @@ type ParamsModelType = {
 }
 
 class PresetDefinitionModel {
-    public headType:string = HEAD_PRINTING;
-    public typeOfPrinting='universal';
+    public headType: string = HEAD_PRINTING;
+    public typeOfPrinting = 'universal';
     public nozzleSize;
     public params: ParamsModelType;
     public materialType: string;
     private visible = false;
 
     public definitionId = '';
-    public name= '';
+    public name = '';
     public inherits = '';
     public category = '';
     public i18nName = '';
     public i18nCategory = '';
-    public settings:string = HEAD_PRINTING;
-    public ownKeys:any;
+    public settings: string = HEAD_PRINTING;
+    public ownKeys: string[];
 
     // init definitionId and definition
     public constructor(definition, materialType, defaultNozzleSize) {
@@ -835,7 +838,7 @@ class PresetDefinitionModel {
         if (this.visible) {
             Object.entries(this.params).forEach(([paramName, paramItem]) => {
                 const actualValue = settings[paramName]?.default_value;
-                const actualOptions = paramItem.affectByType ? paramItem[this.typeOfPrinting] : paramItem.options;
+                const actualOptions: ParamsObjectOption = paramItem.affectByType ? paramItem[this.typeOfPrinting] : paramItem.options;
                 const isDefautValue = Object.entries(actualOptions).some(([optionName, optionItem]) => {
                     if (optionItem.value === actualValue) {
                         paramItem.current_value = optionName;

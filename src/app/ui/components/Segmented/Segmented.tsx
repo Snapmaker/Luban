@@ -13,13 +13,13 @@ import { ConfigContext, SizeType } from './context';
 export type { SegmentedValue } from './RcSegmented';
 
 interface SegmentedLabeledOptionWithoutIcon extends RcSegmentedLabeledOption {
-  label: RcSegmentedLabeledOption['label'];
+    label: RcSegmentedLabeledOption['label'];
 }
 
 interface SegmentedLabeledOptionWithIcon extends Omit<RcSegmentedLabeledOption, 'label'> {
-  label?: RcSegmentedLabeledOption['label'];
-  /** Set icon for Segmented item */
-  icon: React.ReactNode;
+    label?: RcSegmentedLabeledOption['label'];
+    /** Set icon for Segmented item */
+    icon: React.ReactNode;
 }
 
 function isSegmentedLabeledOptionWithIcon(
@@ -29,15 +29,15 @@ function isSegmentedLabeledOptionWithIcon(
 }
 
 export type SegmentedLabeledOption =
-  | SegmentedLabeledOptionWithIcon
-  | SegmentedLabeledOptionWithoutIcon;
+    | SegmentedLabeledOptionWithIcon
+    | SegmentedLabeledOptionWithoutIcon;
 
 export interface SegmentedProps extends Omit<RCSegmentedProps, 'size' | 'options'> {
-  options: (SegmentedRawOption | SegmentedLabeledOption)[];
-  /** Option to fit width to its parent's width */
-  block?: boolean;
-  /** Option to control the display size */
-  size?: SizeType;
+    options?: (SegmentedRawOption | SegmentedLabeledOption)[];
+    /** Option to fit width to its parent's width */
+    block?: boolean;
+    /** Option to control the display size */
+    size?: SizeType;
 }
 
 const Segmented = React.forwardRef<HTMLDivElement, SegmentedProps>((props, ref) => {
