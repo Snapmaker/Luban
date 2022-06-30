@@ -7,6 +7,7 @@ import { actions as printingActions } from '../../../flux/printing';
 import { ModelEvents } from '../../../models/events';
 
 function VisualizerClippingControl() {
+    const transformMode = useSelector(state => state?.printing?.transformMode, shallowEqual);
     const modelGroup = useSelector(state => state?.printing?.modelGroup);
     const displayedType = useSelector(state => state?.printing?.displayedType, shallowEqual);
     const primeTowerHeight = useSelector(state => state?.printing?.primeTowerHeight, shallowEqual);
@@ -26,14 +27,10 @@ function VisualizerClippingControl() {
         setValue(primeTowerHeight);
     }, [primeTowerHeight]);
     useEffect(() => {
-        modelGroup.on(ModelEvents.ClippingFinish, () => {
-            setValue(primeTowerHeight + qualitySetting?.layer_height?.default_value);
-        });
         modelGroup.on(ModelEvents.ClippingReset, () => {
             setValue(primeTowerHeight + qualitySetting?.layer_height?.default_value);
         });
         return () => {
-            modelGroup.off(ModelEvents.ClippingFinish, noop);
             modelGroup.off(ModelEvents.ClippingReset, noop);
         };
     }, [modelGroup, primeTowerHeight, qualitySetting]);
@@ -47,7 +44,9 @@ function VisualizerClippingControl() {
         update.current(v);
     };
 
-    if (displayedType === 'model' && modelGroup.models.length && !(modelGroup.models.length === 1 && modelGroup.models[0].type === 'primeTower')) {
+    const isSpecialMode = transformMode === 'rotate-placement' || transformMode === 'support-edit';
+
+    if (displayedType === 'model' && !isSpecialMode && modelGroup.models.length && !(modelGroup.models.length === 1 && modelGroup.models[0].type === 'primeTower')) {
         return (
             <React.Fragment>
                 <div className={styles['layer-wrapper']}>

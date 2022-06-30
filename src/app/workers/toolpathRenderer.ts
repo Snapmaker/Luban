@@ -15,6 +15,7 @@ const toolpathRenderer = (taskResult: ToolpathRendererData) => {
                 status: 'err',
                 value: 'Data is empty'
             });
+            subscriber.complete();
             return;
         }
         const { headType } = taskResult;
@@ -38,6 +39,7 @@ const toolpathRenderer = (taskResult: ToolpathRendererData) => {
                 headType: headType,
                 value: err
             });
+            subscriber.complete();
         }
 
         forkJoin(allPromises).subscribe({
@@ -64,6 +66,7 @@ const toolpathRenderer = (taskResult: ToolpathRendererData) => {
                     }
                 };
                 subscriber.next(data);
+                subscriber.complete();
             }
         });
     });

@@ -22,6 +22,10 @@ import { TPolygon } from './ClipperModel';
 import { PolygonsUtils } from '../../shared/lib/math/PolygonsUtils';
 import workerManager from '../lib/manager/workerManager';
 
+import { IResult as TBrimResult } from '../workers/plateAdhesion/generateBrim';
+import { IResult as TRaftResult } from '../workers/plateAdhesion/generateRaft';
+import { IResult as TSkirtResult } from '../workers/plateAdhesion/generateSkirt';
+
 const CUSTOM_EVENTS = {
     UPDATE: { type: 'update' }
 };
@@ -38,22 +42,6 @@ type TModel = ThreeGroup | ThreeModel | SvgModel
 type Model3D = Exclude<TModel, SvgModel>;
 
 export type TDisplayedType = 'model' | 'gcode'
-
-type TPoint = {
-    x: number,
-    y: number,
-    z?: number
-}
-
-type AttributeObject = {
-    array: number[];
-    itemSize: number;
-    normalized: boolean;
-};
-
-type AttributeData = {
-    send: AttributeObject;
-};
 
 type TRotationAnalysisTable = {
     faceId: number;
@@ -444,7 +432,14 @@ class ModelGroup extends EventEmitter {
         for (const model of models) {
             model.meshObject.removeEventListener('update', this.onModelUpdate);
             model.meshObject.parent && model.meshObject.parent.remove(model.meshObject);
+            if (model instanceof ThreeModel) {
+                this.clippingGroup.remove(model.clipper.group);
+                model.clipper = null;
+            }
         }
+        this.plateAdhesion.clear();
+        this.object.remove(this.sectionMesh);
+        this.sectionMesh = null;
         this.models = [];
     }
 
@@ -1053,7 +1048,6 @@ class ModelGroup extends EventEmitter {
      */
     public copy() {
         this.clipboard = this.selectedModelArray.filter((model) => !(model instanceof PrimeTowerModel)).map(model => model.clone(this));
-        console.log('this.clipboard = ', this.clipboard);
     }
 
     /**
@@ -1432,7 +1426,7 @@ class ModelGroup extends EventEmitter {
 
     public onModelBeforeTransform() {
         this.updateClippingPlane(planeMaxHeight);
-        this.emit(ModelEvents.ClippingFinish, true);
+        this.emit(ModelEvents.ClippingHeightReset, true);
         this.plateAdhesion.clear();
     }
 
@@ -2504,13 +2498,16 @@ class ModelGroup extends EventEmitter {
     }
 
     public generateSkirt(polygons: TPolygon[]) {
-        const now = performance.now();
-        workerManager.generateSkirt({
+        workerManager.generatePlateAdhesion({
+            adhesionType: 'skirt',
             polygons: Transfer(polygons as unknown as ArrayBuffer),
             skirtGap: this.adhesionConfig.skirtGap,
             skirtBrimLineWidth: this.adhesionConfig.skirtBrimLineWidth,
             skirtLineCount: this.adhesionConfig.skirtLineCount
-        }, (res: AttributeData) => {
+        }, (res: TSkirtResult) => {
+            if (this.models.length === 0) {
+                return;
+            }
             const positionObject = res.send;
             const linePosAttr = new BufferAttribute(
                 positionObject.array,
@@ -2529,17 +2526,20 @@ class ModelGroup extends EventEmitter {
             line.visible = true;
             this.plateAdhesion.add(line);
             this.onModelUpdate();
-            console.log(`===>>> generateSkirt cost=${performance.now() - now}`);
+            // generateSkirt finish
         });
     }
 
     public generateBrim(polygons: TPolygon[]) {
-        const now = performance.now();
-        workerManager.generateBrim({
+        workerManager.generatePlateAdhesion({
+            adhesionType: 'brim',
             polygons,
             skirtBrimLineWidth: this.adhesionConfig.skirtBrimLineWidth,
             brimLineCount: this.adhesionConfig.brimLineCount
-        }, (res: {linePosAttr: AttributeData, length: number}) => {
+        }, (res: TBrimResult) => {
+            if (this.models.length === 0) {
+                return;
+            }
             const positionObject = res.linePosAttr.send;
             const linePosAttr = new BufferAttribute(
                 positionObject.array,
@@ -2559,17 +2559,20 @@ class ModelGroup extends EventEmitter {
             line.visible = true;
             this.plateAdhesion.add(line);
             this.onModelUpdate();
-            console.log(`===>>> generateBrim cost=${performance.now() - now}`);
+            // generateBrim finish
         });
     }
 
     public generateRaft(polygons: TPolygon[]) {
-        const now = performance.now();
-        workerManager.generateRaft({
+        workerManager.generatePlateAdhesion({
+            adhesionType: 'raft',
             polygons,
             raftMargin: this.adhesionConfig.raftMargin,
             skirtBrimLineWidth: this.adhesionConfig.skirtBrimLineWidth
-        }, (arr: {send: TPoint[][]}) => {
+        }, (arr: TRaftResult) => {
+            if (this.models.length === 0) {
+                return;
+            }
             arr.send.forEach((vectors) => {
                 const points = [];
                 for (let i = 0; i < vectors.length; i++) {
@@ -2581,7 +2584,7 @@ class ModelGroup extends EventEmitter {
                 const mesh = new Mesh(geometry, new MeshPhongMaterial({ color: 0x9254DE, side: DoubleSide }));
                 mesh.position.setZ(0.02);
                 this.plateAdhesion.add(mesh);
-                console.log(`===>>> generateRaft cost=${performance.now() - now}`);
+                // generateRaft finish
             });
             this.onModelUpdate();
         });
@@ -2638,7 +2641,7 @@ class ModelGroup extends EventEmitter {
 
     public updateClippingPlane(height?: number) {
         if (!height) {
-            this.emit(ModelEvents.ClippingReset);
+            this.emit(ModelEvents.ClippingHeightReset);
         }
         // this.planeMesh.position.set(0, 0, height);
         !height && (height = planeMaxHeight);
@@ -2674,8 +2677,8 @@ class ModelGroup extends EventEmitter {
         if (finished) {
             const allDone = this.hasClipped();
             if (allDone) {
-                this.emit(ModelEvents.ClippingFinish, true);
                 this.updatePlateAdhesion();
+                this.updateClippingPlane(this.localPlane.constant);
                 this.models = [...this.models];
             }
         } else {
@@ -2689,7 +2692,7 @@ class ModelGroup extends EventEmitter {
     public setTransformMode(value: string) {
         if (value) {
             this.updateClippingPlane(planeMaxHeight);
-            this.emit(ModelEvents.ClippingFinish, true);
+            this.emit(ModelEvents.ClippingHeightReset, true);
         }
     }
 }

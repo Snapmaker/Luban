@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { Transfer } from 'threads';
+import { TransferDescriptor } from 'threads';
 import { BufferAttribute, BufferGeometry, Line3, Matrix4, Plane, Vector3 } from 'three';
 import { MeshBVH } from 'three-mesh-bvh';
 // import sortUnorderedLine from './sort-unordered-line';
@@ -7,27 +7,27 @@ import { MeshBVH } from 'three-mesh-bvh';
 
 type TPoint = { x: number, y: number, z?: number }
 
-
-type AttributeObject = {
-    array: number[];
-    itemSize: number;
-    normalized: boolean;
-};
-
-type AttributeData = {
-    send: AttributeObject;
-};
-
-type IMessage = {
-    positionAttribute: AttributeData,
+export type IMessage = {
+    positionAttribute: TransferDescriptor<{
+        array: number[];
+        itemSize: number;
+        normalized: boolean;
+    }>,
     modelMatrix: Matrix4,
     height: number,
     layerHeight: number
 }
 
+export type IResult = {
+    layerTop: number,
+    vectors: TPoint[]
+}
+
 const calculateSectionPoints = ({ positionAttribute, modelMatrix, height, layerHeight }: IMessage) => {
-    return new Observable((observer) => {
-        const bvhGeometry = new BufferGeometry();
+    let number = 0;
+    const now = new Date().getTime();
+    return new Observable<IResult>((observer) => {
+        let bvhGeometry = new BufferGeometry();
         const positionObject = positionAttribute.send;
         const position = new BufferAttribute(
             positionObject.array,
@@ -38,10 +38,10 @@ const calculateSectionPoints = ({ positionAttribute, modelMatrix, height, layerH
         matrix.fromArray(modelMatrix.elements);
         position.applyMatrix4(matrix);
         bvhGeometry.setAttribute('position', position);
-        const colliderBvh = new MeshBVH(bvhGeometry, { maxLeafTris: 3 });
+        let colliderBvh = new MeshBVH(bvhGeometry, { maxLeafTris: 3 });
 
         const plane = new Plane(new Vector3(0, 0, -1), 0);
-        for (let layerTop = 0; layerTop <= height; layerTop = Number((layerTop + layerHeight).toFixed(2))) {
+        for (let layerTop = layerHeight; layerTop <= height; layerTop = Number((layerTop + layerHeight).toFixed(2))) {
             plane.constant = layerTop;
             let index = 0;
             const tempVector = new Vector3();
@@ -52,8 +52,8 @@ const calculateSectionPoints = ({ positionAttribute, modelMatrix, height, layerH
                     return plane.intersectsBox(box);
                 },
                 intersectsTriangle: (tri) => {
-                // check each triangle edge to see if it intersects with the plane. If so then
-                // add it to the list of segments.
+                    // check each triangle edge to see if it intersects with the plane. If so then
+                    // add it to the list of segments.
                     let count = 0;
 
                     const intersectPoints = [[tri.a, tri.b], [tri.b, tri.c], [tri.c, tri.a]].reduce((p, [start, end]) => {
@@ -74,7 +74,7 @@ const calculateSectionPoints = ({ positionAttribute, modelMatrix, height, layerH
                     if (count === 3) {
                         if (
                             (intersectPoints[count - 1].x === intersectPoints[count - 2].x && intersectPoints[count - 1].y === intersectPoints[count - 2].y)
-                    || (intersectPoints[count - 1].x === intersectPoints[count - 3].x && intersectPoints[count - 1].y === intersectPoints[count - 3].y)
+                            || (intersectPoints[count - 1].x === intersectPoints[count - 3].x && intersectPoints[count - 1].y === intersectPoints[count - 3].y)
                         ) {
                             count--;
                             index--;
@@ -93,9 +93,15 @@ const calculateSectionPoints = ({ positionAttribute, modelMatrix, height, layerH
             });
             observer.next({
                 layerTop,
-                vectors: Transfer(positions as unknown as ArrayBuffer)
+                vectors: positions
             });
+            number++;
         }
+        bvhGeometry = null;
+        colliderBvh = null;
+        const cost = new Date().getTime() - now;
+        console.log(`calculate section finish => layCount=${number},cost=${cost},average=${cost / number}`);
+        observer.complete();
     });
 };
 

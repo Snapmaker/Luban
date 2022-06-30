@@ -12,8 +12,15 @@ const intersectionSkin = (subPaths, vectorsArray) => {
     return polyIntersection(subPaths, vectorsArray);
 };
 
-type TMessage = {
-     currentInnerWall: TPolygon[], otherLayers: TPolygon[][], lineWidth: number
+export type TMessage = {
+    currentInnerWall: TPolygon[],
+    otherLayers: TPolygon[][],
+    lineWidth: number
+}
+
+export type TResult = {
+    infill: TPolygon[],
+    skin: TPolygon[]
 }
 
 const unionPolygons = (polygons: TPolygon[]): TPolygon => {
@@ -25,32 +32,37 @@ const unionPolygons = (polygons: TPolygon[]): TPolygon => {
 
 const calaClippingSkin = ({ currentInnerWall, otherLayers, lineWidth }: TMessage) => {
     return new Observable((observer) => {
-        const commonArea = otherLayers.reduce((p, c) => {
-            return intersectionSkin(unionPolygons(c), p);
-        }, otherLayers[0] ? unionPolygons(otherLayers[0]) : []);
+        try {
+            const commonArea = otherLayers.reduce((p, c) => {
+                return intersectionSkin(unionPolygons(c), p);
+            }, otherLayers[0] ? unionPolygons(otherLayers[0]) : []);
 
 
-        let skin;
-        let infill;
+            let skin;
+            let infill;
 
-        if (commonArea.length === 0) {
-            skin = currentInnerWall;
-            infill = [];
-        } else {
-            skin = polyDiff(unionPolygons(currentInnerWall), commonArea);
-            infill = [commonArea];
+            if (commonArea.length === 0) {
+                skin = currentInnerWall;
+                infill = [];
+            } else {
+                skin = polyDiff(unionPolygons(currentInnerWall), commonArea);
+                infill = [commonArea];
 
-            skin = [skin];
+                skin = [skin];
+            }
+            if (skin && skin.length > 0) {
+                skin = polyOffset(unionPolygons(skin), -lineWidth);
+                skin = [skin];
+            }
+            observer.next({
+                infill,
+                skin
+            });
+        } catch (error) {
+            console.error('[web worker]: calaClippingSkin', error);
+        } finally {
+            observer.complete();
         }
-        if (skin && skin.length > 0) {
-            skin = polyOffset(unionPolygons(skin), -lineWidth);
-            skin = [skin];
-        }
-        observer.next({
-            infill,
-            skin
-        });
-        observer.complete();
     });
 };
 

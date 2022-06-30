@@ -248,6 +248,8 @@ class ThreeModel extends BaseModel {
     public setConvexGeometry(convexGeometry: THREE.BufferGeometry) {
         if (convexGeometry instanceof THREE.BufferGeometry) {
             this.convexGeometry = new THREE.Geometry().fromBufferGeometry(convexGeometry);
+            // Optimize GC
+            convexGeometry = null;
             this.convexGeometry.mergeVertices();
         } else {
             this.convexGeometry = convexGeometry;

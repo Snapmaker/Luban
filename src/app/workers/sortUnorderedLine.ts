@@ -1,25 +1,48 @@
 import { Observable } from 'rxjs';
-// import { polyDiff } from '../../shared/lib/clipper/cLipper-adapter';
+import { Transfer, TransferDescriptor } from 'threads';
+
+// import { Box3 } from 'three';
+import { polyOffset } from '../../shared/lib/clipper/cLipper-adapter';
 import { Polygon, Polygons } from '../../shared/lib/clipper/Polygons';
 import { PolygonsUtils } from '../../shared/lib/math/PolygonsUtils';
 
 type TPoint = { x: number, y: number, z?: number }
+export type TPolygon = TPoint[][]
 
-type ITraceLine = [TPoint, TPoint]
-
-type ITraceLineItem = {
-    visited: boolean;
-    value: Map<string, ITraceLine>
+export type TMessage = {
+    fragments: TransferDescriptor<TPoint[]>,
+    layerHeight: number,
+    innerWallCount: number,
+    lineWidth: number,
+    // bottomLayers: number,
+    // topLayers: number,
+    // modelBoundingBox: Box3,
+    time: number
 }
 
-type IPointsMap = Map<string, ITraceLineItem>
+export type IResult = {
+    outWall: TransferDescriptor<TPolygon[]>,
+    innerWall: TransferDescriptor<TPolygon[][]>,
+    time: number
+}
+
+type TPointValue = {
+    key: string;
+    pt: TPoint,
+    children: string[]
+    visited?: boolean;
+    rings: number[],
+    findingIndex: number
+}
+
+type IPointsMap = Map<string, TPointValue>
 
 const toPointHash = (point: TPoint) => {
     return `${point.x},${point.y};`;
 };
 
 const toPointMap = (data: TPoint[]): IPointsMap => {
-    let pointMap = new Map<string, ITraceLineItem>();
+    const pointMap = new Map<string, TPointValue>();
     for (let index = 0; index < data.length; index += 2) {
         if (!data[index + 1]) {
             break;
@@ -28,175 +51,143 @@ const toPointMap = (data: TPoint[]): IPointsMap => {
         const key2 = toPointHash(data[index + 1]);
 
         if (pointMap.has(key1)) {
-            pointMap.get(key1).value.set(`${key1}${key2}`, [
-                data[index], data[index + 1]
-            ]);
+            pointMap.get(key1).children.push(key2);
         } else {
-            const m = new Map<string, ITraceLine>();
-            m.set(`${key1}${key2}`, [
-                data[index], data[index + 1]
-            ]);
-            pointMap = pointMap.set(key1, {
-                visited: false,
-                value: m
+            pointMap.set(key1, {
+                children: [key2], rings: [], key: key1, findingIndex: null, pt: data[index]
             });
         }
         if (pointMap.has(key2)) {
-            pointMap.get(key2).value.set(`${key1}${key2}`, [
-                data[index], data[index + 1]
-            ]);
+            pointMap.get(key2).children.push(key1);
         } else {
-            const m = new Map<string, ITraceLine>();
-            m.set(`${key1}${key2}`, [
-                data[index], data[index + 1]
-            ]);
-            pointMap = pointMap.set(key2, {
-                visited: false,
-                value: m
+            pointMap.set(key2, {
+                children: [key1], rings: [], key: key2, findingIndex: null, pt: data[index + 1]
             });
         }
     }
     return pointMap;
 };
 
-const removePoint = (traceLine: ITraceLine, pointsMap: IPointsMap) => {
-    const key1 = toPointHash(traceLine[0]);
-    const key2 = toPointHash(traceLine[1]);
-
-    if (pointsMap.has(key1)) {
-        pointsMap.get(key1).value.delete(`${key1}${key2}`);
-        pointsMap.get(key1).value.delete(`${key2}${key1}`);
-        if (pointsMap.get(key1).value.size === 0) {
-            pointsMap.delete(key1);
+const findStart = (pointsMap: IPointsMap) => {
+    let start: string;
+    for (const [key, value] of pointsMap) {
+        if (value.rings.length === 0) {
+            start = key;
+            break;
         }
     }
-    if (pointsMap.has(key2)) {
-        pointsMap.get(key2).value.delete(`${key1}${key2}`);
-        pointsMap.get(key2).value.delete(`${key2}${key1}`);
-        if (pointsMap.get(key2).value.size === 0) {
-            pointsMap.delete(key2);
-        }
-    }
-    return pointsMap;
+    return start;
 };
 
-type TStackItem = {
-    depth: number;
-    latest: TPoint;
-    connectedKeys: Set<string>;
-    connectedPoints: TPoint[]
-}
-
-const search = (stack: TStackItem[], pointsMap: IPointsMap): [TPoint[], boolean] => {
-    let max: TPoint[] = [];
-    let isCircle = false;
-
-    while (stack.length) {
-        const current = stack.pop();
-        const currentHash = toPointHash(current.latest);
-
-        if (current.connectedKeys.has(currentHash)) {
-            const index = current.connectedPoints.findIndex(i => toPointHash(i) === currentHash);
-            if (max.length < current.connectedKeys.size - index - 1) {
-                max = current.connectedPoints;
-                isCircle = true;
-            }
-        } else {
-            current.connectedPoints.push(current.latest);
-            current.connectedKeys.add(currentHash);
-
-            const linesMap = pointsMap.get(currentHash);
-            if (linesMap && !linesMap.visited) {
-                linesMap.visited = true;
-
-                for (const [, line] of linesMap.value.entries()) {
-                    const spKey = toPointHash(line[0]);
-                    const next = currentHash === spKey ? line[1] : line[0];
-                    stack.push({
-                        depth: current.depth + 1,
-                        latest: next,
-                        connectedPoints: current.connectedPoints,
-                        connectedKeys: current.connectedKeys
-                    });
-                }
-            } else {
-            // return [connectedPoints, false];
-            }
+const findChildren = (pointsMap: IPointsMap, current: TPointValue, findChain: string[]): TPointValue[] => {
+    const childrenKeys = current.children;
+    const arr = [];
+    for (let i = 0; i < childrenKeys.length; i++) {
+        const key = childrenKeys[i];
+        const item = pointsMap.get(key);
+        if (item && item.key !== current.key && item.key !== findChain[findChain.length - 2] && (
+            item.rings.length === 0
+            || item.children.find((child) => {
+                return pointsMap.get(child) && pointsMap.get(child)?.rings.length === 0;
+            })
+        )) {
+            arr.push(item);
         }
     }
-    return [max, isCircle];
+    return arr;
+    // return childrenKeys.map((key) => {
+    //     return pointsMap.get(key);
+    // }).filter((item) => item && item.key !== current.key && item.key !== findChain[findChain.length - 2]);
 };
 
-type TMessage = {
-    fragments: TPoint[],
-    actionID: string
-}
+const cleanStack = (stack: TPointValue[], ringIndex: number) => {
+    return stack.filter((value) => {
+        return !value.rings.includes(ringIndex);
+    });
+};
 
-const sortUnorderedLine = ({ fragments, actionID }: TMessage) => {
-    return new Observable((observer) => {
-        const m3 = new Date().getTime();
+const sortUnorderedLine = ({ fragments, innerWallCount, lineWidth, layerHeight }: TMessage) => {
+    // const n1 = new Date().getTime();
+
+    // console.log(layerHeight, ' =>> worker get data', n1 - time);
+    let pointsMap = toPointMap(fragments.send);
+    fragments = null;
+    const findChain: string[] = [];
+    let stack: TPointValue[] = [];
+    let rings: TPointValue[][] = [];
+    let polygons = [];
+    let res, ret, polygon, _polygons, tree;
+
+    return new Observable<IResult>((observer) => {
         // console.log(`[${actionID}] worker exec 2, cost=`, m3 - m);
         try {
-            // console.log('=========== ', fragments.length);
-
-            let pointsMap = toPointMap(fragments);
-
-            let latest;
-            const polygons = [];
-            // const stack = [];
-            // let num = 0;
-
-            while (pointsMap.size) {
-                let traceLines: ITraceLineItem;
-                for (const iterator of pointsMap.entries()) {
-                    traceLines = iterator[1];
-                    break;
+            while (findStart(pointsMap) || stack.length) {
+                if (stack.length === 0) {
+                    const startKey = findStart(pointsMap);
+                    const start = pointsMap.get(startKey);
+                    // start.findingIndex = 0
+                    // findChain.push(startKey)
+                    stack.push(start);
                 }
+                // console.log(findChain);
 
-                let initial;
-                for (const iterator of traceLines.value.entries()) {
-                    initial = iterator[1];
-                    break;
-                }
+                const current = stack.pop();
+                // console.log(current.key);
 
-                const connected:TPoint[] = [];
-                const allConnectedPoints = new Set<string>();
-                latest = initial[1];
-
-                const stack: TStackItem[] = [{
-                    depth: 0,
-                    latest: latest,
-                    connectedKeys: allConnectedPoints,
-                    connectedPoints: connected
-                }];
-
-                // const m2 = new Date().getTime();
-                const [arr, isCircle] = search(stack, removePoint(initial, pointsMap));
-                // console.log(`=>> ${num++}: ${arr.length}, isCircle=${isCircle} ,cost=`, new Date().getTime() - m2);
-
-                if (isCircle) {
-                    const leng = arr.length;
-                    const polygon = [];
-                    for (let index = 0; index < leng; index++) {
-                        const next = arr[index + 1] || arr[0];
-                        polygon.push(arr[index], next);
+                if (current.findingIndex !== null && findChain.length > 0 && current.key !== findChain[findChain.length - 1]) {
+                    const ringIndex = rings.length;
+                    let ringLength = findChain.length - current.findingIndex;
+                    if (ringLength > 2) {
+                        const arr = [];
+                        while (ringLength--) {
+                            const _key = findChain.pop();
+                            const pt = pointsMap.get(_key);
+                            if (pt) {
+                                pt.findingIndex = null;
+                                pt.rings.push(ringIndex);
+                                arr.push(pt);
+                            }
+                        }
+                        arr.push(arr[0]);
+                        rings.push(arr);
+                        stack = cleanStack(stack, ringIndex);
                     }
-                    polygons.push(polygon);
+                    continue;
+                } else {
+                    current.findingIndex = findChain.length;
+                    findChain.push(current.key);
                 }
 
-                for (let index = 0; index < arr.length; index++) {
-                    const start = arr[index];
-                    const end = arr[index + 1];
-                    if (end) {
-                        pointsMap = removePoint([start, end], pointsMap);
-                    }
+
+                const children = findChildren(pointsMap, current, findChain);
+                if (children.length) {
+                    stack.push(current, ...children);
+                } else {
+                    findChain.pop();
+                    pointsMap.delete(current.key);
                 }
             }
-            // const m4 = new Date().getTime();
-            // console.log(`[${actionID}] worker complete, cost=`, m4 - m3);
+            if (rings.length === 0) {
+                observer.next();
+                return;
+            }
+            // const n2 = new Date().getTime();
+            // console.log(layerHeight, ' =>> sort finish', n2 - n1);
 
-            const res = PolygonsUtils.simplify(polygons, 0.2);
-            const ret = res.map((vectors) => {
+            for (let j = 0; j < rings.length; j++) {
+                const arr = [];
+                for (let i = 0; i < rings[j].length; i++) {
+                    const start = rings[j][i];
+                    const end = rings[j][i + 1];
+                    if (end) {
+                        arr.push(start.pt);
+                        arr.push(end.pt);
+                    }
+                }
+                polygons.push(arr);
+            }
+            res = PolygonsUtils.simplify(polygons, 0.2);
+            ret = res.map((vectors) => {
                 const arr = [];
                 for (let k = 0; k < vectors.length; k++) {
                     const begin = vectors[k];
@@ -208,27 +199,50 @@ const sortUnorderedLine = ({ fragments, actionID }: TMessage) => {
                 return arr;
             }) as TPoint[][];
 
-            const _polygons = new Polygons();
+            _polygons = new Polygons();
             ret.forEach((line) => {
-                const polygon = new Polygon();
+                polygon = new Polygon();
                 polygon.path = line;
                 _polygons.add(polygon);
             });
-            const tree = _polygons.getPolygonssByPolyTree2();
-            const marged = tree.map((t) => {
-                return t.data.map((polygon) => {
-                    return polygon.path;
+            tree = _polygons.getPolygonssByPolyTree2();
+            let marged = tree.map((t) => {
+                return t.data.map((item) => {
+                    return item.path;
                 });
             });
-            observer.next(marged);
+
+            let innerWall = Array(innerWallCount).fill('').map((_, index) => {
+                return marged.map((item) => {
+                    return polyOffset(item, -lineWidth * (index + 1));
+                });
+            });
+            const n3 = new Date().getTime();
+            // console.log(layerHeight, ' =>> polygon finish', n3 - n2);
+
+            observer.next({
+                outWall: Transfer(marged as unknown as ArrayBuffer),
+                innerWall: Transfer(innerWall as unknown as ArrayBuffer),
+                time: n3
+            });
+            // console.log(marged.length + innerWall.length);
+            marged = null;
+            innerWall = null;
         } catch (error) {
-            const m4 = new Date().getTime();
-            console.error(`[${actionID}] worker error, time=`, m4 - m3, error);
-            observer.error(error);
+            console.error('layerHeight=', layerHeight, 'error=', error);
+            observer.complete();
         } finally {
+            pointsMap = null;
+            rings = null;
+            polygons = null;
+            res = null;
+            ret = null;
+            _polygons = null;
+            tree = null;
+            // const n4 = new Date().getTime();
+            // console.log(layerHeight, ' =>> worker filish', n4 - n1);
             observer.complete();
         }
-        // return polygons;
     });
 };
 

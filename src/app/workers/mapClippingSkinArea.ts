@@ -1,12 +1,12 @@
 import { Observable } from 'rxjs';
-import { Transfer } from 'threads';
+import { Transfer, TransferDescriptor } from 'threads';
 import { Box3 } from 'three';
 
 type TPoint = { x: number, y: number, z?: number }
 
 type TPolygon = TPoint[][]
 
-type TMessage = {
+export type TMessage = {
     innerWallMap: Map<number, TPolygon[][]>,
     innerWallCount: number,
     lineWidth: number,
@@ -16,13 +16,18 @@ type TMessage = {
     layerHeight: number
 }
 
+export type TResult = {
+    layerTop: number,
+    otherLayers: TransferDescriptor<TPolygon[][]>
+}
+
 
 const calaClippingSkin = ({ innerWallMap, innerWallCount, lineWidth, bottomLayers, modelBoundingBox, topLayers, layerHeight }: TMessage) => {
     const bottomHeight = Number((bottomLayers * lineWidth + modelBoundingBox.min.z).toFixed(2));
     const topHeight = modelBoundingBox.max.z - Number((topLayers * lineWidth).toFixed(2));
     let otherLayers = [];
 
-    return new Observable((observer) => {
+    return new Observable<TResult>((observer) => {
         for (const [layerTop] of innerWallMap.entries()) {
             otherLayers = [];
             if (layerTop <= bottomHeight || layerTop >= topHeight) {
@@ -58,6 +63,7 @@ const calaClippingSkin = ({ innerWallMap, innerWallCount, lineWidth, bottomLayer
                 }
             }
         }
+        observer.complete();
     });
 };
 

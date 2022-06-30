@@ -302,7 +302,7 @@
     "tar": "6.1.11",
     "threads": "^1.7.0",
     "three": "0.124.0",
-    "three-mesh-bvh": "^0.5.11",
+    "three-mesh-bvh": "0.5.14",
     "universal-logger": "1.0.1",
     "universal-logger-browser": "1.0.2",
     "uuid": "8.3.2",
