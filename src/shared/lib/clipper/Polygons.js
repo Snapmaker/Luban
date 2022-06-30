@@ -480,7 +480,7 @@ export class Polygons {
         return polygons;
     }
 
-    getPolygonssByPolyTree2() {
+    getUnDirectionPolygonssTree() {
         const polygonAreasIndex = this.data
             .map((polygon, index) => { return { area: polygon.area(), index: index, inner: 0 }; })
             .sort((o1, o2) => (Math.abs(o1.area) > Math.abs(o2.area) ? -1 : 1));

@@ -205,7 +205,7 @@ const sortUnorderedLine = ({ fragments, innerWallCount, lineWidth, layerHeight }
                 polygon.path = line;
                 _polygons.add(polygon);
             });
-            tree = _polygons.getPolygonssByPolyTree2();
+            tree = _polygons.getUnDirectionPolygonssTree();
             let marged = tree.map((t) => {
                 return t.data.map((item) => {
                     return item.path;

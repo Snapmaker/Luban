@@ -45,7 +45,6 @@ class ClippingModel {
     private subscriber: Subscription;
     private model: ThreeModel
     private modelGroup: ModelGroup
-    private modelName: string;
     private poolManager = new ClippingPoolManager()
 
     public group: THREE.Group = new THREE.Group();
@@ -75,7 +74,6 @@ class ClippingModel {
         this.modelGeometry = this.modelMeshObject.geometry as unknown as THREE.BufferGeometry;
         this.modelGroup = modelGroup;
         this.modelBoundingBox = model.boundingBox;
-        this.modelName = model.modelName;
         this.localPlane = localPlane;
 
         this.init();
