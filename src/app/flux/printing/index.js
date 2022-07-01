@@ -667,6 +667,7 @@ export const actions = {
             materialDefinitions,
             qualityDefinitions
         } = printingState;
+        let activeMaterialType = dispatch(actions.getActiveMaterialType());
 
         let originalConfigId = {};
         if (machineStore.get('defaultConfigId')) {
@@ -677,6 +678,7 @@ export const actions = {
                 switch (direction) {
                     case LEFT_EXTRUDER:
                         originalConfigId[series].material = defaultId;
+                        activeMaterialType = dispatch(actions.getActiveMaterialType(defaultId));
                         if (defaultMaterialId !== defaultId) {
                             logProfileChange(HEAD_PRINTING, 'material');
                         }
@@ -702,7 +704,6 @@ export const actions = {
                 [type]: defaultId
             };
         }
-        const activeMaterialType = dispatch(actions.getActiveMaterialType());
         qualityDefinitions.forEach((item) => {
             item?.updateParams && item.updateParams(activeMaterialType);
         });
@@ -1448,9 +1449,11 @@ export const actions = {
         return createdDefinitionModel;
     },
 
-    getActiveMaterialType: () => (undefined, getState) => {
-        const {materialDefinitions, defaultMaterialId} = getState().printing;
-        const activeMaterialDefinition = materialDefinitions.find((d) => d.definitionId === defaultMaterialId);
+    getActiveMaterialType: (defaultId) => (undefined, getState) => {
+        const { materialDefinitions, defaultMaterialId } = getState().printing;
+        const id = defaultId || defaultMaterialId;
+        console.log('id', id);
+        const activeMaterialDefinition = materialDefinitions.find((d) => d.definitionId === id);
         return activeMaterialDefinition?.settings?.material_type?.default_value;
     },
 

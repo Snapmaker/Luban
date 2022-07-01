@@ -7,33 +7,33 @@ import {
 const DEFAULE_PARAMS_FOR_OTHERS = {
     'layer_height': {
         'options': {
-            'low': {
+            'fine': {
                 'affect': {
                     'layer_height': 0.08,
                     'layer_height_0': 0.28,
                 },
                 'value': 0.08,
-                'label': 'low'
+                'label': 'fine'
             },
-            'middle': {
+            'balanced': {
                 'affect': {
                     'layer_height': 0.16,
                     'layer_height_0': 0.28,
                 },
                 'value': 0.16,
-                'label': 'middle'
+                'label': 'balanced'
             },
-            'high': {
+            'rough': {
                 'affect': {
                     'layer_height': 0.24,
                     'layer_height_0': 0.28,
                 },
                 'value': 0.24,
-                'label': 'high'
+                'label': 'rough'
             },
         },
         'current_value': 0.08,
-        'default_value': 'high'
+        'default_value': 'rough'
     },
     'speed_print': {
         'affectByType': true,
@@ -159,7 +159,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'speed_wall_x': 15,
                     'speed_topbottom': 20,
                     'speed_infill': 45,
-                    'speed_travel': 70
+                    'speed_travel': 60
                 },
                 'value': 40,
                 'label': 'low'
@@ -199,7 +199,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                 'affect': {
                     'model_structure_type': 'Normal',
                     'wall_line_count': 3,
-                    'infill_pattern': 'Lines',
+                    'infill_pattern': 'lines',
                     'infill_sparse_density': 10,
                     'top_thickness': 1,
                     'bottom_thickness': 1
@@ -211,7 +211,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                 'affect': {
                     'model_structure_type': 'Normal',
                     'wall_line_count': 3,
-                    'infill_pattern': 'Tri-Hexagon',
+                    'infill_pattern': 'trihexagon',
                     'infill_sparse_density': 15,
                     'top_thickness': 1,
                     'bottom_thickness': 1
@@ -223,7 +223,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                 'affect': {
                     'model_structure_type': 'Normal',
                     'wall_line_count': 4,
-                    'infill_pattern': 'Cubic',
+                    'infill_pattern': 'cubic',
                     'infill_sparse_density': 25,
                     'top_thickness': 1.2,
                     'bottom_thickness': 1.2
@@ -237,7 +237,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                 'affect': {
                     'model_structure_type': 'Normal',
                     'wall_line_count': 3,
-                    'infill_pattern': 'Lines',
+                    'infill_pattern': 'lines',
                     'infill_sparse_density': 10,
                     'top_thickness': 1,
                     'bottom_thickness': 1
@@ -249,7 +249,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                 'affect': {
                     'model_structure_type': 'Normal',
                     'wall_line_count': 3,
-                    'infill_pattern': 'Lines',
+                    'infill_pattern': 'lines',
                     'infill_sparse_density': 15,
                     'top_thickness': 1,
                     'bottom_thickness': 1
@@ -261,7 +261,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                 'affect': {
                     'model_structure_type': 'Normal',
                     'wall_line_count': 4,
-                    'infill_pattern': 'Lines',
+                    'infill_pattern': 'lines',
                     'infill_sparse_density': 25,
                     'top_thickness': 1.2,
                     'bottom_thickness': 1.2
@@ -287,7 +287,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                 'affect': {
                     'model_structure_type': 'Normal',
                     'wall_line_count': 3,
-                    'infill_pattern': 'Lines',
+                    'infill_pattern': 'lines',
                     'infill_sparse_density': 15,
                     'top_thickness': 1,
                     'bottom_thickness': 1
@@ -299,7 +299,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                 'affect': {
                     'model_structure_type': 'Normal',
                     'wall_line_count': 4,
-                    'infill_pattern': 'Lines',
+                    'infill_pattern': 'lines',
                     'infill_sparse_density': 25,
                     'top_thickness': 1.2,
                     'bottom_thickness': 1.2
@@ -313,7 +313,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                 'affect': {
                     'model_structure_type': 'Normal',
                     'wall_line_count': 3,
-                    'infill_pattern': 'Tri-Hexagon',
+                    'infill_pattern': 'trihexagon',
                     'infill_sparse_density': 10,
                     'top_thickness': 1,
                     'bottom_thickness': 1
@@ -325,7 +325,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                 'affect': {
                     'model_structure_type': 'Normal',
                     'wall_line_count': 3,
-                    'infill_pattern': 'Tri-Hexagon',
+                    'infill_pattern': 'trihexagon',
                     'infill_sparse_density': 20,
                     'top_thickness': 1,
                     'bottom_thickness': 1
@@ -337,7 +337,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                 'affect': {
                     'model_structure_type': 'Normal',
                     'wall_line_count': 4,
-                    'infill_pattern': 'Cubic',
+                    'infill_pattern': 'cubic',
                     'infill_sparse_density': 25,
                     'top_thickness': 1.2,
                     'bottom_thickness': 1.2
@@ -421,25 +421,25 @@ const DEFAULE_PARAMS_FOR_TPU = {
                 'value': 0.08,
                 'label': 'low'
             },
-            'middle': {
+            'balanced': {
                 'affect': {
                     'layer_height': 0.16,
                     'layer_height_0': 0.28,
                 },
                 'value': 0.16,
-                'label': 'middle'
+                'label': 'balanced'
             },
-            'high': {
+            'rough': {
                 'affect': {
                     'layer_height': 0.24,
                     'layer_height_0': 0.28,
                 },
                 'value': 0.24,
-                'label': 'high'
+                'label': 'rough'
             },
         },
         'current_value': 0.08,
-        'default_value': 'high'
+        'default_value': 'rough'
     },
     // changed
     'speed_print': {
@@ -695,27 +695,27 @@ class PresetDefinitionModel {
                         'options': {
                             'fine': {
                                 'affect': {
-                                    'layer_height': this.nozzleSize * 0.3,
+                                    'layer_height': (this.nozzleSize * 0.3).toFixed(2),
                                 },
-                                'value': this.nozzleSize * 0.3,
+                                'value': (this.nozzleSize * 0.3).toFixed(2),
                                 'label': 'fine'
                             },
                             'balanced': {
                                 'affect': {
-                                    'layer_height': this.nozzleSize * 0.5,
+                                    'layer_height': (this.nozzleSize * 0.5).toFixed(2),
                                 },
-                                'value': this.nozzleSize * 0.5,
+                                'value': (this.nozzleSize * 0.5).toFixed(2),
                                 'label': 'balanced'
                             },
                             'rough': {
                                 'affect': {
-                                    'layer_height': this.nozzleSize * 0.7
+                                    'layer_height': (this.nozzleSize * 0.7).toFixed(2)
                                 },
-                                'value': this.nozzleSize * 0.7,
+                                'value': (this.nozzleSize * 0.7).toFixed(2),
                                 'label': 'rough'
                             }
                         },
-                        'current_value': this.nozzleSize * 0.5,
+                        'current_value': (this.nozzleSize * 0.5).toFixed(2),
                         'default_value': 'rough'
                     },
                     'speed_print': {

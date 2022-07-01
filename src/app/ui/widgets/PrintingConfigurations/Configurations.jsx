@@ -11,6 +11,7 @@ import Modal from '../../components/Modal';
 import Anchor from '../../components/Anchor';
 import { Button } from '../../components/Buttons';
 import TipTrigger from '../../components/TipTrigger';
+import { printingStore } from '../../../store/local-storage';
 
 import Segmented from '../../components/Segmented/index';
 import i18n from '../../../lib/i18n';
@@ -33,7 +34,7 @@ import styles from './styles.styl';
 import { getPresetOptions } from '../../utils/profileManager';
 
 const newKeys = cloneDeep(PRINTING_QUALITY_CONFIG_INDEX);
-const PRESET_DISPLAY_TYPE = 'Default';
+const DEFAULT_DISPLAY_TYPE = 'key-default_category-Default';
 const CONFIG_DISPLAY_TYPES = ['Recommended', 'Customized'];
 const CONFIG_DISPLAY_TYPES_OPTIONS = CONFIG_DISPLAY_TYPES.map((item) => {
     return { value: item, label: item };
@@ -127,10 +128,10 @@ ParamItem.propTypes = {
 // {i18n._(`key-Printing/PrintingConfigurations-${optionItem.typeOfPrinting}`)}
 function Configurations() {
     const [selectedDefinition, setSelectedDefinition] = useState(null);
-    const [minimized, setMinimized] = useState(false);
+    const [minimized, setMinimized] = useState(printingStore.get('printingSettingMinimized') || false);
     const [showCustomConfigPannel, setShowCustomConfigPannel] = useState(false);
-    const [presetDisplayType, setPresetDisplayType] = useState(PRESET_DISPLAY_TYPE);
-    const [configDisplayType, setConfigDisplayType] = useState(CONFIG_DISPLAY_TYPES[1]);
+    const [presetDisplayType, setPresetDisplayType] = useState();
+    const [configDisplayType, setConfigDisplayType] = useState(printingStore.get('printingSettingDisplayType') || CONFIG_DISPLAY_TYPES[0]);
     const defaultQualityId = useSelector((state) => state?.printing?.defaultQualityId);
     const defaultMaterialId = useSelector((state) => state?.printing?.defaultMaterialId);
     const qualityDefinitionModels = useSelector((state) => state?.printing?.qualityDefinitions);
@@ -152,11 +153,21 @@ function Configurations() {
 
 
     const presetOptionsObj = getPresetOptions(qualityDefinitionModels);
+
     const presetDisplayTypeOptions = Object.entries(presetOptionsObj).map(([key, item]) => {
         return { value: key, label: key, category: item.category, i18nCategory: item.i18nCategory };
     });
 
     const actions = {
+        onChangeConfigDisplayType: (newDisplayType) => {
+            setConfigDisplayType(newDisplayType);
+            printingStore.set('printingSettingDisplayType', newDisplayType);
+        },
+        toggleMinimized: () => {
+            const newMinimized = !minimized;
+            setMinimized(newMinimized);
+            printingStore.set('printingSettingMinimized', newMinimized);
+        },
         onChangePresetDisplayType: (options) => {
             setPresetDisplayType(options.value);
             const firstDefinitionId = presetOptionsObj[options.value]?.options[0]?.definitionId;
@@ -177,13 +188,13 @@ function Configurations() {
             const title = i18n._('key-Printing/ProfileManager-Copy Profile');
             const copyType = 'Item';
 
-            const copyCategoryName = newSelectedDefinition.category;
+            const copyCategoryName = newSelectedDefinition.category | 'CUSTOM';
             const copyCategoryI18n = newSelectedDefinition.i18nCategory;
             const copyItemName = newSelectedDefinition.name;
             const isCreate = false;
             let materialOptions = presetDisplayTypeOptions
                 .filter((option) => {
-                    return option.category !== 'Default';
+                    return option.category !== i18n._(DEFAULT_DISPLAY_TYPE);
                 })
                 .map(option => {
                     return {
@@ -331,7 +342,7 @@ function Configurations() {
         );
     }, []);
     const renderProfileMenu = (displayType) => {
-        const hasResetButton = displayType === 'Default';
+        const hasResetButton = displayType === i18n._(DEFAULT_DISPLAY_TYPE);
         return (
             <div>
                 {hasResetButton && (
@@ -362,8 +373,10 @@ function Configurations() {
             if (!definition) {
                 // definition no found, select first official definition
                 actions.onSelectOfficialDefinition(qualityDefinitionModels[0], false);
+                setPresetDisplayType(qualityDefinitionModels[0].category);
             } else {
                 actions.onSelectOfficialDefinition(definition, false);
+                setPresetDisplayType(definition.category);
             }
         }
     }, [defaultQualityId, qualityDefinitionModels]);
@@ -388,7 +401,7 @@ function Configurations() {
                     value={presetDisplayType}
                     onChange={actions.onChangePresetDisplayType}
                 />
-                {presetDisplayType === 'Default' && (
+                {presetDisplayType === i18n._(DEFAULT_DISPLAY_TYPE) && (
                     <div className={classNames(styles['preset-recommended'], 'sm-flex', 'margin-vertical-16', 'align-c', 'justify-space-between')}>
                         {presetOptionsObj[presetDisplayType].options.map((optionItem) => {
                             return (
@@ -431,7 +444,7 @@ function Configurations() {
                         })}
                     </div>
                 )}
-                {presetDisplayType !== 'Default' && (
+                {presetDisplayType !== i18n._(DEFAULT_DISPLAY_TYPE) && (
                     <div className={classNames(styles['preset-customized'], 'margin-top-8')}>
                         {presetOptionsObj[presetDisplayType] && presetOptionsObj[presetDisplayType].options.map((optionItem) => {
                             return (
@@ -490,7 +503,7 @@ function Configurations() {
                     </span>
                     <SvgIcon
                         title={minimized ? i18n._('key-Widget/CommonDropdownButton-Expand') : i18n._('key-Widget/CommonDropdownButton-Collapse')}
-                        onClick={() => setMinimized(!minimized)}
+                        onClick={() => actions.toggleMinimized()}
                         name="DropdownLine"
                         size={24}
                         type={['static']}
@@ -534,7 +547,7 @@ function Configurations() {
                                     options={CONFIG_DISPLAY_TYPES_OPTIONS}
                                     value={configDisplayType}
                                     onChange={(options) => {
-                                        setConfigDisplayType(options.value);
+                                        actions.onChangeConfigDisplayType(options.value);
                                     }}
                                 />
                             </div>
