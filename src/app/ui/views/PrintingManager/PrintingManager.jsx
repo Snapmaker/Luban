@@ -113,7 +113,7 @@ function PrintingManager() {
         },
         onSaveDefinitionForManager: async (
             newDefinition,
-            changedSetting,
+            changedSettingArray,
             shouldUpdateActive
         ) => {
             // now setDefinitionState is synchronize, so remove setTimeout
@@ -121,7 +121,7 @@ function PrintingManager() {
             await dispatch(
                 printingActions.updateCurrentDefinition({
                     definitionModel: newDefinition,
-                    changedSetting,
+                    changedSettingArray,
                     managerDisplayType
                 })
             );
@@ -129,28 +129,6 @@ function PrintingManager() {
                 dispatch(printingActions.destroyGcodeLine());
                 dispatch(printingActions.displayModel());
             }
-        },
-        onSaveQualityForManager: async (type, newDefinition) => {
-            await dispatch(
-                printingActions.updateCurrentDefinition(newDefinition, type)
-            );
-            return dispatch(
-                printingActions.updateDefinitionsForManager(
-                    newDefinition.definitionId,
-                    type
-                )
-            );
-        },
-        onSaveMaterialForManager: async (type, newDefinition) => {
-            await dispatch(
-                printingActions.updateCurrentDefinition(newDefinition, type)
-            );
-            return dispatch(
-                printingActions.updateDefinitionsForManager(
-                    newDefinition.definitionId,
-                    type
-                )
-            );
         },
 
         updateDefinitionName: async (definition, selectedName) => {

@@ -718,6 +718,7 @@ export const actions = {
 
     },
 
+    // when switch 'materialType' or 'nozzleSize', has to check defintion visible
     updateDefinitionModelAndCheckVisible: (
         {activeMaterialType, machineNozzleSize, direction, type, originalConfigId, series}
     ) =>  (dispatch, getState) => {
@@ -732,7 +733,6 @@ export const actions = {
                 isSelectedModelVisible = item.visible
             }
         });
-        console.log('newQualityId', isSelectedModelVisible);
         if (!isSelectedModelVisible) {
             const newQualityId = qualityDefinitions.find(item => item.visible)?.definitionId;
             originalConfigId[series][PRINTING_MANAGER_TYPE_QUALITY] = newQualityId;
@@ -1258,19 +1258,21 @@ export const actions = {
         dispatch(actions.updateState({ managerDisplayType }));
     },
 
-    updateCurrentDefinition: (
+    updateCurrentDefinition: ({
         definitionModel,
-        type,
+        managerDisplayType: type,
+        changedSettingArray,
         direction = LEFT_EXTRUDER,
         shouldUpdateIsOversteped = false
-    ) => (dispatch, getState) => {
+    }) => (dispatch, getState) => {
         const printingState = getState().printing;
         const { series } = getState().machine;
         const { qualityDefinitions } = printingState;
         const id = definitionModel?.definitionId;
         const definitionsKey = definitionKeysWithDirection[direction][type];
         let { extruderLDefinition: actualExtruderDefinition } = printingState;
-        let UpdatePresetModel = false
+        let UpdatePresetModel = false;
+        console.log('changedSettingArray', changedSettingArray);
         // Todo
         if (['snapmaker_extruder_0', 'snapmaker_extruder_1'].includes(id)) {
             if (id === 'snapmaker_extruder_0') {

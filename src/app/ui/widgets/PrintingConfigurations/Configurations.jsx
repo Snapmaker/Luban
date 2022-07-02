@@ -54,16 +54,19 @@ function ParamItem({ selectedDefinitionModel, allParams }) {
     async function onChangeParam(newValue, paramSetting) {
         const actualOptions = paramSetting.affectByType ? paramSetting[selectedDefinitionModel.typeOfPrinting] : paramSetting.options;
         const findedAffect = actualOptions[newValue]?.affect;
+        const changedSettingArray = [];
         Object.entries(findedAffect).forEach(([affectKey, affectValue]) => {
             selectedDefinitionModel.settings[
                 affectKey
             ].default_value = affectValue;
+            changedSettingArray.push([affectKey, affectValue]);
         });
         await dispatch(
-            printingActions.updateCurrentDefinition(
-                selectedDefinitionModel,
-                PRINTING_MANAGER_TYPE_QUALITY
-            )
+            printingActions.updateCurrentDefinition({
+                definitionModel: selectedDefinitionModel,
+                managerDisplayType: PRINTING_MANAGER_TYPE_QUALITY,
+                changedSettingArray
+            })
         );
         dispatch(printingActions.destroyGcodeLine());
         dispatch(printingActions.displayModel());
@@ -135,7 +138,6 @@ function Configurations() {
     const defaultQualityId = useSelector((state) => state?.printing?.defaultQualityId);
     const defaultMaterialId = useSelector((state) => state?.printing?.defaultMaterialId);
     const qualityDefinitionModels = useSelector((state) => state?.printing?.qualityDefinitions);
-    const refSelectedDefinition = useRef(selectedDefinition);
 
     let printingCustomConfigs = useSelector(
         (state) => state?.machine?.printingCustomConfigs
@@ -270,7 +272,6 @@ function Configurations() {
                     )
                 );
                 setSelectedDefinition(definition);
-                refSelectedDefinition.current = definition;
             }
         },
         toggleShowCustomConfigPannel: () => {
@@ -293,19 +294,18 @@ function Configurations() {
                     )
                 )[definitionKey].default_value;
             }
-            const newDefinitionForManager = selectedDefinition;
-            newDefinitionForManager.settings[
+            selectedDefinition.settings[
                 definitionKey
             ].default_value = value;
             const shouldUpdateIsOversteped = definitionKey === 'prime_tower_enable' && value === true;
 
             await dispatch(
-                printingActions.updateCurrentDefinition(
-                    newDefinitionForManager,
-                    PRINTING_MANAGER_TYPE_QUALITY,
-                    undefined,
+                printingActions.updateCurrentDefinition({
+                    definitionModel: selectedDefinition,
+                    managerDisplayType: PRINTING_MANAGER_TYPE_QUALITY,
+                    changedSettingArray: [[definitionKey, value]],
                     shouldUpdateIsOversteped
-                )
+                })
             );
 
             // actions.onChangeSelectedDefinition(newDefinitionForManager);

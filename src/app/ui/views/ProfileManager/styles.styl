@@ -126,3 +126,31 @@
     padding: 0 16px;
     text-align: left
 }
+.settings-select-wrapper {
+    max-width: 384px;
+    max-height: 256px;
+    .settings-select {
+        height: 76px;
+        width: 76px;
+        border-radius: 8px;
+        &:not(:last-child) {
+            margin-right: 16px;
+        }
+        &_adhesion_type_brim {
+            background: url("./images/adhesion_type_brim.svg") no-repeat 0 0
+            background-size: 100%
+        }
+        &_adhesion_type_raft {
+            background: url("./images/adhesion_type_raft.svg") no-repeat 0 0
+            background-size: 100%
+        }
+        &_adhesion_type_skirt {
+            background: url("./images/adhesion_type_skirt.svg") no-repeat 0 0
+            background-size: 100%
+        }
+        &_adhesion_type_none {
+            background: url("./images/adhesion_type_none.svg") no-repeat 0 0
+            background-size: 100%
+        }
+    }
+}

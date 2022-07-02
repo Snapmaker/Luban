@@ -13,15 +13,14 @@ import SvgIcon from '../../components/SvgIcon';
 import Popover from '../../components/Popover';
 import styles from './styles.styl';
 
-function dropdownRender(opts, key) {
+function dropdownRender(opts, key, onChangeDefinition) {
     return () => (
         <div
             className={classNames(
                 styles['settings-select-wrapper'],
                 'sm-flex',
-                'height-36',
-                'padding-right-4',
-                'padding-bottom-4'
+                'padding-vertical-16',
+                'padding-horizontal-16'
             )}
         >
             {opts.map((settingItem) => {
@@ -29,14 +28,16 @@ function dropdownRender(opts, key) {
                 const label = settingItem.label;
                 return (
                     <span>
-                        <Anchor>
+                        <Anchor
+                            onClick={() => onChangeDefinition(key, value)}
+                        >
                             <div className={classNames(
                                 styles[`settings-select_${key}_${value}`],
                                 styles['settings-select']
                             )}
                             />
                         </Anchor>
-                        <span className="max-width-76 text-overflow-ellipsis-line-2 height-16 margin-top-4 margin-bottom-8">
+                        <span className="max-width-76 align-center text-overflow-ellipsis-line-2 height-16 margin-top-4 margin-bottom-8">
                             {label}
                         </span>
                     </span>
@@ -157,7 +158,6 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
                 label: i18n._(options[k])
             });
         });
-        console.log('opts', opts, options, definitionKey);
     }
     const colorSelectorContent = (
         <div>
@@ -248,7 +248,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
                 {type === 'enumWithImage' && (
                     <Select
                         className="sm-flex-width align-r"
-                        dropdownRender={dropdownRender(opts, definitionKey)}
+                        dropdownRender={dropdownRender(opts, definitionKey, onChangeDefinition)}
                         size={styleSize}
                         name={definitionKey}
                         options={opts}
