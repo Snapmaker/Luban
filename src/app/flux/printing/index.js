@@ -283,7 +283,16 @@ const INITIAL_STATE = {
 
     tmpSupportFaceMarks: {},
     supportOverhangAngle: 50,
-    supportBrushStatus: 'add' // add | remove
+    supportBrushStatus: 'add', // add | remove
+
+    gcodeEntity: {
+        extruderLlineWidth0: 0,
+        extruderLlineWidth: 0,
+        extruderRlineWidth0: 0,
+        extruderRlineWidth: 0,
+        layerHeight0: 0,
+        layerHeight: 0,
+    }
 };
 
 const ACTION_UPDATE_STATE = 'printing/ACTION_UPDATE_STATE';
@@ -995,78 +1004,28 @@ export const actions = {
         }
     },
 
-    gcodeRenderingCallback: data => (dispatch, getState) => {
-        const { gcodeLineGroup, gcodePreviewMode } = getState().printing;
+    gcodeRenderingCallback: (data, extruderColors) => (dispatch, getState) => {
+        const { gcodeLineGroup, gcodePreviewMode, gcodeEntity } = getState().printing;
 
         const { status, value } = data;
         switch (status) {
             case 'succeed': {
-                const {
-                    positions,
-                    colors,
-                    colors1,
-                    layerIndices,
-                    typeCodes,
-                    toolCodes,
-                    layerCount,
-                    bounds
-                } = value;
-                const bufferGeometry = new THREE.BufferGeometry();
-                const positionAttribute = new THREE.Float32BufferAttribute(positions.send, 3);
-                const colorAttribute = new THREE.Uint8BufferAttribute(colors.send, 3);
-                // this will map the buffer values to 0.0f - +1.0f in the shader
-                colorAttribute.normalized = true;
-                const color1Attribute = new THREE.Uint8BufferAttribute(colors1.send, 3);
-                color1Attribute.normalized = true;
-                const layerIndexAttribute = new THREE.Float32BufferAttribute(layerIndices.send, 1);
-                const typeCodeAttribute = new THREE.Float32BufferAttribute(typeCodes.send, 1);
-                const toolCodeAttribute = new THREE.Float32BufferAttribute(toolCodes.send, 1);
-
-                bufferGeometry.setAttribute('position', positionAttribute);
-                bufferGeometry.setAttribute('a_color', colorAttribute);
-                bufferGeometry.setAttribute('a_color1', color1Attribute);
-                bufferGeometry.setAttribute(
-                    'a_layer_index',
-                    layerIndexAttribute
-                );
-                bufferGeometry.setAttribute('a_type_code', typeCodeAttribute);
-                bufferGeometry.setAttribute('a_tool_code', toolCodeAttribute);
+                const { gcodeEntityLayers: bufferGeometry, layerCount, bounds } = value;
 
                 dispatch(actions.destroyGcodeLine());
 
-                // gcodeLineObjects.forEach(object => {
-                //     gcodeLineGroup.remove(object);
-                // });
-                // gcodeParser && gcodeParser.dispose();
-                const object3D = gcodeBufferGeometryToObj3d(
-                    '3DP',
-                    bufferGeometry
-                );
+                const object3D = gcodeBufferGeometryToObj3d('3DP', bufferGeometry, null, {
+                    ...gcodeEntity,
+                    extruderColors
+                });
                 gcodeLineGroup.add(object3D);
 
-                // const gcode = value.gcode;
-                // const parser = new GCodeParser(gcode, extruderColors);
-                // parser.travelWidth = 0.1;
-                // parser.radialSegments = 3;
-                // parser.parse();
-                // parser.slice();
-                // const newGcodeLineObjects = [];
-
-                // parser.getGeometries().forEach((geometry) => {
-                //     const newGcodeLineObject = gcodeBufferGeometryToObj3d('3DP', geometry, 'mesh');
-                //     newGcodeLineObjects.push(newGcodeLineObject);
-                // });
-
                 object3D.position.copy(new THREE.Vector3());
-                dispatch(
-                    actions.updateState({
-                        layerCount,
-                        layerRangeDisplayed: [0, layerCount - 1],
-                        gcodeLine: object3D
-                        // gcodeLineObjects: newGcodeLineObjects,
-                        // gcodeParser: parser
-                    })
-                );
+                dispatch(actions.updateState({
+                    layerCount,
+                    layerRangeDisplayed: [0, layerCount - 1],
+                    gcodeLine: object3D
+                }));
 
                 dispatch(actions.updateGcodePreviewMode(gcodePreviewMode));
 
@@ -1085,6 +1044,9 @@ export const actions = {
                 dispatch(actions.displayGcode());
 
                 const { progressStatesManager } = getState().printing;
+                dispatch(actions.updateState({
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_PREVIEWING, 1)
+                }));
                 progressStatesManager.startNextStep();
                 dispatch(
                     actions.updateState({
@@ -1642,14 +1604,12 @@ export const actions = {
         const { gcodeLine, gcodeLineGroup } = getState().printing;
         if (gcodeLine) {
             gcodeLineGroup.remove(gcodeLine);
-            gcodeLine.geometry.dispose();
-            dispatch(
-                actions.updateState({
-                    gcodeFile: null,
-                    gcodeLine: null,
-                    displayedType: 'model'
-                })
-            );
+            // gcodeLine.geometry.dispose();
+            dispatch(actions.updateState({
+                gcodeFile: null,
+                gcodeLine: null,
+                displayedType: 'model'
+            }));
         }
     },
 
@@ -1844,6 +1804,17 @@ export const actions = {
             modelFileName: filename
         };
         */
+        // save line width and layer height for gcode preview
+        dispatch(actions.updateState({
+            gcodeEntity: {
+                extruderLlineWidth0: extruderLDefinition.settings.wall_line_width_0.default_value,
+                extruderLlineWidth: extruderLDefinition.settings.wall_line_width_x.default_value,
+                extruderRlineWidth0: extruderRDefinition.settings.wall_line_width_0.default_value,
+                extruderRlineWidth: extruderRDefinition.settings.wall_line_width_x.default_value,
+                layerHeight0: finalDefinition.settings.layer_height_0.default_value,
+                layerHeight: finalDefinition.settings.layer_height.default_value,
+            }
+        }));
 
         const boundingBox = modelGroup.getBoundingBox();
         const params = {
@@ -1960,11 +1931,7 @@ export const actions = {
     },
 
     // preview
-    setGcodeVisibilityByTypeAndDirection: (
-        type,
-        direction = LEFT_EXTRUDER,
-        visible
-    ) => (dispatch, getState) => {
+    setGcodeVisibilityByTypeAndDirection: (type, direction = LEFT_EXTRUDER, visible) => (dispatch, getState) => {
         const { gcodeLine, gcodeTypeInitialVisibility } = getState().printing;
         if (type === 'TOOL0') {
             const gcodeVisibleType = gcodeTypeInitialVisibility[LEFT_EXTRUDER];
@@ -1986,82 +1953,86 @@ export const actions = {
         dispatch(actions.updateState({ gcodeTypeInitialVisibility }));
         // dispatch(actions.renderShowGcodeLines());
         if (gcodeLine) {
-            const uniforms = gcodeLine.material.uniforms;
+            // const uniforms = gcodeLine.material.uniforms;
             const value = visible ? 1 : 0;
             if (direction === LEFT_EXTRUDER) {
-                switch (type) {
-                    case 'WALL-INNER':
-                        uniforms.u_l_wall_inner_visible.value = value;
-                        break;
-                    case 'WALL-OUTER':
-                        uniforms.u_l_wall_outer_visible.value = value;
-                        break;
-                    case 'SKIN':
-                        uniforms.u_l_skin_visible.value = value;
-                        uniforms.u_l_skirt_visible.value = value;
-                        break;
-                    case 'SUPPORT':
-                        uniforms.u_l_support_visible.value = value;
-                        break;
-                    case 'FILL':
-                        uniforms.u_l_fill_visible.value = value;
-                        break;
-                    case 'TRAVEL':
-                        uniforms.u_l_travel_visible.value = value;
-                        break;
-                    case 'UNKNOWN':
-                        uniforms.u_l_unknown_visible.value = value;
-                        break;
-                    default:
-                        break;
-                }
+                gcodeLine.children.forEach(mesh => {
+                    const uniforms = mesh.material.uniforms;
+                    switch (type) {
+                        case 'WALL-INNER':
+                            uniforms.u_l_wall_inner_visible.value = value;
+                            break;
+                        case 'WALL-OUTER':
+                            uniforms.u_l_wall_outer_visible.value = value;
+                            break;
+                        case 'SKIN':
+                            uniforms.u_l_skin_visible.value = value;
+                            uniforms.u_l_skirt_visible.value = value;
+                            break;
+                        case 'SUPPORT':
+                            uniforms.u_l_support_visible.value = value;
+                            break;
+                        case 'FILL':
+                            uniforms.u_l_fill_visible.value = value;
+                            break;
+                        case 'TRAVEL':
+                            uniforms.u_l_travel_visible.value = value;
+                            break;
+                        case 'UNKNOWN':
+                            uniforms.u_l_unknown_visible.value = value;
+                            break;
+                        default:
+                            break;
+                    }
+                });
             } else {
-                switch (type) {
-                    case 'WALL-INNER':
-                        uniforms.u_r_wall_inner_visible.value = value;
-                        break;
-                    case 'WALL-OUTER':
-                        uniforms.u_r_wall_outer_visible.value = value;
-                        break;
-                    case 'SKIN':
-                        uniforms.u_r_skin_visible.value = value;
-                        uniforms.u_r_skirt_visible.value = value;
-                        break;
-                    case 'SUPPORT':
-                        uniforms.u_r_support_visible.value = value;
-                        break;
-                    case 'FILL':
-                        uniforms.u_r_fill_visible.value = value;
-                        break;
-                    case 'TRAVEL':
-                        uniforms.u_r_travel_visible.value = value;
-                        break;
-                    case 'UNKNOWN':
-                        uniforms.u_r_unknown_visible.value = value;
-                        break;
-                    default:
-                        break;
-                }
+                gcodeLine.children.forEach(mesh => {
+                    const uniforms = mesh.material.uniforms;
+                    switch (type) {
+                        case 'WALL-INNER':
+                            uniforms.u_r_wall_inner_visible.value = value;
+                            break;
+                        case 'WALL-OUTER':
+                            uniforms.u_r_wall_outer_visible.value = value;
+                            break;
+                        case 'SKIN':
+                            uniforms.u_r_skin_visible.value = value;
+                            uniforms.u_r_skirt_visible.value = value;
+                            break;
+                        case 'SUPPORT':
+                            uniforms.u_r_support_visible.value = value;
+                            break;
+                        case 'FILL':
+                            uniforms.u_r_fill_visible.value = value;
+                            break;
+                        case 'TRAVEL':
+                            uniforms.u_r_travel_visible.value = value;
+                            break;
+                        case 'UNKNOWN':
+                            uniforms.u_r_unknown_visible.value = value;
+                            break;
+                        default:
+                            break;
+                    }
+                });
             }
         }
         dispatch(actions.render());
     },
 
     updateGcodePreviewMode: (mode) => (dispatch, getState) => {
-        const {
-            gcodeLine,
-            layerRangeDisplayed,
-            layerCount
-        } = getState().printing;
+        const { gcodeLine, layerRangeDisplayed, layerCount } = getState().printing;
         // gcodeParser.setColortypes(mode === GCODEPREVIEWMODES[2]);
         if (gcodeLine) {
-            const uniforms = gcodeLine.material.uniforms;
-
-            if (mode === GCODEPREVIEWMODES[2]) {
-                uniforms.u_middle_layer_set_gray.value = 1;
-            } else {
-                uniforms.u_middle_layer_set_gray.value = 0;
-            }
+            // const uniforms = gcodeLine.material.uniforms;
+            gcodeLine.children.forEach(mesh => {
+                const uniforms = mesh.material.uniforms;
+                if (mode === GCODEPREVIEWMODES[2]) {
+                    uniforms.u_middle_layer_set_gray.value = 1;
+                } else {
+                    uniforms.u_middle_layer_set_gray.value = 0;
+                }
+            });
         }
 
         dispatch(
@@ -2099,9 +2070,13 @@ export const actions = {
         //     };
         // }
         // gcodeParser.setColortypes(undefined, renderLineType);
+        // console.log(gcodeLine, renderLineType);
         if (gcodeLine) {
-            const uniforms = gcodeLine.material.uniforms;
-            uniforms.u_color_type.value = renderLineType ? 1 : 0;
+            // const uniforms = gcodeLine.material.uniforms;
+            gcodeLine.children.forEach(mesh => {
+                const uniforms = mesh.material.uniforms;
+                uniforms.u_color_type.value = renderLineType ? 1 : 0;
+            });
         }
         dispatch(actions.render());
     },
@@ -2210,16 +2185,13 @@ export const actions = {
         // gcodeParser.endLayer = range[1];
         // dispatch(actions.renderShowGcodeLines());
         if (gcodeLine) {
-            gcodeLine.material.uniforms.u_visible_layer_range_start.value = range[0] || -100;
-            gcodeLine.material.uniforms.u_visible_layer_range_end.value = range[1];
+            gcodeLine.children.forEach(mesh => {
+                mesh.material.uniforms.u_visible_layer_range_start.value = range[0] || -100;
+                mesh.material.uniforms.u_visible_layer_range_end.value = range[1];
+            });
         }
-        if (
-            isUp
-            && range[0] - prevRange[0] > 0
-            && range[0] - prevRange[0] < 1
-            && range[1] - prevRange[1] > 0
-            && range[1] - prevRange[1] < 1
-        ) {
+        if (isUp && (range[0] - prevRange[0]) > 0 && (range[0] - prevRange[0]) < 1
+            && (range[1] - prevRange[1]) > 0 && (range[1] - prevRange[1]) < 1) {
             range[0] = prevRange[0];
             range[1] = prevRange[1];
         }

@@ -1,6 +1,6 @@
 import isEmpty from 'lodash/isEmpty';
 import { Observable } from 'rxjs';
-import { Transfer } from 'threads';
+// import { Transfer } from 'threads';
 import { gcodeToBufferGeometry as _gcodeToBufferGeometry } from './GcodeToBufferGeometry/index';
 
 type ExtruderColorsData = {
@@ -22,7 +22,7 @@ type GcodeBoundsData = {
     maxZ: number;
 };
 type GcodeParsedData = {
-    bufferGeometry: any;
+    gcodeEntityLayers: any;
     layerCount: number;
     bounds: GcodeBoundsData;
     gcode: string;
@@ -52,34 +52,35 @@ const gcodeToBufferGeometry = (message: GcodeToBufferGeometryData) => {
             gcodeFilename,
             extruderColors,
             (result: GcodeParsedData) => {
-                const { bufferGeometry, layerCount, bounds, gcode } = result;
-                const positions = Transfer(
-                    bufferGeometry.getAttribute('position').array
-                );
-                const colors = Transfer(
-                    bufferGeometry.getAttribute('a_color').array
-                );
-                const colors1 = Transfer(
-                    bufferGeometry.getAttribute('a_color1').array
-                );
-                const layerIndices = Transfer(
-                    bufferGeometry.getAttribute('a_layer_index').array
-                );
-                const typeCodes = Transfer(
-                    bufferGeometry.getAttribute('a_type_code').array
-                );
-                const toolCodes = Transfer(
-                    bufferGeometry.getAttribute('a_tool_code').array
-                );
+                const { gcodeEntityLayers, layerCount, bounds, gcode } = result;
+                // const positions = Transfer(
+                //     bufferGeometry.getAttribute('position').array
+                // );
+                // const colors = Transfer(
+                //     bufferGeometry.getAttribute('a_color').array
+                // );
+                // const colors1 = Transfer(
+                //     bufferGeometry.getAttribute('a_color1').array
+                // );
+                // const layerIndices = Transfer(
+                //     bufferGeometry.getAttribute('a_layer_index').array
+                // );
+                // const typeCodes = Transfer(
+                //     bufferGeometry.getAttribute('a_type_code').array
+                // );
+                // const toolCodes = Transfer(
+                //     bufferGeometry.getAttribute('a_tool_code').array
+                // );
                 const data = {
                     status: 'succeed',
                     value: {
-                        positions,
-                        colors,
-                        colors1,
-                        layerIndices,
-                        typeCodes,
-                        toolCodes,
+                        // positions,
+                        // colors,
+                        // colors1,
+                        // layerIndices,
+                        // typeCodes,
+                        // toolCodes,
+                        gcodeEntityLayers,
                         layerCount,
                         bounds,
                         gcode, // TODO: used gcode parser
