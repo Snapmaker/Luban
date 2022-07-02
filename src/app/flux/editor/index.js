@@ -576,7 +576,7 @@ export const actions = {
 
     prepareStlVisualizer: (headType, model) => dispatch => {
         const uploadPath = model.resource.originalFile.path;
-        const worker = workerManager.loadModel([{ uploadPath }], async data => {
+        const worker = workerManager.loadModel(uploadPath, async data => {
             const { type } = data;
 
             switch (type) {

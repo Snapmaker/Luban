@@ -67,7 +67,7 @@ class Controls extends EventEmitter {
     // scale
     scale = 1;
 
-    scaleRate = 0.98;
+    scaleRate = 0.90;
 
     // calculation only
     offset = new THREE.Vector3();
@@ -335,6 +335,14 @@ class Controls extends EventEmitter {
             } else {
                 this.offset.copy(spherialOffset);
             }
+            // if (this.spherical.radius <= 10) {
+            //     const scalar = this.target.z > 20 ? 10 : 1;
+            //     const cameraWorldDir = new THREE.Vector3();
+            //     this.camera.getWorldDirection(cameraWorldDir);
+            //     if (this.target.z > 20 && this.target.z + cameraWorldDir.z * scalar >= 10) {
+            //         this.target.add(cameraWorldDir.multiplyScalar(scalar));
+            //     }
+            // }
 
             this.sphericalDelta.set(0, 0, 0);
         }
