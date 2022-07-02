@@ -30,6 +30,7 @@ import {
     MACHINE_SERIES,
     PRINTING_MANAGER_TYPE_MATERIAL,
     PRINTING_MANAGER_TYPE_QUALITY,
+    PRINTING_MANAGER_TYPE_EXTRUDER,
     PRINTING_MATERIAL_CONFIG_GROUP_DUAL,
     PRINTING_MATERIAL_CONFIG_GROUP_SINGLE,
     PRINTING_QUALITY_CONFIG_GROUP_DUAL,
@@ -704,11 +705,43 @@ export const actions = {
                 [type]: defaultId
             };
         }
-        qualityDefinitions.forEach((item) => {
-            item?.updateParams && item.updateParams(activeMaterialType);
-        });
+        dispatch(actions.updateDefinitionModelAndCheckVisible({
+            activeMaterialType,
+            direction,
+            type,
+            series,
+            originalConfigId
+        }))
 
         machineStore.set('defaultConfigId', JSON.stringify(originalConfigId));
+
+
+    },
+
+    updateDefinitionModelAndCheckVisible: (
+        {activeMaterialType, machineNozzleSize, direction, type, originalConfigId, series}
+    ) =>  (dispatch, getState) => {
+        const {qualityDefinitions, defaultQualityId} = getState().printing;
+        let isSelectedModelVisible = true;
+        qualityDefinitions.forEach((item) => {
+            item?.updateParams && item.updateParams(activeMaterialType, machineNozzleSize);
+            if (direction === LEFT_EXTRUDER
+                && (type === PRINTING_MANAGER_TYPE_MATERIAL || type === PRINTING_MANAGER_TYPE_EXTRUDER)
+                && item.definitionId === defaultQualityId
+            ) {
+                isSelectedModelVisible = item.visible
+            }
+        });
+        console.log('newQualityId', isSelectedModelVisible);
+        if (!isSelectedModelVisible) {
+            const newQualityId = qualityDefinitions.find(item => item.visible)?.definitionId;
+            originalConfigId[series][PRINTING_MANAGER_TYPE_QUALITY] = newQualityId;
+            dispatch(
+                actions.updateState({
+                    defaultQualityId: newQualityId
+                })
+            );
+        }
     },
 
     // TODO: init should be  re-called
@@ -1232,6 +1265,7 @@ export const actions = {
         shouldUpdateIsOversteped = false
     ) => (dispatch, getState) => {
         const printingState = getState().printing;
+        const { series } = getState().machine;
         const { qualityDefinitions } = printingState;
         const id = definitionModel?.definitionId;
         const definitionsKey = definitionKeysWithDirection[direction][type];
@@ -1258,12 +1292,13 @@ export const actions = {
                 })
             );
         }
-        qualityDefinitions.forEach((presetModel) => {
-            presetModel.updateParams && presetModel.updateParams(
-                undefined,
-                actualExtruderDefinition.settings?.machine_nozzle_size?.default_value
-            );
-        });
+        dispatch(actions.updateDefinitionModelAndCheckVisible({
+            type,
+            direction,
+            series,
+            machineNozzleSize: actualExtruderDefinition.settings?.machine_nozzle_size?.default_value,
+            originalConfigId: machineStore.get('defaultConfigId') ? JSON.parse(machineStore.get('defaultConfigId')) : {}
+        }))
         definitionManager.updateDefinition(definitionModel);
         if (UpdatePresetModel) {
             dispatch(actions.updateState({ qualityDefinitions: [...qualityDefinitions] }));
@@ -1452,7 +1487,6 @@ export const actions = {
     getActiveMaterialType: (defaultId) => (undefined, getState) => {
         const { materialDefinitions, defaultMaterialId } = getState().printing;
         const id = defaultId || defaultMaterialId;
-        console.log('id', id);
         const activeMaterialDefinition = materialDefinitions.find((d) => d.definitionId === id);
         return activeMaterialDefinition?.settings?.material_type?.default_value;
     },

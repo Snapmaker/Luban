@@ -1,15 +1,50 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
 import i18n from '../../../lib/i18n';
 import Select from '../../components/Select';
 import { NumberInput as Input } from '../../components/Input';
 import Checkbox from '../../components/Checkbox';
 import ColorSelector from '../../components/ColorSelector';
 import { HEAD_CNC, PRINTING_MATERIAL_CONFIG_COLORS } from '../../../constants';
-
+import Anchor from '../../components/Anchor';
 import TipTrigger from '../../components/TipTrigger';
 import SvgIcon from '../../components/SvgIcon';
 import Popover from '../../components/Popover';
+import styles from './styles.styl';
+
+function dropdownRender(opts, key) {
+    return () => (
+        <div
+            className={classNames(
+                styles['settings-select-wrapper'],
+                'sm-flex',
+                'height-36',
+                'padding-right-4',
+                'padding-bottom-4'
+            )}
+        >
+            {opts.map((settingItem) => {
+                const value = settingItem.value;
+                const label = settingItem.label;
+                return (
+                    <span>
+                        <Anchor>
+                            <div className={classNames(
+                                styles[`settings-select_${key}_${value}`],
+                                styles['settings-select']
+                            )}
+                            />
+                        </Anchor>
+                        <span className="max-width-76 text-overflow-ellipsis-line-2 height-16 margin-top-4 margin-bottom-8">
+                            {label}
+                        </span>
+                    </span>
+                );
+            })}
+        </div>
+    );
+}
 
 function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onChangeDefinition, defaultValue, styleSize = 'large', managerType, officalDefinition }) {
     const [showColor, setShowColor] = useState(false);
@@ -122,6 +157,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
                 label: i18n._(options[k])
             });
         });
+        console.log('opts', opts, options, definitionKey);
     }
     const colorSelectorContent = (
         <div>
@@ -201,6 +237,20 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
                         menuContainerStyle={{ zIndex: 5 }}
                         name={definitionKey}
                         // disabled={!isDefinitionEditable()}
+                        options={opts}
+                        value={settingDefaultValue}
+                        onChange={(option) => {
+                            onChangeDefinition(definitionKey, option.value);
+                        }}
+                        disabled={officalDefinition && managerType === HEAD_CNC && definitionKey === 'tool_type'}
+                    />
+                )}
+                {type === 'enumWithImage' && (
+                    <Select
+                        className="sm-flex-width align-r"
+                        dropdownRender={dropdownRender(opts, definitionKey)}
+                        size={styleSize}
+                        name={definitionKey}
                         options={opts}
                         value={settingDefaultValue}
                         onChange={(option) => {

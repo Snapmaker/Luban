@@ -113,15 +113,17 @@ function PrintingManager() {
         },
         onSaveDefinitionForManager: async (
             newDefinition,
+            changedSetting,
             shouldUpdateActive
         ) => {
             // now setDefinitionState is synchronize, so remove setTimeout
-            newDefinition.updateParams && newDefinition.updateParams();
+            // newDefinition.updateParams && newDefinition.updateParams();
             await dispatch(
-                printingActions.updateCurrentDefinition(
-                    newDefinition,
+                printingActions.updateCurrentDefinition({
+                    definitionModel: newDefinition,
+                    changedSetting,
                     managerDisplayType
-                )
+                })
             );
             if (shouldUpdateActive) {
                 dispatch(printingActions.destroyGcodeLine());

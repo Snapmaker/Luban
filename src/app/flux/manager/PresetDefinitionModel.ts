@@ -275,7 +275,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                 'affect': {
                     'model_structure_type': 'Normal',
                     'wall_line_count': 3,
-                    'infill_pattern': 'Lines',
+                    'infill_pattern': 'lines',
                     'infill_sparse_density': 10,
                     'top_thickness': 1,
                     'bottom_thickness': 1
