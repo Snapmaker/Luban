@@ -313,7 +313,14 @@ export function simplifyModel(params, onProgress, onSucceed, onError) {
     // onSucceed();
     // onProgress(0.8);
     // const process =
-    const { modelName, fileType, modelID, simplifyType, simplifyPercent, layerHeight } = params;
+    const { uploadName, modelID, simplifyType, simplifyPercent, layerHeight, sourcePly } = params;
+
+    const extname = path.extname(uploadName);
+    const modelName = uploadName.slice(
+        0,
+        uploadName.indexOf(extname)
+    );
+
     const simplifyConfigPath = `${DataStorage.configDir}/${HEAD_PRINTING}/simplify_model.def.json`;
     const data = fs.readFileSync(simplifyConfigPath, 'utf8');
     const config = JSON.parse(data);
@@ -325,7 +332,7 @@ export function simplifyModel(params, onProgress, onSucceed, onError) {
     } else if (simplifyType === 1) {
         config.config.edge_length_threshold = layerHeight;
     }
-    const outputPath = `${DataStorage.tmpDir}/${modelName}-repiar.stl`;
+    const outputPath = `${DataStorage.tmpDir}/${modelName}-simplify.stl`;
     // fs.exists() && fs.rmdirSync(outputPath);
     if (fs.existsSync(outputPath)) {
         fs.unlinkSync(outputPath);
@@ -337,11 +344,10 @@ export function simplifyModel(params, onProgress, onSucceed, onError) {
         } else {
             const simplifyConfig = {
                 // configFilePath: `${DataStorage.configDir}/${HEAD_PRINTING}/simplify_model.def.json`,
-                modelPath: `${DataStorage.tmpDir}/${modelName}.${fileType}`,
+                modelPath: `${DataStorage.tmpDir}/${sourcePly}`,
                 configFilePath: simplifyConfigPath,
                 outputPath: outputPath
             };
-            // console.log(lunarGetPath('MP') + ' -v -j ' + simplifyConfig.configFilePath + ' -l ' + simplifyConfig.modelPath + ' -o ' + simplifyConfig.outputPath);
             lunar.modelSimplify(simplifyConfig.modelPath, simplifyConfig.outputPath, simplifyConfig.configFilePath).onStderr('data', res => {
                 log.info(`response: ${res}`);
             }).end((_err, res) => {
@@ -349,7 +355,14 @@ export function simplifyModel(params, onProgress, onSucceed, onError) {
                     log.error(`fail to simplify model: ${_err}`);
                 } else {
                     log.info(`lunar code: ${res.code}`);
-                    if (res.code === 0) onSucceed({ modelID: modelID, modelUploadName: `${modelName}.${fileType}`, modelOutputName: `${modelName}-repiar.stl` });
+                    if (res.code === 0) {
+                        onSucceed({
+                            modelID: modelID,
+                            modelUploadName: `${sourcePly}`,
+                            modelOutputName: `${modelName}-simplify.stl`,
+                            sourcePly: `${modelName}-simplify.ply`,
+                        });
+                    }
                 }
             });
         }

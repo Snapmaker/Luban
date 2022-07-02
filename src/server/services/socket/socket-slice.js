@@ -50,8 +50,8 @@ const handleGenerateSupport = (socket, params) => {
 const handleSimplifyModel = (socket, params) => {
     socket.emit('simplify-model:started', {
         firstTime: params.isFirstTime,
-        modelName: params.modelName,
-        fileType: params.fileType,
+        uploadName: params.uploadName,
+        sourcePly: params.sourcePly,
         transformation: params.transformation,
         originModel: params.originModel
     });

@@ -311,7 +311,7 @@ const createLoadModelWorker = (() => {
                             });
                             delete runningTasks[uploadPath];
                             break;
-                            // case 'LOAD_MODEL_'
+                        // case 'LOAD_MODEL_'
                         default:
                             break;
                     }
@@ -883,14 +883,15 @@ export const actions = {
             });
 
             // for simplify-model
-            controller.on('simplify-model:started', ({ firstTime, modelName, fileType, transformation }) => {
+            controller.on('simplify-model:started', ({ firstTime, uploadName, transformation, sourcePly }) => {
                 const { progressStatesManager, simplifyOriginModelInfo } = getState().printing;
                 // progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SIMPLIFY_MODEL);
-                if (firstTime && modelName && fileType) {
+                if (firstTime && uploadName) {
                     dispatch(actions.updateState({
                         simplifyOriginModelInfo: {
                             ...simplifyOriginModelInfo,
-                            uploadName: `${modelName}.${fileType}`,
+                            uploadName: uploadName,
+                            sourcePly: sourcePly,
                             transformation: transformation,
                         }
                     }));
@@ -922,13 +923,13 @@ export const actions = {
             });
 
             controller.on('simplify-model:completed', (params) => {
-                const { modelOutputName, modelID } = params;
-                actions.loadSimplifyModel({ modelID, modelOutputName })(dispatch, getState);
+                const { modelOutputName, modelID, sourcePly } = params;
+                actions.loadSimplifyModel({ modelID, modelOutputName, sourcePly })(dispatch, getState);
             });
         }
     },
 
-    loadSimplifyModel: ({ modelID, modelOutputName }) => (dispatch, getState) => {
+    loadSimplifyModel: ({ modelID, modelOutputName, sourcePly }) => async (dispatch, getState) => {
         const { progressStatesManager, modelGroup } = getState().printing;
         dispatch(
             actions.updateState({
@@ -943,7 +944,7 @@ export const actions = {
         modelGroup.removeModel(originModel);
         // const repiarModelOriginalName = removeSpecialChars(modelOutputName);
         const uploadName = modelOutputName;
-        actions.__loadModel([{ originalName: modelOutputName, uploadName: uploadName }], true)(dispatch, getState);
+        actions.__loadModel([{ originalName: modelOutputName, uploadName: uploadName, sourcePly }], true)(dispatch, getState);
     },
 
     logGenerateGcode: () => (dispatch, getState) => {
@@ -3569,10 +3570,33 @@ export const actions = {
 
     isModelsRepaired: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-
         const selectedModels = modelGroup.getSelectedModelArray();
-        return selectedModels.every((model) => {
+        const repaired = selectedModels.every((model) => {
             return model.sourcePly;
+        });
+
+        return new Promise((resolve) => {
+            if (repaired) {
+                resolve(true);
+            } else {
+                dispatch(actions.updateState({
+                    stage: STEP_STAGE.PRINTING_EMIT_REPAIRING_MODEL,
+                    promptTasks: [{
+                        status: 'need-repair-model',
+                        resolve: async () => {
+                            resolve(
+                                await dispatch(actions.repairSelectedModels())
+                            );
+                        },
+                        reject: () => {
+                            dispatch(actions.updateState({
+                                stage: STEP_STAGE.EMPTY
+                            }));
+                            resolve(false);
+                        }
+                    }]
+                }));
+            }
         });
     },
 
@@ -3611,8 +3635,8 @@ export const actions = {
             return controller.repairModel({
                 uploadName: model.sourcePly || model.uploadName,
                 modelID: model.modelID
-            }, (res) => {
-                const { type, data } = res;
+            }, (data) => {
+                const { type } = data;
                 switch (type) {
                     case 'process':
                         if (data.progress && models.length === 1) {
@@ -3694,13 +3718,14 @@ export const actions = {
             modelName,
             children,
             primeTowerTag,
-            reloadSimplifyModel = false
+            reloadSimplifyModel = false,
+            sourcePly
         }
     ) => async (dispatch, getState) => {
         const { progressStatesManager, modelGroup } = getState().printing;
         const { size } = getState().machine;
         const models = [...modelGroup.models];
-        const modelNames = files || [{ originalName, uploadName }];
+        const modelNames = files || [{ originalName, uploadName, sourcePly }];
         let _progress = 0;
         !reloadSimplifyModel && progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
         const promptTasks = [];
@@ -3797,7 +3822,8 @@ export const actions = {
                                         modelID,
                                         extruderConfig,
                                         parentModelID,
-                                        reloadSimplifyModel
+                                        reloadSimplifyModel,
+                                        sourcePly: model.sourcePly
                                     }
                                 );
                                 dispatch(actions.updateState(modelState));
@@ -4627,7 +4653,7 @@ export const actions = {
             leftBarOverlayVisible: true,
             transformMode: 'simplify-model'
         }));
-        const { progressStatesManager, modelGroup, simplifyOriginModelInfo, defaultQualityId, qualityDefinitions } = getState().printing;
+        const { progressStatesManager, modelGroup, defaultQualityId, qualityDefinitions } = getState().printing;
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SIMPLIFY_MODEL);
         dispatch(actions.updateState({
             stage: STEP_STAGE.PRINTING_SIMPLIFY_MODEL,
@@ -4636,32 +4662,24 @@ export const actions = {
             simplifyPercent
         }));
         const layerHeight = lodashFind(qualityDefinitions, { definitionId: defaultQualityId })?.settings?.layer_height?.default_value;
-        let uploadResult = {};
         let transformation = {};
+        const simplifyModel = modelGroup.selectedModelArray[0];
+
         if (isFirstTime) {
-            const simplifyModel = modelGroup.selectedModelArray[0];
             transformation = simplifyModel.transformation;
-            const basenameWithoutExt = path.basename(
-                `${DATA_PREFIX}/${simplifyModel.originalName}`,
-                path.extname(`${DATA_PREFIX}/${simplifyModel.originalName}`)
-            );
-            const plyFileName = `${basenameWithoutExt}.stl`;
             const mesh = simplifyModel.meshObject.clone(false);
             mesh.clear();
             mesh.applyMatrix4(simplifyModel.meshObject.parent.matrix);
-            uploadResult = await uploadMesh(mesh, plyFileName, 'stl');
-            dispatch(actions.updateState({
+            await dispatch(actions.updateState({
                 simplifyOriginModelInfo: {
-                    originModel: modelGroup.selectedModelArray[0]
+                    originModel: simplifyModel
                 }
             }));
         }
-        const tempUploadName = simplifyOriginModelInfo.uploadName || uploadResult?.body?.uploadName;
-        const selectedModelNameArr = tempUploadName.split('.');
         const params = {
-            modelName: selectedModelNameArr[0],
-            fileType: selectedModelNameArr[1],
-            modelID: modelGroup.selectedModelArray[0]?.modelID,
+            uploadName: simplifyModel.uploadName,
+            sourcePly: simplifyModel.sourcePly,
+            modelID: simplifyModel?.modelID,
             simplifyType,
             simplifyPercent,
             isFirstTime,

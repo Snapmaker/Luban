@@ -36,7 +36,6 @@ class ThreeModel extends BaseModel {
     private processImageName: string;
     private _materialNormal: THREE.Color;
     private _materialSelected: THREE.Color;
-    public sourcePly: string = ''
 
     public constructor(modelInfo: ModelInfo, modelGroup: ModelGroup) {
         super(modelInfo, modelGroup);

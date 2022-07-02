@@ -75,3 +75,37 @@ export const sliceFailPopup = () => {
         )
     });
 };
+
+export const repairModelPopup = () => {
+    return new Promise((resolve, reject) => {
+        const action = modal({
+            title: i18n._('key-Printing/ContextMenu-Repair model'),
+            body: (
+                <React.Fragment>
+                    <p>xxxxxxxxxxxxxxxxxxxxx</p>
+                </React.Fragment>
+            ),
+
+            footer: (
+                <Button
+                    priority="level-two"
+                    type="primary"
+                    width="96px"
+                    className="margin-left-4"
+                    onClick={() => {
+                        resolve();
+                        action.close();
+                    }}
+                >
+                    {i18n._('key-Printing/ContextMenu-Repair model')}
+                </Button>
+            ),
+
+            onClose: () => {
+                reject();
+            }
+        });
+    });
+};
+
+

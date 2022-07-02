@@ -212,9 +212,12 @@ function useRenderMainToolBar(setSimplifying) {
                 disabled: !canSimplify || !enableShortcut,
                 type: 'button',
                 name: 'MainToolbarSimplifiedModel',
-                action: () => {
-                    setSimplifying(true);
-                    dispatch(printingActions.modelSimplify(0, 80, true));
+                action: async () => {
+                    const repaired = await dispatch(printingActions.isModelsRepaired());
+                    if (repaired) {
+                        setSimplifying(true);
+                        dispatch(printingActions.modelSimplify(0, 80, true));
+                    }
                 }
             },
             {
