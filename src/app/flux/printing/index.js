@@ -389,7 +389,7 @@ export const actions = {
         const { toolHead, series, size } = getState().machine;
         // await dispatch(machineActions.updateMachineToolHead(toolHead, series, CONFIG_HEADTYPE));
         const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
-        await definitionManager.init(CONFIG_HEADTYPE, currentMachine.configPathname[CONFIG_HEADTYPE]);
+        const profileLevel = await definitionManager.init(CONFIG_HEADTYPE, currentMachine.configPathname[CONFIG_HEADTYPE]);
 
         const allMaterialDefinition = await definitionManager.getDefinitionsByPrefixName(
             'material'
@@ -411,10 +411,12 @@ export const actions = {
         });
         dispatch(
             actions.updateState({
-                materialDefinitions: allMaterialDefinition,
-                qualityDefinitions: qualityParamModels,
-                extruderLDefinition,
-                extruderRDefinition: await definitionManager.getDefinitionsByPrefixName('snapmaker_extruder_1')
+                materialDefinitions: await definitionManager.getDefinitionsByPrefixName('material'),
+                qualityDefinitions: await definitionManager.getDefinitionsByPrefixName('quality'),
+                extruderLDefinition: await definitionManager.getDefinitionsByPrefixName('snapmaker_extruder_0'),
+                extruderRDefinition: await definitionManager.getDefinitionsByPrefixName('snapmaker_extruder_1'),
+                printingProfileLevel: profileLevel.printingProfileLevel,
+                materialProfileLevel: profileLevel.materialProfileLevel
             })
         );
         // model group
@@ -444,7 +446,7 @@ export const actions = {
         series = getRealSeries(series);
         // await dispatch(machineActions.updateMachineToolHead(toolHead, series, CONFIG_HEADTYPE));
         const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
-        await definitionManager.init(
+        const profileLevel = await definitionManager.init(
             CONFIG_HEADTYPE,
             currentMachine.configPathname[CONFIG_HEADTYPE]
         );
@@ -509,9 +511,15 @@ export const actions = {
         })
         dispatch(
             actions.updateState({
-                defaultDefinitions,
-                materialDefinitions: allMaterialDefinition,
-                qualityDefinitions: qualityParamModels
+                defaultDefinitions: definitionManager?.defaultDefinitions,
+                materialDefinitions: await definitionManager.getDefinitionsByPrefixName(
+                    'material'
+                ),
+                qualityDefinitions: await definitionManager.getDefinitionsByPrefixName(
+                    'quality'
+                ),
+                printingProfileLevel: profileLevel.printingProfileLevel,
+                materialProfileLevel: profileLevel.materialProfileLevel
             })
         );
 

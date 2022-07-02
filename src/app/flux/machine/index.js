@@ -1,5 +1,5 @@
 /* eslint-disable import/no-cycle */
-import _, { isEmpty, isNil } from 'lodash';
+import _, { cloneDeep, isEmpty, isNil } from 'lodash';
 import {
     ABSENT_OBJECT,
     CONNECTION_STATUS_CONNECTED,
@@ -190,6 +190,8 @@ const INITIAL_STATE = {
         'support_enable'
     ],
 
+    printingCustomConfigsWithCategory: {},
+
     // security warning
     shouldShowCncWarning: true,
 
@@ -256,6 +258,7 @@ export const actions = {
             }
         }
         const printingCustomConfigs = machineStore.get('printingCustomConfigs');
+        const printingCustomConfigsWithCategory = machineStore.get('printingCustomConfigsWithCategory');
         if (
             printingCustomConfigs
             && Object.prototype.toString.call(printingCustomConfigs)
@@ -267,6 +270,16 @@ export const actions = {
                     printingCustomConfigs: customConfigsArray
                 })
             );
+        }
+
+        if (printingCustomConfigsWithCategory) {
+            const tempConfigs = {};
+            Object.keys(printingCustomConfigsWithCategory).forEach(category => {
+                tempConfigs[category] = [...printingCustomConfigsWithCategory[category]];
+            });
+            dispatch(baseActions.updateState({
+                printingCustomConfigsWithCategory: tempConfigs
+            }));
         }
 
         if (machineStore.get('shouldAutoPreviewGcode') === false) {
@@ -1077,6 +1090,15 @@ export const actions = {
         dispatch(baseActions.updateState({ printingCustomConfigs }));
         const newConfig = printingCustomConfigs.join('-');
         machineStore.set('printingCustomConfigs', newConfig);
+    },
+    updatePrintingCustomConfigsWithCategory: (printingCustomConfigs, category) => (dispatch, getState) => {
+        const { printingCustomConfigsWithCategory } = getState().machine;
+        const newConfig = cloneDeep(printingCustomConfigsWithCategory);
+        newConfig[category] = printingCustomConfigs;
+        dispatch(baseActions.updateState({
+            printingCustomConfigsWithCategory: newConfig
+        }));
+        machineStore.set('printingCustomConfigsWithCategory', newConfig);
     },
     updateMultipleEngine: () => (dispatch, getState) => {
         const { multipleEngine } = getState().machine;

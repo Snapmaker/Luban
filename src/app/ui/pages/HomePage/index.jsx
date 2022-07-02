@@ -53,6 +53,7 @@ const HomePage = (props) => { // Todo, what's the props ?
                             action: () => props?.onClose()
                         }
                     ]}
+                    hasMachineSettings={false}
                     mainBarClassName="background-transparent"
                     lang={i18next.language}
                 />
