@@ -16,6 +16,19 @@ export const loadModelFailPopup = (fileName) => {
     });
 };
 
+export const repairModelFailPopup = (fileName) => {
+    return modal({
+        cancelTitle: i18n._(''),
+        title: i18n._('key-Printing/ContextMenu-Repair Error'),
+        body: (
+            <React.Fragment>
+                <p>{i18n._('Failed to repair this object. \n')}</p>
+                <p>{i18n._('key-Printing/ContextMenu-Model source name')}: {fileName}</p>
+            </React.Fragment>
+        )
+    });
+};
+
 export const scaletoFitPopup = (model) => {
     return new Promise((resolve, reject) => {
         const action = modal({

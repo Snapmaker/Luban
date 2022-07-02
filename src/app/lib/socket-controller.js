@@ -1,5 +1,7 @@
 import noop from 'lodash/noop';
+import { Observable } from 'rxjs';
 import io from 'socket.io-client';
+import { v4 as uuid } from 'uuid';
 
 class SocketController {
     socket = null;
@@ -65,6 +67,28 @@ class SocketController {
         });
 
         return this;
+    }
+
+    channel(topic, args) {
+        return new Observable((observer) => {
+            const actionid = uuid();
+            const listener = (res) => {
+                if (res.actionid === actionid) {
+                    if (res._STATUS_ === 'next') {
+                        observer.next(res.data);
+                    } else if (res._STATUS_ === 'complete') {
+                        observer.next(res.data);
+                        observer.complete();
+                        this.socket.off(listener);
+                    }
+                }
+            };
+            this.socket.on(topic, listener);
+            this.emit(topic, {
+                actionid,
+                data: args
+            });
+        });
     }
 }
 

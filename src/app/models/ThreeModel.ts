@@ -36,7 +36,7 @@ class ThreeModel extends BaseModel {
     private processImageName: string;
     private _materialNormal: THREE.Color;
     private _materialSelected: THREE.Color;
-
+    public sourcePly: string = ''
 
     public constructor(modelInfo: ModelInfo, modelGroup: ModelGroup) {
         super(modelInfo, modelGroup);
@@ -253,6 +253,10 @@ class ThreeModel extends BaseModel {
     public setOversteppedAndSelected(overstepped: boolean, isSelected: boolean) {
         this.overstepped = overstepped;
         this.setSelected(isSelected);
+    }
+
+    public setSorucePly(fileName: string) {
+        this.sourcePly = fileName;
     }
 
     public setSelected(isSelected?: boolean) {

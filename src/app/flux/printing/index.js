@@ -457,7 +457,7 @@ export const actions = {
         if (
             defaultConfigId
             && Object.prototype.toString.call(defaultConfigId)
-                === '[object String]'
+            === '[object String]'
         ) {
             const newConfigId = JSON.parse(defaultConfigId);
             if (newConfigId[series]) {
@@ -1489,9 +1489,9 @@ export const actions = {
                 {
                     ...activeToolList,
                     name:
-                          type === PRINTING_MANAGER_TYPE_MATERIAL
-                              ? i18n._('key-default_category-Default Material')
-                              : i18n._('key-default_category-Default Preset'),
+                        type === PRINTING_MANAGER_TYPE_MATERIAL
+                            ? i18n._('key-default_category-Default Material')
+                            : i18n._('key-default_category-Default Preset'),
                     settings: definitions[0]?.settings
                 }
             ]
@@ -1828,12 +1828,12 @@ export const actions = {
                 - (primeTowerModel.boundingBox.max.x
                     + primeTowerModel.boundingBox.min.x
                     + primeTowerWidth)
-                    / 2;
+                / 2;
             const primeTowerPositionY = modelGroupBBox.max.y
                 - (primeTowerModel.boundingBox.max.y
                     + primeTowerModel.boundingBox.min.y
                     - primeTowerWidth)
-                    / 2;
+                / 2;
             primeTowerXDefinition = size.x - primeTowerPositionX - left;
             primeTowerYDefinition = size.y - primeTowerPositionY - front;
             activeQualityDefinition.settings.prime_tower_position_x.default_value = primeTowerXDefinition;
@@ -3566,6 +3566,115 @@ export const actions = {
         const { modelGroup } = getState().printing;
         modelGroup.defaultSupportSize = size;
     },
+
+    isModelsRepaired: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+
+        const selectedModels = modelGroup.getSelectedModelArray();
+        return selectedModels.every((model) => {
+            return model.sourcePly;
+        });
+    },
+
+    repairSelectedModels: () => async (dispatch, getState) => {
+        const { modelGroup, progressStatesManager } = getState().printing;
+
+        const allModels = modelGroup.getModels();
+        if (allModels.length === 0) {
+            return false;
+        }
+        const selectedModels = modelGroup.getSelectedModelArray();
+        const models = selectedModels.length > 0 ? selectedModels : allModels;
+
+        progressStatesManager.startProgress(
+            PROCESS_STAGE.PRINTING_REPAIRING_MODEL
+        );
+        dispatch(
+            actions.updateState({
+                stage: STEP_STAGE.PRINTING_REPAIRING_MODEL,
+                progress: progressStatesManager.updateProgress(
+                    STEP_STAGE.PRINTING_REPAIRING_MODEL,
+                    0.01
+                )
+            })
+        );
+        const minimumTime = (() => {
+            return new Promise((reolve) => {
+                setTimeout(() => {
+                    reolve();
+                }, 1000);
+            });
+        })();
+        const promptTasks = [];
+        let completedNum = 0;
+        const promises = models.map(async (model) => {
+            return controller.repairModel({
+                uploadName: model.sourcePly || model.uploadName,
+                modelID: model.modelID
+            }, (res) => {
+                const { type, data } = res;
+                switch (type) {
+                    case 'process':
+                        if (data.progress && models.length === 1) {
+                            const { progress } = getState().printing;
+                            if (
+                                progress - data.progress > 0.01
+                                || progress > 1 - EPSILON
+                            ) {
+                                dispatch(
+                                    actions.updateState({
+                                        progress: progressStatesManager.updateProgress(
+                                            STEP_STAGE.PRINTING_REPAIRING_MODEL,
+                                            progress
+                                        )
+                                    })
+                                );
+                            }
+                        }
+                        break;
+                    case 'error':
+                        // TODO: Whether to set the identification of repair failure
+                        promptTasks.push({
+                            status: 'repair-model-fail',
+                            originalName: model.originalName
+                        });
+                        break;
+                    case 'completed':
+                        if (models.length > 1) {
+                            completedNum++;
+                            dispatch(
+                                actions.updateState({
+                                    progress: progressStatesManager.updateProgress(
+                                        STEP_STAGE.PRINTING_REPAIRING_MODEL,
+                                        1 * (completedNum / models.length) - 0.01
+                                    )
+                                })
+                            );
+                        }
+                        model.setSorucePly(data.sourcePly);
+                        break;
+                    default:
+                        break;
+                }
+            });
+        });
+
+        await Promise.all([minimumTime, ...promises]);
+
+        dispatch(
+            actions.updateState({
+                promptTasks,
+                stage: STEP_STAGE.PRINTING_REPAIRING_MODEL,
+                progress: progressStatesManager.updateProgress(
+                    STEP_STAGE.PRINTING_REPAIRING_MODEL,
+                    1
+                )
+            })
+        );
+
+        return promptTasks.length === 0;
+    },
+
     generateModel: (
         headType,
         {
@@ -3753,7 +3862,7 @@ export const actions = {
                             }
                             case 'LOAD_MODEL_FAILED': {
                                 promptTasks.push({
-                                    status: 'fail',
+                                    status: 'load-model-fail',
                                     originalName: model.originalName
                                 });
                                 if (modelNames.length > 1) {
@@ -3924,7 +4033,7 @@ export const actions = {
                     dispatch(actions.destroyGcodeLine());
                     dispatch(actions.displayModel());
                 })
-                .catch(() => {});
+                .catch(() => { });
         }
     },
 
@@ -4224,8 +4333,8 @@ export const actions = {
                     // https://stackoverflow.com/questions/16469270/transforming-vertex-normals-in-three-js/16469913#16469913
                     if (
                         model.transformation.scaleX
-                            * model.transformation.scaleY
-                            * model.transformation.scaleZ
+                        * model.transformation.scaleY
+                        * model.transformation.scaleZ
                         < 0
                     ) {
                         mesh.geometry = mesh.geometry.clone();
@@ -4323,7 +4432,7 @@ export const actions = {
                                 model.meshObject.add(mesh);
                                 resolve();
                             },
-                            () => {},
+                            () => { },
                             (err) => {
                                 reject(err);
                             }

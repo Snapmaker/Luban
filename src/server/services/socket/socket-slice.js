@@ -1,5 +1,5 @@
 import { parseLubanGcodeHeader } from '../../lib/parseGcodeHeader';
-import slice, { generateSupport, simplifyModel } from '../../slicer/slice';
+import slice, { generateSupport, simplifyModel, repairModel } from '../../slicer/slice';
 
 const handleSlice = (socket, params) => {
     socket.emit('slice:started');
@@ -48,7 +48,6 @@ const handleGenerateSupport = (socket, params) => {
 };
 
 const handleSimplifyModel = (socket, params) => {
-    console.log('params', params);
     socket.emit('simplify-model:started', {
         firstTime: params.isFirstTime,
         modelName: params.modelName,
@@ -70,8 +69,40 @@ const handleSimplifyModel = (socket, params) => {
     );
 };
 
+const handleRepairModel = (subscriber, params) => {
+    subscriber.next({
+        type: 'started',
+        uploadName: params.uploadName,
+        fileType: params.fileType,
+        modelID: params.modelID
+    });
+    repairModel(
+        params,
+        (progress) => {
+            subscriber.next({
+                type: 'progress',
+                progress
+            });
+        },
+        (res) => {
+            subscriber.complete({
+                type: 'completed',
+                ...res
+            });
+        },
+        (err) => {
+            subscriber.next({
+                type: 'error',
+                err
+            });
+        }
+    );
+};
+
+
 export default {
     handleSlice,
     handleGenerateSupport,
-    handleSimplifyModel
+    handleSimplifyModel,
+    handleRepairModel
 };

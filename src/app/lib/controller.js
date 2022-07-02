@@ -85,6 +85,12 @@ class SerialPortClient {
         'simplify-model:progress': [],
         'simplify-model:error': [],
 
+        // for repair model
+        'repair-model:started': [],
+        'repair-model:completed': [],
+        'repair-model:progress': [],
+        'repair-model:error': [],
+
         'daily:heartbeat': []
     };
 
@@ -261,6 +267,19 @@ class SerialPortClient {
         socketController.emit('simplify-model', params);
     }
 
+    repairModel(params, onMessage) {
+        return new Promise((resolve) => {
+            const observable = socketController.channel('repair-model', params);
+            observable.subscribe({
+                next(data) {
+                    onMessage(data);
+                },
+                complete() {
+                    resolve();
+                }
+            });
+        });
+    }
 
     commitViewPathTask(task) {
         socketController.emit('taskCommit:generateViewPath', task);

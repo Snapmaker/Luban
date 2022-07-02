@@ -61,6 +61,8 @@ function startServices(server) {
 
     // simplify model
     socketServer.registerEvent('simplify-model', socketSlice.handleSimplifyModel);
+    // repair model
+    socketServer.registerChannel('repair-model', socketSlice.handleRepairModel);
 
     // communication: http & serial port
     socketServer.registerEvent('machine:discover', connectionManager.refreshDevices);

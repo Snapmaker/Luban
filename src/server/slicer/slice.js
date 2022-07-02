@@ -363,4 +363,46 @@ export function simplifyModel(params, onProgress, onSucceed, onError) {
     // })
 }
 
+export function repairModel(params, onProgress, onSucceed, onError) {
+    const { uploadName, modelID } = params;
+
+    const extname = path.extname(uploadName);
+    const modelName = uploadName.slice(
+        0,
+        uploadName.indexOf(extname)
+    );
+
+    const modeltPath = `${DataStorage.tmpDir}/${uploadName}`;
+    const outputPath = `${DataStorage.tmpDir}/${modelName}_repaired.ply`;
+    if (fs.existsSync(outputPath)) {
+        fs.unlinkSync(outputPath);
+    }
+
+    const steps = [0.02, 0.44, 0.69, 0.98];
+    let index = 0;
+    lunar.modelRepair(modeltPath, outputPath)
+        .onStderr('data', (message) => {
+            log.debug(`${message}`);
+            onProgress(
+                steps[index]
+            );
+            index++;
+        })
+        .end((_err, res) => {
+            if (_err) {
+                log.error(`fail to repair model: ${_err}`);
+                onError(_err);
+            } else {
+                log.info(`lunar code: ${res.code}`);
+                if (res.code === 0) {
+                    onSucceed({
+                        modelID,
+                        uploadName,
+                        sourcePly: `${modelName}_repaired.ply`
+                    });
+                }
+            }
+        });
+}
+
 export default slice;

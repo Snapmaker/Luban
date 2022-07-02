@@ -29,7 +29,7 @@ import VisualizerBottomLeft from './VisualizerBottomLeft';
 import VisualizerInfo from './VisualizerInfo';
 import PrintableCube from './PrintableCube';
 import styles from './styles.styl';
-import { loadModelFailPopup, scaletoFitPopup, sliceFailPopup } from './VisualizerPopup';
+import { loadModelFailPopup, scaletoFitPopup, sliceFailPopup, repairModelFailPopup } from './VisualizerPopup';
 
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 import { emitUpdateControlInputEvent } from '../../components/SMCanvas/TransformControls';
@@ -446,7 +446,7 @@ class Visualizer extends PureComponent {
         if (stage !== prevProps.stage) {
             if (promptTasks.length > 0) {
                 if (stage === STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE) {
-                    promptTasks.filter(item => item.status === 'fail').forEach(item => {
+                    promptTasks.filter(item => item.status === 'load-model-fail').forEach(item => {
                         loadModelFailPopup(item.originalName);
                     });
                     promptTasks.filter(item => item.status === 'needScaletoFit').forEach(item => {
@@ -457,6 +457,10 @@ class Visualizer extends PureComponent {
                     });
                 } else if (stage === STEP_STAGE.PRINTING_SLICE_FAILED) {
                     sliceFailPopup();
+                } else if (stage === STEP_STAGE.PRINTING_REPAIRING_MODEL) {
+                    promptTasks.filter(item => item.status === 'repair-model-fail').forEach(item => {
+                        repairModelFailPopup(item.originalName);
+                    });
                 }
             }
         }
