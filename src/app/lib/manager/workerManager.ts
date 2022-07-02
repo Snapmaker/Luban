@@ -24,9 +24,9 @@ type IWorkerManager = {
     };
 };
 type PayloadData = {
-    status?: String;
-    type?: String;
-    value?: any;
+    status?: string;
+    type?: string;
+    value?: unknown;
 };
 
 class WorkerManager {
@@ -35,7 +35,7 @@ class WorkerManager {
 
 Object.entries(WorkerMethods).forEach(([, method]) => {
     // eslint-disable-next-line
-    WorkerManager.prototype[method] = async function(data: any, onmessage?: (payload: unknown) => void | Promise<unknown>) {
+    WorkerManager.prototype[method] = async function (data: any, onmessage?: (payload: unknown) => void | Promise<unknown>) {
         this.pool || (this.pool = Pool(async () => spawn(new Worker('./Pool.worker.js'))));
         const task = this.pool.queue(eachPool => {
             eachPool[method](data).subscribe((payload: PayloadData) => {

@@ -61,7 +61,7 @@ function PrintingManager() {
     );
     // TODO: Update materialDifinitions Data, for TreeSelect
     // const [materialOptions, setMaterialOptions] = useState(materialDefinitions);
-    const qualityDefinitions = useSelector(
+    const qualityDefinitionsModels = useSelector(
         (state) => state?.printing?.qualityDefinitions
     );
     const series = useSelector((state) => state?.machine?.series);
@@ -113,41 +113,22 @@ function PrintingManager() {
         },
         onSaveDefinitionForManager: async (
             newDefinition,
+            changedSettingArray,
             shouldUpdateActive
         ) => {
             // now setDefinitionState is synchronize, so remove setTimeout
+            // newDefinition.updateParams && newDefinition.updateParams();
             await dispatch(
-                printingActions.updateCurrentDefinition(
-                    newDefinition,
+                printingActions.updateCurrentDefinition({
+                    definitionModel: newDefinition,
+                    changedSettingArray,
                     managerDisplayType
-                )
+                })
             );
             if (shouldUpdateActive) {
                 dispatch(printingActions.destroyGcodeLine());
                 dispatch(printingActions.displayModel());
             }
-        },
-        onSaveQualityForManager: async (type, newDefinition) => {
-            await dispatch(
-                printingActions.updateCurrentDefinition(newDefinition, type)
-            );
-            return dispatch(
-                printingActions.updateDefinitionsForManager(
-                    newDefinition.definitionId,
-                    type
-                )
-            );
-        },
-        onSaveMaterialForManager: async (type, newDefinition) => {
-            await dispatch(
-                printingActions.updateCurrentDefinition(newDefinition, type)
-            );
-            return dispatch(
-                printingActions.updateDefinitionsForManager(
-                    newDefinition.definitionId,
-                    type
-                )
-            );
         },
 
         updateDefinitionName: async (definition, selectedName) => {
@@ -249,7 +230,7 @@ function PrintingManager() {
         : printingQualityConfigGroup;
     const allDefinitions = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL
         ? materialDefinitions
-        : qualityDefinitions;
+        : qualityDefinitionsModels;
 
     const selectedIds = {
         [PRINTING_MANAGER_TYPE_MATERIAL]: {

@@ -5,7 +5,7 @@ import { Input } from 'antd';
 import log from '../../../lib/log';
 import styles from './styles.styl';
 
-const NumberInput = React.memo(({
+const NumberInput = ({
     className = '', size = 'middle', value, defaultValue, disabled = false, min, max, onChange, placeholder, allowUndefined, ...rest
 }) => {
     const [displayValue, setDisplayValue] = useState(value);
@@ -52,11 +52,12 @@ const NumberInput = React.memo(({
         // multiple .setState on edge values won't change props from outside, we
         // need to change display manually
         useEdgeValue && setDisplayValue(numericValue);
-        if (value !== numericValue) {
-            setDisplayValue(value);
-        }
+        // if (value !== numericValue) {
+        //     setDisplayValue(value);
+        // }
         // call onAfterChange to change value
         if (onChange && value !== numericValue) {
+            setDisplayValue(numericValue);
             onChange(numericValue);
         }
         ref.current.blur();
@@ -114,7 +115,7 @@ const NumberInput = React.memo(({
             />
         </span>
     );
-});
+};
 
 NumberInput.propTypes = {
     className: PropTypes.string,

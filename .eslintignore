@@ -3,3 +3,4 @@
 dist/
 output/
 src/node_modules
+src/server/lib/SACP-SDK

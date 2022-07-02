@@ -68,7 +68,7 @@ class DrawGroup {
     private selected: {
         line?: Line,
         point?: SVGRectElement,
-        pointIndex?: Number
+        pointIndex?: number
     } = {};
 
     private preSelectLine: Line;
@@ -85,7 +85,7 @@ class DrawGroup {
 
     private redrawLatestLine: boolean;
 
-    private latestDrawingCompleted: boolean = false;
+    private latestDrawingCompleted = false;
 
     private isAttached: boolean
 
@@ -120,7 +120,7 @@ class DrawGroup {
     }
 
 
-    public stopDraw(forcedStop: boolean = false) {
+    public stopDraw(forcedStop = false) {
         if (this.mode === MODE.NONE) {
             return null;
         }
@@ -323,7 +323,7 @@ class DrawGroup {
         });
     }
 
-    public appendLine(data: TCoordinate[] | SVGPathElement, closedLoop: boolean = false, fragmentID?: number) {
+    public appendLine(data: TCoordinate[] | SVGPathElement, closedLoop = false, fragmentID?: number) {
         const line = new Line(data, this.scale, closedLoop, fragmentID || this.drawedLine.length);
         this.drawedLine.splice(line.fragmentID, 0, line);
 

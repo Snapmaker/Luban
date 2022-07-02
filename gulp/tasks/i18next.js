@@ -51,13 +51,13 @@ const appConfig = {
 
         func: {
             list: ['i18n._'],
-            extensions: ['.js', '.jsx', '.ts']
+            extensions: ['.js', '.jsx', '.ts', '.tsx']
         },
 
         trans: {
             component: 'Trans',
             i18nKey: 'i18nKey',
-            extensions: ['.js', '.jsx', '.ts'],
+            extensions: ['.js', '.jsx', '.ts', '.tsx'],
             fallbackKey: function (ns, value) {
                 return value;
             }

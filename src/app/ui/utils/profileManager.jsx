@@ -33,6 +33,38 @@ function getSelectOptions(printingDefinitions) {
     return toolDefinitionOptions;
 }
 
+function getPresetOptions(definitionModels) {
+    const presetOptionsObj = {};
+    definitionModels.forEach(preset => {
+        const typeOfPrinting = preset.typeOfPrinting;
+        const category = preset.category && typeOfPrinting ? preset.category : 'Custom';
+        const definitionId = preset.definitionId;
+        if (Object.keys(preset?.settings).length > 0) {
+            const checkboxAndSelectGroup = {};
+            const name = preset.name;
+            checkboxAndSelectGroup.name = name;
+            checkboxAndSelectGroup.definitionId = definitionId;
+            checkboxAndSelectGroup.typeOfPrinting = typeOfPrinting;
+            checkboxAndSelectGroup.label = `${name}`;
+            checkboxAndSelectGroup.value = `${definitionId}-${name}`;
+            if (presetOptionsObj[category]) {
+                preset.visible && presetOptionsObj[category].options.push(checkboxAndSelectGroup);
+            } else {
+                const i18nCategory = preset.i18nCategory;
+                const groupOptions = {
+                    label: category,
+                    category: category,
+                    i18nCategory: i18nCategory,
+                    options: []
+                };
+                presetOptionsObj[category] = groupOptions;
+                preset.visible && groupOptions.options.push(checkboxAndSelectGroup);
+            }
+        }
+    });
+    return presetOptionsObj;
+}
+
 function getMaterialSelectOptions(materialDefinitions) {
     const materialDefinitionOptionsObj = {};
     const materialDefinitionOptions = [];
@@ -67,5 +99,6 @@ function getMaterialSelectOptions(materialDefinitions) {
 
 export {
     getSelectOptions,
-    getMaterialSelectOptions
+    getMaterialSelectOptions,
+    getPresetOptions
 };

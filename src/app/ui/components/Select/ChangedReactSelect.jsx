@@ -20,6 +20,7 @@ class ChangedReactSelect extends PureComponent {
         ]),
         showSearch: PropTypes.bool,
         disabled: PropTypes.bool,
+        bordered: PropTypes.bool,
         options: PropTypes.array.isRequired,
         size: PropTypes.string,
         className: PropTypes.string,
@@ -128,7 +129,8 @@ class ChangedReactSelect extends PureComponent {
             className,
             isGroup,
             showSearch = true,
-            disabled = true
+            disabled = true,
+            bordered = true
         } = this.props;
         let defaultValue = {};
         if (isGroup) {
@@ -166,15 +168,17 @@ class ChangedReactSelect extends PureComponent {
             return (
                 <div className={classNames(styles['override-select'], className)} style={{ width: size }}>
                     <TreeSelect
-                        className={styles[size]}
                         onTreeExpand={this.actions.onTreeExpand}
                         showSearch
-                        style={{ width: size }}
+                        className={classNames(
+                            styles[size]
+                        )}
                         onDropdownVisibleChange={this.actions.onDropdownVisibleChange}
                         treeExpandedKeys={this.state.expandedKeys}
                         value={defaultValue?.definitionId}
                         treeData={treeData}
                         onChange={(option) => this.actions.handleTreeChange(option)}
+                        bordered={bordered}
                     />
                 </div>
             );
@@ -193,13 +197,16 @@ class ChangedReactSelect extends PureComponent {
                 <div className={classNames(styles['override-select'], className)}>
                     <Select
                         dropdownRender={this.props.dropdownRender}
-                        className={styles[size]}
+                        className={classNames(
+                            styles[size]
+                        )}
                         value={defaultValue?.value}
                         showSearch={showSearch}
                         optionFilterProp="children"
                         style={{ width: size }}
                         disabled={disabled}
                         onChange={this.actions.handleChange}
+                        bordered={bordered}
                     >
                         {(options.map((option) => {
                             return (<Option key={option.value + option.label} value={option.value}>{i18n._(option.label)}</Option>);

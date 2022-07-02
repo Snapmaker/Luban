@@ -6,6 +6,9 @@
     "i18nName": "key-default_name-PETG_Red",
     "i18nCategory": "key-default_category-PETG",
     "overrides": {
+        "material_type": {
+            "default_value": "petg"
+        },
         "color": {
             "default_value": "#E70008"
         },

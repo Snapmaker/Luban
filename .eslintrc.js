@@ -23,7 +23,7 @@ module.exports = {
                         modules: [
                             path.resolve(__dirname, 'src')
                         ],
-                        extensions: ['.js', '.jsx', '.ts']
+                        extensions: ['.js', '.jsx', '.ts', '.tsx']
                     }
                 }
             }
@@ -33,6 +33,16 @@ module.exports = {
         'react-hooks'
     ],
     rules: {
+        'no-use-before-define': 'off',
+        '@typescript-eslint/no-use-before-define': ['error'],
+        'react/jsx-filename-extension': [2, {
+            'extensions': [
+                '.js',
+                '.jsx',
+                '.ts',
+                '.tsx'
+            ]
+        }],
         'react-hooks/rules-of-hooks': 'error', // Checks rules of Hooks
         'react-hooks/exhaustive-deps': 'warn', // Checks effect dependencies
         'react/jsx-no-bind': [1, {
@@ -77,14 +87,32 @@ module.exports = {
                 'exceptAfterSingleLine': true // skip checking empty lines after single-line class members
             }
         ],
-        'semi': [2, 'always']
+        'semi': [2, 'always'],
+        'jsx-a11y/label-has-associated-control': ['error', {
+            'required': {
+                'some': ['nesting', 'id']
+            }
+        }],
+        'jsx-a11y/label-has-for': ['error', {
+            'required': {
+                'some': ['nesting', 'id']
+            }
+        }]
     },
     ignorePatterns: ['*.d.ts'],
     overrides: [{
         files: ['*.ts', '*.tsx'],
+        extends: [
+            'plugin:@typescript-eslint/eslint-recommended',
+            'plugin:@typescript-eslint/recommended',
+        ],
         parser: '@typescript-eslint/parser',
-        plugins: ['@typescript-eslint'],
+        // plugins: ['react', '@typescript-eslint'],
         rules: {
+            '@typescript-eslint/ban-types': 'off',
+            'no-use-before-define': 'off',
+            '@typescript-eslint/no-use-before-define': ['error'],
+            'react/prop-types': 'off',
             'no-shadow': 'off',
             '@typescript-eslint/no-shadow': ['error'],
             'no-empty-function': 'off',

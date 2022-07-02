@@ -13,10 +13,10 @@ class SVGSelector {
     public scale: number;
     public visible: boolean;
 
-    private x: number = 0;
-    private y: number = 0;
-    private width: number = 0;
-    private height: number = 0;
+    private x = 0;
+    private y = 0;
+    private width = 0;
+    private height = 0;
 
     private elem: SVGRectElement;
 

@@ -5,7 +5,7 @@ class Size {
 
     public height: number;
 
-    public constructor(width: number = 0, height: number = 0) {
+    public constructor(width = 0, height = 0) {
         this.width = width;
         this.height = height;
     }

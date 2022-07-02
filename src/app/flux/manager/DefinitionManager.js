@@ -1,15 +1,17 @@
+/* eslint-disable */
 import { includes } from 'lodash';
 import api from '../../api';
 import i18n from '../../lib/i18n';
 import {
     HEAD_CNC,
+    HEAD_PRINTING,
     RIGHT_EXTRUDER_MAP_NUMBER,
     PRINTING_MATERIAL_CONFIG_KEYS_SINGLE,
     MACHINE_EXTRUDER_X,
     MACHINE_EXTRUDER_Y,
     KEY_DEFAULT_CATEGORY_CUSTOM,
 } from '../../constants';
-
+import PresetDefinitionModel from './PresetDefinitionModel';
 const primeTowerDefinitionKeys = [
     'prime_tower_enable',
     'prime_tower_size',
@@ -55,12 +57,17 @@ class DefinitionManager {
             }
             return item;
         });
+        if (headType === HEAD_PRINTING) {
+            res = await this.getDefinition('machine');
+            this.machineDefinition = res;
 
-        res = await this.getDefinition('snapmaker_extruder_0', false);
-        this.extruderLDefinition = res;
+            res = await this.getDefinition('snapmaker_extruder_0', false);
+            this.extruderLDefinition = res;
 
-        res = await this.getDefinition('snapmaker_extruder_1', false);
-        this.extruderRDefinition = res;
+            res = await this.getDefinition('snapmaker_extruder_1', false);
+            this.extruderRDefinition = res;
+        }
+
     }
 
     /**
@@ -145,17 +152,21 @@ class DefinitionManager {
     }
 
     async createDefinition(definition) {
-        const res = await api.profileDefinitions.createDefinition(
-            this.headType,
-            definition,
-            this.configPathname
-        );
+        let actualDefinition = definition;
+        if (definition instanceof PresetDefinitionModel) {
+            actualDefinition = definition.getSerializableDefinition()
+        }
+        const res = await api.profileDefinitions.createDefinition(this.headType, actualDefinition, this.configPathname);
         return res.body.definition;
     }
 
     async createTmpDefinition(definition, definitionName) {
+        let actualDefinition = definition;
+        if (definition instanceof PresetDefinitionModel) {
+            actualDefinition = definition.getSerializableDefinition()
+        }
         const res = await api.profileDefinitions.createTmpDefinition(
-            definition,
+            actualDefinition,
             definitionName
         );
         return res.body.uploadName;
@@ -188,10 +199,14 @@ class DefinitionManager {
     // Update definition
     // Only name & settings are configurable
     async updateDefinition(definition) {
+        let actualDefinition = definition;
+        if (definition instanceof PresetDefinitionModel) {
+            actualDefinition = definition.getSerializableDefinition()
+        }
         await api.profileDefinitions.updateDefinition(
             this.headType,
             definition.definitionId,
-            definition,
+            actualDefinition,
             this.configPathname
         );
     }
@@ -219,7 +234,6 @@ class DefinitionManager {
     // Start Notice: only used for printing config
     // Calculate hidden settings
     calculateDependencies(
-        definition,
         settings,
         hasSupportModel,
         extruderLDefinitionSettings,
@@ -294,22 +308,22 @@ class DefinitionManager {
 
         if (settings.layer_height) {
             const layerHeight = settings.layer_height.default_value;
-            const infillSparseDensity = definition.settings.infill_sparse_density.default_value;
+            const infillSparseDensity = settings.infill_sparse_density.default_value;
 
             // "0 if infill_sparse_density == 100 else math.ceil(round(top_thickness / resolveOrValue('layer_height'), 4))"
-            const topThickness = definition.settings.top_thickness.default_value;
+            const topThickness = settings.top_thickness.default_value;
             const topLayers = infillSparseDensity === 100
                 ? 0
                 : Math.ceil(topThickness / layerHeight);
-            definition.settings.top_layers.default_value = topLayers;
+            settings.top_layers.default_value = topLayers;
             settings.top_layers = { default_value: topLayers };
 
             // "999999 if infill_sparse_density == 100 else math.ceil(round(bottom_thickness / resolveOrValue('layer_height'), 4))"
-            const bottomThickness = definition.settings.bottom_thickness.default_value;
+            const bottomThickness = settings.bottom_thickness.default_value;
             const bottomLayers = infillSparseDensity === 100
                 ? 999999
                 : Math.ceil(bottomThickness / layerHeight);
-            definition.settings.bottom_layers.default_value = bottomLayers;
+            settings.bottom_layers.default_value = bottomLayers;
             settings.bottom_layers = { default_value: bottomLayers };
         }
         if (settings.speed_print_layer_0) {
@@ -330,18 +344,18 @@ class DefinitionManager {
 
             // "0 if support_infill_rate == 0 else (support_line_width * 100) / support_infill_rate *
             // (2 if support_pattern == 'grid' else (3 if support_pattern == 'triangles' else 1))"
-            const supportPattern = definition.settings.support_pattern.default_value;
+            const supportPattern = settings.support_pattern.default_value;
             let supportPatternRate = 1;
             if (supportPattern === 'grid') {
                 supportPatternRate = 2;
             } else if (supportPattern === 'triangles') {
                 supportPatternRate = 3;
             }
-            definition.settings.support_line_distance.default_value = supportInfillRate === 0
+            settings.support_line_distance.default_value = supportInfillRate === 0
                 ? 0
                 : ((supportLineWidth * 100) / supportInfillRate)
                       * supportPatternRate;
-            definition.settings.support_initial_layer_line_distance.default_value = definition.settings.support_line_distance.default_value;
+            settings.support_initial_layer_line_distance.default_value = settings.support_line_distance.default_value;
         }
         if (settings.support_pattern) {
             settings.support_wall_count = settings.support_pattern.default_value === 'grid'
@@ -372,8 +386,8 @@ class DefinitionManager {
                 };
             }
         } else if (
-            definition.settings.support_xy_distance.default_value
-            === definition.settings.support_z_distance.default_value
+            settings.support_xy_distance.default_value
+            === settings.support_z_distance.default_value
         ) {
             settings.support_xy_distance.default_value = 0.875; // reset xy
         }

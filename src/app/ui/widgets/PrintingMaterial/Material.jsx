@@ -64,14 +64,14 @@ function Material({ widgetActions }) {
     }
 
     const updateActiveDefinition = useCallback(
-        (definition, type, direction) => {
-            if (definition) {
+        (definitionModel, managerDisplayType, direction) => {
+            if (definitionModel) {
                 dispatch(
-                    printingActions.updateCurrentDefinition(
-                        definition,
-                        type,
+                    printingActions.updateCurrentDefinition({
+                        definitionModel,
+                        managerDisplayType,
                         direction
-                    )
+                    })
                 );
                 dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
             }

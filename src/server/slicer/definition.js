@@ -116,6 +116,9 @@ export class DefinitionLoader {
         if (json.i18nCategory) {
             this.i18nCategory = json.i18nCategory;
         }
+        if (json.typeOfPrinting) {
+            this.typeOfPrinting = json.typeOfPrinting;
+        }
         if (!isNil(json.isRecommended)) {
             this.isRecommended = json.isRecommended;
         }
@@ -170,6 +173,7 @@ export class DefinitionLoader {
             category: this.category,
             i18nName: this.i18nName,
             i18nCategory: this.i18nCategory,
+            typeOfPrinting: this.typeOfPrinting,
             isRecommended: this.isRecommended,
             inherits: this.inherits,
             metadata: this.metadata,
@@ -188,6 +192,7 @@ export class DefinitionLoader {
             inherits: this.inherits,
             settings: this.settings,
             metadata: this.metadata,
+            typeOfPrinting: this.typeOfPrinting,
             ownKeys: Array.from(this.ownKeys)
         };
     }
@@ -198,6 +203,7 @@ export class DefinitionLoader {
         this.category = object.category;
         this.i18nCategory = object.i18nCategory;
         this.inherits = object.inherits;
+        this.typeOfPrinting = object.typeOfPrinting;
         this.ownKeys = new Set(object.ownKeys);
         this.settings = object.settings;
         this.metadata = object.metadata;

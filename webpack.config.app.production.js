@@ -40,7 +40,7 @@ module.exports = {
             path.resolve(__dirname, 'src/app'),
             'node_modules'
         ],
-        extensions: ['.js', '.json', '.jsx', '.styl', '.ts']
+        extensions: ['.js', '.json', '.jsx', '.styl', '.ts', '.tsx']
     },
     entry: {
         polyfill: path.resolve(__dirname, 'src/app/polyfill/index.js'),
@@ -106,14 +106,40 @@ module.exports = {
                 },
             },
             {
-                test: /\.ts$/,
-                loader: 'ts-loader'
+                test: /\.tsx?$/,
+                use: [
+                    {
+                        loader: 'babel-loader',
+                        options: {
+                            presets: [
+                                '@babel/preset-env',
+                                [
+                                    '@babel/preset-react',
+                                    { pragma: 'createElement' },
+                                ],
+                            ],
+                        },
+                    },
+                    {
+                        loader: 'ts-loader',
+                        options: {
+                            transpileOnly: true
+                        }
+                    },
+                ]
             },
             {
-                test: /\.jsx?$|\.ts$/,
+                test: /\.jsx?$|\.tsx?$/,
                 loader: 'eslint-loader',
                 enforce: 'pre',
-                exclude: /node_modules/
+                exclude: /node_modules/,
+                options: {
+                    cache: true,
+                    fix: true,
+                    emitWarning: false,
+                    quiet: true,
+                    configFile: path.resolve(__dirname, '.eslintrc.js')
+                }
             },
             {
                 test: /\.jsx?$/,

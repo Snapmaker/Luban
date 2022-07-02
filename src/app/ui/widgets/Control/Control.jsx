@@ -505,11 +505,9 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
                 <div className="sm-flex justify-space-between align-center">
                     <span className="max-width-208 text-overflow-ellipsis">{i18n._('key-Workspace/Console-Jog Speed')}</span>
                     <Select
-                        backspaceRemoves={false}
                         className="margin-left-8"
                         clearable={false}
                         size="middle"
-                        menuContainerStyle={{ zIndex: 5 }}
                         options={state.jogSpeedOptions}
                         onNewOptionClick={actions.onCreateJogSpeedOption}
                         searchable

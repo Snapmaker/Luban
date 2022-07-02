@@ -92,7 +92,7 @@ type TModelConfigs = Record<TMode, {
 }>
 
 class SvgModel extends BaseModel {
-    public isSvgModel: boolean = true;
+    public isSvgModel = true;
     public modeConfigs: TModelConfigs = {} as unknown as TModelConfigs;
     public resource: Resource = new Resource();
     public pathPreSelectionArea: SVGPathElement = null;

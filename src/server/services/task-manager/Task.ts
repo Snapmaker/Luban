@@ -38,27 +38,27 @@ class Task {
 
     public finishTime: number;
 
-    public filenames: string = ''
+    public filenames = ''
 
     public gcodeFile: TGcodeFile = {} as TGcodeFile
 
-    public viewPathFile: string = ''
+    public viewPathFile = ''
 
-    public filename: string = ''
+    public filename = ''
 
-    public width: string = ''
+    public width = ''
 
-    public height: string = ''
+    public height = ''
 
-    public stlInfo: string = ''
+    public stlInfo = ''
 
-    public svgInfo: string = ''
+    public svgInfo = ''
 
     public terminateFn: () => void;
 
     public constructor(taskId: string, socket: Socket, data: {
         taskAsyncFor: unknown
-    }, taskType: string, headType: string, modelId: string = '') {
+    }, taskType: string, headType: string, modelId = '') {
         this.taskId = taskId;
         this.modelId = modelId;
         this.socket = socket;

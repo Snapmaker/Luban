@@ -32,7 +32,7 @@ module.exports = {
             path.resolve(__dirname, 'src/app'),
             'node_modules'
         ],
-        extensions: ['.js', '.json', '.jsx', '.styl', '.ts']
+        extensions: ['.js', '.json', '.jsx', '.styl', '.ts', '.tsx']
     },
     entry: {
         polyfill: [
@@ -118,22 +118,28 @@ module.exports = {
                 exclude: /node_modules/
             },
             {
-                test: /\.ts$/,
+                test: /\.tsx?$/,
                 loader: 'ts-loader',
                 exclude: /node_modules/,
+                options: {
+                    transpileOnly: true,
+                },
                 include: [
                     path.resolve(__dirname, 'src/app'),
                     path.resolve(__dirname, 'src/shared'),
                 ]
             },
             {
-                test: /\.jsx?$|\.ts$/,
+                test: /\.jsx?$|\.tsx?$/,
                 loader: 'eslint-loader',
                 enforce: 'pre',
                 exclude: /node_modules/,
                 options: {
                     cache: true,
-                    fix: true
+                    fix: true,
+                    emitWarning: false,
+                    quiet: true,
+                    configFile: path.resolve(__dirname, '.eslintrc.js')
                 }
             },
             {

@@ -87,37 +87,39 @@ class WidgetContainer extends PureComponent {
                 className="border-bottom-normal padding-bottom-16"
                 fullscreen={state.fullscreen}
             >
-                <div className="sm-flex height-32 justify-space-between">
-                    <span className="sm-flex-width heading-3">{i18n._(state.title)}</span>
-                    <div>
-                        {state.buttons && _.isArray(state.buttons) && state.buttons.map(v => {
-                            if (typeof v === 'object') {
-                                const { disabled = false, title = '', onClick, className = '', name = 'CopyNomral', type = ['hoverNormal', 'pressNormal'] } = v;
-                                return (
-                                    <SvgIcon
-                                        key={title}
-                                        disabled={disabled}
-                                        name={name}
-                                        className={className}
-                                        title={i18n._(title)}
-                                        onClick={onClick}
-                                        type={type}
-                                    />
-                                );
-                            } else if (v === 'SMMinimize') {
-                                return (
-                                    <SMMinimizeButton
-                                        key="SMMinimize"
-                                        className="margin-left-4"
-                                        state={state}
-                                        actions={actions}
-                                    />
-                                );
-                            }
-                            return null;
-                        })}
+                {state.title && (
+                    <div className="sm-flex height-32 justify-space-between">
+                        <span className="sm-flex-width heading-3">{i18n._(state.title)}</span>
+                        <div>
+                            {state.buttons && _.isArray(state.buttons) && state.buttons.map(v => {
+                                if (typeof v === 'object') {
+                                    const { disabled = false, title = '', onClick, className = '', name = 'CopyNomral', type = ['hoverNormal', 'pressNormal'] } = v;
+                                    return (
+                                        <SvgIcon
+                                            key={title}
+                                            disabled={disabled}
+                                            name={name}
+                                            className={className}
+                                            title={i18n._(title)}
+                                            onClick={onClick}
+                                            type={type}
+                                        />
+                                    );
+                                } else if (v === 'SMMinimize') {
+                                    return (
+                                        <SMMinimizeButton
+                                            key="SMMinimize"
+                                            className="margin-left-4"
+                                            state={state}
+                                            actions={actions}
+                                        />
+                                    );
+                                }
+                                return null;
+                            })}
+                        </div>
                     </div>
-                </div>
+                )}
                 <Widget.Content style={{ display: state.minimized ? 'none' : 'block', padding: '0', border: 'none' }}>
 
                     <Component

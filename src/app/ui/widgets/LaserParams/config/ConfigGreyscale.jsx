@@ -184,10 +184,8 @@ const ConfigGreyscale = ({ disabled }) => {
                                 <span className="sm-flex-width">{i18n._('key-Laser/ProcessingModeSection/ConfigGreyscale-Algorithm')}</span>
                                 <Select
                                     disabled={disabled}
-                                    backspaceRemoves={false}
                                     size="large"
                                     clearable={false}
-                                    menuContainerStyle={{ zIndex: 5 }}
                                     name="algorithm"
                                     options={[{
                                         value: 'FloydSteinburg',

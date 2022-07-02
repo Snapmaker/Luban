@@ -97,6 +97,7 @@ export const createDefinition = async (req, res) => {
     const { definition } = req.body;
 
     const definitionLoader = new DefinitionLoader();
+    delete (definition.typeOfPrinting);
     definitionLoader.fromObject(definition);
     const series = isPublicProfile(definitionLoader.definitionId) ? '' : (req.body.series ?? '');
 
