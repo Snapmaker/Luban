@@ -69,7 +69,7 @@ class SocketController {
         return this;
     }
 
-    channel(topic, args) {
+    channel(topic, params) {
         return new Observable((observer) => {
             const actionid = uuid();
             const listener = (res) => {
@@ -86,7 +86,7 @@ class SocketController {
             this.socket.on(topic, listener);
             this.emit(topic, {
                 actionid,
-                data: args
+                data: params
             });
         });
     }

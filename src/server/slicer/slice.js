@@ -313,7 +313,7 @@ export function simplifyModel(params, onProgress, onSucceed, onError) {
     // onSucceed();
     // onProgress(0.8);
     // const process =
-    const { uploadName, modelID, simplifyType, simplifyPercent, layerHeight, sourcePly } = params;
+    const { uploadName, modelID, simplifyType, simplifyPercent, layerHeight, repairedSource } = params;
 
     const extname = path.extname(uploadName);
     const modelName = uploadName.slice(
@@ -332,11 +332,18 @@ export function simplifyModel(params, onProgress, onSucceed, onError) {
     } else if (simplifyType === 1) {
         config.config.edge_length_threshold = layerHeight;
     }
-    const outputPath = `${DataStorage.tmpDir}/${modelName}-simplify.stl`;
+    const outputPath = `${DataStorage.tmpDir}/${modelName}-simplify`;
     // fs.exists() && fs.rmdirSync(outputPath);
-    if (fs.existsSync(outputPath)) {
-        fs.unlinkSync(outputPath);
-    }
+    const tempFiles = [
+        path.join(outputPath, '.ply'),
+        path.join(outputPath, '.stl')
+    ];
+    tempFiles.forEach((file) => {
+        if (fs.existsSync(file)) {
+            fs.unlinkSync(file);
+        }
+    });
+
     fs.writeFile(simplifyConfigPath, JSON.stringify(config), 'utf8', (err) => {
         if (err) {
             console.log({ err });
@@ -344,7 +351,7 @@ export function simplifyModel(params, onProgress, onSucceed, onError) {
         } else {
             const simplifyConfig = {
                 // configFilePath: `${DataStorage.configDir}/${HEAD_PRINTING}/simplify_model.def.json`,
-                modelPath: `${DataStorage.tmpDir}/${sourcePly}`,
+                modelPath: `${DataStorage.tmpDir}/${repairedSource}`,
                 configFilePath: simplifyConfigPath,
                 outputPath: outputPath
             };
@@ -358,9 +365,9 @@ export function simplifyModel(params, onProgress, onSucceed, onError) {
                     if (res.code === 0) {
                         onSucceed({
                             modelID: modelID,
-                            modelUploadName: `${sourcePly}`,
+                            modelUploadName: `${repairedSource}`,
                             modelOutputName: `${modelName}-simplify.stl`,
-                            sourcePly: `${modelName}-simplify.ply`,
+                            repairedSource: `${modelName}-simplify.ply`,
                         });
                     }
                 }
@@ -377,7 +384,7 @@ export function simplifyModel(params, onProgress, onSucceed, onError) {
 }
 
 export function repairModel(params, onProgress, onSucceed, onError) {
-    const { uploadName, modelID } = params;
+    const { uploadName, modelID, outputType } = params;
 
     const extname = path.extname(uploadName);
     const modelName = uploadName.slice(
@@ -386,7 +393,7 @@ export function repairModel(params, onProgress, onSucceed, onError) {
     );
 
     const modeltPath = `${DataStorage.tmpDir}/${uploadName}`;
-    const outputPath = `${DataStorage.tmpDir}/${modelName}_repaired.ply`;
+    const outputPath = `${DataStorage.tmpDir}/${modelName}_repaired${outputType}`;
     if (fs.existsSync(outputPath)) {
         fs.unlinkSync(outputPath);
     }
@@ -411,7 +418,7 @@ export function repairModel(params, onProgress, onSucceed, onError) {
                     onSucceed({
                         modelID,
                         uploadName,
-                        sourcePly: `${modelName}_repaired.ply`
+                        repairedSource: `${modelName}_repaired${outputType}`
                     });
                 }
             }

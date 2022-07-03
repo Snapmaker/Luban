@@ -5,6 +5,8 @@ import { includes } from 'lodash';
 import { isInside } from 'overlap-area';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as projectActions } from '../project';
+/* eslint-disable-next-line import/no-cycle */
+import { actions as appGlobalActions } from '../app-global';
 import api from '../../api';
 import { checkParams, DEFAULT_TEXT_CONFIG, generateModelDefaultConfigs, limitModelSizeByMachineSize, isOverSizeModel } from '../../models/ModelInfoUtils';
 
@@ -312,7 +314,7 @@ export const actions = {
                 );
             });
 
-            controller.on('taskProgress:cutModel', () => {});
+            controller.on('taskProgress:cutModel', () => { });
 
             // task completed
             controller.on('taskCompleted:processImage', taskResult => {
@@ -576,7 +578,7 @@ export const actions = {
 
     prepareStlVisualizer: (headType, model) => dispatch => {
         const uploadPath = model.resource.originalFile.path;
-        const worker = workerManager.loadModel([{ uploadPath }], async data => {
+        const worker = workerManager.loadModel(uploadPath, async data => {
             const { type } = data;
 
             switch (type) {
@@ -2171,7 +2173,7 @@ export const actions = {
                             throw new Error('geometry invalid');
                         }
                     },
-                    () => {}, // onprogress
+                    () => { }, // onprogress
                     err => {
                         onError && onError(err);
                         dispatch(
@@ -2395,7 +2397,19 @@ export const actions = {
         if (SVGCanvasMode === 'draw' || SVGCanvasExt.elem) {
             await SVGActions.svgContentGroup.exitModelEditing(true);
         }
-    }
+    },
+
+    repairSelectedModels: (headType) => async (dispatch, getState) => {
+        const { modelGroup } = getState()[headType];
+
+        const { results } = await dispatch(appGlobalActions.repairSelectedModels(headType));
+
+        results.forEach((data) => {
+            const model = modelGroup.findModelByID(data.modelID);
+            model.resource.originalFile.path = `/data/Tmp/${model.repairedSource}`;
+            dispatch(actions.prepareStlVisualizer(headType, model));
+        });
+    },
 };
 
 export default function reducer() {

@@ -467,6 +467,10 @@ class SvgModel extends BaseModel {
         }
     }
 
+    public setRepairedSource(fileName: string) {
+        this.repairedSource = fileName;
+    }
+
     public appendToParent() {
         this.parent && this.parent.append(this.elem);
     }

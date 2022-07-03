@@ -60,6 +60,7 @@ import ThreeUtils from '../../three-extensions/ThreeUtils';
 import ModelExporter from '../../ui/widgets/PrintingVisualizer/ModelExporter';
 import ModelLoader from '../../ui/widgets/PrintingVisualizer/ModelLoader';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
+// eslint-disable-next-line import/no-cycle
 import { actions as appGlobalActions } from '../app-global';
 import definitionManager from '../manager/DefinitionManager';
 // eslint-disable-next-line import/no-cycle
@@ -883,7 +884,7 @@ export const actions = {
             });
 
             // for simplify-model
-            controller.on('simplify-model:started', ({ firstTime, uploadName, transformation, sourcePly }) => {
+            controller.on('simplify-model:started', ({ firstTime, uploadName, transformation, repairedSource }) => {
                 const { progressStatesManager, simplifyOriginModelInfo } = getState().printing;
                 // progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SIMPLIFY_MODEL);
                 if (firstTime && uploadName) {
@@ -891,7 +892,7 @@ export const actions = {
                         simplifyOriginModelInfo: {
                             ...simplifyOriginModelInfo,
                             uploadName: uploadName,
-                            sourcePly: sourcePly,
+                            repairedSource: repairedSource,
                             transformation: transformation,
                         }
                     }));
@@ -923,13 +924,13 @@ export const actions = {
             });
 
             controller.on('simplify-model:completed', (params) => {
-                const { modelOutputName, modelID, sourcePly } = params;
-                actions.loadSimplifyModel({ modelID, modelOutputName, sourcePly })(dispatch, getState);
+                const { modelOutputName, modelID, repairedSource } = params;
+                actions.loadSimplifyModel({ modelID, modelOutputName, repairedSource })(dispatch, getState);
             });
         }
     },
 
-    loadSimplifyModel: ({ modelID, modelOutputName, sourcePly }) => async (dispatch, getState) => {
+    loadSimplifyModel: ({ modelID, modelOutputName, repairedSource }) => async (dispatch, getState) => {
         const { progressStatesManager, modelGroup } = getState().printing;
         dispatch(
             actions.updateState({
@@ -944,7 +945,7 @@ export const actions = {
         modelGroup.removeModel(originModel);
         // const repiarModelOriginalName = removeSpecialChars(modelOutputName);
         const uploadName = modelOutputName;
-        actions.__loadModel([{ originalName: modelOutputName, uploadName: uploadName, sourcePly }], true)(dispatch, getState);
+        actions.__loadModel([{ originalName: modelOutputName, uploadName: uploadName, repairedSource }], true)(dispatch, getState);
     },
 
     logGenerateGcode: () => (dispatch, getState) => {
@@ -3572,7 +3573,7 @@ export const actions = {
         const { modelGroup } = getState().printing;
         const selectedModels = modelGroup.getSelectedModelArray();
         const repaired = selectedModels.every((model) => {
-            return model.sourcePly;
+            return model.repairedSource;
         });
 
         return new Promise((resolve) => {
@@ -3584,9 +3585,9 @@ export const actions = {
                     promptTasks: [{
                         status: 'need-repair-model',
                         resolve: async () => {
-                            resolve(
-                                await dispatch(actions.repairSelectedModels())
-                            );
+                            const { allPepaired } = await dispatch(appGlobalActions.repairSelectedModels(HEAD_PRINTING));
+
+                            resolve(allPepaired);
                         },
                         reject: () => {
                             dispatch(actions.updateState({
@@ -3598,105 +3599,6 @@ export const actions = {
                 }));
             }
         });
-    },
-
-    repairSelectedModels: () => async (dispatch, getState) => {
-        const { modelGroup, progressStatesManager } = getState().printing;
-
-        const allModels = modelGroup.getModels();
-        if (allModels.length === 0) {
-            return false;
-        }
-        const selectedModels = modelGroup.getSelectedModelArray();
-        const models = selectedModels.length > 0 ? selectedModels : allModels;
-
-        progressStatesManager.startProgress(
-            PROCESS_STAGE.PRINTING_REPAIRING_MODEL
-        );
-        dispatch(
-            actions.updateState({
-                stage: STEP_STAGE.PRINTING_REPAIRING_MODEL,
-                progress: progressStatesManager.updateProgress(
-                    STEP_STAGE.PRINTING_REPAIRING_MODEL,
-                    0.01
-                )
-            })
-        );
-        const minimumTime = (() => {
-            return new Promise((reolve) => {
-                setTimeout(() => {
-                    reolve();
-                }, 1000);
-            });
-        })();
-        const promptTasks = [];
-        let completedNum = 0;
-        const promises = models.map(async (model) => {
-            return controller.repairModel({
-                uploadName: model.sourcePly || model.uploadName,
-                modelID: model.modelID
-            }, (data) => {
-                const { type } = data;
-                switch (type) {
-                    case 'process':
-                        if (data.progress && models.length === 1) {
-                            const { progress } = getState().printing;
-                            if (
-                                progress - data.progress > 0.01
-                                || progress > 1 - EPSILON
-                            ) {
-                                dispatch(
-                                    actions.updateState({
-                                        progress: progressStatesManager.updateProgress(
-                                            STEP_STAGE.PRINTING_REPAIRING_MODEL,
-                                            progress
-                                        )
-                                    })
-                                );
-                            }
-                        }
-                        break;
-                    case 'error':
-                        // TODO: Whether to set the identification of repair failure
-                        promptTasks.push({
-                            status: 'repair-model-fail',
-                            originalName: model.originalName
-                        });
-                        break;
-                    case 'completed':
-                        if (models.length > 1) {
-                            completedNum++;
-                            dispatch(
-                                actions.updateState({
-                                    progress: progressStatesManager.updateProgress(
-                                        STEP_STAGE.PRINTING_REPAIRING_MODEL,
-                                        1 * (completedNum / models.length) - 0.01
-                                    )
-                                })
-                            );
-                        }
-                        model.setSorucePly(data.sourcePly);
-                        break;
-                    default:
-                        break;
-                }
-            });
-        });
-
-        await Promise.all([minimumTime, ...promises]);
-
-        dispatch(
-            actions.updateState({
-                promptTasks,
-                stage: STEP_STAGE.PRINTING_REPAIRING_MODEL,
-                progress: progressStatesManager.updateProgress(
-                    STEP_STAGE.PRINTING_REPAIRING_MODEL,
-                    1
-                )
-            })
-        );
-
-        return promptTasks.length === 0;
     },
 
     generateModel: (
@@ -3719,13 +3621,13 @@ export const actions = {
             children,
             primeTowerTag,
             reloadSimplifyModel = false,
-            sourcePly
+            repairedSource
         }
     ) => async (dispatch, getState) => {
         const { progressStatesManager, modelGroup } = getState().printing;
         const { size } = getState().machine;
         const models = [...modelGroup.models];
-        const modelNames = files || [{ originalName, uploadName, sourcePly }];
+        const modelNames = files || [{ originalName, uploadName, repairedSource }];
         let _progress = 0;
         !reloadSimplifyModel && progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
         const promptTasks = [];
@@ -3823,7 +3725,7 @@ export const actions = {
                                         extruderConfig,
                                         parentModelID,
                                         reloadSimplifyModel,
-                                        sourcePly: model.sourcePly
+                                        repairedSource: model.repairedSource
                                     }
                                 );
                                 dispatch(actions.updateState(modelState));
@@ -4653,7 +4555,7 @@ export const actions = {
             leftBarOverlayVisible: true,
             transformMode: 'simplify-model'
         }));
-        const { progressStatesManager, modelGroup, defaultQualityId, qualityDefinitions } = getState().printing;
+        const { progressStatesManager, modelGroup, defaultQualityId, qualityDefinitions, simplifyOriginModelInfo } = getState().printing;
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SIMPLIFY_MODEL);
         dispatch(actions.updateState({
             stage: STEP_STAGE.PRINTING_SIMPLIFY_MODEL,
@@ -4677,8 +4579,8 @@ export const actions = {
             }));
         }
         const params = {
-            uploadName: simplifyModel.uploadName,
-            sourcePly: simplifyModel.sourcePly,
+            uploadName: simplifyOriginModelInfo.uploadName || simplifyModel.uploadName,
+            repairedSource: simplifyOriginModelInfo.repairedSource || simplifyModel.repairedSource,
             modelID: simplifyModel?.modelID,
             simplifyType,
             simplifyPercent,

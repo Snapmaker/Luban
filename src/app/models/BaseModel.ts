@@ -123,6 +123,7 @@ abstract class BaseModel {
      */
     public image3dObj: Mesh;
     public scale: number;
+    public repairedSource: string;
 
     public constructor(modelInfo: ModelInfo, modelGroup: ModelGroup) {
         this.modelGroup = modelGroup;

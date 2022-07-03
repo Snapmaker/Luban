@@ -41,7 +41,7 @@ export type ModelInfo = {
     sourceWidth?: number,
     originalName?: string,
     uploadName?: string,
-    sourcePly?: string;
+    repairedSource?: string;
     modelName?: string,
     config?: Object,
     mode?: string,
@@ -90,7 +90,7 @@ export default class BaseModel {
     public modelID: string;
     public originModelID: string;
     public modelName: string;
-    public sourcePly: string = ''
+    public repairedSource: string = ''
     public sourceHeight: number;
     public sourceWidth: number;
     public originalName: string;
