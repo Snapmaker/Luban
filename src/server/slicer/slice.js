@@ -384,7 +384,7 @@ export function simplifyModel(params, onProgress, onSucceed, onError) {
 }
 
 export function repairModel(params, onProgress, onSucceed, onError) {
-    const { uploadName, modelID, outputType } = params;
+    const { uploadName, modelID } = params;
 
     const extname = path.extname(uploadName);
     const modelName = uploadName.slice(
@@ -393,7 +393,7 @@ export function repairModel(params, onProgress, onSucceed, onError) {
     );
 
     const modeltPath = `${DataStorage.tmpDir}/${uploadName}`;
-    const outputPath = `${DataStorage.tmpDir}/${modelName}_repaired${outputType}`;
+    const outputPath = `${DataStorage.tmpDir}/${modelName}_repaired`;
     if (fs.existsSync(outputPath)) {
         fs.unlinkSync(outputPath);
     }
@@ -418,7 +418,8 @@ export function repairModel(params, onProgress, onSucceed, onError) {
                     onSucceed({
                         modelID,
                         uploadName,
-                        repairedSource: `${modelName}_repaired${outputType}`
+                        repairedPly: `${modelName}_repaired.ply`,
+                        repairedSource: `${modelName}_repaired.stl`
                     });
                 }
             }

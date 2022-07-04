@@ -16,7 +16,6 @@ import modal from '../../lib/modal';
 import Dropzone from '../components/Dropzone';
 import { actions as printingActions } from '../../flux/printing';
 import { actions as projectActions } from '../../flux/project';
-import { actions as appGlobalActions } from '../../flux/app-global';
 import ProjectLayout from '../layouts/ProjectLayout';
 import MainToolBar from '../layouts/MainToolBar';
 import { HEAD_PRINTING, ROTATE_MODE } from '../../constants';
@@ -227,7 +226,7 @@ function useRenderMainToolBar(setSimplifying) {
                 type: 'button',
                 name: 'MainToolbarFixModel',
                 action: () => {
-                    dispatch(appGlobalActions.repairSelectedModels(HEAD_PRINTING));
+                    dispatch(printingActions.repairSelectedModels());
                 }
             }
         ];

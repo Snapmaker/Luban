@@ -3,7 +3,7 @@ import path from 'path';
 import * as THREE from 'three';
 // import FileSaver from 'file-saver';
 import { Transfer } from 'threads';
-import { Vector3 } from 'three';
+import { Mesh, Vector3 } from 'three';
 import {
     acceleratedRaycast,
     computeBoundsTree,
@@ -4615,6 +4615,150 @@ export const actions = {
             enableShortcut: true,
             leftBarOverlayVisible: false
         }));
+    },
+
+    /**
+     * @param {*} modelInfos: { modelID:string, uploadName:string }[]
+     */
+    updateModelMesh: (modelInfos) => async (dispatch, getState) => {
+        const { modelGroup, progressStatesManager } = getState().printing;
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
+        let _progress = 0;
+        const promptTasks = [];
+        modelGroup.unselectAllModels();
+
+        const promises = modelInfos.map((res) => {
+            const uploadPath = `${DATA_PREFIX}/${res.uploadName}`;
+            const model = modelGroup.findModelByID(res.modelID);
+            model.uploadName = res.uploadName;
+            return new Promise((resolve, reject) => {
+                const onMessage = async data => {
+                    const { type } = data;
+                    switch (type) {
+                        case 'LOAD_MODEL_POSITIONS': {
+                            const { positions } = data;
+
+                            const bufferGeometry = new THREE.BufferGeometry();
+                            const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
+                            const material = new THREE.MeshPhongMaterial({
+                                color: 0xa0a0a0,
+                                specular: 0xb0b0b0,
+                                shininess: 0
+                            });
+
+                            bufferGeometry.setAttribute(
+                                'position',
+                                modelPositionAttribute
+                            );
+
+                            bufferGeometry.computeVertexNormals();
+                            const meshObject = new Mesh(bufferGeometry, material);
+
+                            model.meshObject.updateMatrixWorld();
+
+                            meshObject.applyMatrix(model.meshObject.matrixWorld);
+                            modelGroup.object.remove(model.meshObject);
+                            model.meshObject = meshObject;
+                            modelGroup.object.add(meshObject);
+                            modelGroup.addModelToSelectedGroup(model);
+                            if (modelInfos.length > 1) {
+                                _progress += 1 / modelInfos.length;
+                                dispatch(
+                                    actions.updateState({
+                                        stage: STEP_STAGE.PRINTING_LOADING_MODEL,
+                                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress)
+                                    })
+                                );
+                            }
+                            resolve();
+                            break;
+                        }
+                        case 'LOAD_MODEL_CONVEX': {
+                            const { positions } = data;
+
+                            const convexGeometry = new THREE.BufferGeometry();
+                            const positionAttribute = new THREE.BufferAttribute(
+                                positions,
+                                3
+                            );
+                            convexGeometry.setAttribute(
+                                'position',
+                                positionAttribute
+                            );
+                            modelGroup.setConvexGeometry(
+                                model.uploadName,
+                                convexGeometry
+                            );
+
+                            break;
+                        }
+                        case 'LOAD_MODEL_PROGRESS': {
+                            if (modelInfos.length === 1) {
+                                const state = getState().printing;
+                                const progress = 0.25 + data.progress * 0.5;
+                                if (progress - state.progress > 0.01 || progress > 0.75 - EPSILON) {
+                                    dispatch(
+                                        actions.updateState({
+                                            stage: STEP_STAGE.PRINTING_LOADING_MODEL,
+                                            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, progress)
+                                        })
+                                    );
+                                }
+                            }
+                            break;
+                        }
+                        case 'LOAD_MODEL_FAILED': {
+                            promptTasks.push({
+                                status: 'load-model-fail',
+                                originalName: model.originalName
+                            });
+                            if (modelInfos.length > 1) {
+                                _progress += 1 / modelInfos.length;
+                                dispatch(
+                                    actions.updateState({
+                                        stage: STEP_STAGE.PRINTING_LOADING_MODEL,
+                                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress)
+                                    })
+                                );
+                            }
+                            reject();
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                };
+                createLoadModelWorker(uploadPath, onMessage);
+            });
+        });
+
+        await Promise.allSettled(promises);
+
+        dispatch(
+            actions.updateState({
+                stage: STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1),
+                promptTasks
+            })
+        );
+
+        dispatch(actions.updateAllModelColors());
+        dispatch(actions.displayModel());
+        dispatch(actions.destroyGcodeLine());
+    },
+
+    repairSelectedModels: () => async (dispatch, getState) => {
+        const { progressStatesManager } = getState().printing;
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
+
+        const { results } = await dispatch(appGlobalActions.repairSelectedModels(HEAD_PRINTING));
+
+        await dispatch(actions.updateModelMesh(results.map((i) => {
+            return {
+                modelID: i.modelID,
+                uploadName: i.repairedSource
+            };
+        })));
     }
 };
 

@@ -85,12 +85,6 @@ class SerialPortClient {
         'simplify-model:progress': [],
         'simplify-model:error': [],
 
-        // for repair model
-        'repair-model:started': [],
-        'repair-model:completed': [],
-        'repair-model:progress': [],
-        'repair-model:error': [],
-
         'daily:heartbeat': []
     };
 

@@ -117,8 +117,7 @@ export const actions = {
         const promises = models.map(async (model) => {
             return controller.repairModel({
                 uploadName: model.repairedSource || model.uploadName,
-                modelID: model.modelID,
-                outputType: headType === HEAD_PRINTING ? '.ply' : '.stl'
+                modelID: model.modelID
             }, (data) => {
                 const { type } = data;
                 switch (type) {
@@ -160,7 +159,7 @@ export const actions = {
                             );
                         }
                         results.push(data);
-                        model.setRepairedSource(data.repairedSource);
+                        model.setRepairedSource(data.repairedPly);
                         break;
                     default:
                         break;
