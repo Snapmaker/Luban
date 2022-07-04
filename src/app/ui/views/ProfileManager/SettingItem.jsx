@@ -47,6 +47,21 @@ function dropdownRender(opts, key, onChangeDefinition) {
     );
 }
 
+const colorSelectorContent = (settingDefaultValue, definitionKey, setShowColor, onChangeDefinition) => (
+    <div>
+        <ColorSelector
+            recentColorKey="profile-manager"
+            colors={PRINTING_MATERIAL_CONFIG_COLORS}
+            value={settingDefaultValue.toString()}
+            onClose={() => {
+                setShowColor(false);
+            }}
+            onChangeComplete={(color) => {
+                onChangeDefinition(definitionKey, color);
+            }}
+        />
+    </div>
+);
 function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onChangeDefinition, defaultValue, styleSize = 'large', managerType, officalDefinition }) {
     const [showColor, setShowColor] = useState(false);
 
@@ -158,21 +173,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
             });
         });
     }
-    const colorSelectorContent = (
-        <div>
-            <ColorSelector
-                recentColorKey="profile-manager"
-                colors={PRINTING_MATERIAL_CONFIG_COLORS}
-                value={settingDefaultValue.toString()}
-                onClose={() => {
-                    setShowColor(false);
-                }}
-                onChangeComplete={(color) => {
-                    onChangeDefinition(definitionKey, color);
-                }}
-            />
-        </div>
-    );
+
     return (
         <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
             <TipTrigger title={i18n._(label)} content={i18n._(description)} key={definitionKey}>
@@ -274,7 +275,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
                 )}
                 {type === 'color' && (
                     <Popover
-                        content={colorSelectorContent}
+                        content={colorSelectorContent(settingDefaultValue, definitionKey, setShowColor, onChangeDefinition)}
                         visible={showColor}
                         trigger="click"
                         placement="bottomRight"

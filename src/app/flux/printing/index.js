@@ -81,6 +81,7 @@ import ScaleOperation3D from '../operation-history/ScaleOperation3D';
 import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWithRotateOperation3D';
 import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import VisibleOperation3D from '../operation-history/VisibleOperation3D';
+import resolveDefinition from '../../../shared/lib/definitionResolver';
 
 // register methods for three-mesh-bvh
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
@@ -389,7 +390,7 @@ export const actions = {
         const { toolHead, series, size } = getState().machine;
         // await dispatch(machineActions.updateMachineToolHead(toolHead, series, CONFIG_HEADTYPE));
         const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
-        const profileLevel = await definitionManager.init(CONFIG_HEADTYPE, currentMachine.configPathname[CONFIG_HEADTYPE]);
+        await definitionManager.init(CONFIG_HEADTYPE, currentMachine.configPathname[CONFIG_HEADTYPE]);
 
         const allMaterialDefinition = await definitionManager.getDefinitionsByPrefixName(
             'material'
@@ -411,12 +412,10 @@ export const actions = {
         });
         dispatch(
             actions.updateState({
-                materialDefinitions: await definitionManager.getDefinitionsByPrefixName('material'),
-                qualityDefinitions: await definitionManager.getDefinitionsByPrefixName('quality'),
-                extruderLDefinition: await definitionManager.getDefinitionsByPrefixName('snapmaker_extruder_0'),
-                extruderRDefinition: await definitionManager.getDefinitionsByPrefixName('snapmaker_extruder_1'),
-                printingProfileLevel: profileLevel.printingProfileLevel,
-                materialProfileLevel: profileLevel.materialProfileLevel
+                materialDefinitions: allMaterialDefinition,
+                qualityDefinitions: qualityParamModels,
+                extruderLDefinition,
+                extruderRDefinition: await definitionManager.getDefinitionsByPrefixName('snapmaker_extruder_1')
             })
         );
         // model group
@@ -512,12 +511,8 @@ export const actions = {
         dispatch(
             actions.updateState({
                 defaultDefinitions: definitionManager?.defaultDefinitions,
-                materialDefinitions: await definitionManager.getDefinitionsByPrefixName(
-                    'material'
-                ),
-                qualityDefinitions: await definitionManager.getDefinitionsByPrefixName(
-                    'quality'
-                ),
+                materialDefinitions: allMaterialDefinition,
+                qualityDefinitions: qualityParamModels,
                 printingProfileLevel: profileLevel.printingProfileLevel,
                 materialProfileLevel: profileLevel.materialProfileLevel
             })
@@ -1242,7 +1237,7 @@ export const actions = {
         const definitionsKey = definitionKeysWithDirection[direction][type];
         let { extruderLDefinition: actualExtruderDefinition } = printingState;
         let UpdatePresetModel = false;
-        console.log('changedSettingArray', changedSettingArray);
+        resolveDefinition(definitionModel, changedSettingArray);
         // Todo
         if (['snapmaker_extruder_0', 'snapmaker_extruder_1'].includes(id)) {
             if (id === 'snapmaker_extruder_0') {
