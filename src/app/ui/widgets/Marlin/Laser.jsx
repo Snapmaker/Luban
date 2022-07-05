@@ -29,6 +29,7 @@ class Laser extends PureComponent {
         workflowStatus: PropTypes.string,
         // workflowState: PropTypes.string,
         // connectionType: PropTypes.string,
+        // headStatus: PropTypes.bool,
         isConnected: PropTypes.bool,
         toolHead: PropTypes.string,
         addConsoleLogs: PropTypes.func.isRequired,
@@ -107,12 +108,13 @@ class Laser extends PureComponent {
         return prevProps;
     }
 
-    componentDidUpdate() {
-
+    componentDidMount() {
+        // console.log(this.state.laserPower, this.state.laserPowerOpen);
     }
 
 
     render() {
+        // console.log(this.props.laserPower);
         const { laserPowerOpen, laserPower } = this.state; // laserPowerMarks,
         // const { toolHead } = this.props;
         // const actions = this.actions;
@@ -131,7 +133,7 @@ class Laser extends PureComponent {
                         inputMin={1}
                     >
                         <div className="width-44 sm-flex sm-flex-direction-c margin-left-16">
-                            <span>{Math.floor(laserPower)}°C</span>
+                            <span>{Math.floor(laserPower)}%</span>
                         </div>
                     </ParamsWrapper>
                 )}

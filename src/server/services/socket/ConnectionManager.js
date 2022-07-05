@@ -191,7 +191,7 @@ class ConnectionManager {
             const gcodeFilePath = `${DataStorage.tmpDir}/${uploadName}`;
             const promises = [];
             if (this.protocol === SACP_PROTOCOL && headType === HEAD_LASER) {
-                if (laserFocalLength && toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isRotate) {
+                if (laserFocalLength && toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isRotate && (!isLaserPrintAutoMode && materialThickness === 0)) {
                     await this.socket.laseAutoSetMaterialHeight({ toolHead });
                 }
                 if (!isLaserPrintAutoMode || materialThickness !== 0) {
@@ -199,6 +199,8 @@ class ConnectionManager {
                 }
                 const { gcode, jogSpeed = 1500 } = options;
                 const moveOrders = [
+                    { axis: 'X', distance: 0 },
+                    { axis: 'Y', distance: 0 },
                     { axis: 'Z', distance: 0 }
                 ];
                 await this.socket.coordinateMove({ moveOrders, gcode, jogSpeed, headType });
@@ -259,6 +261,8 @@ class ConnectionManager {
                     }
                     const { gcode, jogSpeed = 1500 } = options;
                     const moveOrders = [
+                        { axis: 'X', distance: 0 },
+                        { axis: 'Y', distance: 0 },
                         { axis: 'Z', distance: 0 }
                     ];
                     await this.socket.coordinateMove({ moveOrders, gcode, jogSpeed, headType });

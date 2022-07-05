@@ -213,7 +213,7 @@ const visualizerGroup = {
 let printableArea = null;
 function WifiTransport({ widgetActions, controlActions }) {
     const dispatch = useDispatch();
-    const [isLaserAutoFocus, setIsLaserAutoFocus] = useState(true);
+    // const [isLaserAutoFocus, setIsLaserAutoFocus] = useState(true);
     const isLaserPrintAutoMode = useSelector(state => state?.machine?.isLaserPrintAutoMode);
     const originOffset = useSelector(state => state?.machine?.originOffset);
     const toolHeadName = useSelector(state => state?.workspace?.toolHead);
@@ -324,7 +324,7 @@ function WifiTransport({ widgetActions, controlActions }) {
             await actions.startPrint();
         },
 
-        loadGcodeToWorkspace: async () => {
+        loadGcodeToWorkspace: async (isLaserAutoFocus) => {
             const find = gcodeFiles.find(v => v.uploadName.toLowerCase() === selectFileName.toLowerCase());
             if (!find) {
                 return;
@@ -430,13 +430,13 @@ function WifiTransport({ widgetActions, controlActions }) {
         }
     }, [isConnected]);
     useEffect(() => {
-        if (connectionType === CONNECTION_TYPE_SERIAL || isRotate || toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2) {
-            setIsLaserAutoFocus(false);
-            dispatch(machineActions.updateIsLaserPrintAutoMode(false));
-        } else {
-            setIsLaserAutoFocus(true);
-            dispatch(machineActions.updateIsLaserPrintAutoMode(true));
-        }
+        // if (connectionType === CONNECTION_TYPE_SERIAL || isRotate || toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2) {
+        //     setIsLaserAutoFocus(false);
+        //     dispatch(machineActions.updateIsLaserPrintAutoMode(false));
+        // } else {
+        //     setIsLaserAutoFocus(true);
+        //     dispatch(machineActions.updateIsLaserPrintAutoMode(true));
+        // }
         if (isRotate) {
             dispatch(machineActions.updateIsLaserPrintAutoMode(false));
         }
@@ -516,7 +516,6 @@ function WifiTransport({ widgetActions, controlActions }) {
     // console.log({ currentWorkflowStatus, isConnected, isSended });
     const canPlay = hasFile && isConnected && isSended && _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE], currentWorkflowStatus);
     const canSend = hasFile && isConnected && isHeadType && isWifi && isSendedOnWifi;
-
 
 
 
@@ -631,21 +630,31 @@ function WifiTransport({ widgetActions, controlActions }) {
                 onClose={() => setShowStartModal(false)}
                 onConfirm={(type) => {
                     const { AUTO_MDOE, SEMI_AUTO_MODE, MANUAL_MODE } = LaserLevelingMode;
+                    let isLaserAutoFocus = false;
+                    // if (connectionType === CONNECTION_TYPE_SERIAL || isRotate || toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                    //     dispatch(machineActions.updateIsLaserPrintAutoMode(false));
+                    // } else {
+                    //     isLaserAutoFocus = true
+                    //     dispatch(machineActions.updateIsLaserPrintAutoMode(true));
+                    // }
                     switch (type) {
                         case AUTO_MDOE:
+                            isLaserAutoFocus = true;
                             dispatch(machineActions.updateIsLaserPrintAutoMode(true));
                             dispatch(machineActions.updateMaterialThickness(0));
                             break;
                         case SEMI_AUTO_MODE:
+                            isLaserAutoFocus = false;
                             dispatch(machineActions.updateIsLaserPrintAutoMode(toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2));
                             break;
                         case MANUAL_MODE:
+                            isLaserAutoFocus = false;
                             dispatch(machineActions.updateIsLaserPrintAutoMode(false));
                             dispatch(machineActions.updateMaterialThickness(0));
                             break;
                         default:
                     }
-                    actions.loadGcodeToWorkspace();
+                    actions.loadGcodeToWorkspace(isLaserAutoFocus);
                 }}
             />
             {showPreviewModal && (

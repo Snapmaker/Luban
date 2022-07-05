@@ -258,7 +258,7 @@ class SocketBASE {
     }
 
     public coordinateMove = async ({ moveOrders, jogSpeed, headType }) => {
-        log.info(`coordinate: ${moveOrders}, ${headType}`);
+        log.info(`coordinate: ${JSON.stringify(moveOrders)}, ${headType}`);
         this.socket && this.socket.emit('move:status', { isMoving: true });
         const distances = [];
         const directions = [];

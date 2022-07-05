@@ -54,10 +54,10 @@ function LaserStartModal(props) {
             // mean: 'true' will show only can rotate status, false will only show no rotate status , undefined will show not matter what roate is
             // isRotate: true,
                 isHeightPower: true,
-            // isSerialConnect: true,
+                isSerialConnect: false,
             },
             disable: {
-                // isRotate: false,
+                isRotate: true,
                 // isHeightPower: true,
                 isSerialConnect: true,
             },
@@ -131,6 +131,7 @@ function LaserStartModal(props) {
                         // console.log(v);
                         return handleDisplay(v) && (
                             <Radio
+                                key={`laserStartModal${v.name}`}
                                 style={{ borderRadius: '100%', marginTop: '16px' }}
                                 className="sm-flex-auto "
                                 value={v.key}
