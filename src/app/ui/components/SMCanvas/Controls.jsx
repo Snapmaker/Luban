@@ -56,7 +56,7 @@ class Controls extends EventEmitter {
 
     lastQuaternion = new THREE.Quaternion();
 
-    minDistance = 30;
+    minDistance = 10;
 
     // calculation temporary variables
     // spherical rotation
@@ -240,7 +240,6 @@ class Controls extends EventEmitter {
         this.offset.copy(this.camera.position).sub(this.target);
         // calculate move distance of target in perspective view of camera
         const distance = 2 * this.offset.length() * Math.tan(this.camera.fov / 2 * Math.PI / 180);
-        console.log('distance', distance, deltaX, elem, elem.clientWidth, elem.clientHeight, distance * deltaX / elem.clientWidth);
 
         this.panLeft(distance * deltaX / elem.clientWidth, this.camera.matrix);
         this.panUp(distance * deltaY / elem.clientHeight, this.camera.matrix);
@@ -643,7 +642,6 @@ class Controls extends EventEmitter {
             // now v is Vector3 which is from mouse position camera position
             const distanceAll = v1.copy(scope.target).sub(scope.camera.position).length();
             this.panScale = Math.round((Math.log(distanceAll / 700) / Math.log(this.scaleRate)) * 10) / 10;
-            console.log('this.panScale =', this.panScale);
             scope.mouse3D.copy(scope.camera.position).add(v.multiplyScalar(distanceAll));
         };
     })();
@@ -736,11 +734,11 @@ class Controls extends EventEmitter {
                 this.offset.copy(spherialOffset);
             }
 
-            if (this.spherical.radius <= 30) {
-                const scalar = this.target.z > 30 ? 10 : 1;
+            if (this.spherical.radius <= 20) {
+                const scalar = this.target.z >= 20 ? 10 : 1;
                 const cameraWorldDir = new THREE.Vector3();
                 this.camera.getWorldDirection(cameraWorldDir);
-                if (this.target.z > 30 && this.target.z + cameraWorldDir.z * scalar >= 20) {
+                if (this.target.z >= 20 && this.target.z + cameraWorldDir.z * scalar >= 10) {
                     this.target.add(cameraWorldDir.multiplyScalar(scalar));
                 }
             }
