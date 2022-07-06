@@ -61,7 +61,7 @@ function ConfigValueBox({
         return renderList && renderList.map(profileKey => {
             if (settings[profileKey].childKey.length > 0) {
                 return (
-                    <div className={`margin-left-${(settings[profileKey].zIndex - 1) * 16}`}>
+                    <div key={profileKey} className={`margin-left-${(settings[profileKey].zIndex - 1) * 16}`}>
                         <CheckboxItem
                             calculateTextIndex={_calculateTextIndex}
                             settings={settings}
@@ -147,19 +147,21 @@ function ConfigValueBox({
                     );
                 }
                 return (
-                    <SettingItem
-                        settings={settings}
-                        definitionKey={profileKey}
-                        key={profileKey}
-                        isDefaultDefinition={isDefaultDefinition}
-                        onChangeDefinition={_onChangeCustomConfig}
-                        defaultValue={{
-                            value: selectedSettingDefaultValue && selectedSettingDefaultValue[profileKey].default_value
-                        }}
-                        styleSize="large"
-                        managerType={_managerType}
-                        officalDefinition={officalDefinition}
-                    />
+                    <div className={`margin-left-${(settings[profileKey].zIndex - 1) * 16}`}>
+                        <SettingItem
+                            settings={settings}
+                            definitionKey={profileKey}
+                            key={profileKey}
+                            isDefaultDefinition={isDefaultDefinition}
+                            onChangeDefinition={_onChangeCustomConfig}
+                            defaultValue={{
+                                value: selectedSettingDefaultValue && selectedSettingDefaultValue[profileKey].default_value
+                            }}
+                            styleSize="large"
+                            managerType={_managerType}
+                            officalDefinition={officalDefinition}
+                        />
+                    </div>
                 );
             } else {
                 return null;

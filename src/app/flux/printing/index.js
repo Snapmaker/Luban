@@ -81,7 +81,7 @@ import ScaleOperation3D from '../operation-history/ScaleOperation3D';
 import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWithRotateOperation3D';
 import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import VisibleOperation3D from '../operation-history/VisibleOperation3D';
-import resolveDefinition from '../../../shared/lib/definitionResolver';
+import { resolveDefinition } from '../../../shared/lib/definitionResolver';
 
 // register methods for three-mesh-bvh
 THREE.Mesh.prototype.raycast = acceleratedRaycast;

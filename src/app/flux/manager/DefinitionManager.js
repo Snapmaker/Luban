@@ -12,6 +12,7 @@ import {
     KEY_DEFAULT_CATEGORY_CUSTOM,
 } from '../../constants';
 import PresetDefinitionModel from './PresetDefinitionModel';
+import { resolveDefinition } from '../../../shared/lib/definitionResolver';
 const primeTowerDefinitionKeys = [
     'prime_tower_enable',
     'prime_tower_size',
@@ -154,7 +155,12 @@ class DefinitionManager {
         const definitions = await this.markDefaultDefinitions(
             res.body.definitions
         );
-        return definitions.map(this.fillCustomCategory);
+        const result = definitions.map((item) => {
+            resolveDefinition(item);
+            return item
+        }).map(this.fillCustomCategory);
+
+        return result;
     }
 
     async createDefinition(definition) {
