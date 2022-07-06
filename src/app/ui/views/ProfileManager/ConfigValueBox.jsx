@@ -118,10 +118,10 @@ function ConfigValueBox({
         // selectParamsType: _selectParamsType
     }) => {
         return renderList && renderList.map(profileKey => {
-            if (selectParamsType === 'custom' || includes(settings[profileKey].filter, selectParamsType)) {
+            if (selectParamsType === 'custom' || includes((settings[profileKey].filter).concat('all'), selectParamsType)) {
                 if (settings[profileKey].childKey.length > 0) {
                     return (
-                        <div className={`margin-left-${(settings[profileKey].zIndex - 1) * 16}`}>
+                        <div key={profileKey} className={`margin-left-${(settings[profileKey].zIndex - 1) * 16}`}>
                             <SettingItem
                                 settings={settings}
                                 definitionKey={profileKey}

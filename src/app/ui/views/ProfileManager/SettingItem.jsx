@@ -71,12 +71,12 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
         return null;
     }
     const { label, description, type, unit = '', options, min, max } = setting;
-    const { enabled } = setting;
+    // const { enabled } = setting;
     const settingDefaultValue = setting.default_value;
     const isDefault = defaultValue && (defaultValue.value === settingDefaultValue);
-    if (!enabled) {
-        return null;
-    }
+    // if (!enabled) {
+    //     return null;
+    // }
 
     const opts = [];
     if (options) {
