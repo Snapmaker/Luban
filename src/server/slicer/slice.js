@@ -462,7 +462,7 @@ export function checkModel(actions, params) {
                     });
                 } else if (item === 'status: 0') {
                     actions.next({
-                        type: 'sucess',
+                        type: 'success',
                         modelID,
                         originUploadName: uploadName,
                         sourcePly: `${modelName}_check.ply`,
