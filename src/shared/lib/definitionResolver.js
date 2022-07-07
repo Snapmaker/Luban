@@ -32,38 +32,6 @@ var asistantMapInitialized = false;
 var allValues = {};
 var affectKey = '';
 var hasValue = false;
-var context = {
-    sum: _.sum,
-    map: function (fn, arr) {
-        return _.map(arr, fn);
-    },
-    math: {
-        radians: function (degree) {
-            return degree / 180 * Math.PI;
-        }
-    },
-    resolveOrValue: function (input) { return context[input]; },
-    extruderValue: function (ignore, input) { return context[input]; },
-    extruderValues: function (input) { return [context[input]]; },
-    defaultExtruderPosition: function () { return 0; }
-};
-function constructContext(obj, context) {
-    var _loop_1 = function (key) {
-        var _a;
-        var value = obj[key];
-        // context[key] = value.default_value;
-        Object.defineProperties(context, (_a = {},
-            _a[key] = {
-                get: function () {
-                    return value.default_value;
-                }
-            },
-            _a));
-    };
-    for (var key in obj) {
-        _loop_1(key);
-    }
-}
 function flatAffectedValue(affectSet, originalAffectSet) {
     affectSet.forEach(function (item) {
         originalAffectSet.add(item);
@@ -73,17 +41,33 @@ function flatAffectedValue(affectSet, originalAffectSet) {
     });
 }
 function resolveDefinition(definition, modifiedParams) {
-    var e_1, _a, e_2, _b, e_3, _c;
+    var e_1, _a, e_2, _b, e_3, _c, e_4, _d;
+    // make context
+    var context = {
+        sum: _.sum,
+        map: function (fn, arr) {
+            return _.map(arr, fn);
+        },
+        math: {
+            radians: function (degree) {
+                return degree / 180 * Math.PI;
+            }
+        },
+        resolveOrValue: function (input) { return context[input]; },
+        extruderValue: function (ignore, input) { return context[input]; },
+        extruderValues: function (input) { return [context[input]]; },
+        defaultExtruderPosition: function () { return 0; }
+    };
+    var obj = definition.settings;
     if (!asistantMapInitialized) {
-        var obj = definition.settings;
-        var _loop_2 = function (key) {
-            var _g;
+        var _loop_1 = function (key) {
+            var _j;
             var value = obj[key];
             if (value.type && (value.type !== 'category' && value.type !== 'mainCategory')) {
                 var cloneValue = _.cloneDeep(obj[key]);
                 asistantMap.set(key, cloneValue);
-                Object.defineProperties(context, (_g = {},
-                    _g[key] = {
+                Object.defineProperties(context, (_j = {},
+                    _j[key] = {
                         get: function () {
                             if (hasValue) {
                                 if (!(allValues[affectKey] instanceof Set)) {
@@ -97,26 +81,26 @@ function resolveDefinition(definition, modifiedParams) {
                             value.default_value = newValue;
                         }
                     },
-                    _g));
+                    _j));
                 context[key] = value.default_value;
             }
         };
         try {
-            for (var _d = __values(Object.keys(obj)), _e = _d.next(); !_e.done; _e = _d.next()) {
-                var key = _e.value;
-                _loop_2(key);
+            for (var _e = __values(Object.keys(obj)), _f = _e.next(); !_f.done; _f = _e.next()) {
+                var key = _f.value;
+                _loop_1(key);
             }
         }
         catch (e_1_1) { e_1 = { error: e_1_1 }; }
         finally {
             try {
-                if (_e && !_e.done && (_a = _d.return)) _a.call(_d);
+                if (_f && !_f.done && (_a = _e.return)) _a.call(_e);
             }
             finally { if (e_1) throw e_1.error; }
         }
         try {
             for (var asistantMap_1 = __values(asistantMap), asistantMap_1_1 = asistantMap_1.next(); !asistantMap_1_1.done; asistantMap_1_1 = asistantMap_1.next()) {
-                var _f = __read(asistantMap_1_1.value, 2), key = _f[0], insideValue = _f[1];
+                var _g = __read(asistantMap_1_1.value, 2), key = _g[0], insideValue = _g[1];
                 affectKey = key;
                 try {
                     var defaultValue = obj[key].default_value;
@@ -129,7 +113,6 @@ function resolveDefinition(definition, modifiedParams) {
                     insideValue.maximum_value && eval("(function calcMinMax() {\n                    hasValue = true;\n                    with (context) {\n                        return ".concat(insideValue.maximum_value, ";\n                    }\n                })()"));
                     var calcEnabled = insideValue.enabled && eval("(function calcEnable() {\n                    hasValue = true;\n                    with (context) {\n                        return ".concat(insideValue.enabled, ";\n                    }\n                })()"));
                     if (typeof calcEnabled !== 'undefined') {
-                        console.log('calcEnabled', key, calcEnabled);
                         definition.settings[key].enabled = calcEnabled;
                     }
                     if (insideValue.type === 'float' || insideValue.type === 'int') {
@@ -139,7 +122,6 @@ function resolveDefinition(definition, modifiedParams) {
                         else {
                             definition.settings[key].mismatch = false;
                         }
-                        console.log('mismatch', key, calcValue, defaultValue);
                     }
                     else {
                         if (calcValue !== defaultValue) {
@@ -163,16 +145,25 @@ function resolveDefinition(definition, modifiedParams) {
             finally { if (e_2) throw e_2.error; }
         }
         asistantMapInitialized = true;
-        // allValues.wall_line_count = new Set();
-        // allValues.top_layers = new Set();
-        // allValues.bottom_layers = new Set();
-        // allValues.wall_line_count.add('wall_thickness').add('magic_spiralize').add('wall_line_width_0').add('wall_line_width_x')
-        // allValues.top_layers.add('top_thickness').add('infill_sparse_density').add('layer_height')
-        // allValues.bottom_layers.add('bottom_thickness').add('infill_sparse_density').add('layer_height')
         Object.entries(allValues).forEach(function (_a) {
             var _b = __read(_a, 2), undefined = _b[0], affectSet = _b[1];
             flatAffectedValue(affectSet, affectSet);
         });
+    }
+    else {
+        try {
+            for (var asistantMap_2 = __values(asistantMap), asistantMap_2_1 = asistantMap_2.next(); !asistantMap_2_1.done; asistantMap_2_1 = asistantMap_2.next()) {
+                var _h = __read(asistantMap_2_1.value, 2), key = _h[0], value = _h[1];
+                context[key] = _.isNil(obj[key].default_value) ? value.default_value : obj[key].default_value;
+            }
+        }
+        catch (e_3_1) { e_3 = { error: e_3_1 }; }
+        finally {
+            try {
+                if (asistantMap_2_1 && !asistantMap_2_1.done && (_c = asistantMap_2.return)) _c.call(asistantMap_2);
+            }
+            finally { if (e_3) throw e_3.error; }
+        }
     }
     var allAsistantArray = new Set();
     var affectArray = [];
@@ -189,21 +180,24 @@ function resolveDefinition(definition, modifiedParams) {
         });
     }
     console.log('allAsistantArray', allAsistantArray);
-    var _loop_3 = function (key) {
+    var _loop_2 = function (key) {
         var value = asistantMap.get(key);
         try {
             var defaultValue = void 0;
-            if (value.preprocess && modifiedParams) {
-                Object.entries(value.preprocess).forEach(function (_a) {
-                    var _b = __read(_a, 2), key = _b[0], valueItem = _b[1];
-                    console.log('!affectArray.includes(key)', affectArray, key, !affectArray.includes(key));
-                    if (!affectArray.includes(key)) {
-                        var processValue = eval("(function calcProcessValue() {\n                            with (context) {\n                                return ".concat(valueItem, ";\n                            }\n                        })()"));
-                        context[key] = processValue;
-                        definition.settings[key].default_value = processValue;
-                    }
-                });
-            }
+            // if (value.preprocess && modifiedParams) {
+            //     Object.entries(value.preprocess).forEach(([key, valueItem]) => {
+            //         console.log('!affectArray.includes(key)', affectArray, key, !affectArray.includes(key));
+            //         if (!affectArray.includes(key)) {
+            //             const processValue = eval(`(function calcProcessValue() {
+            //                 with (context) {
+            //                     return ${valueItem};
+            //                 }
+            //             })()`);
+            //             context[key] = processValue;
+            //             definition.settings[key].default_value = processValue;
+            //         }
+            //     });
+            // }
             var calcValue = value.value && eval("(function calcValue() {\n                with (context) {\n                    return ".concat(value.value, ";\n                }\n            })()"));
             var calcMinValue = value.minimum_value && eval("(function calcMinMax() {\n                with (context) {\n                    return ".concat(value.minimum_value, ";\n                }\n            })()"));
             var calcMaxValue = value.maximum_value && eval("(function calcMinMax() {\n                with (context) {\n                    return ".concat(value.maximum_value, ";\n                }\n            })()"));
@@ -256,21 +250,18 @@ function resolveDefinition(definition, modifiedParams) {
         // calc value & default_value
         for (var allAsistantArray_1 = __values(allAsistantArray), allAsistantArray_1_1 = allAsistantArray_1.next(); !allAsistantArray_1_1.done; allAsistantArray_1_1 = allAsistantArray_1.next()) {
             var key = allAsistantArray_1_1.value;
-            _loop_3(key);
+            _loop_2(key);
         }
     }
-    catch (e_3_1) { e_3 = { error: e_3_1 }; }
+    catch (e_4_1) { e_4 = { error: e_4_1 }; }
     finally {
         try {
-            if (allAsistantArray_1_1 && !allAsistantArray_1_1.done && (_c = allAsistantArray_1.return)) _c.call(allAsistantArray_1);
+            if (allAsistantArray_1_1 && !allAsistantArray_1_1.done && (_d = allAsistantArray_1.return)) _d.call(allAsistantArray_1);
         }
-        finally { if (e_3) throw e_3.error; }
+        finally { if (e_4) throw e_4.error; }
     }
-    // Object.getOwnPropertyNames(context).forEach(function(val, idx, array) {
-    //   console.log(val + " -> " + context[val]);
-    // });
-    console.log('context.wall_thickness', context.wall_thickness, context.wall_line_count);
-    console.log('definition.settings.wall_thickness', definition.settings.cool_fan_speed_min);
+    // console.log('context.wall_thickness', context.wall_thickness, context.wall_line_count);
+    // console.log('definition.settings.wall_thickness', definition.settings.wall_thickness.default_value, definition.settings.wall_line_count.default_value);
 }
 module.exports = {
     resolveDefinition: resolveDefinition

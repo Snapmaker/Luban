@@ -834,7 +834,7 @@
                             "type": "extruder",
                             "default_value": "0",
                             "value": "Number.parseInt(defaultExtruderPosition())",
-                            "enabled": "extruders_enabled_count > 1 && (resolveOrValue(\"adhesion_type\") !== \"none\" || resolveOrValue(\"prime_tower_brim_enable\"))",
+                            "enabled": "extruders_enabled_count > 1 && (resolveOrValue(adhesion_type) !== \"none\" || resolveOrValue(prime_tower_brim_enable))",
                             "settable_per_mesh": false,
                             "settable_per_extruder": false
                         }
@@ -1067,7 +1067,7 @@
                             "type": "float",
                             "resolve": "Math.max('material_bed_temperature_layer_0'))",
                             "default_value": 60,
-                            "value": "resolveOrValue(\"material_bed_temperature\")",
+                            "value": "resolveOrValue(material_bed_temperature)",
                             "minimum_value": "0",
                             "maximum_value": "heated_bed_maximum_temperature",
                             "enabled": "machine_heated_bed && machine_gcode_flavor !== \"UltiGCode\"",
@@ -1878,7 +1878,7 @@
                                     "minimum_value": "('layer_height') / 2 if infill_line_distance > 0 else -999999",
                                     "maximum_value_warning": "0.75 * machine_nozzle_size",
                                     "maximum_value": "('layer_height') * 8 if infill_line_distance > 0 else 999999",
-                                    "value": "resolveOrValue(\"layer_height\")",
+                                    "value": "resolveOrValue(layer_height)",
                                     "enabled": "infill_sparse_density > 0",
                                     "limit_to_extruder": "infill_extruder_nr",
                                     "settable_per_mesh": true
@@ -1892,7 +1892,7 @@
                                     "minimum_value": "('layer_height')",
                                     "maximum_value_warning": "0.75 * machine_nozzle_size",
                                     "maximum_value": "('layer_height') * 8",
-                                    "value": "resolveOrValue(\"layer_height\")",
+                                    "value": "resolveOrValue(layer_height)",
                                     "enabled": "(support_enable || support_meshes_present) && support_infill_rate > 0",
                                     "limit_to_extruder": "support_infill_extruder_nr",
                                     "settable_per_mesh": false,
@@ -1992,7 +1992,7 @@
                                     "default_value": 0.4,
                                     "type": "float",
                                     "value": "line_width",
-                                    "enabled": "resolveOrValue(\"adhesion_type\") === \"skirt\" || resolveOrValue(\"adhesion_type\") === \"brim\" || resolveOrValue(\"prime_tower_brim_enable\")",
+                                    "enabled": "resolveOrValue(adhesion_type) === \"skirt\" || resolveOrValue(adhesion_type) === \"brim\" || resolveOrValue(prime_tower_brim_enable)",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "filter": [
@@ -2052,7 +2052,7 @@
                                     "description": "Width of a single prime tower line.",
                                     "type": "float",
                                     "unit": "mm",
-                                    "enabled": "resolveOrValue(\"prime_tower_enable\")",
+                                    "enabled": "resolveOrValue(prime_tower_enable)",
                                     "default_value": 0.4,
                                     "value": "line_width",
                                     "minimum_value": "0.001",
@@ -2291,7 +2291,7 @@
                                     "maximum_value_warning": "10000",
                                     "value": "acceleration_print",
                                     "default_value": 3000,
-                                    "enabled": "resolveOrValue(\"acceleration_enabled\") && infill_sparse_density > 0",
+                                    "enabled": "resolveOrValue(acceleration_enabled) && infill_sparse_density > 0",
                                     "limit_to_extruder": "infill_extruder_nr",
                                     "settable_per_mesh": true
                                 },
@@ -2333,7 +2333,7 @@
                                     "maximum_value_warning": "10000",
                                     "default_value": 3000,
                                     "value": "acceleration_print",
-                                    "enabled": "resolveOrValue(\"acceleration_enabled\") && roofing_layer_count > 0 && top_layers > 0",
+                                    "enabled": "resolveOrValue(acceleration_enabled) && roofing_layer_count > 0 && top_layers > 0",
                                     "limit_to_extruder": "roofing_extruder_nr",
                                     "settable_per_mesh": true
                                 },
@@ -2347,7 +2347,7 @@
                                     "maximum_value_warning": "10000",
                                     "default_value": 3000,
                                     "value": "acceleration_print",
-                                    "enabled": "resolveOrValue(\"acceleration_enabled\")",
+                                    "enabled": "resolveOrValue(acceleration_enabled)",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
                                     "settable_per_mesh": true
                                 },
@@ -2406,7 +2406,7 @@
                                     "maximum_value_warning": "10000",
                                     "default_value": 3000,
                                     "value": "acceleration_print",
-                                    "enabled": "resolveOrValue(\"prime_tower_enable\") && resolveOrValue(\"acceleration_enabled\")",
+                                    "enabled": "resolveOrValue(prime_tower_enable) && resolveOrValue(acceleration_enabled)",
                                     "settable_per_mesh": false
                                 },
                                 "acceleration_travel": {
@@ -2462,7 +2462,7 @@
                                     "maximum_value_warning": "50",
                                     "default_value": 20,
                                     "value": "jerk_print",
-                                    "enabled": "resolveOrValue(\"jerk_enabled\") && infill_sparse_density > 0",
+                                    "enabled": "resolveOrValue(jerk_enabled) && infill_sparse_density > 0",
                                     "limit_to_extruder": "infill_extruder_nr",
                                     "settable_per_mesh": true
                                 },
@@ -2501,7 +2501,7 @@
                                     "maximum_value_warning": "50",
                                     "default_value": 20,
                                     "value": "jerk_topbottom",
-                                    "enabled": "resolveOrValue(\"jerk_enabled\") && roofing_layer_count > 0 && top_layers > 0",
+                                    "enabled": "resolveOrValue(jerk_enabled) && roofing_layer_count > 0 && top_layers > 0",
                                     "limit_to_extruder": "roofing_extruder_nr",
                                     "settable_per_mesh": true
                                 },
@@ -2514,7 +2514,7 @@
                                     "maximum_value_warning": "50",
                                     "default_value": 20,
                                     "value": "jerk_print",
-                                    "enabled": "(top_layers > 0 || bottom_layers > 0) && resolveOrValue(\"jerk_enabled\")",
+                                    "enabled": "(top_layers > 0 || bottom_layers > 0) && resolveOrValue(jerk_enabled)",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
                                     "settable_per_mesh": true
                                 },
@@ -2527,7 +2527,7 @@
                                     "value": "jerk_print",
                                     "minimum_value": "0",
                                     "maximum_value_warning": "50",
-                                    "enabled": "resolveOrValue(\"jerk_enabled\") && (support_enable || support_meshes_present)",
+                                    "enabled": "resolveOrValue(jerk_enabled) && (support_enable || support_meshes_present)",
                                     "limit_to_extruder": "support_infill_extruder_nr",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true
@@ -2541,7 +2541,7 @@
                                     "value": "extruderValue(support_roof_extruder_nr, \"jerk_support_interface\")",
                                     "minimum_value": "0",
                                     "maximum_value_warning": "50",
-                                    "enabled": "resolveOrValue(\"jerk_enabled\") && support_roof_enable && (support_enable || support_meshes_present)",
+                                    "enabled": "resolveOrValue(jerk_enabled) && support_roof_enable && (support_enable || support_meshes_present)",
                                     "limit_to_extruder": "support_roof_extruder_nr",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true
@@ -2555,7 +2555,7 @@
                                     "value": "extruderValue(support_roof_extruder_nr, \"jerk_support_interface\")",
                                     "minimum_value": "0",
                                     "maximum_value_warning": "50",
-                                    "enabled": "resolveOrValue(\"jerk_enabled\") && support_bottom_enable && (support_enable || support_meshes_present)",
+                                    "enabled": "resolveOrValue(jerk_enabled) && support_bottom_enable && (support_enable || support_meshes_present)",
                                     "limit_to_extruder": "support_bottom_extruder_nr",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true
@@ -2569,7 +2569,7 @@
                                     "maximum_value_warning": "50",
                                     "default_value": 20,
                                     "value": "jerk_print",
-                                    "enabled": "resolveOrValue(\"prime_tower_enable\") && resolveOrValue(\"jerk_enabled\")",
+                                    "enabled": "resolveOrValue(prime_tower_enable) && resolveOrValue(jerk_enabled)",
                                     "settable_per_mesh": false
                                 },
                                 "jerk_travel": {
@@ -2729,7 +2729,7 @@
                                 "bottom_layers": {
                                     "label": "Bottom Layers",
                                     "description": "The number of bottom layers. When calculated by the bottom thickness, this value is rounded to a whole number.",
-                                    "value": "infill_sparse_density === 100 ? 999999 : Math.ceil(Math.round(bottom_thickness / (\"layer_height\"))",
+                                    "value": "infill_sparse_density === 100 ? 999999 : Math.ceil(Math.round(bottom_thickness / layer_height))",
                                     "minimum_value": "0",
                                     "minimum_value_warning": "2",
                                     "default_value": 6,
@@ -2761,7 +2761,7 @@
                         "top_bottom_pattern": {
                             "label": "Top/Bottom Pattern",
                             "description": "The pattern of the top/bottom layers.",
-                            "type": "enumWithImage ",
+                            "type": "enumWithImage",
                             "options": {
                                 "lines": "Lines",
                                 "concentric": "Concentric",
@@ -2775,7 +2775,7 @@
                                 "top_bottom_pattern_0": {
                                     "label": "Bottom Pattern Initial Layer",
                                     "description": "The pattern on the bottom of the print on the first layer.",
-                                    "type": "enumWithImage ",
+                                    "type": "enumWithImage",
                                     "options": {
                                         "lines": "Lines",
                                         "concentric": "Concentric",
@@ -2797,7 +2797,7 @@
                             "description": "A list of integer line directions to use when the top/bottom layers use the lines or zig zag pattern. Elements from the list are used sequentially as the layers progress and when the end of the list is reached, it starts at the beginning again. The list items are separated by commas and the whole list is contained in square brackets. Default is an empty list which means use the traditional default angles (45 and 135 degrees).",
                             "type": "[int]",
                             "default_value": "[ ]",
-                            "enabled": "(top_layers > 0 || bottom_layers > 0) && top_bottom_pattern !== \"concentric\"",
+                            "enabled": false,
                             "limit_to_extruder": "top_bottom_extruder_nr",
                             "settable_per_mesh": true
                         },
@@ -2836,7 +2836,7 @@
                         "infill_pattern": {
                             "label": "Infill Pattern",
                             "description": "The pattern of the infill material of the print. The line and zig zag infill swap direction on alternate layers, reducing material cost. The grid, triangle, tri-hexagon, cubic, octet, quarter cubic, cross and concentric patterns are fully printed every layer. Gyroid, cubic, quarter cubic and octet infill change with every layer to provide a more equal distribution of strength over each direction.",
-                            "type": "enumWithImage ",
+                            "type": "enumWithImage",
                             "options": {
                                 "grid": "Grid",
                                 "lines": "Lines",
@@ -2868,7 +2868,7 @@
                             "description": "A list of integer line directions to use. Elements from the list are used sequentially as the layers progress and when the end of the list is reached, it starts at the beginning again. The list items are separated by commas and the whole list is contained in square brackets. Default is an empty list which means use the traditional default angles (45 and 135 degrees for the lines and zig zag patterns and 45 degrees for all other patterns).",
                             "type": "[int]",
                             "default_value": "[ ]",
-                            "enabled": "infill_pattern != 'concentric' && infill_sparse_density > 0",
+                            "enabled": false,
                             "limit_to_extruder": "infill_extruder_nr",
                             "settable_per_mesh": true,
                             "filter": [
@@ -3227,7 +3227,7 @@
                                     "maximum_value_warning": "10000",
                                     "default_value": 3000,
                                     "value": "acceleration_roofing",
-                                    "enabled": "resolveOrValue(\"acceleration_enabled\") && ironing_enabled",
+                                    "enabled": "resolveOrValue(acceleration_enabled) && ironing_enabled",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
                                     "settable_per_mesh": true
                                 },
@@ -3240,7 +3240,7 @@
                                     "maximum_value_warning": "50",
                                     "default_value": 20,
                                     "value": "jerk_topbottom",
-                                    "enabled": "resolveOrValue(\"jerk_enabled\") && ironing_enabled",
+                                    "enabled": "resolveOrValue(jerk_enabled) && ironing_enabled",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
                                     "settable_per_mesh": true
                                 }
@@ -3661,8 +3661,8 @@
                             "label": "Support Infill Line Directions",
                             "description": "A list of integer line directions to use. Elements from the list are used sequentially as the layers progress and when the end of the list is reached, it starts at the beginning again. The list items are separated by commas and the whole list is contained in square brackets. Default is an empty list which means use the default angle 0 degrees.",
                             "type": "[int]",
-                            "default_value": "[ ]",
-                            "enabled": "(support_enable || support_meshes_present) && support_pattern !== \"concentric\" && support_infill_rate > 0",
+                            "default_value": "[135]",
+                            "enabled": false,
                             "limit_to_extruder": "support_infill_extruder_nr",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
@@ -3756,7 +3756,7 @@
                                     "value": "support_type === \"everywhere\" ? extruderValue(support_bottom_enable ? support_bottom_extruder_nr : support_infill_extruder_nr, \"support_z_distance\") : 0",
                                     "limit_to_extruder": "support_bottom_extruder_nr if support_bottom_enable else support_infill_extruder_nr",
                                     "type": "float",
-                                    "enabled": "(support_enable || support_meshes_present) && resolveOrValue(\"support_type\") === \"everywhere\"",
+                                    "enabled": "(support_enable || support_meshes_present) && resolveOrValue(support_type) === \"everywhere\"",
                                     "settable_per_mesh": true,
                                     "filter": [
                                         "advance"
@@ -4225,9 +4225,9 @@
                             "label": "Support Interface Line Directions",
                             "description": "A list of integer line directions to use. Elements from the list are used sequentially as the layers progress and when the end of the list is reached, it starts at the beginning again. The list items are separated by commas and the whole list is contained in square brackets. Default is an empty list which means use the default angles (alternates between 45 and 135 degrees if interfaces are quite thick or 90 degrees).",
                             "type": "[int]",
-                            "default_value": "[ ]",
+                            "default_value": "[45]",
                             "limit_to_extruder": "support_interface_extruder_nr",
-                            "enabled": "(support_enable || support_meshes_present) && support_interface_enable && support_interface_pattern !== \"concentric\"",
+                            "enabled": false,
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "filter": [
@@ -4238,10 +4238,10 @@
                                     "label": "Support Roof Line Directions",
                                     "description": "A list of integer line directions to use. Elements from the list are used sequentially as the layers progress and when the end of the list is reached, it starts at the beginning again. The list items are separated by commas and the whole list is contained in square brackets. Default is an empty list which means use the default angles (alternates between 45 and 135 degrees if interfaces are quite thick or 90 degrees).",
                                     "type": "[int]",
-                                    "default_value": "[ ]",
+                                    "default_value": "[45]",
                                     "value": "support_interface_angles",
                                     "limit_to_extruder": "support_roof_extruder_nr",
-                                    "enabled": "(support_enable || support_meshes_present) && support_roof_enable && support_roof_pattern !== \"concentric\"",
+                                    "enabled": false,
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true
                                 },
@@ -4249,10 +4249,10 @@
                                     "label": "Support Floor Line Directions",
                                     "description": "A list of integer line directions to use. Elements from the list are used sequentially as the layers progress and when the end of the list is reached, it starts at the beginning again. The list items are separated by commas and the whole list is contained in square brackets. Default is an empty list which means use the default angles (alternates between 45 and 135 degrees if interfaces are quite thick or 90 degrees).",
                                     "type": "[int]",
-                                    "default_value": "[ ]",
+                                    "default_value": "[45]",
                                     "value": "support_interface_angles",
                                     "limit_to_extruder": "support_bottom_extruder_nr",
-                                    "enabled": "(support_enable || support_meshes_present) && support_bottom_enable && support_bottom_pattern !== \"concentric\"",
+                                    "enabled": false,
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true
                                 }
@@ -4432,7 +4432,7 @@
                                     "minimum_value": "0",
                                     "minimum_value_warning": "25",
                                     "maximum_value_warning": "2500",
-                                    "enabled": "resolveOrValue(\"adhesion_type\") === \"skirt\" || resolveOrValue(\"adhesion_type\") === \"brim\" || resolveOrValue(\"prime_tower_brim_enable\")",
+                                    "enabled": "resolveOrValue(adhesion_type) === \"skirt\" || resolveOrValue(adhesion_type) === \"brim\" || resolveOrValue(prime_tower_brim_enable)",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "filter": [
@@ -4447,7 +4447,7 @@
                                     "minimum_value": "0",
                                     "maximum_value_warning": "50 / skirt_brim_line_width",
                                     "maximum_value": "0.5 * Math.min(machine_width, machine_depth) / skirt_brim_line_width",
-                                    "enabled": "resolveOrValue(\"adhesion_type\") === \"brim\" || resolveOrValue(\"prime_tower_brim_enable\")",
+                                    "enabled": "resolveOrValue(adhesion_type) === \"brim\" || resolveOrValue(prime_tower_brim_enable)",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "limit_to_extruder": "adhesion_extruder_nr",
@@ -4463,7 +4463,7 @@
                                     "default_value": 0,
                                     "minimum_value": "0",
                                     "maximum_value_warning": "skirt_brim_line_width",
-                                    "enabled": "resolveOrValue(\"adhesion_type\") === \"brim\"",
+                                    "enabled": "resolveOrValue(adhesion_type) === \"brim\"",
                                     "settable_per_mesh": true,
                                     "settable_per_extruder": true,
                                     "limit_to_extruder": "adhesion_extruder_nr",
@@ -4476,7 +4476,7 @@
                                     "description": "Enforce brim to be printed around the model even if that space would otherwise be occupied by support. This replaces some regions of the first layer of support by brim regions.",
                                     "type": "bool",
                                     "default_value": true,
-                                    "enabled": "resolveOrValue(\"adhesion_type\") === \"brim\" && (support_enable || support_meshes_present)",
+                                    "enabled": "resolveOrValue(adhesion_type) === \"brim\" && (support_enable || support_meshes_present)",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "limit_to_extruder": "support_infill_extruder_nr",
@@ -4489,7 +4489,7 @@
                                     "description": "Only print the brim on the outside of the model. This reduces the amount of brim you need to remove afterwards, while it doesn't reduce the bed adhesion that much.",
                                     "type": "bool",
                                     "default_value": true,
-                                    "enabled": "resolveOrValue(\"adhesion_type\") === \"brim\"",
+                                    "enabled": "resolveOrValue(adhesion_type) === \"brim\"",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "limit_to_extruder": "adhesion_extruder_nr",
@@ -4505,7 +4505,7 @@
                                     "default_value": 15,
                                     "minimum_value_warning": "raft_interface_line_width",
                                     "maximum_value_warning": "20",
-                                    "enabled": "resolveOrValue(\"adhesion_type\") === \"raft\"",
+                                    "enabled": "resolveOrValue(adhesion_type) === \"raft\"",
                                     "limit_to_extruder": "adhesion_extruder_nr",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
@@ -4579,7 +4579,7 @@
                                     "maximum_value": "Math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
                                     "maximum_value_warning": "300",
                                     "value": "speed_layer_0",
-                                    "enabled": "resolveOrValue(\"adhesion_type\") === \"skirt\" || resolveOrValue(\"adhesion_type\") === \"brim\" || resolveOrValue(\"draft_shield_enabled\") || resolveOrValue(\"ooze_shield_enabled\")",
+                                    "enabled": "resolveOrValue(adhesion_type) === \"skirt\" || resolveOrValue(adhesion_type) === \"brim\" || resolveOrValue(draft_shield_enabled) || resolveOrValue(ooze_shield_enabled)",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "limit_to_extruder": "adhesion_extruder_nr"
@@ -4639,7 +4639,7 @@
                                     "minimum_value": "0.1",
                                     "minimum_value_warning": "100",
                                     "maximum_value_warning": "10000",
-                                    "enabled": "resolveOrValue(\"acceleration_enabled\") && (resolveOrValue(\"adhesion_type\") === \"skirt\" || resolveOrValue(\"adhesion_type\") === \"brim\" || resolveOrValue(\"draft_shield_enabled\") || resolveOrValue(\"ooze_shield_enabled\"))",
+                                    "enabled": "resolveOrValue(acceleration_enabled) && (resolveOrValue(adhesion_type) === \"skirt\" || resolveOrValue(adhesion_type) === \"brim\" || resolveOrValue(draft_shield_enabled) || resolveOrValue(ooze_shield_enabled))",
                                     "settable_per_mesh": false,
                                     "limit_to_extruder": "adhesion_extruder_nr"
                                 }
@@ -4694,7 +4694,7 @@
                                     "minimum_value": "0",
                                     "maximum_value_warning": "50",
                                     "value": "jerk_layer_0",
-                                    "enabled": "resolveOrValue(\"jerk_enabled\") && (resolveOrValue(\"adhesion_type\") === \"skirt\" || resolveOrValue(\"adhesion_type\") === \"brim\" || resolveOrValue(\"draft_shield_enabled\") || resolveOrValue(\"ooze_shield_enabled\"))",
+                                    "enabled": "resolveOrValue(jerk_enabled) && (resolveOrValue(adhesion_type) === \"skirt\" || resolveOrValue(adhesion_type) === \"brim\" || resolveOrValue(draft_shield_enabled) || resolveOrValue(ooze_shield_enabled))",
                                     "settable_per_mesh": false,
                                     "limit_to_extruder": "adhesion_extruder_nr"
                                 }
@@ -4824,7 +4824,7 @@
                             "label": "Prime Tower Brim",
                             "description": "Prime-towers might need the extra adhesion afforded by a brim even if the model doesn't. Presently can't be used with the 'Raft' adhesion-type.",
                             "type": "bool",
-                            "enabled": "resolveOrValue(\"prime_tower_enable\") && resolveOrValue(\"adhesion_type\") !== \"raft\"",
+                            "enabled": "resolveOrValue(prime_tower_enable) && resolveOrValue(adhesion_type) !== \"raft\"",
                             "resolve": "('prime_tower_enable') and (('adhesion_type') in ('none', 'skirt'))",
                             "default_value": true,
                             "settable_per_mesh": false,
@@ -5025,7 +5025,7 @@
                             "type": "float",
                             "default_value": 0,
                             "minimum_value": "0",
-                            "enabled": "resolveOrValue(\"retraction_combing\") !== \"off\"",
+                            "enabled": "resolveOrValue(retraction_combing) !== \"off\"",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "filter": [
@@ -5068,7 +5068,7 @@
                             "description": "The nozzle avoids already printed parts when traveling. This option is only available when combing is enabled.",
                             "type": "bool",
                             "default_value": true,
-                            "enabled": "resolveOrValue(\"retraction_combing\") !== \"off\"",
+                            "enabled": "resolveOrValue(retraction_combing) !== \"off\"",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "filter": [
@@ -5082,7 +5082,7 @@
                             "description": "The nozzle avoids already printed supports when traveling. This option is only available when combing is enabled.",
                             "type": "bool",
                             "default_value": false,
-                            "enabled": "resolveOrValue(\"retraction_combing\") !== \"off\" && travel_avoid_other_parts",
+                            "enabled": "resolveOrValue(retraction_combing) !== \"off\" && travel_avoid_other_parts",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "filter": [
@@ -5101,7 +5101,7 @@
                             "minimum_value": "0",
                             "minimum_value_warning": "machine_nozzle_tip_outer_diameter * 0.5",
                             "maximum_value_warning": "machine_nozzle_tip_outer_diameter * 5",
-                            "enabled": "resolveOrValue(\"retraction_combing\") !== \"off\" && travel_avoid_other_parts",
+                            "enabled": "resolveOrValue(retraction_combing) !== \"off\" && travel_avoid_other_parts",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true
                         },
@@ -5500,7 +5500,7 @@
                             "minimum_value": "0",
                             "maximum_value_warning": "10",
                             "type": "int",
-                            "value": "Math.ceil(Math.round(skin_edge_support_thickness / resolveOrValue(\"infill_sparse_thickness\"), 4))",
+                            "value": "Math.ceil(Math.round(skin_edge_support_thickness / resolveOrValue(infill_sparse_thickness), 4))",
                             "limit_to_extruder": "infill_extruder_nr",
                             "enable": false,
                             "settable_per_mesh": true
@@ -5599,7 +5599,7 @@
                     "unit": "mm",
                     "type": "float",
                     "default_value": 0.1,
-                    "value": "resolveOrValue(\"layer_height\")",
+                    "value": "resolveOrValue(layer_height)",
                     "minimum_value": "0.001",
                     "minimum_value_warning": "0.04",
                     "maximum_value_warning": "0.75 * machine_nozzle_size",
@@ -5644,7 +5644,7 @@
                     "unit": "mm",
                     "type": "float",
                     "default_value": 0.15,
-                    "value": "resolveOrValue(\"layer_height\") * 1.5",
+                    "value": "resolveOrValue(layer_height) * 1.5",
                     "minimum_value": "0.001",
                     "minimum_value_warning": "0.04",
                     "maximum_value_warning": "0.75 * machine_nozzle_size",
@@ -5689,7 +5689,7 @@
                     "unit": "mm",
                     "type": "float",
                     "default_value": 0.3,
-                    "value": "resolveOrValue(\"layer_height_0\") * 1.2",
+                    "value": "resolveOrValue(layer_height_0) * 1.2",
                     "minimum_value": "0.001",
                     "minimum_value_warning": "0.04",
                     "maximum_value_warning": "0.75 * raft_base_line_width",
@@ -6316,7 +6316,7 @@
                             "type": "[int]",
                             "default_value": "[ ]",
                             "value": "skin_angles",
-                            "enabled": "roofing_pattern !== \"concentric\" && roofing_layer_count > 0 && top_layers > 0",
+                            "enabled": false,
                             "limit_to_extruder": "roofing_extruder_nr",
                             "settable_per_mesh": true
                         },
@@ -6324,7 +6324,7 @@
                             "label": "Infill Travel Optimization",
                             "description": "When enabled, the order in which the infill lines are printed is optimized to reduce the distance travelled. The reduction in travel time achieved very much depends on the model being sliced, infill pattern, density, etc. Note that, for some models that have many small areas of infill, the time to slice the model may be greatly increased.",
                             "type": "bool",
-                            "enabled": "resolveOrValue(\"retraction_combing\") !== \"off\"",
+                            "enabled": "resolveOrValue(retraction_combing) !== \"off\"",
                             "default_value": false,
                             "settable_per_mesh": true
                         },

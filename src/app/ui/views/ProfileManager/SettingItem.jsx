@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import { isNil } from 'lodash';
 import i18n from '../../../lib/i18n';
 import Select from '../../components/Select';
 import { NumberInput as Input } from '../../components/Input';
@@ -71,12 +72,12 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
         return null;
     }
     const { label, description, type, unit = '', options, min, max } = setting;
-    // const { enabled } = setting;
+    const { enabled } = setting;
     const settingDefaultValue = setting.default_value;
     const isDefault = defaultValue && (defaultValue.value === settingDefaultValue);
-    // if (!enabled) {
-    //     return null;
-    // }
+    if (!enabled && !isNil(enabled)) {
+        return null;
+    }
 
     const opts = [];
     if (options) {
