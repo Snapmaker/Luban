@@ -453,14 +453,14 @@ export function checkModel(actions, params) {
             const array = data.toString().split('\n');
 
             array.forEach((item) => {
-                if (item === 'status: 1') {
+                if (item.indexOf('status: 1') !== -1) {
                     actions.next({
                         type: 'error',
                         modelID,
                         originUploadName: uploadName,
                         sourcePly: `${modelName}_check.ply`
                     });
-                } else if (item === 'status: 0') {
+                } else if (item.indexOf('status: 0') !== -1) {
                     actions.next({
                         type: 'success',
                         modelID,
