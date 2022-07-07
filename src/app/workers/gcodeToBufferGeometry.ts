@@ -2,8 +2,6 @@ import isEmpty from 'lodash/isEmpty';
 import { Observable } from 'rxjs';
 import { gcodeToBufferGeometry as _gcodeToBufferGeometry } from './GcodeToBufferGeometry/index';
 
-const { Transfer } = require('threads');
-
 type ExtruderColorsData = {
     toolColor0: string;
     toolColor1: string;

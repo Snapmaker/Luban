@@ -18,7 +18,7 @@ type mfPositionsType = {
 export default class ThreeGroup extends BaseModel {
     public children: Array<ThreeModel | ThreeGroup>;
 
-    public positionsArr?: mfPositionsType;
+    public positionsArr: mfPositionsType;
 
     declare public meshObject: THREE.Group;
 
@@ -476,6 +476,7 @@ export default class ThreeGroup extends BaseModel {
      * @returns Object
      */
     public analyzeRotation() {
+        console.log('this.meshObject', this.meshObject.scale.x);
         this.computeConvex();
         if (this.sourceType !== '3d' || !this.convexGeometry) {
             return null;
@@ -533,6 +534,7 @@ export default class ThreeGroup extends BaseModel {
             areas: objPlanes.areas,
             supportVolumes: objPlanes.supportVolumes
         };
+        console.log('this.meshObject', this.meshObject.scale.x);
         return result;
     }
 

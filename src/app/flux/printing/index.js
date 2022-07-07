@@ -2729,7 +2729,6 @@ export const actions = {
         );
 
         const models = [];
-        console.log('modelGroup.getModels()', modelGroup.getModels());
         modelGroup.getModels().forEach(model => {
             if (model instanceof PrimeTowerModel) {
                 return;
@@ -3639,7 +3638,6 @@ export const actions = {
                         });
                         dispatch(actions.updateState(modelState));
                     } else {
-                        console.log('size', size, headType, sourceType, groupPositionArr, model.originalName);
                         modelGroup.addGroup({
                             loadFrom: LOAD_MODEL_FROM_OUTER,
                             limitSize: size,
@@ -3791,7 +3789,6 @@ export const actions = {
                             }
                             case 'LOAD_GROUP_POSITIONS': {
                                 const { positionsArr, originalPosition } = data;
-                                console.log('positionsArr, originalPosition', positionsArr, originalPosition);
                                 modelGroup.addGroup({
                                     loadFrom: LOAD_MODEL_FROM_OUTER,
                                     limitSize: size,

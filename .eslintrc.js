@@ -34,6 +34,7 @@ module.exports = {
     ],
     rules: {
         'no-use-before-define': 'off',
+        '@typescript-eslint/no-var-requires': 'off',
         '@typescript-eslint/no-use-before-define': ['error'],
         'react/jsx-filename-extension': [2, {
             'extensions': [
