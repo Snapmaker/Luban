@@ -207,7 +207,7 @@ const INITIAL_STATE = {
     shouldAutoPreviewGcode: true,
     // Whether hide console when machine is working
     shouldHideConsole: true,
-
+    promptDamageModel: true,
     // connect info
     moduleStatusList: {},
     // wifi connection, home button in control widget
@@ -259,7 +259,7 @@ export const actions = {
         if (
             printingCustomConfigs
             && Object.prototype.toString.call(printingCustomConfigs)
-                === '[object String]'
+            === '[object String]'
         ) {
             const customConfigsArray = printingCustomConfigs.split('-');
             dispatch(
@@ -280,6 +280,13 @@ export const actions = {
             dispatch(baseActions.updateState({
                 shouldHideConsole: false
             }));
+        }
+        if (machineStore.get('promptDamageModel') === false) {
+            dispatch(
+                baseActions.updateState({
+                    promptDamageModel: false
+                })
+            );
         }
     },
 
@@ -404,11 +411,11 @@ export const actions = {
                 }
                 if (
                     Number(machineState.originOffset.x)
-                        !== Number(originOffset.x)
+                    !== Number(originOffset.x)
                     || Number(machineState.originOffset.y)
-                        !== Number(originOffset.y)
+                    !== Number(originOffset.y)
                     || Number(machineState.originOffset.z)
-                        !== Number(originOffset.z)
+                    !== Number(originOffset.z)
                 ) {
                     dispatch(
                         baseActions.updateState({
@@ -1097,6 +1104,11 @@ export const actions = {
     updateShouldHideConsole: (shouldHideConsole) => (dispatch) => {
         dispatch(baseActions.updateState({ shouldHideConsole: shouldHideConsole }));
         machineStore.set('shouldHideConsole', shouldHideConsole);
+    },
+    updatePromptDamageModel: (bool) => (dispatch) => {
+        console.log(bool);
+        dispatch(baseActions.updateState({ promptDamageModel: bool }));
+        machineStore.set('promptDamageModel', bool);
     }
     // endregion
 };

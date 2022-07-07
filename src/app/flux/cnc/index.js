@@ -123,7 +123,8 @@ const INITIAL_STATE = {
     // ProgressStatesManager
     progressStatesManager: new ProgressStatesManager(),
 
-    enableShortcut: true
+    enableShortcut: true,
+    promptTasks: []
 };
 
 export const actions = {

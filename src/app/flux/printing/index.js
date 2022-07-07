@@ -884,7 +884,7 @@ export const actions = {
             });
 
             // for simplify-model
-            controller.on('simplify-model:started', ({ firstTime, uploadName, transformation, repairedSource }) => {
+            controller.on('simplify-model:started', ({ firstTime, uploadName, transformation, sourcePly }) => {
                 const { progressStatesManager, simplifyOriginModelInfo } = getState().printing;
                 // progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SIMPLIFY_MODEL);
                 if (firstTime && uploadName) {
@@ -892,7 +892,7 @@ export const actions = {
                         simplifyOriginModelInfo: {
                             ...simplifyOriginModelInfo,
                             uploadName: uploadName,
-                            repairedSource: repairedSource,
+                            sourcePly: sourcePly,
                             transformation: transformation,
                         }
                     }));
@@ -924,13 +924,13 @@ export const actions = {
             });
 
             controller.on('simplify-model:completed', (params) => {
-                const { modelOutputName, modelID, repairedSource } = params;
-                actions.loadSimplifyModel({ modelID, modelOutputName, repairedSource })(dispatch, getState);
+                const { modelOutputName, modelID, sourcePly } = params;
+                actions.loadSimplifyModel({ modelID, modelOutputName, sourcePly })(dispatch, getState);
             });
         }
     },
 
-    loadSimplifyModel: ({ modelID, modelOutputName, repairedSource }) => async (dispatch, getState) => {
+    loadSimplifyModel: ({ modelID, modelOutputName, sourcePly }) => async (dispatch, getState) => {
         const { progressStatesManager, modelGroup } = getState().printing;
         dispatch(
             actions.updateState({
@@ -945,7 +945,7 @@ export const actions = {
         modelGroup.removeModel(originModel);
         // const repiarModelOriginalName = removeSpecialChars(modelOutputName);
         const uploadName = modelOutputName;
-        actions.__loadModel([{ originalName: modelOutputName, uploadName: uploadName, repairedSource }], true)(dispatch, getState);
+        actions.__loadModel([{ originalName: modelOutputName, uploadName: uploadName, sourcePly }], true)(dispatch, getState);
     },
 
     logGenerateGcode: () => (dispatch, getState) => {
@@ -3573,7 +3573,7 @@ export const actions = {
         const { modelGroup } = getState().printing;
         const selectedModels = modelGroup.getSelectedModelArray();
         const repaired = selectedModels.every((model) => {
-            return model.repairedSource;
+            return !model.needRepair;
         });
 
         return new Promise((resolve) => {
@@ -3583,9 +3583,9 @@ export const actions = {
                 dispatch(actions.updateState({
                     stage: STEP_STAGE.PRINTING_EMIT_REPAIRING_MODEL,
                     promptTasks: [{
-                        status: 'need-repair-model',
+                        status: 'repair-model-before-simplify',
                         resolve: async () => {
-                            const { allPepaired } = await dispatch(appGlobalActions.repairSelectedModels(HEAD_PRINTING));
+                            const { allPepaired } = await dispatch(actions.repairSelectedModels());
 
                             resolve(allPepaired);
                         },
@@ -3621,16 +3621,37 @@ export const actions = {
             children,
             primeTowerTag,
             reloadSimplifyModel = false,
-            repairedSource
+            sourcePly
         }
     ) => async (dispatch, getState) => {
         const { progressStatesManager, modelGroup } = getState().printing;
+        const { promptDamageModel } = getState().machine;
         const { size } = getState().machine;
         const models = [...modelGroup.models];
-        const modelNames = files || [{ originalName, uploadName, repairedSource }];
+        const modelNames = files || [{ originalName, uploadName, sourcePly }];
         let _progress = 0;
         !reloadSimplifyModel && progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
         const promptTasks = [];
+
+        const checkResultMap = new Map();
+        const checkPromises = reloadSimplifyModel ? [] : modelNames.map(async (item) => {
+            return controller.checkModel({
+                uploadName: item.uploadName
+            }, (data) => {
+                if (data.type === 'error') {
+                    checkResultMap.set(item.uploadName, {
+                        sourcePly: data.sourcePly,
+                        isDamage: true
+                    });
+                } else if (data.type === 'success') {
+                    checkResultMap.set(item.uploadName, {
+                        sourcePly: data.sourcePly,
+                        isDamage: false
+                    });
+                }
+            });
+        });
+
         const promises = modelNames.map((model) => {
             return new Promise(async (resolve, reject) => {
                 const {
@@ -3725,7 +3746,7 @@ export const actions = {
                                         extruderConfig,
                                         parentModelID,
                                         reloadSimplifyModel,
-                                        repairedSource: model.repairedSource
+                                        sourcePly: model.sourcePly
                                     }
                                 );
                                 dispatch(actions.updateState(modelState));
@@ -3814,6 +3835,7 @@ export const actions = {
             });
         });
 
+        await Promise.allSettled(checkPromises);
         await Promise.allSettled(promises);
 
         const newModels = modelGroup.models.filter(model => {
@@ -3823,7 +3845,19 @@ export const actions = {
             const modelSize = new Vector3();
             model.boundingBox.getSize(modelSize);
             const isLarge = ['x', 'y', 'z'].some(key => modelSize[key] >= size[key]);
-
+            if (!reloadSimplifyModel) {
+                const checkResult = checkResultMap.get(model.uploadName);
+                if (checkResult && checkResult.isDamage) {
+                    promptDamageModel && promptTasks.push({
+                        status: 'need-repair-model',
+                        model
+                    });
+                    model.needRepair = true;
+                } else {
+                    model.needRepair = false;
+                }
+                model.sourcePly = checkResult.sourcePly;
+            }
             if (isLarge) {
                 promptTasks.push({
                     status: 'needScaletoFit',
@@ -3831,10 +3865,13 @@ export const actions = {
                 });
             }
         });
+        modelGroup.models = [...modelGroup.models];
+
         if (modelNames.length === 1 && newModels.length === 0) {
             progressStatesManager.finishProgress(false);
             dispatch(
                 actions.updateState({
+                    modelGroup,
                     stage: STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE,
                     progress: 0,
                     promptTasks
@@ -3843,6 +3880,7 @@ export const actions = {
         } else {
             dispatch(
                 actions.updateState({
+                    modelGroup,
                     stage: STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE,
                     progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1),
                     promptTasks
@@ -4580,7 +4618,7 @@ export const actions = {
         }
         const params = {
             uploadName: simplifyOriginModelInfo.uploadName || simplifyModel.uploadName,
-            repairedSource: simplifyOriginModelInfo.repairedSource || simplifyModel.repairedSource,
+            sourcePly: simplifyOriginModelInfo.sourcePly || simplifyModel.sourcePly,
             modelID: simplifyModel?.modelID,
             simplifyType,
             simplifyPercent,
@@ -4631,6 +4669,8 @@ export const actions = {
             const uploadPath = `${DATA_PREFIX}/${res.uploadName}`;
             const model = modelGroup.findModelByID(res.modelID);
             model.uploadName = res.uploadName;
+            // 修复和简化时， 模型一定没有问题
+            model.needRepair = false;
             return new Promise((resolve, reject) => {
                 const onMessage = async data => {
                     const { type } = data;
@@ -4733,9 +4773,10 @@ export const actions = {
         });
 
         await Promise.allSettled(promises);
-
+        modelGroup.models = modelGroup.models.concat();
         dispatch(
             actions.updateState({
+                modelGroup,
                 stage: STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE,
                 progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1),
                 promptTasks
@@ -4751,14 +4792,11 @@ export const actions = {
         const { progressStatesManager } = getState().printing;
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
 
-        const { results } = await dispatch(appGlobalActions.repairSelectedModels(HEAD_PRINTING));
+        const { results, allPepaired } = await dispatch(appGlobalActions.repairSelectedModels(HEAD_PRINTING));
 
-        await dispatch(actions.updateModelMesh(results.map((i) => {
-            return {
-                modelID: i.modelID,
-                uploadName: i.repairedSource
-            };
-        })));
+        await dispatch(actions.updateModelMesh(results));
+
+        return { allPepaired };
     }
 };
 

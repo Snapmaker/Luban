@@ -76,16 +76,15 @@ export const sliceFailPopup = () => {
     });
 };
 
-export const repairModelPopup = () => {
+export const repairModelBeforSimplifyPopup = () => {
     return new Promise((resolve, reject) => {
         const action = modal({
             title: i18n._('key-Printing/ContextMenu-Repair model'),
             body: (
                 <React.Fragment>
-                    <p>xxxxxxxxxxxxxxxxxxxxx</p>
+                    <p>{i18n._('key-Printing/ContextMenu-BeforSimplify Model need to repair damage model')}   </p>
                 </React.Fragment>
             ),
-
             footer: (
                 <Button
                     priority="level-two"
@@ -108,4 +107,57 @@ export const repairModelPopup = () => {
     });
 };
 
+export const repairGuidePopup = () => {
+    modal({
+        isConfirm: true,
+        title: i18n._('key-Printing/ContextMenu-Repair model'),
+        body: (
+            <React.Fragment>
+                <p>{i18n._('key-Printing/ContextMenu-Model repair prompt message')}   </p>
+            </React.Fragment>
+        )
+    });
+};
 
+export const repairModelPopup = (models) => {
+    let ignore = false;
+    const modelNames = models.map((c) => {
+        return c.modelName;
+    }).join();
+    return new Promise((resolve, reject) => {
+        const action = modal({
+            title: i18n._('key-Printing/ContextMenu-Repair model'),
+            body: (
+                <React.Fragment>
+                    <p>{i18n._('key-Printing/ContextMenu-Model repair prompt message')}   </p>
+                    <p>{i18n._('key-Printing/ContextMenu-Model source name')}: {modelNames}</p>
+                </React.Fragment>
+            ),
+            showChangeIgnore: true,
+            cancelTitle: '忽略',
+            footer: (
+                <Button
+                    priority="level-two"
+                    type="primary"
+                    width="96px"
+                    className="margin-left-4"
+                    onClick={() => {
+                        resolve(ignore);
+                        action.close();
+                    }}
+                >
+                    {i18n._('key-Printing/ContextMenu-Repair model')}
+                </Button>
+            ),
+            onChangeIgnore: (bool) => {
+                if (bool) {
+                    repairGuidePopup();
+                }
+                ignore = bool;
+            },
+            onClose: () => {
+                reject(ignore);
+            }
+        });
+    });
+};

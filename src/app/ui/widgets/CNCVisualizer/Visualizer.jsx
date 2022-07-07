@@ -20,6 +20,7 @@ import { Button } from '../../components/Buttons';
 import Canvas from '../../components/SMCanvas';
 import PrintablePlate from '../CncLaserShared/PrintablePlate';
 import VisualizerBottomLeft from '../CncLaserShared/VisualizerBottomLeft';
+import { actions as machineActions } from '../../../flux/machine';
 import { actions as editorActions } from '../../../flux/editor';
 import styles from './styles.styl';
 import VisualizerTopRight from '../CncLaserTopRight/VisualizerTopRight';
@@ -33,6 +34,8 @@ import SVGEditor from '../../SVGEditor';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import modal from '../../../lib/modal';
 import UniApi from '../../../lib/uni-api';
+import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
+import { repairModelPopup } from '../PrintingVisualizer/VisualizerPopup';
 
 class Visualizer extends Component {
     static propTypes = {
@@ -59,6 +62,7 @@ class Visualizer extends Component {
         SVGActions: PropTypes.object.isRequired,
         toolPathGroup: PropTypes.object.isRequired,
         displayedType: PropTypes.string.isRequired,
+        promptTasks: PropTypes.array.isRequired,
 
         renderingTimestamp: PropTypes.number.isRequired,
         enableShortcut: PropTypes.bool.isRequired,
@@ -104,6 +108,8 @@ class Visualizer extends Component {
         checkIsOversizeImage: PropTypes.func.isRequired,
         uploadImage: PropTypes.func.isRequired,
         switchToPage: PropTypes.func.isRequired,
+        updatePromptDamageModel: PropTypes.func.isRequired,
+        repairSelectedModels: PropTypes.func.isRequired,
 
         progressStatesManager: PropTypes.object,
 
@@ -390,6 +396,25 @@ class Visualizer extends Component {
             });
             if (isOverSize === false) {
                 this.actions.onClickLimitImage(false);
+            }
+        }
+
+        const { stage, promptTasks, modelGroup } = nextProps;
+        if (stage !== this.props.stage) {
+            if (stage === STEP_STAGE.CNC_LASER_REPAIRING_MODEL) {
+                if (promptTasks && promptTasks.length > 0) {
+                    const needRepairModels = promptTasks.filter(item => item.status === 'need-repair-model').map((i) => {
+                        return i.model;
+                    });
+                    repairModelPopup(needRepairModels).then((ignore) => {
+                        modelGroup.unselectAllModels();
+                        modelGroup.addSelectedModels(needRepairModels);
+                        this.props.repairSelectedModels();
+                        this.props.updatePromptDamageModel(!ignore);
+                    }).catch((ignore) => {
+                        this.props.updatePromptDamageModel(!ignore);
+                    });
+                }
             }
         }
         this.printableArea.changeCoordinateVisibility(!nextProps.showSimulation);
@@ -683,7 +708,7 @@ const mapStateToProps = (state, ownProps) => {
     const { size } = state.machine;
     const { currentModalPath, menuDisabledCount } = state.appbarMenu;
     const { page, materials, modelGroup, toolPathGroup, displayedType, hasModel, isChangedAfterGcodeGenerating,
-        renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize, showSimulation, progressStatesManager, enableShortcut, isOverSize, SVGCanvasMode, SVGCanvasExt } = state.cnc;
+        renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize, showSimulation, progressStatesManager, enableShortcut, isOverSize, SVGCanvasMode, SVGCanvasExt, promptTasks } = state.cnc;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedModelID = modelGroup.getSelectedModel().modelID;
     const selectedToolPathModels = modelGroup.getSelectedToolPathModels();
@@ -718,7 +743,8 @@ const mapStateToProps = (state, ownProps) => {
         progress,
         isOverSize,
         SVGCanvasMode,
-        SVGCanvasExt
+        SVGCanvasExt,
+        promptTasks
     };
 };
 
@@ -767,6 +793,8 @@ const mapDispatchToProps = (dispatch) => {
         onDrawComplete: (elem) => dispatch(editorActions.drawComplete('cnc', elem)),
         onBoxSelect: (bbox, onlyContainSelect) => dispatch(editorActions.boxSelect('cnc', bbox, onlyContainSelect)),
         setMode: (mode, ext) => dispatch(editorActions.setCanvasMode('cnc', mode, ext)),
+        updatePromptDamageModel: (bool) => dispatch(machineActions.updatePromptDamageModel(bool)),
+        repairSelectedModels: () => dispatch(editorActions.repairSelectedModels('cnc')),
 
         elementActions: {
             moveElementsStart: (elements, options) => dispatch(editorActions.moveElementsStart('cnc', elements, options)),

@@ -262,17 +262,11 @@ class SerialPortClient {
     }
 
     repairModel(params, onMessage) {
-        return new Promise((resolve) => {
-            const observable = socketController.channel('repair-model', params);
-            observable.subscribe({
-                next(data) {
-                    onMessage(data);
-                },
-                complete() {
-                    resolve();
-                }
-            });
-        });
+        return socketController.channel('repair-model', params, onMessage);
+    }
+
+    checkModel(params, onMessage) {
+        return socketController.channel('check-model', params, onMessage);
     }
 
     commitViewPathTask(task) {

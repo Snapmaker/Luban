@@ -23,13 +23,14 @@ import Canvas from '../../components/SMCanvas';
 import { NumberInput as Input } from '../../components/Input';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import { actions as printingActions } from '../../../flux/printing';
+import { actions as machineActions } from '../../../flux/machine';
 import VisualizerLeftBar from './VisualizerLeftBar';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
 import VisualizerBottomLeft from './VisualizerBottomLeft';
 import VisualizerInfo from './VisualizerInfo';
 import PrintableCube from './PrintableCube';
 import styles from './styles.styl';
-import { loadModelFailPopup, scaletoFitPopup, sliceFailPopup, repairModelFailPopup, repairModelPopup } from './VisualizerPopup';
+import { loadModelFailPopup, scaletoFitPopup, sliceFailPopup, repairModelFailPopup, repairModelPopup, repairModelBeforSimplifyPopup } from './VisualizerPopup';
 
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 import { emitUpdateControlInputEvent } from '../../components/SMCanvas/TransformControls';
@@ -93,6 +94,8 @@ class Visualizer extends PureComponent {
         resetSelectedModelTransformation: PropTypes.func.isRequired,
         progressStatesManager: PropTypes.object.isRequired,
         setRotationPlacementFace: PropTypes.func.isRequired,
+        repairSelectedModels: PropTypes.func.isRequired,
+        updatePromptDamageModel: PropTypes.func.isRequired,
         enablePrimeTower: PropTypes.bool,
         primeTowerHeight: PropTypes.number.isRequired,
         printingToolhead: PropTypes.string,
@@ -455,6 +458,17 @@ class Visualizer extends PureComponent {
                             this.actions.scaleToFitSelectedModel([item.model]);
                         });
                     });
+                    const needRepairModels = promptTasks.filter(item => item.status === 'need-repair-model').map((i) => {
+                        return i.model;
+                    });
+                    repairModelPopup(needRepairModels).then((ignore) => {
+                        modelGroup.unselectAllModels();
+                        modelGroup.addModelToSelectedGroup(...needRepairModels);
+                        this.props.repairSelectedModels();
+                        this.props.updatePromptDamageModel(!ignore);
+                    }).catch((ignore) => {
+                        this.props.updatePromptDamageModel(!ignore);
+                    });
                 } else if (stage === STEP_STAGE.PRINTING_SLICE_FAILED) {
                     sliceFailPopup();
                 } else if (stage === STEP_STAGE.PRINTING_REPAIRING_MODEL) {
@@ -462,9 +476,9 @@ class Visualizer extends PureComponent {
                         repairModelFailPopup(item.originalName);
                     });
                 } else if (stage === STEP_STAGE.PRINTING_EMIT_REPAIRING_MODEL) {
-                    const needRepair = promptTasks.find(item => item.status === 'need-repair-model');
+                    const needRepair = promptTasks.find(item => item.status === 'repair-model-before-simplify');
                     if (needRepair) {
-                        repairModelPopup().then(() => {
+                        repairModelBeforSimplifyPopup().then(() => {
                             needRepair.resolve();
                         }).catch(() => {
                             needRepair.reject();
@@ -795,6 +809,8 @@ const mapDispatchToProps = (dispatch) => ({
     resetSelectedModelTransformation: () => dispatch(printingActions.resetSelectedModelTransformation()),
     autoRotateSelectedModel: () => dispatch(printingActions.autoRotateSelectedModel()),
     scaleToFitSelectedModel: (models) => dispatch(printingActions.scaleToFitSelectedModel(models)),
+    repairSelectedModels: () => dispatch(printingActions.repairSelectedModels()),
+    updatePromptDamageModel: (bool) => dispatch(machineActions.updatePromptDamageModel(bool)),
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value)),
     moveSupportBrush: (raycastResult) => dispatch(printingActions.moveSupportBrush(raycastResult)),
     applySupportBrush: (raycastResult) => dispatch(printingActions.applySupportBrush(raycastResult)),

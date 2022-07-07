@@ -116,14 +116,14 @@ abstract class BaseModel {
     public limitSize: number
 
     public config: Record<string, string | number | boolean> = {}
-
+    public needRepair: boolean;
 
     /**
      * for cnc model visualizer
      */
     public image3dObj: Mesh;
     public scale: number;
-    public repairedSource: string;
+    public sourcePly: string;
 
     public constructor(modelInfo: ModelInfo, modelGroup: ModelGroup) {
         this.modelGroup = modelGroup;

@@ -47,6 +47,38 @@ const getExtruderColor = (shell, infill, leftMaterialColor, rightMaterialColor) 
         _rightExtruderColor
     };
 };
+
+const ModelIcon = (props) => {
+    const { model, disabled, name } = props;
+    const Icon = (
+        <SvgIcon
+            type={['static']}
+            name={model.needRepair ? 'WarningTipsWarning' : name}
+            className="margin-right-4"
+            disabled={disabled}
+        />
+    );
+    if (model.needRepair) {
+        return (
+            <TipTrigger
+                key={model.modelID}
+                content={i18n._('模型存在错误，可选择模型后点击顶部工具栏的模型修复按钮进行修复')}
+                visible={model.needRepair}
+                placement="bottom"
+            >
+                {Icon}
+            </TipTrigger>
+        );
+    } else {
+        return Icon;
+    }
+};
+ModelIcon.propTypes = {
+    model: PropTypes.object.isRequired,
+    disabled: PropTypes.bool.isRequired,
+    name: PropTypes.string.isRequired,
+};
+
 function ModelItem({
     model, visible, isSelected, styles, onSelect, onToggleVisible,
     inProgress, placment, disabled = false, isDualExtruder = false,
@@ -119,12 +151,9 @@ function ModelItem({
                             style={{ color: disabled ? '#D5D6D9' : '' }}
                             onClick={(event) => onSelect(model, event)}
                         >
-                            <SvgIcon
-                                type={['static']}
-                                name={svgName}
-                                className="margin-right-4"
-                                disabled={disabled}
-                            />
+
+                            <ModelIcon name={svgName} model={model} disabled={disabled} />
+
                             <span className={classNames(styles['prefix-name'])}>
                                 {prefixName}
                             </span>
@@ -170,12 +199,7 @@ function ModelItem({
                                     onClick={() => onExpend(model.modelID)}
                                 />
                             ) : (
-                                <SvgIcon
-                                    type={['static']}
-                                    name={svgName}
-                                    className="margin-right-4"
-                                    disabled={disabled}
-                                />
+                                <ModelIcon name={svgName} model={model} disabled={disabled} />
                             )}
                             <span className={classNames(styles['prefix-name'])}>
                                 {prefixName}
@@ -231,12 +255,8 @@ function ModelItem({
                                 style={{ color: disabled ? '#D5D6D9' : '' }}
                                 onClick={(event) => onSelect(modelItem, event)}
                             >
-                                <SvgIcon
-                                    type={['static']}
-                                    name={objectList3d}
-                                    className="margin-right-4"
-                                    disabled={disabled}
-                                />
+                                <ModelIcon name={objectList3d} model={modelItem} disabled={disabled} />
+
                                 <span className={classNames(styles['prefix-name'])}>
                                     {_prefixName}
                                 </span>

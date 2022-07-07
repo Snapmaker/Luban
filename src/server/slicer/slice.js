@@ -313,7 +313,7 @@ export function simplifyModel(params, onProgress, onSucceed, onError) {
     // onSucceed();
     // onProgress(0.8);
     // const process =
-    const { uploadName, modelID, simplifyType, simplifyPercent, layerHeight, repairedSource } = params;
+    const { uploadName, modelID, simplifyType, simplifyPercent, layerHeight, sourcePly } = params;
 
     const extname = path.extname(uploadName);
     const modelName = uploadName.slice(
@@ -351,7 +351,7 @@ export function simplifyModel(params, onProgress, onSucceed, onError) {
         } else {
             const simplifyConfig = {
                 // configFilePath: `${DataStorage.configDir}/${HEAD_PRINTING}/simplify_model.def.json`,
-                modelPath: `${DataStorage.tmpDir}/${repairedSource}`,
+                modelPath: `${DataStorage.tmpDir}/${sourcePly}`,
                 configFilePath: simplifyConfigPath,
                 outputPath: outputPath
             };
@@ -365,9 +365,9 @@ export function simplifyModel(params, onProgress, onSucceed, onError) {
                     if (res.code === 0) {
                         onSucceed({
                             modelID: modelID,
-                            modelUploadName: `${repairedSource}`,
+                            modelUploadName: `${sourcePly}`,
                             modelOutputName: `${modelName}-simplify.stl`,
-                            repairedSource: `${modelName}-simplify.ply`,
+                            sourcePly: `${modelName}-simplify.ply`,
                         });
                     }
                 }
@@ -383,7 +383,7 @@ export function simplifyModel(params, onProgress, onSucceed, onError) {
     // })
 }
 
-export function repairModel(params, onProgress, onSucceed, onError) {
+export function repairModel(actions, params) {
     const { uploadName, modelID } = params;
 
     const extname = path.extname(uploadName);
@@ -403,25 +403,82 @@ export function repairModel(params, onProgress, onSucceed, onError) {
     lunar.modelRepair(modeltPath, outputPath)
         .onStderr('data', (message) => {
             log.debug(`${message}`);
-            onProgress(
-                steps[index]
-            );
+            actions.next({
+                type: 'progress',
+                progress: steps[index]
+            });
             index++;
         })
-        .end((_err, res) => {
-            if (_err) {
-                log.error(`fail to repair model: ${_err}`);
-                onError(_err);
+        .end((err, res) => {
+            if (err) {
+                log.error(`fail to repair model: ${err}`);
+                actions.next({
+                    type: 'error',
+                    modelID,
+                    sourcePly: `${modelName}_repaired.ply`,
+                    uploadName: `${modelName}_repaired.stl`
+                });
+                actions.error(err);
             } else {
                 log.info(`lunar code: ${res.code}`);
                 if (res.code === 0) {
-                    onSucceed({
+                    actions.next({
+                        type: 'success',
                         modelID,
-                        uploadName,
-                        repairedPly: `${modelName}_repaired.ply`,
-                        repairedSource: `${modelName}_repaired.stl`
+                        sourcePly: `${modelName}_repaired.ply`,
+                        uploadName: `${modelName}_repaired.stl`
+                    });
+                    actions.complete();
+                }
+            }
+        });
+}
+
+export function checkModel(actions, params) {
+    const { uploadName, modelID } = params;
+
+    const extname = path.extname(uploadName);
+    const modelName = uploadName.slice(
+        0,
+        uploadName.indexOf(extname)
+    );
+
+    const modeltPath = `${DataStorage.tmpDir}/${uploadName}`;
+    const outputPath = `${DataStorage.tmpDir}/${modelName}_check`;
+    if (fs.existsSync(outputPath)) {
+        fs.unlinkSync(outputPath);
+    }
+    lunar.modelCheck(modeltPath, outputPath)
+        .onStderr('data', (data) => {
+            const array = data.toString().split('\n');
+
+            array.forEach((item) => {
+                if (item === 'status: 1') {
+                    actions.next({
+                        type: 'error',
+                        modelID,
+                        originUploadName: uploadName,
+                        sourcePly: `${modelName}_check.ply`
+                    });
+                } else if (item === 'status: 0') {
+                    actions.next({
+                        type: 'sucess',
+                        modelID,
+                        originUploadName: uploadName,
+                        sourcePly: `${modelName}_check.ply`,
+                        uploadName: `${modelName}_check.stl`
                     });
                 }
+            });
+
+            log.debug(`${data}`);
+        })
+        .end((err) => {
+            if (err) {
+                log.error(`fail to check model: ${err}`);
+                actions.error(err);
+            } else {
+                actions.complete();
             }
         });
 }

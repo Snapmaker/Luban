@@ -116,7 +116,7 @@ export const actions = {
         let completedNum = 0;
         const promises = models.map(async (model) => {
             return controller.repairModel({
-                uploadName: model.repairedSource || model.uploadName,
+                uploadName: model.sourcePly || model.uploadName,
                 modelID: model.modelID
             }, (data) => {
                 const { type } = data;
@@ -146,7 +146,7 @@ export const actions = {
                             originalName: model.originalName
                         });
                         break;
-                    case 'completed':
+                    case 'success':
                         if (models.length > 1) {
                             completedNum++;
                             dispatch(
@@ -159,7 +159,7 @@ export const actions = {
                             );
                         }
                         results.push(data);
-                        model.setRepairedSource(data.repairedPly);
+                        model.setSourcePly(data.sourcePly);
                         break;
                     default:
                         break;

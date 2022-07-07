@@ -254,8 +254,8 @@ class ThreeModel extends BaseModel {
         this.setSelected(isSelected);
     }
 
-    public setRepairedSource(fileName: string) {
-        this.repairedSource = fileName;
+    public setSourcePly(fileName: string) {
+        this.sourcePly = fileName;
     }
 
     public setSelected(isSelected?: boolean) {

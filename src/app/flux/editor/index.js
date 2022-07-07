@@ -646,13 +646,30 @@ export const actions = {
     generateModel: (
         headType,
         { originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, zIndex, isLimit }
-    ) => (dispatch, getState) => {
-        const { size } = getState().machine;
+    ) => async (dispatch, getState) => {
+        const { size, promptDamageModel } = getState().machine;
+
         const { materials, modelGroup, SVGActions, contentGroup, toolPathGroup, coordinateMode, coordinateSize } = getState()[headType];
         sourceType = sourceType || getSourceType(originalName);
         if (!checkParams(headType, sourceType, mode)) {
             console.error(`sourceType or mode error, sourceType: ${sourceType}, mode: ${mode}`);
             return;
+        }
+
+        let isDamage = false;
+        let sourcePly = '';
+        if (path.extname(uploadName).toLowerCase() === '.stl') {
+            await controller.checkModel({
+                uploadName
+            }, (data) => {
+                if (data.type === 'error') {
+                    sourcePly = data.sourcePly;
+                    isDamage = true;
+                } else if (data.type === 'success') {
+                    sourcePly = data.sourcePly;
+                    isDamage = false;
+                }
+            });
         }
 
         // Get default configurations
@@ -753,6 +770,13 @@ export const actions = {
 
         const model = modelGroup.addModel(options);
         model.setPreSelection(contentGroup.preSelectionGroup);
+        model.needRepair = isDamage;
+        model.setSourcePly(sourcePly);
+        const promptTasks = [];
+        promptDamageModel && promptTasks.push({
+            status: 'need-repair-model',
+            model
+        });
 
         const operation = new AddOperation2D({
             toolPathGroup,
@@ -776,7 +800,9 @@ export const actions = {
         dispatch(actions.processSelectedModel(headType));
         dispatch(
             actions.updateState(headType, {
-                isOverSize: null
+                stage: promptTasks.length ? STEP_STAGE.CNC_LASER_REPAIRING_MODEL : STEP_STAGE.EMPTY,
+                isOverSize: null,
+                promptTasks
             })
         );
     },
@@ -2402,11 +2428,12 @@ export const actions = {
     repairSelectedModels: (headType) => async (dispatch, getState) => {
         const { modelGroup } = getState()[headType];
 
-        const { results } = await dispatch(appGlobalActions.repairSelectedModels(headType));
-
+        const res = await dispatch(appGlobalActions.repairSelectedModels(headType));
+        const { results } = res;
         results.forEach((data) => {
             const model = modelGroup.findModelByID(data.modelID);
-            model.resource.originalFile.path = `/data/Tmp/${model.repairedSource}`;
+            model.needRepair = false;
+            model.resource.originalFile.path = `/data/Tmp/${data.uploadName}`;
             dispatch(actions.prepareStlVisualizer(headType, model));
         });
     },

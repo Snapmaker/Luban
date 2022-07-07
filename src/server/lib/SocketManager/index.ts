@@ -112,28 +112,19 @@ class SocketServer extends EventEmitter {
         this.events.push([event, callback]);
     }
 
-    private channelMiddleware = (socket: Socket, topic: string, invoke, params: {
-        actionid: string,
-        data: unknown[]
-    }) => {
-        const actionid = params.actionid;
+    private channelMiddleware = (socket: Socket, topic: string, invoke, actionid, params) => {
         const actions = {
             next: (res) => {
-                socket.emit(topic, {
-                    data: res,
-                    _STATUS_: 'next',
-                    actionid
-                });
+                socket.emit(topic, actionid, 'next', res);
+            },
+            error: (res) => {
+                socket.emit(topic, actionid, 'error', res);
             },
             complete: (res) => {
-                socket.emit(topic, {
-                    data: res,
-                    _STATUS_: 'complete',
-                    actionid
-                });
+                socket.emit(topic, actionid, 'complete', res);
             }
         };
-        return invoke(actions, params.data);
+        return invoke(actions, params);
     }
 
     public registerChannel(
@@ -143,11 +134,8 @@ class SocketServer extends EventEmitter {
         }, ...data: unknown[]) => void
     ) {
         this.events.push([
-            topic, (socket, params: {
-                actionid: string,
-                data: unknown[]
-            }) => {
-                return this.channelMiddleware(socket, topic, callback, params);
+            topic, (socket, actionid, params) => {
+                return this.channelMiddleware(socket, topic, callback, actionid, params);
             }
         ]);
     }
