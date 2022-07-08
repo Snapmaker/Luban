@@ -156,6 +156,7 @@ class DefinitionManager {
             res.body.definitions
         );
         const result = definitions.map((item) => {
+            console.log('item', item);
             resolveDefinition(item);
             return item
         }).map(this.fillCustomCategory);

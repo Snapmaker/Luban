@@ -28,7 +28,7 @@ var __read = (this && this.__read) || function (o, n) {
 };
 var _ = require('lodash');
 var asistantMap = new Map();
-var asistantMapInitialized = false;
+let asistantMapInitialized = false;
 var allValues = {};
 var affectKey = '';
 var hasValue = false;
@@ -41,7 +41,7 @@ function flatAffectedValue(affectSet, originalAffectSet) {
     });
 }
 function resolveDefinition(definition, modifiedParams) {
-    var e_1, _a, e_2, _b, e_3, _c, e_4, _d;
+    var e_1, _a, e_2, _b, e_3, _c;
     // make context
     var context = {
         sum: _.sum,
@@ -53,118 +53,104 @@ function resolveDefinition(definition, modifiedParams) {
                 return degree / 180 * Math.PI;
             }
         },
-        resolveOrValue: function (input) { return context[input]; },
+        resolveOrValue: function (input) { return _.isUndefined(context[input]) ? input : context[input]; },
         extruderValue: function (ignore, input) { return context[input]; },
         extruderValues: function (input) { return [context[input]]; },
         defaultExtruderPosition: function () { return 0; }
     };
     var obj = definition.settings;
-    if (!asistantMapInitialized) {
-        var _loop_1 = function (key) {
-            var _j;
-            var value = obj[key];
-            if (value.type && (value.type !== 'category' && value.type !== 'mainCategory')) {
-                var cloneValue = _.cloneDeep(obj[key]);
+    var _loop_1 = function (key) {
+        var _g;
+        var value = obj[key];
+        if (value.type && (value.type !== 'category' && value.type !== 'mainCategory')) {
+            if (!asistantMapInitialized) {
+                var cloneValue = _.cloneDeep(value);
                 asistantMap.set(key, cloneValue);
-                Object.defineProperties(context, (_j = {},
-                    _j[key] = {
-                        get: function () {
-                            if (hasValue) {
-                                if (!(allValues[affectKey] instanceof Set)) {
-                                    allValues[affectKey] = new Set();
-                                }
-                                allValues[affectKey].add(key);
+            }
+            Object.defineProperties(context, (_g = {},
+                _g[key] = {
+                    get: function () {
+                        if (hasValue) {
+                            if (!(allValues[affectKey] instanceof Set)) {
+                                allValues[affectKey] = new Set();
                             }
-                            return value.default_value;
-                        },
-                        set: function (newValue) {
-                            value.default_value = newValue;
+                            allValues[affectKey].add(key);
                         }
+                        return value.default_value;
                     },
-                    _j));
-                context[key] = value.default_value;
-            }
-        };
-        try {
-            for (var _e = __values(Object.keys(obj)), _f = _e.next(); !_f.done; _f = _e.next()) {
-                var key = _f.value;
-                _loop_1(key);
-            }
+                    set: function (newValue) {
+                        value.default_value = newValue;
+                    }
+                },
+                _g));
+            context[key] = value.default_value;
         }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
-        finally {
+    };
+    try {
+        for (var _d = __values(Object.keys(obj)), _e = _d.next(); !_e.done; _e = _d.next()) {
+            var key = _e.value;
+            _loop_1(key);
+        }
+    }
+    catch (e_1_1) { e_1 = { error: e_1_1 }; }
+    finally {
+        try {
+            if (_e && !_e.done && (_a = _d.return)) _a.call(_d);
+        }
+        finally { if (e_1) throw e_1.error; }
+    }
+    try {
+        for (var asistantMap_1 = __values(asistantMap), asistantMap_1_1 = asistantMap_1.next(); !asistantMap_1_1.done; asistantMap_1_1 = asistantMap_1.next()) {
+            var _f = __read(asistantMap_1_1.value, 2), key = _f[0], insideValue = _f[1];
+            affectKey = key;
             try {
-                if (_f && !_f.done && (_a = _e.return)) _a.call(_e);
-            }
-            finally { if (e_1) throw e_1.error; }
-        }
-        try {
-            for (var asistantMap_1 = __values(asistantMap), asistantMap_1_1 = asistantMap_1.next(); !asistantMap_1_1.done; asistantMap_1_1 = asistantMap_1.next()) {
-                var _g = __read(asistantMap_1_1.value, 2), key = _g[0], insideValue = _g[1];
-                affectKey = key;
-                try {
-                    var defaultValue = obj[key].default_value;
-                    var calcValue = insideValue.value && eval("(function calcValue() {\n                        hasValue = true;\n                        with (context) {\n                            return ".concat(insideValue.value, ";\n                        }\n                    })()"));
-                    if (_.isUndefined(calcValue)) {
-                        hasValue = false;
-                    }
-                    ;
-                    insideValue.minimum_value && eval("(function calcMinMax() {\n                    hasValue = true;\n                    with (context) {\n                        return ".concat(insideValue.minimum_value, ";\n                    }\n                })()"));
-                    insideValue.maximum_value && eval("(function calcMinMax() {\n                    hasValue = true;\n                    with (context) {\n                        return ".concat(insideValue.maximum_value, ";\n                    }\n                })()"));
-                    var calcEnabled = insideValue.enabled && eval("(function calcEnable() {\n                    hasValue = true;\n                    with (context) {\n                        return ".concat(insideValue.enabled, ";\n                    }\n                })()"));
-                    if (typeof calcEnabled !== 'undefined') {
-                        definition.settings[key].enabled = calcEnabled;
-                    }
-                    if (insideValue.type === 'float' || insideValue.type === 'int') {
-                        if (Math.abs(calcValue - defaultValue) > 1e-6) {
-                            definition.settings[key].mismatch = true;
-                        }
-                        else {
-                            definition.settings[key].mismatch = false;
-                        }
+                var defaultValue = obj[key].default_value;
+                var calcValue = insideValue.value && eval("(function calcValue() {\n                    hasValue = true;\n                    with (context) {\n                        return ".concat(insideValue.value, ";\n                    }\n                })()"));
+                if (_.isUndefined(calcValue)) {
+                    hasValue = false;
+                }
+                insideValue.minimum_value && eval("(function calcMinMax() {\n                hasValue = true;\n                with (context) {\n                    return ".concat(insideValue.minimum_value, ";\n                }\n            })()"));
+                insideValue.maximum_value && eval("(function calcMinMax() {\n                hasValue = true;\n                with (context) {\n                    return ".concat(insideValue.maximum_value, ";\n                }\n            })()"));
+                var calcEnabled = insideValue.enabled && eval("(function calcEnable() {\n                hasValue = true;\n                with (context) {\n                    return ".concat(insideValue.enabled, ";\n                }\n            })()"));
+                // if (key === 'z_seam_position') {
+                // }
+                if (typeof calcEnabled !== 'undefined') {
+                    definition.settings[key].enabled = calcEnabled;
+                }
+                if (insideValue.type === 'float' || insideValue.type === 'int') {
+                    if (Math.abs(calcValue - defaultValue) > 1e-6) {
+                        definition.settings[key].mismatch = true;
                     }
                     else {
-                        if (calcValue !== defaultValue) {
-                            definition.settings[key].mismatch = true;
-                        }
-                        else {
-                            definition.settings[key].mismatch = false;
-                        }
+                        definition.settings[key].mismatch = false;
                     }
                 }
-                catch (e) {
-                    console.error(e, insideValue.enabled);
+                else {
+                    if (calcValue !== defaultValue) {
+                        definition.settings[key].mismatch = true;
+                    }
+                    else {
+                        definition.settings[key].mismatch = false;
+                    }
                 }
             }
-        }
-        catch (e_2_1) { e_2 = { error: e_2_1 }; }
-        finally {
-            try {
-                if (asistantMap_1_1 && !asistantMap_1_1.done && (_b = asistantMap_1.return)) _b.call(asistantMap_1);
+            catch (e) {
+                console.error(e, insideValue.enabled);
             }
-            finally { if (e_2) throw e_2.error; }
         }
-        asistantMapInitialized = true;
-        Object.entries(allValues).forEach(function (_a) {
-            var _b = __read(_a, 2), undefined = _b[0], affectSet = _b[1];
-            flatAffectedValue(affectSet, affectSet);
-        });
     }
-    else {
+    catch (e_2_1) { e_2 = { error: e_2_1 }; }
+    finally {
         try {
-            for (var asistantMap_2 = __values(asistantMap), asistantMap_2_1 = asistantMap_2.next(); !asistantMap_2_1.done; asistantMap_2_1 = asistantMap_2.next()) {
-                var _h = __read(asistantMap_2_1.value, 2), key = _h[0], value = _h[1];
-                context[key] = _.isNil(obj[key].default_value) ? value.default_value : obj[key].default_value;
-            }
+            if (asistantMap_1_1 && !asistantMap_1_1.done && (_b = asistantMap_1.return)) _b.call(asistantMap_1);
         }
-        catch (e_3_1) { e_3 = { error: e_3_1 }; }
-        finally {
-            try {
-                if (asistantMap_2_1 && !asistantMap_2_1.done && (_c = asistantMap_2.return)) _c.call(asistantMap_2);
-            }
-            finally { if (e_3) throw e_3.error; }
-        }
+        finally { if (e_2) throw e_2.error; }
     }
+    asistantMapInitialized = true;
+    Object.entries(allValues).forEach(function (_a) {
+        var _b = __read(_a, 2), undefined = _b[0], affectSet = _b[1];
+        flatAffectedValue(affectSet, affectSet);
+    });
     var allAsistantArray = new Set();
     var affectArray = [];
     if (modifiedParams) {
@@ -179,26 +165,13 @@ function resolveDefinition(definition, modifiedParams) {
             }
         });
     }
-    console.log('allAsistantArray', allAsistantArray);
-    var _loop_2 = function (key) {
-        var value = asistantMap.get(key);
+    console.log('allAsistantArray', allAsistantArray, context.resolveOrValue, asistantMap.get('skirt_line_count'),asistantMap.get('raft_margin') );
+    var _loop_2 = function (key) {''
+        var value = _.cloneDeep(asistantMap.get(key));
         try {
             var defaultValue = void 0;
-            // if (value.preprocess && modifiedParams) {
-            //     Object.entries(value.preprocess).forEach(([key, valueItem]) => {
-            //         console.log('!affectArray.includes(key)', affectArray, key, !affectArray.includes(key));
-            //         if (!affectArray.includes(key)) {
-            //             const processValue = eval(`(function calcProcessValue() {
-            //                 with (context) {
-            //                     return ${valueItem};
-            //                 }
-            //             })()`);
-            //             context[key] = processValue;
-            //             definition.settings[key].default_value = processValue;
-            //         }
-            //     });
-            // }
             var calcValue = value.value && eval("(function calcValue() {\n                with (context) {\n                    return ".concat(value.value, ";\n                }\n            })()"));
+
             var calcMinValue = value.minimum_value && eval("(function calcMinMax() {\n                with (context) {\n                    return ".concat(value.minimum_value, ";\n                }\n            })()"));
             var calcMaxValue = value.maximum_value && eval("(function calcMinMax() {\n                with (context) {\n                    return ".concat(value.maximum_value, ";\n                }\n            })()"));
             var calcEnabled = value.enabled && eval("(function calcEnable() {\n                with (context) {\n                    return ".concat(value.enabled, ";\n                }\n            })()"));
@@ -208,6 +181,9 @@ function resolveDefinition(definition, modifiedParams) {
             }
             if (typeof calcEnabled !== 'undefined') {
                 definition.settings[key].enabled = calcEnabled;
+            }
+            if (key === 'adhesion_type' ||key === 'raft_margin' ) {
+                console.log('calcValue0', key, context['adhesion_type'], value.enabled, calcEnabled);
             }
             var modifiedParamItem = modifiedParams && modifiedParams.find(function (item) { return item[0] === key; });
             if (modifiedParamItem) {
@@ -253,18 +229,17 @@ function resolveDefinition(definition, modifiedParams) {
             _loop_2(key);
         }
     }
-    catch (e_4_1) { e_4 = { error: e_4_1 }; }
+    catch (e_3_1) { e_3 = { error: e_3_1 }; }
     finally {
         try {
-            if (allAsistantArray_1_1 && !allAsistantArray_1_1.done && (_d = allAsistantArray_1.return)) _d.call(allAsistantArray_1);
+            if (allAsistantArray_1_1 && !allAsistantArray_1_1.done && (_c = allAsistantArray_1.return)) _c.call(allAsistantArray_1);
         }
-        finally { if (e_4) throw e_4.error; }
+        finally { if (e_3) throw e_3.error; }
     }
-    // console.log('context.wall_thickness', context.wall_thickness, context.wall_line_count);
-    // console.log('definition.settings.wall_thickness', definition.settings.wall_thickness.default_value, definition.settings.wall_line_count.default_value);
+    console.log('context.wall_thickness',allValues.wall_min_flow_retract, context.wall_min_flow_retract, obj.wall_min_flow_retract);
 }
 module.exports = {
     resolveDefinition: resolveDefinition
 };
 //# sourceMappingURL=allparams.js.map
-//@ sourceURL=name
+// @ sourceURL=name

@@ -70,7 +70,6 @@ export class DefinitionLoader {
             json = JSON.parse(data);
             this.loadJSON(headType, definitionId, json);
         } catch (e) {
-            console.log(e);
             log.error(`JSON Syntax error of: ${definitionId}`);
         }
     }
@@ -312,10 +311,6 @@ export function loadDefinitionsByRegex(headType, configPath, regex, defaultId) {
     for (const filename of defaultFilenames) {
         if (regex.test(filename)) {
             const definitionLoader = loadDefinitionLoaderByFilename(headType, filename, configPath);
-
-            if (definitionLoader.definitionId.indexOf('quality.high') >= 0) {
-                console.log('definitionLoader', definitionLoader.isRecommended, defaultDefinitionLoader.ownKeys.length);
-            }
             if (!definitionLoader.isRecommended && defaultDefinitionLoader) {
                 const ownKeys = Array.from(defaultDefinitionLoader.ownKeys).filter(e => !definitionLoader.ownKeys.has(e));
                 if (ownKeys && ownKeys.length > 0) {
