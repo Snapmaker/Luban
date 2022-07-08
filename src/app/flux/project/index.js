@@ -31,6 +31,7 @@ import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
 import { logGcodeExport, logModuleVisit } from '../../lib/gaEvent';
 
+console.log('dd');
 const INITIAL_STATE = {
     [HEAD_PRINTING]: {
         findLastEnvironment: false,

@@ -1930,9 +1930,7 @@ class ModelGroup extends EventEmitter {
     public analyzeSelectedModelRotation() {
         if (this.selectedModelArray.length === 1) {
             const model = this.selectedModelArray[0] as ThreeGroup;
-            console.log('dd 1', this.object.children[0].children[0].children[0].scale.x, model.children[0].meshObject.scale.x);
             const rotationInfo = model.analyzeRotation();
-            console.log('dd 2', this.object.children[0].children[0].children[0].scale.x, model.children[0].meshObject.scale.x);
             const tableResult: TRotationAnalysisTable[] = [];
             // todo
             if (rotationInfo) {
@@ -1953,7 +1951,6 @@ class ModelGroup extends EventEmitter {
 
                 const group = this.resetSelectedModelConvexMeshGroup();
                 ThreeUtils.setObjectParent(group, model.meshObject);
-                console.log('dd 3', this.object.children[0].children[0].children[0].scale.x, model.children[0].meshObject.scale.x);
                 const MAX_POINTS_FOR_CURVE_FACE = 54;
                 tableResult.forEach((rowInfo) => {
                     const geometry = new BufferGeometry();
@@ -1984,7 +1981,6 @@ class ModelGroup extends EventEmitter {
                     };
                     group.add(mesh);
                 });
-                console.log('dd 4', this.object.children[0].children[0].children[0].scale.x, model.children[0].meshObject.scale.x);
                 model.meshObject.add(group);
             }
             return tableResult;

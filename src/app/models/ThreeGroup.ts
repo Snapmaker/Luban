@@ -263,18 +263,21 @@ export default class ThreeGroup extends BaseModel {
                 0
             );
         }
+        console.log('', center, boundingBoxTemp);
 
         // set selected group position need to remove children temporarily
-        const children = [...this.meshObject.children];
-        children.map((obj) => ThreeUtils.removeObjectParent(obj));
-        // only make the diff translation
-        const oldPosition = new THREE.Vector3();
-        this.meshObject.getWorldPosition(oldPosition);
-        const matrix = new THREE.Matrix4().makeTranslation(center.x - oldPosition.x, center.y - oldPosition.y, center.z - oldPosition.z);
-        ThreeUtils.applyObjectMatrix(this.meshObject, matrix);
-        children.map((obj) => ThreeUtils.setObjectParent(obj, this.meshObject));
+        // const children = [...this.meshObject.children];
+        // children.map((obj) => ThreeUtils.removeObjectParent(obj));
+        // // only make the diff translation
+        // const oldPosition = new THREE.Vector3();
+        // this.meshObject.getWorldPosition(oldPosition);
+        // const matrix = new THREE.Matrix4().makeTranslation(center.x - oldPosition.x, center.y - oldPosition.y, center.z - oldPosition.z);
+        // ThreeUtils.applyObjectMatrix(this.meshObject, matrix);
+        // children.map((obj) => ThreeUtils.setObjectParent(obj, this.meshObject));
+        //
+        // this.boundingBox = ThreeUtils.computeBoundingBox(this.meshObject);
 
-        this.boundingBox = ThreeUtils.computeBoundingBox(this.meshObject);
+        this.boundingBox = boundingBoxTemp;
     }
 
     public setConvexGeometry(convexGeometry: THREE.BufferGeometry | THREE.Geometry) {
