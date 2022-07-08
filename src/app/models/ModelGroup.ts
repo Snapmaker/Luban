@@ -651,7 +651,7 @@ class ModelGroup extends EventEmitter {
             if (selectModel) {
                 const objectIndex = this.selectedGroup.children.indexOf(selectModel.meshObject);
                 if (objectIndex === -1) {
-                    if (this.selectedModelArray.length === 1) {
+                    if (this.selectedModelArray.length === 1 && this.selectedModelArray[0] instanceof PrimeTowerModel) {
                         this.unselectAllModels();
                     }
                     let isModelAcrossGroup = false;

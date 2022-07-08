@@ -1,15 +1,13 @@
-import * as THREE from 'three';
-import { find } from 'lodash';
-import ModelGroup from '../../models/ModelGroup';
-import { ModelTransformation } from '../../models/ThreeBaseModel';
 import ThreeModel from '../../models/ThreeModel';
 import Operation from './Operation';
+/* eslint-disable import/no-cycle */
+import { actions as printingActions } from '../printing';
 
 type StateMap = {
-    originModel: ThreeModel,
     target: ThreeModel, // model finish simplify
-    modelGroup: ModelGroup,
-    transformation: ModelTransformation
+    sourceSimplify: string,
+    simplifyResultFimeName: string,
+    dispatch: any
 };
 
 export default class SimplifyModelOperation extends Operation<StateMap> {
@@ -18,25 +16,21 @@ export default class SimplifyModelOperation extends Operation<StateMap> {
         this.state = state;
     }
 
-    public redo() {
-        const { modelGroup, originModel: { modelID }, target, transformation: { positionX, positionY, positionZ } } = this.state;
-        const simplifyModel = find(modelGroup.models, { modelID: modelID });
-        modelGroup.removeModel(simplifyModel);
-        const translatePosition = new THREE.Vector3(positionX, positionY, positionZ);
-        modelGroup.models = modelGroup.models.concat(target);
-        target.meshObject.position.copy(translatePosition);
-        modelGroup.object.add(target.meshObject);
-        modelGroup.modelChanged();
+    public async redo() {
+        const { simplifyResultFimeName, target: { modelID }, dispatch } = this.state;
+        await dispatch(printingActions.updateModelMesh([{
+            modelID,
+            uploadName: simplifyResultFimeName,
+            reloadSimplifyModel: true
+        }]));
     }
 
-    public undo() {
-        const { modelGroup, originModel, target: { modelID }, transformation: { positionX, positionY, positionZ } } = this.state;
-        const simplifyModel = find(modelGroup.models, { modelID: modelID });
-        modelGroup.removeModel(simplifyModel);
-        const translatePosition = new THREE.Vector3(positionX, positionY, positionZ);
-        modelGroup.models = modelGroup.models.concat(originModel);
-        originModel.meshObject.position.copy(translatePosition);
-        modelGroup.object.add(originModel.meshObject);
-        modelGroup.modelChanged();
+    public async undo() {
+        const { sourceSimplify, target: { modelID }, dispatch } = this.state;
+        await dispatch(printingActions.updateModelMesh([{
+            modelID,
+            uploadName: sourceSimplify,
+            reloadSimplifyModel: true
+        }]));
     }
 }

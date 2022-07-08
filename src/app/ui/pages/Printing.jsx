@@ -91,7 +91,7 @@ const allWidgets = {
 const pageHeadType = HEAD_PRINTING;
 function useRenderMainToolBar(setSimplifying) {
     const unSaved = useSelector(state => state?.project[pageHeadType]?.unSaved, shallowEqual);
-    const inProgress = useSelector(state => state?.printing?.inProgress, shallowEqual);
+    const { inProgress, simplifyType, simplifyPercent } = useSelector(state => state?.printing, shallowEqual);
     const enableShortcut = useSelector(state => state?.printing?.enableShortcut, shallowEqual);
     const canRedo = useSelector(state => state?.printing?.history?.canRedo, shallowEqual);
     const canUndo = useSelector(state => state?.printing?.history?.canUndo, shallowEqual);
@@ -216,7 +216,7 @@ function useRenderMainToolBar(setSimplifying) {
                     const repaired = await dispatch(printingActions.isModelsRepaired());
                     if (repaired) {
                         setSimplifying(true);
-                        dispatch(printingActions.modelSimplify(0, 80, true));
+                        dispatch(printingActions.modelSimplify(simplifyType, simplifyPercent, true));
                     }
                 }
             },

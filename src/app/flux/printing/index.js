@@ -80,6 +80,7 @@ import ScaleOperation3D from '../operation-history/ScaleOperation3D';
 import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWithRotateOperation3D';
 import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import VisibleOperation3D from '../operation-history/VisibleOperation3D';
+/* eslint-disable import/no-cycle */
 import SimplifyModelOperation from '../operation-history/SimplifyModelOperation';
 
 // register methods for three-mesh-bvh
@@ -299,7 +300,7 @@ const createLoadModelWorker = (() => {
     const runningTasks = {};
     return (uploadPath, onMessage, reloadSimplifyModel = false) => {
         let task = runningTasks[uploadPath];
-        if (reloadSimplifyModel) {
+        if (!task || reloadSimplifyModel) {
             !!task && delete runningTasks[uploadPath];
             task = {
                 worker: workerManager.loadModel(uploadPath, data => {
@@ -312,7 +313,6 @@ const createLoadModelWorker = (() => {
                             });
                             delete runningTasks[uploadPath];
                             break;
-                        // case 'LOAD_MODEL_'
                         default:
                             break;
                     }
@@ -325,32 +325,6 @@ const createLoadModelWorker = (() => {
                 cbOnMessage: []
             };
             runningTasks[uploadPath] = task;
-        } else {
-            if (!task) {
-                task = {
-                    worker: workerManager.loadModel(uploadPath, data => {
-                        const { type } = data;
-
-                        switch (type) {
-                            case 'LOAD_MODEL_FAILED':
-                                task.worker.then(result => {
-                                    result.terminate();
-                                });
-                                delete runningTasks[uploadPath];
-                                break;
-                            default:
-                                break;
-                        }
-                        for (const fn of task.cbOnMessage) {
-                            if (typeof fn === 'function') {
-                                fn(data);
-                            }
-                        }
-                    }),
-                    cbOnMessage: []
-                };
-                runningTasks[uploadPath] = task;
-            }
         }
 
         task.cbOnMessage.push(onMessage);
@@ -930,22 +904,27 @@ export const actions = {
         }
     },
 
-    loadSimplifyModel: ({ modelID, modelOutputName, sourcePly }) => async (dispatch, getState) => {
-        const { progressStatesManager, modelGroup } = getState().printing;
-        dispatch(
+    loadSimplifyModel: ({ modelID, modelOutputName, isCancelSimplify = false }) => async (dispatch, getState) => {
+        const { progressStatesManager, simplifyOriginModelInfo } = getState().printing;
+        !isCancelSimplify && dispatch(
             actions.updateState({
                 stage: STEP_STAGE.PRINTING_SIMPLIFY_MODEL,
                 progress: progressStatesManager.updateProgress(
                     STEP_STAGE.PRINTING_SIMPLIFY_MODEL,
                     1
                 ),
+                simplifyOriginModelInfo: {
+                    ...simplifyOriginModelInfo,
+                    simplifyResultFimeName: modelOutputName
+                }
             })
         );
-        const originModel = modelGroup.getModel(modelID);
-        modelGroup.removeModel(originModel);
-        // const repiarModelOriginalName = removeSpecialChars(modelOutputName);
         const uploadName = modelOutputName;
-        actions.__loadModel([{ originalName: modelOutputName, uploadName: uploadName, sourcePly }], true)(dispatch, getState);
+        await dispatch(actions.updateModelMesh([{
+            modelID,
+            uploadName,
+            reloadSimplifyModel: true
+        }]));
     },
 
     logGenerateGcode: () => (dispatch, getState) => {
@@ -4604,21 +4583,30 @@ export const actions = {
         const layerHeight = lodashFind(qualityDefinitions, { definitionId: defaultQualityId })?.settings?.layer_height?.default_value;
         let transformation = {};
         const simplifyModel = modelGroup.selectedModelArray[0];
-
+        let uploadResult = null;
         if (isFirstTime) {
             transformation = simplifyModel.transformation;
             const mesh = simplifyModel.meshObject.clone(false);
             mesh.clear();
+            const basenameWithoutExt = path.basename(
+                `${DATA_PREFIX}/${simplifyModel.originalName}`,
+                path.extname(`${DATA_PREFIX}/${simplifyModel.originalName}`)
+            );
+            const sourceSimplifyName = `${basenameWithoutExt}.stl`;
+            uploadResult = await uploadMesh(mesh, sourceSimplifyName, 'stl');
             mesh.applyMatrix4(simplifyModel.meshObject.parent.matrix);
             await dispatch(actions.updateState({
                 simplifyOriginModelInfo: {
-                    originModel: simplifyModel
+                    ...simplifyOriginModelInfo,
+                    originModel: simplifyModel,
+                    sourceSimplifyName: uploadResult.body.uploadName
                 }
             }));
         }
         const params = {
             uploadName: simplifyOriginModelInfo.uploadName || simplifyModel.uploadName,
-            sourcePly: simplifyOriginModelInfo.sourcePly || simplifyModel.sourcePly,
+            // sourcePly: simplifyOriginModelInfo.sourcePly || simplifyModel.sourcePly,
+            sourceSimplify: uploadResult?.body?.uploadName || simplifyOriginModelInfo.sourceSimplifyName,
             modelID: simplifyModel?.modelID,
             simplifyType,
             simplifyPercent,
@@ -4630,13 +4618,13 @@ export const actions = {
     },
 
     recordSimplifyModel: () => (dispatch, getState) => {
-        const { simplifyOriginModelInfo: { originModel, transformation }, modelGroup } = getState().printing;
+        const { simplifyOriginModelInfo: { sourceSimplifyName, simplifyResultFimeName }, modelGroup } = getState().printing;
         const operations = new Operations();
         const operation = new SimplifyModelOperation({
-            originModel: originModel,
             target: modelGroup.selectedModelArray[0],
-            modelGroup: modelGroup,
-            transformation: transformation
+            sourceSimplify: sourceSimplifyName,
+            dispatch: dispatch,
+            simplifyResultFimeName: simplifyResultFimeName
         });
         operations.push(operation);
         dispatch(
@@ -4656,7 +4644,7 @@ export const actions = {
     },
 
     /**
-     * @param {*} modelInfos: { modelID:string, uploadName:string }[]
+     * @param {*} modelInfos: { modelID:string, uploadName:string, reloadSimplifyModel?: bool }[]
      */
     updateModelMesh: (modelInfos) => async (dispatch, getState) => {
         const { modelGroup, progressStatesManager } = getState().printing;
@@ -4677,7 +4665,6 @@ export const actions = {
                     switch (type) {
                         case 'LOAD_MODEL_POSITIONS': {
                             const { positions } = data;
-
                             const bufferGeometry = new THREE.BufferGeometry();
                             const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
                             const material = new THREE.MeshPhongMaterial({
@@ -4685,11 +4672,12 @@ export const actions = {
                                 specular: 0xb0b0b0,
                                 shininess: 0
                             });
-
                             bufferGeometry.setAttribute(
                                 'position',
                                 modelPositionAttribute
                             );
+                            // simplify model mesh import with sacle befor action
+                            bufferGeometry.scale(1 / model.transformation.scaleX, 1 / model.transformation.scaleY, 1 / model.transformation.scaleZ);
 
                             bufferGeometry.computeVertexNormals();
                             const meshObject = new Mesh(bufferGeometry, material);
@@ -4768,7 +4756,7 @@ export const actions = {
                             break;
                     }
                 };
-                createLoadModelWorker(uploadPath, onMessage);
+                createLoadModelWorker(uploadPath, onMessage, res.reloadSimplifyModel);
             });
         });
 

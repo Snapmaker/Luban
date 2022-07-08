@@ -53,12 +53,14 @@ const SimplifyModelOverlay = ({ handleApplySimplify, handleCancelSimplify, handl
                 <div className="padding-horizontal-16 padding-top-8">
                     <div>{i18n._('key-Printing/LeftBar-Simplify percent')}</div>
                     <div className="sm-flex justify-space-between padding-top-8 padding-bottom-24">
-                        <Slider value={sliderValue} onChange={(value) => setSliderValue(value)} onAfterChange={handleSimplifyPercentUpdate} style={{ width: 120 }} />
+                        <Slider min={1} max={100} value={sliderValue} onChange={(value) => setSliderValue(value)} onAfterChange={handleSimplifyPercentUpdate} style={{ width: 120 }} />
                         <Input
                             suffix="%"
                             value={sliderValue}
                             onChange={(value) => handleSimplifyPercentUpdate(value)}
                             size="small"
+                            min={1}
+                            max={100}
                         />
                     </div>
                 </div>

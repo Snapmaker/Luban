@@ -520,8 +520,8 @@ class Visualizer extends PureComponent {
     }
 
     handleCancelSimplify = () => {
-        const { selectedModelArray, simplifyOriginModelInfo: { uploadName } } = this.props;
-        this.props.loadSimplifyModel(selectedModelArray[0].modelID, uploadName);
+        const { selectedModelArray, simplifyOriginModelInfo: { sourceSimplifyName } } = this.props;
+        this.props.loadSimplifyModel(selectedModelArray[0].modelID, sourceSimplifyName, true);
         this.props.resetSimplifyOriginModelInfo();
         this.props.setSimplifying(false);
     }
@@ -816,7 +816,7 @@ const mapDispatchToProps = (dispatch) => ({
     applySupportBrush: (raycastResult) => dispatch(printingActions.applySupportBrush(raycastResult)),
     setRotationPlacementFace: (userData) => dispatch(printingActions.setRotationPlacementFace(userData)),
     displayModel: () => dispatch(printingActions.displayModel()),
-    loadSimplifyModel: (modelID, modelOutputName) => dispatch(printingActions.loadSimplifyModel({ modelID, modelOutputName })),
+    loadSimplifyModel: (modelID, modelOutputName, isCancelSimplify) => dispatch(printingActions.loadSimplifyModel({ modelID, modelOutputName, isCancelSimplify })),
     modelSimplify: (type, percent) => dispatch(printingActions.modelSimplify(type, percent)),
     resetSimplifyOriginModelInfo: () => dispatch(printingActions.resetSimplifyOriginModelInfo()),
     recordSimplifyModel: () => dispatch(printingActions.recordSimplifyModel())

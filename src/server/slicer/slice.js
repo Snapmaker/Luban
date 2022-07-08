@@ -313,7 +313,7 @@ export function simplifyModel(params, onProgress, onSucceed, onError) {
     // onSucceed();
     // onProgress(0.8);
     // const process =
-    const { uploadName, modelID, simplifyType, simplifyPercent, layerHeight, sourcePly } = params;
+    const { uploadName, modelID, simplifyType, simplifyPercent, layerHeight, sourceSimplify } = params;
 
     const extname = path.extname(uploadName);
     const modelName = uploadName.slice(
@@ -351,7 +351,7 @@ export function simplifyModel(params, onProgress, onSucceed, onError) {
         } else {
             const simplifyConfig = {
                 // configFilePath: `${DataStorage.configDir}/${HEAD_PRINTING}/simplify_model.def.json`,
-                modelPath: `${DataStorage.tmpDir}/${sourcePly}`,
+                modelPath: `${DataStorage.tmpDir}/${sourceSimplify}`,
                 configFilePath: simplifyConfigPath,
                 outputPath: outputPath
             };
@@ -365,7 +365,7 @@ export function simplifyModel(params, onProgress, onSucceed, onError) {
                     if (res.code === 0) {
                         onSucceed({
                             modelID: modelID,
-                            modelUploadName: `${sourcePly}`,
+                            modelUploadName: `${sourceSimplify}`,
                             modelOutputName: `${modelName}-simplify.stl`,
                             sourcePly: `${modelName}-simplify.ply`,
                         });
