@@ -53,6 +53,7 @@ const ModelIcon = (props) => {
     const Icon = (
         <SvgIcon
             type={['static']}
+            color={model.needRepair ? '#FFA940' : ''}
             name={model.needRepair ? 'WarningTipsWarning' : name}
             className="margin-right-4"
             disabled={disabled}

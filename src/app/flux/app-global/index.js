@@ -81,7 +81,7 @@ export const actions = {
 
     repairSelectedModels: (headType) => async (dispatch, getState) => {
         const { modelGroup, progressStatesManager } = getState()[headType];
-
+        const { size } = getState().machine;
         const allModels = modelGroup.getModels();
         if (allModels.length === 0) {
             return {
@@ -117,22 +117,23 @@ export const actions = {
         const promises = models.map(async (model) => {
             return controller.repairModel({
                 uploadName: model.sourcePly || model.uploadName,
-                modelID: model.modelID
+                modelID: model.modelID,
+                size
             }, (data) => {
                 const { type } = data;
                 switch (type) {
-                    case 'process':
+                    case 'progress':
                         if (data.progress && models.length === 1) {
                             const { progress } = getState().printing;
                             if (
-                                progress - data.progress > 0.01
-                                || progress > 1 - EPSILON
+                                data.progress - progress > 0.01
+                                || data.progress > 1 - EPSILON
                             ) {
                                 dispatch(
                                     actions.updateState({
                                         progress: progressStatesManager.updateProgress(
                                             STEP_STAGE.PRINTING_REPAIRING_MODEL,
-                                            progress
+                                            data.progress
                                         )
                                     }, headType)
                                 );

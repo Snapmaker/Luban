@@ -681,8 +681,10 @@ export const actions = {
         } = printingState;
         // TODO
         const {
-            toolHead: { printingToolhead }
+            toolHead: { printingToolhead },
+            series
         } = getState().machine;
+        modelGroup.setSeries(series);
         // const printingToolhead = machineStore.get('machine.toolHead.printingToolhead');
         const activeQualityDefinition = lodashFind(qualityDefinitions, {
             definitionId: defaultQualityId
@@ -4681,12 +4683,14 @@ export const actions = {
 
                             bufferGeometry.computeVertexNormals();
                             const meshObject = new Mesh(bufferGeometry, material);
-
                             model.meshObject.updateMatrixWorld();
-
                             meshObject.applyMatrix(model.meshObject.matrixWorld);
+
+                            const visible = model.visible;
                             modelGroup.object.remove(model.meshObject);
+                            meshObject.visible = visible;
                             model.meshObject = meshObject;
+
                             modelGroup.object.add(meshObject);
                             modelGroup.addModelToSelectedGroup(model);
                             if (modelInfos.length > 1) {

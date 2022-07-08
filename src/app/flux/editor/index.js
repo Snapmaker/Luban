@@ -773,7 +773,7 @@ export const actions = {
         model.needRepair = isDamage;
         model.setSourcePly(sourcePly);
         const promptTasks = [];
-        promptDamageModel && promptTasks.push({
+        promptDamageModel && isDamage && promptTasks.push({
             status: 'need-repair-model',
             model
         });

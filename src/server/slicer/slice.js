@@ -11,6 +11,7 @@ import { DefinitionLoader } from './definition';
 import { generateRandomPathName, pathWithRandomSuffix } from '../../shared/lib/random-utils';
 import { HEAD_PRINTING, PRINTING_CONFIG_SUBCATEGORY } from '../constants';
 import { convertObjectKeyNameToUnderScoreCase } from '../lib/utils';
+import pkg from '../../package.json';
 
 const log = logger('service:print3d-slice');
 
@@ -384,7 +385,7 @@ export function simplifyModel(params, onProgress, onSucceed, onError) {
 }
 
 export function repairModel(actions, params) {
-    const { uploadName, modelID } = params;
+    const { uploadName, modelID, size } = params;
 
     const extname = path.extname(uploadName);
     const modelName = uploadName.slice(
@@ -397,41 +398,62 @@ export function repairModel(actions, params) {
     if (fs.existsSync(outputPath)) {
         fs.unlinkSync(outputPath);
     }
+    let stepCount = 0;
 
-    const steps = [0.02, 0.44, 0.69, 0.98];
-    let index = 0;
-    lunar.modelRepair(modeltPath, outputPath)
-        .onStderr('data', (message) => {
-            log.debug(`${message}`);
-            actions.next({
-                type: 'progress',
-                progress: steps[index]
-            });
-            index++;
-        })
-        .end((err, res) => {
-            if (err) {
-                log.error(`fail to repair model: ${err}`);
-                actions.next({
-                    type: 'error',
-                    modelID,
-                    sourcePly: `${modelName}_repaired.ply`,
-                    uploadName: `${modelName}_repaired.stl`
-                });
-                actions.error(err);
-            } else {
-                log.info(`lunar code: ${res.code}`);
-                if (res.code === 0) {
-                    actions.next({
-                        type: 'success',
-                        modelID,
-                        sourcePly: `${modelName}_repaired.ply`,
-                        uploadName: `${modelName}_repaired.stl`
+    const config = {
+        version: pkg.version,
+        config: {
+            machine_width: size.x,
+            machine_depth: size.y,
+            machine_height: size.z
+        },
+        data: []
+    };
+    const reapirConfigPath = `${DataStorage.tmpDir}/_reapir_model.def.json`;
+
+    fs.writeFile(reapirConfigPath, JSON.stringify(config), 'utf8', (_err) => {
+        if (_err) {
+            actions.error(_err);
+        } else {
+            lunar.modelRepair(modeltPath, outputPath, reapirConfigPath)
+                .onStderr('data', (data) => {
+                    const array = data.toString().split('\n');
+                    array.forEach((item) => {
+                        if (item.indexOf('Step:') !== -1) {
+                            actions.next({
+                                type: 'progress',
+                                progress: stepCount / 7
+                            });
+                            stepCount++;
+                        }
                     });
-                    actions.complete();
-                }
-            }
-        });
+                    log.debug(`${data}`);
+                })
+                .end((err, res) => {
+                    if (err) {
+                        log.error(`fail to repair model: ${err}`);
+                        actions.next({
+                            type: 'error',
+                            modelID,
+                            sourcePly: `${modelName}_repaired.ply`,
+                            uploadName: `${modelName}_repaired.stl`
+                        });
+                        actions.error(err);
+                    } else {
+                        log.info(`lunar code: ${res.code}`);
+                        if (res.code === 0) {
+                            actions.next({
+                                type: 'success',
+                                modelID,
+                                sourcePly: `${modelName}_repaired.ply`,
+                                uploadName: `${modelName}_repaired.stl`
+                            });
+                            actions.complete();
+                        }
+                    }
+                });
+        }
+    });
 }
 
 export function checkModel(actions, params) {
@@ -451,16 +473,15 @@ export function checkModel(actions, params) {
     lunar.modelCheck(modeltPath, outputPath)
         .onStderr('data', (data) => {
             const array = data.toString().split('\n');
-
             array.forEach((item) => {
-                if (item.indexOf('status: 1') !== -1) {
+                if (item.indexOf('status:1;') !== -1) {
                     actions.next({
                         type: 'error',
                         modelID,
                         originUploadName: uploadName,
                         sourcePly: `${modelName}_check.ply`
                     });
-                } else if (item.indexOf('status: 0') !== -1) {
+                } else if (item.indexOf('status:0;') !== -1) {
                     actions.next({
                         type: 'success',
                         modelID,
