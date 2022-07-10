@@ -55,6 +55,7 @@ export default class GroupAlginOperation3D extends Operation<GroupState> {
         modelGroup.models = [...this.state.modelsafterGroup];
         modelGroup.updatePrimeTowerHeight();
         target.updateGroupExtruder();
+        modelGroup.calaClippingMap();
     }
 
     public undo() {
@@ -89,5 +90,6 @@ export default class GroupAlginOperation3D extends Operation<GroupState> {
         });
         modelGroup.models = [...this.state.modelsbeforeGroup];
         modelGroup.updatePrimeTowerHeight();
+        modelGroup.calaClippingMap();
     }
 }

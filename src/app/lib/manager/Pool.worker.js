@@ -1,13 +1,23 @@
 import { expose } from 'threads/worker';
 
-const methods = require
-    .context('../../workers', false, /\.(t|j)s/)
-    .keys()
-    .reduce((prev, key) => {
-        key = key.replace('./', '');
-        const [name] = key.split('.');
-        // eslint-disable-next-line import/no-dynamic-require
-        prev[name] = require(`../../workers/${key}`).default;
-        return prev;
-    }, {});
-expose(methods);
+import arrangeModels from '../../workers/arrangeModels';
+import autoRotateModels from '../../workers/autoRotateModels';
+import boxSelect from '../../workers/boxSelect';
+import gcodeToArraybufferGeometry from '../../workers/gcodeToArraybufferGeometry';
+import gcodeToBufferGeometry from '../../workers/gcodeToBufferGeometry';
+import loadModel from '../../workers/loadModel';
+import scaleToFitWithRotate from '../../workers/scaleToFitWithRotate';
+import toolpathRenderer from '../../workers/toolpathRenderer';
+import generatePlateAdhesion from '../../workers/generatePlateAdhesion';
+
+expose({
+    arrangeModels,
+    autoRotateModels,
+    boxSelect,
+    gcodeToArraybufferGeometry,
+    gcodeToBufferGeometry,
+    loadModel,
+    scaleToFitWithRotate,
+    toolpathRenderer,
+    generatePlateAdhesion
+});

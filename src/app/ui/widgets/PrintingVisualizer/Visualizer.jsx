@@ -35,6 +35,8 @@ import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 import { emitUpdateControlInputEvent } from '../../components/SMCanvas/TransformControls';
 import ModeToggleBtn from './ModeToggleBtn';
 import { logModelViewOperation } from '../../../lib/gaEvent';
+import VisualizerClippingControl from './VisualizerClippingControl';
+import { ModelEvents } from '../../../models/events';
 
 const initQuaternion = new Quaternion();
 const modeSuffix = {
@@ -42,6 +44,7 @@ const modeSuffix = {
     [TRANSLATE_MODE]: 'mm',
     [SCALE_MODE]: '%'
 };
+
 class Visualizer extends PureComponent {
     static propTypes = {
         isActive: PropTypes.bool.isRequired,
@@ -382,7 +385,7 @@ class Visualizer extends PureComponent {
             this.actions.fitViewIn,
             false
         );
-        this.props.modelGroup.on('add', this.props.recordAddOperation);
+        this.props.modelGroup.on(ModelEvents.AddModel, this.props.recordAddOperation);
     }
 
     componentDidUpdate(prevProps) {
@@ -514,6 +517,7 @@ class Visualizer extends PureComponent {
 
                 <div className={styles['visualizer-preview-control']}>
                     <VisualizerPreviewControl />
+                    <VisualizerClippingControl />
                 </div>
 
                 <ModeToggleBtn />

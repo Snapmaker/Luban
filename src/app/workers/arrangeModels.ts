@@ -168,8 +168,10 @@ const arrangeModels = (data: ArrangeModelsData) => {
                 stl = null;
             });
             observer.next({ status: 'succeed', value: { parts } });
+            observer.complete();
         } catch (err) {
             observer.next({ status: 'err', value: err });
+            observer.complete();
         }
     });
 };

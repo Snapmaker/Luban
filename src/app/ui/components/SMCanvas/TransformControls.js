@@ -966,6 +966,9 @@ class TransformControls extends Object3D {
     }
 
     onMouseDown(coord) {
+        if (!this.mode) {
+            return false;
+        }
         if (!(this.object.children && this.object.children.length > 0) || !this.axis) {
             return false;
         }

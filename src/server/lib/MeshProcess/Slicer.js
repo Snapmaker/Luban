@@ -1,4 +1,4 @@
-import { Polygon, Polygons } from './Polygons';
+import { Polygon, Polygons } from '../../../shared/lib/clipper/Polygons';
 import { Vector2 } from '../../../shared/lib/math/Vector2';
 import { round } from '../../../shared/lib/utils';
 

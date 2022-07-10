@@ -57,12 +57,14 @@ const loadModel = (uploadPath: string) => {
                     type: 'LOAD_MODEL_CONVEX',
                     positions: convexPositions,
                 });
+                observer.complete();
             },
             (progress: number) => {
                 observer.next({ type: 'LOAD_MODEL_PROGRESS', progress });
             },
             (err: string) => {
                 observer.next({ type: 'LOAD_MODEL_FAILED', err });
+                observer.complete();
             }
         );
         // });

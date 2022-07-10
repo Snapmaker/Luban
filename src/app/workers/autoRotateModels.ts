@@ -123,8 +123,8 @@ const autoRotateModels = (data: AutoRotateModelsData) => {
                         }
                         rates.push(
                             objPlanes.areas[idx]
-                                * areasFactor
-                                * supportVolumesFactor
+                            * areasFactor
+                            * supportVolumesFactor
                         );
                     }
 
@@ -145,9 +145,11 @@ const autoRotateModels = (data: AutoRotateModelsData) => {
                         isFinish: index + 1 >= selectedModelLength,
                     },
                 });
+                observer.complete();
             });
         } catch (err) {
             observer.next({ status: 'ERROR', value: err });
+            observer.complete();
         }
     });
 };

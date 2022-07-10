@@ -61,5 +61,6 @@ export default class ScaleToFitWithRotateOpeartion3D extends Operation<ScaleToFi
         const overstepped = modelGroup._checkOverstepped(model);
         model.setOversteppedAndSelected(overstepped, model.isSelected);
         modelGroup.updatePrimeTowerHeight();
+        modelGroup.calaClippingMap();
     }
 }

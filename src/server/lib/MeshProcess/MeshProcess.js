@@ -282,7 +282,7 @@ export class MeshProcess {
 
                         const p = getPointByLineAndAngle(start, end, aa);
 
-                        const l = Vector2.length(p);
+                        const l = Vector2._length(p);
 
                         data[i][j] = Math.max(l, data[i][j]);
                     }

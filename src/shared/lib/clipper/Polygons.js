@@ -1,8 +1,8 @@
 import _ from 'lodash';
-import { Vector2 } from '../../../shared/lib/math/Vector2';
+import { Vector2 } from '../math/Vector2';
 
-import { isEqual } from '../../../shared/lib/utils';
-import { polyDiff, polyIntersection, polyOffset, recursivePolyUnion } from '../clipper/cLipper-adapter';
+import { isEqual } from '../utils';
+import { polyDiff, polyIntersection, polyOffset, recursivePolyUnion } from './cLipper-adapter';
 
 function getDist2FromLine(p, a, b) {
     const vba = Vector2.sub(b, a);
@@ -289,7 +289,7 @@ export class Polygons {
             const isDegenerate = function (last, now, next) {
                 const lastLine = Vector2.sub(now, last);
                 const nextLine = Vector2.sub(next, now);
-                return isEqual(Vector2.dot(lastLine, nextLine), -1 * Vector2.length(lastLine) * Vector2.length(nextLine));
+                return isEqual(Vector2.dot(lastLine, nextLine), -1 * Vector2._length(lastLine) * Vector2._length(nextLine));
             };
 
             let isChanged = false;
@@ -478,6 +478,34 @@ export class Polygons {
         const polygons = new Polygons();
         polygons.data = this.data.map(v => v.clone());
         return polygons;
+    }
+
+    getUnDirectionPolygonssTree() {
+        const polygonAreasIndex = this.data
+            .map((polygon, index) => { return { area: polygon.area(), index: index, inner: 0 }; })
+            .sort((o1, o2) => (Math.abs(o1.area) > Math.abs(o2.area) ? -1 : 1));
+        for (let i = 0; i < polygonAreasIndex.length; i++) {
+            const areaIndex1 = polygonAreasIndex[i];
+            const poly = this.data[areaIndex1.index];
+            for (let j = i + 1; j < polygonAreasIndex.length; j++) {
+                const areaIndex2 = polygonAreasIndex[j];
+                if (poly.isPointInPolygon(this.data[areaIndex2.index].path[0])) {
+                    areaIndex2.inner++;
+                }
+            }
+        }
+
+        for (let i = 0; i < polygonAreasIndex.length; i++) {
+            const poly = this.data[polygonAreasIndex[i].index];
+            if (polygonAreasIndex[i].inner % 2 === 0 && polygonAreasIndex[i].area < 0) {
+                poly.path.reverse();
+            }
+            if (polygonAreasIndex[i].inner % 2 === 1 && polygonAreasIndex[i].area > 0) {
+                poly.path.reverse();
+            }
+        }
+
+        return this.getPolygonssByPolyTree();
     }
 
     /**

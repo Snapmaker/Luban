@@ -1,9 +1,11 @@
 import * as THREE from 'three';
 import { v4 as uuid } from 'uuid';
+import EventEmitter from 'events';
 import { HEAD_PRINTING } from '../constants';
 import { SvgModelElement } from './BaseModel';
 import type ModelGroup from './ModelGroup';
 import type ThreeGroup from './ThreeGroup';
+import { TDisplayedType } from './ModelGroup';
 
 export type ModelTransformation = {
     positionX?: number;
@@ -83,16 +85,18 @@ const DEFAULT_TRANSFORMATION: ModelTransformation = {
 
 // BaseModel only do data process
 // isolated from Model.js which renamed to ThreeModel.js
-export default class BaseModel {
+export default class BaseModel extends EventEmitter {
     public headType: typeof HEAD_PRINTING = HEAD_PRINTING;
     public sourceType: '3d' = '3d';
 
     public modelID: string;
     public originModelID: string;
     public modelName: string;
+    // public visible: boolean;
     public sourceHeight: number;
     public sourceWidth: number;
     public originalName: string;
+    public originalPosition: TSize;
     public uploadName: string;
     public meshObject: (THREE.Mesh | THREE.Group) & {
         uniformScalingState?: boolean
@@ -115,13 +119,14 @@ export default class BaseModel {
 
     public mode: '3d';
 
-    protected displayedType = 'model';
+    protected displayedType: TDisplayedType = 'model';
 
     protected gcodeModeMaterial: THREE.MeshLambertMaterial;
 
     protected modelModeMaterial: THREE.MeshStandardMaterial = new THREE.MeshStandardMaterial({ color: 0xe0e0e0, visible: false });
 
     public constructor(modelInfo: ModelInfo, modelGroup: ModelGroup) {
+        super();
         this.modelGroup = modelGroup;
 
         Object.keys(modelInfo).forEach((key) => {
@@ -157,7 +162,7 @@ export default class BaseModel {
         this.meshObject.applyQuaternion(quaternion);
     }
 
-    public updateDisplayedType(value: string) {
+    public updateDisplayedType(value: TDisplayedType) {
         this.displayedType = value;
         this.setSelectedGroup();
     }

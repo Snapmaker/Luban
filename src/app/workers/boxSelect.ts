@@ -66,6 +66,7 @@ const boxSelect = (data: BoxSelectData) => {
             });
 
         observer.next(selectedIndex);
+        observer.complete();
     });
 };
 

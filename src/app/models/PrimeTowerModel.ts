@@ -45,6 +45,9 @@ class PrimeTowerModel extends ThreeModel {
             uniformScalingState: false
         });
         this.stickToPlate();
+
+        const stencilGroup = this.createPlaneStencilGroup(geometry);
+        this.meshObject.add(stencilGroup);
     }
 
 
