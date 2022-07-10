@@ -165,7 +165,7 @@ function resolveDefinition(definition, modifiedParams) {
             }
         });
     }
-    console.log('allAsistantArray', allAsistantArray);
+    // console.log('allAsistantArray', allAsistantArray);
     var _loop_2 = function (key) {''
         var value = _.cloneDeep(asistantMap.get(key));
         try {

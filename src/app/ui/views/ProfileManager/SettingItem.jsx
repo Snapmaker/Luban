@@ -70,7 +70,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
     if (!setting) {
         return null;
     }
-    const { label, description, type, unit = '', options, min, max } = setting;
+    const { label, type, unit = '', options, min, max } = setting;
     const { enabled } = setting;
     const settingDefaultValue = setting.default_value;
     const isDefault = defaultValue && (defaultValue.value === settingDefaultValue);
