@@ -6,11 +6,10 @@ import styles from './styles.styl';
 
 export const MaterialWithColor = ({ name, color }) => {
     return (
-        <div className="sm-flex align-center justify-space-between">
-            <span className={classNames('text-overflow-ellipsis', styles.text)}>{name}</span>
+        <div className="sm-flex align-center">
             {color && (
                 <div
-                    className="width-16 height-16 margin-right-8"
+                    className="width-16 height-16 margin-right-4"
                     style={{
                         backgroundColor: color,
                         border: '1px solid #B9BCBF',
@@ -18,6 +17,7 @@ export const MaterialWithColor = ({ name, color }) => {
                     }}
                 />
             )}
+            <span className={classNames('text-overflow-ellipsis', styles.text)}>{name}</span>
         </div>
     );
 };

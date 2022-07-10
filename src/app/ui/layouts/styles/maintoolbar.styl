@@ -1,6 +1,6 @@
 .bar-wrapper{
     width: 100%;
-    padding: 4px 8px;
+    padding: 4px 0px 4px 8px;
     background-color: #FFFFFF;
     .bar-item{
         display: inline-block;
@@ -31,7 +31,12 @@
     }
     .left{
         float: left;
-        min-width: 30%;
+        // min-width: 30%;
+        width: calc(100% - 380px);
+        overflow: auto
+    }
+    .left::-webkit-scrollbar {
+        display: none;
     }
     .right{
         float: right;

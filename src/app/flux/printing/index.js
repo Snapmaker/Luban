@@ -81,6 +81,7 @@ import ScaleOperation3D from '../operation-history/ScaleOperation3D';
 import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWithRotateOperation3D';
 import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import VisibleOperation3D from '../operation-history/VisibleOperation3D';
+import { resolveDefinition } from '../../../shared/lib/definitionResolver';
 
 // register methods for three-mesh-bvh
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
@@ -444,7 +445,7 @@ export const actions = {
         series = getRealSeries(series);
         // await dispatch(machineActions.updateMachineToolHead(toolHead, series, CONFIG_HEADTYPE));
         const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
-        await definitionManager.init(
+        const profileLevel = await definitionManager.init(
             CONFIG_HEADTYPE,
             currentMachine.configPathname[CONFIG_HEADTYPE]
         );
@@ -509,9 +510,11 @@ export const actions = {
         })
         dispatch(
             actions.updateState({
-                defaultDefinitions,
+                defaultDefinitions: definitionManager?.defaultDefinitions,
                 materialDefinitions: allMaterialDefinition,
-                qualityDefinitions: qualityParamModels
+                qualityDefinitions: qualityParamModels,
+                printingProfileLevel: profileLevel.printingProfileLevel,
+                materialProfileLevel: profileLevel.materialProfileLevel
             })
         );
 
@@ -1234,7 +1237,7 @@ export const actions = {
         const definitionsKey = definitionKeysWithDirection[direction][type];
         let { extruderLDefinition: actualExtruderDefinition } = printingState;
         let UpdatePresetModel = false;
-        console.log('changedSettingArray', changedSettingArray);
+        resolveDefinition(definitionModel, changedSettingArray);
         // Todo
         if (['snapmaker_extruder_0', 'snapmaker_extruder_1'].includes(id)) {
             if (id === 'snapmaker_extruder_0') {

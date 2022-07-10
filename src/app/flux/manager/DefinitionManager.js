@@ -12,6 +12,7 @@ import {
     KEY_DEFAULT_CATEGORY_CUSTOM,
 } from '../../constants';
 import PresetDefinitionModel from './PresetDefinitionModel';
+import { resolveDefinition } from '../../../shared/lib/definitionResolver';
 const primeTowerDefinitionKeys = [
     'prime_tower_enable',
     'prime_tower_size',
@@ -41,8 +42,8 @@ class DefinitionManager {
         this.headType = headType;
         let res;
         // active definition
-        res = await this.getDefinition('active', false);
-        this.activeDefinition = res;
+        const definitionRes = await this.getDefinition('active', false);
+        this.activeDefinition = definitionRes;
         res = await api.profileDefinitions.getDefaultDefinitions(
             this.headType,
             this.configPathname
@@ -68,6 +69,12 @@ class DefinitionManager {
             this.extruderRDefinition = res;
         }
 
+        res = await this.getDefinition('snapmaker_extruder_1', false);
+        this.extruderRDefinition = res;
+        return {
+            printingProfileLevel: definitionRes.printingProfileLevel,
+            materialProfileLevel: definitionRes.materialProfileLevel
+        };
     }
 
     /**
@@ -148,7 +155,13 @@ class DefinitionManager {
         const definitions = await this.markDefaultDefinitions(
             res.body.definitions
         );
-        return definitions.map(this.fillCustomCategory);
+        const result = definitions.map((item) => {
+            console.log('item', item);
+            resolveDefinition(item);
+            return item
+        }).map(this.fillCustomCategory);
+
+        return result;
     }
 
     async createDefinition(definition) {

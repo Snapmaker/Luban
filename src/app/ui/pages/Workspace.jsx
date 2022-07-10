@@ -252,6 +252,7 @@ function Workspace({ isPopup, onClose, style, className }) {
             <MainToolBar
                 leftItems={leftItems}
                 lang={i18next.language}
+                hasMachineSettings={false}
             />
         );
     };

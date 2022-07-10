@@ -1,5 +1,6 @@
-import { spawn, Worker, Pool } from 'threads';
+// import { spawn, Worker, Pool } from 'threads';
 import './Pool.worker';
+import { spawn, Worker, Pool } from 'threads';
 
 export enum WorkerMethods {
     // LUBAN worker methods BEGIN

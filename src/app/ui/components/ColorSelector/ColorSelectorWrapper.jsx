@@ -80,54 +80,57 @@ const ColorSelectorPicker = React.memo(({ onChangeComplete, onClose, colors, val
                     </div>
                 );
             })}
-
-            <div className="sm-flex justify-space-between margin-top-12 margin-bottom-8">
-                <span className="width-auto margin-left-2">{i18n._('key-color_selector-Recent Color')}</span>
-            </div>
-            <div
-                className="sm-flex position-re"
-            >
-                {recentColors.map((color, index) => {
-                    const key = `recentColor-${index}`;
-                    if (color === '') {
-                        return (
-                            <div
-                                key={key}
-                                className={classNames('margin-left-2', 'margin-top-2', 'width-32', 'height-32',
-                                    'padding-vertical-3', 'padding-horizontal-3')}
-                            >
-                                <div
-                                    className={classNames('border-radius-4', 'width-24', 'height-24',
-                                        'border-dashed-black-5')}
-                                />
-                            </div>
-                        );
-                    }
-                    return (
-                        <Anchor
-                            onClick={() => {
-                                onChangeColor(color, false);
-                            }}
-                            key={key}
-                        >
-                            <div
-                                className={classNames(recentColors.indexOf(color) > 0 ? 'margin-left-2' : null,
-                                    'margin-top-2',
-                                    'width-32', 'height-32',
-                                    'padding-vertical-3', 'padding-horizontal-3')}
-                            >
-                                <div
-                                    className={classNames('border-radius-4', 'width-24', 'height-24',
-                                        color === '#ffffff' ? 'border-default-black-5' : null)}
-                                    style={{
-                                        backgroundColor: color
+            {recentColorKey && (
+                <>
+                    <div className="sm-flex justify-space-between margin-top-12 margin-bottom-8">
+                        <span className="width-auto margin-left-2">{i18n._('key-color_selector-Recent Color')}</span>
+                    </div>
+                    <div
+                        className="sm-flex position-re"
+                    >
+                        {recentColors.map((color, index) => {
+                            const key = `recentColor-${index}`;
+                            if (color === '') {
+                                return (
+                                    <div
+                                        key={key}
+                                        className={classNames('margin-left-2', 'margin-top-2', 'width-32', 'height-32',
+                                            'padding-vertical-3', 'padding-horizontal-3')}
+                                    >
+                                        <div
+                                            className={classNames('border-radius-4', 'width-24', 'height-24',
+                                                'border-dashed-black-5')}
+                                        />
+                                    </div>
+                                );
+                            }
+                            return (
+                                <Anchor
+                                    onClick={() => {
+                                        onChangeColor(color, false);
                                     }}
-                                />
-                            </div>
-                        </Anchor>
-                    );
-                })}
-            </div>
+                                    key={key}
+                                >
+                                    <div
+                                        className={classNames(recentColors.indexOf(color) > 0 ? 'margin-left-2' : null,
+                                            'margin-top-2',
+                                            'width-32', 'height-32',
+                                            'padding-vertical-3', 'padding-horizontal-3')}
+                                    >
+                                        <div
+                                            className={classNames('border-radius-4', 'width-24', 'height-24',
+                                                color === '#ffffff' ? 'border-default-black-5' : null)}
+                                            style={{
+                                                backgroundColor: color
+                                            }}
+                                        />
+                                    </div>
+                                </Anchor>
+                            );
+                        })}
+                    </div>
+                </>
+            )}
         </div>
     );
 });

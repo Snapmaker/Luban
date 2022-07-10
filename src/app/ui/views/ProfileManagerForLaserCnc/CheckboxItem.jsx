@@ -9,9 +9,9 @@ function CheckboxItem({
     settings,
     calculateTextIndex = () => 0,
     width = 'auto',
+    isOfficialDefinitionKey = () => true,
     onChangeDefinition,
-    defaultValue,
-    configCategory
+    defaultValue
 }) {
     const setting = settings[definitionKey];
     const { label, description } = setting;
@@ -26,10 +26,14 @@ function CheckboxItem({
                     className="sm-flex-auto sm-flex-order-negative"
                     style={{
                         width: width,
+                        cursor: isOfficialDefinitionKey(definitionKey)
+                            ? 'not-allowed'
+                            : 'default',
                         marginLeft: calculateTextIndex(definitionKey)
                     }}
                     checked={defaultValue}
-                    onChange={(e) => onChangeDefinition(definitionKey, e.target.checked, configCategory)}
+                    disabled={isOfficialDefinitionKey(definitionKey)}
+                    onChange={(event) => onChangeDefinition(definitionKey, event.target.checked)}
                 />
                 <span className="margin-left-8">{i18n._(label)}</span>
             </div>
@@ -41,9 +45,9 @@ CheckboxItem.propTypes = {
     calculateTextIndex: PropTypes.func,
     definitionKey: PropTypes.string.isRequired,
     defaultValue: PropTypes.bool.isRequired,
+    isOfficialDefinitionKey: PropTypes.func,
     width: PropTypes.string,
-    onChangeDefinition: PropTypes.func.isRequired,
-    configCategory: PropTypes.string
+    onChangeDefinition: PropTypes.func.isRequired
 };
 
 export default React.memo(CheckboxItem);

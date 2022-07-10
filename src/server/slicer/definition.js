@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { includes, isNil, orderBy } from 'lodash';
+import { includes, isNil, isUndefined, orderBy } from 'lodash';
 import DataStorage from '../DataStorage';
 import pkg from '../../package.json';
 import logger from '../lib/logger';
@@ -10,7 +10,7 @@ const log = logger('service:definition');
 
 const SETTING_FIELDS = [
     'label', 'description', 'type', 'options', 'unit', 'enabled', 'default_value', 'value', 'enabled',
-    'min', 'max',
+    'min', 'max', 'filter',
     // Snapmaker extended fields:
     'sm_value'
 ];
@@ -22,6 +22,10 @@ const DEFAULT_PREDEFINED_ID = {
     '10w-laser': 'basswood.cutting_1.5mm.def.json'
 };
 export class DefinitionLoader {
+    printingProfileLevel = {};
+
+    materialProfileLevel = {};
+
     definitionId = '';
 
     name = '';
@@ -41,6 +45,10 @@ export class DefinitionLoader {
     metadata = {};
 
     isRecommended = false;
+
+    printProfileLevel() {
+        return this.printingProfileLevel;
+    }
 
     loadDefinition(headType, definitionId, configPath) {
         if (!this.definitionId) {
@@ -133,15 +141,35 @@ export class DefinitionLoader {
         }
     }
 
-    loadJSONSettings(definitionId, json) {
+    loadJSONSettings(definitionId, json, zIndex = -2, parentKey, _mainCategory, _smallCategory) {
+        zIndex++;
+        let mainCategory = _mainCategory;
+        let smallCategory = _smallCategory;
         for (const key of Object.keys(json)) {
             const setting = json[key];
-
-            if (setting.type !== 'category') {
+            if (setting.type === 'mainCategory') {
+                mainCategory = key;
+            } else if (setting.type === 'category') {
+                smallCategory = key;
+            } else {
                 this.settings[key] = this.settings[key] || {};
+                this.settings[key].childKey = this.settings[key].childKey || [];
                 this.settings[key].from = definitionId;
                 this.settings[key].isLeave = (setting.children === undefined);
-
+                if (mainCategory === 'material' && zIndex === 1) {
+                    this.materialProfileLevel[smallCategory] = this.materialProfileLevel[smallCategory] || [];
+                    if (!includes(this.materialProfileLevel[smallCategory], key)) {
+                        this.materialProfileLevel[smallCategory] = this.materialProfileLevel[smallCategory].concat(key);
+                    }
+                } else if (mainCategory === 'quality' && zIndex === 1) {
+                    this.printingProfileLevel[smallCategory] = this.printingProfileLevel[smallCategory] || [];
+                    if (!includes(this.printingProfileLevel[smallCategory], key)) {
+                        this.printingProfileLevel[smallCategory] = this.printingProfileLevel[smallCategory].concat(key);
+                    }
+                }
+                if (parentKey && !includes(this.settings[parentKey].childKey, key)) {
+                    this.settings[parentKey].childKey = this.settings[parentKey].childKey.concat(key);
+                }
                 if (definitionId === this.definitionId && !this.ownKeys.has(key)) {
                     this.ownKeys.add(key);
                 }
@@ -150,12 +178,19 @@ export class DefinitionLoader {
                     if (setting[field] !== undefined) {
                         this.settings[key][field] = setting[field];
                     }
+                    if (field === 'filter' && !setting[field]) {
+                        this.settings[key][field] = ['all'];
+                    }
+                }
+                if (isUndefined(this.settings[key].zIndex)) {
+                    this.settings[key].zIndex = zIndex;
                 }
             }
             if (setting.children) {
-                this.loadJSONSettings(definitionId, setting.children);
+                this.loadJSONSettings(definitionId, setting.children, zIndex, (setting.type === 'category' || setting.type === 'mainCategory') ? '' : key, mainCategory, smallCategory);
             }
         }
+        zIndex--;
     }
 
     toJSON() {
@@ -193,7 +228,9 @@ export class DefinitionLoader {
             settings: this.settings,
             metadata: this.metadata,
             typeOfPrinting: this.typeOfPrinting,
-            ownKeys: Array.from(this.ownKeys)
+            ownKeys: Array.from(this.ownKeys),
+            printingProfileLevel: this.printingProfileLevel,
+            materialProfileLevel: this.materialProfileLevel
         };
     }
 
@@ -274,10 +311,6 @@ export function loadDefinitionsByRegex(headType, configPath, regex, defaultId) {
     for (const filename of defaultFilenames) {
         if (regex.test(filename)) {
             const definitionLoader = loadDefinitionLoaderByFilename(headType, filename, configPath);
-
-            if (definitionLoader.definitionId.indexOf('quality.high') >= 0) {
-                console.log('definitionLoader', definitionLoader.isRecommended, defaultDefinitionLoader.ownKeys.length);
-            }
             if (!definitionLoader.isRecommended && defaultDefinitionLoader) {
                 const ownKeys = Array.from(defaultDefinitionLoader.ownKeys).filter(e => !definitionLoader.ownKeys.has(e));
                 if (ownKeys && ownKeys.length > 0) {

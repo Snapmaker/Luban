@@ -120,37 +120,37 @@ export default class Business extends Dispatcher {
         this.log = log;
     }
 
-    updateCoordinate(coordinateType: CoordinateType) {
+    async updateCoordinate(coordinateType: CoordinateType) {
         return this.send(0x01, 0x31, PeerId.CONTROLLER, Buffer.alloc(1, coordinateType)).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    executeGcode(gcode: string) {
+    async executeGcode(gcode: string) {
         return this.send(0x01, 0x02, PeerId.CONTROLLER, stringToBuffer(gcode)).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    logFeedbackLevel(level: number = 2) {
+    async logFeedbackLevel(level = 2) {
         return this.send(0x01, 0x10, PeerId.CONTROLLER, Buffer.alloc(1, level)).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    subscribeLogFeedback({ interval = 3600000 }, callback: ResponseCallback) {
+    async subscribeLogFeedback({ interval = 3600000 }, callback: ResponseCallback) {
         return this.subscribe(0x01, 0xa1, interval, callback).then(({ response, packet }) => {
             return { code: response.result, packet, data: {} };
         });
     }
 
-    unSubscribeLogFeedback(callback: ResponseCallback) {
+    async unSubscribeLogFeedback(callback: ResponseCallback) {
         return this.unsubscribe(0x01, 0xa1, callback).then(({ response, packet }) => {
             return { code: response.result, packet, data: {} };
         });
     }
 
-    getEmergencyStopInfo() {
+    async getEmergencyStopInfo() {
         return this.send(0x01, 0x3b, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             // const isTouch = readBool(response.data);
             // console.log('emergencyResponse', response);
@@ -158,7 +158,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    takePhoto({ index = 0, x = 0, y = 0, z = 0, feedRate = 0, photoQuality = 0 }: RequestPhotoInfo) {
+    async takePhoto({ index = 0, x = 0, y = 0, z = 0, feedRate = 0, photoQuality = 0 }: RequestPhotoInfo) {
         const buffer = Buffer.alloc(16, 0);
         let nextOffset = 0;
         nextOffset = writeUint8(buffer, nextOffset, index);
@@ -170,7 +170,7 @@ export default class Business extends Dispatcher {
         return this.send(0xb0, 0x04, PeerId.SCREEN, buffer);
     }
 
-    getCameraCalibration(toolHeadType: ToolHeadType = ToolHeadType.LASER1600mW) {
+    async getCameraCalibration(toolHeadType: ToolHeadType = ToolHeadType.LASER1600mW) {
         return this.send(0xb0, 0x03, PeerId.SCREEN, Buffer.alloc(1, toolHeadType)).then(({ response, packet }) => {
             let calibrationInfo = null;
             if (response.result === 0) {
@@ -180,7 +180,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    getPhoto(index: number = 0) {
+    async getPhoto(index = 0) {
         return this.send(0xb0, 0x05, PeerId.SCREEN, Buffer.alloc(1, index)).then(({ response, packet }) => {
             const data = {
                 filename: '',
@@ -196,7 +196,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    getCalibrationPhoto(toolHeadType: ToolHeadType = ToolHeadType.LASER1600mW) {
+    async getCalibrationPhoto(toolHeadType: ToolHeadType = ToolHeadType.LASER1600mW) {
         return this.send(0xb0, 0x06, PeerId.SCREEN, Buffer.alloc(1, toolHeadType)).then(({ response, packet }) => {
             const data = {
                 filename: '',
@@ -212,12 +212,12 @@ export default class Business extends Dispatcher {
         });
     }
 
-    setMatrix(toolHeadType: ToolHeadType = ToolHeadType.LASER1600mW, matrix: CalibrationInfo) {
+    async setMatrix(toolHeadType: ToolHeadType = ToolHeadType.LASER1600mW, matrix: CalibrationInfo) {
         const calibrationInfo = new CalibrationInfo(matrix.points, matrix.corners);
         return this.send(0xb0, 0x07, PeerId.SCREEN, Buffer.concat([Buffer.alloc(1, toolHeadType), calibrationInfo.toBuffer()]));
     }
 
-    startScreenPrint({ headType = HeadType.PRINTING, filename = '', hash = '' }) {
+    async startScreenPrint({ headType = HeadType.PRINTING, filename = '', hash = '' }) {
         const filenameBuffer = stringToBuffer(filename);
         const hashBuffer = stringToBuffer(hash);
         return this.send(0xb0, 0x08, PeerId.SCREEN, Buffer.concat([Buffer.alloc(1, headType), filenameBuffer, hashBuffer])).then(res => {
@@ -225,7 +225,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    getLaserMaterialThickness({ token = '', x = 0, y = 0, feedRate = 0 }) {
+    async getLaserMaterialThickness({ token = '', x = 0, y = 0, feedRate = 0 }) {
         console.log(token);
         // const tokenBuffer = stringToBuffer(token);
         const buffer = Buffer.alloc(10, 0);
@@ -242,7 +242,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    setWorkOrigin(coordinateInfos: Array<CoordinateInfo>) {
+    async setWorkOrigin(coordinateInfos: Array<CoordinateInfo>) {
         let buffer = Buffer.alloc(0);
         const lenBuffer = Buffer.alloc(1, 0);
         writeUint8(lenBuffer, 0, coordinateInfos.length);
@@ -256,7 +256,7 @@ export default class Business extends Dispatcher {
         return this.send(0x01, 0x32, PeerId.CONTROLLER, buffer);
     }
 
-    moveAbsolutely(movementInstructions: Array<MovementInstruction>, speed: number = 0) {
+    async moveAbsolutely(movementInstructions: Array<MovementInstruction>, speed = 0) {
         const speedBuffer = Buffer.alloc(2, 0);
         writeUint16(speedBuffer, 0, speed);
         let buffer = Buffer.alloc(0);
@@ -272,7 +272,7 @@ export default class Business extends Dispatcher {
         return this.send(0x01, 0x34, PeerId.CONTROLLER, Buffer.concat([buffer, speedBuffer]));
     }
 
-    getLaserToolHeadInfo(key: number) {
+    async getLaserToolHeadInfo(key: number) {
         const buffer = Buffer.alloc(1, 0);
         writeUint8(buffer, 0, key);
         return this.send(0x12, 0x01, PeerId.CONTROLLER, buffer).then(({ response }) => {
@@ -286,26 +286,26 @@ export default class Business extends Dispatcher {
 
     // ----------
 
-    subscribeHeartbeat({ interval = 1000 }, callback: ResponseCallback) {
+    async subscribeHeartbeat({ interval = 1000 }, callback: ResponseCallback) {
         return this.subscribe(0x01, 0xa0, interval, callback).then(({ response, packet }) => {
             return { code: response.result, packet, data: {} };
         });
     }
 
-    unsubscribeHeartbeat(callback: ResponseCallback) {
+    async unsubscribeHeartbeat(callback: ResponseCallback) {
         return this.unsubscribe(0x01, 0xa0, callback).then(({ response, packet }) => {
             return { code: response.result, packet, data: {} };
         });
     }
 
-    getModuleInfo() {
+    async getModuleInfo() {
         return this.send(0x01, 0x20, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             const moduleInfos = ModuleInfo.parseArray(response.data) as ModuleInfo[];
             return { code: response.result, packet, data: moduleInfos as ModuleInfo[] };
         });
     }
 
-    getMachineInfo() {
+    async getMachineInfo() {
         return this.send(0x01, 0x21, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             const machineInfo = new MachineInfo().fromBuffer(response.data);
             return { code: response.result, packet, data: machineInfo as MachineInfo };
@@ -313,105 +313,105 @@ export default class Business extends Dispatcher {
     }
 
     // unimplemented by master control
-    getMachineSize() {
+    async getMachineSize() {
         return this.send(0x01, 0x22, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             const machineSize = new MachineSize().fromBuffer(response.data);
             return { response, packet, data: { machineSize }, machineSize };
         });
     }
 
-    getCurrentCoordinateInfo() {
+    async getCurrentCoordinateInfo() {
         return this.send(0x01, 0x30, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             const coordinateSystemInfo = new CoordinateSystemInfo().fromBuffer(response.data);
             return { response, packet, data: { coordinateSystemInfo }, coordinateSystemInfo };
         });
     }
 
-    subscribeCurrentCoordinateInfo({ interval = 1000 }, callback: ResponseCallback) {
+    async subscribeCurrentCoordinateInfo({ interval = 1000 }, callback: ResponseCallback) {
         return this.subscribe(0x01, 0xa2, interval, callback).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    unSubscribeCurrentCoordinateInfo(callback: ResponseCallback) {
+    async unSubscribeCurrentCoordinateInfo(callback: ResponseCallback) {
         return this.unsubscribe(0x01, 0xa2, callback).then(({ response, packet }) => {
             return { code: response.result, packet, data: {} };
         });
     }
 
-    movementInstruction(direction: MoveDirection, distance: number, speed: number) {
+    async movementInstruction(direction: MoveDirection, distance: number, speed: number) {
         const info = new MovementInstruction(direction, distance, speed);
         return this.send(0x01, 0x34, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    requestHome(number: number = 0) {
+    async requestHome(number = 0) {
         return this.send(0x01, 0x35, PeerId.CONTROLLER, Buffer.alloc(1, number)).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    requestAbsoluteCooridateMove(directions: MoveDirection[] = [0], distances: number[] = [0], jogSpeed: number = 0.1, coordinateType: CoordinateType) {
+    async requestAbsoluteCooridateMove(directions: MoveDirection[] = [0], distances: number[] = [0], jogSpeed = 0.1, coordinateType: CoordinateType) {
         const paramBuffer = new MovementInstruction(undefined, undefined, jogSpeed, directions, distances, coordinateType).toArrayBuffer();
         return this.send(0x01, 0x34, PeerId.CONTROLLER, paramBuffer).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    startPrint(md5: string, gcodeName: string, headType: number) {
+    async startPrint(md5: string, gcodeName: string, headType: number) {
         const info = new GcodeFileInfo(md5, gcodeName, headType);
         return this.send(0xac, 0x03, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    stopPrint() {
+    async stopPrint() {
         return this.send(0xac, 0x06, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    pausePrint() {
+    async pausePrint() {
         return this.send(0xac, 0x04, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    resumePrint() {
+    async resumePrint() {
         return this.send(0xac, 0x05, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    getGocdeFile() {
+    async getGocdeFile() {
         return this.send(0xac, 0x00, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             const gcodeFileInfo = new GcodeFileInfo().fromBuffer(response.data);
             return { response, packet, data: { gcodeFileInfo } };
         });
     }
 
-    laserCalibration(calibrationMode: number) {
+    async laserCalibration(calibrationMode: number) {
         const info = new LaserCalibration(calibrationMode);
         return this.send(0xa8, 0x02, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    laserCalibrationSave(type: number) {
+    async laserCalibrationSave(type: number) {
         return this.send(0xa8, 0x03, PeerId.CONTROLLER, Buffer.alloc(1, type)).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    SetLaserPower(key: number, power: number) {
+    async SetLaserPower(key: number, power: number) {
         const info = new SetLaserPower(key, power);
         return this.send(0x12, 0x02, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    SetBrightness(key: number, brightness: number) {
+    async SetBrightness(key: number, brightness: number) {
         const tobuffer = Buffer.alloc(1 + 1, 0);
         writeUint8(tobuffer, 0, key);
         writeUint8(tobuffer, 1, brightness);
@@ -420,7 +420,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    SetFocalLength(key: number, focalLength: number) {
+    async SetFocalLength(key: number, focalLength: number) {
         const tobuffer = Buffer.alloc(1 + 1, 0);
         writeUint8(tobuffer, 0, key);
         writeUint8(tobuffer, 1, focalLength);
@@ -429,7 +429,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    TemperatureProtect(key: number, protectTemperature: number, recoverTemperature: number) {
+    async TemperatureProtect(key: number, protectTemperature: number, recoverTemperature: number) {
         const tobuffer = Buffer.alloc(1 + 1 + 1, 0);
         writeUint8(tobuffer, 0, key);
         writeUint8(tobuffer, 1, protectTemperature);
@@ -440,7 +440,7 @@ export default class Business extends Dispatcher {
     }
 
 
-    SetLaserLock(key: number, lockStatus: number) {
+    async SetLaserLock(key: number, lockStatus: number) {
         const tobuffer = Buffer.alloc(1 + 1, 0);
         writeUint8(tobuffer, 0, key);
         writeUint8(tobuffer, 1, lockStatus);
@@ -449,7 +449,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    GetFDMInfo(key: number) {
+    async GetFDMInfo(key: number) {
         const info = new FdmToolHeadInfo(key);
         return this.send(0x10, 0x01, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
             // console.log('FDMSubCase',info.toBuffer,response,packet)
@@ -458,19 +458,19 @@ export default class Business extends Dispatcher {
         });
     }
 
-    subscribeNozzleInfo({ interval = 1000 }, callback: ResponseCallback) {
+    async subscribeNozzleInfo({ interval = 1000 }, callback: ResponseCallback) {
         return this.subscribe(0x10, 0xa0, interval, callback).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    unSubscribeNozzleInfo(callback: ResponseCallback) {
+    async unSubscribeNozzleInfo(callback: ResponseCallback) {
         return this.unsubscribe(0x10, 0xa0, callback).then(({ response, packet }) => {
             return { code: response.result, packet, data: {} };
         });
     }
 
-    GetHotBed(key: number) {
+    async GetHotBed(key: number) {
         const info = new GetHotBed(key);
         return this.send(0x14, 0x01, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
             const hotBedInfo = new GetHotBed().fromBuffer(response.data);
@@ -478,19 +478,19 @@ export default class Business extends Dispatcher {
         });
     }
 
-    subscribeHotBedTemperature({ interval = 1000 }, callback: ResponseCallback) {
+    async subscribeHotBedTemperature({ interval = 1000 }, callback: ResponseCallback) {
         return this.subscribe(0x14, 0xa0, interval, callback).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    unSubscribeHotBedTemperature(callback: ResponseCallback) {
+    async unSubscribeHotBedTemperature(callback: ResponseCallback) {
         return this.unsubscribe(0x14, 0xa0, callback).then(({ response, packet }) => {
             return { code: response.result, packet, data: {} };
         });
     }
 
-    SetExtruderTemperature(key: number, extruderIndex: number, temperature: number) {
+    async SetExtruderTemperature(key: number, extruderIndex: number, temperature: number) {
         const tobuffer = Buffer.alloc(1 + 1 + 2, 0);
         writeUint8(tobuffer, 0, key);
         writeUint8(tobuffer, 1, extruderIndex);
@@ -500,7 +500,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    SetFilamentstatus(key: number, extruderIndex: number, filamentstatus: number) {
+    async SetFilamentstatus(key: number, extruderIndex: number, filamentstatus: number) {
         const tobuffer = Buffer.alloc(1 + 1 + 1, 0);
         writeUint8(tobuffer, 0, key);
         writeUint8(tobuffer, 1, extruderIndex);
@@ -510,7 +510,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    SwitchExtruder(key: number, extruderIndex: number) {
+    async SwitchExtruder(key: number, extruderIndex: number) {
         const tobuffer = Buffer.alloc(1 + 1, 0);
         writeUint8(tobuffer, 0, key);
         writeUint8(tobuffer, 1, extruderIndex);
@@ -519,7 +519,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    SetExtruderSpeed(key: number, fansIndex: number, speedLevel: number) {
+    async SetExtruderSpeed(key: number, fansIndex: number, speedLevel: number) {
         const tobuffer = Buffer.alloc(1 + 1 + 1);
         writeUint8(tobuffer, 0, key);
         writeUint8(tobuffer, 1, fansIndex);
@@ -529,28 +529,28 @@ export default class Business extends Dispatcher {
         });
     }
 
-    SetExtruderOffset(key: number, index: number, direction: number, distance: number) {
+    async SetExtruderOffset(key: number, index: number, direction: number, distance: number) {
         const info = new ExtruderOffset(key, index, direction, distance);
         return this.send(0x10, 0x07, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    GetExtruderOffset(key: number) {
+    async GetExtruderOffset(key: number) {
         return this.send(0x10, 0x08, PeerId.CONTROLLER, Buffer.alloc(1, key)).then(({ response, packet }) => {
             const ExtruderOffsetInfo = new ExtruderOffset().fromBuffer(response.data);
             return { response, packet, data: { ExtruderOffsetInfo } };
         });
     }
 
-    ExtruderMovement(key: number, movementType: number, lengthIn: number, speedIn: number, lengthOut: number, speedOut: number) {
+    async ExtruderMovement(key: number, movementType: number, lengthIn: number, speedIn: number, lengthOut: number, speedOut: number) {
         const info = new ExtruderMovement(key, movementType, lengthIn, speedIn, lengthOut, speedOut);
         return this.send(0x10, 0x09, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
             return { response, packet };
         });
     }
 
-    uploadFile(filePath: string) {
+    async uploadFile(filePath: string) {
         const sizePerChunk = 60 * 1024;
         this.setHandler(0xb0, 0x01, (data) => {
             const { nextOffset, result: md5HexStr } = readString(data.param);
@@ -564,7 +564,7 @@ export default class Business extends Dispatcher {
             let finalBuf = Buffer.alloc(0);
             inputStream.on('data', (buf) => {
                 // console.log('>-', buf);
-                //@ts-ignore
+                // @ts-ignore
                 finalBuf = Buffer.concat([finalBuf, buf]);
             });
             inputStream.on('end', () => {
@@ -662,7 +662,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    wifiConnection(hostName: string, clientName: string, token: string, callback: any) {
+    async wifiConnection(hostName: string, clientName: string, token: string, callback: any) {
         const info = new WifiConnectionInfo(hostName, clientName, token).toBuffer();
         console.log('wifiConnectionInfo', info);
         this.setHandler(0x01, 0x06, ({ param, packet }: RequestData) => {
@@ -672,13 +672,13 @@ export default class Business extends Dispatcher {
             callback && callback();
         });
         return this.send(0x01, 0x05, PeerId.SCREEN, info).then(({ response, packet }) => {
-            // return res;
+        // return res;
             console.log('resresres', response, packet);
             return { response, packet };
         });
     }
 
-    wifiConnectionClose() {
+    async wifiConnectionClose() {
         console.log('get wifi connection close');
         return this.send(0x01, 0x06, PeerId.SCREEN, Buffer.alloc(0)).then(({ response, packet }) => {
             console.log('close response');

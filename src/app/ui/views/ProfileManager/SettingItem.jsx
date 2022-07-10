@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import { isNil } from 'lodash';
 import i18n from '../../../lib/i18n';
 import Select from '../../components/Select';
 import { NumberInput as Input } from '../../components/Input';
@@ -47,109 +48,37 @@ function dropdownRender(opts, key, onChangeDefinition) {
     );
 }
 
+const colorSelectorContent = (settingDefaultValue, definitionKey, setShowColor, onChangeDefinition) => (
+    <div>
+        <ColorSelector
+            recentColorKey="profile-manager"
+            colors={PRINTING_MATERIAL_CONFIG_COLORS}
+            value={settingDefaultValue.toString()}
+            onClose={() => {
+                setShowColor(false);
+            }}
+            onChangeComplete={(color) => {
+                onChangeDefinition(definitionKey, color);
+            }}
+        />
+    </div>
+);
 function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onChangeDefinition, defaultValue, styleSize = 'large', managerType, officalDefinition }) {
     const [showColor, setShowColor] = useState(false);
 
     const setting = settings[definitionKey];
-
     const isProfile = isDefaultDefinition;
     if (!setting) {
         return null;
     }
-    const { label, description, type, unit = '', enabled, options, min, max } = setting;
+    const { label, description, type, unit = '', options, min, max } = setting;
+    const { enabled } = setting;
     const settingDefaultValue = setting.default_value;
     const isDefault = defaultValue && (defaultValue.value === settingDefaultValue);
-    if (typeof enabled === 'string') {
-        if (enabled.indexOf(' and ') !== -1) {
-            const andConditions = enabled.split(' and ').map(c => c.trim());
-            for (const condition of andConditions) {
-            // parse resolveOrValue('adhesion_type') == 'skirt'
-                const enabledKey = condition.match("resolveOrValue\\('(.[^)|']*)'") ? condition.match("resolveOrValue\\('(.[^)|']*)'")[1] : null;
-                const enabledEqualValue = condition.match("== ?'(.[^)|']*)'") ? condition.match("== ?'(.[^)|']*)'")[1] : null;
-                const enabledUnequalValue = condition.match("!= ?'(.[^)|']*)'") ? condition.match("!= ?'(.[^)|']*)'")[1] : null;
-                const enabledGreaterValue = condition.match('> ?([0-9]+)') ? condition.match('> ?([0-9]+)')[1] : null;
-                const enabledLessValue = condition.match('< ?([0-9]+)') ? condition.match('< ?([0-9]+)')[1] : null;
-                if (enabledKey) {
-                    if (settings[enabledKey]) {
-                        const value = settings[enabledKey].default_value;
-                        if (enabledEqualValue && value !== enabledEqualValue) {
-                            return null;
-                        }
-                        if (enabledUnequalValue && value === enabledUnequalValue) {
-                            return null;
-                        }
-                        if (enabledGreaterValue && value <= enabledGreaterValue) {
-                            return null;
-                        }
-                        if (enabledLessValue && value >= enabledLessValue) {
-                            return null;
-                        }
-                        if (settings[enabledKey].type === 'bool' && !value) {
-                            return null;
-                        }
-                    }
-                } else {
-                    if (settings[condition]) {
-                        const value = settings[condition].default_value;
-                        if (!value) {
-                            return null;
-                        }
-                    }
-                }
-            }
-        } else {
-            const orConditions = enabled.split(' or ')
-                .map(c => c.trim());
-            let result = false;
-            for (const condition of orConditions) {
-                if (settings[condition]) {
-                    const value = settings[condition].default_value;
-                    if (value) {
-                        result = true;
-                    }
-                }
-                if (condition.match('(.*) > ([0-9]+)')) {
-                    const m = condition.match('(.*) > ([0-9]+)');
-                    const enabledKey = m[1];
-                    const enabledValue = parseInt(m[2], 10);
-                    if (settings[enabledKey]) {
-                        const value = settings[enabledKey].default_value;
-                        if (value > enabledValue) {
-                            result = true;
-                        }
-                    }
-                }
-                if (condition.match('(.*) < ([0-9]+)')) {
-                    const m = condition.match('(.*) > ([0-9]+)');
-                    const enabledKey = m[1];
-                    const enabledValue = parseInt(m[2], 10);
-                    if (settings[enabledKey]) {
-                        const value = settings[enabledKey].default_value;
-                        if (value < enabledValue) {
-                            result = true;
-                        }
-                    }
-                }
-                if (condition.match("resolveOrValue\\('(.[^)|']*)'")) {
-                    const m1 = condition.match("resolveOrValue\\('(.[^)|']*)'");
-                    const m2 = condition.match("== ?'(.[^)|']*)'");
-                    const enabledKey = m1[1];
-                    const enabledValue = (m2 && m2[1]) || true;
-                    if (settings[enabledKey]) {
-                        const value = settings[enabledKey].default_value;
-                        if (value === enabledValue) {
-                            result = true;
-                        }
-                    }
-                }
-            }
-            if (!result) {
-                return null;
-            }
-        }
-    } else if (typeof enabled === 'boolean' && enabled === false) {
+    if (!enabled && !isNil(enabled)) {
         return null;
     }
+
     const opts = [];
     if (options) {
         Object.keys(options).forEach((k) => {
@@ -159,21 +88,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
             });
         });
     }
-    const colorSelectorContent = (
-        <div>
-            <ColorSelector
-                recentColorKey="profile-manager"
-                colors={PRINTING_MATERIAL_CONFIG_COLORS}
-                value={settingDefaultValue.toString()}
-                onClose={() => {
-                    setShowColor(false);
-                }}
-                onChangeComplete={(color) => {
-                    onChangeDefinition(definitionKey, color);
-                }}
-            />
-        </div>
-    );
+
     return (
         <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
             <TipTrigger title={i18n._(label)} content={i18n._(description)} key={definitionKey}>
@@ -275,7 +190,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
                 )}
                 {type === 'color' && (
                     <Popover
-                        content={colorSelectorContent}
+                        content={colorSelectorContent(settingDefaultValue, definitionKey, setShowColor, onChangeDefinition)}
                         visible={showColor}
                         trigger="click"
                         placement="bottomRight"
