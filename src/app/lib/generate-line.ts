@@ -46,7 +46,7 @@ const generateEdgeTable = (points: TPoint[], angle: number, center: TPoint) => {
     return { edgeTable, boundingBox };
 };
 
-const generateSkin = (points: TPoint[], step: number, angle: number, boundingBox: Box3, clippingHeight: number, offset = 0) => {
+const generateLine = (points: TPoint[], step: number, angle: number, boundingBox: Box3, clippingHeight: number, offset = 0) => {
     if (points.length === 0) {
         return [];
     }
@@ -77,38 +77,26 @@ const generateSkin = (points: TPoint[], step: number, angle: number, boundingBox
         });
         startMin += step;
     }
-    // console.log(JSON.stringify(edgeTable));
 
     const intersectionMap = new Map<number, TPoint[]>();
     for (let i = 0; i < edgeTable.length; i++) {
         const item = edgeTable[i];
-        // console.log('line index === ', i);
-
         for (let j = 0; j < rays.length; j++) {
             const ray = rays[j];
-            // console.log('======>>>>>>>>>>>>', ray.y);
-
             if (item.yMax >= ray.y && item.yMin <= ray.y) {
-                // console.log('ray index --- ', ...ray.points, ...item.points);
                 const intersectionPoint = Line.intersectionPoint(...ray.points, ...item.points);
                 if (intersectionPoint) {
-                    // console.log('++');
                     const value = intersectionMap.get(ray.y);
                     if (value) {
                         value.push(intersectionPoint);
                     } else {
                         intersectionMap.set(ray.y, [intersectionPoint]);
                     }
-                    // intersectionMap
                 }
             }
         }
     }
 
-    // const newCenter = {
-    //     x: (newBoundingBox.maxX + newBoundingBox.minX) / 2,
-    //     y: (newBoundingBox.maxY + newBoundingBox.minY) / 2
-    // };
     const ret: TPoint[][] = [];
     intersectionMap.forEach((item) => {
         ret.push(item.map((point) => {
@@ -129,6 +117,4 @@ const generateSkin = (points: TPoint[], step: number, angle: number, boundingBox
     }, []);
 };
 
-// generateSkin(data, 1);
-
-export default generateSkin;
+export default generateLine;

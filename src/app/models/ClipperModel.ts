@@ -3,12 +3,11 @@ import * as THREE from 'three';
 import { Observable, Subscription } from 'rxjs';
 import { Transfer } from 'threads';
 import { debounce } from 'lodash';
-// import { MeshBVH } from 'three-mesh-bvh';
 import type ThreeModel from './ThreeModel';
 import type ModelGroup from './ModelGroup';
 import { ModelTransformation } from './ThreeBaseModel';
-import generateSkin from '../lib/generate-skin';
-import { planeMaxHeight } from './ModelGroup';
+import generateLine from '../lib/generate-line';
+import { CLIPPING_LINE_COLOR, planeMaxHeight } from './ModelGroup';
 import ClippingPoolManager from '../lib/manager/ClippingPoolManager';
 
 type TPoint = {
@@ -66,7 +65,6 @@ class ClippingModel {
     private clippingSkin: THREE.LineSegments<THREE.BufferGeometry, THREE.LineBasicMaterial>;
     private clippingSkinArea: THREE.LineSegments<THREE.BufferGeometry, THREE.LineBasicMaterial>;
     private clippingInfill: THREE.LineSegments<THREE.BufferGeometry, THREE.LineBasicMaterial>;
-    private testLine: THREE.LineSegments<THREE.BufferGeometry, THREE.LineBasicMaterial>;
 
     public constructor(model: ThreeModel, modelGroup: ModelGroup, localPlane: Plane) {
         this.model = model;
@@ -85,49 +83,35 @@ class ClippingModel {
 
     private reCala = debounce(this.calaClippingWall)
 
-    private createLine(color, linewidth = 1) {
+    private createLine(color) {
         const lineGeometry = new THREE.BufferGeometry();
         const linePosAttr = new THREE.BufferAttribute(new Float32Array(300000), 3, false);
         linePosAttr.setUsage(DynamicDrawUsage);
         lineGeometry.setAttribute('position', linePosAttr);
         const line = new THREE.LineSegments(lineGeometry, new THREE.LineBasicMaterial({
-            linewidth
+            linewidth: 1,
+            polygonOffset: true,
+            polygonOffsetFactor: -1,
+            polygonOffsetUnits: -20
         }));
         line.material.color.set(color).convertSRGBToLinear();
         line.frustumCulled = false;
         line.visible = true;
-        // line.renderOrder = 3;
+        line.name = 'line';
         return line;
     }
 
     public init() {
         this.modelBoundingBox = this.model.boundingBox;
-
-        // this.colliderBvh = new MeshBVH(this.bvhGeometry, { maxLeafTris: 3 });
-        // this.modelGeometry.boundsTree = this.colliderBvh;
         this.colliderBvhTransform = { ...this.model.transformation };
-
-        // this.colliderMesh = new THREE.Mesh(this.bvhGeometry, new MeshLambertMaterial({
-        //     color: '#FFFFF0',
-        //     side: THREE.DoubleSide,
-        //     depthWrite: false,
-        //     transparent: true,
-        //     opacity: 0.3,
-        //     polygonOffset: true,
-        //     polygonOffsetFactor: -5,
-        //     polygonOffsetUnits: -0.1
-        // }));
-        // this.group.add(this.colliderMesh);
-
         this.createPlaneStencilGroup();
-        this.clippingWall = this.createLine(0x3B83F6);
-        this.clippingSkin = this.createLine(0xFFFF00);
-        this.clippingSkinArea = this.createLine(0xFFFF00);
-        this.clippingInfill = this.createLine(0x8D4bbb);
-        this.testLine = this.createLine(0xDC143C, 2);
+        this.clippingWall = this.createLine(CLIPPING_LINE_COLOR);
+        this.clippingSkin = this.createLine(CLIPPING_LINE_COLOR);
+        this.clippingSkinArea = this.createLine(CLIPPING_LINE_COLOR);
+        this.clippingInfill = this.createLine(CLIPPING_LINE_COLOR);
         this.reCala();
 
-        this.group.add(this.clippingWall, this.clippingSkin, this.clippingSkinArea, this.clippingInfill, this.testLine);
+        this.group.add(this.clippingWall, this.clippingSkin, this.clippingSkinArea, this.clippingInfill);
         this.model.onTransform();
     }
 
@@ -358,7 +342,7 @@ class ClippingModel {
         const configs = this.getInfillConfig(clippingHeight);
         return configs.map((config) => {
             const infillDistance = this.clippingConfig.lineWidth * 100 / this.clippingConfig.infillSparseDensity * config.infillDistance;
-            return generateSkin([...arr], infillDistance, config.anagle, this.model.boundingBox, clippingHeight, config.offset);
+            return generateLine([...arr], infillDistance, config.anagle, this.model.boundingBox, clippingHeight, config.offset);
         });
     }
 
@@ -412,7 +396,7 @@ class ClippingModel {
                 this.clippingSkinArea.visible = false;
                 return;
             }
-            const skinLines = generateSkin([...arr], 1, Number(
+            const skinLines = generateLine([...arr], 1, Number(
                 (clippingHeight / this.clippingConfig.layerHeight).toFixed(0)
             ) % 2 ? 135 : 45, this.modelBoundingBox, clippingHeight);
             if (!skinLines.length) {
@@ -430,8 +414,8 @@ class ClippingModel {
             });
             this.clippingSkin.geometry.setDrawRange(0, j);
             this.clippingSkinArea.geometry.setDrawRange(0, i);
-            this.clippingSkin.position.copy(this.localPlane.normal).multiplyScalar(-0.2);
-            this.clippingSkinArea.position.copy(this.localPlane.normal).multiplyScalar(-0.2);
+            this.clippingSkin.position.copy(this.localPlane.normal).multiplyScalar(-0.002);
+            this.clippingSkinArea.position.copy(this.localPlane.normal).multiplyScalar(-0.002);
             posAttr.needsUpdate = true;
 
             posAttrArea.needsUpdate = true;
@@ -486,7 +470,7 @@ class ClippingModel {
             });
 
             this.clippingWall.geometry.setDrawRange(0, temp.index);
-            this.clippingWall.position.copy(this.localPlane.normal).multiplyScalar(-0.2);
+            this.clippingWall.position.copy(this.localPlane.normal).multiplyScalar(-0.002);
 
             posAttr.needsUpdate = true;
             this.clippingWall.visible = true;
@@ -514,7 +498,7 @@ class ClippingModel {
                 });
             });
             this.clippingInfill.geometry.setDrawRange(0, j);
-            this.clippingInfill.position.copy(this.localPlane.normal).multiplyScalar(-0.2);
+            this.clippingInfill.position.copy(this.localPlane.normal).multiplyScalar(-0.002);
             posAttr.needsUpdate = true;
             this.clippingInfill.visible = true;
         } else {

@@ -1,4 +1,4 @@
-import { Sphere, SphereBufferGeometry, MeshStandardMaterial, Vector3, Group, Matrix4, BufferGeometry, Mesh, Float32BufferAttribute, MeshBasicMaterial, Plane, Box3, Object3D, Intersection, BufferAttribute, DynamicDrawUsage, LineSegments, LineBasicMaterial, PlaneGeometry, NotEqualStencilFunc, ReplaceStencilOp, MeshPhongMaterial, DoubleSide, Vector2, Shape, ShapeGeometry } from 'three';
+import { Sphere, SphereBufferGeometry, MeshStandardMaterial, Vector3, Group, Matrix4, BufferGeometry, Mesh, Float32BufferAttribute, MeshBasicMaterial, Plane, Box3, Object3D, Intersection, BufferAttribute, DynamicDrawUsage, LineSegments, LineBasicMaterial, PlaneGeometry, NotEqualStencilFunc, ReplaceStencilOp, MeshPhongMaterial, Vector2, Shape, ShapeGeometry, FrontSide } from 'three';
 import EventEmitter from 'events';
 import { CONTAINED, INTERSECTED, NOT_INTERSECTED } from 'three-mesh-bvh';
 import { v4 as uuid } from 'uuid';
@@ -35,7 +35,10 @@ const SUPPORT_AVAIL_AREA_COLOR = [0.5725490196078431, 0.32941176470588235, 0.870
 const SUPPORT_ADD_AREA_COLOR = [0.2980392156862745, 0, 0.5098039215686274];
 const SUPPORT_UNAVAIL_AREA_COLOR = [0.9, 0.9, 0.9];
 const AVAIL = -1, NONE = 0, FACE = 1/* , POINT = 2, LINE = 3 */;
-export const planeMaxHeight = 9999;
+export const planeMaxHeight = 999;
+
+const SECTION_COLOR = '#E9F3FE';
+export const CLIPPING_LINE_COLOR = '#3B83F6';
 
 type TModel = ThreeGroup | ThreeModel | SvgModel
 
@@ -2519,9 +2522,10 @@ class ModelGroup extends EventEmitter {
             linePosAttr.setUsage(DynamicDrawUsage);
 
             const line = new LineSegments(lineGeometry, new LineBasicMaterial({
-                linewidth: 2
+                linewidth: 2,
+                side: FrontSide
             }));
-            line.material.color.set(0x9254DE).convertSRGBToLinear();
+            line.material.color.set(CLIPPING_LINE_COLOR).convertSRGBToLinear();
             line.frustumCulled = false;
             line.visible = true;
             this.plateAdhesion.add(line);
@@ -2551,10 +2555,11 @@ class ModelGroup extends EventEmitter {
             linePosAttr.setUsage(DynamicDrawUsage);
 
             const line = new LineSegments(lineGeometry, new LineBasicMaterial({
-                linewidth: 2
+                linewidth: 2,
+                side: FrontSide
             }));
             line.geometry.setDrawRange(0, res.length);
-            line.material.color.set(0x9254DE).convertSRGBToLinear();
+            line.material.color.set(CLIPPING_LINE_COLOR).convertSRGBToLinear();
             line.frustumCulled = false;
             line.visible = true;
             this.plateAdhesion.add(line);
@@ -2581,7 +2586,10 @@ class ModelGroup extends EventEmitter {
                 const RaftShape = new Shape(points);
                 const geometry = new ShapeGeometry(RaftShape);
 
-                const mesh = new Mesh(geometry, new MeshPhongMaterial({ color: 0x9254DE, side: DoubleSide }));
+                const mesh = new Mesh(geometry, new MeshPhongMaterial({
+                    color: '#3B83F6',
+                    side: FrontSide
+                }));
                 mesh.position.setZ(0.02);
                 this.plateAdhesion.add(mesh);
                 // generateRaft finish
@@ -2600,36 +2608,30 @@ class ModelGroup extends EventEmitter {
         if (!this.sectionMesh) {
             const planeGeom = new PlaneGeometry();
             const planeMat = new MeshStandardMaterial({
-                color: 0xF8F8FF, // 0x7CFC00
+                color: SECTION_COLOR,
                 metalness: 0.1,
                 roughness: 0.75,
                 clippingPlanes: [],
-                // side: DoubleSide,
                 stencilWrite: true,
                 stencilRef: 0,
                 stencilFunc: NotEqualStencilFunc,
                 stencilFail: ReplaceStencilOp,
                 stencilZFail: ReplaceStencilOp,
-                stencilZPass: ReplaceStencilOp
+                stencilZPass: ReplaceStencilOp,
+                polygonOffset: true,
+                polygonOffsetFactor: 1,
+                polygonOffsetUnits: 20
             });
             this.sectionMesh = new Mesh(planeGeom, planeMat);
+            this.sectionMesh.name = 'clippingSection';
             this.sectionMesh.frustumCulled = false;
 
             this.sectionMesh.onAfterRender = (renderer) => {
                 renderer.clearStencil();
             };
-            // this.sectionMesh.renderOrder = 1200;
             this.object.add(this.sectionMesh);
         }
 
-        // let maxX = 0;
-        // let maxY = 0;
-        // this.getThreeModels().forEach((model) => {
-        //     maxX = Math.max(maxX, Math.abs(model.boundingBox.max.x));
-        //     maxX = Math.max(maxX, Math.abs(model.boundingBox.min.x));
-        //     maxY = Math.max(maxY, Math.abs(model.boundingBox.max.y));
-        //     maxY = Math.max(maxY, Math.abs(model.boundingBox.min.y));
-        // });
         this.sectionMesh.geometry = new PlaneGeometry(planeMaxHeight, planeMaxHeight);
         const position = new Vector3();
         this.object.getWorldPosition(position);
@@ -2643,18 +2645,10 @@ class ModelGroup extends EventEmitter {
         if (!height) {
             this.emit(ModelEvents.ClippingHeightReset);
         }
-        // this.planeMesh.position.set(0, 0, height);
         !height && (height = planeMaxHeight);
         this.clippingHeight = height;
 
         this.sectionMesh?.position?.setZ(height);
-        // this.localPlane.coplanarPoint(this.sectionMesh.position);
-        // this.sectionMesh.lookAt(
-        //     this.sectionMesh.position.x - this.localPlane.normal.x,
-        //     this.sectionMesh.position.y - this.localPlane.normal.y,
-        //     this.sectionMesh.position.z - this.localPlane.normal.z
-        // );
-
         this.getThreeModels().filter((model) => {
             return model.visible && model.clipper;
         }).forEach((model) => {

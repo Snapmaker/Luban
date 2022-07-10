@@ -639,14 +639,11 @@ class ThreeModel extends BaseModel {
         });
         const mesh = new Mesh(geometry, material);
         mesh.renderOrder = 1500;
-        // mesh.applyMatrix4(this.meshObject.matrixWorld.clone().invert());
         group.add(mesh);
 
-        // group.renderOrder = 1000;
         group.applyMatrix4(this.meshObject.matrixWorld.clone().invert());
         this.meshObject.add(group);
 
-        // return mesh;
         return group;
     }
 }
