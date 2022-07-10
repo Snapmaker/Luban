@@ -275,7 +275,7 @@ const MachineSettings = ({
             return;
         }
         if (direction === LEFT) {
-            if (!find(leftNozzleDiameterList, { value: Number(newValue) })) {
+            if (!find(leftNozzleDiameterList, { value: Number(newValue) }) && newValue >= 0.1 && newValue <= 1.2) {
                 setLeftNozzleDiameterList([...leftNozzleDiameterList, {
                     label: newValue,
                     value: Number(newValue),
@@ -283,7 +283,7 @@ const MachineSettings = ({
                 }]);
             }
         } else {
-            if (!find(rightNozzleDiameterList, { value: Number(newValue) })) {
+            if (!find(rightNozzleDiameterList, { value: Number(newValue) }) && newValue >= 0.1 && newValue <= 1.2) {
                 setRightNozzleDiameterList([...rightNozzleDiameterList, {
                     label: newValue,
                     value: Number(newValue),

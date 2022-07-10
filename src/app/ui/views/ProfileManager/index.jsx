@@ -281,9 +281,9 @@ function ProfileManager({
                     i18n: option.i18nCategory
                 };
             });
-            !isCreate && (materialOptions = materialOptions.filter((option) => {
+            materialOptions = materialOptions.filter((option) => {
                 return option.value !== i18n._(DEFAULT_DISPLAY_TYPE);
-            }));
+            });
             materialOptions = uniqWith(materialOptions, (a, b) => {
                 return a.label === b.label;
             });
