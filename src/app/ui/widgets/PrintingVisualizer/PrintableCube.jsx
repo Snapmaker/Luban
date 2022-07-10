@@ -22,13 +22,15 @@ class PrintableCube extends Object3D {
 
     scale10line
     scale50line
-    hotZone
     scale10lineVisible = false
-    shape
+    scale50lineVisible = true
+    hotArea
+    series
 
-    constructor(size, stopArea) {
+    constructor(series, size, stopArea) {
         super();
         this.type = 'PrintCube';
+        this.series = series;
         this.size = size;
         this.stopArea = stopArea;
         this.stopAreaObjects = [];
@@ -43,7 +45,8 @@ class PrintableCube extends Object3D {
         this._setupStopArea();
     }
 
-    updateSize(size, stopArea) {
+    updateSize(series, size, stopArea) {
+        this.series = series;
         this.size = size;
         this.remove(...this.children);
         this._setup();
@@ -201,22 +204,6 @@ class PrintableCube extends Object3D {
         right.position.set(this.size.x / 2, 0, this.size.z / 2);
         this.add(right);
 
-        // Add logo
-        // const minSideLength = Math.min(this.size.x, this.size.y);
-        // const geometry = new PlaneGeometry(minSideLength / 2, minSideLength / 8);
-        // const texture = new TextureLoader().load(`${DEFAULT_LUBAN_HOST}/resources/images/snapmaker-logo-1024x256.png`, this.update);
-        // texture.minFilter = LinearFilter;
-        // const material = new MeshBasicMaterial({
-        //     map: texture,
-        //     side: FrontSide,
-        //     opacity: 1,
-        //     transparent: true
-        // });
-        // const mesh = new Mesh(geometry, material);
-        // mesh.position.set(0, -this.size.y / 4, 0);
-        // mesh.renderOrder = 4;
-        // this.add(mesh);
-
         // Add background
         const backgroundGeometry = new PlaneGeometry(this.size.x, this.size.y);
         const backgroundMaterial = new MeshBasicMaterial({
@@ -231,30 +218,30 @@ class PrintableCube extends Object3D {
         background.renderOrder = -5;
         this.add(background);
 
-        this.createMachine();
+        this.createSeries();
 
-        const shape = this.roundedRectShape(-130, -130, 260, 260, 10);
-        const geometry = new ShapeGeometry(shape);
-        this.shape = geometry;
-        const mesh = new Line(geometry, new LineBasicMaterial({
-            color: '#85888C',
-            side: FrontSide,
-            opacity: 1,
-            transparent: true,
-            polygonOffset: true,
-            polygonOffsetFactor: -12,
-            polygonOffsetUnits: -20
-        }));
-        mesh.name = 'shap';
-        mesh.renderOrder = -1;
-        this.hotZone = mesh;
-        this.add(mesh);
+        if (this.series === 'A400') {
+            const hotArea = this.roundedRectShape(-130, -130, 260, 260, 10);
+            const geometry = new ShapeGeometry(hotArea);
+            const mesh = new Line(geometry, new LineBasicMaterial({
+                color: '#85888C',
+                side: FrontSide,
+                opacity: 1,
+                transparent: true,
+                polygonOffset: true,
+                polygonOffsetFactor: -12,
+                polygonOffsetUnits: -20
+            }));
+            mesh.renderOrder = -1;
+            this.hotArea = mesh;
+            this.add(mesh);
+        }
 
         // this.loadBaseplate();
         // this.loadBackground();
     }
 
-    createMachine() {
+    createSeries() {
         const loader = new FontLoader();
         loader.load(`${DEFAULT_LUBAN_HOST}/resources/helvetiker_regular.typeface.json`, (font) => {
             const color = new Color('#D5D6D9');
@@ -387,8 +374,6 @@ class PrintableCube extends Object3D {
                 const box3 = geometry.boundingBox;
                 const x = (box3.max.x - box3.min.x);
                 const y = (box3.max.y - box3.min.y);
-                console.log(box3);
-                // const z = -(box3.max.z + box3.min.z) / 2;
                 geometry.translate(-200, 350, -30);
                 geometry.scale(410 / x, 410 / y, 1);
                 const material = new MeshPhongMaterial({
@@ -405,52 +390,73 @@ class PrintableCube extends Object3D {
                 const mesh = new Mesh(geometry, material);
 
                 this.add(mesh);
-
-                // const backgroundGeometry = new PlaneGeometry(this.size.x, this.size.y);
-                // const backgroundMaterial = new MeshBasicMaterial({
-                //     color: '#E4E7EA',
-                //     side: FrontSide,
-                //     polygonOffset: true,
-                //     polygonOffsetFactor: 0,
-                //     polygonOffsetUnits: 5,
-                // });
-                // const background = new Mesh(backgroundGeometry, backgroundMaterial);
-                // background.position.set(0, 0, 0);
-                // background.renderOrder = -5;
-                // this.add(background);
             },
             () => { },
             () => { }
         );
     }
 
-    onPanScale(scale) {
-        if (scale <= 2) {
-            if (this.scale10lineVisible === true) {
-                this.scale10line.visible = false;
-                this.scale10lineVisible = false;
-                return true;
+    setScale50lineVisible(visible) {
+        let needRefresh = false;
+        if (visible) {
+            if (!this.scale50lineVisible) {
+                this.scale50line.visible = true;
+                this.scale50lineVisible = true;
+                needRefresh = true;
             }
         } else {
-            if (this.scale10lineVisible === false) {
-                this.scale10line.visible = true;
-                this.scale10lineVisible = true;
-                return true;
+            if (this.scale50lineVisible) {
+                this.scale50line.visible = false;
+                this.scale50lineVisible = false;
+                needRefresh = true;
             }
         }
-        return false;
+        return needRefresh;
     }
 
-    updateCamera(scale) {
-        if (scale.z < 0) {
-            this.scale50line.visible = false;
-            this.scale10lineVisible = false;
-            this.hotZone.visible = false;
+    setScale10lineVisible(visible) {
+        let needRefresh = false;
+        if (visible) {
+            if (!this.scale10lineVisible) {
+                this.scale10line.visible = true;
+                this.scale10lineVisible = true;
+                needRefresh = true;
+            }
         } else {
-            this.scale50line.visible = true;
-            this.scale10lineVisible = true;
-            this.hotZone.visible = true;
+            if (this.scale10lineVisible) {
+                this.scale10line.visible = false;
+                this.scale10lineVisible = false;
+                needRefresh = true;
+            }
         }
+        return needRefresh;
+    }
+
+    toogleVisible() {
+        let needRefresh = false;
+
+        if (this.cameraPositionZ < 0) {
+            needRefresh = this.setScale50lineVisible(false);
+            needRefresh = this.setScale10lineVisible(false);
+        } else {
+            if (this.panScale > 2) {
+                needRefresh = this.setScale10lineVisible(true);
+            } else {
+                needRefresh = this.setScale10lineVisible(false);
+            }
+            needRefresh = this.setScale50lineVisible(true);
+        }
+        return needRefresh;
+    }
+
+    onPanScale(scale) {
+        this.panScale = scale;
+        return this.toogleVisible();
+    }
+
+    updateCamera(position) {
+        this.cameraPositionZ = position.z;
+        return this.toogleVisible();
     }
 }
 

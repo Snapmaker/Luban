@@ -38,6 +38,8 @@ class ThreeModel extends BaseModel {
     private _materialNormal: THREE.Color;
     private _materialSelected: THREE.Color;
 
+    public hasOversteppedHotArea: boolean
+
     public clipper: ClipperModel;
 
     // private infillDensity = 0

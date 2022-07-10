@@ -430,19 +430,27 @@ class Canvas extends PureComponent {
             if (hasOverstepped) {
                 toast(ToastWapper('不可打印区域提示', 'WarningTipsWarning', '#FFA940'));
             } else if (this.props.printableArea.isPointInShape) {
-                const bbox = this.modelGroup.isOversteppedHotArea();
-                if (bbox) {
-                    const points = [
-                        bbox.max,
-                        bbox.min,
-                        new Vector3(bbox.max.x, bbox.min.y, 0),
-                        new Vector3(bbox.min.x, bbox.max.y, 0),
-                    ];
-                    const res = points.every((point) => {
-                        return this.props.printableArea.isPointInShape(point);
+                const useHotMatialModels = this.modelGroup.isOversteppedHotArea();
+                if (useHotMatialModels) {
+                    let hasOversteppedHotArea = false;
+                    useHotMatialModels.forEach((model) => {
+                        const bbox = model.boundingBox;
+                        const points = [
+                            bbox.max,
+                            bbox.min,
+                            new Vector3(bbox.max.x, bbox.min.y, 0),
+                            new Vector3(bbox.min.x, bbox.max.y, 0),
+                        ];
+                        const inHotArea = points.every((point) => {
+                            return this.props.printableArea.isPointInShape(point);
+                        });
+                        model.hasOversteppedHotArea = !inHotArea;
+                        if (!inHotArea) {
+                            hasOversteppedHotArea = true;
+                        }
                     });
-                    if (!res) {
-                        toast(ToastWapper('此模型使用高温材料，建议放置构建板中央高温区内打印', 'WarningTipsWarning', '#FFA940'));
+                    if (hasOversteppedHotArea) {
+                        toast(ToastWapper('此模型使用高温材料，建议放置构建板中央高温区内打印', 'WarningTipsWarning', '#1890FF'));
                     }
                 }
             }
@@ -458,9 +466,9 @@ class Canvas extends PureComponent {
                 }
             }
         });
-        this.controls.on(EVENTS.UPDATE_CAMERA, (scale) => {
+        this.controls.on(EVENTS.UPDATE_CAMERA, (position) => {
             if (this.props.printableArea.updateCamera) {
-                const needRefresh = this.props.printableArea.updateCamera(scale);
+                const needRefresh = this.props.printableArea.updateCamera(position);
                 if (needRefresh) {
                     this.renderScene();
                 }
