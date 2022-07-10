@@ -57,18 +57,12 @@ class ThreeModel extends BaseModel {
             material = newMaterial;
             this.localPlane = modelGroup.localPlane;
             material.clippingPlanes = [this.localPlane];
-            // material.side = THREE.FrontSide;
-            // material.stencilWrite = true;
-            // material.stencilFail = THREE.DecrementWrapStencilOp;
-            // material.stencilZFail = THREE.DecrementWrapStencilOp;
-            // material.stencilZPass = THREE.DecrementWrapStencilOp;
-            // plane is clipped by the other clipping planes
 
             this.modelModeMaterial = material;
             // Line version
             this.gcodeModeMaterial = new MeshLambertMaterial({
                 color: '#2a2c2e',
-                side: THREE.DoubleSide,
+                side: THREE.FrontSide,
                 depthWrite: false,
                 transparent: true,
                 opacity: 0.3,
@@ -354,11 +348,11 @@ class ThreeModel extends BaseModel {
     }
 
     /**
-* Find the best fit direction, and rotate the model
-* step1. get big planes of convex geometry
-* step2. calculate area, support volumes of each big plane
-* step3. find the best fit plane using formula below
-*/
+    * Find the best fit direction, and rotate the model
+    * step1. get big planes of convex geometry
+    * step2. calculate area, support volumes of each big plane
+    * step3. find the best fit plane using formula below
+    */
     public autoRotate() {
         if (this.sourceType !== '3d' || !this.convexGeometry) {
             return;

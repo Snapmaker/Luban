@@ -2,8 +2,6 @@ import { Observable } from 'rxjs';
 import { TransferDescriptor } from 'threads';
 import { BufferAttribute, BufferGeometry, Line3, Matrix4, Plane, Vector3 } from 'three';
 import { MeshBVH } from 'three-mesh-bvh';
-// import sortUnorderedLine from './sort-unordered-line';
-// import { GenerateMeshBVHWorker } from 'three-mesh-bvh/src/workers/generateAsync.worker';
 
 type TPoint = { x: number, y: number, z?: number }
 

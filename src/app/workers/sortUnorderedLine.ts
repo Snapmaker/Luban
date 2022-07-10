@@ -1,7 +1,6 @@
 import { Observable } from 'rxjs';
 import { Transfer, TransferDescriptor } from 'threads';
 
-// import { Box3 } from 'three';
 import { polyOffset } from '../../shared/lib/clipper/cLipper-adapter';
 import { Polygon, Polygons } from '../../shared/lib/clipper/Polygons';
 import { PolygonsUtils } from '../../shared/lib/math/PolygonsUtils';
@@ -14,9 +13,6 @@ export type TMessage = {
     layerHeight: number,
     innerWallCount: number,
     lineWidth: number,
-    // bottomLayers: number,
-    // topLayers: number,
-    // modelBoundingBox: Box3,
     time: number
 }
 
@@ -95,9 +91,6 @@ const findChildren = (pointsMap: IPointsMap, current: TPointValue, findChain: st
         }
     }
     return arr;
-    // return childrenKeys.map((key) => {
-    //     return pointsMap.get(key);
-    // }).filter((item) => item && item.key !== current.key && item.key !== findChain[findChain.length - 2]);
 };
 
 const cleanStack = (stack: TPointValue[], ringIndex: number) => {
@@ -107,9 +100,6 @@ const cleanStack = (stack: TPointValue[], ringIndex: number) => {
 };
 
 const sortUnorderedLine = ({ fragments, innerWallCount, lineWidth, layerHeight }: TMessage) => {
-    // const n1 = new Date().getTime();
-
-    // console.log(layerHeight, ' =>> worker get data', n1 - time);
     let pointsMap = toPointMap(fragments.send);
     fragments = null;
     const findChain: string[] = [];
@@ -119,20 +109,15 @@ const sortUnorderedLine = ({ fragments, innerWallCount, lineWidth, layerHeight }
     let res, ret, polygon, _polygons, tree;
 
     return new Observable<IResult>((observer) => {
-        // console.log(`[${actionID}] worker exec 2, cost=`, m3 - m);
         try {
             while (findStart(pointsMap) || stack.length) {
                 if (stack.length === 0) {
                     const startKey = findStart(pointsMap);
                     const start = pointsMap.get(startKey);
-                    // start.findingIndex = 0
-                    // findChain.push(startKey)
                     stack.push(start);
                 }
-                // console.log(findChain);
 
                 const current = stack.pop();
-                // console.log(current.key);
 
                 if (current.findingIndex !== null && findChain.length > 0 && current.key !== findChain[findChain.length - 1]) {
                     const ringIndex = rings.length;
@@ -171,8 +156,6 @@ const sortUnorderedLine = ({ fragments, innerWallCount, lineWidth, layerHeight }
                 observer.next();
                 return;
             }
-            // const n2 = new Date().getTime();
-            // console.log(layerHeight, ' =>> sort finish', n2 - n1);
 
             for (let j = 0; j < rings.length; j++) {
                 const arr = [];
@@ -218,14 +201,12 @@ const sortUnorderedLine = ({ fragments, innerWallCount, lineWidth, layerHeight }
                 });
             });
             const n3 = new Date().getTime();
-            // console.log(layerHeight, ' =>> polygon finish', n3 - n2);
 
             observer.next({
                 outWall: Transfer(marged as unknown as ArrayBuffer),
                 innerWall: Transfer(innerWall as unknown as ArrayBuffer),
                 time: n3
             });
-            // console.log(marged.length + innerWall.length);
             marged = null;
             innerWall = null;
         } catch (error) {
@@ -239,8 +220,6 @@ const sortUnorderedLine = ({ fragments, innerWallCount, lineWidth, layerHeight }
             ret = null;
             _polygons = null;
             tree = null;
-            // const n4 = new Date().getTime();
-            // console.log(layerHeight, ' =>> worker filish', n4 - n1);
             observer.complete();
         }
     });

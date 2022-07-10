@@ -30,16 +30,10 @@ export type IResult = {
 const generateBrim = ({ polygons, skirtBrimLineWidth, brimLineCount }: IMessage) => {
     return new Observable<IResult>((observer) => {
         try {
-            // const initLength = polygons.reduce((p, c) => {
-            //     return p + c.length * 3 * 2 * brimLineCount;
-            // }, 0);
             const linePosAttr = new BufferAttribute(new Float32Array(30000000), 3, false);
             linePosAttr.setUsage(DynamicDrawUsage);
 
             let j = 0;
-            // const _polygons = polyOffset(
-            //     polygons, skirtBrimLineWidth, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon, 0.12, 0.1
-            // );
             const offset = skirtBrimLineWidth;
             Array(brimLineCount).fill(0).forEach((_item, index) => {
                 let skirtArea;

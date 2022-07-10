@@ -1,6 +1,5 @@
 import { spawn, Worker, Pool, Thread } from 'threads';
 
-import { PoolEventType } from 'threads/dist/master/pool-types';
 import * as sortUnorderedLine from '../../workers/sortUnorderedLine';
 import * as calculateSectionPoints from '../../workers/calculateSectionPoints';
 import * as mapClippingSkinArea from '../../workers/mapClippingSkinArea';
@@ -9,7 +8,7 @@ import * as calaClippingSkin from '../../workers/calaClippingSkin';
 import './clipperPool.worker';
 
 class ClippingPoolManager {
-    private pool: Pool<any>
+    private pool: Pool<Thread>;
 
     public sortUnorderedLine(message: sortUnorderedLine.TMessage, onMessage?: (data: sortUnorderedLine.IResult) => void, onComplete?: () => void) {
         return this.execTask<sortUnorderedLine.IResult>('sortUnorderedLine', message, onMessage, onComplete);
@@ -66,14 +65,6 @@ class ClippingPoolManager {
     private getPool() {
         if (!this.pool) {
             this.pool = Pool(async () => spawn(new Worker('./clipperPool.worker.js'))) as unknown as Pool<Thread>;
-
-            this.pool.events()
-                .filter(event => event.type === PoolEventType.taskQueueDrained)
-                .subscribe(() => {
-                    console.log('no task');
-
-                    // this.terminate();
-                });
         }
         return this.pool;
     }

@@ -178,11 +178,6 @@ class ClippingModel {
     }
 
     public updateBvhGeometry(transformation: ModelTransformation) {
-        // this.colliderMesh.geometry = this.bvhGeometry;
-        // this.meshObjectGroup.applyMatrix4(inverseMatrix);
-
-        // this.colliderBvh = new MeshBVH(this.bvhGeometry, { maxLeafTris: 3 });
-        // this.modelGeometry.boundsTree = this.colliderBvh;
         this.colliderBvhTransform = { ...transformation };
     }
 
@@ -375,8 +370,6 @@ class ClippingModel {
         }
         const posAttr = this.clippingSkin.geometry.attributes.position;
         const posAttrArea = this.clippingSkinArea.geometry.attributes.position;
-        // const inverseMatrix = new THREE.Matrix4();
-        // inverseMatrix.copy(this.modelMeshObject.matrixWorld).invert();
         const polygons = this.skinMap.get(clippingHeight);
         if (polygons && polygons.length > 0) {
             const arr = [];
@@ -443,8 +436,6 @@ class ClippingModel {
 
     private updateClippingWall(clippingHeight: number) {
         const posAttr = this.clippingWall.geometry.attributes.position;
-        // const inverseMatrix = new THREE.Matrix4();
-        // inverseMatrix.copy(this.modelMeshObject.matrixWorld).invert();
 
         const polygons = this.clippingMap.get(clippingHeight);
         if (polygons && polygons.length > 0 && clippingHeight <= this.modelBoundingBox.max.z) {
@@ -481,8 +472,6 @@ class ClippingModel {
 
     private updateClippingInfill(clippingHeight: number) {
         const posAttr = this.clippingInfill.geometry.attributes.position;
-        // const inverseMatrix = new THREE.Matrix4();
-        // inverseMatrix.copy(this.modelMeshObject.matrixWorld).invert();
         const polygons = this.infillMap.get(clippingHeight);
         if (polygons && polygons.length !== 0 && clippingHeight <= this.modelBoundingBox.max.z) {
             const skinLines = this.generateLineInfill(clippingHeight, polygons);
@@ -524,23 +513,6 @@ class ClippingModel {
         this.meshObjectGroup?.position.copy(position);
         this.meshObjectGroup?.scale.copy(scale);
         this.meshObjectGroup?.rotation.copy(rotation);
-
-        // this.colliderMesh.applyMatrix4(
-        //     this.modelMeshObject.matrixWorld
-        // );
-
-        // if (!this.sectionMesh) {
-        //     return;
-        // }
-        // const width = this.modelBoundingBox?.max.x - this.modelBoundingBox?.min.x;
-        // const height = this.modelBoundingBox?.max.y - this.modelBoundingBox?.min.y;
-
-        // this.sectionMesh.geometry = new THREE.PlaneGeometry(width + 100, height + 100);
-
-        // this.modelMeshObject.updateMatrixWorld();
-        // this.sectionMesh.position.copy(position);
-        // this.sectionMesh.position.setZ(height);
-        // this.sectionMesh.scale.copy(scale);
 
         this.model.setLocalPlane(planeMaxHeight);
     }
