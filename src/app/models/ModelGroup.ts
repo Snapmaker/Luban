@@ -71,7 +71,6 @@ class ModelGroup extends EventEmitter {
     private selectedToolPathModelIDs: string[];
     private onDataChangedCallback: () => void;
     private primeTowerHeightCallback: (height: number) => void;
-    private series: string;
     private candidatePoints: {
         x: number;
         y: number;
@@ -584,10 +583,6 @@ class ModelGroup extends EventEmitter {
             }
             return true;
         });
-    }
-
-    public setSeries(series: string) {
-        this.series = series;
     }
 
     public calculateSelectedGroupPosition() {
