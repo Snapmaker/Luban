@@ -52,6 +52,7 @@ function Output() {
     const defaultThumbnail = useSelector(state => state?.printing?.thumbnail);
     const leftBarOverlayVisible = useSelector(state => state?.printing?.leftBarOverlayVisible, shallowEqual);
     const workflowState = useSelector(state => state?.machine?.workflowState, shallowEqual);
+    const series = useSelector(state => state?.machine?.series, shallowEqual);
 
     const dispatch = useDispatch();
     const thumbnail = useRef(null);
@@ -65,7 +66,7 @@ function Output() {
             }
         },
         onClickGenerateGcode: () => {
-            const gcodeThumbnail = thumbnail.current.getThumbnail();
+            const gcodeThumbnail = thumbnail.current.getThumbnail(series);
             dispatch(printingActions.generateGcode(gcodeThumbnail));
             dispatch(printingActions.generateGrayModeObject());
         },

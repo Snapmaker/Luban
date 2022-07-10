@@ -27,6 +27,8 @@ import log from '../../../lib/log';
 import Detector from '../../../three-extensions/Detector';
 import WebGLRendererWrapper from '../../../three-extensions/WebGLRendererWrapper';
 import { TRANSLATE_MODE } from '../../../constants';
+import { toast } from '../Toast';
+import { ToastWapper } from '../Toast/toastContainer';
 
 const ANIMATION_DURATION = 500;
 const DEFAULT_MODEL_POSITION = new Vector3(0, 0, 0);
@@ -422,9 +424,47 @@ class Canvas extends PureComponent {
                 this.controls.transformControl.mode,
                 this.controls.transformControl.axis
             );
+            const hasOverstepped = this.modelGroup.selectedModelArray.some((model) => {
+                return model.overstepped;
+            });
+            if (hasOverstepped) {
+                toast(ToastWapper('不可打印区域提示', 'WarningTipsWarning', '#FFA940'));
+            } else if (this.props.printableArea.isPointInShape) {
+                const bbox = this.modelGroup.isOversteppedHotArea();
+                if (bbox) {
+                    const points = [
+                        bbox.max,
+                        bbox.min,
+                        new Vector3(bbox.max.x, bbox.min.y, 0),
+                        new Vector3(bbox.min.x, bbox.max.y, 0),
+                    ];
+                    const res = points.every((point) => {
+                        return this.props.printableArea.isPointInShape(point);
+                    });
+                    if (!res) {
+                        toast(ToastWapper('此模型使用高温材料，建议放置构建板中央高温区内打印', 'WarningTipsWarning', '#FFA940'));
+                    }
+                }
+            }
         });
         this.controls.on(EVENTS.SELECT_PLACEMENT_FACE, (userData) => {
             this.onRotationPlacementSelect(userData);
+        });
+        this.controls.on(EVENTS.PAN_SCALE, (scale) => {
+            if (this.props.printableArea.onPanScale) {
+                const needRefresh = this.props.printableArea.onPanScale(scale);
+                if (needRefresh) {
+                    this.renderScene();
+                }
+            }
+        });
+        this.controls.on(EVENTS.UPDATE_CAMERA, (scale) => {
+            if (this.props.printableArea.updateCamera) {
+                const needRefresh = this.props.printableArea.updateCamera(scale);
+                if (needRefresh) {
+                    this.renderScene();
+                }
+            }
         });
     }
 
@@ -677,6 +717,7 @@ class Canvas extends PureComponent {
     }
 
     fitViewIn(center, selectedGroupBsphereRadius) {
+        console.log({ center, selectedGroupBsphereRadius });
         const r = selectedGroupBsphereRadius;
         const newTarget = {
             ...center
@@ -891,8 +932,12 @@ class Canvas extends PureComponent {
                             - 220)
                     ) > 10
                 ) {
-                    this.inputPositionLeft = `${this.controlFrontLeftTop.x * this.canvasWidthHalf + this.canvasWidthHalf - this.inputLeftOffset}px`;
-                    this.inputPositionTop = `${-(this.controlFrontLeftTop.y * this.canvasHeightHalf) + this.canvasHeightHalf - 220}px`;
+                    this.inputPositionLeft = `${this.controlFrontLeftTop.x * this.canvasWidthHalf
+                        + this.canvasWidthHalf
+                        - this.inputLeftOffset}px`;
+                    this.inputPositionTop = `${-(this.controlFrontLeftTop.y * this.canvasHeightHalf)
+                        + this.canvasHeightHalf
+                        - 220}px`;
                 }
                 inputDOM && (inputDOM.style.top = this.inputPositionTop);
                 inputDOM && (inputDOM.style.left = this.inputPositionLeft);

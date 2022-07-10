@@ -30,6 +30,7 @@ class ThreeModel extends BaseModel {
     declare public meshObject: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial | THREE.MeshLambertMaterial> & { uniformScalingState?: boolean };
 
     public isEditingSupport = false;
+    public materialPrintTemperature: number;
 
     private geometry: THREE.BufferGeometry;
 
@@ -324,10 +325,10 @@ class ThreeModel extends BaseModel {
     }
 
     /**
-* Note that you need to give cloned Model a new model name.
-*
-* @returns {ThreeModel}
-*/
+        * Note that you need to give cloned Model a new model name.
+        *
+        * @returns {ThreeModel}
+        */
     public clone(modelGroup: ModelGroup = this.modelGroup) {
         const modelInfo = {
             ...this,
@@ -348,11 +349,11 @@ class ThreeModel extends BaseModel {
     }
 
     /**
-    * Find the best fit direction, and rotate the model
-    * step1. get big planes of convex geometry
-    * step2. calculate area, support volumes of each big plane
-    * step3. find the best fit plane using formula below
-    */
+        * Find the best fit direction, and rotate the model
+        * step1. get big planes of convex geometry
+        * step2. calculate area, support volumes of each big plane
+        * step3. find the best fit plane using formula below
+        */
     public autoRotate() {
         if (this.sourceType !== '3d' || !this.convexGeometry) {
             return;

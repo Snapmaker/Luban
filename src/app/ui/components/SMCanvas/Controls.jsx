@@ -33,7 +33,9 @@ export const EVENTS = {
     BEFORE_TRANSFORM_OBJECT: 'object:beforetransform',
     TRANSFORM_OBJECT: 'object:transform',
     AFTER_TRANSFORM_OBJECT: 'object:aftertransform',
-    SELECT_PLACEMENT_FACE: 'placement:select'
+    SELECT_PLACEMENT_FACE: 'placement:select',
+    PAN_SCALE: 'pan:scale',
+    UPDATE_CAMERA: 'update:camera'
 };
 
 class Controls extends EventEmitter {
@@ -649,11 +651,11 @@ class Controls extends EventEmitter {
             const distanceAll = v1.copy(scope.target).sub(scope.camera.position).length();
             this.panScale = Math.round((Math.log(distanceAll / 700) / Math.log(this.scaleRate)) * 10) / 10;
             scope.mouse3D.copy(scope.camera.position).add(v.multiplyScalar(distanceAll));
+            this.emit(EVENTS.PAN_SCALE, this.panScale);
         };
     })();
 
     handleMouseWheel = (event) => {
-        this.updateMouse3D(event);
         if (event.deltaY < 0) {
             this.dollyIn();
         } else {
@@ -661,6 +663,7 @@ class Controls extends EventEmitter {
         }
 
         this.updateCamera();
+        this.updateMouse3D(event);
     };
 
     setSelectableObjects(objects) {
@@ -740,6 +743,7 @@ class Controls extends EventEmitter {
             }
 
             this.sphericalDelta.set(0, 0, 0);
+            this.emit(EVENTS.UPDATE_CAMERA, this.camera.position);
         }
 
         // pan
@@ -767,6 +771,7 @@ class Controls extends EventEmitter {
             this.lastPosition.copy(this.camera.position);
             this.lastQuaternion.copy(this.camera.quaternion);
         }
+        // this
     }
 
     dispose() {

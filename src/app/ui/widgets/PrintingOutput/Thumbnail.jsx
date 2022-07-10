@@ -1,7 +1,8 @@
 import React, { PureComponent } from 'react';
 import { Color, HemisphereLight, PerspectiveCamera, Scene, Vector3, Group } from 'three';
+// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import PropTypes from 'prop-types';
-
+import * as THREE from 'three';
 import ThreeUtils from '../../../three-extensions/ThreeUtils';
 import WebGLRendererWrapper from '../../../three-extensions/WebGLRendererWrapper';
 
@@ -33,17 +34,24 @@ class Thumbnail extends PureComponent {
         this.camera = new PerspectiveCamera(45, width / height, 0.1, 10000);
         this.camera.position.copy(new Vector3(0, 120, 500));
 
-        this.renderer = new WebGLRendererWrapper({ antialias: true, preserveDrawingBuffer: true });
-        this.renderer.setClearColor(new Color(0xfafafa), 1);
+        this.renderer = new WebGLRendererWrapper({
+            antialias: true,
+            preserveDrawingBuffer: true,
+            alpha: true,
+            clearColor: [new Color(0xffffff), 0]
+        });
         this.renderer.setSize(width, height);
-        // this.renderer.shadowMap.enabled = true;
-
         this.scene = new Scene();
         this.scene.add(this.camera);
 
         this.scene.add(new HemisphereLight(0x000000, 0xe0e0e0));
 
         this.node.current.appendChild(this.renderer.domElement);
+
+        // const controls = new OrbitControls(this.camera, this.renderer.domElement);
+        // controls.target.y = 0.5;
+        // controls.update();
+
         this.renderScene();
     }
 
@@ -54,7 +62,13 @@ class Thumbnail extends PureComponent {
         }
     }
 
-    getThumbnail() {
+    getThumbnail(series) {
+        if (series === 'A400') {
+            this.camera.aspect = 600 / 600;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(600, 600);
+            this.camera.position.copy(new Vector3(0, 120, 500));
+        }
         this.object && (this.scene.remove(this.object));
         this.object = new Group();
         this.object.add(...this.props.modelGroup.getModels().map(d => d.clone().meshObject));
@@ -70,26 +84,36 @@ class Thumbnail extends PureComponent {
             child.position.z -= z;
         }
 
-        const rz = Math.max(
-            boundingBox.max.x - boundingBox.min.x,
-            boundingBox.max.y - boundingBox.min.y,
-            boundingBox.max.z - boundingBox.min.z
-        ) * 1.5;
-
         // 15° up look at the object
         this.object.rotation.x -= (Math.PI / 2 - Math.PI / 12);
-        this.camera.position.copy(new Vector3(0, 0, rz));
+
+        const bbbx = new THREE.Box3();
+        bbbx.expandByObject(this.object);
+        const rz = Math.max(
+            bbbx.max.x - bbbx.min.x,
+            bbbx.max.y - bbbx.min.y,
+            bbbx.max.z - bbbx.min.z
+        );
+        // if (this.cube) {
+        //     this.scene.remove(this.cube);
+        // }
+        // const geometry = new THREE.BoxGeometry(bbbx.max.x - bbbx.min.x, bbbx.max.y - bbbx.min.y, bbbx.max.z - bbbx.min.z);
+        // const material = new THREE.MeshBasicMaterial({ color: 0xe0e0e0, opacity: 0.8, transparent: true });
+        // this.cube = new THREE.Mesh(geometry, material);
+        // this.scene.add(this.cube);
+
+        const p = rz / 2 / Math.tan(22.5 / 180 * Math.PI) + 5;
+
+        this.camera.position.copy(new Vector3(0, 0, p));
 
         this.object.visible = true;
         this.scene.add(this.object);
-
         this.renderScene();
 
         const toDataURL = this.renderer.domElement.toDataURL();
         this.setState({
             dataURL: toDataURL
         });
-
         return toDataURL;
     }
 
@@ -98,6 +122,10 @@ class Thumbnail extends PureComponent {
     }
 
     renderScene() {
+        // requestAnimationFrame(() => {
+        //     this.renderScene();
+        // });
+
         this.renderer.render(this.scene, this.camera);
     }
 

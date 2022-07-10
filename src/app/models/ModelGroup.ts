@@ -97,6 +97,8 @@ class ModelGroup extends EventEmitter {
     private selectedToolPathModelIDs: string[];
     private onDataChangedCallback: () => void;
     private primeTowerHeightCallback: (height: number) => void;
+    private series: string;
+    public materialPrintTemperature: number;
     private candidatePoints: {
         x: number;
         y: number;
@@ -648,6 +650,35 @@ class ModelGroup extends EventEmitter {
             }
             return true;
         });
+    }
+
+    public setSeries(series: string) {
+        this.series = series;
+    }
+
+    public isOversteppedHotArea() {
+        if (this.series !== 'A400') {
+            return false;
+        }
+
+        const useHotMatialModels = [];
+        const selectedModels = this.getSelectedModelArray<Model3D>();
+        this.traverseModels(selectedModels, (model) => {
+            if (model instanceof ThreeModel && model.materialPrintTemperature <= 80) {
+                useHotMatialModels.push(model);
+            }
+        });
+        if (!useHotMatialModels.length) {
+            return false;
+        }
+
+        const { recovery } = this.unselectAllModels();
+        this.addModelToSelectedGroup(...useHotMatialModels);
+        // Selected model using high temperature material
+        const boundingBoxTemp = ThreeUtils.computeBoundingBox(this.selectedGroup);
+        recovery();
+
+        return boundingBoxTemp;
     }
 
     public calculateSelectedGroupPosition() {
