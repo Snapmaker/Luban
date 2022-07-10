@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import i18n from '../../../lib/i18n';
-import TipTrigger from '../../components/TipTrigger';
+// import TipTrigger from '../../components/TipTrigger';
 import Checkbox from '../../components/Checkbox';
 
 function CheckboxItem({
@@ -14,26 +14,20 @@ function CheckboxItem({
     configCategory
 }) {
     const setting = settings[definitionKey];
-    const { label, description } = setting;
+    const { label } = setting;
     return (
-        <TipTrigger
-            title={i18n._(label)}
-            content={i18n._(description)}
-            key={definitionKey}
-        >
-            <div className="sm-flex height-32 margin-vertical-8">
-                <Checkbox
-                    className="sm-flex-auto sm-flex-order-negative"
-                    style={{
-                        width: width,
-                        marginLeft: calculateTextIndex(definitionKey)
-                    }}
-                    checked={defaultValue}
-                    onChange={(e) => onChangeDefinition(definitionKey, e.target.checked, configCategory)}
-                />
-                <span className="margin-left-8">{i18n._(label)}</span>
-            </div>
-        </TipTrigger>
+        <div className="sm-flex height-32 margin-vertical-8">
+            <Checkbox
+                className="sm-flex-auto sm-flex-order-negative"
+                style={{
+                    width: width,
+                    marginLeft: calculateTextIndex(definitionKey)
+                }}
+                checked={defaultValue}
+                onChange={(e) => onChangeDefinition(definitionKey, e.target.checked, configCategory)}
+            />
+            <span className="margin-left-8">{i18n._(label)}</span>
+        </div>
     );
 }
 CheckboxItem.propTypes = {

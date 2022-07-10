@@ -884,16 +884,16 @@
                             "default_value": "PLA",
                             "type": "enum",
                             "options": {
-                                "[PLA]": "PLA",
-                                "[Support]": "Support",
-                                "[ABS]": "ABS",
-                                "[PTEG]": "PTEG",
-                                "[TPE]": "TPE",
-                                "[PVA]": "PVA",
-                                "[ASA]": "ASA",
-                                "[PC]": "PC",
-                                "[Nylon]": "Nylon",
-                                "[Other]": "Other"
+                                "PLA": "PLA",
+                                "Support": "Support",
+                                "ABS": "ABS",
+                                "PTEG": "PTEG",
+                                "TPE": "TPE",
+                                "PVA": "PVA",
+                                "ASA": "ASA",
+                                "PC": "PC",
+                                "Nylon": "Nylon",
+                                "Other": "Other"
                             },
                             "filter": [
                                 "basic",
@@ -2777,7 +2777,7 @@
                             "minimum_value": "0",
                             "maximum_value": "",
                             "settable_per_mesh": true,
-                            "enabled": "",
+                            "enabled": "true",
                             "filter": [
                                 "all",
                                 "basic"

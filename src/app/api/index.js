@@ -187,6 +187,7 @@ const fetchGCode = defaultAPIFactory(({ port = '', dataSource = '' }) => request
     dataSource
 }));
 
+const getProfileDocsDir = defaultAPIFactory(() => request.get('/api/profiledocs'));
 //
 // Users
 //
@@ -346,6 +347,7 @@ export default {
     generateToolPath,
 
     profileDefinitions,
+    getProfileDocsDir,
 
     // State
     getState,

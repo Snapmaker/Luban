@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
+import classNames from 'classnames';
 // import { useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 // import { useDispatch } from 'react-redux';
+import { find, includes, remove } from 'lodash';
 import i18n from '../../../lib/i18n';
 import Anchor from '../../components/Anchor';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, getCurrentHeadType, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, LEVEL_ONE_POWER_LASER_FOR_ORIGINAL, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES, MACHINE_TOOL_HEADS, SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL, STANDARD_CNC_TOOLHEAD_FOR_SM2 } from '../../../constants';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, getCurrentHeadType, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, LEVEL_ONE_POWER_LASER_FOR_ORIGINAL, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES, MACHINE_TOOL_HEADS, PRINTING_SINGLE_EXTRUDER_HEADTOOL, SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL, STANDARD_CNC_TOOLHEAD_FOR_SM2 } from '../../../constants';
 import { LEFT, RIGHT } from '../../../../server/constants';
+import SvgIcon from '../../components/SvgIcon';
+import { NumberInput as Input } from '../../components/Input';
 // import { actions as machineActions } from '../../../flux/machine';
 // import { actions as machineActions } from '../../../flux/machine';
 
@@ -156,16 +160,63 @@ const toolHeadMap = {
 };
 const defaultNozzleDiameterList = [{
     value: 0.2,
-    label: 0.2
+    label: '0.2',
+    isDefault: true
 }, {
     value: 0.4,
-    label: 0.4
+    label: '0.4',
+    isDefault: true
 }, {
     value: 0.6,
-    label: 0.6
+    label: '0.6',
+    isDefault: true
 }, {
     value: 0.8,
-    label: 0.8
+    label: '0.8',
+    isDefault: true
+}];
+const defaultNozzleDiameterListForSingleExtruder = [{
+    value: 0.4,
+    label: '0.4',
+    isDefault: true
+}];
+const defaultNozzleDiameterListForDualExtruderArtisan = [{
+    value: 0.2,
+    label: '0.2',
+    isDefault: true
+}, {
+    value: 0.4,
+    label: '0.4',
+    isDefault: true
+}, {
+    value: '0.4H',
+    label: '0.4H',
+    isDefault: true
+}, {
+    value: 0.6,
+    label: '0.6',
+    isDefault: true
+}, {
+    value: 0.8,
+    label: '0.8',
+    isDefault: true
+}];
+const defaultNozzleDiameterListForDualExtruder = [{
+    value: 0.2,
+    label: '0.2',
+    isDefault: true
+}, {
+    value: 0.4,
+    label: '0.4',
+    isDefault: true
+}, {
+    value: 0.6,
+    label: '0.6',
+    isDefault: true
+}, {
+    value: 0.8,
+    label: '0.8',
+    isDefault: true
 }];
 const MachineSettings = ({
     serial,
@@ -192,10 +243,56 @@ const MachineSettings = ({
     const [zAxis, setZAxis] = useState(hasZAxis);
     const [leftNozzleDiameterList, setLeftNozzleDiameterList] = useState(defaultNozzleDiameterList);
     const [rightNozzleDiameterList, setRightNozzleDiameterList] = useState(defaultNozzleDiameterList);
+    const [addDiameterStatus, setAddDiameterStatus] = useState(false);
     const handleMachineUpdate = (value) => {
         setCurrentSerial(value);
+        if (value === MACHINE_SERIES.ORIGINAL.value) {
+            setCurrentToolHead(SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL);
+        } else {
+            setCurrentToolHead(SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2);
+        }
     };
-
+    const handleAddDiameter = (status) => {
+        setAddDiameterStatus(status);
+    };
+    const handleRemoveDiameter = (value, direction) => {
+        if (direction === LEFT) {
+            const newLeftList = remove(leftNozzleDiameterList, (list) => {
+                return list.value !== value;
+            });
+            setLeftNozzleDiameterList(newLeftList);
+        } else {
+            const newRightList = remove(rightNozzleDiameterList, (list) => {
+                return list.value !== value;
+            });
+            setRightNozzleDiameterList(newRightList);
+        }
+    };
+    const AddDiameterToList = (e, direction) => {
+        const newValue = e.target.value;
+        if (!newValue) {
+            setAddDiameterStatus(false);
+            return;
+        }
+        if (direction === LEFT) {
+            if (!find(leftNozzleDiameterList, { value: Number(newValue) })) {
+                setLeftNozzleDiameterList([...leftNozzleDiameterList, {
+                    label: newValue,
+                    value: Number(newValue),
+                    isDefault: false
+                }]);
+            }
+        } else {
+            if (!find(rightNozzleDiameterList, { value: Number(newValue) })) {
+                setRightNozzleDiameterList([...rightNozzleDiameterList, {
+                    label: newValue,
+                    value: Number(newValue),
+                    isDefault: false
+                }]);
+            }
+        }
+        setAddDiameterStatus(false);
+    };
     const resizeAction = () => {
         const ele = document.getElementById('machine-list');
         if (window.innerWidth < 1360) {
@@ -216,7 +313,25 @@ const MachineSettings = ({
 
     useEffect(() => {
         setSeries(currentSerial);
-        setToolhead(currentToolHead);
+        setToolhead({
+            ...toolHead,
+            [`${headType}Toolhead`]: currentToolHead
+        });
+        if (currentToolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+            switch (currentSerial) {
+                case MACHINE_SERIES.A400.value:
+                    setLeftNozzleDiameterList(defaultNozzleDiameterListForDualExtruderArtisan);
+                    setRightNozzleDiameterList(defaultNozzleDiameterListForDualExtruderArtisan);
+                    break;
+                default:
+                    setLeftNozzleDiameterList(defaultNozzleDiameterListForDualExtruder);
+                    setRightNozzleDiameterList(defaultNozzleDiameterListForDualExtruder);
+                    break;
+            }
+        } else if (includes(PRINTING_SINGLE_EXTRUDER_HEADTOOL, currentToolHead)) {
+            setLeftNozzleDiameterList(defaultNozzleDiameterListForSingleExtruder);
+            setRightNozzleDiameterList([]);
+        }
     }, [currentSerial, currentToolHead]);
 
     return (
@@ -295,33 +410,83 @@ const MachineSettings = ({
                             </div>
                         )}
                         {activeNozzle === LEFT && (
-                            <div className="sm-flex sm-flex-wrap justify-space-between margin-top-16">
-                                {leftNozzleDiameterList.map(nozzle => {
+                            <div className="sm-flex sm-flex-wrap margin-top-16">
+                                {leftNozzleDiameterList.map((nozzle, index) => {
                                     return (
-                                        <Anchor onClick={() => setLeftNozzleDiameter(nozzle.value)} className={`margin-bottom-8 width-56 padding-left-8 height-32 border-radius-8 border-default-grey-1 ${leftNozzleDiameter === nozzle.value ? 'border-color-blue-2' : ''}`}>
-                                            <div>{nozzle.label}</div>
+                                        <Anchor onClick={() => setLeftNozzleDiameter(nozzle.value)} className={`margin-bottom-8 width-56 padding-horizontal-8 height-32 border-radius-8 border-default-grey-1 ${(index === 3 || index === 7) ? '' : 'margin-right-8'} ${leftNozzleDiameter === nozzle.value ? 'border-color-blue-2' : ''}`}>
+                                            <div className="sm-flex justify-space-between ">
+                                                <span>{nozzle.label}</span>
+                                                {!nozzle.isDefault && (
+                                                    <SvgIcon
+                                                        name="Cancel"
+                                                        size={8}
+                                                        type={['static']}
+                                                        onClick={() => handleRemoveDiameter(nozzle.value, LEFT)}
+                                                    />
+                                                )}
+                                            </div>
                                         </Anchor>
                                     );
                                 })}
-                                {leftNozzleDiameterList.length < 7 && (
-                                    <Anchor className="width-56 height-32 border-radius-8 border-dashed-grey-1 padding-left-8">
-                                        +Add
+                                {leftNozzleDiameterList.length < 8 && (
+                                    <Anchor className={(classNames(addDiameterStatus ? '' : 'padding-left-8', 'width-56 height-32 border-radius-8 border-dashed-grey-1'))} onClick={() => handleAddDiameter(true)}>
+                                        {addDiameterStatus ? (
+                                            <Input
+                                                min={0.1}
+                                                max={1.2}
+                                                bordered={false}
+                                                size="super-small"
+                                                autoFocus
+                                                placeholder="Add"
+                                                onPressEnter={e => AddDiameterToList(e, LEFT)}
+                                                onBlur={e => AddDiameterToList(e, LEFT)}
+                                            />
+                                        ) : (
+                                            <span>
+                                                +Add
+                                            </span>
+                                        )}
                                     </Anchor>
                                 )}
                             </div>
                         )}
                         {activeNozzle === RIGHT && (
-                            <div className="sm-flex sm-flex-wrap justify-space-between margin-top-16">
+                            <div className="sm-flex sm-flex-wrap margin-top-16">
                                 {rightNozzleDiameterList.map(nozzle => {
                                     return (
                                         <Anchor onClick={() => setRightNozzleDiameter(nozzle.value)} className={`margin-bottom-8 padding-left-8 width-56 height-32 border-radius-8 border-default-grey-1 ${rightNozzleDiameter === nozzle.value ? 'border-color-blue-2' : ''}`}>
-                                            <div>{nozzle.label}</div>
+                                            <div>
+                                                <span>{nozzle.label}</span>
+                                                {!nozzle.isDefault && (
+                                                    <SvgIcon
+                                                        name="Cancel"
+                                                        size={8}
+                                                        type={['static']}
+                                                        onClick={() => handleRemoveDiameter(nozzle.value, LEFT)}
+                                                    />
+                                                )}
+                                            </div>
                                         </Anchor>
                                     );
                                 })}
-                                {rightNozzleDiameterList.length < 7 && (
-                                    <Anchor className="width-56 height-32 border-radius-8 border-dashed-grey-1 padding-left-8">
-                                        +Add
+                                {rightNozzleDiameterList.length < 8 && (
+                                    <Anchor className={(classNames(addDiameterStatus ? '' : 'padding-left-8', 'width-56 height-32 border-radius-8 border-dashed-grey-1'))} onClick={() => handleAddDiameter(true)}>
+                                        {addDiameterStatus ? (
+                                            <Input
+                                                min={0.1}
+                                                max={1.2}
+                                                bordered={false}
+                                                size="super-small"
+                                                autoFocus
+                                                placeholder="Add"
+                                                onPressEnter={e => AddDiameterToList(e, RIGHT)}
+                                                onBlur={e => AddDiameterToList(e, RIGHT)}
+                                            />
+                                        ) : (
+                                            <span>
+                                                +Add
+                                            </span>
+                                        )}
                                     </Anchor>
                                 )}
                             </div>

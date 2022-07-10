@@ -10,7 +10,7 @@ const log = logger('service:definition');
 
 const SETTING_FIELDS = [
     'label', 'description', 'type', 'options', 'unit', 'enabled', 'default_value', 'value', 'enabled',
-    'min', 'max', 'filter',
+    'min', 'max',
     // Snapmaker extended fields:
     'sm_value'
 ];
@@ -156,6 +156,7 @@ export class DefinitionLoader {
                 this.settings[key].childKey = this.settings[key].childKey || [];
                 this.settings[key].from = definitionId;
                 this.settings[key].isLeave = (setting.children === undefined);
+                this.settings[key].filter = this.settings[key].filter ? this.settings[key].filter : (setting.filter || ['all']);
                 if (mainCategory === 'material' && zIndex === 1) {
                     this.materialProfileLevel[smallCategory] = this.materialProfileLevel[smallCategory] || [];
                     if (!includes(this.materialProfileLevel[smallCategory], key)) {
@@ -177,9 +178,6 @@ export class DefinitionLoader {
                 for (const field of SETTING_FIELDS) {
                     if (setting[field] !== undefined) {
                         this.settings[key][field] = setting[field];
-                    }
-                    if (field === 'filter' && !setting[field]) {
-                        this.settings[key][field] = ['all'];
                     }
                 }
                 if (isUndefined(this.settings[key].zIndex)) {

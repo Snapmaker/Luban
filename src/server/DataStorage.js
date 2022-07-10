@@ -61,6 +61,8 @@ class DataStorage {
 
     userCaseDir;
 
+    profileDocsDir;
+
     envDir;
 
     constructor() {
@@ -73,6 +75,7 @@ class DataStorage {
 
         this.sessionDir = `${this.userDataDir}/Sessions`;
         this.userCaseDir = `${this.userDataDir}/UserCase`;
+        this.profileDocsDir = `${this.userDataDir}/ProfileDocs`;
         this.tmpDir = `${this.userDataDir}/Tmp`;
         this.configDir = `${this.userDataDir}/Config`;
         this.defaultConfigDir = `${this.userDataDir}/Default`;
@@ -123,6 +126,7 @@ class DataStorage {
         await this.initFonts();
         await this.initScenes();
         await this.initUserCase();
+        await this.initProfileDocs();
 
         // if alt+shift+r, cannot init recover config
         !isReset && await this.initRecoverActive();
@@ -400,6 +404,26 @@ class DataStorage {
                 } else {
                     const srcPath = `${USER_CASE_LOCAL}/${file}`;
                     const dstPath = `${this.userCaseDir}/${file}`;
+                    await this.copyDir(srcPath, dstPath);
+                }
+            }
+        }
+    }
+
+    async initProfileDocs() {
+        mkdirp.sync(this.profileDocsDir);
+        const PROFILE_DOCS_LOCAL = '../../resources/ProfileDocs/';
+        if (fs.existsSync(PROFILE_DOCS_LOCAL)) {
+            const files = fs.readdirSync(PROFILE_DOCS_LOCAL);
+            for (const file of files) {
+                const src = path.join(PROFILE_DOCS_LOCAL, file);
+                const dst = path.join(this.profileDocsDir, file);
+                if (fs.statSync(src)
+                    .isFile()) {
+                    fs.copyFileSync(src, dst);
+                } else {
+                    const srcPath = `${PROFILE_DOCS_LOCAL}/${file}`;
+                    const dstPath = `${this.profileDocsDir}/${file}`;
                     await this.copyDir(srcPath, dstPath);
                 }
             }

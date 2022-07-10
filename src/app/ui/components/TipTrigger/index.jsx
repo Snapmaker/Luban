@@ -25,7 +25,7 @@ function checkIsEqual(newObj, oldObj) {
 }
 
 const TipTrigger = React.memo((props) => {
-    const { placement = 'left', style = {}, title = '', content, isIcon = false, children, ...rest } = props;
+    const { maxWidth, placement = 'left', title = '', content, isIcon = false, children, ...rest } = props;
     let placementValue = 'left';
     if (isIcon) {
         placementValue = 'bottom';
@@ -36,9 +36,9 @@ const TipTrigger = React.memo((props) => {
         <Popover
             placement={placementValue}
             className={classNames(
-                styles['popover-wrapper']
+                styles['popover-wrapper'],
             )}
-            style={style}
+            overlayClassName={`popover-content-max-width-${maxWidth}`}
             autoAdjustOverflow={false}
             zIndex={9999}
             content={content}
@@ -58,7 +58,8 @@ TipTrigger.propTypes = {
     children: PropTypes.node,
     style: PropTypes.object,
     content: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
-    isIcon: PropTypes.bool
+    isIcon: PropTypes.bool,
+    maxWidth: PropTypes.string
 };
 
 export default TipTrigger;
