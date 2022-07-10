@@ -165,7 +165,7 @@ function resolveDefinition(definition, modifiedParams) {
             }
         });
     }
-    console.log('allAsistantArray', allAsistantArray, context.resolveOrValue, asistantMap.get('skirt_line_count'),asistantMap.get('raft_margin') );
+    console.log('allAsistantArray', allAsistantArray);
     var _loop_2 = function (key) {''
         var value = _.cloneDeep(asistantMap.get(key));
         try {
@@ -181,9 +181,6 @@ function resolveDefinition(definition, modifiedParams) {
             }
             if (typeof calcEnabled !== 'undefined') {
                 definition.settings[key].enabled = calcEnabled;
-            }
-            if (key === 'adhesion_type' ||key === 'raft_margin' ) {
-                console.log('calcValue0', key, context['adhesion_type'], value.enabled, calcEnabled);
             }
             var modifiedParamItem = modifiedParams && modifiedParams.find(function (item) { return item[0] === key; });
             if (modifiedParamItem) {
@@ -236,7 +233,6 @@ function resolveDefinition(definition, modifiedParams) {
         }
         finally { if (e_3) throw e_3.error; }
     }
-    console.log('context.wall_thickness',allValues.wall_min_flow_retract, context.wall_min_flow_retract, obj.wall_min_flow_retract);
 }
 module.exports = {
     resolveDefinition: resolveDefinition
