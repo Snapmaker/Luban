@@ -429,7 +429,7 @@ function ProfileManager({
                     lastStatus = false;
                     break;
                 }
-                if (definitionForManager.settings[key].childKey.length > 0) {
+                if (definitionForManager.settings[key]?.childKey?.length > 0) {
                     actions.checkDefault(definitionForManager.settings[key].childKey, definitionForManager, selectedSettingDefaultValue, lastStatus);
                 }
             }

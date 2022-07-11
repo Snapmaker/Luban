@@ -197,7 +197,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
         'universal': {
             'normal_weak': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 3,
                     'infill_pattern': 'lines',
                     'infill_sparse_density': 10,
@@ -209,7 +209,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
             },
             'normal_normal': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 3,
                     'infill_pattern': 'trihexagon',
                     'infill_sparse_density': 15,
@@ -221,7 +221,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
             },
             'normal_strong': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 4,
                     'infill_pattern': 'cubic',
                     'infill_sparse_density': 25,
@@ -235,7 +235,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
         'quik': {
             'normal_weak': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 3,
                     'infill_pattern': 'lines',
                     'infill_sparse_density': 10,
@@ -247,7 +247,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
             },
             'normal_normal': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 3,
                     'infill_pattern': 'lines',
                     'infill_sparse_density': 15,
@@ -259,7 +259,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
             },
             'normal_strong': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 4,
                     'infill_pattern': 'lines',
                     'infill_sparse_density': 25,
@@ -273,7 +273,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
         'fine': {
             'normal_weak': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 3,
                     'infill_pattern': 'lines',
                     'infill_sparse_density': 10,
@@ -285,7 +285,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
             },
             'normal_normal': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 3,
                     'infill_pattern': 'lines',
                     'infill_sparse_density': 15,
@@ -297,7 +297,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
             },
             'normal_strong': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 4,
                     'infill_pattern': 'lines',
                     'infill_sparse_density': 25,
@@ -311,7 +311,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
         'engineering': {
             'normal_weak': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 3,
                     'infill_pattern': 'trihexagon',
                     'infill_sparse_density': 10,
@@ -323,7 +323,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
             },
             'normal_normal': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 3,
                     'infill_pattern': 'trihexagon',
                     'infill_sparse_density': 20,
@@ -335,7 +335,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
             },
             'normal_strong': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 4,
                     'infill_pattern': 'cubic',
                     'infill_sparse_density': 25,
@@ -354,51 +354,51 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
         'options': {
             'Normal': {
                 'affect': {
-                    'support_type': 'Normal',
+                    'support_type': 'normal',
                     'support_roof_enable': true,
                     'support_roof_height': 2,
-                    'support_roof_pattern': 'Zig Zag',
+                    'support_roof_pattern': 'zigzag',
                     'minimum_roof_area': 4,
                     'support_roof_offset': 2
                 },
-                'value': 'Normal',
+                'value': 'normal',
                 'label': 'Normal'
             },
             'None': {
                 'affect': {
-                    'support_type': 'None'
+                    'support_type': 'none'
                 },
-                'value': 'None',
+                'value': 'none',
                 'label': 'None'
             },
         },
-        'current_value': 'Normal',
+        'current_value': 'normal',
         'default_value': 'None'
     },
     'adhesion_type': {
         'options': {
-            'skirt': {
+            'Skirt': {
                 'affect': {
                     'adhesion_type': 'skirt'
                 },
                 'value': 'skirt',
                 'label': 'Skirt'
             },
-            'brim': {
+            'Brim': {
                 'affect': {
                     'adhesion_type': 'brim'
                 },
                 'value': 'brim',
                 'label': 'Brim'
             },
-            'raft': {
+            'Raft': {
                 'affect': {
                     'adhesion_type': 'raft'
                 },
                 'value': 'raft',
                 'label': 'Raft'
             },
-            'none': {
+            'None': {
                 'affect': {
                     'adhesion_type': 'none'
                 },
@@ -488,9 +488,9 @@ const DEFAULE_PARAMS_FOR_TPU = {
         'options': {
             'normal_weak': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 3,
-                    'infill_pattern': 'Lines',
+                    'infill_pattern': 'lines',
                     'infill_sparse_density': 10,
                     'top_thickness': 1,
                     'bottom_thickness': 1
@@ -500,9 +500,9 @@ const DEFAULE_PARAMS_FOR_TPU = {
             },
             'normal_normal': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 3,
-                    'infill_pattern': 'Tri-Hexagon',
+                    'infill_pattern': 'trihexagon',
                     'infill_sparse_density': 15,
                     'top_thickness': 1,
                     'bottom_thickness': 1
@@ -512,9 +512,9 @@ const DEFAULE_PARAMS_FOR_TPU = {
             },
             'normal_strong': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 4,
-                    'infill_pattern': 'Cubic',
+                    'infill_pattern': 'cubic',
                     'infill_sparse_density': 25,
                     'top_thickness': 1.2,
                     'bottom_thickness': 1.2
@@ -531,21 +531,21 @@ const DEFAULE_PARAMS_FOR_TPU = {
         'options': {
             'Normal': {
                 'affect': {
-                    'support_type': 'Normal',
+                    'support_type': 'normal',
                     'support_roof_enable': true,
                     'support_roof_height': 2,
-                    'support_roof_pattern': 'Zig Zag',
+                    'support_roof_pattern': 'zigzag',
                     'minimum_roof_area': 4,
                     'support_roof_offset': 2
                 },
-                'value': 'Normal',
+                'value': 'normal',
                 'label': 'Normal'
             },
             'None': {
                 'affect': {
-                    'support_type': 'None'
+                    'support_type': 'none'
                 },
-                'value': 'None',
+                'value': 'none',
                 'label': 'None'
             },
         },
@@ -554,28 +554,28 @@ const DEFAULE_PARAMS_FOR_TPU = {
     },
     'adhesion_type': {
         'options': {
-            'skirt': {
+            'Skirt': {
                 'affect': {
                     'adhesion_type': 'skirt'
                 },
                 'value': 'skirt',
                 'label': 'Skirt'
             },
-            'brim': {
+            'Brim': {
                 'affect': {
                     'adhesion_type': 'brim'
                 },
                 'value': 'brim',
                 'label': 'Brim'
             },
-            'raft': {
+            'Raft': {
                 'affect': {
                     'adhesion_type': 'raft'
                 },
                 'value': 'raft',
                 'label': 'Raft'
             },
-            'none': {
+            'None': {
                 'affect': {
                     'adhesion_type': 'none'
                 },
@@ -777,21 +777,21 @@ class PresetDefinitionModel {
                         'options': {
                             'Normal': {
                                 'affect': {
-                                    'support_type': 'Normal',
+                                    'support_type': 'normal',
                                     'support_roof_enable': true,
                                     'support_roof_height': 2,
-                                    'support_roof_pattern': 'Zig Zag',
+                                    'support_roof_pattern': 'zigzag',
                                     'minimum_roof_area': 4,
                                     'support_roof_offset': 2
                                 },
-                                'value': 'Normal',
+                                'value': 'normal',
                                 'label': 'Normal'
                             },
                             'None': {
                                 'affect': {
-                                    'support_type': 'None'
+                                    'support_type': 'none'
                                 },
-                                'value': 'None',
+                                'value': 'none',
                                 'label': 'None'
                             },
                         },
@@ -800,28 +800,28 @@ class PresetDefinitionModel {
                     },
                     'adhesion_type': {
                         'options': {
-                            'skirt': {
+                            'Skirt': {
                                 'affect': {
                                     'adhesion_type': 'skirt'
                                 },
                                 'value': 'skirt',
                                 'label': 'Skirt'
                             },
-                            'brim': {
+                            'Brim': {
                                 'affect': {
                                     'adhesion_type': 'brim'
                                 },
                                 'value': 'brim',
                                 'label': 'Brim'
                             },
-                            'raft': {
+                            'Raft': {
                                 'affect': {
                                     'adhesion_type': 'raft'
                                 },
                                 'value': 'raft',
                                 'label': 'Raft'
                             },
-                            'none': {
+                            'None': {
                                 'affect': {
                                     'adhesion_type': 'none'
                                 },
@@ -829,8 +829,8 @@ class PresetDefinitionModel {
                                 'label': 'None'
                             }
                         },
-                        'current_value': 'skirt',
-                        'default_value': 'none'
+                        'current_value': 'Skirt',
+                        'default_value': 'None'
                     }
                 };
             }
