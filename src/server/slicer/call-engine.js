@@ -1,14 +1,17 @@
 import fs from 'fs';
 
-import lubanEngine from 'snapmaker-luban-engine';
+import lunar from 'snapmaker-lunar';
 import logger from '../lib/logger';
 import { pathWithRandomSuffix } from '../../shared/lib/random-utils';
-
 
 const log = logger('laser-cnc-slice');
 
 function slice(modelInfo, onProgress, onSucceed, onError) {
-    const { headType, data, toolPathLength } = modelInfo;
+    const {
+        headType,
+        data,
+        toolPathLength
+    } = modelInfo;
 
     for (const d of data) {
         const uploadPath = `${process.env.Tmpdir}/${d.uploadName}`;
@@ -26,35 +29,31 @@ function slice(modelInfo, onProgress, onSucceed, onError) {
 
     let sliceProgress;
 
-    lubanEngine.slice(headType, process.env.Tmpdir, process.env.Tmpdir, settingsFilePath)
-        .onStderr('data', (res) => {
-            const array = res.toString()
-                .split('\n');
-            array.map((item) => {
-                if (item.length < 10) {
-                    return null;
-                }
-                if (item.indexOf('Progress:') === 0 && item.indexOf('accomplished') === -1) {
-                    const start = item.search('[0-9.]*%');
-                    const end = item.indexOf('%');
-                    sliceProgress = Number(item.slice(start, end));
-                    if (toolPathLength < 10) {
+    lunar.slice(headType, process.env.Tmpdir, process.env.Tmpdir, settingsFilePath)
+        .onStderr('data', (item) => {
+            if (item.length < 10) {
+                return null;
+            }
+            if (item.indexOf('Progress:') === 0 && item.indexOf('accomplished') === -1) {
+                const start = item.search('[0-9.]*%');
+                const end = item.indexOf('%');
+                sliceProgress = Number(item.slice(start, end));
+                if (toolPathLength < 10) {
+                    onProgress(sliceProgress);
+                } else {
+                    if (sliceProgress >= 0.8) {
                         onProgress(sliceProgress);
-                    } else {
-                        if (sliceProgress >= 0.8) {
-                            onProgress(sliceProgress);
-                        }
                     }
                 }
-                if (item.indexOf('ERROR') !== -1) {
-                    log.error(item);
-                }
-                return null;
-            });
+            }
+            if (item.indexOf('ERROR') !== -1) {
+                log.error(item);
+            }
+            return null;
         })
         .end((err, res) => {
             if (err) {
-                log.error(`LubanEngine slice error, Code: ${err.code} | Msg: ${err.msg}`);
+                log.error(`LunarTPP slice error, Code: ${err.code} | Msg: ${err.msg}`);
                 onError();
             } else {
                 onSucceed({

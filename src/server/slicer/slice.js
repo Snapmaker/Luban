@@ -20,17 +20,17 @@ const log = logger('service:print3d-slice');
 const enginePath = getPath();
 
 /**
-     * callCuraEngine
-     *
-     * @param modelConfig - information needed to create new model.
-     *  modelConfig = {
+ * callCuraEngine
+ *
+ * @param modelConfig - information needed to create new model.
+ *  modelConfig = {
                 configFilePath,
                 path: [modelPathString]
             };
-     * @param supportConfig same as modelConfig
-     * @param outputPath output file path
-     * @returns process
-     */
+ * @param supportConfig same as modelConfig
+ * @param outputPath output file path
+ * @returns process
+ */
 function callCuraEngine(modelConfig, supportConfig, outputPath) {
     const args = ['slice', '-v', '-p', '-o', outputPath];
 
@@ -79,8 +79,20 @@ function processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox, thumbnail
 
     const date = new Date();
     const splitIndex = readFileSync.indexOf(';Generated');
-    const boundingBoxMax = (boundingBox || { max: { x: 0, y: 0, z: 0 } }).max;
-    const boundingBoxMin = (boundingBox || { min: { x: 0, y: 0, z: 0 } }).min;
+    const boundingBoxMax = (boundingBox || {
+        max: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    }).max;
+    const boundingBoxMin = (boundingBox || {
+        min: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    }).min;
     const header = `${';Header Start\n'
         + '\n'
         + `${readFileSync.substring(0, splitIndex)}\n`
@@ -128,8 +140,20 @@ function slice(params, onProgress, onSucceed, onError) {
         return;
     }
 
-    const { originalName, model, support, definition, layerCount, matierial0, matierial1,
-        boundingBox, thumbnail, renderGcodeFileName: renderName, printingToolhead, series } = params;
+    const {
+        originalName,
+        model,
+        support,
+        definition,
+        layerCount,
+        matierial0,
+        matierial1,
+        boundingBox,
+        thumbnail,
+        renderGcodeFileName: renderName,
+        printingToolhead,
+        series
+    } = params;
     const modelConfig = {
         configFilePath: `${DataStorage.configDir}/${PRINTING_CONFIG_SUBCATEGORY}/active_final.def.json`,
         path: [],
@@ -179,7 +203,8 @@ function slice(params, onProgress, onSucceed, onError) {
     const renderGcodeFileName = `${renderName}.gcode`;
 
     process.stderr.on('data', (data) => {
-        const array = data.toString().split('\n');
+        const array = data.toString()
+            .split('\n');
 
         array.map((item) => {
             if (item.length < 10) {
@@ -193,8 +218,11 @@ function slice(params, onProgress, onSucceed, onError) {
             } else if (item.indexOf(';Filament used:') === 0) {
                 // single extruder: ';Filament used: 0.139049m'
                 // dual extruders: ';Filament used: 0.139049m, 0m'
-                const filamentLengthArr = item.replace(';Filament used:', '').split(',');
-                filamentLength = filamentLengthArr.map(str => Number(str.trim().replace('m', ''))).reduce((a, b) => a + b, 0);
+                const filamentLengthArr = item.replace(';Filament used:', '')
+                    .split(',');
+                filamentLength = filamentLengthArr.map(str => Number(str.trim()
+                    .replace('m', '')))
+                    .reduce((a, b) => a + b, 0);
                 filamentWeight = Math.PI * (1.75 / 2) * (1.75 / 2) * filamentLength * 1.24;
             } else if (item.indexOf('Print time (s):') === 0) {
                 // Times empirical parameter: 1.07
@@ -274,21 +302,17 @@ export function generateSupport(modelInfo, onProgress, onSucceed, onError) {
     }
 
     lubanEngine.modelSupport(DataStorage.tmpDir, DataStorage.tmpDir, settingsFilePath)
-        .onStderr('data', (res) => {
-            const array = res.toString()
-                .split('\n');
-            array.map((item) => {
-                if (item.length < 10) {
-                    return null;
-                }
-                if (item.indexOf('Progress:') === 0 && item.indexOf('accomplished') === -1) {
-                    const start = item.search('[0-9.]*%');
-                    const end = item.indexOf('%');
-                    sliceProgress = Number(item.slice(start, end));
-                    onProgress(sliceProgress);
-                }
+        .onStderr('data', (item) => {
+            if (item.length < 10) {
                 return null;
-            });
+            }
+            if (item.indexOf('Progress:') === 0 && item.indexOf('accomplished') === -1) {
+                const start = item.search('[0-9.]*%');
+                const end = item.indexOf('%');
+                sliceProgress = Number(item.slice(start, end));
+                onProgress(sliceProgress);
+            }
+            return null;
         })
         .end((err, res) => {
             if (err) {
@@ -314,7 +338,14 @@ export function simplifyModel(params, onProgress, onSucceed, onError) {
     // onSucceed();
     // onProgress(0.8);
     // const process =
-    const { uploadName, modelID, simplifyType, simplifyPercent, layerHeight, sourceSimplify } = params;
+    const {
+        uploadName,
+        modelID,
+        simplifyType,
+        simplifyPercent,
+        layerHeight,
+        sourceSimplify
+    } = params;
 
     const extname = path.extname(uploadName);
     const modelName = uploadName.slice(
@@ -356,23 +387,25 @@ export function simplifyModel(params, onProgress, onSucceed, onError) {
                 configFilePath: simplifyConfigPath,
                 outputPath: outputPath
             };
-            lunar.modelSimplify(simplifyConfig.modelPath, simplifyConfig.outputPath, simplifyConfig.configFilePath).onStderr('data', res => {
-                log.info(`response: ${res}`);
-            }).end((_err, res) => {
-                if (_err) {
-                    log.error(`fail to simplify model: ${_err}`);
-                } else {
-                    log.info(`lunar code: ${res.code}`);
-                    if (res.code === 0) {
-                        onSucceed({
-                            modelID: modelID,
-                            modelUploadName: `${sourceSimplify}`,
-                            modelOutputName: `${modelName}-simplify.stl`,
-                            sourcePly: `${modelName}-simplify.ply`,
-                        });
+            lunar.modelSimplify(simplifyConfig.modelPath, simplifyConfig.outputPath, simplifyConfig.configFilePath)
+                .onStderr('data', res => {
+                    log.info(`response: ${res}`);
+                })
+                .end((_err, res) => {
+                    if (_err) {
+                        log.error(`fail to simplify model: ${_err}`);
+                    } else {
+                        log.info(`lunar code: ${res.code}`);
+                        if (res.code === 0) {
+                            onSucceed({
+                                modelID: modelID,
+                                modelUploadName: `${sourceSimplify}`,
+                                modelOutputName: `${modelName}-simplify.stl`,
+                                sourcePly: `${modelName}-simplify.ply`
+                            });
+                        }
                     }
-                }
-            });
+                });
         }
     });
     // const process = simplifyModelEngine(simplifyConfig);
@@ -385,7 +418,11 @@ export function simplifyModel(params, onProgress, onSucceed, onError) {
 }
 
 export function repairModel(actions, params) {
-    const { uploadName, modelID, size } = params;
+    const {
+        uploadName,
+        modelID,
+        size
+    } = params;
 
     const extname = path.extname(uploadName);
     const modelName = uploadName.slice(
@@ -416,18 +453,14 @@ export function repairModel(actions, params) {
             actions.error(_err);
         } else {
             lunar.modelRepair(modeltPath, outputPath, reapirConfigPath)
-                .onStderr('data', (data) => {
-                    const array = data.toString().split('\n');
-                    array.forEach((item) => {
-                        if (item.indexOf('Step:') !== -1) {
-                            actions.next({
-                                type: 'progress',
-                                progress: stepCount / 7
-                            });
-                            stepCount++;
-                        }
-                    });
-                    log.debug(`${data}`);
+                .onStderr('data', (item) => {
+                    if (item.indexOf('Step:') !== -1) {
+                        actions.next({
+                            type: 'progress',
+                            progress: stepCount / 7
+                        });
+                        stepCount++;
+                    }
                 })
                 .end((err, res) => {
                     if (err) {
@@ -457,7 +490,10 @@ export function repairModel(actions, params) {
 }
 
 export function checkModel(actions, params) {
-    const { uploadName, modelID } = params;
+    const {
+        uploadName,
+        modelID
+    } = params;
 
     const extname = path.extname(uploadName);
     const modelName = uploadName.slice(
@@ -472,16 +508,15 @@ export function checkModel(actions, params) {
     }
     lunar.modelCheck(modeltPath, outputPath)
         .onStderr('data', (data) => {
-            const array = data.toString().split('\n');
-            array.forEach((item) => {
-                if (item.indexOf('status:1;') !== -1) {
-                    actions.next({
-                        type: 'error',
-                        modelID,
-                        originUploadName: uploadName,
-                        sourcePly: `${modelName}_check.ply`
-                    });
-                } else if (item.indexOf('status:0;') !== -1) {
+            console.log(1);
+            log.debug(`${data}`);
+        })
+        .end((err, res) => {
+            if (err) {
+                log.error(`fail to check model: ${err}`);
+                actions.error(err);
+            } else {
+                if (res.status === 0) {
                     actions.next({
                         type: 'success',
                         modelID,
@@ -489,16 +524,14 @@ export function checkModel(actions, params) {
                         sourcePly: `${modelName}_check.ply`,
                         uploadName: `${modelName}_check.stl`
                     });
+                } else {
+                    actions.next({
+                        type: 'error',
+                        modelID,
+                        originUploadName: uploadName,
+                        sourcePly: `${modelName}_check.ply`
+                    });
                 }
-            });
-
-            log.debug(`${data}`);
-        })
-        .end((err) => {
-            if (err) {
-                log.error(`fail to check model: ${err}`);
-                actions.error(err);
-            } else {
                 actions.complete();
             }
         });
