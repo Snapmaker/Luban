@@ -299,7 +299,8 @@ const INITIAL_STATE = {
     },
     // profile manager params type
     printingParamsType: 'basic',
-    materialParamsType: 'basic'
+    materialParamsType: 'basic',
+    customMode: false,
 };
 
 const ACTION_UPDATE_STATE = 'printing/ACTION_UPDATE_STATE';
@@ -540,6 +541,12 @@ export const actions = {
                 printingParamsType: value
             }));
         }
+    },
+
+    updateCustomMode: (value) => (dispatch) => {
+        dispatch(actions.updateState({
+            customMode: value
+        }));
     },
 
     updateBoundingBox: () => (dispatch, getState) => {

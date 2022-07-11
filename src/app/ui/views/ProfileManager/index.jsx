@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import classNames from 'classnames';
+import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 // import { useSelector, shallowEqual } from 'react-redux';
 import { isUndefined, cloneDeep, uniqWith } from 'lodash';
@@ -13,8 +14,10 @@ import SvgIcon from '../../components/SvgIcon';
 import Notifications from '../../components/Notifications';
 import Modal from '../../components/Modal';
 import { Button } from '../../components/Buttons';
+/* eslint-disable import/no-cycle */
 import ConfigValueBox from './ConfigValueBox';
 import styles from './styles.styl';
+import { actions as printingActions } from '../../../flux/printing';
 import { MaterialWithColor } from '../../widgets/PrintingMaterial/MaterialWithColor';
 import useSetState from '../../../lib/hooks/set-state';
 import AddMaterialModel from '../../pages/MachineMaterialSettings/addMaterialModel';
@@ -118,11 +121,16 @@ function ProfileManager({
         renameInput: useRef(null),
         refCreateModal: useRef(null)
     };
-    const [customMode, setCustomMode] = useState(false);
+    const customMode = useSelector(state => state?.printing?.customMode);
+
     const [definitionState, setDefinitionState] = useGetDefinitions(allDefinitions, activeDefinitionID, outsideActions.getDefaultDefinition, managerType);
     const [showCreateMaterialModal, setShowCreateMaterialModal] = useState(false);
     const currentDefinitions = useRef(allDefinitions);
+    const dispatch = useDispatch();
     currentDefinitions.current = allDefinitions;
+    const setCustomMode = (value) => {
+        dispatch(printingActions.updateCustomMode(value));
+    };
 
     const actions = {
         isCategorySelectedNow: (category) => {
