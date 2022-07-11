@@ -681,10 +681,8 @@ export const actions = {
         } = printingState;
         // TODO
         const {
-            toolHead: { printingToolhead },
-            series
+            toolHead: { printingToolhead }
         } = getState().machine;
-        modelGroup.setSeries(series);
         // const printingToolhead = machineStore.get('machine.toolHead.printingToolhead');
         const activeQualityDefinition = lodashFind(qualityDefinitions, {
             definitionId: defaultQualityId
