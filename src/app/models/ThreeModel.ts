@@ -161,7 +161,7 @@ class ThreeModel extends BaseModel {
 
     public async updateClippingMap() {
         this.onTransform();
-        this.clipper.updateClippingMap(this.transformation, this.boundingBox);
+        this.clipper && this.clipper.updateClippingMap(this.transformation, this.boundingBox);
     }
 
     public updateDisplayedType(value) {

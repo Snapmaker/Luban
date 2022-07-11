@@ -2768,7 +2768,6 @@ export const actions = {
             }
             models.push(modelInfo);
         });
-        console.log('models', models);
 
         const res = workerManager.arrangeModels(
             {
@@ -3615,9 +3614,6 @@ export const actions = {
                         progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress)
                     })
                 );
-                console.log(
-                    'isGroup && !isMfRecovery', isGroup , !isMfRecovery
-                );
                 if (!model.uploadName) {
                     resolve();
                 }
@@ -3777,7 +3773,6 @@ export const actions = {
                             }
                             case 'LOAD_GROUP_POSITIONS': {
                                 const { positionsArr, originalPosition } = data;
-                                console.log('positionsArr', positionsArr, children);
                                 modelGroup.addGroup({
                                     loadFrom: LOAD_MODEL_FROM_OUTER,
                                     limitSize: size,
@@ -3795,7 +3790,7 @@ export const actions = {
 
                                 const modelState = modelGroup.getState();
                                 dispatch(actions.updateState(modelState));
-                                dispatch(actions.updateAllModelColors());
+                                dispatch(actions.applyProfileToAllModels());
                                 dispatch(actions.displayModel());
                                 dispatch(actions.destroyGcodeLine());
                                 if (modelNames.length > 1) {
@@ -3822,10 +3817,10 @@ export const actions = {
         const newModels = modelGroup.models.filter(model => {
             return !models.includes(model);
         });
-        newModels.forEach((model) => {
-            if (model instanceof ThreeModel) {
-                model.initClipper(modelGroup.localPlane);
-            }
+        modelGroup.traverseModels(newModels,(model) => {
+            // if (model instanceof ThreeModel) {
+            //     model.initClipper(modelGroup.localPlane);
+            // }
             const modelSize = new Vector3();
             model.boundingBox.getSize(modelSize);
             const isLarge = ['x', 'y', 'z'].some(key => modelSize[key] >= size[key]);
