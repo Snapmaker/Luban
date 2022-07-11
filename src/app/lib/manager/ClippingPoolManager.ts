@@ -35,14 +35,19 @@ class ClippingPoolManager {
     private execTask<T>(workerName: string, message: unknown, onMessage: ((data: T) => void), onComplete?: () => void) {
         const workerPool = this.getPool();
 
+        let _reject;
         const task = workerPool.queue(async (worker) => {
-            return new Promise<void>((resolve) => {
+            return new Promise<void>((resolve, reject) => {
+                _reject = reject;
                 const subscribe = worker[workerName](message).subscribe({
                     next: onMessage,
                     complete() {
                         resolve();
                         subscribe.unsubscribe();
                         onComplete && onComplete();
+                    },
+                    error(err) {
+                        console.log('wwwwww', err);
                     }
                 });
             });
@@ -51,6 +56,7 @@ class ClippingPoolManager {
         return {
             terminate: () => {
                 task && task.cancel();
+                _reject && _reject('cancel');
             }
         };
     }
@@ -70,7 +76,9 @@ class ClippingPoolManager {
     }
 }
 
-export default ClippingPoolManager;
+const clippingPoolManager = new ClippingPoolManager();
+
+export default clippingPoolManager;
 
 
 // const workersHandle = await spawn(new Worker(`./${workerName}.worker.js`));

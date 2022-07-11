@@ -42,7 +42,7 @@ export type ModelLoadedInGroup = {
 export type ModelInfo = {
     modelID?: string,
     parentModelID?: string,
-    limitSize?: number,
+    limitSize?: TSize,
     headType?: typeof HEAD_PRINTING,
     sourceType?: '3d',
     sourceHeight?: number,

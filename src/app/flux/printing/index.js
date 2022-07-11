@@ -3817,10 +3817,10 @@ export const actions = {
         const newModels = modelGroup.models.filter(model => {
             return !models.includes(model);
         });
-        modelGroup.traverseModels(newModels,(model) => {
-            // if (model instanceof ThreeModel) {
-            //     model.initClipper(modelGroup.localPlane);
-            // }
+        modelGroup.traverseModels(newModels, (model) => {
+            if (model instanceof ThreeModel) {
+                model.initClipper(modelGroup.localPlane);
+            }
             const modelSize = new Vector3();
             model.boundingBox.getSize(modelSize);
             const isLarge = ['x', 'y', 'z'].some(key => modelSize[key] >= size[key]);
