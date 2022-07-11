@@ -108,8 +108,6 @@ function ParamItem({ selectedDefinitionModel, onChangeDefinition }) {
                     Object.entries(modelStructure?.options).forEach(([value, label]) => {
                         selectOptions.push({ value, label });
                     });
-
-                    console.log('selectOptions', selectOptions, displayName, displayValue, segmentedDisplay);
                 }
                 return (
                     <div key={paramName} className="margin-vertical-16">
