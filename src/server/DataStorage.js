@@ -412,7 +412,7 @@ class DataStorage {
 
     async initProfileDocs() {
         mkdirp.sync(this.profileDocsDir);
-        const PROFILE_DOCS_LOCAL = '../../resources/ProfileDocs/';
+        const PROFILE_DOCS_LOCAL = '../resources/ProfileDocs/';
         if (fs.existsSync(PROFILE_DOCS_LOCAL)) {
             const files = fs.readdirSync(PROFILE_DOCS_LOCAL);
             for (const file of files) {
