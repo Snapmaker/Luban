@@ -82,15 +82,15 @@ class PrintableCube extends Object3D {
             opacity: 1,
             transparent: true,
             depthWrite: false,
-            // polygonOffset: true,
-            // polygonOffsetFactor: 0,
-            // polygonOffsetUnits: 0,
+            polygonOffset: true,
+            polygonOffsetFactor: 0,
+            polygonOffsetUnits: 3,
 
         });
         const mesh1 = new Mesh(geometry1, material);
         mesh1.position.set(0, -y / 2 + front / 2, 0);
         this.add(mesh1);
-        mesh1.renderOrder = 2;
+        mesh1.renderOrder = -4;
         this.stopAreaObjects.push(mesh1);
 
         // back
@@ -98,7 +98,7 @@ class PrintableCube extends Object3D {
         const mesh2 = new Mesh(geometry2, material);
         mesh2.position.set(0, y / 2 - back / 2, 0);
         this.add(mesh2);
-        mesh2.renderOrder = 2;
+        mesh2.renderOrder = -4;
         this.stopAreaObjects.push(mesh2);
 
         // left
@@ -106,7 +106,7 @@ class PrintableCube extends Object3D {
         const mesh3 = new Mesh(geometry3, material);
         mesh3.position.set(-x / 2 + left / 2, (front - back) / 2, 0);
         this.add(mesh3);
-        mesh3.renderOrder = 2;
+        mesh3.renderOrder = -4;
         this.stopAreaObjects.push(mesh3);
 
         // right
@@ -114,7 +114,7 @@ class PrintableCube extends Object3D {
         const mesh4 = new Mesh(geometry4, material);
         mesh4.position.set(x / 2 - right / 2, (front - back) / 2, 0);
         this.add(mesh4);
-        mesh4.renderOrder = 2;
+        mesh4.renderOrder = -4;
         this.stopAreaObjects.push(mesh4);
     }
 
@@ -243,7 +243,7 @@ class PrintableCube extends Object3D {
 
     createSeries() {
         const loader = new FontLoader();
-        loader.load(`${DEFAULT_LUBAN_HOST}/resources/helvetiker_regular.typeface.json`, (font) => {
+        loader.load(`${DEFAULT_LUBAN_HOST}/resources/print-board/helvetiker_regular.typeface.json`, (font) => {
             const color = new Color('#D5D6D9');
             const matLite = new MeshBasicMaterial({
                 color: color,
@@ -253,8 +253,11 @@ class PrintableCube extends Object3D {
                 polygonOffsetFactor: 0,
                 polygonOffsetUnits: -3
             });
-            const message = 'A350/A350T/F350';
-            const shapes = font.generateShapes(message, 9);
+            let size = 9;
+            if (this.series.indexOf('Original') !== -1) {
+                size = 4;
+            }
+            const shapes = font.generateShapes(this.series, size);
             const geometry = new ShapeGeometry(shapes);
             geometry.computeBoundingBox();
             geometry.translate(
@@ -338,7 +341,7 @@ class PrintableCube extends Object3D {
 
     loadBaseplate() {
         new STLLoader().load(
-            `${DEFAULT_LUBAN_HOST}/resources/a400.stl`,
+            `${DEFAULT_LUBAN_HOST}/resources/print-board/a400.stl`,
             (geometry) => {
                 geometry.computeBoundingBox();
                 // const box3 = geometry.boundingBox;
@@ -368,7 +371,7 @@ class PrintableCube extends Object3D {
 
     loadBackground() {
         new STLLoader().load(
-            `${DEFAULT_LUBAN_HOST}/resources/background.stl`,
+            `${DEFAULT_LUBAN_HOST}/resources/print-board/background.stl`,
             (geometry) => {
                 geometry.computeBoundingBox();
                 const box3 = geometry.boundingBox;

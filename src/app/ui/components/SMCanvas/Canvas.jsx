@@ -403,6 +403,7 @@ class Canvas extends PureComponent {
 
         this.controls.setTarget(this.initialTarget);
         this.controls.setSelectableObjects(this.modelGroup.object);
+        this.controls.setHighlightableObjects(this.modelGroup.clippingGroup);
 
         this.controls.on(EVENTS.UPDATE, () => {
             this.renderScene();
@@ -428,7 +429,8 @@ class Canvas extends PureComponent {
                 return model.overstepped;
             });
             if (hasOverstepped) {
-                toast(ToastWapper('不可打印区域提示', 'WarningTipsWarning', '#FFA940'));
+                toast.dismiss();
+                toast(ToastWapper('此处为不可打印区域', 'WarningTipsWarning', '#FFA940'));
             } else if (this.props.printableArea.isPointInShape) {
                 const useHotMatialModels = this.modelGroup.isOversteppedHotArea();
                 if (useHotMatialModels) {
@@ -450,6 +452,7 @@ class Canvas extends PureComponent {
                         }
                     });
                     if (hasOversteppedHotArea) {
+                        toast.dismiss();
                         toast(ToastWapper('此模型使用高温材料，建议放置构建板中央高温区内打印', 'WarningTipsWarning', '#1890FF'));
                     }
                 }
