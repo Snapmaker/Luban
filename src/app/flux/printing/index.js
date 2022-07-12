@@ -4677,7 +4677,7 @@ export const actions = {
                                 modelPositionAttribute
                             );
                             // simplify model mesh import with sacle befor action
-                            bufferGeometry.scale(1 / model.transformation.scaleX, 1 / model.transformation.scaleY, 1 / model.transformation.scaleZ);
+                            res.reloadSimplifyModel && bufferGeometry.scale(1 / model.transformation.scaleX, 1 / model.transformation.scaleY, 1 / model.transformation.scaleZ);
 
                             bufferGeometry.computeVertexNormals();
                             const meshObject = new Mesh(bufferGeometry, material);
