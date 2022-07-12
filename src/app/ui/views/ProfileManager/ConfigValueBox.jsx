@@ -53,6 +53,10 @@ function ConfigValueBox({
         if (selectCategory && selectProfile) {
             try {
                 const content = fs.readFileSync(`${profileDocsDir}/${lang.toUpperCase()}/${selectCategory}/${selectProfile}.md`, 'utf-8');
+                // const content = await fetch(`${DEFAULT_LUBAN_HOST}/${profileDocsDir}/${lang.toUpperCase() === 'ZH-CN' ? 'CN' : 'EN'}/${selectCategory}/${selectProfile}.md`)
+                //     .then(res => {
+                //         console.log(res);
+                //     });
                 setMdContent(content);
             } catch (e) {
                 console.info(e);
@@ -276,9 +280,6 @@ function ConfigValueBox({
                 <div className="sm-flex">
                     <div className="sm-flex align-center margin-right-64">
                         <span className="margin-right-8">{i18n._('key-profileManager/param type')}</span>
-                        {/* <Dropdown trigger={['click']} overlay={managerType === PRINTING_MANAGER_TYPE_MATERIAL ? materialParamsType : qualityParamsType}>
-                            <div>{i18n._(`key-profileManager/${selectParamsType}`)}</div>
-                        </Dropdown> */}
                         <Select
                             options={managerType === PRINTING_MANAGER_TYPE_MATERIAL ? materialParamsTypeOptions : qualityParamsTypeOptions}
                             clearable={false}
@@ -502,7 +503,6 @@ ConfigValueBox.propTypes = {
     onChangeCustomConfig: PropTypes.func,
     customMode: PropTypes.bool,
     setCustomMode: PropTypes.func,
-    // isFromPrinting: PropTypes.bool
 };
 
 export default React.memo(ConfigValueBox);

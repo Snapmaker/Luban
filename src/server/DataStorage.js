@@ -416,6 +416,7 @@ class DataStorage {
         if (fs.existsSync(PROFILE_DOCS_LOCAL)) {
             const files = fs.readdirSync(PROFILE_DOCS_LOCAL);
             for (const file of files) {
+                if (file === '.git') continue;
                 const src = path.join(PROFILE_DOCS_LOCAL, file);
                 const dst = path.join(this.profileDocsDir, file);
                 if (fs.statSync(src)

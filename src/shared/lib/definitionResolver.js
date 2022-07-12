@@ -62,6 +62,7 @@ function resolveDefinition(definition, modifiedParams) {
     var _loop_1 = function (key) {
         var _g;
         var value = obj[key];
+        console.log('value', value, key);
         if (value.type && (value.type !== 'category' && value.type !== 'mainCategory')) {
             if (!asistantMapInitialized) {
                 var cloneValue = _.cloneDeep(value);
@@ -118,7 +119,7 @@ function resolveDefinition(definition, modifiedParams) {
                     definition.settings[key].enabled = calcEnabled;
                 }
                 if (insideValue.type === 'float' || insideValue.type === 'int') {
-                    if (Math.abs(calcValue - defaultValue) > 1e-6) {
+                    if (Math.abs(calcValue - defaultValue) > 1e-6 && !_.isUndefined(calcValue)) {
                         definition.settings[key].mismatch = true;
                     }
                     else {
@@ -126,7 +127,7 @@ function resolveDefinition(definition, modifiedParams) {
                     }
                 }
                 else {
-                    if (calcValue !== defaultValue) {
+                    if (calcValue !== defaultValue && !_.isUndefined(calcValue)) {
                         definition.settings[key].mismatch = true;
                     }
                     else {
@@ -199,7 +200,7 @@ function resolveDefinition(definition, modifiedParams) {
                 definition.settings[key].default_value = defaultValue;
             }
             if (value.type === 'float' || value.type === 'int') {
-                if (Math.abs(calcValue - defaultValue) > 1e-6) {
+                if (Math.abs(calcValue - defaultValue) > 1e-6 && !_.isUndefined(calcValue)) {
                     definition.settings[key].mismatch = true;
                 }
                 else {
@@ -207,7 +208,8 @@ function resolveDefinition(definition, modifiedParams) {
                 }
             }
             else {
-                if (calcValue !== defaultValue) {
+                console.log({ calcValue, defaultValue });
+                if (calcValue !== defaultValue && !_.isUndefined(calcValue)) {
                     definition.settings[key].mismatch = true;
                 }
                 else {

@@ -100,7 +100,6 @@ function useRenderMainToolBar() {
     const canGroup = useSelector(state => state?.printing?.modelGroup?.canGroup());
     const canMerge = useSelector(state => state?.printing?.modelGroup?.canMerge());
     const canUngroup = useSelector(state => state?.printing?.modelGroup?.canUngroup());
-    // const toolHeadObj = useSelector(state => state?.machine?.toolHead);
     const [showHomePage, setShowHomePage] = useState(false);
     const [showWorkspace, setShowWorkspace] = useState(false);
     const [showMachineMaterialSettings, setShowMachineMaterialSettings] = useState(false);
@@ -141,7 +140,7 @@ function useRenderMainToolBar() {
                 dispatch(machineActions.updateMachineSeries(currentSeries));
                 dispatch(machineActions.updateMachineToolHead({
                     ...toolHead,
-                    printingToolhead: typeof currentToolhead === 'string' ? currentToolhead : currentToolhead.printingToolhead
+                    printingToolhead: currentToolhead
                 }, currentSeries));
                 await dispatch(projectActions.clearSavedEnvironment(HEAD_PRINTING));
                 window.location.href = '/';

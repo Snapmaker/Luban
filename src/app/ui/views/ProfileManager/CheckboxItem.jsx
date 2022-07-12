@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import i18n from '../../../lib/i18n';
-// import TipTrigger from '../../components/TipTrigger';
 import Checkbox from '../../components/Checkbox';
 
 function CheckboxItem({

@@ -391,7 +391,7 @@ export const actions = {
         // state
         const printingState = getState().printing;
         const { gcodeLineGroup, defaultMaterialId } = printingState;
-
+        const profileDocsDir = await api.getProfileDocsDir();
         const { toolHead, series, size } = getState().machine;
         // await dispatch(machineActions.updateMachineToolHead(toolHead, series, CONFIG_HEADTYPE));
         const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
@@ -420,7 +420,8 @@ export const actions = {
                 materialDefinitions: allMaterialDefinition,
                 qualityDefinitions: qualityParamModels,
                 extruderLDefinition,
-                extruderRDefinition: await definitionManager.getDefinitionsByPrefixName('snapmaker_extruder_1')
+                extruderRDefinition: await definitionManager.getDefinitionsByPrefixName('snapmaker_extruder_1'),
+                profileDocsDir: profileDocsDir.body.profileDocsDir
             })
         );
         // model group

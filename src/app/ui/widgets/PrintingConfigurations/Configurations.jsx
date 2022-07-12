@@ -26,6 +26,7 @@ import SettingItem from '../../views/ProfileManager/SettingItem';
 /* eslint-disable import/no-cycle */
 import styles from './styles.styl';
 import { getPresetOptions } from '../../utils/profileManager';
+/* eslint-disable import/no-cycle */
 import PrintingManager from '../../views/PrintingManager';
 
 const DEFAULT_DISPLAY_TYPE = 'key-default_category-Default';

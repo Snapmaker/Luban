@@ -12,7 +12,6 @@ import RotationAnalysisOverlay from './Overlay/RotationAnalysisOverlay';
 import EditSupportOverlay from './Overlay/EditSupportOverlay';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, EPSILON, HEAD_PRINTING } from '../../../constants';
 import { machineStore } from '../../../store/local-storage';
-// import TipTrigger from '../../components/TipTrigger';
 import PrimeTowerModel from '../../../models/PrimeTowerModel';
 /* eslint-disable-next-line import/no-cycle */
 import SupportOverlay from './Overlay/SupportOverlay';
