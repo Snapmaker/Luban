@@ -74,7 +74,7 @@ export const set = async (req, res) => {
     try {
         if (file) { // post blob file in web
             let filename = file.name, filePath = file.path, children = [];
-            ({ filename, filePath, children } = await convertFileToSTL(file, headType === 'printing'));
+            ({ filename, filePath, children = [] } = await convertFileToSTL(file, headType === 'printing'));
             const originalName = removeSpecialChars(path.basename(filename));
             if (!uploadName) {
                 uploadName = generateRandomPathName(originalName);

@@ -394,7 +394,7 @@ class ModelGroup extends EventEmitter {
             model.meshObject.remove(model.processObject3D);
         }
         if (model instanceof ThreeModel) {
-            this.clippingGroup && this.clippingGroup.remove(model.clipper.group);
+            this.clippingGroup && model.clipper && this.clippingGroup.remove(model.clipper.group);
         }
         model.meshObject.removeEventListener('update', this.onModelUpdate);
         if (model.parent instanceof ThreeGroup) {

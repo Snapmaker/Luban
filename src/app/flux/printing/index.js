@@ -2,7 +2,6 @@
 import { cloneDeep, filter, find as lodashFind, isNil } from 'lodash';
 import path from 'path';
 import * as THREE from 'three';
-import { Transfer } from 'threads';
 import { Mesh, Vector3 } from 'three';
 import {
     acceleratedRaycast,
@@ -3716,7 +3715,9 @@ export const actions = {
         const promptTasks = [];
 
         const checkResultMap = new Map();
-        const checkPromises = modelNames.map(async (item) => {
+        const checkPromises = modelNames.filter((item) => {
+            return ['.obj', '.stl'].includes(path.extname(item.uploadName))
+        }).map(async (item) => {
             return controller.checkModel({
                 uploadName: item.uploadName
             }, (data) => {
@@ -3949,7 +3950,7 @@ export const actions = {
         await Promise.allSettled(promises);
 
         const newModels = modelGroup.models.filter(model => {
-            return !models.includes(model);
+            return !models.includes(model) && model;
         });
         modelGroup.traverseModels(newModels, (model) => {
             // if (model instanceof ThreeModel) {
@@ -3959,16 +3960,20 @@ export const actions = {
             model.boundingBox.getSize(modelSize);
             const isLarge = ['x', 'y', 'z'].some(key => modelSize[key] >= size[key]);
             const checkResult = checkResultMap.get(model.uploadName);
+            if(!model.sourcePly){
+
             if (checkResult && checkResult.isDamage) {
                 promptDamageModel && promptTasks.push({
                     status: 'need-repair-model',
                     model
                 });
                 model.needRepair = true;
+                model.sourcePly = checkResult.sourcePly;
             } else {
                 model.needRepair = false;
             }
-            model.sourcePly = checkResult.sourcePly;
+        }
+
             if (isLarge) {
                 promptTasks.push({
                     status: 'needScaletoFit',
@@ -4939,7 +4944,7 @@ export const actions = {
             })
         );
 
-        dispatch(actions.updateAllModelColors());
+        dispatch(actions.applyProfileToAllModels());
         dispatch(actions.displayModel());
         dispatch(actions.destroyGcodeLine());
     },
