@@ -95,7 +95,7 @@ function ConfigValueBox({
         categoryKey
     }) => {
         return renderList && renderList.map(profileKey => {
-            if (settings[profileKey].childKey.length > 0) {
+            if (settings[profileKey].childKey?.length > 0) {
                 return (
                     <div key={profileKey} className={`margin-left-${(settings[profileKey].zIndex - 1) * 16}`}>
                         <CheckboxItem
@@ -155,8 +155,8 @@ function ConfigValueBox({
         // selectParamsType: _selectParamsType
     }) => {
         return renderList && renderList.map(profileKey => {
-            if (selectParamsType === 'custom' || includes((settings[profileKey].filter).concat('all'), selectParamsType)) {
-                if (settings[profileKey].childKey.length > 0 && selectParamsType !== 'custom') {
+            if (selectParamsType === 'custom' || includes((settings[profileKey].filter || []).concat('all'), selectParamsType)) {
+                if (settings[profileKey].childKey?.length > 0 && selectParamsType !== 'custom') {
                     return (
                         <div key={profileKey} className={`margin-left-${(settings[profileKey].zIndex - 1) * 16}`}>
                             <SettingItem
