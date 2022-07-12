@@ -240,14 +240,9 @@ class Controls extends EventEmitter {
         this.offset.copy(this.camera.position).sub(this.target);
         // calculate move distance of target in perspective view of camera
         const distance = 2 * this.offset.length() * Math.tan(this.camera.fov / 2 * Math.PI / 180);
-        let currentScale = this.panScale;
-        if (this.panScale <= 3) {
-            currentScale = 1;
-        } else {
-            currentScale = (this.panScale * 0.5) * 0.75;
-        }
-        this.panLeft(distance * deltaX * currentScale / elem.clientWidth, this.camera.matrix);
-        this.panUp(distance * deltaY * currentScale / elem.clientHeight, this.camera.matrix);
+
+        this.panLeft(distance * deltaX / elem.clientWidth, this.camera.matrix);
+        this.panUp(distance * deltaY / elem.clientHeight, this.camera.matrix);
     }
 
     setScale(scale) {
@@ -357,7 +352,6 @@ class Controls extends EventEmitter {
             this.ray.firstHitOnly = true;
             const res = this.ray.intersectObject(this.selectedGroup, true);
             if (res.length) {
-                // console.log(this.selectedGroup, res);
                 this.supportActions.moveSupport(res);
             }
             // const mousePosition = new THREE.Vector3();
@@ -660,7 +654,7 @@ class Controls extends EventEmitter {
             this.dollyOut();
         }
 
-        this.updateCamera();
+        this.updateCamera(true);
     };
 
     setSelectableObjects(objects) {
@@ -727,6 +721,7 @@ class Controls extends EventEmitter {
                 this.spherical.radius = this.scaleSize / this.minScale;
             }
             this.spherical.radius = Math.max(this.minDistance, Math.min(this.maxDistance, this.spherical.radius));
+
             // suport zoomToCursor (mouse only)
             if (this.zoomToCursor && shouldUpdateTarget) {
                 this.target.lerp(this.mouse3D, 1 - this.spherical.radius / prevRadius);
@@ -737,6 +732,15 @@ class Controls extends EventEmitter {
                 this.offset.set(spherialOffset.x, -spherialOffset.z, spherialOffset.y);
             } else {
                 this.offset.copy(spherialOffset);
+            }
+
+            if (this.spherical.radius <= 20) {
+                const scalar = this.target.z >= 20 ? 10 : 1;
+                const cameraWorldDir = new THREE.Vector3();
+                this.camera.getWorldDirection(cameraWorldDir);
+                if (this.target.z >= 20 && this.target.z + cameraWorldDir.z * scalar >= 10) {
+                    this.target.add(cameraWorldDir.multiplyScalar(scalar));
+                }
             }
 
             this.sphericalDelta.set(0, 0, 0);
