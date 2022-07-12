@@ -36,15 +36,16 @@ function callCuraEngine(modelConfig, supportConfig, outputPath) {
         for (let i = 0; i < modelConfig.path.length; i++) {
             const filePath = modelConfig.path[i];
             const fileConfig = modelConfig.modelConfigFilePath[i];
-            args.push('-l', filePath);
-            args.push('-j', fileConfig);
+            console.log(filePath.replace(/\\/g, '/'));
+            args.push('-l', filePath.replace(/\\/g, '/'));
+            args.push('-j', fileConfig.replace(/\\/g, '/'));
         }
     }
     if (supportConfig && supportConfig.path.length) {
         for (const filePath of supportConfig.path) {
-            args.push('-l', filePath);
+            args.push('-l', filePath.replace(/\\/g, '/'));
             // notice that this config just effects the previous model
-            args.push('-j', supportConfig.configFilePath);
+            args.push('-j', supportConfig.configFilePath.replace(/\\/g, '/'));
         }
     }
     log.info(`${enginePath} ${args.join(' ')}`);
