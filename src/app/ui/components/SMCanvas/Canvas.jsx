@@ -29,6 +29,7 @@ import WebGLRendererWrapper from '../../../three-extensions/WebGLRendererWrapper
 import { TRANSLATE_MODE } from '../../../constants';
 import { toast } from '../Toast';
 import { ToastWapper } from '../Toast/toastContainer';
+import i18n from '../../../lib/i18n';
 
 const ANIMATION_DURATION = 500;
 const DEFAULT_MODEL_POSITION = new Vector3(0, 0, 0);
@@ -430,7 +431,7 @@ class Canvas extends PureComponent {
             });
             if (hasOverstepped) {
                 toast.dismiss();
-                toast(ToastWapper('此处为不可打印区域', 'WarningTipsWarning', '#FFA940'));
+                toast(ToastWapper(i18n._('key-Printing/This is the non printable area'), 'WarningTipsWarning', '#FFA940'));
             } else if (this.props.printableArea.isPointInShape) {
                 const useHotMatialModels = this.modelGroup.isOversteppedHotArea();
                 if (useHotMatialModels) {
@@ -453,7 +454,7 @@ class Canvas extends PureComponent {
                     });
                     if (hasOversteppedHotArea) {
                         toast.dismiss();
-                        toast(ToastWapper('此模型使用高温材料，建议放置构建板中央高温区内打印', 'WarningTipsWarning', '#1890FF'));
+                        toast(ToastWapper(i18n._('key-Printing/This model uses high-temperature materials, and it is recommended to place it in the central high-temperature area of the construction board for printing'), 'WarningTipsWarning', '#1890FF'));
                     }
                 }
             }

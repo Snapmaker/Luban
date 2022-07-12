@@ -48,10 +48,6 @@ class Thumbnail extends PureComponent {
 
         this.node.current.appendChild(this.renderer.domElement);
 
-        // const controls = new OrbitControls(this.camera, this.renderer.domElement);
-        // controls.target.y = 0.5;
-        // controls.update();
-
         this.renderScene();
     }
 
@@ -94,13 +90,6 @@ class Thumbnail extends PureComponent {
             bbbx.max.y - bbbx.min.y,
             bbbx.max.z - bbbx.min.z
         );
-        // if (this.cube) {
-        //     this.scene.remove(this.cube);
-        // }
-        // const geometry = new THREE.BoxGeometry(bbbx.max.x - bbbx.min.x, bbbx.max.y - bbbx.min.y, bbbx.max.z - bbbx.min.z);
-        // const material = new THREE.MeshBasicMaterial({ color: 0xe0e0e0, opacity: 0.8, transparent: true });
-        // this.cube = new THREE.Mesh(geometry, material);
-        // this.scene.add(this.cube);
 
         const p = rz / 2 / Math.tan(22.5 / 180 * Math.PI) + 5;
 
@@ -122,10 +111,6 @@ class Thumbnail extends PureComponent {
     }
 
     renderScene() {
-        // requestAnimationFrame(() => {
-        //     this.renderScene();
-        // });
-
         this.renderer.render(this.scene, this.camera);
     }
 
