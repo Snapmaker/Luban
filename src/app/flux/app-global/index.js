@@ -1,10 +1,11 @@
-import { EPSILON, HEAD_PRINTING } from '../../constants';
+import path from 'path';
+import { EPSILON, HEAD_PRINTING, DATA_PREFIX, } from '../../constants';
 import { controller } from '../../lib/controller';
 import { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 
 import { baseActions as editorActions } from '../editor/actions-base';
 // eslint-disable-next-line import/no-cycle
-import { actions as printingActions } from '../printing/index';
+import { actions as printingActions, uploadMesh } from '../printing/index';
 import ThreeGroup from '../../models/ThreeGroup';
 
 const ACTION_UPDATE_STATE = 'app-global/ACTION_UPDATE_STATE';
@@ -116,10 +117,19 @@ export const actions = {
         const results = [];
         let completedNum = 0;
         const promises = [];
-        modelGroup.traverseModels(models, (model) => {
+        modelGroup.traverseModels(models, async (model) => {
             if (!(model instanceof ThreeGroup)) {
+                const mesh = model.meshObject.clone(false);
+                mesh.clear();
+                const basenameWithoutExt = path.basename(
+                    `${DATA_PREFIX}/${model.originalName}`,
+                    path.extname(`${DATA_PREFIX}/${model.originalName}`)
+                );
+                const sourceRepairName = `${basenameWithoutExt}.stl`;
+                const uploadResult = await uploadMesh(mesh, sourceRepairName);
+                const newUploadName = uploadResult?.body?.uploadName;
                 promises.push(controller.repairModel({
-                    uploadName: model.sourcePly || model.uploadName,
+                    uploadName: newUploadName,
                     modelID: model.modelID,
                     size
                 }, (data) => {

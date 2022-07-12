@@ -162,7 +162,8 @@ const ThreeUtils = {
         const parent = obj.parent;
         if (!parent) return () => {};
 
-        this.updateMatrixIncrusive(parent);
+        // this.updateMatrixIncrusive(parent);
+        parent.updateMatrixWorld();
         parent.remove(obj);
         obj.applyMatrix4(parent.matrixWorld);
         return () => this.setObjectParent(obj, parent);

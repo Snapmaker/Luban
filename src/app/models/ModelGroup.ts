@@ -1752,7 +1752,6 @@ class ModelGroup extends EventEmitter {
                 }
             }
             if (model.parentUploadName) {
-                console.log('model', model.position, model);
                 this.updateSelectedGroupTransformation(
                     {
                         positionX: model.originalPosition.x,

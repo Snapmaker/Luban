@@ -381,12 +381,18 @@ function Printing({ location }) {
     }, [enabledIntro]);
 
     async function onDropAccepted(files) {
+        const allFiles = files.map(d => d.name).join();
         try {
             await dispatch(printingActions.uploadModel(files));
         } catch (e) {
             modal({
                 title: i18n._('key-Printing/Page-Failed to open model.'),
-                body: e.message
+                body: (
+                    <React.Fragment>
+                        <p>{e.message || e.body.msg}</p>
+                        <p>{i18n._('key-Printing/ContextMenu-Model source name')}: {allFiles}</p>
+                    </React.Fragment>
+                )
             });
         }
     }

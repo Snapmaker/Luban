@@ -96,7 +96,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
             } catch (e) {
                 modal({
                     title: i18n._('key-Printing/LeftBar-Failed to upload model.'),
-                    body: e.message
+                    body: e.message || e.body.msg
                 });
             }
         },

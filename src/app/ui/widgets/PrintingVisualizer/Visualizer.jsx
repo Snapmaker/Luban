@@ -464,14 +464,16 @@ class Visualizer extends PureComponent {
                     const needRepairModels = promptTasks.filter(item => item.status === 'need-repair-model').map((i) => {
                         return i.model;
                     });
-                    repairModelPopup(needRepairModels).then((ignore) => {
-                        modelGroup.unselectAllModels();
-                        modelGroup.addModelToSelectedGroup(...needRepairModels);
-                        this.props.repairSelectedModels();
-                        this.props.updatePromptDamageModel(!ignore);
-                    }).catch((ignore) => {
-                        this.props.updatePromptDamageModel(!ignore);
-                    });
+                    if (needRepairModels.length) {
+                        repairModelPopup(needRepairModels).then((ignore) => {
+                            modelGroup.unselectAllModels();
+                            modelGroup.addModelToSelectedGroup(...needRepairModels);
+                            this.props.repairSelectedModels();
+                            this.props.updatePromptDamageModel(!ignore);
+                        }).catch((ignore) => {
+                            this.props.updatePromptDamageModel(!ignore);
+                        });
+                    }
                 } else if (stage === STEP_STAGE.PRINTING_SLICE_FAILED) {
                     sliceFailPopup();
                 } else if (stage === STEP_STAGE.PRINTING_REPAIRING_MODEL) {
@@ -544,7 +546,7 @@ class Visualizer extends PureComponent {
 
         const isModelSelected = (selectedModelArray.length > 0);
         const isMultipleModel = selectedModelArray.length > 1;
-        const isSupportSelected = modelGroup.selectedModelArray.length > 0 && modelGroup.selectedModelArray[0].supportTag === true;
+
         const notice = this.getNotice();
         const progress = this.props.progress;
         const pasteDisabled = (modelGroup.clipboard.length === 0);
@@ -644,25 +646,25 @@ class Visualizer extends PureComponent {
                             {
                                 type: 'item',
                                 label: i18n._('key-Printing/ContextMenu-Cut'),
-                                disabled: inProgress || !isModelSelected || isSupportSelected,
+                                disabled: inProgress || !isModelSelected,
                                 onClick: this.props.cut
                             },
                             {
                                 type: 'item',
                                 label: i18n._('key-Printing/ContextMenu-Copy'),
-                                disabled: inProgress || !isModelSelected || isSupportSelected,
+                                disabled: inProgress || !isModelSelected,
                                 onClick: this.props.copy
                             },
                             {
                                 type: 'item',
                                 label: i18n._('key-Printing/ContextMenu-Paste'),
-                                disabled: inProgress || isSupportSelected || pasteDisabled,
+                                disabled: inProgress || pasteDisabled,
                                 onClick: this.props.paste
                             },
                             {
                                 type: 'item',
                                 label: i18n._('key-Printing/ContextMenu-Duplicate'),
-                                disabled: inProgress || !isModelSelected || isSupportSelected,
+                                disabled: inProgress || !isModelSelected,
                                 onClick: this.actions.duplicateSelectedModel
                             },
                             {
@@ -671,13 +673,13 @@ class Visualizer extends PureComponent {
                             {
                                 type: 'item',
                                 label: i18n._('key-Printing/ContextMenu-FitViewIn'),
-                                disabled: inProgress || !hasModel || isSupportSelected,
+                                disabled: inProgress || !hasModel,
                                 onClick: this.actions.fitViewIn
                             },
                             {
                                 type: 'item',
                                 label: i18n._('key-Printing/ContextMenu-Hide'),
-                                disabled: inProgress || !isModelSelected || isSupportSelected,
+                                disabled: inProgress || !isModelSelected,
                                 onClick: this.props.hideSelectedModel
                             },
                             {
@@ -686,25 +688,25 @@ class Visualizer extends PureComponent {
                             {
                                 type: 'item',
                                 label: i18n._('key-Printing/ContextMenu-Reset Model Transformation'),
-                                disabled: inProgress || !isModelSelected || isSupportSelected,
+                                disabled: inProgress || !isModelSelected,
                                 onClick: this.actions.resetSelectedModelTransformation
                             },
                             {
                                 type: 'item',
                                 label: i18n._('key-Printing/ContextMenu-Center Models'),
-                                disabled: inProgress || !isModelSelected || isSupportSelected,
+                                disabled: inProgress || !isModelSelected,
                                 onClick: this.actions.centerSelectedModel
                             },
                             {
                                 type: 'item',
                                 label: i18n._('key-Printing/ContextMenu-Auto Rotate'),
-                                disabled: inProgress || !isModelSelected || isSupportSelected || isMultipleModel,
+                                disabled: inProgress || !isModelSelected || isMultipleModel,
                                 onClick: this.actions.autoRotateSelectedModel
                             },
                             {
                                 type: 'item',
                                 label: i18n._('key-Printing/ContextMenu-Auto Arrange'),
-                                disabled: inProgress || !hasModel || isSupportSelected,
+                                disabled: inProgress || !hasModel,
                                 onClick: () => {
                                     this.actions.arrangeAllModels();
                                 }

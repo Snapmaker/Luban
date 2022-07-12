@@ -38,18 +38,6 @@ const loadModel = (uploadPath: string) => {
                 if (geometry instanceof Group) {
                     observer.next({
                         type: 'LOAD_GROUP_POSITIONS',
-                        // positionsArr: {
-                        //     groupName: geometry.name,
-                        //     matrix: geometry.matrix.toArray(),
-                        //     children: geometry.children.slice(0).map(mesh => {
-                        //         mesh.updateMatrix();
-                        //         return {
-                        //             meshName: mesh.name,
-                        //             matrix: mesh.matrix.toArray(),
-                        //             positions: mesh.geometry.getAttribute('position').array
-                        //         };
-                        //     })
-                        // },
                         originalPosition
                     });
                 } else {

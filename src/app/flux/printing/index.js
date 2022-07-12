@@ -348,7 +348,7 @@ function stateEqual(model, stateFrom, stateTo) {
     return true;
 }
 
-async function uploadMesh(mesh, fileName, fileType = 'stl') {
+export const uploadMesh = async function (mesh, fileName, fileType = 'stl') {
     const stl = new ModelExporter().parse(mesh, fileType, true);
     const blob = new Blob([stl], { type: 'text/plain' });
     const fileOfBlob = new File([blob], fileName);
@@ -1758,7 +1758,7 @@ export const actions = {
      * @returns {Function}
      * @private
      */
-    __loadModel: (files, parentUploadName = '') => async dispatch => {
+    __loadModel: (files) => async dispatch => {
         const headType = 'printing';
         const sourceType = '3d';
         const mode = '3d';
@@ -1772,7 +1772,6 @@ export const actions = {
                 sourceHeight: height,
                 mode,
                 sourceType,
-                parentUploadName,
                 transformation: {}
             })
         );
@@ -1789,11 +1788,11 @@ export const actions = {
             return { originalName, uploadName, children };
         });
         const fileNames = await Promise.all(ps);
-        const allChild = fileNames.map((item) => {
-            const parentUploadName = item.children[0] ? item.children[0].parentUploadName: '';
-            return actions.__loadModel(item.children, parentUploadName)(dispatch, getState);
+        const allChild = []
+        fileNames.map((item) => {
+            allChild.push(...item.children)
         });
-        Promise.all(allChild).then(() => {
+        actions.__loadModel(allChild)(dispatch, getState).then(() => {
             actions.__loadModel(fileNames)(dispatch, getState);
         })
 
@@ -3830,7 +3829,7 @@ export const actions = {
                                         modelID,
                                         extruderConfig,
                                         parentModelID,
-                                        parentUploadName,
+                                        parentUploadName: model.parentUploadName,
                                         sourcePly: model.sourcePly
                                     }
                                 );
@@ -3868,7 +3867,6 @@ export const actions = {
                                     model.uploadName,
                                     convexGeometry
                                 );
-                                console.log('LOAD_MODEL_CONVEX', model.uploadName);
 
                                 break;
                             }
@@ -3906,7 +3904,7 @@ export const actions = {
                             }
                             case 'LOAD_GROUP_POSITIONS': {
                                 const modelsInGroup = modelGroup.models.filter((item) => {
-                                    return  item instanceof ThreeModel && (item.parentUploadName = model.uploadName)
+                                    return  item instanceof ThreeModel && (item.parentUploadName === model.uploadName)
                                 })
                                 const { originalPosition } = data;
                                 modelGroup.addGroup({
@@ -3959,20 +3957,19 @@ export const actions = {
             const modelSize = new Vector3();
             model.boundingBox.getSize(modelSize);
             const isLarge = ['x', 'y', 'z'].some(key => modelSize[key] >= size[key]);
-            const checkResult = checkResultMap.get(model.uploadName);
             if(!model.sourcePly){
-
-            if (checkResult && checkResult.isDamage) {
-                promptDamageModel && promptTasks.push({
-                    status: 'need-repair-model',
-                    model
-                });
-                model.needRepair = true;
-                model.sourcePly = checkResult.sourcePly;
-            } else {
-                model.needRepair = false;
+                const checkResult = checkResultMap.get(model.uploadName);
+                if (checkResult && checkResult.isDamage) {
+                    promptDamageModel && promptTasks.push({
+                        status: 'need-repair-model',
+                        model
+                    });
+                    model.needRepair = true;
+                    model.sourcePly = checkResult.sourcePly;
+                } else {
+                    model.needRepair = false;
+                }
             }
-        }
 
             if (isLarge) {
                 promptTasks.push({
@@ -4848,13 +4845,13 @@ export const actions = {
                                 modelPositionAttribute
                             );
                             // simplify model mesh import with sacle befor action
-                            res.reloadSimplifyModel && bufferGeometry.scale(1 / model.transformation.scaleX, 1 / model.transformation.scaleY, 1 / model.transformation.scaleZ);
+                            bufferGeometry.scale(1 / model.transformation.scaleX, 1 / model.transformation.scaleY, 1 / model.transformation.scaleZ);
 
                             bufferGeometry.computeVertexNormals();
                             const meshObject = new Mesh(bufferGeometry, material);
+
                             model.meshObject.updateMatrixWorld();
                             meshObject.applyMatrix4(model.meshObject.matrixWorld);
-
                             const visible = model.visible;
                             modelGroup.object.remove(model.meshObject);
                             meshObject.visible = visible;
