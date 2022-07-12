@@ -70,7 +70,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
     if (!setting) {
         return null;
     }
-    const { label, type, unit = '', options, min, max } = setting;
+    const { label, type, unit = '', options, min, max, mismatch } = setting;
     const { enabled } = setting;
     const settingDefaultValue = setting.default_value;
     const isDefault = defaultValue && (defaultValue.value === settingDefaultValue);
@@ -103,6 +103,14 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
                         onClick={() => {
                             onChangeDefinition(definitionKey, (defaultValue && defaultValue.value) ?? settingDefaultValue);
                         }}
+                    />
+                )}
+                {mismatch && (
+                    <SvgIcon
+                        name="ParameterDisconnect"
+                        size={24}
+                        type={['static']}
+                        color="#FFA940"
                     />
                 )}
                 {type === 'float' && (
