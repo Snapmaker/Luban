@@ -42,6 +42,7 @@ export type ModelLoadedInGroup = {
 export type ModelInfo = {
     modelID?: string,
     parentModelID?: string,
+    parentUploadName?: string,
     limitSize?: TSize,
     headType?: typeof HEAD_PRINTING,
     sourceType?: '3d',
@@ -69,7 +70,6 @@ export type ModelInfo = {
     width?: number;
     height?: number;
     isGroup?: boolean;
-    isMfRecovery?: boolean;
     // svg
     elem?: SvgModelElement;
     size?: TSize;

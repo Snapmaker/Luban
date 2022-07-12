@@ -28,7 +28,7 @@ function copyFileSync(src, dst) {
 function traverse(models, callback) {
     models.forEach(model => {
         // callback && callback(model);
-        if (model.children && !model.isMfRecovery) {
+        if (model.children) {
             traverse(model.children, callback);
         } else {
             callback && callback(model);
@@ -73,18 +73,19 @@ export const set = async (req, res) => {
     const headType = req.query.headType;
     try {
         if (file) { // post blob file in web
-            let filename = file.name, filePath = file.path;
-            if (headType !== 'printing') {
-                ({ filename, filePath } = await convertFileToSTL(file));
-            }
+            let filename = file.name, filePath = file.path, children = [];
+            ({ filename, filePath, children } = await convertFileToSTL(file, headType === 'printing'));
             const originalName = removeSpecialChars(path.basename(filename));
             if (!uploadName) {
                 uploadName = generateRandomPathName(originalName);
             }
             uploadName = uploadName.toLowerCase();
+            children.forEach((item) => {
+                console.log('filename, filePath, children', filename, uploadName);
+                item.parentUploadName = uploadName;
+            });
 
             const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
-
             mv(filePath, uploadPath, (err) => {
                 if (err) {
                     log.error(`Failed to upload file ${originalName}`);
@@ -94,7 +95,8 @@ export const set = async (req, res) => {
                 } else {
                     res.send({
                         originalName,
-                        uploadName
+                        uploadName,
+                        children
                     });
                     res.end();
                 }

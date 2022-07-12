@@ -50,9 +50,7 @@ export const set = async (req, res) => {
     try {
         if (files) {
             const file = files.image;
-            console.log('file', file);
             const { filename, filePath } = await convertFileToSTL(file);
-            console.log('file', filename, filePath);
 
             originalName = path.basename(filename);
             tempName = generateRandomPathName(originalName, true);

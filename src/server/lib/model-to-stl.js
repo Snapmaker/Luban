@@ -6,20 +6,16 @@ import ThreeMFLoader from '../../shared/lib/3MFLoader';
 import STLExporter from '../../shared/lib/STL/STLExporter';
 import { BufferGeometryUtils } from '../../shared/lib/BufferGeometryUtils';
 import DataStorage from '../DataStorage';
+import { removeSpecialChars } from '../../shared/lib/utils';
+import { generateRandomPathName } from '../../shared/lib/random-utils';
 
-// make meshs into the same group
 function flatGroup(object) {
     if (!object.isGroup) { // mesh
         if (object.parent) {
             object.name += object.parent.name;
-            // object.parent.updateMatrix();
-            // object.applyMatrix4(object.parent.matrix);
-            // object.updateMatrix();
-            // object.geometry.applyMatrix4(object.matrix);
-            // object.applyMatrix4(object.matrix.clone().invert());
-            // object.updateMatrixWorld();
-            // object.geometry.applyMatrix4(object.matrixWorld);
-            // object.applyMatrix4(object.matrixWorld.clone().invert());
+            object.updateMatrixWorld();
+            object.geometry.applyMatrix4(object.matrixWorld);
+            object.applyMatrix4(object.matrixWorld.clone().invert());
             if (object.geometry.index) {
                 object.geometry = object.geometry.toNonIndexed();
             }
@@ -28,13 +24,6 @@ function flatGroup(object) {
         for (let i = object.children.length - 1; i > -1; i--) {
             const child = object.children[i];
             flatGroup(child);
-            // if (!child.isGroup) {
-            //     if (object.parent && object.parent.isGroup) {
-            //         object.parent.add(child);
-            //     }
-            // } else {
-            //     object.remove(child);
-            // }
         }
         if (object.parent && object.parent.isGroup) {
             if (object.children.length > 0) {
@@ -44,26 +33,48 @@ function flatGroup(object) {
         }
     }
 }
-function loadModel(file, format, Loader) {
+function loadModel(file, format, separateGroup, Loader) {
     return new Promise((resolve, reject) => {
         const buffer = fs.readFileSync(path.resolve(file.path));
         const uint8Arr = new Uint8Array(buffer.byteLength);
         buffer.copy(uint8Arr, 0, 0, buffer.byteLength);
 
         new Loader().loadFromBuffer(uint8Arr.buffer, (group) => {
-            const filename = file.name.replace(new RegExp(`.${format}$`, 'ig'), '.stl');
-            const filePath = `${DataStorage.tmpDir}/${filename}`;
+            let filename = file.name;
+            let filePath = file.path;
+            const children = [];
             // merge all the meshes in group
             flatGroup(group);
-            const bufferGeometry = BufferGeometryUtils.mergeBufferGeometries(group.children.slice(0).map(mesh => {
-                mesh.geometry.deleteAttribute('uv');
-                return mesh.geometry;
-            }), false);
-            const mesh = new Mesh(bufferGeometry, new MeshBasicMaterial());
-            fs.writeFileSync(filePath, new STLExporter().parse(mesh, { binary: true }), 'utf8');
+            if (separateGroup) {
+                const bufferGeometrys = group.children.slice(0).map(mesh => {
+                    mesh.geometry.deleteAttribute('uv');
+                    return mesh.geometry;
+                });
+                bufferGeometrys.forEach((item) => {
+                    const mesh = new Mesh(item, new MeshBasicMaterial());
+                    let partFilename = removeSpecialChars(path.basename(filename));
+                    partFilename = generateRandomPathName(partFilename);
+                    partFilename = partFilename.replace(new RegExp(`.${format}$`, 'ig'), '_.stl');
+                    const partFilePath = `${DataStorage.tmpDir}/${partFilename}`;
+                    fs.writeFileSync(partFilePath, new STLExporter().parse(mesh, { binary: true }), 'utf8');
+                    children.push({
+                        uploadName: partFilename
+                    });
+                });
+            } else {
+                filename = file.name.replace(new RegExp(`.${format}$`, 'ig'), '.stl');
+                filePath = `${DataStorage.tmpDir}/${filename}`;
+                const bufferGeometry = BufferGeometryUtils.mergeBufferGeometries(group.children.slice(0).map(mesh => {
+                    mesh.geometry.deleteAttribute('uv');
+                    return mesh.geometry;
+                }), false);
+                const mesh = new Mesh(bufferGeometry, new MeshBasicMaterial());
+                fs.writeFileSync(filePath, new STLExporter().parse(mesh, { binary: true }), 'utf8');
+            }
             resolve({
                 filename,
-                filePath
+                filePath,
+                children
             });
         }, (error) => {
             console.log('reject', error);
@@ -71,12 +82,12 @@ function loadModel(file, format, Loader) {
         });
     });
 }
-function convertFileToSTL(file) {
+function convertFileToSTL(file, separateGroup = false) {
     return new Promise((resolve, reject) => {
         if (file.name.toLowerCase().endsWith('.amf')) {
-            loadModel(file, 'amf', AMFLoader).then(resolve).catch(reject);
+            loadModel(file, 'amf', separateGroup, AMFLoader).then(resolve).catch(reject);
         } else if (file.name.toLowerCase().endsWith('.3mf')) {
-            loadModel(file, '3mf', ThreeMFLoader).then(resolve).catch(reject);
+            loadModel(file, '3mf', separateGroup, ThreeMFLoader).then(resolve).catch(reject);
         } else {
             resolve({
                 filename: file.name,

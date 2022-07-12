@@ -1689,7 +1689,7 @@ export const actions = {
      * @returns {Function}
      * @private
      */
-    __loadModel: files => async dispatch => {
+    __loadModel: (files, parentUploadName = '') => async dispatch => {
         const headType = 'printing';
         const sourceType = '3d';
         const mode = '3d';
@@ -1703,7 +1703,7 @@ export const actions = {
                 sourceHeight: height,
                 mode,
                 sourceType,
-                children: files?.children,
+                parentUploadName,
                 transformation: {}
             })
         );
@@ -1717,11 +1717,18 @@ export const actions = {
             const formData = new FormData();
             formData.append('file', file);
             const res = await api.uploadFile(formData, HEAD_PRINTING);
-            const { originalName, uploadName, children ={} } = res.body;
+            const { originalName, uploadName, children = [] } = res.body;
             return { originalName, uploadName, children };
         });
         const fileNames = await Promise.all(ps);
-        actions.__loadModel(fileNames)(dispatch, getState);
+        const allChild = fileNames.map((item) => {
+            const parentUploadName = item.children[0] ? item.children[0].parentUploadName: '';
+            return actions.__loadModel(item.children, parentUploadName)(dispatch, getState);
+        });
+        Promise.all(allChild).then(() => {
+            actions.__loadModel(fileNames)(dispatch, getState);
+        })
+
     },
 
     setTransformMode: (value) => (dispatch, getState) => {
@@ -3590,7 +3597,7 @@ export const actions = {
             extruderConfig,
             isGroup = false,
             parentModelID = '',
-            isMfRecovery,
+            parentUploadName = '',
             modelName,
             children,
             primeTowerTag
@@ -3619,8 +3626,7 @@ export const actions = {
                     resolve();
                 }
                 const uploadPath = `${DATA_PREFIX}/${model.uploadName}`;
-
-                if (isGroup && !isMfRecovery) {
+                if (isGroup) {
                     const modelState = await modelGroup.generateModel({
                         loadFrom,
                         limitSize: size,
@@ -3677,8 +3683,6 @@ export const actions = {
                                 );
 
                                 bufferGeometry.computeVertexNormals();
-                                // Create model
-                                // modelGroup.generateModel(modelInfo);
 
                                 const modelState = await modelGroup.generateModel(
                                     {
@@ -3700,7 +3704,8 @@ export const actions = {
                                         originalPosition,
                                         modelID,
                                         extruderConfig,
-                                        parentModelID
+                                        parentModelID,
+                                        parentUploadName
                                     }
                                 );
                                 dispatch(actions.updateState(modelState));
@@ -3737,6 +3742,7 @@ export const actions = {
                                     model.uploadName,
                                     convexGeometry
                                 );
+                                console.log('LOAD_MODEL_CONVEX', model.uploadName);
 
                                 break;
                             }
@@ -3773,21 +3779,22 @@ export const actions = {
                                 break;
                             }
                             case 'LOAD_GROUP_POSITIONS': {
-                                const { positionsArr, originalPosition } = data;
+                                const modelsInGroup = modelGroup.models.filter((item) => {
+                                    return  item instanceof ThreeModel && (item.parentUploadName = model.uploadName)
+                                })
+                                const { originalPosition } = data;
                                 modelGroup.addGroup({
                                     loadFrom: LOAD_MODEL_FROM_OUTER,
                                     limitSize: size,
                                     headType,
                                     sourceType,
-                                    positionsArr,
                                     originalName: model.originalName,
                                     uploadName: model.uploadName,
                                     modelName: null,
                                     children,
                                     originalPosition,
                                     transformation
-                                }, isMfRecovery);
-
+                                }, modelsInGroup);
 
                                 const modelState = modelGroup.getState();
                                 dispatch(actions.updateState(modelState));
@@ -3819,9 +3826,9 @@ export const actions = {
             return !models.includes(model);
         });
         modelGroup.traverseModels(newModels, (model) => {
-            if (model instanceof ThreeModel) {
-                model.initClipper(modelGroup.localPlane);
-            }
+            // if (model instanceof ThreeModel) {
+            //     model.initClipper(modelGroup.localPlane);
+            // }
             const modelSize = new Vector3();
             model.boundingBox.getSize(modelSize);
             const isLarge = ['x', 'y', 'z'].some(key => modelSize[key] >= size[key]);

@@ -22,7 +22,7 @@ import { ModelEvents } from './events';
 import { TPolygon } from './ClipperModel';
 import { PolygonsUtils } from '../../shared/lib/math/PolygonsUtils';
 import workerManager from '../lib/manager/workerManager';
-import ConvexGeometry from '../three-extensions/ConvexGeometry';
+// import ConvexGeometry from '../three-extensions/ConvexGeometry';
 
 import { IResult as TBrimResult } from '../workers/plateAdhesion/generateBrim';
 import { IResult as TRaftResult } from '../workers/plateAdhesion/generateRaft';
@@ -394,7 +394,7 @@ class ModelGroup extends EventEmitter {
             model.meshObject.remove(model.processObject3D);
         }
         if (model instanceof ThreeModel) {
-            this.clippingGroup.remove(model.clipper.group);
+            this.clippingGroup && this.clippingGroup.remove(model.clipper.group);
         }
         model.meshObject.removeEventListener('update', this.onModelUpdate);
         if (model.parent instanceof ThreeGroup) {
@@ -1746,6 +1746,16 @@ class ModelGroup extends EventEmitter {
                     this.selectModelById(model.modelID);
                 }
             }
+            if (model.parentUploadName) {
+                console.log('model', model.position, model);
+                this.updateSelectedGroupTransformation(
+                    {
+                        positionX: model.originalPosition.x,
+                        positionY: model.originalPosition.y,
+                        positionZ: model.originalPosition.z,
+                    }
+                );
+            }
         } else {
             // add to group and select
             this.models.push(model);
@@ -1763,83 +1773,36 @@ class ModelGroup extends EventEmitter {
         return model;
     }
 
-    public addGroup(modelInfo: ModelInfo, isMfRecovery: Boolean = false) {
+    public addGroup(modelInfo: ModelInfo, modelsInGroup: Model3D[]) {
         const group = new ThreeGroup(modelInfo, this);
-        const { positionsArr, loadFrom, size, headType, sourceType, transformation, children } = modelInfo;
         group.modelName = this._createNewModelName(group);
-        group.positionsArr = positionsArr;
 
-        const subModels = [];
-        positionsArr.children.forEach((child, index) => {
-            const { positions, meshName: name, matrix } = child;
-            const bufferGeometry = new BufferGeometry();
-            const modelPositionAttribute = new BufferAttribute(positions, 3);
-            const material = new MeshStandardMaterial({ color: 0xa0a0a0 });
-
-            bufferGeometry.setAttribute('position', modelPositionAttribute);
-
-            bufferGeometry.computeVertexNormals();
-
-            const modelAdded = this.addModel({
-                loadFrom,
-                limitSize: size,
-                headType,
-                sourceType,
-                originalName: name,
-                uploadName: name,
-                modelName: name,
-                geometry: bufferGeometry,
-                material: material,
-            }, false);
-            modelAdded.meshObject.applyMatrix4(new Matrix4().fromArray(matrix));
-            if (children && children[index]) {
-                modelAdded.updateTransformation(children[index].transformation);
+        modelsInGroup.forEach((model) => {
+            if (model.parent && model.parent instanceof ThreeGroup) {
+                const index = model.parent.children.findIndex((subModel) => subModel.modelID === model.modelID);
+                model.parent.children.splice(index, 1);
+                this.models.push(model);
+                ThreeUtils.setObjectParent(model.meshObject, model.parent.meshObject.parent);
+                model.parent.computeBoundingBox();
+                model.parent.updateGroupExtruder();
             }
-            modelAdded.onTransform();
-
-            // update each model's convexGeometry
-            const vertices = [];
-            for (let i = 0; i < positions.length; i += 3) {
-                vertices.push(
-                    new Vector3(
-                        positions[i],
-                        positions[i + 1],
-                        positions[i + 2]
-                    )
-                );
-            }
-            const convexGeometry = new ConvexGeometry(vertices) as any;
-            const convexBufferGeometry = new BufferGeometry().fromGeometry(
-                convexGeometry
-            );
-
-            modelAdded.modelName = this._createNewModelName(modelAdded as ThreeModel);
-
-            if (modelAdded instanceof ThreeModel) {
-                modelAdded.setConvexGeometry(convexBufferGeometry);
-            }
-            subModels.push(modelAdded);
         });
-        group.add(subModels);
 
+        const indexesOfSelectedModels = modelsInGroup.map((model) => {
+            return this.models.indexOf(model);
+        });
+        const modelsToGroup = this._flattenGroups(modelsInGroup);
+        group.modelName = this._createNewModelName(group);
+        group.add(modelsToGroup);
+        const insertIndex = Math.min(...indexesOfSelectedModels);
+        this.models.splice(insertIndex, 0, group);
+        this.models = this.getModels<Model3D>().filter((model) => modelsInGroup.indexOf(model) === -1);
+
+        this.object.add(group.meshObject);
         group.stickToPlate();
-        if (!isMfRecovery) {
-            group.meshObject.position.x = 0;
-            group.meshObject.position.y = 0;
-            const point = this._computeAvailableXY(group);
-            group.meshObject.position.x = point.x;
-            group.meshObject.position.y = point.y;
-        } else {
-            group.updateTransformation(transformation);
-        }
         group.meshObject.updateMatrix();
         group.computeBoundingBox();
         group.onTransform();
-
-        this.object.add(group.meshObject);
-        this.models = [...this.models, group];
-
-        this.unselectAllModels();
         this.addModelToSelectedGroup(group);
         this.updatePrimeTowerHeight();
 
