@@ -1703,6 +1703,7 @@ export const actions = {
                 sourceHeight: height,
                 mode,
                 sourceType,
+                children: files?.children,
                 transformation: {}
             })
         );
@@ -1716,8 +1717,8 @@ export const actions = {
             const formData = new FormData();
             formData.append('file', file);
             const res = await api.uploadFile(formData, HEAD_PRINTING);
-            const { originalName, uploadName } = res.body;
-            return { originalName, uploadName };
+            const { originalName, uploadName, children ={} } = res.body;
+            return { originalName, uploadName, children };
         });
         const fileNames = await Promise.all(ps);
         actions.__loadModel(fileNames)(dispatch, getState);

@@ -1,8 +1,8 @@
 {
     "version": "4.3.0",
-    "name": "High Quality",
+    "name": "Smooth Surface",
     "category": "Default",
-    "i18nName": "key-default_name-High Print",
+    "i18nName": "key-default_name-Smooth Surface",
     "i18nCategory": "key-default_category-Default",
     "typeOfPrinting": "fine",
     "isRecommended": true,
@@ -10,7 +10,7 @@
     "metadata": {
         "visible": true,
         "readonly": true,
-        "author": "walker",
+        "author": "snapmaker",
         "manufacturer": "Snapmaker",
         "file_formats": "text/x-gcode",
         "machine_extruder_trains": {
@@ -23,7 +23,7 @@
             "default_value": 0.08
         },
         "layer_height_0": {
-            "default_value": 0.16
+            "default_value": 0.28
         },
         "initial_layer_line_width_factor": {
             "default_value": 150
@@ -59,22 +59,22 @@
             "default_value": 0.08
         },
         "skin_preshrink": {
-            "default_value": 1.2000000000000002
+            "default_value": 1.2
         },
         "top_skin_preshrink": {
-            "default_value": 1.2000000000000002
+            "default_value": 1.2
         },
         "bottom_skin_preshrink": {
-            "default_value": 1.2000000000000002
+            "default_value": 1.2
         },
         "expand_skins_expand_distance": {
-            "default_value": 1.2000000000000002
+            "default_value": 1.2
         },
         "top_skin_expand_distance": {
-            "default_value": 1.2000000000000002
+            "default_value": 1.2
         },
         "bottom_skin_expand_distance": {
-            "default_value": 1.2000000000000002
+            "default_value": 1.2
         },
         "speed_travel": {
             "default_value": 40
@@ -1207,7 +1207,7 @@
             "default_value": 1.5
         },
         "min_infill_area": {
-            "default_value": 0
+            "default_value": 5
         },
         "infill_support_enabled": {
             "default_value": false

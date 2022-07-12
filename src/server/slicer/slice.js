@@ -142,6 +142,7 @@ function slice(params, onProgress, onSucceed, onError) {
     for (let i = 0; i < model.length; i++) {
         const modelName = model[i];
         const definitionName = definition[i];
+        console.log('modelName', modelName);
         const uploadPath = `${DataStorage.tmpDir}/${modelName}`;
         const uploadDefinitionPath = `${DataStorage.tmpDir}/${definitionName}`;
 

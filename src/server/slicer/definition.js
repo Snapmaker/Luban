@@ -197,9 +197,11 @@ export class DefinitionLoader {
         const overrides = {};
 
         for (const key of this.ownKeys) {
-            overrides[key] = {
-                default_value: this.settings[key].default_value
-            };
+            if (this.settings[key]) {
+                overrides[key] = {
+                    default_value: this.settings[key].default_value
+                };
+            }
         }
 
         return {
