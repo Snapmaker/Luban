@@ -9,6 +9,7 @@ import './clipperPool.worker';
 
 class ClippingPoolManager {
     private pool: Pool<Thread>;
+    private worker: any;
 
     public initPool() {
         this.getPool();
@@ -27,12 +28,11 @@ class ClippingPoolManager {
     public async calculateSectionPoints(
         message: calculateSectionPoints.IMessage, onMessage: (data: calculateSectionPoints.IResult) => void, onComplete?: () => void
     ) {
-        const workersHandle = await spawn(new Worker('./clipperPool.worker.js'));
+        const worker = await this.getWorker();
         this.getPool();
-        const subscribe = workersHandle.calculateSectionPoints(message).subscribe({
+        const subscribe = worker.calculateSectionPoints(message).subscribe({
             next: onMessage,
             complete() {
-                Thread.terminate(workersHandle);
                 subscribe.unsubscribe();
                 onComplete && onComplete();
             }
@@ -40,7 +40,7 @@ class ClippingPoolManager {
 
         return {
             terminate: async () => {
-                return Thread.terminate(workersHandle);
+                return Thread.terminate(worker);
             }
         };
     }
@@ -48,11 +48,10 @@ class ClippingPoolManager {
     public async mapClippingSkinArea(
         message: mapClippingSkinArea.TMessage, onMessage: (data: mapClippingSkinArea.TResult) => void, onComplete?: () => void
     ) {
-        const workersHandle = await spawn(new Worker('./clipperPool.worker.js'));
-        const subscribe = workersHandle.mapClippingSkinArea(message).subscribe({
+        const worker = await this.getWorker();
+        const subscribe = worker.mapClippingSkinArea(message).subscribe({
             next: onMessage,
             complete() {
-                Thread.terminate(workersHandle);
                 subscribe.unsubscribe();
                 onComplete && onComplete();
             }
@@ -60,7 +59,7 @@ class ClippingPoolManager {
 
         return {
             terminate: async () => {
-                return Thread.terminate(workersHandle);
+                return Thread.terminate(worker);
             }
         };
     }
@@ -93,6 +92,13 @@ class ClippingPoolManager {
             this.pool.terminate(true);
             this.pool = null;
         }
+    }
+
+    private async getWorker() {
+        if (!this.worker) {
+            this.worker = await spawn(new Worker('./clipperPool.worker.js'));
+        }
+        return this.worker;
     }
 
     private getPool() {

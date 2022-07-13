@@ -1792,7 +1792,9 @@ export const actions = {
         const fileNames = await Promise.all(ps);
         const allChild = []
         fileNames.map((item) => {
-            item.isGroup = true
+            if (item.children.length) {
+                item.isGroup = true
+            }
             allChild.push(...item.children)
         });
         actions.__loadModel(allChild)(dispatch, getState).then(() => {
