@@ -62,7 +62,6 @@ function resolveDefinition(definition, modifiedParams) {
     var _loop_1 = function (key) {
         var _g;
         var value = obj[key];
-        console.log('value', value, key);
         if (value.type && (value.type !== 'category' && value.type !== 'mainCategory')) {
             if (!asistantMapInitialized) {
                 var cloneValue = _.cloneDeep(value);
@@ -208,7 +207,6 @@ function resolveDefinition(definition, modifiedParams) {
                 }
             }
             else {
-                console.log({ calcValue, defaultValue });
                 if (calcValue !== defaultValue && !_.isUndefined(calcValue)) {
                     definition.settings[key].mismatch = true;
                 }
