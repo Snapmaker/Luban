@@ -45,7 +45,7 @@ function initColumns() {
 }
 
 let columns = [];
-let initialTransformation = {};
+// let initialTransformation = {};
 let loopIndex = 1;
 const Table = React.memo(({ tableColumns, onRowSelect, selectedRow, data, setData, scrollToSelectedRow }) => {
     const refThead = useRef();
@@ -189,7 +189,6 @@ function RotationAnalysisOverlay({ onClose }) {
                 // restore initial transformation
                 const model = modelGroup.selectedModelArray[0];
                 modelGroup.unselectAllModels();
-                console.log('', initialTransformation);
 
                 modelGroup.selectModelById(model.modelID);
                 model.stickToPlate();
@@ -214,7 +213,7 @@ function RotationAnalysisOverlay({ onClose }) {
         // Mousetrap doesn't support unbind specific shortcut callback, use native instead
         window.addEventListener('keydown', actions.exitModal, true);
         dispatch(printingActions.startAnalyzeRotation());
-        initialTransformation = { ...modelGroup.selectedModelArray[0].transformation };
+        // initialTransformation = { ...modelGroup.selectedModelArray[0].transformation };
         dispatch(printingActions.analyzeSelectedModelRotation());
         dispatch(printingActions.setShortcutStatus(false));
         dispatch(printingActions.setLeftBarOverlayVisible(true));
@@ -224,7 +223,7 @@ function RotationAnalysisOverlay({ onClose }) {
             dispatch(printingActions.setLeftBarOverlayVisible(false));
             dispatch(menuActions.enableMenu());
             window.removeEventListener('keydown', actions.exitModal, true);
-            initialTransformation = null;
+            // initialTransformation = null;
         };
     }, []);
 

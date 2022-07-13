@@ -3971,7 +3971,7 @@ export const actions = {
                 }
             }
 
-            if (isLarge) {
+            if (isLarge && model.parentUploadName) {
                 promptTasks.push({
                     status: 'needScaletoFit',
                     model

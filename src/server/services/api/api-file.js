@@ -81,7 +81,6 @@ export const set = async (req, res) => {
             }
             uploadName = uploadName.toLowerCase();
             children.forEach((item) => {
-                console.log('filename, filePath, children', filename, uploadName);
                 item.parentUploadName = uploadName;
             });
 
