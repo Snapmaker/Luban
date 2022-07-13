@@ -181,7 +181,7 @@ class ModelGroup extends EventEmitter {
     // }
 
     public onModelUpdate() {
-        this.object.dispatchEvent(CUSTOM_EVENTS.UPDATE);
+        this.object && this.object.dispatchEvent(CUSTOM_EVENTS.UPDATE);
     }
 
     public getState(shouldCheckOverStep = true) {
@@ -1751,7 +1751,7 @@ class ModelGroup extends EventEmitter {
                 mode: modelInfo?.mode as unknown as TMode,
                 originalName: modelInfo.originalName,
                 config: modelInfo.config as {
-                    svgNodeName: string
+                    svgNodeName: string, isText: boolean, drawn: boolean
                 }
             });
         }
@@ -1907,7 +1907,7 @@ class ModelGroup extends EventEmitter {
     public _createNewModelName(model: {
         sourceType: string,
         originalName: string,
-        config?: { svgNodeName: string },
+        config?: { svgNodeName: string, isText: boolean, drawn: boolean },
         mode?: unknown
     }) {
         let baseName = '';
@@ -1919,11 +1919,9 @@ class ModelGroup extends EventEmitter {
             }
         } else {
             const { config } = model;
-            const isText = (config && config.svgNodeName === 'text');
-            const isShape = (model.mode === 'vector' && config && config.svgNodeName !== 'image');
-            if (isText) {
+            if (config.isText) {
                 baseName = i18n._('key-2D_model_basename-Text');
-            } else if (isShape) {
+            } else if (config.drawn) {
                 baseName = i18n._('key-2D_model_basename-Shape');
             } else {
                 baseName = model.originalName;

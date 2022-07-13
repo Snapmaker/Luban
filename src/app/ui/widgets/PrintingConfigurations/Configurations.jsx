@@ -36,7 +36,7 @@ const CONFIG_DISPLAY_TYPES_OPTIONS = CONFIG_DISPLAY_TYPES.map((item) => {
 });
 
 
-function ParamItem({ selectedDefinitionModel, onChangeDefinition }) {
+export function ParamItem({ selectedDefinitionModel, onChangeDefinition }) {
     const allParams = selectedDefinitionModel.params;
     const selectedDefinitionSettings = selectedDefinitionModel.settings;
     const dispatch = useDispatch();

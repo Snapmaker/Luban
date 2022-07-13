@@ -2,6 +2,8 @@ import fs from 'fs';
 import _ from 'lodash';
 import potrace from 'potrace';
 import * as opentype from 'opentype.js';
+// import svgPath from 'svgpath';
+import svgPath from 'svgpath';
 import { pathWithRandomSuffix } from './random-utils';
 // import fontManager from './FontManager';
 import logger from './logger';
@@ -9,6 +11,7 @@ import SVGParser from '../../shared/lib/SVGParser';
 import fontManager from '../../shared/lib/FontManager';
 import { svgToString } from '../../shared/lib/SVGParser/SvgToString';
 import { unionShapes } from '../../shared/lib/union-shapes';
+import { MINIMUM_WIDTH_AND_HEIGHT } from '../constants';
 
 const log = logger('svg-convert');
 
@@ -86,8 +89,40 @@ const convertRasterToSvg = (options) => {
     });
 };
 
+/**
+ * 1 pt = 1/72 inch
+ * 1 inch = 25.4mm
+ * @param text
+ * @param fontSize: font size, unit is pt.
+ * @param lineHeight
+ * @param size
+ * @returns {{width: number, height: number}}
+ */
+export const computeTransformationSizeForTextVector = (text, fontSize, lineHeight, size) => {
+    const numberOfLines = text.split('\n').length;
+    // const newHeight = size / 72 * 25.4 * numberOfLines;
+    // const newWidth = newHeight * whRatio;
+    // Assume that limitSize.x === limitSize.y
+    const estimatedHeight = fontSize / 72 * 25.4;
+    let height = estimatedHeight + estimatedHeight * lineHeight * (numberOfLines - 1);
+    let width = height / size.height * size.width;
+
+    if (!width) {
+        width = MINIMUM_WIDTH_AND_HEIGHT;
+    }
+    if (!height) {
+        height = MINIMUM_WIDTH_AND_HEIGHT;
+    }
+
+    return {
+        width,
+        height
+    };
+};
+
 const convertTextToSvg = async (options) => {
-    const { text, 'font-size': fontSize, 'line-height': lineHeight, 'font-family': fontFamily, style, name, alignment } = options;
+    const { text, 'font-size': fontSize, 'line-height': lineHeight, 'font-family': fontFamily, style, name, alignment, size } = options;
+
     const uploadName = pathWithRandomSuffix(name).replace(/\.svg$/i, 'parsed.svg');
 
     const fontObj = await fontManager.getFont(fontFamily, null, style);
@@ -115,8 +150,7 @@ const convertTextToSvg = async (options) => {
     }
 
     // We use descender line as the bottom of a line, first line with lineHeight = 1
-    let y = (ascender - descender + sTypoLineGap) > unitsPerEm ? estimatedFontSize
-            : (realUnitsPerEm + descender) / realUnitsPerEm * estimatedFontSize, x = 0;
+    let y = (ascender - descender + sTypoLineGap) > unitsPerEm ? estimatedFontSize : (realUnitsPerEm + descender) / realUnitsPerEm * estimatedFontSize, x = 0;
     const fullPath = new opentype.Path();
     for (let i = 0; i < numberOfLines; i++) {
         const line = lines[i];
@@ -147,12 +181,29 @@ const convertTextToSvg = async (options) => {
         width: width,
         height: height
     });
-    const svgParser = new SVGParser();
+    const svgParser = new SVGParser({ size });
     // Don't delete, for debugging
     // const targetPath1 = `${process.env.Tmpdir}/${uploadName}_new.svg`;
     // fs.writeFileSync(targetPath1, svgString);
     const result = await svgParser.parse(svgString);
+    result.viewBox = result.shapesViewBox;
     unionShapes(result.shapes);
+
+    const textSize = computeTransformationSizeForTextVector(text, fontSize, lineHeight, {
+        width,
+        height
+    });
+
+    const scaleX = textSize.width / width;
+    const scaleY = textSize.height / height;
+    const paths = result.paths.map((d) => {
+        const _d = svgPath(d)
+            .translate(-size.x, -size.y)
+            .scale(scaleX, scaleY)
+            .translate(size.x, size.y)
+            .toString();
+        return _d;
+    });
 
     return new Promise((resolve, reject) => {
         const targetPath = `${process.env.Tmpdir}/${uploadName}`;
@@ -165,8 +216,9 @@ const convertTextToSvg = async (options) => {
                     originalName: name,
                     uploadName: uploadName,
                     family: fontObj?.names?.fontFamily?.en,
-                    width,
-                    height
+                    width: textSize.width,
+                    height: textSize.height,
+                    paths
                 });
             }
         });

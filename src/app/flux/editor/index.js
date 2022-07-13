@@ -3,6 +3,7 @@ import path from 'path';
 import { v4 as uuid } from 'uuid';
 import { includes } from 'lodash';
 import { isInside } from 'overlap-area';
+import svgPath from 'svgpath';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as projectActions } from '../project';
 /* eslint-disable-next-line import/no-cycle */
@@ -509,8 +510,9 @@ export const actions = {
      * 1. Upload image to backend
      * 2. Create Mold from image information
      */
-    uploadImage: (headType, file, mode, onError, isLimit = true) => (dispatch, getState) => {
+    uploadImage: (headType, file, mode, onError, isLimit = true, fileInfo) => (dispatch, getState) => {
         const { materials, progressStatesManager } = getState()[headType];
+        const { size } = getState().machine;
         progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_UPLOAD_IMAGE, [1, 1]);
         dispatch(
             actions.updateState(headType, {
@@ -521,10 +523,28 @@ export const actions = {
         const formData = new FormData();
         formData.append('image', file);
         formData.append('isRotate', materials.isRotate);
+        formData.append('size', JSON.stringify(size));
 
+        if (fileInfo) {
+            const { width, height, originalName, uploadName, paths } = fileInfo;
+
+            dispatch(
+                actions.generateModel(headType, {
+                    originalName,
+                    uploadName,
+                    sourceWidth: width,
+                    sourceHeight: height,
+                    mode,
+                    paths,
+                    config: { svgNodeName: paths ? 'path' : 'image', editable: !!paths },
+                    isLimit
+                })
+            );
+            return;
+        }
         api.uploadImage(formData)
             .then(res => {
-                const { width, height, originalName, uploadName } = res.body;
+                const { width, height, originalName, uploadName, paths } = res.body;
                 dispatch(
                     actions.generateModel(headType, {
                         originalName,
@@ -532,7 +552,8 @@ export const actions = {
                         sourceWidth: width,
                         sourceHeight: height,
                         mode,
-                        config: { svgNodeName: 'image' },
+                        paths,
+                        config: { svgNodeName: paths ? 'path' : 'image', editable: !!paths },
                         isLimit
                     })
                 );
@@ -551,29 +572,39 @@ export const actions = {
 
     checkIsOversizeImage: (headType, file, onError) => (dispatch, getState) => {
         const { materials, progressStatesManager, coordinateSize } = getState()[headType];
+        const { size } = getState().machine;
+
         const formData = new FormData();
         formData.append('image', file);
         formData.append('isRotate', materials.isRotate);
-        api.uploadImage(formData)
-            .then(res => {
-                const { width, height } = res.body;
-                const isOverSize = isOverSizeModel(coordinateSize, width, height);
-                dispatch(
-                    actions.updateState(headType, {
-                        isOverSize: isOverSize
-                    })
-                );
-            })
-            .catch(err => {
-                onError && onError(err);
-                dispatch(
-                    actions.updateState(headType, {
-                        stage: STEP_STAGE.CNC_LASER_UPLOAD_IMAGE_FAILED,
-                        progress: 1
-                    })
-                );
-                progressStatesManager.finishProgress(false);
-            });
+        formData.append('size', JSON.stringify(size));
+        return new Promise((resolve) => {
+            api.uploadImage(formData)
+                .then(res => {
+                    resolve(res.body);
+                    // Ensure promise is completed first
+                    setTimeout(() => {
+                        const { width, height } = res.body;
+                        const isOverSize = isOverSizeModel(coordinateSize, width, height);
+                        dispatch(
+                            actions.updateState(headType, {
+                                isOverSize: isOverSize
+                            })
+                        );
+                    });
+                })
+                .catch(err => {
+                    resolve();
+                    onError && onError(err);
+                    dispatch(
+                        actions.updateState(headType, {
+                            stage: STEP_STAGE.CNC_LASER_UPLOAD_IMAGE_FAILED,
+                            progress: 1
+                        })
+                    );
+                    progressStatesManager.finishProgress(false);
+                });
+        });
     },
 
     prepareStlVisualizer: (headType, model) => dispatch => {
@@ -645,7 +676,7 @@ export const actions = {
      */
     generateModel: (
         headType,
-        { originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, zIndex, isLimit }
+        { originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, zIndex, isLimit, paths }
     ) => async (dispatch, getState) => {
         const { size, promptDamageModel } = getState().machine;
 
@@ -701,6 +732,15 @@ export const actions = {
             width = newModelSize?.width;
             height = newModelSize?.height;
             scale = newModelSize?.scale;
+        }
+        if (paths && paths.length && scale && config.svgNodeName === 'path' && scale !== 1) {
+            paths = [
+                svgPath(paths.join(' '))
+                    .translate(-coordinateSize.x, -coordinateSize.y)
+                    .scale(scale)
+                    .translate(coordinateSize.x, coordinateSize.y)
+                    .toString()
+            ];
         }
 
         if (`${headType}-${sourceType}-${mode}` === 'cnc-raster-greyscale') {
@@ -761,9 +801,14 @@ export const actions = {
             gcodeConfig,
             zIndex,
             isRotate: materials.isRotate,
+            paths,
             elem: contentGroup.addSVGElement({
                 element: config.svgNodeName === 'text' ? 'image' : config.svgNodeName || 'image',
-                attr: { id: modelID }
+                attr: {
+                    id: modelID,
+                    d: config.d || (paths && paths.join(' ')) || ''
+                }
+
             }),
             size: size
         };
@@ -807,9 +852,12 @@ export const actions = {
         );
     },
 
-    insertDefaultTextVector: headType => dispatch => {
+    insertDefaultTextVector: headType => (dispatch, getState) => {
+        const { size } = getState().machine;
+
         api.convertTextToSvg({
-            ...DEFAULT_TEXT_CONFIG
+            ...DEFAULT_TEXT_CONFIG,
+            size
         }).then(async res => {
             // const { name, filename, width, height } = res.body;
             const { originalName, uploadName, width, height } = res.body;
@@ -1015,6 +1063,10 @@ export const actions = {
     },
 
     duplicateSelectedModel: headType => (dispatch, getState) => {
+        const isDrawing = dispatch(actions.isDrawing(headType));
+        if (isDrawing) {
+            return;
+        }
         const { modelGroup, SVGActions, toolPathGroup } = getState()[headType];
 
         SVGActions.duplicateSelectedModel();
@@ -1212,8 +1264,9 @@ export const actions = {
         }
 
         model.updateProcessImageName(processImageName);
-
-        SVGActions.updateSvgModelImage(model, processImageName);
+        SVGActions.clearSelection();
+        SVGActions.selectElements([model.elem]);
+        SVGActions.resetSelection();
 
         dispatch(baseActions.resetCalculatedState(headType));
         dispatch(baseActions.render(headType));
@@ -1378,13 +1431,17 @@ export const actions = {
         dispatch(actions.resetProcessState(headType));
     },
 
+    isDrawing: headType => (dispatch, getState) => {
+        const { SVGCanvasMode, SVGCanvasExt } = getState()[headType];
+        return SVGCanvasMode === 'draw' || SVGCanvasExt.elem;
+    },
+
     selectAllElements: headType => async (dispatch, getState) => {
-        const { SVGActions, SVGCanvasMode, SVGCanvasExt } = getState()[headType];
-        if (SVGCanvasMode === 'draw' || SVGCanvasExt.elem) {
+        const { SVGActions } = getState()[headType];
+        const isDrawing = dispatch(actions.isDrawing(headType));
+        if (isDrawing) {
             await SVGActions.svgContentGroup.exitModelEditing(true);
             dispatch(actions.selectAllElements(headType));
-            // SVGActions.selectAllElements();
-            // dispatch(baseActions.render(headType));
         } else {
             SVGActions.selectAllElements();
             dispatch(baseActions.render(headType));
@@ -1392,6 +1449,10 @@ export const actions = {
     },
 
     cut: headType => dispatch => {
+        const isDrawing = dispatch(actions.isDrawing(headType));
+        if (isDrawing) {
+            return;
+        }
         dispatch(
             actions.updateState(headType, {
                 removingModelsWarningCallback: () => {
@@ -1404,12 +1465,20 @@ export const actions = {
     },
 
     copy: headType => (dispatch, getState) => {
+        const isDrawing = dispatch(actions.isDrawing(headType));
+        if (isDrawing) {
+            return;
+        }
         const { SVGActions } = getState()[headType];
         SVGActions.copy();
         dispatch(baseActions.render(headType));
     },
 
     paste: headType => (dispatch, getState) => {
+        const isDrawing = dispatch(actions.isDrawing(headType));
+        if (isDrawing) {
+            return;
+        }
         const { modelGroup, SVGActions, toolPathGroup } = getState()[headType];
 
         SVGActions.paste();
@@ -1494,7 +1563,9 @@ export const actions = {
         const tmpTransformationState = {};
         for (const element of elements) {
             const svgModel = SVGActions.getSVGModelByElement(element);
-            tmpTransformationState[element.id] = { ...svgModel.transformation };
+            if (svgModel) {
+                tmpTransformationState[element.id] = { ...svgModel.transformation };
+            }
         }
 
         SVGActions.moveElementsFinish(elements, options);
@@ -1502,15 +1573,17 @@ export const actions = {
         const operations = new Operations();
         for (const element of elements) {
             const svgModel = SVGActions.getSVGModelByElement(element);
-            if (whetherTransformed(tmpTransformationState[element.id], svgModel.transformation)) {
-                const operation = new MoveOperation2D({
-                    target: svgModel,
-                    svgActions: SVGActions,
-                    machine,
-                    from: tmpTransformationState[element.id],
-                    to: { ...svgModel.transformation }
-                });
-                operations.push(operation);
+            if (svgModel) {
+                if (whetherTransformed(tmpTransformationState[element.id], svgModel.transformation)) {
+                    const operation = new MoveOperation2D({
+                        target: svgModel,
+                        svgActions: SVGActions,
+                        machine,
+                        from: tmpTransformationState[element.id],
+                        to: { ...svgModel.transformation }
+                    });
+                    operations.push(operation);
+                }
             }
         }
         dispatch(actions.resetProcessState(headType));
@@ -2286,11 +2359,14 @@ export const actions = {
             })
         );
     },
-    drawTransformComplete: (headType, elem, before, after) => (dispatch, getState) => {
-        const { contentGroup, history, SVGActions } = getState()[headType];
+    drawTransformComplete: (headType, { modelID, before, after }) => async (dispatch, getState) => {
+        const { modelGroup, contentGroup, history, SVGActions } = getState()[headType];
         history.clearDrawOperations();
+        const model = modelGroup.getModel(modelID);
+        if (!model) {
+            return;
+        }
         if (before !== after) {
-            const model = SVGActions.getSVGModelByElement(elem);
             if (after === '') {
                 // delete model
                 SVGActions.clearSelection();
@@ -2298,17 +2374,21 @@ export const actions = {
                 dispatch(actions.removeSelectedModelsByCallback(headType, 'select'));
                 return;
             }
+            const isText = model.config.isText;
             const operations = new Operations();
             const operation = new DrawTransformComplete({
                 svgModel: model,
                 before,
                 after,
-                drawGroup: contentGroup.drawGroup
+                isText,
+                drawGroup: contentGroup.drawGroup,
+                SVGActions
             });
             operations.push(operation);
             history.push(operations);
-
-            SvgModel.completeElementTransform(elem);
+            // After text editing, changing styles is no longer supported
+            model.config.isText = false;
+            SvgModel.completeElementTransform(model.elem);
             model.onTransform();
             model.updateSource();
 

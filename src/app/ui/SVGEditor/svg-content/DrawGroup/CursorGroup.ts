@@ -1,5 +1,5 @@
 import { createSVGElement } from '../../element-utils';
-import { MODE, ATTACH_POINT_RADIUS, POINT_RADIUS, POINT_SIZE, POINT_WEIGHT, THEME_COLOR } from './constants';
+import { MODE, ATTACH_POINT_RADIUS, POINT_SIZE, POINT_WEIGHT, THEME_COLOR } from './constants';
 import { TCoordinate } from './types';
 
 const cursorWidth = 100;
@@ -20,9 +20,11 @@ class CursorGroup {
     private cursorCoordinate: TCoordinate = [0, 0];
 
     private scale: number;
+    private pointRadiusWithScale: number;
 
-    public constructor(scale: number) {
+    public constructor(scale: number, pointRadiusWithScale: number) {
         this.scale = scale;
+        this.pointRadiusWithScale = pointRadiusWithScale;
         this.init();
     }
 
@@ -127,15 +129,15 @@ class CursorGroup {
         }
         this.cursorCoordinate = [x, y];
         if (leftKeyPressed) {
-            this.cursorPoint.setAttribute('x', `${x - POINT_RADIUS / this.scale}`);
-            this.cursorPoint.setAttribute('y', `${y - POINT_RADIUS / this.scale}`);
+            this.cursorPoint.setAttribute('x', `${x - this.pointRadiusWithScale}`);
+            this.cursorPoint.setAttribute('y', `${y - this.pointRadiusWithScale}`);
             this.cursorPoint.setAttribute('rx', '0');
             this.cursorPoint.setAttribute('ry', '0');
         } else {
-            this.cursorPoint.setAttribute('x', `${x - POINT_RADIUS / this.scale}`);
-            this.cursorPoint.setAttribute('y', `${y - POINT_RADIUS / this.scale}`);
-            this.cursorPoint.setAttribute('rx', `${POINT_RADIUS / this.scale}`);
-            this.cursorPoint.setAttribute('ry', `${POINT_RADIUS / this.scale}`);
+            this.cursorPoint.setAttribute('x', `${x - this.pointRadiusWithScale}`);
+            this.cursorPoint.setAttribute('y', `${y - this.pointRadiusWithScale}`);
+            this.cursorPoint.setAttribute('rx', `${this.pointRadiusWithScale}`);
+            this.cursorPoint.setAttribute('ry', `${this.pointRadiusWithScale}`);
         }
 
         this.cursorPoint.setAttribute('fill', '');
@@ -178,8 +180,11 @@ class CursorGroup {
         this.cursorPoint.setAttribute('fill', THEME_COLOR);
     }
 
-    public updateScale(scale: number) { // just change the engineer scale
+    public updateScale(scale: number, pointRadiusWithScale: number) { // just change the engineer scale
+        console.log('cursor updateScale');
+
         this.scale = scale;
+        this.pointRadiusWithScale = pointRadiusWithScale;
 
         this.cursorPoint.setAttribute('width', `${POINT_SIZE / this.scale}`);
         this.cursorPoint.setAttribute('height', `${POINT_SIZE / this.scale}`);

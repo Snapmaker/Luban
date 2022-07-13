@@ -32,12 +32,10 @@ type PayloadData = {
 class WorkerManager {
     private pool: Pool<Thread>;
 
-
     public getPool() {
         if (!this.pool) {
             this.pool = Pool(async () => spawn(new Worker('./Pool.worker.js'))) as unknown as Pool<Thread>;
         }
-
         return this.pool;
     }
 }

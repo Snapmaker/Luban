@@ -1,29 +1,33 @@
 import { v4 as uuid } from 'uuid';
-import { cloneDeep, noop } from 'lodash';
+import { cloneDeep, debounce, noop } from 'lodash';
 import svgPath from 'svgpath';
-import SvgModel from '../../../../models/SvgModel';
 import { createSVGElement, setAttributes } from '../../element-utils';
 import { MODE, THEME_COLOR, ATTACH_SPACE, POINT_RADIUS } from './constants';
 import { TCoordinate } from './types';
 import { EndPoint, ControlPoint } from './Point';
-import Line from './Line';
+import Line, { TLineConfig } from './Line';
 import OperationGroup from './OperationGroup';
 import CursorGroup from './CursorGroup';
-import { ModelTransformation } from '../../../../models/BaseModel';
+import drawManager from '../../../../lib/manager/drawManager';
 
 export type TransformRecord = {
-    fragmentID: number,
+    fragmentID: string,
     points: TCoordinate[]
+}
+
+type TSplitPathResult = {
+    points: { send: TCoordinate[][] },
+    d: string,
+    pointsElemStr: string
 }
 
 const manualEndOffset = 0.0000001;
 
 class DrawGroup {
-    public svgModel: SvgModel;
-
     public mode: MODE = MODE.NONE;
 
     private scale: number;
+    private pointRadiusWithScale: number;
 
     private cursorGroup: CursorGroup;
 
@@ -35,21 +39,15 @@ class DrawGroup {
 
     private endPointsGroup: SVGGElement;
 
-    private drawedLine: Line[] = []
+    private drawedLine = new Map<string, Line>()
 
-    private graph: SVGPathElement
-
-    private originGraph: SVGPathElement;
-
-    private originGraphPath: string;
-
-    private originTransformation: ModelTransformation
+    private graph: SVGGElement;
 
     private guideX: SVGLineElement
 
     private guideY: SVGLineElement
 
-    public onDrawLine: (line: SVGPathElement, closedLoop: boolean) => void = noop;
+    public onDrawLine: (line: SVGGElement, closedLoop: boolean) => void = noop;
 
     public onDrawDelete: (line: {
         points: TCoordinate[],
@@ -63,17 +61,17 @@ class DrawGroup {
 
     public onDrawComplete: (elem?: SVGPathElement) => void = noop;
 
-    public onDrawTransformComplete: (records: { elem: SVGPathElement, before: string, after: string }) => void = noop;
+    public onDrawTransformComplete: (records: { modelID: string, before: string, after: string }) => void = noop;
 
     private selected: {
         line?: Line,
-        point?: SVGRectElement,
-        pointIndex?: number
+        point?: SVGGElement,
+        pointIndex?: Number
     } = {};
 
     private preSelectLine: Line;
 
-    private preSelectPoint: SVGRectElement;
+    private preSelectPoint: SVGGElement;
 
     private hasTransform: boolean;
 
@@ -87,11 +85,25 @@ class DrawGroup {
 
     private latestDrawingCompleted = false;
 
-    private isAttached: boolean
+    private isAttached: boolean;
 
-    public constructor(contentGroup: SVGGElement, scale: number) {
+    private originElem: SVGPathElement;
+    private originPath: string;
+    private modelID: string;
+
+    private drawManager = drawManager()
+
+    public updateScale = debounce(this._updateScale, 50)
+
+    private preSelectLineElem: SVGGElement
+    private leftKeyPressed: boolean;
+
+    public constructor(contentGroup: SVGGElement, scale: number, drawableGroup: SVGGElement) {
         this.scale = scale;
+        this.pointRadiusWithScale = Number((POINT_RADIUS / scale).toFixed(5));
+
         this.init();
+        this.graph = drawableGroup;
 
         this.container = createSVGElement({
             element: 'g',
@@ -100,9 +112,9 @@ class DrawGroup {
             }
         });
 
-        this.operationGroup = new OperationGroup(this.container, this.scale);
+        this.operationGroup = new OperationGroup(this.container, this.scale, this.pointRadiusWithScale);
         this.operationGroup.onDrawgraph = (points: Array<[number, number]>) => {
-            const latestLine = this.drawedLine[this.drawedLine.length - 1];
+            const latestLine = this.getLatestDrawnLine();
             latestLine && latestLine.updatePosition([]);
             this.latestDrawingCompleted = true;
             this.drawgraph(points);
@@ -110,15 +122,22 @@ class DrawGroup {
 
         this.container.append(this.endPointsGroup);
 
-        this.cursorGroup = new CursorGroup(this.scale);
+        this.cursorGroup = new CursorGroup(this.scale, this.pointRadiusWithScale);
         this.container.append(this.cursorGroup.group);
 
         this.container.append(this.guideX);
         this.container.append(this.guideY);
 
         contentGroup.parentElement.append(this.container);
-    }
 
+        this.graph.addEventListener('mouseleave', () => {
+            this.graphLeaveListener();
+        });
+
+        this.graph.addEventListener('mouseover', (e) => {
+            this.graphOverListener(e);
+        });
+    }
 
     public stopDraw(forcedStop = false) {
         if (this.mode === MODE.NONE) {
@@ -130,16 +149,16 @@ class DrawGroup {
         this.operationGroup.lastControlsArray = [];
 
         this.clearAllEndPoint();
+        this.clearDrawedLine();
 
         if (forcedStop) {
-            this.originGraph.setAttribute('visibility', 'visible');
-            this.mode = MODE.NONE;
-            this.clearAllEndPoint();
-            this.originGraph = null;
-            if (this.graph) {
-                this.graph.remove();
-                this.graph = null;
+            if (this.originElem) {
+                this.originElem.setAttribute('visibility', 'visible');
+                this.originElem = null;
             }
+            this.mode = MODE.NONE;
+            this.clearDrawedLine();
+
             return null;
         } else {
             if (this.mode === MODE.DRAW) {
@@ -151,15 +170,18 @@ class DrawGroup {
         }
     }
 
-    public updateScale(scale: number) { // just change the engineer scale
+    public _updateScale(scale: number) { // just change the engineer scale
+        if (scale === this.scale) {
+            return;
+        }
         this.scale = scale;
         this.attachSpace = ATTACH_SPACE / this.scale;
+        this.pointRadiusWithScale = Number((POINT_RADIUS / scale).toFixed(5));
 
-        this.cursorGroup.updateScale(this.scale);
-        this.operationGroup.updateScale(this.scale);
-        this.drawedLine.forEach((line) => line.updateScale(this.scale));
-        this.guideX.setAttribute('stroke-width', `${1 / this.scale}`);
-        this.guideY.setAttribute('stroke-width', `${1 / this.scale}`);
+        this.cursorGroup.updateScale(this.scale, this.pointRadiusWithScale);
+        this.operationGroup.updateScale(this.scale, this.pointRadiusWithScale);
+
+        this.drawManager?.updateScale(scale);
     }
 
     private init() {
@@ -168,7 +190,8 @@ class DrawGroup {
             attr: {
                 visibility: 'hidden',
                 id: 'guideX',
-                stroke: 'red'
+                stroke: 'red',
+                'vector-effect': 'non-scaling-stroke'
             }
         });
 
@@ -177,7 +200,8 @@ class DrawGroup {
             attr: {
                 visibility: 'hidden',
                 id: 'guideY',
-                stroke: 'red'
+                stroke: 'red',
+                'vector-effect': 'non-scaling-stroke'
             }
         });
         this.endPointsGroup = createSVGElement({
@@ -190,10 +214,15 @@ class DrawGroup {
 
     private drawgraph(points: Array<[number, number]>) {
         const closedLoop = this.cursorGroup.isAttached();
-        const line = this.appendLine(points, closedLoop);
-        this.unSelectAllPoint();
-        this.endPointsGroup.lastElementChild.setAttribute('fill', THEME_COLOR);
-        this.onDrawLine && this.onDrawLine(line.elem, closedLoop);
+        const line = this.appendLine({
+            points,
+            closedLoop
+        });
+        if (line) {
+            this.endPointsGroup.lastElementChild.setAttribute('fill', THEME_COLOR);
+            this.onDrawLine && this.onDrawLine(line.elem, closedLoop);
+        }
+        this.operationGroup.lastClosedLoop = closedLoop;
     }
 
     public deleteLine(line: SVGPathElement) {
@@ -203,58 +232,80 @@ class DrawGroup {
         return null;
     }
 
-    private getPointCoordinate(point: SVGRectElement) {
-        const x = point.getAttribute('x');
-        const y = point.getAttribute('y');
-        return { x: Number(x) + POINT_RADIUS / this.scale, y: Number(y) + POINT_RADIUS / this.scale };
-    }
-
     private setMode(mode: MODE) {
         this.mode = mode;
-        if (mode !== MODE.NONE) {
-            this.onDrawStart && this.onDrawStart(this.originGraph);
-        }
 
         this.cursorGroup.setAttachPoint();
-        this.unSelectAllPoint();
+        this.clearDrawedLine();
 
         this.operationGroup.mode = mode;
         this.cursorGroup.mode = mode;
         this.operationGroup.clearOperation();
     }
 
-    public startDraw(mode: MODE, svg?: SVGPathElement, transformation?: ModelTransformation) {
-        this.originGraph = svg;
-        this.setMode(mode);
-        this.drawedLine = [];
-
-        this.graph && this.graph.remove();
-        this.graph = createSVGElement({
-            element: 'g',
-            attr: {
-                id: `graph-${uuid()}`
-            }
-        });
-        this.container.insertBefore(this.graph, this.container.firstElementChild);
-
-        if (this.mode === MODE.DRAW) {
-            if (svg) {
-                this.originGraphPath = this.originGraph.getAttribute('d');
-
-                this.originGraph.setAttribute('visibility', 'hidden');
-
-                this.originTransformation = { ...transformation };
-                this.generatelines();
-            } else {
-                this.originGraph = null;
-            }
-            this.cursorGroup.toogleVisible(true);
-        } else {
-            this.originGraphPath = this.originGraph.getAttribute('d');
-            this.originGraph.setAttribute('visibility', 'hidden');
-            this.originTransformation = { ...transformation };
-            this.generatelines();
+    private graphOverListener(e: Event) {
+        if (this.mode !== MODE.SELECT || this.leftKeyPressed || this.preSelectLineElem && this.selected.line?.elem === this.preSelectLineElem) {
+            return;
         }
+        if (e.target instanceof SVGPathElement && e.target.parentElement instanceof SVGGElement) {
+            if (this.preSelectLineElem && this.preSelectLineElem !== e.target.parentElement) {
+                this.preSelectLineElem.children[0].setAttribute('stroke', 'black');
+                this.preSelectLineElem.children[0].setAttribute('stroke-opacity', '1');
+            }
+            this.preSelectLineElem = e.target.parentElement;
+            this.preSelectLineElem.children[0].setAttribute('stroke', THEME_COLOR);
+            this.preSelectLineElem.children[0].setAttribute('stroke-opacity', '0.5');
+        }
+    }
+
+    private graphLeaveListener() {
+        if (this.mode !== MODE.SELECT || !this.preSelectLineElem || this.leftKeyPressed) {
+            return;
+        }
+        if (this.selected.line?.elem === this.preSelectLineElem) {
+            this.preSelectLineElem = null;
+            return;
+        }
+        this.preSelectLineElem.children[0].setAttribute('stroke', 'black');
+        this.preSelectLineElem.children[0].setAttribute('stroke-opacity', '1');
+        this.preSelectLineElem = null;
+    }
+
+    private get transformation() {
+        const transform = this.originElem.transform;
+        if (!transform) {
+            return null;
+        }
+        const transformList = transform.baseVal;
+        if (transformList.length === 0) {
+            return null;
+        }
+
+        const scaleX = transformList.getItem(2).matrix.a;
+        const scaleY = transformList.getItem(2).matrix.d;
+        const angle = transformList.getItem(1).angle;
+        return { scaleX, scaleY, angle };
+    }
+
+    public startDraw(mode: MODE, elem: SVGPathElement) {
+        this.setMode(mode);
+        this.clearDrawedLine();
+        // Distinguish between editing and new creation
+        if (elem) {
+            this.originElem = elem;
+            this.modelID = this.originElem?.getAttribute('id');
+            this.originPath = elem.getAttribute('d');
+            this.generatelines(this.originPath);
+        } else {
+            this.originPath = '';
+            this.originElem = null;
+            this.modelID = `id${uuid()}`;
+            this.graph.setAttribute('id', this.modelID);
+        }
+        if (mode !== MODE.NONE) {
+            this.onDrawStart && this.onDrawStart(this.originElem);
+        }
+        this.cursorGroup.toogleVisible(this.mode === MODE.DRAW);
     }
 
     public resetOperationByselect() {
@@ -264,7 +315,7 @@ class DrawGroup {
     public resetOperation(line?: Line) {
         this.operationGroup.clearOperation();
         if (!line) {
-            line = this.drawedLine[this.drawedLine.length - 1];
+            line = this.getLatestDrawnLine();
         }
         if (line) {
             this.operationGroup.lastControlsArray = [];
@@ -273,105 +324,157 @@ class DrawGroup {
             } else {
                 const lastPoint = line.points[line.points.length - 1];
                 this.operationGroup.controlsArray = [
-                    new EndPoint(lastPoint[0], lastPoint[1])
+                    new EndPoint(lastPoint[0], lastPoint[1], null)
                 ];
             }
-            this.operationGroup.updatePrviewByCursor(new EndPoint(...this.cursorPosition));
+            this.operationGroup.updatePrviewByCursor(new EndPoint(...this.cursorPosition, null));
         }
     }
 
     private applyTransform(d: string, restore?: boolean) {
-        const config = this.originTransformation;
-        const { scaleX, scaleY, rotationZ } = config;
-
-        const angle = rotationZ * 180 / Math.PI;
+        if (!this.transformation) {
+            return svgPath(d);
+        }
 
         if (restore) {
-            const { x, y, width, height } = this.originGraph.getBBox();
+            const { scaleX, scaleY, angle } = this.transformation;
+            const { x, y, width, height } = this.originElem.getBBox();
             const cx = x + width / 2;
             const cy = y + height / 2;
 
             return svgPath(d)
                 .translate(-cx, -cy)
-                .rotate(angle)
+                .rotate(-angle)
                 .scale(1 / scaleX, 1 / scaleY)
                 .translate(cx, cy);
         } else {
-            const transform = this.originGraph.getAttribute('transform');
+            const transform = this.originElem.getAttribute('transform');
             return svgPath(d).transform(transform);
         }
     }
 
-    private generatelines() {
-        this.applyTransform(this.originGraphPath).iterate((segment, _, x, y) => {
-            const arr = cloneDeep(segment);
-            const mark = arr.shift();
+    private generatelines(path: string) {
+        this.drawManager.initPath<TSplitPathResult>({
+            path,
+            transform: this.transformation ? this.originElem.getAttribute('transform') : '',
+            scale: this.scale
+        }, (res) => {
+            this.drawedLine = new Map();
 
-            if (mark !== 'M' && mark !== 'Z') {
-                const points: TCoordinate[] = [];
-                for (let index = 0; index < arr.length; index += 2) {
-                    points.push([
-                        Number(arr[index]),
-                        Number(arr[index + 1])
-                    ]);
-                }
-                this.appendLine([
-                    [x, y],
-                    ...points
-                ]);
-            }
+            this.graph.innerHTML = res.d;
+            this.endPointsGroup.innerHTML = res.pointsElemStr;
+
+            const childsElem = Array.from(this.graph.children) as unknown as SVGPathElement[];
+            res.points.send.forEach((points, index) => {
+                this.appendLine({
+                    elem: childsElem[index],
+                    points,
+                    fragmentID: `${this.drawedLine.size}`,
+                    scale: this.scale
+                });
+            });
+        }, () => {
+            this.originElem.setAttribute('visibility', 'hidden');
         });
     }
 
-    public appendLine(data: TCoordinate[] | SVGPathElement, closedLoop = false, fragmentID?: number) {
-        const line = new Line(data, this.scale, closedLoop, fragmentID || this.drawedLine.length);
-        this.drawedLine.splice(line.fragmentID, 0, line);
-
-        this.endPointsGroup.append(...line.EndPointsEle);
-        if (!Array.from(this.graph.childNodes).find((elem) => elem === line.elem)) {
-            this.graph.appendChild(line.elem);
-        }
+    public appendLine(config: TLineConfig) {
+        const line = new Line({
+            ...config,
+            scale: this.scale,
+            pointRadiusWithScale: this.pointRadiusWithScale,
+            endPointsGroup: this.endPointsGroup,
+            group: this.graph,
+            fragmentID: config.fragmentID || `${this.drawedLine.size}`,
+        });
+        this.drawedLine.set(line.fragmentID, line);
         return line;
     }
 
-    public finishDraw() {
-        this.svgModel = null;
+    private getLatestDrawnLine() {
+        const fragmentIDs = Array.from(this.drawedLine.keys());
+        const LatestFragmentID = fragmentIDs[fragmentIDs.length - 1];
+        return this.drawedLine.get(LatestFragmentID);
     }
 
+    private getEndPointfragments(elem: SVGGElement) {
+        if (!elem || !elem.dataset || !elem.dataset) {
+            return [];
+        }
+        const fragmentIDs: { id: string, index: number }[] = [];
+        for (const id of Object.keys(elem.dataset)) {
+            fragmentIDs.push({
+                id,
+                index: Number(elem.dataset[id])
+            });
+        }
+        return fragmentIDs;
+    }
 
     public delLine(line: Line) {
         line.del();
-        this.drawedLine = this.drawedLine.filter((item) => item !== line);
-        line.EndPointsEle.filter((elem) => {
-            const flag = this.drawedLine.some((item) => item.EndPointsEle.includes(elem));
-            return !flag;
-        }).forEach((elem) => elem.remove());
-    }
-
-    public getLineByPoint(point: SVGRectElement) {
-        const { x, y } = this.getPointCoordinate(point);
-        return this.drawedLine.find((item) => {
-            return item.points.some((p) => p[0] === x && p[1] === y);
-        });
-    }
-
-    public getLine(mark: SVGPathElement | SVGRectElement | number) {
-        if (typeof mark === 'number') {
-            return this.drawedLine.find((line) => line.fragmentID === mark);
-        }
-        return this.drawedLine.find((item) => {
-            if (mark instanceof SVGPathElement) {
-                return item.elem === mark;
-            } else if (mark instanceof SVGRectElement) {
-                const { x, y } = this.getPointCoordinate(mark);
-                return item.points.some((p) => p[0] === x && p[1] === y);
-            } else {
-                return false;
+        this.drawedLine.delete(line.fragmentID);
+        line.getEndPointEles().forEach((elem) => {
+            const useful = this.getEndPointfragments(elem).some((item) => {
+                return this.drawedLine.has(item.id);
+            });
+            if (!useful) {
+                elem.remove();
             }
         });
     }
 
+    public getLine(mark: SVGGElement | string): Line {
+        if (typeof mark === 'string') {
+            return this.drawedLine.get(mark);
+        }
+        if (!mark) {
+            return null;
+        }
+        if (mark.parentNode === this.graph) {
+            const fragmentID = mark.getAttribute('fragmentid');
+            return this.getLine(fragmentID);
+        } else if (mark.parentNode === this.operationGroup.controlPoints) {
+            // control point
+            const fragmentID = mark.getAttribute('fragmentid');
+            return this.getLine(fragmentID);
+        } else if (mark.parentNode === this.endPointsGroup) {
+            // end point
+            const fragmentIDs = this.getEndPointfragments(mark);
+            const fragmentID = fragmentIDs.find(item => this.drawedLine.has(item.id));
+            return this.getLine(fragmentID.id);
+        }
+        return null;
+    }
 
+    /**
+     * Finds lines associated with the selected control points or selected lines
+     */
+    public getSelectedRelationLines(relationType?: 'point', elem?: SVGGElement): Line[];
+    public getSelectedRelationLines(relationType: 'line', line: Line): Line[];
+    public getSelectedRelationLines(relationType = 'point', elem: unknown = this.selected.point): Line[] {
+        if (relationType === 'point' && !elem) {
+            return [];
+        }
+        if (relationType === 'point' && elem instanceof SVGGElement) {
+            if (elem === this.selected.point && elem.parentNode === this.operationGroup.controlPoints) {
+                return [this.selected.line];
+            }
+            const fragmentIDs = this.getEndPointfragments(elem);
+
+            return fragmentIDs.filter((item) => {
+                return this.drawedLine.has(item.id);
+            }).map((item) => {
+                return this.drawedLine.get(item.id);
+            });
+        } else if (relationType === 'line' && elem instanceof Line) {
+            return elem.getEndPointEles().reduce((prev, point) => {
+                prev.push(...this.getSelectedRelationLines('point', point));
+                return prev;
+            }, []);
+        }
+        return [];
+    }
 
     public onDelete() {
         if (this.selected.line) {
@@ -384,9 +487,7 @@ class DrawGroup {
                     closedLoop: this.selected.line.closedLoop
                 }];
             } else if (this.selected.point) {
-                deleteLines = this.drawedLine.filter((line) => {
-                    return line.EndPointsEle.findIndex((elem) => elem === this.selected.point) !== -1;
-                }).map((line) => {
+                deleteLines = this.getSelectedRelationLines().map((line) => {
                     this.delLine(line);
                     return {
                         fragmentID: line.fragmentID,
@@ -410,7 +511,6 @@ class DrawGroup {
 
     public onMouseDown() {
         const [x, y] = this.cursorPosition;
-        this.unSelectAllPoint();
         this.clearAllConnectLine();
 
         if (this.mode === MODE.DRAW) {
@@ -428,33 +528,24 @@ class DrawGroup {
             return;
         }
         if (this.mode === MODE.SELECT) {
-            this.selected.line && this.selected.line.elem.setAttribute('stroke', 'black');
-            this.selected.point && this.selected.point.setAttribute('fill', '');
+            this.selected.line && this.selected.line.elem.children[0].setAttribute('stroke', 'black');
+            this.selected.point && this.selected.point.children[1].setAttribute('stroke', 'white');
             if (this.preSelectPoint) {
                 const parent = this.preSelectPoint.parentElement as unknown as SVGGElement;
-                this.preSelectPoint.setAttribute('fill', THEME_COLOR);
+
                 this.selected.line = this.getLine(this.preSelectPoint);
                 if (this.selected.line) {
                     this.selected.point = this.preSelectPoint;
                     if (parent === this.operationGroup.controlPoints) {
-                        const cx = this.preSelectPoint.getAttribute('x');
-                        const cy = this.preSelectPoint.getAttribute('y');
+                        // const cx = this.preSelectPoint.getAttribute('x');
+                        // const cy = this.preSelectPoint.getAttribute('y');
                         this.operationGroup.updateOperation(this.selected.line.elem);
-
-                        this.selected.pointIndex = Array.from(this.operationGroup.controlPoints.children).findIndex((elem) => {
-                            if (elem.getAttribute('x') === cx && elem.getAttribute('y') === cy) {
-                                elem.setAttribute('fill', THEME_COLOR);
-                                return true;
-                            } else {
-                                return false;
-                            }
-                        }) + 1;
-                        this.operationGroup.updateOperation(this.selected.line.elem);
+                        this.selected.pointIndex = Number(this.preSelectPoint.dataset.index);
+                        this.operationGroup.controlPoints.children[this.selected.pointIndex as number].children[1].setAttribute('stroke', THEME_COLOR);
                     } else {
+                        this.preSelectPoint.children[1].setAttribute('stroke', THEME_COLOR);
                         this.selected.pointIndex = null;
-                        const elems = this.drawedLine.filter((line) => {
-                            return line.EndPointsEle.includes(this.preSelectPoint as SVGRectElement);
-                        }).reduce((p, c) => {
+                        const elems = this.getSelectedRelationLines().reduce((p, c) => {
                             p.push(c.elem);
                             return p;
                         }, []);
@@ -465,9 +556,12 @@ class DrawGroup {
                 }
                 return;
             }
-            if (this.preSelectLine) {
-                this.preSelectLine.elem.setAttribute('stroke', THEME_COLOR);
-                this.preSelectLine.elem.setAttribute('stroke-opacity', '1');
+            if (this.preSelectLineElem) {
+                this.preSelectLineElem.children[0].setAttribute('stroke', THEME_COLOR);
+                this.preSelectLineElem.children[0].setAttribute('stroke-opacity', '1');
+
+                const fragmentid = this.preSelectLineElem.getAttribute('fragmentid');
+                this.preSelectLine = this.getLine(fragmentid);
 
                 this.operationGroup.updateOperation(this.preSelectLine.elem);
                 this.selected.line = this.preSelectLine;
@@ -481,11 +575,6 @@ class DrawGroup {
             this.selected.pointIndex = null;
         }
         this.operationGroup.clearOperation();
-    }
-
-    public updateAllLinePosition() {
-        this.drawedLine.forEach((item) => item.updatePosition([], true));
-        this.drawedLine.forEach((item) => this.endPointsGroup.append(...item.EndPointsEle));
     }
 
     public onMouseUp(event: MouseEvent, cx: number, cy: number) {
@@ -513,7 +602,7 @@ class DrawGroup {
                 }
             }
             if (this.redrawLatestLine) {
-                const latestLine = this.drawedLine[this.drawedLine.length - 1];
+                const latestLine = this.getLatestDrawnLine();
                 latestLine && latestLine.updatePosition([]);
             }
             this.redrawLatestLine = false;
@@ -522,25 +611,27 @@ class DrawGroup {
         if (this.mode === MODE.SELECT) {
             if (this.hasTransform) {
                 this.hasTransform = false;
-                let anotherEndpoint: SVGRectElement = null;
-                this.drawedLine.filter((line) => {
-                    return line.EndPointsEle.includes(this.selected.point);
-                }).some((line) => {
+                let anotherEndpoint: SVGGElement = null;
+                const relationLines = this.getSelectedRelationLines();
+                relationLines.some((line) => {
                     const isEndpointCoincidence = line.isEndpointCoincidence();
                     if (isEndpointCoincidence) {
-                        anotherEndpoint = line.EndPointsEle.find((elem) => elem !== this.selected.point);
+                        anotherEndpoint = line.getEndPointEles().find((elem) => elem !== this.selected.point);
                         return true;
                     }
                     return false;
                 });
+                // Two endpoints coincide
                 if (anotherEndpoint) {
                     this.selected.pointIndex = null;
-                    this.selected.point = anotherEndpoint;
+                    // this.selected.point = anotherEndpoint;
                     const x = Number(anotherEndpoint.getAttribute('cx'));
                     const y = Number(anotherEndpoint.getAttribute('cy'));
                     this.transformOperatingPoint([x + manualEndOffset, y + manualEndOffset]);
                 }
-                this.updateAllLinePosition();
+                this.getSelectedRelationLines('line', this.selected.line).forEach((line) => {
+                    line.updatePosition([], true);
+                });
                 this.afterTransform = this.recordTransform();
                 this.onDrawTransform({ before: this.beforeTransform, after: this.afterTransform });
             }
@@ -549,6 +640,11 @@ class DrawGroup {
     }
 
     private setGuideLineVisibility(visible: boolean) {
+        // if (visible === this.guideLineVisibility) {
+        //     // Avoid repeated styling
+        //     return;
+        // }
+        // this.guideLineVisibility = visible;
         if (!visible) {
             setAttributes(this.guideX, {
                 x1: 0, y1: 0, x2: 0, y2: 0
@@ -567,10 +663,13 @@ class DrawGroup {
         let attachPosition: TCoordinate;
         let guideX: TCoordinate;
         let guideY: TCoordinate;
-        this.drawedLine.forEach((line) => {
-            const selfIndex = line.EndPointsEle.findIndex((elem) => elem === this.selected.point);
-            line.EndPoins.forEach((p, index) => {
-                if (selfIndex !== -1 && selfIndex === index) {
+        const fragments = this.getEndPointfragments(this.selected.point);
+        for (const [id, line] of this.drawedLine.entries()) {
+            const lineIsSelected = fragments.find((item) => {
+                return item.id === id;
+            });
+            line.endPoints.forEach((p, index) => {
+                if (lineIsSelected && lineIsSelected.index === index) {
                     return;
                 }
                 if (Math.abs(x - p[0]) <= this.attachSpace || Math.abs(y - p[1]) <= this.attachSpace) {
@@ -588,20 +687,23 @@ class DrawGroup {
                     }
                 }
             });
-        });
+        }
 
         if (this.mode === MODE.DRAW) {
             const controlPoints = this.operationGroup.controlPoints.querySelectorAll('[visibility="visible"]');
             const length = controlPoints.length;
             if (length > 1) {
                 Array.from(controlPoints).forEach((elem, index) => {
+                    // Avoid the participation of moving control points in the calculation
                     if (length === 2 && (index === 1 || elem.getAttribute('rx') === '0')) {
                         return;
-                    } else if (length === 3 && index !== 1) {
+                    } else if (length === 3 && index === length - 1) {
+                        return;
+                    } else if (length === 4 && index !== 0) {
                         return;
                     }
-                    const cx = Number(elem.getAttribute('x')) + POINT_RADIUS / this.scale;
-                    const cy = Number(elem.getAttribute('y')) + POINT_RADIUS / this.scale;
+                    const cx = Number(elem.getAttribute('cx'));
+                    const cy = Number(elem.getAttribute('cy'));
                     if (Math.abs(x - cx) <= this.attachSpace) {
                         guideX = [cx, cy];
                     }
@@ -663,46 +765,53 @@ class DrawGroup {
             this.selected.line.points[this.selected.pointIndex][1] = y;
             this.selected.line.updatePosition(this.selected.line.points);
         } else {
-            this.drawedLine.forEach((p) => {
-                const index = p.EndPointsEle.findIndex((elem) => elem === this.selected.point);
-                if (index !== -1) {
-                    p.EndPoins[index][0] = x;
-                    p.EndPoins[index][1] = y;
-                    p.updatePosition(p.points);
+            const lines = this.getEndPointfragments(this.selected.point);
+            for (const { id, index } of lines) {
+                const line = this.drawedLine.get(id);
+                if (line) {
+                    line.endPoints[index][0] = x;
+                    line.endPoints[index][1] = y;
+                    line.updatePosition(line.points);
                 }
-            });
+            }
         }
     }
 
-    private queryLink(line: SVGPathElement) {
-        const selectedLine = this.getLine(line);
-        const links = new Map<Line, { line: Line, indexs: number[], fragmentID: number }>();
-        this.drawedLine.forEach((item) => {
-            if (item.elem === line) {
-                links.set(item, {
-                    indexs: Array(item.points.length).fill(0).map((_, index) => index),
-                    line: item,
-                    fragmentID: item.fragmentID
-                });
-            } else {
-                const circleEles = item.EndPointsEle;
-                selectedLine.EndPointsEle.forEach((circle) => {
-                    const circleIndex = circleEles.findIndex((i) => circle === i);
-                    const index = item.points.findIndex((p) => p === item.EndPoins[circleIndex]);
-                    if (index !== -1) {
-                        const has = links.get(item);
-                        if (has) {
-                            has.indexs.push(index);
-                        } else {
-                            links.set(item, {
-                                indexs: [index],
-                                line: item,
-                                fragmentID: item.fragmentID
-                            });
-                        }
-                    }
-                });
-            }
+    private queryLink(elem: SVGGElement) {
+        const line = this.getLine(elem);
+        if (!line) {
+            return [];
+        }
+        const links = new Map<string, { line: Line, indexs: Set<number>, fragmentID: string }>();
+
+        links.set(line.fragmentID, {
+            indexs: Array(line.points.length).fill(0).reduce((p: Set<number>, _, index) => {
+                p.add(index);
+                return p;
+            }, new Set()),
+            line,
+            fragmentID: line.fragmentID
+        });
+
+        const endPointEles = line.getEndPointEles();
+        endPointEles.forEach((point) => {
+            this.getEndPointfragments(point).forEach((item) => {
+                if (!this.drawedLine.has(item.id)) {
+                    return;
+                }
+                const _line = this.drawedLine.get(item.id);
+                const index = item.index === 0 ? 0 : _line.points.length - 1;
+                const link = links.get(item.id);
+                if (link) {
+                    link.indexs.add(index);
+                } else {
+                    links.set(item.id, {
+                        indexs: new Set([index]),
+                        line: _line,
+                        fragmentID: item.id
+                    });
+                }
+            });
         });
         return Array.from(links.values());
     }
@@ -721,28 +830,15 @@ class DrawGroup {
         });
     }
 
-    private renderPreviewElem(x: number, y: number) {
-        let nearest = ATTACH_SPACE / 4;
-        let nearestLine: Line;
-        let nearestPoint: SVGRectElement;
-        this.drawedLine.forEach((line) => {
-            const d = line.distanceDetection(x, y);
-            if (!(line === this.selected.line && !this.selected.point)) {
-                line.elem.setAttribute('stroke', 'black');
-                line.elem.setAttribute('stroke-opacity', '1');
-            }
-            if (d < nearest) {
-                nearest = d;
-                nearestLine = line;
-            }
-        });
-        nearest = ATTACH_SPACE;
+    public renderPreviewElem(x: number, y: number) {
+        let nearest = this.attachSpace;
+        let nearestPoint: SVGGElement;
+
+        nearest = this.attachSpace;
         (Array.from(this.endPointsGroup.children) as unknown[] as SVGRectElement[]).forEach((elem) => {
-            const pointX = Number(elem.getAttribute('x'));
-            const pointY = Number(elem.getAttribute('y'));
+            const pointX = Number(elem.getAttribute('cx'));
+            const pointY = Number(elem.getAttribute('cy'));
             const space = Math.sqrt((pointX - x) ** 2 + (pointY - y) ** 2);
-            elem.setAttribute('stroke', THEME_COLOR);
-            elem.setAttribute('stroke-opacity', '1');
             if (space < nearest) {
                 if (Math.abs(space - nearest) <= manualEndOffset * 2) {
                     if (Number(nearestPoint.getAttribute('cx')) - Number(elem.getAttribute('cx')) > 0) {
@@ -755,32 +851,26 @@ class DrawGroup {
                 }
             }
         });
+
         Array.from(this.operationGroup.controlPoints.querySelectorAll<SVGRectElement>('[visibility="visible"]')).forEach((elem) => {
-            const pointX = Number(elem.getAttribute('x'));
-            const pointY = Number(elem.getAttribute('y'));
+            const pointX = Number(elem.getAttribute('cx'));
+            const pointY = Number(elem.getAttribute('cy'));
             const space = Math.sqrt((pointX - x) ** 2 + (pointY - y) ** 2);
-            elem.setAttribute('stroke', THEME_COLOR);
-            elem.setAttribute('stroke-opacity', '1');
             if (space < nearest) {
                 nearest = space;
                 nearestPoint = elem;
             }
         });
+        if (this.preSelectPoint) {
+            this.preSelectPoint.children[0].setAttribute('stroke-opacity', '1');
+            this.preSelectPoint.children[0].setAttribute('stroke', THEME_COLOR);
+        }
         if (nearestPoint) {
-            nearestPoint.setAttribute('stroke-opacity', '0.5');
-            nearestPoint.setAttribute('stroke', THEME_COLOR);
+            nearestPoint.children[0].setAttribute('stroke-opacity', '0.5');
+            nearestPoint.children[0].setAttribute('stroke', THEME_COLOR);
             this.preSelectPoint = nearestPoint;
         } else {
             this.preSelectPoint = null;
-            if (nearestLine) {
-                this.preSelectLine = nearestLine;
-                if (this.selected.point || nearestLine !== this.selected.line) {
-                    nearestLine.elem.setAttribute('stroke-opacity', '0.5');
-                    nearestLine.elem.setAttribute('stroke', THEME_COLOR);
-                }
-            } else {
-                this.preSelectLine = null;
-            }
         }
     }
 
@@ -788,8 +878,8 @@ class DrawGroup {
         if (this.mode === MODE.NONE) {
             return;
         }
-        let leftKeyPressed = event.which === 1;
-
+        this.leftKeyPressed = event.which === 1;
+        let leftKeyPressed = this.leftKeyPressed;
         const { x, y, attached } = this.attachCursor(cx, cy);
         if (attached) {
             if (this.mode === MODE.SELECT) {
@@ -802,8 +892,6 @@ class DrawGroup {
         } else {
             this.cursorGroup.setAttachPoint();
         }
-        // const x = cx;
-        // const y = cy;
         this.cursorPosition = [x, y];
 
         if (this.mode === MODE.DRAW) {
@@ -818,17 +906,18 @@ class DrawGroup {
                 leftKeyPressed = false;
             }
             this.cursorGroup.update(leftKeyPressed, x, y);
-            this.operationGroup.updatePrviewByCursor(leftKeyPressed ? new ControlPoint(x, y) : new EndPoint(x, y));
-            if (leftKeyPressed && this.drawedLine.length > 0) {
+            this.operationGroup.updatePrviewByCursor(leftKeyPressed ? new ControlPoint(x, y, null) : new EndPoint(x, y, null));
+
+            if (leftKeyPressed && this.drawedLine.size > 0) {
                 if (this.operationGroup.controlsArray.length === 0 && this.latestDrawingCompleted) {
-                    const latestLine = this.drawedLine[this.drawedLine.length - 1];
+                    const latestLine = this.getLatestDrawnLine();
                     this.redrawLatestLine = true;
                     latestLine && latestLine.redrawCurve(x, y);
                 } else if (
                     this.operationGroup.lastControlsArray.length > 0
                     && this.operationGroup.controlsArray[this.operationGroup.controlsArray.length - 1] instanceof EndPoint
                 ) {
-                    const latestLine = this.drawedLine[this.drawedLine.length - 1];
+                    const latestLine = this.getLatestDrawnLine();
                     const latestPoint = latestLine.points[latestLine.points.length - 1];
                     if (latestPoint[0] === this.operationGroup.controlsArray[0].x && latestPoint[1] === this.operationGroup.controlsArray[0].y) {
                         this.redrawLatestLine = true;
@@ -837,20 +926,19 @@ class DrawGroup {
                 }
             }
         } else {
-            if (leftKeyPressed) {
+            if (leftKeyPressed && this.selected.line) {
                 if (this.selected.line && this.selected.point) {
-                    // move controls points
                     this.setGuideLineVisibility(true);
                     this.transformOperatingPoint([x, y]);
                     if (this.selected.pointIndex) {
+                        // move controls points
                         this.operationGroup.updateOperation(this.selected.line.elem);
                     } else {
-                        const elems = this.drawedLine.filter((line) => {
-                            return line.EndPointsEle.includes(this.selected.point as SVGRectElement);
-                        }).reduce((p, c) => {
-                            p.push(c.elem);
-                            return p;
-                        }, []);
+                        // move end points
+                        const elems = this.getSelectedRelationLines().map((line) => {
+                            return line.elem;
+                        });
+                        // find relation lines
                         this.operationGroup.updateOperation(elems);
                     }
                 } else if (this.selected.line) {
@@ -875,11 +963,19 @@ class DrawGroup {
     }
 
     private generatePath() {
-        const d = this.drawedLine.reduce((p, c) => {
-            p += c.generatePath(c.points);
-            p += ' ';
-            return p;
-        }, '');
+        if (this.drawedLine.size === 0) {
+            return null;
+        }
+        let d = '';
+        for (const [, line] of this.drawedLine.entries()) {
+            d += line.generatePath(line.points);
+            d += ' ';
+        }
+
+        if (this.originElem) {
+            const res = this.applyTransform(d, true).round(5).rel();
+            d = res.toString();
+        }
 
         return d;
     }
@@ -889,43 +985,33 @@ class DrawGroup {
             return null;
         }
         this.setMode(MODE.NONE);
-        let path = this.generatePath();
-        this.drawedLine = [];
-        if (this.originGraph) {
-            const res = this.applyTransform(path, true);
-            path = res.toString();
-        }
+        const path = this.generatePath();
+        this.drawedLine = new Map();
         if (path) {
-            this.graph.remove();
-
-            let graph: SVGPathElement;
-            if (this.originGraph) {
-                graph = this.originGraph;
-                graph.setAttribute('d', path);
-                graph.setAttribute('visibility', 'visible');
-            } else {
-                graph = createSVGElement({
+            if (this.originElem && this.onDrawTransformComplete) {
+                this.originElem.setAttribute('d', path);
+                this.originElem.setAttribute('visibility', 'visible');
+                this.onDrawTransformComplete({
+                    modelID: this.modelID,
+                    before: this.originPath,
+                    after: path
+                });
+            } else if (!this.originElem && this.onDrawComplete) {
+                const temp = createSVGElement({
                     element: 'path',
                     attr: {
-                        id: `graph-${uuid()}`,
+                        id: this.modelID,
                         'stroke-width': 1 / this.scale,
                         d: path,
                         fill: 'transparent',
-                        stroke: 'black'
+                        stroke: '#000',
+                        preset: 'true'
                     }
                 }) as SVGPathElement;
-                this.container.append(graph);
+                this.container.append(temp);
+                this.onDrawComplete(temp);
             }
-            if (this.originGraph && this.onDrawTransformComplete) {
-                this.onDrawTransformComplete({
-                    elem: this.originGraph,
-                    before: this.originGraphPath,
-                    after: path
-                });
-            } else if (!this.originGraph && this.onDrawComplete) {
-                this.onDrawComplete(graph);
-            }
-            return graph;
+            return this.modelID;
         } else {
             if (this.onDrawComplete) {
                 this.onDrawComplete();
@@ -936,40 +1022,36 @@ class DrawGroup {
 
     private transformComplete() {
         if (this.mode !== MODE.SELECT) {
-            return;
+            return null;
         }
         this.setMode(MODE.NONE);
 
-        this.originGraph.setAttribute('visibility', 'visible');
         const path = this.generatePath();
-        this.drawedLine = [];
+        this.drawedLine = new Map();
         if (path) {
-            const res = this.applyTransform(path, true);
-            const d = res.toString();
-            this.graph.remove();
-
-            const transformed = this.originGraphPath !== d;
-            if (transformed) {
-                this.originGraph.setAttribute('d', d);
+            if (this.originElem) {
+                this.originElem.setAttribute('d', path);
+                this.originElem.setAttribute('visibility', 'visible');
             }
+            // 判断是否有编辑
             if (this.onDrawTransformComplete) {
                 this.onDrawTransformComplete({
-                    elem: this.originGraph,
-                    before: this.originGraphPath,
-                    after: d
+                    modelID: this.modelID,
+                    before: this.originPath,
+                    after: path,
                 });
             }
         } else {
             if (this.onDrawTransformComplete) {
                 this.onDrawTransformComplete({
-                    elem: this.originGraph,
-                    before: this.originGraphPath,
-                    after: ''
+                    modelID: this.modelID,
+                    before: this.originPath,
+                    after: '',
                 });
             }
         }
+        return this.modelID;
     }
-
 
     private recordTransform() {
         const pointRecords: TransformRecord[] = [];
@@ -979,15 +1061,16 @@ class DrawGroup {
                 points: cloneDeep(this.selected.line.points)
             });
         } else if (this.selected.point) {
-            this.drawedLine.forEach((p) => {
-                const index = p.EndPointsEle.findIndex((elem) => elem === this.selected.point);
-                if (index !== -1) {
+            const lines = this.getEndPointfragments(this.selected.point);
+            for (const { id } of lines) {
+                const line = this.drawedLine.get(id);
+                if (line) {
                     pointRecords.push({
-                        fragmentID: p.fragmentID,
-                        points: cloneDeep(p.points)
+                        fragmentID: id,
+                        points: cloneDeep(line.points)
                     });
                 }
-            });
+            }
         } else if (this.selected.line) {
             this.queryLink(this.selected.line.elem).forEach((item) => {
                 pointRecords.push({
@@ -1005,12 +1088,9 @@ class DrawGroup {
         });
     }
 
-    private unSelectAllPoint() {
-        Array.from(this.endPointsGroup.children).forEach((p) => {
-            p.setAttribute('fill', '');
-        });
-        Array.from(this.operationGroup.controlPoints.children).forEach((p) => {
-            p.setAttribute('fill', '');
+    private clearDrawedLine() {
+        Array.from(this.graph.children).forEach((item) => {
+            item.remove();
         });
     }
 
@@ -1018,7 +1098,13 @@ class DrawGroup {
         Array.from(this.operationGroup.connectLines.children).forEach((p) => {
             p.setAttribute('visibility', 'hidden');
         });
+
+        Array.from(this.operationGroup.controlPoints.children).forEach((p) => {
+            p.children[1].setAttribute('stroke', 'white');
+            p.setAttribute('fill', '');
+        });
     }
 }
 
 export default DrawGroup;
+

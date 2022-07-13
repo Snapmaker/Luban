@@ -4,14 +4,14 @@ import Canvg from 'canvg';
 import path from 'path';
 import svgPath from 'svgpath';
 import { cloneDeep } from 'lodash';
-import { coordGmSvgToModel, createSVGElement } from '../ui/SVGEditor/element-utils';
+import { coordGmSvgToModel, createSVGElement, setAttributes } from '../ui/SVGEditor/element-utils';
 
 import { NS } from '../ui/SVGEditor/lib/namespaces';
 
 import api from '../api';
 import { checkIsImageSuffix } from '../../shared/lib/utils';
 import Resource from './Resource';
-import { SOURCE_TYPE, SVG_MOVE_MINI_DISTANCE } from '../constants';
+import { DATA_PREFIX, SOURCE_TYPE, SVG_MOVE_MINI_DISTANCE } from '../constants';
 import BaseModel, { ModelTransformation, ModelInfo, TSize, SvgModelElement, TMode } from './BaseModel';
 import ModelGroup from './ModelGroup';
 
@@ -87,7 +87,12 @@ function setElementTransformToList(transformList: SVGTransformList, transformati
 type TVertexPoint = [number, number]
 
 type TModelConfigs = Record<TMode, {
-    config?: Record<string, string | number | boolean>
+    config?: {
+        npType: string;
+        npSize: number;
+        npAngle: number;
+        threshold: number;
+    }
     gcodeConfig?: Record<string, string | number | boolean>
 }>
 
@@ -99,6 +104,7 @@ class SvgModel extends BaseModel {
     public isToolPathSelect: boolean;
     public vertexPoints: TVertexPoint[] = [];
     public geometry: THREE.PlaneGeometry;
+    public isStraightLine = false;
 
     public constructor(modelInfo: ModelInfo, modelGroup: ModelGroup) {
         super(modelInfo, modelGroup);
@@ -373,6 +379,9 @@ class SvgModel extends BaseModel {
                 element.setAttribute('y', `${y - imageHeight / 2}`);
                 element.setAttribute('width', `${imageWidth}`);
                 element.setAttribute('height', `${imageHeight}`);
+                if (element.getAttribute('editable')) {
+                    // console.log('----------->>>>>>>> 更新源文件');
+                }
                 break;
             }
             case 'path': {
@@ -521,24 +530,30 @@ class SvgModel extends BaseModel {
         }
     }
 
-    public calculationPath(pathss: string) {
+    public calculationPath(d: string) {
         const allPoints: [number, number][][] = [];
-        svgPath(pathss).iterate((segment, __, x, y) => {
-            const arr = cloneDeep(segment);
-            const mark = arr.shift();
+        svgPath(d).abs().unarc().unshort()
+            .iterate((segment, __, x, y) => {
+                const arr = cloneDeep(segment) as unknown as number[];
+                const mark = arr.shift().toString();
 
-            if (mark !== 'M' && mark !== 'Z') {
-                const points: [number, number][] = [];
-                points.push([x, y]);
-                for (let index = 0; index < arr.length; index += 2) {
-                    points.push([
-                        Number(arr[index]),
-                        Number(arr[index + 1])
-                    ]);
+                if (mark !== 'M' && mark !== 'Z') {
+                    if (mark === 'H') {
+                        arr.push(y);
+                    } else if (mark === 'V') {
+                        arr.unshift(x);
+                    }
+                    const points: [number, number][] = [];
+                    points.push([x, y]);
+                    for (let index = 0; index < arr.length; index += 2) {
+                        points.push([
+                            Number(arr[index]),
+                            Number(arr[index + 1])
+                        ]);
+                    }
+                    allPoints.push(points);
                 }
-                allPoints.push(points);
-            }
-        });
+            });
 
         const sorted: { item: [number, number][], connected: boolean }[] = [];
         const findConnect = (arr) => {
@@ -654,17 +669,25 @@ class SvgModel extends BaseModel {
 
         const { x, y, width, height, positionX, positionY } = coord;
         let modelContent = '';
-        const isDraw = elem.getAttribute('id')?.includes('graph');
+        // const isDraw = elem.getAttribute('id')?.includes('graph');
 
-        if (elem instanceof SVGPathElement && isDraw) {
-            const dPath = elem.getAttribute('d');
-            const paths = this.calculationPath(dPath);
+        if (this.config.svgNodeName === 'path') {
+            // 应用节点的transform
+            const d = elem.getAttribute('d');
+            const paths = this.calculationPath(d);
             const segments = paths.map((item) => {
-                const clone = elem.cloneNode(true) as SVGPathElement;
-                clone.setAttribute('d', item);
-                clone.setAttribute('transform', 'scale(1 1)');
-                clone.setAttribute('font-size', clone.getAttribute('font-size'));
-                return new XMLSerializer().serializeToString(clone);
+                const temp = createSVGElement({
+                    element: 'path',
+                    attr: {}
+                }) as SVGPathElement;
+                temp.setAttribute('d', item);
+                temp.setAttribute('transform', 'scale(1 1)');
+                temp.setAttribute('font-size', temp.getAttribute('font-size'));
+                temp.setAttribute('fill', 'transparent');
+                temp.setAttribute('fill-opacity', '0');
+                // temp.setAttribute('stroke-width', `${1 / this.scale}`);
+                temp.setAttribute('stroke', 'black');
+                return new XMLSerializer().serializeToString(temp);
             });
             modelContent = segments.join('');
         } else {
@@ -722,12 +745,14 @@ class SvgModel extends BaseModel {
             document.body.removeChild(canvas);
             const formData = new FormData();
             formData.append('image', file);
+            formData.append('size', JSON.stringify(this.size));
             const res = await api.uploadImage(formData);
 
             this.uploadImageName = res.body.uploadName;
         } else {
             this.uploadImageName = '';
         }
+
         this.generateModelObject3D();
         this.generateProcessObject3D();
     }
@@ -735,17 +760,20 @@ class SvgModel extends BaseModel {
     // update model source file
     public async updateSource() {
         // svg and image files(always has this.type = 'image') do nothing
-        if (this.type === 'image') return;
-        const { width, height } = this.elem.getBBox();
-        const uploadName = await this.uploadSourceFile();
+        if (this.type === 'image') return null;
+        const bbox = this.elem.getBBox();
+        const fileInfo = await this.uploadSourceFile();
+        const uploadName = fileInfo.uploadName;
+
         const processImageName = uploadName,
             // !!!source file size MUST NOT apply scale
-            sourceWidth = width,
-            sourceHeight = height;
+            sourceWidth = bbox.width,
+            sourceHeight = bbox.height;
 
         this.sourceHeight = sourceHeight || this.sourceHeight;
         this.sourceWidth = sourceWidth || this.sourceWidth;
-        // this.uploadName = uploadName || this.uploadName;
+        // 当时为什么把这块注释了
+        this.uploadName = uploadName || this.uploadName;
         this.resource.originalFile.update(uploadName);
         this.resource.processedFile.update(processImageName);
 
@@ -754,6 +782,11 @@ class SvgModel extends BaseModel {
         // const height = sourceHeight / sourceWidth * width;
         this.generateModelObject3D();
         this.generateProcessObject3D();
+        return {
+            ...fileInfo,
+            x: bbox.x,
+            y: bbox.y
+        };
     }
 
     public async uploadSourceFile() {
@@ -763,12 +796,28 @@ class SvgModel extends BaseModel {
         const file = new File([blob], 'gen.svg');
         const formData = new FormData();
         formData.append('image', file);
+        formData.append('size', JSON.stringify(this.size));
         const res = await api.uploadImage(formData);
 
-        return res.body.uploadName as string;
+        return res.body;
     }
 
+    public updateSvgPaths(preTransformation: ModelTransformation) {
+        const preScaleX = Math.abs(preTransformation.width / this.width);
+        const preScaleY = Math.abs(preTransformation.height / this.height);
 
+        const scaleX = Math.abs(this.transformation.width / this.width);
+        const scaleY = Math.abs(this.transformation.height / this.height);
+
+        this.config.d = svgPath((this.config.d as string))
+            .translate(-this.size.x - preTransformation.positionX, -this.size.y + preTransformation.positionY)
+            .scale(scaleX / preScaleX, scaleY / preScaleY)
+            .scale(Math.abs(this.transformation.scaleX / preTransformation.scaleX), Math.abs(this.transformation.scaleY / preTransformation.scaleY))
+            // .rotate(preTransformation.rotationZ / Math.PI * 180)
+            // .rotate(-this.transformation.rotationZ / Math.PI * 180)
+            .translate(this.size.x + this.transformation.positionX, this.size.y - this.transformation.positionY)
+            .toString();
+    }
 
     public elemTransformList() {
         const transform = this.elem.transform;
@@ -776,10 +825,6 @@ class SvgModel extends BaseModel {
             this.elem.setAttribute('transform', 'translate(0,0)');
         }
         return this.elem.transform.baseVal;
-    }
-
-    public isDrawGraphic() {
-        return this.elem.getAttribute('id')?.includes('graph');
     }
 
     public refreshElemAttrs() {
@@ -809,40 +854,38 @@ class SvgModel extends BaseModel {
             //     numberAttrs.push('x1', 'y1', 'x2', 'y2');
             //     break;
             case 'path': {
-                const isDraw = this.isDrawGraphic();
-                if (isDraw) {
-                    const d = elem.getAttribute('d');
-                    const bbox = elem.getBBox();
-                    const cx = bbox.x + bbox.width / 2;
-                    const cy = bbox.y + bbox.height / 2;
-                    // clone Model
-                    if (cx !== x || cy !== y) {
-                        const newPath = svgPath(d)
-                            .translate(x - cx, y - cy)
-                            .toString();
-                        elem.setAttribute('d', newPath);
-                    }
-                    break;
+                const d = elem.getAttribute('d');
+                const bbox = elem.getBBox();
+                const cx = bbox.x + bbox.width / 2;
+                const cy = bbox.y + bbox.height / 2;
+                // clone Model
+                if (cx !== x || cy !== y) {
+                    const newPath = svgPath(d)
+                        .translate(x - cx, y - cy)
+                        .toString();
+                    elem.setAttribute('d', newPath);
                 }
-                const imageElement = document.createElementNS(NS.SVG, 'image') as SVGImageElement;
-                const absWidth = Math.abs(width), absHeight = Math.abs(height);
-                const attributes = {
-                    from: 'inner-svg',
-                    'href': href.replace(/\.svg$/, 'parsed.svg'),
-                    'id': elem.getAttribute('id'),
-                    'x': x - absWidth / 2,
-                    'y': y - absHeight / 2,
-                    width: absWidth,
-                    height: absHeight
-                };
-                // // set attribute
-                for (const [key, value] of Object.entries(attributes)) {
-                    imageElement.setAttribute(key, `${value}`);
-                }
-                this.elem.parentNode.append(imageElement);
-                this.elem.remove();
-                this.elem = imageElement;
                 break;
+                // const imageElement = document.createElementNS(NS.SVG, 'image') as SVGImageElement;
+                // const absWidth = Math.abs(width), absHeight = Math.abs(height);
+                // const attributes = {
+                //     // from: 'inner-svg',
+                //     'href': href, // .replace(/\.svg$/, 'parsed.svg'),
+                //     'id': elem.getAttribute('id'),
+                //     'x': x - absWidth / 2,
+                //     'y': y - absHeight / 2,
+                //     editable: 'true',
+                //     width: absWidth,
+                //     height: absHeight
+                // };
+                // // // set attribute
+                // for (const [key, value] of Object.entries(attributes)) {
+                //     imageElement.setAttribute(key, `${value}`);
+                // }
+                // this.elem.parentNode.append(imageElement);
+                // this.elem.remove();
+                // this.elem = imageElement;
+                // break;
             }
             case 'rect': {
                 elem.setAttribute('x', `${x - width / 2}`);
@@ -864,24 +907,16 @@ class SvgModel extends BaseModel {
                 break;
             }
             case 'text': {
-                const imageElement = document.createElementNS(NS.SVG, 'image') as SVGImageElement;
-                const attributes = {
-                    from: 'inner-svg',
-                    'href': href || elem.getAttribute('href'),
-                    'id': elem.getAttribute('id'),
-                    'x': Number(elem.getAttribute('x')) - width / 2,
-                    'y': Number(elem.getAttribute('y')) - height / 2,
+                this.elemToImage({
+                    href: href || this.elem.getAttribute('href'),
+                    id: this.elem.getAttribute('id'),
+                    x: this.elem.getAttribute('x') ? Number(this.elem.getAttribute('x')) - width / 2 : this.x,
+                    y: this.elem.getAttribute('y') ? Number(this.elem.getAttribute('y')) - height / 2 : this.y,
                     width,
                     height
-                };
-                // // set attribute
-                for (const [key, value] of Object.entries(attributes)) {
-                    imageElement.setAttribute(key, `${value}`);
-                }
-                this.elem.parentNode.append(imageElement);
-                this.elem.remove();
-                this.elem = imageElement;
 
+                });
+                this.config.svgNodeName = 'text';
                 break;
             }
             default:
@@ -894,6 +929,7 @@ class SvgModel extends BaseModel {
     public refresh() {
         this.elemTransformList().clear();
         this.refreshElemAttrs();
+        this.setTextStyle(this.config.isText as boolean);
     }
 
     public elemTransform() {
@@ -1049,11 +1085,15 @@ class SvgModel extends BaseModel {
         if (this.mode !== mode) {
             this.modeConfigs[this.mode] = {
                 config: {
-                    ...this.config
+                    npType: this.config.npType as string,
+                    npSize: this.config.npSize as number,
+                    npAngle: this.config.npAngle as number,
+                    threshold: this.config.threshold as number,
                 }
             };
             if (this.modeConfigs[mode]) {
                 this.config = {
+                    ...this.config,
                     ...this.modeConfigs[mode].config
                 };
             } else {
@@ -1066,24 +1106,6 @@ class SvgModel extends BaseModel {
             this.resource.processedFile.update(null);
         }
         this.generateProcessObject3D();
-
-        // const res = await api.processImage({
-        //     headType: this.headType,
-        //     uploadName: this.uploadName,
-        //     config: {
-        //         ...this.config,
-        //         density: 4
-        //     },
-        //     sourceType: this.sourceType,
-        //     mode: mode,
-        //     transformation: {
-        //         width: this.width,
-        //         height: this.height,
-        //         rotationZ: 0
-        //     }
-        // });
-        //
-        // this.processImageName = res.body.filename;
     }
 
     public computeBoundingBox() {
@@ -1186,9 +1208,14 @@ class SvgModel extends BaseModel {
         // Not to update source for text, because <path> need to remap first
         // Todo, <Path> error, add remap method or not to use model source
         // this.updateSource();
-        const isDraw = this.isDrawGraphic();
-        if (isDraw) {
+        if (this.type === 'path') {
             this.config.d = this.elem.getAttribute('d');
+            const flag = this.config.d.replace(/[^a-zA-Z]/g, '').toLocaleUpperCase();
+            if (flag === 'ML' || flag === 'MLZ') {
+                this.isStraightLine = true;
+            } else {
+                this.isStraightLine = false;
+            }
         }
         this.computevertexPoints();
     }
@@ -1230,8 +1257,7 @@ class SvgModel extends BaseModel {
     public clone(modelGroup: ModelGroup) {
         const clone = new SvgModel({ ...this } as unknown as ModelInfo, modelGroup);
         clone.originModelID = this.modelID;
-        const specialPrefix = this.isDrawGraphic() ? 'graph-' : '';
-        clone.modelID = `${specialPrefix}${uuid()}`;
+        clone.modelID = `id${uuid()}`;
         clone.updateConfig(clone.config);
         clone.generateModelObject3D();
         clone.generateProcessObject3D();
@@ -1252,11 +1278,19 @@ class SvgModel extends BaseModel {
         this.processMode(this.mode, this.config);
     }
 
-    public updateProcessImageName(processImageName: string) {
-        // this.processMode(this.mode, this.config, processImageName);
+    public updateProcessImageName(processImageName?: string) {
+        if (this.mode === 'vector' && this.config.editable) {
+            this.elemToPath();
+            return;
+        } else {
+            this.elemToImage();
+        }
         this.resource.processedFile.update(processImageName);
 
         this.generateProcessObject3D();
+
+        const imagePath = `${DATA_PREFIX}/${processImageName}`;
+        this.elem.setAttribute('href', imagePath);
     }
     // --Model functions--
 
@@ -1282,19 +1316,89 @@ class SvgModel extends BaseModel {
         };
     }
 
-    public isStraightLine() {
-        if (this.type === 'path') {
-            const d = this.elem.getAttribute('d');
-            const flag = ['M', 'L', 'Z'];
-            let res = true;
-            svgPath(d).iterate((segment, index) => {
-                if (segment[0] !== flag[index]) {
-                    res = false;
-                }
-            });
-            return res;
+    public elemToPath(attrs?: { [attr: string]: string | boolean | number }) {
+        if (this.elem instanceof SVGPathElement) {
+            return;
         }
-        return false;
+        const pathElement = document.createElementNS(NS.SVG, 'path') as SVGPathElement;
+        const attributes = {
+            'id': this.modelID,
+            d: this.config.d,
+            preset: true,
+            fill: 'transparent',
+            stroke: '#000',
+            editable: true,
+            isText: this.config.isText,
+            ...attrs
+        };
+        // // set attribute
+        for (const [key, value] of Object.entries(attributes)) {
+            pathElement.setAttribute(key, `${value}`);
+        }
+        this.elem.parentNode.append(pathElement);
+
+        const scaleX = this.scaleX;
+        const scaleY = this.scaleY;
+        const angle = this.angle;
+        this.elem.remove();
+
+        SvgModel.initializeElementTransform(pathElement);
+        const x = this.x;
+        const y = this.y;
+
+        SvgModel.recalculateElementTransformList(pathElement, { x, y, scaleX, scaleY, angle });
+
+        this.elem = pathElement;
+        this.config.svgNodeName = 'path';
+
+        this.computevertexPoints();
+        SvgModel.updatePathPreSelectionArea(this.elem);
+    }
+
+    public elemToImage(attrs?: { [attr: string]: string | boolean | number }) {
+        if (this.elem instanceof SVGImageElement) {
+            return;
+        }
+        const imageElement = document.createElementNS(NS.SVG, 'image') as SVGImageElement;
+        const bbox = this.elem.getBBox();
+        const attributes = {
+            from: 'inner-svg',
+            'id': this.modelID,
+            x: bbox.x,
+            y: bbox.y,
+            width: bbox.width,
+            height: bbox.height,
+            ...attrs
+        };
+        // // set attribute
+        for (const [key, value] of Object.entries(attributes)) {
+            imageElement.setAttribute(key, `${value}`);
+        }
+        this.elem.parentNode.append(imageElement);
+        const scaleX = this.scaleX;
+        const scaleY = this.scaleY;
+        const angle = this.angle;
+        this.elem.remove();
+
+        SvgModel.initializeElementTransform(imageElement);
+        const x = this.x;
+        const y = this.y;
+
+        SvgModel.recalculateElementTransformList(imageElement, { x, y, scaleX, scaleY, angle });
+
+        this.elem = imageElement;
+        this.config.svgNodeName = 'image';
+
+        this.computevertexPoints();
+        SvgModel.updatePathPreSelectionArea(this.elem);
+    }
+
+    private setTextStyle(fill: boolean) {
+        setAttributes(this.elem, {
+            stroke: fill ? 'none' : '#000',
+            fill: fill ? '#000' : '',
+            'fill-opacity': fill ? 1 : 0
+        });
     }
 }
 

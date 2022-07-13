@@ -18,7 +18,8 @@ export default class DrawStart extends Operation<DrawStartProp> {
     public redo() {
         this.state.contentGroup.drawGroup.stopDraw(true);
         if (this.state.elemID) {
-            const elem = document.querySelector(`#${this.state.elemID}`);
+            // Compatible with IDS starting with numbers
+            const elem = document.querySelector(`[id="${this.state.elemID}"]`);
             this.state.contentGroup.onChangeMode('select', { elem });
         } else {
             this.state.contentGroup.onChangeMode('draw');

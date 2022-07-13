@@ -18,7 +18,10 @@ export default class DrawLine extends Operation<DrawLineProp> {
     }
 
     public redo() {
-        this.state.drawGroup.appendLine(this.state.target, this.state.closedLoop);
+        this.state.drawGroup.appendLine({
+            elem: this.state.target,
+            closedLoop: this.state.closedLoop
+        });
         this.state.drawGroup.resetOperation();
     }
 

@@ -123,7 +123,8 @@ module.exports = {
             'no-unused-vars': 'off',
             '@typescript-eslint/no-unused-vars': ['error'],
             '@typescript-eslint/explicit-member-accessibility': ['error'], // Require explicit accessibility modifiers on class properties and methods
-            '@typescript-eslint/promise-function-async': 'error'
+            '@typescript-eslint/promise-function-async': 'error',
+            'no-dupe-class-members': 'off'
         }
     }]
 };
