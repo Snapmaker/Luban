@@ -1124,7 +1124,6 @@ export const actions = {
         machineStore.set('shouldHideConsole', shouldHideConsole);
     },
     updatePromptDamageModel: (bool) => (dispatch) => {
-        console.log(bool);
         dispatch(baseActions.updateState({ promptDamageModel: bool }));
         machineStore.set('promptDamageModel', bool);
     }

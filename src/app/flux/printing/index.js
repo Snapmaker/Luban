@@ -746,12 +746,14 @@ export const actions = {
         });
         if (!isSelectedModelVisible) {
             const newQualityId = qualityDefinitions.find(item => item.visible)?.definitionId;
-            originalConfigId[series][PRINTING_MANAGER_TYPE_QUALITY] = newQualityId;
-            dispatch(
-                actions.updateState({
-                    defaultQualityId: newQualityId
-                })
-            );
+            if (originalConfigId[series]) { // Avoid first load error
+                originalConfigId[series][PRINTING_MANAGER_TYPE_QUALITY] = newQualityId;
+                dispatch(
+                    actions.updateState({
+                        defaultQualityId: newQualityId
+                    })
+                );
+            }
         }
     },
 
@@ -1790,6 +1792,7 @@ export const actions = {
         const fileNames = await Promise.all(ps);
         const allChild = []
         fileNames.map((item) => {
+            item.isGroup = true
             allChild.push(...item.children)
         });
         actions.__loadModel(allChild)(dispatch, getState).then(() => {
@@ -3708,14 +3711,14 @@ export const actions = {
         const { promptDamageModel } = getState().machine;
         const { size } = getState().machine;
         const models = [...modelGroup.models];
-        const modelNames = files || [{ originalName, uploadName, sourcePly }];
+        const modelNames = files || [{ originalName, uploadName, sourcePly, isGroup, parentUploadName }];
         let _progress = 0;
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
         const promptTasks = [];
 
         const checkResultMap = new Map();
         const checkPromises = modelNames.filter((item) => {
-            return ['.obj', '.stl'].includes(path.extname(item.uploadName))
+            return !item.isGroup && ['.obj', '.stl'].includes(path.extname(item.uploadName))
         }).map(async (item) => {
             return controller.checkModel({
                 uploadName: item.uploadName
@@ -3904,7 +3907,7 @@ export const actions = {
                             }
                             case 'LOAD_GROUP_POSITIONS': {
                                 const modelsInGroup = modelGroup.models.filter((item) => {
-                                    return  item instanceof ThreeModel && (item.parentUploadName === model.uploadName)
+                                    return item instanceof ThreeModel && (item.parentUploadName === model.uploadName)
                                 })
                                 const { originalPosition } = data;
                                 modelGroup.addGroup({
@@ -3950,36 +3953,40 @@ export const actions = {
         const newModels = modelGroup.models.filter(model => {
             return !models.includes(model) && model;
         });
-        modelGroup.traverseModels(newModels, (model) => {
-            // if (model instanceof ThreeModel) {
-            //     model.initClipper(modelGroup.localPlane);
-            // }
-            const modelSize = new Vector3();
-            model.boundingBox.getSize(modelSize);
-            const isLarge = ['x', 'y', 'z'].some(key => modelSize[key] >= size[key]);
-            if(!model.sourcePly){
+        newModels.forEach((model) => {
+            if (model instanceof ThreeModel) {
+                model.initClipper(modelGroup.localPlane);
+
                 const checkResult = checkResultMap.get(model.uploadName);
                 if (checkResult && checkResult.isDamage) {
                     promptDamageModel && promptTasks.push({
                         status: 'need-repair-model',
                         model
                     });
-                    model.needRepair = true;
                     model.sourcePly = checkResult.sourcePly;
+                    model.needRepair = true;
                 } else {
                     model.needRepair = false;
                 }
+
+            } else {
+                model.needRepair = false;
             }
 
-            if (isLarge && model.parentUploadName) {
-                promptTasks.push({
-                    status: 'needScaletoFit',
-                    model
-                });
+            if (!model.parentUploadName) {
+                const modelSize = new Vector3();
+                model.boundingBox.getSize(modelSize);
+                const isLarge = ['x', 'y', 'z'].some(key => modelSize[key] >= size[key]);
+                if (isLarge) {
+                    promptTasks.push({
+                        status: 'needScaletoFit',
+                        model
+                    });
+                }
             }
         });
         dispatch(actions.applyProfileToAllModels());
-        modelGroup.models = [...modelGroup.models];
+        modelGroup.models = modelGroup.models.concat();
 
         if (modelNames.length === 1 && newModels.length === 0) {
             progressStatesManager.finishProgress(false);
@@ -4819,7 +4826,7 @@ export const actions = {
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
         let _progress = 0;
         const promptTasks = [];
-        modelGroup.unselectAllModels();
+        const { recovery } = modelGroup.unselectAllModels();
 
         const promises = modelInfos.map((res) => {
             const uploadPath = `${DATA_PREFIX}/${res.uploadName}`;
@@ -4835,11 +4842,6 @@ export const actions = {
                             const { positions } = data;
                             const bufferGeometry = new THREE.BufferGeometry();
                             const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
-                            const material = new THREE.MeshPhongMaterial({
-                                color: 0xa0a0a0,
-                                specular: 0xb0b0b0,
-                                shininess: 0
-                            });
                             bufferGeometry.setAttribute(
                                 'position',
                                 modelPositionAttribute
@@ -4847,17 +4849,7 @@ export const actions = {
                             // simplify model mesh import with sacle befor action
                             bufferGeometry.scale(1 / model.transformation.scaleX, 1 / model.transformation.scaleY, 1 / model.transformation.scaleZ);
 
-                            bufferGeometry.computeVertexNormals();
-                            const meshObject = new Mesh(bufferGeometry, material);
-
-                            model.meshObject.updateMatrixWorld();
-                            meshObject.applyMatrix4(model.meshObject.matrixWorld);
-                            const visible = model.visible;
-                            modelGroup.object.remove(model.meshObject);
-                            meshObject.visible = visible;
-                            model.meshObject = meshObject;
-
-                            modelGroup.object.add(meshObject);
+                            model.updateBufferGeometry(bufferGeometry);
                             modelGroup.addModelToSelectedGroup(model);
                             if (modelInfos.length > 1) {
                                 _progress += 1 / modelInfos.length;
@@ -4932,6 +4924,8 @@ export const actions = {
 
         await Promise.allSettled(promises);
         modelGroup.models = modelGroup.models.concat();
+
+        recovery();
         dispatch(
             actions.updateState({
                 modelGroup,
@@ -4961,7 +4955,9 @@ export const actions = {
 export default function reducer(state = INITIAL_STATE, action) {
     switch (action.type) {
         case ACTION_UPDATE_STATE: {
-            return Object.assign({}, state, action.state);
+            const s = Object.assign({}, state, action.state);
+            window.pp = s
+            return s
         }
         case ACTION_UPDATE_TRANSFORMATION: {
             return Object.assign({}, state, {

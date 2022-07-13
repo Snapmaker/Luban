@@ -1,5 +1,7 @@
-import { Sphere, SphereBufferGeometry, MeshStandardMaterial, Vector3, Group, Matrix4, BufferGeometry, Mesh, Float32BufferAttribute, MeshBasicMaterial, Plane, Box3, Object3D,
-    Intersection, BufferAttribute, DynamicDrawUsage, LineSegments, LineBasicMaterial, PlaneGeometry, NotEqualStencilFunc, ReplaceStencilOp, MeshPhongMaterial, Vector2, Shape, ShapeGeometry, FrontSide } from 'three';
+import {
+    Sphere, SphereBufferGeometry, MeshStandardMaterial, Vector3, Group, Matrix4, BufferGeometry, Mesh, Float32BufferAttribute, MeshBasicMaterial, Plane, Box3, Object3D,
+    Intersection, BufferAttribute, DynamicDrawUsage, LineSegments, LineBasicMaterial, PlaneGeometry, NotEqualStencilFunc, ReplaceStencilOp, MeshPhongMaterial, Vector2, Shape, ShapeGeometry, FrontSide
+} from 'three';
 import EventEmitter from 'events';
 import { CONTAINED, INTERSECTED, NOT_INTERSECTED } from 'three-mesh-bvh';
 import { v4 as uuid } from 'uuid';
@@ -1178,11 +1180,25 @@ class ModelGroup extends EventEmitter {
         return this.getState();
     }
 
-    public scaleToFitSelectedModel(size: TSize, offsetX = 0, offsetY = 0) {
+    private async stopClipper() {
+        const selected = this.getSelectedModelArray<Model3D>();
+        const promises = [];
+        this.traverseModels(selected, (model) => {
+            if (model instanceof ThreeModel && model.clipper) {
+                promises.push(
+                    model.clipper.clear()
+                );
+            }
+        });
+        await Promise.all(promises);
+    }
+
+    public async scaleToFitSelectedModel(size: TSize, offsetX = 0, offsetY = 0) {
         const selected = this.getSelectedModelArray<Model3D>();
         if (selected.length === 0) {
             return null;
         }
+        await this.stopClipper();
         this.scaleToFitFromModel(size, offsetX, offsetY, selected);
         this.prepareSelectedGroup();
         return this.getState();
@@ -1437,6 +1453,8 @@ class ModelGroup extends EventEmitter {
     public onModelBeforeTransform() {
         this.updateClippingPlane(planeMaxHeight);
         this.emit(ModelEvents.ClippingHeightReset, true);
+
+        this.stopClipper();
         this.plateAdhesion.clear();
     }
 

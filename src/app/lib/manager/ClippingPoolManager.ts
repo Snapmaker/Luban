@@ -10,6 +10,10 @@ import './clipperPool.worker';
 class ClippingPoolManager {
     private pool: Pool<Thread>;
 
+    public initPool() {
+        this.getPool();
+    }
+
     public sortUnorderedLine(message: sortUnorderedLine.TMessage, onMessage?: (data: sortUnorderedLine.IResult) => void, onComplete?: () => void) {
         return this.execTask<sortUnorderedLine.IResult>('sortUnorderedLine', message, onMessage, onComplete);
     }
@@ -20,34 +24,58 @@ class ClippingPoolManager {
         return this.execTask('calaClippingSkin', message, onMessage, onComplete);
     }
 
-    public calculateSectionPoints(
+    public async calculateSectionPoints(
         message: calculateSectionPoints.IMessage, onMessage: (data: calculateSectionPoints.IResult) => void, onComplete?: () => void
     ) {
-        return this.execTask('calculateSectionPoints', message, onMessage, onComplete);
+        const workersHandle = await spawn(new Worker('./clipperPool.worker.js'));
+        this.getPool();
+        const subscribe = workersHandle.calculateSectionPoints(message).subscribe({
+            next: onMessage,
+            complete() {
+                Thread.terminate(workersHandle);
+                subscribe.unsubscribe();
+                onComplete && onComplete();
+            }
+        });
+
+        return {
+            terminate: async () => {
+                return Thread.terminate(workersHandle);
+            }
+        };
     }
 
-    public mapClippingSkinArea(
+    public async mapClippingSkinArea(
         message: mapClippingSkinArea.TMessage, onMessage: (data: mapClippingSkinArea.TResult) => void, onComplete?: () => void
     ) {
-        return this.execTask('mapClippingSkinArea', message, onMessage, onComplete);
+        const workersHandle = await spawn(new Worker('./clipperPool.worker.js'));
+        const subscribe = workersHandle.mapClippingSkinArea(message).subscribe({
+            next: onMessage,
+            complete() {
+                Thread.terminate(workersHandle);
+                subscribe.unsubscribe();
+                onComplete && onComplete();
+            }
+        });
+
+        return {
+            terminate: async () => {
+                return Thread.terminate(workersHandle);
+            }
+        };
     }
 
     private execTask<T>(workerName: string, message: unknown, onMessage: ((data: T) => void), onComplete?: () => void) {
         const workerPool = this.getPool();
 
-        let _reject;
         const task = workerPool.queue(async (worker) => {
-            return new Promise<void>((resolve, reject) => {
-                _reject = reject;
+            return new Promise<void>((resolve) => {
                 const subscribe = worker[workerName](message).subscribe({
                     next: onMessage,
                     complete() {
                         resolve();
                         subscribe.unsubscribe();
                         onComplete && onComplete();
-                    },
-                    error(err) {
-                        console.log('wwwwww', err);
                     }
                 });
             });
@@ -56,7 +84,6 @@ class ClippingPoolManager {
         return {
             terminate: () => {
                 task && task.cancel();
-                _reject && _reject('cancel');
             }
         };
     }
@@ -81,18 +108,3 @@ const clippingPoolManager = new ClippingPoolManager();
 export default clippingPoolManager;
 
 
-// const workersHandle = await spawn(new Worker(`./${workerName}.worker.js`));
-// const subscribe = workersHandle(message).subscribe({
-//     next: onMessage,
-//     complete() {
-//         Thread.terminate(workersHandle);
-//         subscribe.unsubscribe();
-//         onComplete && onComplete();
-//     }
-// });
-
-// return {
-//     terminate: () => {
-//         workersHandle.
-//     }
-// };

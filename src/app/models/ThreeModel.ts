@@ -158,6 +158,13 @@ class ThreeModel extends BaseModel {
         this.clipper.setLocalPlane(height);
     }
 
+    public updateBufferGeometry(bufferGeometry) {
+        bufferGeometry.computeVertexNormals();
+        this.meshObject.geometry = bufferGeometry;
+
+        this.clipper.init();
+    }
+
     public async updateClippingMap() {
         this.onTransform();
         this.clipper && this.clipper.updateClippingMap(this.transformation, this.boundingBox);

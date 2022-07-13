@@ -126,59 +126,66 @@ export const actions = {
                     path.extname(`${DATA_PREFIX}/${model.originalName}`)
                 );
                 const sourceRepairName = `${basenameWithoutExt}.stl`;
-                const uploadResult = await uploadMesh(mesh, sourceRepairName);
-                const newUploadName = uploadResult?.body?.uploadName;
-                promises.push(controller.repairModel({
-                    uploadName: newUploadName,
-                    modelID: model.modelID,
-                    size
-                }, (data) => {
-                    const { type } = data;
-                    switch (type) {
-                        case 'progress':
-                            if (data.progress && models.length === 1) {
-                                const { progress } = getState().printing;
-                                if (
-                                    data.progress - progress > 0.01
-                                    || data.progress > 1 - EPSILON
-                                ) {
+                const promise = new Promise(async (resolve, reject) => {
+                    const uploadResult = await uploadMesh(mesh, sourceRepairName);
+                    const newUploadName = uploadResult?.body?.uploadName;
+                    const task = await controller.repairModel({
+                        uploadName: newUploadName,
+                        modelID: model.modelID,
+                        size
+                    }, (data) => {
+                        const { type } = data;
+                        switch (type) {
+                            case 'progress':
+                                if (data.progress && models.length === 1) {
+                                    const { progress } = getState().printing;
+                                    if (
+                                        data.progress - progress > 0.01
+                                        || data.progress > 1 - EPSILON
+                                    ) {
+                                        dispatch(
+                                            actions.updateState({
+                                                progress: progressStatesManager.updateProgress(
+                                                    STEP_STAGE.PRINTING_REPAIRING_MODEL,
+                                                    data.progress
+                                                )
+                                            }, headType)
+                                        );
+                                    }
+                                }
+                                break;
+                            case 'error':
+                                // TODO: Whether to set the identification of repair failure
+                                promptTasks.push({
+                                    status: 'repair-model-fail',
+                                    originalName: model.originalName
+                                });
+                                break;
+                            case 'success':
+                                if (models.length > 1) {
+                                    completedNum++;
                                     dispatch(
                                         actions.updateState({
                                             progress: progressStatesManager.updateProgress(
                                                 STEP_STAGE.PRINTING_REPAIRING_MODEL,
-                                                data.progress
+                                                1 * (completedNum / models.length) - 0.01
                                             )
                                         }, headType)
                                     );
                                 }
-                            }
-                            break;
-                        case 'error':
-                            // TODO: Whether to set the identification of repair failure
-                            promptTasks.push({
-                                status: 'repair-model-fail',
-                                originalName: model.originalName
-                            });
-                            break;
-                        case 'success':
-                            if (models.length > 1) {
-                                completedNum++;
-                                dispatch(
-                                    actions.updateState({
-                                        progress: progressStatesManager.updateProgress(
-                                            STEP_STAGE.PRINTING_REPAIRING_MODEL,
-                                            1 * (completedNum / models.length) - 0.01
-                                        )
-                                    }, headType)
-                                );
-                            }
-                            results.push(data);
-                            model.setSourcePly(data.sourcePly);
-                            break;
-                        default:
-                            break;
-                    }
-                }));
+                                results.push(data);
+                                model.setSourcePly(data.sourcePly);
+                                break;
+                            default:
+                                break;
+                        }
+                    }).catch((err) => {
+                        reject(err);
+                    });
+                    resolve(task);
+                });
+
+                promises.push(promise);
             }
         });
 

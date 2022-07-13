@@ -22,8 +22,8 @@ export type IResult = {
 }
 
 const calculateSectionPoints = ({ positionAttribute, modelMatrix, height, layerHeight }: IMessage) => {
-    let number = 0;
-    const now = new Date().getTime();
+    // let number = 0;
+    // const now = new Date().getTime();
     return new Observable<IResult>((observer) => {
         let bvhGeometry = new BufferGeometry();
         const positionObject = positionAttribute.send;
@@ -93,12 +93,12 @@ const calculateSectionPoints = ({ positionAttribute, modelMatrix, height, layerH
                 layerTop,
                 vectors: positions
             });
-            number++;
+            // number++;
         }
         bvhGeometry = null;
         colliderBvh = null;
-        const cost = new Date().getTime() - now;
-        console.log(`calculate section finish => layCount=${number},cost=${cost},average=${cost / number}`);
+        // const cost = new Date().getTime() - now;
+        // console.log(`calculate section finish => layCount=${number},cost=${cost},average=${cost / number}`);
         observer.complete();
     });
 };

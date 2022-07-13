@@ -12,8 +12,7 @@ export type TMessage = {
     fragments: TransferDescriptor<TPoint[]>,
     layerHeight: number,
     innerWallCount: number,
-    lineWidth: number,
-    time: number
+    lineWidth: number
 }
 
 export type IResult = {

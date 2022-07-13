@@ -121,7 +121,7 @@ export default class BaseModel extends EventEmitter {
 
     public transformation: ModelTransformation;
     public boundingBox: THREE.Box3;
-    public limitSize: number; // TODO ts remove?
+    public limitSize: TSize;
     public isSelected = false;
 
     public modelGroup: ModelGroup;
@@ -135,6 +135,7 @@ export default class BaseModel extends EventEmitter {
     protected displayedType: TDisplayedType = 'model';
 
     protected gcodeModeMaterial: THREE.MeshLambertMaterial;
+    public parentUploadName?: string;
 
     protected modelModeMaterial: THREE.MeshStandardMaterial = new THREE.MeshStandardMaterial({ color: 0xe0e0e0, visible: false });
 
