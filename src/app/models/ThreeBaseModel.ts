@@ -33,16 +33,24 @@ export type ExtruderConfig = {
     shell: '0' | '1' | '2',
 };
 
+export type ModelLoadedInGroup = {
+    positions: Float32Array;
+    meshName?: string;
+    matrix?: number[];
+}
+
 export type ModelInfo = {
     modelID?: string,
     parentModelID?: string,
-    limitSize?: number,
+    parentUploadName?: string,
+    limitSize?: TSize,
     headType?: typeof HEAD_PRINTING,
     sourceType?: '3d',
     sourceHeight?: number,
     sourceWidth?: number,
     originalName?: string,
     uploadName?: string,
+    sourcePly?: string;
     modelName?: string,
     config?: {
         [key: string]: number | boolean | string
@@ -66,6 +74,10 @@ export type ModelInfo = {
     // svg
     elem?: SvgModelElement;
     size?: TSize;
+    positionsArr?: {
+        children: Array<ModelLoadedInGroup>;
+        matrix?: number[];
+    }
 };
 
 const DEFAULT_TRANSFORMATION: ModelTransformation = {
@@ -92,7 +104,7 @@ export default class BaseModel extends EventEmitter {
     public modelID: string;
     public originModelID: string;
     public modelName: string;
-    // public visible: boolean;
+    public sourcePly = ''
     public sourceHeight: number;
     public sourceWidth: number;
     public originalName: string;
@@ -109,11 +121,12 @@ export default class BaseModel extends EventEmitter {
 
     public transformation: ModelTransformation;
     public boundingBox: THREE.Box3;
-    public limitSize: number; // TODO ts remove?
+    public limitSize: TSize;
     public isSelected = false;
 
     public modelGroup: ModelGroup;
     public type: string;
+    public needRepair: boolean;
 
     public extruderConfig: ExtruderConfig;
 
@@ -122,6 +135,7 @@ export default class BaseModel extends EventEmitter {
     protected displayedType: TDisplayedType = 'model';
 
     protected gcodeModeMaterial: THREE.MeshLambertMaterial;
+    public parentUploadName?: string;
 
     protected modelModeMaterial: THREE.MeshStandardMaterial = new THREE.MeshStandardMaterial({ color: 0xe0e0e0, visible: false });
 

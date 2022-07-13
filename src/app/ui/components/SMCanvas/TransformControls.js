@@ -979,13 +979,13 @@ class TransformControls extends Object3D {
             return false;
         }
         let data = {};
-        if (this.mode.toLowerCase() === SCALE_MODE) {
+        if (this.mode?.toLowerCase() === SCALE_MODE) {
             data = {
                 x: Math.round(Math.abs(this.object.scale.x) * 1000) / 10,
                 y: Math.round(Math.abs(this.object.scale.y) * 1000) / 10,
                 z: Math.round(Math.abs(this.object.scale.z) * 1000) / 10
             };
-        } else if (this.mode.toLowerCase() === TRANSLATE_MODE) {
+        } else if (this.mode?.toLowerCase() === TRANSLATE_MODE) {
             data = {
                 x: Math.round(this.object.position.x * 10) / 10,
                 y: Math.round(this.object.position.y * 10) / 10,

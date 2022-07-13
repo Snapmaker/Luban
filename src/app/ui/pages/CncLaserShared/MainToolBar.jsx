@@ -37,6 +37,12 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
     const [showCameraCapture, setShowCameraCapture] = useState(false);
     const isOriginalSeries = (series === MACHINE_SERIES.ORIGINAL?.value || series === MACHINE_SERIES.ORIGINAL_LZ?.value);
 
+    // cnc
+    const selectedModelArray = useSelector(state => state?.cnc?.modelGroup?.selectedModelArray);
+    const selectedAllStl = selectedModelArray.length > 0 && selectedModelArray.every((model) => {
+        return model.sourceType === 'image3d';
+    });
+
     const [showStlModal, setShowStlModal] = useState(true);
     const dispatch = useDispatch();
     function handleHideStlModal() {
@@ -234,6 +240,15 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                             </div>
                         </Dropdown>
                     );
+                }
+            },
+            {
+                title: i18n._('key-3DP/MainToolBar-Model repair'),
+                disabled: !selectedAllStl,
+                type: 'button',
+                name: 'MainToolbarFixModel',
+                action: () => {
+                    dispatch(editorActions.repairSelectedModels(headType));
                 }
             }
         );

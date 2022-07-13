@@ -258,6 +258,7 @@ export default class ThreeGroup extends BaseModel {
 
         // set selected group position need to remove children temporarily
         const children = [...this.meshObject.children];
+
         children.map((obj) => ThreeUtils.removeObjectParent(obj));
         // only make the diff translation
         const oldPosition = new THREE.Vector3();

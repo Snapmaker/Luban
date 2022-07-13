@@ -2,8 +2,7 @@
 import { cloneDeep, filter, find as lodashFind, isNil } from 'lodash';
 import path from 'path';
 import * as THREE from 'three';
-import { Transfer } from 'threads';
-import { Vector3 } from 'three';
+import { Mesh, Vector3 } from 'three';
 import {
     acceleratedRaycast,
     computeBoundsTree,
@@ -27,6 +26,7 @@ import {
     LEFT_EXTRUDER,
     LEFT_EXTRUDER_MAP_NUMBER,
     LOAD_MODEL_FROM_INNER,
+    LOAD_MODEL_FROM_OUTER,
     MACHINE_SERIES,
     PRINTING_MANAGER_TYPE_MATERIAL,
     PRINTING_MANAGER_TYPE_QUALITY,
@@ -61,6 +61,7 @@ import ThreeUtils from '../../three-extensions/ThreeUtils';
 import ModelExporter from '../../ui/widgets/PrintingVisualizer/ModelExporter';
 import ModelLoader from '../../ui/widgets/PrintingVisualizer/ModelLoader';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
+// eslint-disable-next-line import/no-cycle
 import { actions as appGlobalActions } from '../app-global';
 import definitionManager from '../manager/DefinitionManager';
 import PresetDefinitionModel from '../manager/PresetDefinitionModel';
@@ -83,6 +84,10 @@ import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import VisibleOperation3D from '../operation-history/VisibleOperation3D';
 import { resolveDefinition } from '../../../shared/lib/definitionResolver';
 import ThreeModel from '../../models/ThreeModel';
+/* eslint-disable import/no-cycle */
+import SimplifyModelOperation from '../operation-history/SimplifyModelOperation';
+
+const { Transfer } = require('threads');
 
 // register methods for three-mesh-bvh
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
@@ -297,49 +302,43 @@ const INITIAL_STATE = {
         layerHeight0: 0,
         layerHeight: 0,
     },
+    simplifyType: 0, // 0: low-polygon, 1: length
+    simplifyPercent: 80, // only for low polygon
+    simplifyOriginModelInfo: {},
     // profile manager params type
     printingParamsType: 'basic',
     materialParamsType: 'basic',
-    customMode: false,
+    customMode: false
 };
 
 const ACTION_UPDATE_STATE = 'printing/ACTION_UPDATE_STATE';
 const ACTION_UPDATE_TRANSFORMATION = 'printing/ACTION_UPDATE_TRANSFORMATION';
 
-// avoid parallel loading of same file
-const createLoadModelWorker = (() => {
-    const runningTasks = {};
-    return (uploadPath, onMessage) => {
-        let task = runningTasks[uploadPath];
-        if (!task) {
-            task = {
-                worker: workerManager.loadModel(uploadPath, data => {
-                    const { type } = data;
+const createLoadModelWorker = (uploadPath, onMessage) => {
+    const task = {
+        worker: workerManager.loadModel(uploadPath, data => {
+            const { type } = data;
 
-                    switch (type) {
-                        case 'LOAD_MODEL_FAILED':
-                            task.worker.then(result => {
-                                result.terminate();
-                            });
-                            delete runningTasks[uploadPath];
-                            break;
-                        default:
-                            break;
-                    }
-                    for (const fn of task.cbOnMessage) {
-                        if (typeof fn === 'function') {
-                            fn(data);
-                        }
-                    }
-                }),
-                cbOnMessage: []
-            };
-            runningTasks[uploadPath] = task;
-        }
-
-        task.cbOnMessage.push(onMessage);
+            switch (type) {
+                case 'LOAD_MODEL_FAILED':
+                    task.worker.then(result => {
+                        result.terminate();
+                    });
+                    break;
+                default:
+                    break;
+            }
+            for (const fn of task.cbOnMessage) {
+                if (typeof fn === 'function') {
+                    fn(data);
+                }
+            }
+        }),
+        cbOnMessage: []
     };
-})();
+
+    task.cbOnMessage.push(onMessage);
+};
 
 function stateEqual(model, stateFrom, stateTo) {
     for (const key of Object.keys(stateFrom)) {
@@ -353,14 +352,14 @@ function stateEqual(model, stateFrom, stateTo) {
     return true;
 }
 
-async function uploadMesh(mesh, stlFileName) {
-    const stl = new ModelExporter().parse(mesh, 'stl', true);
+export const uploadMesh = async function (mesh, fileName, fileType = 'stl') {
+    const stl = new ModelExporter().parse(mesh, fileType, true);
     const blob = new Blob([stl], { type: 'text/plain' });
-    const fileOfBlob = new File([blob], stlFileName);
+    const fileOfBlob = new File([blob], fileName);
 
     const formData = new FormData();
     formData.append('file', fileOfBlob);
-    const uploadResult = await api.uploadFile(formData);
+    const uploadResult = await api.uploadFile(formData, HEAD_PRINTING);
     return uploadResult;
 }
 
@@ -772,12 +771,14 @@ export const actions = {
         });
         if (!isSelectedModelVisible) {
             const newQualityId = qualityDefinitions.find(item => item.visible)?.definitionId;
-            originalConfigId[series][PRINTING_MANAGER_TYPE_QUALITY] = newQualityId;
-            dispatch(
-                actions.updateState({
-                    defaultQualityId: newQualityId
-                })
-            );
+            if (originalConfigId[series]) { // Avoid first load error
+                originalConfigId[series][PRINTING_MANAGER_TYPE_QUALITY] = newQualityId;
+                dispatch(
+                    actions.updateState({
+                        defaultQualityId: newQualityId
+                    })
+                );
+            }
         }
     },
 
@@ -971,7 +972,78 @@ export const actions = {
                     })
                 );
             });
+
+            // for simplify-model
+            controller.on('simplify-model:started', ({ firstTime, uploadName, transformation, sourcePly }) => {
+                const { progressStatesManager, simplifyOriginModelInfo } = getState().printing;
+                // progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SIMPLIFY_MODEL);
+                if (firstTime && uploadName) {
+                    dispatch(actions.updateState({
+                        simplifyOriginModelInfo: {
+                            ...simplifyOriginModelInfo,
+                            uploadName: uploadName,
+                            sourcePly: sourcePly,
+                            transformation: transformation,
+                        }
+                    }));
+                }
+                dispatch(actions.updateState({
+                    stage: STEP_STAGE.PRINTING_SIMPLIFY_MODEL,
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SIMPLIFY_MODEL, 0.3),
+                }));
+            });
+
+            controller.on('simplify-model:progress', _progress => {
+                const { progressStatesManager, progress } = getState().printing;
+                if (_progress - progress > 0.01 || progress > 1 - EPSILON) {
+                    dispatch(actions.updateState({
+                        progress: progressStatesManager.updateProgress(
+                            STEP_STAGE.PRINTING_SIMPLIFY_MODEL,
+                            _progress
+                        )
+                    }));
+                }
+            });
+
+            controller.on('simplify-model:error', () => {
+                const { progressStatesManager } = getState().printing;
+                progressStatesManager.finishProgress(false);
+                dispatch(actions.updateState({
+                    stage: STEP_STAGE.PRINTING_SIMPLIFY_MODEL_FAILED
+                }));
+            });
+
+            controller.on('simplify-model:completed', (params) => {
+                const { modelOutputName, modelID, sourcePly } = params;
+                actions.loadSimplifyModel({ modelID, modelOutputName, sourcePly })(dispatch, getState);
+            });
         }
+    },
+
+    loadSimplifyModel: ({ modelID, modelOutputName, isCancelSimplify = false, sourcePly }) => async (dispatch, getState) => {
+        const { progressStatesManager, simplifyOriginModelInfo, modelGroup } = getState().printing;
+        !isCancelSimplify && dispatch(
+            actions.updateState({
+                stage: STEP_STAGE.PRINTING_SIMPLIFY_MODEL,
+                progress: progressStatesManager.updateProgress(
+                    STEP_STAGE.PRINTING_SIMPLIFY_MODEL,
+                    1
+                ),
+                simplifyOriginModelInfo: {
+                    ...simplifyOriginModelInfo,
+                    simplifyResultFimeName: modelOutputName
+                }
+            })
+        );
+        const uploadName = modelOutputName;
+        const model = modelGroup.findModelByID(modelID);
+        model.sourcePly = sourcePly;
+        await dispatch(actions.updateModelMesh([{
+            modelID,
+            uploadName,
+            sourcePly,
+            reloadSimplifyModel: true
+        }]));
     },
 
     logGenerateGcode: () => (dispatch, getState) => {
@@ -1311,8 +1383,8 @@ export const actions = {
         return new Promise(resolve => {
             const formData = new FormData();
             formData.append('file', file);
-            api.uploadFile(formData)
-                .then(async res => {
+            api.uploadFile(formData, HEAD_PRINTING)
+                .then(async (res) => {
                     const response = res.body;
                     const definitionId = `${type}.${timestamp()}`;
                     const definition = await definitionManager.uploadDefinition(
@@ -1715,7 +1787,7 @@ export const actions = {
      * @returns {Function}
      * @private
      */
-    __loadModel: files => async dispatch => {
+    __loadModel: (files) => async dispatch => {
         const headType = 'printing';
         const sourceType = '3d';
         const mode = '3d';
@@ -1733,7 +1805,6 @@ export const actions = {
             })
         );
     },
-
     // Upload model
     // @param files
     uploadModel: files => async (dispatch, getState) => {
@@ -1741,12 +1812,22 @@ export const actions = {
             // Notice user that model is being loading
             const formData = new FormData();
             formData.append('file', file);
-            const res = await api.uploadFile(formData);
-            const { originalName, uploadName } = res.body;
-            return { originalName, uploadName };
+            const res = await api.uploadFile(formData, HEAD_PRINTING);
+            const { originalName, uploadName, children = [] } = res.body;
+            return { originalName, uploadName, children };
         });
         const fileNames = await Promise.all(ps);
-        actions.__loadModel(fileNames)(dispatch, getState);
+        const allChild = []
+        fileNames.map((item) => {
+            if (item.children.length) {
+                item.isGroup = true
+            }
+            allChild.push(...item.children)
+        });
+        actions.__loadModel(allChild)(dispatch, getState).then(() => {
+            actions.__loadModel(fileNames)(dispatch, getState);
+        })
+
     },
 
     setTransformMode: (value) => (dispatch, getState) => {
@@ -3617,6 +3698,39 @@ export const actions = {
         const { modelGroup } = getState().printing;
         modelGroup.defaultSupportSize = size;
     },
+
+    isModelsRepaired: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        const selectedModels = modelGroup.getSelectedModelArray();
+        const repaired = selectedModels.every((model) => {
+            return !model.needRepair;
+        });
+
+        return new Promise((resolve) => {
+            if (repaired) {
+                resolve(true);
+            } else {
+                dispatch(actions.updateState({
+                    stage: STEP_STAGE.PRINTING_EMIT_REPAIRING_MODEL,
+                    promptTasks: [{
+                        status: 'repair-model-before-simplify',
+                        resolve: async () => {
+                            const { allPepaired } = await dispatch(actions.repairSelectedModels());
+
+                            resolve(allPepaired);
+                        },
+                        reject: () => {
+                            dispatch(actions.updateState({
+                                stage: STEP_STAGE.EMPTY
+                            }));
+                            resolve(false);
+                        }
+                    }]
+                }));
+            }
+        });
+    },
+
     generateModel: (
         headType,
         {
@@ -3633,18 +3747,43 @@ export const actions = {
             extruderConfig,
             isGroup = false,
             parentModelID = '',
+            parentUploadName = '',
             modelName,
             children,
-            primeTowerTag
+            primeTowerTag,
+            sourcePly
         }
     ) => async (dispatch, getState) => {
         const { progressStatesManager, modelGroup } = getState().printing;
+        const { promptDamageModel } = getState().machine;
         const { size } = getState().machine;
         const models = [...modelGroup.models];
-        const modelNames = files || [{ originalName, uploadName }];
+        const modelNames = files || [{ originalName, uploadName, sourcePly, isGroup, parentUploadName }];
         let _progress = 0;
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
         const promptTasks = [];
+
+        const checkResultMap = new Map();
+        const checkPromises = modelNames.filter((item) => {
+            return !item.isGroup && ['.obj', '.stl'].includes(path.extname(item.uploadName))
+        }).map(async (item) => {
+            return controller.checkModel({
+                uploadName: item.uploadName
+            }, (data) => {
+                if (data.type === 'error') {
+                    checkResultMap.set(item.uploadName, {
+                        sourcePly: data.sourcePly,
+                        isDamage: true
+                    });
+                } else if (data.type === 'success') {
+                    checkResultMap.set(item.uploadName, {
+                        sourcePly: data.sourcePly,
+                        isDamage: false
+                    });
+                }
+            });
+        });
+
         const promises = modelNames.map((model) => {
             return new Promise(async (resolve, reject) => {
                 const {
@@ -3657,8 +3796,10 @@ export const actions = {
                         progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress)
                     })
                 );
+                if (!model.uploadName) {
+                    resolve();
+                }
                 const uploadPath = `${DATA_PREFIX}/${model.uploadName}`;
-
                 if (isGroup) {
                     const modelState = await modelGroup.generateModel({
                         loadFrom,
@@ -3682,6 +3823,7 @@ export const actions = {
                         children
                     });
                     dispatch(actions.updateState(modelState));
+
                     dispatch(actions.displayModel());
                     dispatch(actions.destroyGcodeLine());
                     resolve();
@@ -3715,8 +3857,6 @@ export const actions = {
                                 );
 
                                 bufferGeometry.computeVertexNormals();
-                                // Create model
-                                // modelGroup.generateModel(modelInfo);
 
                                 const modelState = await modelGroup.generateModel(
                                     {
@@ -3738,7 +3878,9 @@ export const actions = {
                                         originalPosition,
                                         modelID,
                                         extruderConfig,
-                                        parentModelID
+                                        parentModelID,
+                                        parentUploadName: model.parentUploadName,
+                                        sourcePly: model.sourcePly
                                     }
                                 );
                                 dispatch(actions.updateState(modelState));
@@ -3795,7 +3937,7 @@ export const actions = {
                             }
                             case 'LOAD_MODEL_FAILED': {
                                 promptTasks.push({
-                                    status: 'fail',
+                                    status: 'load-model-fail',
                                     originalName: model.originalName
                                 });
                                 if (modelNames.length > 1) {
@@ -3810,6 +3952,39 @@ export const actions = {
                                 reject();
                                 break;
                             }
+                            case 'LOAD_GROUP_POSITIONS': {
+                                const modelsInGroup = modelGroup.models.filter((item) => {
+                                    return item instanceof ThreeModel && (item.parentUploadName === model.uploadName)
+                                })
+                                const { originalPosition } = data;
+                                modelGroup.addGroup({
+                                    loadFrom: LOAD_MODEL_FROM_OUTER,
+                                    limitSize: size,
+                                    headType,
+                                    sourceType,
+                                    originalName: model.originalName,
+                                    uploadName: model.uploadName,
+                                    modelName: null,
+                                    children,
+                                    originalPosition,
+                                    transformation
+                                }, modelsInGroup);
+
+                                const modelState = modelGroup.getState();
+                                dispatch(actions.updateState(modelState));
+                                dispatch(actions.applyProfileToAllModels());
+                                dispatch(actions.displayModel());
+                                dispatch(actions.destroyGcodeLine());
+                                if (modelNames.length > 1) {
+                                    _progress += 1 / modelNames.length;
+                                    dispatch(actions.updateState({
+                                        stage: STEP_STAGE.PRINTING_LOADING_MODEL,
+                                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress)
+                                    }));
+                                }
+                                resolve();
+                                break;
+                            }
                             default:
                                 break;
                         }
@@ -3819,31 +3994,52 @@ export const actions = {
             });
         });
 
+        await Promise.allSettled(checkPromises);
         await Promise.allSettled(promises);
 
         const newModels = modelGroup.models.filter(model => {
-            return !models.includes(model);
+            return !models.includes(model) && model;
         });
         newModels.forEach((model) => {
             if (model instanceof ThreeModel) {
                 model.initClipper(modelGroup.localPlane);
-            }
-            const modelSize = new Vector3();
-            model.boundingBox.getSize(modelSize);
-            const isLarge = ['x', 'y', 'z'].some(key => modelSize[key] >= size[key]);
 
-            if (isLarge) {
-                promptTasks.push({
-                    status: 'needScaletoFit',
-                    model
-                });
+                const checkResult = checkResultMap.get(model.uploadName);
+                if (checkResult && checkResult.isDamage) {
+                    promptDamageModel && promptTasks.push({
+                        status: 'need-repair-model',
+                        model
+                    });
+                    model.sourcePly = checkResult.sourcePly;
+                    model.needRepair = true;
+                } else {
+                    model.needRepair = false;
+                }
+
+            } else {
+                model.needRepair = false;
+            }
+
+            if (!model.parentUploadName) {
+                const modelSize = new Vector3();
+                model.boundingBox.getSize(modelSize);
+                const isLarge = ['x', 'y', 'z'].some(key => modelSize[key] >= size[key]);
+                if (isLarge) {
+                    promptTasks.push({
+                        status: 'needScaletoFit',
+                        model
+                    });
+                }
             }
         });
         dispatch(actions.applyProfileToAllModels());
+        modelGroup.models = modelGroup.models.concat();
+
         if (modelNames.length === 1 && newModels.length === 0) {
             progressStatesManager.finishProgress(false);
             dispatch(
                 actions.updateState({
+                    modelGroup,
                     stage: STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE,
                     progress: 0,
                     promptTasks
@@ -3852,6 +4048,7 @@ export const actions = {
         } else {
             dispatch(
                 actions.updateState({
+                    modelGroup,
                     stage: STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE,
                     progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1),
                     promptTasks
@@ -4587,13 +4784,228 @@ export const actions = {
         const { modelGroup } = getState().printing;
         modelGroup.updateClippingPlane(height);
         dispatch(actions.render());
+    },
+
+    modelSimplify: (simplifyType = 0, simplifyPercent = 80, isFirstTime = false) => async (dispatch, getState) => {
+        dispatch(actions.updateState({
+            enableShortcut: false,
+            leftBarOverlayVisible: true,
+            transformMode: 'simplify-model'
+        }));
+        const { progressStatesManager, modelGroup, defaultQualityId, qualityDefinitions, simplifyOriginModelInfo } = getState().printing;
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SIMPLIFY_MODEL);
+        dispatch(actions.updateState({
+            stage: STEP_STAGE.PRINTING_SIMPLIFY_MODEL,
+            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SIMPLIFY_MODEL, 0.1),
+            simplifyType,
+            simplifyPercent
+        }));
+        const layerHeight = lodashFind(qualityDefinitions, { definitionId: defaultQualityId })?.settings?.layer_height?.default_value;
+        let transformation = {};
+        const simplifyModel = modelGroup.selectedModelArray[0];
+        let uploadResult = null;
+        if (isFirstTime) {
+            transformation = simplifyModel.transformation;
+            const mesh = simplifyModel.meshObject.clone(false);
+            mesh.clear();
+            const basenameWithoutExt = path.basename(
+                `${DATA_PREFIX}/${simplifyModel.originalName}`,
+                path.extname(`${DATA_PREFIX}/${simplifyModel.originalName}`)
+            );
+            const sourceSimplifyName = `${basenameWithoutExt}.stl`;
+            uploadResult = await uploadMesh(mesh, sourceSimplifyName, 'stl');
+            mesh.applyMatrix4(simplifyModel.meshObject.parent.matrix);
+            await dispatch(actions.updateState({
+                simplifyOriginModelInfo: {
+                    ...simplifyOriginModelInfo,
+                    originModel: simplifyModel,
+                    sourceSimplifyName: uploadResult.body.uploadName
+                }
+            }));
+        }
+        const params = {
+            uploadName: simplifyOriginModelInfo.uploadName || simplifyModel.uploadName,
+            sourcePly: simplifyOriginModelInfo.sourcePly || simplifyModel.sourcePly,
+            sourceSimplify: uploadResult?.body?.uploadName || simplifyOriginModelInfo.sourceSimplifyName,
+            modelID: simplifyModel?.modelID,
+            simplifyType,
+            simplifyPercent,
+            isFirstTime,
+            transformation: transformation,
+            layerHeight: layerHeight,
+        };
+        controller.simplifyModel(params);
+    },
+
+    recordSimplifyModel: () => (dispatch, getState) => {
+        const { simplifyOriginModelInfo: { sourceSimplifyName, simplifyResultFimeName, sourcePly }, modelGroup } = getState().printing;
+        const target = modelGroup.selectedModelArray[0];
+        const operations = new Operations();
+        const operation = new SimplifyModelOperation({
+            target,
+            sourceSimplify: sourceSimplifyName,
+            sourcePly: sourcePly,
+            dispatch: dispatch,
+            simplifyResultFimeName: simplifyResultFimeName,
+            resultSourcePly: target.sourcePly,
+        });
+        operations.push(operation);
+        dispatch(
+            operationHistoryActions.setOperations(
+                INITIAL_STATE.name,
+                operations
+            )
+        );
+    },
+
+    resetSimplifyOriginModelInfo: () => (dispatch) => {
+        dispatch(actions.updateState({
+            simplifyOriginModelInfo: {},
+            enableShortcut: true,
+            leftBarOverlayVisible: false
+        }));
+    },
+
+    /**
+     * @param {*} modelInfos: { modelID:string, uploadName:string, reloadSimplifyModel?: bool }[]
+     */
+    updateModelMesh: (modelInfos) => async (dispatch, getState) => {
+        const { modelGroup, progressStatesManager } = getState().printing;
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
+        let _progress = 0;
+        const promptTasks = [];
+        const { recovery } = modelGroup.unselectAllModels();
+
+        const promises = modelInfos.map((res) => {
+            const uploadPath = `${DATA_PREFIX}/${res.uploadName}`;
+            const model = modelGroup.findModelByID(res.modelID);
+            model.uploadName = res.uploadName;
+            // When repairing and simplifying, there must be no problem with the model
+            model.needRepair = false;
+            return new Promise((resolve, reject) => {
+                const onMessage = async data => {
+                    const { type } = data;
+                    switch (type) {
+                        case 'LOAD_MODEL_POSITIONS': {
+                            const { positions } = data;
+                            const bufferGeometry = new THREE.BufferGeometry();
+                            const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
+                            bufferGeometry.setAttribute(
+                                'position',
+                                modelPositionAttribute
+                            );
+                            // simplify model mesh import with sacle befor action
+                            bufferGeometry.scale(1 / model.transformation.scaleX, 1 / model.transformation.scaleY, 1 / model.transformation.scaleZ);
+
+                            model.updateBufferGeometry(bufferGeometry);
+                            modelGroup.addModelToSelectedGroup(model);
+                            if (modelInfos.length > 1) {
+                                _progress += 1 / modelInfos.length;
+                                dispatch(
+                                    actions.updateState({
+                                        stage: STEP_STAGE.PRINTING_LOADING_MODEL,
+                                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress)
+                                    })
+                                );
+                            }
+                            resolve();
+                            break;
+                        }
+                        case 'LOAD_MODEL_CONVEX': {
+                            const { positions } = data;
+
+                            const convexGeometry = new THREE.BufferGeometry();
+                            const positionAttribute = new THREE.BufferAttribute(
+                                positions,
+                                3
+                            );
+                            convexGeometry.setAttribute(
+                                'position',
+                                positionAttribute
+                            );
+                            modelGroup.setConvexGeometry(
+                                model.uploadName,
+                                convexGeometry
+                            );
+
+                            break;
+                        }
+                        case 'LOAD_MODEL_PROGRESS': {
+                            if (modelInfos.length === 1) {
+                                const state = getState().printing;
+                                const progress = 0.25 + data.progress * 0.5;
+                                if (progress - state.progress > 0.01 || progress > 0.75 - EPSILON) {
+                                    dispatch(
+                                        actions.updateState({
+                                            stage: STEP_STAGE.PRINTING_LOADING_MODEL,
+                                            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, progress)
+                                        })
+                                    );
+                                }
+                            }
+                            break;
+                        }
+                        case 'LOAD_MODEL_FAILED': {
+                            promptTasks.push({
+                                status: 'load-model-fail',
+                                originalName: model.originalName
+                            });
+                            if (modelInfos.length > 1) {
+                                _progress += 1 / modelInfos.length;
+                                dispatch(
+                                    actions.updateState({
+                                        stage: STEP_STAGE.PRINTING_LOADING_MODEL,
+                                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress)
+                                    })
+                                );
+                            }
+                            reject();
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                };
+                createLoadModelWorker(uploadPath, onMessage, res.reloadSimplifyModel);
+            });
+        });
+
+        await Promise.allSettled(promises);
+        modelGroup.models = modelGroup.models.concat();
+
+        recovery();
+        dispatch(
+            actions.updateState({
+                modelGroup,
+                stage: STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1),
+                promptTasks
+            })
+        );
+
+        dispatch(actions.applyProfileToAllModels());
+        dispatch(actions.displayModel());
+        dispatch(actions.destroyGcodeLine());
+    },
+
+    repairSelectedModels: () => async (dispatch, getState) => {
+        const { progressStatesManager } = getState().printing;
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
+
+        const { results, allPepaired } = await dispatch(appGlobalActions.repairSelectedModels(HEAD_PRINTING));
+
+        await dispatch(actions.updateModelMesh(results));
+
+        return { allPepaired };
     }
 };
 
 export default function reducer(state = INITIAL_STATE, action) {
     switch (action.type) {
         case ACTION_UPDATE_STATE: {
-            return Object.assign({}, state, action.state);
+            const s = Object.assign({}, state, action.state);
+            window.pp = s
+            return s
         }
         case ACTION_UPDATE_TRANSFORMATION: {
             return Object.assign({}, state, {

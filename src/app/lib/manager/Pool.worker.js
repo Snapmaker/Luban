@@ -10,6 +10,7 @@ import scaleToFitWithRotate from '../../workers/scaleToFitWithRotate';
 import toolpathRenderer from '../../workers/toolpathRenderer';
 import generatePlateAdhesion from '../../workers/generatePlateAdhesion';
 
+
 expose({
     arrangeModels,
     autoRotateModels,

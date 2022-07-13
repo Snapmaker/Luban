@@ -1,10 +1,37 @@
 import * as THREE from 'three';
 import path from 'path';
+import AMFLoader from '../../../../shared/lib/AMFLoader';
+import ThreeMFLoader from '../../../../shared/lib/3MFLoader';
 import STLLoader from '../../../three-extensions/STLLoader';
 import OBJLoader from '../../../three-extensions/OBJLoader';
 
-const SUPPORT_FORMATS = ['.stl', '.obj'];
+const SUPPORT_FORMATS = ['.stl', '.obj', '.amf', '.3mf'];
 
+// make meshs into the same group
+function flatGroup(object) {
+    if (!object.isGroup) { // mesh
+        if (object.parent) {
+            object.name += object.parent.name;
+            object.updateMatrixWorld();
+            object.geometry.applyMatrix4(object.matrixWorld);
+            object.applyMatrix4(object.matrixWorld.clone().invert());
+            if (object.geometry.index) {
+                object.geometry = object.geometry.toNonIndexed();
+            }
+        }
+    } else {
+        for (let i = object.children.length - 1; i > -1; i--) {
+            const child = object.children[i];
+            flatGroup(child);
+        }
+        if (object.parent && object.parent.isGroup) {
+            if (object.children.length > 0) {
+                object.parent.add(...object.children);
+            }
+            object.parent.remove(object);
+        }
+    }
+}
 class ModelLoader {
     load(modelPath, onLoad, onProgress, onError) {
         // to fix bug: get firstly uploaded model when load different files with the same filename
@@ -14,10 +41,12 @@ class ModelLoader {
             onError('Unsupported format');
             return;
         }
-        if (format === '.stl') {
-            this.parseAsStl(modelPath, onLoad, onProgress, onError);
-        } else if (format === '.obj') {
-            this.parseAsObj(modelPath, onLoad, onProgress, onError);
+        switch (format) {
+            case '.stl': this.parseAsStl(modelPath, onLoad, onProgress, onError); break;
+            case '.obj': this.parseAsObj(modelPath, onLoad, onProgress, onError); break;
+            case '.3mf': this.parseAs3mf(modelPath, onLoad, onProgress, onError); break;
+            case '.amf': this.parseAsAmf(modelPath, onLoad, onProgress, onError); break;
+            default: break;
         }
     }
 
@@ -98,6 +127,38 @@ class ModelLoader {
             },
             (event) => {
                 onError(event);
+            }
+        );
+    }
+
+    parseAs3mf(modelPath, onLoad, onProgress, onError) {
+        new ThreeMFLoader().load(
+            modelPath,
+            (group) => {
+                flatGroup(group);
+                onLoad(group);
+            },
+            (progress) => {
+                onProgress(progress);
+            },
+            (error) => {
+                onError(error);
+            }
+        );
+    }
+
+    parseAsAmf(modelPath, onLoad, onProgress, onError) {
+        new AMFLoader().load(
+            modelPath,
+            (group) => {
+                flatGroup(group);
+                onLoad(group);
+            },
+            (progress) => {
+                onProgress(progress);
+            },
+            (error) => {
+                onError(error);
             }
         );
     }

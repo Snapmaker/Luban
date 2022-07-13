@@ -31,6 +31,7 @@ import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
 import { logModuleVisit } from '../../lib/gaEvent';
 
+console.log('dd');
 const INITIAL_STATE = {
     [HEAD_PRINTING]: {
         findLastEnvironment: false,
@@ -149,11 +150,11 @@ export const actions = {
 
     recoverModels: (promiseArray = [], modActions, models, envHeadType) => (dispatch) => {
         for (let k = 0; k < models.length; k++) {
-            const { headType, originalName, uploadName, modelName, config, sourceType, gcodeConfig,
+            const { headType, originalName, uploadName, modelName, config, sourceType, gcodeConfig, isMfRecovery,
                 sourceWidth, sourceHeight, mode, transformation, modelID, supportTag, extruderConfig, children, parentModelID } = models[k];
             const primeTowerTag = includes(originalName, 'prime_tower');
             // prevent project recovery recorded into operation history
-            if (supportTag) {
+            if (supportTag || originalName?.indexOf('prime_tower') === 0) {
                 continue;
             }
             if (!children) {
@@ -178,6 +179,7 @@ export const actions = {
                     extruderConfig,
                     isGroup: !!children,
                     parentModelID,
+                    isMfRecovery,
                     children,
                     primeTowerTag
                 }))

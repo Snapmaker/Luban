@@ -8,7 +8,7 @@ import type ModelGroup from './ModelGroup';
 import { ModelTransformation } from './ThreeBaseModel';
 import generateLine from '../lib/generate-line';
 import { CLIPPING_LINE_COLOR, planeMaxHeight } from './ModelGroup';
-import ClippingPoolManager from '../lib/manager/ClippingPoolManager';
+import clippingPoolManager from '../lib/manager/ClippingPoolManager';
 
 type TPoint = {
     x: number,
@@ -44,7 +44,7 @@ class ClippingModel {
     private subscriber: Subscription;
     private model: ThreeModel
     private modelGroup: ModelGroup
-    private poolManager = new ClippingPoolManager()
+    private layerCount = null
 
     public group: THREE.Group = new THREE.Group();
 
@@ -102,15 +102,20 @@ class ClippingModel {
     }
 
     public init() {
+        this.group.remove(...this.group.children);
+
+        this.modelMeshObject = this.model.meshObject;
+        this.modelGeometry = this.modelMeshObject.geometry as unknown as THREE.BufferGeometry;
         this.modelBoundingBox = this.model.boundingBox;
+
         this.colliderBvhTransform = { ...this.model.transformation };
-        this.createPlaneStencilGroup();
         this.clippingWall = this.createLine(CLIPPING_LINE_COLOR);
         this.clippingSkin = this.createLine(CLIPPING_LINE_COLOR);
         this.clippingSkinArea = this.createLine(CLIPPING_LINE_COLOR);
         this.clippingInfill = this.createLine(CLIPPING_LINE_COLOR);
         this.reCala();
 
+        this.createPlaneStencilGroup();
         this.group.add(this.clippingWall, this.clippingSkin, this.clippingSkinArea, this.clippingInfill);
         this.model.onTransform();
     }
@@ -158,10 +163,7 @@ class ClippingModel {
             return this.colliderBvhTransform[tag] !== transformation[tag];
         });
         if (re) {
-            for (const [, terminate] of this.clippingWorkerMap.entries()) {
-                terminate();
-            }
-            this.clippingWorkerMap.clear();
+            this.cancalWorkers();
             this.updateBvhGeometry(transformation);
             this.reCala();
             return;
@@ -181,41 +183,56 @@ class ClippingModel {
         this.colliderBvhTransform = { ...transformation };
     }
 
+    public clear = async () => {
+        await this.cancalWorkers();
+
+        // Wait for the pool to complete the current task
+        setTimeout(() => {
+            this.clippingMap.clear();
+            this.innerWallMap.clear();
+            this.skinMap.clear();
+            this.infillMap.clear();
+            this.layerCount = null;
+        });
+    }
+
+    private cancalWorkers = async () => {
+        const promises = [];
+        for (const [, cancel] of this.clippingWorkerMap) {
+            promises.push(cancel());
+        }
+        await Promise.all(promises);
+        this.clippingWorkerMap.clear();
+    }
+
     public async calaClippingWall() {
         this.modelGroup.clippingFinish(false);
         if (this.subscriber) {
             Promise.resolve(this.subscriber.unsubscribe());
-            this.poolManager.terminate();
-            // stop worker pool
         }
-        for (const [, terminate] of this.clippingWorkerMap.entries()) {
-            terminate();
-        }
-        this.clippingWorkerMap.clear();
-        this.clippingMap.clear();
-        this.innerWallMap.clear();
-        this.skinMap.clear();
-        this.infillMap.clear();
+        // stop worker pool
+        this.clear();
 
         const modelMatrix = new THREE.Matrix4();
         this.modelMeshObject.updateMatrixWorld();
         modelMatrix.copy(this.modelMeshObject.matrixWorld);
         const wallCount = Math.max(1, Math.round((this.clippingConfig.wallThickness - this.clippingConfig.lineWidth) / this.clippingConfig.lineWidth) + 1);
-
         const observable = new Observable((subscriber) => {
-            this.poolManager.calculateSectionPoints({
+            let layerCount = 0;
+            clippingPoolManager.calculateSectionPoints({
                 positionAttribute: Transfer(this.modelGeometry.getAttribute('position') as unknown as ArrayBuffer),
                 modelMatrix,
                 height: this.modelBoundingBox.max.z,
                 layerHeight: this.clippingConfig.layerHeight
             }, ({ layerTop, vectors }) => {
-                const now2 = new Date().getTime();
-                const task = this.poolManager.sortUnorderedLine({
+                layerCount++;
+                // const now2 = new Date().getTime();
+                const task = clippingPoolManager.sortUnorderedLine({
                     fragments: Transfer(vectors as unknown as ArrayBuffer),
                     layerHeight: layerTop,
                     innerWallCount: wallCount,
                     lineWidth: this.clippingConfig.lineWidth,
-                    time: now2
+                    // time: now2
                 }, (res) => {
                     if (res) {
                         this.clippingMap.set(layerTop, res.outWall.send);
@@ -226,14 +243,17 @@ class ClippingModel {
                     }
                     this.clippingWorkerMap.delete(layerTop);
                     subscriber.next(this.clippingWorkerMap);
-                    if (this.clippingWorkerMap.size === 0) {
+                    if (this.layerCount !== null && this.clippingWorkerMap.size === 0 && this.layerCount === this.innerWallMap.size) {
                         // wall complete
                         subscriber.complete();
                     }
                 });
                 this.clippingWorkerMap.set(layerTop, task.terminate);
             }, () => {
-                subscriber.complete();
+                this.layerCount = layerCount;
+                this.clippingWorkerMap.delete(0);
+            }).then((worker) => {
+                this.clippingWorkerMap.set(0, worker.terminate);
             });
         });
         const subscriber = observable.subscribe({
@@ -248,7 +268,7 @@ class ClippingModel {
         const wallCount = Math.max(1, Math.round((this.clippingConfig.wallThickness - this.clippingConfig.lineWidth) / this.clippingConfig.lineWidth) + 1);
 
         const observable = new Observable(subscriber => {
-            this.poolManager.mapClippingSkinArea({
+            clippingPoolManager.mapClippingSkinArea({
                 innerWallMap: this.innerWallMap,
                 innerWallCount: wallCount,
                 lineWidth: this.clippingConfig.lineWidth,
@@ -258,7 +278,7 @@ class ClippingModel {
                 layerHeight: this.clippingConfig.layerHeight
             }, ({ otherLayers, layerTop }) => {
                 const currentInnerWall = this.innerWallMap.get(layerTop) ? this.innerWallMap.get(layerTop)[wallCount - 1] : [];
-                const task = this.poolManager.calaClippingSkin({
+                const task = clippingPoolManager.calaClippingSkin({
                     currentInnerWall,
                     otherLayers: otherLayers.send,
                     lineWidth: this.clippingConfig.lineWidth
@@ -267,12 +287,15 @@ class ClippingModel {
                     this.infillMap.set(layerTop, res.infill);
                     this.clippingWorkerMap.delete(layerTop);
                     subscriber.next(this.clippingWorkerMap);
-                    if (this.clippingWorkerMap.size === 0) {
+                    if (this.layerCount !== null && this.clippingWorkerMap.size === 0 && this.layerCount === this.infillMap.size) {
                         subscriber.complete();
-                        this.poolManager.terminate();
                     }
                 });
                 this.clippingWorkerMap.set(layerTop, task.terminate);
+            }, () => {
+                this.clippingWorkerMap.delete(0);
+            }).then((worker) => {
+                this.clippingWorkerMap.set(0, worker.terminate);
             });
         });
         this.subscriber = observable.subscribe({
@@ -354,7 +377,7 @@ class ClippingModel {
                 terminate();
             }
             this.setLocalPlane(planeMaxHeight);
-            this.clippingWorkerMap.clear();
+            this.cancalWorkers();
             this.reCala();
         } else {
             this.clippingConfig = config;

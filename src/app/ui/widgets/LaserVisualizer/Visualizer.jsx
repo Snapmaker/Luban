@@ -191,7 +191,7 @@ class Visualizer extends Component {
             });
             // Switch to PAGE_EDITOR page if new image being uploaded
             this.props.switchToPage(PAGE_EDITOR);
-            if (extname === '.stl' && !this.props.materials.isRotate) {
+            if ((extname === '.stl' || extname === '.amf' || extname === '.3mf') && !this.props.materials.isRotate) {
                 this.props.cutModel(file, () => {
                     modal({
                         cancelTitle: i18n._('key-Laser/Edit/ContextMenu-Close'),
@@ -414,7 +414,7 @@ class Visualizer extends Component {
             }
         }
 
-        this.allowedFiles = (nextProps.materials.isRotate ? this.uploadExts : `${this.uploadExts}, .stl`);
+        this.allowedFiles = (nextProps.materials.isRotate ? this.uploadExts : `${this.uploadExts}, .stl, .amf, .3mf`);
     }
 
     componentWillUnmount() {

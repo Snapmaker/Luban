@@ -42,7 +42,6 @@ class ThreeModel extends BaseModel {
 
     public clipper: ClipperModel;
 
-    // private infillDensity = 0
     public constructor(modelInfo: ModelInfo, modelGroup: ModelGroup) {
         super(modelInfo, modelGroup);
         const { width, height, processImageName } = modelInfo;
@@ -162,9 +161,16 @@ class ThreeModel extends BaseModel {
         this.clipper.setLocalPlane(height);
     }
 
+    public updateBufferGeometry(bufferGeometry) {
+        bufferGeometry.computeVertexNormals();
+        this.meshObject.geometry = bufferGeometry;
+
+        this.clipper.init();
+    }
+
     public async updateClippingMap() {
         this.onTransform();
-        this.clipper.updateClippingMap(this.transformation, this.boundingBox);
+        this.clipper && this.clipper.updateClippingMap(this.transformation, this.boundingBox);
     }
 
     public updateDisplayedType(value) {
@@ -287,6 +293,10 @@ class ThreeModel extends BaseModel {
     public setOversteppedAndSelected(overstepped: boolean, isSelected: boolean) {
         this.overstepped = overstepped;
         this.setSelected(isSelected);
+    }
+
+    public setSourcePly(fileName: string) {
+        this.sourcePly = fileName;
     }
 
     public setSelected(isSelected?: boolean) {

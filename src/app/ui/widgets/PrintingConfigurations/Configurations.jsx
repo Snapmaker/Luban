@@ -36,7 +36,8 @@ const CONFIG_DISPLAY_TYPES_OPTIONS = CONFIG_DISPLAY_TYPES.map((item) => {
 });
 
 
-export function ParamItem({ selectedDefinitionModel, allParams }) {
+function ParamItem({ selectedDefinitionModel, onChangeDefinition }) {
+    const allParams = selectedDefinitionModel.params;
     const selectedDefinitionSettings = selectedDefinitionModel.settings;
     const dispatch = useDispatch();
 
@@ -79,32 +80,61 @@ export function ParamItem({ selectedDefinitionModel, allParams }) {
                     SegmentedValue = paramSetting.current_value;
                 }
                 const eachParamObject = selectedDefinitionSettings[paramName];
+                let displayName = eachParamObject?.label;
+                let displayValue = eachParamObject?.default_value;
+                let segmentedDisplay = true;
+                let showSelect = false;
+                const selectOptions = [];
                 // // TODO: add 'model_structure_type' select
-                // if (paramName === 'infill_sparse_density') {
-                //     eachParamObject = selectedDefinitionSettings['model_structure_type']
-                // }
+                if (paramName === 'infill_sparse_density') {
+                    const modelStructure = selectedDefinitionSettings.model_structure_type;
+                    showSelect = true;
+                    displayValue = modelStructure?.default_value;
+                    displayName = 'Model Structure';
+                    if (displayValue !== 'normal') {
+                        segmentedDisplay = false;
+                    }
+                    Object.entries(modelStructure?.options).forEach(([value, label]) => {
+                        selectOptions.push({ value, label });
+                    });
+                }
                 return (
                     <div key={paramName} className="margin-vertical-16">
-                        <div className="height-24 margin-bottom-4">
-                            <SvgIcon
-                                className="border-default-black-5 margin-right-8"
-                                name="PrintingSettingNormal"
-                                type={['static']}
-                                size={24}
-                                disabled
-                            />
-                            <span className="color-black-3">
-                                {i18n._(eachParamObject?.label)}
+                        <div className="height-24 margin-bottom-4 sm-flex justify-space-between">
+                            <span>
+                                <SvgIcon
+                                    className="border-default-black-5 margin-right-8"
+                                    name="PrintingSettingNormal"
+                                    type={['static']}
+                                    size={24}
+                                    disabled
+                                />
+                                <span className="color-black-3">
+                                    {i18n._(displayName)}
+                                </span>
                             </span>
-                            <span className="float-r color-black-3">
-                                {eachParamObject?.default_value}
-                            </span>
+                            {!showSelect && (
+                                <span className="float-r color-black-3">
+                                    {displayValue}
+                                </span>
+                            )}
+                            {showSelect && (
+                                <Select
+                                    size="72px"
+                                    bordered={false}
+                                    options={selectOptions}
+                                    value={displayValue}
+                                    onChange={(item) => { onChangeDefinition('model_structure_type', item.value); }}
+                                />
+                            )}
                         </div>
-                        <Segmented
-                            options={options}
-                            value={SegmentedValue}
-                            onChange={(value) => { onChangeParam(value, paramSetting); }}
-                        />
+                        {segmentedDisplay && (
+                            <Segmented
+                                options={options}
+                                value={SegmentedValue}
+                                onChange={(value) => { onChangeParam(value, paramSetting); }}
+                            />
+                        )}
                     </div>
                 );
             })}
@@ -113,7 +143,7 @@ export function ParamItem({ selectedDefinitionModel, allParams }) {
 }
 ParamItem.propTypes = {
     selectedDefinitionModel: PropTypes.object,
-    allParams: PropTypes.object
+    onChangeDefinition: PropTypes.func
 };
 
 
@@ -531,7 +561,7 @@ function Configurations() {
                             <div>
                                 <ParamItem
                                     selectedDefinitionModel={selectedDefinition}
-                                    allParams={selectedDefinition.params}
+                                    onChangeDefinition={actions.onChangeDefinition}
                                 />
                             </div>
                         )}
@@ -552,9 +582,9 @@ function Configurations() {
                                                     }
                                                     defaultValue={{
                                                         value:
-                                                        selectedSettingDefaultValue
-                                                        && selectedSettingDefaultValue[key]
-                                                            .default_value
+                                                            selectedSettingDefaultValue
+                                                            && selectedSettingDefaultValue[key]
+                                                                .default_value
                                                     }}
                                                 />
                                             );
