@@ -29,14 +29,13 @@ const enginePath = getPath();
      * @returns process
      */
 function callCuraEngine(modelConfig, supportConfig, outputPath) {
-    const args = ['slice', '-v', '-p', '-o', outputPath];
+    const args = ['slice', '-v', '-p', '-o', outputPath.replace(/\\/g, '/')];
 
     if (modelConfig && modelConfig.path.length) {
-        args.push('-j', modelConfig.configFilePath);
+        args.push('-j', modelConfig.configFilePath.replace(/\\/g, '/'));
         for (let i = 0; i < modelConfig.path.length; i++) {
             const filePath = modelConfig.path[i];
             const fileConfig = modelConfig.modelConfigFilePath[i];
-            console.log(filePath.replace(/\\/g, '/'));
             args.push('-l', filePath.replace(/\\/g, '/'));
             args.push('-j', fileConfig.replace(/\\/g, '/'));
         }
