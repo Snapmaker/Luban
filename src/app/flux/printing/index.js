@@ -769,8 +769,10 @@ export const actions = {
         } = printingState;
         // TODO
         const {
-            toolHead: { printingToolhead }
+            toolHead: { printingToolhead },
+            series
         } = getState().machine;
+        modelGroup.setSeries(series);
         // const printingToolhead = machineStore.get('machine.toolHead.printingToolhead');
         const activeQualityDefinition = lodashFind(qualityDefinitions, {
             definitionId: defaultQualityId
@@ -1927,6 +1929,24 @@ export const actions = {
         finalDefinition.settings.support_interface_extruder_nr.default_value = supportExtruder;
         finalDefinition.settings.support_roof_extruder_nr.default_value = supportExtruder;
         finalDefinition.settings.support_bottom_extruder_nr.default_value = supportExtruder;
+
+        const options = {}
+        if (modelGroup.models.every(model => !model.hasOversteppedHotArea)) {
+            options.center = 'Center'
+        } else {
+            options.all = 'All'
+        }
+        finalDefinition.settings.machine_heated_bed_area = {
+            label: "Machine Heated Bed Area",
+            description: "",
+            type: "enum",
+            options,
+            default_value: "all",
+            enabled: "false",
+            settable_per_mesh: false,
+            settable_per_extruder: false,
+            settable_per_meshgroup: false
+        }
         await definitionManager.createDefinition(finalDefinition);
         // slice
         /*
@@ -4172,6 +4192,7 @@ export const actions = {
                 infillSparseDensity: qualitySetting.infill_sparse_density.default_value,
                 infillPattern: qualitySetting.infill_pattern.default_value,
             });
+            model.materialPrintTemperature = materialSettings.material_print_temperature.default_value
         });
         modelGroup.models = models.concat();
         dispatch(actions.render());

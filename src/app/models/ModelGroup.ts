@@ -97,6 +97,8 @@ class ModelGroup extends EventEmitter {
     private selectedToolPathModelIDs: string[];
     private onDataChangedCallback: () => void;
     private primeTowerHeightCallback: (height: number) => void;
+    private series: string;
+    public materialPrintTemperature: number;
     private candidatePoints: {
         x: number;
         y: number;
@@ -650,6 +652,29 @@ class ModelGroup extends EventEmitter {
         });
     }
 
+    public setSeries(series: string) {
+        this.series = series;
+    }
+
+    public isOversteppedHotArea() {
+        if (this.series !== 'A400') {
+            return false;
+        }
+
+        const useHotMatialModels = [];
+        const selectedModels = this.getSelectedModelArray<Model3D>();
+        this.traverseModels(selectedModels, (model) => {
+            if (model instanceof ThreeModel && model.materialPrintTemperature > 80) {
+                useHotMatialModels.push(model);
+            }
+        });
+        if (!useHotMatialModels.length) {
+            return false;
+        }
+
+        return useHotMatialModels;
+    }
+
     public calculateSelectedGroupPosition() {
         const boundingBoxTemp = ThreeUtils.computeBoundingBox(this.selectedGroup);
         if (this.selectedGroup.children.length >= 1) {
@@ -862,15 +887,17 @@ class ModelGroup extends EventEmitter {
         return this.getState(false);
     }
 
-    public addModelToSelectedGroup(model: Model3D) {
-        if (model.isSelected) return;
-        if (model instanceof PrimeTowerModel && !model.visible) return;
-        model.setSelected(true);
-        ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().copy(this.selectedGroup.matrix).invert());
-        this.selectedModelArray = [...this.selectedModelArray, model];
+    public addModelToSelectedGroup(...models: Model3D[]) {
+        models.forEach((model) => {
+            if (model.isSelected) return;
+            if (model instanceof PrimeTowerModel && !model.visible) return;
+            model.setSelected(true);
+            ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().copy(this.selectedGroup.matrix).invert());
+            this.selectedModelArray = [...this.selectedModelArray, model];
 
-        ThreeUtils.setObjectParent(model.meshObject, this.selectedGroup);
-        this.prepareSelectedGroup();
+            ThreeUtils.setObjectParent(model.meshObject, this.selectedGroup);
+            this.prepareSelectedGroup();
+        });
     }
 
     public removeModelFromSelectedGroup(model: TModel) {

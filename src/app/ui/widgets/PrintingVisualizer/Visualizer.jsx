@@ -48,6 +48,7 @@ const modeSuffix = {
 class Visualizer extends PureComponent {
     static propTypes = {
         isActive: PropTypes.bool.isRequired,
+        series: PropTypes.string.isRequired,
         size: PropTypes.object.isRequired,
         stage: PropTypes.number.isRequired,
         promptTasks: PropTypes.array.isRequired,
@@ -357,7 +358,8 @@ class Visualizer extends PureComponent {
         super(props);
         const size = props.size;
         const stopArea = props.stopArea;
-        this.printableArea = new PrintableCube(size, stopArea);
+        const series = props.series;
+        this.printableArea = new PrintableCube(series, size, stopArea);
     }
 
     // hideContextMenu = () => {
@@ -415,7 +417,7 @@ class Visualizer extends PureComponent {
         }
 
         if (!isEqual(size, prevProps.size)) {
-            this.printableArea.updateSize(size, stopArea);
+            this.printableArea.updateSize(this.props.series, size, stopArea);
             const { gcodeLineGroup } = this.props;
 
             modelGroup.updateBoundingBox(new Box3(
@@ -665,7 +667,7 @@ const mapStateToProps = (state, ownProps) => {
     const machine = state.machine;
     const { currentModalPath } = state.appbarMenu;
     const printing = state.printing;
-    const { size, toolHead: { printingToolhead } } = machine;
+    const { size, series, toolHead: { printingToolhead } } = machine;
     const { menuDisabledCount } = state.appbarMenu;
     // TODO: be to organized
     const {
@@ -707,6 +709,7 @@ const mapStateToProps = (state, ownProps) => {
         stage,
         promptTasks,
         size,
+        series,
         selectedModelArray: modelGroup.selectedModelArray,
         transformation: modelGroup.getSelectedModelTransformationForPrinting(),
         modelGroup,

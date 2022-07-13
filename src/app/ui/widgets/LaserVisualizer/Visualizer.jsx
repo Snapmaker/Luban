@@ -40,6 +40,7 @@ import { Button } from '../../components/Buttons';
 class Visualizer extends Component {
     static propTypes = {
         ...withRouter.propTypes,
+        series: PropTypes.string.isRequired,
         pathname: PropTypes.string,
         page: PropTypes.string.isRequired,
         stage: PropTypes.number.isRequired,
@@ -363,7 +364,7 @@ class Visualizer extends Component {
 
         if (!isEqual(nextProps.size, this.props.size)) {
             const { size, materials } = nextProps;
-            this.printableArea.updateSize(size, materials);
+            this.printableArea.updateSize(this.props.series, size, materials);
             this.canvas.current.setCamera(new THREE.Vector3(0, 0, VISUALIZER_CAMERA_HEIGHT), new THREE.Vector3());
             this.actions.autoFocus();
         }
@@ -690,7 +691,7 @@ class Visualizer extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => {
-    const { size } = state.machine;
+    const { size, series } = state.machine;
     const { currentModalPath, menuDisabledCount } = state.appbarMenu;
     const { background, progressStatesManager } = state.laser;
     const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, displayedType,
@@ -710,6 +711,7 @@ const mapStateToProps = (state, ownProps) => {
         target,
         SVGActions,
         size,
+        series,
         coordinateMode,
         coordinateSize,
         materials,

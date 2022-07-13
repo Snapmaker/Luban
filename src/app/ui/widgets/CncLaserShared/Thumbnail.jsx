@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react';
-import { Color, HemisphereLight, PerspectiveCamera, Scene, Vector3 } from 'three';
+import { Box3, Color, HemisphereLight, PerspectiveCamera, Scene, Vector3 } from 'three';
 import PropTypes from 'prop-types';
 
 import ThreeUtils from '../../../three-extensions/ThreeUtils';
@@ -34,7 +34,12 @@ class Thumbnail extends PureComponent {
 
 
         this.renderer = new WebGLRendererWrapper({ antialias: true, preserveDrawingBuffer: true });
-        this.renderer.setClearColor(new Color(0xfafafa), 1);
+        this.renderer = new WebGLRendererWrapper({
+            antialias: true,
+            preserveDrawingBuffer: true,
+            alpha: true,
+            clearColor: [new Color(0xffffff), 0]
+        });
         this.renderer.setSize(width, height);
 
         this.scene = new Scene();
@@ -70,7 +75,12 @@ class Thumbnail extends PureComponent {
     //     return this.node.current.parentElement.clientHeight;
     // }
 
-    getThumbnail() {
+    getThumbnail(series) {
+        if (series === 'A400') {
+            this.camera.aspect = 600 / 600;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(600, 600);
+        }
         this.object && (this.scene.remove(this.object));
 
         this.object = this.props.toolPathGroup.getThumbnailObject();
@@ -79,15 +89,20 @@ class Thumbnail extends PureComponent {
         const y = (boundingBox.max.y + boundingBox.min.y) / 2;
         const x = (boundingBox.max.x + boundingBox.min.x) / 2;
         const z = 0;
-        const rz = Math.max(
-            boundingBox.max.y - boundingBox.min.y,
-            boundingBox.max.x - boundingBox.min.x,
-            boundingBox.max.z - boundingBox.min.z
-        );
         this.object.position.x += -x;
         this.object.position.y += -y;
         this.object.position.z += -z;
-        this.camera.position.copy(new Vector3(0, 0, (rz + 80)));
+
+        const bbbx = new Box3();
+        bbbx.expandByObject(this.object);
+        const rz = Math.max(
+            bbbx.max.x - bbbx.min.x,
+            bbbx.max.y - bbbx.min.y,
+            bbbx.max.z - bbbx.min.z
+        );
+        const p = rz / 2 / Math.tan(22.5 / 180 * Math.PI);
+
+        this.camera.position.copy(new Vector3(0, 0, (p)));
         this.scene.add(this.object);
 
         this.renderScene();

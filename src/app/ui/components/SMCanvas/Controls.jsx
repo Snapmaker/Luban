@@ -33,7 +33,9 @@ export const EVENTS = {
     BEFORE_TRANSFORM_OBJECT: 'object:beforetransform',
     TRANSFORM_OBJECT: 'object:transform',
     AFTER_TRANSFORM_OBJECT: 'object:aftertransform',
-    SELECT_PLACEMENT_FACE: 'placement:select'
+    SELECT_PLACEMENT_FACE: 'placement:select',
+    PAN_SCALE: 'pan:scale',
+    UPDATE_CAMERA: 'update:camera'
 };
 
 class Controls extends EventEmitter {
@@ -92,6 +94,9 @@ class Controls extends EventEmitter {
 
     // detection
     selectableObjects = null;
+    highlightableObjects = null;
+    highlightLine = null
+    pointer = new THREE.Vector2();
 
     shouldForbidSelect = false;
 
@@ -140,6 +145,7 @@ class Controls extends EventEmitter {
         this.isPrimeTower = false;
 
         this.bindEventListeners();
+        this.ray.params.Line.threshold = 0.5;
     }
 
 
@@ -344,10 +350,13 @@ class Controls extends EventEmitter {
     };
 
     onMouseHover = (event) => {
+        const coord = this.getMouseCoord(event);
+        this.pointer.x = coord.x;
+        this.pointer.y = coord.y;
+
         event.preventDefault();
         // model move with mouse no matter mousedown
         if (this.state === STATE.SUPPORT) {
-            const coord = this.getMouseCoord(event);
             this.ray.setFromCamera(coord, this.camera);
             this.ray.firstHitOnly = true;
             const res = this.ray.intersectObject(this.selectedGroup, true);
@@ -360,15 +369,16 @@ class Controls extends EventEmitter {
         }
         if (this.state === STATE.ROTATE_PLACEMENT) {
             // Let transform control deal with mouse move
-            const coord = this.getMouseCoord(event);
             this.transformControl.onMouseHover(coord);
         }
+
+        this.hoverLine();
+
         if (!(this.selectedGroup && this.selectedGroup.children.length > 0) || this.state !== STATE.NONE) {
             return;
         }
 
         // Let transform control deal with mouse move
-        const coord = this.getMouseCoord(event);
         this.transformControl.onMouseHover(coord);
     };
 
@@ -494,6 +504,10 @@ class Controls extends EventEmitter {
             if (this.selectedGroup && this.selectedGroup.children) {
                 allObjects = allObjects.concat(this.selectedGroup.children);
             }
+
+            allObjects = allObjects.filter((mesh) => {
+                return mesh.name !== 'clippingSection';
+            });
 
             // Check if we select a new object
             const coord = this.getMouseCoord(event);
@@ -643,6 +657,7 @@ class Controls extends EventEmitter {
             const distanceAll = v1.copy(scope.target).sub(scope.camera.position).length();
             this.panScale = Math.round((Math.log(distanceAll / 700) / Math.log(this.scaleRate)) * 10) / 10;
             scope.mouse3D.copy(scope.camera.position).add(v.multiplyScalar(distanceAll));
+            this.emit(EVENTS.PAN_SCALE, this.panScale);
         };
     })();
 
@@ -654,11 +669,53 @@ class Controls extends EventEmitter {
             this.dollyOut();
         }
 
-        this.updateCamera(true);
+        this.updateCamera();
     };
 
     setSelectableObjects(objects) {
         this.selectableObjects = objects;
+    }
+
+    clearHighlight() {
+        if (this.highlightLine) {
+            this.highlightLine.material.color.set('#3B83F6');
+            this.highlightLine = null;
+        }
+    }
+
+    hoverLine() {
+        if (this.highlightableObjects && this.highlightableObjects.children.length) {
+            const lines = this.highlightableObjects.children.reduce((p, c) => {
+                p.push(...c.children.filter((mesh) => {
+                    return mesh.name === 'line' && mesh.visible;
+                }));
+
+                return p;
+            }, []);
+            if (lines.length) {
+                this.ray.setFromCamera(this.pointer, this.camera);
+                const allIntersectObjects = this.ray.intersectObjects(lines, true);
+                if (allIntersectObjects.length) {
+                    const highlightLine = allIntersectObjects[0].object;
+                    if (this.highlightLine !== highlightLine) {
+                        this.clearHighlight();
+                        highlightLine.material.color.set('#9254DE');
+                        this.highlightLine = highlightLine;
+                        this.emit(EVENTS.UPDATE);
+                    }
+                } else {
+                    this.clearHighlight();
+                    this.emit(EVENTS.UPDATE);
+                }
+            }
+        } else {
+            this.clearHighlight();
+            this.emit(EVENTS.UPDATE);
+        }
+    }
+
+    setHighlightableObjects(objects) {
+        this.highlightableObjects = objects;
     }
     //
     // setShouldForbidSelect(shouldForbidSelect) {
@@ -744,6 +801,7 @@ class Controls extends EventEmitter {
             }
 
             this.sphericalDelta.set(0, 0, 0);
+            this.emit(EVENTS.UPDATE_CAMERA, this.camera.position);
         }
 
         // pan
@@ -771,6 +829,7 @@ class Controls extends EventEmitter {
             this.lastPosition.copy(this.camera.position);
             this.lastQuaternion.copy(this.camera.quaternion);
         }
+        // this
     }
 
     dispose() {

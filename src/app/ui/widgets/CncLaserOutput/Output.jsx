@@ -35,6 +35,7 @@ const Output = ({ headType }) => {
     const workflowState = useSelector(state => state.machine?.workflowState);
     const isGcodeGenerating = useSelector(state => state[headType]?.isGcodeGenerating);
     const materials = useSelector(state => state[headType]?.materials);
+    const series = useSelector(state => state?.machine?.series, shallowEqual);
 
     const [showWorkspace, setShowWorkspace] = useState(false);
     const [showExportOptions, setShowExportOptions] = useState(false);
@@ -54,7 +55,7 @@ const Output = ({ headType }) => {
             dispatch(editorActions.switchToPage(headType, PAGE_PROCESS));
         },
         onGenerateThumbnail: () => {
-            dispatch(editorActions.setThumbnail(headType, thumbnail?.current?.getThumbnail()));
+            dispatch(editorActions.setThumbnail(headType, thumbnail?.current?.getThumbnail(series)));
         },
         onLoadGcode: async () => {
             if (gcodeFile === null) {

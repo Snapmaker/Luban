@@ -27,6 +27,9 @@ import log from '../../../lib/log';
 import Detector from '../../../three-extensions/Detector';
 import WebGLRendererWrapper from '../../../three-extensions/WebGLRendererWrapper';
 import { TRANSLATE_MODE } from '../../../constants';
+import { toast } from '../Toast';
+import { ToastWapper } from '../Toast/toastContainer';
+import i18n from '../../../lib/i18n';
 
 const ANIMATION_DURATION = 500;
 const DEFAULT_MODEL_POSITION = new Vector3(0, 0, 0);
@@ -401,6 +404,7 @@ class Canvas extends PureComponent {
 
         this.controls.setTarget(this.initialTarget);
         this.controls.setSelectableObjects(this.modelGroup.object);
+        this.controls.setHighlightableObjects(this.modelGroup.clippingGroup);
 
         this.controls.on(EVENTS.UPDATE, () => {
             this.renderScene();
@@ -422,9 +426,57 @@ class Canvas extends PureComponent {
                 this.controls.transformControl.mode,
                 this.controls.transformControl.axis
             );
+            const hasOverstepped = this.modelGroup.selectedModelArray.some((model) => {
+                return model.overstepped;
+            });
+            if (hasOverstepped) {
+                toast.dismiss();
+                toast(ToastWapper(i18n._('key-Printing/This is the non printable area'), 'WarningTipsWarning', '#FFA940'));
+            } else if (this.props.printableArea.isPointInShape) {
+                const useHotMatialModels = this.modelGroup.isOversteppedHotArea();
+                if (useHotMatialModels) {
+                    let hasOversteppedHotArea = false;
+                    useHotMatialModels.forEach((model) => {
+                        const bbox = model.boundingBox;
+                        const points = [
+                            bbox.max,
+                            bbox.min,
+                            new Vector3(bbox.max.x, bbox.min.y, 0),
+                            new Vector3(bbox.min.x, bbox.max.y, 0),
+                        ];
+                        const inHotArea = points.every((point) => {
+                            return this.props.printableArea.isPointInShape(point);
+                        });
+                        model.hasOversteppedHotArea = !inHotArea;
+                        if (!inHotArea) {
+                            hasOversteppedHotArea = true;
+                        }
+                    });
+                    if (hasOversteppedHotArea) {
+                        toast.dismiss();
+                        toast(ToastWapper(i18n._('key-Printing/This model uses high-temperature materials, and it is recommended to place it in the central high-temperature area of the construction board for printing'), 'WarningTipsWarning', '#1890FF'));
+                    }
+                }
+            }
         });
         this.controls.on(EVENTS.SELECT_PLACEMENT_FACE, (userData) => {
             this.onRotationPlacementSelect(userData);
+        });
+        this.controls.on(EVENTS.PAN_SCALE, (scale) => {
+            if (this.props.printableArea.onPanScale) {
+                const needRefresh = this.props.printableArea.onPanScale(scale);
+                if (needRefresh) {
+                    this.renderScene();
+                }
+            }
+        });
+        this.controls.on(EVENTS.UPDATE_CAMERA, (position) => {
+            if (this.props.printableArea.updateCamera) {
+                const needRefresh = this.props.printableArea.updateCamera(position);
+                if (needRefresh) {
+                    this.renderScene();
+                }
+            }
         });
     }
 
@@ -677,6 +729,7 @@ class Canvas extends PureComponent {
     }
 
     fitViewIn(center, selectedGroupBsphereRadius) {
+        console.log({ center, selectedGroupBsphereRadius });
         const r = selectedGroupBsphereRadius;
         const newTarget = {
             ...center
@@ -891,8 +944,12 @@ class Canvas extends PureComponent {
                             - 220)
                     ) > 10
                 ) {
-                    this.inputPositionLeft = `${this.controlFrontLeftTop.x * this.canvasWidthHalf + this.canvasWidthHalf - this.inputLeftOffset}px`;
-                    this.inputPositionTop = `${-(this.controlFrontLeftTop.y * this.canvasHeightHalf) + this.canvasHeightHalf - 220}px`;
+                    this.inputPositionLeft = `${this.controlFrontLeftTop.x * this.canvasWidthHalf
+                        + this.canvasWidthHalf
+                        - this.inputLeftOffset}px`;
+                    this.inputPositionTop = `${-(this.controlFrontLeftTop.y * this.canvasHeightHalf)
+                        + this.canvasHeightHalf
+                        - 220}px`;
                 }
                 inputDOM && (inputDOM.style.top = this.inputPositionTop);
                 inputDOM && (inputDOM.style.left = this.inputPositionLeft);
