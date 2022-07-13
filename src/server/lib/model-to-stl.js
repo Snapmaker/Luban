@@ -77,7 +77,6 @@ function loadModel(file, format, separateGroup, Loader) {
                 children
             });
         }, (error) => {
-            console.log('reject', error);
             reject(error);
         });
     });
