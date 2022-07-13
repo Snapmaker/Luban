@@ -1,13 +1,12 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
 import classNames from 'classnames';
-import { cloneDeep, includes, isNil, uniqWith } from 'lodash';
+import { cloneDeep, isNil, uniqWith } from 'lodash';
 import modal from '../../../lib/modal';
 import DefinitionCreator from '../../views/DefinitionCreator';
 import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
-import Modal from '../../components/Modal';
 import Anchor from '../../components/Anchor';
 import { Button } from '../../components/Buttons';
 import TipTrigger from '../../components/TipTrigger';
@@ -17,34 +16,24 @@ import Segmented from '../../components/Segmented/index';
 import i18n from '../../../lib/i18n';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
-import { actions as machineActions } from '../../../flux/machine';
 
 import {
     HEAD_PRINTING,
     PRINTING_MANAGER_TYPE_QUALITY,
-    PRINTING_QUALITY_CONFIG_INDEX,
-    PRINTING_QUALITY_CUSTOMIZE_FIELDS,
-    PRINTING_QUALITY_CONFIG_GROUP_DUAL,
-    PRINTING_QUALITY_CONFIG_GROUP_SINGLE,
-    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2
 } from '../../../constants';
+/* eslint-disable import/no-cycle */
 import SettingItem from '../../views/ProfileManager/SettingItem';
-import ConfigValueBox from '../../views/ProfileManager/ConfigValueBox';
+/* eslint-disable import/no-cycle */
 import styles from './styles.styl';
 import { getPresetOptions } from '../../utils/profileManager';
+/* eslint-disable import/no-cycle */
+import PrintingManager from '../../views/PrintingManager';
 
-const newKeys = cloneDeep(PRINTING_QUALITY_CONFIG_INDEX);
 const DEFAULT_DISPLAY_TYPE = 'key-default_category-Default';
 const CONFIG_DISPLAY_TYPES = ['Recommended', 'Customized'];
 const CONFIG_DISPLAY_TYPES_OPTIONS = CONFIG_DISPLAY_TYPES.map((item) => {
     return { value: item, label: item };
 });
-function isOfficialDefinitionKey(key) {
-    return includes(cloneDeep(PRINTING_QUALITY_CUSTOMIZE_FIELDS), key);
-}
-function calculateTextIndex(key) {
-    return `${newKeys[key] * 20}px`;
-}
 
 
 function ParamItem({ selectedDefinitionModel, onChangeDefinition }) {
@@ -162,24 +151,16 @@ ParamItem.propTypes = {
 function Configurations() {
     const [selectedDefinition, setSelectedDefinition] = useState(null);
     const [minimized, setMinimized] = useState(printingStore.get('printingSettingMinimized') || false);
-    const [showCustomConfigPannel, setShowCustomConfigPannel] = useState(false);
     const [presetDisplayType, setPresetDisplayType] = useState();
     const [configDisplayType, setConfigDisplayType] = useState(printingStore.get('printingSettingDisplayType') || CONFIG_DISPLAY_TYPES[0]);
     const defaultQualityId = useSelector((state) => state?.printing?.defaultQualityId);
     const defaultMaterialId = useSelector((state) => state?.printing?.defaultMaterialId);
     const qualityDefinitionModels = useSelector((state) => state?.printing?.qualityDefinitions);
-
-    let printingCustomConfigs = useSelector(
-        (state) => state?.machine?.printingCustomConfigs
-    );
-    const toolHead = useSelector((state) => state?.machine?.toolHead);
+    const printingCustomConfigsWithCategory = useSelector((state) => state?.machine?.printingCustomConfigsWithCategory);
     const [
         selectedSettingDefaultValue,
         setSelectedSettingDefaultValue
     ] = useState(null);
-    const printingQualityConfigGroup = toolHead.printingToolhead === SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2
-        ? PRINTING_QUALITY_CONFIG_GROUP_SINGLE
-        : PRINTING_QUALITY_CONFIG_GROUP_DUAL;
     const refCreateModal = useRef(null);
     const dispatch = useDispatch();
 
@@ -305,10 +286,10 @@ function Configurations() {
             }
         },
         toggleShowCustomConfigPannel: () => {
-            setShowCustomConfigPannel(!showCustomConfigPannel);
-        },
-        closePannel: () => {
-            setShowCustomConfigPannel(false);
+            dispatch(printingActions.updateManagerDisplayType(PRINTING_MANAGER_TYPE_QUALITY));
+            dispatch(printingActions.updateCustomMode(true));
+            dispatch(printingActions.updateProfileParamsType(PRINTING_MANAGER_TYPE_QUALITY, 'custom'));
+            dispatch(printingActions.updateShowPrintingManager(true));
         },
         displayModel: () => {
             dispatch(printingActions.destroyGcodeLine());
@@ -358,19 +339,6 @@ function Configurations() {
         }
     };
 
-    const onChangeCustomConfig = useCallback((key, value) => {
-        if (value && !includes(printingCustomConfigs, key)) {
-            printingCustomConfigs.push(key);
-            printingCustomConfigs = [...printingCustomConfigs];
-        } else if (!value) {
-            printingCustomConfigs = printingCustomConfigs.filter(
-                (a) => a !== key
-            );
-        }
-        dispatch(
-            machineActions.updatePrintingCustomConfigs(printingCustomConfigs)
-        );
-    }, []);
     const renderProfileMenu = (displayType) => {
         const hasResetButton = displayType === i18n._(DEFAULT_DISPLAY_TYPE);
         return (
@@ -599,68 +567,31 @@ function Configurations() {
                         )}
                         {configDisplayType === CONFIG_DISPLAY_TYPES[1] && (
                             <div className="overflow-y-auto height-max-400">
-                                {printingCustomConfigs.map((key) => {
-                                    return (
-                                        <SettingItem
-                                            styleSize="middle"
-                                            settings={selectedDefinition?.settings}
-                                            definitionKey={key}
-                                            key={key}
-                                            onChangeDefinition={actions.onChangeDefinition}
-                                            isDefaultDefinition={
-                                                selectedDefinition.isRecommended
-                                            }
-                                            defaultValue={{
-                                                value:
-                                                selectedSettingDefaultValue
-                                                && selectedSettingDefaultValue[key]
-                                                    .default_value
-                                            }}
-                                        />
-                                    );
-                                })}
-                                {showCustomConfigPannel && (
-                                    <Modal
-                                        className={classNames(styles['manager-body'])}
-                                        style={{ minWidth: '700px' }}
-                                        onClose={actions.closePannel}
-                                    >
-                                        <Modal.Header>
-                                            {i18n._(
-                                                'key-Printing/PrintingConfigurations-Custom Parameter Visibility'
-                                            )}
-                                        </Modal.Header>
-                                        <Modal.Body>
-                                            <div className={classNames(styles['manager-content'])}>
-                                                <ConfigValueBox
-                                                    calculateTextIndex={calculateTextIndex}
-                                                    customConfigs={printingCustomConfigs}
-                                                    definitionForManager={selectedDefinition}
-                                                    optionConfigGroup={printingQualityConfigGroup}
-                                                    isOfficialDefinitionKey={
-                                                        isOfficialDefinitionKey
+                                {Object.keys(printingCustomConfigsWithCategory).map((category) => (
+                                    <>
+                                        {printingCustomConfigsWithCategory[category].map(key => {
+                                            return (
+                                                <SettingItem
+                                                    styleSize="middle"
+                                                    settings={selectedDefinition?.settings}
+                                                    definitionKey={key}
+                                                    key={key}
+                                                    onChangeDefinition={actions.onChangeDefinition}
+                                                    isDefaultDefinition={
+                                                        selectedDefinition.isRecommended
                                                     }
-                                                    type="checkbox"
-                                                    onChangeDefinition={onChangeCustomConfig}
-                                                    onResetDefinition={actions.onChangeDefinition}
-                                                    showMiddle
+                                                    defaultValue={{
+                                                        value:
+                                                            selectedSettingDefaultValue
+                                                            && selectedSettingDefaultValue[key]
+                                                                .default_value
+                                                    }}
                                                 />
-                                            </div>
-                                        </Modal.Body>
-                                        <Modal.Footer>
-                                            <Button
-                                                onClick={actions.closePannel}
-                                                type="default"
-                                                width="96px"
-                                                priority="level-two"
-                                            >
-                                                {i18n._(
-                                                    'key-Printing/PrintingConfigurations-Close'
-                                                )}
-                                            </Button>
-                                        </Modal.Footer>
-                                    </Modal>
-                                )}
+                                            );
+                                        })}
+                                    </>
+                                ))}
+                                <PrintingManager />
                             </div>
                         )}
                         <Anchor

@@ -81,11 +81,11 @@ class ClippingModel {
         return this.clippingWorkerMap.size !== 0;
     }
 
-    private reCala = debounce(this.calaClippingWall)
+    private reCala = debounce(this.calaClippingWall, 200)
 
     private createLine(color) {
         const lineGeometry = new THREE.BufferGeometry();
-        const linePosAttr = new THREE.BufferAttribute(new Float32Array(300000), 3, false);
+        const linePosAttr = new THREE.BufferAttribute(new Float32Array([]), 3, false);
         linePosAttr.setUsage(DynamicDrawUsage);
         lineGeometry.setAttribute('position', linePosAttr);
         const line = new THREE.LineSegments(lineGeometry, new THREE.LineBasicMaterial({
@@ -391,9 +391,11 @@ class ClippingModel {
             this.clippingSkinArea.visible = false;
             return;
         }
-        const posAttr = this.clippingSkin.geometry.attributes.position;
-        const posAttrArea = this.clippingSkinArea.geometry.attributes.position;
+        const posAttr = this.clippingSkin.geometry;
+        const posAttrArea = this.clippingSkinArea.geometry;
         const polygons = this.skinMap.get(clippingHeight);
+        const arr1 = [];
+        const arr2 = [];
         if (polygons && polygons.length > 0) {
             const arr = [];
             polygons.forEach((polygon) => {
@@ -418,23 +420,20 @@ class ClippingModel {
             if (!skinLines.length) {
                 return;
             }
-            let i = 0;
             // skinArea
             arr.forEach((point) => {
-                point && posAttrArea.setXYZ(i++, point.x, point.y, clippingHeight);
+                point && arr1.push(point.x, point.y, clippingHeight);
             });
-            let j = 0;
             skinLines.forEach((point) => {
-                posAttr.setXYZ(j, point.x, point.y, clippingHeight);
-                j++;
+                arr2.push(point.x, point.y, clippingHeight);
             });
-            this.clippingSkin.geometry.setDrawRange(0, j);
-            this.clippingSkinArea.geometry.setDrawRange(0, i);
             this.clippingSkin.position.copy(this.localPlane.normal).multiplyScalar(-0.002);
             this.clippingSkinArea.position.copy(this.localPlane.normal).multiplyScalar(-0.002);
-            posAttr.needsUpdate = true;
 
-            posAttrArea.needsUpdate = true;
+            posAttr.setAttribute('position', new THREE.BufferAttribute(new Float32Array(arr1), 3));
+            posAttrArea.setAttribute('position', new THREE.BufferAttribute(new Float32Array(arr2), 3));
+            this.clippingSkin.updateMatrix();
+            this.clippingSkinArea.updateMatrix();
 
             this.clippingSkin.visible = true;
             this.clippingSkinArea.visible = true;
@@ -444,27 +443,26 @@ class ClippingModel {
         }
     }
 
-    private setPointFromPolygon(posAttr, polygon, clippingHeight, temp) {
+    private setPointFromPolygon(arr, polygon, clippingHeight) {
         polygon.forEach((paths) => {
             for (let i = 0; i < paths.length; i++) {
                 const start = paths[i];
                 const end = paths[i + 1];
                 if (end) {
-                    posAttr.setXYZ(temp.index++, start.x, start.y, clippingHeight);
-                    posAttr.setXYZ(temp.index++, end.x, end.y, clippingHeight);
+                    arr.push(start.x, start.y, clippingHeight);
+                    arr.push(end.x, end.y, clippingHeight);
                 }
             }
         });
     }
 
     private updateClippingWall(clippingHeight: number) {
-        const posAttr = this.clippingWall.geometry.attributes.position;
-
+        const posAttr = this.clippingWall.geometry;
+        const arr = [];
         const polygons = this.clippingMap.get(clippingHeight);
         if (polygons && polygons.length > 0 && clippingHeight <= this.modelBoundingBox.max.z) {
-            const temp = { index: 0 };
             polygons.forEach((polygon) => {
-                this.setPointFromPolygon(posAttr, polygon, clippingHeight, temp);
+                this.setPointFromPolygon(arr, polygon, clippingHeight);
             });
 
             const polygonss = this.innerWallMap.get(clippingHeight) || [];
@@ -475,18 +473,18 @@ class ClippingModel {
                             const begin = vectors[i];
                             const end = vectors[i + 1];
                             if (end) {
-                                posAttr.setXYZ(temp.index++, begin.x, begin.y, clippingHeight);
-                                posAttr.setXYZ(temp.index++, end.x, end.y, clippingHeight);
+                                arr.push(begin.x, begin.y, clippingHeight);
+                                arr.push(end.x, end.y, clippingHeight);
                             }
                         }
                     });
                 });
             });
 
-            this.clippingWall.geometry.setDrawRange(0, temp.index);
-            this.clippingWall.position.copy(this.localPlane.normal).multiplyScalar(-0.002);
+            posAttr.setAttribute('position', new THREE.BufferAttribute(new Float32Array(arr), 3));
 
-            posAttr.needsUpdate = true;
+            this.clippingWall.position.copy(this.localPlane.normal).multiplyScalar(-0.002);
+            this.clippingWall.updateMatrix();
             this.clippingWall.visible = true;
         } else {
             this.clippingWall.visible = false;
@@ -494,7 +492,8 @@ class ClippingModel {
     }
 
     private updateClippingInfill(clippingHeight: number) {
-        const posAttr = this.clippingInfill.geometry.attributes.position;
+        const posAttr = this.clippingInfill.geometry;
+        const arr = [];
         const polygons = this.infillMap.get(clippingHeight);
         if (polygons && polygons.length !== 0 && clippingHeight <= this.modelBoundingBox.max.z) {
             const skinLines = this.generateLineInfill(clippingHeight, polygons);
@@ -502,16 +501,14 @@ class ClippingModel {
                 this.clippingInfill.visible = false;
                 return;
             }
-            let j = 0;
             skinLines.forEach((skinLine) => {
                 skinLine.forEach((point) => {
-                    posAttr.setXYZ(j, point.x, point.y, clippingHeight);
-                    j++;
+                    arr.push(point.x, point.y, clippingHeight);
                 });
             });
-            this.clippingInfill.geometry.setDrawRange(0, j);
+            posAttr.setAttribute('position', new THREE.BufferAttribute(new Float32Array(arr), 3));
             this.clippingInfill.position.copy(this.localPlane.normal).multiplyScalar(-0.002);
-            posAttr.needsUpdate = true;
+            this.clippingInfill.updateMatrix();
             this.clippingInfill.visible = true;
         } else {
             this.clippingInfill.visible = false;

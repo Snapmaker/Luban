@@ -40,6 +40,7 @@ import { repairModelPopup } from '../PrintingVisualizer/VisualizerPopup';
 class Visualizer extends Component {
     static propTypes = {
         ...withRouter.propTypes,
+        series: PropTypes.string.isRequired,
         pathname: PropTypes.string,
         page: PropTypes.string.isRequired,
         materials: PropTypes.object,
@@ -336,7 +337,7 @@ class Visualizer extends Component {
 
         if (!isEqual(nextProps.size, this.props.size)) {
             const { size, materials } = nextProps;
-            this.printableArea.updateSize(size, materials);
+            this.printableArea.updateSize(this.props.series, size, materials);
             this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(size.z, VISUALIZER_CAMERA_HEIGHT)), new THREE.Vector3());
             this.actions.autoFocus();
         }
@@ -696,7 +697,7 @@ class Visualizer extends Component {
 
 const mapStateToProps = (state, ownProps) => {
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
-    const { size } = state.machine;
+    const { size, series } = state.machine;
     const { currentModalPath, menuDisabledCount } = state.appbarMenu;
     const { page, materials, modelGroup, toolPathGroup, displayedType, hasModel, isChangedAfterGcodeGenerating,
         renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize, showSimulation, progressStatesManager, enableShortcut, isOverSize, SVGCanvasMode, SVGCanvasExt, promptTasks } = state.cnc;
@@ -705,6 +706,7 @@ const mapStateToProps = (state, ownProps) => {
     const selectedToolPathModels = modelGroup.getSelectedToolPathModels();
 
     return {
+        series,
         enableShortcut,
         progressStatesManager,
         currentModalPath,

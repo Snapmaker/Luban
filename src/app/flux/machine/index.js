@@ -1098,11 +1098,11 @@ export const actions = {
         const newConfig = printingCustomConfigs.join('-');
         machineStore.set('printingCustomConfigs', newConfig);
     },
-    updatePrintingCustomConfigsWithCategory: (printingCustomConfigs, category) => (dispatch, getState) => {
+    updatePrintingCustomConfigsWithCategory: (printingCustomConfigs, category) => async (dispatch, getState) => {
         const { printingCustomConfigsWithCategory } = getState().machine;
         const newConfig = cloneDeep(printingCustomConfigsWithCategory);
         newConfig[category] = printingCustomConfigs;
-        dispatch(baseActions.updateState({
+        await dispatch(baseActions.updateState({
             printingCustomConfigsWithCategory: newConfig
         }));
         machineStore.set('printingCustomConfigsWithCategory', newConfig);

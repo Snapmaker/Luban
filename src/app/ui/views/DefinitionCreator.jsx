@@ -1,11 +1,13 @@
 import React, { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import PropTypes from 'prop-types';
+import { Divider } from 'antd';
 import { Radio } from '../components/Radio';
 import Select from '../components/Select';
-import { TextInput as Input } from '../components/Input';
+import { TextInput as Input, TextInput } from '../components/Input';
 import { PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY, HEAD_CNC, HEAD_LASER } from '../../constants';
 
 import i18n from '../../lib/i18n';
+import SvgIcon from '../components/SvgIcon';
 
 /**
  * relationship between UI and placeholder
@@ -75,10 +77,11 @@ const describeCreator = (managerType) => {
 };
 
 const DefinitionCreator = ({
-    managerType, isCreate, copyType, copyCategoryName, copyCategoryI18n, copyItemName, materialOptions
+    managerType, isCreate, copyType, copyCategoryName, copyCategoryI18n, copyItemName, materialOptions: _materialOptions
 }, ref) => {
     const [displayDescribe] = useState(describeCreator(managerType));
-
+    const [newOptionValue, setNewOptionsValue] = useState('');
+    const [materialOptions, setMaterialOptions] = useState(_materialOptions);
     const [state, setState] = useState({
         createType: 'Category',
         categoryName: '',
@@ -96,6 +99,9 @@ const DefinitionCreator = ({
         });
     }, [managerType, copyItemName, copyCategoryName, displayDescribe.categoryName, displayDescribe.itemName, copyCategoryI18n]);
 
+    useEffect(() => {
+        setMaterialOptions(_materialOptions);
+    }, [_materialOptions]);
     useImperativeHandle(ref, () => ({
         getData: () => {
             return state;
@@ -151,6 +157,38 @@ const DefinitionCreator = ({
                                     categoryI18n: option.i18n
                                 });
                             }}
+                            dropdownRender={menu => (
+                                <>
+                                    {menu}
+                                    <Divider style={{ margin: '0' }} />
+                                    <TextInput
+                                        value={newOptionValue}
+                                        bordered={false}
+                                        placeholder={i18n._(
+                                            'key-Printing/PrintingConfigurations-Add Item'
+                                        )}
+                                        onChange={e => setNewOptionsValue(e.target.value)}
+                                    />
+                                    {!!newOptionValue && (
+                                        <SvgIcon
+                                            className="margin-top-2"
+                                            color="#1890FF"
+                                            name="CameraCaptureExtract"
+                                            onClick={() => {
+                                                setMaterialOptions([
+                                                    ...materialOptions,
+                                                    {
+                                                        label: newOptionValue,
+                                                        value: newOptionValue,
+                                                        i18n: newOptionValue
+                                                    }
+                                                ]);
+                                                setNewOptionsValue('');
+                                            }}
+                                        />
+                                    )}
+                                </>
+                            )}
                         />
                     </>
 

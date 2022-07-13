@@ -11,6 +11,7 @@ import {
     HEAD_PRINTING,
     LEFT_EXTRUDER
 } from '../../../constants';
+/* eslint-disable import/no-cycle */
 import ProfileManager from '../ProfileManager';
 import i18n from '../../../lib/i18n';
 

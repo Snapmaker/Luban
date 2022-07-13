@@ -305,6 +305,10 @@ const INITIAL_STATE = {
     simplifyType: 0, // 0: low-polygon, 1: length
     simplifyPercent: 80, // only for low polygon
     simplifyOriginModelInfo: {},
+    // profile manager params type
+    printingParamsType: 'basic',
+    materialParamsType: 'basic',
+    customMode: false
 };
 
 const ACTION_UPDATE_STATE = 'printing/ACTION_UPDATE_STATE';
@@ -386,7 +390,7 @@ export const actions = {
         // state
         const printingState = getState().printing;
         const { gcodeLineGroup, defaultMaterialId } = printingState;
-
+        const profileDocsDir = await api.getProfileDocsDir();
         const { toolHead, series, size } = getState().machine;
         // await dispatch(machineActions.updateMachineToolHead(toolHead, series, CONFIG_HEADTYPE));
         const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
@@ -415,7 +419,8 @@ export const actions = {
                 materialDefinitions: allMaterialDefinition,
                 qualityDefinitions: qualityParamModels,
                 extruderLDefinition,
-                extruderRDefinition: await definitionManager.getDefinitionsByPrefixName('snapmaker_extruder_1')
+                extruderRDefinition: await definitionManager.getDefinitionsByPrefixName('snapmaker_extruder_1'),
+                profileDocsDir: profileDocsDir.body.profileDocsDir
             })
         );
         // model group
@@ -445,6 +450,7 @@ export const actions = {
         series = getRealSeries(series);
         // await dispatch(machineActions.updateMachineToolHead(toolHead, series, CONFIG_HEADTYPE));
         const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
+        const profileDocsDir = await api.getProfileDocsDir();
         const profileLevel = await definitionManager.init(
             CONFIG_HEADTYPE,
             currentMachine.configPathname[CONFIG_HEADTYPE]
@@ -474,7 +480,8 @@ export const actions = {
                     support: LEFT_EXTRUDER_MAP_NUMBER
                 },
                 extruderLDefinition: definitionManager.extruderLDefinition,
-                extruderRDefinition: definitionManager.extruderRDefinition
+                extruderRDefinition: definitionManager.extruderRDefinition,
+                profileDocsDir: profileDocsDir.body.profileDocsDir
             })
         );
 
@@ -522,6 +529,24 @@ export const actions = {
 
         // Re-position model group
         gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
+    },
+
+    updateProfileParamsType: (managerType, value) => (dispatch) => {
+        if (managerType === PRINTING_MANAGER_TYPE_MATERIAL) {
+            dispatch(actions.updateState({
+                materialParamsType: value
+            }));
+        } else {
+            dispatch(actions.updateState({
+                printingParamsType: value
+            }));
+        }
+    },
+
+    updateCustomMode: (value) => (dispatch) => {
+        dispatch(actions.updateState({
+            customMode: value
+        }));
     },
 
     updateBoundingBox: () => (dispatch, getState) => {
@@ -770,8 +795,10 @@ export const actions = {
         } = printingState;
         // TODO
         const {
-            toolHead: { printingToolhead }
+            toolHead: { printingToolhead },
+            series
         } = getState().machine;
+        modelGroup.setSeries(series);
         // const printingToolhead = machineStore.get('machine.toolHead.printingToolhead');
         const activeQualityDefinition = lodashFind(qualityDefinitions, {
             definitionId: defaultQualityId
@@ -2008,6 +2035,24 @@ export const actions = {
         finalDefinition.settings.support_interface_extruder_nr.default_value = supportExtruder;
         finalDefinition.settings.support_roof_extruder_nr.default_value = supportExtruder;
         finalDefinition.settings.support_bottom_extruder_nr.default_value = supportExtruder;
+
+        const options = {}
+        if (modelGroup.models.every(model => !model.hasOversteppedHotArea)) {
+            options.center = 'Center'
+        } else {
+            options.all = 'All'
+        }
+        finalDefinition.settings.machine_heated_bed_area = {
+            label: "Machine Heated Bed Area",
+            description: "",
+            type: "enum",
+            options,
+            default_value: "all",
+            enabled: "false",
+            settable_per_mesh: false,
+            settable_per_extruder: false,
+            settable_per_meshgroup: false
+        }
         await definitionManager.createDefinition(finalDefinition);
         // slice
         /*
@@ -4369,6 +4414,7 @@ export const actions = {
                 infillSparseDensity: qualitySetting.infill_sparse_density.default_value,
                 infillPattern: qualitySetting.infill_pattern.default_value,
             });
+            model.materialPrintTemperature = materialSettings.material_print_temperature.default_value
         });
         modelGroup.models = models.concat();
         dispatch(actions.render());

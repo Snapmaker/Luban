@@ -11,7 +11,11 @@ class WebGLRendererWrapper {
     constructor(options) {
         if (Detector.isWebGLAvailable()) {
             this.renderer = new WebGLRenderer(options);
-            this.renderer.setClearColor(new Color(0xF5F5F7), 1);
+            if (options.clearColor) {
+                this.renderer.setClearColor(...options.clearColor);
+            } else {
+                this.renderer.setClearColor(new Color(0xF5F5F7), 1);
+            }
             this.renderer.shadowMap.enabled = true;
             this.renderer.localClippingEnabled = true;
         } else {

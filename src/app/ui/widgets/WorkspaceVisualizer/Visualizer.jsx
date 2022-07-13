@@ -519,10 +519,12 @@ class Visualizer extends PureComponent {
                     y: size.y * 2
                 });
             } else {
-                this.state.printableArea && this.state.printableArea.updateSize({
-                    x: size.x * 2,
-                    y: size.y * 2
-                });
+                this.state.printableArea && this.state.printableArea.updateSize(
+                    this.props.series, {
+                        x: size.x * 2,
+                        y: size.y * 2
+                    }
+                );
             }
             this.canvas.current && this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(size.z * 2, 300)), new THREE.Vector3());
         }

@@ -4,3 +4,6 @@
 [submodule "src/server/lib/SACP-SDK"]
 	path = src/server/lib/SACP-SDK
 	url = https://github.com/Snapmaker/SACP-SDK.git
+[submodule "resources/ProfileDocs"]
+	path = resources/ProfileDocs
+	url = https://github.com/wen-qing-255/ProfileDocs.git

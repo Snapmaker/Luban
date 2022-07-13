@@ -12,6 +12,17 @@ i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A350');
 i18n._('key-Luban/Machine/MachineSeries-Custom');
 i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A400');
 
+// machine name without brand
+i18n._('key-Luban/Machine/MachineSeries-Original');
+i18n._('key-Luban/Machine/MachineSeries-A150');
+i18n._('key-Luban/Machine/MachineSeries-A250');
+i18n._('key-Luban/Machine/MachineSeries-A350');
+i18n._('key-Luban/Machine/MachineSeries-A400');
+
+// machine brand
+i18n._('key-Luban/Machine/Brand-Original');
+i18n._('key-Luban/Machine/Brand-Snapmaker 2.0');
+
 i18n._('key-machine_selection-Workspace');
 i18n._('key-machine_selection-3D Printing');
 i18n._('key-machine_selection-Laser');

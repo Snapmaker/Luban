@@ -33,7 +33,9 @@ export const EVENTS = {
     BEFORE_TRANSFORM_OBJECT: 'object:beforetransform',
     TRANSFORM_OBJECT: 'object:transform',
     AFTER_TRANSFORM_OBJECT: 'object:aftertransform',
-    SELECT_PLACEMENT_FACE: 'placement:select'
+    SELECT_PLACEMENT_FACE: 'placement:select',
+    PAN_SCALE: 'pan:scale',
+    UPDATE_CAMERA: 'update:camera'
 };
 
 class Controls extends EventEmitter {
@@ -92,6 +94,9 @@ class Controls extends EventEmitter {
 
     // detection
     selectableObjects = null;
+    highlightableObjects = null;
+    highlightLine = null
+    pointer = new THREE.Vector2();
 
     shouldForbidSelect = false;
 
@@ -140,6 +145,7 @@ class Controls extends EventEmitter {
         this.isPrimeTower = false;
 
         this.bindEventListeners();
+        this.ray.params.Line.threshold = 0.5;
     }
 
 
@@ -240,14 +246,9 @@ class Controls extends EventEmitter {
         this.offset.copy(this.camera.position).sub(this.target);
         // calculate move distance of target in perspective view of camera
         const distance = 2 * this.offset.length() * Math.tan(this.camera.fov / 2 * Math.PI / 180);
-        let currentScale = this.panScale;
-        if (this.panScale <= 3) {
-            currentScale = 1;
-        } else {
-            currentScale = (this.panScale * 0.5) * 0.75;
-        }
-        this.panLeft(distance * deltaX * currentScale / elem.clientWidth, this.camera.matrix);
-        this.panUp(distance * deltaY * currentScale / elem.clientHeight, this.camera.matrix);
+
+        this.panLeft(distance * deltaX / elem.clientWidth, this.camera.matrix);
+        this.panUp(distance * deltaY / elem.clientHeight, this.camera.matrix);
     }
 
     setScale(scale) {
@@ -349,15 +350,17 @@ class Controls extends EventEmitter {
     };
 
     onMouseHover = (event) => {
+        const coord = this.getMouseCoord(event);
+        this.pointer.x = coord.x;
+        this.pointer.y = coord.y;
+
         event.preventDefault();
         // model move with mouse no matter mousedown
         if (this.state === STATE.SUPPORT) {
-            const coord = this.getMouseCoord(event);
             this.ray.setFromCamera(coord, this.camera);
             this.ray.firstHitOnly = true;
             const res = this.ray.intersectObject(this.selectedGroup, true);
             if (res.length) {
-                // console.log(this.selectedGroup, res);
                 this.supportActions.moveSupport(res);
             }
             // const mousePosition = new THREE.Vector3();
@@ -366,15 +369,16 @@ class Controls extends EventEmitter {
         }
         if (this.state === STATE.ROTATE_PLACEMENT) {
             // Let transform control deal with mouse move
-            const coord = this.getMouseCoord(event);
             this.transformControl.onMouseHover(coord);
         }
+
+        this.hoverLine();
+
         if (!(this.selectedGroup && this.selectedGroup.children.length > 0) || this.state !== STATE.NONE) {
             return;
         }
 
         // Let transform control deal with mouse move
-        const coord = this.getMouseCoord(event);
         this.transformControl.onMouseHover(coord);
     };
 
@@ -500,6 +504,10 @@ class Controls extends EventEmitter {
             if (this.selectedGroup && this.selectedGroup.children) {
                 allObjects = allObjects.concat(this.selectedGroup.children);
             }
+
+            allObjects = allObjects.filter((mesh) => {
+                return mesh.name !== 'clippingSection';
+            });
 
             // Check if we select a new object
             const coord = this.getMouseCoord(event);
@@ -649,6 +657,7 @@ class Controls extends EventEmitter {
             const distanceAll = v1.copy(scope.target).sub(scope.camera.position).length();
             this.panScale = Math.round((Math.log(distanceAll / 700) / Math.log(this.scaleRate)) * 10) / 10;
             scope.mouse3D.copy(scope.camera.position).add(v.multiplyScalar(distanceAll));
+            this.emit(EVENTS.PAN_SCALE, this.panScale);
         };
     })();
 
@@ -665,6 +674,48 @@ class Controls extends EventEmitter {
 
     setSelectableObjects(objects) {
         this.selectableObjects = objects;
+    }
+
+    clearHighlight() {
+        if (this.highlightLine) {
+            this.highlightLine.material.color.set('#3B83F6');
+            this.highlightLine = null;
+        }
+    }
+
+    hoverLine() {
+        if (this.highlightableObjects && this.highlightableObjects.children.length) {
+            const lines = this.highlightableObjects.children.reduce((p, c) => {
+                p.push(...c.children.filter((mesh) => {
+                    return mesh.name === 'line' && mesh.visible;
+                }));
+
+                return p;
+            }, []);
+            if (lines.length) {
+                this.ray.setFromCamera(this.pointer, this.camera);
+                const allIntersectObjects = this.ray.intersectObjects(lines, true);
+                if (allIntersectObjects.length) {
+                    const highlightLine = allIntersectObjects[0].object;
+                    if (this.highlightLine !== highlightLine) {
+                        this.clearHighlight();
+                        highlightLine.material.color.set('#9254DE');
+                        this.highlightLine = highlightLine;
+                        this.emit(EVENTS.UPDATE);
+                    }
+                } else {
+                    this.clearHighlight();
+                    this.emit(EVENTS.UPDATE);
+                }
+            }
+        } else {
+            this.clearHighlight();
+            this.emit(EVENTS.UPDATE);
+        }
+    }
+
+    setHighlightableObjects(objects) {
+        this.highlightableObjects = objects;
     }
     //
     // setShouldForbidSelect(shouldForbidSelect) {
@@ -727,6 +778,7 @@ class Controls extends EventEmitter {
                 this.spherical.radius = this.scaleSize / this.minScale;
             }
             this.spherical.radius = Math.max(this.minDistance, Math.min(this.maxDistance, this.spherical.radius));
+
             // suport zoomToCursor (mouse only)
             if (this.zoomToCursor && shouldUpdateTarget) {
                 this.target.lerp(this.mouse3D, 1 - this.spherical.radius / prevRadius);
@@ -739,7 +791,17 @@ class Controls extends EventEmitter {
                 this.offset.copy(spherialOffset);
             }
 
+            if (this.spherical.radius <= 20) {
+                const scalar = this.target.z >= 20 ? 10 : 1;
+                const cameraWorldDir = new THREE.Vector3();
+                this.camera.getWorldDirection(cameraWorldDir);
+                if (this.target.z >= 20 && this.target.z + cameraWorldDir.z * scalar >= 10) {
+                    this.target.add(cameraWorldDir.multiplyScalar(scalar));
+                }
+            }
+
             this.sphericalDelta.set(0, 0, 0);
+            this.emit(EVENTS.UPDATE_CAMERA, this.camera.position);
         }
 
         // pan
@@ -767,6 +829,7 @@ class Controls extends EventEmitter {
             this.lastPosition.copy(this.camera.position);
             this.lastQuaternion.copy(this.camera.quaternion);
         }
+        // this
     }
 
     dispose() {

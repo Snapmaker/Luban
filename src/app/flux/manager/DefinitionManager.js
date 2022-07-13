@@ -445,8 +445,9 @@ class DefinitionManager {
             const setting = activeDefinition.settings[key];
 
             if (
-                setting.from !== 'fdmprinter'
-                && !['machine_width', 'machine_depth', 'machine_height'].includes(
+                // setting.from !== 'fdmprinter'
+                // &&
+                !['machine_width', 'machine_depth', 'machine_height'].includes(
                     key
                 )
             ) {
