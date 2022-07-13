@@ -81,7 +81,7 @@ type TAdhesionConfig = {
 }
 
 class ModelGroup extends EventEmitter {
-    public namesMap: Map<string, number> = new Map();
+    private namesMap: Map<string, number> = new Map();
     public object: Group;
     public grayModeObject: Group;
     public models: (TModel)[];
@@ -233,7 +233,6 @@ class ModelGroup extends EventEmitter {
 
     // TODO: Unify method return type, it causes unnecessary calculations.
     public getSelectedModelTransformation() {
-        // todo
         if (this.selectedModelArray.length === 1) {
             return this.selectedModelArray[0].transformation;
         }
