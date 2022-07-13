@@ -77,7 +77,7 @@ const NumberInput = ({
     };
 
     const onFocus = () => {
-        ref.current.select();
+        ref.current?.select();
     };
 
 

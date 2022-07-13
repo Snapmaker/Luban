@@ -296,7 +296,11 @@ const INITIAL_STATE = {
         extruderRlineWidth: 0,
         layerHeight0: 0,
         layerHeight: 0,
-    }
+    },
+    // profile manager params type
+    printingParamsType: 'basic',
+    materialParamsType: 'basic',
+    customMode: false,
 };
 
 const ACTION_UPDATE_STATE = 'printing/ACTION_UPDATE_STATE';
@@ -387,7 +391,7 @@ export const actions = {
         // state
         const printingState = getState().printing;
         const { gcodeLineGroup, defaultMaterialId } = printingState;
-
+        const profileDocsDir = await api.getProfileDocsDir();
         const { toolHead, series, size } = getState().machine;
         // await dispatch(machineActions.updateMachineToolHead(toolHead, series, CONFIG_HEADTYPE));
         const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
@@ -416,7 +420,8 @@ export const actions = {
                 materialDefinitions: allMaterialDefinition,
                 qualityDefinitions: qualityParamModels,
                 extruderLDefinition,
-                extruderRDefinition: await definitionManager.getDefinitionsByPrefixName('snapmaker_extruder_1')
+                extruderRDefinition: await definitionManager.getDefinitionsByPrefixName('snapmaker_extruder_1'),
+                profileDocsDir: profileDocsDir.body.profileDocsDir
             })
         );
         // model group
@@ -446,6 +451,7 @@ export const actions = {
         series = getRealSeries(series);
         // await dispatch(machineActions.updateMachineToolHead(toolHead, series, CONFIG_HEADTYPE));
         const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
+        const profileDocsDir = await api.getProfileDocsDir();
         const profileLevel = await definitionManager.init(
             CONFIG_HEADTYPE,
             currentMachine.configPathname[CONFIG_HEADTYPE]
@@ -475,7 +481,8 @@ export const actions = {
                     support: LEFT_EXTRUDER_MAP_NUMBER
                 },
                 extruderLDefinition: definitionManager.extruderLDefinition,
-                extruderRDefinition: definitionManager.extruderRDefinition
+                extruderRDefinition: definitionManager.extruderRDefinition,
+                profileDocsDir: profileDocsDir.body.profileDocsDir
             })
         );
 
@@ -523,6 +530,24 @@ export const actions = {
 
         // Re-position model group
         gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
+    },
+
+    updateProfileParamsType: (managerType, value) => (dispatch) => {
+        if (managerType === PRINTING_MANAGER_TYPE_MATERIAL) {
+            dispatch(actions.updateState({
+                materialParamsType: value
+            }));
+        } else {
+            dispatch(actions.updateState({
+                printingParamsType: value
+            }));
+        }
+    },
+
+    updateCustomMode: (value) => (dispatch) => {
+        dispatch(actions.updateState({
+            customMode: value
+        }));
     },
 
     updateBoundingBox: () => (dispatch, getState) => {

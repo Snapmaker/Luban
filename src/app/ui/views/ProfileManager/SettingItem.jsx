@@ -6,10 +6,9 @@ import i18n from '../../../lib/i18n';
 import Select from '../../components/Select';
 import { NumberInput as Input } from '../../components/Input';
 import Checkbox from '../../components/Checkbox';
+import Anchor from '../../components/Anchor';
 import ColorSelector from '../../components/ColorSelector';
 import { HEAD_CNC, PRINTING_MATERIAL_CONFIG_COLORS } from '../../../constants';
-import Anchor from '../../components/Anchor';
-import TipTrigger from '../../components/TipTrigger';
 import SvgIcon from '../../components/SvgIcon';
 import Popover from '../../components/Popover';
 import styles from './styles.styl';
@@ -63,7 +62,7 @@ const colorSelectorContent = (settingDefaultValue, definitionKey, setShowColor, 
         />
     </div>
 );
-function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onChangeDefinition, defaultValue, styleSize = 'large', managerType, officalDefinition }) {
+function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onChangeDefinition, defaultValue, styleSize = 'large', managerType, officalDefinition, onClick, categoryKey }) {
     const [showColor, setShowColor] = useState(false);
 
     const setting = settings[definitionKey];
@@ -71,7 +70,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
     if (!setting) {
         return null;
     }
-    const { label, description, type, unit = '', options, min, max } = setting;
+    const { label, type, unit = '', options, min, max, mismatch } = setting;
     const { enabled } = setting;
     const settingDefaultValue = setting.default_value;
     const isDefault = defaultValue && (defaultValue.value === settingDefaultValue);
@@ -83,19 +82,17 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
     if (options) {
         Object.keys(options).forEach((k) => {
             opts.push({
-                value: k,
+                value: k.toLocaleLowerCase(),
                 label: i18n._(options[k])
             });
         });
     }
 
     return (
-        <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
-            <TipTrigger title={i18n._(label)} content={i18n._(description)} key={definitionKey}>
-                <span className="text-overflow-ellipsis width-auto main-text-normal" style={{ maxWidth: '171px' }}>
-                    {i18n._(label)}
-                </span>
-            </TipTrigger>
+        <Anchor className="position-re sm-flex justify-space-between height-32 margin-vertical-8" onClick={() => onClick(categoryKey, definitionKey)}>
+            <span className="text-overflow-ellipsis width-auto main-text-normal" style={{ maxWidth: '171px' }}>
+                {i18n._(label)}
+            </span>
             <div className="sm-flex-auto">
                 {isProfile && !isDefault && (
                     <SvgIcon
@@ -106,6 +103,14 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
                         onClick={() => {
                             onChangeDefinition(definitionKey, (defaultValue && defaultValue.value) ?? settingDefaultValue);
                         }}
+                    />
+                )}
+                {mismatch && (
+                    <SvgIcon
+                        name="ParameterDisconnect"
+                        size={24}
+                        type={['static']}
+                        color="#FFA940"
                     />
                 )}
                 {type === 'float' && (
@@ -153,7 +158,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
                         name={definitionKey}
                         // disabled={!isDefinitionEditable()}
                         options={opts}
-                        value={settingDefaultValue}
+                        value={typeof settingDefaultValue === 'string' ? settingDefaultValue.toLowerCase() : settingDefaultValue}
                         onChange={(option) => {
                             onChangeDefinition(definitionKey, option.value);
                         }}
@@ -213,7 +218,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
                     </Popover>
                 )}
             </div>
-        </div>
+        </Anchor>
     );
 }
 SettingItem.propTypes = {
@@ -224,7 +229,9 @@ SettingItem.propTypes = {
     defaultValue: PropTypes.object,
     styleSize: PropTypes.string,
     managerType: PropTypes.string,
-    officalDefinition: PropTypes.bool
+    officalDefinition: PropTypes.bool,
+    onClick: PropTypes.func.isRequired,
+    categoryKey: PropTypes.string
 };
 
 export default React.memo(SettingItem);

@@ -19,7 +19,7 @@ import { actions as projectActions } from '../../flux/project';
 import { actions as machineActions } from '../../flux/machine';
 import ProjectLayout from '../layouts/ProjectLayout';
 import MainToolBar from '../layouts/MainToolBar';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_PRINTING, ROTATE_MODE } from '../../constants';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_PRINTING, LEFT, PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY, ROTATE_MODE } from '../../constants';
 import { renderPopup, renderWidgetList, logPageView, useUnsavedTitle } from '../utils';
 import { machineStore } from '../../store/local-storage';
 
@@ -100,7 +100,6 @@ function useRenderMainToolBar() {
     const canGroup = useSelector(state => state?.printing?.modelGroup?.canGroup());
     const canMerge = useSelector(state => state?.printing?.modelGroup?.canMerge());
     const canUngroup = useSelector(state => state?.printing?.modelGroup?.canUngroup());
-    // const toolHeadObj = useSelector(state => state?.machine?.toolHead);
     const [showHomePage, setShowHomePage] = useState(false);
     const [showWorkspace, setShowWorkspace] = useState(false);
     const [showMachineMaterialSettings, setShowMachineMaterialSettings] = useState(false);
@@ -149,7 +148,7 @@ function useRenderMainToolBar() {
         };
         const onCallBack = (_series, _toolHead) => {
             setCurrentSeries(_series);
-            setCurrentToolHead(_toolHead);
+            setCurrentToolHead(_toolHead.printingToolhead);
         };
         return showMachineMaterialSettings && renderPopup({
             onClose,
@@ -234,6 +233,28 @@ function useRenderMainToolBar() {
                 name: 'MainToolbarUngroup',
                 action: () => {
                     dispatch(printingActions.ungroup());
+                }
+            },
+            {
+                title: i18n._('key-3DP/MainToolBar-MaterialSetting'),
+                type: 'button',
+                name: 'MainToolbarMaterialSetting',
+                action: () => {
+                    dispatch(printingActions.updateManagerDisplayType(PRINTING_MANAGER_TYPE_MATERIAL));
+                    dispatch(printingActions.updateShowPrintingManager(true, LEFT));
+                }
+            },
+            {
+                title: i18n._('key-3DP/MainToolBar-QualitySetting'),
+                type: 'button',
+                name: 'MainToolbarPrintingSetting',
+                action: () => {
+                    dispatch(
+                        printingActions.updateManagerDisplayType(
+                            PRINTING_MANAGER_TYPE_QUALITY
+                        )
+                    );
+                    dispatch(printingActions.updateShowPrintingManager(true));
                 }
             }
         ];

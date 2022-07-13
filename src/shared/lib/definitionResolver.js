@@ -118,7 +118,7 @@ function resolveDefinition(definition, modifiedParams) {
                     definition.settings[key].enabled = calcEnabled;
                 }
                 if (insideValue.type === 'float' || insideValue.type === 'int') {
-                    if (Math.abs(calcValue - defaultValue) > 1e-6) {
+                    if (Math.abs(calcValue - defaultValue) > 1e-6 && !_.isUndefined(calcValue)) {
                         definition.settings[key].mismatch = true;
                     }
                     else {
@@ -126,7 +126,7 @@ function resolveDefinition(definition, modifiedParams) {
                     }
                 }
                 else {
-                    if (calcValue !== defaultValue) {
+                    if (calcValue !== defaultValue && !_.isUndefined(calcValue)) {
                         definition.settings[key].mismatch = true;
                     }
                     else {
@@ -165,7 +165,7 @@ function resolveDefinition(definition, modifiedParams) {
             }
         });
     }
-    console.log('allAsistantArray', allAsistantArray);
+    // console.log('allAsistantArray', allAsistantArray);
     var _loop_2 = function (key) {''
         var value = _.cloneDeep(asistantMap.get(key));
         try {
@@ -199,7 +199,7 @@ function resolveDefinition(definition, modifiedParams) {
                 definition.settings[key].default_value = defaultValue;
             }
             if (value.type === 'float' || value.type === 'int') {
-                if (Math.abs(calcValue - defaultValue) > 1e-6) {
+                if (Math.abs(calcValue - defaultValue) > 1e-6 && !_.isUndefined(calcValue)) {
                     definition.settings[key].mismatch = true;
                 }
                 else {
@@ -207,7 +207,7 @@ function resolveDefinition(definition, modifiedParams) {
                 }
             }
             else {
-                if (calcValue !== defaultValue) {
+                if (calcValue !== defaultValue && !_.isUndefined(calcValue)) {
                     definition.settings[key].mismatch = true;
                 }
                 else {

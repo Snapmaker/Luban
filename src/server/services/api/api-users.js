@@ -67,6 +67,12 @@ const getSanitizedRecords = () => {
     return records;
 };
 
+export const getProfileDocsDir = (req, res) => {
+    res.status(200).send({
+        profileDocsDir: DataStorage.profileDocsDir
+    });
+};
+
 export const signin = (req, res) => {
     // TODO: Skip authentication
     // const { token = '', name = '', password = '' } = { ...req.body };

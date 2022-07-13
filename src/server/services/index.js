@@ -203,6 +203,8 @@ function registerApis(app) {
     app.delete(urljoin(settings.route, 'api/profileDefinition/:headType/:definitionId'), api.profileDefinitions.removeDefinition);
     app.put(urljoin(settings.route, 'api/profileDefinition/:headType/:definitionId'), api.profileDefinitions.updateDefinition);
     app.post(urljoin(settings.route, 'api/profileDefinition/:headType/upload'), api.profileDefinitions.uploadDefinition);
+
+    app.get(urljoin(settings.route, 'api/profiledocs'), api.users.getProfileDocsDir);
 }
 
 export {

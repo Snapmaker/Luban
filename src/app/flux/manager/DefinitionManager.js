@@ -156,7 +156,6 @@ class DefinitionManager {
             res.body.definitions
         );
         const result = definitions.map((item) => {
-            console.log('item', item);
             resolveDefinition(item);
             return item
         }).map(this.fillCustomCategory);
@@ -446,8 +445,9 @@ class DefinitionManager {
             const setting = activeDefinition.settings[key];
 
             if (
-                setting.from !== 'fdmprinter'
-                && !['machine_width', 'machine_depth', 'machine_height'].includes(
+                // setting.from !== 'fdmprinter'
+                // &&
+                !['machine_width', 'machine_depth', 'machine_height'].includes(
                     key
                 )
             ) {

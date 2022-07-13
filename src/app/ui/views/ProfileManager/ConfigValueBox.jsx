@@ -2,17 +2,25 @@ import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { includes, throttle } from 'lodash';
 import classNames from 'classnames';
-import Menu from '../../components/Menu';
+import i18next from 'i18next';
+import { useSelector, useDispatch } from 'react-redux';
+import ReactMarkdown from 'react-markdown';
+import { actions as printingActions } from '../../../flux/printing';
+// import Menu from '../../components/Menu';
 import i18n from '../../../lib/i18n';
 import SettingItem from './SettingItem';
 import CheckboxItem from './CheckboxItem';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
 import SvgIcon from '../../components/SvgIcon';
-import Dropdown from '../../components/Dropdown';
+// import Dropdown from '../../components/Dropdown';
+import Select from '../../components/Select';
 import { Button } from '../../components/Buttons';
-import { PRINTING_MANAGER_TYPE_MATERIAL } from '../../../constants';
+import { PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
+/* eslint-disable import/no-cycle */
+import { ParamItem } from '../../widgets/PrintingConfigurations/Configurations';
 
+const fs = window.require('fs');
 function ConfigValueBox({
     optionConfigGroup,
     calculateTextIndex,
@@ -25,13 +33,37 @@ function ConfigValueBox({
     showMiddle = false,
     hideMiniTitle = false,
     managerType,
+    customMode,
+    setCustomMode,
     onChangeCustomConfig
 }) {
+    const { profileDocsDir, printingParamsType, materialParamsType } = useSelector(state => state?.printing);
     const [activeCateId, setActiveCateId] = useState(2);
-    const [selectParamsType, setSelectParamsType] = useState('basic');
-    const [customMode, setCustomMode] = useState(false);
+    const [selectParamsType, setSelectParamsType] = useState(managerType === PRINTING_MANAGER_TYPE_MATERIAL ? materialParamsType : printingParamsType);
+    const [showProfileDocs, setShowProfileDocs] = useState(true);
+    const [selectProfile, setSelectProfile] = useState('');
+    const [selectCategory, setSelectCategory] = useState('');
+    const [mdContent, setMdContent] = useState('');
+    const [selectQualityDetailType, setSelectQualityDetailType] = useState('no_limit');
     const scrollDom = useRef(null);
     const fieldsDom = useRef([]);
+    const dispatch = useDispatch();
+    const lang = i18next.language;
+    useEffect(() => {
+        if (selectCategory && selectProfile) {
+            try {
+                const content = fs.readFileSync(`${profileDocsDir}/${lang.toUpperCase()}/${selectCategory}/${selectProfile}.md`, 'utf-8');
+                // const content = await fetch(`${DEFAULT_LUBAN_HOST}/${profileDocsDir}/${lang.toUpperCase() === 'ZH-CN' ? 'CN' : 'EN'}/${selectCategory}/${selectProfile}.md`)
+                //     .then(res => {
+                //         console.log(res);
+                //     });
+                setMdContent(content);
+            } catch (e) {
+                console.info(e);
+                setMdContent('');
+            }
+        }
+    }, [selectProfile]);
     function setActiveCate(cateId) {
         if (scrollDom.current) {
             const container = scrollDom.current.parentElement;
@@ -50,6 +82,10 @@ function ConfigValueBox({
             setActiveCateId(cateId);
         }
     }
+    const handleUpdateProfileKey = (category, profileKey) => {
+        setSelectCategory(category);
+        setSelectProfile(profileKey);
+    };
     const renderCheckboxList = ({
         renderList,
         calculateTextIndex: _calculateTextIndex,
@@ -59,7 +95,7 @@ function ConfigValueBox({
         categoryKey
     }) => {
         return renderList && renderList.map(profileKey => {
-            if (settings[profileKey].childKey.length > 0) {
+            if (settings[profileKey].childKey?.length > 0) {
                 return (
                     <div key={profileKey} className={`margin-left-${(settings[profileKey].zIndex - 1) * 16}`}>
                         <CheckboxItem
@@ -115,11 +151,12 @@ function ConfigValueBox({
         onChangeDefinition: _onChangeCustomConfig,
         managerType: _managerType,
         officalDefinition,
+        categoryKey
         // selectParamsType: _selectParamsType
     }) => {
         return renderList && renderList.map(profileKey => {
-            if (selectParamsType === 'custom' || includes((settings[profileKey].filter).concat('all'), selectParamsType)) {
-                if (settings[profileKey].childKey.length > 0) {
+            if (selectParamsType === 'custom' || includes((settings[profileKey].filter || []).concat('all'), selectParamsType)) {
+                if (settings[profileKey].childKey?.length > 0 && selectParamsType !== 'custom') {
                     return (
                         <div key={profileKey} className={`margin-left-${(settings[profileKey].zIndex - 1) * 16}`}>
                             <SettingItem
@@ -134,6 +171,8 @@ function ConfigValueBox({
                                 styleSize="large"
                                 managerType={_managerType}
                                 officalDefinition={officalDefinition}
+                                onClick={handleUpdateProfileKey}
+                                categoryKey={categoryKey}
                             />
                             {renderSettingItemList({
                                 settings,
@@ -147,7 +186,7 @@ function ConfigValueBox({
                     );
                 }
                 return (
-                    <div className={`margin-left-${(settings[profileKey].zIndex - 1) * 16}`}>
+                    <div className={selectParamsType !== 'custom' && `margin-left-${(settings[profileKey].zIndex - 1) * 16}`}>
                         <SettingItem
                             settings={settings}
                             definitionKey={profileKey}
@@ -160,6 +199,8 @@ function ConfigValueBox({
                             styleSize="large"
                             managerType={_managerType}
                             officalDefinition={officalDefinition}
+                            onClick={handleUpdateProfileKey}
+                            categoryKey={categoryKey}
                         />
                     </div>
                 );
@@ -182,47 +223,89 @@ function ConfigValueBox({
         }
     }, [Object.keys(optionConfigGroup), selectParamsType, Object.keys(customConfigs)]);
 
-    const materialParamsType = (
-        <Menu>
-            <Menu.Item onClick={() => setSelectParamsType('basic')}>
-                <span>{i18n._('key-profileManager/params basic')}</span>
-            </Menu.Item>
-            <Menu.Item onClick={() => setSelectParamsType('all')}>
-                <span>{i18n._('key-profileManager/params all')}</span>
-            </Menu.Item>
-        </Menu>
-    );
-    const qualityParamsType = (
-        <Menu>
-            <Menu.Item onClick={() => setSelectParamsType('recommed')}>
-                <span>{i18n._('key-profileManager/params recommed')}</span>
-            </Menu.Item>
-            <Menu.Item onClick={() => setSelectParamsType('custom')}>
-                <span>{i18n._('key-profileManager/params custom')}</span>
-            </Menu.Item>
-            <Menu.Item>
-                <div className="border-bottom-normal" />
-            </Menu.Item>
-            <Menu.Item onClick={() => setSelectParamsType('basic')}>
-                <span>{i18n._('key-profileManager/params basic')}</span>
-            </Menu.Item>
-            <Menu.Item onClick={() => setSelectParamsType('advanced')}>
-                <span>{i18n._('key-profileManager/params advanced')}</span>
-            </Menu.Item>
-            <Menu.Item onClick={() => setSelectParamsType('all')}>
-                <span>{i18n._('key-profileManager/params all')}</span>
-            </Menu.Item>
-        </Menu>
-    );
+    const handleUpdateParamsType = (e) => {
+        setSelectProfile('');
+        setSelectParamsType(e.value);
+        dispatch(printingActions.updateProfileParamsType(managerType, e.value));
+    };
+    const materialParamsTypeOptions = [{
+        value: 'basic',
+        label: i18n._('key-profileManager/Params Basic')
+    }, {
+        value: 'all',
+        label: i18n._('key-profileManager/Params All')
+    }];
+    const qualityParamsTypeOptions = [{
+        value: 'recommed',
+        label: i18n._('key-profileManager/Params Recommed')
+    }, {
+        value: 'custom',
+        label: i18n._('key-profileManager/Params Custom')
+    }, {
+        value: 'basic',
+        label: i18n._('key-profileManager/Params Basic')
+    }, {
+        value: 'advanced',
+        label: i18n._('key-profileManager/Params Advanced')
+    }, {
+        value: 'all',
+        label: i18n._('key-profileManager/Params All')
+    }];
+    const qualityDetailTypeOptions = [{
+        value: 'no_limit',
+        label: i18n._('key-profileManager/Params No Limit')
+    }, {
+        value: 'efficiency',
+        label: i18n._('key-profileManager/Params Efficiency')
+    }, {
+        value: 'strength',
+        label: i18n._('key-profileManager/Params Strength')
+    }, {
+        value: 'surface_quality',
+        label: i18n._('key-profileManager/Params Surface_quality')
+    }, {
+        value: 'accuracy',
+        label: i18n._('key-profileManager/Params Accuracy')
+    }, {
+        value: 'material',
+        label: i18n._('key-profileManager/Params Material')
+    }, {
+        value: 'success',
+        label: i18n._('key-profileManager/Params Success')
+    }];
+
     return (
         <div className={classNames(styles['config-value-box-wrapper'], 'width-percent-100 margin-vertical-16 margin-horizontal-16 background-color-white border-radius-16')}>
             <div className="height-56 sm-flex border-bottom-normal padding-left-16">
                 <div className="sm-flex">
                     <div className="sm-flex align-center margin-right-64">
                         <span className="margin-right-8">{i18n._('key-profileManager/param type')}</span>
-                        <Dropdown trigger={['click']} overlay={managerType === PRINTING_MANAGER_TYPE_MATERIAL ? materialParamsType : qualityParamsType}>
-                            <div>{i18n._(`key-profileManager/${selectParamsType}`)}</div>
-                        </Dropdown>
+                        <Select
+                            options={managerType === PRINTING_MANAGER_TYPE_MATERIAL ? materialParamsTypeOptions : qualityParamsTypeOptions}
+                            clearable={false}
+                            size="large"
+                            showSearch={false}
+                            value={selectParamsType}
+                            onChange={(e) => {
+                                handleUpdateParamsType(e);
+                            }}
+                            bordered={false}
+                            disabled={customMode}
+                        />
+                        {managerType === PRINTING_MANAGER_TYPE_QUALITY && selectParamsType === 'all' && (
+                            <Select
+                                options={qualityDetailTypeOptions}
+                                clearable={false}
+                                size="large"
+                                showSearch={false}
+                                bordered={false}
+                                value={selectQualityDetailType}
+                                onChange={(e) => {
+                                    setSelectQualityDetailType(e.value);
+                                }}
+                                disabled={customMode}
+                            />
+                        )}
                     </div>
                     {selectParamsType === 'custom' && (
                         <Button width="120px" priority="levle-two" type="default" className="margin-top-12" onClick={() => setCustomMode(!customMode)}>
@@ -291,7 +374,8 @@ function ConfigValueBox({
                         )}
                         <div className={classNames(
                             styles['manager-detail-and-docs'],
-                            'sm-flex'
+                            'sm-flex',
+                            'justify-space-between'
                         )}
                         >
                             <div
@@ -312,11 +396,11 @@ function ConfigValueBox({
                                 <div className="sm-parameter-container" ref={scrollDom}>
                                     {!isCategorySelected
                                         && Object.keys((selectParamsType === 'custom' && !customMode) ? customConfigs : optionConfigGroup).map((key, index) => {
-                                            const eachFieldsDom = fieldsDom.current[index];
+                                            // const eachFieldsDom = fieldsDom.current[index];
                                             return (
                                                 <div key={key}>
                                                     <>
-                                                        {!hideMiniTitle && key && (eachFieldsDom ? eachFieldsDom.childNodes?.length > 0 : true) && (
+                                                        {!hideMiniTitle && key && (
                                                             <div className="border-bottom-normal padding-bottom-8 margin-vertical-16">
                                                                 <SvgIcon
                                                                     name="TitleSetting"
@@ -346,6 +430,7 @@ function ConfigValueBox({
                                                                     onChangeDefinition,
                                                                     managerType,
                                                                     officalDefinition: !!definitionForManager?.isDefault,
+                                                                    categoryKey: key
                                                                     // selectParamsType
                                                                 })}
                                                             </div>
@@ -356,16 +441,47 @@ function ConfigValueBox({
                                         })}
                                 </div>
                             </div>
-                            <div className={classNames(styles['manager-params-docs'], 'width-percent-40 background-grey-3 border-radius-16')}> params detail </div>
+                            <div className={classNames(styles['manager-params-docs'], 'width-percent-40 background-grey-3 border-radius-16 position-re', showProfileDocs ? '' : 'width-1-important min-width-1 margin-right-16')}>
+                                <Anchor onClick={() => setShowProfileDocs(!showProfileDocs)} className="background-color-white border-default-grey-1 border-radius-12 position-ab left-minus-12 bottom-24">
+                                    <SvgIcon
+                                        name="MainToolbarBack"
+                                        size={24}
+                                        type={['static']}
+                                        className={classNames(showProfileDocs ? 'rotate180' : '')}
+                                    />
+                                </Anchor>
+                                {showProfileDocs && (
+                                    <ReactMarkdown>
+                                        {mdContent}
+                                    </ReactMarkdown>
+                                )}
+                            </div>
                         </div>
                     </>
                 )}
                 {selectParamsType === 'recommed' && (
-                    <div className="width-percent-100 padding-horizontal-16 padding-vertical-16">
-                        <div className="width-percent-70">
-                            Recommed Params
+                    <div className="width-percent-100 padding-horizontal-16 padding-vertical-16 sm-flex justify-space-between">
+                        <div className="width-percent-70 margin-right-46">
+                            <ParamItem
+                                selectedDefinitionModel={definitionForManager}
+                                allParams={definitionForManager.params}
+                            />
                         </div>
-                        <div className="width-percent-30 background-grey-3 border-radius-16"> params detail </div>
+                        <div className={classNames(styles['manager-params-docs'], 'width-percent-40 background-grey-3 border-radius-16 position-re', showProfileDocs ? '' : 'width-1-important min-width-1 margin-right-16')}>
+                            <Anchor onClick={() => setShowProfileDocs(!showProfileDocs)} className="background-color-white border-default-grey-1 border-radius-12 position-ab left-minus-12 bottom-24">
+                                <SvgIcon
+                                    name="MainToolbarBack"
+                                    size={24}
+                                    type={['static']}
+                                    className={classNames(showProfileDocs ? 'rotate180' : '')}
+                                />
+                            </Anchor>
+                            {showProfileDocs && (
+                                <ReactMarkdown>
+                                    {mdContent}
+                                </ReactMarkdown>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>
@@ -376,7 +492,7 @@ ConfigValueBox.propTypes = {
     definitionForManager: PropTypes.object.isRequired,
     optionConfigGroup: PropTypes.array.isRequired,
     isCategorySelected: PropTypes.bool,
-    customConfigs: PropTypes.array,
+    customConfigs: PropTypes.object,
     calculateTextIndex: PropTypes.func,
     isOfficialDefinitionKey: PropTypes.func,
     onChangeDefinition: PropTypes.func.isRequired,
@@ -385,7 +501,8 @@ ConfigValueBox.propTypes = {
     hideMiniTitle: PropTypes.bool,
     managerType: PropTypes.string,
     onChangeCustomConfig: PropTypes.func,
-    // isFromPrinting: PropTypes.bool
+    customMode: PropTypes.bool,
+    setCustomMode: PropTypes.func,
 };
 
 export default React.memo(ConfigValueBox);

@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import classNames from 'classnames';
+import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 // import { useSelector, shallowEqual } from 'react-redux';
 import { isUndefined, cloneDeep, uniqWith } from 'lodash';
-import { Popover } from 'antd';
+import Popover from '../../components/Popover';
 import { HEAD_CNC, HEAD_LASER, PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
 import modal from '../../../lib/modal';
 import DefinitionCreator from '../DefinitionCreator';
@@ -13,8 +14,10 @@ import SvgIcon from '../../components/SvgIcon';
 import Notifications from '../../components/Notifications';
 import Modal from '../../components/Modal';
 import { Button } from '../../components/Buttons';
+/* eslint-disable import/no-cycle */
 import ConfigValueBox from './ConfigValueBox';
 import styles from './styles.styl';
+import { actions as printingActions } from '../../../flux/printing';
 import { MaterialWithColor } from '../../widgets/PrintingMaterial/MaterialWithColor';
 import useSetState from '../../../lib/hooks/set-state';
 import AddMaterialModel from '../../pages/MachineMaterialSettings/addMaterialModel';
@@ -31,7 +34,7 @@ import AddMaterialModel from '../../pages/MachineMaterialSettings/addMaterialMod
  *
  * @ExportType                  ×    |     ×
  */
-
+const DEFAULT_DISPLAY_TYPE = 'key-default_category-Default';
 function creatCateArray(optionList) {
     const cates = [];
     optionList.forEach(option => {
@@ -52,7 +55,7 @@ function creatCateArray(optionList) {
     return cates;
 }
 
-function useGetDefinitions(allDefinitions, activeDefinitionID, getDefaultDefinition, managerType) {
+export function useGetDefinitions(allDefinitions, activeDefinitionID, getDefaultDefinition, managerType) {
     const [definitionState, setDefinitionState] = useSetState({
         activeDefinitionID,
         definitionForManager: allDefinitions.find(d => d.definitionId === activeDefinitionID),
@@ -86,7 +89,7 @@ function useGetDefinitions(allDefinitions, activeDefinitionID, getDefaultDefinit
                 selectedSettingDefaultValue = prev.selectedSettingDefaultValue;
             } else {
                 definitionForManager = allDefinitions.find(d => d.definitionId === activeDefinitionID) || allDefinitions[0];
-                selectedSettingDefaultValue = getDefaultDefinition(definitionForManager.definitionId);
+                selectedSettingDefaultValue = getDefaultDefinition(definitionForManager?.definitionId);
             }
             return {
                 definitionOptions,
@@ -118,10 +121,16 @@ function ProfileManager({
         renameInput: useRef(null),
         refCreateModal: useRef(null)
     };
+    const customMode = useSelector(state => state?.printing?.customMode);
+
     const [definitionState, setDefinitionState] = useGetDefinitions(allDefinitions, activeDefinitionID, outsideActions.getDefaultDefinition, managerType);
     const [showCreateMaterialModal, setShowCreateMaterialModal] = useState(false);
     const currentDefinitions = useRef(allDefinitions);
+    const dispatch = useDispatch();
     currentDefinitions.current = allDefinitions;
+    const setCustomMode = (value) => {
+        dispatch(printingActions.updateCustomMode(value));
+    };
 
     const actions = {
         isCategorySelectedNow: (category) => {
@@ -280,6 +289,9 @@ function ProfileManager({
                     i18n: option.i18nCategory
                 };
             });
+            materialOptions = materialOptions.filter((option) => {
+                return option.value !== i18n._(DEFAULT_DISPLAY_TYPE);
+            });
             materialOptions = uniqWith(materialOptions, (a, b) => {
                 return a.label === b.label;
             });
@@ -429,7 +441,7 @@ function ProfileManager({
                     lastStatus = false;
                     break;
                 }
-                if (definitionForManager.settings[key].childKey.length > 0) {
+                if (definitionForManager.settings[key].childKey?.length > 0) {
                     actions.checkDefault(definitionForManager.settings[key].childKey, definitionForManager, selectedSettingDefaultValue, lastStatus);
                 }
             }
@@ -441,6 +453,32 @@ function ProfileManager({
                 result = result && actions.checkDefault(configList[key], definitionForManager, selectedSettingDefaultValue);
             });
             return result;
+        },
+        handleAddMaterial: async (data) => {
+            const newDefinitionForManager = cloneDeep(definitionState.definitionForManager);
+            newDefinitionForManager.category = data.type;
+            newDefinitionForManager.name = data.name;
+            if (Object.keys(newDefinitionForManager.settings).length === 0) {
+                newDefinitionForManager.settings = cloneDeep(allDefinitions[0].settings);
+            }
+            newDefinitionForManager.settings = {
+                ...newDefinitionForManager.settings,
+                color: {
+                    default_value: data.color
+                },
+                material_print_temperature: {
+                    default_value: data.printingTemperature
+                },
+                cool_fan_speed: {
+                    default_value: data.openFan ? 100 : 0
+                },
+                material_bed_temperature: {
+                    default_value: data.buildPlateTemperature
+                }
+            };
+            setShowCreateMaterialModal(false);
+            const newDefinition = await outsideActions.onCreateManagerDefinition(newDefinitionForManager, data.name, false, true);
+            actions.onSelectDefinitionById(newDefinition.definitionId, newDefinition.name);
         }
     };
 
@@ -451,7 +489,7 @@ function ProfileManager({
                     size="lg-profile-manager"
                     className={classNames(styles['manager-body'])}
                     style={{ minWidth: '700px' }}
-                    onClose={outsideActions.closeManager}
+                    onClose={customMode ? () => {} : outsideActions.closeManager}
                 >
                     <Modal.Header>
                         <div className={classNames('heading-3')}>
@@ -462,7 +500,7 @@ function ProfileManager({
                         <div
                             className={classNames(styles['manager-content'], 'sm-flex', 'background-grey-3')}
                         >
-                            <div className={classNames(styles['manager-name'], 'border-radius-8', 'padding-top-24')}>
+                            <div className={classNames(styles['manager-name'], 'border-radius-8')}>
                                 {notificationMessage && (
                                     <Notifications bsStyle="danger" onDismiss={actions.clearNotification} className="Notifications">
                                         {notificationMessage}
@@ -473,7 +511,7 @@ function ProfileManager({
                                         {(definitionState.cates.map((cate) => {
                                             const isCategorySelected = cate.category === definitionState?.definitionForManager.category;
                                             return !!cate.items.length && (
-                                                <li key={`${cate.category}`}>
+                                                <li key={`${cate.category}`} className={classNames(customMode ? styles['disable-li'] : '')}>
                                                     <Anchor
                                                         className={classNames(styles['manager-btn'], { [styles.selected]: actions.isCategorySelectedNow(cate.category) })}
                                                         onClick={() => actions.onSelectCategory(cate.category)}
@@ -541,7 +579,7 @@ function ProfileManager({
                                                                     return null;
                                                                 } else {
                                                                     return (
-                                                                        <li key={`${currentOption.value}${currentOption.label}`} className={classNames(styles['profile-li'])}>
+                                                                        <li key={`${currentOption.value}${currentOption.label}`} className={classNames(styles['profile-li'], customMode ? styles['disable-li'] : '')}>
                                                                             <div className="sm-flex align-center justify-space-between">
                                                                                 <Anchor
                                                                                     className={classNames(styles['manager-btn'], { [styles.selected]: isSelected })}
@@ -600,12 +638,9 @@ function ProfileManager({
                                                                                             )}
                                                                                         >
                                                                                             <SvgIcon
-                                                                                                name="Reset"
+                                                                                                name="More"
                                                                                                 size={24}
                                                                                                 className="margin-left-n-30"
-                                                                                                onClick={() => {
-                                                                                                    actions.resetDefinition(currentOption.value);
-                                                                                                }}
                                                                                             />
                                                                                         </Popover>
                                                                                     </div>
@@ -623,6 +658,20 @@ function ProfileManager({
                                         }))}
                                     </div>
                                     <div>
+                                        <input
+                                            ref={refs.fileInput}
+                                            type="file"
+                                            accept=".json"
+                                            style={{ display: 'none' }}
+                                            multiple={false}
+                                            onChange={async (e) => {
+                                                const definition = await outsideActions.onChangeFileForManager(e);
+                                                actions.onSelectDefinitionById(
+                                                    definition.definitionId,
+                                                    definition.name
+                                                );
+                                            }}
+                                        />
                                         <Popover
                                             trigger="click"
                                             placement="topLeft"
@@ -631,6 +680,8 @@ function ProfileManager({
                                                     <Anchor onClick={() => {
                                                         if (managerType === PRINTING_MANAGER_TYPE_MATERIAL) {
                                                             setShowCreateMaterialModal(true);
+                                                        } else {
+                                                            actions.showNewModal();
                                                         }
                                                     }}
                                                     >
@@ -640,17 +691,17 @@ function ProfileManager({
                                                                 className="margin-bottom-8"
                                                                 size={48}
                                                             />
-                                                            <span className="display-inline width-percent-100 text-overflow-ellipsis">{i18n._('key-Printing/ProfileManager-Create')}</span>
+                                                            <span className="display-inline width-percent-100 text-overflow-ellipsis align-c">{i18n._('key-Printing/ProfileManager-Create')}</span>
                                                         </div>
                                                     </Anchor>
-                                                    <Anchor>
+                                                    <Anchor onClick={() => actions.importFile(refs.fileInput)}>
                                                         <div className="width-112 height-88 sm-flex sm-flex-direction-c align-center">
                                                             <SvgIcon
                                                                 name="TitleSetting"
                                                                 className="margin-bottom-8"
                                                                 size={48}
                                                             />
-                                                            <span className="display-inline width-percent-100 text-overflow-ellipsis">{i18n._('key-Printing/ProfileManager-Import')}</span>
+                                                            <span className="display-inline width-percent-100 text-overflow-ellipsis align-c">{i18n._('key-Printing/ProfileManager-Import')}</span>
                                                         </div>
                                                     </Anchor>
                                                 </div>
@@ -661,6 +712,7 @@ function ProfileManager({
                                                 type="default"
                                                 priority="level-two"
                                                 className="margin-left-16"
+                                                disabled={customMode}
                                             >
                                                 {i18n._('key-ProfileManager/Add Profile')}
                                             </Button>
@@ -680,10 +732,13 @@ function ProfileManager({
                                 managerType={managerType}
                                 customConfigs={customConfig}
                                 onChangeCustomConfig={onChangeCustomConfig}
+                                customMode={customMode}
+                                setCustomMode={setCustomMode}
                             />
                             {showCreateMaterialModal && managerType === PRINTING_MANAGER_TYPE_MATERIAL && (
                                 <AddMaterialModel
                                     setShowCreateMaterialModal={setShowCreateMaterialModal}
+                                    onSubmit={(data) => actions.handleAddMaterial(data)}
                                 />
                             )}
                         </div>

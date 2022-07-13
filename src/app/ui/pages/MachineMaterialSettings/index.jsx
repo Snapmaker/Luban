@@ -7,6 +7,7 @@ import MachineSettings from './machineSettings';
 import MaterialSettings from './materialSettings';
 import SvgIcon from '../../components/SvgIcon';
 import Anchor from '../../components/Anchor';
+import { MACHINE_SERIES, SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL } from '../../../constants';
 
 const MACHINE_TAB = 'machine';
 const MATERIAL_TAB = 'material';
@@ -27,8 +28,14 @@ const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
     const [currentSeries, setCurrentSeries] = useState(serial);
     const [currentToolhead, setCurrentToolhead] = useState(toolHead);
     useEffect(() => {
+        const tempToolhead = currentSeries === MACHINE_SERIES.ORIGINAL.value ? { ...currentToolhead, printingToolhead: SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL } : { ...currentToolhead };
+        setCurrentToolhead(tempToolhead);
+        onCallBack(currentSeries, tempToolhead);
+    }, [currentSeries]);
+
+    useEffect(() => {
         onCallBack(currentSeries, currentToolhead);
-    }, [currentSeries, currentToolhead]);
+    }, [currentToolhead]);
     return (
         <div className="padding-top-16 padding-horizontal-40 height-100vh">
             {isPopup && (
@@ -70,7 +77,9 @@ const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
                     />
                 )}
                 {selectTab === MATERIAL_TAB && (
-                    <MaterialSettings />
+                    <MaterialSettings
+                        toolHead={currentToolhead}
+                    />
                 )}
             </div>
         </div>
