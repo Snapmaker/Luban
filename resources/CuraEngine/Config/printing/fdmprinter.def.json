@@ -5,7 +5,7 @@
         "type": "machine",
         "author": "Snapmaker",
         "manufacturer": "Snapmaker",
-        "setting_version": 0.7,
+        "setting_version": 0.9,
         "file_formats": "text/x-gcode;application/x-stl-ascii;application/x-stl-binary;application/x-wavefront-obj;application/x3g",
         "visible": false,
         "has_materials": true,
@@ -70,7 +70,7 @@
                             "description": "GUID of the material. This is set automatically.",
                             "default_value": "",
                             "type": "str",
-                            "enabled": "true"
+                            "enabled": "false"
                         },
                         "material_diameter": {
                             "label": "Diameter",
@@ -841,42 +841,42 @@
                     "label": "Command Line Settings",
                     "description": "Settings which are only used if CuraEngine isn't called from the Cura frontend.",
                     "type": "category",
-                    "enabled": "true",
+                    "enabled": "false",
                     "children": {
                         "center_object": {
                             "description": "Whether to center the object on the middle of the build platform (0,0), instead of using the coordinate system in which the object was saved.",
                             "type": "bool",
                             "label": "Center Object",
                             "default_value": false,
-                            "enabled": "true"
+                            "enabled": "false"
                         },
                         "mesh_position_x": {
                             "description": "Offset applied to the object in the x direction.",
                             "type": "float",
                             "label": "Mesh Position X",
                             "default_value": 0,
-                            "enabled": "true"
+                            "enabled": "false"
                         },
                         "mesh_position_y": {
                             "description": "Offset applied to the object in the y direction.",
                             "type": "float",
                             "label": "Mesh Position Y",
                             "default_value": 0,
-                            "enabled": "true"
+                            "enabled": "false"
                         },
                         "mesh_position_z": {
                             "description": "Offset applied to the object in the z direction. With this you can perform what was used to be called 'Object Sink'.",
                             "type": "float",
                             "label": "Mesh Position Z",
                             "default_value": 0,
-                            "enabled": "true"
+                            "enabled": "false"
                         },
                         "mesh_rotation_matrix": {
                             "label": "Mesh Rotation Matrix",
                             "description": "Transformation matrix to be applied to the model when loading it from file.",
                             "type": "str",
                             "default_value": "[[1,0,0], [0,1,0], [0,0,1]]",
-                            "enabled": "true"
+                            "enabled": "false"
                         }
                     }
                 }
@@ -1603,7 +1603,7 @@
                             "minimum_value_warning": "0",
                             "maximum_value_warning": "285",
                             "maximum_value": "365",
-                            "enabled": "true",
+                            "enabled": "false",
                             "settable_per_extruder": true,
                             "settable_per_mesh": false,
                             "minimum_value": "-273.15"
@@ -1617,7 +1617,7 @@
                             "default_value": 60,
                             "minimum_value": "0",
                             "maximum_value": "heated_bed_maximum_temperature",
-                            "enabled": "true",
+                            "enabled": "false",
                             "settable_per_mesh": false,
                             "settable_per_extruder": false,
                             "settable_per_meshgroup": false
@@ -1626,7 +1626,7 @@
                             "label": "Enable Print Cooling",
                             "description": "Enables the print cooling fans while printing. The fans improve print quality on layers with short layer times and bridging / overhangs.",
                             "type": "bool",
-                            "enabled": "true",
+                            "enabled": "false",
                             "default_value": true,
                             "settable_per_mesh": false,
                             "settable_per_extruder": true
@@ -1638,7 +1638,7 @@
                             "default_value": 10,
                             "minimum_value": "0",
                             "maximum_value": "10",
-                            "enabled": "true",
+                            "enabled": "false",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true
                         },
@@ -1650,7 +1650,7 @@
                             "default_value": 100,
                             "minimum_value": "0",
                             "maximum_value": "100",
-                            "enabled": "true",
+                            "enabled": "false",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true
                         },
@@ -1660,7 +1660,7 @@
                             "unit": "%",
                             "type": "float",
                             "default_value": 100,
-                            "enabled": "true",
+                            "enabled": "false",
                             "minimum_value": "0.001",
                             "minimum_value_warning": "100",
                             "maximum_value_warning": "120",
@@ -1673,7 +1673,7 @@
                             "description": "Is this material the type that breaks off cleanly when heated (crystalline), or is it the type that produces long intertwined polymer chains (non-crystalline)?",
                             "type": "bool",
                             "default_value": false,
-                            "enabled": "true",
+                            "enabled": "false",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true
                         },
@@ -1683,7 +1683,7 @@
                             "type": "float",
                             "unit": "mm",
                             "default_value": -4,
-                            "enabled": "true",
+                            "enabled": "false",
                             "minimum_value_warning": "-switch_extruder_retraction_amount",
                             "maximum_value_warning": "0",
                             "settable_per_mesh": false,
@@ -1695,7 +1695,7 @@
                             "type": "float",
                             "unit": "mm/s",
                             "default_value": 5,
-                            "enabled": "true",
+                            "enabled": "false",
                             "minimum_value": "0",
                             "maximum_value": "machine_max_feedrate_e",
                             "settable_per_mesh": false,
@@ -1707,7 +1707,7 @@
                             "type": "float",
                             "unit": "mm",
                             "default_value": -16,
-                            "enabled": "true",
+                            "enabled": "false",
                             "minimum_value_warning": "-retraction_amount * 4",
                             "maximum_value_warning": "0",
                             "settable_per_mesh": false,
@@ -1719,7 +1719,7 @@
                             "type": "float",
                             "unit": "mm/s",
                             "default_value": 2,
-                            "enabled": "true",
+                            "enabled": "false",
                             "minimum_value": "0",
                             "maximum_value": "machine_max_feedrate_e",
                             "settable_per_mesh": false,
@@ -1732,7 +1732,7 @@
                             "unit": "°C",
                             "default_value": 50,
                             "value": "material_print_temperature",
-                            "enabled": "true",
+                            "enabled": "false",
                             "minimum_value": "-273.15",
                             "maximum_value_warning": "300",
                             "maximum_value": "365",
@@ -1745,7 +1745,7 @@
                             "type": "float",
                             "unit": "mm",
                             "default_value": -50,
-                            "enabled": "true",
+                            "enabled": "false",
                             "minimum_value_warning": "-100",
                             "maximum_value_warning": "0",
                             "settable_per_mesh": false,
@@ -1757,7 +1757,7 @@
                             "type": "float",
                             "unit": "mm/s",
                             "default_value": 25,
-                            "enabled": "true",
+                            "enabled": "false",
                             "minimum_value": "0",
                             "maximum_value": "machine_max_feedrate_e",
                             "settable_per_mesh": false,
@@ -1769,7 +1769,7 @@
                             "type": "float",
                             "unit": "°C",
                             "default_value": 50,
-                            "enabled": "true",
+                            "enabled": "false",
                             "minimum_value": "-273.15",
                             "maximum_value": "365",
                             "maximum_value_warning": "300",
@@ -1781,42 +1781,42 @@
                             "description": "How fast to prime the material after switching to a different material.",
                             "type": "float",
                             "default_value": 0.5,
-                            "enabled": "true"
+                            "enabled": "false"
                         },
                         "material_flush_purge_length": {
                             "label": "Flush Purge Length",
                             "description": "How much material to use to purge the previous material out of the nozzle (in length of filament) when switching to a different material.",
                             "type": "float",
                             "default_value": 60,
-                            "enabled": "true"
+                            "enabled": "false"
                         },
                         "material_end_of_filament_purge_speed": {
                             "label": "End of Filament Purge Speed",
                             "description": "How fast to prime the material after replacing an empty spool with a fresh spool of the same material.",
                             "type": "float",
                             "default_value": 0.5,
-                            "enabled": "true"
+                            "enabled": "false"
                         },
                         "material_end_of_filament_purge_length": {
                             "label": "End of Filament Purge Length",
                             "description": "How much material to use to purge the previous material out of the nozzle (in length of filament) when replacing an empty spool with a fresh spool of the same material.",
                             "type": "float",
                             "default_value": 20,
-                            "enabled": "true"
+                            "enabled": "false"
                         },
                         "material_maximum_park_duration": {
                             "label": "Maximum Park Duration",
                             "description": "How long the material can be kept out of dry storage safely.",
                             "type": "float",
                             "default_value": 300,
-                            "enabled": "true"
+                            "enabled": "false"
                         },
                         "material_no_load_move_factor": {
                             "label": "No Load Move Factor",
                             "description": "A factor indicating how much the filament gets compressed between the feeder and the nozzle chamber, used to determine how far to move the material for a filament switch.",
                             "type": "float",
                             "default_value": 0.940860215,
-                            "enabled": "true"
+                            "enabled": "false"
                         }
                     }
                 }
@@ -1847,7 +1847,7 @@
                             "settable_per_extruder": false,
                             "filter": [
                                 "basic",
-                                "advance"
+                                "advanced"
                             ],
                             "children": {
                                 "layer_height_0": {
@@ -1863,7 +1863,8 @@
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": false,
                                     "filter": [
-                                        "advance"
+                                        "basic",
+                                        "advanced"
                                     ]
                                 },
                                 "infill_sparse_thickness": {
@@ -1910,7 +1911,7 @@
                             "settable_per_mesh": true,
                             "filter": [
                                 "basic",
-                                "advance"
+                                "advanced"
                             ],
                             "children": {
                                 "wall_line_width_0": {
@@ -1926,7 +1927,7 @@
                                     "limit_to_extruder": "wall_0_extruder_nr",
                                     "settable_per_mesh": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "wall_line_width_x": {
@@ -1942,7 +1943,7 @@
                                     "limit_to_extruder": "wall_x_extruder_nr",
                                     "settable_per_mesh": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "skin_line_width": {
@@ -1959,7 +1960,7 @@
                                     "limit_to_extruder": "top_bottom_extruder_nr",
                                     "settable_per_mesh": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "infill_line_width": {
@@ -1976,7 +1977,7 @@
                                     "limit_to_extruder": "infill_extruder_nr",
                                     "settable_per_mesh": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "skirt_brim_line_width": {
@@ -1993,7 +1994,7 @@
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "support_line_width": {
@@ -2011,7 +2012,7 @@
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "support_roof_line_width": {
@@ -2058,14 +2059,14 @@
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 }
                             }
                         }
                     }
                 },
-                "printing_Speed": {
+                "printing_speed": {
                     "label": "Printing Speed",
                     "type": "category",
                     "icon": "category_speed",
@@ -2083,8 +2084,7 @@
                             "settable_per_mesh": true,
                             "filter": [
                                 "basic",
-                                "advance",
-                                "efficiency"
+                                "advanced"
                             ],
                             "children": {
                                 "speed_infill": {
@@ -2101,7 +2101,7 @@
                                     "limit_to_extruder": "infill_extruder_nr",
                                     "settable_per_mesh": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "speed_wall_0": {
@@ -2117,7 +2117,7 @@
                                     "limit_to_extruder": "wall_0_extruder_nr",
                                     "settable_per_mesh": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "speed_wall_x": {
@@ -2133,7 +2133,7 @@
                                     "limit_to_extruder": "wall_x_extruder_nr",
                                     "settable_per_mesh": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "speed_topbottom": {
@@ -2150,7 +2150,7 @@
                                     "enabled": "top_layers > 0 || bottom_layers > 0",
                                     "settable_per_mesh": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "speed_roofing": {
@@ -2167,7 +2167,7 @@
                                     "settable_per_mesh": true,
                                     "enabled": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "speed_support_infill": {
@@ -2185,7 +2185,7 @@
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "speed_support_roof": {
@@ -2203,7 +2203,7 @@
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "speed_support_bottom": {
@@ -2221,7 +2221,7 @@
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "speed_prime_tower": {
@@ -2238,7 +2238,7 @@
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "speed_travel": {
@@ -2254,7 +2254,8 @@
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "filter": [
-                                        "advance"
+                                        "basic",
+                                        "advanced"
                                     ]
                                 }
                             }
@@ -2268,7 +2269,7 @@
                             "settable_per_mesh": false,
                             "settable_per_extruder": false,
                             "filter": [
-                                "advance"
+                                "advanced"
                             ],
                             "children": {
                                 "acceleration_print": {
@@ -2283,7 +2284,7 @@
                                     "enabled": "acceleration_enabled",
                                     "settable_per_mesh": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "acceleration_infill": {
@@ -2427,7 +2428,7 @@
                                     "enabled": "acceleration_enabled",
                                     "settable_per_mesh": false,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 }
                             }
@@ -2441,7 +2442,7 @@
                             "settable_per_mesh": false,
                             "settable_per_extruder": false,
                             "filter": [
-                                "advance"
+                                "advanced"
                             ],
                             "children": {
                                 "jerk_print": {
@@ -2455,7 +2456,7 @@
                                     "enabled": "jerk_enabled",
                                     "settable_per_mesh": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "jerk_infill": {
@@ -2589,7 +2590,7 @@
                                     "enabled": "jerk_enabled",
                                     "settable_per_mesh": false,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 }
                             }
@@ -2617,7 +2618,8 @@
                             "enabled": true,
                             "filter": [
                                 "basic",
-                                "advance"
+                                "advanced",
+                                "strength"
                             ]
                         },
                         "wall_thickness": {
@@ -2649,13 +2651,19 @@
                                     "settable_per_mesh": true,
                                     "enabled": "model_structure_type === 'normal'",
                                     "filter": [
-                                        "advance"
+                                        "advanced",
+                                        "strength",
+                                        "efficiency",
+                                        "material"
                                     ]
                                 }
                             },
                             "filter": [
                                 "basic",
-                                "advance"
+                                "advanced",
+                                "strength",
+                                "efficiency",
+                                "material"
                             ]
                         },
                         "top_thickness": {
@@ -2675,7 +2683,10 @@
                             "enabled": "model_structure_type === 'normal'",
                             "filter": [
                                 "basic",
-                                "advance"
+                                "advanced",
+                                "strength",
+                                "efficiency",
+                                "material"
                             ],
                             "children": {
                                 "top_layers": {
@@ -2691,7 +2702,10 @@
                                     "settable_per_mesh": true,
                                     "enabled": "model_structure_type === 'normal'",
                                     "filter": [
-                                        "advance"
+                                        "advanced",
+                                        "strength",
+                                        "efficiency",
+                                        "material"
                                     ]
                                 },
                                 "roofing_layer_count": {
@@ -2704,9 +2718,12 @@
                                     "value": "0",
                                     "limit_to_extruder": "roofing_extruder_nr",
                                     "settable_per_mesh": true,
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "filter": [
-                                        "advance"
+                                        "advanced",
+                                        "strength",
+                                        "efficiency",
+                                        "material"
                                     ]
                                 }
                             }
@@ -2728,7 +2745,10 @@
                             "enabled": true,
                             "filter": [
                                 "basic",
-                                "advance"
+                                "advanced",
+                                "strength",
+                                "efficiency",
+                                "material"
                             ],
                             "children": {
                                 "bottom_layers": {
@@ -2743,7 +2763,10 @@
                                     "settable_per_mesh": true,
                                     "enabled": "model_structure_type === 'normal'",
                                     "filter": [
-                                        "advance"
+                                        "advanced",
+                                        "strength",
+                                        "efficiency",
+                                        "material"
                                     ]
                                 },
                                 "initial_bottom_layers": {
@@ -2758,7 +2781,10 @@
                                     "settable_per_mesh": true,
                                     "enabled": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced",
+                                        "strength",
+                                        "efficiency",
+                                        "material"
                                     ]
                                 }
                             }
@@ -2794,7 +2820,7 @@
                                 }
                             },
                             "filter": [
-                                "advance"
+                                "advanced"
                             ]
                         },
                         "skin_angles": {
@@ -2802,7 +2828,7 @@
                             "description": "A list of integer line directions to use when the top/bottom layers use the lines or zig zag pattern. Elements from the list are used sequentially as the layers progress and when the end of the list is reached, it starts at the beginning again. The list items are separated by commas and the whole list is contained in square brackets. Default is an empty list which means use the traditional default angles (45 and 135 degrees).",
                             "type": "[int]",
                             "default_value": "[ ]",
-                            "enabled": "true",
+                            "enabled": "false",
                             "limit_to_extruder": "top_bottom_extruder_nr",
                             "settable_per_mesh": true
                         },
@@ -2820,7 +2846,10 @@
                             "enabled": "model_structure_type === 'normal'",
                             "filter": [
                                 "basic",
-                                "advance"
+                                "advanced",
+                                "strength",
+                                "efficiency",
+                                "material"
                             ],
                             "children": {
                                 "infill_line_distance": {
@@ -2836,7 +2865,7 @@
                                     "settable_per_mesh": true,
                                     "enabled": "infill_sparse_density !== 100 && model_structure_type === 'normal'",
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "infill_angles": {
@@ -2844,11 +2873,11 @@
                                     "description": "A list of integer line directions to use. Elements from the list are used sequentially as the layers progress and when the end of the list is reached, it starts at the beginning again. The list items are separated by commas and the whole list is contained in square brackets. Default is an empty list which means use the traditional default angles (45 and 135 degrees for the lines and zig zag patterns and 45 degrees for all other patterns).",
                                     "type": "[int]",
                                     "default_value": "[ ]",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "limit_to_extruder": "infill_extruder_nr",
                                     "settable_per_mesh": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 }
                             }
@@ -2878,8 +2907,9 @@
                             "settable_per_mesh": true,
                             "filter": [
                                 "basic",
-                                "advance",
-                                "strength"
+                                "advanced",
+                                "strength",
+                                "efficiency"
                             ]
                         },
                         "fill_outline_gaps": {
@@ -2892,7 +2922,23 @@
                             "enabled": "model_structure_type === 'normal'",
                             "filter": [
                                 "basic",
-                                "advance"
+                                "advanced",
+                                "accuracy"
+                            ]
+                        },
+                        "infill_multiplier": {
+                            "label": "Infill Line Multiplier",
+                            "description": "Convert each infill line to this many lines. The extra lines do not cross over each other, but avoid each other. This makes the infill stiffer, but increases print time and material usage.",
+                            "default_value": 1,
+                            "type": "int",
+                            "minimum_value": "1",
+                            "maximum_value_warning": "infill_line_distance / infill_line_width",
+                            "limit_to_extruder": "infill_extruder_nr",
+                            "settable_per_mesh": true,
+                            "enabled": "infill_sparse_density > 0 && infill_sparse_density !== 100 && model_structure_type === 'normal'",
+                            "filter": [
+                                "advanced",
+                                "strength"
                             ]
                         },
                         "magic_spiralize": {
@@ -2903,10 +2949,7 @@
                             "settable_per_mesh": false,
                             "settable_per_extruder": false,
                             "value": "model_structure_type === 'vase' ? true : false",
-                            "enabled": "true",
-                            "filter": [
-                                "advance"
-                            ]
+                            "enabled": "false"
                         }
                     }
                 },
@@ -2916,17 +2959,32 @@
                     "icon": "category_support",
                     "description": "Support",
                     "children": {
-                        "support_enable": {
-                            "label": "Generate Support",
-                            "description": "Generate structures to support parts of the model which have overhangs. Without these structures, such parts would collapse during printing.",
-                            "type": "bool",
+                        "support_generate_type": {
+                            "label": "Support Type",
+                            "description": "",
+                            "type": "enum",
+                            "options": {
+                                "none": "None",
+                                "normal": "Normal",
+                                "tree": "Tree"
+                            },
                             "default_value": false,
                             "settable_per_mesh": true,
                             "settable_per_extruder": false,
                             "filter": [
                                 "basic",
-                                "advance"
+                                "advanced"
                             ]
+                        },
+                        "support_enable": {
+                            "label": "Generate Support",
+                            "description": "Generate structures to support parts of the model which have overhangs. Without these structures, such parts would collapse during printing.",
+                            "type": "bool",
+                            "default_value": false,
+                            "value": "support_generate_type === 'none' ? false : true",
+                            "settable_per_mesh": true,
+                            "settable_per_extruder": false,
+                            "enabled": "false"
                         },
                         "support_structure": {
                             "label": "Support Structure",
@@ -2942,7 +3000,7 @@
                             "settable_per_extruder": false,
                             "filter": [
                                 "basic",
-                                "advance"
+                                "advanced"
                             ],
                             "children": {
                                 "support_tree_angle": {
@@ -3033,7 +3091,7 @@
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "filter": [
-                                "advance"
+                                "advanced"
                             ],
                             "children": {
                                 "support_wall_count": {
@@ -3050,7 +3108,7 @@
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "zig_zaggify_support": {
@@ -3062,10 +3120,7 @@
                                     "enabled": "(support_enable || support_meshes_present) && (support_pattern === 'lines' || support_pattern === 'grid' || support_pattern === 'triangles' || support_pattern === 'cross' || support_pattern === 'gyroid')",
                                     "limit_to_extruder": "support_infill_extruder_nr",
                                     "settable_per_mesh": false,
-                                    "settable_per_extruder": true,
-                                    "filter": [
-                                        "advance"
-                                    ]
+                                    "settable_per_extruder": true
                                 },
                                 "support_connect_zigzags": {
                                     "label": "Connect Support ZigZags",
@@ -3075,10 +3130,7 @@
                                     "enabled": "(support_enable || support_meshes_present) && support_pattern === 'zigzag'",
                                     "limit_to_extruder": "support_infill_extruder_nr",
                                     "settable_per_mesh": false,
-                                    "settable_per_extruder": true,
-                                    "filter": [
-                                        "advance"
-                                    ]
+                                    "settable_per_extruder": true
                                 }
                             }
                         },
@@ -3097,7 +3149,7 @@
                             "settable_per_extruder": true,
                             "filter": [
                                 "basic",
-                                "advance"
+                                "advanced"
                             ],
                             "children": {
                                 "support_line_distance": {
@@ -3135,12 +3187,12 @@
                             "description": "A list of integer line directions to use. Elements from the list are used sequentially as the layers progress and when the end of the list is reached, it starts at the beginning again. The list items are separated by commas and the whole list is contained in square brackets. Default is an empty list which means use the default angle 0 degrees.",
                             "type": "[int]",
                             "default_value": "[135]",
-                            "enabled": "true",
+                            "enabled": "false",
                             "limit_to_extruder": "support_infill_extruder_nr",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "filter": [
-                                "advance"
+                                "advanced"
                             ]
                         },
                         "support_brim_enable": {
@@ -3154,7 +3206,7 @@
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "filter": [
-                                "advance"
+                                "advanced"
                             ],
                             "children": {
                                 "support_brim_width": {
@@ -3170,7 +3222,7 @@
                                     "settable_per_extruder": true,
                                     "limit_to_extruder": "support_infill_extruder_nr",
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ],
                                     "children": {
                                         "support_brim_line_count": {
@@ -3203,7 +3255,7 @@
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "filter": [
-                                "advance"
+                                "advanced"
                             ]
                         },
                         "support_interface_enable": {
@@ -3216,7 +3268,7 @@
                             "settable_per_mesh": true,
                             "filter": [
                                 "basic",
-                                "advance"
+                                "advanced"
                             ],
                             "children": {
                                 "support_roof_enable": {
@@ -3229,7 +3281,7 @@
                                     "enabled": "support_enable || support_meshes_present",
                                     "settable_per_mesh": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "support_bottom_enable": {
@@ -3242,7 +3294,7 @@
                                     "enabled": "support_enable || support_meshes_present",
                                     "settable_per_mesh": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "support_interface_height": {
@@ -3259,7 +3311,7 @@
                                     "settable_per_mesh": true,
                                     "filter": [
                                         "basic",
-                                        "advance"
+                                        "advanced"
                                     ],
                                     "children": {
                                         "support_roof_height": {
@@ -3276,7 +3328,7 @@
                                             "enabled": "support_roof_enable && (support_enable || support_meshes_present)",
                                             "settable_per_mesh": true,
                                             "filter": [
-                                                "advance"
+                                                "advanced"
                                             ]
                                         },
                                         "support_bottom_height": {
@@ -3293,7 +3345,7 @@
                                             "enabled": "support_bottom_enable && (support_enable || support_meshes_present)",
                                             "settable_per_mesh": true,
                                             "filter": [
-                                                "advance"
+                                                "advanced"
                                             ]
                                         }
                                     }
@@ -3324,7 +3376,7 @@
                                     "settable_per_extruder": true,
                                     "filter": [
                                         "basic",
-                                        "advance"
+                                        "advanced"
                                     ],
                                     "children": {
                                         "support_roof_line_distance": {
@@ -3341,7 +3393,7 @@
                                             "settable_per_mesh": false,
                                             "settable_per_extruder": true,
                                             "filter": [
-                                                "advance"
+                                                "advanced"
                                             ]
                                         },
                                         "support_bottom_line_distance": {
@@ -3358,7 +3410,7 @@
                                             "settable_per_mesh": false,
                                             "settable_per_extruder": true,
                                             "filter": [
-                                                "advance"
+                                                "advanced"
                                             ]
                                         }
                                     }
@@ -3380,7 +3432,7 @@
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ],
                                     "children": {
                                         "support_roof_pattern": {
@@ -3433,7 +3485,7 @@
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ],
                                     "children": {
                                         "support_roof_offset": {
@@ -3470,11 +3522,11 @@
                                     "type": "[int]",
                                     "default_value": "[45]",
                                     "limit_to_extruder": "support_interface_extruder_nr",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ],
                                     "children": {
                                         "support_roof_angles": {
@@ -3484,7 +3536,7 @@
                                             "default_value": "[45]",
                                             "value": "support_interface_angles",
                                             "limit_to_extruder": "support_roof_extruder_nr",
-                                            "enabled": "true",
+                                            "enabled": "false",
                                             "settable_per_mesh": false,
                                             "settable_per_extruder": true
                                         },
@@ -3495,7 +3547,7 @@
                                             "default_value": "[45]",
                                             "value": "support_interface_angles",
                                             "limit_to_extruder": "support_bottom_extruder_nr",
-                                            "enabled": "true",
+                                            "enabled": "false",
                                             "settable_per_mesh": false,
                                             "settable_per_extruder": true
                                         }
@@ -3511,7 +3563,7 @@
                             "enabled": "support_enable || support_meshes_present",
                             "settable_per_mesh": false,
                             "filter": [
-                                "advance"
+                                "advanced"
                             ],
                             "children": {
                                 "support_supported_skin_fan_speed": {
@@ -3525,7 +3577,7 @@
                                     "enabled": "(support_enable || support_meshes_present) && support_fan_enable",
                                     "settable_per_mesh": false,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 }
                             }
@@ -3565,8 +3617,7 @@
                             "enabled": "support_enable && support_structure === 'normal'",
                             "settable_per_mesh": true,
                             "filter": [
-                                "basic",
-                                "advance"
+                                "advanced"
                             ],
                             "children": {
                                 "support_tower_diameter": {
@@ -3582,7 +3633,7 @@
                                     "enabled": "support_enable && support_structure === 'normal' && support_use_towers",
                                     "settable_per_mesh": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "support_tower_maximum_supported_diameter": {
@@ -3599,7 +3650,7 @@
                                     "enabled": "support_enable && support_structure === 'normal' && support_use_towers",
                                     "settable_per_mesh": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "support_tower_roof_angle": {
@@ -3614,8 +3665,259 @@
                                     "enabled": "support_enable && support_structure === 'normal' && support_use_towers",
                                     "settable_per_mesh": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
+                                }
+                            }
+                        },
+                        "support_type": {
+                            "label": "Support Placement",
+                            "description": "Adjusts the placement of the support structures. The placement can be set to touching build plate or everywhere. When set to everywhere the support structures will also be printed on the model.",
+                            "type": "enum",
+                            "options": {
+                                "buildplate": "Touching Buildplate",
+                                "everywhere": "Everywhere"
+                            },
+                            "default_value": "everywhere",
+                            "resolve": "'everywhere' if 'everywhere' in 'support_type' else 'buildplate'",
+                            "enabled": "support_enable",
+                            "settable_per_mesh": false,
+                            "settable_per_extruder": false,
+                            "filter": [
+                                "advanced"
+                            ]
+                        },
+                        "support_angle": {
+                            "label": "Support Overhang Angle",
+                            "description": "The minimum angle of overhangs for which support is added. At a value of 0° all overhangs are supported, 90° will not provide any support.",
+                            "unit": "°",
+                            "type": "float",
+                            "minimum_value": "0",
+                            "maximum_value": "90",
+                            "maximum_value_warning": "80",
+                            "default_value": 50,
+                            "limit_to_extruder": "support_roof_extruder_nr if support_roof_enable else support_infill_extruder_nr",
+                            "enabled": "support_enable",
+                            "settable_per_mesh": true,
+                            "filter": [
+                                "basic",
+                                "advanced"
+                            ]
+                        },
+                        "support_distance": {
+                            "label": "Support Distance",
+                            "description": "Support Distance",
+                            "unit": "mm",
+                            "type": "enum",
+                            "options": {
+                                "printable": "printable",
+                                "balance": "balance",
+                                "removable": "removable"
+                            },
+                            "default_value": "balance",
+                            "enabled": "support_enable || support_meshes_present",
+                            "settable_per_mesh": true,
+                            "filter": [
+                                "basic"
+                            ],
+                            "children": {
+                                "support_z_distance": {
+                                    "label": "Support Z Distance",
+                                    "description": "Distance from the top/bottom of the support structure to the print. This gap provides clearance to remove the supports after the model is printed. This value is rounded up to a multiple of the layer height.",
+                                    "unit": "mm",
+                                    "type": "float",
+                                    "minimum_value": "0",
+                                    "maximum_value_warning": "machine_nozzle_size",
+                                    "default_value": 0.1,
+                                    "limit_to_extruder": "support_interface_extruder_nr if support_interface_enable else support_infill_extruder_nr",
+                                    "enabled": "support_enable || support_meshes_present",
+                                    "settable_per_mesh": true,
+                                    "filter": [
+                                        "advanced"
+                                    ],
+                                    "children": {
+                                        "support_top_distance": {
+                                            "label": "Support Top Distance",
+                                            "description": "Distance from the top of the support to the print.",
+                                            "unit": "mm",
+                                            "minimum_value": "0",
+                                            "maximum_value_warning": "machine_nozzle_size",
+                                            "default_value": 0.1,
+                                            "type": "float",
+                                            "enabled": "support_enable || support_meshes_present",
+                                            "value": "extruderValue(support_roof_enable ? support_roof_extruder_nr : support_infill_extruder_nr, 'support_z_distance')",
+                                            "limit_to_extruder": "support_roof_extruder_nr if support_roof_enable else support_infill_extruder_nr",
+                                            "settable_per_mesh": true
+                                        },
+                                        "support_bottom_distance": {
+                                            "label": "Support Bottom Distance",
+                                            "description": "Distance from the print to the bottom of the support.",
+                                            "unit": "mm",
+                                            "minimum_value": "0",
+                                            "maximum_value_warning": "machine_nozzle_size",
+                                            "default_value": 0.1,
+                                            "value": "support_type === 'everywhere' ? extruderValue(support_bottom_enable ? support_bottom_extruder_nr : support_infill_extruder_nr, 'support_z_distance') : 0",
+                                            "limit_to_extruder": "support_bottom_extruder_nr if support_bottom_enable else support_infill_extruder_nr",
+                                            "type": "float",
+                                            "enabled": "(support_enable || support_meshes_present) && resolveOrValue(support_type) === 'everywhere'",
+                                            "settable_per_mesh": true
+                                        }
+                                    }
+                                },
+                                "support_xy_distance": {
+                                    "label": "Support X/Y Distance",
+                                    "description": "Distance of the support structure from the print in the X/Y directions.",
+                                    "unit": "mm",
+                                    "type": "float",
+                                    "minimum_value": "0",
+                                    "maximum_value_warning": "1.5 * machine_nozzle_tip_outer_diameter",
+                                    "default_value": 0.7,
+                                    "limit_to_extruder": "support_infill_extruder_nr",
+                                    "enabled": "support_enable || support_meshes_present",
+                                    "settable_per_mesh": true,
+                                    "filter": [
+                                        "advanced"
+                                    ]
+                                },
+                                "support_xy_overrides_z": {
+                                    "label": "Support Distance Priority",
+                                    "description": "Whether the Support X/Y Distance overrides the Support Z Distance or vice versa. When X/Y overrides Z the X/Y distance can push away the support from the model, influencing the actual Z distance to the overhang. We can disable this by not applying the X/Y distance around overhangs.",
+                                    "type": "enum",
+                                    "options": {
+                                        "xy_overrides_z": "X/Y overrides Z",
+                                        "z_overrides_xy": "Z overrides X/Y"
+                                    },
+                                    "default_value": "z_overrides_xy",
+                                    "limit_to_extruder": "support_infill_extruder_nr",
+                                    "enabled": "support_enable || support_meshes_present",
+                                    "settable_per_mesh": true,
+                                    "filter": [
+                                        "advanced"
+                                    ]
+                                },
+                                "support_xy_distance_overhang": {
+                                    "label": "Minimum Support X/Y Distance",
+                                    "description": "Distance of the support structure from the overhang in the X/Y directions.",
+                                    "unit": "mm",
+                                    "type": "float",
+                                    "minimum_value": "0",
+                                    "minimum_value_warning": "support_xy_distance - support_line_width * 2",
+                                    "maximum_value_warning": "support_xy_distance",
+                                    "default_value": 0.2,
+                                    "value": "machine_nozzle_size / 2",
+                                    "limit_to_extruder": "support_infill_extruder_nr",
+                                    "enabled": "(support_enable || support_meshes_present) && support_xy_overrides_z === 'z_overrides_xy'",
+                                    "settable_per_mesh": true,
+                                    "filter": [
+                                        "advanced"
+                                    ]
+                                },
+                                "support_bottom_stair_step_height": {
+                                    "label": "Support Stair Step Height",
+                                    "description": "The height of the steps of the stair-like bottom of support resting on the model. A low value makes the support harder to remove, but too high values can lead to unstable support structures. Set to zero to turn off the stair-like behaviour.",
+                                    "unit": "mm",
+                                    "type": "float",
+                                    "default_value": 0.3,
+                                    "limit_to_extruder": "support_bottom_extruder_nr if support_bottom_enable else support_infill_extruder_nr",
+                                    "minimum_value": "0",
+                                    "maximum_value_warning": "1.0",
+                                    "enabled": "support_enable || support_meshes_present",
+                                    "settable_per_mesh": true
+                                },
+                                "support_bottom_stair_step_width": {
+                                    "label": "Support Stair Step Maximum Width",
+                                    "description": "The maximum width of the steps of the stair-like bottom of support resting on the model. A low value makes the support harder to remove, but too high values can lead to unstable support structures.",
+                                    "unit": "mm",
+                                    "type": "float",
+                                    "default_value": 5,
+                                    "limit_to_extruder": "support_interface_extruder_nr if support_interface_enable else support_infill_extruder_nr",
+                                    "minimum_value": "0",
+                                    "maximum_value_warning": "10.0",
+                                    "enabled": "support_enable || support_meshes_present",
+                                    "settable_per_mesh": true
+                                },
+                                "support_bottom_stair_step_min_slope": {
+                                    "label": "Support Stair Step Minimum Slope Angle",
+                                    "description": "The minimum slope of the area for stair-stepping to take effect. Low values should make support easier to remove on shallower slopes, but really low values may result in some very counter-intuitive results on other parts of the model.",
+                                    "unit": "°",
+                                    "type": "float",
+                                    "default_value": 10,
+                                    "limit_to_extruder": "support_bottom_extruder_nr if support_bottom_enable else support_infill_extruder_nr",
+                                    "minimum_value": "0.01",
+                                    "maximum_value": "89.99",
+                                    "enabled": "support_enable || support_meshes_present",
+                                    "settable_per_mesh": true
+                                },
+                                "support_join_distance": {
+                                    "label": "Support Join Distance",
+                                    "description": "The maximum distance between support structures in the X/Y directions. When separate structures are closer together than this value, the structures merge into one.",
+                                    "unit": "mm",
+                                    "type": "float",
+                                    "default_value": 2,
+                                    "limit_to_extruder": "support_infill_extruder_nr",
+                                    "minimum_value_warning": "0",
+                                    "maximum_value_warning": "10",
+                                    "enabled": "support_enable && support_structure === 'normal' || support_meshes_present",
+                                    "settable_per_mesh": false,
+                                    "settable_per_extruder": true
+                                },
+                                "minimum_support_area": {
+                                    "label": "Minimum Support Area",
+                                    "description": "Minimum area size for support polygons. Polygons which have an area smaller than this value will not be generated.",
+                                    "unit": "mm²",
+                                    "type": "float",
+                                    "default_value": 0,
+                                    "minimum_value": "0",
+                                    "maximum_value_warning": "5",
+                                    "enabled": "support_enable && support_structure === 'normal'",
+                                    "limit_to_extruder": "support_infill_extruder_nr",
+                                    "settable_per_mesh": true,
+                                    "filter": [
+                                        "advanced"
+                                    ]
+                                },
+                                "minimum_interface_area": {
+                                    "label": "Minimum Support Interface Area",
+                                    "description": "Minimum area size for support interface polygons. Polygons which have an area smaller than this value will be printed as normal support.",
+                                    "unit": "mm²",
+                                    "type": "float",
+                                    "default_value": 1,
+                                    "minimum_value": "0",
+                                    "minimum_value_warning": "minimum_support_area",
+                                    "limit_to_extruder": "support_interface_extruder_nr",
+                                    "enabled": "support_interface_enable && (support_enable || support_meshes_present)",
+                                    "settable_per_mesh": true,
+                                    "filter": [
+                                        "advanced"
+                                    ],
+                                    "children": {
+                                        "minimum_roof_area": {
+                                            "label": "Minimum Support Roof Area",
+                                            "description": "Minimum area size for the roofs of the support. Polygons which have an area smaller than this value will be printed as normal support.",
+                                            "unit": "mm²",
+                                            "type": "float",
+                                            "default_value": 1,
+                                            "value": "extruderValue(support_roof_extruder_nr, 'minimum_interface_area')",
+                                            "minimum_value": "0",
+                                            "minimum_value_warning": "minimum_support_area",
+                                            "limit_to_extruder": "support_roof_extruder_nr",
+                                            "enabled": "support_roof_enable && (support_enable || support_meshes_present)",
+                                            "settable_per_mesh": true
+                                        },
+                                        "minimum_bottom_area": {
+                                            "label": "Minimum Support Floor Area",
+                                            "description": "Minimum area size for the floors of the support. Polygons which have an area smaller than this value will be printed as normal support.",
+                                            "unit": "mm²",
+                                            "type": "float",
+                                            "default_value": 1,
+                                            "value": "extruderValue(support_bottom_extruder_nr, 'minimum_interface_area')",
+                                            "minimum_value": "0",
+                                            "minimum_value_warning": "minimum_support_area",
+                                            "limit_to_extruder": "support_bottom_extruder_nr",
+                                            "enabled": "support_bottom_enable && (support_enable || support_meshes_present)",
+                                            "settable_per_mesh": true
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -3643,7 +3945,8 @@
                             "settable_per_extruder": false,
                             "filter": [
                                 "basic",
-                                "advance"
+                                "advanced",
+                                "success"
                             ],
                             "children": {
                                 "skirt_line_count": {
@@ -3658,7 +3961,7 @@
                                     "settable_per_extruder": true,
                                     "limit_to_extruder": "adhesion_extruder_nr",
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "skirt_gap": {
@@ -3674,7 +3977,7 @@
                                     "settable_per_extruder": true,
                                     "limit_to_extruder": "adhesion_extruder_nr",
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "skirt_brim_minimal_length": {
@@ -3690,7 +3993,7 @@
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "brim_line_count": {
@@ -3706,7 +4009,7 @@
                                     "settable_per_extruder": true,
                                     "limit_to_extruder": "adhesion_extruder_nr",
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "brim_gap": {
@@ -3722,7 +4025,7 @@
                                     "settable_per_extruder": true,
                                     "limit_to_extruder": "adhesion_extruder_nr",
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "brim_replaces_support": {
@@ -3735,7 +4038,7 @@
                                     "settable_per_extruder": true,
                                     "limit_to_extruder": "support_infill_extruder_nr",
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "brim_outside_only": {
@@ -3748,7 +4051,7 @@
                                     "settable_per_extruder": true,
                                     "limit_to_extruder": "adhesion_extruder_nr",
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 },
                                 "raft_margin": {
@@ -3764,7 +4067,7 @@
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced"
                                     ]
                                 }
                             }
@@ -3780,7 +4083,8 @@
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "filter": [
-                                "advance"
+                                "advanced",
+                                "success"
                             ]
                         },
                         "speed_layer_0": {
@@ -3788,13 +4092,15 @@
                             "description": "The speed for the initial layer. A lower value is advised to improve adhesion to the build plate.",
                             "unit": "mm/s",
                             "type": "float",
-                            "default_value": 30,
+                            "default_value": 24,
                             "minimum_value": "0.1",
                             "maximum_value": "Math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
                             "maximum_value_warning": "300",
                             "settable_per_mesh": true,
                             "filter": [
-                                "advance"
+                                "basic",
+                                "advanced",
+                                "success"
                             ],
                             "children": {
                                 "speed_print_layer_0": {
@@ -3807,7 +4113,10 @@
                                     "minimum_value": "0.1",
                                     "maximum_value": "Math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
                                     "maximum_value_warning": "300",
-                                    "settable_per_mesh": true
+                                    "settable_per_mesh": true,
+                                    "filter": [
+                                        "success"
+                                    ]
                                 },
                                 "speed_travel_layer_0": {
                                     "label": "Initial Layer Travel Speed",
@@ -3820,7 +4129,10 @@
                                     "maximum_value": "Math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
                                     "maximum_value_warning": "300",
                                     "settable_per_extruder": true,
-                                    "settable_per_mesh": false
+                                    "settable_per_mesh": false,
+                                    "filter": [
+                                        "success"
+                                    ]
                                 },
                                 "skirt_brim_speed": {
                                     "label": "Skirt/Brim Speed",
@@ -3835,7 +4147,10 @@
                                     "enabled": "resolveOrValue(adhesion_type) === 'skirt' || resolveOrValue(adhesion_type) === 'brim' || resolveOrValue(draft_shield_enabled) || resolveOrValue(ooze_shield_enabled)",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
-                                    "limit_to_extruder": "adhesion_extruder_nr"
+                                    "limit_to_extruder": "adhesion_extruder_nr",
+                                    "filter": [
+                                        "success"
+                                    ]
                                 }
                             }
                         },
@@ -3852,7 +4167,8 @@
                             "enabled": "acceleration_enabled",
                             "settable_per_mesh": true,
                             "filter": [
-                                "advance"
+                                "advanced",
+                                "success"
                             ],
                             "children": {
                                 "acceleration_print_layer_0": {
@@ -3866,7 +4182,10 @@
                                     "minimum_value_warning": "100",
                                     "maximum_value_warning": "10000",
                                     "enabled": "acceleration_enabled",
-                                    "settable_per_mesh": true
+                                    "settable_per_mesh": true,
+                                    "filter": [
+                                        "success"
+                                    ]
                                 },
                                 "acceleration_travel_layer_0": {
                                     "label": "Initial Layer Travel Acceleration",
@@ -3880,7 +4199,10 @@
                                     "maximum_value_warning": "10000",
                                     "enabled": "acceleration_enabled",
                                     "settable_per_extruder": true,
-                                    "settable_per_mesh": false
+                                    "settable_per_mesh": false,
+                                    "filter": [
+                                        "success"
+                                    ]
                                 },
                                 "acceleration_skirt_brim": {
                                     "label": "Skirt/Brim Acceleration",
@@ -3894,7 +4216,10 @@
                                     "maximum_value_warning": "10000",
                                     "enabled": "(acceleration_enabled) && (adhesion_type === 'skirt' || adhesion_type === 'brim' || draft_shield_enabled || ooze_shield_enabled)",
                                     "settable_per_mesh": false,
-                                    "limit_to_extruder": "adhesion_extruder_nr"
+                                    "limit_to_extruder": "adhesion_extruder_nr",
+                                    "filter": [
+                                        "success"
+                                    ]
                                 }
                             }
                         },
@@ -3910,7 +4235,8 @@
                             "enabled": "jerk_enabled",
                             "settable_per_mesh": true,
                             "filter": [
-                                "advance"
+                                "advanced",
+                                "success"
                             ],
                             "children": {
                                 "jerk_print_layer_0": {
@@ -3923,7 +4249,10 @@
                                     "minimum_value": "0",
                                     "maximum_value_warning": "50",
                                     "enabled": "jerk_enabled",
-                                    "settable_per_mesh": true
+                                    "settable_per_mesh": true,
+                                    "filter": [
+                                        "success"
+                                    ]
                                 },
                                 "jerk_travel_layer_0": {
                                     "label": "Initial Layer Travel Jerk",
@@ -3936,7 +4265,10 @@
                                     "maximum_value_warning": "50",
                                     "enabled": "jerk_enabled",
                                     "settable_per_extruder": true,
-                                    "settable_per_mesh": false
+                                    "settable_per_mesh": false,
+                                    "filter": [
+                                        "success"
+                                    ]
                                 },
                                 "jerk_skirt_brim": {
                                     "label": "Skirt/Brim Jerk",
@@ -3949,7 +4281,10 @@
                                     "value": "jerk_layer_0",
                                     "enabled": "resolveOrValue(jerk_enabled) && (resolveOrValue(adhesion_type) === 'skirt' || resolveOrValue(adhesion_type) === 'brim' || resolveOrValue(draft_shield_enabled) || resolveOrValue(ooze_shield_enabled))",
                                     "settable_per_mesh": false,
-                                    "limit_to_extruder": "adhesion_extruder_nr"
+                                    "limit_to_extruder": "adhesion_extruder_nr",
+                                    "filter": [
+                                        "success"
+                                    ]
                                 }
                             }
                         },
@@ -3964,7 +4299,8 @@
                             "settable_per_mesh": false,
                             "settable_per_extruder": false,
                             "filter": [
-                                "advance"
+                                "advanced",
+                                "success"
                             ]
                         }
                     }
@@ -3989,21 +4325,22 @@
                             "settable_per_extruder": false,
                             "filter": [
                                 "basic",
-                                "advance"
+                                "advanced",
+                                "success"
                             ]
                         },
                         "prime_tower_enable": {
                             "label": "enabled Prime Tower",
                             "description": "Print a tower next to the print which serves to prime the material after each nozzle switch.",
                             "type": "bool",
-                            "enabled": "extruders_enabled_count > 1",
+                            "enabled": "false",
                             "default_value": false,
                             "resolve": "(extruders_enabled_count > 1) and any(prime_tower_enable)",
                             "value": "dual_helper_type === 'prime_tower'",
                             "settable_per_mesh": false,
                             "settable_per_extruder": false,
                             "filter": [
-                                "advance"
+                                "advanced"
                             ]
                         },
                         "prime_tower_size": {
@@ -4011,7 +4348,6 @@
                             "description": "The width of the prime tower.",
                             "type": "float",
                             "unit": "mm",
-                            "enabled": "true",
                             "default_value": 20,
                             "resolve": "Math.max(prime_tower_size)",
                             "minimum_value": "0",
@@ -4019,7 +4355,8 @@
                             "minimum_value_warning": "Math.max(prime_tower_line_width) * 2",
                             "maximum_value_warning": "42",
                             "settable_per_mesh": false,
-                            "settable_per_extruder": false
+                            "settable_per_extruder": false,
+                            "enabled": "false"
                         },
                         "prime_tower_min_volume": {
                             "label": "Prime Tower Minimum Volume",
@@ -4029,12 +4366,13 @@
                             "default_value": 6,
                             "minimum_value": "0",
                             "maximum_value_warning": "((prime_tower_size) * 0.5) ** 2 * 3.14159 * (layer_height) - sum(prime_tower_min_volume) + prime_tower_min_volume",
-                            "enabled": "(prime_tower_enable)",
+                            "value": "dual_helper_type === 'prime_tower'",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "filter": [
                                 "basic",
-                                "advance"
+                                "advanced",
+                                "success"
                             ]
                         },
                         "prime_tower_position_x": {
@@ -4042,48 +4380,51 @@
                             "description": "The x coordinate of the position of the prime tower.",
                             "type": "float",
                             "unit": "mm",
-                            "enabled": "true",
+                            "value": "dual_helper_type === 'prime_tower'",
                             "default_value": 200,
                             "maximum_value": "machine_width / 2 if machine_center_is_zero else machine_width",
                             "minimum_value": "(prime_tower_size) - machine_width / 2 if machine_center_is_zero else (prime_tower_size)",
                             "settable_per_mesh": false,
-                            "settable_per_extruder": false
+                            "settable_per_extruder": false,
+                            "enabled": "false"
                         },
                         "prime_tower_position_y": {
                             "label": "Prime Tower Y Position",
                             "description": "The y coordinate of the position of the prime tower.",
                             "type": "float",
                             "unit": "mm",
-                            "enabled": "true",
+                            "value": "dual_helper_type === 'prime_tower'",
                             "default_value": 200,
                             "maximum_value": "machine_depth / 2 - (prime_tower_size) if machine_center_is_zero else machine_depth - (prime_tower_size)",
                             "minimum_value": "machine_depth / -2 if machine_center_is_zero else 0",
                             "settable_per_mesh": false,
-                            "settable_per_extruder": false
+                            "settable_per_extruder": false,
+                            "enabled": "false"
                         },
                         "prime_tower_wipe_enabled": {
                             "label": "Wipe Inactive Nozzle on Prime Tower",
                             "description": "After printing the prime tower with one nozzle, wipe the oozed material from the other nozzle off on the prime tower.",
                             "type": "bool",
-                            "enabled": "(prime_tower_enable)",
+                            "value": "dual_helper_type === 'prime_tower'",
                             "default_value": true,
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "filter": [
-                                "advance"
+                                "advanced"
                             ]
                         },
                         "prime_tower_brim_enable": {
                             "label": "Prime Tower Brim",
                             "description": "Prime-towers might need the extra adhesion afforded by a brim even if the model doesn't. Presently can't be used with the 'Raft' adhesion-type.",
                             "type": "bool",
-                            "enabled": "resolveOrValue(prime_tower_enable) && resolveOrValue(adhesion_type) !== 'raft'",
+                            "enabled": "dual_helper_type === 'prime_tower' && adhesion_type !== 'raft'",
                             "resolve": "(prime_tower_enable) and ((adhesion_type) in (none', 'skirt))",
                             "default_value": true,
                             "settable_per_mesh": false,
                             "settable_per_extruder": false,
                             "filter": [
-                                "advance"
+                                "advanced",
+                                "success"
                             ]
                         },
                         "ooze_shield_enabled": {
@@ -4092,13 +4433,14 @@
                             "type": "bool",
                             "resolve": "any(ooze_shield_enabled)",
                             "value": "dual_helper_type === 'ooze_shield'",
-                            "enabled": "extruders_enabled_count > 1",
+                            "enabled": "false",
                             "default_value": false,
                             "settable_per_mesh": false,
                             "settable_per_extruder": false,
                             "filter": [
                                 "basic",
-                                "advance"
+                                "advanced",
+                                "success"
                             ]
                         },
                         "ooze_shield_angle": {
@@ -4115,7 +4457,8 @@
                             "settable_per_extruder": false,
                             "filter": [
                                 "basic",
-                                "advance"
+                                "advanced",
+                                "success"
                             ]
                         },
                         "ooze_shield_dist": {
@@ -4132,7 +4475,8 @@
                             "settable_per_extruder": false,
                             "filter": [
                                 "basic",
-                                "advance"
+                                "advanced",
+                                "success"
                             ]
                         }
                     }
@@ -4154,7 +4498,7 @@
                                 "sharpest_corner": "Sharpest Corner",
                                 "filter": [
                                     "basic",
-                                    "advance",
+                                    "advanced",
                                     "surface_quality"
                                 ]
                             },
@@ -4182,7 +4526,8 @@
                                     "settable_per_mesh": true,
                                     "filter": [
                                         "basic",
-                                        "advance"
+                                        "advanced",
+                                        "surface_quality"
                                     ],
                                     "children": {
                                         "z_seam_x": {
@@ -4197,7 +4542,8 @@
                                             "settable_per_mesh": true,
                                             "filter": [
                                                 "basic",
-                                                "advance"
+                                                "advanced",
+                                                "surface_quality"
                                             ]
                                         },
                                         "z_seam_y": {
@@ -4212,7 +4558,8 @@
                                             "settable_per_mesh": true,
                                             "filter": [
                                                 "basic",
-                                                "advance"
+                                                "advanced",
+                                                "surface_quality"
                                             ]
                                         }
                                     }
@@ -4234,7 +4581,8 @@
                                     "settable_per_mesh": true,
                                     "filter": [
                                         "basic",
-                                        "advance"
+                                        "advanced",
+                                        "surface_quality"
                                     ]
                                 },
                                 "z_seam_relative": {
@@ -4257,7 +4605,9 @@
                             "settable_per_mesh": true,
                             "filter": [
                                 "basic",
-                                "advance"
+                                "advanced",
+                                "surface_quality",
+                                "efficiency"
                             ]
                         },
                         "outer_inset_first": {
@@ -4269,8 +4619,9 @@
                             "settable_per_mesh": true,
                             "filter": [
                                 "basic",
-                                "advance",
-                                "accuracy"
+                                "advanced",
+                                "accuracy",
+                                "surface_quality"
                             ]
                         },
                         "infill_before_walls": {
@@ -4282,7 +4633,7 @@
                             "settable_per_mesh": true,
                             "filter": [
                                 "basic",
-                                "advance"
+                                "advanced"
                             ]
                         },
                         "ironing_enabled": {
@@ -4293,7 +4644,8 @@
                             "limit_to_extruder": "top_bottom_extruder_nr",
                             "settable_per_mesh": true,
                             "filter": [
-                                "advance"
+                                "advanced",
+                                "surface_quality"
                             ],
                             "children": {
                                 "ironing_only_highest_layer": {
@@ -4303,7 +4655,10 @@
                                     "default_value": false,
                                     "enabled": "ironing_enabled",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
-                                    "settable_per_mesh": true
+                                    "settable_per_mesh": true,
+                                    "filter": [
+                                        "surface_quality"
+                                    ]
                                 },
                                 "ironing_pattern": {
                                     "label": "Ironing Pattern",
@@ -4316,7 +4671,10 @@
                                     "default_value": "zigzag",
                                     "enabled": "ironing_enabled",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
-                                    "settable_per_mesh": true
+                                    "settable_per_mesh": true,
+                                    "filter": [
+                                        "surface_quality"
+                                    ]
                                 },
                                 "ironing_line_spacing": {
                                     "label": "Ironing Line Spacing",
@@ -4328,7 +4686,10 @@
                                     "maximum_value_warning": "machine_nozzle_tip_outer_diameter",
                                     "enabled": "ironing_enabled",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
-                                    "settable_per_mesh": true
+                                    "settable_per_mesh": true,
+                                    "filter": [
+                                        "surface_quality"
+                                    ]
                                 },
                                 "ironing_flow": {
                                     "label": "Ironing Flow",
@@ -4340,7 +4701,10 @@
                                     "maximum_value_warning": "50",
                                     "enabled": "ironing_enabled",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
-                                    "settable_per_mesh": true
+                                    "settable_per_mesh": true,
+                                    "filter": [
+                                        "surface_quality"
+                                    ]
                                 },
                                 "ironing_inset": {
                                     "label": "Ironing Inset",
@@ -4353,7 +4717,10 @@
                                     "maximum_value_warning": "wall_line_width_0",
                                     "enabled": "ironing_enabled",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
-                                    "settable_per_mesh": true
+                                    "settable_per_mesh": true,
+                                    "filter": [
+                                        "surface_quality"
+                                    ]
                                 },
                                 "speed_ironing": {
                                     "label": "Ironing Speed",
@@ -4367,7 +4734,10 @@
                                     "maximum_value_warning": "100",
                                     "enabled": "ironing_enabled",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
-                                    "settable_per_mesh": true
+                                    "settable_per_mesh": true,
+                                    "filter": [
+                                        "surface_quality"
+                                    ]
                                 },
                                 "acceleration_ironing": {
                                     "label": "Ironing Acceleration",
@@ -4381,7 +4751,10 @@
                                     "value": "acceleration_roofing",
                                     "enabled": "resolveOrValue(acceleration_enabled) && ironing_enabled",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
-                                    "settable_per_mesh": true
+                                    "settable_per_mesh": true,
+                                    "filter": [
+                                        "surface_quality"
+                                    ]
                                 },
                                 "jerk_ironing": {
                                     "label": "Ironing Jerk",
@@ -4394,7 +4767,10 @@
                                     "value": "jerk_topbottom",
                                     "enabled": "resolveOrValue(jerk_enabled) && ironing_enabled",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
-                                    "settable_per_mesh": true
+                                    "settable_per_mesh": true,
+                                    "filter": [
+                                        "surface_quality"
+                                    ]
                                 }
                             }
                         },
@@ -4409,8 +4785,7 @@
                             "maximum_value_warning": "100",
                             "settable_per_mesh": true,
                             "filter": [
-                                "advance",
-                                "all"
+                                "advanced"
                             ],
                             "children": {
                                 "small_feature_speed_factor_0": {
@@ -4428,7 +4803,7 @@
                             }
                         },
                         "bridge_settings_enabled": {
-                            "label": "enabled Bridge Settings",
+                            "label": "Enabled Bridge Settings",
                             "description": "Detect bridges and modify print speed, flow and fan settings while bridges are printed.",
                             "type": "bool",
                             "default_value": false,
@@ -4436,6 +4811,10 @@
                             "settable_per_mesh": true,
                             "settable_per_extruder": false,
                             "settable_per_meshgroup": false,
+                            "filter": [
+                                "success",
+                                "surface_quality"
+                            ],
                             "children": {
                                 "bridge_wall_min_length": {
                                     "label": "Minimum Bridge Wall Length",
@@ -4446,7 +4825,11 @@
                                     "default_value": 5,
                                     "enabled": "bridge_settings_enabled",
                                     "settable_per_mesh": true,
-                                    "settable_per_extruder": false
+                                    "settable_per_extruder": false,
+                                    "filter": [
+                                        "success",
+                                        "surface_quality"
+                                    ]
                                 }
                             }
                         },
@@ -4458,8 +4841,7 @@
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "filter": [
-                                "advance",
-                                "all"
+                                "advanced"
                             ]
                         },
                         "retraction_count_max": {
@@ -4473,8 +4855,7 @@
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "filter": [
-                                "advance",
-                                "all"
+                                "advanced"
                             ]
                         },
                         "retraction_extrusion_window": {
@@ -4490,8 +4871,7 @@
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "filter": [
-                                "advance",
-                                "all"
+                                "advanced"
                             ]
                         },
                         "limit_support_retractions": {
@@ -4503,8 +4883,7 @@
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "filter": [
-                                "advance",
-                                "all"
+                                "advanced"
                             ]
                         },
                         "retraction_combing": {
@@ -4522,8 +4901,7 @@
                             "settable_per_mesh": false,
                             "settable_per_extruder": false,
                             "filter": [
-                                "advance",
-                                "all"
+                                "advanced"
                             ]
                         },
                         "retraction_combing_max_distance": {
@@ -4537,8 +4915,7 @@
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "filter": [
-                                "advance",
-                                "all"
+                                "advanced"
                             ]
                         },
                         "retraction_min_travel": {
@@ -4554,8 +4931,7 @@
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "filter": [
-                                "advance",
-                                "all"
+                                "advanced"
                             ]
                         },
                         "travel_retract_before_outer_wall": {
@@ -4567,8 +4943,7 @@
                             "settable_per_mesh": false,
                             "settable_per_extruder": false,
                             "filter": [
-                                "advance",
-                                "all"
+                                "advanced"
                             ]
                         },
                         "travel_avoid_other_parts": {
@@ -4581,8 +4956,8 @@
                             "settable_per_extruder": true,
                             "filter": [
                                 "basic",
-                                "advance",
-                                "all"
+                                "advanced",
+                                "success"
                             ]
                         },
                         "travel_avoid_supports": {
@@ -4595,8 +4970,8 @@
                             "settable_per_extruder": true,
                             "filter": [
                                 "basic",
-                                "advance",
-                                "all"
+                                "advanced",
+                                "success"
                             ]
                         },
                         "travel_avoid_distance": {
@@ -4611,7 +4986,10 @@
                             "maximum_value_warning": "machine_nozzle_tip_outer_diameter * 5",
                             "enabled": "resolveOrValue(retraction_combing) !== 'off' && travel_avoid_other_parts",
                             "settable_per_mesh": false,
-                            "settable_per_extruder": true
+                            "settable_per_extruder": true,
+                            "filter": [
+                                "success"
+                            ]
                         },
                         "retraction_hop_enabled": {
                             "label": "Z Hop When Retracted",
@@ -4623,8 +5001,7 @@
                             "settable_per_extruder": true,
                             "filter": [
                                 "basic",
-                                "advance",
-                                "all"
+                                "advanced"
                             ],
                             "children": {
                                 "speed_z_hop": {
@@ -4704,7 +5081,8 @@
                             "limit_to_extruder": "wall_0_extruder_nr",
                             "settable_per_mesh": true,
                             "filter": [
-                                "advance"
+                                "advanced",
+                                "surface_quality"
                             ]
                         },
                         "travel_compensate_overlapping_walls_enabled": {
@@ -4715,7 +5093,8 @@
                             "limit_to_extruder": "wall_x_extruder_nr",
                             "settable_per_mesh": true,
                             "filter": [
-                                "advance"
+                                "basic",
+                                "advanced"
                             ],
                             "children": {
                                 "travel_compensate_overlapping_walls_0_enabled": {
@@ -4769,7 +5148,8 @@
                             "limit_to_extruder": "wall_0_extruder_nr",
                             "settable_per_mesh": true,
                             "filter": [
-                                "advance"
+                                "advanced",
+                                "strength"
                             ],
                             "children": {
                                 "filter_out_tiny_gaps": {
@@ -4780,7 +5160,8 @@
                                     "limit_to_extruder": "wall_0_extruder_nr",
                                     "settable_per_mesh": true,
                                     "filter": [
-                                        "advance"
+                                        "advanced",
+                                        "strength"
                                     ]
                                 }
                             }
@@ -4796,7 +5177,7 @@
                             "limit_to_extruder": "wall_0_extruder_nr",
                             "settable_per_mesh": true,
                             "filter": [
-                                "advance"
+                                "advanced"
                             ]
                         },
                         "xy_offset_layer_0": {
@@ -4811,7 +5192,7 @@
                             "limit_to_extruder": "wall_0_extruder_nr",
                             "settable_per_mesh": true,
                             "filter": [
-                                "advance"
+                                "advanced"
                             ]
                         },
                         "hole_xy_offset": {
@@ -4825,7 +5206,7 @@
                             "limit_to_extruder": "wall_0_extruder_nr",
                             "settable_per_mesh": true,
                             "filter": [
-                                "advance"
+                                "advanced"
                             ]
                         },
                         "alternate_extra_perimeter": {
@@ -4836,7 +5217,8 @@
                             "limit_to_extruder": "infill_extruder_nr",
                             "settable_per_mesh": true,
                             "filter": [
-                                "advance"
+                                "advanced",
+                                "strength"
                             ]
                         },
                         "skin_no_small_gaps_heuristic": {
@@ -4848,7 +5230,7 @@
                             "limit_to_extruder": "top_bottom_extruder_nr",
                             "settable_per_mesh": true,
                             "filter": [
-                                "advance"
+                                "advanced"
                             ]
                         },
                         "skin_outline_count": {
@@ -4863,7 +5245,7 @@
                             "limit_to_extruder": "top_bottom_extruder_nr",
                             "settable_per_mesh": true,
                             "filter": [
-                                "advance"
+                                "advanced"
                             ]
                         },
                         "skin_overlap": {
@@ -4879,7 +5261,8 @@
                             "limit_to_extruder": "top_bottom_extruder_nr",
                             "settable_per_mesh": true,
                             "filter": [
-                                "advance"
+                                "advanced",
+                                "surface_quality"
                             ],
                             "children": {
                                 "skin_overlap_mm": {
@@ -4909,7 +5292,7 @@
                             "limit_to_extruder": "infill_extruder_nr",
                             "settable_per_mesh": true,
                             "filter": [
-                                "advance"
+                                "advanced"
                             ],
                             "children": {
                                 "infill_overlap_mm": {
@@ -4939,273 +5322,8 @@
                             "limit_to_extruder": "infill_extruder_nr",
                             "settable_per_mesh": true,
                             "filter": [
-                                "advance"
+                                "advanced"
                             ]
-                        }
-                    }
-                },
-                "support_area": {
-                    "label": "Support Area",
-                    "icon": "category_support_area",
-                    "description": "Support Area",
-                    "type": "category",
-                    "children": {
-                        "support_type": {
-                            "label": "Support Placement",
-                            "description": "Adjusts the placement of the support structures. The placement can be set to touching build plate or everywhere. When set to everywhere the support structures will also be printed on the model.",
-                            "type": "enum",
-                            "options": {
-                                "buildplate": "Touching Buildplate",
-                                "everywhere": "Everywhere"
-                            },
-                            "default_value": "everywhere",
-                            "resolve": "'everywhere' if 'everywhere' in 'support_type' else 'buildplate'",
-                            "enabled": "support_enable",
-                            "settable_per_mesh": false,
-                            "settable_per_extruder": false,
-                            "filter": [
-                                "advance"
-                            ]
-                        },
-                        "support_angle": {
-                            "label": "Support Overhang Angle",
-                            "description": "The minimum angle of overhangs for which support is added. At a value of 0° all overhangs are supported, 90° will not provide any support.",
-                            "unit": "°",
-                            "type": "float",
-                            "minimum_value": "0",
-                            "maximum_value": "90",
-                            "maximum_value_warning": "80",
-                            "default_value": 50,
-                            "limit_to_extruder": "support_roof_extruder_nr if support_roof_enable else support_infill_extruder_nr",
-                            "enabled": "support_enable",
-                            "settable_per_mesh": true,
-                            "filter": [
-                                "basic",
-                                "advance"
-                            ]
-                        },
-                        "support_distance": {
-                            "label": "Support Distance",
-                            "description": "TBD",
-                            "unit": "mm",
-                            "type": "enum",
-                            "options": {
-                                "printable": "printable",
-                                "balance": "balance",
-                                "removable": "removable"
-                            },
-                            "default_value": "balance",
-                            "enabled": "support_enable || support_meshes_present",
-                            "settable_per_mesh": true,
-                            "filter": [
-                                "basic"
-                            ],
-                            "children": {
-                                "support_z_distance": {
-                                    "label": "Support Z Distance",
-                                    "description": "Distance from the top/bottom of the support structure to the print. This gap provides clearance to remove the supports after the model is printed. This value is rounded up to a multiple of the layer height.",
-                                    "unit": "mm",
-                                    "type": "float",
-                                    "minimum_value": "0",
-                                    "maximum_value_warning": "machine_nozzle_size",
-                                    "default_value": 0.1,
-                                    "limit_to_extruder": "support_interface_extruder_nr if support_interface_enable else support_infill_extruder_nr",
-                                    "enabled": "support_enable || support_meshes_present",
-                                    "settable_per_mesh": true,
-                                    "filter": [
-                                        "advance"
-                                    ],
-                                    "children": {
-                                        "support_top_distance": {
-                                            "label": "Support Top Distance",
-                                            "description": "Distance from the top of the support to the print.",
-                                            "unit": "mm",
-                                            "minimum_value": "0",
-                                            "maximum_value_warning": "machine_nozzle_size",
-                                            "default_value": 0.1,
-                                            "type": "float",
-                                            "enabled": "support_enable || support_meshes_present",
-                                            "value": "extruderValue(support_roof_enable ? support_roof_extruder_nr : support_infill_extruder_nr, 'support_z_distance')",
-                                            "limit_to_extruder": "support_roof_extruder_nr if support_roof_enable else support_infill_extruder_nr",
-                                            "settable_per_mesh": true,
-                                            "filter": [
-                                                "advance"
-                                            ]
-                                        },
-                                        "support_bottom_distance": {
-                                            "label": "Support Bottom Distance",
-                                            "description": "Distance from the print to the bottom of the support.",
-                                            "unit": "mm",
-                                            "minimum_value": "0",
-                                            "maximum_value_warning": "machine_nozzle_size",
-                                            "default_value": 0.1,
-                                            "value": "support_type === 'everywhere' ? extruderValue(support_bottom_enable ? support_bottom_extruder_nr : support_infill_extruder_nr, 'support_z_distance') : 0",
-                                            "limit_to_extruder": "support_bottom_extruder_nr if support_bottom_enable else support_infill_extruder_nr",
-                                            "type": "float",
-                                            "enabled": "(support_enable || support_meshes_present) && resolveOrValue(support_type) === 'everywhere'",
-                                            "settable_per_mesh": true,
-                                            "filter": [
-                                                "advance"
-                                            ]
-                                        }
-                                    }
-                                },
-                                "support_xy_distance": {
-                                    "label": "Support X/Y Distance",
-                                    "description": "Distance of the support structure from the print in the X/Y directions.",
-                                    "unit": "mm",
-                                    "type": "float",
-                                    "minimum_value": "0",
-                                    "maximum_value_warning": "1.5 * machine_nozzle_tip_outer_diameter",
-                                    "default_value": 0.7,
-                                    "limit_to_extruder": "support_infill_extruder_nr",
-                                    "enabled": "support_enable || support_meshes_present",
-                                    "settable_per_mesh": true,
-                                    "filter": [
-                                        "advance"
-                                    ]
-                                },
-                                "support_xy_overrides_z": {
-                                    "label": "Support Distance Priority",
-                                    "description": "Whether the Support X/Y Distance overrides the Support Z Distance or vice versa. When X/Y overrides Z the X/Y distance can push away the support from the model, influencing the actual Z distance to the overhang. We can disable this by not applying the X/Y distance around overhangs.",
-                                    "type": "enum",
-                                    "options": {
-                                        "xy_overrides_z": "X/Y overrides Z",
-                                        "z_overrides_xy": "Z overrides X/Y"
-                                    },
-                                    "default_value": "z_overrides_xy",
-                                    "limit_to_extruder": "support_infill_extruder_nr",
-                                    "enabled": "support_enable || support_meshes_present",
-                                    "settable_per_mesh": true,
-                                    "filter": [
-                                        "advance"
-                                    ]
-                                },
-                                "support_xy_distance_overhang": {
-                                    "label": "Minimum Support X/Y Distance",
-                                    "description": "Distance of the support structure from the overhang in the X/Y directions.",
-                                    "unit": "mm",
-                                    "type": "float",
-                                    "minimum_value": "0",
-                                    "minimum_value_warning": "support_xy_distance - support_line_width * 2",
-                                    "maximum_value_warning": "support_xy_distance",
-                                    "default_value": 0.2,
-                                    "value": "machine_nozzle_size / 2",
-                                    "limit_to_extruder": "support_infill_extruder_nr",
-                                    "enabled": "(support_enable || support_meshes_present) && support_xy_overrides_z === 'z_overrides_xy'",
-                                    "settable_per_mesh": true,
-                                    "filter": [
-                                        "advance"
-                                    ]
-                                },
-                                "support_bottom_stair_step_height": {
-                                    "label": "Support Stair Step Height",
-                                    "description": "The height of the steps of the stair-like bottom of support resting on the model. A low value makes the support harder to remove, but too high values can lead to unstable support structures. Set to zero to turn off the stair-like behaviour.",
-                                    "unit": "mm",
-                                    "type": "float",
-                                    "default_value": 0.3,
-                                    "limit_to_extruder": "support_bottom_extruder_nr if support_bottom_enable else support_infill_extruder_nr",
-                                    "minimum_value": "0",
-                                    "maximum_value_warning": "1.0",
-                                    "enabled": "support_enable || support_meshes_present",
-                                    "settable_per_mesh": true
-                                },
-                                "support_bottom_stair_step_width": {
-                                    "label": "Support Stair Step Maximum Width",
-                                    "description": "The maximum width of the steps of the stair-like bottom of support resting on the model. A low value makes the support harder to remove, but too high values can lead to unstable support structures.",
-                                    "unit": "mm",
-                                    "type": "float",
-                                    "default_value": 5,
-                                    "limit_to_extruder": "support_interface_extruder_nr if support_interface_enable else support_infill_extruder_nr",
-                                    "minimum_value": "0",
-                                    "maximum_value_warning": "10.0",
-                                    "enabled": "support_enable || support_meshes_present",
-                                    "settable_per_mesh": true
-                                },
-                                "support_bottom_stair_step_min_slope": {
-                                    "label": "Support Stair Step Minimum Slope Angle",
-                                    "description": "The minimum slope of the area for stair-stepping to take effect. Low values should make support easier to remove on shallower slopes, but really low values may result in some very counter-intuitive results on other parts of the model.",
-                                    "unit": "°",
-                                    "type": "float",
-                                    "default_value": 10,
-                                    "limit_to_extruder": "support_bottom_extruder_nr if support_bottom_enable else support_infill_extruder_nr",
-                                    "minimum_value": "0.01",
-                                    "maximum_value": "89.99",
-                                    "enabled": "support_enable || support_meshes_present",
-                                    "settable_per_mesh": true
-                                },
-                                "support_join_distance": {
-                                    "label": "Support Join Distance",
-                                    "description": "The maximum distance between support structures in the X/Y directions. When separate structures are closer together than this value, the structures merge into one.",
-                                    "unit": "mm",
-                                    "type": "float",
-                                    "default_value": 2,
-                                    "limit_to_extruder": "support_infill_extruder_nr",
-                                    "minimum_value_warning": "0",
-                                    "maximum_value_warning": "10",
-                                    "enabled": "support_enable && support_structure === 'normal' || support_meshes_present",
-                                    "settable_per_mesh": false,
-                                    "settable_per_extruder": true
-                                },
-                                "minimum_support_area": {
-                                    "label": "Minimum Support Area",
-                                    "description": "Minimum area size for support polygons. Polygons which have an area smaller than this value will not be generated.",
-                                    "unit": "mm²",
-                                    "type": "float",
-                                    "default_value": 0,
-                                    "minimum_value": "0",
-                                    "maximum_value_warning": "5",
-                                    "enabled": "support_enable && support_structure === 'normal'",
-                                    "limit_to_extruder": "support_infill_extruder_nr",
-                                    "settable_per_mesh": true,
-                                    "filter": [
-                                        "advance"
-                                    ]
-                                },
-                                "minimum_interface_area": {
-                                    "label": "Minimum Support Interface Area",
-                                    "description": "Minimum area size for support interface polygons. Polygons which have an area smaller than this value will be printed as normal support.",
-                                    "unit": "mm²",
-                                    "type": "float",
-                                    "default_value": 1,
-                                    "minimum_value": "0",
-                                    "minimum_value_warning": "minimum_support_area",
-                                    "limit_to_extruder": "support_interface_extruder_nr",
-                                    "enabled": "support_interface_enable && (support_enable || support_meshes_present)",
-                                    "settable_per_mesh": true,
-                                    "filter": [
-                                        "advance"
-                                    ],
-                                    "children": {
-                                        "minimum_roof_area": {
-                                            "label": "Minimum Support Roof Area",
-                                            "description": "Minimum area size for the roofs of the support. Polygons which have an area smaller than this value will be printed as normal support.",
-                                            "unit": "mm²",
-                                            "type": "float",
-                                            "default_value": 1,
-                                            "value": "extruderValue(support_roof_extruder_nr, 'minimum_interface_area')",
-                                            "minimum_value": "0",
-                                            "minimum_value_warning": "minimum_support_area",
-                                            "limit_to_extruder": "support_roof_extruder_nr",
-                                            "enabled": "support_roof_enable && (support_enable || support_meshes_present)",
-                                            "settable_per_mesh": true
-                                        },
-                                        "minimum_bottom_area": {
-                                            "label": "Minimum Support Floor Area",
-                                            "description": "Minimum area size for the floors of the support. Polygons which have an area smaller than this value will be printed as normal support.",
-                                            "unit": "mm²",
-                                            "type": "float",
-                                            "default_value": 1,
-                                            "value": "extruderValue(support_bottom_extruder_nr, 'minimum_interface_area')",
-                                            "minimum_value": "0",
-                                            "minimum_value_warning": "minimum_support_area",
-                                            "limit_to_extruder": "support_bottom_extruder_nr",
-                                            "enabled": "support_bottom_enable && (support_enable || support_meshes_present)",
-                                            "settable_per_mesh": true
-                                        }
-                                    }
-                                }
-                            }
                         }
                     }
                 },
@@ -5222,7 +5340,7 @@
                             "default_value": false,
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
-                            "enabled": "true"
+                            "enabled": "false"
                         },
                         "speed_equalize_flow_max": {
                             "label": "Maximum Speed for Flow Equalization",
@@ -5235,7 +5353,7 @@
                             "maximum_value_warning": "150",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
-                            "enabled": "true"
+                            "enabled": "false"
                         },
                         "wall_0_inset": {
                             "label": "Outer Wall Inset",
@@ -5248,7 +5366,7 @@
                             "maximum_value_warning": "machine_nozzle_size",
                             "limit_to_extruder": "wall_0_extruder_nr",
                             "settable_per_mesh": true,
-                            "enabled": "true"
+                            "enabled": "false"
                         },
                         "infill_wall_line_count": {
                             "label": "Extra Infill Wall Count",
@@ -5258,7 +5376,7 @@
                             "minimum_value": "0",
                             "limit_to_extruder": "infill_extruder_nr",
                             "settable_per_mesh": true,
-                            "enabled": "true"
+                            "enabled": "false"
                         },
                         "connect_infill_polygons": {
                             "label": "Connect Infill Polygons",
@@ -5266,7 +5384,7 @@
                             "type": "bool",
                             "default_value": true,
                             "value": "(infill_pattern === 'cross' || infill_pattern === 'cross_3d' || infill_multiplier % 2 === 0) && infill_wall_line_count > 0",
-                            "enabled": "true",
+                            "enabled": "false",
                             "limit_to_extruder": "infill_extruder_nr",
                             "settable_per_mesh": true
                         },
@@ -5278,7 +5396,7 @@
                             "value": "infill_pattern === 'cross' || infill_pattern === 'cross_3d'",
                             "limit_to_extruder": "infill_extruder_nr",
                             "settable_per_mesh": true,
-                            "enabled": "true"
+                            "enabled": "false"
                         },
                         "connect_skin_polygons": {
                             "label": "Connect Top/Bottom Polygons",
@@ -5287,18 +5405,7 @@
                             "default_value": false,
                             "limit_to_extruder": "top_bottom_extruder_nr",
                             "settable_per_mesh": true,
-                            "enabled": "true"
-                        },
-                        "infill_multiplier": {
-                            "label": "Infill Line Multiplier",
-                            "description": "Convert each infill line to this many lines. The extra lines do not cross over each other, but avoid each other. This makes the infill stiffer, but increases print time and material usage.",
-                            "default_value": 1,
-                            "type": "int",
-                            "minimum_value": "1",
-                            "maximum_value_warning": "infill_line_distance / infill_line_width",
-                            "limit_to_extruder": "infill_extruder_nr",
-                            "settable_per_mesh": true,
-                            "enabled": "true"
+                            "enabled": "false"
                         },
                         "infill_offset_x": {
                             "label": "Infill X Offset",
@@ -5308,7 +5415,7 @@
                             "default_value": 0,
                             "limit_to_extruder": "infill_extruder_nr",
                             "settable_per_mesh": true,
-                            "enabled": "true"
+                            "enabled": "false"
                         },
                         "infill_offset_y": {
                             "label": "Infill Y Offset",
@@ -5318,7 +5425,7 @@
                             "default_value": 0,
                             "limit_to_extruder": "infill_extruder_nr",
                             "settable_per_mesh": true,
-                            "enabled": "true"
+                            "enabled": "false"
                         },
                         "infill_randomize_start_location": {
                             "label": "Randomize Infill Start",
@@ -5328,7 +5435,7 @@
                             "warning_value": "True if infill_pattern not in (grid', 'triangles', 'trihexagon', 'cubic', 'cubicsubdiv', 'tetrahedral', 'quarter_cubic) else None",
                             "limit_to_extruder": "infill_extruder_nr",
                             "settable_per_mesh": true,
-                            "enabled": "true"
+                            "enabled": "false"
                         },
                         "sub_div_rad_add": {
                             "label": "Cubic Subdivision Shell",
@@ -5341,7 +5448,7 @@
                             "maximum_value_warning": "5 * infill_line_distance",
                             "limit_to_extruder": "infill_extruder_nr",
                             "settable_per_mesh": true,
-                            "enabled": "true"
+                            "enabled": "false"
                         },
                         "gradual_infill_steps": {
                             "label": "Gradual Infill Steps",
@@ -5353,7 +5460,12 @@
                             "maximum_value": "999999 if infill_line_distance == 0 else (20 - Math.log(infill_line_distance) / Math.log(2))",
                             "limit_to_extruder": "infill_extruder_nr",
                             "settable_per_mesh": true,
-                            "enabled": "true"
+                            "enabled": "false",
+                            "filter": [
+                                "material",
+                                "strength",
+                                "efficiency"
+                            ]
                         },
                         "gradual_infill_step_height": {
                             "label": "Gradual Infill Step Height",
@@ -5365,7 +5477,12 @@
                             "minimum_value_warning": "3 * (layer_height)",
                             "limit_to_extruder": "infill_extruder_nr",
                             "settable_per_mesh": true,
-                            "enabled": "true"
+                            "enabled": "false",
+                            "filter": [
+                                "material",
+                                "strength",
+                                "efficiency"
+                            ]
                         },
                         "min_infill_area": {
                             "label": "Minimum Infill Area",
@@ -5376,7 +5493,7 @@
                             "default_value": 0,
                             "limit_to_extruder": "infill_extruder_nr",
                             "settable_per_mesh": true,
-                            "enabled": "true"
+                            "enabled": "false"
                         },
                         "infill_support_enabled": {
                             "label": "Infill Support",
@@ -5385,7 +5502,7 @@
                             "default_value": false,
                             "limit_to_extruder": "infill_extruder_nr",
                             "settable_per_mesh": true,
-                            "enabled": "true"
+                            "enabled": "false"
                         },
                         "infill_support_angle": {
                             "label": "Infill Overhang Angle",
@@ -5398,7 +5515,7 @@
                             "default_value": 40,
                             "limit_to_extruder": "infill_extruder_nr",
                             "settable_per_mesh": true,
-                            "enabled": "true"
+                            "enabled": "false"
                         },
                         "skin_preshrink": {
                             "label": "Skin Removal Width",
@@ -5411,7 +5528,7 @@
                             "maximum_value_warning": "wall_line_width_0 + (wall_line_count - 1) * wall_line_width_x",
                             "limit_to_extruder": "top_bottom_extruder_nr",
                             "settable_per_mesh": true,
-                            "enabled": "true",
+                            "enabled": "false",
                             "children": {
                                 "top_skin_preshrink": {
                                     "label": "Top Skin Removal Width",
@@ -5422,7 +5539,7 @@
                                     "value": "skin_preshrink",
                                     "maximum_value_warning": "wall_line_width_0 + (wall_line_count - 1) * wall_line_width_x",
                                     "minimum_value": "0",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
                                     "settable_per_mesh": true
                                 },
@@ -5435,7 +5552,7 @@
                                     "value": "skin_preshrink",
                                     "maximum_value_warning": "wall_line_width_0 + (wall_line_count - 1) * wall_line_width_x",
                                     "minimum_value": "0",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
                                     "settable_per_mesh": true
                                 }
@@ -5450,7 +5567,7 @@
                             "value": "wall_line_width_0 + (wall_line_count - 1) * wall_line_width_x",
                             "minimum_value": "-skin_preshrink",
                             "limit_to_extruder": "top_bottom_extruder_nr",
-                            "enabled": "true",
+                            "enabled": "false",
                             "settable_per_mesh": true,
                             "children": {
                                 "top_skin_expand_distance": {
@@ -5461,7 +5578,7 @@
                                     "default_value": 1,
                                     "value": "expand_skins_expand_distance",
                                     "minimum_value": "-top_skin_preshrink",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
                                     "settable_per_mesh": true
                                 },
@@ -5473,7 +5590,7 @@
                                     "default_value": 1,
                                     "value": "expand_skins_expand_distance",
                                     "minimum_value": "-bottom_skin_preshrink",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
                                     "settable_per_mesh": true
                                 }
@@ -5488,7 +5605,7 @@
                             "minimum_value_warning": "2",
                             "maximum_value": "90",
                             "default_value": 90,
-                            "enabled": "true",
+                            "enabled": "false",
                             "limit_to_extruder": "top_bottom_extruder_nr",
                             "settable_per_mesh": true,
                             "children": {
@@ -5500,7 +5617,7 @@
                                     "default_value": 0,
                                     "value": "top_layers * layer_height / Math.tan(Math.PI * max_skin_angle_for_expansion / 180)",
                                     "minimum_value": "0",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
                                     "settable_per_mesh": true
                                 }
@@ -5517,7 +5634,7 @@
                             "type": "float",
                             "value": "infill_sparse_density > 0 ? 0 : 0",
                             "limit_to_extruder": "infill_extruder_nr",
-                            "enabled": "true",
+                            "enabled": "false",
                             "settable_per_mesh": true,
                             "children": {
                                 "skin_edge_support_layers": {
@@ -5529,7 +5646,7 @@
                                     "type": "int",
                                     "value": "Math.ceil(Math.round(skin_edge_support_thickness / resolveOrValue(infill_sparse_thickness), 4))",
                                     "limit_to_extruder": "infill_extruder_nr",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "settable_per_mesh": true
                                 }
                             }
@@ -5541,7 +5658,7 @@
                             "default_value": false,
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
-                            "enabled": "true",
+                            "enabled": "false",
                             "warning_value": "True if (print_sequence) == 'one_at_a_time' else None"
                         },
                         "extruder_prime_pos_x": {
@@ -5554,7 +5671,7 @@
                             "maximum_value_warning": "machine_width / 2 if machine_center_is_zero else machine_width",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
-                            "enabled": "true"
+                            "enabled": "false"
                         },
                         "extruder_prime_pos_y": {
                             "label": "Extruder Prime Y Position",
@@ -5566,7 +5683,7 @@
                             "maximum_value_warning": "machine_depth / 2 if machine_center_is_zero else machine_depth",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
-                            "enabled": "true"
+                            "enabled": "false"
                         },
                         "raft_smoothing": {
                             "label": "Raft Smoothing",
@@ -5576,7 +5693,7 @@
                             "default_value": 5,
                             "minimum_value": "0",
                             "minimum_value_warning": "raft_interface_line_width",
-                            "enabled": "true",
+                            "enabled": "false",
                             "limit_to_extruder": "adhesion_extruder_nr",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true
@@ -5589,7 +5706,7 @@
                             "default_value": 0.3,
                             "minimum_value": "0",
                             "maximum_value_warning": "Math.min(machine_nozzle_size)",
-                            "enabled": "true",
+                            "enabled": "false",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "limit_to_extruder": "adhesion_extruder_nr"
@@ -5603,7 +5720,7 @@
                             "value": "raft_airgap / 2",
                             "minimum_value": "0",
                             "maximum_value_warning": "raft_airgap",
-                            "enabled": "true",
+                            "enabled": "false",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "limit_to_extruder": "adhesion_extruder_nr"
@@ -5615,7 +5732,7 @@
                             "default_value": 2,
                             "minimum_value": "0",
                             "maximum_value_warning": "20",
-                            "enabled": "true",
+                            "enabled": "false",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "limit_to_extruder": "adhesion_extruder_nr"
@@ -5630,7 +5747,7 @@
                             "minimum_value": "0.001",
                             "minimum_value_warning": "0.04",
                             "maximum_value_warning": "0.75 * machine_nozzle_size",
-                            "enabled": "true",
+                            "enabled": "false",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "limit_to_extruder": "adhesion_extruder_nr"
@@ -5645,7 +5762,7 @@
                             "minimum_value": "0.001",
                             "minimum_value_warning": "machine_nozzle_size * 0.1",
                             "maximum_value_warning": "machine_nozzle_size * 2",
-                            "enabled": "true",
+                            "enabled": "false",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "limit_to_extruder": "adhesion_extruder_nr"
@@ -5659,7 +5776,7 @@
                             "minimum_value": "0",
                             "minimum_value_warning": "raft_surface_line_width",
                             "maximum_value_warning": "raft_surface_line_width * 3",
-                            "enabled": "true",
+                            "enabled": "false",
                             "value": "raft_surface_line_width",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
@@ -5675,7 +5792,7 @@
                             "minimum_value": "0.001",
                             "minimum_value_warning": "0.04",
                             "maximum_value_warning": "0.75 * machine_nozzle_size",
-                            "enabled": "true",
+                            "enabled": "false",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "limit_to_extruder": "adhesion_extruder_nr"
@@ -5690,7 +5807,7 @@
                             "minimum_value": "0.001",
                             "minimum_value_warning": "machine_nozzle_size * 0.5",
                             "maximum_value_warning": "machine_nozzle_size * 3",
-                            "enabled": "true",
+                            "enabled": "false",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "limit_to_extruder": "adhesion_extruder_nr"
@@ -5705,7 +5822,7 @@
                             "minimum_value": "0",
                             "minimum_value_warning": "raft_interface_line_width",
                             "maximum_value_warning": "15.0",
-                            "enabled": "true",
+                            "enabled": "false",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "limit_to_extruder": "adhesion_extruder_nr"
@@ -5720,7 +5837,7 @@
                             "minimum_value": "0.001",
                             "minimum_value_warning": "0.04",
                             "maximum_value_warning": "0.75 * raft_base_line_width",
-                            "enabled": "true",
+                            "enabled": "false",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "limit_to_extruder": "adhesion_extruder_nr"
@@ -5735,7 +5852,7 @@
                             "value": "machine_nozzle_size * 2",
                             "minimum_value_warning": "machine_nozzle_size * 0.5",
                             "maximum_value_warning": "machine_nozzle_size * 3",
-                            "enabled": "true",
+                            "enabled": "false",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "limit_to_extruder": "adhesion_extruder_nr"
@@ -5750,7 +5867,7 @@
                             "minimum_value": "0",
                             "minimum_value_warning": "raft_base_line_width",
                             "maximum_value_warning": "100",
-                            "enabled": "true",
+                            "enabled": "false",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "limit_to_extruder": "adhesion_extruder_nr"
@@ -5764,7 +5881,7 @@
                             "minimum_value": "0.1",
                             "maximum_value": "Math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
                             "maximum_value_warning": "200",
-                            "enabled": "true",
+                            "enabled": "false",
                             "value": "speed_print / 60 * 30",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
@@ -5779,7 +5896,7 @@
                                     "minimum_value": "0.1",
                                     "maximum_value": "Math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
                                     "maximum_value_warning": "100",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "value": "raft_speed",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
@@ -5795,7 +5912,7 @@
                                     "minimum_value": "0.1",
                                     "maximum_value": "Math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
                                     "maximum_value_warning": "150",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "limit_to_extruder": "adhesion_extruder_nr"
@@ -5809,7 +5926,7 @@
                                     "minimum_value": "0.1",
                                     "maximum_value": "Math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
                                     "maximum_value_warning": "200",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "value": "0.75 * raft_speed",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
@@ -5827,7 +5944,7 @@
                             "minimum_value_warning": "100",
                             "maximum_value_warning": "10000",
                             "value": "acceleration_print",
-                            "enabled": "true",
+                            "enabled": "false",
                             "settable_per_mesh": false,
                             "limit_to_extruder": "adhesion_extruder_nr",
                             "children": {
@@ -5841,7 +5958,7 @@
                                     "minimum_value": "0.1",
                                     "minimum_value_warning": "100",
                                     "maximum_value_warning": "10000",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "settable_per_mesh": false,
                                     "limit_to_extruder": "adhesion_extruder_nr"
                                 },
@@ -5855,7 +5972,7 @@
                                     "minimum_value": "0.1",
                                     "minimum_value_warning": "100",
                                     "maximum_value_warning": "10000",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "settable_per_mesh": false,
                                     "limit_to_extruder": "adhesion_extruder_nr"
                                 },
@@ -5869,7 +5986,7 @@
                                     "minimum_value": "0.1",
                                     "minimum_value_warning": "100",
                                     "maximum_value_warning": "10000",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "settable_per_mesh": false,
                                     "limit_to_extruder": "adhesion_extruder_nr"
                                 }
@@ -5885,7 +6002,7 @@
                             "minimum_value_warning": "5",
                             "maximum_value_warning": "50",
                             "value": "jerk_print",
-                            "enabled": "true",
+                            "enabled": "false",
                             "settable_per_mesh": false,
                             "limit_to_extruder": "adhesion_extruder_nr",
                             "children": {
@@ -5899,7 +6016,7 @@
                                     "minimum_value": "0",
                                     "minimum_value_warning": "5",
                                     "maximum_value_warning": "100",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "settable_per_mesh": false,
                                     "limit_to_extruder": "adhesion_extruder_nr"
                                 },
@@ -5913,7 +6030,7 @@
                                     "minimum_value": "0",
                                     "minimum_value_warning": "5",
                                     "maximum_value_warning": "50",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "settable_per_mesh": false,
                                     "limit_to_extruder": "adhesion_extruder_nr"
                                 },
@@ -5927,7 +6044,7 @@
                                     "minimum_value": "0",
                                     "minimum_value_warning": "5",
                                     "maximum_value_warning": "50",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "settable_per_mesh": false,
                                     "limit_to_extruder": "adhesion_extruder_nr"
                                 }
@@ -5943,7 +6060,7 @@
                             "default_value": 0,
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
-                            "enabled": "true",
+                            "enabled": "false",
                             "limit_to_extruder": "adhesion_extruder_nr",
                             "children": {
                                 "raft_surface_fan_speed": {
@@ -5955,7 +6072,7 @@
                                     "maximum_value": "100",
                                     "default_value": 0,
                                     "value": "raft_fan_speed",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "limit_to_extruder": "adhesion_extruder_nr"
@@ -5969,7 +6086,7 @@
                                     "maximum_value": "100",
                                     "default_value": 0,
                                     "value": "raft_fan_speed",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "limit_to_extruder": "adhesion_extruder_nr"
@@ -5983,7 +6100,7 @@
                                     "maximum_value": "100",
                                     "default_value": 0,
                                     "value": "raft_fan_speed",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "limit_to_extruder": "adhesion_extruder_nr"
@@ -5995,7 +6112,7 @@
                             "description": "The X coordinate of the position near where to find the part to start printing each layer.",
                             "unit": "mm",
                             "type": "float",
-                            "enabled": "true",
+                            "enabled": "false",
                             "default_value": 0,
                             "minimum_value": "machine_width / -2 if machine_center_is_zero else 0",
                             "settable_per_mesh": false,
@@ -6007,7 +6124,7 @@
                             "description": "The Y coordinate of the position near where to find the part to start printing each layer.",
                             "unit": "mm",
                             "type": "float",
-                            "enabled": "true",
+                            "enabled": "false",
                             "default_value": 0,
                             "minimum_value": "machine_depth / -2 if machine_center_is_zero else 0",
                             "settable_per_mesh": false,
@@ -6024,7 +6141,7 @@
                                     "label": "Union Overlapping Volumes",
                                     "description": "Ignore the internal geometry arising from overlapping volumes within a mesh and print the volumes as one. This may cause unintended internal cavities to disappear.",
                                     "type": "bool",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "default_value": true,
                                     "value": "magic_mesh_surface_mode !== 'surface'",
                                     "settable_per_mesh": true
@@ -6033,7 +6150,7 @@
                                     "label": "Remove All Holes",
                                     "description": "Remove the holes in each layer and keep only the outside shape. This will ignore any invisible internal geometry. However, it also ignores layer holes which can be viewed from above or below.",
                                     "type": "bool",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "default_value": false,
                                     "settable_per_mesh": true
                                 },
@@ -6041,7 +6158,7 @@
                                     "label": "Extensive Stitching",
                                     "description": "Extensive stitching tries to stitch up open holes in the mesh by closing the hole with touching polygons. This option can introduce a lot of processing time.",
                                     "type": "bool",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "default_value": false,
                                     "settable_per_mesh": true
                                 },
@@ -6049,7 +6166,7 @@
                                     "label": "Keep Disconnected Faces",
                                     "description": "Normally Cura tries to stitch up small holes in the mesh and remove parts of a layer with big holes. Enabling this option keeps those parts which cannot be stitched. This option should be used as a last resort option when everything else fails to produce proper g-code.",
                                     "type": "bool",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "default_value": false,
                                     "settable_per_mesh": true
                                 },
@@ -6058,7 +6175,7 @@
                                     "description": "Make meshes which are touching each other overlap a bit. This makes them bond together better.",
                                     "type": "float",
                                     "unit": "mm",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "default_value": 0.15,
                                     "minimum_value": "0",
                                     "maximum_value_warning": "1.0",
@@ -6069,7 +6186,7 @@
                                     "label": "Remove Mesh Intersection",
                                     "description": "Remove areas where multiple meshes are overlapping with each other. This may be used if merged dual material objects overlap with each other.",
                                     "type": "bool",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "default_value": true,
                                     "value": "extruders_enabled_count > 1",
                                     "settable_per_mesh": false,
@@ -6080,7 +6197,7 @@
                                     "label": "Alternate Mesh Removal",
                                     "description": "Switch to which mesh intersecting volumes will belong with every layer, so that the overlapping meshes become interwoven. Turning this setting off will cause one of the meshes to obtain all of the volume in the overlap, while it is removed from the other meshes.",
                                     "type": "bool",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "default_value": true,
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": false,
@@ -6090,7 +6207,7 @@
                                     "label": "Remove Empty First Layers",
                                     "description": "Remove empty layers beneath the first printed layer if they are present. Disabling this setting can cause empty first layers if the Slicing Tolerance setting is set to Exclusive or Middle.",
                                     "type": "bool",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "default_value": true,
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": false
@@ -6100,7 +6217,7 @@
                                     "description": "The minimum size of a line segment after slicing. If you increase this, the mesh will have a lower resolution. This may allow the printer to keep up with the speed it has to process g-code and will increase slice speed by removing details of the mesh that it can't process anyway.",
                                     "type": "float",
                                     "unit": "mm",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "default_value": 0.5,
                                     "minimum_value": "0.001",
                                     "minimum_value_warning": "0.01",
@@ -6112,7 +6229,7 @@
                                     "description": "The minimum size of a travel line segment after slicing. If you increase this, the travel moves will have less smooth corners. This may allow the printer to keep up with the speed it has to process g-code, but it may cause model avoidance to become less accurate.",
                                     "type": "float",
                                     "unit": "mm",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "default_value": 1,
                                     "value": "Math.min(meshfix_maximum_resolution * speed_travel / speed_print, 2 * line_width)",
                                     "minimum_value": "0.001",
@@ -6126,7 +6243,7 @@
                                     "description": "The maximum deviation allowed when reducing the resolution for the Maximum Resolution setting. If you increase this, the print will be less accurate, but the g-code will be smaller. Maximum Deviation is a limit for Maximum Resolution, so if the two conflict the Maximum Deviation will always be held true.",
                                     "type": "float",
                                     "unit": "mm",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "default_value": 0.025,
                                     "minimum_value": "0.001",
                                     "minimum_value_warning": "0.01",
@@ -6150,7 +6267,7 @@
                                         "one_at_a_time": "One at a Time"
                                     },
                                     "default_value": "all_at_once",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": false,
                                     "settable_per_meshgroup": false
@@ -6159,7 +6276,7 @@
                                     "label": "Infill Mesh",
                                     "description": "Use this mesh to modify the infill of other meshes with which it overlaps. Replaces infill regions of other meshes with regions for this mesh. It's suggested to only print one Wall and no Top/Bottom Skin for this mesh.",
                                     "type": "bool",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "default_value": false,
                                     "settable_per_mesh": true,
                                     "settable_per_extruder": false,
@@ -6170,7 +6287,7 @@
                                     "label": "Mesh Processing Rank",
                                     "description": "Determines the priority of this mesh when considering multiple overlapping infill meshes. Areas where multiple infill meshes overlap will take on the settings of the mesh with the lowest rank. An infill mesh with a higher order will modify the infill of infill meshes with lower order and normal meshes.",
                                     "default_value": 0,
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "value": "infill_mesh ? 1 : 0",
                                     "minimum_value_warning": "1",
                                     "maximum_value_warning": "50",
@@ -6184,7 +6301,7 @@
                                     "label": "Cutting Mesh",
                                     "description": "Limit the volume of this mesh to within other meshes. You can use this to make certain areas of one mesh print with different settings and with a whole different extruder.",
                                     "type": "bool",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "default_value": false,
                                     "settable_per_mesh": true,
                                     "settable_per_extruder": false,
@@ -6195,7 +6312,7 @@
                                     "label": "Mold",
                                     "description": "Print models as a mold, which can be cast in order to get a model which resembles the models on the build plate.",
                                     "type": "bool",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "default_value": false,
                                     "settable_per_mesh": true
                                 },
@@ -6208,7 +6325,7 @@
                                     "maximum_value_warning": "100",
                                     "default_value": 5,
                                     "settable_per_mesh": true,
-                                    "enabled": "true"
+                                    "enabled": "false"
                                 },
                                 "mold_roof_height": {
                                     "label": "Mold Roof Height",
@@ -6219,14 +6336,14 @@
                                     "maximum_value_warning": "5",
                                     "default_value": 0.5,
                                     "settable_per_mesh": true,
-                                    "enabled": "true"
+                                    "enabled": "false"
                                 },
                                 "mold_angle": {
                                     "label": "Mold Angle",
                                     "description": "The angle of overhang of the outer walls created for the mold. 0° will make the outer shell of the mold vertical, while 90° will make the outside of the model follow the contour of the model.",
                                     "unit": "°",
                                     "type": "float",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "minimum_value": "-89",
                                     "minimum_value_warning": "0",
                                     "maximum_value_warning": "support_angle",
@@ -6238,7 +6355,7 @@
                                     "label": "Support Mesh",
                                     "description": "Use this mesh to specify support areas. This can be used to generate support structure.",
                                     "type": "bool",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "default_value": false,
                                     "settable_per_mesh": true,
                                     "settable_per_extruder": false,
@@ -6250,7 +6367,7 @@
                                     "description": "Make support everywhere below the support mesh, so that there's no overhang in the support mesh.",
                                     "type": "bool",
                                     "default_value": true,
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "settable_per_mesh": true,
                                     "settable_per_extruder": false,
                                     "settable_per_meshgroup": false,
@@ -6261,7 +6378,7 @@
                                     "description": "There are support meshes present in the scene. This setting is controlled by Cura.",
                                     "type": "bool",
                                     "default_value": false,
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": false,
                                     "settable_per_meshgroup": false
@@ -6270,7 +6387,7 @@
                                     "label": "Anti Overhang Mesh",
                                     "description": "Use this mesh to specify where no part of the model should be detected as overhang. This can be used to remove unwanted support structure.",
                                     "type": "bool",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "default_value": false,
                                     "settable_per_mesh": true,
                                     "settable_per_extruder": false,
@@ -6281,7 +6398,7 @@
                                     "label": "Surface Mode",
                                     "description": "Treat the model as a surface only, a volume, or volumes with loose surfaces. The normal print mode only prints enclosed volumes. 'Surface' prints a single wall tracing the mesh surface with no infill and no top/bottom skin. 'Both' prints enclosed volumes like normal and any remaining polygons as surfaces.",
                                     "type": "enum",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "options": {
                                         "normal": "Normal",
                                         "surface": "Surface",
@@ -6294,7 +6411,7 @@
                                     "label": "Smooth Spiralized Contours",
                                     "description": "Smooth the spiralized contours to reduce the visibility of the Z seam (the Z seam should be barely visible on the print but will still be visible in the layer view). Note that smoothing will tend to blur fine surface details.",
                                     "type": "bool",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "default_value": true,
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": false
@@ -6303,7 +6420,7 @@
                                     "label": "Relative Extrusion",
                                     "description": "Use relative extrusion rather than absolute extrusion. Using relative E-steps makes for easier post-processing of the g-code. However, it's not supported by all printers and it may produce very slight deviations in the amount of deposited material compared to absolute E-steps. Irrespective of this setting, the extrusion mode will always be set to absolute before any g-code script is output.",
                                     "type": "bool",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "default_value": false,
                                     "value": "machine_gcode_flavor === 'RepRap (RepRap)'",
                                     "settable_per_mesh": false,
@@ -6364,7 +6481,7 @@
                                     "type": "[int]",
                                     "default_value": "[ ]",
                                     "value": "skin_angles",
-                                    "enabled": "true",
+                                    "enabled": "false",
                                     "limit_to_extruder": "roofing_extruder_nr",
                                     "settable_per_mesh": true
                                 },
