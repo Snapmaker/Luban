@@ -36,7 +36,7 @@ const CONFIG_DISPLAY_TYPES_OPTIONS = CONFIG_DISPLAY_TYPES.map((item) => {
 });
 
 
-export function ParamItem({ selectedDefinitionModel, onChangeDefinition }) {
+export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition }) {
     const allParams = selectedDefinitionModel.params;
     const selectedDefinitionSettings = selectedDefinitionModel.settings;
     const dispatch = useDispatch();
@@ -140,7 +140,7 @@ export function ParamItem({ selectedDefinitionModel, onChangeDefinition }) {
             })}
         </div>
     );
-}
+};
 ParamItem.propTypes = {
     selectedDefinitionModel: PropTypes.object,
     onChangeDefinition: PropTypes.func
