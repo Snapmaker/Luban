@@ -41,6 +41,7 @@ i18n._('key-Luban/Machine/MachineSeries-A400');
 
 // machine brand
 i18n._('key-Luban/Machine/Brand-Original');
+i18n._('key-Luban/Machine/Brand-Snapmaker');
 i18n._('key-Luban/Machine/Brand-Snapmaker 2.0');
 
 i18n._('key-machine_selection-Workspace');
