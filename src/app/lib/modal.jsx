@@ -1,12 +1,62 @@
 /* eslint react/no-set-state: 0 */
 import pick from 'lodash/pick';
-import React, { PureComponent } from 'react';
+import React, { PureComponent, useState } from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import i18n from './i18n';
 import Modal from '../ui/components/Modal';
 import { Button } from '../ui/components/Buttons';
 import Checkbox from '../ui/components/Checkbox';
+
+export const FooterCheckBox = ({
+    i18nKey = 'key-Modal/Common-Don\'t ask again',
+    defaultValue = false,
+    onChange
+}) => {
+    const [ignore, setIgnore] = useState(defaultValue);
+
+    return (
+        <>
+            <Checkbox
+                className=""
+                defaultChecked={ignore}
+                type="checkbox"
+                checked={ignore}
+                onChange={(event) => {
+                    setIgnore(event.target.checked);
+                    onChange && onChange(event.target.checked);
+                }}
+            />
+            <span>{i18n._(i18nKey)}</span>
+        </>
+    );
+};
+FooterCheckBox.propTypes = {
+    i18nKey: PropTypes.string,
+    defaultValue: PropTypes.bool,
+    onChange: PropTypes.func.isRequired,
+};
+
+export const FooterPrimaryButton = ({
+    i18nKey = 'key-Modal/Common-Confirm',
+    onClick
+}) => {
+    return (
+        <Button
+            priority="level-two"
+            type="primary"
+            width="96px"
+            className="margin-left-4"
+            onClick={onClick}
+        >
+            {i18n._(i18nKey)}
+        </Button>
+    );
+};
+FooterPrimaryButton.propTypes = {
+    i18nKey: PropTypes.string,
+    onClick: PropTypes.func.isRequired,
+};
 
 let outsideInputValue = '';
 class ModalHOC extends PureComponent {
@@ -20,6 +70,7 @@ class ModalHOC extends PureComponent {
         title: PropTypes.node,
         body: PropTypes.node,
         footer: PropTypes.node,
+        footerLeft: PropTypes.node,
         showChangeIgnore: PropTypes.bool
     };
 
@@ -57,7 +108,7 @@ class ModalHOC extends PureComponent {
     }
 
     render() {
-        const { title, body, footer, size, type, cancelTitle, isConfirm } = this.props;
+        const { title, body, footer, footerLeft, size, type, cancelTitle, isConfirm } = this.props;
         const { show, inputValue } = this.state;
         const props = pick(this.props, Object.keys(Modal.propTypes));
         const defalutCancelTitle = isConfirm ? i18n._('key-Modal/Common-Confirm') : i18n._('key-Modal/Common-Cancel');
@@ -110,26 +161,11 @@ class ModalHOC extends PureComponent {
                         {newTitle}
                     </Button>
                     {type !== 'buttonRight' && footer}
-                    {
-                        this.props.showChangeIgnore
-                        && (
-                            <span className="float-l">
-                                <Checkbox
-                                    className=""
-                                    defaultChecked={this.state.ignore}
-                                    type="checkbox"
-                                    checked={this.state.ignore}
-                                    onChange={(event) => {
-                                        this.setState({
-                                            ignore: event.target.checked
-                                        });
-                                        this.props.onChangeIgnore && this.props.onChangeIgnore(event.target.checked);
-                                    }}
-                                />
-                                <span>{i18n._('key-Modal/Common-Don\'t ask again')}</span>
-                            </span>
-                        )
-                    }
+                    {footerLeft && (
+                        <span className="float-l">
+                            {footerLeft}
+                        </span>
+                    )}
                 </Modal.Footer>
             </Modal>
         );

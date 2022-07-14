@@ -5,7 +5,7 @@ import { Dropdown as AntDropdown } from 'antd';
 import '../../../styles/global.styl';
 
 const Dropdown = React.memo((props) => {
-    const { className, placement = 'bottomCenter', overlay = <div />, ...rest } = props;
+    const { className, placement = 'bottom', overlay = <div />, ...rest } = props;
     return (
         <div className={classNames(className)}>
             <AntDropdown

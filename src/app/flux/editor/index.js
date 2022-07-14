@@ -596,6 +596,10 @@ export const actions = {
                     bufferGeometry.setAttribute('position', modelPositionAttribute);
                     bufferGeometry.computeVertexNormals();
                     const mesh = new THREE.Mesh(bufferGeometry, material);
+                    if (model.image3dObj) {
+                        // Before updating mesh, destroy the previous mesh
+                        model.image3dObj.parent.remove(model.image3dObj);
+                    }
                     model.image3dObj = mesh;
                     break;
                 }

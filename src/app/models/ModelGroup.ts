@@ -1125,6 +1125,10 @@ class ModelGroup extends EventEmitter {
                 this.updatePrimeTowerHeight();
                 if (newModel instanceof ThreeModel) {
                     newModel.initClipper(this.localPlane);
+                } else if (newModel instanceof ThreeGroup) {
+                    newModel.children.forEach((subModel) => {
+                        (subModel as ThreeModel).initClipper(this.localPlane);
+                    });
                 }
             }
         });
@@ -1811,7 +1815,7 @@ class ModelGroup extends EventEmitter {
         }
 
         if (immediatelyShow) {
-            this.emit('add', model);
+            this.emit(ModelEvents.AddModel, model);
             // refresh view
             this.modelChanged();
             modelInfo.sourceType === '3d' && this.updatePrimeTowerHeight();
@@ -1852,7 +1856,7 @@ class ModelGroup extends EventEmitter {
         this.addModelToSelectedGroup(group);
         this.updatePrimeTowerHeight();
 
-        this.emit('add', group);
+        this.emit(ModelEvents.AddModel, group);
     }
 
     /**
