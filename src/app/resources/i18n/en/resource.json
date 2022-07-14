@@ -755,6 +755,7 @@
     "key-Laser_firmware_update_content-Luban updated the parameters on the laser. This change requires the machine to be updated to version 1.13.4 or higher to adapt.": "Luban has updated the laser parameters. To use it, you should update the Touchscreen firmware to version 1.14.1 or later.",
     "key-Laser_firmware_update_title-Please Update Machine Firmware": "Update Firmware",
     "key-Luban/Machine/Brand-Original": "Snapmaker Original",
+    "key-Luban/Machine/Brand-Snapmaker": "Snapmaker",
     "key-Luban/Machine/Brand-Snapmaker 2.0": "Snapmaker 2.0",
     "key-Luban/Machine/MachineSeries-A350": "A350/A350T/F350",
     "key-Luban/Machine/MachineSeries-A150": "A150",

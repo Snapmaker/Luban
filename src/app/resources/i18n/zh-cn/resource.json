@@ -755,6 +755,7 @@
     "key-Laser_firmware_update_content-Luban updated the parameters on the laser. This change requires the machine to be updated to version 1.13.4 or higher to adapt.": "Luban 已更新激光参数。请更新触控屏固件版本至 1.14.1 及其以上，配合使用。",
     "key-Laser_firmware_update_title-Please Update Machine Firmware": "更新固件",
     "key-Luban/Machine/Brand-Original": "Snapmaker Original",
+    "key-Luban/Machine/Brand-Snapmaker": "Snapmaker",
     "key-Luban/Machine/Brand-Snapmaker 2.0": "Snapmaker 2.0",
     "key-Luban/Machine/MachineSeries- A350": "",
     "key-Luban/Machine/MachineSeries-A150": "A150",
