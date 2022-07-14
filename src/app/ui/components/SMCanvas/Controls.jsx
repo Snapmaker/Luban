@@ -669,7 +669,7 @@ class Controls extends EventEmitter {
             this.dollyOut();
         }
 
-        this.updateCamera();
+        this.updateCamera(true);
     };
 
     setSelectableObjects(objects) {
