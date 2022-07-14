@@ -516,7 +516,7 @@ export const actions = {
         })
         dispatch(
             actions.updateState({
-                defaultDefinitions: definitionManager?.defaultDefinitions,
+                defaultDefinitions: defaultDefinitions,
                 materialDefinitions: allMaterialDefinition,
                 qualityDefinitions: qualityParamModels,
                 printingProfileLevel: profileLevel.printingProfileLevel,
@@ -1965,13 +1965,13 @@ export const actions = {
                 primeTowerYDefinition
             }
         );
-        definitionManager.calculateDependencies(
-            activeQualityDefinition.settings,
-            modelGroup && modelGroup.hasSupportModel(),
-            newExtruderLDefinition.settings,
-            newExtruderRDefinition.settings,
-            helpersExtruderConfig
-        );
+        // definitionManager.calculateDependencies(
+        //     activeQualityDefinition.settings,
+        //     modelGroup && modelGroup.hasSupportModel(),
+        //     newExtruderLDefinition.settings,
+        //     newExtruderRDefinition.settings,
+        //     helpersExtruderConfig
+        // );
         definitionManager.updateDefinition({
             ...newExtruderLDefinition,
             definitionId: 'snapmaker_extruder_0'

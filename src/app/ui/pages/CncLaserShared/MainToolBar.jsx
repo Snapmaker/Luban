@@ -340,12 +340,19 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
         setBackgroundModal, // laser
         renderMainToolBar: () => {
             return (
-                <MainToolBar
-                    leftItems={leftItems}
-                    lang={i18next.language}
-                    headType={headType}
-                    hasMachineSettings={false}
-                />
+                <div>
+                    <MainToolBar
+                        leftItems={leftItems}
+                        lang={i18next.language}
+                        headType={headType}
+                        hasMachineSettings={false}
+                    />
+                    <LaserCameraAidBackground
+                        hideModal={() => {
+                            setShowCameraCapture(false);
+                        }}
+                    />
+                </div>
             );
         }
     };

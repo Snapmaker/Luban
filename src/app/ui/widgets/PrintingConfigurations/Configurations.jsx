@@ -32,8 +32,15 @@ import PrintingManager from '../../views/PrintingManager';
 const DEFAULT_DISPLAY_TYPE = 'key-default_category-Default';
 const CONFIG_DISPLAY_TYPES = ['Recommended', 'Customized'];
 const CONFIG_DISPLAY_TYPES_OPTIONS = CONFIG_DISPLAY_TYPES.map((item) => {
-    return { value: item, label: item };
+    return { value: item, label: `key-Printing/PrintingConfigurations-${item}` };
 });
+const ALL_ICON_NAMES = {
+    'layer_height': ['LayerHeightFine', 'LayerHeightMedium', 'LayerHeightRough'],
+    'speed_print': ['SpeedSlow', 'SpeedMedium', 'SpeedFast'],
+    'infill_sparse_density': ['ModelStructureThin', 'ModelStructureMedium', 'ModelStructureHard', 'ModelStructureVase'],
+    'support_type': ['SupportLine', 'SupportNone'],
+    'adhesion_type': ['AdhesionSkirt', 'AdhesionBrim', 'AdhesionRaft']
+};
 
 
 export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition }) {
@@ -67,6 +74,7 @@ export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition
                 const actualOptions = paramSetting.affectByType ? paramSetting[selectedDefinitionModel.typeOfPrinting] : paramSetting.options;
                 const allParamsName = [];
                 let SegmentedValue = null;
+                let iconName = '';
                 const options = Object.entries(actualOptions).map(([keyName, keyValue]) => {
                     allParamsName.push(keyName);
                     return {
@@ -77,7 +85,11 @@ export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition
                     };
                 });
                 if (allParamsName.includes(paramSetting.current_value)) {
+                    const index = allParamsName.findIndex((d) => d === paramSetting.current_value);
+                    iconName = ALL_ICON_NAMES[paramName][index] || 'PrintingSettingNormal';
                     SegmentedValue = paramSetting.current_value;
+                } else {
+                    iconName = ALL_ICON_NAMES[paramName][1] || 'PrintingSettingNormal';
                 }
                 const eachParamObject = selectedDefinitionSettings[paramName];
                 let displayName = eachParamObject?.label;
@@ -85,14 +97,14 @@ export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition
                 let segmentedDisplay = true;
                 let showSelect = false;
                 const selectOptions = [];
-                // // TODO: add 'model_structure_type' select
                 if (paramName === 'infill_sparse_density') {
                     const modelStructure = selectedDefinitionSettings.model_structure_type;
                     showSelect = true;
+                    displayName = modelStructure?.label;
                     displayValue = modelStructure?.default_value;
-                    displayName = 'Model Structure';
                     if (displayValue !== 'normal') {
                         segmentedDisplay = false;
+                        iconName = ALL_ICON_NAMES[paramName][3];
                     }
                     Object.entries(modelStructure?.options).forEach(([value, label]) => {
                         selectOptions.push({ value, label });
@@ -101,19 +113,18 @@ export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition
                 return (
                     <div key={paramName} className="margin-vertical-16">
                         <div className="height-24 margin-bottom-4 sm-flex justify-space-between">
-                            <span>
+                            <div className="display-inline">
                                 <SvgIcon
-                                    className="border-default-black-5 margin-right-8"
-                                    name="PrintingSettingNormal"
+                                    className="margin-right-8"
+                                    name={iconName}
                                     type={['static']}
                                     size={24}
-                                    disabled
                                 />
                                 <span className="color-black-3">
-                                    {i18n._(displayName)}
+                                    {i18n._(`key-Luban/Preset/${displayName}`)}
                                 </span>
-                            </span>
-                            {!showSelect && (
+                            </div>
+                            {!showSelect && !(['Support Placement', 'Build Plate Adhesion Type'].includes(displayName)) && (
                                 <span className="float-r color-black-3">
                                     {displayValue}
                                 </span>
@@ -187,14 +198,12 @@ function Configurations() {
             firstDefinitionId && actions.onSelectCustomDefinitionById(firstDefinitionId);
         },
         resetPreset: () => {
-            setTimeout(() => {
-                dispatch(
-                    printingActions.resetDefinitionById(
-                        'quality',
-                        selectedDefinition?.definitionId
-                    )
-                );
-            }, 50);
+            dispatch(
+                printingActions.resetDefinitionById(
+                    'quality',
+                    selectedDefinition?.definitionId
+                )
+            );
         },
         showInputModal: () => {
             const newSelectedDefinition = cloneDeep(selectedDefinition.getSerializableDefinition());
@@ -342,23 +351,17 @@ function Configurations() {
     const renderProfileMenu = (displayType) => {
         const hasResetButton = displayType === i18n._(DEFAULT_DISPLAY_TYPE);
         return (
-            <div>
+            <div className="width-160">
                 {hasResetButton && (
-                    <Button
-                        priority="level-two"
-                        width="128px"
+                    <Anchor
                         onClick={actions.resetPreset}
                     >
-                        {i18n._('key-Printing/ProfileManager-Reset')}
-                    </Button>
+                        <div className="width-120 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Reset')}</div>
+                    </Anchor>
                 )}
-                <Button
-                    priority="level-two"
-                    width="128px"
-                    onClick={actions.showInputModal}
-                >
-                    {i18n._('key-Printing/ProfileManager-Copy')}
-                </Button>
+                <Anchor onClick={actions.showInputModal}>
+                    <div className="width-120 text-overflow-ellipsis">{i18n._('key-App/Menu-Copy')}</div>
+                </Anchor>
             </div>
         );
     };
@@ -418,7 +421,7 @@ function Configurations() {
                                         )}
                                         >
                                             <TipTrigger
-                                                placement="bottom"
+                                                placement="bottomRight"
                                                 style={{ maxWidth: '160px' }}
                                                 content={renderProfileMenu(presetDisplayType)}
                                                 trigger="click"
@@ -429,13 +432,13 @@ function Configurations() {
                                                     )}
                                                     type={['static']}
                                                     size={24}
-                                                    name="PrintingSettingNormal"
+                                                    name="More"
                                                 />
                                             </TipTrigger>
                                         </div>
                                     </Anchor>
-                                    <span className="max-width-76 text-overflow-ellipsis-line-2 height-16 margin-top-4 margin-bottom-8">
-                                        {optionItem.typeOfPrinting}
+                                    <span className="max-width-76 text-overflow-ellipsis-line-2 height-32-half-line margin-top-4 margin-bottom-8">
+                                        {optionItem.name}
                                     </span>
                                 </div>
                             );
@@ -478,7 +481,7 @@ function Configurations() {
                                                 )}
                                                 type={['static']}
                                                 size={24}
-                                                name="PrintingSettingNormal"
+                                                name="More"
                                             />
                                         </TipTrigger>
                                     </Anchor>
@@ -534,8 +537,8 @@ function Configurations() {
                             <div className="display-inline-block">
                                 <span className="color-black-5 margin-right-8">
                                     {i18n._(
-                                        'key-Printing/PrintingConfigurations-Parameter Display'
-                                    )}:
+                                        'key-Printing/PrintingConfigurations-Parameter Display :'
+                                    )}
                                 </span>
                                 <Select
                                     clearable={false}

@@ -16,11 +16,11 @@ import SvgIcon from '../../components/SvgIcon';
 // import Dropdown from '../../components/Dropdown';
 import Select from '../../components/Select';
 import { Button } from '../../components/Buttons';
-import { PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
+import { PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY, DEFAULT_LUBAN_HOST } from '../../../constants';
 /* eslint-disable import/no-cycle */
 import { ParamItem } from '../../widgets/PrintingConfigurations/Configurations';
 
-const fs = window.require('fs');
+// const fs = window.require('fs');
 function ConfigValueBox({
     optionConfigGroup,
     calculateTextIndex,
@@ -49,14 +49,14 @@ function ConfigValueBox({
     const fieldsDom = useRef([]);
     const dispatch = useDispatch();
     const lang = i18next.language;
-    useEffect(() => {
+    useEffect(async () => {
         if (selectCategory && selectProfile) {
             try {
-                const content = fs.readFileSync(`${profileDocsDir}/${lang.toUpperCase()}/${selectCategory}/${selectProfile}.md`, 'utf-8');
-                // const content = await fetch(`${DEFAULT_LUBAN_HOST}/${profileDocsDir}/${lang.toUpperCase() === 'ZH-CN' ? 'CN' : 'EN'}/${selectCategory}/${selectProfile}.md`)
-                //     .then(res => {
-                //         console.log(res);
-                //     });
+                // const content = fs.readFileSync(`${profileDocsDir}/${lang.toUpperCase()}/${selectCategory}/${selectProfile}.md`, 'utf-8');
+                const content = await fetch(`${DEFAULT_LUBAN_HOST}/${profileDocsDir}/${lang.toUpperCase() === 'ZH-CN' ? 'CN' : 'EN'}/${selectCategory}/${selectProfile}.md`)
+                    .then(res => {
+                        console.log(res);
+                    });
                 setMdContent(content);
             } catch (e) {
                 console.info(e);
