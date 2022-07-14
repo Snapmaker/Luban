@@ -119,18 +119,23 @@ export const actions = {
         const promises = [];
         modelGroup.traverseModels(models, async (model) => {
             if (!(model instanceof ThreeGroup)) {
-                const mesh = model.meshObject.clone(false);
-                mesh.clear();
-                const basenameWithoutExt = path.basename(
-                    `${DATA_PREFIX}/${model.originalName}`,
-                    path.extname(`${DATA_PREFIX}/${model.originalName}`)
-                );
-                const sourceRepairName = `${basenameWithoutExt}.stl`;
                 const promise = new Promise(async (resolve, reject) => {
-                    const uploadResult = await uploadMesh(mesh, sourceRepairName);
-                    const newUploadName = uploadResult?.body?.uploadName;
+                    let uploadName = model.sourcePly || model.uploadName;
+                    if (headType === HEAD_PRINTING) {
+                        const mesh = model.meshObject.clone(false);
+                        mesh.clear();
+                        const basenameWithoutExt = path.basename(
+                            `${DATA_PREFIX}/${model.originalName}`,
+                            path.extname(`${DATA_PREFIX}/${model.originalName}`)
+                        );
+                        const sourceRepairName = `${basenameWithoutExt}.stl`;
+
+                        const uploadResult = await uploadMesh(mesh, sourceRepairName);
+                        uploadName = uploadResult?.body?.uploadName;
+                    }
+
                     const task = await controller.repairModel({
-                        uploadName: newUploadName,
+                        uploadName: uploadName,
                         modelID: model.modelID,
                         size
                     }, (data) => {

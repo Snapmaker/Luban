@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import path from 'path';
+import { Tooltip } from 'antd';
 import i18n from '../../lib/i18n';
 import TipTrigger from '../components/TipTrigger';
 import Anchor from '../components/Anchor';
@@ -61,14 +62,9 @@ const ModelIcon = (props) => {
     );
     if (model.needRepair) {
         return (
-            <TipTrigger
-                key={model.modelID}
-                content={i18n._('key-PrintingCncLaser/ObjectList-Error model, select it and click repair model button to repair it')}
-                visible={model.needRepair}
-                placement="bottom"
-            >
+            <Tooltip title={i18n._('key-PrintingCncLaser/ObjectList-Error model, select it and click repair model button to repair it')} arrowPointAtCenter>
                 {Icon}
-            </TipTrigger>
+            </Tooltip>
         );
     } else {
         return Icon;

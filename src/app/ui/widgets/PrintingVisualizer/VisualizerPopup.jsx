@@ -1,5 +1,5 @@
 import React from 'react';
-import modal from '../../../lib/modal';
+import modal, { FooterCheckBox, FooterPrimaryButton } from '../../../lib/modal';
 import i18n from '../../../lib/i18n';
 import { Button } from '../../components/Buttons';
 
@@ -86,20 +86,14 @@ export const repairModelBeforSimplifyPopup = () => {
                 </React.Fragment>
             ),
             footer: (
-                <Button
-                    priority="level-two"
-                    type="primary"
-                    width="96px"
-                    className="margin-left-4"
+                <FooterPrimaryButton
+                    i18nKey="key-Printing/ContextMenu-Repair model"
                     onClick={() => {
                         resolve();
                         action.close();
                     }}
-                >
-                    {i18n._('key-Printing/ContextMenu-Repair model')}
-                </Button>
+                />
             ),
-
             onClose: () => {
                 reject();
             }
@@ -136,25 +130,25 @@ export const repairModelPopup = (models) => {
             showChangeIgnore: true,
             cancelTitle: '忽略',
             footer: (
-                <Button
-                    priority="level-two"
-                    type="primary"
-                    width="96px"
-                    className="margin-left-4"
+                <FooterPrimaryButton
+                    i18nKey="key-Printing/ContextMenu-Repair model"
                     onClick={() => {
                         resolve(ignore);
                         action.close();
                     }}
-                >
-                    {i18n._('key-Printing/ContextMenu-Repair model')}
-                </Button>
+                />
             ),
-            onChangeIgnore: (bool) => {
-                if (bool) {
-                    repairGuidePopup();
-                }
-                ignore = bool;
-            },
+            footerLeft: (
+                <FooterCheckBox
+                    i18nKey={'key-Modal/Common-Don\'t ask again'}
+                    onChange={(bool) => {
+                        if (bool) {
+                            repairGuidePopup();
+                        }
+                        ignore = bool;
+                    }}
+                />
+            ),
             onClose: () => {
                 reject(ignore);
             }

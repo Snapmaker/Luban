@@ -513,7 +513,7 @@ class Visualizer extends PureComponent {
 
     componentWillUnmount() {
         this.props.clearOperationHistory();
-        this.props.modelGroup.off('add', this.props.recordAddOperation);
+        this.props.modelGroup.off(ModelEvents.AddModel, this.props.recordAddOperation);
         window.removeEventListener('fit-view-in', this.actions.fitViewIn, false);
     }
 

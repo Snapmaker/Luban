@@ -1,7 +1,7 @@
 import { v4 as uuid } from 'uuid';
 import * as THREE from 'three';
 import noop from 'lodash/noop';
-import { DoubleSide, Geometry, Mesh, MeshBasicMaterial, MeshLambertMaterial, Object3D, ObjectLoader, Plane } from 'three';
+import { BufferGeometry, DoubleSide, Geometry, Mesh, MeshBasicMaterial, MeshLambertMaterial, Object3D, ObjectLoader, Plane } from 'three';
 import {
     LOAD_MODEL_FROM_INNER
 } from '../constants';
@@ -161,9 +161,25 @@ class ThreeModel extends BaseModel {
         this.clipper.setLocalPlane(height);
     }
 
-    public updateBufferGeometry(bufferGeometry) {
+    public updateBufferGeometry(bufferGeometry: BufferGeometry) {
+        const { recovery } = this.modelGroup.unselectAllModels();
+
+        if (this.parent) {
+            bufferGeometry.scale(1 / this.meshObject.parent.scale.x, 1 / this.meshObject.parent.scale.y, 1 / this.meshObject.parent.scale.z);
+            bufferGeometry.rotateX(-this.meshObject.parent.rotation.x);
+            bufferGeometry.rotateY(-this.meshObject.parent.rotation.y);
+            bufferGeometry.rotateZ(-this.meshObject.parent.rotation.z);
+        }
+        bufferGeometry.scale(1 / this.meshObject.scale.x, 1 / this.meshObject.scale.y, 1 / this.meshObject.scale.z);
+        bufferGeometry.rotateX(-this.meshObject.rotation.x);
+        bufferGeometry.rotateY(-this.meshObject.rotation.y);
+        bufferGeometry.rotateZ(-this.meshObject.rotation.z);
+
         bufferGeometry.computeVertexNormals();
+
         this.meshObject.geometry = bufferGeometry;
+
+        recovery();
 
         this.clipper.init();
     }
