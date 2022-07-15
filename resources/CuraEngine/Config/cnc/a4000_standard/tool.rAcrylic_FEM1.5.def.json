@@ -1,0 +1,41 @@
+{
+    "category": "Acrylic",
+    "name": "Flat End Mill 1.5",
+    "i18nCategory": "key-default_category-Acrylic",
+    "i18nName": "key-default_name-Flat End Mill 1.5",
+    "version": "1.0.0",
+    "inherits": "snapmaker2",
+    "overrides": {
+        "tool_type": {
+            "default_value": "flat"
+        },
+        "diameter": {
+            "default_value": 1.5
+        },
+        "angle": {
+            "default_value": 180
+        },
+        "shaft_diameter": {
+            "default_value": 1.5
+        },
+        "jog_speed": {
+            "default_value": 1500
+        },
+        "work_speed": {
+            "default_value": 300
+        },
+        "plunge_speed": {
+            "default_value": 300
+        },
+        "step_down": {
+            "default_value": 0.4
+        },
+        "step_over": {
+            "default_value": 0.5
+        },
+        "tool_extension_enabled": {
+            "default_value": false
+        }
+    },
+    "isRecommended": true
+}

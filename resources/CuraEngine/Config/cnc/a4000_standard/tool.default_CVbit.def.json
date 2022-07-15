@@ -1,0 +1,41 @@
+{
+    "category": "Default Material",
+    "name": "Carving V-bit",
+    "i18nCategory": "key-default_category-Default Material",
+    "i18nName": "key-default_name-Carving V-bit",
+    "inherits": "snapmaker2",
+    "version": "1.0.0",
+    "overrides": {
+        "tool_type": {
+            "default_value": "vbit"
+        },
+        "diameter": {
+            "default_value": 0.2
+        },
+        "angle": {
+            "default_value": 30
+        },
+        "shaft_diameter": {
+            "default_value": 3.175
+        },
+        "jog_speed": {
+            "default_value": 1500
+        },
+        "work_speed": {
+            "default_value": 300
+        },
+        "plunge_speed": {
+            "default_value": 300
+        },
+        "step_down": {
+            "default_value": 0.5
+        },
+        "step_over": {
+            "default_value": 0.12
+        },
+        "tool_extension_enabled": {
+            "default_value": false
+        }
+    },
+    "isRecommended": true
+}

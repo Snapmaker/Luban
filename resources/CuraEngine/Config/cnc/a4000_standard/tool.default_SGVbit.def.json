@@ -1,0 +1,41 @@
+{
+    "category": "Default Material",
+    "name": "Straight Groove V-bit",
+    "i18nCategory": "key-default_category-Default Material",
+    "i18nName": "key-default_name-Straight Groove V-bit",
+    "version": "1.0.0",
+    "inherits": "snapmaker2",
+    "overrides": {
+        "tool_type": {
+            "default_value": "vbit"
+        },
+        "diameter": {
+            "default_value": 0.3
+        },
+        "angle": {
+            "default_value": 20
+        },
+        "shaft_diameter": {
+            "default_value": 3.175
+        },
+        "jog_speed": {
+            "default_value": 1500
+        },
+        "work_speed": {
+            "default_value": 300
+        },
+        "plunge_speed": {
+            "default_value": 300
+        },
+        "step_down": {
+            "default_value": 0.5
+        },
+        "step_over": {
+            "default_value": 0.12
+        },
+        "tool_extension_enabled": {
+            "default_value": false
+        }
+    },
+    "isRecommended": true
+}

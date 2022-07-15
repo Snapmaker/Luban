@@ -12,6 +12,9 @@
         "material_flow": {
             "default_value": 100
         },
+        "material_type": {
+            "default_value": "petg"
+        },
         "machine_heated_bed": {
             "default_value": true
         },

@@ -19,6 +19,9 @@
         "color": {
             "default_value": "#ffffff"
         },
+        "material_type": {
+            "default_value": "petg"
+        },
         "material_flow": {
             "default_value": 100
         },
