@@ -96,15 +96,15 @@ export type GcodeResult = {
  * A singleton to manage devices connection.
  */
 class SocketHttp {
-    private isGcodeExecuting: boolean = false;
+    private isGcodeExecuting = false;
 
     private gcodeInfos = [];
 
     private socket: SocketServer = null;
 
-    private host: string = '';
+    private host = '';
 
-    private token: string = '';
+    private token = '';
 
     private state: StateOptions = {};
 
