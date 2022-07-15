@@ -102,7 +102,7 @@ function useRenderMainToolBar(setSimplifying) {
     const canUngroup = useSelector(state => state?.printing?.modelGroup?.canUngroup());
     // const toolHeadObj = useSelector(state => state?.machine?.toolHead);
     const canSimplify = useSelector(state => state?.printing?.modelGroup?.canSimplify());
-    const hasModelWhole = useSelector(state => state?.printing?.modelGroup?.hasModelWhole());
+    const canRepair = useSelector(state => state?.printing?.modelGroup?.canRepair());
     const [showHomePage, setShowHomePage] = useState(false);
     const [showWorkspace, setShowWorkspace] = useState(false);
     const [showMachineMaterialSettings, setShowMachineMaterialSettings] = useState(false);
@@ -253,7 +253,7 @@ function useRenderMainToolBar(setSimplifying) {
             },
             {
                 title: i18n._('key-3DP/MainToolBar-Model repair'),
-                disabled: !hasModelWhole || !enableShortcut,
+                disabled: !canRepair || !enableShortcut,
                 type: 'button',
                 name: 'MainToolbarFixModel',
                 action: () => {

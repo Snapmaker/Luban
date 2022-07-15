@@ -2249,6 +2249,16 @@ class ModelGroup extends EventEmitter {
         }
     }
 
+    public canRepair() {
+        if (this.models.length === 0) {
+            return false;
+        }
+        if (this.selectedModelArray.length === 1 && !this.selectedModelArray[0].visible) {
+            return false;
+        }
+        return true;
+    }
+
     // prime tower
     public initPrimeTower(initHeight = 0.1, transformation: ModelTransformation) {
         return new PrimeTowerModel(initHeight, this, transformation);

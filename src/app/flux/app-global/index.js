@@ -92,7 +92,17 @@ export const actions = {
             };
         }
         const selectedModels = modelGroup.getSelectedModelArray();
-        const models = selectedModels.length > 0 ? selectedModels : allModels;
+        let models = selectedModels.length > 0 ? selectedModels : allModels;
+
+        models = models.filter((model) => {
+            return model.visible;
+        });
+        if (models.length === 0) {
+            return {
+                allPepaired: true,
+                results: []
+            };
+        }
 
         progressStatesManager.startProgress(
             PROCESS_STAGE.PRINTING_REPAIRING_MODEL
