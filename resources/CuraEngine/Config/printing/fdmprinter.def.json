@@ -897,19 +897,19 @@
                         "material_type": {
                             "label": "Material Type",
                             "description": "Choose which type of material it is. This parameter will be used to generate the default process parameters. If it is composite material select matrix material or other as material type.",
-                            "default_value": "PLA",
+                            "default_value": "pla",
                             "type": "enum",
                             "options": {
-                                "PLA": "PLA",
-                                "Support": "Support",
-                                "ABS": "ABS",
-                                "PTEG": "PTEG",
-                                "TPE": "TPE",
-                                "PVA": "PVA",
-                                "ASA": "ASA",
-                                "PC": "PC",
-                                "Nylon": "Nylon",
-                                "Other": "Other"
+                                "pla": "PLA",
+                                "support": "Support",
+                                "abs": "ABS",
+                                "petg": "PTEG",
+                                "tpe": "TPE",
+                                "pva": "PVA",
+                                "asa": "ASA",
+                                "pc": "PC",
+                                "nylon": "Nylon",
+                                "other": "Other"
                             },
                             "filter": [
                                 "basic",

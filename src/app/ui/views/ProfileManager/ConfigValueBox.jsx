@@ -16,11 +16,11 @@ import SvgIcon from '../../components/SvgIcon';
 // import Dropdown from '../../components/Dropdown';
 import Select from '../../components/Select';
 import { Button } from '../../components/Buttons';
+import api from '../../../api';
 import { PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
 /* eslint-disable import/no-cycle */
 import { ParamItem } from '../../widgets/PrintingConfigurations/Configurations';
 
-const fs = window.require('fs');
 function ConfigValueBox({
     optionConfigGroup,
     calculateTextIndex,
@@ -37,7 +37,7 @@ function ConfigValueBox({
     setCustomMode,
     onChangeCustomConfig
 }) {
-    const { profileDocsDir, printingParamsType, materialParamsType } = useSelector(state => state?.printing);
+    const { printingParamsType, materialParamsType } = useSelector(state => state?.printing);
     const [activeCateId, setActiveCateId] = useState(2);
     const [selectParamsType, setSelectParamsType] = useState(managerType === PRINTING_MANAGER_TYPE_MATERIAL ? materialParamsType : printingParamsType);
     const [showProfileDocs, setShowProfileDocs] = useState(true);
@@ -49,15 +49,36 @@ function ConfigValueBox({
     const fieldsDom = useRef([]);
     const dispatch = useDispatch();
     const lang = i18next.language;
-    useEffect(() => {
+    useEffect(async () => {
         if (selectCategory && selectProfile) {
+            // let urlPre = '';
+            // let langDir = '';
+            // if (lang.toUpperCase() === 'ZH-CN') {
+            //     langDir = 'CN';
+            //     urlPre = 'https://snapmaker.oss-cn-beijing.aliyuncs.com/snapmaker.com';
+            // } else {
+            //     langDir = 'EN';
+            //     urlPre = 'https://s3.us-west-2.amazonaws.com/snapmaker.com';
+            // }
+            // const url = `${urlPre}/${langDir}/${selectCategory}/${selectProfile}.md`;
+
             try {
-                const content = fs.readFileSync(`${profileDocsDir}/${lang.toUpperCase()}/${selectCategory}/${selectProfile}.md`, 'utf-8');
-                // const content = await fetch(`${DEFAULT_LUBAN_HOST}/${profileDocsDir}/${lang.toUpperCase() === 'ZH-CN' ? 'CN' : 'EN'}/${selectCategory}/${selectProfile}.md`)
-                //     .then(res => {
-                //         console.log(res);
+                const res = await api.getProfileDocs({ lang, selectCategory, selectProfile });
+                setMdContent(res.body?.content);
+                // fetch(url, { mode: 'cors',
+                //     method: 'GET',
+                //     headers: {
+                //         'Content-Type': 'text/markdown'
+                //     } })
+                //     .then((response) => {
+                //         response.headers['access-control-allow-origin'] = { value: '*' };
+                //         return response.text();
+                //     })
+                //     .then(result => {
+                //         if (result) {
+                //             setMdContent(result);
+                //         }
                 //     });
-                setMdContent(content);
             } catch (e) {
                 console.info(e);
                 setMdContent('');

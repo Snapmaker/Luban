@@ -9,6 +9,9 @@
         "color": {
             "default_value": "#464646"
         },
+        "material_type": {
+            "default_value": "abs"
+        },
         "material_flow": {
             "default_value": 100
         },

@@ -201,15 +201,15 @@ const MaterialSettings = ({
             duration: 5
         });
     };
-    // const onChangeFileForManager = (event) => {
-    //     const file = event.target.files[0];
-    //     return dispatch(
-    //         printingActions.onUploadManagerDefinition(
-    //             file,
-    //             PRINTING_MANAGER_TYPE_MATERIAL
-    //         )
-    //     );
-    // };
+    const onChangeFileForManager = (event) => {
+        const file = event.target.files[0];
+        return dispatch(
+            printingActions.onUploadManagerDefinition(
+                file,
+                PRINTING_MANAGER_TYPE_MATERIAL
+            )
+        );
+    };
     // const onSelectDefinitionById = (definitionId, name) => {
     //     const definitionForManager
     // }
@@ -246,13 +246,9 @@ const MaterialSettings = ({
                     accept=".json"
                     style={{ display: 'none' }}
                     multiple={false}
-                    // onChange={async (e) => {
-                    //     const definition = await onChangeFileForManager(e);
-                    //     onSelectDefinitionById(
-                    //         definition.definitionId,
-                    //         definition.name
-                    //     );
-                    // }}
+                    onChange={async (e) => {
+                        await onChangeFileForManager(e);
+                    }}
                 />
                 <div className={`padding-horizontal-4 padding-vertical-4 border-radius-16 sm-flex background-grey-2 ${toolHead.printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? 'width-532' : 'width-272'}`}>
                     <Anchor onClick={() => setActiveNozzle(LEFT)} className={`padding-horizontal-16 padding-vertical-8 border-radius-16 width-264 height-68 ${activeNozzle === LEFT ? 'background-color-white' : ''}`}>
@@ -289,7 +285,6 @@ const MaterialSettings = ({
                             priority="level-two"
                             width="160px"
                             className="margin-left-16"
-                            // onClick={() => setShowCreateMaterialModal(true)}
                         >
                             <span className="display-inline width-142 text-overflow-ellipsis">{i18n._('key-settings/Add Material')}</span>
                         </Button>
