@@ -1359,7 +1359,7 @@ export const MACHINE_BRAND_MAP = {
     [MACHINE_SERIES.A150.value]: 'Snapmaker 2.0',
     [MACHINE_SERIES.A250.value]: 'Snapmaker 2.0',
     [MACHINE_SERIES.A350.value]: 'Snapmaker 2.0',
-    [MACHINE_SERIES.A400.value]: 'Snapmaker 2.0',
+    [MACHINE_SERIES.A400.value]: 'Snapmaker',
 };
 export const IMAGE_WIFI_CONNECTING = '/resources/images/connection/Screen.png';
 export const IMAGE_WIFI_CONNECT_WAITING = '/resources/images/connection/ic_waiting-64x64.png';

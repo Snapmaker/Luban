@@ -1,12 +1,16 @@
 import {
     Object3D, FrontSide,
     PlaneGeometry, MeshBasicMaterial, Mesh,
-    Color, ShapeGeometry, Shape, LineBasicMaterial, Line, BufferGeometry, Float32BufferAttribute, LineSegments, MeshPhongMaterial
+    Color, ShapeGeometry, Shape, LineBasicMaterial, Line, BufferGeometry, Float32BufferAttribute, LineSegments, MeshPhongMaterial, Group
 } from 'three';
-import { DEFAULT_LUBAN_HOST } from '../../../constants';
+import { DEFAULT_LUBAN_HOST, MACHINE_SERIES } from '../../../constants';
 import Rectangle from '../../../three-extensions/objects/Rectangle';
 import { FontLoader } from '../../../three-extensions/FontLoader';
 import STLLoader from '../../../three-extensions/STLLoader';
+// import ThreeUtils from '../../../three-extensions/ThreeUtils';
+import SVGLoader from '../../../three-extensions/SVGLoader';
+import ThreeUtils from '../../../three-extensions/ThreeUtils';
+import i18n from '../../../lib/i18n';
 
 class PrintableCube extends Object3D {
     size = { x: 0, y: 0 };
@@ -170,7 +174,7 @@ class PrintableCube extends Object3D {
         scale10Geometry.setAttribute('position', new Float32BufferAttribute(scale10Vertices, 3));
         const scaleLineMaterial = new LineBasicMaterial({
             side: FrontSide,
-            color: '#D5D6D9',
+            color: '#E8EAED',
             transparent: true,
             depthWrite: false,
             polygonOffset: true,
@@ -224,7 +228,7 @@ class PrintableCube extends Object3D {
             const hotArea = this.roundedRectShape(-130, -130, 260, 260, 10);
             const geometry = new ShapeGeometry(hotArea);
             const mesh = new Line(geometry, new LineBasicMaterial({
-                color: '#85888C',
+                color: '#D5D6D9',
                 side: FrontSide,
                 opacity: 1,
                 transparent: true,
@@ -244,7 +248,7 @@ class PrintableCube extends Object3D {
     createSeries() {
         const loader = new FontLoader();
         loader.load(`${DEFAULT_LUBAN_HOST}/resources/print-board/helvetiker_regular.typeface.json`, (font) => {
-            const color = new Color('#D5D6D9');
+            const color = new Color('#B9BCBF');
             const matLite = new MeshBasicMaterial({
                 color: color,
                 side: FrontSide,
@@ -253,39 +257,116 @@ class PrintableCube extends Object3D {
                 polygonOffsetFactor: 0,
                 polygonOffsetUnits: -3
             });
-            let size = 9;
-            if (this.series.indexOf('Original') !== -1) {
-                size = 4;
+            // let size = 9;
+            // if (this.series.indexOf('Original') !== -1) {
+            //     size = 4;
+            // }
+            const fontSize = this.size.y * 0.025;
+
+            let machineText = '';
+            for (const key of Object.keys(MACHINE_SERIES)) {
+                const item = MACHINE_SERIES[key];
+                if (item.value === this.series) {
+                    machineText = i18n._(item.label);
+                    break;
+                }
             }
-            const shapes = font.generateShapes(this.series, size);
+            machineText = machineText.replace(/^Snapmaker\s*(2\.0)?\s*/, '');
+
+            const shapes = font.generateShapes(machineText, fontSize);
             const geometry = new ShapeGeometry(shapes);
             geometry.computeBoundingBox();
+            const fontWidth = geometry.boundingBox.max.x - geometry.boundingBox.min.x;
+            const fontHeight = geometry.boundingBox.max.y - geometry.boundingBox.min.y;
+
             geometry.translate(
-                this.size.x / 2 - geometry.boundingBox.max.x - 15,
-                -this.size.y / 2 + 15,
-                0
+                this.size.x / 2 - fontWidth - (this.size.x / 2 % 10 || 10) - 10,
+                -this.size.y / 2 + (this.size.y / 2 % 10 || 10) + 10,
+                0.005
             );
             const text = new Mesh(geometry, matLite);
             this.add(text);
 
-            const shape = this.roundedRectShape(
-                geometry.boundingBox.min.x,
-                geometry.boundingBox.min.y,
-                geometry.boundingBox.max.x - geometry.boundingBox.min.x,
-                geometry.boundingBox.max.y - geometry.boundingBox.min.y,
-                0
-            );
-            const BboxGeometry = new ShapeGeometry(shape);
-            const mesh = new Mesh(BboxGeometry, new LineBasicMaterial({
-                color: 'white',
-                side: FrontSide,
-                opacity: 1,
-                transparent: true,
-                polygonOffset: true,
-                polygonOffsetFactor: 0,
-                polygonOffsetUnits: -2
-            }));
-            this.add(mesh);
+            // Add logo
+            // const minSideLength = Math.min(this.size.x, this.size.y);
+            // const logoGeometry = new PlaneGeometry(
+            //     (geometry.boundingBox.max.y - geometry.boundingBox.min.y) * 0.63 * 4,
+            //     (geometry.boundingBox.max.y - geometry.boundingBox.min.y) * 0.63,
+            // );
+            new SVGLoader().load(`${DEFAULT_LUBAN_HOST}/resources/images/logo.svg`, (data) => {
+                const paths = data.paths;
+
+                const group = new Group();
+
+                group.position.x = 0;
+                group.position.y = 0;
+                group.scale.y *= -1;
+                for (let i = 0; i < paths.length; i++) {
+                    const path = paths[i];
+
+                    const fillColor = path.userData.style.fill;
+                    if (fillColor !== undefined && fillColor !== 'none') {
+                        const material = new MeshBasicMaterial({
+                            color: fillColor,
+                            opacity: path.userData.style.fillOpacity,
+                            transparent: true,
+                            side: FrontSide,
+                            depthWrite: false,
+                            wireframe: false
+                        });
+
+                        const pathShape = SVGLoader.createShapes(path);
+
+                        for (let j = 0; j < pathShape.length; j++) {
+                            const shape = pathShape[j];
+
+                            const fontGeometry = new ShapeGeometry(shape);
+                            const mesh = new Mesh(fontGeometry, material);
+
+                            group.add(mesh);
+                        }
+                    }
+                }
+
+                const logoBoundingBox = ThreeUtils.computeBoundingBox(group);
+                const logoHeight = logoBoundingBox.max.y - logoBoundingBox.min.y;
+                console.log('fontHeight =', fontHeight, ' logoHeight=', logoHeight, fontHeight / logoHeight);
+                group.scale.setX(fontHeight / logoHeight);
+                group.scale.setY(-fontHeight / logoHeight);
+
+                const newLogoBoundingBox = ThreeUtils.computeBoundingBox(group);
+                group.position.set(
+                    this.size.x / 2 - newLogoBoundingBox.max.x - (this.size.x / 2 % 10 || 10) - 10,
+                    geometry.boundingBox.max.y + geometry.boundingBox.max.y - geometry.boundingBox.min.y + fontHeight * 0.4,
+                    0.01
+                );
+                // group.scale.set(
+                //     logoHeight / fontHeight,
+                //     logoHeight / fontHeight,
+                //     1
+                // );
+
+                this.add(group);
+
+                // const logoMaterial = new MeshBasicMaterial({
+                //     map: data,
+                //     side: FrontSide,
+                //     opacity: 0.75,
+                //     transparent: true
+                // });
+
+                // const logoMesh = new Mesh(logoGeometry, logoMaterial);
+                // // const boundingBox2 = ThreeUtils.computeBoundingBox(logoMesh);
+                // // console.log(boundingBox2);
+                // // logoMesh.scale.set(0.1, 0.1, 0.1);
+                // const boundingBox = ThreeUtils.computeBoundingBox(logoMesh);
+                // logoMesh.position.set(
+                //     this.size.x / 2 - boundingBox.max.x - (this.size.x / 2 % 10 || 10) - 10,
+                //     geometry.boundingBox.max.y + (geometry.boundingBox.max.y - geometry.boundingBox.min.y) / 2,
+                //     0.01
+                // );
+                // this.add(logoMesh);
+            });
         });
     }
 
@@ -293,13 +374,13 @@ class PrintableCube extends Object3D {
         const shape = new Shape();
         shape.moveTo(x, y + radius + 10);
         shape.lineTo(x, y + height - radius);
-        shape.absarc(x + radius, y + height - radius, radius, Math.PI, 90 / 180 * Math.PI, true);
+        radius && shape.absarc(x + radius, y + height - radius, radius, Math.PI, 90 / 180 * Math.PI, true);
         shape.lineTo(x + width - radius, y + height);
-        shape.absarc(x + width - radius, y + height - radius, radius, 90 / 180 * Math.PI, 0, true);
+        radius && shape.absarc(x + width - radius, y + height - radius, radius, 90 / 180 * Math.PI, 0, true);
         shape.lineTo(x + width, y + radius);
-        shape.absarc(x + width - radius, y + radius, radius, 0, 270 / 180 * Math.PI, true);
+        radius && shape.absarc(x + width - radius, y + radius, radius, 0, 270 / 180 * Math.PI, true);
         shape.lineTo(x + radius, y);
-        shape.absarc(x + radius, y + radius, radius, 270 / 180 * Math.PI, Math.PI, true);
+        radius && shape.absarc(x + radius, y + radius, radius, 270 / 180 * Math.PI, Math.PI, true);
         shape.lineTo(x, y + radius + 15);
         return shape;
     }

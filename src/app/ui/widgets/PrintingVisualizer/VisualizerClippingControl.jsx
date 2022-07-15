@@ -33,7 +33,7 @@ function VisualizerClippingControl() {
         return () => {
             modelGroup.off(ModelEvents.ClippingReset, noop);
         };
-    }, [modelGroup, primeTowerHeight, qualitySetting]);
+    }, []);
 
     const update = useRef(throttle((v) => {
         return dispatch(printingActions.updateClippingPlane(v));
