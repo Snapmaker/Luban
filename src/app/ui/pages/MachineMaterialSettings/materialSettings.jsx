@@ -247,8 +247,7 @@ const MaterialSettings = ({
                     style={{ display: 'none' }}
                     multiple={false}
                     onChange={async (e) => {
-                        const definition = await onChangeFileForManager(e);
-                        console.log('definition', definition);
+                        await onChangeFileForManager(e);
                     }}
                 />
                 <div className={`padding-horizontal-4 padding-vertical-4 border-radius-16 sm-flex background-grey-2 ${toolHead.printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? 'width-532' : 'width-272'}`}>

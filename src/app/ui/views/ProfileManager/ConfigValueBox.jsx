@@ -21,7 +21,6 @@ import { PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY } from '.
 /* eslint-disable import/no-cycle */
 import { ParamItem } from '../../widgets/PrintingConfigurations/Configurations';
 
-// const fs = window.require('fs');
 function ConfigValueBox({
     optionConfigGroup,
     calculateTextIndex,
@@ -52,35 +51,34 @@ function ConfigValueBox({
     const lang = i18next.language;
     useEffect(async () => {
         if (selectCategory && selectProfile) {
-            let urlPre = '';
-            let langDir = '';
-            if (lang.toUpperCase() === 'ZH-CN') {
-                langDir = 'CN';
-                urlPre = 'https://snapmaker.oss-cn-beijing.aliyuncs.com/snapmaker.com';
-            } else {
-                langDir = 'EN';
-                urlPre = 'https://s3.us-west-2.amazonaws.com/snapmaker.com';
-            }
-            const url = `${urlPre}/${langDir}/${selectCategory}/${selectProfile}.md`;
+            // let urlPre = '';
+            // let langDir = '';
+            // if (lang.toUpperCase() === 'ZH-CN') {
+            //     langDir = 'CN';
+            //     urlPre = 'https://snapmaker.oss-cn-beijing.aliyuncs.com/snapmaker.com';
+            // } else {
+            //     langDir = 'EN';
+            //     urlPre = 'https://s3.us-west-2.amazonaws.com/snapmaker.com';
+            // }
+            // const url = `${urlPre}/${langDir}/${selectCategory}/${selectProfile}.md`;
 
             try {
                 const res = await api.getProfileDocs({ lang, selectCategory, selectProfile });
                 setMdContent(res.body?.content);
-                fetch(url, { mode: 'cors',
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'text/markdown'
-                    } })
-                    .then((response) => {
-                        response.headers['access-control-allow-origin'] = { value: '*' };
-                        console.log('response', response);
-                        return response.text();
-                    })
-                    .then(result => {
-                        if (result) {
-                            setMdContent(result);
-                        }
-                    });
+                // fetch(url, { mode: 'cors',
+                //     method: 'GET',
+                //     headers: {
+                //         'Content-Type': 'text/markdown'
+                //     } })
+                //     .then((response) => {
+                //         response.headers['access-control-allow-origin'] = { value: '*' };
+                //         return response.text();
+                //     })
+                //     .then(result => {
+                //         if (result) {
+                //             setMdContent(result);
+                //         }
+                //     });
             } catch (e) {
                 console.info(e);
                 setMdContent('');
