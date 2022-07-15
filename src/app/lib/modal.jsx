@@ -1,11 +1,62 @@
 /* eslint react/no-set-state: 0 */
 import pick from 'lodash/pick';
-import React, { PureComponent } from 'react';
+import React, { PureComponent, useState } from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import i18n from './i18n';
 import Modal from '../ui/components/Modal';
 import { Button } from '../ui/components/Buttons';
+import Checkbox from '../ui/components/Checkbox';
+
+export const FooterCheckBox = ({
+    i18nKey = 'key-Modal/Common-Don\'t ask again',
+    defaultValue = false,
+    onChange
+}) => {
+    const [ignore, setIgnore] = useState(defaultValue);
+
+    return (
+        <>
+            <Checkbox
+                className=""
+                defaultChecked={ignore}
+                type="checkbox"
+                checked={ignore}
+                onChange={(event) => {
+                    setIgnore(event.target.checked);
+                    onChange && onChange(event.target.checked);
+                }}
+            />
+            <span>{i18n._(i18nKey)}</span>
+        </>
+    );
+};
+FooterCheckBox.propTypes = {
+    i18nKey: PropTypes.string,
+    defaultValue: PropTypes.bool,
+    onChange: PropTypes.func.isRequired,
+};
+
+export const FooterPrimaryButton = ({
+    i18nKey = 'key-Modal/Common-Confirm',
+    onClick
+}) => {
+    return (
+        <Button
+            priority="level-two"
+            type="primary"
+            width="96px"
+            className="margin-left-4"
+            onClick={onClick}
+        >
+            {i18n._(i18nKey)}
+        </Button>
+    );
+};
+FooterPrimaryButton.propTypes = {
+    i18nKey: PropTypes.string,
+    onClick: PropTypes.func.isRequired,
+};
 
 let outsideInputValue = '';
 class ModalHOC extends PureComponent {
@@ -15,9 +66,12 @@ class ModalHOC extends PureComponent {
         defaultInputValue: PropTypes.string,
         type: PropTypes.string,
         cancelTitle: PropTypes.string,
+        isConfirm: PropTypes.bool,
         title: PropTypes.node,
         body: PropTypes.node,
-        footer: PropTypes.node
+        footer: PropTypes.node,
+        footerLeft: PropTypes.node,
+        showChangeIgnore: PropTypes.bool
     };
 
     static defaultProps = {
@@ -26,7 +80,8 @@ class ModalHOC extends PureComponent {
 
     state = {
         show: true,
-        inputValue: this.props.defaultInputValue ? this.props.defaultInputValue : ''
+        inputValue: this.props.defaultInputValue ? this.props.defaultInputValue : '',
+        ignore: false
     };
 
     componentDidMount() {
@@ -44,7 +99,7 @@ class ModalHOC extends PureComponent {
         this.setState({ show: false });
         setTimeout(() => {
             this.props.removeContainer();
-            this.props.onClose && this.props.onClose();
+            this.props.onClose && this.props.onClose(this.state.ignore);
         });
     };
 
@@ -53,10 +108,12 @@ class ModalHOC extends PureComponent {
     }
 
     render() {
-        const { title, body, footer, size, type, cancelTitle } = this.props;
+        const { title, body, footer, footerLeft, size, type, cancelTitle, isConfirm } = this.props;
         const { show, inputValue } = this.state;
         const props = pick(this.props, Object.keys(Modal.propTypes));
-        const newTitle = i18n._(cancelTitle) || i18n._('key-Modal/Common-Cancel');
+        const defalutCancelTitle = isConfirm ? i18n._('key-Modal/Common-Confirm') : i18n._('key-Modal/Common-Cancel');
+        const newTitle = cancelTitle ? i18n._(cancelTitle) : defalutCancelTitle;
+
         return (
             <Modal
                 {...props}
@@ -76,7 +133,8 @@ class ModalHOC extends PureComponent {
                     {this.props.defaultInputValue && (
                         <input
                             type="text"
-                            style={{ height: '30px',
+                            style={{
+                                height: '30px',
                                 width: '100%',
                                 padding: '6px 12px',
                                 fontSize: '13px',
@@ -85,7 +143,8 @@ class ModalHOC extends PureComponent {
                                 borderWidth: '1px',
                                 borderStyle: 'solid',
                                 borderRadius: '4px',
-                                borderColor: '#c8c8c8' }}
+                                borderColor: '#c8c8c8'
+                            }}
                             onChange={this.onChangeInputValue}
                             value={inputValue}
                         />
@@ -94,12 +153,19 @@ class ModalHOC extends PureComponent {
                 <Modal.Footer>
                     {type === 'buttonRight' && footer}
                     <Button
+                        priority={isConfirm ? 'level-two' : ''}
+                        type={isConfirm ? 'primary' : 'default'}
                         onClick={this.handleClose}
                         width="96px"
                     >
                         {newTitle}
                     </Button>
                     {type !== 'buttonRight' && footer}
+                    {footerLeft && (
+                        <span className="float-l">
+                            {footerLeft}
+                        </span>
+                    )}
                 </Modal.Footer>
             </Modal>
         );

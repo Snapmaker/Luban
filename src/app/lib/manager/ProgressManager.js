@@ -26,6 +26,7 @@ export const STEP_STAGE = {
     CNC_LASER_RENDER_TOOLPATH: 20,
     CNC_LASER_GENERATE_TOOLPATH_AND_PREVIEW: 21,
     CNC_LASER_RENDER_VIEWPATH: 22,
+    CNC_LASER_REPAIRING_MODEL: 23,
 
     // laser
     LASER_CUTTING_STL: 34,
@@ -54,7 +55,12 @@ export const STEP_STAGE = {
     PRINTING_AUTO_ROTATE_SUCCESSED: 44,
     PRINTING_SCALE_TO_FIT_WITH_ROTATE: 45,
     PRINTING_SCALE_TO_FIT_WITH_ROTATE_SUCCESS: 46,
-    PRINTING_SCALE_TO_FIT_WITH_ROTATE_FAILED: 47
+    PRINTING_SCALE_TO_FIT_WITH_ROTATE_FAILED: 47,
+    PRINTING_SIMPLIFY_MODEL: 48,
+    PRINTING_SIMPLIFY_MODEL_SUCCESS: 49,
+    PRINTING_SIMPLIFY_MODEL_FAILED: 50,
+    PRINTING_REPAIRING_MODEL: 51,
+    PRINTING_EMIT_REPAIRING_MODEL: 53
 };
 
 export const PROCESS_STAGE = {
@@ -76,7 +82,9 @@ export const PROCESS_STAGE = {
     PRINTING_GENERATE_SUPPORT: 9,
     PRINTING_ARRANGE_MODELS: 10,
     PRINTING_AUTO_ROTATE: 11,
-    PRINTING_SCALE_TO_FIT_WITH_ROTATE: 12
+    PRINTING_SCALE_TO_FIT_WITH_ROTATE: 12,
+    PRINTING_SIMPLIFY_MODEL: 13,
+    PRINTING_REPAIRING_MODEL: 14
 };
 
 const _STATE = {
@@ -276,6 +284,25 @@ class ProgressStatesManager {
             'key-Progress/3DP-Scale to fit...{{progress}}%',
             'key-Progress/3DP-Scale to fit successfully.',
             'key-Progress/3DP-Scale to fit failed.');
+        this.push(PROCESS_STAGE.PRINTING_SIMPLIFY_MODEL, [
+            {
+                stageID: STEP_STAGE.PRINTING_SIMPLIFY_MODEL,
+                percent: 1
+            }
+        ],
+        'key-Progress/3DP-Simplify model...{{prgress}}%',
+        'key-Progress/3DP-Simplify model successfully.',
+        'key-Progress/3DP-Simplify model failed.');
+        this.push(PROCESS_STAGE.PRINTING_REPAIRING_MODEL,
+            [
+                {
+                    stageID: STEP_STAGE.PRINTING_REPAIRING_MODEL,
+                    percent: 1
+                }
+            ],
+            'key-Progress/3DP-Repairing model... {{progress}}%',
+            'key-Progress/3DP-Repair model successfully.',
+            'key-Progress/3DP-Failed to repair model.');
     }
 
     push(processStageID, stages, notice, successNotice, failedNotice) {

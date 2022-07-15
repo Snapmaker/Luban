@@ -1,7 +1,27 @@
 // mock function i18n to force variables to be counted as i18n words
 const i18n = {
-    _: () => {}
+    _: () => { }
 };
+
+// preset label
+i18n._('key-Luban/Preset/Layer Height');
+i18n._('key-Luban/Preset/Print Speed');
+i18n._('key-Luban/Preset/Infill Density');
+i18n._('key-Luban/Preset/Model Structure Type');
+i18n._('key-Luban/Preset/Support Placement');
+i18n._('key-Luban/Preset/Build Plate Adhesion Type');
+i18n._('key-Luban/Preset/Layer Height-Fine');
+i18n._('key-Luban/Preset/Layer Height-Medium');
+i18n._('key-Luban/Preset/Layer Height-Rough');
+i18n._('key-Luban/Preset/Print Speed-Slow');
+i18n._('key-Luban/Preset/Print Speed-Medium');
+i18n._('key-Luban/Preset/Print Speed-Fast');
+i18n._('key-Luban/Preset/Model Structure-Thin');
+i18n._('key-Luban/Preset/Model Structure-Medium');
+i18n._('key-Luban/Preset/Model Structure-Strong');
+i18n._('key-Luban/Preset/Support Placement-Normal');
+i18n._('key-Luban/Preset/Support Placement-None');
+
 
 // machine size name
 i18n._('key-Luban/Machine/MachineSeries-Snapmaker Original');
@@ -11,6 +31,18 @@ i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A250');
 i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A350');
 i18n._('key-Luban/Machine/MachineSeries-Custom');
 i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A400');
+
+// machine name without brand
+i18n._('key-Luban/Machine/MachineSeries-Original');
+i18n._('key-Luban/Machine/MachineSeries-A150');
+i18n._('key-Luban/Machine/MachineSeries-A250');
+i18n._('key-Luban/Machine/MachineSeries-A350');
+i18n._('key-Luban/Machine/MachineSeries-A400');
+
+// machine brand
+i18n._('key-Luban/Machine/Brand-Original');
+i18n._('key-Luban/Machine/Brand-Snapmaker');
+i18n._('key-Luban/Machine/Brand-Snapmaker 2.0');
 
 i18n._('key-machine_selection-Workspace');
 i18n._('key-machine_selection-3D Printing');
@@ -174,7 +206,8 @@ i18n._('Carving Tool');
 i18n._('Parameters');
 
 // Printing Profile
-i18n._('key-Printing/PrintingConfigurations-Material Settings');
+i18n._('key-Printing/PrintingConfigurations-Customized');
+i18n._('key-Printing/PrintingConfigurations-Recommended');
 
 i18n._('key-printing/material_settings-Temperature');
 i18n._('key-printing/material_settings-Extrusion');
@@ -213,6 +246,9 @@ i18n._('key-default_name-PETG');
 i18n._('key-default_name-PLA');
 i18n._('key-default_category-TPU');
 i18n._('key-default_name-Fast Print');
+i18n._('key-default_name-Normal Print');
+i18n._('key-default_name-Precise & Strong');
+i18n._('key-default_name-Smooth Surface');
 i18n._('key-default_name-Normal Quality');
 i18n._('key-default_name-High Quality');
 i18n._('key-default_name-ABS_Black');
@@ -310,6 +346,9 @@ i18n._('key-Printing/LeftBar-Auto Rotate All Models');
 i18n._('key-Progress/3DP-Scale to fit...{{progress}}%');
 i18n._('key-Printing/3DP-Scale to fit successfully.');
 i18n._('key-Printing/3DP-scale to fit failed.');
+i18n._('key-Progress/3DP-Repairing model... {{progress}}%');
+i18n._('key-Progress/3DP-Repair model successfully.');
+i18n._('key-Progress/3DP-Failed to repair model.');
 
 
 // Machine Settings

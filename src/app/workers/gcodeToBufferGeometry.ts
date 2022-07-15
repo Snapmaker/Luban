@@ -1,7 +1,8 @@
 import isEmpty from 'lodash/isEmpty';
 import { Observable } from 'rxjs';
-// import { Transfer } from 'threads';
 import { gcodeToBufferGeometry as _gcodeToBufferGeometry } from './GcodeToBufferGeometry/index';
+
+// const { Transfer } = require('threads');
 
 type ExtruderColorsData = {
     toolColor0: string;
@@ -32,6 +33,7 @@ const gcodeToBufferGeometry = (message: GcodeToBufferGeometryData) => {
     return new Observable((observer) => {
         if (isEmpty(message)) {
             observer.next({ status: 'err', value: 'Data is empty' });
+            observer.complete();
             return;
         }
         const { func, gcodeFilename, extruderColors } = message;
@@ -40,10 +42,12 @@ const gcodeToBufferGeometry = (message: GcodeToBufferGeometryData) => {
                 status: 'err',
                 value: `Unsupported func: ${func}`,
             });
+            observer.complete();
             return;
         }
         if (isEmpty(gcodeFilename)) {
             observer.next({ status: 'err', value: 'Gcode filename is empty' });
+            observer.complete();
             return;
         }
 
@@ -87,12 +91,14 @@ const gcodeToBufferGeometry = (message: GcodeToBufferGeometryData) => {
                     },
                 };
                 observer.next(data);
+                observer.complete();
             },
             (progress: number) => {
                 observer.next({ status: 'progress', value: progress });
             },
             (err: string) => {
                 observer.next({ status: 'err', value: err });
+                observer.complete();
             }
         );
     });

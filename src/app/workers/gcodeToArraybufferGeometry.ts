@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { Transfer } from 'threads';
 import GcodeToBufferGeometryWorkspace from './GcodeToBufferGeometry/GcodeToBufferGeometryWorkspace';
 
+
 type GcodeToArraybufferGeometryData = {
     func: string;
     gcodeFilename: string;
@@ -21,12 +22,16 @@ const gcodeToArraybufferGeometry = (data: GcodeToArraybufferGeometryData) => {
                 status: 'err',
                 value: `Unsupported func: ${func}`,
             });
+            observer.complete();
+            return;
         }
         if (isEmpty(gcodeFilename) && isEmpty(gcode)) {
             observer.next({
                 status: 'err',
                 value: 'Gcode filename and gcode is empty',
             });
+            observer.complete();
+            return;
         }
 
         new GcodeToBufferGeometryWorkspace().parse(
@@ -68,6 +73,7 @@ const gcodeToArraybufferGeometry = (data: GcodeToArraybufferGeometryData) => {
                 };
 
                 observer.next(_data);
+                observer.complete();
             },
             (progress: number) => {
                 observer.next({
@@ -78,6 +84,7 @@ const gcodeToArraybufferGeometry = (data: GcodeToArraybufferGeometryData) => {
             },
             (err: string) => {
                 observer.next({ status: 'err', value: err });
+                observer.complete();
             }
         );
     });

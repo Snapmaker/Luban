@@ -1,5 +1,5 @@
 import React from 'react';
-import modal from '../../../lib/modal';
+import modal, { FooterCheckBox, FooterPrimaryButton } from '../../../lib/modal';
 import i18n from '../../../lib/i18n';
 import { Button } from '../../components/Buttons';
 
@@ -10,6 +10,19 @@ export const loadModelFailPopup = (fileName) => {
         body: (
             <React.Fragment>
                 <p>{i18n._('Failed to import this object. \nPlease select a supported file format.')}</p>
+                <p>{i18n._('key-Printing/ContextMenu-Model source name')}: {fileName}</p>
+            </React.Fragment>
+        )
+    });
+};
+
+export const repairModelFailPopup = (fileName) => {
+    return modal({
+        cancelTitle: i18n._(''),
+        title: i18n._('key-Printing/ContextMenu-Repair Error'),
+        body: (
+            <React.Fragment>
+                <p>{i18n._('Failed to repair this object. \n')}</p>
                 <p>{i18n._('key-Printing/ContextMenu-Model source name')}: {fileName}</p>
             </React.Fragment>
         )
@@ -60,5 +73,85 @@ export const sliceFailPopup = () => {
                 <p>{i18n._('key-Progress/3DP-Slice Failed reason')}</p>
             </React.Fragment>
         )
+    });
+};
+
+export const repairModelBeforSimplifyPopup = () => {
+    return new Promise((resolve, reject) => {
+        const action = modal({
+            title: i18n._('key-Printing/ContextMenu-Repair model'),
+            body: (
+                <React.Fragment>
+                    <p>{i18n._('key-Printing/ContextMenu-BeforSimplify Model need to repair damage model')}   </p>
+                </React.Fragment>
+            ),
+            footer: (
+                <FooterPrimaryButton
+                    i18nKey="key-Printing/ContextMenu-Repair model"
+                    onClick={() => {
+                        resolve();
+                        action.close();
+                    }}
+                />
+            ),
+            onClose: () => {
+                reject();
+            }
+        });
+    });
+};
+
+export const repairGuidePopup = () => {
+    modal({
+        isConfirm: true,
+        title: i18n._('key-Printing/ContextMenu-Tips'),
+        body: (
+            <React.Fragment>
+                <p>{i18n._('key-Printing/ContextMenu-you can click the "repair model" button on the toolbar to repair it manually or reopen the model detection pop-up window in "Settings"，when you import error models next time')}   </p>
+            </React.Fragment>
+        )
+    });
+};
+
+export const repairModelPopup = (models) => {
+    let ignore = false;
+    const modelNames = models.map((c) => {
+        return c.modelName;
+    }).join();
+    return new Promise((resolve, reject) => {
+        const action = modal({
+            title: i18n._('key-Printing/ContextMenu-Repair model'),
+            body: (
+                <React.Fragment>
+                    <p>{i18n._('key-Printing/ContextMenu-Model repair prompt message')}   </p>
+                    <p>{i18n._('key-Printing/ContextMenu-Model source name')}: {modelNames}</p>
+                </React.Fragment>
+            ),
+            showChangeIgnore: true,
+            cancelTitle: '忽略',
+            footer: (
+                <FooterPrimaryButton
+                    i18nKey="key-Printing/ContextMenu-Repair model"
+                    onClick={() => {
+                        resolve(ignore);
+                        action.close();
+                    }}
+                />
+            ),
+            footerLeft: (
+                <FooterCheckBox
+                    i18nKey={'key-Modal/Common-Don\'t ask again'}
+                    onChange={(bool) => {
+                        if (bool) {
+                            repairGuidePopup();
+                        }
+                        ignore = bool;
+                    }}
+                />
+            ),
+            onClose: () => {
+                reject(ignore);
+            }
+        });
     });
 };

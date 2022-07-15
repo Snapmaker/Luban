@@ -25,6 +25,7 @@ import {
 } from '../../lib/image-getPhoto';
 import { generateRandomPathName } from '../../../shared/lib/random-utils';
 import workerManager from '../task-manager/workerManager';
+import { convertFileToSTL } from '../../lib/model-to-stl';
 
 const log = logger('api:image');
 
@@ -40,29 +41,32 @@ const moveFile = (originalPath, tempPath) => {
     });
 };
 
+
 export const set = async (req, res) => {
     const files = req.files;
     const { isRotate } = req.body;
     let originalName, tempName, tempPath, originalPath;
     // if 'files' does not exist, the model in the case library is being loaded
-    if (files) {
-        const file = files.image;
-        originalName = path.basename(file.name);
-        tempName = generateRandomPathName(originalName, true);
-        tempName = tempName.toLowerCase();
-        tempPath = `${DataStorage.tmpDir}/${tempName}`;
-        originalPath = file.path;
-    } else {
-        const { name, casePath } = req.body;
-        originalName = name;
-        originalPath = `${DataStorage.userCaseDir}/${casePath}/${name}`;
-        tempName = generateRandomPathName(originalName, true);
-        tempName = tempName.toLowerCase();
-        tempPath = `${DataStorage.tmpDir}/${tempName}`;
-    }
-    const extname = path.extname(tempName).toLowerCase();
-
     try {
+        if (files) {
+            const file = files.image;
+            const { filename, filePath } = await convertFileToSTL(file);
+
+            originalName = path.basename(filename);
+            tempName = generateRandomPathName(originalName, true);
+            tempName = tempName.toLowerCase();
+            tempPath = `${DataStorage.tmpDir}/${tempName}`;
+            originalPath = filePath;
+        } else {
+            const { name, casePath } = req.body;
+            originalName = name;
+            originalPath = `${DataStorage.userCaseDir}/${casePath}/${name}`;
+            tempName = generateRandomPathName(originalName, true);
+            tempName = tempName.toLowerCase();
+            tempPath = `${DataStorage.tmpDir}/${tempName}`;
+        }
+        const extname = path.extname(tempName).toLowerCase();
+
         if (files) {
             // jpg image may have EXIF data, parse it
             // https://blog.csdn.net/weixin_40243894/article/details/107049225
@@ -132,10 +136,7 @@ export const set = async (req, res) => {
                             uploadName: tempName,
                             width: width,
                             height: height,
-                        })
-                            .catch((err) => {
-                                throw new Error(err);
-                            });
+                        });
                     } else if (payload.status === 'fail') {
                         throw new Error(payload.error);
                     }

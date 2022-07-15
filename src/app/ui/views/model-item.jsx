@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import path from 'path';
+import { Tooltip } from 'antd';
 import i18n from '../../lib/i18n';
 import TipTrigger from '../components/TipTrigger';
 import Anchor from '../components/Anchor';
@@ -47,6 +48,34 @@ const getExtruderColor = (shell, infill, leftMaterialColor, rightMaterialColor) 
         _rightExtruderColor
     };
 };
+
+const ModelIcon = (props) => {
+    const { model, disabled, name } = props;
+    const Icon = (
+        <SvgIcon
+            type={['static']}
+            color={model.needRepair ? '#FFA940' : ''}
+            name={model.needRepair ? 'WarningTipsWarningBig' : name}
+            className="margin-right-4"
+            disabled={disabled}
+        />
+    );
+    if (model.needRepair) {
+        return (
+            <Tooltip title={i18n._('key-PrintingCncLaser/ObjectList-Error model, select it and click repair model button to repair it')} arrowPointAtCenter>
+                {Icon}
+            </Tooltip>
+        );
+    } else {
+        return Icon;
+    }
+};
+ModelIcon.propTypes = {
+    model: PropTypes.object.isRequired,
+    disabled: PropTypes.bool.isRequired,
+    name: PropTypes.string.isRequired,
+};
+
 function ModelItem({
     model, visible, isSelected, styles, onSelect, onToggleVisible,
     inProgress, placment, disabled = false, isDualExtruder = false,
@@ -119,12 +148,9 @@ function ModelItem({
                             style={{ color: disabled ? '#D5D6D9' : '' }}
                             onClick={(event) => onSelect(model, event)}
                         >
-                            <SvgIcon
-                                type={['static']}
-                                name={svgName}
-                                className="margin-right-4"
-                                disabled={disabled}
-                            />
+
+                            <ModelIcon name={svgName} model={model} disabled={disabled} />
+
                             <span className={classNames(styles['prefix-name'])}>
                                 {prefixName}
                             </span>
@@ -170,12 +196,7 @@ function ModelItem({
                                     onClick={() => onExpend(model.modelID)}
                                 />
                             ) : (
-                                <SvgIcon
-                                    type={['static']}
-                                    name={svgName}
-                                    className="margin-right-4"
-                                    disabled={disabled}
-                                />
+                                <ModelIcon name={svgName} model={model} disabled={disabled} />
                             )}
                             <span className={classNames(styles['prefix-name'])}>
                                 {prefixName}
@@ -231,12 +252,8 @@ function ModelItem({
                                 style={{ color: disabled ? '#D5D6D9' : '' }}
                                 onClick={(event) => onSelect(modelItem, event)}
                             >
-                                <SvgIcon
-                                    type={['static']}
-                                    name={objectList3d}
-                                    className="margin-right-4"
-                                    disabled={disabled}
-                                />
+                                <ModelIcon name={objectList3d} model={modelItem} disabled={disabled} />
+
                                 <span className={classNames(styles['prefix-name'])}>
                                     {_prefixName}
                                 </span>

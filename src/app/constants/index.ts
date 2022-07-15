@@ -1108,9 +1108,9 @@ export const MACHINE_SERIES = {
         label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A400',
         setting: {
             size: {
-                x: 410,
-                y: 410,
-                z: 420
+                x: 400,
+                y: 400,
+                z: 400
             },
             laserSize: {
                 x: 410,
@@ -1150,8 +1150,8 @@ export const STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL = 'standardCNCToolheadForOrigina
 export const STANDARD_CNC_TOOLHEAD_FOR_SM2 = 'standardCNCToolheadForSM2';
 export const LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2 = 'levelTwoCNCToolheadForSM2';
 
-export const DUAL_EXTRUDER_LIMIT_WIDTH_L = 20;
-export const DUAL_EXTRUDER_LIMIT_WIDTH_R = 20;
+export const DUAL_EXTRUDER_LIMIT_WIDTH_L = 0;
+export const DUAL_EXTRUDER_LIMIT_WIDTH_R = 26;
 
 export const MACHINE_TOOL_HEADS = {
     [SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL]: {
@@ -1354,6 +1354,13 @@ export const MACHINE_HEAD_TYPE = {
     }
 };
 
+export const MACHINE_BRAND_MAP = {
+    [MACHINE_SERIES.ORIGINAL.value]: 'Original',
+    [MACHINE_SERIES.A150.value]: 'Snapmaker 2.0',
+    [MACHINE_SERIES.A250.value]: 'Snapmaker 2.0',
+    [MACHINE_SERIES.A350.value]: 'Snapmaker 2.0',
+    [MACHINE_SERIES.A400.value]: 'Snapmaker',
+};
 export const IMAGE_WIFI_CONNECTING = '/resources/images/connection/Screen.png';
 export const IMAGE_WIFI_CONNECT_WAITING = '/resources/images/connection/ic_waiting-64x64.png';
 export const IMAGE_WIFI_CONNECTED = '/resources/images/connection/ic_complete_64x64.png';
@@ -1610,3 +1617,8 @@ export const MODULEID_TOOLHEAD_MAP = {
     '14': LEVEL_TWO_POWER_LASER_FOR_SM2,
     '15': LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2
 };
+
+export const PRINTING_SINGLE_EXTRUDER_HEADTOOL = [
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL
+];

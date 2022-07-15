@@ -14,11 +14,15 @@ import { Button } from '../../components/Buttons';
 import CncParameters from './cnc/CncParameters';
 import { toHump } from '../../../../shared/lib/utils';
 import LaserParameters from './laser/LaserParameters';
+import { editorStore } from '../../../store/local-storage';
 
 function getDefaultDefinition(headType, laserToolHead, modelMode, toolDefinitions) {
     let res;
+    const lastDefinitionId = editorStore.get(`${headType}LastDefinitionId`);
     if (headType === HEAD_LASER) {
-        if (laserToolHead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
+        if (lastDefinitionId) {
+            res = toolDefinitions.find(d => d?.definitionId === lastDefinitionId);
+        } else if (laserToolHead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
             if (modelMode === PROCESS_MODE_VECTOR) {
                 res = toolDefinitions.find(d => d?.definitionId === 'basswood.cutting_1.5mm');
             } else {
@@ -30,6 +34,10 @@ function getDefaultDefinition(headType, laserToolHead, modelMode, toolDefinition
             } else {
                 res = toolDefinitions.find(d => d?.definitionId === 'basswood.dot_filled_engraving');
             }
+        }
+    } else {
+        if (lastDefinitionId) {
+            res = toolDefinitions.find(d => d?.definitionId === lastDefinitionId);
         }
     }
     if (!res) {
@@ -102,6 +110,12 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
     }, [toolpath]);
 
     const actions = {
+        setToolDefinitionAndRemember(definition) {
+            setCurrentToolDefinition(definition);
+            if (definition.definitionId) {
+                editorStore.set(`${headType}LastDefinitionId`, definition.definitionId);
+            }
+        },
         updateToolConfig(key, value) {
             const newDefinition = _.cloneDeep(currentToolDefinition);
             newDefinition.settings[key].default_value = value;
@@ -148,7 +162,7 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                     }
                 }
             }
-            setCurrentToolDefinition(newDefinition);
+            actions.setToolDefinitionAndRemember(newDefinition);
         },
         checkIfDefinitionModified() {
             const oldTooldefinition = toolDefinitions.find((d) => {
@@ -284,7 +298,7 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                     {headType === HEAD_CNC && (
                         <CncParameters
                             toolPath={toolPath}
-                            setCurrentToolDefinition={setCurrentToolDefinition}
+                            setCurrentToolDefinition={(definition) => actions.setToolDefinitionAndRemember(definition)}
                             toolDefinitions={toolDefinitions}
                             isModifiedDefinition={isModifiedDefinition}
                             activeToolDefinition={currentToolDefinition}
@@ -298,7 +312,7 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                     {headType === HEAD_LASER && (
                         <LaserParameters
                             toolPath={toolPath}
-                            setCurrentToolDefinition={setCurrentToolDefinition}
+                            setCurrentToolDefinition={(definition) => actions.setToolDefinitionAndRemember(definition)}
                             toolDefinitions={toolDefinitions}
                             isModifiedDefinition={isModifiedDefinition}
                             activeToolDefinition={currentToolDefinition}

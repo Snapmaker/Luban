@@ -29,7 +29,7 @@ import ThreeModel from '../../models/ThreeModel';
 
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
-import { logGcodeExport, logModuleVisit } from '../../lib/gaEvent';
+import { logModuleVisit } from '../../lib/gaEvent';
 
 const INITIAL_STATE = {
     [HEAD_PRINTING]: {
@@ -153,7 +153,7 @@ export const actions = {
                 sourceWidth, sourceHeight, mode, transformation, modelID, supportTag, extruderConfig, children, parentModelID } = models[k];
             const primeTowerTag = includes(originalName, 'prime_tower');
             // prevent project recovery recorded into operation history
-            if (supportTag) {
+            if (supportTag || originalName?.indexOf('prime_tower') === 0) {
                 continue;
             }
             if (!children) {
@@ -290,15 +290,13 @@ export const actions = {
         Promise.all(promiseArray).then(() => {
             dispatch(actions.afterOpened(envHeadType));
             if (envHeadType === HEAD_PRINTING) {
-                dispatch(modActions.updateAllModelColors());
+                dispatch(modActions.applyProfileToAllModels());
             }
         }).catch(console.error);
     },
 
-    exportFile: (targetFile, renderGcodeFileName = null) => async (dispatch, getState) => {
-        const { headType, isRotate } = getState().workspace;
+    exportFile: (targetFile, renderGcodeFileName = null) => async (dispatch) => {
         const tmpFile = `/Tmp/${targetFile}`;
-        logGcodeExport(headType, 'local', isRotate);
         await UniApi.File.exportAs(targetFile, tmpFile, renderGcodeFileName, (type, filePath = '') => {
             dispatch(appGlobalActions.updateSavedModal({
                 showSavedModal: true,

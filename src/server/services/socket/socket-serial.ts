@@ -12,9 +12,9 @@ const log = logger('service:socket-server');
 let intervalHandle = null;
 
 class SocketSerial {
-    private port: string = '';
+    private port = '';
 
-    private dataSource: string = '';
+    private dataSource = '';
 
     public onConnection = (socket: SocketServer) => {
         intervalHandle = setInterval(() => {

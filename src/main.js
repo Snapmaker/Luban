@@ -454,7 +454,7 @@ app.on('second-instance', (event, commandLine) => {
         }
     }
 });
-protocol.registerSchemesAsPrivileged([{ scheme: 'luban', privileges: { standard: true } }]);
+protocol.registerSchemesAsPrivileged([{ scheme: 'luban', privileges: { standard: true, corsEnabled: true } }]);
 
 /**
  * when ready

@@ -1,20 +1,17 @@
-import React from 'react';
-// import { includes } from 'lodash';
+import React, { useCallback } from 'react';
+import { includes } from 'lodash';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
+import { actions as machineActions } from '../../../flux/machine';
 import {
     PRINTING_MANAGER_TYPE_MATERIAL,
     PRINTING_MANAGER_TYPE_QUALITY,
     getMachineSeriesWithToolhead,
     HEAD_PRINTING,
-    PRINTING_MATERIAL_CONFIG_GROUP_SINGLE,
-    PRINTING_MATERIAL_CONFIG_GROUP_DUAL,
-    PRINTING_QUALITY_CONFIG_GROUP_SINGLE,
-    PRINTING_QUALITY_CONFIG_GROUP_DUAL,
-    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     LEFT_EXTRUDER
 } from '../../../constants';
+/* eslint-disable import/no-cycle */
 import ProfileManager from '../ProfileManager';
 import i18n from '../../../lib/i18n';
 
@@ -66,15 +63,28 @@ function PrintingManager() {
     );
     const series = useSelector((state) => state?.machine?.series);
     const toolHead = useSelector((state) => state?.machine?.toolHead);
+    const printingProfileLevel = useSelector((state) => state?.printing?.printingProfileLevel);
+    const materialProfileLevel = useSelector((state) => state?.printing?.materialProfileLevel);
     const dispatch = useDispatch();
-    let printingMaterialConfigGroup, printingQualityConfigGroup;
-    if (toolHead.printingToolhead === SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2) {
-        printingMaterialConfigGroup = PRINTING_MATERIAL_CONFIG_GROUP_SINGLE;
-        printingQualityConfigGroup = PRINTING_QUALITY_CONFIG_GROUP_SINGLE;
-    } else {
-        printingMaterialConfigGroup = PRINTING_MATERIAL_CONFIG_GROUP_DUAL;
-        printingQualityConfigGroup = PRINTING_QUALITY_CONFIG_GROUP_DUAL;
-    }
+    const customConfigs = useSelector(state => state?.machine?.printingCustomConfigsWithCategory);
+    const onChangeCustomConfig = useCallback((key, checked, category) => {
+        const newCustomConfig = { ...customConfigs };
+        if (checked && !includes(newCustomConfig[category], key)) {
+            newCustomConfig[category] = newCustomConfig[category] || [];
+            newCustomConfig[category].push(key);
+        } else if (!checked) {
+            newCustomConfig[category] = newCustomConfig[category].filter(a => a !== key);
+        }
+        dispatch(machineActions.updatePrintingCustomConfigsWithCategory(newCustomConfig[category], category));
+    }, [customConfigs]);
+    // let printingMaterialConfigGroup, printingQualityConfigGroup;
+    // if (toolHead.printingToolhead === SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2) {
+    //     printingMaterialConfigGroup = PRINTING_MATERIAL_CONFIG_GROUP_SINGLE;
+    //     printingQualityConfigGroup = PRINTING_QUALITY_CONFIG_GROUP_SINGLE;
+    // } else {
+    //     printingMaterialConfigGroup = PRINTING_MATERIAL_CONFIG_GROUP_DUAL;
+    //     printingQualityConfigGroup = PRINTING_QUALITY_CONFIG_GROUP_DUAL;
+    // }
     if (!showPrintingManager) {
         return null;
     }
@@ -225,9 +235,9 @@ function PrintingManager() {
         }
     };
 
-    const optionConfigGroup = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL
-        ? printingMaterialConfigGroup
-        : printingQualityConfigGroup;
+    // const optionConfigGroup = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL
+    //     ? printingMaterialConfigGroup
+    //     : printingQualityConfigGroup;
     const allDefinitions = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL
         ? materialDefinitions
         : qualityDefinitionsModels;
@@ -247,7 +257,8 @@ function PrintingManager() {
         <ProfileManager
             outsideActions={actions}
             isOfficialDefinition={isOfficialDefinition}
-            optionConfigGroup={optionConfigGroup}
+            customConfig={customConfigs}
+            optionConfigGroup={managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? materialProfileLevel : printingProfileLevel}
             allDefinitions={allDefinitions}
             managerTitle={
                 managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL
@@ -256,6 +267,7 @@ function PrintingManager() {
             }
             activeDefinitionID={selectedIds[managerDisplayType].id}
             managerType={managerDisplayType}
+            onChangeCustomConfig={onChangeCustomConfig}
         />
     );
 }

@@ -1,27 +1,27 @@
-import { spawn, Worker, Pool } from 'threads';
+import { spawn, Worker, Pool, Thread } from 'threads';
 import './Pool.worker';
+// const { spawn, Worker, Pool } = require('threads');
 
 export enum WorkerMethods {
-    // LUBAN worker methods BEGIN
     arrangeModels = 'arrangeModels',
     autoRotateModels = 'autoRotateModels',
     boxSelect = 'boxSelect',
-    // evaluateSupportArea = 'evaluateSupportArea',
     gcodeToArraybufferGeometry = 'gcodeToArraybufferGeometry',
     gcodeToBufferGeometry = 'gcodeToBufferGeometry',
     loadModel = 'loadModel',
     scaleToFitWithRotate = 'scaleToFitWithRotate',
-    toolpathRenderer = 'toolpathRenderer'
-    // LUBAN worker methods END
+    toolpathRenderer = 'toolpathRenderer',
+    generatePlateAdhesion = 'generatePlateAdhesion',
 }
 
 type IWorkerManager = {
-    [method in WorkerMethods]: (
-        data: unknown[],
-        onmessage: (data: unknown) => void
-    ) => {
+    [method in WorkerMethods]: <T>(
+        data: unknown,
+        onMessage: (data: T) => void,
+        onComplete?: () => void
+    ) => Promise<{
         terminate(): void;
-    };
+    }>;
 };
 type PayloadData = {
     status?: string;
@@ -30,23 +30,41 @@ type PayloadData = {
 };
 
 class WorkerManager {
-    public pool;
+    private pool: Pool<Thread>;
+
+
+    public getPool() {
+        if (!this.pool) {
+            this.pool = Pool(async () => spawn(new Worker('./Pool.worker.js'))) as unknown as Pool<Thread>;
+        }
+
+        return this.pool;
+    }
 }
 
 Object.entries(WorkerMethods).forEach(([, method]) => {
     // eslint-disable-next-line
-    WorkerManager.prototype[method] = async function (data: any, onmessage?: (payload: unknown) => void | Promise<unknown>) {
-        this.pool || (this.pool = Pool(async () => spawn(new Worker('./Pool.worker.js'))));
-        const task = this.pool.queue(eachPool => {
-            eachPool[method](data).subscribe((payload: PayloadData) => {
-                if (onmessage) {
-                    onmessage(payload);
-                }
+    WorkerManager.prototype[method] = async function (data: any, onMessage?: (payload: unknown) => void | Promise<unknown>, onComplete?: () => void) {
+        let task = this.getPool().queue(async (eachPool) => {
+            return new Promise<void>((resolve) => {
+                const subscribe = eachPool[method](data).subscribe({
+                    next: (payload: PayloadData) => {
+                        if (onMessage) {
+                            onMessage(payload);
+                        }
+                    },
+                    complete() {
+                        resolve();
+                        task = null;
+                        subscribe.unsubscribe();
+                        onComplete && onComplete();
+                    }
+                });
             });
         });
         return {
             terminate: () => {
-                task.cancel();
+                task && task.cancel();
             }
         };
     };

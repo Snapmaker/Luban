@@ -30,6 +30,7 @@ const ModalWrapper = React.memo(({
     onClose,
     className = '',
     children,
+    size,
     ...rest
 }) => {
     useEffect(() => {
@@ -71,7 +72,7 @@ const ModalWrapper = React.memo(({
             maskClosable={false}
             centered={centered}
             mask={!tile}
-            className={classNames(styles.modal, `${renderSection('modalTitle') ? className : `${className} no-header`}`)}
+            className={classNames(styles.modal, `${renderSection('modalTitle') ? className : `${className} no-header`}`, `model-${size}`)}
             wrapClassName={tile ? `${modalWrapperClassName} tile-modal` : modalWrapperClassName}
             maskStyle={{
                 background: '#2A2C2E30'

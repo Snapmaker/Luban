@@ -1,0 +1,128 @@
+@import "../../../styles/variables.styl"
+.manager-body {
+    text-align: left;
+    .manager-content {
+        height: 536px
+        .manager-name {
+            display:flex
+            flex-direction: column
+            width: 260px
+            height: 100%
+            margin-right: 16px
+            vertical-align: top
+            .manager-name-wrapper {
+                list-style: none
+                background: #FFFFFF;
+                padding: 0;
+                margin: 0 0 8px;
+                overflow-y: auto;
+                flex: 1
+                vertical-align: top
+                .manager-btn {
+                    display: flex;
+                    height: 32px
+                    line-height: 32px;
+                    width: 100%;
+                    text-align: left;
+                    &.selected {
+                        background: #E6F2FD;
+                    }
+                    .manager-btn-unfold {
+                        width: 32px;
+                        height: 32px;
+                        display: inline-block;
+                        vertical-align: middle;
+                        .manager-btn-unfold-bg {
+                            outline: none;
+                            background: url("../../../resources/images/cnc-laser/ic_right arrow_18x18.png") no-repeat center/18px 18px
+                            height: 18px;
+                            margin: 7px;
+                            width: 18px;
+                            display: inline-block;
+                            &.unfold {
+                                outline: none;
+                                background-image: url("../../../resources/images/cnc-laser/ic_drop arrow_18x18.png")
+                            }
+                        }
+                    }
+                    input{
+                        float: none;
+                        outline:none;
+                        border:none;
+                        width: 215px;
+                        height: 24px;
+                        background: #FFFFFF;
+                        width: 180px;
+                    }
+                }
+            }
+            .manager-file {
+                width: 48%;
+                vertical-align: middle;
+                background-color: white;
+                padding: 4px;
+                border: 1px solid #B9BCBF;
+                &:hover {
+                    color: #272829;
+                    background #eeeff0 !important;
+                }
+                .action-title{
+                    vertical-align: middle;
+                    display: inline-block;
+                    line-height: 16px;
+                    padding: 0 5px;
+                }
+            }
+        }
+    }
+
+    .manager-settings {
+        padding: 0 20px;
+        background: #F6F7F8;
+        .manager-settings-btn {
+            padding: 9px 0;
+            a {
+                box-sizing: content-box;
+                height: 24px;
+                line-height: 24px;
+                padding: 5px 30px
+            }
+        }
+        .manager-settings-operate {
+            float: left;
+        }
+        .manager-settings-save {
+            float: right;
+        }
+    }
+
+}
+
+.manager-grouplist {
+    width: 220px
+    // height: 100%
+    height: 98%
+    margin-right: 16px;
+    // padding: 1px;
+    text-align: left;
+    box-sizing content-box;
+    .item{
+        display: block;
+        width: 100%;
+        line-height: 32px;
+        padding: 0px 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .selected {
+        background: #E6F2FD;
+    }
+}
+.manager-details {
+    width: 420px
+    height: 100%
+    overflow-y: auto;
+    padding: 0 16px;
+    text-align: left
+}

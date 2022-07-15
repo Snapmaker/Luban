@@ -2,19 +2,20 @@
 .manager-body {
     text-align: left;
     .manager-content {
-        height: 536px
+        height: calc(100vh - 132px);
         .manager-name {
             display:flex
             flex-direction: column
-            width: 260px
+            width: 262px
             height: 100%
-            margin-right: 16px
+            // margin-right: 16px
             vertical-align: top
             .manager-name-wrapper {
                 list-style: none
+                width: 262px;
                 background: #FFFFFF;
                 padding: 0;
-                margin: 0 0 8px;
+                margin: 0;
                 overflow-y: auto;
                 flex: 1
                 vertical-align: top
@@ -99,10 +100,12 @@
 }
 
 .manager-grouplist {
-    width: 220px
+    width: 176px
+    border-right: 1px solid #EEEFF0;
+    padding: 16px 0;
     // height: 100%
     height: 98%
-    margin-right: 16px;
+    // margin-right: 16px;
     // padding: 1px;
     text-align: left;
     box-sizing content-box;
@@ -119,11 +122,20 @@
         background: #E6F2FD;
     }
 }
+.manager-detail-and-docs {
+    max-width: calc(100% - 176px);
+    width: calc(100% - 192px);
+    overflow-x: auto;
+    padding: 16px 0px 16px 16px;
+}
+
 .manager-details {
-    width: 420px
+    // width: 100%;
+    // max-width: 490px;
+    min-width: 408px;
     height: 100%
     overflow-y: auto;
-    padding: 0 16px;
+    margin: 0 24px 0 0;
     text-align: left
 }
 .settings-select-wrapper {
@@ -153,4 +165,37 @@
             background-size: 100%
         }
     }
+}
+.manager-params-docs {
+    min-width: 265px;
+}
+.hidden-docs {
+    width: 1px;
+    min-width: 1px !important;
+}
+.manager-list {
+    height: calc(100% - 56px);
+}
+
+.manager-action {
+    visibility: hidden;
+}
+
+.profile-li {
+    &:hover {
+        .selected {
+           .manager-action {
+                background: #f00;
+                visibility: visible;
+            }
+        }
+    }
+}
+
+.config-value-box-wrapper {
+    width: calc(100% - 294px);
+}
+
+.disable-li {
+    pointer-events: none;
 }

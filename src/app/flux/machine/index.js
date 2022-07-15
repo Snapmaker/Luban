@@ -1,5 +1,5 @@
 /* eslint-disable import/no-cycle */
-import _, { isEmpty, isNil } from 'lodash';
+import _, { cloneDeep, isEmpty, isNil } from 'lodash';
 import {
     ABSENT_OBJECT,
     CONNECTION_STATUS_CONNECTED,
@@ -190,6 +190,8 @@ const INITIAL_STATE = {
         'support_enable'
     ],
 
+    printingCustomConfigsWithCategory: {},
+
     // security warning
     shouldShowCncWarning: true,
 
@@ -207,7 +209,7 @@ const INITIAL_STATE = {
     shouldAutoPreviewGcode: true,
     // Whether hide console when machine is working
     shouldHideConsole: true,
-
+    promptDamageModel: true,
     // connect info
     moduleStatusList: {},
     // wifi connection, home button in control widget
@@ -256,10 +258,11 @@ export const actions = {
             }
         }
         const printingCustomConfigs = machineStore.get('printingCustomConfigs');
+        const printingCustomConfigsWithCategory = machineStore.get('printingCustomConfigsWithCategory');
         if (
             printingCustomConfigs
             && Object.prototype.toString.call(printingCustomConfigs)
-                === '[object String]'
+            === '[object String]'
         ) {
             const customConfigsArray = printingCustomConfigs.split('-');
             dispatch(
@@ -267,6 +270,16 @@ export const actions = {
                     printingCustomConfigs: customConfigsArray
                 })
             );
+        }
+
+        if (printingCustomConfigsWithCategory) {
+            const tempConfigs = {};
+            Object.keys(printingCustomConfigsWithCategory).forEach(category => {
+                tempConfigs[category] = [...printingCustomConfigsWithCategory[category]];
+            });
+            dispatch(baseActions.updateState({
+                printingCustomConfigsWithCategory: tempConfigs
+            }));
         }
 
         if (machineStore.get('shouldAutoPreviewGcode') === false) {
@@ -280,6 +293,13 @@ export const actions = {
             dispatch(baseActions.updateState({
                 shouldHideConsole: false
             }));
+        }
+        if (machineStore.get('promptDamageModel') === false) {
+            dispatch(
+                baseActions.updateState({
+                    promptDamageModel: false
+                })
+            );
         }
     },
 
@@ -404,11 +424,11 @@ export const actions = {
                 }
                 if (
                     Number(machineState.originOffset.x)
-                        !== Number(originOffset.x)
+                    !== Number(originOffset.x)
                     || Number(machineState.originOffset.y)
-                        !== Number(originOffset.y)
+                    !== Number(originOffset.y)
                     || Number(machineState.originOffset.z)
-                        !== Number(originOffset.z)
+                    !== Number(originOffset.z)
                 ) {
                     dispatch(
                         baseActions.updateState({
@@ -1078,6 +1098,15 @@ export const actions = {
         const newConfig = printingCustomConfigs.join('-');
         machineStore.set('printingCustomConfigs', newConfig);
     },
+    updatePrintingCustomConfigsWithCategory: (printingCustomConfigs, category) => async (dispatch, getState) => {
+        const { printingCustomConfigsWithCategory } = getState().machine;
+        const newConfig = cloneDeep(printingCustomConfigsWithCategory);
+        newConfig[category] = printingCustomConfigs;
+        await dispatch(baseActions.updateState({
+            printingCustomConfigsWithCategory: newConfig
+        }));
+        machineStore.set('printingCustomConfigsWithCategory', newConfig);
+    },
     updateMultipleEngine: () => (dispatch, getState) => {
         const { multipleEngine } = getState().machine;
         dispatch(baseActions.updateState({ multipleEngine: !multipleEngine }));
@@ -1093,6 +1122,10 @@ export const actions = {
     updateShouldHideConsole: (shouldHideConsole) => (dispatch) => {
         dispatch(baseActions.updateState({ shouldHideConsole: shouldHideConsole }));
         machineStore.set('shouldHideConsole', shouldHideConsole);
+    },
+    updatePromptDamageModel: (bool) => (dispatch) => {
+        dispatch(baseActions.updateState({ promptDamageModel: bool }));
+        machineStore.set('promptDamageModel', bool);
     }
     // endregion
 };

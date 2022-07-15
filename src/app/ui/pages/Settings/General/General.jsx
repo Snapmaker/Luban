@@ -86,10 +86,12 @@ function General({ state: generalState, actions }) {
     const shouldAutoPreviewGcode = useSelector(state => state?.machine?.shouldAutoPreviewGcode, shallowEqual);
     const shouldHideConsole = useSelector(state => state?.machine?.shouldHideConsole, shallowEqual);
     const autoupdateMessage = useSelector(state => state?.machine?.autoupdateMessage, shallowEqual);
+    const promptDamageModel = useSelector(state => state?.machine?.promptDamageModel, shallowEqual);
     const dispatch = useDispatch();
     const updateShouldCheckForUpdate = (shouldAutoUpdate) => dispatch(machineActions.updateShouldCheckForUpdate(shouldAutoUpdate));
     const updateShouldAutoPreviewGcode = (bool) => dispatch(machineActions.updateShouldAutoPreviewGcode(bool));
     const updateShouldHideConsole = (bool) => dispatch(machineActions.updateShouldHideConsole(bool));
+    const updatePromptDamageModel = (bool) => dispatch(machineActions.updatePromptDamageModel(bool));
 
     const handlers = {
         changeLanguage: (option) => {
@@ -215,6 +217,15 @@ function General({ state: generalState, actions }) {
                         />
                         <span className="margin-left-4">
                             {i18n._('key-App/Settings/General-Workspace Hide the console when working')}
+                        </span>
+                    </SubMenuitemWrapper>
+                    <SubMenuitemWrapper title={i18n._('key-App/Settings/Model repair')}>
+                        <Checkbox
+                            checked={promptDamageModel}
+                            onChange={(event) => { updatePromptDamageModel(event.target.checked); }}
+                        />
+                        <span className="margin-left-4">
+                            {i18n._('key-App/Settings/Pop-up detection models window when import error model')}
                         </span>
                     </SubMenuitemWrapper>
                 </div>

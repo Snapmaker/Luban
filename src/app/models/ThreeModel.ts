@@ -1,24 +1,24 @@
 import { v4 as uuid } from 'uuid';
 import * as THREE from 'three';
 import noop from 'lodash/noop';
-import { MeshLambertMaterial, Object3D, ObjectLoader } from 'three';
+import { BufferGeometry, DoubleSide, Geometry, Mesh, MeshBasicMaterial, MeshLambertMaterial, Object3D, ObjectLoader, Plane } from 'three';
 import {
     LOAD_MODEL_FROM_INNER
 } from '../constants';
-
 import ThreeUtils from '../three-extensions/ThreeUtils';
 import ThreeGroup from './ThreeGroup';
 import BaseModel, { ModelInfo, TSize } from './ThreeBaseModel';
 import { machineStore } from '../store/local-storage';
 import type ModelGroup from './ModelGroup';
+import ClipperModel from './ClipperModel';
 
 const materialOverstepped = new THREE.Color(0xa80006);
 
 class ThreeModel extends BaseModel {
     public isThreeModel = true;
+    public localPlane: Plane;
 
     public target: unknown = null;
-    public originalPosition: TSize;
     public supportTag = false;
     public supportFaceMarks: number[] = [];
     public convexGeometry: THREE.Geometry;
@@ -30,6 +30,7 @@ class ThreeModel extends BaseModel {
     declare public meshObject: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial | THREE.MeshLambertMaterial> & { uniformScalingState?: boolean };
 
     public isEditingSupport = false;
+    public materialPrintTemperature: number;
 
     private geometry: THREE.BufferGeometry;
 
@@ -37,13 +38,16 @@ class ThreeModel extends BaseModel {
     private _materialNormal: THREE.Color;
     private _materialSelected: THREE.Color;
 
+    public hasOversteppedHotArea: boolean
+
+    public clipper: ClipperModel;
 
     public constructor(modelInfo: ModelInfo, modelGroup: ModelGroup) {
         super(modelInfo, modelGroup);
         const { width, height, processImageName } = modelInfo;
 
         this.geometry = modelInfo.geometry || new THREE.PlaneGeometry(width, height) as unknown as THREE.BufferGeometry;
-        let material = modelInfo.material || new THREE.MeshStandardMaterial({ color: 0xe0e0e0, visible: false });
+        let material = modelInfo.material || new THREE.MeshStandardMaterial({ color: 0xe0e0e0, visible: false, side: THREE.DoubleSide });
 
         try {
             const objectLoader = new ObjectLoader();
@@ -53,6 +57,8 @@ class ThreeModel extends BaseModel {
             const materials = objectLoader.parseMaterials(json.materials, textures);
             const newMaterial = Object.values(materials)[0] as THREE.MeshStandardMaterial;
             material = newMaterial;
+            this.localPlane = modelGroup.localPlane;
+            material.clippingPlanes = [this.localPlane];
 
             this.modelModeMaterial = material;
             // Line version
@@ -65,6 +71,7 @@ class ThreeModel extends BaseModel {
                 polygonOffset: true,
                 polygonOffsetFactor: -5,
                 polygonOffsetUnits: -0.1
+
             });
             // Linetube version, not remove
             // this.gcodeModeMaterial = new MeshLambertMaterial({
@@ -139,7 +146,50 @@ class ThreeModel extends BaseModel {
         this.meshObject.visible = value;
     }
 
-    public updateDisplayedType(value: string) {
+    public initClipper(localPlane: Plane) {
+        this.localPlane = localPlane;
+        this.clipper = new ClipperModel(this, this.modelGroup, localPlane);
+        this.onTransform();
+        this.modelGroup.clippingGroup.add(this.clipper.group);
+    }
+
+    public setLocalPlane(height) {
+        this.meshObject.material.clippingPlanes = [
+            this.localPlane
+        ];
+
+        this.clipper.setLocalPlane(height);
+    }
+
+    public updateBufferGeometry(bufferGeometry: BufferGeometry) {
+        const { recovery } = this.modelGroup.unselectAllModels();
+
+        if (this.parent) {
+            bufferGeometry.scale(1 / this.meshObject.parent.scale.x, 1 / this.meshObject.parent.scale.y, 1 / this.meshObject.parent.scale.z);
+            bufferGeometry.rotateX(-this.meshObject.parent.rotation.x);
+            bufferGeometry.rotateY(-this.meshObject.parent.rotation.y);
+            bufferGeometry.rotateZ(-this.meshObject.parent.rotation.z);
+        }
+        bufferGeometry.scale(1 / this.meshObject.scale.x, 1 / this.meshObject.scale.y, 1 / this.meshObject.scale.z);
+        bufferGeometry.rotateX(-this.meshObject.rotation.x);
+        bufferGeometry.rotateY(-this.meshObject.rotation.y);
+        bufferGeometry.rotateZ(-this.meshObject.rotation.z);
+
+        bufferGeometry.computeVertexNormals();
+
+        this.meshObject.geometry = bufferGeometry;
+
+        recovery();
+
+        this.clipper.init();
+    }
+
+    public async updateClippingMap() {
+        this.onTransform();
+        this.clipper && this.clipper.updateClippingMap(this.transformation, this.boundingBox);
+    }
+
+    public updateDisplayedType(value) {
         this.displayedType = value;
         this.setSelected(this.isSelected);
     }
@@ -202,6 +252,10 @@ class ThreeModel extends BaseModel {
             ...this.transformation,
             ...transformation
         };
+        if (this.clipper) {
+            this.clipper?.onTransform();
+            this.modelGroup.setSectionMesh();
+        }
         return this.transformation;
     }
 
@@ -213,6 +267,8 @@ class ThreeModel extends BaseModel {
     public setConvexGeometry(convexGeometry: THREE.BufferGeometry) {
         if (convexGeometry instanceof THREE.BufferGeometry) {
             this.convexGeometry = new THREE.Geometry().fromBufferGeometry(convexGeometry);
+            // Optimize GC
+            convexGeometry = null;
             this.convexGeometry.mergeVertices();
         } else {
             this.convexGeometry = convexGeometry;
@@ -255,6 +311,10 @@ class ThreeModel extends BaseModel {
         this.setSelected(isSelected);
     }
 
+    public setSourcePly(fileName: string) {
+        this.sourcePly = fileName;
+    }
+
     public setSelected(isSelected?: boolean) {
         if (typeof isSelected === 'boolean') {
             this.isSelected = isSelected;
@@ -293,15 +353,16 @@ class ThreeModel extends BaseModel {
     }
 
     /**
-    * Note that you need to give cloned Model a new model name.
-    *
-    * @returns {ThreeModel}
-    */
+        * Note that you need to give cloned Model a new model name.
+        *
+        * @returns {ThreeModel}
+        */
     public clone(modelGroup: ModelGroup = this.modelGroup) {
         const modelInfo = {
             ...this,
             loadFrom: LOAD_MODEL_FROM_INNER,
-            material: this.meshObject.material
+            material: this.meshObject.material,
+            clipper: null
         } as unknown as ModelInfo;
         const clone = new ThreeModel(modelInfo, modelGroup);
         clone.originModelID = this.modelID;
@@ -316,11 +377,11 @@ class ThreeModel extends BaseModel {
     }
 
     /**
-    * Find the best fit direction, and rotate the model
-    * step1. get big planes of convex geometry
-    * step2. calculate area, support volumes of each big plane
-    * step3. find the best fit plane using formula below
-    */
+        * Find the best fit direction, and rotate the model
+        * step1. get big planes of convex geometry
+        * step2. calculate area, support volumes of each big plane
+        * step3. find the best fit plane using formula below
+        */
     public autoRotate() {
         if (this.sourceType !== '3d' || !this.convexGeometry) {
             return;
@@ -544,6 +605,69 @@ class ThreeModel extends BaseModel {
             extruderConfig,
             modelName
         };
+    }
+
+    public createPlaneStencilGroup(geometry) {
+        const group = new THREE.Group();
+        const baseMat = new THREE.MeshBasicMaterial();
+        baseMat.depthWrite = false;
+        baseMat.depthTest = false;
+        baseMat.colorWrite = false;
+        baseMat.stencilWrite = true;
+        baseMat.stencilFunc = THREE.AlwaysStencilFunc;
+
+        // back faces
+        const mat0 = baseMat.clone();
+        mat0.side = THREE.BackSide;
+        mat0.clippingPlanes = [this.localPlane];
+        mat0.stencilFail = THREE.IncrementWrapStencilOp;
+        mat0.stencilZFail = THREE.IncrementWrapStencilOp;
+        mat0.stencilZPass = THREE.IncrementWrapStencilOp;
+
+        const mesh0 = new THREE.Mesh(geometry, mat0);
+        group.add(mesh0);
+
+        // front faces
+        const mat1 = baseMat.clone();
+        mat1.side = THREE.FrontSide;
+        mat1.clippingPlanes = [this.localPlane];
+        mat1.stencilFail = THREE.DecrementWrapStencilOp;
+        mat1.stencilZFail = THREE.DecrementWrapStencilOp;
+        mat1.stencilZPass = THREE.DecrementWrapStencilOp;
+
+        const mesh1 = new THREE.Mesh(geometry, mat1);
+
+        group.add(mesh1);
+
+        return group;
+    }
+
+    // model support
+    public generateSupportMesh(geometry: Geometry) {
+        geometry.computeVertexNormals();
+        const group = this.createPlaneStencilGroup(geometry);
+
+        const material = new MeshBasicMaterial({
+            side: DoubleSide,
+            transparent: true,
+            opacity: 0.5,
+            color: 0x6485AB,
+            depthWrite: false,
+            polygonOffset: true,
+            polygonOffsetFactor: -1,
+            polygonOffsetUnits: -5,
+            clippingPlanes: [
+                this.localPlane
+            ]
+        });
+        const mesh = new Mesh(geometry, material);
+        mesh.renderOrder = 1500;
+        group.add(mesh);
+
+        group.applyMatrix4(this.meshObject.matrixWorld.clone().invert());
+        this.meshObject.add(group);
+
+        return group;
     }
 }
 

@@ -1,5 +1,5 @@
 import { parseLubanGcodeHeader } from '../../lib/parseGcodeHeader';
-import slice, { generateSupport } from '../../slicer/slice';
+import slice, { generateSupport, simplifyModel, repairModel, checkModel } from '../../slicer/slice';
 
 const handleSlice = (socket, params) => {
     socket.emit('slice:started');
@@ -47,7 +47,52 @@ const handleGenerateSupport = (socket, params) => {
     );
 };
 
+const handleSimplifyModel = (socket, params) => {
+    socket.emit('simplify-model:started', {
+        firstTime: params.isFirstTime,
+        uploadName: params.uploadName,
+        sourcePly: params.sourcePly,
+        transformation: params.transformation,
+        originModel: params.originModel
+    });
+    simplifyModel(
+        params,
+        (progress) => {
+            socket.emit('simplify-model:progress', progress);
+        },
+        (simplifyConfig) => {
+            socket.emit('simplify-model:completed', simplifyConfig);
+        },
+        (err) => {
+            socket.emit('simplify-model:error', err);
+        }
+    );
+};
+
+const handleRepairModel = (actions, params) => {
+    actions.next({
+        type: 'started',
+        uploadName: params.uploadName,
+        fileType: params.fileType,
+        modelID: params.modelID
+    });
+    repairModel(actions, params);
+};
+
+const handleCheckModel = (actions, params) => {
+    actions.next({
+        type: 'started',
+        uploadName: params.uploadName,
+        fileType: params.fileType,
+        modelID: params.modelID
+    });
+    checkModel(actions, params);
+};
+
 export default {
     handleSlice,
-    handleGenerateSupport
+    handleGenerateSupport,
+    handleSimplifyModel,
+    handleRepairModel,
+    handleCheckModel
 };

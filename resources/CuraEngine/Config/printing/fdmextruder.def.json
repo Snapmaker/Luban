@@ -13,9 +13,6 @@
         "has_machine_quality": false,
         "preferred_material": "generic_pla",
         "preferred_quality_type": "normal",
-        "machine_extruder_trains": {
-            "0": "fdmextruder"
-        },
         "supports_usb_connection": true,
         "supports_network_connection": false
     },
@@ -884,16 +881,16 @@
                             "default_value": "PLA",
                             "type": "enum",
                             "options": {
-                                "[PLA]": "PLA",
-                                "[Support]": "Support",
-                                "[ABS]": "ABS",
-                                "[PTEG]": "PTEG",
-                                "[TPE]": "TPE",
-                                "[PVA]": "PVA",
-                                "[ASA]": "ASA",
-                                "[PC]": "PC",
-                                "[Nylon]": "Nylon",
-                                "[Other]": "Other"
+                                "PLA": "PLA",
+                                "Support": "Support",
+                                "ABS": "ABS",
+                                "PTEG": "PTEG",
+                                "TPE": "TPE",
+                                "PVA": "PVA",
+                                "ASA": "ASA",
+                                "PC": "PC",
+                                "Nylon": "Nylon",
+                                "Other": "Other"
                             },
                             "filter": [
                                 "basic",
@@ -2777,7 +2774,7 @@
                             "minimum_value": "0",
                             "maximum_value": "",
                             "settable_per_mesh": true,
-                            "enabled": "",
+                            "enabled": "true",
                             "filter": [
                                 "all",
                                 "basic"

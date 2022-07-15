@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import { useHistory, withRouter } from 'react-router-dom';
-import { includes, throttle } from 'lodash';
+import { find, includes, throttle } from 'lodash';
 import isElectron from 'is-electron';
 import i18next from 'i18next';
 // import { Steps } from 'intro.js-react';
@@ -16,9 +16,10 @@ import modal from '../../lib/modal';
 import Dropzone from '../components/Dropzone';
 import { actions as printingActions } from '../../flux/printing';
 import { actions as projectActions } from '../../flux/project';
+import { actions as machineActions } from '../../flux/machine';
 import ProjectLayout from '../layouts/ProjectLayout';
 import MainToolBar from '../layouts/MainToolBar';
-import { HEAD_PRINTING, ROTATE_MODE } from '../../constants';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_PRINTING, LEFT, PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY, ROTATE_MODE } from '../../constants';
 import { renderPopup, renderWidgetList, logPageView, useUnsavedTitle } from '../utils';
 import { machineStore } from '../../store/local-storage';
 
@@ -54,6 +55,7 @@ import '../../styles/introCustom.styl';
 import Steps from '../components/Steps';
 import Modal from '../components/Modal';
 import { Button } from '../components/Buttons';
+import MachineMaterialSettings from './MachineMaterialSettings';
 
 export const openFolder = () => {
     if (isElectron()) {
@@ -89,17 +91,24 @@ const allWidgets = {
 
 
 const pageHeadType = HEAD_PRINTING;
-function useRenderMainToolBar() {
+function useRenderMainToolBar(setSimplifying) {
     const unSaved = useSelector(state => state?.project[pageHeadType]?.unSaved, shallowEqual);
-    const inProgress = useSelector(state => state?.printing?.inProgress, shallowEqual);
+    const { inProgress, simplifyType, simplifyPercent } = useSelector(state => state?.printing, shallowEqual);
     const enableShortcut = useSelector(state => state?.printing?.enableShortcut, shallowEqual);
     const canRedo = useSelector(state => state?.printing?.history?.canRedo, shallowEqual);
     const canUndo = useSelector(state => state?.printing?.history?.canUndo, shallowEqual);
     const canGroup = useSelector(state => state?.printing?.modelGroup?.canGroup());
     const canMerge = useSelector(state => state?.printing?.modelGroup?.canMerge());
     const canUngroup = useSelector(state => state?.printing?.modelGroup?.canUngroup());
+    // const toolHeadObj = useSelector(state => state?.machine?.toolHead);
+    const canSimplify = useSelector(state => state?.printing?.modelGroup?.canSimplify());
+    const canRepair = useSelector(state => state?.printing?.modelGroup?.canRepair());
     const [showHomePage, setShowHomePage] = useState(false);
     const [showWorkspace, setShowWorkspace] = useState(false);
+    const [showMachineMaterialSettings, setShowMachineMaterialSettings] = useState(false);
+    const { series, toolHead } = useSelector(state => state?.machine);
+    const [currentSeries, setCurrentSeries] = useState(series);
+    const [currentToolhead, setCurrentToolHead] = useState(toolHead.printingToolhead);
     const dispatch = useDispatch();
     function renderHomepage() {
         const onClose = () => {
@@ -127,7 +136,31 @@ function useRenderMainToolBar() {
             key: 'workspace'
         });
     }
-    function renderMainToolBar() {
+    function renderMachineMaterialSettings() {
+        const onClose = async () => {
+            setShowMachineMaterialSettings(false);
+            if (currentSeries !== series || currentToolhead !== toolHead.printingToolhead) {
+                dispatch(machineActions.updateMachineSeries(currentSeries));
+                dispatch(machineActions.updateMachineToolHead({
+                    ...toolHead,
+                    printingToolhead: currentToolhead
+                }, currentSeries));
+                await dispatch(projectActions.clearSavedEnvironment(HEAD_PRINTING));
+                window.location.href = '/';
+            }
+        };
+        const onCallBack = (_series, _toolHead) => {
+            setCurrentSeries(_series);
+            setCurrentToolHead(_toolHead.printingToolhead);
+        };
+        return showMachineMaterialSettings && renderPopup({
+            onClose,
+            component: MachineMaterialSettings,
+            key: 'machineMaterialSettings',
+            onCallBack: onCallBack
+        });
+    }
+    function renderMainToolBar(machineInfo, materialInfo, isConnected) {
         // const fileInput = React.createRef();
         const leftItems = [
             {
@@ -204,6 +237,50 @@ function useRenderMainToolBar() {
                 action: () => {
                     dispatch(printingActions.ungroup());
                 }
+            },
+            {
+                title: i18n._('key-3DP/MainToolBar-Model Simplify'),
+                disabled: !canSimplify || !enableShortcut,
+                type: 'button',
+                name: 'MainToolbarSimplifiedModel',
+                action: async () => {
+                    const repaired = await dispatch(printingActions.isModelsRepaired());
+                    if (repaired) {
+                        setSimplifying(true);
+                        dispatch(printingActions.modelSimplify(simplifyType, simplifyPercent, true));
+                    }
+                }
+            },
+            {
+                title: i18n._('key-3DP/MainToolBar-Model repair'),
+                disabled: !canRepair || !enableShortcut,
+                type: 'button',
+                name: 'MainToolbarFixModel',
+                action: () => {
+                    dispatch(printingActions.repairSelectedModels());
+                }
+            },
+            {
+                title: i18n._('key-3DP/MainToolBar-MaterialSetting'),
+                type: 'button',
+                name: 'MainToolbarMaterialSetting',
+                action: () => {
+                    dispatch(printingActions.updateManagerDisplayType(PRINTING_MANAGER_TYPE_MATERIAL));
+                    dispatch(printingActions.updateShowPrintingManager(true, LEFT));
+                }
+            },
+            {
+                title: i18n._('key-3DP/MainToolBar-QualitySetting'),
+                type: 'button',
+                name: 'MainToolbarPrintingSetting',
+                action: () => {
+                    dispatch(
+                        printingActions.updateManagerDisplayType(
+                            PRINTING_MANAGER_TYPE_QUALITY
+                        )
+                    );
+                    dispatch(printingActions.updateShowPrintingManager(true));
+                }
             }
         ];
         return (
@@ -211,15 +288,26 @@ function useRenderMainToolBar() {
                 leftItems={leftItems}
                 lang={i18next.language}
                 headType={HEAD_PRINTING}
+                hasMachineSettings
+                machineInfo={machineInfo}
+                materialInfo={materialInfo}
+                isConnected={isConnected}
+                setShowMachineMaterialSettings={setShowMachineMaterialSettings}
             />
         );
     }
-    return [renderHomepage, renderMainToolBar, renderWorkspace];
+    return [renderHomepage, renderMainToolBar, renderWorkspace, renderMachineMaterialSettings];
 }
 
 function Printing({ location }) {
     const widgets = useSelector(state => state?.widget[pageHeadType].default.widgets, shallowEqual);
     const series = useSelector(state => state?.machine?.series);
+    const printingState = useSelector(state => state?.printing);
+    const { materialDefinitions, defaultMaterialId, defaultMaterialIdRight } = printingState;
+    const leftMaterial = find(materialDefinitions, { definitionId: defaultMaterialId });
+    const rightMaterial = find(materialDefinitions, { definitionId: defaultMaterialIdRight });
+    const machineState = useSelector(state => state?.machine);
+    const { isConnected, toolHead: { printingToolhead } } = machineState;
     const isOriginal = includes(series, 'Original');
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [enabledIntro, setEnabledIntro] = useState(null);
@@ -229,9 +317,13 @@ function Printing({ location }) {
     const [controlInputValue, setControlInputValue] = useState(null);
     const [controlAxis, setControlAxis] = useState(['x']);
     const [controlMode, setControlMode] = useState(null);
+    const [machineInfo, setMachineInfo] = useState({});
+    const [materialInfo, setMaterialInfo] = useState({});
+    // for simplify model, if true, visaulizerLeftbar and main tool bar can't be use
+    const [simplifying, setSimplifying] = useState(false);
     const dispatch = useDispatch();
     const history = useHistory();
-    const [renderHomepage, renderMainToolBar, renderWorkspace] = useRenderMainToolBar();
+    const [renderHomepage, renderMainToolBar, renderWorkspace, renderMachineMaterialSettings] = useRenderMainToolBar(setSimplifying);
     const modelGroup = useSelector(state => state.printing.modelGroup);
     const isNewUser = useSelector(state => state.printing.isNewUser);
     const thumbnail = useRef();
@@ -269,6 +361,32 @@ function Printing({ location }) {
     }, [isNewUser]);
 
     useEffect(() => {
+        const machine = {
+            series: series,
+            toolHead: printingToolhead
+        };
+        const material = {
+            leftExtruder: {
+                name: leftMaterial?.name,
+                color: leftMaterial?.settings?.color?.default_value
+            }
+        };
+        if (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+            material.rightExtruder = {
+                name: rightMaterial?.name,
+                color: rightMaterial?.settings?.color?.default_value
+            };
+        }
+        setMachineInfo(machine);
+        setMaterialInfo(material);
+        renderMainToolBar(machine, material, isConnected);
+    }, [series, leftMaterial, rightMaterial, printingToolhead]);
+
+    useEffect(() => {
+        renderMainToolBar(machineInfo, materialInfo, isConnected);
+    }, [isConnected]);
+
+    useEffect(() => {
         if (location?.state?.shouldShowGuideTours) {
             setEnabledIntro(true);
         } else if (!location?.state?.shouldShowGuideTours && typeof (location?.state?.shouldShowGuideTours) === 'boolean') {
@@ -285,12 +403,18 @@ function Printing({ location }) {
     }, [enabledIntro]);
 
     async function onDropAccepted(files) {
+        const allFiles = files.map(d => d.name).join();
         try {
             await dispatch(printingActions.uploadModel(files));
         } catch (e) {
             modal({
                 title: i18n._('key-Printing/Page-Failed to open model.'),
-                body: e.message
+                body: (
+                    <React.Fragment>
+                        <p>{e.message || e.body.msg}</p>
+                        <p>{i18n._('key-Printing/ContextMenu-Model source name')}: {allFiles}</p>
+                    </React.Fragment>
+                )
             });
         }
     }
@@ -358,21 +482,29 @@ function Printing({ location }) {
 
     return (
         <ProjectLayout
-            renderMainToolBar={renderMainToolBar}
+            renderMainToolBar={() => renderMainToolBar(machineInfo, materialInfo, isConnected)}
             renderRightView={renderRightView}
             renderModalView={renderModalView}
         >
             <Dropzone
                 multiple
                 disabled={isDraggingWidget}
-                accept=".stl, .obj"
+                accept=".stl, .obj, .3mf, .amf"
                 dragEnterMsg={i18n._('key-Printing/Page-Drop an STL/OBJ file here.')}
                 onDropAccepted={onDropAccepted}
                 onDropRejected={onDropRejected}
             >
-                <PrintingVisualizer widgetId="printingVisualizer" controlInputValue={controlInputValue} controlAxis={controlAxis} controlMode={controlMode} />
+                <PrintingVisualizer
+                    widgetId="printingVisualizer"
+                    controlInputValue={controlInputValue}
+                    controlAxis={controlAxis}
+                    controlMode={controlMode}
+                    simplifying={simplifying}
+                    setSimplifying={setSimplifying}
+                />
                 {renderHomepage()}
                 {renderWorkspace()}
+                {renderMachineMaterialSettings()}
                 {enabledIntro && (
                     <Steps
                         enabled={enabledIntro}

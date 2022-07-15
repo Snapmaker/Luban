@@ -40,6 +40,7 @@ import { Button } from '../../components/Buttons';
 class Visualizer extends Component {
     static propTypes = {
         ...withRouter.propTypes,
+        series: PropTypes.string.isRequired,
         pathname: PropTypes.string,
         page: PropTypes.string.isRequired,
         stage: PropTypes.number.isRequired,
@@ -190,7 +191,7 @@ class Visualizer extends Component {
             });
             // Switch to PAGE_EDITOR page if new image being uploaded
             this.props.switchToPage(PAGE_EDITOR);
-            if (extname === '.stl' && !this.props.materials.isRotate) {
+            if ((extname === '.stl' || extname === '.amf' || extname === '.3mf') && !this.props.materials.isRotate) {
                 this.props.cutModel(file, () => {
                     modal({
                         cancelTitle: i18n._('key-Laser/Edit/ContextMenu-Close'),
@@ -363,7 +364,7 @@ class Visualizer extends Component {
 
         if (!isEqual(nextProps.size, this.props.size)) {
             const { size, materials } = nextProps;
-            this.printableArea.updateSize(size, materials);
+            this.printableArea.updateSize(this.props.series, size, materials);
             this.canvas.current.setCamera(new THREE.Vector3(0, 0, VISUALIZER_CAMERA_HEIGHT), new THREE.Vector3());
             this.actions.autoFocus();
         }
@@ -413,7 +414,7 @@ class Visualizer extends Component {
             }
         }
 
-        this.allowedFiles = (nextProps.materials.isRotate ? this.uploadExts : `${this.uploadExts}, .stl`);
+        this.allowedFiles = (nextProps.materials.isRotate ? this.uploadExts : `${this.uploadExts}, .stl, .amf, .3mf`);
     }
 
     componentWillUnmount() {
@@ -690,7 +691,7 @@ class Visualizer extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => {
-    const { size } = state.machine;
+    const { size, series } = state.machine;
     const { currentModalPath, menuDisabledCount } = state.appbarMenu;
     const { background, progressStatesManager } = state.laser;
     const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, displayedType,
@@ -710,6 +711,7 @@ const mapStateToProps = (state, ownProps) => {
         target,
         SVGActions,
         size,
+        series,
         coordinateMode,
         coordinateSize,
         materials,

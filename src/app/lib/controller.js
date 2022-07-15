@@ -79,6 +79,11 @@ class SerialPortClient {
         'generate-support:completed': [],
         'generate-support:progress': [],
         'generate-support:error': [],
+        // for simplify model
+        'simplify-model:started': [],
+        'simplify-model:completed': [],
+        'simplify-model:progress': [],
+        'simplify-model:error': [],
 
         'daily:heartbeat': []
     };
@@ -252,6 +257,17 @@ class SerialPortClient {
         socketController.emit('generate-support', params);
     }
 
+    simplifyModel(params) {
+        socketController.emit('simplify-model', params);
+    }
+
+    repairModel(params, onMessage) {
+        return socketController.channel('repair-model', params, onMessage);
+    }
+
+    checkModel(params, onMessage) {
+        return socketController.channel('check-model', params, onMessage);
+    }
 
     commitViewPathTask(task) {
         socketController.emit('taskCommit:generateViewPath', task);

@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import { useHistory, withRouter } from 'react-router-dom';
-import path from 'path';
 import { Trans } from 'react-i18next';
 import 'intro.js/introjs.css';
 import Steps from '../components/Steps';
@@ -15,7 +14,7 @@ import Space from '../components/Space';
 import { renderModal, renderPopup, logPageView, useUnsavedTitle } from '../utils';
 import Checkbox from '../components/Checkbox';
 import { Button } from '../components/Buttons';
-
+import { getUploadModeByFilename } from '../../lib/units';
 import CNCVisualizer from '../widgets/CNCVisualizer';
 import ProjectLayout from '../layouts/ProjectLayout';
 
@@ -26,9 +25,6 @@ import { actions as editorActions } from '../../flux/editor';
 import { actions as machineActions } from '../../flux/machine';
 
 import {
-    PROCESS_MODE_GREYSCALE,
-    PROCESS_MODE_MESH,
-    PROCESS_MODE_VECTOR,
     HEAD_CNC
 } from '../../constants';
 
@@ -44,7 +40,7 @@ import Thumbnail from '../widgets/CncLaserShared/Thumbnail';
 import { laserCncIntroStepOne, laserCncIntroStepTwo, laserCncIntroStepFive, laserCncIntroStepSix, cnc4AxisStepOne } from './introContent';
 import useSetState from '../../lib/hooks/set-state';
 
-const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf, .stl';
+const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf, .stl, .3mf, .amf';
 const pageHeadType = HEAD_CNC;
 function useRenderWarning() {
     const [showWarning, setShowWarning] = useState(false);
@@ -211,17 +207,7 @@ function Cnc({ location }) {
 
     const actions = {
         onDropAccepted: (file) => {
-            const extname = path.extname(file.name).toLowerCase();
-            let uploadMode;
-            if (extname.toLowerCase() === '.svg') {
-                uploadMode = PROCESS_MODE_VECTOR;
-            } else if (extname.toLowerCase() === '.dxf') {
-                uploadMode = PROCESS_MODE_VECTOR;
-            } else if (extname.toLowerCase() === '.stl') {
-                uploadMode = PROCESS_MODE_MESH;
-            } else {
-                uploadMode = PROCESS_MODE_GREYSCALE;
-            }
+            const uploadMode = getUploadModeByFilename(file.name);
             dispatch(editorActions.uploadImage('cnc', file, uploadMode, () => {
                 modal({
                     cancelTitle: i18n._('key-Cnc/Page-Close'),

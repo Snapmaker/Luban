@@ -12,7 +12,6 @@ import RotationAnalysisOverlay from './Overlay/RotationAnalysisOverlay';
 import EditSupportOverlay from './Overlay/EditSupportOverlay';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, EPSILON, HEAD_PRINTING } from '../../../constants';
 import { machineStore } from '../../../store/local-storage';
-// import TipTrigger from '../../components/TipTrigger';
 import PrimeTowerModel from '../../../models/PrimeTowerModel';
 /* eslint-disable-next-line import/no-cycle */
 import SupportOverlay from './Overlay/SupportOverlay';
@@ -26,6 +25,7 @@ import RotateOverlay from './Overlay/RotateOverlay';
 import ExtruderOverlay from './Overlay/ExtruderOverlay';
 /* eslint-disable-next-line import/no-cycle */
 import MirrorOverlay from './Overlay/MirrorOverlay';
+import SimplifyModelOverlay from './Overlay/SimplifyOverlay';
 import { logTransformOperation } from '../../../lib/gaEvent';
 
 export const whiteHex = '#ffffff';
@@ -69,7 +69,8 @@ CancelButton.propTypes = {
     onClick: PropTypes.func.isRequired,
 };
 function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox,
-    autoRotateSelectedModel, arrangeAllModels, setHoverFace, fitViewIn }) {
+    autoRotateSelectedModel, arrangeAllModels, setHoverFace, fitViewIn, simplifying, handleApplySimplify,
+    handleCancelSimplify, handleUpdateSimplifyConfig }) {
     const size = useSelector(state => state?.machine?.size, shallowEqual);
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
     const modelGroup = useSelector(state => state?.printing?.modelGroup);
@@ -82,7 +83,6 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
     const isDualExtruder = machineStore.get('machine.toolHead.printingToolhead') === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2;
     const dispatch = useDispatch();
     const fileInput = useRef(null);
-
     const actions = {
         onClickToUpload: () => {
             fileInput.current.value = null;
@@ -95,7 +95,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
             } catch (e) {
                 modal({
                     title: i18n._('key-Printing/LeftBar-Failed to upload model.'),
-                    body: e.message
+                    body: e.message || e.body.msg
                 });
             }
         },
@@ -160,12 +160,12 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
     const hasAnyVisableModels = models.some(model => model.visible);
 
     // const hasModels = modelGroup.getModels().some(model => !(model instanceof PrimeTowerModel));
-    const moveDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasAnyVisableModels;
-    const scaleDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasAnyVisableModels;
-    const rotateDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected;
-    const mirrorDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected;
-    const supportDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected;
-    const extruderDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected;
+    const moveDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasAnyVisableModels || simplifying;
+    const scaleDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasAnyVisableModels || simplifying;
+    const rotateDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || simplifying;
+    const mirrorDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || simplifying;
+    const supportDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || simplifying;
+    const extruderDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || simplifying;
 
     return (
         <React.Fragment>
@@ -173,7 +173,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                 <input
                     ref={fileInput}
                     type="file"
-                    accept=".stl, .obj"
+                    accept=".stl, .obj, .3mf, .amf"
                     className="display-none"
                     multiple
                     onChange={actions.onChangeFile}
@@ -355,6 +355,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
 
                 {showEditSupportModal && <EditSupportOverlay onClose={() => { setShowEditSupportModal(false); }} />}
 
+                {simplifying && <SimplifyModelOverlay handleApplySimplify={handleApplySimplify} handleCancelSimplify={handleCancelSimplify} handleUpdateSimplifyConfig={handleUpdateSimplifyConfig} />}
                 {!supportDisabled && transformMode === 'support' && <SupportOverlay setTransformMode={setTransformMode} editSupport={() => { actions.editSupport(); }} />}
 
                 {!extruderDisabled && transformMode === 'extruder' && isDualExtruder && (
@@ -371,7 +372,11 @@ VisualizerLeftBar.propTypes = {
     updateBoundingBox: PropTypes.func.isRequired,
     arrangeAllModels: PropTypes.func.isRequired,
     setHoverFace: PropTypes.func.isRequired,
-    fitViewIn: PropTypes.func.isRequired
+    fitViewIn: PropTypes.func.isRequired,
+    simplifying: PropTypes.bool,
+    handleApplySimplify: PropTypes.func,
+    handleCancelSimplify: PropTypes.func,
+    handleUpdateSimplifyConfig: PropTypes.func
 };
 
 export default React.memo(VisualizerLeftBar);

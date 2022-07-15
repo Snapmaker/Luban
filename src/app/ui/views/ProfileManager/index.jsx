@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import classNames from 'classnames';
+import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 // import { useSelector, shallowEqual } from 'react-redux';
 import { isUndefined, cloneDeep, uniqWith } from 'lodash';
+import Popover from '../../components/Popover';
 import { HEAD_CNC, HEAD_LASER, PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
 import modal from '../../../lib/modal';
 import DefinitionCreator from '../DefinitionCreator';
@@ -12,10 +14,13 @@ import SvgIcon from '../../components/SvgIcon';
 import Notifications from '../../components/Notifications';
 import Modal from '../../components/Modal';
 import { Button } from '../../components/Buttons';
+/* eslint-disable import/no-cycle */
 import ConfigValueBox from './ConfigValueBox';
 import styles from './styles.styl';
+import { actions as printingActions } from '../../../flux/printing';
 import { MaterialWithColor } from '../../widgets/PrintingMaterial/MaterialWithColor';
 import useSetState from '../../../lib/hooks/set-state';
+import AddMaterialModel from '../../pages/MachineMaterialSettings/addMaterialModel';
 
 /**
  * Do category fields in different types of profiles have values, and multilingual support
@@ -29,7 +34,7 @@ import useSetState from '../../../lib/hooks/set-state';
  *
  * @ExportType                  ×    |     ×
  */
-
+const DEFAULT_DISPLAY_TYPE = 'key-default_category-Default';
 function creatCateArray(optionList) {
     const cates = [];
     optionList.forEach(option => {
@@ -50,7 +55,7 @@ function creatCateArray(optionList) {
     return cates;
 }
 
-function useGetDefinitions(allDefinitions, activeDefinitionID, getDefaultDefinition, managerType) {
+export function useGetDefinitions(allDefinitions, activeDefinitionID, getDefaultDefinition, managerType) {
     const [definitionState, setDefinitionState] = useSetState({
         activeDefinitionID,
         definitionForManager: allDefinitions.find(d => d.definitionId === activeDefinitionID),
@@ -84,7 +89,7 @@ function useGetDefinitions(allDefinitions, activeDefinitionID, getDefaultDefinit
                 selectedSettingDefaultValue = prev.selectedSettingDefaultValue;
             } else {
                 definitionForManager = allDefinitions.find(d => d.definitionId === activeDefinitionID) || allDefinitions[0];
-                selectedSettingDefaultValue = getDefaultDefinition(definitionForManager.definitionId);
+                selectedSettingDefaultValue = getDefaultDefinition(definitionForManager?.definitionId);
             }
             return {
                 definitionOptions,
@@ -105,7 +110,9 @@ function ProfileManager({
     allDefinitions,
     outsideActions,
     isOfficialDefinition,
-    managerType
+    managerType,
+    customConfig,
+    onChangeCustomConfig
 }) {
     const [configExpanded, setConfigExpanded] = useState({});
     const [notificationMessage, setNotificationMessage] = useState('');
@@ -114,10 +121,16 @@ function ProfileManager({
         renameInput: useRef(null),
         refCreateModal: useRef(null)
     };
-    const [definitionState, setDefinitionState] = useGetDefinitions(allDefinitions, activeDefinitionID, outsideActions.getDefaultDefinition, managerType);
+    const customMode = useSelector(state => state?.printing?.customMode);
 
+    const [definitionState, setDefinitionState] = useGetDefinitions(allDefinitions, activeDefinitionID, outsideActions.getDefaultDefinition, managerType);
+    const [showCreateMaterialModal, setShowCreateMaterialModal] = useState(false);
     const currentDefinitions = useRef(allDefinitions);
+    const dispatch = useDispatch();
     currentDefinitions.current = allDefinitions;
+    const setCustomMode = (value) => {
+        dispatch(printingActions.updateCustomMode(value));
+    };
 
     const actions = {
         isCategorySelectedNow: (category) => {
@@ -276,6 +289,9 @@ function ProfileManager({
                     i18n: option.i18nCategory
                 };
             });
+            materialOptions = materialOptions.filter((option) => {
+                return option.value !== i18n._(DEFAULT_DISPLAY_TYPE);
+            });
             materialOptions = uniqWith(materialOptions, (a, b) => {
                 return a.label === b.label;
             });
@@ -417,6 +433,52 @@ function ProfileManager({
             setDefinitionState({
                 definitionForManager: newDefinitionForManager
             });
+        },
+        checkDefault: (configList, definitionForManager, selectedSettingDefaultValue, _lastStatus = true) => {
+            let lastStatus = _lastStatus;
+            for (const key of configList) {
+                if (definitionForManager.settings[key].default_value !== selectedSettingDefaultValue[key].default_value) {
+                    lastStatus = false;
+                    break;
+                }
+                if (definitionForManager.settings[key]?.childKey?.length > 0) {
+                    actions.checkDefault(definitionForManager.settings[key].childKey, definitionForManager, selectedSettingDefaultValue, lastStatus);
+                }
+            }
+            return lastStatus;
+        },
+        checkIsAllDefault: (configList, definitionForManager, selectedSettingDefaultValue) => {
+            let result = true;
+            Object.keys(configList).forEach(key => {
+                result = result && actions.checkDefault(configList[key], definitionForManager, selectedSettingDefaultValue);
+            });
+            return result;
+        },
+        handleAddMaterial: async (data) => {
+            const newDefinitionForManager = cloneDeep(definitionState.definitionForManager);
+            newDefinitionForManager.category = data.type;
+            newDefinitionForManager.name = data.name;
+            if (Object.keys(newDefinitionForManager.settings).length === 0) {
+                newDefinitionForManager.settings = cloneDeep(allDefinitions[0].settings);
+            }
+            newDefinitionForManager.settings = {
+                ...newDefinitionForManager.settings,
+                color: {
+                    default_value: data.color
+                },
+                material_print_temperature: {
+                    default_value: data.printingTemperature
+                },
+                cool_fan_speed: {
+                    default_value: data.openFan ? 100 : 0
+                },
+                material_bed_temperature: {
+                    default_value: data.buildPlateTemperature
+                }
+            };
+            setShowCreateMaterialModal(false);
+            const newDefinition = await outsideActions.onCreateManagerDefinition(newDefinitionForManager, data.name, false, true);
+            actions.onSelectDefinitionById(newDefinition.definitionId, newDefinition.name);
         }
     };
 
@@ -424,10 +486,10 @@ function ProfileManager({
         <React.Fragment>
             {definitionState?.definitionForManager && (
                 <Modal
-                    size="lg"
+                    size="lg-profile-manager"
                     className={classNames(styles['manager-body'])}
                     style={{ minWidth: '700px' }}
-                    onClose={outsideActions.closeManager}
+                    onClose={customMode ? () => {} : outsideActions.closeManager}
                 >
                     <Modal.Header>
                         <div className={classNames('heading-3')}>
@@ -436,151 +498,166 @@ function ProfileManager({
                     </Modal.Header>
                     <Modal.Body>
                         <div
-                            className={classNames(styles['manager-content'], 'sm-flex')}
+                            className={classNames(styles['manager-content'], 'sm-flex', 'background-grey-3')}
                         >
-                            <div className={classNames(styles['manager-name'], 'border-default-grey-1', 'border-radius-8', 'padding-top-4')}>
+                            <div className={classNames(styles['manager-name'], 'border-radius-8')}>
                                 {notificationMessage && (
                                     <Notifications bsStyle="danger" onDismiss={actions.clearNotification} className="Notifications">
                                         {notificationMessage}
                                     </Notifications>
                                 )}
                                 <ul className={classNames(styles['manager-name-wrapper'])}>
-                                    {(definitionState.cates.map((cate) => {
-                                        const isCategorySelected = cate.category === definitionState?.definitionForManager.category;
-                                        return !!cate.items.length && (
-                                            <li key={`${cate.category}`}>
-                                                <Anchor
-                                                    className={classNames(styles['manager-btn'], { [styles.selected]: actions.isCategorySelectedNow(cate.category) })}
-                                                    onClick={() => actions.onSelectCategory(cate.category)}
-                                                    onDoubleClick={() => actions.setRenamingStatus(true)}
-                                                >
-                                                    <div className="sm-flex align-center" style={{ paddingRight: '10px' }}>
-                                                        <SvgIcon
-                                                            name="DropdownOpen"
-                                                            className={classNames(
-                                                                'margin-horizontal-4',
-                                                                'padding-horizontal-4',
-                                                                configExpanded[cate.category] ? 'rotate270' : ''
-                                                            )}
-                                                            onClick={() => { actions.foldCategory(cate.category); }}
-                                                            type={['static']}
-                                                        />
-                                                        {(definitionState?.isCategorySelected && isCategorySelected && definitionState?.renamingStatus) ? (
-                                                            <input
-                                                                ref={refs.renameInput}
-                                                                className="sm-parameter-row__input"
-                                                                value={definitionState?.selectedName}
-                                                                onChange={actions.onChangeSelectedName}
-                                                                onKeyPress={(e) => {
-                                                                    if (e.key === 'Enter') {
-                                                                        e.preventDefault();
+                                    <div className={classNames(styles['manager-list'])}>
+                                        {(definitionState.cates.map((cate) => {
+                                            const isCategorySelected = cate.category === definitionState?.definitionForManager.category;
+                                            return !!cate.items.length && (
+                                                <li key={`${cate.category}`} className={classNames(customMode ? styles['disable-li'] : '')}>
+                                                    <Anchor
+                                                        className={classNames(styles['manager-btn'], { [styles.selected]: actions.isCategorySelectedNow(cate.category) })}
+                                                        onClick={() => actions.onSelectCategory(cate.category)}
+                                                        onDoubleClick={() => actions.setRenamingStatus(true)}
+                                                    >
+                                                        <div className="sm-flex align-center" style={{ paddingRight: '10px' }}>
+                                                            <SvgIcon
+                                                                name="DropdownOpen"
+                                                                className={classNames(
+                                                                    'margin-horizontal-4',
+                                                                    'padding-horizontal-4',
+                                                                    configExpanded[cate.category] ? 'rotate270' : ''
+                                                                )}
+                                                                onClick={() => { actions.foldCategory(cate.category); }}
+                                                                type={['static']}
+                                                            />
+                                                            {(definitionState?.isCategorySelected && isCategorySelected && definitionState?.renamingStatus) ? (
+                                                                <input
+                                                                    ref={refs.renameInput}
+                                                                    className="sm-parameter-row__input"
+                                                                    value={definitionState?.selectedName}
+                                                                    onChange={actions.onChangeSelectedName}
+                                                                    onKeyPress={(e) => {
+                                                                        if (e.key === 'Enter') {
+                                                                            e.preventDefault();
+                                                                            actions.setRenamingStatus(false);
+                                                                            actions.updateCategoryName();
+                                                                        }
+                                                                    }}
+                                                                    onBlur={() => {
                                                                         actions.setRenamingStatus(false);
                                                                         actions.updateCategoryName();
-                                                                    }
-                                                                }}
-                                                                onBlur={() => {
-                                                                    actions.setRenamingStatus(false);
-                                                                    actions.updateCategoryName();
-                                                                }}
-                                                            />
-                                                        ) : <span className="text-overflow-ellipsis">{cate.category}</span>}
-                                                    </div>
-                                                </Anchor>
-                                                {!configExpanded[cate.category] && (
-                                                    <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
-                                                        {(cate.items.map((currentOption) => {
-                                                            const definitionForManager = definitionState?.definitionForManager;
-                                                            const displayName = (
-                                                                <div className="display-inherit width-196 margin-left-4">
-                                                                    <MaterialWithColor name={currentOption.label} color={currentOption.color} />
-                                                                </div>
-                                                            );
-                                                            const isSelected = (
-                                                                !definitionState.isCategorySelected
-                                                                && currentOption.value === definitionForManager.definitionId
-                                                            );
-                                                            let isAllValueDefault = true;
-                                                            if (isSelected && currentOption.isDefault && definitionState?.selectedSettingDefaultValue) {
-                                                                const selectedSettingDefaultValue = definitionState?.selectedSettingDefaultValue;
-                                                                isAllValueDefault = optionConfigGroup.every((item) => {
-                                                                    return item.fields.every((key) => {
-                                                                        return (
-                                                                            definitionForManager.settings[key].default_value
-                                                                            === selectedSettingDefaultValue[key].default_value
-                                                                        );
-                                                                    });
-                                                                });
-                                                            }
-                                                            if (isUndefined(currentOption.label) || currentOption.isHidden) {
-                                                                return null;
-                                                            } else {
-                                                                return (
-                                                                    <li key={`${currentOption.value}${currentOption.label}`}>
-                                                                        <div className="sm-flex align-center justify-space-between">
-                                                                            <Anchor
-                                                                                className={classNames(styles['manager-btn'], { [styles.selected]: isSelected })}
-                                                                                style={{ paddingLeft: '42px' }}
-                                                                                title={currentOption.label}
-                                                                                onClick={() => actions.onSelectDefinitionById(
-                                                                                    currentOption.value,
-                                                                                    currentOption.label
-                                                                                )}
-                                                                                onDoubleClick={() => actions.setRenamingStatus(true)}
-                                                                            >
-                                                                                {!isAllValueDefault && (
-                                                                                    <SvgIcon
-                                                                                        name="Reset"
-                                                                                        size={24}
-                                                                                        className="margin-left-n-30"
-                                                                                        onClick={() => {
-                                                                                            actions.resetDefinition(currentOption.value);
-                                                                                        }}
-                                                                                    />
-                                                                                )}
-                                                                                {(isSelected && definitionState.renamingStatus) ? (
-                                                                                    <input
-                                                                                        ref={refs.renameInput}
-                                                                                        className="sm-parameter-row__input"
-                                                                                        value={definitionState.selectedName}
-                                                                                        onChange={actions.onChangeSelectedName}
-                                                                                        onKeyPress={(e) => {
-                                                                                            if (e.key === 'Enter') {
-                                                                                                e.preventDefault();
+                                                                    }}
+                                                                />
+                                                            ) : <span className="text-overflow-ellipsis">{cate.category}</span>}
+                                                        </div>
+                                                    </Anchor>
+                                                    {!configExpanded[cate.category] && (
+                                                        <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
+                                                            {(cate.items.map((currentOption) => {
+                                                                const definitionForManager = definitionState?.definitionForManager;
+                                                                const displayName = (
+                                                                    <div className="display-inherit width-196 margin-left-4">
+                                                                        <MaterialWithColor name={currentOption.label} color={currentOption.color} />
+                                                                    </div>
+                                                                );
+                                                                const isSelected = (
+                                                                    !definitionState.isCategorySelected
+                                                                    && currentOption.value === definitionForManager.definitionId
+                                                                );
+                                                                let isAllValueDefault = true;
+                                                                if (isSelected && currentOption.isDefault && definitionState?.selectedSettingDefaultValue) {
+                                                                    const selectedSettingDefaultValue = definitionState?.selectedSettingDefaultValue;
+                                                                    // isAllValueDefault = optionConfigGroup.every((item) => {
+                                                                    //     return item.fields.every((key) => {
+                                                                    //         return (
+                                                                    //             definitionForManager.settings[key].default_value
+                                                                    //             === selectedSettingDefaultValue[key].default_value
+                                                                    //         );
+                                                                    //     });
+                                                                    // });
+                                                                    isAllValueDefault = actions.checkIsAllDefault(optionConfigGroup, definitionForManager, selectedSettingDefaultValue);
+                                                                }
+                                                                if (isUndefined(currentOption.label) || currentOption.isHidden) {
+                                                                    return null;
+                                                                } else {
+                                                                    return (
+                                                                        <li key={`${currentOption.value}${currentOption.label}`} className={classNames(styles['profile-li'], customMode ? styles['disable-li'] : '')}>
+                                                                            <div className="sm-flex align-center justify-space-between">
+                                                                                <Anchor
+                                                                                    className={classNames(styles['manager-btn'], { [styles.selected]: isSelected })}
+                                                                                    style={{ paddingLeft: '42px' }}
+                                                                                    title={currentOption.label}
+                                                                                    onClick={() => actions.onSelectDefinitionById(
+                                                                                        currentOption.value,
+                                                                                        currentOption.label
+                                                                                    )}
+                                                                                    onDoubleClick={() => actions.setRenamingStatus(true)}
+                                                                                >
+                                                                                    {(isSelected && definitionState.renamingStatus) ? (
+                                                                                        <input
+                                                                                            ref={refs.renameInput}
+                                                                                            className="sm-parameter-row__input"
+                                                                                            value={definitionState.selectedName}
+                                                                                            onChange={actions.onChangeSelectedName}
+                                                                                            onKeyPress={(e) => {
+                                                                                                if (e.key === 'Enter') {
+                                                                                                    e.preventDefault();
+                                                                                                    actions.setRenamingStatus(false);
+                                                                                                    actions.updateDefinitionName();
+                                                                                                }
+                                                                                            }}
+                                                                                            onBlur={() => {
                                                                                                 actions.setRenamingStatus(false);
                                                                                                 actions.updateDefinitionName();
-                                                                                            }
-                                                                                        }}
-                                                                                        onBlur={() => {
-                                                                                            actions.setRenamingStatus(false);
-                                                                                            actions.updateDefinitionName();
-                                                                                        }}
-                                                                                    />
-                                                                                )
-                                                                                    : <span className="text-overflow-ellipsis">{displayName}</span>}
-                                                                            </Anchor>
-                                                                        </div>
-                                                                    </li>
-                                                                );
-                                                            }
-                                                        }))}
-                                                    </ul>
+                                                                                            }}
+                                                                                        />
+                                                                                    )
+                                                                                        : <span className="text-overflow-ellipsis">{displayName}</span>}
+                                                                                    <div className={classNames(styles['manager-action'])}>
+                                                                                        <Popover
+                                                                                            placement="bottomRight"
+                                                                                            content={() => (
+                                                                                                <div className="width-160">
+                                                                                                    <Anchor onClick={() => { actions.showDuplicateModal(); }}>
+                                                                                                        <div className="width-120 text-overflow-ellipsis">{i18n._('key-App/Menu-Copy')}</div>
+                                                                                                    </Anchor>
+                                                                                                    {!isAllValueDefault && (
+                                                                                                        <Anchor
+                                                                                                            onClick={() => actions.resetDefinition(currentOption.value)}
+                                                                                                        >
+                                                                                                            <div className="width-120 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Reset')}</div>
+                                                                                                        </Anchor>
+                                                                                                    )}
+                                                                                                    <Anchor onClick={() => outsideActions.exportConfigFile(definitionState.definitionForManager)}>
+                                                                                                        <div className="width-120 text-overflow-ellipsis">{i18n._('key-Printing/ProfileManager-Export')}</div>
+                                                                                                    </Anchor>
+                                                                                                    {!isOfficialDefinition(definitionState.definitionForManager) && (
+                                                                                                        <Anchor onClick={() => actions.onRemoveManagerDefinition(definitionState.definitionForManager, definitionState.isCategorySelected)}>
+                                                                                                            <div>{i18n._('key-Printing/ProfileManager-Delete')}</div>
+                                                                                                        </Anchor>
+                                                                                                    )}
+                                                                                                </div>
+                                                                                            )}
+                                                                                        >
+                                                                                            <SvgIcon
+                                                                                                name="More"
+                                                                                                size={24}
+                                                                                                className="margin-left-n-30"
+                                                                                            />
+                                                                                        </Popover>
+                                                                                    </div>
+                                                                                </Anchor>
+                                                                            </div>
+                                                                        </li>
+                                                                    );
+                                                                }
+                                                            }))}
+                                                        </ul>
 
-                                                )}
-                                            </li>
-                                        );
-                                    }))}
-                                </ul>
-
-                                <div className="module-default-shadow">
-                                    <div className="sm-flex justify-space-between padding-vertical-8 padding-horizontal-16">
-                                        <SvgIcon
-                                            name="Edit"
-                                            disabled={isOfficialDefinition(definitionState.definitionForManager)}
-                                            size={24}
-                                            className="padding-vertical-2 padding-horizontal-2"
-                                            title={i18n._('key-Printing/ProfileManager-Edit')}
-                                            onClick={() => actions.setRenamingStatus(true)}
-                                        />
+                                                    )}
+                                                </li>
+                                            );
+                                        }))}
+                                    </div>
+                                    <div>
                                         <input
                                             ref={refs.fileInput}
                                             type="file"
@@ -595,53 +672,53 @@ function ProfileManager({
                                                 );
                                             }}
                                         />
-                                        <SvgIcon
-                                            name="Import"
-                                            size={24}
-                                            className="padding-vertical-2 padding-horizontal-2"
-                                            title={i18n._('key-Printing/ProfileManager-Import')}
-                                            onClick={() => actions.importFile(refs.fileInput)}
-                                        />
-                                        <SvgIcon
-                                            name="Export"
-                                            size={24}
-                                            className="padding-vertical-2 padding-horizontal-2"
-                                            disabled={definitionState.isCategorySelected}
-                                            title={i18n._('key-Printing/ProfileManager-Export')}
-                                            onClick={() => outsideActions.exportConfigFile(definitionState.definitionForManager)}
-                                        />
-                                        <SvgIcon
-                                            name="Delete"
-                                            size={24}
-                                            className="padding-vertical-2 padding-horizontal-2"
-                                            title={i18n._('key-Printing/ProfileManager-Delete')}
-                                            onClick={() => actions.onRemoveManagerDefinition(definitionState.definitionForManager, definitionState.isCategorySelected)}
-                                            disabled={isOfficialDefinition(definitionState.definitionForManager)}
-                                        />
+                                        <Popover
+                                            trigger="click"
+                                            placement="topLeft"
+                                            content={() => (
+                                                <div className="height-120 sm-flex align-center justify-space-between">
+                                                    <Anchor onClick={() => {
+                                                        if (managerType === PRINTING_MANAGER_TYPE_MATERIAL) {
+                                                            setShowCreateMaterialModal(true);
+                                                        } else {
+                                                            actions.showNewModal();
+                                                        }
+                                                    }}
+                                                    >
+                                                        <div className="width-112 height-88 sm-flex sm-flex-direction-c align-center margin-right-8">
+                                                            <SvgIcon
+                                                                name="TitleSetting"
+                                                                className="margin-bottom-8"
+                                                                size={48}
+                                                            />
+                                                            <span className="display-inline width-percent-100 text-overflow-ellipsis align-c">{i18n._('key-Printing/ProfileManager-Create')}</span>
+                                                        </div>
+                                                    </Anchor>
+                                                    <Anchor onClick={() => actions.importFile(refs.fileInput)}>
+                                                        <div className="width-112 height-88 sm-flex sm-flex-direction-c align-center">
+                                                            <SvgIcon
+                                                                name="TitleSetting"
+                                                                className="margin-bottom-8"
+                                                                size={48}
+                                                            />
+                                                            <span className="display-inline width-percent-100 text-overflow-ellipsis align-c">{i18n._('key-Printing/ProfileManager-Import')}</span>
+                                                        </div>
+                                                    </Anchor>
+                                                </div>
+                                            )}
+                                        >
+                                            <Button
+                                                width="230px"
+                                                type="default"
+                                                priority="level-two"
+                                                className="margin-left-16"
+                                                disabled={customMode}
+                                            >
+                                                {i18n._('key-ProfileManager/Add Profile')}
+                                            </Button>
+                                        </Popover>
                                     </div>
-
-
-                                    <div className="sm-flex justify-space-between padding-bottom-16 padding-horizontal-16">
-                                        <SvgIcon
-                                            name="NewNormal"
-                                            size={24}
-                                            type={['static']}
-                                            className={classNames(styles['manager-file'], 'sm-tab', 'align-c')}
-                                            onClick={() => { actions.showNewModal(); }}
-                                            spanText={i18n._('key-Printing/ProfileManager-Create')}
-                                            spanClassName={classNames(styles['action-title'])}
-                                        />
-                                        <SvgIcon
-                                            name="CopyNormal"
-                                            size={24}
-                                            type={['static']}
-                                            className={classNames(styles['manager-file'], 'sm-tab', 'align-c')}
-                                            onClick={() => { actions.showDuplicateModal(); }}
-                                            spanText={i18n._('key-Printing/ProfileManager-Copy')}
-                                            spanClassName={classNames(styles['action-title'])}
-                                        />
-                                    </div>
-                                </div>
+                                </ul>
                             </div>
                             <ConfigValueBox
                                 definitionForManager={definitionState.definitionForManager}
@@ -653,35 +730,20 @@ function ProfileManager({
                                 showMiddle={managerType === PRINTING_MANAGER_TYPE_MATERIAL || managerType === PRINTING_MANAGER_TYPE_QUALITY}
                                 hideMiniTitle={false}
                                 managerType={managerType}
+                                customConfigs={customConfig}
+                                onChangeCustomConfig={onChangeCustomConfig}
+                                customMode={customMode}
+                                setCustomMode={setCustomMode}
                             />
-
+                            {showCreateMaterialModal && managerType === PRINTING_MANAGER_TYPE_MATERIAL && (
+                                <AddMaterialModel
+                                    setShowCreateMaterialModal={setShowCreateMaterialModal}
+                                    onSubmit={(data) => actions.handleAddMaterial(data)}
+                                />
+                            )}
                         </div>
 
                     </Modal.Body>
-                    <Modal.Footer>
-                        <Button
-                            onClick={outsideActions.closeManager}
-                            type="default"
-                            priority="level-two"
-                            width="96px"
-                        >
-                            {i18n._('key-Printing/ProfileManager-Close')}
-                        </Button>
-
-                        {!definitionState?.isCategorySelected && (
-                            <Button
-                                onClick={() => {
-                                    outsideActions.onUpdateDefaultDefinition(definitionState.definitionForManager);
-                                    outsideActions.closeManager();
-                                }}
-                                priority="level-two"
-                                width="96px"
-                                className="margin-left-8"
-                            >
-                                {i18n._('key-Printing/ProfileManager-Select')}
-                            </Button>
-                        )}
-                    </Modal.Footer>
                 </Modal>
             )}
         </React.Fragment>
@@ -691,10 +753,12 @@ ProfileManager.propTypes = {
     outsideActions: PropTypes.object.isRequired,
     activeDefinitionID: PropTypes.string.isRequired,
     managerTitle: PropTypes.string.isRequired,
-    optionConfigGroup: PropTypes.array.isRequired,
+    optionConfigGroup: PropTypes.object.isRequired,
     allDefinitions: PropTypes.array.isRequired,
     isOfficialDefinition: PropTypes.func.isRequired,
-    managerType: PropTypes.string
+    managerType: PropTypes.string,
+    customConfig: PropTypes.object,
+    onChangeCustomConfig: PropTypes.func
 };
 
 export default ProfileManager;

@@ -5,6 +5,8 @@ import { includes } from 'lodash';
 import { isInside } from 'overlap-area';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as projectActions } from '../project';
+/* eslint-disable-next-line import/no-cycle */
+import { actions as appGlobalActions } from '../app-global';
 import api from '../../api';
 import { checkParams, DEFAULT_TEXT_CONFIG, generateModelDefaultConfigs, limitModelSizeByMachineSize, isOverSizeModel } from '../../models/ModelInfoUtils';
 
@@ -312,7 +314,7 @@ export const actions = {
                 );
             });
 
-            controller.on('taskProgress:cutModel', () => {});
+            controller.on('taskProgress:cutModel', () => { });
 
             // task completed
             controller.on('taskCompleted:processImage', taskResult => {
@@ -576,7 +578,7 @@ export const actions = {
 
     prepareStlVisualizer: (headType, model) => dispatch => {
         const uploadPath = model.resource.originalFile.path;
-        const worker = workerManager.loadModel([{ uploadPath }], async data => {
+        const worker = workerManager.loadModel(uploadPath, async data => {
             const { type } = data;
 
             switch (type) {
@@ -594,6 +596,10 @@ export const actions = {
                     bufferGeometry.setAttribute('position', modelPositionAttribute);
                     bufferGeometry.computeVertexNormals();
                     const mesh = new THREE.Mesh(bufferGeometry, material);
+                    if (model.image3dObj) {
+                        // Before updating mesh, destroy the previous mesh
+                        model.image3dObj.parent.remove(model.image3dObj);
+                    }
                     model.image3dObj = mesh;
                     break;
                 }
@@ -644,13 +650,30 @@ export const actions = {
     generateModel: (
         headType,
         { originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, zIndex, isLimit }
-    ) => (dispatch, getState) => {
-        const { size } = getState().machine;
+    ) => async (dispatch, getState) => {
+        const { size, promptDamageModel } = getState().machine;
+
         const { materials, modelGroup, SVGActions, contentGroup, toolPathGroup, coordinateMode, coordinateSize } = getState()[headType];
         sourceType = sourceType || getSourceType(originalName);
         if (!checkParams(headType, sourceType, mode)) {
             console.error(`sourceType or mode error, sourceType: ${sourceType}, mode: ${mode}`);
             return;
+        }
+
+        let isDamage = false;
+        let sourcePly = '';
+        if (path.extname(uploadName).toLowerCase() === '.stl') {
+            await controller.checkModel({
+                uploadName
+            }, (data) => {
+                if (data.type === 'error') {
+                    sourcePly = data.sourcePly;
+                    isDamage = true;
+                } else if (data.type === 'success') {
+                    sourcePly = data.sourcePly;
+                    isDamage = false;
+                }
+            });
         }
 
         // Get default configurations
@@ -751,6 +774,13 @@ export const actions = {
 
         const model = modelGroup.addModel(options);
         model.setPreSelection(contentGroup.preSelectionGroup);
+        model.needRepair = isDamage;
+        model.setSourcePly(sourcePly);
+        const promptTasks = [];
+        promptDamageModel && isDamage && promptTasks.push({
+            status: 'need-repair-model',
+            model
+        });
 
         const operation = new AddOperation2D({
             toolPathGroup,
@@ -774,7 +804,9 @@ export const actions = {
         dispatch(actions.processSelectedModel(headType));
         dispatch(
             actions.updateState(headType, {
-                isOverSize: null
+                stage: promptTasks.length ? STEP_STAGE.CNC_LASER_REPAIRING_MODEL : STEP_STAGE.EMPTY,
+                isOverSize: null,
+                promptTasks
             })
         );
     },
@@ -2171,7 +2203,7 @@ export const actions = {
                             throw new Error('geometry invalid');
                         }
                     },
-                    () => {}, // onprogress
+                    () => { }, // onprogress
                     err => {
                         onError && onError(err);
                         dispatch(
@@ -2395,7 +2427,20 @@ export const actions = {
         if (SVGCanvasMode === 'draw' || SVGCanvasExt.elem) {
             await SVGActions.svgContentGroup.exitModelEditing(true);
         }
-    }
+    },
+
+    repairSelectedModels: (headType) => async (dispatch, getState) => {
+        const { modelGroup } = getState()[headType];
+
+        const res = await dispatch(appGlobalActions.repairSelectedModels(headType));
+        const { results } = res;
+        results.forEach((data) => {
+            const model = modelGroup.findModelByID(data.modelID);
+            model.needRepair = false;
+            model.resource.originalFile.path = `/data/Tmp/${data.uploadName}`;
+            dispatch(actions.prepareStlVisualizer(headType, model));
+        });
+    },
 };
 
 export default function reducer() {

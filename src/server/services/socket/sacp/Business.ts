@@ -1,38 +1,15 @@
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
-// @ts-ignore
 import { includes } from 'lodash';
-// @ts-ignore
 import readline from 'linebyline';
-import Dispatcher, { ResponseCallback, ResponseData, RequestData } from '../../../lib/SACP-SDK/SACP/communication/Dispatcher';
-import CoordinateSystemInfo from '../../../lib/SACP-SDK/SACP/business/models/CoordinateSystemInfo';
-import GcodeFileInfo from '../../../lib/SACP-SDK/SACP/business/models/GcodeFileInfo';
-import MachineInfo from '../../../lib/SACP-SDK/SACP/business/models/MachineInfo';
-import MachineSize from '../../../lib/SACP-SDK/SACP/business/models/MachineSize';
-import ModuleInfo from '../../../lib/SACP-SDK/SACP/business/models/ModuleInfo';
-import MovementInstruction, { MoveDirection } from '../../../lib/SACP-SDK/SACP/business/models/MovementInstruction';
-import LaserCalibration from '../../../lib/SACP-SDK/SACP/business/models/LaserCalibration';
-import SetLaserPower from '../../../lib/SACP-SDK/SACP/business/models/SetLaserPower';
-import { readFloat, readString, readUint16, readUint32, readUint8, stringToBuffer, writeFloat, writeInt16, writeInt8, writeUint16, writeUint32, writeUint8 } from '../../../lib/SACP-SDK/SACP/helper';
-import FdmToolHeadInfo from '../../../lib/SACP-SDK/SACP/business/models/FdmToolHeadInfo';
-import GetHotBed from '../../../lib/SACP-SDK/SACP/business/models/GetHotBed';
-import ExtruderOffset from '../../../lib/SACP-SDK/SACP/business/models/ExtruderOffset';
-import ExtruderMovement from '../../../lib/SACP-SDK/SACP/business/models/ExtruderMovement';
-import { PeerId } from '../../../lib/SACP-SDK/SACP/communication/Header';
-import CalibrationInfo from '../../../lib/SACP-SDK/SACP/business/models/CalibrationInfo';
-// @ts-ignore
-// eslint-disable-next-line import/no-unresolved
+import { BatchBufferInfo, CalibrationInfo, CoordinateInfo, CoordinateSystemInfo, ExtruderMovement, ExtruderOffset, FdmToolHeadInfo, GcodeFileInfo, GetHotBed, LaserCalibration, LaserToolHeadInfo, MachineInfo, MachineSize, ModuleInfo, MovementInstruction, PrintBatchGcode, SetLaserPower, WifiConnectionInfo } from 'snapmaker-sacp-sdk/models';
+import { Dispatcher, RequestData, ResponseCallback, ResponseData, Response } from 'snapmaker-sacp-sdk';
+import net from 'net';
+import { stringToBuffer, readString, readUint16, readUint32, writeUint16, writeUint8, writeFloat, readFloat, writeInt8, writeInt16, readUint8, writeUint32 } from 'snapmaker-sacp-sdk/helper';
+import { PeerId } from 'snapmaker-sacp-sdk/communication/Header';
+import { MoveDirection } from 'snapmaker-sacp-sdk/models/MovementInstruction';
 import DataStorage from '../../../DataStorage';
-import CoordinateInfo from '../../../lib/SACP-SDK/SACP/business/models/CoordinateInfo';
-import LaserToolHeadInfo from '../../../lib/SACP-SDK/SACP/business/models/LaserToolHeadInfo';
-import BatchBufferInfo from '../../../lib/SACP-SDK/SACP/business/models/BatchBufferInfo';
-import PrintBatchGcode from '../../../lib/SACP-SDK/SACP/business/models/PrintBatchGcode';
-import Response from '../../../lib/SACP-SDK/SACP/communication/Response';
-import WifiConnectionInfo from '../../../lib/SACP-SDK/SACP/business/models/WifiConnectionInfo';
-// @ts-ignore
-// import { pathWithRandomSuffix } from '../../../random-utils';
-// import CoordinateInfo from './models/CoordinateInfo';
 
 export enum CoordinateType {
     MACHINE, WORKSPACE
@@ -56,9 +33,9 @@ export enum ToolHeadType {
 }
 
 export default class Business extends Dispatcher {
-    log: any = console;
+    private log = console;
 
-    constructor(type: string, socket: any) {
+    public constructor(type: string, socket: net.Socket) {
         super(type, socket);
         this.setHandler(0xb0, 0x00, async (data) => {
             const { nextOffset, result: filename } = readString(data.param, 0);
@@ -116,41 +93,41 @@ export default class Business extends Dispatcher {
         });
     }
 
-    setLogger(log: any) {
+    public setLogger(log: any) {
         this.log = log;
     }
 
-    updateCoordinate(coordinateType: CoordinateType) {
+    public async updateCoordinate(coordinateType: CoordinateType) {
         return this.send(0x01, 0x31, PeerId.CONTROLLER, Buffer.alloc(1, coordinateType)).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    executeGcode(gcode: string) {
+    public async executeGcode(gcode: string) {
         return this.send(0x01, 0x02, PeerId.CONTROLLER, stringToBuffer(gcode)).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    logFeedbackLevel(level: number = 2) {
+    public async logFeedbackLevel(level = 2) {
         return this.send(0x01, 0x10, PeerId.CONTROLLER, Buffer.alloc(1, level)).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    subscribeLogFeedback({ interval = 3600000 }, callback: ResponseCallback) {
+    public async subscribeLogFeedback({ interval = 3600000 }, callback: ResponseCallback) {
         return this.subscribe(0x01, 0xa1, interval, callback).then(({ response, packet }) => {
             return { code: response.result, packet, data: {} };
         });
     }
 
-    unSubscribeLogFeedback(callback: ResponseCallback) {
+    public async unSubscribeLogFeedback(callback: ResponseCallback) {
         return this.unsubscribe(0x01, 0xa1, callback).then(({ response, packet }) => {
             return { code: response.result, packet, data: {} };
         });
     }
 
-    getEmergencyStopInfo() {
+    public async getEmergencyStopInfo() {
         return this.send(0x01, 0x3b, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             // const isTouch = readBool(response.data);
             // console.log('emergencyResponse', response);
@@ -158,7 +135,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    takePhoto({ index = 0, x = 0, y = 0, z = 0, feedRate = 0, photoQuality = 0 }: RequestPhotoInfo) {
+    public async takePhoto({ index = 0, x = 0, y = 0, z = 0, feedRate = 0, photoQuality = 0 }: RequestPhotoInfo) {
         const buffer = Buffer.alloc(16, 0);
         let nextOffset = 0;
         nextOffset = writeUint8(buffer, nextOffset, index);
@@ -170,7 +147,7 @@ export default class Business extends Dispatcher {
         return this.send(0xb0, 0x04, PeerId.SCREEN, buffer);
     }
 
-    getCameraCalibration(toolHeadType: ToolHeadType = ToolHeadType.LASER1600mW) {
+    public async getCameraCalibration(toolHeadType: ToolHeadType = ToolHeadType.LASER1600mW) {
         return this.send(0xb0, 0x03, PeerId.SCREEN, Buffer.alloc(1, toolHeadType)).then(({ response, packet }) => {
             let calibrationInfo = null;
             if (response.result === 0) {
@@ -180,7 +157,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    getPhoto(index: number = 0) {
+    public async getPhoto(index = 0) {
         return this.send(0xb0, 0x05, PeerId.SCREEN, Buffer.alloc(1, index)).then(({ response, packet }) => {
             const data = {
                 filename: '',
@@ -196,7 +173,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    getCalibrationPhoto(toolHeadType: ToolHeadType = ToolHeadType.LASER1600mW) {
+    public async getCalibrationPhoto(toolHeadType: ToolHeadType = ToolHeadType.LASER1600mW) {
         return this.send(0xb0, 0x06, PeerId.SCREEN, Buffer.alloc(1, toolHeadType)).then(({ response, packet }) => {
             const data = {
                 filename: '',
@@ -212,12 +189,12 @@ export default class Business extends Dispatcher {
         });
     }
 
-    setMatrix(toolHeadType: ToolHeadType = ToolHeadType.LASER1600mW, matrix: CalibrationInfo) {
+    public async setMatrix(toolHeadType: ToolHeadType = ToolHeadType.LASER1600mW, matrix: CalibrationInfo) {
         const calibrationInfo = new CalibrationInfo(matrix.points, matrix.corners);
         return this.send(0xb0, 0x07, PeerId.SCREEN, Buffer.concat([Buffer.alloc(1, toolHeadType), calibrationInfo.toBuffer()]));
     }
 
-    startScreenPrint({ headType = HeadType.PRINTING, filename = '', hash = '' }) {
+    public async startScreenPrint({ headType = HeadType.PRINTING, filename = '', hash = '' }) {
         const filenameBuffer = stringToBuffer(filename);
         const hashBuffer = stringToBuffer(hash);
         return this.send(0xb0, 0x08, PeerId.SCREEN, Buffer.concat([Buffer.alloc(1, headType), filenameBuffer, hashBuffer])).then(res => {
@@ -225,7 +202,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    getLaserMaterialThickness({ token = '', x = 0, y = 0, feedRate = 0 }) {
+    public async getLaserMaterialThickness({ token = '', x = 0, y = 0, feedRate = 0 }) {
         console.log(token);
         // const tokenBuffer = stringToBuffer(token);
         const buffer = Buffer.alloc(10, 0);
@@ -242,7 +219,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    setWorkOrigin(coordinateInfos: Array<CoordinateInfo>) {
+    public async setWorkOrigin(coordinateInfos: Array<CoordinateInfo>) {
         let buffer = Buffer.alloc(0);
         const lenBuffer = Buffer.alloc(1, 0);
         writeUint8(lenBuffer, 0, coordinateInfos.length);
@@ -256,7 +233,7 @@ export default class Business extends Dispatcher {
         return this.send(0x01, 0x32, PeerId.CONTROLLER, buffer);
     }
 
-    moveAbsolutely(movementInstructions: Array<MovementInstruction>, speed: number = 0) {
+    public async moveAbsolutely(movementInstructions: Array<MovementInstruction>, speed = 0) {
         const speedBuffer = Buffer.alloc(2, 0);
         writeUint16(speedBuffer, 0, speed);
         let buffer = Buffer.alloc(0);
@@ -272,7 +249,7 @@ export default class Business extends Dispatcher {
         return this.send(0x01, 0x34, PeerId.CONTROLLER, Buffer.concat([buffer, speedBuffer]));
     }
 
-    getLaserToolHeadInfo(key: number) {
+    public async getLaserToolHeadInfo(key: number) {
         const buffer = Buffer.alloc(1, 0);
         writeUint8(buffer, 0, key);
         return this.send(0x12, 0x01, PeerId.CONTROLLER, buffer).then(({ response }) => {
@@ -286,26 +263,26 @@ export default class Business extends Dispatcher {
 
     // ----------
 
-    subscribeHeartbeat({ interval = 1000 }, callback: ResponseCallback) {
+    public async subscribeHeartbeat({ interval = 1000 }, callback: ResponseCallback) {
         return this.subscribe(0x01, 0xa0, interval, callback).then(({ response, packet }) => {
             return { code: response.result, packet, data: {} };
         });
     }
 
-    unsubscribeHeartbeat(callback: ResponseCallback) {
+    public async unsubscribeHeartbeat(callback: ResponseCallback) {
         return this.unsubscribe(0x01, 0xa0, callback).then(({ response, packet }) => {
             return { code: response.result, packet, data: {} };
         });
     }
 
-    getModuleInfo() {
+    public async getModuleInfo() {
         return this.send(0x01, 0x20, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             const moduleInfos = ModuleInfo.parseArray(response.data) as ModuleInfo[];
             return { code: response.result, packet, data: moduleInfos as ModuleInfo[] };
         });
     }
 
-    getMachineInfo() {
+    public async getMachineInfo() {
         return this.send(0x01, 0x21, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             const machineInfo = new MachineInfo().fromBuffer(response.data);
             return { code: response.result, packet, data: machineInfo as MachineInfo };
@@ -313,105 +290,105 @@ export default class Business extends Dispatcher {
     }
 
     // unimplemented by master control
-    getMachineSize() {
+    public async getMachineSize() {
         return this.send(0x01, 0x22, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             const machineSize = new MachineSize().fromBuffer(response.data);
             return { response, packet, data: { machineSize }, machineSize };
         });
     }
 
-    getCurrentCoordinateInfo() {
+    public async getCurrentCoordinateInfo() {
         return this.send(0x01, 0x30, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             const coordinateSystemInfo = new CoordinateSystemInfo().fromBuffer(response.data);
             return { response, packet, data: { coordinateSystemInfo }, coordinateSystemInfo };
         });
     }
 
-    subscribeCurrentCoordinateInfo({ interval = 1000 }, callback: ResponseCallback) {
+    public async subscribeCurrentCoordinateInfo({ interval = 1000 }, callback: ResponseCallback) {
         return this.subscribe(0x01, 0xa2, interval, callback).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    unSubscribeCurrentCoordinateInfo(callback: ResponseCallback) {
+    public async unSubscribeCurrentCoordinateInfo(callback: ResponseCallback) {
         return this.unsubscribe(0x01, 0xa2, callback).then(({ response, packet }) => {
             return { code: response.result, packet, data: {} };
         });
     }
 
-    movementInstruction(direction: MoveDirection, distance: number, speed: number) {
+    public async movementInstruction(direction: MoveDirection, distance: number, speed: number) {
         const info = new MovementInstruction(direction, distance, speed);
         return this.send(0x01, 0x34, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    requestHome(number: number = 0) {
+    public async requestHome(number = 0) {
         return this.send(0x01, 0x35, PeerId.CONTROLLER, Buffer.alloc(1, number)).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    requestAbsoluteCooridateMove(directions: MoveDirection[] = [0], distances: number[] = [0], jogSpeed: number = 0.1, coordinateType: CoordinateType) {
+    public async requestAbsoluteCooridateMove(directions: MoveDirection[] = [0], distances: number[] = [0], jogSpeed = 0.1, coordinateType: CoordinateType) {
         const paramBuffer = new MovementInstruction(undefined, undefined, jogSpeed, directions, distances, coordinateType).toArrayBuffer();
         return this.send(0x01, 0x34, PeerId.CONTROLLER, paramBuffer).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    startPrint(md5: string, gcodeName: string, headType: number) {
+    public async startPrint(md5: string, gcodeName: string, headType: number) {
         const info = new GcodeFileInfo(md5, gcodeName, headType);
         return this.send(0xac, 0x03, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    stopPrint() {
+    public async stopPrint() {
         return this.send(0xac, 0x06, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    pausePrint() {
+    public async pausePrint() {
         return this.send(0xac, 0x04, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    resumePrint() {
+    public async resumePrint() {
         return this.send(0xac, 0x05, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    getGocdeFile() {
+    public async getGocdeFile() {
         return this.send(0xac, 0x00, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             const gcodeFileInfo = new GcodeFileInfo().fromBuffer(response.data);
             return { response, packet, data: { gcodeFileInfo } };
         });
     }
 
-    laserCalibration(calibrationMode: number) {
+    public async laserCalibration(calibrationMode: number) {
         const info = new LaserCalibration(calibrationMode);
         return this.send(0xa8, 0x02, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    laserCalibrationSave(type: number) {
+    public async laserCalibrationSave(type: number) {
         return this.send(0xa8, 0x03, PeerId.CONTROLLER, Buffer.alloc(1, type)).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    SetLaserPower(key: number, power: number) {
+    public async SetLaserPower(key: number, power: number) {
         const info = new SetLaserPower(key, power);
         return this.send(0x12, 0x02, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    SetBrightness(key: number, brightness: number) {
+    public async SetBrightness(key: number, brightness: number) {
         const tobuffer = Buffer.alloc(1 + 1, 0);
         writeUint8(tobuffer, 0, key);
         writeUint8(tobuffer, 1, brightness);
@@ -420,7 +397,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    SetFocalLength(key: number, focalLength: number) {
+    public async SetFocalLength(key: number, focalLength: number) {
         const tobuffer = Buffer.alloc(1 + 1, 0);
         writeUint8(tobuffer, 0, key);
         writeUint8(tobuffer, 1, focalLength);
@@ -429,7 +406,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    TemperatureProtect(key: number, protectTemperature: number, recoverTemperature: number) {
+    public async TemperatureProtect(key: number, protectTemperature: number, recoverTemperature: number) {
         const tobuffer = Buffer.alloc(1 + 1 + 1, 0);
         writeUint8(tobuffer, 0, key);
         writeUint8(tobuffer, 1, protectTemperature);
@@ -440,7 +417,7 @@ export default class Business extends Dispatcher {
     }
 
 
-    SetLaserLock(key: number, lockStatus: number) {
+    public async SetLaserLock(key: number, lockStatus: number) {
         const tobuffer = Buffer.alloc(1 + 1, 0);
         writeUint8(tobuffer, 0, key);
         writeUint8(tobuffer, 1, lockStatus);
@@ -449,7 +426,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    GetFDMInfo(key: number) {
+    public async GetFDMInfo(key: number) {
         const info = new FdmToolHeadInfo(key);
         return this.send(0x10, 0x01, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
             // console.log('FDMSubCase',info.toBuffer,response,packet)
@@ -458,19 +435,19 @@ export default class Business extends Dispatcher {
         });
     }
 
-    subscribeNozzleInfo({ interval = 1000 }, callback: ResponseCallback) {
+    public async subscribeNozzleInfo({ interval = 1000 }, callback: ResponseCallback) {
         return this.subscribe(0x10, 0xa0, interval, callback).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    unSubscribeNozzleInfo(callback: ResponseCallback) {
+    public async unSubscribeNozzleInfo(callback: ResponseCallback) {
         return this.unsubscribe(0x10, 0xa0, callback).then(({ response, packet }) => {
             return { code: response.result, packet, data: {} };
         });
     }
 
-    GetHotBed(key: number) {
+    public async GetHotBed(key: number) {
         const info = new GetHotBed(key);
         return this.send(0x14, 0x01, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
             const hotBedInfo = new GetHotBed().fromBuffer(response.data);
@@ -478,19 +455,19 @@ export default class Business extends Dispatcher {
         });
     }
 
-    subscribeHotBedTemperature({ interval = 1000 }, callback: ResponseCallback) {
+    public async subscribeHotBedTemperature({ interval = 1000 }, callback: ResponseCallback) {
         return this.subscribe(0x14, 0xa0, interval, callback).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    unSubscribeHotBedTemperature(callback: ResponseCallback) {
+    public async unSubscribeHotBedTemperature(callback: ResponseCallback) {
         return this.unsubscribe(0x14, 0xa0, callback).then(({ response, packet }) => {
             return { code: response.result, packet, data: {} };
         });
     }
 
-    SetExtruderTemperature(key: number, extruderIndex: number, temperature: number) {
+    public async SetExtruderTemperature(key: number, extruderIndex: number, temperature: number) {
         const tobuffer = Buffer.alloc(1 + 1 + 2, 0);
         writeUint8(tobuffer, 0, key);
         writeUint8(tobuffer, 1, extruderIndex);
@@ -500,7 +477,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    SetFilamentstatus(key: number, extruderIndex: number, filamentstatus: number) {
+    public async SetFilamentstatus(key: number, extruderIndex: number, filamentstatus: number) {
         const tobuffer = Buffer.alloc(1 + 1 + 1, 0);
         writeUint8(tobuffer, 0, key);
         writeUint8(tobuffer, 1, extruderIndex);
@@ -510,7 +487,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    SwitchExtruder(key: number, extruderIndex: number) {
+    public async SwitchExtruder(key: number, extruderIndex: number) {
         const tobuffer = Buffer.alloc(1 + 1, 0);
         writeUint8(tobuffer, 0, key);
         writeUint8(tobuffer, 1, extruderIndex);
@@ -519,7 +496,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    SetExtruderSpeed(key: number, fansIndex: number, speedLevel: number) {
+    public async SetExtruderSpeed(key: number, fansIndex: number, speedLevel: number) {
         const tobuffer = Buffer.alloc(1 + 1 + 1);
         writeUint8(tobuffer, 0, key);
         writeUint8(tobuffer, 1, fansIndex);
@@ -529,28 +506,28 @@ export default class Business extends Dispatcher {
         });
     }
 
-    SetExtruderOffset(key: number, index: number, direction: number, distance: number) {
+    public async SetExtruderOffset(key: number, index: number, direction: number, distance: number) {
         const info = new ExtruderOffset(key, index, direction, distance);
         return this.send(0x10, 0x07, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
-    GetExtruderOffset(key: number) {
+    public async GetExtruderOffset(key: number) {
         return this.send(0x10, 0x08, PeerId.CONTROLLER, Buffer.alloc(1, key)).then(({ response, packet }) => {
             const ExtruderOffsetInfo = new ExtruderOffset().fromBuffer(response.data);
             return { response, packet, data: { ExtruderOffsetInfo } };
         });
     }
 
-    ExtruderMovement(key: number, movementType: number, lengthIn: number, speedIn: number, lengthOut: number, speedOut: number) {
+    public async ExtruderMovement(key: number, movementType: number, lengthIn: number, speedIn: number, lengthOut: number, speedOut: number) {
         const info = new ExtruderMovement(key, movementType, lengthIn, speedIn, lengthOut, speedOut);
         return this.send(0x10, 0x09, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
             return { response, packet };
         });
     }
 
-    uploadFile(filePath: string) {
+    public async uploadFile(filePath: string) {
         const sizePerChunk = 60 * 1024;
         this.setHandler(0xb0, 0x01, (data) => {
             const { nextOffset, result: md5HexStr } = readString(data.param);
@@ -559,12 +536,13 @@ export default class Business extends Dispatcher {
             // console.log('>>', index);
             this.log.info(`receive file chunk request: md5: ${md5HexStr}, index: ${index}`);
 
-            const inputStream = fs.createReadStream(filePath, { start: index * sizePerChunk, end: (index + 1) * sizePerChunk - 1, highWaterMark: sizePerChunk });
+            const inputStream = fs.createReadStream(filePath, {
+                start: index * sizePerChunk, end: (index + 1) * sizePerChunk - 1, highWaterMark: sizePerChunk
+            });
             let buffer = Buffer.alloc(1, 200); // result = 1, means file EOF reached
             let finalBuf = Buffer.alloc(0);
-            inputStream.on('data', (buf) => {
+            inputStream.on('data', (buf: Buffer) => {
                 // console.log('>-', buf);
-                //@ts-ignore
                 finalBuf = Buffer.concat([finalBuf, buf]);
             });
             inputStream.on('end', () => {
@@ -633,7 +611,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    startPrintSerial(filePath: string, callback: any) {
+    public startPrintSerial(filePath: string, callback: any) {
         const content: string[] = [];
         let elapsedTime = 0;
         const rl = readline(filePath);
@@ -662,7 +640,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    wifiConnection(hostName: string, clientName: string, token: string, callback: any) {
+    public async wifiConnection(hostName: string, clientName: string, token: string, callback: any) {
         const info = new WifiConnectionInfo(hostName, clientName, token).toBuffer();
         console.log('wifiConnectionInfo', info);
         this.setHandler(0x01, 0x06, ({ param, packet }: RequestData) => {
@@ -678,7 +656,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    wifiConnectionClose() {
+    public async wifiConnectionClose() {
         console.log('get wifi connection close');
         return this.send(0x01, 0x06, PeerId.SCREEN, Buffer.alloc(0)).then(({ response, packet }) => {
             console.log('close response');

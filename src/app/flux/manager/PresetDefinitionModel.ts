@@ -13,7 +13,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'layer_height_0': 0.28,
                 },
                 'value': 0.08,
-                'label': 'fine'
+                'label': 'key-Luban/Preset/Layer Height-Fine'
             },
             'balanced': {
                 'affect': {
@@ -21,7 +21,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'layer_height_0': 0.28,
                 },
                 'value': 0.16,
-                'label': 'balanced'
+                'label': 'key-Luban/Preset/Layer Height-Medium'
             },
             'rough': {
                 'affect': {
@@ -29,7 +29,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'layer_height_0': 0.28,
                 },
                 'value': 0.24,
-                'label': 'rough'
+                'label': 'key-Luban/Preset/Layer Height-Rough'
             },
         },
         'current_value': 0.08,
@@ -48,7 +48,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'speed_travel': 60
                 },
                 'value': 40,
-                'label': 'low'
+                'label': 'key-Luban/Preset/Print Speed-Slow'
             },
             'middle': {
                 'affect': {
@@ -60,7 +60,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'speed_travel': 70
                 },
                 'value': 50,
-                'label': 'middle'
+                'label': 'key-Luban/Preset/Print Speed-Medium'
             },
             'high': {
                 'affect': {
@@ -72,7 +72,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'speed_travel': 80
                 },
                 'value': 60,
-                'label': 'high'
+                'label': 'key-Luban/Preset/Print Speed-Fast'
             },
         },
         'quik': {
@@ -86,7 +86,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'speed_travel': 60
                 },
                 'value': 40,
-                'label': 'low'
+                'label': 'key-Luban/Preset/Print Speed-Slow'
             },
             'middle': {
                 'affect': {
@@ -98,7 +98,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'speed_travel': 70
                 },
                 'value': 50,
-                'label': 'middle'
+                'label': 'key-Luban/Preset/Print Speed-Medium'
             },
             'high': {
                 'affect': {
@@ -110,7 +110,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'speed_travel': 80
                 },
                 'value': 60,
-                'label': 'high'
+                'label': 'key-Luban/Preset/Print Speed-Fast'
             },
         },
         'fine': {
@@ -124,7 +124,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'speed_travel': 50
                 },
                 'value': 40,
-                'label': 'low'
+                'label': 'key-Luban/Preset/Print Speed-Slow'
             },
             'middle': {
                 'affect': {
@@ -136,7 +136,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'speed_travel': 60
                 },
                 'value': 50,
-                'label': 'middle'
+                'label': 'key-Luban/Preset/Print Speed-Medium'
             },
             'high': {
                 'affect': {
@@ -148,7 +148,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'speed_travel': 70
                 },
                 'value': 60,
-                'label': 'high'
+                'label': 'key-Luban/Preset/Print Speed-Fast'
             },
         },
         'engineering': {
@@ -162,7 +162,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'speed_travel': 60
                 },
                 'value': 40,
-                'label': 'low'
+                'label': 'key-Luban/Preset/Print Speed-Slow'
             },
             'middle': {
                 'affect': {
@@ -174,7 +174,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'speed_travel': 70
                 },
                 'value': 50,
-                'label': 'middle'
+                'label': 'key-Luban/Preset/Print Speed-Medium'
             },
             'high': {
                 'affect': {
@@ -186,7 +186,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'speed_travel': 80
                 },
                 'value': 60,
-                'label': 'high'
+                'label': 'key-Luban/Preset/Print Speed-Fast'
             },
         },
         'current_value': 0.08,
@@ -197,7 +197,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
         'universal': {
             'normal_weak': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 3,
                     'infill_pattern': 'lines',
                     'infill_sparse_density': 10,
@@ -205,11 +205,11 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'bottom_thickness': 1
                 },
                 'value': 10,
-                'label': 'normal_weak'
+                'label': 'key-Luban/Preset/Model Structure-Thin'
             },
             'normal_normal': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 3,
                     'infill_pattern': 'trihexagon',
                     'infill_sparse_density': 15,
@@ -217,11 +217,11 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'bottom_thickness': 1
                 },
                 'value': 15,
-                'label': 'normal_normal'
+                'label': 'key-Luban/Preset/Model Structure-Medium'
             },
             'normal_strong': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 4,
                     'infill_pattern': 'cubic',
                     'infill_sparse_density': 25,
@@ -229,13 +229,13 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'bottom_thickness': 1.2
                 },
                 'value': 25,
-                'label': 'normal_strong'
+                'label': 'key-Luban/Preset/Model Structure-Strong'
             }
         },
         'quik': {
             'normal_weak': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 3,
                     'infill_pattern': 'lines',
                     'infill_sparse_density': 10,
@@ -243,11 +243,11 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'bottom_thickness': 1
                 },
                 'value': 10,
-                'label': 'normal_weak'
+                'label': 'key-Luban/Preset/Model Structure-Thin'
             },
             'normal_normal': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 3,
                     'infill_pattern': 'lines',
                     'infill_sparse_density': 15,
@@ -255,11 +255,11 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'bottom_thickness': 1
                 },
                 'value': 15,
-                'label': 'normal_normal'
+                'label': 'key-Luban/Preset/Model Structure-Medium'
             },
             'normal_strong': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 4,
                     'infill_pattern': 'lines',
                     'infill_sparse_density': 25,
@@ -267,13 +267,13 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'bottom_thickness': 1.2
                 },
                 'value': 25,
-                'label': 'normal_strong'
+                'label': 'key-Luban/Preset/Model Structure-Strong'
             }
         },
         'fine': {
             'normal_weak': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 3,
                     'infill_pattern': 'lines',
                     'infill_sparse_density': 10,
@@ -281,11 +281,11 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'bottom_thickness': 1
                 },
                 'value': 10,
-                'label': 'normal_weak'
+                'label': 'key-Luban/Preset/Model Structure-Thin'
             },
             'normal_normal': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 3,
                     'infill_pattern': 'lines',
                     'infill_sparse_density': 15,
@@ -293,11 +293,11 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'bottom_thickness': 1
                 },
                 'value': 15,
-                'label': 'normal_normal'
+                'label': 'key-Luban/Preset/Model Structure-Medium'
             },
             'normal_strong': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 4,
                     'infill_pattern': 'lines',
                     'infill_sparse_density': 25,
@@ -305,13 +305,13 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'bottom_thickness': 1.2
                 },
                 'value': 25,
-                'label': 'normal_strong'
+                'label': 'key-Luban/Preset/Model Structure-Strong'
             }
         },
         'engineering': {
             'normal_weak': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 3,
                     'infill_pattern': 'trihexagon',
                     'infill_sparse_density': 10,
@@ -319,11 +319,11 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'bottom_thickness': 1
                 },
                 'value': 10,
-                'label': 'normal_weak'
+                'label': 'key-Luban/Preset/Model Structure-Thin'
             },
             'normal_normal': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 3,
                     'infill_pattern': 'trihexagon',
                     'infill_sparse_density': 20,
@@ -331,11 +331,11 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'bottom_thickness': 1
                 },
                 'value': 20,
-                'label': 'normal_normal'
+                'label': 'key-Luban/Preset/Model Structure-Medium'
             },
             'normal_strong': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 4,
                     'infill_pattern': 'cubic',
                     'infill_sparse_density': 25,
@@ -343,7 +343,7 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'bottom_thickness': 1.2
                 },
                 'value': 25,
-                'label': 'normal_strong'
+                'label': 'key-Luban/Preset/Model Structure-Strong'
             }
         },
         'current_value': 'normal_weak',
@@ -354,56 +354,49 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
         'options': {
             'Normal': {
                 'affect': {
-                    'support_type': 'Normal',
+                    'support_type': 'normal',
                     'support_roof_enable': true,
                     'support_roof_height': 2,
-                    'support_roof_pattern': 'Zig Zag',
+                    'support_roof_pattern': 'zigzag',
                     'minimum_roof_area': 4,
                     'support_roof_offset': 2
                 },
-                'value': 'Normal',
-                'label': 'Normal'
+                'value': 'normal',
+                'label': 'key-Luban/Preset/Support Placement-Normal'
             },
             'None': {
                 'affect': {
-                    'support_type': 'None'
+                    'support_type': 'none'
                 },
-                'value': 'None',
-                'label': 'None'
+                'value': 'none',
+                'label': 'key-Luban/Preset/Support Placement-None'
             },
         },
-        'current_value': 'Normal',
+        'current_value': 'normal',
         'default_value': 'None'
     },
     'adhesion_type': {
         'options': {
-            'skirt': {
+            'Skirt': {
                 'affect': {
                     'adhesion_type': 'skirt'
                 },
                 'value': 'skirt',
                 'label': 'Skirt'
             },
-            'brim': {
+            'Brim': {
                 'affect': {
                     'adhesion_type': 'brim'
                 },
                 'value': 'brim',
                 'label': 'Brim'
             },
-            'raft': {
+            'Raft': {
                 'affect': {
                     'adhesion_type': 'raft'
                 },
                 'value': 'raft',
                 'label': 'Raft'
-            },
-            'none': {
-                'affect': {
-                    'adhesion_type': 'none'
-                },
-                'value': 'none',
-                'label': 'None'
             }
         },
         'current_value': 'Skirt',
@@ -413,13 +406,13 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
 const DEFAULE_PARAMS_FOR_TPU = {
     'layer_height': {
         'options': {
-            'low': {
+            'fine': {
                 'affect': {
                     'layer_height': 0.08,
                     'layer_height_0': 0.28,
                 },
                 'value': 0.08,
-                'label': 'low'
+                'label': 'key-Luban/Preset/Layer Height-Fine'
             },
             'balanced': {
                 'affect': {
@@ -427,7 +420,7 @@ const DEFAULE_PARAMS_FOR_TPU = {
                     'layer_height_0': 0.28,
                 },
                 'value': 0.16,
-                'label': 'balanced'
+                'label': 'key-Luban/Preset/Layer Height-Medium'
             },
             'rough': {
                 'affect': {
@@ -435,7 +428,7 @@ const DEFAULE_PARAMS_FOR_TPU = {
                     'layer_height_0': 0.28,
                 },
                 'value': 0.24,
-                'label': 'rough'
+                'label': 'key-Luban/Preset/Layer Height-Rough'
             },
         },
         'current_value': 0.08,
@@ -454,7 +447,7 @@ const DEFAULE_PARAMS_FOR_TPU = {
                     'speed_travel': 60
                 },
                 'value': 25,
-                'label': 'low'
+                'label': 'key-Luban/Preset/Print Speed-Slow'
             },
             'middle': {
                 'affect': {
@@ -466,7 +459,7 @@ const DEFAULE_PARAMS_FOR_TPU = {
                     'speed_travel': 60
                 },
                 'value': 30,
-                'label': 'middle'
+                'label': 'key-Luban/Preset/Print Speed-Medium'
             },
             'high': {
                 'affect': {
@@ -478,7 +471,7 @@ const DEFAULE_PARAMS_FOR_TPU = {
                     'speed_travel': 70
                 },
                 'value': 40,
-                'label': 'high'
+                'label': 'key-Luban/Preset/Print Speed-Fast'
             },
         },
         'current_value': 'middle',
@@ -488,39 +481,39 @@ const DEFAULE_PARAMS_FOR_TPU = {
         'options': {
             'normal_weak': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 3,
-                    'infill_pattern': 'Lines',
+                    'infill_pattern': 'lines',
                     'infill_sparse_density': 10,
                     'top_thickness': 1,
                     'bottom_thickness': 1
                 },
                 'value': 10,
-                'label': 'normal_weak'
+                'label': 'key-Luban/Preset/Model Structure-Thin'
             },
             'normal_normal': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 3,
-                    'infill_pattern': 'Tri-Hexagon',
+                    'infill_pattern': 'trihexagon',
                     'infill_sparse_density': 15,
                     'top_thickness': 1,
                     'bottom_thickness': 1
                 },
                 'value': 15,
-                'label': 'normal_normal'
+                'label': 'key-Luban/Preset/Model Structure-Medium'
             },
             'normal_strong': {
                 'affect': {
-                    'model_structure_type': 'Normal',
+                    'model_structure_type': 'normal',
                     'wall_line_count': 4,
-                    'infill_pattern': 'Cubic',
+                    'infill_pattern': 'cubic',
                     'infill_sparse_density': 25,
                     'top_thickness': 1.2,
                     'bottom_thickness': 1.2
                 },
                 'value': 25,
-                'label': 'normal_strong'
+                'label': 'key-Luban/Preset/Model Structure-Strong'
             }
         },
         'current_value': 'normal_weak',
@@ -531,22 +524,22 @@ const DEFAULE_PARAMS_FOR_TPU = {
         'options': {
             'Normal': {
                 'affect': {
-                    'support_type': 'Normal',
+                    'support_type': 'normal',
                     'support_roof_enable': true,
                     'support_roof_height': 2,
-                    'support_roof_pattern': 'Zig Zag',
+                    'support_roof_pattern': 'zigzag',
                     'minimum_roof_area': 4,
                     'support_roof_offset': 2
                 },
-                'value': 'Normal',
-                'label': 'Normal'
+                'value': 'normal',
+                'label': 'key-Luban/Preset/Support Placement-Normal'
             },
             'None': {
                 'affect': {
-                    'support_type': 'None'
+                    'support_type': 'none'
                 },
-                'value': 'None',
-                'label': 'None'
+                'value': 'none',
+                'label': 'key-Luban/Preset/Support Placement-None'
             },
         },
         'current_value': 'Normal',
@@ -554,33 +547,26 @@ const DEFAULE_PARAMS_FOR_TPU = {
     },
     'adhesion_type': {
         'options': {
-            'skirt': {
+            'Skirt': {
                 'affect': {
                     'adhesion_type': 'skirt'
                 },
                 'value': 'skirt',
                 'label': 'Skirt'
             },
-            'brim': {
+            'Brim': {
                 'affect': {
                     'adhesion_type': 'brim'
                 },
                 'value': 'brim',
                 'label': 'Brim'
             },
-            'raft': {
+            'Raft': {
                 'affect': {
                     'adhesion_type': 'raft'
                 },
                 'value': 'raft',
                 'label': 'Raft'
-            },
-            'none': {
-                'affect': {
-                    'adhesion_type': 'none'
-                },
-                'value': 'none',
-                'label': 'None'
             }
         },
         'current_value': 'Skirt',
@@ -698,21 +684,21 @@ class PresetDefinitionModel {
                                     'layer_height': (this.nozzleSize * 0.3).toFixed(2),
                                 },
                                 'value': (this.nozzleSize * 0.3).toFixed(2),
-                                'label': 'fine'
+                                'label': 'key-Luban/Preset/Layer Height-Fine'
                             },
                             'balanced': {
                                 'affect': {
                                     'layer_height': (this.nozzleSize * 0.5).toFixed(2),
                                 },
                                 'value': (this.nozzleSize * 0.5).toFixed(2),
-                                'label': 'balanced'
+                                'label': 'key-Luban/Preset/Layer Height-Medium'
                             },
                             'rough': {
                                 'affect': {
                                     'layer_height': (this.nozzleSize * 0.7).toFixed(2)
                                 },
                                 'value': (this.nozzleSize * 0.7).toFixed(2),
-                                'label': 'rough'
+                                'label': 'key-Luban/Preset/Layer Height-Rough'
                             }
                         },
                         'current_value': (this.nozzleSize * 0.5).toFixed(2),
@@ -725,21 +711,21 @@ class PresetDefinitionModel {
                                     'speed_print': 20
                                 },
                                 'value': 20,
-                                'label': 'low'
+                                'label': 'key-Luban/Preset/Print Speed-Slow'
                             },
                             'middle': {
                                 'affect': {
                                     'speed_print': 40
                                 },
                                 'value': 40,
-                                'label': 'middle'
+                                'label': 'key-Luban/Preset/Print Speed-Medium'
                             },
                             'high': {
                                 'affect': {
                                     'speed_print': 60
                                 },
                                 'value': 60,
-                                'label': 'high'
+                                'label': 'key-Luban/Preset/Print Speed-Medium'
                             },
                         },
                         'current_value': 40,
@@ -752,21 +738,21 @@ class PresetDefinitionModel {
                                     'infill_sparse_density': 10
                                 },
                                 'value': 10,
-                                'label': 'normal_weak'
+                                'label': 'key-Luban/Preset/Model Structure-Thin'
                             },
                             'normal_normal': {
                                 'affect': {
                                     'infill_sparse_density': 15
                                 },
                                 'value': 15,
-                                'label': 'normal_normal'
+                                'label': 'key-Luban/Preset/Model Structure-Medium'
                             },
                             'normal_strong': {
                                 'affect': {
                                     'infill_sparse_density': 25
                                 },
                                 'value': 25,
-                                'label': 'normal_strong'
+                                'label': 'key-Luban/Preset/Model Structure-Strong'
                             }
                         },
                         'current_value': 10,
@@ -777,22 +763,22 @@ class PresetDefinitionModel {
                         'options': {
                             'Normal': {
                                 'affect': {
-                                    'support_type': 'Normal',
+                                    'support_type': 'normal',
                                     'support_roof_enable': true,
                                     'support_roof_height': 2,
-                                    'support_roof_pattern': 'Zig Zag',
+                                    'support_roof_pattern': 'zigzag',
                                     'minimum_roof_area': 4,
                                     'support_roof_offset': 2
                                 },
-                                'value': 'Normal',
-                                'label': 'Normal'
+                                'value': 'normal',
+                                'label': 'key-Luban/Preset/Support Placement-Normal'
                             },
                             'None': {
                                 'affect': {
-                                    'support_type': 'None'
+                                    'support_type': 'none'
                                 },
-                                'value': 'None',
-                                'label': 'None'
+                                'value': 'none',
+                                'label': 'key-Luban/Preset/Support Placement-None'
                             },
                         },
                         'current_value': 'Normal',
@@ -800,37 +786,30 @@ class PresetDefinitionModel {
                     },
                     'adhesion_type': {
                         'options': {
-                            'skirt': {
+                            'Skirt': {
                                 'affect': {
                                     'adhesion_type': 'skirt'
                                 },
                                 'value': 'skirt',
                                 'label': 'Skirt'
                             },
-                            'brim': {
+                            'Brim': {
                                 'affect': {
                                     'adhesion_type': 'brim'
                                 },
                                 'value': 'brim',
                                 'label': 'Brim'
                             },
-                            'raft': {
+                            'Raft': {
                                 'affect': {
                                     'adhesion_type': 'raft'
                                 },
                                 'value': 'raft',
                                 'label': 'Raft'
-                            },
-                            'none': {
-                                'affect': {
-                                    'adhesion_type': 'none'
-                                },
-                                'value': 'none',
-                                'label': 'None'
                             }
                         },
-                        'current_value': 'skirt',
-                        'default_value': 'none'
+                        'current_value': 'Skirt',
+                        'default_value': 'None'
                     }
                 };
             }

@@ -61,7 +61,7 @@ const checkNewUser = defaultAPIFactory(() => request.get('/api/checkNewUser'));
 // Image
 //
 
-const uploadFile = defaultAPIFactory((formData) => request.post('/api/file').send(formData));
+const uploadFile = defaultAPIFactory((formData, headType = '') => request.post('/api/file').query({ headType: headType }).send(formData));
 const uploadCaseFile = defaultAPIFactory((formData) => request.post('/api/file/uploadCaseFile').send(formData));
 const uploadGcodeFile = defaultAPIFactory((formData) => request.post('/api/file/uploadGcodeFile').send(formData));
 const uploadUpdateFile = defaultAPIFactory((formData) => request.post('/api/file/uploadUpdateFile').send(formData));
@@ -187,6 +187,9 @@ const fetchGCode = defaultAPIFactory(({ port = '', dataSource = '' }) => request
     dataSource
 }));
 
+const getProfileDocs = defaultAPIFactory(({ lang, selectCategory, selectProfile }) => request.get(`/api/profiledocs/${selectCategory}/${selectProfile}`).query({
+    lang
+}));
 //
 // Users
 //
@@ -346,6 +349,7 @@ export default {
     generateToolPath,
 
     profileDefinitions,
+    getProfileDocs,
 
     // State
     getState,

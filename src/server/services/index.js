@@ -59,6 +59,12 @@ function startServices(server) {
     socketServer.registerEvent('slice', socketSlice.handleSlice);
     socketServer.registerEvent('generate-support', socketSlice.handleGenerateSupport);
 
+    // simplify model
+    socketServer.registerEvent('simplify-model', socketSlice.handleSimplifyModel);
+    // repair model
+    socketServer.registerChannel('repair-model', socketSlice.handleRepairModel);
+    socketServer.registerChannel('check-model', socketSlice.handleCheckModel);
+
     // communication: http & serial port
     socketServer.registerEvent('machine:discover', connectionManager.refreshDevices);
 
@@ -203,6 +209,8 @@ function registerApis(app) {
     app.delete(urljoin(settings.route, 'api/profileDefinition/:headType/:definitionId'), api.profileDefinitions.removeDefinition);
     app.put(urljoin(settings.route, 'api/profileDefinition/:headType/:definitionId'), api.profileDefinitions.updateDefinition);
     app.post(urljoin(settings.route, 'api/profileDefinition/:headType/upload'), api.profileDefinitions.uploadDefinition);
+
+    app.get(urljoin(settings.route, 'api/profiledocs/:selectCategory/:selectProfile'), api.users.getProfileDocsDir);
 }
 
 export {

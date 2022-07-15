@@ -10,19 +10,23 @@ import logger from '../logger';
 
 const log = logger('service:socket-server');
 
+type TMessage = {
+    type: string,
+    [key: string]: unknown
+}
 
 class SocketServer extends EventEmitter {
-    server = null;
+    private server = null;
 
-    io: Server<DefaultEventsMap, DefaultEventsMap> = null;
+    private io: Server<DefaultEventsMap, DefaultEventsMap> = null;
 
-    sockets: Socket[] = [];
+    private sockets: Socket[] = [];
 
-    id: string = '';
+    public id: string = '';
 
-    events = [];
+    private events = [];
 
-    start(server) {
+    public start(server) {
         this.stop();
 
         this.server = server;
@@ -60,7 +64,7 @@ class SocketServer extends EventEmitter {
         this.io.on('connection', this.onConnection);
     }
 
-    stop() {
+    public stop() {
         if (this.io) {
             this.io.close();
             this.io = null;
@@ -71,7 +75,7 @@ class SocketServer extends EventEmitter {
     }
 
     // established a new socket connection
-    onConnection = (socket) => {
+    public onConnection = (socket) => {
         const address = socket.handshake.address;
         const token = socket.decoded_token || {};
         log.debug(`New connection from ${address}: id=${socket.id}, token.id=${token.id}, token.name=${token.name}`);
@@ -103,8 +107,36 @@ class SocketServer extends EventEmitter {
         });
     };
 
-    registerEvent(event, callback) {
+    public registerEvent(event, callback) {
         this.events.push([event, callback]);
+    }
+
+    private channelMiddleware = (socket: Socket, topic: string, invoke, actionid, params) => {
+        const actions = {
+            next: (res) => {
+                socket.emit(topic, actionid, 'next', res);
+            },
+            error: (res) => {
+                socket.emit(topic, actionid, 'error', res);
+            },
+            complete: (res) => {
+                socket.emit(topic, actionid, 'complete', res);
+            }
+        };
+        return invoke(actions, params);
+    }
+
+    public registerChannel(
+        topic: string, callback: (subscriber: {
+            next: (msg: TMessage) => void;
+            complete: (msg: TMessage) => void;
+        }, ...data: unknown[]) => void
+    ) {
+        this.events.push([
+            topic, (socket, actionid, params) => {
+                return this.channelMiddleware(socket, topic, callback, actionid, params);
+            }
+        ]);
     }
 }
 

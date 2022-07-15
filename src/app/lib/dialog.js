@@ -9,16 +9,16 @@ const Dialog = {
         let extensions = ['snap3dp', 'snaplzr', 'snapcnc'];
         switch (type) { // substring '/3dp' to '3dp'
             case 'printing':
-                extensions = ['stl', 'obj'];
+                extensions = ['stl', 'obj', '3mf', 'amf'];
                 break;
             case 'laser-rotate':
                 extensions = ['svg', 'png', 'jpg', 'jpeg', 'bmp', 'dxf'];
                 break;
             case 'laser':
-                extensions = ['svg', 'png', 'jpg', 'jpeg', 'bmp', 'dxf', 'stl'];
+                extensions = ['svg', 'png', 'jpg', 'jpeg', 'bmp', 'dxf', 'stl', '3mf', 'amf'];
                 break;
             case 'cnc':
-                extensions = ['svg', 'png', 'jpg', 'jpeg', 'bmp', 'dxf', 'stl'];
+                extensions = ['svg', 'png', 'jpg', 'jpeg', 'bmp', 'dxf', 'stl', '3mf', 'amf'];
                 break;
             case 'workspace':
                 extensions = ['gcode', 'nc', 'cnc'];
@@ -29,13 +29,12 @@ const Dialog = {
         if (isElectron()) {
             const { remote } = window.require('electron');
             const currentWindow = remote.getCurrentWindow();
-            const defaultProperties = ['createDirectory', 'openFile'];
             const openDialogReturnValue = await remote.dialog.showOpenDialog(
                 currentWindow,
                 {
                     title: 'Snapmaker Luban',
                     filters: [{ name: 'files', extensions }],
-                    properties: isMultiSelect ? defaultProperties.concat('multiSelections') : defaultProperties
+                    properties: isMultiSelect ? ['multiSelections'] : []
                 }
             );
             const filePaths = openDialogReturnValue.filePaths;
@@ -80,5 +79,6 @@ const Dialog = {
         return null;
     }
 };
+
 
 export default Dialog;

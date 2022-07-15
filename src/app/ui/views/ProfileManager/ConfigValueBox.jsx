@@ -2,19 +2,29 @@ import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { includes, throttle } from 'lodash';
 import classNames from 'classnames';
+import i18next from 'i18next';
+import { useSelector, useDispatch } from 'react-redux';
+import ReactMarkdown from 'react-markdown';
+import { actions as printingActions } from '../../../flux/printing';
+// import Menu from '../../components/Menu';
 import i18n from '../../../lib/i18n';
 import SettingItem from './SettingItem';
 import CheckboxItem from './CheckboxItem';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
 import SvgIcon from '../../components/SvgIcon';
-import { HEAD_CNC } from '../../../constants';
+// import Dropdown from '../../components/Dropdown';
+import Select from '../../components/Select';
+import { Button } from '../../components/Buttons';
+import api from '../../../api';
+import { PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
+/* eslint-disable import/no-cycle */
+import { ParamItem } from '../../widgets/PrintingConfigurations/Configurations';
 
 function ConfigValueBox({
     optionConfigGroup,
     calculateTextIndex,
     isCategorySelected,
-    type = 'input',
     onChangeDefinition,
     isOfficialDefinitionKey,
     selectedSettingDefaultValue,
@@ -22,11 +32,59 @@ function ConfigValueBox({
     customConfigs,
     showMiddle = false,
     hideMiniTitle = false,
-    managerType
+    managerType,
+    customMode,
+    setCustomMode,
+    onChangeCustomConfig
 }) {
+    const { printingParamsType, materialParamsType } = useSelector(state => state?.printing);
     const [activeCateId, setActiveCateId] = useState(2);
+    const [selectParamsType, setSelectParamsType] = useState(managerType === PRINTING_MANAGER_TYPE_MATERIAL ? materialParamsType : printingParamsType);
+    const [showProfileDocs, setShowProfileDocs] = useState(true);
+    const [selectProfile, setSelectProfile] = useState('');
+    const [selectCategory, setSelectCategory] = useState('');
+    const [mdContent, setMdContent] = useState('');
+    const [selectQualityDetailType, setSelectQualityDetailType] = useState('no_limit');
     const scrollDom = useRef(null);
     const fieldsDom = useRef([]);
+    const dispatch = useDispatch();
+    const lang = i18next.language;
+    useEffect(async () => {
+        if (selectCategory && selectProfile) {
+            // let urlPre = '';
+            // let langDir = '';
+            // if (lang.toUpperCase() === 'ZH-CN') {
+            //     langDir = 'CN';
+            //     urlPre = 'https://snapmaker.oss-cn-beijing.aliyuncs.com/snapmaker.com';
+            // } else {
+            //     langDir = 'EN';
+            //     urlPre = 'https://s3.us-west-2.amazonaws.com/snapmaker.com';
+            // }
+            // const url = `${urlPre}/${langDir}/${selectCategory}/${selectProfile}.md`;
+
+            try {
+                const res = await api.getProfileDocs({ lang, selectCategory, selectProfile });
+                setMdContent(res.body?.content);
+                // fetch(url, { mode: 'cors',
+                //     method: 'GET',
+                //     headers: {
+                //         'Content-Type': 'text/markdown'
+                //     } })
+                //     .then((response) => {
+                //         response.headers['access-control-allow-origin'] = { value: '*' };
+                //         return response.text();
+                //     })
+                //     .then(result => {
+                //         if (result) {
+                //             setMdContent(result);
+                //         }
+                //     });
+            } catch (e) {
+                console.info(e);
+                setMdContent('');
+            }
+        }
+    }, [selectProfile]);
     function setActiveCate(cateId) {
         if (scrollDom.current) {
             const container = scrollDom.current.parentElement;
@@ -45,205 +103,408 @@ function ConfigValueBox({
             setActiveCateId(cateId);
         }
     }
-    useEffect(() => {
-        fieldsDom.current = fieldsDom.current.slice(
-            0,
-            Object.keys(optionConfigGroup).length
-        );
-    }, [Object.keys(optionConfigGroup)]);
-
-    return (
-        <div className="sm-flex">
-            {showMiddle && (
-                <div
-                    className={classNames(
-                        styles['manager-grouplist'],
-                        'border-default-grey-1',
-                        'padding-vertical-4',
-                        'border-radius-8'
-                    )}
-                >
-                    <div className="sm-parameter-container">
-                        {optionConfigGroup.map((group, idx) => {
-                            return (
-                                <div key={i18n._(idx)}>
-                                    {group.name && (
-                                        <Anchor
-                                            className={classNames(styles.item, {
-                                                [styles.selected]:
-                                                    idx === activeCateId
-                                            })}
-                                            onClick={() => {
-                                                setActiveCate(idx);
-                                            }}
-                                        >
-                                            <span className="sm-parameter-header__title">
-                                                {i18n._(group.name)}
-                                            </span>
-                                        </Anchor>
-                                    )}
-                                </div>
-                            );
+    const handleUpdateProfileKey = (category, profileKey) => {
+        setSelectCategory(category);
+        setSelectProfile(profileKey);
+    };
+    const renderCheckboxList = ({
+        renderList,
+        calculateTextIndex: _calculateTextIndex,
+        settings,
+        isOfficialDefinitionKey: _isOfficialDefinitionKey,
+        onChangeCustomConfig: _onChangeCustomConfig,
+        categoryKey
+    }) => {
+        return renderList && renderList.map(profileKey => {
+            if (settings[profileKey].childKey?.length > 0) {
+                return (
+                    <div key={profileKey} className={`margin-left-${(settings[profileKey].zIndex - 1) * 16}`}>
+                        <CheckboxItem
+                            calculateTextIndex={_calculateTextIndex}
+                            settings={settings}
+                            defaultValue={includes(
+                                customConfigs ? customConfigs[categoryKey] : [],
+                                profileKey
+                            )}
+                            definitionKey={
+                                profileKey
+                            }
+                            key={profileKey}
+                            isOfficialDefinitionKey={_isOfficialDefinitionKey}
+                            onChangeDefinition={_onChangeCustomConfig}
+                            configCategory={categoryKey}
+                        />
+                        {renderCheckboxList({
+                            // customConfigs: _customConfigs,
+                            renderList: settings[profileKey].childKey,
+                            calculateTextIndex: _calculateTextIndex,
+                            settings,
+                            isOfficialDefinitionKey: _isOfficialDefinitionKey,
+                            onChangeCustomConfig: _onChangeCustomConfig,
+                            categoryKey
                         })}
                     </div>
+                );
+            }
+            return (
+                <CheckboxItem
+                    calculateTextIndex={_calculateTextIndex}
+                    settings={settings}
+                    defaultValue={includes(
+                        customConfigs ? customConfigs[categoryKey] : [],
+                        profileKey
+                    )}
+                    definitionKey={
+                        profileKey
+                    }
+                    key={profileKey}
+                    isOfficialDefinitionKey={_isOfficialDefinitionKey}
+                    onChangeDefinition={_onChangeCustomConfig}
+                    configCategory={categoryKey}
+                />
+            );
+        });
+    };
+    const renderSettingItemList = ({
+        settings,
+        renderList,
+        isDefaultDefinition,
+        onChangeDefinition: _onChangeCustomConfig,
+        managerType: _managerType,
+        officalDefinition,
+        categoryKey
+        // selectParamsType: _selectParamsType
+    }) => {
+        return renderList && renderList.map(profileKey => {
+            if (selectParamsType === 'custom' || includes((settings[profileKey].filter || []).concat('all'), selectParamsType)) {
+                if (settings[profileKey].childKey?.length > 0 && selectParamsType !== 'custom') {
+                    return (
+                        <div key={profileKey} className={`margin-left-${(settings[profileKey].zIndex - 1) * 16}`}>
+                            <SettingItem
+                                settings={settings}
+                                definitionKey={profileKey}
+                                key={profileKey}
+                                isDefaultDefinition={isDefaultDefinition}
+                                onChangeDefinition={_onChangeCustomConfig}
+                                defaultValue={{
+                                    value: selectedSettingDefaultValue && selectedSettingDefaultValue[profileKey].default_value
+                                }}
+                                styleSize="large"
+                                managerType={_managerType}
+                                officalDefinition={officalDefinition}
+                                onClick={handleUpdateProfileKey}
+                                categoryKey={categoryKey}
+                            />
+                            {renderSettingItemList({
+                                settings,
+                                renderList: settings[profileKey].childKey,
+                                isDefaultDefinition,
+                                onChangeDefinition: _onChangeCustomConfig,
+                                managerType: _managerType,
+                                officalDefinition
+                            })}
+                        </div>
+                    );
+                }
+                return (
+                    <div className={selectParamsType !== 'custom' && `margin-left-${(settings[profileKey].zIndex - 1) * 16}`}>
+                        <SettingItem
+                            settings={settings}
+                            definitionKey={profileKey}
+                            key={profileKey}
+                            isDefaultDefinition={isDefaultDefinition}
+                            onChangeDefinition={_onChangeCustomConfig}
+                            defaultValue={{
+                                value: selectedSettingDefaultValue && selectedSettingDefaultValue[profileKey].default_value
+                            }}
+                            styleSize="large"
+                            managerType={_managerType}
+                            officalDefinition={officalDefinition}
+                            onClick={handleUpdateProfileKey}
+                            categoryKey={categoryKey}
+                        />
+                    </div>
+                );
+            } else {
+                return null;
+            }
+        });
+    };
+    useEffect(() => {
+        if (selectParamsType !== 'custom') {
+            fieldsDom.current = fieldsDom.current.slice(
+                0,
+                Object.keys(optionConfigGroup).length
+            );
+        } else {
+            fieldsDom.current = fieldsDom.current.slice(
+                0,
+                Object.keys(customConfigs).length
+            );
+        }
+    }, [Object.keys(optionConfigGroup), selectParamsType, Object.keys(customConfigs)]);
+
+    const handleUpdateParamsType = (e) => {
+        setSelectProfile('');
+        setSelectParamsType(e.value);
+        dispatch(printingActions.updateProfileParamsType(managerType, e.value));
+    };
+    const materialParamsTypeOptions = [{
+        value: 'basic',
+        label: i18n._('key-profileManager/Params Basic')
+    }, {
+        value: 'all',
+        label: i18n._('key-profileManager/Params All')
+    }];
+    const qualityParamsTypeOptions = [{
+        value: 'recommed',
+        label: i18n._('key-profileManager/Params Recommed')
+    }, {
+        value: 'custom',
+        label: i18n._('key-profileManager/Params Custom')
+    }, {
+        value: 'basic',
+        label: i18n._('key-profileManager/Params Basic')
+    }, {
+        value: 'advanced',
+        label: i18n._('key-profileManager/Params Advanced')
+    }, {
+        value: 'all',
+        label: i18n._('key-profileManager/Params All')
+    }];
+    const qualityDetailTypeOptions = [{
+        value: 'no_limit',
+        label: i18n._('key-profileManager/Params No Limit')
+    }, {
+        value: 'efficiency',
+        label: i18n._('key-profileManager/Params Efficiency')
+    }, {
+        value: 'strength',
+        label: i18n._('key-profileManager/Params Strength')
+    }, {
+        value: 'surface_quality',
+        label: i18n._('key-profileManager/Params Surface_quality')
+    }, {
+        value: 'accuracy',
+        label: i18n._('key-profileManager/Params Accuracy')
+    }, {
+        value: 'material',
+        label: i18n._('key-profileManager/Params Material')
+    }, {
+        value: 'success',
+        label: i18n._('key-profileManager/Params Success')
+    }];
+
+    return (
+        <div className={classNames(styles['config-value-box-wrapper'], 'width-percent-100 margin-vertical-16 margin-horizontal-16 background-color-white border-radius-16')}>
+            <div className="height-56 sm-flex border-bottom-normal padding-left-16">
+                <div className="sm-flex">
+                    <div className="sm-flex align-center margin-right-64">
+                        <span className="margin-right-8">{i18n._('key-profileManager/param type')}</span>
+                        <Select
+                            options={managerType === PRINTING_MANAGER_TYPE_MATERIAL ? materialParamsTypeOptions : qualityParamsTypeOptions}
+                            clearable={false}
+                            size="large"
+                            showSearch={false}
+                            value={selectParamsType}
+                            onChange={(e) => {
+                                handleUpdateParamsType(e);
+                            }}
+                            bordered={false}
+                            disabled={customMode}
+                        />
+                        {managerType === PRINTING_MANAGER_TYPE_QUALITY && selectParamsType === 'all' && (
+                            <Select
+                                options={qualityDetailTypeOptions}
+                                clearable={false}
+                                size="large"
+                                showSearch={false}
+                                bordered={false}
+                                value={selectQualityDetailType}
+                                onChange={(e) => {
+                                    setSelectQualityDetailType(e.value);
+                                }}
+                                disabled={customMode}
+                            />
+                        )}
+                    </div>
+                    {selectParamsType === 'custom' && (
+                        <Button width="120px" priority="levle-two" type="default" className="margin-top-12" onClick={() => setCustomMode(!customMode)}>
+                            <span>{customMode ? i18n._('key-profileManager/Finish') : i18n._('key-profileManager/Manager Custom Params')}</span>
+                        </Button>
+                    )}
                 </div>
-            )}
-            <div
-                className={classNames(
-                    styles['manager-details'],
-                    'border-default-grey-1',
-                    'border-radius-8'
-                )}
-                onWheel={throttle(
-                    () => {
-                        setActiveCate();
-                    },
-                    200,
-                    { leading: false, trailing: true }
-                )}
-            >
-                <div className="sm-parameter-container" ref={scrollDom}>
-                    {!isCategorySelected
-                        && optionConfigGroup.map((group, index) => {
-                            const eachFieldsDom = fieldsDom.current[index];
-                            return (
-                                <div key={group.name || group.fields[0]}>
-                                    <>
-                                        {!hideMiniTitle
-                                            && group.name
-                                            && (eachFieldsDom
-                                                ? eachFieldsDom.childNodes
-                                                    ?.length > 0
-                                                : true) && (
-                                            <div className="border-bottom-normal padding-bottom-8 margin-vertical-16">
-                                                <SvgIcon
-                                                    name="TitleSetting"
-                                                    type={['static']}
-                                                />
-                                                <span className="margin-left-2">
-                                                    {i18n._(group.name)}
-                                                </span>
-                                            </div>
-                                        )}
-                                        {/* eslint no-return-assign: 0*/}
-                                        <div
-                                            className={`${
-                                                managerType === HEAD_CNC
-                                                && group.name === 'Carving Tool'
-                                                && 'sm-flex justify-space-between'
-                                            }`}
-                                        >
-                                            <div
-                                                ref={(el) => (fieldsDom.current[
-                                                    index
-                                                ] = el)}
-                                                className={`${
-                                                    managerType === HEAD_CNC
-                                                    && group.name
-                                                        === 'Carving Tool'
-                                                    && 'width-percent-100'
-                                                }`}
-                                            >
-                                                {group.fields
-                                                    && group.fields.map((key) => {
-                                                        if (type === 'input') {
-                                                            return (
-                                                                <SettingItem
-                                                                    settings={
-                                                                        definitionForManager?.settings
-                                                                    }
-                                                                    definitionKey={
-                                                                        key
-                                                                    }
-                                                                    // width={managerType === HEAD_CNC && group.name === 'Carving Tool' ? '120px' : '160px'}
-                                                                    key={key}
-                                                                    isDefaultDefinition={
-                                                                        definitionForManager?.isRecommended
-                                                                    }
-                                                                    onChangeDefinition={
-                                                                        onChangeDefinition
-                                                                    }
-                                                                    isProfile="true"
-                                                                    defaultValue={{
-                                                                        // Check to reset
-                                                                        value:
-                                                                            selectedSettingDefaultValue
-                                                                            && selectedSettingDefaultValue[
-                                                                                key
-                                                                            ]
-                                                                                .default_value
-                                                                    }}
-                                                                    styleSize={
-                                                                        managerType
-                                                                            === HEAD_CNC
-                                                                        && group.name
-                                                                            === 'Carving Tool'
-                                                                            ? 'middle'
-                                                                            : 'large'
-                                                                    }
-                                                                    managerType={
-                                                                        managerType
-                                                                    }
-                                                                    officalDefinition={
-                                                                        !!definitionForManager?.isDefault
-                                                                    }
-                                                                />
-                                                            );
-                                                        } else if (
-                                                            type === 'checkbox'
-                                                        ) {
-                                                            return (
-                                                                <CheckboxItem
-                                                                    calculateTextIndex={
-                                                                        calculateTextIndex
-                                                                    }
-                                                                    settings={
-                                                                        definitionForManager?.settings
-                                                                    }
-                                                                    defaultValue={includes(
-                                                                        customConfigs,
-                                                                        key
-                                                                    )}
-                                                                    definitionKey={
-                                                                        key
-                                                                    }
-                                                                    key={key}
-                                                                    isOfficialDefinitionKey={
-                                                                        isOfficialDefinitionKey
-                                                                    }
-                                                                    onChangeDefinition={
-                                                                        onChangeDefinition
-                                                                    }
-                                                                />
-                                                            );
-                                                        } else {
-                                                            return null;
-                                                        }
-                                                    })}
-                                            </div>
-                                            {managerType === HEAD_CNC
-                                                && group.name === 'Carving Tool'
-                                                && definitionForManager?.settings
-                                                    ?.tool_type
-                                                    ?.default_value && (
-                                                <div>
-                                                    <img
-                                                        style={{
-                                                            width: 80,
-                                                            height: 203,
-                                                            marginLeft: 20
+            </div>
+            <div className="sm-flex width-percent-100 height-100-percent-minus-56">
+                {selectParamsType !== 'recommed' && (
+                    <>
+                        {showMiddle && (
+                            <div
+                                className={classNames(
+                                    styles['manager-grouplist'],
+                                    // 'border-default-grey-1',
+                                    'padding-vertical-16',
+                                    // 'border-radius-8'
+                                )}
+                            >
+                                {(selectParamsType !== 'custom' || customMode) && (
+                                    <div className="sm-parameter-container">
+                                        {Object.keys(optionConfigGroup).map((key, index) => {
+                                            return (
+                                                <div key={i18n._(index)}>
+                                                    <Anchor
+                                                        className={classNames(styles.item, {
+                                                            [styles.selected]:
+                                                            index === activeCateId
+                                                        })}
+                                                        onClick={() => {
+                                                            setActiveCate(index);
                                                         }}
-                                                        src={`/resources/images/cnc/tool-type-${definitionForManager?.settings?.tool_type?.default_value}.jpg`}
-                                                        alt=""
-                                                    />
+                                                    >
+                                                        <span className="sm-parameter-header__title">
+                                                            {i18n._(key)}
+                                                        </span>
+                                                    </Anchor>
                                                 </div>
-                                            )}
-                                        </div>
-                                    </>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                                {selectParamsType === 'custom' && !customMode && (
+                                    Object.keys(customConfigs).map((key, index) => {
+                                        return (
+                                            <div key={i18n._(index)}>
+                                                <Anchor
+                                                    className={classNames(styles.item, {
+                                                        [styles.selected]:
+                                                        index === activeCateId
+                                                    })}
+                                                    onClick={() => {
+                                                        setActiveCate(index);
+                                                    }}
+                                                >
+                                                    <span className="sm-parameter-header__title">
+                                                        {i18n._(key)}
+                                                    </span>
+                                                </Anchor>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        )}
+                        <div className={classNames(
+                            styles['manager-detail-and-docs'],
+                            'sm-flex',
+                            'justify-space-between'
+                        )}
+                        >
+                            <div
+                                className={classNames(
+                                    styles['manager-details'],
+                                    // 'border-default-grey-1',
+                                    'border-radius-8',
+                                    'width-percent-60 '
+                                )}
+                                onWheel={throttle(
+                                    () => {
+                                        setActiveCate();
+                                    },
+                                    200,
+                                    { leading: false, trailing: true }
+                                )}
+                            >
+                                <div className="sm-parameter-container" ref={scrollDom}>
+                                    {!isCategorySelected
+                                        && Object.keys((selectParamsType === 'custom' && !customMode) ? customConfigs : optionConfigGroup).map((key, index) => {
+                                            // const eachFieldsDom = fieldsDom.current[index];
+                                            return (
+                                                <div key={key}>
+                                                    <>
+                                                        {!hideMiniTitle && key && (
+                                                            <div className="border-bottom-normal padding-bottom-8 margin-vertical-16">
+                                                                <SvgIcon
+                                                                    name="TitleSetting"
+                                                                    type={['static']}
+                                                                />
+                                                                <span className="margin-left-2">
+                                                                    {i18n._(key)}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                        {/* eslint no-return-assign: 0*/}
+                                                        <div>
+                                                            <div ref={(el) => (fieldsDom.current[index] = el)}>
+                                                                {customMode && renderCheckboxList({
+                                                                    customConfig: customConfigs,
+                                                                    renderList: optionConfigGroup[key],
+                                                                    calculateTextIndex,
+                                                                    settings: definitionForManager?.settings,
+                                                                    isOfficialDefinitionKey,
+                                                                    onChangeCustomConfig,
+                                                                    categoryKey: key
+                                                                })}
+                                                                {!customMode && renderSettingItemList({
+                                                                    settings: definitionForManager?.settings,
+                                                                    renderList: selectParamsType === 'custom' ? customConfigs[key] : optionConfigGroup[key],
+                                                                    isDefaultDefinition: definitionForManager?.isRecommended,
+                                                                    onChangeDefinition,
+                                                                    managerType,
+                                                                    officalDefinition: !!definitionForManager?.isDefault,
+                                                                    categoryKey: key
+                                                                    // selectParamsType
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    </>
+                                                </div>
+                                            );
+                                        })}
                                 </div>
-                            );
-                        })}
-                </div>
+                            </div>
+                            <div className={classNames(styles['manager-params-docs'], 'width-percent-40 background-grey-3 border-radius-16 position-re', showProfileDocs ? '' : 'width-1-important min-width-1 margin-right-16')}>
+                                <Anchor onClick={() => setShowProfileDocs(!showProfileDocs)} className="background-color-white border-default-grey-1 border-radius-12 position-ab left-minus-12 bottom-24">
+                                    <SvgIcon
+                                        name="MainToolbarBack"
+                                        size={24}
+                                        type={['static']}
+                                        className={classNames(showProfileDocs ? 'rotate180' : '')}
+                                    />
+                                </Anchor>
+                                {showProfileDocs && (
+                                    <ReactMarkdown>
+                                        {mdContent}
+                                    </ReactMarkdown>
+                                )}
+                            </div>
+                        </div>
+                    </>
+                )}
+                {selectParamsType === 'recommed' && (
+                    <div className="width-percent-100 padding-horizontal-16 padding-vertical-16 sm-flex justify-space-between">
+                        <div className="width-percent-70 margin-right-46">
+                            <ParamItem
+                                selectedDefinitionModel={definitionForManager}
+                                allParams={definitionForManager.params}
+                            />
+                        </div>
+                        <div className={classNames(styles['manager-params-docs'], 'width-percent-40 background-grey-3 border-radius-16 position-re', showProfileDocs ? '' : 'width-1-important min-width-1 margin-right-16')}>
+                            <Anchor onClick={() => setShowProfileDocs(!showProfileDocs)} className="background-color-white border-default-grey-1 border-radius-12 position-ab left-minus-12 bottom-24">
+                                <SvgIcon
+                                    name="MainToolbarBack"
+                                    size={24}
+                                    type={['static']}
+                                    className={classNames(showProfileDocs ? 'rotate180' : '')}
+                                />
+                            </Anchor>
+                            {showProfileDocs && (
+                                <ReactMarkdown>
+                                    {mdContent}
+                                </ReactMarkdown>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -252,15 +513,17 @@ ConfigValueBox.propTypes = {
     definitionForManager: PropTypes.object.isRequired,
     optionConfigGroup: PropTypes.array.isRequired,
     isCategorySelected: PropTypes.bool,
-    customConfigs: PropTypes.array,
-    type: PropTypes.string,
+    customConfigs: PropTypes.object,
     calculateTextIndex: PropTypes.func,
     isOfficialDefinitionKey: PropTypes.func,
     onChangeDefinition: PropTypes.func.isRequired,
     selectedSettingDefaultValue: PropTypes.object,
     showMiddle: PropTypes.bool,
     hideMiniTitle: PropTypes.bool,
-    managerType: PropTypes.string
+    managerType: PropTypes.string,
+    onChangeCustomConfig: PropTypes.func,
+    customMode: PropTypes.bool,
+    setCustomMode: PropTypes.func,
 };
 
 export default React.memo(ConfigValueBox);

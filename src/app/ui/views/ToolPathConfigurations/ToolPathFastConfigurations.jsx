@@ -12,6 +12,7 @@ import { Button } from '../../components/Buttons';
 import { toHump, toLine } from '../../../../shared/lib/utils';
 import ToolParameters from './cnc/ToolParameters';
 import ToolSelector from './cnc/ToolSelector';
+import { editorStore } from '../../../store/local-storage';
 
 import {
     CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION,
@@ -133,6 +134,9 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
     };
     async function handleSelectorChange(value) {
         setCurrentToolDefinition(value);
+        if (value.definitionId) {
+            editorStore.set(`${headType}LastDefinitionId`, value.definitionId);
+        }
         if (value?.definitionId !== activeToolListDefinition?.definitionId) {
             await dispatch(editorActions.changeActiveToolListDefinition(headType, value?.definitionId, value?.name, true));
         }

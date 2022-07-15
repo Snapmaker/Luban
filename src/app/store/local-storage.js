@@ -17,7 +17,8 @@ if (isElectron()) {
         path: {
             'widget': path.join(app.getPath('userData'), 'widget.json'),
             'machine': path.join(app.getPath('userData'), 'machine.json'),
-            'printing': path.join(app.getPath('userData'), 'printing.json')
+            'printing': path.join(app.getPath('userData'), 'printing.json'),
+            'editor': path.join(app.getPath('userData'), 'editor.json')
         }
     };
 }
@@ -83,6 +84,7 @@ const getLocalStore = (name) => {
 export const widgetStore = getLocalStore('widget');
 export const machineStore = getLocalStore('machine');
 export const printingStore = getLocalStore('printing');
+export const editorStore = getLocalStore('editor');
 
 
 if (semver.gte(settings.version, '4.2.2')) {
@@ -99,13 +101,15 @@ const storeManager = {
     widgetStore,
     machineStore,
     printingStore,
+    editorStore,
     clear: () => {
         machineStore.clear();
         widgetStore.clear();
         printingStore.clear();
+        editorStore.clear();
     },
     get: () => {
-        return _.merge(machineStore.get(), widgetStore.get(), printingStore.get());
+        return _.merge(machineStore.get(), widgetStore.get(), printingStore.get(), editorStore.get());
     }
 };
 export default storeManager;
