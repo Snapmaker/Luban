@@ -210,7 +210,7 @@ function registerApis(app) {
     app.put(urljoin(settings.route, 'api/profileDefinition/:headType/:definitionId'), api.profileDefinitions.updateDefinition);
     app.post(urljoin(settings.route, 'api/profileDefinition/:headType/upload'), api.profileDefinitions.uploadDefinition);
 
-    app.get(urljoin(settings.route, 'api/profiledocs'), api.users.getProfileDocsDir);
+    app.get(urljoin(settings.route, 'api/profiledocs/:selectCategory/:selectProfile'), api.users.getProfileDocsDir);
 }
 
 export {

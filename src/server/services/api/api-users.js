@@ -68,9 +68,22 @@ const getSanitizedRecords = () => {
 };
 
 export const getProfileDocsDir = (req, res) => {
-    res.status(200).send({
-        profileDocsDir: DataStorage.profileDocsDir
-    });
+    try {
+        const { selectCategory, selectProfile } = req.params;
+        const lang = req.query.lang;
+        log.info(' langselectCategory, selectProfile', lang, selectCategory, selectProfile);
+        const langDir = lang.toUpperCase() === 'ZH-CN' ? 'CN' : 'EN';
+        const urlPath = `/${langDir}/${selectCategory}/${selectProfile}.md`;
+        const content = fs.readFileSync(`${DataStorage.profileDocsDir}${urlPath}`, 'utf-8');
+        res.status(200).send({
+            content: content
+        });
+    } catch (e) {
+        log.error(e);
+        res.status(500).send({
+            msg: 'No such path'
+        });
+    }
 };
 
 export const signin = (req, res) => {

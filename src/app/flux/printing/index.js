@@ -390,7 +390,6 @@ export const actions = {
         // state
         const printingState = getState().printing;
         const { gcodeLineGroup, defaultMaterialId } = printingState;
-        const profileDocsDir = await api.getProfileDocsDir();
         const { toolHead, series, size } = getState().machine;
         // await dispatch(machineActions.updateMachineToolHead(toolHead, series, CONFIG_HEADTYPE));
         const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
@@ -420,7 +419,6 @@ export const actions = {
                 qualityDefinitions: qualityParamModels,
                 extruderLDefinition,
                 extruderRDefinition: await definitionManager.getDefinitionsByPrefixName('snapmaker_extruder_1'),
-                profileDocsDir: profileDocsDir.body.profileDocsDir
             })
         );
         // model group
@@ -450,7 +448,6 @@ export const actions = {
         series = getRealSeries(series);
         // await dispatch(machineActions.updateMachineToolHead(toolHead, series, CONFIG_HEADTYPE));
         const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
-        const profileDocsDir = await api.getProfileDocsDir();
         const profileLevel = await definitionManager.init(
             CONFIG_HEADTYPE,
             currentMachine.configPathname[CONFIG_HEADTYPE]
@@ -481,7 +478,6 @@ export const actions = {
                 },
                 extruderLDefinition: definitionManager.extruderLDefinition,
                 extruderRDefinition: definitionManager.extruderRDefinition,
-                profileDocsDir: profileDocsDir.body.profileDocsDir
             })
         );
 
@@ -516,7 +512,7 @@ export const actions = {
         })
         dispatch(
             actions.updateState({
-                defaultDefinitions: defaultDefinitions,
+                defaultDefinitions: definitionManager?.defaultDefinitions,
                 materialDefinitions: allMaterialDefinition,
                 qualityDefinitions: qualityParamModels,
                 printingProfileLevel: profileLevel.printingProfileLevel,
@@ -1965,13 +1961,13 @@ export const actions = {
                 primeTowerYDefinition
             }
         );
-        // definitionManager.calculateDependencies(
-        //     activeQualityDefinition.settings,
-        //     modelGroup && modelGroup.hasSupportModel(),
-        //     newExtruderLDefinition.settings,
-        //     newExtruderRDefinition.settings,
-        //     helpersExtruderConfig
-        // );
+        definitionManager.calculateDependencies(
+            activeQualityDefinition.settings,
+            modelGroup && modelGroup.hasSupportModel(),
+            newExtruderLDefinition.settings,
+            newExtruderRDefinition.settings,
+            helpersExtruderConfig
+        );
         definitionManager.updateDefinition({
             ...newExtruderLDefinition,
             definitionId: 'snapmaker_extruder_0'
