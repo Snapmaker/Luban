@@ -1108,9 +1108,9 @@ export const MACHINE_SERIES = {
         label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A400',
         setting: {
             size: {
-                x: 410,
-                y: 410,
-                z: 420
+                x: 400,
+                y: 400,
+                z: 400
             },
             laserSize: {
                 x: 410,
@@ -1150,8 +1150,8 @@ export const STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL = 'standardCNCToolheadForOrigina
 export const STANDARD_CNC_TOOLHEAD_FOR_SM2 = 'standardCNCToolheadForSM2';
 export const LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2 = 'levelTwoCNCToolheadForSM2';
 
-export const DUAL_EXTRUDER_LIMIT_WIDTH_L = 20;
-export const DUAL_EXTRUDER_LIMIT_WIDTH_R = 20;
+export const DUAL_EXTRUDER_LIMIT_WIDTH_L = 0;
+export const DUAL_EXTRUDER_LIMIT_WIDTH_R = 26;
 
 export const MACHINE_TOOL_HEADS = {
     [SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL]: {

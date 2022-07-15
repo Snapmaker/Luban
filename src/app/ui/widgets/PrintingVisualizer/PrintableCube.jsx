@@ -282,7 +282,7 @@ class PrintableCube extends Object3D {
             geometry.translate(
                 this.size.x / 2 - fontWidth - (this.size.x / 2 % 10 || 10) - 10,
                 -this.size.y / 2 + (this.size.y / 2 % 10 || 10) + 10,
-                0
+                0.005
             );
             const text = new Mesh(geometry, matLite);
             this.add(text);

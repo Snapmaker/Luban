@@ -94,11 +94,10 @@ class SvgIcon extends PureComponent {
         } = this.props;
         let iconBackground = 'transparent';
         let iconLineHeight = `${hoversize}px`;
-        const Component = Icons[name];
-        // if (!Component) {
-        //     console.log(`Can't find the icon named '${name}', please check your icon name`);
-        //     return null;
-        // }
+        let Component = Icons[name];
+        if (!Component) {
+            Component = Icons.PrintingSettingNormal;
+        }
         const hoverBackgroundColor = includes(type, 'hoverNoBackground') ? 'transparent' : '#EEEFF0';
         const hoverIconColor = includes(type, 'hoverNoBackground') ? '#2A2C2E' : color;
         // const pressedBackground = includes(type, 'pressSpecial') ? '#E7F3FF' : '#D5D6D9';// '#D5D6D9'
