@@ -1,35 +1,33 @@
 import { includes, find } from 'lodash';
 import net from 'net';
-import Business, { CoordinateType } from './Business';
-import SocketServer from '../../../lib/SocketManager';
-import logger from '../../../lib/logger';
-import { COORDINATE_AXIS, WORKFLOW_STATUS_MAP, HEAD_PRINTING, EMERGENCY_STOP_BUTTON, ENCLOSURE_MODULES, AIR_PURIFIER_MODULES, ROTARY_MODULES, MODULEID_TOOLHEAD_MAP, CNC_MODULE, LASER_MODULE, PRINTING_MODULE, HEAD_CNC, HEAD_LASER } from '../../../../app/constants';
-import { readString, readUint8 } from '../../../lib/SACP-SDK/SACP/helper';
-import GetHotBed from '../../../lib/SACP-SDK/SACP/business/models/GetHotBed';
-import CoordinateSystemInfo from '../../../lib/SACP-SDK/SACP/business/models/CoordinateSystemInfo';
+import { readString, readUint8 } from 'snapmaker-sacp-sdk/helper';
+import { GetHotBed, CoordinateInfo, CoordinateSystemInfo, ExtruderInfo } from 'snapmaker-sacp-sdk/models';
+import { ResponseCallback } from 'snapmaker-sacp-sdk';
+import { Direction } from 'snapmaker-sacp-sdk/models/CoordinateInfo';
 import { EventOptions, MarlinStateData } from '../types';
-import ExtruderInfo from '../../../lib/SACP-SDK/SACP/business/models/ExtruderInfo';
-import CoordinateInfo, { Direction } from '../../../lib/SACP-SDK/SACP/business/models/CoordinateInfo';
-import { ResponseCallback } from '../../../lib/SACP-SDK/SACP/communication/Dispatcher';
+import { COORDINATE_AXIS, WORKFLOW_STATUS_MAP, HEAD_PRINTING, EMERGENCY_STOP_BUTTON, ENCLOSURE_MODULES, AIR_PURIFIER_MODULES, ROTARY_MODULES, MODULEID_TOOLHEAD_MAP, CNC_MODULE, LASER_MODULE, PRINTING_MODULE, HEAD_CNC, HEAD_LASER } from '../../../../app/constants';
+import logger from '../../../lib/logger';
+import SocketServer from '../../../lib/SocketManager';
+import Business, { CoordinateType } from './Business';
 
 const log = logger('lib:SocketBASE');
 
 class SocketBASE {
     private heartbeatTimer;
 
-    socket: SocketServer;
+    public socket: SocketServer;
 
-    sacpClient: Business;
+    public sacpClient: Business;
 
-    subscribeLogCallback: ResponseCallback;
+    public subscribeLogCallback: ResponseCallback;
 
-    subscribeHeartCallback: ResponseCallback;
+    public subscribeHeartCallback: ResponseCallback;
 
-    subscribeNozzleCallback: ResponseCallback;
+    public subscribeNozzleCallback: ResponseCallback;
 
-    subscribeHotBedCallback: ResponseCallback;
+    public subscribeHotBedCallback: ResponseCallback;
 
-    subscribeCoordinateCallback: ResponseCallback;
+    public subscribeCoordinateCallback: ResponseCallback;
 
     public startHeartbeatBase = (sacpClient: Business, client?: net.Socket) => {
         this.sacpClient = sacpClient;
@@ -71,7 +69,7 @@ class SocketBASE {
             this.heartbeatTimer = setTimeout(() => {
                 client && client.destroy();
                 log.info('TCP close');
-                this.socket && this.socket.emit('connection:close')
+                this.socket && this.socket.emit('connection:close');
             }, 10000);
             await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
                 // log.info(`revice moduleInfo: ${data.response}`);
@@ -102,11 +100,13 @@ class SocketBASE {
                 });
             });
             // stateData.status = WORKFLOW_STATUS_MAP[statusKey];
-            this.socket && this.socket.emit('Marlin:state', { state: {
-                ...stateData,
-                status: WORKFLOW_STATUS_MAP[statusKey],
-                moduleList: moduleStatusList,
-            } });
+            this.socket && this.socket.emit('Marlin:state', {
+                state: {
+                    ...stateData,
+                    status: WORKFLOW_STATUS_MAP[statusKey],
+                    moduleList: moduleStatusList,
+                }
+            });
         };
         this.sacpClient.subscribeHeartbeat({ interval: 1000 }, this.subscribeHeartCallback).then((res) => {
             log.info(`subscribe heartbeat success: ${res.code}`);
@@ -254,8 +254,7 @@ class SocketBASE {
     public resumeGcode = (options, callback) => {
         this.sacpClient.resumePrint().then(res => {
             log.info(`Resume Print: ${res}`);
-            callback && callback({ msg: res.response.result, code: res.response.result })
-
+            callback && callback({ msg: res.response.result, code: res.response.result });
         });
     }
 }
