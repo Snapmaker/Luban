@@ -384,20 +384,20 @@ const MachineSettings = ({
                                 <div className={`width-116 height-116 border-radius-8 ${zAxis ? 'border-default-grey-1' : 'border-default-grey-1 border-color-blue-2'}`}>
                                     <img src="/resources/images/machine/z_axis_standard.png" alt="" className="width-percent-100" />
                                 </div>
-                                <div className="align-c">{i18n._('Standard')}</div>
+                                <div className="align-c">{i18n._('key-settings/Z-axis Standard')}</div>
                             </Anchor>
                             <Anchor onClick={() => setZAxis(true)}>
                                 <div className={`width-116 height-116 border-radius-8 ${!zAxis ? 'border-default-grey-1' : 'border-default-grey-1 border-color-blue-2'}`}>
                                     <img src="/resources/images/machine/z_axis_extension.png" alt="" className="width-percent-100" />
                                 </div>
-                                <div className="align-c">{i18n._('Extension')}</div>
+                                <div className="align-c">{i18n._('key-settings/Z-axis Extension')}</div>
                             </Anchor>
                         </div>
                     </div>
                 )}
                 <div>
                     <div className={`heading-3 ${currentSerial === MACHINE_SERIES.ORIGINAL.value ? 'margin-top-32' : ''} margin-bottom-16`}>
-                        {i18n._('key-unused-Toolhead')}
+                        {i18n._('key-App/Settings/MachineSettings-3D Print Toolhead')}
                     </div>
                     <div className="sm-flex">
                         {toolHeadMap[currentSerial][headType].map((toolHeadItem, index) => {
@@ -414,7 +414,7 @@ const MachineSettings = ({
                 </div>
                 {headType === HEAD_PRINTING && (
                     <div className="margin-top-32">
-                        <div>{i18n._('key-settings/Nozzle Extruder')}</div>
+                        <div>{i18n._('key-settings/Nozzle Diameter')}</div>
                         {currentToolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
                             <div className="margin-top-16 width-248 height-32 background-grey-2 padding-2 border-radius-8">
                                 <Anchor className={`padding-left-8 border-radius-8 width-122 display-inline ${activeNozzle === LEFT ? 'background-color-white' : ''}`} onClick={() => setActiveNozzle(LEFT)}>
@@ -461,7 +461,7 @@ const MachineSettings = ({
                                             />
                                         ) : (
                                             <span>
-                                                +Add
+                                                +{i18n._('key-Settings/Nozazle-Add')}
                                             </span>
                                         )}
                                     </Anchor>
@@ -502,7 +502,7 @@ const MachineSettings = ({
                                             />
                                         ) : (
                                             <span>
-                                                +Add
+                                                +{i18n._('key-Settings/Nozazle-Add')}
                                             </span>
                                         )}
                                     </Anchor>

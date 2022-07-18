@@ -219,13 +219,13 @@ function General({ state: generalState, actions }) {
                             {i18n._('key-App/Settings/General-Workspace Hide the console when working')}
                         </span>
                     </SubMenuitemWrapper>
-                    <SubMenuitemWrapper title={i18n._('key-App/Settings/Model repair')}>
+                    <SubMenuitemWrapper title={i18n._('key-App/Settings/Model Examination')}>
                         <Checkbox
                             checked={promptDamageModel}
                             onChange={(event) => { updatePromptDamageModel(event.target.checked); }}
                         />
                         <span className="margin-left-4">
-                            {i18n._('key-App/Settings/Pop-up detection models window when import error model')}
+                            {i18n._('key-App/Settings/Pop up a reminder when importing deficient model(s)')}
                         </span>
                     </SubMenuitemWrapper>
                 </div>

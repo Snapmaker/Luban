@@ -62,7 +62,7 @@ const ModelIcon = (props) => {
     );
     if (model.needRepair) {
         return (
-            <Tooltip title={i18n._('key-PrintingCncLaser/ObjectList-Error model, select it and click repair model button to repair it')} arrowPointAtCenter>
+            <Tooltip title={i18n._('key-PrintingCncLaser/ObjectList-This is a deficient model. Select it and click Repair.')} arrowPointAtCenter>
                 {Icon}
             </Tooltip>
         );

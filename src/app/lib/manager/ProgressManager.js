@@ -284,15 +284,16 @@ class ProgressStatesManager {
             'key-Progress/3DP-Scale to fit...{{progress}}%',
             'key-Progress/3DP-Scale to fit successfully.',
             'key-Progress/3DP-Scale to fit failed.');
-        this.push(PROCESS_STAGE.PRINTING_SIMPLIFY_MODEL, [
-            {
-                stageID: STEP_STAGE.PRINTING_SIMPLIFY_MODEL,
-                percent: 1
-            }
-        ],
-        'key-Progress/3DP-Simplify model...{{prgress}}%',
-        'key-Progress/3DP-Simplify model successfully.',
-        'key-Progress/3DP-Simplify model failed.');
+        this.push(PROCESS_STAGE.PRINTING_SIMPLIFY_MODEL,
+            [
+                {
+                    stageID: STEP_STAGE.PRINTING_SIMPLIFY_MODEL,
+                    percent: 1
+                }
+            ],
+            'key-Progress/3DP-Simplify model...{{prgress}}%',
+            'key-Progress/3DP-Simplify model successfully.',
+            'key-Progress/3DP-Simplify model failed.');
         this.push(PROCESS_STAGE.PRINTING_REPAIRING_MODEL,
             [
                 {

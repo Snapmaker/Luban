@@ -9,7 +9,7 @@ import { Button } from '../ui/components/Buttons';
 import Checkbox from '../ui/components/Checkbox';
 
 export const FooterCheckBox = ({
-    i18nKey = 'key-Modal/Common-Don\'t ask again',
+    i18nKey = 'key-Modal/Common-Do not ask me again',
     defaultValue = false,
     onChange
 }) => {
