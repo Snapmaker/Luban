@@ -1,15 +1,15 @@
 {
-    "Absolute (G90)": "",
-    "Inches (G20)": "",
-    "Inverse Time (G93)": "",
-    "Linear Move (G1)": "",
-    "Millimeters (G21)": "",
-    "Power Off (M5)": "",
-    "Power On (M3)": "",
-    "Rapid Move (G0)": "",
-    "Relative (G91)": "",
-    "Spindle Off (M5)": "",
-    "Spindle On, CCW (M4)": "",
-    "Spindle On, CW (M3)": "",
-    "Units/Min (G94)": ""
+    "Absolute (G90)": "Абсолютні кординати (G90)",
+    "Inches (G20)": "Дюйми (G20)",
+    "Inverse Time (G93)": "Зворотній відлік (G93)",
+    "Linear Move (G1)": "Лінійне переміщення (G1)",
+    "Millimeters (G21)": "Міліметри (G21)",
+    "Power Off (M5)": "Вимкнути (M5)",
+    "Power On (M3)": "Увімкнути (M3)",
+    "Rapid Move (G0)": "Швидке переміщення (G0)",
+    "Relative (G91)": "Відносні кординати (G91)",
+    "Spindle Off (M5)": "Вимкнути шпіндель (M5)",
+    "Spindle On, CCW (M4)": "Увімкнути шпіндель ↺ (M4)",
+    "Spindle On, CW (M3)": "Увімкнути шпіндель ↻ (M3)",
+    "Units/Min (G94)": "Одиниці/Хвилини (G94)"
 }

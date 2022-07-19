@@ -1961,6 +1961,14 @@ export const actions = {
                 primeTowerYDefinition
             }
         );
+
+        definitionManager.calculateDependencies(
+            activeQualityDefinition.settings,
+            modelGroup && modelGroup.hasSupportModel(),
+            newExtruderLDefinition.settings,
+            newExtruderRDefinition.settings,
+            helpersExtruderConfig
+        );
         definitionManager.updateDefinition({
             ...newExtruderLDefinition,
             definitionId: 'snapmaker_extruder_0'
