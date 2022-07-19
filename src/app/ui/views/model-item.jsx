@@ -62,7 +62,7 @@ const ModelIcon = (props) => {
     );
     if (model.needRepair) {
         return (
-            <Tooltip title={i18n._('key-PrintingCncLaser/ObjectList-This is a deficient model. Select it and click Repair.')} arrowPointAtCenter>
+            <Tooltip placement="topLeft" title={i18n._('key-PrintingCncLaser/ObjectList-This is a deficient model. Select it and click Repair.')} arrowPointAtCenter>
                 {Icon}
             </Tooltip>
         );
@@ -123,41 +123,104 @@ function ModelItem({
     const { prefixName, suffixName } = normalizeNameDisplay(modelName, suffixLength);
     return (
         <div>
-            <TipTrigger
-                key={model.modelID}
-                title={i18n._('key-PrintingCncLaser/ObjectList-Object')}
-                content={model.modelName}
-                placement={placment || undefined}
-            >
-                {!isPrinting ? (
-                    <div
+
+            {!isPrinting ? (
+                <div
+                    className={classNames(
+                        'padding-vertical-4',
+                        'padding-horizontal-8',
+                        'sm-flex',
+                        styles.objectListItem,
+                        isSelected ? styles.selected : null,
+                    )}
+                >
+                    <Anchor
                         className={classNames(
-                            'padding-vertical-4',
-                            'padding-horizontal-8',
-                            'sm-flex',
-                            styles.objectListItem,
-                            isSelected ? styles.selected : null,
+                            'height-24',
+                            'sm-flex-width',
+                            'sm-flex'
                         )}
+                        style={{ color: disabled ? '#D5D6D9' : '' }}
+                        onClick={(event) => onSelect(model, event)}
                     >
-                        <Anchor
-                            className={classNames(
-                                'height-24',
-                                'sm-flex-width',
-                                'sm-flex'
-                            )}
-                            style={{ color: disabled ? '#D5D6D9' : '' }}
-                            onClick={(event) => onSelect(model, event)}
+
+                        <ModelIcon name={svgName} model={model} disabled={disabled} />
+                        <TipTrigger
+                            key={model.modelID}
+                            title={i18n._('key-PrintingCncLaser/ObjectList-Object')}
+                            content={model.modelName}
+                            placement={placment || undefined}
                         >
-
+                            <span style={{ overflow: 'hidden' }}>
+                                <span className={classNames(styles['prefix-name'])}>
+                                    {prefixName}
+                                </span>
+                                <span className={classNames(styles['suffix-name'])}>
+                                    {suffixName}
+                                </span>
+                            </span>
+                        </TipTrigger>
+                    </Anchor>
+                    <SvgIcon
+                        name={visible ? 'ShowNormal' : 'HideNormal'}
+                        title={visible ? i18n._('key-PrintingCncLaser/ObjectList-Hide') : i18n._('key-PrintingCncLaser/ObjectList-Show')}
+                        color={visible ? '#545659' : '#B9BCBF'}
+                        onClick={() => onToggleVisible(model)}
+                        disabled={inProgress || disabled}
+                        // type={isSelected ? ['static'] : ['hoverNormal', 'pressNormal']}
+                        type={['static']}
+                    />
+                </div>
+            ) : (
+                <div
+                    className={classNames(
+                        'padding-vertical-4',
+                        'padding-horizontal-8',
+                        'sm-flex',
+                        styles.objectListItem,
+                        isSelected ? styles.selected : null,
+                    )}
+                >
+                    <Anchor
+                        className={classNames(
+                            'height-24',
+                            'sm-flex-width',
+                            'sm-flex'
+                        )}
+                        style={{ color: disabled ? '#D5D6D9' : '' }}
+                        onClick={(event) => onSelect(model, event)}
+                    >
+                        {(model.children && !!model.children?.length) ? (
+                            <SvgIcon
+                                type={['static']}
+                                name={isExpend ? 'DropdownOpen' : 'DropdownClose'}
+                                className="margin-right-4"
+                                disabled={disabled}
+                                onClick={() => onExpend(model.modelID)}
+                            />
+                        ) : (
                             <ModelIcon name={svgName} model={model} disabled={disabled} />
-
-                            <span className={classNames(styles['prefix-name'])}>
-                                {prefixName}
+                        )}
+                        <TipTrigger
+                            key={model.modelID}
+                            title={i18n._('key-PrintingCncLaser/ObjectList-Object')}
+                            content={model.modelName}
+                            placement={placment || undefined}
+                        >
+                            <span style={{ overflow: 'hidden' }}>
+                                <span className={classNames(styles['prefix-name'])}>
+                                    {prefixName}
+                                </span>
+                                <span className={classNames(styles['suffix-name'])}>
+                                    {suffixName}
+                                </span>
                             </span>
-                            <span className={classNames(styles['suffix-name'])}>
-                                {suffixName}
-                            </span>
-                        </Anchor>
+                        </TipTrigger>
+                    </Anchor>
+                    <div className="sm-flex">
+                        <>
+                            {renderExtruderIcon(leftExtruderColor, rightExtruderColor)}
+                        </>
                         <SvgIcon
                             name={visible ? 'ShowNormal' : 'HideNormal'}
                             title={visible ? i18n._('key-PrintingCncLaser/ObjectList-Hide') : i18n._('key-PrintingCncLaser/ObjectList-Show')}
@@ -168,60 +231,8 @@ function ModelItem({
                             type={['static']}
                         />
                     </div>
-                ) : (
-                    <div
-                        className={classNames(
-                            'padding-vertical-4',
-                            'padding-horizontal-8',
-                            'sm-flex',
-                            styles.objectListItem,
-                            isSelected ? styles.selected : null,
-                        )}
-                    >
-                        <Anchor
-                            className={classNames(
-                                'height-24',
-                                'sm-flex-width',
-                                'sm-flex'
-                            )}
-                            style={{ color: disabled ? '#D5D6D9' : '' }}
-                            onClick={(event) => onSelect(model, event)}
-                        >
-                            {(model.children && !!model.children?.length) ? (
-                                <SvgIcon
-                                    type={['static']}
-                                    name={isExpend ? 'DropdownOpen' : 'DropdownClose'}
-                                    className="margin-right-4"
-                                    disabled={disabled}
-                                    onClick={() => onExpend(model.modelID)}
-                                />
-                            ) : (
-                                <ModelIcon name={svgName} model={model} disabled={disabled} />
-                            )}
-                            <span className={classNames(styles['prefix-name'])}>
-                                {prefixName}
-                            </span>
-                            <span className={classNames(styles['suffix-name'])}>
-                                {suffixName}
-                            </span>
-                        </Anchor>
-                        <div className="sm-flex">
-                            <>
-                                {renderExtruderIcon(leftExtruderColor, rightExtruderColor)}
-                            </>
-                            <SvgIcon
-                                name={visible ? 'ShowNormal' : 'HideNormal'}
-                                title={visible ? i18n._('key-PrintingCncLaser/ObjectList-Hide') : i18n._('key-PrintingCncLaser/ObjectList-Show')}
-                                color={visible ? '#545659' : '#B9BCBF'}
-                                onClick={() => onToggleVisible(model)}
-                                disabled={inProgress || disabled}
-                                // type={isSelected ? ['static'] : ['hoverNormal', 'pressNormal']}
-                                type={['static']}
-                            />
-                        </div>
-                    </div>
-                )}
-            </TipTrigger>
+                </div>
+            )}
             {isExpend && model.children && !!model.children.length && model.children.map((modelItem) => {
                 const { prefixName: _prefixName, suffixName: _suffixName } = normalizeNameDisplay(modelItem.modelName, suffixLength);
                 const { shell, infill } = modelItem.extruderConfig;
@@ -253,13 +264,21 @@ function ModelItem({
                                 onClick={(event) => onSelect(modelItem, event)}
                             >
                                 <ModelIcon name={objectList3d} model={modelItem} disabled={disabled} />
-
-                                <span className={classNames(styles['prefix-name'])}>
-                                    {_prefixName}
-                                </span>
-                                <span className={classNames(styles['suffix-name'])}>
-                                    {_suffixName}
-                                </span>
+                                <TipTrigger
+                                    key={model.modelID}
+                                    title={i18n._('key-PrintingCncLaser/ObjectList-Object')}
+                                    content={model.modelName}
+                                    placement={placment || undefined}
+                                >
+                                    <span style={{ overflow: 'hidden' }}>
+                                        <span className={classNames(styles['prefix-name'])}>
+                                            {_prefixName}
+                                        </span>
+                                        <span className={classNames(styles['suffix-name'])}>
+                                            {_suffixName}
+                                        </span>
+                                    </span>
+                                </TipTrigger>
                             </Anchor>
                             <div className="sm-flex">
                                 <>

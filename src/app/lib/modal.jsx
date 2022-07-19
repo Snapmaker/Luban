@@ -27,7 +27,7 @@ export const FooterCheckBox = ({
                     onChange && onChange(event.target.checked);
                 }}
             />
-            <span>{i18n._(i18nKey)}</span>
+            <span className="margin-left-4">{i18n._(i18nKey)}</span>
         </>
     );
 };
@@ -117,6 +117,7 @@ class ModalHOC extends PureComponent {
         return (
             <Modal
                 {...props}
+                width="480px"
                 size={size || 'sm'}
                 show={show}
                 onClose={this.handleClose}
@@ -129,26 +130,28 @@ class ModalHOC extends PureComponent {
                     </Modal.Header>
                 )}
                 <Modal.Body>
-                    {body}
-                    {this.props.defaultInputValue && (
-                        <input
-                            type="text"
-                            style={{
-                                height: '30px',
-                                width: '100%',
-                                padding: '6px 12px',
-                                fontSize: '13px',
-                                lineHeight: '1.42857143',
-                                color: '#282828',
-                                borderWidth: '1px',
-                                borderStyle: 'solid',
-                                borderRadius: '4px',
-                                borderColor: '#c8c8c8'
-                            }}
-                            onChange={this.onChangeInputValue}
-                            value={inputValue}
-                        />
-                    )}
+                    <div style={{ maxHeight: '280px', overflow: 'auto' }}>
+                        {body}
+                        {this.props.defaultInputValue && (
+                            <input
+                                type="text"
+                                style={{
+                                    height: '30px',
+                                    width: '100%',
+                                    padding: '6px 12px',
+                                    fontSize: '13px',
+                                    lineHeight: '1.42857143',
+                                    color: '#282828',
+                                    borderWidth: '1px',
+                                    borderStyle: 'solid',
+                                    borderRadius: '4px',
+                                    borderColor: '#c8c8c8'
+                                }}
+                                onChange={this.onChangeInputValue}
+                                value={inputValue}
+                            />
+                        )}
+                    </div>
                 </Modal.Body>
                 <Modal.Footer>
                     {type === 'buttonRight' && footer}
@@ -162,7 +165,7 @@ class ModalHOC extends PureComponent {
                     </Button>
                     {type !== 'buttonRight' && footer}
                     {footerLeft && (
-                        <span className="float-l">
+                        <span className="float-l height-32">
                             {footerLeft}
                         </span>
                     )}

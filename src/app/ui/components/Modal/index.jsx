@@ -31,6 +31,7 @@ const ModalWrapper = React.memo(({
     className = '',
     children,
     size,
+    width = 'auto',
     ...rest
 }) => {
     useEffect(() => {
@@ -64,7 +65,7 @@ const ModalWrapper = React.memo(({
     return (
         <Modal
             {...rest}
-            width="auto"
+            width={width}
             visible={visible}
             title={renderSection('modalTitle')}
             footer={renderSection('modalFooter')}
@@ -89,7 +90,8 @@ ModalWrapper.propTypes = {
     tile: PropTypes.bool,
     visible: PropTypes.bool,
     onClose: PropTypes.func,
-    className: PropTypes.string
+    className: PropTypes.string,
+    width: PropTypes.string
 };
 ModalWrapper.Header = Title;
 ModalWrapper.Body = Body;

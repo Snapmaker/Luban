@@ -1,4 +1,5 @@
 import React from 'react';
+import { Trans } from 'react-i18next';
 import modal, { FooterCheckBox, FooterPrimaryButton } from '../../../lib/modal';
 import i18n from '../../../lib/i18n';
 import { Button } from '../../components/Buttons';
@@ -108,7 +109,9 @@ export const repairGuidePopup = () => {
         body: (
             <React.Fragment>
                 <p>{i18n._('key-Modal/tips-To repair deficient models, you can also click Repair in the top main toolbar.')}</p>
-                <p>{i18n._('key-Modal/tips-To enable the pop-up reminder of  Repair Model(s), go to Settings > Preferences > General.')}</p>
+                <Trans i18nKey="key-Modal/tips-To enable the pop-up reminder of  Repair Model(s), go to Settings > Preferences > General.">
+                    To enable the pop-up reminder of  Repair Model(s), go to <b>Settings</b> <b>Preferences</b>  <b>  General</b>
+                </Trans>
             </React.Fragment>
         )
     });

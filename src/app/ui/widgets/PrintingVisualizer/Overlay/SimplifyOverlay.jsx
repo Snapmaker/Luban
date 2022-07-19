@@ -45,10 +45,10 @@ const SimplifyModelOverlay = ({ handleApplySimplify, handleCancelSimplify, handl
                 >
                     <Anchor key={0} onClick={() => handleSimplifyTypeUpdate(0)}>
                         <div className="simplify-type-0">
-                            <div className={`width-120 border-default-grey-1 ${simplifyType === 0 ? 'border-color-blue-2' : ''} border-radius-8`}>
+                            <div className={`width-118 border-default-grey-1 ${simplifyType === 0 ? 'border-color-blue-2' : ''} border-radius-8`}>
                                 <img src="/resources/images/3dp/low-ploygon.png" alt="" className="width-percent-100" />
                             </div>
-                            <div className={`${simplifyType === 0 ? 'color-blue' : ''} width-120 text-overflow-ellipsis`}>{i18n._('key-Printing/LeftBar-Simplify by Custom Rate')}</div>
+                            <div className={`${simplifyType === 0 ? 'color-blue' : ''} width-118 align-c`}>{i18n._('key-Printing/LeftBar-Simplify by Custom Rate')}</div>
                         </div>
                     </Anchor>
                 </TipTrigger>
@@ -63,19 +63,19 @@ const SimplifyModelOverlay = ({ handleApplySimplify, handleCancelSimplify, handl
                 >
                     <Anchor key={1} onClick={() => handleSimplifyTypeUpdate(1)}>
                         <div className="simplify-type-1">
-                            <div className={`width-120 border-default-grey-1 ${simplifyType === 1 ? 'border-color-blue-2' : ''} border-radius-8`}>
+                            <div className={`width-118 border-default-grey-1 ${simplifyType === 1 ? 'border-color-blue-2' : ''} border-radius-8`}>
                                 <img src="/resources/images/3dp/detail-rabbit.png" alt="" className="width-percent-100" />
                             </div>
-                            <div className={`${simplifyType === 1 ? 'color-blue' : ''} width-120 text-overflow-ellipsis`}>{i18n._('key-Printing/LeftBar-Simplify by Layer Height')}</div>
+                            <div className={`${simplifyType === 1 ? 'color-blue' : ''} width-118 align-c`}>{i18n._('key-Printing/LeftBar-Simplify by Layer Height')}</div>
                         </div>
                     </Anchor>
                 </TipTrigger>
             </div>
             {simplifyType === 0 && (
-                <div className="padding-horizontal-16 padding-top-8">
+                <div className="padding-horizontal-16">
                     <div>{i18n._('key-Printing/LeftBar-Simplification Rate')}</div>
-                    <div className="sm-flex justify-space-between padding-top-8 padding-bottom-24">
-                        <Slider min={1} max={100} value={sliderValue} onChange={(value) => setSliderValue(value)} onAfterChange={handleSimplifyPercentUpdate} style={{ width: 120 }} />
+                    <div className="sm-flex justify-space-between padding-top-8 padding-bottom-20">
+                        <Slider min={1} max={100} value={sliderValue} onChange={(value) => setSliderValue(value)} onAfterChange={handleSimplifyPercentUpdate} style={{ width: 120, marginLeft: 0, marginRight: 0 }} />
                         <Input
                             suffix="%"
                             value={sliderValue}
@@ -87,7 +87,7 @@ const SimplifyModelOverlay = ({ handleApplySimplify, handleCancelSimplify, handl
                     </div>
                 </div>
             )}
-            <div className="background-grey-3 padding-vertical-8 sm-flex padding-horizontal-16 justify-space-between">
+            <div className="background-grey-3 padding-vertical-8 sm-flex padding-horizontal-16 justify-space-between border-radius-bottom-8">
                 <Button
                     onClick={handleCancelSimplify}
                     priority="level-two"
