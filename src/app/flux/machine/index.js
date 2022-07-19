@@ -212,6 +212,7 @@ const INITIAL_STATE = {
     promptDamageModel: true,
     // connect info
     moduleStatusList: {},
+    nozzleSizeList: [],
     // wifi connection, home button in control widget
     homingModal: false,
     // if XYZ axis move finished, value is false, else moving, value is true
@@ -457,6 +458,7 @@ export const actions = {
                     airPurifierFilterHealth,
                     isEmergencyStopped,
                     moduleList: moduleStatusList,
+                    nozzleSizeList,
                     laserCamera,
                     nozzleRightTargetTemperature,
                     nozzleRightTemperature,
@@ -474,6 +476,11 @@ export const actions = {
                 if (!isNil(isHomed)) {
                     dispatch(baseActions.updateState({
                         isHomed
+                    }));
+                }
+                if (!isNil(nozzleSizeList)) {
+                    dispatch(baseActions.updateState({
+                        nozzleSizeList
                     }));
                 }
                 if (!isNil(laserFocalLength)) {

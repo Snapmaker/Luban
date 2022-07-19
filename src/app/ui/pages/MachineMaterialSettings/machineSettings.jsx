@@ -1,17 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import classNames from 'classnames';
-// import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
-// import { useDispatch } from 'react-redux';
 import { find, includes, remove } from 'lodash';
 import i18n from '../../../lib/i18n';
 import Anchor from '../../components/Anchor';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, getCurrentHeadType, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, LEVEL_ONE_POWER_LASER_FOR_ORIGINAL, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES, MACHINE_TOOL_HEADS, PRINTING_SINGLE_EXTRUDER_HEADTOOL, SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL, STANDARD_CNC_TOOLHEAD_FOR_SM2 } from '../../../constants';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, PRINTING_MANAGER_TYPE_EXTRUDER,
+    getCurrentHeadType, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, LEVEL_ONE_POWER_LASER_FOR_ORIGINAL, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES, MACHINE_TOOL_HEADS, PRINTING_SINGLE_EXTRUDER_HEADTOOL, SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL, STANDARD_CNC_TOOLHEAD_FOR_SM2 } from '../../../constants';
 import { LEFT, RIGHT } from '../../../../server/constants';
 import SvgIcon from '../../components/SvgIcon';
 import { NumberInput as Input } from '../../components/Input';
-// import { actions as machineActions } from '../../../flux/machine';
-// import { actions as machineActions } from '../../../flux/machine';
+import { actions as printingActions } from '../../../flux/printing';
 
 const machineList = [{
     value: 'Original',
@@ -230,14 +229,15 @@ const MachineSettings = ({
     setSeries,
     setToolhead
 }) => {
-    // const dispatch = useDispatch();
+    const extruderLDefinition = useSelector((state) => state?.printing?.extruderLDefinition);
+    const extruderRDefinition = useSelector((state) => state?.printing?.extruderRDefinition);
     const [headType, setHeadType] = useState(HEAD_PRINTING);
     const [currentSerial, setCurrentSerial] = useState(serial);
     const [currentToolHead, setCurrentToolHead] = useState(toolHead[`${headType}Toolhead`]);
     const [leftNozzleDiameter, setLeftNozzleDiameter] = useState(defaultLeftDiameter);
     const [rightNozzleDiameter, setRightNozzleDiameter] = useState(defaultRightDiameter);
     const [activeNozzle, setActiveNozzle] = useState(LEFT);
-    // const dispatch = useDispatch();
+    const dispatch = useDispatch();
 
     // for original long zAxis
     const [zAxis, setZAxis] = useState(hasZAxis);
@@ -254,6 +254,24 @@ const MachineSettings = ({
     };
     const handleAddDiameter = (status) => {
         setAddDiameterStatus(status);
+    };
+    const onChangeDiameter = (direction, value) => {
+        if (direction === LEFT) {
+            setLeftNozzleDiameter(value);
+        } else {
+            setRightNozzleDiameter(value);
+        }
+        const def = direction === LEFT
+            ? extruderLDefinition
+            : extruderRDefinition;
+        def.settings.machine_nozzle_size.default_value = value;
+        dispatch(
+            printingActions.updateCurrentDefinition({
+                definitionModel: def,
+                managerDisplayType: PRINTING_MANAGER_TYPE_EXTRUDER,
+                direction
+            })
+        );
     };
     const handleRemoveDiameter = (value, direction) => {
         if (direction === LEFT) {
@@ -413,7 +431,7 @@ const MachineSettings = ({
                             <div className="sm-flex sm-flex-wrap margin-top-16">
                                 {leftNozzleDiameterList.map((nozzle, index) => {
                                     return (
-                                        <Anchor onClick={() => setLeftNozzleDiameter(nozzle.value)} className={`margin-bottom-8 width-56 padding-horizontal-8 height-32 border-radius-8 border-default-grey-1 ${(index === 3 || index === 7) ? '' : 'margin-right-8'} ${leftNozzleDiameter === nozzle.value ? 'border-color-blue-2' : ''}`}>
+                                        <Anchor onClick={() => onChangeDiameter(LEFT, nozzle.value)} className={`margin-bottom-8 width-56 padding-horizontal-8 height-32 border-radius-8 border-default-grey-1 ${(index === 3 || index === 7) ? '' : 'margin-right-8'} ${leftNozzleDiameter === nozzle.value ? 'border-color-blue-2' : ''}`}>
                                             <div className="sm-flex justify-space-between ">
                                                 <span>{nozzle.label}</span>
                                                 {!nozzle.isDefault && (
@@ -454,7 +472,7 @@ const MachineSettings = ({
                             <div className="sm-flex sm-flex-wrap margin-top-16">
                                 {rightNozzleDiameterList.map(nozzle => {
                                     return (
-                                        <Anchor onClick={() => setRightNozzleDiameter(nozzle.value)} className={`margin-bottom-8 padding-left-8 width-56 height-32 border-radius-8 border-default-grey-1 ${rightNozzleDiameter === nozzle.value ? 'border-color-blue-2' : ''}`}>
+                                        <Anchor onClick={() => onChangeDiameter(RIGHT, nozzle.value)} className={`margin-bottom-8 padding-left-8 width-56 height-32 border-radius-8 border-default-grey-1 ${rightNozzleDiameter === nozzle.value ? 'border-color-blue-2' : ''}`}>
                                             <div>
                                                 <span>{nozzle.label}</span>
                                                 {!nozzle.isDefault && (

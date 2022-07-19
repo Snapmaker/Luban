@@ -71,7 +71,7 @@ class SocketBASE {
             this.heartbeatTimer = setTimeout(() => {
                 client && client.destroy();
                 log.info('TCP close');
-                this.socket && this.socket.emit('connection:close')
+                this.socket && this.socket.emit('connection:close');
             }, 10000);
             await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
                 // log.info(`revice moduleInfo: ${data.response}`);
@@ -125,11 +125,13 @@ class SocketBASE {
         });
         this.subscribeNozzleCallback = (data) => {
             const nozzleInfo = new ExtruderInfo().fromBuffer(data.response.data);
-            // log.info(`nozzleInfo, ${nozzleInfo}`);
             const leftInfo = find(nozzleInfo.extruderList, { index: 0 });
             const rightInfo = find(nozzleInfo.extruderList, { index: 1 });
+            const nozzleSizeList = [].concat(leftInfo.diameter, rightInfo.diameter);
+            log.info(`nozzleInfo, ${JSON.stringify(nozzleInfo.extruderList)}, ${nozzleSizeList}`);
             stateData = {
                 ...stateData,
+                nozzleSizeList: [leftInfo.diameter, rightInfo.diameter],
                 nozzleTemperature: leftInfo.currentTemperature,
                 nozzleTargetTemperature: leftInfo.targetTemperature,
                 nozzleRightTargetTemperature: rightInfo?.targetTemperature || 0,
@@ -254,8 +256,7 @@ class SocketBASE {
     public resumeGcode = (options, callback) => {
         this.sacpClient.resumePrint().then(res => {
             log.info(`Resume Print: ${res}`);
-            callback && callback({ msg: res.response.result, code: res.response.result })
-
+            callback && callback({ msg: res.response.result, code: res.response.result });
         });
     }
 }

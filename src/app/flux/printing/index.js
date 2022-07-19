@@ -1332,7 +1332,6 @@ export const actions = {
         const definitionsKey = definitionKeysWithDirection[direction][type];
         let { extruderLDefinition: actualExtruderDefinition } = printingState;
         let UpdatePresetModel = false;
-        resolveDefinition(definitionModel, changedSettingArray);
         // Todo
         if (['snapmaker_extruder_0', 'snapmaker_extruder_1'].includes(id)) {
             if (id === 'snapmaker_extruder_0') {
@@ -1345,6 +1344,7 @@ export const actions = {
                 })
             );
         } else {
+            resolveDefinition(definitionModel, changedSettingArray);
             const definitions = printingState[definitionsKey];
             const index = definitions.findIndex((d) => d.definitionId === id);
             definitions[index] = definitionModel;
