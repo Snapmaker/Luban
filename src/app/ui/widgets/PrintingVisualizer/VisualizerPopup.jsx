@@ -1,4 +1,5 @@
 import React from 'react';
+import { Trans } from 'react-i18next';
 import modal, { FooterCheckBox, FooterPrimaryButton } from '../../../lib/modal';
 import i18n from '../../../lib/i18n';
 import { Button } from '../../components/Buttons';
@@ -79,7 +80,7 @@ export const sliceFailPopup = () => {
 export const repairModelBeforSimplifyPopup = () => {
     return new Promise((resolve, reject) => {
         const action = modal({
-            title: i18n._('key-Printing/ContextMenu-Repair model'),
+            title: i18n._('key-Modal/tips-Tips'),
             body: (
                 <React.Fragment>
                     <p>{i18n._('key-Printing/ContextMenu-BeforSimplify Model need to repair damage model')}   </p>
@@ -87,7 +88,7 @@ export const repairModelBeforSimplifyPopup = () => {
             ),
             footer: (
                 <FooterPrimaryButton
-                    i18nKey="key-Printing/ContextMenu-Repair model"
+                    i18nKey="key-3DP/MainToolBar-Model repair"
                     onClick={() => {
                         resolve();
                         action.close();
@@ -104,10 +105,13 @@ export const repairModelBeforSimplifyPopup = () => {
 export const repairGuidePopup = () => {
     modal({
         isConfirm: true,
-        title: i18n._('key-Printing/ContextMenu-Tips'),
+        title: i18n._('key-Modal/tips-Tips'),
         body: (
             <React.Fragment>
-                <p>{i18n._('key-Printing/ContextMenu-you can click the "repair model" button on the toolbar to repair it manually or reopen the model detection pop-up window in "Settings"，when you import error models next time')}   </p>
+                <p>{i18n._('key-Modal/tips-To repair deficient models, you can also click Repair in the top main toolbar.')}</p>
+                <Trans i18nKey="key-Modal/tips-To enable the pop-up reminder of  Repair Model(s), go to Settings > Preferences > General.">
+                    To enable the pop-up reminder of  Repair Model(s), go to <b>Settings</b> <b>Preferences</b>  <b>  General</b>
+                </Trans>
             </React.Fragment>
         )
     });
@@ -120,18 +124,18 @@ export const repairModelPopup = (models) => {
     }).join();
     return new Promise((resolve, reject) => {
         const action = modal({
-            title: i18n._('key-Printing/ContextMenu-Repair model'),
+            title: i18n._('key-Modal/Repair-Repair Model(s)'),
             body: (
                 <React.Fragment>
-                    <p>{i18n._('key-Printing/ContextMenu-Model repair prompt message')}   </p>
-                    <p>{i18n._('key-Printing/ContextMenu-Model source name')}: {modelNames}</p>
+                    <p>{i18n._('key-Modal/Repair-Errors are detected in the imported model(s), which may cause problems during machining. Do you want to repair the model(s)?')}   </p>
+                    <p>{i18n._('key-Modal/Repair-Model(s) with Errors')}: {modelNames}</p>
                 </React.Fragment>
             ),
             showChangeIgnore: true,
-            cancelTitle: '忽略',
+            cancelTitle: 'key-Modal/Common-Ignore',
             footer: (
                 <FooterPrimaryButton
-                    i18nKey="key-Printing/ContextMenu-Repair model"
+                    i18nKey="key-Printing/Repair"
                     onClick={() => {
                         resolve(ignore);
                         action.close();
@@ -140,7 +144,7 @@ export const repairModelPopup = (models) => {
             ),
             footerLeft: (
                 <FooterCheckBox
-                    i18nKey={'key-Modal/Common-Don\'t ask again'}
+                    i18nKey="key-Modal/Common-Do not ask me again"
                     onChange={(bool) => {
                         if (bool) {
                             repairGuidePopup();

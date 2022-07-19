@@ -3703,27 +3703,12 @@ export const actions = {
             return !model.needRepair;
         });
 
-        return new Promise((resolve) => {
+        return new Promise(async (resolve) => {
             if (repaired) {
                 resolve(true);
             } else {
-                dispatch(actions.updateState({
-                    stage: STEP_STAGE.PRINTING_EMIT_REPAIRING_MODEL,
-                    promptTasks: [{
-                        status: 'repair-model-before-simplify',
-                        resolve: async () => {
-                            const { allPepaired } = await dispatch(actions.repairSelectedModels());
-
-                            resolve(allPepaired);
-                        },
-                        reject: () => {
-                            dispatch(actions.updateState({
-                                stage: STEP_STAGE.EMPTY
-                            }));
-                            resolve(false);
-                        }
-                    }]
-                }));
+                const { allPepaired } = await dispatch(actions.repairSelectedModels());
+                resolve(allPepaired);
             }
         });
     },

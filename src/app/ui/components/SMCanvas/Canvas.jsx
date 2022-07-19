@@ -454,7 +454,7 @@ class Canvas extends PureComponent {
                     });
                     if (hasOversteppedHotArea) {
                         toast.dismiss();
-                        toast(ToastWapper(i18n._('key-Printing/This model uses high-temperature materials, and it is recommended to place it in the central high-temperature area of the construction board for printing'), 'WarningTipsWarning', '#1890FF'));
+                        toast(ToastWapper(i18n._('key-Printing/Place the model within the High-temperature Zone to get a temperature higher than 80℃.'), 'WarningTipsWarning', '#1890FF'));
                     }
                 }
             }
