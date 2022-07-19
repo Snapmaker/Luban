@@ -125,11 +125,13 @@ class SocketBASE {
         });
         this.subscribeNozzleCallback = (data) => {
             const nozzleInfo = new ExtruderInfo().fromBuffer(data.response.data);
-            // log.info(`nozzleInfo, ${nozzleInfo}`);
             const leftInfo = find(nozzleInfo.extruderList, { index: 0 });
             const rightInfo = find(nozzleInfo.extruderList, { index: 1 });
+            const nozzleSizeList = [].concat(leftInfo.diameter, rightInfo.diameter);
+            log.info(`nozzleInfo, ${JSON.stringify(nozzleInfo.extruderList)}, ${nozzleSizeList}`);
             stateData = {
                 ...stateData,
+                nozzleSizeList: [leftInfo.diameter, rightInfo.diameter],
                 nozzleTemperature: leftInfo.currentTemperature,
                 nozzleTargetTemperature: leftInfo.targetTemperature,
                 nozzleRightTargetTemperature: rightInfo?.targetTemperature || 0,
