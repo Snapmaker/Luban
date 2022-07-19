@@ -251,48 +251,48 @@ function ConfigValueBox({
     };
     const materialParamsTypeOptions = [{
         value: 'basic',
-        label: i18n._('key-profileManager/Params Basic')
+        label: i18n._('key-profileManager/Params-Basic')
     }, {
         value: 'all',
-        label: i18n._('key-profileManager/Params All')
+        label: i18n._('key-profileManager/Params-All')
     }];
     const qualityParamsTypeOptions = [{
         value: 'recommed',
-        label: i18n._('key-profileManager/Params Recommed')
+        label: i18n._('key-profileManager/Params-Recommed')
     }, {
         value: 'custom',
-        label: i18n._('key-profileManager/Params Custom')
+        label: i18n._('key-profileManager/Params-Custom')
     }, {
         value: 'basic',
-        label: i18n._('key-profileManager/Params Basic')
+        label: i18n._('key-profileManager/Params-Basic')
     }, {
         value: 'advanced',
-        label: i18n._('key-profileManager/Params Advanced')
+        label: i18n._('key-profileManager/Params-Advanced')
     }, {
         value: 'all',
-        label: i18n._('key-profileManager/Params All')
+        label: i18n._('key-profileManager/Params-All')
     }];
     const qualityDetailTypeOptions = [{
         value: 'no_limit',
-        label: i18n._('key-profileManager/Params No Limit')
+        label: i18n._('key-profileManager/Params-No Limit')
     }, {
         value: 'efficiency',
-        label: i18n._('key-profileManager/Params Efficiency')
+        label: i18n._('key-profileManager/Params-Efficiency')
     }, {
         value: 'strength',
-        label: i18n._('key-profileManager/Params Strength')
+        label: i18n._('key-profileManager/Params-Strength')
     }, {
         value: 'surface_quality',
-        label: i18n._('key-profileManager/Params Surface_quality')
+        label: i18n._('key-profileManager/Params-Surface_quality')
     }, {
         value: 'accuracy',
-        label: i18n._('key-profileManager/Params Accuracy')
+        label: i18n._('key-profileManager/Params-Accuracy')
     }, {
         value: 'material',
-        label: i18n._('key-profileManager/Params Material')
+        label: i18n._('key-profileManager/Params-Material')
     }, {
         value: 'success',
-        label: i18n._('key-profileManager/Params Success')
+        label: i18n._('key-profileManager/Params-Success')
     }];
 
     return (
@@ -329,7 +329,7 @@ function ConfigValueBox({
                         )}
                     </div>
                     {selectParamsType === 'custom' && (
-                        <Button width="120px" priority="levle-two" type="default" className="margin-top-12" onClick={() => setCustomMode(!customMode)}>
+                        <Button width="160px" priority="levle-two" type="default" className="margin-top-4" onClick={() => setCustomMode(!customMode)}>
                             <span>{customMode ? i18n._('key-profileManager/Finish') : i18n._('key-profileManager/Manager Custom Params')}</span>
                         </Button>
                     )}
