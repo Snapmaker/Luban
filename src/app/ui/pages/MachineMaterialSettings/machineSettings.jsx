@@ -5,12 +5,14 @@ import PropTypes from 'prop-types';
 import { find, includes, remove } from 'lodash';
 import i18n from '../../../lib/i18n';
 import Anchor from '../../components/Anchor';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, PRINTING_MANAGER_TYPE_EXTRUDER,
-    getCurrentHeadType, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, LEVEL_ONE_POWER_LASER_FOR_ORIGINAL, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES, MACHINE_TOOL_HEADS, PRINTING_SINGLE_EXTRUDER_HEADTOOL, SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL, STANDARD_CNC_TOOLHEAD_FOR_SM2 } from '../../../constants';
-import { LEFT, RIGHT } from '../../../../server/constants';
+import {
+    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, PRINTING_MANAGER_TYPE_EXTRUDER, getCurrentHeadType, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, LEVEL_ONE_POWER_LASER_FOR_ORIGINAL, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES, MACHINE_TOOL_HEADS, PRINTING_SINGLE_EXTRUDER_HEADTOOL, SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL, STANDARD_CNC_TOOLHEAD_FOR_SM2,
+    LEFT, RIGHT
+} from '../../../constants';
 import SvgIcon from '../../components/SvgIcon';
 import { NumberInput as Input } from '../../components/Input';
 import { actions as printingActions } from '../../../flux/printing';
+import { machineStore } from '../../../store/local-storage';
 
 const machineList = [{
     value: 'Original',
@@ -273,6 +275,17 @@ const MachineSettings = ({
             })
         );
     };
+    const saveDiameterToStorage = (direction, value, isDelete = false) => {
+        const key = `customNozzleDiameter.${currentToolHead}.${currentSerial === MACHINE_SERIES.A400.value ? 'artisan' : '_'}.${direction}`;
+        const str = machineStore.get(key) || '[]';
+        let configs = JSON.parse(str);
+        if (isDelete) {
+            configs = configs.filter(i => `${i}` !== `${value}`);
+        } else {
+            configs.push(value);
+        }
+        machineStore.set(key, JSON.stringify(configs));
+    };
     const handleRemoveDiameter = (value, direction) => {
         if (direction === LEFT) {
             const newLeftList = remove(leftNozzleDiameterList, (list) => {
@@ -285,6 +298,7 @@ const MachineSettings = ({
             });
             setRightNozzleDiameterList(newRightList);
         }
+        saveDiameterToStorage(direction, value, true);
     };
     const AddDiameterToList = (e, direction) => {
         const newValue = e.target.value;
@@ -299,6 +313,7 @@ const MachineSettings = ({
                     value: Number(newValue),
                     isDefault: false
                 }]);
+                saveDiameterToStorage(direction, newValue);
             }
         } else {
             if (!find(rightNozzleDiameterList, { value: Number(newValue) }) && newValue >= 0.1 && newValue <= 1.2) {
@@ -307,6 +322,7 @@ const MachineSettings = ({
                     value: Number(newValue),
                     isDefault: false
                 }]);
+                saveDiameterToStorage(direction, newValue);
             }
         }
         setAddDiameterStatus(false);
@@ -329,6 +345,59 @@ const MachineSettings = ({
         };
     }, []);
 
+    const getNozzleDiameterFromStorage = (direction, _currentSerial) => {
+        const key = `customNozzleDiameter.${currentToolHead}.${_currentSerial === MACHINE_SERIES.A400.value ? 'artisan' : '_'}.${direction}`;
+        const str = machineStore.get(key) || '[]';
+        const configs = JSON.parse(str);
+        return configs.map((value) => {
+            return {
+                isDefault: false,
+                label: `${value}`,
+                value: value
+            };
+        });
+    };
+
+    const _setNozzleDiameterList = (direction, _defaultNozzleDiameterList, _currentSerial) => {
+        if (direction === LEFT) {
+            const list = [..._defaultNozzleDiameterList, ...getNozzleDiameterFromStorage(LEFT, _currentSerial)];
+            setLeftNozzleDiameterList(list);
+            // const machineLeftNozzle = extruderLDefinition?.settings?.machine_nozzle_size?.default_value;
+            // if (machineLeftNozzle) {
+            //     const current = list.find((item) => {
+            //         return item.value === machineLeftNozzle;
+            //     });
+            //     if (!current) {
+            //         list.push({
+            //             isDefault: false,
+            //             label: `${machineLeftNozzle}`,
+            //             value: Number(machineLeftNozzle)
+            //         });
+            //         saveDiameterToStorage(direction, machineLeftNozzle);
+            //     }
+            // }
+            // setLeftNozzleDiameter(machineLeftNozzle);
+        } else {
+            const list = [..._defaultNozzleDiameterList, ...getNozzleDiameterFromStorage(RIGHT, _currentSerial)];
+            setRightNozzleDiameterList(list);
+            // const machineRightNozzle = extruderRDefinition?.settings?.machine_nozzle_size?.default_value;
+            // if (machineRightNozzle) {
+            //     const current = list.find((item) => {
+            //         return item.value === machineRightNozzle;
+            //     });
+            //     if (!current) {
+            //         list.push({
+            //             isDefault: false,
+            //             label: `${machineRightNozzle}`,
+            //             value: Number(machineRightNozzle)
+            //         });
+            //         saveDiameterToStorage(direction, machineRightNozzle);
+            //     }
+            // }
+            // setRightNozzleDiameter(machineRightNozzle);
+        }
+    };
+
     useEffect(() => {
         setSeries(currentSerial);
         setToolhead({
@@ -338,19 +407,19 @@ const MachineSettings = ({
         if (currentToolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
             switch (currentSerial) {
                 case MACHINE_SERIES.A400.value:
-                    setLeftNozzleDiameterList(defaultNozzleDiameterListForDualExtruderArtisan);
-                    setRightNozzleDiameterList(defaultNozzleDiameterListForDualExtruderArtisan);
+                    _setNozzleDiameterList(LEFT, defaultNozzleDiameterListForDualExtruderArtisan, currentSerial);
+                    _setNozzleDiameterList(RIGHT, defaultNozzleDiameterListForDualExtruderArtisan, currentSerial);
                     break;
                 default:
-                    setLeftNozzleDiameterList(defaultNozzleDiameterListForDualExtruder);
-                    setRightNozzleDiameterList(defaultNozzleDiameterListForDualExtruder);
+                    _setNozzleDiameterList(LEFT, defaultNozzleDiameterListForDualExtruder, currentSerial);
+                    _setNozzleDiameterList(RIGHT, defaultNozzleDiameterListForDualExtruder, currentSerial);
                     break;
             }
         } else if (includes(PRINTING_SINGLE_EXTRUDER_HEADTOOL, currentToolHead)) {
-            setLeftNozzleDiameterList(defaultNozzleDiameterListForSingleExtruder);
+            _setNozzleDiameterList(LEFT, defaultNozzleDiameterListForSingleExtruder, currentSerial);
             setRightNozzleDiameterList([]);
         }
-    }, [currentSerial, currentToolHead]);
+    }, [currentSerial, currentToolHead, extruderLDefinition?.settings?.machine_nozzle_size?.default_value, extruderRDefinition?.settings?.machine_nozzle_size?.default_value]);
 
     return (
         <div className="sm-flex padding-vertical-40 padding-horizontal-40 justify-space-between height-all-minus-60">
