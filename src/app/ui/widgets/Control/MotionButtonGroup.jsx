@@ -14,7 +14,7 @@ const MotionButtonGroup = (props) => {
     const { canClick } = state;
 
     return (
-        <div>
+        <div className="sm-flex-overflow-visible " style={{ flexDirection: 'column' }}>
             <TipTrigger
                 title={i18n._('key-Workspace/Control/MotionButton-Run Boundary')}
                 content={(
