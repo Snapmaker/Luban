@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import Slider from '../Slider';
@@ -30,13 +30,26 @@ const EditComponent = React.memo(({
         setInputValue(value);
     };
 
+    const handleGlobalClick = useCallback(() => {
+        if (!showOverlay) return;
+        handleSubmit(inputValue);
+        setShowOverlay(false);
+    }, [showOverlay, handleSubmit, inputValue]);
+
+    useEffect(() => {
+        window.addEventListener('click', handleGlobalClick);
+        return () => {
+            window.removeEventListener('click', handleGlobalClick);
+        };
+    }, [handleGlobalClick]);
+
     return (
         <div className="position-re">
             <div className="height-percent-100 sm-flex align-flex-end">
                 <SvgIcon
                     name="Edit"
                     type={['hoverNormal', 'pressNormal']}
-                    onClick={() => setShowOverlay(!showOverlay)}
+                    onClick={() => { setShowOverlay(!showOverlay); }}
                 />
             </div>
             {showOverlay && (

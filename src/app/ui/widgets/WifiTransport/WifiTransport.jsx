@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState, useImperativeHandle } from 'react';
 import PropTypes from 'prop-types';
-import { Trans } from 'react-i18next';
+// import { Trans } from 'react-i18next';
 import noop from 'lodash/noop';
 import * as THREE from 'three';
 import { Spin } from 'antd';
@@ -19,7 +19,8 @@ import {
     CONNECTION_TYPE_WIFI, WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE,
     HEAD_CNC, HEAD_LASER, HEAD_PRINTING,
     LEVEL_TWO_POWER_LASER_FOR_SM2, CONNECTION_MATERIALTHICKNESS_ABORT,
-    CONNECTION_TYPE_SERIAL, CONNECTION_MATERIALTHICKNESS, CONNECTION_UPLOAD_FILE
+    CONNECTION_TYPE_SERIAL, CONNECTION_MATERIALTHICKNESS, CONNECTION_UPLOAD_FILE,
+    AUTO_MDOE, SEMI_AUTO_MODE, MANUAL_MODE
 } from '../../../constants';
 import { actions as workspaceActions, WORKSPACE_STAGE } from '../../../flux/workspace';
 import { actions as projectActions } from '../../../flux/project';
@@ -34,11 +35,12 @@ import Canvas from '../../components/SMCanvas';
 import PrintablePlate from '../WorkspaceVisualizer/PrintablePlate';
 import usePrevious from '../../../lib/hooks/previous';
 import { actions as machineActions } from '../../../flux/machine';
-import Checkbox from '../../components/Checkbox';
-import { NumberInput as Input } from '../../components/Input';
+// import Checkbox from '../../components/Checkbox';
+// import { NumberInput as Input } from '../../components/Input';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import GCodeParams from './GCodeParams';
 import PreviewToRunJobModal from './PreviewToRunJobModal';
+import LaserStartModal from './LaserStartModal';
 
 const changeNameInput = [];
 const suffixLength = 7;
@@ -214,11 +216,11 @@ const visualizerGroup = {
 let printableArea = null;
 function WifiTransport({ widgetActions, controlActions }) {
     const dispatch = useDispatch();
-    const [isLaserAutoFocus, setIsLaserAutoFocus] = useState(true);
+    // const [isLaserAutoFocus, setIsLaserAutoFocus] = useState(true);
     const isLaserPrintAutoMode = useSelector(state => state?.machine?.isLaserPrintAutoMode);
-    const materialThickness = useSelector(state => state?.machine?.materialThickness);
     const originOffset = useSelector(state => state?.machine?.originOffset);
     const toolHeadName = useSelector(state => state?.workspace?.toolHead);
+    const useBackground = useSelector(state => state?.laser?.useBackground);
     const { previewBoundingBox, headType, gcodeFiles, previewModelGroup, previewRenderState, previewStage, isRotate } = useSelector(state => state.workspace);
     const { isConnected, connectionType, size, workflowStatus, isSendedOnWifi } = useSelector(state => state.machine);
     const [loadToWorkspaceOnLoad, setLoadToWorkspaceOnLoad] = useState(true);
@@ -226,8 +228,9 @@ function WifiTransport({ widgetActions, controlActions }) {
     const [selectFileType, setSelectFileType] = useState('');
     const [selectFileIndex, setSelectFileIndex] = useState(-1);
 
-    const [isUnknownGCodeType, setIsUnknownGCodeType] = useState(false);
-    const [isGCdoeFileMatchToolHead, setIsGCdoeFileMatchToolHead] = useState(false);
+    // const [isUnknownGCodeType, setIsUnknownGCodeType] = useState(false);
+    // const [isGCdoeFileMatchToolHead, setIsGCdoeFileMatchToolHead] = useState(false);
+    // const [selectedFileType, setSelectedFileType] = useState(HEAD_UNKNOWN);
     const [showPreviewToRunJobModal, setShowPreviewToRunJobModal] = useState(false);
 
     const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -319,14 +322,14 @@ function WifiTransport({ widgetActions, controlActions }) {
             }
         },
         matchingGCodeTypeAndHeadType: async () => {
-            if (isUnknownGCodeType || !isGCdoeFileMatchToolHead) {
+            if (selectFileType !== headType) {
                 setShowPreviewToRunJobModal(true);
                 return;
             }
             await actions.startPrint();
         },
 
-        loadGcodeToWorkspace: async () => {
+        loadGcodeToWorkspace: async ({ isLaserAutoFocus, isCameraCapture }) => {
             const find = gcodeFiles.find(v => v.uploadName.toLowerCase() === selectFileName.toLowerCase());
             if (!find) {
                 return;
@@ -346,7 +349,8 @@ function WifiTransport({ widgetActions, controlActions }) {
                 const args = {
                     x: x,
                     y: y,
-                    feedRate: 1500
+                    feedRate: 1500,
+                    isCameraCapture
                 };
                 window.addEventListener('cancelReq', () => {
                     controller.emitEvent(CONNECTION_MATERIALTHICKNESS_ABORT);
@@ -432,13 +436,6 @@ function WifiTransport({ widgetActions, controlActions }) {
         }
     }, [isConnected]);
     useEffect(() => {
-        if (connectionType === CONNECTION_TYPE_SERIAL || isRotate || toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2) {
-            setIsLaserAutoFocus(false);
-            dispatch(machineActions.updateIsLaserPrintAutoMode(false));
-        } else {
-            setIsLaserAutoFocus(true);
-            dispatch(machineActions.updateIsLaserPrintAutoMode(true));
-        }
         if (isRotate) {
             dispatch(machineActions.updateIsLaserPrintAutoMode(false));
         }
@@ -520,18 +517,27 @@ function WifiTransport({ widgetActions, controlActions }) {
 
 
 
-
-    useEffect(() => {
-        const matchMap = {
-            '3dp': HEAD_PRINTING, //  'printing';
-            'laser': HEAD_LASER,
-            'cnc': HEAD_CNC,
-        };
-        const gcodeType = gcodeFiles[selectFileIndex] && gcodeFiles[selectFileIndex].type;
-
-        setIsUnknownGCodeType(!Object.keys(matchMap).includes(gcodeType));
-        setIsGCdoeFileMatchToolHead(headType === matchMap[gcodeType]);
-    }, [headType, selectFileIndex]);
+    const onConfirm = async (type) => {
+        let isLaserAutoFocus = false;
+        switch (type) {
+            case AUTO_MDOE:
+                isLaserAutoFocus = true;
+                dispatch(machineActions.updateIsLaserPrintAutoMode(true));
+                dispatch(machineActions.updateMaterialThickness(0));
+                break;
+            case SEMI_AUTO_MODE:
+                isLaserAutoFocus = false;
+                await dispatch(machineActions.updateIsLaserPrintAutoMode(toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2));
+                break;
+            case MANUAL_MODE:
+                isLaserAutoFocus = false;
+                await dispatch(machineActions.updateIsLaserPrintAutoMode(false));
+                await dispatch(machineActions.updateMaterialThickness(0));
+                break;
+            default:
+        }
+        actions.loadGcodeToWorkspace({ isLaserAutoFocus, isCameraCapture: useBackground });
+    };
 
     return (
         <div className="border-default-grey-1 border-radius-8">
@@ -624,115 +630,14 @@ function WifiTransport({ widgetActions, controlActions }) {
                     </Button>
                 </div>
             </div>
-            {showStartModal && (
-                <Modal
-                    centered
-                    visible={showStartModal}
-                    onClose={() => {
-                        setShowStartModal(false);
-                    }}
-                >
-                    <Modal.Header>
-                        {i18n._('key-Workspace/LaserStartJob-start_job')}
-                    </Modal.Header>
-                    <Modal.Body>
-                        {/* TODO: in one modal */}
-                        <div className="width-438">
-                            {!isRotate && toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 && (
-                                <Trans i18nKey="key-Workspace/LaserStartJob-3axis_start_job_prompt">
-                                    Under the Auto Mode, the machine will run auto focus according to the material thickness you input, and start the job.<br />
-                                    Under the Manual Mode, the machine will use the current work origin to start the job. Make sure you’ve set the work origin before starting.<br />
-                                    Safety Info: Before use, make sure the machine has been equipped with an enclosure, and both the operator and bystanders have worn Laser Safety Goggles.
-                                </Trans>
-                            )}
-                            {!isRotate && toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && (
-                                <Trans i18nKey="key-Workspace/LaserStartJob-10w_3axis_start_job_prompt">
-                                    Under the Auto Mode, the machine will run auto focus according to the material thickness you input, and start the job.<br />
-                                    Under the Manual Mode, the machine will use the current work origin to start the job. Make sure you’ve set the work origin before starting.<br />
-                                    Safety Info: Before use, make sure the machine has been equipped with an enclosure, and both the operator and bystanders have worn Laser Safety Goggles.
-                                </Trans>
-                            )}
-                            {isRotate && (
-                                <Trans i18nKey="key-Workspace/LaserStartJob-4axis_start_job_prompt">
-                                    The machine will use the current work origin to start the job. Make sure you’ve set the work origin before starting.<br />
-                                    Safety Info: Before use, make sure the machine has been equipped with an enclosure, and both the operator and bystanders have worn Laser Safety Goggles.
-                                </Trans>
-                            )}
-
-                            {(toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 || isRotate) && (
-                                <div className="sm-flex height-32 margin-top-8">
-                                    <Checkbox
-                                        className="sm-flex-auto"
-                                        disabled={isRotate || connectionType === CONNECTION_TYPE_SERIAL}
-                                        checked={isLaserPrintAutoMode}
-                                        onChange={actions.onChangeLaserPrintMode}
-                                    >
-                                        <span>{i18n._('key-Workspace/LaserStartJob-3axis_start_job_auto_mode')}</span>
-                                    </Checkbox>
-                                </div>
-                            )}
-                            {(toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2 || isRotate) && isLaserPrintAutoMode && (
-                                <div className="sm-flex height-32 margin-top-8">
-                                    <span className="">{i18n._('key-Workspace/LaserStartJob-3axis_start_job_material_thickness')}</span>
-                                    <Input
-                                        suffix="mm"
-                                        className="sm-flex-auto margin-left-16"
-                                        size="small"
-                                        value={materialThickness}
-                                        max={size.z - 40}
-                                        min={0}
-                                        onChange={actions.onChangeMaterialThickness}
-                                    />
-                                </div>
-                            )}
-
-                            {toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isRotate && (
-                                <div className="sm-flex height-32 margin-top-8">
-                                    <Checkbox
-                                        className="sm-flex-auto"
-                                        disabled={connectionType === 'serial'}
-                                        checked={isLaserAutoFocus}
-                                        onChange={() => {
-                                            dispatch(machineActions.updateIsLaserPrintAutoMode(!isLaserAutoFocus));
-                                            setIsLaserAutoFocus(!isLaserAutoFocus);
-                                        }}
-                                    >
-                                        <span>{i18n._('key-Workspace/LaserStartJob-10w_3axis_start_job_auto_mode')}</span>
-                                    </Checkbox>
-                                </div>
-                            )}
-                            {toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isRotate && !isLaserAutoFocus && (
-                                <div className="sm-flex height-32 margin-top-8">
-                                    <span className="">{i18n._('key-Workspace/LaserStartJob-3axis_start_job_material_thickness')}</span>
-                                    <Input
-                                        suffix="mm"
-                                        className="sm-flex-auto margin-left-16"
-                                        size="small"
-                                        value={materialThickness}
-                                        max={size.z - 40}
-                                        min={0}
-                                        onChange={actions.onChangeMaterialThickness}
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    </Modal.Body>
-                    <Modal.Footer>
-                        <Button priority="level-three" width="88px" onClick={() => setShowStartModal(false)} className="margin-right-16">{i18n._('key-unused-Cancel')}</Button>
-                        <Button
-                            priority="level-two"
-                            type="primary"
-                            width="88px"
-                            onClick={() => {
-                                actions.loadGcodeToWorkspace();
-                                setShowStartModal(false);
-                            }}
-                        >
-                            {i18n._('key-Workspace/LaserStartJob-button_start')}
-                        </Button>
-                    </Modal.Footer>
-                </Modal>
-            )}
+            <LaserStartModal
+                showStartModal={showStartModal}
+                isHeightPower={toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2}
+                isRotate={isRotate}
+                isSerialConnect={connectionType && connectionType === CONNECTION_TYPE_SERIAL}
+                onClose={() => setShowStartModal(false)}
+                onConfirm={(type) => onConfirm(type)}
+            />
             {showPreviewModal && (
                 <Modal
                     centered
@@ -831,12 +736,16 @@ function WifiTransport({ widgetActions, controlActions }) {
             )}
             {showPreviewToRunJobModal && (
                 <PreviewToRunJobModal
-                    isMismatchHead={!isUnknownGCodeType}
-                    isUnKownHead={headType !== HEAD_CNC && headType !== HEAD_LASER && headType !== HEAD_PRINTING}
-                    gcodeType={gcodeFiles[selectFileIndex] && gcodeFiles[selectFileIndex].type}
+                    // isMismatchHead={!isUnknownGCodeType}
+                    // isUnKownHead={headType !== HEAD_CNC && headType !== HEAD_LASER && headType !== HEAD_PRINTING}
+                    // gcodeType={gcodeFiles[selectFileIndex] && gcodeFiles[selectFileIndex].type}
+                    // headType={headType}
+                    // onClose={() => setShowPreviewToRunJobModal(false)}
+                    // onConfirm={actions.startPrint}
+                    selectFileType={selectFileType}
                     headType={headType}
-                    onClose={() => { setShowPreviewToRunJobModal(false); }}
-                    onConfirm={() => { actions.startPrint(); }}
+                    onClose={() => setShowPreviewToRunJobModal(false)}
+                    onConfirm={actions.startPrint}
                 />
             )}
         </div>

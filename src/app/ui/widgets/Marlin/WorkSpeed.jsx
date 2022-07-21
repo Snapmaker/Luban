@@ -2,7 +2,9 @@ import React, { PureComponent } from 'react';
 import SvgIcon from '../../components/SvgIcon';
 import i18n from '../../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
-import { CONNECTION_WORKSPEED_FACTOR } from '../../../constants';
+import {
+    CONNECTION_WORKSPEED_FACTOR } from '../../../constants';
+// CONNECTION_GET_WORKSPEED_FACTOR,
 import { controller } from '../../../lib/controller';
 
 
@@ -28,10 +30,25 @@ class WorkSpeed extends PureComponent {
                 workSpeed: workSpeedValue
             });
             controller.emitEvent(CONNECTION_WORKSPEED_FACTOR, {
-                workSpeedValue
+                workSpeedValue,
+                // toolHead: this.props.toolHead, // DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
             });
         }
     };
+
+    componentDidMount() {
+        // controller.emitEvent(CONNECTION_GET_WORKSPEED_FACTOR).on(CONNECTION_GET_WORKSPEED_FACTOR, (res) => {
+        //     const { data } = res;
+        //     console.log('data', data);
+        // });
+    }
+
+    componentWillUnmount() {
+        // controller.emitEvent(CONNECTION_WORKSPEED_FACTOR, {
+        //     workSpeedValue: value,
+        //     toolHead: this.props.toolHead, // DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
+        // });
+    }
 
     render() {
         const { workSpeed, workSpeedValue } = this.state;

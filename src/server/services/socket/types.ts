@@ -17,6 +17,7 @@ export type EventOptions = {
     zOffset?: number,
     headType?: string,
     uploadName?: string,
+    isCameraCapture?: boolean,
     renderGcodeFileName?: string,
     moveOrders?: object
 };

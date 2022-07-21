@@ -39,9 +39,9 @@ class Printing extends PureComponent {
             });
         },
         isPrinting: () => {
-            const { workflowStatus, workflowState, connectionType } = this.props;
-            return (includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus) && connectionType === CONNECTION_TYPE_WIFI)
-                || (includes([WORKFLOW_STATE_PAUSED, WORKFLOW_STATE_RUNNING], workflowState) && connectionType === CONNECTION_TYPE_SERIAL);
+            const { workflowStatus } = this.props;
+            const _isPrinting = includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_PAUSING], workflowStatus);
+            return _isPrinting;
         }
 
     };
@@ -65,15 +65,51 @@ class Printing extends PureComponent {
         return (
             <div>
                 {isPrinting && <WorkSpeed />}
-                <div className="sm-flex justify-space-between margin-vertical-8">
-                    <span>{i18n._('key-unused-Toolhead')}</span>
-                    <Switch
-                        className="sm-flex-auto"
-                        onClick={this.actions.onClickToolHead}
-                        checked={headStatus}
-                        disabled={isPrinting}
-                    />
-                </div>
+                {isPrinting && isLevelTwoCNC
+                    && (
+                        <ParamsWrapper
+                            handleSubmit={(value) => { this.actions.updateToolHeadSpeed(value); }}
+                            initValue={this.props.cncTargetSpindleSpeed}
+                            title={isLevelTwoCNC ? i18n._('key-Workspace/Marlin-Spindle Speed') : i18n._('key-unused-Toolhead')}
+                            suffix="rpm"
+                            inputMax={18000}
+                            inputMin={8000}
+                        >
+                            <div className="width-44 sm-flex align-center margin-left-16 ">
+                                <span>{this.props.cncCurrentSpindleSpeed} rpm</span>
+                            </div>
+                        </ParamsWrapper>
+                    )}
+                {!isPrinting && (
+                    <div className="sm-flex-overflow-visible margin-vertical-8 justify-space-between">
+                        <div className="height-32 width-176 display-inline text-overflow-ellipsis">{i18n._('key-unused-Toolhead')}</div>
+                        <div className="sm-flex margin-left-24 overflow-visible align-center">
+                            <Switch
+                                className="sm-flex-auto"
+                                style={{ order: 0 }}
+                                onClick={this.actions.onClickToolHead}
+                                checked={headStatus}
+                                disabled={isPrinting}
+                            />
+
+                            {/* //  <div className="sm-flex align-center"> */}
+                            { isLevelTwoCNC && (
+                                <div className=" sm-flex sm-flex-direction-c  margin-right-16  margin-left-16">
+                                    <span>{this.props.cncTargetSpindleSpeed}rpm</span>
+                                </div>
+                            )}
+                            { isLevelTwoCNC && (
+                                <EditComponent
+                                    handleSubmit={(value) => { this.actions.updateToolHeadSpeed(value); }}
+                                    initValue={this.props.cncTargetSpindleSpeed}
+                                    suffix="rpm"
+                                    inputMax={18000}
+                                    inputMin={8000}
+                                />
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
         );
     }

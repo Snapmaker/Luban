@@ -1,7 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import _ from 'lodash';
 import Anchor from '../../components/Anchor';
 // import SvgIcon from '../../components/SvgIcon';
 import { Button } from '../../components/Buttons';
@@ -26,6 +25,8 @@ import { controller } from '../../../lib/controller';
 class Printing extends PureComponent {
     static propTypes = {
         isConnected: PropTypes.bool,
+        // connectionType: PropTypes.string,
+        nozzleTemperature: PropTypes.number.isRequired,
         nozzleTargetTemperature: PropTypes.number.isRequired,
         heatedBedTargetTemperature: PropTypes.number.isRequired,
         workflowStatus: PropTypes.string.isRequired,
@@ -39,7 +40,10 @@ class Printing extends PureComponent {
     state = {
         nozzleTemperatureValue: this.props.nozzleTargetTemperature,
         heatedBedTemperatureValue: this.props.heatedBedTargetTemperature,
-        zOffsetValue: 0.05,
+        leftZOffsetValue: 0.05,
+        rightZOffsetValue: 0.05,
+        isLoad: false,
+        isUnload: false,
         zOffsetMarks: [0.05, 0.1, 0.2]
     };
 
@@ -64,9 +68,14 @@ class Printing extends PureComponent {
                 heatedBedTemperatureValue: this.state.heatedBedTemperatureValue
             });
         },
-        onChangeZOffset: (value) => {
+        onChangeLeftZOffset: (value) => {
             this.setState({
-                zOffsetValue: value
+                leftZOffsetValue: value
+            });
+        },
+        onChangeRightZOffset: (value) => {
+            this.setState({
+                rightZOffsetValue: value
             });
         },
         onClickPlusZOffset: () => {
@@ -91,8 +100,48 @@ class Printing extends PureComponent {
                 this.props.addConsoleLogs([`Z Offset ${zOffset} ok`]);
             });
         },
-        onClickLoad: () => {
-            controller.emitEvent(CONNECTION_LOAD_FILAMENT);
+        onClickLoad: (extruderIndex) => {
+            this.setState({
+                isLoad: true
+            });
+            controller.emitEvent(CONNECTION_LOAD_FILAMENT, {
+                extruderIndex: extruderIndex
+            }).once(CONNECTION_LOAD_FILAMENT, () => {
+                this.setState({
+                    isLoad: false
+                });
+            });
+        },
+        onClickUnload: (extruderIndex) => {
+            this.setState({
+                isUnload: true
+            });
+            controller.emitEvent(CONNECTION_UNLOAD_FILAMENT, {
+                extruderIndex: extruderIndex
+            }).once(CONNECTION_UNLOAD_FILAMENT, () => {
+                this.setState({
+                    isUnload: false
+                });
+            });
+        },
+
+        siwtchWorkNozzle: (extruderIndex) => {
+            controller.emitEvent(CONNECTION_WORK_NOZZLE, {
+                extruderIndex, // RIGHT_EXTRUDER_MAP_NUMBER
+            });
+        },
+
+        updateNozzleTemp: (extruderIndex, temp) => {
+            controller.emitEvent(CONNECTION_NOZZLE_TEMPERATURE, {
+                extruderIndex, // RIGHT_EXTRUDER_MAP_NUMBER
+                nozzleTemperatureValue: temp
+            });
+        },
+        updateHeatedBedTemp: (temp) => {
+            // console.log(`${CONNECTION_BED_TEMPERATURE}, temperature: [${temp}]`);
+            controller.emitEvent(CONNECTION_BED_TEMPERATURE, {
+                heatedBedTemperatureValue: temp
+            });
         },
         onClickUnload: () => {
             controller.emitEvent(CONNECTION_UNLOAD_FILAMENT);
@@ -114,10 +163,24 @@ class Printing extends PureComponent {
 
     }
 
+    isPrinting() {
+        const { workflowStatus } = this.props;
+        return workflowStatus === WORKFLOW_STATUS_RUNNING || workflowStatus === WORKFLOW_STATUS_PAUSING || workflowStatus === WORKFLOW_STATUS_PAUSED;
+    }
+
+    isPausingOrPrinting() {
+        const { workflowStatus } = this.props;
+        return workflowStatus === WORKFLOW_STATUS_RUNNING || workflowStatus === WORKFLOW_STATUS_PAUSING;
+    }
+
     render() {
         const { isConnected, heatedBedTemperature, heatedBedTargetTemperature, nozzleTemperature, nozzleTargetTemperature, workflowStatus, currentWorkNozzle, printingToolhead } = this.props;
         const { zOffsetMarks, zOffsetValue } = this.state;
         const actions = this.actions;
+
+        const nozzleTempratureTitle = i18n._(`${printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? 'key-Workspace/Marlin-Left Nozzle Temp' : 'key-Workspace/Marlin-Nozzle Temp'}`);
+        const nozzleRightTempratureTitle = i18n._('key-Workspace/Marlin-Right Nozzle Temp');
+
         return (
             <div>
                 {workflowStatus === 'running' && <WorkSpeed />}
@@ -127,36 +190,42 @@ class Printing extends PureComponent {
                             <span>{i18n._('key-unused-Current Work Nozzle')}</span>
                             <span>{i18n._(`key-unused-Nozzle-${currentWorkNozzle}`)}</span>
                         </div>
-                        <Button>
-                            {i18n._('key-unused-Switch working nozzle')}
-                        </Button>
+                        {(workflowStatus !== WORKFLOW_STATUS_RUNNING) && (
+                            <Button onClick={() => this.actions.siwtchWorkNozzle(currentWorkNozzle === LEFT_EXTRUDER ? RIGHT_EXTRUDER_MAP_NUMBER : LEFT_EXTRUDER_MAP_NUMBER)}>
+                                {i18n._('key-Workspace/Marlin-Switch working nozzle')}
+                            </Button>
+                        )}
                         <div className="dashed-border-use-background" />
                     </div>
                 )}
-                <div className="sm-flex-overflow-visible margin-vertical-8">
-                    <div className="height-32 width-176 display-inline text-overflow-ellipsis">{i18n._(`${printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? 'key-unused-Left Nozzle Temp' : 'key-unused-Nozzle Temp.'}`)}</div>
-                    <div className="sm-flex margin-left-24 overflow-visible">
-                        <div className="width-40 sm-flex sm-flex-direction-c">
-                            {/* <span>{i18n._('key-unused-Actual')}</span> */}
-                            <span>Actual</span>
-                            <span>{nozzleTemperature} °C</span>
-                        </div>
-                        <div className="width-40 sm-flex sm-flex-direction-c margin-left-16">
-                            {/* <span>{i18n._('key-unused-Target')}</span> */}
-                            <span>Target</span>
-                            <span>{nozzleTargetTemperature} °C</span>
-                        </div>
-                        <EditComponent />
+
+                <ParamsWrapper
+                    handleSubmit={(value) => { this.actions.updateNozzleTemp(LEFT_EXTRUDER_MAP_NUMBER, value); }}
+                    initValue={nozzleTargetTemperature}
+                    title={nozzleTempratureTitle}
+                    suffix="°C"
+                >
+                    <div className="width-44 sm-flex sm-flex-direction-c">
+                        {/* <span>{i18n._('key-unused-{i18n._('key-Workspace/Marlin-Actual Data Title')}')}</span> */}
+                        <span>{i18n._('key-Workspace/Marlin-Actual Data Title')}</span>
+                        <span>{Math.floor(nozzleTemperature)}°C</span>
                     </div>
-                </div>
-                {workflowStatus !== 'running' && (
+                    <div className="width-44 sm-flex sm-flex-direction-c margin-left-16">
+                        {/* <span>{i18n._('key-unused-{i18n._('key-Workspace/Marlin-Target Data Title')}')}</span> */}
+                        <span>{i18n._('key-Workspace/Marlin-Target Data Title')}</span>
+                        <span>{Math.floor(nozzleTargetTemperature)}°C</span>
+                    </div>
+                </ParamsWrapper>
+
+                {!this.isPausingOrPrinting() && (
                     <div className="sm-flex justify-flex-end margin-vertical-8">
                         <div>
                             <Button
                                 priority="level-three"
                                 width="96px"
                                 className="display-inline"
-                                onClick={actions.onClickUnload}
+                                disabled={this.state.isUnload}
+                                onClick={() => actions.onClickUnload(LEFT_EXTRUDER_MAP_NUMBER)}
                             >
                                 {i18n._('key-unused-Unload')}
                             </Button>
@@ -164,7 +233,8 @@ class Printing extends PureComponent {
                                 className="margin-left-4 display-inline"
                                 priority="level-three"
                                 width="96px"
-                                onClick={actions.onClickLoad}
+                                disabled={this.state.isLoad}
+                                onClick={() => actions.onClickLoad(LEFT_EXTRUDER_MAP_NUMBER)}
                             >
                                 {i18n._('key-unused-Load')}
                             </Button>
@@ -173,22 +243,21 @@ class Printing extends PureComponent {
                 )}
 
                 {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
-                    <div>
-                        <div className="sm-flex-overflow-visible margin-vertical-8">
-                            <div className="height-32 width-176 display-inline text-overflow-ellipsis">{i18n._('key-unused-Right Nozzle Temp')}</div>
-                            <div className="sm-flex margin-left-24 overflow-visible">
-                                <div className="width-40 sm-flex sm-flex-direction-c">
-                                    {/* <span>{i18n._('key-unused-Actual')}</span> */}
-                                    <span>Actual</span>
-                                    <span>{nozzleTemperature} °C</span>
-                                </div>
-                                <div className="width-40 sm-flex sm-flex-direction-c margin-left-16">
-                                    {/* <span>{i18n._('key-unused-Target')}</span> */}
-                                    <span>Target</span>
-                                    <span>{nozzleTargetTemperature} °C</span>
-                                </div>
-                                <EditComponent />
-                            </div>
+                    <ParamsWrapper
+                        handleSubmit={(value) => { this.actions.updateNozzleTemp(RIGHT_EXTRUDER_MAP_NUMBER, value); }}
+                        initValue={this.props.nozzleRightTargetTemperature}
+                        title={nozzleRightTempratureTitle}
+                        suffix="°C"
+                    >
+                        <div className="width-44 sm-flex sm-flex-direction-c">
+                            {/* <span>{i18n._('key-unused-{i18n._('key-Workspace/Marlin-Actual Data Title')}')}</span> */}
+                            <span>{i18n._('key-Workspace/Marlin-Actual Data Title')}</span>
+                            <span>{Math.floor(this.props.nozzleRightTemperature)}°C</span>
+                        </div>
+                        <div className="width-44 sm-flex sm-flex-direction-c margin-left-16">
+                            {/* <span>{i18n._('key-unused-{i18n._('key-Workspace/Marlin-Target Data Title')}')}</span> */}
+                            <span>{i18n._('key-Workspace/Marlin-Target Data Title')}</span>
+                            <span>{Math.floor(this.props.nozzleRightTargetTemperature)}°C</span>
                         </div>
                         {workflowStatus !== 'running' && (
                             <div className="sm-flex justify-flex-end margin-vertical-8">
@@ -212,56 +281,17 @@ class Printing extends PureComponent {
                                 </div>
                             </div>
                         )}
-                    </div>
+                    </ParamsWrapper>
                 )}
-                {/* <div className="sm-flex justify-space-between margin-vertical-8">
-                    <span className="height-32 max-width-160 display-inline text-overflow-ellipsis">{i18n._('key-Workspace/Connection-Build Plate Temp.')}</span>
-                    <div className="sm-flex-auto">
-                        <span className="height-32">{heatedBedTemperature} / </span>
-                        <Input
-                            suffix="°C"
-                            size="small"
-                            defaultValue={heatedBedTargetTemperature}
-                            value={this.state.heatedBedTemperatureValue}
-                            max={80}
-                            min={0}
-                            onChange={actions.onChangeHeatedBedTemperatureValue}
-                        />
-                        <SvgIcon
-                            name="Reset"
-                            size={24}
-                            className="border-default-black-5 margin-left-4 border-radius-8"
-                            onClick={actions.onClickHeatedBedTemperature}
-                            borderRadius={8}
-                        />
-                    </div>
-                </div> */}
-                <div className="sm-flex-overflow-visible margin-vertical-8">
-                    <div className="height-32 width-176 display-inline text-overflow-ellipsis">{i18n._('key-Workspace/Connection-Build Plate Temp.')}</div>
-                    <div className="sm-flex margin-left-24 overflow-visible">
-                        <div className="width-40 sm-flex sm-flex-direction-c">
-                            {/* <span>{i18n._('key-unused-Actual')}</span> */}
-                            <span>Actual</span>
-                            <span>{heatedBedTemperature}°C</span>
-                        </div>
-                        <div className="width-40 sm-flex sm-flex-direction-c margin-left-16">
-                            {/* <span>{i18n._('key-unused-Target')}</span> */}
-                            <span>Target</span>
-                            <span>{heatedBedTargetTemperature}°C</span>
-                        </div>
-                        <EditComponent />
-                    </div>
-                </div>
-
-                {/* {workflowStatus !== 'running' && (
-                    <div className="sm-flex justify-space-between margin-vertical-8">
-                        <span className="height-32">{i18n._('key-unused-Filament')}</span>
+                {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && !this.isPausingOrPrinting() && (
+                    <div className="sm-flex justify-flex-end margin-vertical-8">
                         <div>
                             <Button
                                 priority="level-three"
                                 width="96px"
                                 className="display-inline"
-                                onClick={actions.onClickUnload}
+                                disabled={this.state.isUnload}
+                                onClick={() => actions.onClickUnload(RIGHT_EXTRUDER_MAP_NUMBER)}
                             >
                                 {i18n._('key-unused-Unload')}
                             </Button>
@@ -269,7 +299,8 @@ class Printing extends PureComponent {
                                 className="margin-left-4 display-inline"
                                 priority="level-three"
                                 width="96px"
-                                onClick={actions.onClickLoad}
+                                disabled={this.state.isLoad}
+                                onClick={() => actions.onClickLoad(RIGHT_EXTRUDER_MAP_NUMBER)}
                             >
                                 {i18n._('key-unused-Load')}
                             </Button>
@@ -277,9 +308,29 @@ class Printing extends PureComponent {
                     </div>
                 )} */}
 
-                {isConnected && _.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus) && (
+
+                <ParamsWrapper
+                    handleSubmit={(value) => { this.actions.updateHeatedBedTemp(value); }}
+                    initValue={heatedBedTargetTemperature}
+                    title={i18n._('key-Workspace/Marlin-Heated Bed Temp')}
+                    suffix="°C"
+                >
+                    <div className="width-44 sm-flex sm-flex-direction-c">
+                        {/* <span>{i18n._('key-unused-{i18n._('key-Workspace/Marlin-Actual Data Title')}')}</span> */}
+                        <span>{i18n._('key-Workspace/Marlin-Actual Data Title')}</span>
+                        <span>{Math.floor(heatedBedTemperature)}°C</span>
+                    </div>
+                    <div className="width-44 sm-flex sm-flex-direction-c margin-left-16">
+                        {/* <span>{i18n._('key-unused-{i18n._('key-Workspace/Marlin-Target Data Title')}')}</span> */}
+                        <span>{i18n._('key-Workspace/Marlin-Target Data Title')}</span>
+                        <span>{Math.floor(heatedBedTargetTemperature)}°C</span>
+                    </div>
+                </ParamsWrapper>
+
+                {workflowStatus === 'running' && <WorkSpeed />}
+                {isConnected && this.isPrinting() && (
                     <div className="sm-parameter-row">
-                        <span className="sm-parameter-row__label">{i18n._('key-unused-Z Offset')}</span>
+                        <span className="sm-parameter-row__label">{i18n._('key-unused-Left Z Offset')}</span>
                         <Anchor
                             className="sm-parameter-row__input2"
                             style={{
@@ -288,8 +339,36 @@ class Printing extends PureComponent {
                         >
                             <JogDistance
                                 marks={zOffsetMarks}
-                                onChange={actions.onChangeZOffset}
-                                defaultValue={zOffsetValue}
+                                onChange={actions.onChangeLeftZOffset}
+                                defaultValue={leftZOffsetValue}
+                            />
+                        </Anchor>
+                        <Anchor
+                            className="sm-parameter-row__input2-check fa fa-plus"
+                            onClick={() => actions.onClickPlusZOffset(LEFT_EXTRUDER_MAP_NUMBER)}
+                        />
+                        <Anchor
+                            className="sm-parameter-row__input2-check fa fa-minus"
+                            style={{
+                                right: '152px'
+                            }}
+                            onClick={() => actions.onClickMinusZOffset(LEFT_EXTRUDER_MAP_NUMBER)}
+                        />
+                    </div>
+                )}
+                {isConnected && this.isPrinting() && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
+                    <div className="sm-parameter-row">
+                        <span className="sm-parameter-row__label">{i18n._('key-unused-Right Z Offset')}</span>
+                        <Anchor
+                            className="sm-parameter-row__input2"
+                            style={{
+                                marginRight: '84px'
+                            }}
+                        >
+                            <JogDistance
+                                marks={zOffsetMarks}
+                                onChange={actions.onChangeRightZOffset}
+                                defaultValue={rightZOffsetValue}
                             />
                         </Anchor>
                         <Anchor

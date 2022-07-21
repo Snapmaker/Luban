@@ -33,6 +33,7 @@ const connectionEventsObject = {
     'connection:loadFilament': connectionManager.loadFilament,
     'connection:unloadFilament': connectionManager.unloadFilament,
     'connection:updateWorkSpeedFactor': connectionManager.updateWorkSpeedFactor,
+    'connection:getWorkSpeedFactor': connectionManager.getWorkSpeedFactor,
     'connection:updateLaserPower': connectionManager.updateLaserPower,
     'connection:switchLaserPower': connectionManager.switchLaserPower,
     'connection:materialThickness': connectionManager.getLaserMaterialThickness,

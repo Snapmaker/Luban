@@ -331,6 +331,15 @@ function Configurations() {
             // actions.onChangeSelectedDefinition(newDefinitionForManager);
             actions.displayModel();
         },
+        updateActiveDefinition: (definition, shouldSaveEnv = true) => {
+            dispatch(
+                printingActions.updateCurrentDefinition(
+                    definition,
+                    PRINTING_MANAGER_TYPE_QUALITY
+                )
+            );
+            shouldSaveEnv && dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
+        },
         /**
          * Select `definition`.
          *
@@ -345,7 +354,7 @@ function Configurations() {
             const definition = qualityDefinitionModels.find(d => d.definitionId === definitionId);
             actions.onSelectOfficialDefinition(definition);
             actions.displayModel();
-        }
+        },
     };
 
     const renderProfileMenu = (displayType) => {

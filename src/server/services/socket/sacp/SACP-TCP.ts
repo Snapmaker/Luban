@@ -27,7 +27,7 @@ class SocketTCP extends SocketBASE {
 
     private thickness = 0;
 
-    public constructor() {
+    constructor() {
         super();
         this.client = new net.Socket();
 
@@ -300,9 +300,9 @@ class SocketTCP extends SocketBASE {
         });
     }
 
-    public getLaserMaterialThickness = (options: EventOptions) => {
-        const { x, y, feedRate, eventName } = options;
-        this.sacpClient.getLaserMaterialThickness({
+    public getLaserMaterialThickness = async (options: EventOptions) => {
+        const { x, y, feedRate, eventName, isCameraCapture = false } = options;
+        await this.sacpClient.getLaserMaterialThickness({
             token: '',
             x,
             y,
@@ -330,14 +330,16 @@ class SocketTCP extends SocketBASE {
 
                     await this.sacpClient.updateCoordinate(CoordinateType.WORKSPACE);
 
-                    const newX = new CoordinateInfo(Direction.X1, xNow);
-                    const newY = new CoordinateInfo(Direction.Y1, yNow);
-                    const newZ = new CoordinateInfo(Direction.Z1, zNow - (this.laserFocalLength + this.thickness));
-                    const newCoord = [newX, newY, newZ];
+                    if (isCameraCapture) {
+                        const newX = new CoordinateInfo(Direction.X1, xNow);
+                        const newY = new CoordinateInfo(Direction.Y1, yNow);
+                        const newZ = new CoordinateInfo(Direction.Z1, zNow - (this.laserFocalLength + this.thickness));
+                        const newCoord = [newX, newY, newZ];
 
-                    log.debug(`new positions, ${newCoord}`);
+                        log.debug(`new positions, ${newCoord}`);
 
-                    await this.sacpClient.setWorkOrigin(newCoord);
+                        await this.sacpClient.setWorkOrigin(newCoord);
+                    }
 
                     const zMove = new MovementInstruction(MoveDirection.Z1, 0);
                     await this.sacpClient.moveAbsolutely([zMove], 0);
@@ -353,6 +355,30 @@ class SocketTCP extends SocketBASE {
     public abortLaserMaterialThickness = () => {
         // this.getLaserMaterialThicknessReq && this.getLaserMaterialThicknessReq.abort();
     };
+
+    // set z workoringin: laserFocalLength + platformHeight + laserMaterialThickness
+    public async laseAutoSetMaterialHeight(options) {
+        const { x, y, feedRate, toolHead } = options;
+        const { response, thickness } = await this.sacpClient.getLaserMaterialThickness({
+            token: '',
+            x,
+            y,
+            feedRate
+        });
+        const result = {
+            status: false,
+            thickness: 0
+        };
+        if (response.result !== 0) {
+            log.error(`useLaseAutoMode error: ${JSON.stringify(response)}`);
+            return;
+        }
+        result.status = true;
+        result.thickness = thickness;
+        this.thickness = result.thickness;
+
+        await this.laserSetWorkHeight({ toolHead: toolHead, materialThickness: this.thickness });
+    }
 
     public uploadGcodeFile = (gcodeFilePath: string, type: string, callback: (msg: string, data: boolean) => void) => {
         this.sacpClient.uploadFile(gcodeFilePath).then(({ response }) => {
@@ -382,7 +408,7 @@ class SocketTCP extends SocketBASE {
         readStream.on('data', buf => {
             md5.update(buf);
         });
-        readStream.once('end', () => {
+        readStream.once('end', async () => {
             this.sacpClient.startScreenPrint({
                 headType: type, filename: uploadName, hash: md5.digest().toString('hex')
             }).then((res) => {

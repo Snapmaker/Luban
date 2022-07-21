@@ -390,6 +390,7 @@ export const actions = {
                         || Number(machineState.workPosition.y) !== Number(pos.y)
                         || Number(machineState.workPosition.z) !== Number(pos.z)
                         || Number(machineState.workPosition.b) !== Number(pos.b)
+                        || machineState.workPosition.isFourAxis !== pos.isFourAxis
                     ) {
                         dispatch(
                             baseActions.updateState({
@@ -409,6 +410,7 @@ export const actions = {
                         Number(machineState.workPosition.x) !== Number(pos.x)
                         || Number(machineState.workPosition.y) !== Number(pos.y)
                         || Number(machineState.workPosition.z) !== Number(pos.z)
+                        || machineState.workPosition.isFourAxis !== pos.isFourAxis
                     ) {
                         dispatch(
                             baseActions.updateState({

@@ -203,7 +203,6 @@ export default class Business extends Dispatcher {
     }
 
     public async getLaserMaterialThickness({ token = '', x = 0, y = 0, feedRate = 0 }) {
-        console.log(token);
         // const tokenBuffer = stringToBuffer(token);
         const buffer = Buffer.alloc(10, 0);
         let nextOffset = 0;
@@ -297,8 +296,8 @@ export default class Business extends Dispatcher {
         });
     }
 
-    public async getCurrentCoordinateInfo() {
-        return this.send(0x01, 0x30, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
+    public async getCurrentCoordinateInfo(coordinateType = CoordinateType.MACHINE) {
+        return this.send(0x01, 0x30, PeerId.CONTROLLER, Buffer.alloc(1, coordinateType)).then(({ response, packet }) => {
             const coordinateSystemInfo = new CoordinateSystemInfo().fromBuffer(response.data);
             return { response, packet, data: { coordinateSystemInfo }, coordinateSystemInfo };
         });
@@ -467,6 +466,19 @@ export default class Business extends Dispatcher {
         });
     }
 
+    public async subscribeWorkSpeed({ interval = 1000 }, callback: ResponseCallback) {
+        this.log.info('subscribeWorkSpeed');
+        return this.subscribe(0xac, 0xa4, interval, callback).then(({ response, packet }) => {
+            return { response, packet, data: {} };
+        });
+    }
+
+    public async unSubscribeWorkSpeed(callback: ResponseCallback) {
+        return this.unsubscribe(0xac, 0xa4, callback).then(({ response, packet }) => {
+            return { code: response.result, packet, data: {} };
+        });
+    }
+
     public async SetExtruderTemperature(key: number, extruderIndex: number, temperature: number) {
         const tobuffer = Buffer.alloc(1 + 1 + 2, 0);
         writeUint8(tobuffer, 0, key);
@@ -506,9 +518,9 @@ export default class Business extends Dispatcher {
         });
     }
 
-    public async SetExtruderOffset(key: number, index: number, direction: number, distance: number) {
-        const info = new ExtruderOffset(key, index, direction, distance);
-        return this.send(0x10, 0x07, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
+    public async SetExtruderOffset(key: number, index: number, distance: number) {
+        const info = new ExtruderOffset(key, index, distance);
+        return this.send(0xa0, 0x15, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
@@ -636,7 +648,71 @@ export default class Business extends Dispatcher {
             callback && callback({ lineNumber: batchBufferInfo.lineNumber, length: content.length, elapsedTime });
         });
         this.setHandler(0xac, 0x01, (request: RequestData) => {
-            console.log({ request }); // get printing issue
+            console.log({ request });
+        });
+    }
+
+    // TODO
+    public async setHotBedTemperature(key: number, zoneIndex: number, temperature: number) {
+        const buffer = Buffer.alloc(4, 0);
+        writeUint8(buffer, 0, key);
+        writeUint8(buffer, 1, zoneIndex);
+        writeInt16(buffer, 2, temperature);
+        return this.send(0x14, 0x02, PeerId.CONTROLLER, buffer).then(({ response, packet }) => {
+            // const hotBedInfo = new GetHotBed().fromBuffer(response.data);
+            return { response, packet, data: { } };
+        });
+    }
+
+    public async subscribeCncSpeedState({ interval = 1000 }, callback: ResponseCallback) {
+        return this.subscribe(0x11, 0xa0, interval, callback).then(({ response, packet }) => {
+            return { response, packet, data: {} };
+        });
+    }
+
+    public async setCncPower(key: number, targetPower:number) {
+        const buffer = Buffer.alloc(2, 0);
+        writeUint8(buffer, 0, key);
+        writeUint8(buffer, 1, targetPower);
+        return this.send(0x11, 0x02, PeerId.CONTROLLER, buffer).then(({ response, packet }) => {
+            return { response, packet, data: {} };
+        });
+    }
+
+    public async setToolHeadSpeed(key: number, targetSpeed:number) {
+        const buffer = Buffer.alloc(5, 0);
+        writeUint8(buffer, 0, key);
+        writeUint32(buffer, 1, targetSpeed);
+        return this.send(0x11, 0x03, PeerId.CONTROLLER, buffer).then(({ response, packet }) => {
+            return { response, packet, data: {} };
+        });
+    }
+
+    public async switchCNC(key:number, status: boolean) {
+        const buffer = Buffer.alloc(2, 0);
+        writeUint8(buffer, 0, key);
+        writeBool(buffer, 1, status ? 1 : 0);
+        return this.send(0x11, 0x05, PeerId.CONTROLLER, buffer).then(({ response, packet }) => {
+            return { response, packet, data: {} };
+        });
+    }
+
+
+    public async setWorkSpeed(key: number, extruderIndex: number, targetSpeed:number) {
+        const buffer = Buffer.alloc(4, 0);
+        writeUint8(buffer, 0, key);
+        writeUint8(buffer, 1, extruderIndex);
+        writeInt16(buffer, 2, targetSpeed);
+        return this.send(0xac, 0x0e, PeerId.CONTROLLER, buffer).then(({ response, packet }) => {
+            return { response, packet, data: {} };
+        });
+    }
+
+    public async getWorkSpeed(key: number) {
+        const buffer = Buffer.alloc(1, 0);
+        writeUint8(buffer, 0, key);
+        return this.send(0xac, 0x0f, PeerId.CONTROLLER, buffer).then(({ response, packet }) => {
+            return { response, packet, data: { } };
         });
     }
 

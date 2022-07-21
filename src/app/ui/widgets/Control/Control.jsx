@@ -239,6 +239,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
             const zPosition = parseFloat(workPosition.z);
             const bPosition = workPosition.isFourAxis ? parseFloat(workPosition.b) : null;
             // dispatch(machineActions.setWorkOrigin(xPosition, yPosition, zPosition, bPosition));
+            console.log('server', server, server.setWorkOrigin, server.address);
             server.setWorkOrigin(xPosition, yPosition, zPosition, bPosition);
         },
         toggleKeypadJogging: () => {

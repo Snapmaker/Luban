@@ -25,6 +25,7 @@ export const CONNECTION_BED_TEMPERATURE = 'connection:updateBedTemperature';
 export const CONNECTION_LOAD_FILAMENT = 'connection:loadFilament';
 export const CONNECTION_UNLOAD_FILAMENT = 'connection:unloadFilament';
 export const CONNECTION_WORKSPEED_FACTOR = 'connection:updateWorkSpeedFactor';
+export const CONNECTION_GET_WORKSPEED_FACTOR = 'connection:getWorkSpeedFactor';
 export const CONNECTION_LASER_POWER = 'connection:updateLaserPower';
 export const CONNECTION_SWITCH_LASER_POWER = 'connection:switchLaserPower';
 export const CONNECTION_ENCLOSURE_LIGHT = 'connection:setEnclosureLight';
@@ -1622,3 +1623,18 @@ export const PRINTING_SINGLE_EXTRUDER_HEADTOOL = [
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL
 ];
+
+export const MODULEID_MAP = {
+    '0': SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+    '1': STANDARD_CNC_TOOLHEAD_FOR_SM2,
+    '2': LEVEL_ONE_POWER_LASER_FOR_SM2,
+    '13': DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+    '14': LEVEL_TWO_POWER_LASER_FOR_SM2,
+    '15': LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
+    '512': HEADT_BED_FOR_SM2,
+    '515': A400_HEADT_BED_FOR_SM2
+};
+
+export const AUTO_MDOE = Symbol('auto mode');
+export const SEMI_AUTO_MODE = Symbol('semi_auto_mode by MaterialThickness');
+export const MANUAL_MODE = Symbol('manual mode');

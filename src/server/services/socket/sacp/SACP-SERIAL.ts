@@ -156,7 +156,7 @@ class SocketSerialNew extends SocketBASE {
         readStream.on('data', buf => {
             md5.update(buf);
         });
-        readStream.once('end', () => {
+        readStream.once('end', async () => {
             this.sacpClient.startPrint(md5.digest().toString('hex'), options.uploadName, type).then(({ response }) => {
                 log.info(`startPrinting: ${response.result}`);
                 this.startTime = new Date().getTime();

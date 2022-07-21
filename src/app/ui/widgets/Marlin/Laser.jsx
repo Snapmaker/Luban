@@ -24,8 +24,9 @@ class Laser extends PureComponent {
     static propTypes = {
         laserPower: PropTypes.number,
         workflowStatus: PropTypes.string,
-        workflowState: PropTypes.string,
-        connectionType: PropTypes.string,
+        // workflowState: PropTypes.string,
+        // connectionType: PropTypes.string,
+        // headStatus: PropTypes.bool,
         isConnected: PropTypes.bool,
         toolHead: PropTypes.string,
         addConsoleLogs: PropTypes.func.isRequired,
@@ -47,9 +48,8 @@ class Laser extends PureComponent {
 
     actions = {
         isPrinting: () => {
-            const { workflowStatus, workflowState, connectionType } = this.props;
-            return (includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus) && connectionType === CONNECTION_TYPE_WIFI)
-                || (includes([WORKFLOW_STATE_PAUSED, WORKFLOW_STATE_RUNNING], workflowState) && connectionType === CONNECTION_TYPE_SERIAL);
+            const { workflowStatus } = this.props;
+            return (includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_PAUSING], workflowStatus));
         },
         onChangeLaserPower: (value) => {
             this.setState({
@@ -102,19 +102,35 @@ class Laser extends PureComponent {
         return prevProps;
     }
 
-    componentDidUpdate() {
-
+    componentDidMount() {
+        // console.log(this.state.laserPower, this.state.laserPowerOpen);
     }
 
 
     render() {
-        const { laserPowerOpen, laserPowerMarks, laserPower } = this.state;
-        const { toolHead } = this.props;
-        const actions = this.actions;
+        // console.log(this.props.laserPower);
+        const { laserPowerOpen, laserPower } = this.state; // laserPowerMarks,
+        // const { toolHead } = this.props;
+        // const actions = this.actions;
         const isPrinting = this.actions.isPrinting();
 
         return (
             <div>
+                {isPrinting && (
+                    <ParamsWrapper
+                        handleSubmit={(value) => { this.actions.onSaveLaserPower(value); }}
+                        initValue={laserPower}
+                        title={i18n._('key-unused-Laser Power')}
+                        suffix="%"
+                        inputMax={100}
+                        hasSlider
+                        inputMin={1}
+                    >
+                        <div className="width-44 sm-flex sm-flex-direction-c margin-left-16">
+                            <span>{Math.floor(laserPower)}%</span>
+                        </div>
+                    </ParamsWrapper>
+                )}
                 {isPrinting && <WorkSpeed />}
                 <div className="sm-flex justify-space-between margin-vertical-8">
                     <span>{i18n._('key-unused-Laser Power')}</span>
