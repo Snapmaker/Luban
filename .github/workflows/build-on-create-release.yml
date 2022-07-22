@@ -106,7 +106,7 @@ jobs:
     
       - name: Upload Release Windows x64 Installer To OSS
         run: |
-          ossutil cp -f ./output/*.exe oss://snapmaker/snapmaker.com/download/autoUpdater/${{env.INSTALLER_ASSET_NAME}} 
+          ossutil cp -f ./output/"${{env.PRODUCT_NAME}}".exe oss://snapmaker/snapmaker.com/download/autoUpdater/${{env.INSTALLER_ASSET_NAME}} 
           ossutil cp -f ./output/latest.yml oss://snapmaker/snapmaker.com/download/autoUpdater/latest.yml
 
 
@@ -145,7 +145,7 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: Upload Release Windows x86 Installer To OSS
-        run: ossutil cp -f ./output/*.exe oss://snapmaker/snapmaker.com/download/autoUpdater/${{env.INSTALLER_ASSET_NAME}}
+        run: ossutil cp -f ./output/"${{env.PRODUCT_NAME}}".exe oss://snapmaker/snapmaker.com/download/autoUpdater/${{env.INSTALLER_ASSET_NAME}}
 
   build-macos:
     name: Build macOS Packages
