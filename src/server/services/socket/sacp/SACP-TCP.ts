@@ -27,7 +27,7 @@ class SocketTCP extends SocketBASE {
 
     private thickness = 0;
 
-    constructor() {
+    public constructor() {
         super();
         this.client = new net.Socket();
 
@@ -179,23 +179,23 @@ class SocketTCP extends SocketBASE {
         });
     }
 
-    public connectionClose = async (socket: SocketServer, options: EventOptions) => {
+    public connectionClose = (socket: SocketServer, options: EventOptions) => {
         this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
-        await this.sacpClient.unSubscribeLogFeedback(this.subscribeLogCallback).then(res => {
-            log.info(`unsubscribeLog: ${res}`);
-        });
-        await this.sacpClient.unSubscribeCurrentCoordinateInfo(this.subscribeCoordinateCallback).then(res => {
-            log.info(`unSubscribeCoordinate: ${res}`);
-        });
-        await this.sacpClient.unSubscribeHotBedTemperature(this.subscribeHotBedCallback).then(res => {
-            log.info(`unSubscribeHotBed, ${res}`);
-        });
-        await this.sacpClient.unSubscribeNozzleInfo(this.subscribeNozzleCallback).then(res => {
-            log.info(`unSubscribeNozzle: ${res}`);
-        });
-        await this.sacpClient.unsubscribeHeartbeat(this.subscribeHeartCallback).then(res => {
-            log.info(`unSubscribeHeart, ${res}`);
-        });
+        // await this.sacpClient.unSubscribeLogFeedback(this.subscribeLogCallback).then(res => {
+        //     log.info(`unsubscribeLog: ${res}`);
+        // });
+        // await this.sacpClient.unSubscribeCurrentCoordinateInfo(this.subscribeCoordinateCallback).then(res => {
+        //     log.info(`unSubscribeCoordinate: ${res}`);
+        // });
+        // await this.sacpClient.unSubscribeHotBedTemperature(this.subscribeHotBedCallback).then(res => {
+        //     log.info(`unSubscribeHotBed, ${res}`);
+        // });
+        // await this.sacpClient.unSubscribeNozzleInfo(this.subscribeNozzleCallback).then(res => {
+        //     log.info(`unSubscribeNozzle: ${res}`);
+        // });
+        // await this.sacpClient.unsubscribeHeartbeat(this.subscribeHeartCallback).then(res => {
+        //     log.info(`unSubscribeHeart, ${res}`);
+        // });
         this.sacpClient.wifiConnectionClose().then(({ response }) => {
             if (response.result === 0) {
                 setTimeout(() => {

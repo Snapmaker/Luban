@@ -9,7 +9,7 @@ import SocketServer from '../../../lib/SocketManager';
 import logger from '../../../lib/logger';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, CNC_MODULE, LASER_MODULE, PRINTING_MODULE, HEAD_CNC, HEAD_LASER,
     COORDINATE_AXIS, WORKFLOW_STATUS_MAP, HEAD_PRINTING, EMERGENCY_STOP_BUTTON, ENCLOSURE_MODULES, AIR_PURIFIER_MODULES, ROTARY_MODULES,
-    MODULEID_TOOLHEAD_MAP, A400_HEADT_BED_FOR_SM2, HEADT_BED_FOR_SM2, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_SM2, RIGHT_EXTRUDER, LEFT_EXTRUDER, MODULEID_MAP} from '../../../../app/constants';
+    MODULEID_TOOLHEAD_MAP, A400_HEADT_BED_FOR_SM2, HEADT_BED_FOR_SM2, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_SM2, RIGHT_EXTRUDER, LEFT_EXTRUDER, MODULEID_MAP } from '../../../../app/constants';
 import { EventOptions, MarlinStateData } from '../types';
 
 const log = logger('lib:SocketBASE');
@@ -164,7 +164,6 @@ class SocketBASE {
                 b: originCoordinate[3].value
             };
             const isHomed = !(coordinateInfos?.homed); // 0: homed, 1: need to home
-            // console.log('coordinateInfo', coordinateInfos);
             stateData = {
                 ...stateData,
                 pos,
@@ -174,7 +173,7 @@ class SocketBASE {
             };
         };
         this.sacpClient.subscribeCurrentCoordinateInfo({ interval: 1000 }, this.subscribeCoordinateCallback).then(res => {
-            console.log(`subscribe coordination success: ${res}`);
+            log.info(`subscribe coordination success: ${res}`);
         });
     };
 

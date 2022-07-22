@@ -296,8 +296,8 @@ export default class Business extends Dispatcher {
         });
     }
 
-    public async getCurrentCoordinateInfo(coordinateType = CoordinateType.MACHINE) {
-        return this.send(0x01, 0x30, PeerId.CONTROLLER, Buffer.alloc(1, coordinateType)).then(({ response, packet }) => {
+    public async getCurrentCoordinateInfo() {
+        return this.send(0x01, 0x30, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             const coordinateSystemInfo = new CoordinateSystemInfo().fromBuffer(response.data);
             return { response, packet, data: { coordinateSystemInfo }, coordinateSystemInfo };
         });
