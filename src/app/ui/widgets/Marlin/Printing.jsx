@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import Anchor from '../../components/Anchor';
 // import SvgIcon from '../../components/SvgIcon';
 import { Button } from '../../components/Buttons';
-import EditComponent from '../../components/Edit';
+// import EditComponent from '../../components/Edit';
 import i18n from '../../../lib/i18n';
 // import { NumberInput as Input } from '../../components/Input';
 import { actions as machineActions } from '../../../flux/machine';
@@ -17,10 +17,16 @@ import {
     CONNECTION_LOAD_FILAMENT,
     CONNECTION_UNLOAD_FILAMENT,
     DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+    LEFT_EXTRUDER_MAP_NUMBER,
     CONNECTION_NOZZLE_TEMPERATURE,
-    CONNECTION_BED_TEMPERATURE
+    RIGHT_EXTRUDER_MAP_NUMBER,
+    CONNECTION_BED_TEMPERATURE,
+    CONNECTION_WORK_NOZZLE,
+    WORKFLOW_STATUS_PAUSING,
+    LEFT_EXTRUDER,
 } from '../../../constants';
 import { controller } from '../../../lib/controller';
+import ParamsWrapper from './ParamsWrapper';
 
 class Printing extends PureComponent {
     static propTypes = {
@@ -28,9 +34,10 @@ class Printing extends PureComponent {
         // connectionType: PropTypes.string,
         nozzleTemperature: PropTypes.number.isRequired,
         nozzleTargetTemperature: PropTypes.number.isRequired,
+        nozzleRightTemperature: PropTypes.number,
+        nozzleRightTargetTemperature: PropTypes.number,
         heatedBedTargetTemperature: PropTypes.number.isRequired,
         workflowStatus: PropTypes.string.isRequired,
-        nozzleTemperature: PropTypes.number.isRequired,
         addConsoleLogs: PropTypes.func.isRequired,
         heatedBedTemperature: PropTypes.number.isRequired,
         printingToolhead: PropTypes.string.isRequired,
@@ -53,8 +60,9 @@ class Printing extends PureComponent {
                 nozzleTemperatureValue: value
             });
         },
-        onClickNozzleTemperature: () => {
+        onClickNozzleTemperature: (extruderIndex) => {
             controller.emitEvent(CONNECTION_NOZZLE_TEMPERATURE, {
+                extruderIndex: extruderIndex,
                 nozzleTemperatureValue: this.state.nozzleTemperatureValue
             });
         },
@@ -78,10 +86,11 @@ class Printing extends PureComponent {
                 rightZOffsetValue: value
             });
         },
-        onClickPlusZOffset: () => {
-            const zOffset = this.state.zOffsetValue;
+        onClickPlusZOffset: (extruderIndex) => {
+            const zOffset = extruderIndex === RIGHT_EXTRUDER_MAP_NUMBER ? this.state.rightZOffsetValue : this.state.leftZOffsetValue;
             controller.emitEvent(CONNECTION_Z_OFFSET, {
-                zOffset
+                zOffset,
+                extruderIndex,
             }).once(CONNECTION_Z_OFFSET, ({ msg }) => {
                 if (msg) {
                     return;
@@ -89,10 +98,11 @@ class Printing extends PureComponent {
                 this.props.addConsoleLogs([`Z Offset ${zOffset} ok`]);
             });
         },
-        onClickMinusZOffset: () => {
-            const zOffset = 0 - this.state.zOffsetValue;
+        onClickMinusZOffset: (extruderIndex) => {
+            const zOffset = 0 - (extruderIndex === RIGHT_EXTRUDER_MAP_NUMBER ? this.state.rightZOffsetValue : this.state.leftZOffsetValue);
             controller.emitEvent(CONNECTION_Z_OFFSET, {
-                zOffset
+                zOffset,
+                extruderIndex,
             }).once(CONNECTION_Z_OFFSET, ({ msg }) => {
                 if (msg) {
                     return;
@@ -142,9 +152,6 @@ class Printing extends PureComponent {
             controller.emitEvent(CONNECTION_BED_TEMPERATURE, {
                 heatedBedTemperatureValue: temp
             });
-        },
-        onClickUnload: () => {
-            controller.emitEvent(CONNECTION_UNLOAD_FILAMENT);
         }
     };
 
@@ -174,8 +181,12 @@ class Printing extends PureComponent {
     }
 
     render() {
-        const { isConnected, heatedBedTemperature, heatedBedTargetTemperature, nozzleTemperature, nozzleTargetTemperature, workflowStatus, currentWorkNozzle, printingToolhead } = this.props;
-        const { zOffsetMarks, zOffsetValue } = this.state;
+        const {
+            isConnected, heatedBedTemperature, heatedBedTargetTemperature, nozzleTemperature, nozzleTargetTemperature, currentWorkNozzle,
+            printingToolhead,
+            workflowStatus
+        } = this.props;
+        const { zOffsetMarks, leftZOffsetValue, rightZOffsetValue } = this.state;
         const actions = this.actions;
 
         const nozzleTempratureTitle = i18n._(`${printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? 'key-Workspace/Marlin-Left Nozzle Temp' : 'key-Workspace/Marlin-Nozzle Temp'}`);
@@ -183,7 +194,6 @@ class Printing extends PureComponent {
 
         return (
             <div>
-                {workflowStatus === 'running' && <WorkSpeed />}
                 {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
                     <div>
                         <div>
@@ -306,7 +316,7 @@ class Printing extends PureComponent {
                             </Button>
                         </div>
                     </div>
-                )} */}
+                )}
 
 
                 <ParamsWrapper

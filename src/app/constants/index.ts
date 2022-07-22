@@ -21,6 +21,7 @@ export const CONNECTION_GET_GCODEFILE = 'connection:getGcodeFile';
 export const CONNECTION_UPLOAD_FILE = 'connection:uploadFile';
 export const CONNECTION_Z_OFFSET = 'connection:updateZOffset';
 export const CONNECTION_NOZZLE_TEMPERATURE = 'connection:updateNozzleTemperature';
+export const CONNECTION_WORK_NOZZLE = 'connection:updateWorkNozzle';
 export const CONNECTION_BED_TEMPERATURE = 'connection:updateBedTemperature';
 export const CONNECTION_LOAD_FILAMENT = 'connection:loadFilament';
 export const CONNECTION_UNLOAD_FILAMENT = 'connection:unloadFilament';
@@ -36,6 +37,8 @@ export const CONNECTION_FILTER_WORKSPEED = 'connection:setFilterWorkSpeed';
 export const CONNECTION_GO_HOME = 'connection:goHome';
 export const CONNECTION_COORDINATE_MOVE = 'connection:coordinateMove';
 export const CONNECTION_SET_WORK_ORIGIN = 'connection:setWorkOrigin';
+export const CONNECTION_UPDATE_TOOLHEAD_SPEED = 'connection:updateToolHeadSpeed';
+export const CONNECTION_SWITCH_CNC = 'connection:switchCNC';
 
 export const SVG_MOVE_MINI_DISTANCE = 1e-4;
 export const MINIMUM_WIDTH_AND_HEIGHT = 0.01;
@@ -1610,6 +1613,10 @@ export const EMERGENCY_STOP_BUTTON = [8, 517];
 export const ENCLOSURE_MODULES = [5, 16];
 export const ROTARY_MODULES = [6];
 export const AIR_PURIFIER_MODULES = [7];
+
+export const HEADT_BED_FOR_SM2 = 'heatBedForSM2';
+export const A400_HEADT_BED_FOR_SM2 = 'a400HeatBedForSM2';
+
 export const MODULEID_TOOLHEAD_MAP = {
     '0': SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     '1': STANDARD_CNC_TOOLHEAD_FOR_SM2,

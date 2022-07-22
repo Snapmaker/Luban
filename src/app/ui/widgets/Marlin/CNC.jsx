@@ -6,21 +6,25 @@ import { actions as machineActions } from '../../../flux/machine';
 import WorkSpeed from './WorkSpeed';
 import i18n from '../../../lib/i18n';
 import Switch from '../../components/Switch';
+import { controller } from '../../../lib/controller';
+import ParamsWrapper from './ParamsWrapper';
+import EditComponent from '../../components/Edit';
 import {
-    CONNECTION_TYPE_SERIAL,
-    CONNECTION_TYPE_WIFI,
-    WORKFLOW_STATE_PAUSED, WORKFLOW_STATE_RUNNING,
+    CONNECTION_SWITCH_CNC,
+    CONNECTION_UPDATE_TOOLHEAD_SPEED,
+    LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
     WORKFLOW_STATUS_PAUSED,
+    WORKFLOW_STATUS_PAUSING,
     WORKFLOW_STATUS_RUNNING
 } from '../../../constants';
 
-class Printing extends PureComponent {
+class CNC extends PureComponent {
     static propTypes = {
         headStatus: PropTypes.bool,
         workflowStatus: PropTypes.string,
-        workflowState: PropTypes.string,
-        connectionType: PropTypes.string,
-        executeGcode: PropTypes.func.isRequired
+        toolHead: PropTypes.string.isRequired,
+        cncCurrentSpindleSpeed: PropTypes.number.isRequired,
+        cncTargetSpindleSpeed: PropTypes.number.isRequired
     };
 
     state = {
@@ -29,14 +33,24 @@ class Printing extends PureComponent {
 
     actions = {
         onClickToolHead: () => {
-            if (this.state.headStatus) {
-                this.props.executeGcode('M5');
-            } else {
-                this.props.executeGcode('M3 P100');
-            }
+            controller.emitEvent(CONNECTION_SWITCH_CNC, {
+                headStatus: this.state.headStatus,
+                speed: this.props.cncTargetSpindleSpeed,
+                toolHead: this.props.toolHead,
+            }).once(CONNECTION_SWITCH_CNC, (result) => {
+                console.log(`${CONNECTION_SWITCH_CNC} ok, get${JSON.stringify(result)}`);
+            });
             this.setState({
                 headStatus: !this.state.headStatus
             });
+        },
+        updateToolHeadSpeed: (speed) => {
+            controller.emitEvent(CONNECTION_UPDATE_TOOLHEAD_SPEED, {
+                speed: speed
+            }).once(CONNECTION_UPDATE_TOOLHEAD_SPEED, (result) => {
+                console.log(`${CONNECTION_UPDATE_TOOLHEAD_SPEED} ok, get${JSON.stringify(result)}`);
+            });
+            // this.setState({ toolHeadSpeepd: speed });
         },
         isPrinting: () => {
             const { workflowStatus } = this.props;
@@ -62,6 +76,8 @@ class Printing extends PureComponent {
     render() {
         const { headStatus } = this.state;
         const isPrinting = this.actions.isPrinting();
+        const isLevelTwoCNC = this.props.toolHead === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2;
+
         return (
             <div>
                 {isPrinting && <WorkSpeed />}
@@ -117,12 +133,18 @@ class Printing extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { headStatus, workflowStatus, workflowState, connectionType } = machine;
+    const { headStatus, workflowStatus, workflowState, connectionType,
+        cncCurrentSpindleSpeed,
+        cncTargetSpindleSpeed } = machine;
+    const { toolHead } = state.workspace;
     return {
         headStatus,
         workflowStatus,
         workflowState,
-        connectionType
+        connectionType,
+        toolHead,
+        cncCurrentSpindleSpeed,
+        cncTargetSpindleSpeed
     };
 };
 
@@ -132,4 +154,4 @@ const mapDispatchToProps = (dispatch) => {
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Printing);
+export default connect(mapStateToProps, mapDispatchToProps)(CNC);

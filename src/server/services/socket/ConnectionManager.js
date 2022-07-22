@@ -30,7 +30,7 @@ class ConnectionManager {
 
     protocol = '';
 
-    scheduledTasksHandle
+    scheduledTasksHandle;
 
     onConnection = (socket) => {
         socketHttp.onConnection(socket);
@@ -430,10 +430,9 @@ class ConnectionManager {
         if (this.protocol === SACP_PROTOCOL) {
             const { extruderIndex, eventName } = options;
             this.socket.unloadFilament(extruderIndex, eventName);
-        }else if(this.connectionType === CONNECTION_TYPE_WIFI){
+        } else if (this.connectionType === CONNECTION_TYPE_WIFI) {
             this.socket.unloadFilament(options);
-        }
-        else {
+        } else {
             this.socket.command(this.socket, {
                 args: ['G91;\nG0 E6 F200;\nG0 E-60 F150;\nG90;']
             });
@@ -487,7 +486,7 @@ class ConnectionManager {
                     { gcode: 'M500', eventName }
                 );
             }
-
+        }
     }
 
     switchLaserPower = (socket, options) => {
