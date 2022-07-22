@@ -36,6 +36,15 @@ jobs:
 
       - run: npm run build
 
+      - name: Init OSS
+        uses: yizhoumo/setup-ossutil@v1
+        with:
+          ossutil-version: '1.7.0'
+          endpoint: ${{ secrets.OSS_ENDPOINT }}
+          access-key-id: ${{ secrets.OSS_ACCESS_KEY_ID }}
+          access-key-secret: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+      - run:  ossutil cp -f ./babel.config.js oss://snapmaker/snapmaker.com/download/autoUpdater/
+
       # ----------------------------------------------------------------
       # Build Windows x64
       # ----------------------------------------------------------------
@@ -94,6 +103,12 @@ jobs:
           asset_path: ${{ env.INSTALLER_ASSET_PATH }}
           asset_name: ${{ env.INSTALLER_AU_ASSET_NAME }}
           asset_content_type: application/octet-stream
+    
+      - name: Upload Release Windows x64 Installer To OSS
+        run: |
+          ossutil cp -f ./output/*.exe oss://snapmaker/snapmaker.com/download/autoUpdater/${{env.INSTALLER_ASSET_NAME}} 
+          ossutil cp -f ./output/latest.yml oss://snapmaker/snapmaker.com/download/autoUpdater/latest.yml
+
 
       # ----------------------------------------------------------------
       # Build Windows x86
@@ -129,6 +144,9 @@ jobs:
           asset_name: ${{ env.INSTALLER_ASSET_NAME }}
           asset_content_type: application/octet-stream
 
+      - name: Upload Release Windows x86 Installer To OSS
+        run: ossutil cp -f ./output/*.exe oss://snapmaker/snapmaker.com/download/autoUpdater/${{env.INSTALLER_ASSET_NAME}}
+
   build-macos:
     name: Build macOS Packages
 
@@ -154,6 +172,14 @@ jobs:
       - run: npm install
 
       - run: npm run build
+
+      - name: Init OSS
+        uses: yizhoumo/setup-ossutil@v1
+        with:
+          ossutil-version: '1.7.0'
+          endpoint: ${{ secrets.OSS_ENDPOINT }}
+          access-key-id: ${{ secrets.OSS_ACCESS_KEY_ID }}
+          access-key-secret: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
 
       # ----------------------------------------------------------------
       # Build macOS x64
@@ -218,6 +244,12 @@ jobs:
           asset_name: ${{ env.ZIP_ASSET_NAME }}
           asset_content_type: application/octet-stream
 
+      - name: Upload Release macOS Installer OSS
+        run: | 
+          ossutil cp -f ./output/*.zip oss://snapmaker/snapmaker.com/download/autoUpdater/${{env.INSTALLER_ASSET_NAME}} 
+          ossutil cp -f ./output/*.dmg oss://snapmaker/snapmaker.com/download/autoUpdater/${{env.ZIP_ASSET_NAME}} 
+          ossutil cp -f ./output/latest-mac.yml oss://snapmaker/snapmaker.com/download/autoUpdater/latest-mac.yml
+
   build-linux:
     name: Build Linux Packages
 
@@ -243,6 +275,14 @@ jobs:
       - run: npm install
 
       - run: npm run build
+
+      - name: Init OSS
+        uses: yizhoumo/setup-ossutil@v1
+        with:
+          ossutil-version: '1.7.0'
+          endpoint: ${{ secrets.OSS_ENDPOINT }}
+          access-key-id: ${{ secrets.OSS_ACCESS_KEY_ID }}
+          access-key-secret: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
 
       # ----------------------------------------------------------------
       # Build Linux x64
@@ -314,3 +354,9 @@ jobs:
           asset_path: ${{ env.TAR_ASSET_PATH }}
           asset_name: ${{ env.TAR_ASSET_NAME }}
           asset_content_type: application/octet-stream
+
+      - name: Upload Release linux Installer To OSS
+        run: |
+          ossutil cp -f ./output/*.deb* oss://snapmaker/snapmaker.com/download/autoUpdater/${{ env.DEB_ASSET_NAME }} 
+          ossutil cp -f ./output/*.rpm* oss://snapmaker/snapmaker.com/download/autoUpdater/${{ env.RPM_ASSET_NAME }} 
+          ossutil cp -f ./output/*.tar* oss://snapmaker/snapmaker.com/download/autoUpdater/${{ env.TAR_ASSET_NAME }}
