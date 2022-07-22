@@ -183,6 +183,20 @@ function Configurations() {
     });
 
     const actions = {
+        checkIsAllDefault: (definitionModelSettings, selectedModelDefaultSetting) => {
+            let result = true;
+            result = Object.keys(definitionModelSettings).every((key) => {
+                if (definitionModelSettings[key]?.enabled && selectedModelDefaultSetting[key]) {
+                    return definitionModelSettings[key].default_value === selectedModelDefaultSetting[key].default_value;
+                } else {
+                    return true;
+                }
+            });
+            return result;
+        },
+        getDefaultDefinition: (definitionId) => {
+            return dispatch(printingActions.getDefaultDefinition(definitionId));
+        },
         onChangeConfigDisplayType: (newDisplayType) => {
             setConfigDisplayType(newDisplayType);
             printingStore.set('printingSettingDisplayType', newDisplayType);
@@ -359,9 +373,15 @@ function Configurations() {
 
     const renderProfileMenu = (displayType) => {
         const hasResetButton = displayType === i18n._(DEFAULT_DISPLAY_TYPE);
+        let isAllValueDefault = true;
+        if (hasResetButton) {
+            const selectedDefaultSetting = actions.getDefaultDefinition(selectedDefinition.definitionId);
+            isAllValueDefault = actions.checkIsAllDefault(selectedDefinition.settings, selectedDefaultSetting);
+            console.log('isAllValueDefault', selectedDefinition.definitionId, isAllValueDefault);
+        }
         return (
             <div className="width-160">
-                {hasResetButton && (
+                {hasResetButton && !isAllValueDefault && (
                     <Anchor
                         onClick={actions.resetPreset}
                     >
