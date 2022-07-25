@@ -377,7 +377,6 @@ function Configurations() {
         if (hasResetButton) {
             const selectedDefaultSetting = actions.getDefaultDefinition(selectedDefinition.definitionId);
             isAllValueDefault = actions.checkIsAllDefault(selectedDefinition.settings, selectedDefaultSetting);
-            console.log('isAllValueDefault', selectedDefinition.definitionId, isAllValueDefault);
         }
         return (
             <div className="width-160">

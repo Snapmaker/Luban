@@ -329,7 +329,7 @@ function WifiTransport({ widgetActions, controlActions }) {
             await actions.startPrint();
         },
 
-        loadGcodeToWorkspace: async ({ isLaserAutoFocus, isCameraCapture }) => {
+        loadGcodeToWorkspace: async (isLaserAutoFocus = false, isCameraCapture = false) => {
             const find = gcodeFiles.find(v => v.uploadName.toLowerCase() === selectFileName.toLowerCase());
             if (!find) {
                 return;
@@ -536,7 +536,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                 break;
             default:
         }
-        actions.loadGcodeToWorkspace({ isLaserAutoFocus, isCameraCapture: useBackground });
+        actions.loadGcodeToWorkspace(isLaserAutoFocus, useBackground);
     };
 
     return (

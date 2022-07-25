@@ -392,28 +392,47 @@ class ConnectionManager {
         }
     };
 
+
+    switchExtruder = (socket, options) => {
+        if (this.protocol === SACP_PROTOCOL) {
+            const { extruderIndex } = options;
+            this.socket.switchExtruder(extruderIndex);
+        }
+    }
+
+
     updateNozzleTemperature = (socket, options) => {
-        if (this.connectionType === CONNECTION_TYPE_WIFI) {
-            this.socket.updateNozzleTemperature(options);
+        if (this.protocol === SACP_PROTOCOL) {
+            const { extruderIndex, nozzleTemperatureValue } = options;
+            this.socket.updateNozzleTemperature(extruderIndex, nozzleTemperatureValue);
         } else {
-            const { nozzleTemperatureValue } = options;
-            this.socket.command(this.socket, {
-                args: [`M104 S${nozzleTemperatureValue}`]
-            });
+            if (this.connectionType === CONNECTION_TYPE_WIFI) {
+                this.socket.updateNozzleTemperature(options);
+            } else {
+                const { nozzleTemperatureValue } = options;
+                this.socket.command(this.socket, {
+                    args: [`M104 S${nozzleTemperatureValue}`]
+                });
+            }
         }
     }
 
     updateBedTemperature = (socket, options) => {
-        if (this.connectionType === CONNECTION_TYPE_WIFI) {
-            this.socket.updateBedTemperature(options);
+        if (this.protocol === SACP_PROTOCOL) {
+            const { /* zoneIndex, */heatedBedTemperatureValue } = options;
+            this.socket.updateBedTemperature(0, heatedBedTemperatureValue);
+            this.socket.updateBedTemperature(1, heatedBedTemperatureValue);
         } else {
-            const { heatedBedTemperatureValue } = options;
-            this.socket.command(this.socket, {
-                args: [`M140 S${heatedBedTemperatureValue}`]
-            });
+            if (this.connectionType === CONNECTION_TYPE_WIFI) {
+                this.socket.updateBedTemperature(options);
+            } else {
+                const { heatedBedTemperatureValue } = options;
+                this.socket.command(this.socket, {
+                    args: [`M140 S${heatedBedTemperatureValue}`]
+                });
+            }
         }
     }
-
 
     loadFilament = (socket, options) => {
         if (this.protocol === SACP_PROTOCOL) {
@@ -440,13 +459,18 @@ class ConnectionManager {
     }
 
     updateWorkSpeedFactor = (socket, options) => {
-        if (this.connectionType === CONNECTION_TYPE_WIFI) {
-            this.socket.updateWorkSpeedFactor(options);
+        if (this.protocol === SACP_PROTOCOL) {
+            const { toolHead, workSpeedValue, extruderIndex } = options;
+            this.socket.updateWorkSpeed(toolHead, workSpeedValue, extruderIndex);
         } else {
-            const { workSpeedValue } = options;
-            this.socket.command(this.socket, {
-                args: [`M220 S${workSpeedValue}`]
-            });
+            if (this.connectionType === CONNECTION_TYPE_WIFI) {
+                this.socket.updateWorkSpeedFactor(options);
+            } else {
+                const { workSpeedValue } = options;
+                this.socket.command(this.socket, {
+                    args: [`M220 S${workSpeedValue}`]
+                });
+            }
         }
     }
 
@@ -589,7 +613,12 @@ class ConnectionManager {
     };
 
     updateZOffset = (socket, options) => {
-        this.socket.updateZOffset(options);
+        if (this.protocol === SACP_PROTOCOL) {
+            const { extruderIndex, zOffset } = options;
+            this.socket.updateNozzleOffset(extruderIndex, 2, zOffset);
+        } else {
+            this.socket.updateZOffset(options);
+        }
     };
 
     getLaserMaterialThickness = (socket, options) => {

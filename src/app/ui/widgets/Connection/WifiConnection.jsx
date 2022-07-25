@@ -134,7 +134,7 @@ function CheckingNozzleSize() {
                         {i18n._('key-Workspace/Mismatch-The configured Nozzle Diameter ({{diameterInfo}}) is inconsistent with that of the connected machine ({{connectedDameterInfo}}). Luban has updated the configuration to be consistent with the machine nozzle.',
                             {
                                 diameterInfo: toolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? `L: ${leftDiameter}mm; R: ${rightDiameter}mm` : `L: ${leftDiameter}mm`,
-                                connectedDiameterInfo: toolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? `L: ${nozzleSizeList[0]}mm; R: ${nozzleSizeList[1]}mm` : `L: ${nozzleSizeList[0]}mm`,
+                                connectedDameterInfo: toolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? `L: ${nozzleSizeList[0]}mm; R: ${nozzleSizeList[1]}mm` : `L: ${nozzleSizeList[0]}mm`,
                             })}
                     </Modal.Body>
                     <Modal.Footer>
@@ -587,7 +587,9 @@ function WifiConnection() {
                                 })}
                             <Anchor
                                 onClick={actions.onShowMachinwSettings}
-                                color="#545659"
+                                style={{
+                                    fontWeight: 'bold'
+                                }}
                             >
                                 {i18n._('key-Workspace/Mismatch-Machine Settings')}
                             </Anchor>

@@ -73,6 +73,7 @@ class SocketBASE {
                 log.info('TCP close');
                 this.socket && this.socket.emit('connection:close');
             }, 10000);
+
             await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
                 // log.info(`revice moduleInfo: ${data.response}`);
                 moduleInfos.forEach(module => {
@@ -99,12 +100,22 @@ class SocketBASE {
                         stateData.headType = HEAD_CNC;
                         stateData.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
                     }
+
+
+                    const keys = Object.keys(MODULEID_MAP);
+                    if (includes(keys, String(module.moduleId))) {
+                        if (!this.moduleInfos) {
+                            this.moduleInfos = {};
+                        }
+                        this.moduleInfos[MODULEID_MAP[module.moduleId]] = module;
+                    }
                 });
             });
             // stateData.status = WORKFLOW_STATUS_MAP[statusKey];
             this.socket && this.socket.emit('Marlin:state', {
                 state: {
                     ...stateData,
+                    moduleStatusList,
                     status: WORKFLOW_STATUS_MAP[statusKey],
                     moduleList: moduleStatusList,
                 }
@@ -373,7 +384,6 @@ class SocketBASE {
 
 
     public updateLaserPower = (value) => {
-        console.log('set laser power', value);
         const laserLevelTwoHead = this.moduleInfos && (this.moduleInfos[LEVEL_TWO_POWER_LASER_FOR_SM2] || this.moduleInfos[LEVEL_ONE_POWER_LASER_FOR_SM2]); //
         if (!laserLevelTwoHead) {
             log.error(`non-eixst laserLevelHead, moduleInfos:${this.moduleInfos}`,);

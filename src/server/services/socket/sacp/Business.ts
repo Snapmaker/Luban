@@ -6,7 +6,7 @@ import readline from 'linebyline';
 import { BatchBufferInfo, CalibrationInfo, CoordinateInfo, CoordinateSystemInfo, ExtruderMovement, ExtruderOffset, FdmToolHeadInfo, GcodeFileInfo, GetHotBed, LaserCalibration, LaserToolHeadInfo, MachineInfo, MachineSize, ModuleInfo, MovementInstruction, PrintBatchGcode, SetLaserPower, WifiConnectionInfo } from 'snapmaker-sacp-sdk/models';
 import { Dispatcher, RequestData, ResponseCallback, ResponseData, Response } from 'snapmaker-sacp-sdk';
 import net from 'net';
-import { stringToBuffer, readString, readUint16, readUint32, writeUint16, writeUint8, writeFloat, readFloat, writeInt8, writeInt16, readUint8, writeUint32 } from 'snapmaker-sacp-sdk/helper';
+import { stringToBuffer, readString, writeBool, readUint16, readUint32, writeUint16, writeUint8, writeFloat, readFloat, writeInt8, writeInt16, readUint8, writeUint32 } from 'snapmaker-sacp-sdk/helper';
 import { PeerId } from 'snapmaker-sacp-sdk/communication/Header';
 import { MoveDirection } from 'snapmaker-sacp-sdk/models/MovementInstruction';
 import DataStorage from '../../../DataStorage';
@@ -718,24 +718,20 @@ export default class Business extends Dispatcher {
 
     public async wifiConnection(hostName: string, clientName: string, token: string, callback: any) {
         const info = new WifiConnectionInfo(hostName, clientName, token).toBuffer();
-        console.log('wifiConnectionInfo', info);
         this.setHandler(0x01, 0x06, ({ param, packet }: RequestData) => {
-            console.log({ param, packet });
             const res = new Response(0);
             this.ack(0x01, 0x06, packet, res.toBuffer());
             callback && callback();
         });
         return this.send(0x01, 0x05, PeerId.SCREEN, info).then(({ response, packet }) => {
             // return res;
-            console.log('resresres', response, packet);
             return { response, packet };
         });
     }
 
     public async wifiConnectionClose() {
-        console.log('get wifi connection close');
         return this.send(0x01, 0x06, PeerId.SCREEN, Buffer.alloc(0)).then(({ response, packet }) => {
-            console.log('close response');
+            log.info('close response');
             return { response, packet };
         });
     }

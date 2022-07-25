@@ -269,29 +269,8 @@ class Printing extends PureComponent {
                             <span>{i18n._('key-Workspace/Marlin-Target Data Title')}</span>
                             <span>{Math.floor(this.props.nozzleRightTargetTemperature)}°C</span>
                         </div>
-                        {workflowStatus !== 'running' && (
-                            <div className="sm-flex justify-flex-end margin-vertical-8">
-                                <div>
-                                    <Button
-                                        priority="level-three"
-                                        width="96px"
-                                        className="display-inline"
-                                        onClick={actions.onClickUnload}
-                                    >
-                                        {i18n._('key-unused-Unload')}
-                                    </Button>
-                                    <Button
-                                        className="margin-left-4 display-inline"
-                                        priority="level-three"
-                                        width="96px"
-                                        onClick={actions.onClickLoad}
-                                    >
-                                        {i18n._('key-unused-Load')}
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
                     </ParamsWrapper>
+
                 )}
                 {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && !this.isPausingOrPrinting() && (
                     <div className="sm-flex justify-flex-end margin-vertical-8">
@@ -409,9 +388,8 @@ const mapStateToProps = (state) => {
         heatedBedTemperature,
         heatedBedTargetTemperature,
         workflowStatus,
-        // toolHead: {
-        //     printingToolhead
-        // },
+        nozzleRightTemperature,
+        nozzleRightTargetTemperature,
         currentWorkNozzle
     } = machine;
     const { toolHead: printingToolhead } = workspace;
@@ -420,6 +398,8 @@ const mapStateToProps = (state) => {
         connectionType,
         nozzleTemperature,
         nozzleTargetTemperature,
+        nozzleRightTemperature,
+        nozzleRightTargetTemperature,
         heatedBedTemperature,
         heatedBedTargetTemperature,
         workflowStatus,
