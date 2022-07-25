@@ -77,7 +77,9 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
     if (!enabled && !isNil(enabled)) {
         return null;
     }
-
+    if (definitionKey === 'support_pattern') {
+        console.log('definitionKey', definitionKey, options);
+    }
     const opts = [];
     if (options) {
         Object.keys(options).forEach((k) => {
@@ -156,13 +158,12 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
                         size={styleSize}
                         menuContainerStyle={{ zIndex: 5 }}
                         name={definitionKey}
-                        // disabled={!isDefinitionEditable()}
                         options={opts}
                         value={typeof settingDefaultValue === 'string' ? settingDefaultValue.toLowerCase() : settingDefaultValue}
                         onChange={(option) => {
                             onChangeDefinition(definitionKey, option.value);
                         }}
-                        disabled={officalDefinition && managerType === HEAD_CNC && definitionKey === 'tool_type'}
+                        disabled={(officalDefinition && managerType === HEAD_CNC && definitionKey === 'tool_type') || (definitionKey === 'material_type' && isProfile)}
                     />
                 )}
                 {type === 'enumWithImage' && (

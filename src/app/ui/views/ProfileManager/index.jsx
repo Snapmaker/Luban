@@ -511,13 +511,18 @@ function ProfileManager({
                                         {(definitionState.cates.map((cate) => {
                                             const isCategorySelected = cate.category === definitionState?.definitionForManager.category;
                                             return !!cate.items.length && (
-                                                <li key={`${cate.category}`} className={classNames(customMode ? styles['disable-li'] : '')}>
+                                                <li key={`${cate.category}`} className={classNames(customMode ? styles['disable-li'] : '', styles['category-li'])}>
                                                     <Anchor
                                                         className={classNames(styles['manager-btn'], { [styles.selected]: actions.isCategorySelectedNow(cate.category) })}
                                                         onClick={() => actions.onSelectCategory(cate.category)}
                                                         onDoubleClick={() => actions.setRenamingStatus(true)}
                                                     >
-                                                        <div className="sm-flex align-center" style={{ paddingRight: '10px' }}>
+                                                        <div className={classNames(
+                                                            'sm-flex',
+                                                            'align-center',
+                                                            'width-248'
+                                                        )}
+                                                        >
                                                             <SvgIcon
                                                                 name="DropdownOpen"
                                                                 className={classNames(
@@ -548,6 +553,29 @@ function ProfileManager({
                                                                 />
                                                             ) : <span className="text-overflow-ellipsis">{cate.category}</span>}
                                                         </div>
+                                                        {!isOfficialDefinition(definitionState.definitionForManager) && (
+                                                            <div className={classNames(styles['manager-action'])}>
+                                                                <Popover
+                                                                    placement="bottomRight"
+                                                                    content={() => (
+                                                                        <div className="width-160">
+                                                                            <Anchor onClick={() => { actions.setRenamingStatus(true); }}>
+                                                                                <div className="width-120 text-overflow-ellipsis">{i18n._('key-App/Menu-Rename')}</div>
+                                                                            </Anchor>
+                                                                            <Anchor onClick={() => actions.onRemoveManagerDefinition(definitionState.definitionForManager, definitionState.isCategorySelected)}>
+                                                                                <div>{i18n._('key-Printing/ProfileManager-Delete')}</div>
+                                                                            </Anchor>
+                                                                        </div>
+                                                                    )}
+                                                                >
+                                                                    <SvgIcon
+                                                                        name="More"
+                                                                        size={24}
+                                                                        className="margin-left-n-30"
+                                                                    />
+                                                                </Popover>
+                                                            </div>
+                                                        )}
                                                     </Anchor>
                                                     {!configExpanded[cate.category] && (
                                                         <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
@@ -616,6 +644,11 @@ function ProfileManager({
                                                                                             placement="bottomRight"
                                                                                             content={() => (
                                                                                                 <div className="width-160">
+                                                                                                    {!isOfficialDefinition(definitionState.definitionForManager) && (
+                                                                                                        <Anchor onClick={() => { actions.setRenamingStatus(true); }}>
+                                                                                                            <div className="width-120 text-overflow-ellipsis">{i18n._('key-App/Menu-Rename')}</div>
+                                                                                                        </Anchor>
+                                                                                                    )}
                                                                                                     <Anchor onClick={() => { actions.showDuplicateModal(); }}>
                                                                                                         <div className="width-120 text-overflow-ellipsis">{i18n._('key-App/Menu-Copy')}</div>
                                                                                                     </Anchor>

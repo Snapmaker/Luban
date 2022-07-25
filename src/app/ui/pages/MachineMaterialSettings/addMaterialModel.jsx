@@ -11,22 +11,54 @@ import Checkbox from '../../components/Checkbox';
 import { PRINTING_MATERIAL_CONFIG_COLORS } from '../../../constants';
 import { Button } from '../../components/Buttons';
 
-const materialTypeOptions = [{
-    value: 'PLA',
-    label: 'PLA'
-}, {
-    value: 'ABS',
-    label: 'ABS'
-}, {
-    value: 'PETG',
-    label: 'PETG'
-}];
+const materialTypeOptions = [
+    {
+        value: 'pla',
+        label: 'PLA'
+    },
+    {
+        value: 'support',
+        label: 'Support'
+    },
+    {
+        value: 'abs',
+        label: 'ABS'
+    },
+    {
+        value: 'petg',
+        label: 'PETG'
+    },
+    {
+        value: 'tpu',
+        label: 'TPE'
+    },
+    {
+        value: 'pva',
+        label: 'PVA'
+    },
+    {
+        value: 'asa',
+        label: 'ASA'
+    },
+    {
+        value: 'pc',
+        label: 'PC'
+    },
+    {
+        value: 'nylon',
+        label: 'Nylon'
+    },
+    {
+        value: 'other',
+        label: 'Other'
+    }
+];
 
 const AddMaterialModel = ({
     setShowCreateMaterialModal,
     onSubmit
 }) => {
-    const [materialType, setMaterialType] = useState('PLA');
+    const [materialType, setMaterialType] = useState('pla');
     const [materialName, setMaterialName] = useState('');
     const [materialColor, setMaterialColor] = useState('#ffffff');
     const [showColor, setShowColor] = useState(false);

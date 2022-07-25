@@ -1,30 +1,30 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Popover } from 'antd';
-import { isEqual } from 'lodash';
+// import { isEqual } from 'lodash';
 import classNames from 'classnames';
 import styles from './styles.styl';
 
-function isValidElement(object) {
-    return (
-        typeof object === 'object'
-      && object !== null
-      && object.$$typeof === Symbol.for('react.element')
-    );
-}
-function checkIsEqual(newObj, oldObj) {
-    return Object.entries(newObj).every(([key, item]) => {
-        if (Array.isArray(item) && isValidElement(item[0])) {
-            return true;
-        } else if (isValidElement(item)) {
-            return true;
-        } else {
-            return isEqual(item, oldObj[key]);
-        }
-    });
-}
+// function isValidElement(object) {
+//     return (
+//         typeof object === 'object'
+//       && object !== null
+//       && object.$$typeof === Symbol.for('react.element')
+//     );
+// }
+// function checkIsEqual(newObj, oldObj) {
+//     return Object.entries(newObj).every(([key, item]) => {
+//         if (Array.isArray(item) && isValidElement(item[0])) {
+//             return true;
+//         } else if (isValidElement(item)) {
+//             return true;
+//         } else {
+//             return isEqual(item, oldObj[key]);
+//         }
+//     });
+// }
 
-const TipTrigger = React.memo((props) => {
+const TipTrigger = (props) => {
     const { maxWidth, placement = 'left', title = '', content, isIcon = false, children, ...rest } = props;
     let placementValue = 'left';
     if (isIcon) {
@@ -49,7 +49,7 @@ const TipTrigger = React.memo((props) => {
             {children}
         </Popover>
     );
-}, checkIsEqual);
+};
 
 
 TipTrigger.propTypes = {

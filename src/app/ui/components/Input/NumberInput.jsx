@@ -76,9 +76,9 @@ const NumberInput = ({
         }
     };
 
-    const onFocus = () => {
-        ref.current?.select();
-    };
+    // const onFocus = () => {
+    //     ref.current?.select();
+    // };
 
 
     useEffect(() => {
@@ -110,7 +110,6 @@ const NumberInput = ({
                 onChange={onInsideChange}
                 onBlur={onBlur}
                 onKeyUp={onKeyUp}
-                onFocus={onFocus}
                 {...rest}
             />
         </span>

@@ -259,7 +259,7 @@ function Configurations() {
                             newSelectedDefinition.name = newName;
 
                             // TODO: need update
-                            await dispatch(
+                            const createdDefinitionModel = await dispatch(
                                 printingActions.duplicateDefinitionByType(
                                     'quality',
                                     newSelectedDefinition,
@@ -267,6 +267,7 @@ function Configurations() {
                                     newName
                                 )
                             );
+                            actions.onSelectOfficialDefinition(createdDefinitionModel);
                         }}
                     >
                         {i18n._('key-Printing/ProfileManager-Save')}
@@ -367,6 +368,7 @@ function Configurations() {
     };
     useEffect(() => {
         // re-select definition based on new properties
+        console.log('defaultQualityId', defaultQualityId);
         if (qualityDefinitionModels.length > 0) {
             const definition = qualityDefinitionModels.find(
                 (d) => d.definitionId === defaultQualityId
