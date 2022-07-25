@@ -11,3 +11,4 @@ jobs:
           identifier: SnapmakerDevTeam.SnapmakerLuban
           installers-regex: '(ia32|x64).exe$'
           token: ${{ secrets.WINGET_TOKEN }}
+          fork-user: jane-rose
