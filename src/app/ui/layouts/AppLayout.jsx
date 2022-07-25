@@ -188,6 +188,14 @@ class AppLayout extends PureComponent {
                 showDevelopToolsModal: true
             });
         },
+        startingDownloadUpdate: () => {
+            if (this.props.machineInfo.isDownloading) {
+                UniApi.Update.downloadHasStarted();
+            } else {
+                const { ipcRenderer } = window.require('electron');
+                ipcRenderer.send('startingDownloadUpdate');
+            }
+        },
         renderCheckForUpdatesModal: () => {
             const onClose = () => {
                 this.setState({
@@ -206,9 +214,8 @@ class AppLayout extends PureComponent {
             });
         },
         renderDownloadUpdateModal: () => {
-            const { releaseNotes, prevVersion, version } = this.state;
+            const { releaseNotes, releaseChangeLog, prevVersion, version } = this.state;
             const { shouldCheckForUpdate } = this.props;
-            const { ipcRenderer } = window.require('electron');
             const onClose = () => {
                 this.setState({
                     showDownloadUpdateModal: false
@@ -220,6 +227,7 @@ class AppLayout extends PureComponent {
                     return (
                         <DownloadUpdate
                             releaseNotes={releaseNotes}
+                            releaseChangeLog={releaseChangeLog}
                             prevVersion={prevVersion}
                             version={version}
                         />
@@ -253,7 +261,7 @@ class AppLayout extends PureComponent {
                                     className="margin-left-8"
                                     width="auto"
                                     type="primary"
-                                    onClick={() => ipcRenderer.send('startingDownloadUpdate')}
+                                    onClick={() => this.actions.startingDownloadUpdate()}
                                 >
                                     {i18n._('key-App/Update-Update Now')}
                                 </Button>
@@ -274,6 +282,7 @@ class AppLayout extends PureComponent {
             if (downloadInfo) {
                 this.setState({
                     releaseNotes: downloadInfo.releaseNotes,
+                    releaseChangeLog: downloadInfo.releaseChangeLog,
                     prevVersion: downloadInfo.prevVersion,
                     version: downloadInfo.version,
                     showDownloadUpdateModal: true

@@ -7,6 +7,8 @@ import url from 'url';
 import fs from 'fs';
 import { isUndefined, isNull } from 'lodash';
 import path from 'path';
+import isReachable from 'is-reachable';
+import fetch from 'node-fetch';
 import { configureWindow } from './electron-app/window';
 import MenuBuilder, { addRecentFile, cleanAllRecentFiles } from './electron-app/Menu';
 import DataStorage from './DataStorage';
@@ -138,8 +140,24 @@ function updateHandle() {
         sendUpdateMessage(message.checking);
     });
     // Emitted when there is an available update. The update is downloaded automatically if autoDownload is true.
-    autoUpdater.on('update-available', (downloadInfo) => {
+    autoUpdater.on('update-available', async (downloadInfo) => {
         sendUpdateMessage(message.updateAva);
+        if (!downloadInfo.releaseNotes) {
+            const changelogUrl = `https://snapmaker.oss-cn-beijing.aliyuncs.com/snapmaker.com/download/autoUpdater/Snapmaker-Luban-${downloadInfo.version}.changelog.md`;
+            const result = await fetch(changelogUrl, {
+                mode: 'cors',
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'text/markdown'
+                }
+            })
+                .then((response) => {
+                    response.headers['access-control-allow-origin'] = { value: '*' };
+                    return response.text();
+                });
+
+            downloadInfo.releaseChangeLog = result;
+        }
         mainWindow.webContents.send('update-available', { ...downloadInfo, prevVersion: app.getVersion() });
     });
     // Emitted when there is no available update.
@@ -200,10 +218,36 @@ if (process.platform === 'win32') {
     }
 }
 
+const checkUpdateServer = () => {
+    const hosts = [
+        ['snapmaker.oss-cn-beijing.aliyuncs.com', 'aliyuncs'],
+        ['github.com', 'github']
+    ];
+    const promises = hosts.map(([host, flag]) => {
+        return new Promise((resolve) => {
+            isReachable(host).then(() => {
+                resolve(flag);
+            });
+        });
+    });
+    return Promise.race(promises);
+};
+
 const startToBegin = (data) => {
     serverData = data;
     const { address, port } = { ...serverData };
     configureWindow(mainWindow);
+
+    checkUpdateServer().then((host) => {
+        if (host === 'aliyuncs') {
+            autoUpdater.setFeedURL({
+                provider: 'generic',
+                url: 'https://snapmaker.oss-cn-beijing.aliyuncs.com/snapmaker.com/download/autoUpdater'
+            });
+        }
+        updateHandle();
+    });
+
     loadUrl = `http://${address}:${port}`;
     const filter = {
         urls: [
