@@ -302,6 +302,7 @@ class SocketTCP extends SocketBASE {
 
     public getLaserMaterialThickness = async (options: EventOptions) => {
         const { x, y, feedRate, eventName, isCameraCapture = false } = options;
+        log.debug(`x, y, feedRate, eventName, isCameraCapture, ${x}, ${y}, ${feedRate}, ${isCameraCapture}`);
         await this.sacpClient.getLaserMaterialThickness({
             token: '',
             x,
@@ -358,24 +359,7 @@ class SocketTCP extends SocketBASE {
 
     // set z workoringin: laserFocalLength + platformHeight + laserMaterialThickness
     public async laseAutoSetMaterialHeight(options) {
-        const { x, y, feedRate, toolHead } = options;
-        const { response, thickness } = await this.sacpClient.getLaserMaterialThickness({
-            token: '',
-            x,
-            y,
-            feedRate
-        });
-        const result = {
-            status: false,
-            thickness: 0
-        };
-        if (response.result !== 0) {
-            log.error(`useLaseAutoMode error: ${JSON.stringify(response)}`);
-            return;
-        }
-        result.status = true;
-        result.thickness = thickness;
-        this.thickness = result.thickness;
+        log.info(`laseAutoSetMaterialHeight: ${toolHead}, ${this.thickness}`);
 
         await this.laserSetWorkHeight({ toolHead: toolHead, materialThickness: this.thickness });
     }
