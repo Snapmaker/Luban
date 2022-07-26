@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { Tooltip } from 'antd';
 import { useSelector } from 'react-redux';
@@ -36,11 +36,20 @@ const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
     useEffect(() => {
         onCallBack(currentSeries, currentToolhead);
     }, [currentToolhead]);
+
+
+    const ref = useRef(null);
+    // Before switching models, make sure that the nozzle diameter exists
+    const onCloseHandle = () => {
+        ref.current?.checkNozzleDiameter();
+        onClose();
+    };
+
     return (
         <div className="padding-top-16 padding-horizontal-40 height-100vh">
             {isPopup && (
                 <Tooltip title={i18n._('key-Workspace/Page-Back')}>
-                    <Anchor onClick={onClose}>
+                    <Anchor onClick={() => onCloseHandle()}>
                         <SvgIcon
                             size={24}
                             name="MainToolbarBack"
@@ -65,6 +74,7 @@ const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
                 </div>
                 {selectTab === MACHINE_TAB && (
                     <MachineSettings
+                        ref={ref}
                         isConnected={isConnected}
                         serial={serial}
                         toolHead={toolHead}

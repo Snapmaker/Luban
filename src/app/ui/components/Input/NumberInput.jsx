@@ -5,14 +5,21 @@ import { Input } from 'antd';
 import log from '../../../lib/log';
 import styles from './styles.styl';
 
+const maxDecimal = (number, decimalPlaces) => {
+    const reg = new RegExp(`^(.*\\..{${decimalPlaces}}).*$`);
+    return String(number).replace(reg, '$1');
+};
+
+
 const NumberInput = ({
-    className = '', size = 'middle', value, defaultValue, disabled = false, min, max, onChange, placeholder, allowUndefined, ...rest
+    className = '', size = 'middle', value, defaultValue, disabled = false, min, max, onChange, placeholder, allowUndefined, decimalPlaces, ...rest
 }) => {
     const [displayValue, setDisplayValue] = useState(value);
     const ref = useRef();
     function onInsideChange(event) {
-        if (displayValue !== event.target.value) {
-            setDisplayValue(event.target.value);
+        const v = decimalPlaces === undefined ? event.target.value : maxDecimal(event.target.value, decimalPlaces);
+        if (displayValue !== v) {
+            setDisplayValue(v);
         }
     }
 
@@ -122,7 +129,8 @@ NumberInput.propTypes = {
     max: PropTypes.number,
     onChange: PropTypes.func,
     placeholder: PropTypes.string,
-    allowUndefined: PropTypes.bool
+    allowUndefined: PropTypes.bool,
+    decimalPlaces: PropTypes.number
 };
 
 export default NumberInput;

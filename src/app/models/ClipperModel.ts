@@ -7,7 +7,7 @@ import type ThreeModel from './ThreeModel';
 import type ModelGroup from './ModelGroup';
 import { ModelTransformation } from './ThreeBaseModel';
 import generateLine from '../lib/generate-line';
-import { CLIPPING_LINE_COLOR, planeMaxHeight } from './ModelGroup';
+import { CLIPPING_LINE_COLOR, PLANE_MAX_HEIGHT } from './ModelGroup';
 import clippingPoolManager from '../lib/manager/ClippingPoolManager';
 
 type TPoint = {
@@ -27,7 +27,8 @@ type TClippingConfig = {
     bottomLayers: number;
     layerHeight: number;
     infillSparseDensity: number;
-    infillPattern: TInfillPattern
+    infillPattern: TInfillPattern;
+    magicSpiralize: boolean;
 }
 
 class ClippingModel {
@@ -58,7 +59,8 @@ class ClippingModel {
         lineWidth: 0.4,
         topLayers: 1,
         wallThickness: 0.8,
-        infillPattern: 'cubic'
+        infillPattern: 'cubic',
+        magicSpiralize: false
     }
 
     private clippingWall: THREE.LineSegments<THREE.BufferGeometry, THREE.LineBasicMaterial>;
@@ -211,7 +213,7 @@ class ClippingModel {
             Promise.resolve(this.subscriber.unsubscribe());
         }
         // stop worker pool
-        this.clear();
+        await this.clear();
 
         const modelMatrix = new THREE.Matrix4();
         this.modelMeshObject.updateMatrixWorld();
@@ -376,17 +378,19 @@ class ClippingModel {
             for (const [, terminate] of this.clippingWorkerMap.entries()) {
                 terminate();
             }
-            this.setLocalPlane(planeMaxHeight);
+            this.setLocalPlane(PLANE_MAX_HEIGHT);
             this.cancalWorkers();
             this.reCala();
-        } else {
+        } else if (this.clippingConfig.infillPattern !== config.infillPattern) {
             this.clippingConfig = config;
             this.updateClippingInfill(this.localPlane.constant);
+        } else if (this.clippingConfig.magicSpiralize !== config.magicSpiralize) {
+            this.setLocalPlane(this.localPlane.constant);
         }
     }
 
     public updateClippingSkin(clippingHeight: number) {
-        if (clippingHeight > this.modelBoundingBox.max.z) {
+        if (this.clippingConfig.magicSpiralize || clippingHeight > this.modelBoundingBox.max.z) {
             this.clippingSkin.visible = false;
             this.clippingSkinArea.visible = false;
             return;
@@ -418,6 +422,8 @@ class ClippingModel {
                 (clippingHeight / this.clippingConfig.layerHeight).toFixed(0)
             ) % 2 ? 135 : 45, this.modelBoundingBox, clippingHeight);
             if (!skinLines.length) {
+                this.clippingSkin.visible = false;
+                this.clippingSkinArea.visible = false;
                 return;
             }
             // skinArea
@@ -464,22 +470,23 @@ class ClippingModel {
             polygons.forEach((polygon) => {
                 this.setPointFromPolygon(arr, polygon, clippingHeight);
             });
-
-            const polygonss = this.innerWallMap.get(clippingHeight) || [];
-            polygonss.forEach((_polygons) => {
-                _polygons.forEach((polygon) => {
-                    polygon.forEach((vectors) => {
-                        for (let i = 0; i < vectors.length; i++) {
-                            const begin = vectors[i];
-                            const end = vectors[i + 1];
-                            if (end) {
-                                arr.push(begin.x, begin.y, clippingHeight);
-                                arr.push(end.x, end.y, clippingHeight);
+            if (!this.clippingConfig.magicSpiralize) {
+                const polygonss = this.innerWallMap.get(clippingHeight) || [];
+                polygonss.forEach((_polygons) => {
+                    _polygons.forEach((polygon) => {
+                        polygon.forEach((vectors) => {
+                            for (let i = 0; i < vectors.length; i++) {
+                                const begin = vectors[i];
+                                const end = vectors[i + 1];
+                                if (end) {
+                                    arr.push(begin.x, begin.y, clippingHeight);
+                                    arr.push(end.x, end.y, clippingHeight);
+                                }
                             }
-                        }
+                        });
                     });
                 });
-            });
+            }
 
             posAttr.setAttribute('position', new THREE.BufferAttribute(new Float32Array(arr), 3));
 
@@ -495,7 +502,7 @@ class ClippingModel {
         const posAttr = this.clippingInfill.geometry;
         const arr = [];
         const polygons = this.infillMap.get(clippingHeight);
-        if (polygons && polygons.length !== 0 && clippingHeight <= this.modelBoundingBox.max.z) {
+        if (!this.clippingConfig.magicSpiralize && polygons && polygons.length !== 0 && clippingHeight <= this.modelBoundingBox.max.z) {
             const skinLines = this.generateLineInfill(clippingHeight, polygons);
             if (!skinLines.length) {
                 this.clippingInfill.visible = false;
@@ -534,7 +541,7 @@ class ClippingModel {
         this.meshObjectGroup?.scale.copy(scale);
         this.meshObjectGroup?.rotation.copy(rotation);
 
-        this.model.setLocalPlane(planeMaxHeight);
+        this.model.setLocalPlane(PLANE_MAX_HEIGHT);
     }
 }
 

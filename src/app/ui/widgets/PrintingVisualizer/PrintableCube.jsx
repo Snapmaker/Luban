@@ -330,7 +330,6 @@ class PrintableCube extends Object3D {
 
                 const logoBoundingBox = ThreeUtils.computeBoundingBox(group);
                 const logoHeight = logoBoundingBox.max.y - logoBoundingBox.min.y;
-                console.log('fontHeight =', fontHeight, ' logoHeight=', logoHeight, fontHeight / logoHeight);
                 group.scale.setX(fontHeight / logoHeight);
                 group.scale.setY(-fontHeight / logoHeight);
 

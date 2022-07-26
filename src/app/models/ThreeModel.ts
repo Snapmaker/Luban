@@ -1,7 +1,7 @@
 import { v4 as uuid } from 'uuid';
 import * as THREE from 'three';
 import noop from 'lodash/noop';
-import { BufferGeometry, DoubleSide, Geometry, Mesh, MeshBasicMaterial, MeshLambertMaterial, Object3D, ObjectLoader, Plane } from 'three';
+import { DoubleSide, Geometry, Mesh, MeshBasicMaterial, MeshLambertMaterial, Object3D, ObjectLoader, Plane } from 'three';
 import {
     LOAD_MODEL_FROM_INNER
 } from '../constants';
@@ -161,26 +161,35 @@ class ThreeModel extends BaseModel {
         this.clipper.setLocalPlane(height);
     }
 
-    public updateBufferGeometry(bufferGeometry: BufferGeometry) {
+    public updateBufferGeometry(positions) {
         const { recovery } = this.modelGroup.unselectAllModels();
 
+        const bufferGeometry = new THREE.BufferGeometry();
+        // const bufferGeometry = this.meshObject.geometry;
+        const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
+        bufferGeometry.setAttribute(
+            'position',
+            modelPositionAttribute
+        );
         if (this.parent) {
             bufferGeometry.scale(1 / this.meshObject.parent.scale.x, 1 / this.meshObject.parent.scale.y, 1 / this.meshObject.parent.scale.z);
             bufferGeometry.rotateX(-this.meshObject.parent.rotation.x);
             bufferGeometry.rotateY(-this.meshObject.parent.rotation.y);
             bufferGeometry.rotateZ(-this.meshObject.parent.rotation.z);
         }
-        bufferGeometry.scale(1 / this.meshObject.scale.x, 1 / this.meshObject.scale.y, 1 / this.meshObject.scale.z);
+        bufferGeometry.scale(1 / Math.abs(this.meshObject.scale.x), 1 / Math.abs(this.meshObject.scale.y), 1 / Math.abs(this.meshObject.scale.z));
         bufferGeometry.rotateX(-this.meshObject.rotation.x);
         bufferGeometry.rotateY(-this.meshObject.rotation.y);
         bufferGeometry.rotateZ(-this.meshObject.rotation.z);
 
         bufferGeometry.computeVertexNormals();
+        ThreeUtils.computeBoundingBox(this.meshObject, true);
 
         this.meshObject.geometry = bufferGeometry;
 
         recovery();
 
+        this.stickToPlate();
         this.clipper.init();
     }
 

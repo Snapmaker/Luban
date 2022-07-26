@@ -160,7 +160,7 @@ const ThreeUtils = {
 
     removeObjectParent(obj) {
         const parent = obj.parent;
-        if (!parent) return () => {};
+        if (!parent) return () => { };
 
         // this.updateMatrixIncrusive(parent);
         parent.updateMatrixWorld();
@@ -233,7 +233,7 @@ const ThreeUtils = {
             }
         }
 
-        return function computeBoundingBox(obj) {
+        return function computeBoundingBox(obj, force = false) {
             let cache = caches[obj.uuid];
             if (!cache) {
                 cache = {
@@ -248,7 +248,7 @@ const ThreeUtils = {
             obj.updateMatrixWorld();
             if (obj.geometry) {
                 const isChildrenMatrixChanged = obj.children.some((child, j) => !(cache.childrenMatrix[j] && child.matrixWorld.equals(cache.childrenMatrix[j])));
-                if (lastBbox.isEmpty() || !lastMatrix.equals(obj.matrixWorld) || isChildrenMatrixChanged || obj.children.length !== cache.childrenMatrix.length) {
+                if (force || lastBbox.isEmpty() || !lastMatrix.equals(obj.matrixWorld) || isChildrenMatrixChanged || obj.children.length !== cache.childrenMatrix.length) {
                     cache.childrenMatrix = obj.children.map(child => child.matrixWorld.clone());
                     lastBbox.copy(initialBox);
                     compute(obj, lastBbox);
@@ -291,7 +291,7 @@ const ThreeUtils = {
 
         function isSimilarPlanes(p1, p2) {
             return Math.abs(p1.distanceToPoint(center) - p2.distanceToPoint(center)) < 0.05
-            && p1.normal.angleTo(p2.normal) * 180 / Math.PI < 0.6;
+                && p1.normal.angleTo(p2.normal) * 180 / Math.PI < 0.6;
         }
 
         const positions = geometry.getAttribute('position').array;
@@ -346,7 +346,7 @@ const ThreeUtils = {
 
     isReverseEdge(e1, e2) {
         return Math.abs(e1[0].x - e2[1].x) < EPS && Math.abs(e1[0].y - e2[1].y) < EPS && Math.abs(e1[0].z - e2[1].z) < EPS
-        && Math.abs(e2[0].x - e1[1].x) < EPS && Math.abs(e2[0].y - e1[1].y) < EPS && Math.abs(e2[0].z - e1[1].z) < EPS;
+            && Math.abs(e2[0].x - e1[1].x) < EPS && Math.abs(e2[0].y - e1[1].y) < EPS && Math.abs(e2[0].z - e1[1].z) < EPS;
     },
 
     checkEdgeAvailable(newEdge, edges) {

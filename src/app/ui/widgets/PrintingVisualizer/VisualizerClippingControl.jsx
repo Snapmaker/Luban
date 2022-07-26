@@ -2,10 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSelector, shallowEqual, useDispatch } from 'react-redux';
 import { find as lodashFind, noop, throttle } from 'lodash';
 import PropTypes from 'prop-types';
+import { Spin } from 'antd';
 import Slider from '../../components/Slider';
 import styles from './styles.styl';
 import { actions as printingActions } from '../../../flux/printing';
 import { ModelEvents } from '../../../models/events';
+import { PLANE_MAX_HEIGHT } from '../../../models/ModelGroup';
 
 function VisualizerClippingControl({ simplifying }) {
     const transformMode = useSelector(state => state?.printing?.transformMode, shallowEqual);
@@ -27,22 +29,33 @@ function VisualizerClippingControl({ simplifying }) {
     useEffect(() => {
         setValue(primeTowerHeight);
     }, [primeTowerHeight]);
+
+    const [loading, setLoading] = useState(false);
     useEffect(() => {
-        modelGroup.on(ModelEvents.ClippingReset, () => {
-            setValue(primeTowerHeight + qualitySetting?.layer_height?.default_value);
+        modelGroup.on(ModelEvents.ClippingHeightReset, () => {
+            setValue(PLANE_MAX_HEIGHT);
+        });
+        modelGroup.on(ModelEvents.ClippingStart, () => {
+            setLoading(true);
+        });
+        modelGroup.on(ModelEvents.ClippingFinish, () => {
+            setLoading(false);
         });
         return () => {
-            modelGroup.off(ModelEvents.ClippingReset, noop);
+            modelGroup.off(ModelEvents.ClippingHeightReset, noop);
+            modelGroup.off(ModelEvents.ClippingStart, noop);
+            modelGroup.off(ModelEvents.ClippingFinish, noop);
         };
     }, []);
 
     const update = useRef(throttle((v) => {
         return dispatch(printingActions.updateClippingPlane(v));
-    }, 300));
+    }));
 
     const onChange = (v) => {
-        setValue(v);
-        update.current(v);
+        const height = Number(v.toFixed(2));
+        setValue(height);
+        update.current(height);
     };
 
     const isSpecialMode = transformMode === 'rotate-placement' || transformMode === 'support-edit';
@@ -51,6 +64,7 @@ function VisualizerClippingControl({ simplifying }) {
         return (
             <React.Fragment>
                 <div className={styles['layer-wrapper']}>
+                    {/* <span className={styles['layer-label']}>{value || ''}</span> */}
                     <div
                         style={{
                             position: 'relative',
@@ -69,6 +83,14 @@ function VisualizerClippingControl({ simplifying }) {
                                 onChange(v);
                             }}
                         />
+                        {/* Placeholder by setting the height of the div */}
+                        <div style={{ position: 'relative', left: -3, height: '23.22px' }}>
+                            {
+                                loading
+                                && <Spin />
+                            }
+                        </div>
+
                     </div>
                 </div>
             </React.Fragment>

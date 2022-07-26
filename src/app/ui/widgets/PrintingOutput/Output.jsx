@@ -93,7 +93,7 @@ function Output() {
                 return;
             }
             const filename = path.basename(gcodeFile?.name);
-            dispatch(projectActions.exportFile(filename, gcodeFile.renderGcodeFileName));
+            dispatch(projectActions.exportFile(filename, gcodeFile?.renderGcodeFileName));
             logGcodeExport(HEAD_PRINTING, 'local');
         }
     };
