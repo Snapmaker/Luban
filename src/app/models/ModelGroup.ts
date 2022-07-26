@@ -39,7 +39,7 @@ const SUPPORT_AVAIL_AREA_COLOR = [0.5725490196078431, 0.32941176470588235, 0.870
 const SUPPORT_ADD_AREA_COLOR = [0.2980392156862745, 0, 0.5098039215686274];
 const SUPPORT_UNAVAIL_AREA_COLOR = [0.9, 0.9, 0.9];
 const AVAIL = -1, NONE = 0, FACE = 1/* , POINT = 2, LINE = 3 */;
-export const planeMaxHeight = 999;
+export const PLANE_MAX_HEIGHT = 999;
 
 const SECTION_COLOR = '#E9F3FE';
 export const CLIPPING_LINE_COLOR = '#3B83F6';
@@ -112,7 +112,7 @@ class ModelGroup extends EventEmitter {
     private displayedType: TDisplayedType = 'model';
     public clippingGroup = new Group();
     private clippingHeight: number;
-    public localPlane = new Plane(new Vector3(0, 0, -1), planeMaxHeight);
+    public localPlane = new Plane(new Vector3(0, 0, -1), PLANE_MAX_HEIGHT);
     public clippingFaceGroup = new Group();
     public plateAdhesion = new Group();
     public clipping: 'true' | 'false' = 'true';
@@ -421,6 +421,7 @@ class ModelGroup extends EventEmitter {
         }
         this.updatePlateAdhesion();
         this.modelChanged();
+        this.selectedModelArray = this.selectedModelArray.filter((item) => item !== model);
         model.sourceType === '3d' && this.updatePrimeTowerHeight();
     }
 
@@ -1071,9 +1072,15 @@ class ModelGroup extends EventEmitter {
             return newModel;
         });
         if (this.headType === HEAD_PRINTING) {
-            this.traverseModels(newModels, (model: ThreeModel) => {
+            this.traverseModels(newModels, (model: Model3D) => {
                 model.onTransform();
-                model.initClipper(this.localPlane);
+                if (model instanceof ThreeModel) {
+                    model.initClipper(this.localPlane);
+                } else if (model instanceof ThreeGroup) {
+                    model.children.forEach((subModel) => {
+                        (subModel as ThreeModel).initClipper(this.localPlane);
+                    });
+                }
             });
         }
 
@@ -1480,7 +1487,7 @@ class ModelGroup extends EventEmitter {
     }
 
     public onModelBeforeTransform() {
-        this.updateClippingPlane(planeMaxHeight);
+        this.updateClippingPlane(PLANE_MAX_HEIGHT);
         this.emit(ModelEvents.ClippingHeightReset, true);
 
         this.stopClipper();
@@ -2756,11 +2763,11 @@ class ModelGroup extends EventEmitter {
             this.object.add(this.sectionMesh);
         }
 
-        this.sectionMesh.geometry = new PlaneGeometry(planeMaxHeight, planeMaxHeight);
+        this.sectionMesh.geometry = new PlaneGeometry(PLANE_MAX_HEIGHT, PLANE_MAX_HEIGHT);
         const position = new Vector3();
         this.object.getWorldPosition(position);
         this.sectionMesh.position.copy(position);
-        this.sectionMesh.position.setZ(planeMaxHeight);
+        this.sectionMesh.position.setZ(PLANE_MAX_HEIGHT);
 
         this.updateClippingPlane();
     }
@@ -2769,7 +2776,7 @@ class ModelGroup extends EventEmitter {
         if (!height) {
             this.emit(ModelEvents.ClippingHeightReset);
         }
-        !height && (height = planeMaxHeight);
+        !height && (height = PLANE_MAX_HEIGHT);
         this.clippingHeight = height;
 
         this.sectionMesh?.position?.setZ(height);
@@ -2798,18 +2805,20 @@ class ModelGroup extends EventEmitter {
                 this.updatePlateAdhesion();
                 this.updateClippingPlane(this.localPlane.constant);
                 this.models = [...this.models];
+                this.emit(ModelEvents.ClippingFinish);
             }
         } else {
             this.clipping = 'true';
             this.plateAdhesion.clear();
             this.onModelUpdate();
             this.updateClippingPlane();
+            this.emit(ModelEvents.ClippingStart);
         }
     }
 
     public setTransformMode(value: string) {
         if (value) {
-            this.updateClippingPlane(planeMaxHeight);
+            this.updateClippingPlane(PLANE_MAX_HEIGHT);
             this.emit(ModelEvents.ClippingHeightReset, true);
         }
     }

@@ -108,9 +108,11 @@ export const repairGuidePopup = () => {
         title: i18n._('key-Modal/tips-Tips'),
         body: (
             <React.Fragment>
-                <p>{i18n._('key-Modal/tips-To repair deficient models, you can also click Repair in the top main toolbar.')}</p>
+                <Trans i18nKey="key-Modal/tips-To repair deficient models, you can also click Repair in the top main toolbar.">
+                    To repair deficient models, you can also click <b>Repair</b> in the top main toolbar.
+                </Trans>
                 <Trans i18nKey="key-Modal/tips-To enable the pop-up reminder of  Repair Model(s), go to Settings > Preferences > General.">
-                    To enable the pop-up reminder of  Repair Model(s), go to <b>Settings</b> <b>Preferences</b>  <b>  General</b>
+                    To enable the pop-up reminder of <b>Repair Model(s)</b>, go to <b>Settings</b> <b>Preferences</b>  <b>  General</b>
                 </Trans>
             </React.Fragment>
         )

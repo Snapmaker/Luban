@@ -1794,6 +1794,7 @@ export const actions = {
         const updateKey = direction === LEFT_EXTRUDER ? 'defaultMaterialId' : 'defaultMaterialIdRight';
         dispatch(actions.updateDefaultConfigId(PRINTING_MANAGER_TYPE_MATERIAL, materialId, direction));
         dispatch(actions.updateState({ [updateKey]: materialId }));
+        dispatch(actions.applyProfileToAllModels());
     },
 
     updateDefaultQualityId: qualityId => dispatch => {
@@ -1830,6 +1831,16 @@ export const actions = {
     // Upload model
     // @param files
     uploadModel: files => async (dispatch, getState) => {
+        const { progressStatesManager } = getState().printing;
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
+
+        dispatch(
+            actions.updateState({
+                stage: STEP_STAGE.PRINTING_LOADING_MODEL,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 0.01)
+            })
+        );
+
         const ps = Array.from(files).map(async file => {
             // Notice user that model is being loading
             const formData = new FormData();
@@ -1846,10 +1857,13 @@ export const actions = {
             }
             allChild.push(...item.children)
         });
-        actions.__loadModel(allChild)(dispatch, getState).then(() => {
+        if (allChild.length) {
+            actions.__loadModel(allChild)(dispatch, getState).then(() => {
+                actions.__loadModel(fileNames)(dispatch, getState);
+            })
+        } else {
             actions.__loadModel(fileNames)(dispatch, getState);
-        })
-
+        }
     },
 
     setTransformMode: (value) => (dispatch, getState) => {
@@ -1925,6 +1939,7 @@ export const actions = {
             materialDefinitions,
             stopArea: { left, front }
         } = getState().printing;
+        modelGroup.updateClippingPlane()
         const {
             size,
             series,
@@ -3768,7 +3783,6 @@ export const actions = {
         const models = [...modelGroup.models];
         const modelNames = files || [{ originalName, uploadName, sourcePly, isGroup, parentUploadName }];
         let _progress = 0;
-        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
         const promptTasks = [];
 
         const checkResultMap = new Map();
@@ -4421,6 +4435,7 @@ export const actions = {
                 layerHeight,
                 infillSparseDensity: qualitySetting.infill_sparse_density.default_value,
                 infillPattern: qualitySetting.infill_pattern.default_value,
+                magicSpiralize: qualitySetting.magic_spiralize.default_value,
             });
             model.materialPrintTemperature = materialSettings.material_print_temperature.default_value
         });
@@ -4896,14 +4911,8 @@ export const actions = {
                     switch (type) {
                         case 'LOAD_MODEL_POSITIONS': {
                             const { positions } = data;
-                            const bufferGeometry = new THREE.BufferGeometry();
-                            const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
-                            bufferGeometry.setAttribute(
-                                'position',
-                                modelPositionAttribute
-                            );
 
-                            model.updateBufferGeometry(bufferGeometry);
+                            model.updateBufferGeometry(positions);
 
                             if (modelInfos.length > 1) {
                                 _progress += 1 / modelInfos.length;

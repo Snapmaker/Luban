@@ -169,7 +169,6 @@ function slice(params, onProgress, onSucceed, onError) {
     for (let i = 0; i < model.length; i++) {
         const modelName = model[i];
         const definitionName = definition[i];
-        console.log('modelName', modelName);
         const uploadPath = `${DataStorage.tmpDir}/${modelName}`;
         const uploadDefinitionPath = `${DataStorage.tmpDir}/${definitionName}`;
 
@@ -509,7 +508,6 @@ export function checkModel(actions, params) {
     }
     lunar.modelCheck(modeltPath, outputPath)
         .onStderr('data', (data) => {
-            console.log(1);
             log.debug(`${data}`);
         })
         .end((err, res) => {

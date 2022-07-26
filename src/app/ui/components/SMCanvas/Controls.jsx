@@ -11,6 +11,7 @@ import TransformControls from './TransformControls';
 import TransformControls2D from './TransformControls2D';
 // const EPSILON = 0.000001;
 import { SELECTEVENT } from '../../../constants';
+import { CLIPPING_LINE_COLOR } from '../../../models/ModelGroup';
 
 const EPS = 0.000001;
 
@@ -678,7 +679,7 @@ class Controls extends EventEmitter {
 
     clearHighlight() {
         if (this.highlightLine) {
-            this.highlightLine.material.color.set('#3B83F6');
+            this.highlightLine.material.color.set(CLIPPING_LINE_COLOR);
             this.highlightLine = null;
         }
     }
