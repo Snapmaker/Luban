@@ -197,7 +197,6 @@ const DefinitionCreator = ({
             </div>
         );
     };
-    console.log('isCreate', isCreate, showRadio, state.createType);
     if (isCreate) {
         if (!showRadio) {
             return (

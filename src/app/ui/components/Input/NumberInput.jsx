@@ -76,10 +76,6 @@ const NumberInput = ({
         }
     };
 
-    // const onFocus = () => {
-    //     ref.current?.select();
-    // };
-
 
     useEffect(() => {
         if (defaultValue !== undefined) {

@@ -1345,7 +1345,6 @@ export const actions = {
             );
         } else {
             resolveDefinition(definitionModel, changedSettingArray);
-            console.log('definitionModel', definitionModel.settings.support_generate_type, definitionModel.settings.support_enable, definitionModel.settings.support_structure, definitionModel.settings.support_pattern);
             const definitions = printingState[definitionsKey];
             const index = definitions.findIndex((d) => d.definitionId === id);
             definitions[index] = definitionModel;

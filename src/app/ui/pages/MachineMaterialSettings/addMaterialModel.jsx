@@ -62,7 +62,7 @@ const AddMaterialModel = ({
     setShowCreateMaterialModal,
     onSubmit
 }) => {
-    const [materialType, setMaterialType] = useState('pla');
+    const [materialType, setMaterialType] = useState('PLA');
     const [materialName, setMaterialName] = useState('');
     const [materialColor, setMaterialColor] = useState('#ffffff');
     const [showColor, setShowColor] = useState(false);
