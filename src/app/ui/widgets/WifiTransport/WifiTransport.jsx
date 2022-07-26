@@ -228,9 +228,6 @@ function WifiTransport({ widgetActions, controlActions }) {
     const [selectFileType, setSelectFileType] = useState('');
     const [selectFileIndex, setSelectFileIndex] = useState(-1);
 
-    // const [isUnknownGCodeType, setIsUnknownGCodeType] = useState(false);
-    // const [isGCdoeFileMatchToolHead, setIsGCdoeFileMatchToolHead] = useState(false);
-    // const [selectedFileType, setSelectedFileType] = useState(HEAD_UNKNOWN);
     const [showPreviewToRunJobModal, setShowPreviewToRunJobModal] = useState(false);
 
     const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -736,12 +733,6 @@ function WifiTransport({ widgetActions, controlActions }) {
             )}
             {showPreviewToRunJobModal && (
                 <PreviewToRunJobModal
-                    // isMismatchHead={!isUnknownGCodeType}
-                    // isUnKownHead={headType !== HEAD_CNC && headType !== HEAD_LASER && headType !== HEAD_PRINTING}
-                    // gcodeType={gcodeFiles[selectFileIndex] && gcodeFiles[selectFileIndex].type}
-                    // headType={headType}
-                    // onClose={() => setShowPreviewToRunJobModal(false)}
-                    // onConfirm={actions.startPrint}
                     selectFileType={selectFileType}
                     headType={headType}
                     onClose={() => setShowPreviewToRunJobModal(false)}

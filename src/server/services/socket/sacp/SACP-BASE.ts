@@ -442,13 +442,10 @@ class SocketBASE {
                 const zNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.Z1).value;
                 log.debug(`current positions, ${xNow}, ${yNow}, ${zNow}`);
 
-                // const newX = new CoordinateInfo(Direction.X1, 0);
-                // const newY = new CoordinateInfo(Direction.Y1, 0);
                 const newZ = new CoordinateInfo(Direction.Z1, isRotate ? 0 : zNow - z);
-                // const newCoord = [newX, newY, newZ];
                 const newCoord = [newZ];
                 log.debug(`new positions, ${JSON.stringify(newCoord)}`);
-                // const res1 = await this.sacpClient.updateCoordinate(CoordinateType.MACHINE);
+
                 const res = await this.sacpClient.setWorkOrigin(newCoord);
                 await this.sacpClient.updateCoordinate(CoordinateType.WORKSPACE);
                 log.debug(`setAbsoluteWorkOrigin res:${JSON.stringify(res)}`);
