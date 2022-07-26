@@ -154,7 +154,6 @@ const MaterialSettings = ({
     const handleAddMaterial = async (data) => {
         const newDefinitionForManager = cloneDeep(definitionState.definitionForManager);
         newDefinitionForManager.category = data.type;
-        newDefinitionForManager.i18nCategory = `key-default_category-${data.type.toUpperCase()}`;
         newDefinitionForManager.name = data.name;
         if (Object.keys(newDefinitionForManager.settings).length === 0) {
             newDefinitionForManager.settings = cloneDeep(materialDefinitions[0].settings);
@@ -298,7 +297,7 @@ const MaterialSettings = ({
                         <Anchor onClick={() => onUpdateCategory(key)} className="margin-top-36 display-block" key={key}>
                             <div className="sm-flex align-center">
                                 <CaretRightOutlined rotate={includes(activeCategory, key) ? 90 : 0} />
-                                <div className="margin-left-12 heading-3">{i18n._(definitionByCategory[key][0].i18nCategory || 'key-default_category-Custom')}</div>
+                                <div className="margin-left-12 heading-3">{definitionByCategory[key][0].category}</div>
                             </div>
                             <div className={`${includes(activeCategory, key) ? 'sm-grid grid-template-columns-for-material-settings grid-row-gap-16 grid-column-gap-32' : 'display-none'}`}>
                                 {

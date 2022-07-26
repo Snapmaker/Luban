@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import { isNil } from 'lodash';
+import { isNil, noop } from 'lodash';
 import i18n from '../../../lib/i18n';
 import Select from '../../components/Select';
 import { NumberInput as Input } from '../../components/Input';
@@ -62,7 +62,20 @@ const colorSelectorContent = (settingDefaultValue, definitionKey, setShowColor, 
         />
     </div>
 );
-function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onChangeDefinition, defaultValue, styleSize = 'large', managerType, officalDefinition, onClick, categoryKey }) {
+function SettingItem({
+    definitionKey,
+    settings,
+    isDefaultDefinition = false,
+    onChangeDefinition,
+    defaultValue,
+    styleSize = 'large',
+    managerType,
+    officalDefinition,
+    onClick,
+    definitionCategory,
+    onChangeMaterialType = noop,
+    categoryKey
+}) {
     const [showColor, setShowColor] = useState(false);
 
     const setting = settings[definitionKey];
@@ -77,9 +90,6 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
     if (!enabled && !isNil(enabled)) {
         return null;
     }
-    if (definitionKey === 'support_pattern') {
-        console.log('definitionKey', definitionKey, options);
-    }
     const opts = [];
     if (options) {
         Object.keys(options).forEach((k) => {
@@ -91,7 +101,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
     }
 
     return (
-        <Anchor className="position-re sm-flex justify-space-between height-32 margin-vertical-8" onClick={() => onClick(categoryKey, definitionKey)}>
+        <Anchor className="position-re sm-flex justify-space-between height-32 margin-vertical-8" onClick={() => onClick && onClick(categoryKey, definitionKey)}>
             <span className="text-overflow-ellipsis width-auto main-text-normal" style={{ maxWidth: '171px' }}>
                 {i18n._(label)}
             </span>
@@ -150,7 +160,23 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
                         onChange={(event) => onChangeDefinition(definitionKey, event.target.checked)}
                     />
                 )}
-                {type === 'enum' && (
+                {type === 'enum' && definitionKey === 'material_type' && (
+                    <Select
+                        className="sm-flex-width align-r"
+                        backspaceRemoves={false}
+                        clearable={false}
+                        size={styleSize}
+                        menuContainerStyle={{ zIndex: 5 }}
+                        name={definitionKey}
+                        options={opts}
+                        value={definitionCategory.toLowerCase()}
+                        onChange={(option) => {
+                            onChangeMaterialType(option.label);
+                        }}
+                        disabled={isProfile}
+                    />
+                )}
+                {type === 'enum' && definitionKey !== 'material_type' && (
                     <Select
                         className="sm-flex-width align-r"
                         backspaceRemoves={false}
@@ -163,7 +189,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
                         onChange={(option) => {
                             onChangeDefinition(definitionKey, option.value);
                         }}
-                        disabled={(officalDefinition && managerType === HEAD_CNC && definitionKey === 'tool_type') || (definitionKey === 'material_type' && isProfile)}
+                        disabled={(officalDefinition && managerType === HEAD_CNC && definitionKey === 'tool_type')}
                     />
                 )}
                 {type === 'enumWithImage' && (
@@ -231,7 +257,9 @@ SettingItem.propTypes = {
     styleSize: PropTypes.string,
     managerType: PropTypes.string,
     officalDefinition: PropTypes.bool,
-    onClick: PropTypes.func.isRequired,
+    definitionCategory: PropTypes.string,
+    onChangeMaterialType: PropTypes.func,
+    onClick: PropTypes.func,
     categoryKey: PropTypes.string
 };
 

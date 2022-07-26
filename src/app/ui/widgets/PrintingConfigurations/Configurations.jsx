@@ -126,7 +126,7 @@ export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition
                             </div>
                             {!showSelect && !(['Support Placement', 'Build Plate Adhesion Type'].includes(displayName)) && (
                                 <span className="float-r color-black-3">
-                                    {displayValue}
+                                    {displayValue}{eachParamObject?.unit}
                                 </span>
                             )}
                             {showSelect && (
@@ -368,7 +368,6 @@ function Configurations() {
     };
     useEffect(() => {
         // re-select definition based on new properties
-        console.log('defaultQualityId', defaultQualityId);
         if (qualityDefinitionModels.length > 0) {
             const definition = qualityDefinitionModels.find(
                 (d) => d.definitionId === defaultQualityId

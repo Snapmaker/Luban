@@ -77,7 +77,7 @@ const describeCreator = (managerType) => {
 };
 
 const DefinitionCreator = ({
-    managerType, isCreate, copyType, copyCategoryName, copyCategoryI18n, copyItemName, materialOptions: _materialOptions
+    showRadio = true, managerType, isCreate, copyType, copyCategoryName, copyCategoryI18n, copyItemName, materialOptions: _materialOptions
 }, ref) => {
     const [displayDescribe] = useState(describeCreator(managerType));
     const [newOptionValue, setNewOptionsValue] = useState('');
@@ -183,7 +183,7 @@ const DefinitionCreator = ({
                                                         i18n: newOptionValue
                                                     }
                                                 ]);
-                                                setNewOptionsValue('');
+                                                setNewOptionsValue(newOptionValue);
                                             }}
                                         />
                                     )}
@@ -197,29 +197,36 @@ const DefinitionCreator = ({
             </div>
         );
     };
-
+    console.log('isCreate', isCreate, showRadio, state.createType);
     if (isCreate) {
-        return (
-            <Radio.Group
-                name="comic"
-                value={state.createType}
-                onChange={(event) => {
-                    const value = event.target.value;
-                    setState({ ...state, createType: value });
-                }}
-            >
-                <div>
-                    <Radio value="Category" className="height-24">{displayDescribe.createCategoryDescribe}</Radio>
-                    {state.createType === 'Category' && renderCategoryCreate()}
-                </div>
+        if (!showRadio) {
+            return (
+                <>
+                    {renderItemCreate()}
+                </>
+            );
+        } else {
+            return (
+                <Radio.Group
+                    name="comic"
+                    value={state.createType}
+                    onChange={(event) => {
+                        const value = event.target.value;
+                        setState({ ...state, createType: value });
+                    }}
+                >
+                    <div>
+                        <Radio value="Category" className="height-24">{displayDescribe.createCategoryDescribe}</Radio>
+                        {state.createType === 'Category' && renderCategoryCreate()}
+                    </div>
 
-                <div className="margin-top-16">
-                    <Radio value="Item" className="height-24">{displayDescribe.createItemDescribe}</Radio>
-                    {state.createType === 'Item' && renderItemCreate()}
-                </div>
-
-            </Radio.Group>
-        );
+                    <div className="margin-top-16">
+                        <Radio value="Item" className="height-24">{displayDescribe.createItemDescribe}</Radio>
+                        {state.createType === 'Item' && renderItemCreate()}
+                    </div>
+                </Radio.Group>
+            );
+        }
     } else {
         if (copyType === 'Category') {
             return renderCategoryCreate();
@@ -231,6 +238,7 @@ const DefinitionCreator = ({
 
 DefinitionCreator.propTypes = {
     managerType: PropTypes.string.isRequired,
+    showRadio: PropTypes.bool,
     isCreate: PropTypes.bool,
     copyType: PropTypes.string,
     copyCategoryName: PropTypes.string,

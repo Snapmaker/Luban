@@ -13,43 +13,47 @@ import { Button } from '../../components/Buttons';
 
 const materialTypeOptions = [
     {
-        value: 'pla',
+        value: 'PLA',
         label: 'PLA'
     },
     {
-        value: 'support',
+        value: 'Support',
         label: 'Support'
     },
     {
-        value: 'abs',
+        value: 'ABS',
         label: 'ABS'
     },
     {
-        value: 'petg',
+        value: 'PETG',
         label: 'PETG'
     },
     {
-        value: 'tpu',
+        value: 'TPE',
         label: 'TPE'
     },
     {
-        value: 'pva',
+        value: 'TPU',
+        label: 'TPU'
+    },
+    {
+        value: 'PVA',
         label: 'PVA'
     },
     {
-        value: 'asa',
+        value: 'ASA',
         label: 'ASA'
     },
     {
-        value: 'pc',
+        value: 'PC',
         label: 'PC'
     },
     {
-        value: 'nylon',
+        value: 'Nylon',
         label: 'Nylon'
     },
     {
-        value: 'other',
+        value: 'Other',
         label: 'Other'
     }
 ];

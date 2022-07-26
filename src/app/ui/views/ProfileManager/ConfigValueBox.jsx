@@ -21,6 +21,8 @@ import { PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY } from '.
 /* eslint-disable import/no-cycle */
 import { ParamItem } from '../../widgets/PrintingConfigurations/Configurations';
 
+const defaultParamsType = ['all', 'basic', 'advanced'];
+
 function ConfigValueBox({
     optionConfigGroup,
     calculateTextIndex,
@@ -107,6 +109,9 @@ function ConfigValueBox({
         setSelectCategory(category);
         setSelectProfile(profileKey);
     };
+    const onChangeMaterialType = (newCategoryName) => {
+        dispatch(printingActions.updateDefinitionCategoryName(managerType, definitionForManager, newCategoryName));
+    };
     const renderCheckboxList = ({
         renderList,
         calculateTextIndex: _calculateTextIndex,
@@ -172,7 +177,8 @@ function ConfigValueBox({
         onChangeDefinition: _onChangeCustomConfig,
         managerType: _managerType,
         officalDefinition,
-        categoryKey
+        categoryKey,
+        definitionCategory
         // selectParamsType: _selectParamsType
     }) => {
         return renderList && renderList.map(profileKey => {
@@ -194,6 +200,7 @@ function ConfigValueBox({
                                 officalDefinition={officalDefinition}
                                 onClick={handleUpdateProfileKey}
                                 categoryKey={categoryKey}
+                                definitionCategory={definitionCategory}
                             />
                             {renderSettingItemList({
                                 settings,
@@ -201,6 +208,7 @@ function ConfigValueBox({
                                 isDefaultDefinition,
                                 onChangeDefinition: _onChangeCustomConfig,
                                 managerType: _managerType,
+                                definitionCategory,
                                 officalDefinition
                             })}
                         </div>
@@ -222,6 +230,8 @@ function ConfigValueBox({
                             officalDefinition={officalDefinition}
                             onClick={handleUpdateProfileKey}
                             categoryKey={categoryKey}
+                            definitionCategory={definitionCategory}
+                            onChangeMaterialType={onChangeMaterialType}
                         />
                     </div>
                 );
@@ -313,7 +323,7 @@ function ConfigValueBox({
                             bordered={false}
                             disabled={customMode}
                         />
-                        {managerType === PRINTING_MANAGER_TYPE_QUALITY && selectParamsType === 'all' && (
+                        {managerType === PRINTING_MANAGER_TYPE_QUALITY && defaultParamsType.includes(selectParamsType) && (
                             <Select
                                 options={qualityDetailTypeOptions}
                                 clearable={false}
@@ -451,7 +461,8 @@ function ConfigValueBox({
                                                                     onChangeDefinition,
                                                                     managerType,
                                                                     officalDefinition: !!definitionForManager?.isDefault,
-                                                                    categoryKey: key
+                                                                    categoryKey: key,
+                                                                    definitionCategory: definitionForManager.category
                                                                     // selectParamsType
                                                                 })}
                                                             </div>

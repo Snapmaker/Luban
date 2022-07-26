@@ -302,6 +302,7 @@ function ProfileManager({
                     <React.Fragment>
                         <DefinitionCreator
                             managerType={managerType}
+                            showRadio={false}
                             isCreate={isCreate}
                             ref={refs.refCreateModal}
                             materialOptions={materialOptions}
