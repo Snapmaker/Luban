@@ -441,6 +441,7 @@ class SocketBASE {
                 const yNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.Y1).value;
                 const zNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.Z1).value;
                 log.debug(`current positions, ${xNow}, ${yNow}, ${zNow}`);
+                // calculate the absolute distance on seperate axis, same reason with coordinate moving func 'coordinateMove'
 
                 const newZ = new CoordinateInfo(Direction.Z1, isRotate ? 0 : zNow - z);
                 const newCoord = [newZ];
