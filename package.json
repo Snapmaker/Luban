@@ -293,7 +293,7 @@
     "shortid": "2.2.16",
     "snapmaker-luban-engine": "^0.9.1",
     "snapmaker-lunar": "^1.0.0-beta2",
-    "snapmaker-sacp-sdk": "0.0.8",
+    "snapmaker-sacp-sdk": "0.0.10",
     "socket.io": "4.0.2",
     "socket.io-client": "4.0.2",
     "socketio-jwt": "4.5.1",
