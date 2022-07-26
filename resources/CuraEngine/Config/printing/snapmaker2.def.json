@@ -83,16 +83,10 @@
             "default_value": false
         },
         "support_pattern": {
-            "default_value": "zigzag",
-            "options": {
-                "lines": "Lines",
-                "grid": "Grid",
-                "zigzag": "Zig Zag"
-            }
+            "default_value": "zigzag"
         },
         "outer_inset_first": {
-            "default_value": false,
-            "enabled": true
+            "default_value": false
         },
         "resolution": {
             "type": "category",
@@ -102,7 +96,7 @@
             "type": "category",
             "children": {
                 "skin_angles": {
-                    "label": "Top/Bottom Line Directions",
+                    "label": "Top/B‰ottom Line Directions",
                     "default_value": "[  ]"
                 },
                 "optimize_wall_printing_order": {
@@ -209,15 +203,6 @@
             "children": {
                 "support_enable": {
                     "label": "Generate Auto Support"
-                },
-                "support_pattern": {
-                    "enabled": true
-                },
-                "support_infill_rate": {
-                    "enabled": true
-                },
-                "support_z_distance": {
-                    "enabled": true
                 }
             }
         },

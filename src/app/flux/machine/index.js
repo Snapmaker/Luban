@@ -190,7 +190,12 @@ const INITIAL_STATE = {
         'support_enable'
     ],
 
-    printingCustomConfigsWithCategory: {},
+    printingCustomConfigsWithCategory: {
+        quality: ['layer_height'],
+        model_structure: ['infill_sparse_density', 'wall_thickness'],
+        platform_adhesion: ['adhesion_type'],
+        support: ['support_enable'],
+    },
 
     // security warning
     shouldShowCncWarning: true,

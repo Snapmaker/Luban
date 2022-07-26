@@ -76,10 +76,6 @@ const NumberInput = ({
         }
     };
 
-    const onFocus = () => {
-        ref.current?.select();
-    };
-
 
     useEffect(() => {
         if (defaultValue !== undefined) {
@@ -110,7 +106,6 @@ const NumberInput = ({
                 onChange={onInsideChange}
                 onBlur={onBlur}
                 onKeyUp={onKeyUp}
-                onFocus={onFocus}
                 {...rest}
             />
         </span>

@@ -5,7 +5,7 @@
         "type": "machine",
         "author": "Snapmaker",
         "manufacturer": "Snapmaker",
-        "setting_version": 0.9,
+        "setting_version": 0.11,
         "file_formats": "text/x-gcode;application/x-stl-ascii;application/x-stl-binary;application/x-wavefront-obj;application/x3g",
         "visible": false,
         "has_materials": true,
@@ -903,8 +903,9 @@
                                 "pla": "PLA",
                                 "support": "Support",
                                 "abs": "ABS",
-                                "petg": "PTEG",
+                                "petg": "PETG",
                                 "tpe": "TPE",
+                                "tpu": "TPU",
                                 "pva": "PVA",
                                 "asa": "ASA",
                                 "pc": "PC",
@@ -2606,7 +2607,7 @@
                         "model_structure_type": {
                             "label": "Model Structure Type",
                             "description": "",
-                            "type": "enum",
+                            "type": "enumWithImage",
                             "options": {
                                 "normal": "Normal",
                                 "vase": "Vase"
@@ -2692,11 +2693,11 @@
                                 "top_layers": {
                                     "label": "Top Layers",
                                     "description": "The number of top layers. When calculated by the top thickness, this value is rounded to a whole number.",
-                                    "default_value": 8,
+                                    "type": "int",
+                                    "default_value": 5,
                                     "minimum_value": "0",
                                     "value": "infill_sparse_density === 100 ? 0 : top_thickness !== 0 ? Math.ceil(Math.round(top_thickness / layer_height)) : 0 ",
                                     "maximum_value_warning": "100",
-                                    "type": "int",
                                     "minimum_value_warning": "2",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
                                     "settable_per_mesh": true,
@@ -2711,10 +2712,10 @@
                                 "roofing_layer_count": {
                                     "label": "Top Surface Skin Layers",
                                     "description": "The number of top most skin layers. Usually only one top most layer is sufficient to generate higher quality top surfaces.",
+                                    "type": "int",
                                     "default_value": 0,
                                     "minimum_value": "0",
                                     "maximum_value_warning": "top_layers - 1",
-                                    "type": "int",
                                     "value": "0",
                                     "limit_to_extruder": "roofing_extruder_nr",
                                     "settable_per_mesh": true,
@@ -2754,11 +2755,11 @@
                                 "bottom_layers": {
                                     "label": "Bottom Layers",
                                     "description": "The number of bottom layers. When calculated by the bottom thickness, this value is rounded to a whole number.",
+                                    "type": "int",
                                     "value": "infill_sparse_density === 100 ? 999999 : Math.ceil(Math.round(bottom_thickness / layer_height))",
                                     "minimum_value": "0",
                                     "minimum_value_warning": "2",
                                     "default_value": 6,
-                                    "type": "int",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
                                     "settable_per_mesh": true,
                                     "enabled": "model_structure_type === 'normal'",
@@ -2772,10 +2773,10 @@
                                 "initial_bottom_layers": {
                                     "label": "Initial Bottom Layers",
                                     "description": "The number of initial bottom layers, from the build-plate upwards. When calculated by the bottom thickness, this value is rounded to a whole number.",
+                                    "type": "int",
                                     "minimum_value": "0",
                                     "minimum_value_warning": "2",
                                     "default_value": 6,
-                                    "type": "int",
                                     "value": "bottom_layers",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
                                     "settable_per_mesh": true,
@@ -2981,10 +2982,10 @@
                             "description": "Generate structures to support parts of the model which have overhangs. Without these structures, such parts would collapse during printing.",
                             "type": "bool",
                             "default_value": false,
-                            "value": "support_generate_type === 'none' ? false : true",
+                            "value": "support_generate_type !== 'none'",
                             "settable_per_mesh": true,
                             "settable_per_extruder": false,
-                            "enabled": "false"
+                            "enabled": "true"
                         },
                         "support_structure": {
                             "label": "Support Structure",
@@ -3097,11 +3098,11 @@
                                 "support_wall_count": {
                                     "label": "Support Wall Line Count",
                                     "description": "The number of walls with which to surround support infill. Adding a wall can make support print more reliably and can support overhangs better, but increases print time and material used.",
+                                    "type": "int",
                                     "default_value": 0,
                                     "minimum_value": "0",
                                     "minimum_value_warning": "1 if support_pattern == 'concentric' else 0",
                                     "maximum_value_warning": "0 if (support_skip_some_zags and support_pattern == 'zigzag) else 3",
-                                    "type": "int",
                                     "value": "support_enable && support_structure === 'tree' ? 1 : support_pattern === 'grid' || support_pattern === 'triangles' || support_pattern === 'concentric' ? 1 : 0",
                                     "enabled": "support_enable || support_meshes_present",
                                     "limit_to_extruder": "support_infill_extruder_nr",
@@ -3673,7 +3674,7 @@
                         "support_type": {
                             "label": "Support Placement",
                             "description": "Adjusts the placement of the support structures. The placement can be set to touching build plate or everywhere. When set to everywhere the support structures will also be printed on the model.",
-                            "type": "enum",
+                            "type": "enumWithImage",
                             "options": {
                                 "buildplate": "Touching Buildplate",
                                 "everywhere": "Everywhere"
@@ -3739,11 +3740,11 @@
                                         "support_top_distance": {
                                             "label": "Support Top Distance",
                                             "description": "Distance from the top of the support to the print.",
+                                            "type": "float",
                                             "unit": "mm",
                                             "minimum_value": "0",
                                             "maximum_value_warning": "machine_nozzle_size",
                                             "default_value": 0.1,
-                                            "type": "float",
                                             "enabled": "support_enable || support_meshes_present",
                                             "value": "extruderValue(support_roof_enable ? support_roof_extruder_nr : support_infill_extruder_nr, 'support_z_distance')",
                                             "limit_to_extruder": "support_roof_extruder_nr if support_roof_enable else support_infill_extruder_nr",
@@ -3752,13 +3753,13 @@
                                         "support_bottom_distance": {
                                             "label": "Support Bottom Distance",
                                             "description": "Distance from the print to the bottom of the support.",
+                                            "type": "float",
                                             "unit": "mm",
                                             "minimum_value": "0",
                                             "maximum_value_warning": "machine_nozzle_size",
                                             "default_value": 0.1,
                                             "value": "support_type === 'everywhere' ? extruderValue(support_bottom_enable ? support_bottom_extruder_nr : support_infill_extruder_nr, 'support_z_distance') : 0",
                                             "limit_to_extruder": "support_bottom_extruder_nr if support_bottom_enable else support_infill_extruder_nr",
-                                            "type": "float",
                                             "enabled": "(support_enable || support_meshes_present) && resolveOrValue(support_type) === 'everywhere'",
                                             "settable_per_mesh": true
                                         }
@@ -3932,7 +3933,7 @@
                         "adhesion_type": {
                             "label": "Build Plate Adhesion Type",
                             "description": "Different options that help to improve both priming your extrusion and adhesion to the build plate. Brim adds a single layer flat area around the base of your model to prevent warping. Raft adds a thick grid with a roof below the model. Skirt is a line printed around the model, but not connected to the model.",
-                            "type": "enum",
+                            "type": "enumWithImage",
                             "options": {
                                 "skirt": "Skirt",
                                 "brim": "Brim",
@@ -4490,7 +4491,7 @@
                         "z_seam_type": {
                             "label": "Z Seam Alignment",
                             "description": "Starting point of each path in a layer. When paths in consecutive layers start at the same point a vertical seam may show on the print. When aligning these near a user specified location, the seam is easiest to remove. When placed randomly the inaccuracies at the paths' start will be less noticeable. When taking the shortest path the print will be quicker.",
-                            "type": "enum",
+                            "type": "enumWithImage",
                             "options": {
                                 "back": "User Specified",
                                 "shortest": "Shortest",
@@ -6133,7 +6134,7 @@
                         },
                         "meshfix": {
                             "label": "Mesh Fixes",
-                            "type": "float",
+                            "type": "category",
                             "icon": "category_fixes",
                             "description": "Make the meshes more suited for 3D printing.",
                             "children": {
@@ -6254,7 +6255,7 @@
                         },
                         "blackmagic": {
                             "label": "Special Modes",
-                            "type": "float",
+                            "type": "category",
                             "icon": "category_blackmagic",
                             "description": "Non-traditional ways to print your models.",
                             "children": {

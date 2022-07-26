@@ -126,7 +126,7 @@ export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition
                             </div>
                             {!showSelect && !(['Support Placement', 'Build Plate Adhesion Type'].includes(displayName)) && (
                                 <span className="float-r color-black-3">
-                                    {displayValue}
+                                    {displayValue}{eachParamObject?.unit}
                                 </span>
                             )}
                             {showSelect && (
@@ -259,7 +259,7 @@ function Configurations() {
                             newSelectedDefinition.name = newName;
 
                             // TODO: need update
-                            await dispatch(
+                            const createdDefinitionModel = await dispatch(
                                 printingActions.duplicateDefinitionByType(
                                     'quality',
                                     newSelectedDefinition,
@@ -267,6 +267,7 @@ function Configurations() {
                                     newName
                                 )
                             );
+                            actions.onSelectOfficialDefinition(createdDefinitionModel);
                         }}
                     >
                         {i18n._('key-Printing/ProfileManager-Save')}

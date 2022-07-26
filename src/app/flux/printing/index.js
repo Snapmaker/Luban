@@ -1464,8 +1464,27 @@ export const actions = {
     },
 
     /**
-     * @param {*} type 'material'|'quality'
+     * @param {*}
+     * type: 'material'|'quality'
+     * definition: definitionModel
+     * newCategoryName: string
      */
+    updateDefinitionCategoryName: (type, definition, newCategoryName) => async (dispatch, getState) => {
+        const definitionsKey = defaultDefinitionKeys[type]?.definitions;
+        const definitions = getState().printing[definitionsKey];
+        definition.category = newCategoryName;
+        await definitionManager.updateDefinition(definition);
+        const index = definitions.findIndex(
+            (d) => d.definitionId === definition?.definitionId
+        );
+        definitions[index] = definition;
+        dispatch(
+            actions.updateState({
+                [definitionsKey]: [...definitions]
+            })
+        );
+    },
+
     duplicateDefinitionByType: (
         type,
         definition,
