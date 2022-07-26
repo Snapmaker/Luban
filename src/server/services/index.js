@@ -33,6 +33,7 @@ const connectionEventsObject = {
     'connection:loadFilament': connectionManager.loadFilament,
     'connection:unloadFilament': connectionManager.unloadFilament,
     'connection:updateWorkSpeedFactor': connectionManager.updateWorkSpeedFactor,
+    'connection:getWorkSpeedFactor': connectionManager.getWorkSpeedFactor,
     'connection:updateLaserPower': connectionManager.updateLaserPower,
     'connection:switchLaserPower': connectionManager.switchLaserPower,
     'connection:materialThickness': connectionManager.getLaserMaterialThickness,
@@ -45,6 +46,9 @@ const connectionEventsObject = {
     'connection:goHome': connectionManager.goHome,
     'connection:coordinateMove': connectionManager.coordinateMove,
     'connection:setWorkOrigin': connectionManager.setWorkOrigin,
+    'connection:updateToolHeadSpeed': connectionManager.updateToolHeadSpeed, // CNC, FOR NOW
+    'connection:switchCNC': connectionManager.switchCNC, // CNC, FOR NOW
+    'connection:updateWorkNozzle': connectionManager.switchExtruder
 };
 
 function startServices(server) {
