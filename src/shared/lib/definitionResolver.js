@@ -34,10 +34,10 @@ var affectKey = '';
 var hasValue = false;
 function flatAffectedValue(affectSet, originalAffectSet) {
     affectSet.forEach(function (item) {
-        originalAffectSet.add(item);
-        if (allValues[item]) {
+        if (!originalAffectSet.has(item) && allValues[item]) {
             flatAffectedValue(allValues[item], originalAffectSet);
         }
+        originalAffectSet.add(item);
     });
 }
 function resolveDefinition(definition, modifiedParams) {
@@ -105,17 +105,17 @@ function resolveDefinition(definition, modifiedParams) {
             affectKey = key;
             try {
                 var defaultValue = obj[key].default_value;
-                var calcValue = insideValue.value && eval("(function calcValue() {\n                    hasValue = true;\n                    with (context) {\n                        return ".concat(insideValue.value, ";\n                    }\n                })()"));
+                var calcValue = insideValue.calcu_value && eval("(function calcValue() {\n                    hasValue = true;\n                    with (context) {\n                        return ".concat(insideValue.calcu_value, ";\n                    }\n                })()"));
                 if (_.isUndefined(calcValue)) {
                     hasValue = false;
                 }
                 insideValue.minimum_value && eval("(function calcMinMax() {\n                hasValue = true;\n                with (context) {\n                    return ".concat(insideValue.minimum_value, ";\n                }\n            })()"));
                 insideValue.maximum_value && eval("(function calcMinMax() {\n                hasValue = true;\n                with (context) {\n                    return ".concat(insideValue.maximum_value, ";\n                }\n            })()"));
-                var calcEnabled = insideValue.enabled && eval("(function calcEnable() {\n                hasValue = true;\n                with (context) {\n                    return ".concat(insideValue.enabled, ";\n                }\n            })()"));
+                var calcEnabled = insideValue.visible && eval("(function calcEnable() {\n                hasValue = true;\n                with (context) {\n                    return ".concat(insideValue.visible, ";\n                }\n            })()"));
                 // if (key === 'z_seam_position') {
                 // }
                 if (typeof calcEnabled !== 'undefined') {
-                    definition.settings[key].enabled = calcEnabled;
+                    definition.settings[key].visible = calcEnabled;
                 }
                 if (insideValue.type === 'float' || insideValue.type === 'int') {
                     if (Math.abs(calcValue - defaultValue) > 1e-6 && !_.isUndefined(calcValue)) {
@@ -135,7 +135,7 @@ function resolveDefinition(definition, modifiedParams) {
                 }
             }
             catch (e) {
-                console.error(e, insideValue.enabled);
+                console.error(e, insideValue.visible);
             }
         }
     }
@@ -165,22 +165,21 @@ function resolveDefinition(definition, modifiedParams) {
             }
         });
     }
-    // console.log('allAsistantArray', allAsistantArray);
     var _loop_2 = function (key) {''
         var value = _.cloneDeep(asistantMap.get(key));
         try {
             var defaultValue = void 0;
-            var calcValue = value.value && eval("(function calcValue() {\n                with (context) {\n                    return ".concat(value.value, ";\n                }\n            })()"));
+            var calcValue = value.calcu_value && eval("(function calcValue() {\n                with (context) {\n                    return ".concat(value.calcu_value, ";\n                }\n            })()"));
 
             var calcMinValue = value.minimum_value && eval("(function calcMinMax() {\n                with (context) {\n                    return ".concat(value.minimum_value, ";\n                }\n            })()"));
             var calcMaxValue = value.maximum_value && eval("(function calcMinMax() {\n                with (context) {\n                    return ".concat(value.maximum_value, ";\n                }\n            })()"));
-            var calcEnabled = value.enabled && eval("(function calcEnable() {\n                with (context) {\n                    return ".concat(value.enabled, ";\n                }\n            })()"));
+            var calcEnabled = value.visible && eval("(function calcEnable() {\n                with (context) {\n                    return ".concat(value.visible, ";\n                }\n            })()"));
             if (typeof calcValue !== 'undefined') {
                 defaultValue = calcValue;
                 definition.settings[key].default_value = defaultValue;
             }
             if (typeof calcEnabled !== 'undefined') {
-                definition.settings[key].enabled = calcEnabled;
+                definition.settings[key].visible = calcEnabled;
             }
             var modifiedParamItem = modifiedParams && modifiedParams.find(function (item) { return item[0] === key; });
             if (modifiedParamItem) {
@@ -216,7 +215,7 @@ function resolveDefinition(definition, modifiedParams) {
             }
         }
         catch (e) {
-            console.error(e, value.enabled);
+            console.error(e, value.visible);
         }
     };
     try {

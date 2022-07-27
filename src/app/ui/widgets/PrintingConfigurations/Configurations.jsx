@@ -43,7 +43,7 @@ const ALL_ICON_NAMES = {
 };
 
 
-export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition }) {
+export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition, setSelectedDefinition }) {
     const allParams = selectedDefinitionModel.params;
     const selectedDefinitionSettings = selectedDefinitionModel.settings;
     const dispatch = useDispatch();
@@ -65,6 +65,7 @@ export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition
                 changedSettingArray
             })
         );
+        setSelectedDefinition(selectedDefinitionModel);
         dispatch(printingActions.destroyGcodeLine());
         dispatch(printingActions.displayModel());
     }
@@ -92,23 +93,23 @@ export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition
                     iconName = ALL_ICON_NAMES[paramName][1] || 'PrintingSettingNormal';
                 }
                 const eachParamObject = selectedDefinitionSettings[paramName];
-                let displayName = eachParamObject?.label;
-                let displayValue = eachParamObject?.default_value;
-                let segmentedDisplay = true;
-                let showSelect = false;
+                const displayName = eachParamObject?.label;
+                const displayValue = eachParamObject?.default_value;
+                const segmentedDisplay = true;
+                const showSelect = false;
                 const selectOptions = [];
                 if (paramName === 'infill_sparse_density') {
-                    const modelStructure = selectedDefinitionSettings.model_structure_type;
-                    showSelect = true;
-                    displayName = modelStructure?.label;
-                    displayValue = modelStructure?.default_value;
-                    if (displayValue !== 'normal') {
-                        segmentedDisplay = false;
-                        iconName = ALL_ICON_NAMES[paramName][3];
-                    }
-                    Object.entries(modelStructure?.options).forEach(([value, label]) => {
-                        selectOptions.push({ value, label });
-                    });
+                    // const modelStructure = selectedDefinitionSettings.model_structure_type;
+                    // showSelect = true;
+                    // displayName = modelStructure?.label;
+                    // displayValue = modelStructure?.default_value;
+                    // if (displayValue !== 'normal') {
+                    //     segmentedDisplay = false;
+                    //     iconName = ALL_ICON_NAMES[paramName][3];
+                    // }
+                    // Object.entries(modelStructure?.options).forEach(([value, label]) => {
+                    //     selectOptions.push({ value, label });
+                    // });
                 }
                 return (
                     <div key={paramName} className="margin-vertical-16">
@@ -154,7 +155,9 @@ export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition
 };
 ParamItem.propTypes = {
     selectedDefinitionModel: PropTypes.object,
-    onChangeDefinition: PropTypes.func
+    onChangeDefinition: PropTypes.func,
+    setSelectedDefinition: PropTypes.func,
+
 };
 
 
@@ -186,7 +189,7 @@ function Configurations() {
         checkIsAllDefault: (definitionModelSettings, selectedModelDefaultSetting) => {
             let result = true;
             result = Object.keys(definitionModelSettings).every((key) => {
-                if (definitionModelSettings[key]?.enabled && selectedModelDefaultSetting[key]) {
+                if (definitionModelSettings[key] && definitionModelSettings[key]?.enabled && selectedModelDefaultSetting[key]) {
                     return definitionModelSettings[key].default_value === selectedModelDefaultSetting[key].default_value;
                 } else {
                     return true;
@@ -343,7 +346,7 @@ function Configurations() {
                 })
             );
 
-            // actions.onChangeSelectedDefinition(newDefinitionForManager);
+            actions.onChangeSelectedDefinition(selectedDefinition);
             actions.displayModel();
         },
         updateActiveDefinition: (definition, shouldSaveEnv = true) => {
@@ -372,8 +375,8 @@ function Configurations() {
         },
     };
 
-    const renderProfileMenu = (displayType) => {
-        const hasResetButton = displayType === i18n._(DEFAULT_DISPLAY_TYPE);
+    const renderProfileMenu = () => {
+        const hasResetButton = selectedDefinition.isRecommended;
         let isAllValueDefault = true;
         if (hasResetButton) {
             const selectedDefaultSetting = actions.getDefaultDefinition(selectedDefinition.definitionId);
@@ -452,7 +455,7 @@ function Configurations() {
                                             <TipTrigger
                                                 placement="bottomRight"
                                                 style={{ maxWidth: '160px' }}
-                                                content={renderProfileMenu(presetDisplayType)}
+                                                content={renderProfileMenu()}
                                                 trigger="click"
                                             >
                                                 <SvgIcon
@@ -500,7 +503,7 @@ function Configurations() {
                                         </span>
                                         <TipTrigger
                                             placement="left"
-                                            content={renderProfileMenu(presetDisplayType)}
+                                            content={renderProfileMenu()}
                                             trigger="click"
                                         >
                                             <SvgIcon
@@ -594,6 +597,7 @@ function Configurations() {
                                 <ParamItem
                                     selectedDefinitionModel={selectedDefinition}
                                     onChangeDefinition={actions.onChangeDefinition}
+                                    setSelectedDefinition={setSelectedDefinition}
                                 />
                             </div>
                         )}

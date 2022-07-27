@@ -44,6 +44,7 @@ class DefinitionManager {
         // active definition
         const definitionRes = await this.getDefinition('active', false);
         this.activeDefinition = definitionRes;
+        console.log('definitionRes', definitionRes);
 
         res = await api.profileDefinitions.getDefaultDefinitions(
             this.headType,
@@ -68,11 +69,14 @@ class DefinitionManager {
 
             res = await this.getDefinition('snapmaker_extruder_1', false);
             this.extruderRDefinition = res;
+            return {
+                printingProfileLevel: definitionRes.printingProfileLevel,
+                materialProfileLevel: definitionRes.materialProfileLevel
+            };
+        }else {
+            return {}
         }
-        return {
-            printingProfileLevel: definitionRes.printingProfileLevel,
-            materialProfileLevel: definitionRes.materialProfileLevel
-        };
+
     }
 
     /**
@@ -153,6 +157,7 @@ class DefinitionManager {
         const definitions = await this.markDefaultDefinitions(
             res.body.definitions
         );
+        console.log('definitions', definitions[0], definitions[0].settings?.support_enable);
         const result = definitions.map((item) => {
             resolveDefinition(item);
             return item

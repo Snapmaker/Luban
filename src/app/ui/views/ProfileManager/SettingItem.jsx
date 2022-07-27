@@ -84,10 +84,10 @@ function SettingItem({
         return null;
     }
     const { label, type, unit = '', options, min, max, mismatch } = setting;
-    const { enabled } = setting;
+    const { visible } = setting;
     const settingDefaultValue = setting.default_value;
     const isDefault = defaultValue && (defaultValue.value === settingDefaultValue);
-    if (!enabled && !isNil(enabled)) {
+    if (!visible && !isNil(visible)) {
         return null;
     }
     const opts = [];
@@ -227,8 +227,8 @@ function SettingItem({
                         trigger="click"
                         placement="bottomRight"
                         className="cancel-content-padding"
-                        onVisibleChange={(visible) => {
-                            setShowColor(visible);
+                        onVisibleChange={(visibleValue) => {
+                            setShowColor(visibleValue);
                         }}
                     >
                         <span
