@@ -274,6 +274,8 @@ const MachineSettings = forwardRef(({
                     direction
                 })
             );
+            dispatch(printingActions.destroyGcodeLine());
+            dispatch(printingActions.displayModel());
         }
     };
     const saveDiameterToStorage = (direction, value, isDelete = false) => {

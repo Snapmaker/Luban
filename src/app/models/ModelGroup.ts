@@ -126,6 +126,7 @@ class ModelGroup extends EventEmitter {
         this.grayModeObject = new Group();
         this.models = [];
         this.primeTower = new PrimeTowerModel(0.01, this);
+        this.primeTower.visible = false;
         this.selectedGroup = new Group();
         this.selectedGroup.uniformScalingState = true;
         this.selectedGroup.boundingBox = [];
@@ -1752,14 +1753,6 @@ class ModelGroup extends EventEmitter {
      * @returns {TModel}
      */
     public addModel(modelInfo: ModelInfo | SVGModelInfo, immediatelyShow = true) {
-        if (modelInfo.headType === HEAD_PRINTING && modelInfo.isGroup) {
-            const group = new ThreeGroup(modelInfo, this);
-            group.updateTransformation(modelInfo.transformation);
-            this.groupsChildrenMap.set(group, modelInfo.children.map((item) => {
-                return item.modelID;
-            }));
-            return group as ThreeGroup;
-        }
         if (!modelInfo.modelName) {
             modelInfo.modelName = this._createNewModelName({
                 sourceType: modelInfo.sourceType as '3d' | '2d',
@@ -1769,6 +1762,14 @@ class ModelGroup extends EventEmitter {
                     svgNodeName: string
                 }
             });
+        }
+        if (modelInfo.headType === HEAD_PRINTING && modelInfo.isGroup) {
+            const group = new ThreeGroup(modelInfo, this);
+            group.updateTransformation(modelInfo.transformation);
+            this.groupsChildrenMap.set(group, modelInfo.children.map((item) => {
+                return item.modelID;
+            }));
+            return group as ThreeGroup;
         }
         // Adding the z position for each meshObject when add a model(Corresponding to 'bringSelectedModelToFront' function)
         if (modelInfo.sourceType !== '3d') {
@@ -1809,6 +1810,17 @@ class ModelGroup extends EventEmitter {
                 }
             }
             if (model.parentUploadName) {
+                this.groupsChildrenMap.forEach((subModelIDs, group) => {
+                    if (modelInfo.parentUploadName === group.uploadName) {
+                        const newSubModelIDs = subModelIDs.map((id) => {
+                            if (id === model.modelID) {
+                                return model;
+                            }
+                            return id;
+                        });
+                        this.groupsChildrenMap.set(group, newSubModelIDs);
+                    }
+                });
                 this.updateSelectedGroupTransformation(
                     {
                         positionX: model.originalPosition.x,

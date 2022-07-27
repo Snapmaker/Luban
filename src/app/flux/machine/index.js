@@ -197,8 +197,7 @@ const INITIAL_STATE = {
     printingCustomConfigsWithCategory: {
         quality: ['layer_height'],
         model_structure: ['infill_sparse_density', 'wall_thickness'],
-        platform_adhesion: ['adhesion_type'],
-        support: ['support_enable'],
+        platform_adhesion: ['adhesion_type']
     },
 
     // security warning

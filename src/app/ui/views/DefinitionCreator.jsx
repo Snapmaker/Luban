@@ -89,6 +89,10 @@ const DefinitionCreator = ({
         itemName: '',
     });
     useEffect(() => {
+        const option = _materialOptions[0];
+        if (!copyCategoryName && option) {
+            copyCategoryName = option.label;
+        }
         setState((pre) => {
             return {
                 ...pre,
@@ -97,7 +101,7 @@ const DefinitionCreator = ({
                 categoryI18n: copyCategoryI18n
             };
         });
-    }, [managerType, copyItemName, copyCategoryName, displayDescribe.categoryName, displayDescribe.itemName, copyCategoryI18n]);
+    }, [_materialOptions, managerType, copyItemName, copyCategoryName, displayDescribe.categoryName, displayDescribe.itemName, copyCategoryI18n]);
 
     useEffect(() => {
         setMaterialOptions(_materialOptions);

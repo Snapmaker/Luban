@@ -44,7 +44,7 @@ const ALL_ICON_NAMES = {
 };
 
 
-export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition }) {
+export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition, setSelectedDefinition }) {
     const allParams = selectedDefinitionModel.params;
     const selectedDefinitionSettings = selectedDefinitionModel.settings;
     const dispatch = useDispatch();
@@ -66,6 +66,7 @@ export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition
                 changedSettingArray
             })
         );
+        setSelectedDefinition(selectedDefinitionModel);
         dispatch(printingActions.destroyGcodeLine());
         dispatch(printingActions.displayModel());
     }
@@ -155,7 +156,9 @@ export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition
 };
 ParamItem.propTypes = {
     selectedDefinitionModel: PropTypes.object,
-    onChangeDefinition: PropTypes.func
+    onChangeDefinition: PropTypes.func,
+    setSelectedDefinition: PropTypes.func,
+
 };
 
 
@@ -186,7 +189,7 @@ function Configurations() {
         checkIsAllDefault: (definitionModelSettings, selectedModelDefaultSetting) => {
             let result = true;
             result = Object.keys(definitionModelSettings).every((key) => {
-                if (definitionModelSettings[key]?.enabled && selectedModelDefaultSetting[key]) {
+                if (definitionModelSettings[key] && definitionModelSettings[key]?.enabled && selectedModelDefaultSetting[key]) {
                     return definitionModelSettings[key].default_value === selectedModelDefaultSetting[key].default_value;
                 } else {
                     return true;
@@ -224,7 +227,7 @@ function Configurations() {
             const title = i18n._('key-Printing/ProfileManager-Copy Profile');
             const copyType = 'Item';
 
-            const copyCategoryName = newSelectedDefinition.category | 'CUSTOM';
+            const copyCategoryName = (newSelectedDefinition.category !== i18n._(DEFAULT_DISPLAY_TYPE)) ? newSelectedDefinition.category : '';
             const copyCategoryI18n = newSelectedDefinition.i18nCategory;
             const copyItemName = newSelectedDefinition.name;
             const isCreate = false;
@@ -239,6 +242,13 @@ function Configurations() {
                         i18n: option.i18nCategory
                     };
                 });
+            if (materialOptions.length === 0) {
+                materialOptions.push({
+                    label: 'Custom',
+                    value: 'Custom',
+                    i18n: 'key-default_category-Custom'
+                });
+            }
             materialOptions = uniqWith(materialOptions, (a, b) => {
                 return a.label === b.label;
             });
@@ -268,7 +278,7 @@ function Configurations() {
                             const data = refCreateModal.current.getData();
                             const newName = data.itemName;
                             popupActions.close();
-                            newSelectedDefinition.category = data.categoryName === 'Default' ? 'Custom' : data.categoryName;
+                            newSelectedDefinition.category = data.categoryName;
                             newSelectedDefinition.i18nCategory = data.categoryI18n;
                             newSelectedDefinition.name = newName;
 
@@ -343,7 +353,7 @@ function Configurations() {
                 })
             );
 
-            // actions.onChangeSelectedDefinition(newDefinitionForManager);
+            actions.onChangeSelectedDefinition(selectedDefinition);
             actions.displayModel();
         },
         updateActiveDefinition: (definition, shouldSaveEnv = true) => {
@@ -373,8 +383,8 @@ function Configurations() {
         },
     };
 
-    const renderProfileMenu = (displayType) => {
-        const hasResetButton = displayType === i18n._(DEFAULT_DISPLAY_TYPE);
+    const renderProfileMenu = () => {
+        const hasResetButton = selectedDefinition.isRecommended;
         let isAllValueDefault = true;
         if (hasResetButton) {
             const selectedDefaultSetting = actions.getDefaultDefinition(selectedDefinition.definitionId);
@@ -595,6 +605,7 @@ function Configurations() {
                                 <ParamItem
                                     selectedDefinitionModel={selectedDefinition}
                                     onChangeDefinition={actions.onChangeDefinition}
+                                    setSelectedDefinition={setSelectedDefinition}
                                 />
                             </div>
                         )}
