@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import classNames from 'classnames';
 import { useDispatch, useSelector } from 'react-redux';
+import { Tooltip, Menu } from 'antd';
 import PropTypes from 'prop-types';
 // import { useSelector, shallowEqual } from 'react-redux';
 import { isUndefined, cloneDeep, uniqWith } from 'lodash';
-import Popover from '../../components/Popover';
-import { HEAD_CNC, HEAD_LASER, PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
+import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING, PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
 import modal from '../../../lib/modal';
 import DefinitionCreator from '../DefinitionCreator';
 import Anchor from '../../components/Anchor';
@@ -18,9 +18,11 @@ import { Button } from '../../components/Buttons';
 import ConfigValueBox from './ConfigValueBox';
 import styles from './styles.styl';
 import { actions as printingActions } from '../../../flux/printing';
+import { actions as projectActions } from '../../../flux/project';
 import { MaterialWithColor } from '../../widgets/PrintingMaterial/MaterialWithColor';
 import useSetState from '../../../lib/hooks/set-state';
 import AddMaterialModel from '../../pages/MachineMaterialSettings/addMaterialModel';
+import Dropdown from '../../components/Dropdown';
 
 /**
  * Do category fields in different types of profiles have values, and multilingual support
@@ -165,6 +167,7 @@ function ProfileManager({
         },
         // onSelectedQualityDefinition
         onSelectDefinitionById: (definitionId, name) => {
+            console.log('profileSelectDefinition', definitionId, managerType);
             const { definitionForManager, isCategorySelected } = definitionState;
             if (!isCategorySelected && definitionId === definitionForManager.definitionId) {
                 return;
@@ -180,13 +183,18 @@ function ProfileManager({
                 actions.setRenamingStatus(false);
             }
             if (selected) {
-                const selectedSettingDefaultValue = outsideActions.getDefaultDefinition(selected.definitionId);
-                setDefinitionState({
-                    definitionForManager: selected,
-                    isCategorySelected: false,
-                    selectedName: selected.name,
-                    selectedSettingDefaultValue: selectedSettingDefaultValue
-                });
+                if (managerType === PRINTING_MANAGER_TYPE_MATERIAL) {
+                    const selectedSettingDefaultValue = outsideActions.getDefaultDefinition(selected.definitionId);
+                    setDefinitionState({
+                        definitionForManager: selected,
+                        isCategorySelected: false,
+                        selectedName: selected.name,
+                        selectedSettingDefaultValue: selectedSettingDefaultValue
+                    });
+                } else {
+                    dispatch(printingActions.updateDefaultQualityId(selected.definitionId));
+                    dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
+                }
             }
         },
         onSelectCategory: (category) => {
@@ -556,17 +564,21 @@ function ProfileManager({
                                                         </div>
                                                         {!isOfficialDefinition(definitionState.definitionForManager) && (
                                                             <div className={classNames(styles['manager-action'])}>
-                                                                <Popover
+                                                                <Dropdown
                                                                     placement="bottomRight"
-                                                                    content={() => (
-                                                                        <div className="width-160">
-                                                                            <Anchor onClick={() => { actions.setRenamingStatus(true); }}>
-                                                                                <div className="width-120 text-overflow-ellipsis">{i18n._('key-App/Menu-Rename')}</div>
-                                                                            </Anchor>
-                                                                            <Anchor onClick={() => actions.onRemoveManagerDefinition(definitionState.definitionForManager, definitionState.isCategorySelected)}>
-                                                                                <div>{i18n._('key-Printing/ProfileManager-Delete')}</div>
-                                                                            </Anchor>
-                                                                        </div>
+                                                                    overlay={() => (
+                                                                        <Menu>
+                                                                            <Menu.Item>
+                                                                                <Anchor onClick={() => { actions.setRenamingStatus(true); }}>
+                                                                                    <div className="width-120 text-overflow-ellipsis">{i18n._('key-App/Menu-Rename')}</div>
+                                                                                </Anchor>
+                                                                            </Menu.Item>
+                                                                            <Menu.Item>
+                                                                                <Anchor onClick={() => actions.onRemoveManagerDefinition(definitionState.definitionForManager, definitionState.isCategorySelected)}>
+                                                                                    <div>{i18n._('key-Printing/ProfileManager-Delete')}</div>
+                                                                                </Anchor>
+                                                                            </Menu.Item>
+                                                                        </Menu>
                                                                     )}
                                                                 >
                                                                     <SvgIcon
@@ -574,7 +586,7 @@ function ProfileManager({
                                                                         size={24}
                                                                         className="margin-left-n-30"
                                                                     />
-                                                                </Popover>
+                                                                </Dropdown>
                                                             </div>
                                                         )}
                                                     </Anchor>
@@ -641,34 +653,44 @@ function ProfileManager({
                                                                                     )
                                                                                         : <span className="text-overflow-ellipsis">{displayName}</span>}
                                                                                     <div className={classNames(styles['manager-action'])}>
-                                                                                        <Popover
+                                                                                        <Dropdown
                                                                                             placement="bottomRight"
-                                                                                            content={() => (
-                                                                                                <div className="width-160">
+                                                                                            overlay={() => (
+                                                                                                <Menu>
                                                                                                     {!isOfficialDefinition(definitionState.definitionForManager) && (
-                                                                                                        <Anchor onClick={() => { actions.setRenamingStatus(true); }}>
-                                                                                                            <div className="width-120 text-overflow-ellipsis">{i18n._('key-App/Menu-Rename')}</div>
-                                                                                                        </Anchor>
+                                                                                                        <Menu.Item>
+                                                                                                            <Anchor onClick={() => { actions.setRenamingStatus(true); }}>
+                                                                                                                <div className="width-120 text-overflow-ellipsis">{i18n._('key-App/Menu-Rename')}</div>
+                                                                                                            </Anchor>
+                                                                                                        </Menu.Item>
                                                                                                     )}
-                                                                                                    <Anchor onClick={() => { actions.showDuplicateModal(); }}>
-                                                                                                        <div className="width-120 text-overflow-ellipsis">{i18n._('key-App/Menu-Copy')}</div>
-                                                                                                    </Anchor>
+                                                                                                    <Menu.Item>
+                                                                                                        <Anchor onClick={() => { actions.showDuplicateModal(); }}>
+                                                                                                            <div className="width-120 text-overflow-ellipsis">{i18n._('key-App/Menu-Copy')}</div>
+                                                                                                        </Anchor>
+                                                                                                    </Menu.Item>
                                                                                                     {!isAllValueDefault && (
-                                                                                                        <Anchor
-                                                                                                            onClick={() => actions.resetDefinition(currentOption.value)}
-                                                                                                        >
-                                                                                                            <div className="width-120 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Reset')}</div>
-                                                                                                        </Anchor>
+                                                                                                        <Menu.Item>
+                                                                                                            <Anchor
+                                                                                                                onClick={() => actions.resetDefinition(currentOption.value)}
+                                                                                                            >
+                                                                                                                <div className="width-120 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Reset')}</div>
+                                                                                                            </Anchor>
+                                                                                                        </Menu.Item>
                                                                                                     )}
-                                                                                                    <Anchor onClick={() => outsideActions.exportConfigFile(definitionState.definitionForManager)}>
-                                                                                                        <div className="width-120 text-overflow-ellipsis">{i18n._('key-Printing/ProfileManager-Export')}</div>
-                                                                                                    </Anchor>
+                                                                                                    <Menu.Item>
+                                                                                                        <Anchor onClick={() => outsideActions.exportConfigFile(definitionState.definitionForManager)}>
+                                                                                                            <div className="width-120 text-overflow-ellipsis">{i18n._('key-Printing/ProfileManager-Export')}</div>
+                                                                                                        </Anchor>
+                                                                                                    </Menu.Item>
                                                                                                     {!isOfficialDefinition(definitionState.definitionForManager) && (
-                                                                                                        <Anchor onClick={() => actions.onRemoveManagerDefinition(definitionState.definitionForManager, definitionState.isCategorySelected)}>
-                                                                                                            <div>{i18n._('key-Printing/ProfileManager-Delete')}</div>
-                                                                                                        </Anchor>
+                                                                                                        <Menu.Item>
+                                                                                                            <Anchor onClick={() => actions.onRemoveManagerDefinition(definitionState.definitionForManager, definitionState.isCategorySelected)}>
+                                                                                                                <div>{i18n._('key-Printing/ProfileManager-Delete')}</div>
+                                                                                                            </Anchor>
+                                                                                                        </Menu.Item>
                                                                                                     )}
-                                                                                                </div>
+                                                                                                </Menu>
                                                                                             )}
                                                                                         >
                                                                                             <SvgIcon
@@ -676,7 +698,7 @@ function ProfileManager({
                                                                                                 size={24}
                                                                                                 className="margin-left-n-30"
                                                                                             />
-                                                                                        </Popover>
+                                                                                        </Dropdown>
                                                                                     </div>
                                                                                 </Anchor>
                                                                             </div>
@@ -706,39 +728,47 @@ function ProfileManager({
                                                 );
                                             }}
                                         />
-                                        <Popover
-                                            trigger="click"
-                                            placement="topLeft"
-                                            content={() => (
-                                                <div className="height-120 sm-flex align-center justify-space-between">
-                                                    <Anchor onClick={() => {
-                                                        if (managerType === PRINTING_MANAGER_TYPE_MATERIAL) {
-                                                            setShowCreateMaterialModal(true);
-                                                        } else {
-                                                            actions.showNewModal();
-                                                        }
-                                                    }}
-                                                    >
-                                                        <div className="width-112 height-88 sm-flex sm-flex-direction-c align-center margin-right-8">
-                                                            <SvgIcon
-                                                                name="TitleSetting"
-                                                                className="margin-bottom-8"
-                                                                size={48}
-                                                            />
-                                                            <span className="display-inline width-percent-100 text-overflow-ellipsis align-c">{i18n._('key-Printing/ProfileManager-Create')}</span>
-                                                        </div>
-                                                    </Anchor>
-                                                    <Anchor onClick={() => actions.importFile(refs.fileInput)}>
-                                                        <div className="width-112 height-88 sm-flex sm-flex-direction-c align-center">
-                                                            <SvgIcon
-                                                                name="TitleSetting"
-                                                                className="margin-bottom-8"
-                                                                size={48}
-                                                            />
-                                                            <span className="display-inline width-percent-100 text-overflow-ellipsis align-c">{i18n._('key-Printing/ProfileManager-Import')}</span>
-                                                        </div>
-                                                    </Anchor>
-                                                </div>
+                                        <Dropdown
+                                            trigger={['click']}
+                                            placement="top"
+                                            arrow
+                                            overlayClassName="horizontal-menu"
+                                            overlay={() => (
+                                                <Menu>
+                                                    <Menu.Item>
+                                                        <Tooltip title={managerType === PRINTING_MANAGER_TYPE_MATERIAL ? i18n._('key-Settings/Create Material Tips') : null} placement="top">
+                                                            <Anchor onClick={() => {
+                                                                if (managerType === PRINTING_MANAGER_TYPE_MATERIAL) {
+                                                                    setShowCreateMaterialModal(true);
+                                                                } else {
+                                                                    actions.showNewModal();
+                                                                }
+                                                            }}
+                                                            >
+                                                                <div className="width-112 height-88 sm-flex sm-flex-direction-c align-center margin-right-8">
+                                                                    <SvgIcon
+                                                                        name="TitleSetting"
+                                                                        className="margin-bottom-8"
+                                                                        size={48}
+                                                                    />
+                                                                    <span className="display-inline width-percent-100 text-overflow-ellipsis align-c">{i18n._('key-Printing/ProfileManager-Quick Create')}</span>
+                                                                </div>
+                                                            </Anchor>
+                                                        </Tooltip>
+                                                    </Menu.Item>
+                                                    <Menu.Item>
+                                                        <Anchor onClick={() => actions.importFile(refs.fileInput)}>
+                                                            <div className="width-112 height-88 sm-flex sm-flex-direction-c align-center">
+                                                                <SvgIcon
+                                                                    name="TitleSetting"
+                                                                    className="margin-bottom-8"
+                                                                    size={48}
+                                                                />
+                                                                <span className="display-inline width-percent-100 text-overflow-ellipsis align-c">{i18n._('key-Printing/ProfileManager-Local Import')}</span>
+                                                            </div>
+                                                        </Anchor>
+                                                    </Menu.Item>
+                                                </Menu>
                                             )}
                                         >
                                             <Button
@@ -750,7 +780,7 @@ function ProfileManager({
                                             >
                                                 {i18n._('key-ProfileManager/Add Profile')}
                                             </Button>
-                                        </Popover>
+                                        </Dropdown>
                                     </div>
                                 </ul>
                             </div>

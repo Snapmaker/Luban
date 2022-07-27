@@ -13,6 +13,7 @@ import SvgIcon from '../../components/SvgIcon';
 import { NumberInput as Input } from '../../components/Input';
 import { actions as printingActions } from '../../../flux/printing';
 import { machineStore } from '../../../store/local-storage';
+import styles from './styles.styl';
 
 const machineList = [{
     value: 'Original',
@@ -301,13 +302,15 @@ const MachineSettings = ({
         saveDiameterToStorage(direction, value, true);
     };
     const AddDiameterToList = (e, direction) => {
-        const newValue = e.target.value;
+        let newValue = e.target.value;
         if (!newValue) {
             setAddDiameterStatus(false);
             return;
         }
+        if (newValue < 0.1) newValue = 0.1;
+        if (newValue > 1.2) newValue = 1.2;
         if (direction === LEFT) {
-            if (!find(leftNozzleDiameterList, { value: Number(newValue) }) && newValue >= 0.1 && newValue <= 1.2) {
+            if (!find(leftNozzleDiameterList, { value: Number(newValue) })) {
                 setLeftNozzleDiameterList([...leftNozzleDiameterList, {
                     label: newValue,
                     value: Number(newValue),
@@ -316,7 +319,7 @@ const MachineSettings = ({
                 saveDiameterToStorage(direction, newValue);
             }
         } else {
-            if (!find(rightNozzleDiameterList, { value: Number(newValue) }) && newValue >= 0.1 && newValue <= 1.2) {
+            if (!find(rightNozzleDiameterList, { value: Number(newValue) })) {
                 setRightNozzleDiameterList([...rightNozzleDiameterList, {
                     label: newValue,
                     value: Number(newValue),
@@ -501,7 +504,7 @@ const MachineSettings = ({
                                 {leftNozzleDiameterList.map((nozzle, index) => {
                                     return (
                                         <Anchor onClick={() => onChangeDiameter(LEFT, nozzle.value)} className={`margin-bottom-8 width-56 padding-horizontal-8 height-32 border-radius-8 border-default-grey-1 ${(index === 3 || index === 7) ? '' : 'margin-right-8'} ${leftNozzleDiameter === nozzle.value ? 'border-color-blue-2' : ''}`}>
-                                            <div className="sm-flex justify-space-between ">
+                                            <div className={classNames(styles['diameter-item'], 'sm-flex justify-space-between')}>
                                                 <span>{nozzle.label}</span>
                                                 {!nozzle.isDefault && (
                                                     <SvgIcon
@@ -509,6 +512,7 @@ const MachineSettings = ({
                                                         size={8}
                                                         type={['static']}
                                                         onClick={() => handleRemoveDiameter(nozzle.value, LEFT)}
+                                                        className={styles['close-icon']}
                                                     />
                                                 )}
                                             </div>
@@ -527,10 +531,14 @@ const MachineSettings = ({
                                                 placeholder="Add"
                                                 onPressEnter={e => AddDiameterToList(e, LEFT)}
                                                 onBlur={e => AddDiameterToList(e, LEFT)}
+                                                formatter={(value) => {
+                                                    const newValue = Math.round(Number(value) * 100) / 100;
+                                                    return newValue;
+                                                }}
                                             />
                                         ) : (
                                             <span>
-                                                +{i18n._('key-Settings/Nozazle-Add')}
+                                                + {i18n._('key-Settings/Nozazle-Add')}
                                             </span>
                                         )}
                                     </Anchor>
@@ -550,6 +558,7 @@ const MachineSettings = ({
                                                         size={8}
                                                         type={['static']}
                                                         onClick={() => handleRemoveDiameter(nozzle.value, LEFT)}
+                                                        className="hover-show"
                                                     />
                                                 )}
                                             </div>
@@ -568,6 +577,10 @@ const MachineSettings = ({
                                                 placeholder="Add"
                                                 onPressEnter={e => AddDiameterToList(e, RIGHT)}
                                                 onBlur={e => AddDiameterToList(e, RIGHT)}
+                                                formatter={(value) => {
+                                                    const newValue = Math.round(Number(value) * 100) / 100;
+                                                    return newValue;
+                                                }}
                                             />
                                         ) : (
                                             <span>

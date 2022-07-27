@@ -3,13 +3,13 @@ import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
 import classNames from 'classnames';
 import { cloneDeep, isNil, uniqWith } from 'lodash';
+import { Menu } from 'antd';
 import modal from '../../../lib/modal';
 import DefinitionCreator from '../../views/DefinitionCreator';
 import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
 import Anchor from '../../components/Anchor';
 import { Button } from '../../components/Buttons';
-import TipTrigger from '../../components/TipTrigger';
 import { printingStore } from '../../../store/local-storage';
 
 import Segmented from '../../components/Segmented/index';
@@ -28,6 +28,7 @@ import styles from './styles.styl';
 import { getPresetOptions } from '../../utils/profileManager';
 /* eslint-disable import/no-cycle */
 import PrintingManager from '../../views/PrintingManager';
+import Dropdown from '../../components/Dropdown';
 
 const DEFAULT_DISPLAY_TYPE = 'key-default_category-Default';
 const CONFIG_DISPLAY_TYPES = ['Recommended', 'Customized'];
@@ -361,11 +362,13 @@ function Configurations() {
          * @param definition
          */
         onSelectOfficialDefinition: (definition, shouldSaveEnv = true) => {
+            console.log('selectOfficialDefinition', definition);
             actions.onChangeSelectedDefinition(definition);
             dispatch(printingActions.updateDefaultQualityId(definition.definitionId));
             shouldSaveEnv && dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
         },
         onSelectCustomDefinitionById: (definitionId) => {
+            console.log('selectCustomDefinition', definitionId);
             const definition = qualityDefinitionModels.find(d => d.definitionId === definitionId);
             actions.onSelectOfficialDefinition(definition);
             actions.displayModel();
@@ -380,18 +383,22 @@ function Configurations() {
             isAllValueDefault = actions.checkIsAllDefault(selectedDefinition.settings, selectedDefaultSetting);
         }
         return (
-            <div className="width-160">
+            <Menu>
                 {hasResetButton && !isAllValueDefault && (
-                    <Anchor
-                        onClick={actions.resetPreset}
-                    >
-                        <div className="width-120 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Reset')}</div>
-                    </Anchor>
+                    <Menu.Item>
+                        <Anchor
+                            onClick={actions.resetPreset}
+                        >
+                            <div className="width-120 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Reset')}</div>
+                        </Anchor>
+                    </Menu.Item>
                 )}
-                <Anchor onClick={actions.showInputModal}>
-                    <div className="width-120 text-overflow-ellipsis">{i18n._('key-App/Menu-Copy')}</div>
-                </Anchor>
-            </div>
+                <Menu.Item>
+                    <Anchor onClick={actions.showInputModal}>
+                        <div className="width-120 text-overflow-ellipsis">{i18n._('key-App/Menu-Copy')}</div>
+                    </Anchor>
+                </Menu.Item>
+            </Menu>
         );
     };
     useEffect(() => {
@@ -449,11 +456,10 @@ function Configurations() {
                                             styles['preset-recommended__icon']
                                         )}
                                         >
-                                            <TipTrigger
+                                            <Dropdown
                                                 placement="bottomRight"
-                                                style={{ maxWidth: '160px' }}
-                                                content={renderProfileMenu(presetDisplayType)}
-                                                trigger="click"
+                                                overlay={renderProfileMenu(presetDisplayType)}
+                                                trigger={['click']}
                                             >
                                                 <SvgIcon
                                                     className={classNames(
@@ -463,7 +469,7 @@ function Configurations() {
                                                     size={24}
                                                     name="More"
                                                 />
-                                            </TipTrigger>
+                                            </Dropdown>
                                         </div>
                                     </Anchor>
                                     <span className="max-width-76 text-overflow-ellipsis-line-2 height-32-half-line margin-top-4 margin-bottom-8">
@@ -498,10 +504,10 @@ function Configurations() {
                                         <span>
                                             {i18n._(optionItem.i18nName || optionItem.name)}
                                         </span>
-                                        <TipTrigger
+                                        <Dropdown
                                             placement="left"
                                             content={renderProfileMenu(presetDisplayType)}
-                                            trigger="click"
+                                            trigger={['click']}
                                         >
                                             <SvgIcon
                                                 className={classNames(
@@ -512,7 +518,7 @@ function Configurations() {
                                                 size={24}
                                                 name="More"
                                             />
-                                        </TipTrigger>
+                                        </Dropdown>
                                     </Anchor>
                                 </div>
                             );

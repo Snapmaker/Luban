@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { Dropdown as AntDropdown } from 'antd';
 import '../../../styles/global.styl';
+import './dropdown.styl';
 
 const Dropdown = React.memo((props) => {
     const { className, placement = 'bottom', overlay = <div />, ...rest } = props;

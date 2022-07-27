@@ -169,12 +169,28 @@
 .manager-params-docs {
     min-width: 265px;
 }
+.open-params-profile {
+    .profile-params-show-icon {
+        visibility hidden
+    }
+    &:hover {
+        .profile-params-show-icon {
+            visibility visible
+        }
+    }
+}
+.close-params-profile {
+    .profile-params-show-icon {
+        visibility visible
+    }
+}
 .hidden-docs {
     width: 1px;
     min-width: 1px !important;
 }
 .manager-list {
     height: calc(100% - 56px);
+    overflow: auto;
 }
 
 .manager-action {

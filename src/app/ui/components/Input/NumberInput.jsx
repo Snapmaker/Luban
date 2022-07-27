@@ -110,7 +110,6 @@ const NumberInput = ({
                 onChange={onInsideChange}
                 onBlur={onBlur}
                 onKeyUp={onKeyUp}
-                onFocus={onFocus}
                 formatter={formatter}
                 {...rest}
             />

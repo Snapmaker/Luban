@@ -308,7 +308,8 @@ const INITIAL_STATE = {
     // profile manager params type
     printingParamsType: 'basic',
     materialParamsType: 'basic',
-    customMode: false
+    customMode: false,
+    showParamsProfile: true
 };
 
 const ACTION_UPDATE_STATE = 'printing/ACTION_UPDATE_STATE';
@@ -537,6 +538,12 @@ export const actions = {
                 printingParamsType: value
             }));
         }
+    },
+
+    updateParamsProfileShow: (value) => (dispatch) => {
+        dispatch(actions.updateState({
+            showParamsProfile: value
+        }));
     },
 
     updateCustomMode: (value) => (dispatch) => {

@@ -4,8 +4,7 @@ import classNames from 'classnames';
 import { CaretRightOutlined } from '@ant-design/icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { message, Tooltip } from 'antd';
-import Popover from '../../components/Popover';
+import { Menu, message, Tooltip } from 'antd';
 import { actions as printingActions } from '../../../flux/printing';
 import { useGetDefinitions } from '../../views/ProfileManager';
 import i18n from '../../../lib/i18n';
@@ -19,6 +18,7 @@ import { machineStore } from '../../../store/local-storage';
 import SvgIcon from '../../components/SvgIcon';
 import modal from '../../../lib/modal';
 import styles from './styles.styl';
+import Dropdown from '../../components/Dropdown';
 
 const MaterialSettings = ({
     toolHead
@@ -140,10 +140,22 @@ const MaterialSettings = ({
     };
     const renderMaterialMore = (definition) => {
         return (
-            <div>
-                <Anchor className="display-block" onClick={onShowPrintingManager}>{i18n._('key-machineMaterialSettings/Profile update')}</Anchor>
-                {!definition?.isDefault && (<Anchor className="display-block" onClick={e => handleDeleteMaterial(e, definition)}>{i18n._('key-App/Menu-Delete')}</Anchor>)}
-            </div>
+            // <div>
+            //     <Anchor className="display-block" onClick={onShowPrintingManager}>{i18n._('key-machineMaterialSettings/Profile update')}</Anchor>
+            //     {!definition?.isDefault && (<Anchor className="display-block" onClick={e => handleDeleteMaterial(e, definition)}>{i18n._('key-App/Menu-Delete')}</Anchor>)}
+            // </div>
+            <Menu>
+                <Menu.Item>
+                    <Anchor className="display-block" onClick={onShowPrintingManager}>{i18n._('key-machineMaterialSettings/Profile-update')}</Anchor>
+                </Menu.Item>
+                {
+                    !definition?.isDefault && (
+                        <Menu.Item>
+                            <Anchor className="display-block" onClick={e => handleDeleteMaterial(e, definition)}>{i18n._('key-App/Menu-Delete')}</Anchor>
+                        </Menu.Item>
+                    )
+                }
+            </Menu>
         );
     };
     const importFile = (ref) => {
@@ -214,26 +226,30 @@ const MaterialSettings = ({
     // }
     const renderAddMaterial = () => {
         return (
-            <div className="sm-flex">
-                <Tooltip title={i18n._('key-Settings/Create Material Tips')}>
-                    <Anchor className="sm-flex sm-flex-direction-c align-center width-112 height-88" onClick={() => setShowCreateMaterialModal(true)}>
+            <Menu>
+                <Menu.Item key="quickCreate">
+                    <Tooltip title={i18n._('key-Settings/Create Material Tips')}>
+                        <Anchor className="sm-flex sm-flex-direction-c align-center width-112 height-88 border-radius-12" onClick={() => setShowCreateMaterialModal(true)}>
+                            <SvgIcon
+                                name="TitleSetting"
+                                size={48}
+                                type={['hoverNormal', 'pressNormal']}
+                            />
+                            <span className="width-percent-100 height-16 text-overflow-ellipsis margin-top-16">{i18n._('key-Printing/ProfileManager-Quick Create')}</span>
+                        </Anchor>
+                    </Tooltip>
+                </Menu.Item>
+                <Menu.Item>
+                    <Anchor className="sm-flex sm-flex-direction-c width-112 height-88 align-center border-radius-12" onClick={() => importFile(fileInput)}>
                         <SvgIcon
                             name="TitleSetting"
                             size={48}
                             type={['hoverNormal', 'pressNormal']}
                         />
-                        <span>{i18n._('key-Printing/ProfileManager-Create')}</span>
+                        <span className="width-percent-100 height-16 text-overflow-ellipsis margin-top-16">{i18n._('key-Printing/ProfileManager-Local Import')}</span>
                     </Anchor>
-                </Tooltip>
-                <Anchor className="sm-flex sm-flex-direction-c width-112 height-88 align-center" onClick={() => importFile(fileInput)}>
-                    <SvgIcon
-                        name="TitleSetting"
-                        size={48}
-                        type={['hoverNormal', 'pressNormal']}
-                    />
-                    <span>{i18n._('key-Printing/ProfileManager-Import')}</span>
-                </Anchor>
-            </div>
+                </Menu.Item>
+            </Menu>
         );
     };
     return (
@@ -276,9 +292,12 @@ const MaterialSettings = ({
                     >
                         <span className="display-inline width-142 text-overflow-ellipsis">{i18n._('key-settings/Profile Manager')}</span>
                     </Button>
-                    <Popover
-                        trigger="click"
-                        content={renderAddMaterial}
+                    <Dropdown
+                        overlay={renderAddMaterial}
+                        placement="top"
+                        trigger={['click']}
+                        overlayClassName="horizontal-menu"
+                        arrow
                     >
                         <Button
                             priority="level-two"
@@ -287,18 +306,19 @@ const MaterialSettings = ({
                         >
                             <span className="display-inline width-142 text-overflow-ellipsis">{i18n._('key-settings/Add Material')}</span>
                         </Button>
-                    </Popover>
-
+                    </Dropdown>
                 </div>
             </div>
             <div>
                 {Object.keys(definitionByCategory).map(key => {
                     return (
-                        <Anchor onClick={() => onUpdateCategory(key)} className="margin-top-36 display-block" key={key}>
-                            <div className="sm-flex align-center">
-                                <CaretRightOutlined rotate={includes(activeCategory, key) ? 90 : 0} />
-                                <div className="margin-left-12 heading-3">{definitionByCategory[key][0].category}</div>
-                            </div>
+                        <div className="margin-top-36 display-block" key={key}>
+                            <Anchor className="display-inline" onClick={() => onUpdateCategory(key)}>
+                                <div className="sm-flex align-center">
+                                    <CaretRightOutlined rotate={includes(activeCategory, key) ? 90 : 0} />
+                                    <span className="margin-left-12 heading-3">{i18n._(definitionByCategory[key][0].i18nCategory || 'key-default_category-Custom')}</span>
+                                </div>
+                            </Anchor>
                             <div className={`${includes(activeCategory, key) ? 'sm-grid grid-template-columns-for-material-settings grid-row-gap-16 grid-column-gap-32' : 'display-none'}`}>
                                 {
                                     definitionByCategory[key].map(definition => {
@@ -314,8 +334,8 @@ const MaterialSettings = ({
                                                     <span>{i18n._(definition.i18nName || definition.name)}</span>
                                                 </div>
                                                 <div className={classNames(styles['material-more-action'])}>
-                                                    <Popover
-                                                        content={() => renderMaterialMore(definition)}
+                                                    <Dropdown
+                                                        overlay={() => renderMaterialMore(definition)}
                                                         placement="bottomRight"
                                                     >
                                                         <SvgIcon
@@ -323,14 +343,14 @@ const MaterialSettings = ({
                                                             size={24}
                                                             type={['static']}
                                                         />
-                                                    </Popover>
+                                                    </Dropdown>
                                                 </div>
                                             </Anchor>
                                         );
                                     })
                                 }
                             </div>
-                        </Anchor>
+                        </div>
                     );
                 })}
             </div>
