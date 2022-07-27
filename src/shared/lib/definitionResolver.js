@@ -28,43 +28,55 @@ var __read = (this && this.__read) || function (o, n) {
 };
 var _ = require('lodash');
 var asistantMap = new Map();
-let asistantMapInitialized = false;
+var asistantMapInitialized = false;
 var allValues = {};
 var affectKey = '';
 var hasValue = false;
-function flatAffectedValue(affectSet, originalAffectSet) {
+let i = 0;
+function flatAffectedValue(affectKey, affectSet, originalAffectSet, isDeep) {
     affectSet.forEach(function (item) {
-        if (!originalAffectSet.has(item) && allValues[item]) {
-            flatAffectedValue(allValues[item], originalAffectSet);
+        if (item !== affectKey) {
+            originalAffectSet.add(item);
         }
-        originalAffectSet.add(item);
+        if (allValues[item] && item !== affectKey) {
+            if (!isDeep || (isDeep && !originalAffectSet.has(item))) {
+                flatAffectedValue(affectKey, allValues[item], originalAffectSet, true);
+            }
+        }
     });
 }
+var allContext = {};
 function resolveDefinition(definition, modifiedParams) {
     var e_1, _a, e_2, _b, e_3, _c;
     // make context
-    var context = {
-        sum: _.sum,
-        map: function (fn, arr) {
-            return _.map(arr, fn);
-        },
-        math: {
-            radians: function (degree) {
-                return degree / 180 * Math.PI;
-            }
-        },
-        resolveOrValue: function (input) { return _.isUndefined(context[input]) ? input : context[input]; },
-        extruderValue: function (ignore, input) { return context[input]; },
-        extruderValues: function (input) { return [context[input]]; },
-        defaultExtruderPosition: function () { return 0; }
-    };
+    var context = {};
+    if (!allContext[definition.definitionId]) {
+        context = {
+            sum: _.sum,
+            map: function (fn, arr) {
+                return _.map(arr, fn);
+            },
+            math: {
+                radians: function (degree) {
+                    return degree / 180 * Math.PI;
+                }
+            },
+            resolveOrValue: function (input) { return _.isUndefined(context[input]) ? input : context[input]; },
+            extruderValue: function (ignore, input) { return context[input]; },
+            extruderValues: function (input) { return [context[input]]; },
+            defaultExtruderPosition: function () { return 0; }
+        };
+    }
+    else {
+        context = allContext[definition.definitionId];
+    }
     var obj = definition.settings;
     var _loop_1 = function (key) {
         var _g;
         var value = obj[key];
         if (value.type && (value.type !== 'category' && value.type !== 'mainCategory')) {
             if (!asistantMapInitialized) {
-                var cloneValue = _.cloneDeep(value);
+                cloneValue = _.cloneDeep(value);
                 asistantMap.set(key, cloneValue);
             }
             Object.defineProperties(context, (_g = {},
@@ -86,6 +98,7 @@ function resolveDefinition(definition, modifiedParams) {
             context[key] = value.default_value;
         }
     };
+    var cloneValue;
     try {
         for (var _d = __values(Object.keys(obj)), _e = _d.next(); !_e.done; _e = _d.next()) {
             var key = _e.value;
@@ -108,12 +121,10 @@ function resolveDefinition(definition, modifiedParams) {
                 var calcValue = insideValue.calcu_value && eval("(function calcValue() {\n                    hasValue = true;\n                    with (context) {\n                        return ".concat(insideValue.calcu_value, ";\n                    }\n                })()"));
                 if (_.isUndefined(calcValue)) {
                     hasValue = false;
-                }
-                insideValue.minimum_value && eval("(function calcMinMax() {\n                hasValue = true;\n                with (context) {\n                    return ".concat(insideValue.minimum_value, ";\n                }\n            })()"));
-                insideValue.maximum_value && eval("(function calcMinMax() {\n                hasValue = true;\n                with (context) {\n                    return ".concat(insideValue.maximum_value, ";\n                }\n            })()"));
+                };
+                // insideValue.minimum_value && eval("(function calcMinMax() {\n                hasValue = true;\n                with (context) {\n                    return ".concat(insideValue.minimum_value, ";\n                }\n            })()"));
+                // insideValue.maximum_value && eval("(function calcMinMax() {\n                hasValue = true;\n                with (context) {\n                    return ".concat(insideValue.maximum_value, ";\n                }\n            })()"));
                 var calcEnabled = insideValue.visible && eval("(function calcEnable() {\n                hasValue = true;\n                with (context) {\n                    return ".concat(insideValue.visible, ";\n                }\n            })()"));
-                // if (key === 'z_seam_position') {
-                // }
                 if (typeof calcEnabled !== 'undefined') {
                     definition.settings[key].visible = calcEnabled;
                 }
@@ -148,8 +159,8 @@ function resolveDefinition(definition, modifiedParams) {
     }
     asistantMapInitialized = true;
     Object.entries(allValues).forEach(function (_a) {
-        var _b = __read(_a, 2), undefined = _b[0], affectSet = _b[1];
-        flatAffectedValue(affectSet, affectSet);
+        var _b = __read(_a, 2), key = _b[0], affectSet = _b[1];
+        flatAffectedValue(key, new Set(affectSet), affectSet);
     });
     var allAsistantArray = new Set();
     var affectArray = [];
@@ -165,12 +176,11 @@ function resolveDefinition(definition, modifiedParams) {
             }
         });
     }
-    var _loop_2 = function (key) {''
+    var _loop_2 = function (key) {
         var value = _.cloneDeep(asistantMap.get(key));
         try {
             var defaultValue = void 0;
             var calcValue = value.calcu_value && eval("(function calcValue() {\n                with (context) {\n                    return ".concat(value.calcu_value, ";\n                }\n            })()"));
-
             var calcMinValue = value.minimum_value && eval("(function calcMinMax() {\n                with (context) {\n                    return ".concat(value.minimum_value, ";\n                }\n            })()"));
             var calcMaxValue = value.maximum_value && eval("(function calcMinMax() {\n                with (context) {\n                    return ".concat(value.maximum_value, ";\n                }\n            })()"));
             var calcEnabled = value.visible && eval("(function calcEnable() {\n                with (context) {\n                    return ".concat(value.visible, ";\n                }\n            })()"));
@@ -219,6 +229,7 @@ function resolveDefinition(definition, modifiedParams) {
         }
     };
     try {
+        console.log('allAsistantArray', allAsistantArray);
         // calc value & default_value
         for (var allAsistantArray_1 = __values(allAsistantArray), allAsistantArray_1_1 = allAsistantArray_1.next(); !allAsistantArray_1_1.done; allAsistantArray_1_1 = allAsistantArray_1.next()) {
             var key = allAsistantArray_1_1.value;
@@ -237,4 +248,3 @@ module.exports = {
     resolveDefinition: resolveDefinition
 };
 //# sourceMappingURL=allparams.js.map
-// @ sourceURL=name

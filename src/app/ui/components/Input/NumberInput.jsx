@@ -7,7 +7,7 @@ import styles from './styles.styl';
 
 const maxDecimal = (number, decimalPlaces) => {
     const reg = new RegExp(`^(.*\\..{${decimalPlaces}}).*$`);
-    return String(number).replace(reg, '$1');
+    return Number(String(number).replace(reg, '$1'));
 };
 
 

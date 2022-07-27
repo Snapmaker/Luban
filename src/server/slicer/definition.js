@@ -145,7 +145,7 @@ export class DefinitionLoader {
         zIndex++;
         let mainCategory = _mainCategory;
         let smallCategory = _smallCategory;
-        if (definitionId !== 'snapmaker_modify_0') {
+        if (definitionId === 'snapmaker_modify_0') {
             for (const key of Object.keys(json)) {
                 const setting = json[key];
                 if (setting.type === 'mainCategory') {
