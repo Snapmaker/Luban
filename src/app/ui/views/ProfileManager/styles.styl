@@ -181,13 +181,11 @@
     visibility: hidden;
 }
 
-.profile-li, .category-li {
+.profile-li, .manager-btn {
     &:hover {
-        .selected {
-           .manager-action {
-                background: #f00;
-                visibility: visible;
-            }
+        & > .manager-action {
+            background: #f00;
+            visibility: visible;
         }
     }
 }

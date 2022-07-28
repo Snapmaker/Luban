@@ -269,8 +269,6 @@ function ProfileManager({
             if (!isCreate) {
                 title = i18n._('key-Printing/ProfileManager-Copy Profile');
                 copyType = isCategorySelected ? 'Category' : 'Item';
-                copyCategoryName = definitionForManager.category;
-                copyCategoryI18n = definitionForManager.i18nCategory;
                 if (!isCategorySelected) {
                     copyItemName = definitionForManager.name;
                 }
@@ -278,9 +276,9 @@ function ProfileManager({
                 title = i18n._('key-Printing/ProfileManager-Create Profile');
                 copyType = 'Item';
                 copyItemName = i18n._('key-default_category-New Profile');
-                copyCategoryName = definitionForManager.category;
-                copyCategoryI18n = definitionForManager.i18nCategory;
             }
+            copyCategoryName = definitionForManager.category;
+            copyCategoryI18n = definitionForManager.i18nCategory;
 
             let materialOptions = definitionState?.definitionOptions.map(option => {
                 return {
@@ -289,9 +287,19 @@ function ProfileManager({
                     i18n: option.i18nCategory
                 };
             });
-            materialOptions = materialOptions.filter((option) => {
-                return option.value !== i18n._(DEFAULT_DISPLAY_TYPE);
-            });
+            if (managerType === PRINTING_MANAGER_TYPE_QUALITY) {
+                copyCategoryName = (definitionForManager.category !== i18n._(DEFAULT_DISPLAY_TYPE)) ? definitionForManager.category : '';
+                materialOptions = materialOptions.filter((option) => {
+                    return option.value !== i18n._(DEFAULT_DISPLAY_TYPE);
+                });
+                if (materialOptions.length === 0) {
+                    materialOptions.push({
+                        label: 'Custom',
+                        value: 'Custom',
+                        i18n: 'key-default_category-Custom'
+                    });
+                }
+            }
             materialOptions = uniqWith(materialOptions, (a, b) => {
                 return a.label === b.label;
             });

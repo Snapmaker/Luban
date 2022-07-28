@@ -229,7 +229,7 @@ function resolveDefinition(definition, modifiedParams) {
         }
     };
     try {
-        console.log('allAsistantArray', allAsistantArray);
+        // console.log('allAsistantArray', allAsistantArray);
         // calc value & default_value
         for (var allAsistantArray_1 = __values(allAsistantArray), allAsistantArray_1_1 = allAsistantArray_1.next(); !allAsistantArray_1_1.done; allAsistantArray_1_1 = allAsistantArray_1.next()) {
             var key = allAsistantArray_1_1.value;

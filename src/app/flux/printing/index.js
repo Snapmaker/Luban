@@ -1283,7 +1283,6 @@ export const actions = {
         const newDefModel = cloneDeep(
             defaultDefinitions.find((d) => d.definitionId === definitionId)
         );
-        console.log('ddd', defaultDefinitions.find((d) => d.definitionId === definitionId).settings.layer_height);
         definitionManager.updateDefinition(newDefModel);
         const index = definitions.findIndex(
             (d) => d.definitionId === definitionId
@@ -1345,7 +1344,6 @@ export const actions = {
                 })
             );
         } else {
-            console.log('changedSettingArray', changedSettingArray, definitionModel.settings.support_generate_type);
             resolveDefinition(definitionModel, changedSettingArray);
             const definitions = printingState[definitionsKey];
             const index = definitions.findIndex((d) => d.definitionId === id);
@@ -2360,7 +2358,6 @@ export const actions = {
         //     };
         // }
         // gcodeParser.setColortypes(undefined, renderLineType);
-        // console.log(gcodeLine, renderLineType);
         if (gcodeLine) {
             // const uniforms = gcodeLine.material.uniforms;
             gcodeLine.children.forEach(mesh => {

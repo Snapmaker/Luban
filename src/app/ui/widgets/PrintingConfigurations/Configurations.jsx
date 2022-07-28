@@ -227,7 +227,7 @@ function Configurations() {
             const title = i18n._('key-Printing/ProfileManager-Copy Profile');
             const copyType = 'Item';
 
-            const copyCategoryName = newSelectedDefinition.category | 'CUSTOM';
+            const copyCategoryName = (newSelectedDefinition.category !== i18n._(DEFAULT_DISPLAY_TYPE)) ? newSelectedDefinition.category : '';
             const copyCategoryI18n = newSelectedDefinition.i18nCategory;
             const copyItemName = newSelectedDefinition.name;
             const isCreate = false;
@@ -242,6 +242,13 @@ function Configurations() {
                         i18n: option.i18nCategory
                     };
                 });
+            if (materialOptions.length === 0) {
+                materialOptions.push({
+                    label: 'Custom',
+                    value: 'Custom',
+                    i18n: 'key-default_category-Custom'
+                });
+            }
             materialOptions = uniqWith(materialOptions, (a, b) => {
                 return a.label === b.label;
             });
@@ -271,7 +278,7 @@ function Configurations() {
                             const data = refCreateModal.current.getData();
                             const newName = data.itemName;
                             popupActions.close();
-                            newSelectedDefinition.category = data.categoryName === 'Default' ? 'Custom' : data.categoryName;
+                            newSelectedDefinition.category = data.categoryName;
                             newSelectedDefinition.i18nCategory = data.categoryI18n;
                             newSelectedDefinition.name = newName;
 
