@@ -20,7 +20,10 @@ import {
     STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
     CONNECTION_EXECUTE_GCODE,
     CONNECTION_GET_GCODEFILE,
-    LEFT_EXTRUDER
+    LEFT_EXTRUDER,
+    HEAD_PRINTING,
+    getMachineSeriesWithToolhead,
+    RIGHT_EXTRUDER
 } from '../../constants';
 
 import i18n from '../../lib/i18n';
@@ -40,6 +43,7 @@ import baseActions, { ACTION_UPDATE_STATE } from './action-base';
 /* eslint-disable import/no-cycle */
 import discoverActions from './action-discover';
 import connectActions from './action-connect';
+import definitionManager from '../manager/DefinitionManager';
 
 const INITIAL_STATE = {
     // region server disover
@@ -817,6 +821,49 @@ export const actions = {
             );
         }
         series && dispatch(actions.updateMachineSeries(series));
+    },
+
+    onChangeMachineSeries: (toolHead, series) => async (
+        dispatch,
+        getState
+    ) => {
+        machineStore.set('machine.series', series);
+        machineStore.set('machine.toolHead', toolHead);
+
+        const oldToolHead = getState().machine.toolHead;
+        const oldSeries = getState().machine.series;
+        if (oldSeries !== series || !_.isEqual(oldToolHead, toolHead)) {
+            dispatch(baseActions.updateState({ series, toolHead }));
+
+            const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
+            await definitionManager.init(HEAD_PRINTING, currentMachine.configPathname[HEAD_PRINTING]);
+            const allMaterialDefinition = await definitionManager.getDefinitionsByPrefixName(
+                'material'
+            );
+
+            let defaultMaterialId = getState().printing.defaultMaterialId;
+            let defaultMaterialIdRight = getState().printing.defaultMaterialIdRight;
+            defaultMaterialId = allMaterialDefinition.find((item) => {
+                return defaultMaterialId === item.definitionId;
+            }) ? defaultMaterialId : allMaterialDefinition[0].definitionId;
+            defaultMaterialIdRight = allMaterialDefinition.find((item) => {
+                return defaultMaterialIdRight === item.definitionId;
+            }) ? defaultMaterialIdRight : allMaterialDefinition[0].definitionId;
+
+            dispatch(printingActions.updateState({
+                materialDefinitions: allMaterialDefinition,
+                defaultMaterialId,
+                defaultMaterialIdRight
+            }));
+            dispatch(printingActions.updateDefaultMaterialId(
+                defaultMaterialId,
+                LEFT_EXTRUDER
+            ));
+            dispatch(printingActions.updateDefaultMaterialId(
+                defaultMaterialIdRight,
+                RIGHT_EXTRUDER
+            ));
+        }
     },
 
     updateMachineSeries: (series) => async (dispatch, getState) => {

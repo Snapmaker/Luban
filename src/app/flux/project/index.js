@@ -190,6 +190,9 @@ export const actions = {
     },
 
     onRecovery: (envHeadType, envObj, backendRecover = true, shouldSetFileName = true) => async (dispatch, getState) => {
+        const { progressStatesManager } = getState().printing;
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
+
         UniApi.Window.setOpenedFile();
         let { content } = getState().project[envHeadType];
         const { toolHead: { printingToolhead } } = getState().machine;
@@ -444,10 +447,7 @@ export const actions = {
 
     },
 
-    openProject: (file, history, unReload = false, isGuideTours = false) => async (dispatch, getState) => {
-        const { progressStatesManager } = getState().printing;
-        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
-
+    openProject: (file, history, unReload = false, isGuideTours = false) => async (dispatch) => {
         if (checkIsSnapmakerProjectFile(file.name)) {
             const formData = new FormData();
             let shouldSetFileName = true;

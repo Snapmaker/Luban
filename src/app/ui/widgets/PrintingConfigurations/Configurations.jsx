@@ -71,7 +71,7 @@ export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition
     }
     return (
         <div>
-            {Object.entries(allParams).map(([paramName, paramSetting]) => {
+            {allParams && Object.entries(allParams).map(([paramName, paramSetting]) => {
                 const actualOptions = paramSetting.affectByType ? paramSetting[selectedDefinitionModel.typeOfPrinting] : paramSetting.options;
                 const allParamsName = [];
                 let SegmentedValue = null;
@@ -166,7 +166,6 @@ function Configurations() {
     const [presetDisplayType, setPresetDisplayType] = useState();
     const [configDisplayType, setConfigDisplayType] = useState(printingStore.get('printingSettingDisplayType') || CONFIG_DISPLAY_TYPES[0]);
     const defaultQualityId = useSelector((state) => state?.printing?.defaultQualityId);
-    const defaultMaterialId = useSelector((state) => state?.printing?.defaultMaterialId);
     const qualityDefinitionModels = useSelector((state) => state?.printing?.qualityDefinitions);
     const printingCustomConfigsWithCategory = useSelector((state) => state?.machine?.printingCustomConfigsWithCategory);
     const [
@@ -417,9 +416,6 @@ function Configurations() {
         }
     }, [defaultQualityId, qualityDefinitionModels]);
 
-    useEffect(() => {
-        console.log('defaultMaterialId');
-    }, [defaultMaterialId]);
     if (!selectedDefinition) {
         return null;
     }

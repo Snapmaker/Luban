@@ -1073,11 +1073,13 @@ class ModelGroup extends EventEmitter {
         });
         if (this.headType === HEAD_PRINTING) {
             this.traverseModels(newModels, (model: Model3D) => {
+                model.computeBoundingBox();
                 model.onTransform();
                 if (model instanceof ThreeModel) {
                     model.initClipper(this.localPlane);
                 } else if (model instanceof ThreeGroup) {
                     model.children.forEach((subModel) => {
+                        subModel.computeBoundingBox();
                         (subModel as ThreeModel).initClipper(this.localPlane);
                     });
                 }
@@ -1131,9 +1133,11 @@ class ModelGroup extends EventEmitter {
                 this.addModelToSelectedGroup(newModel);
                 this.updatePrimeTowerHeight();
                 if (newModel instanceof ThreeModel) {
+                    newModel.computeBoundingBox();
                     newModel.initClipper(this.localPlane);
                 } else if (newModel instanceof ThreeGroup) {
                     newModel.children.forEach((subModel) => {
+                        subModel.computeBoundingBox();
                         (subModel as ThreeModel).initClipper(this.localPlane);
                     });
                 }

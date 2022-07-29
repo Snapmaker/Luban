@@ -291,7 +291,7 @@ class DefinitionManager {
                     1,
                     Math.round(
                         (wallThickness - wallOutLineWidthL)
-                                  / wallInnerLineWidthL
+                        / wallInnerLineWidthL
                     ) + 1
                 )
                 : 0;
@@ -307,7 +307,7 @@ class DefinitionManager {
                     1,
                     Math.round(
                         (wallThickness - wallOutLineWidthR)
-                                  / wallInnerLineWidthR
+                        / wallInnerLineWidthR
                     ) + 1
                 )
                 : 0;
@@ -364,7 +364,7 @@ class DefinitionManager {
             settings.support_line_distance.default_value = supportInfillRate === 0
                 ? 0
                 : ((supportLineWidth * 100) / supportInfillRate)
-                      * supportPatternRate;
+                * supportPatternRate;
             settings.support_initial_layer_line_distance.default_value = settings.support_line_distance.default_value;
         }
         if (settings.support_pattern) {

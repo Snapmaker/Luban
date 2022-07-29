@@ -161,33 +161,33 @@ const toolHeadMap = {
     },
 };
 const defaultNozzleDiameterList = [{
-    value: 0.2,
+    value: '0.2',
     label: '0.2',
     isDefault: true
 }, {
-    value: 0.4,
+    value: '0.4',
     label: '0.4',
     isDefault: true
 }, {
-    value: 0.6,
+    value: '0.6',
     label: '0.6',
     isDefault: true
 }, {
-    value: 0.8,
+    value: '0.8',
     label: '0.8',
     isDefault: true
 }];
 const defaultNozzleDiameterListForSingleExtruder = [{
-    value: 0.4,
+    value: '0.4',
     label: '0.4',
     isDefault: true
 }];
 const defaultNozzleDiameterListForDualExtruderArtisan = [{
-    value: 0.2,
+    value: '0.2',
     label: '0.2',
     isDefault: true
 }, {
-    value: 0.4,
+    value: '0.4',
     label: '0.4',
     isDefault: true
 }, {
@@ -195,28 +195,28 @@ const defaultNozzleDiameterListForDualExtruderArtisan = [{
     label: '0.4H',
     isDefault: true
 }, {
-    value: 0.6,
+    value: '0.6',
     label: '0.6',
     isDefault: true
 }, {
-    value: 0.8,
+    value: '0.8',
     label: '0.8',
     isDefault: true
 }];
 const defaultNozzleDiameterListForDualExtruder = [{
-    value: 0.2,
+    value: '0.2',
     label: '0.2',
     isDefault: true
 }, {
-    value: 0.4,
+    value: '0.4',
     label: '0.4',
     isDefault: true
 }, {
-    value: 0.6,
+    value: '0.6',
     label: '0.6',
     isDefault: true
 }, {
-    value: 0.8,
+    value: '0.8',
     label: '0.8',
     isDefault: true
 }];
@@ -265,14 +265,16 @@ const MachineSettings = forwardRef(({
         const def = direction === LEFT
             ? extruderLDefinition
             : extruderRDefinition;
-        def.settings.machine_nozzle_size.default_value = value;
-        dispatch(
-            printingActions.updateCurrentDefinition({
-                definitionModel: def,
-                managerDisplayType: PRINTING_MANAGER_TYPE_EXTRUDER,
-                direction
-            })
-        );
+        if (def?.settings?.machine_nozzle_size?.default_value) {
+            def.settings.machine_nozzle_size.default_value = value;
+            dispatch(
+                printingActions.updateCurrentDefinition({
+                    definitionModel: def,
+                    managerDisplayType: PRINTING_MANAGER_TYPE_EXTRUDER,
+                    direction
+                })
+            );
+        }
     };
     const saveDiameterToStorage = (direction, value, isDelete = false) => {
         const key = `customNozzleDiameter.${currentToolHead}.${currentSerial}.${direction}`;
@@ -313,7 +315,7 @@ const MachineSettings = forwardRef(({
             if (!find(leftNozzleDiameterList, { value: newDiameter })) {
                 setLeftNozzleDiameterList([...leftNozzleDiameterList, {
                     label: newValue,
-                    value: newDiameter,
+                    value: newValue,
                     isDefault: false
                 }]);
                 saveDiameterToStorage(direction, newDiameter);
@@ -323,7 +325,7 @@ const MachineSettings = forwardRef(({
             if (!find(rightNozzleDiameterList, { value: newDiameter })) {
                 setRightNozzleDiameterList([...rightNozzleDiameterList, {
                     label: newValue,
-                    value: newDiameter,
+                    value: newValue,
                     isDefault: false
                 }]);
                 saveDiameterToStorage(direction, newDiameter);
@@ -358,12 +360,30 @@ const MachineSettings = forwardRef(({
         const configs = JSON.parse(str);
         return configs.map((value) => {
             return {
-                value: Number(value),
+                value: `${value}`,
                 label: `${value}`,
                 isDefault: false
             };
         });
     };
+
+    const checkNozzleDiameter = (direction) => {
+        if (direction === LEFT) {
+            const activeLeftNozzleSize = extruderLDefinition?.settings?.machine_nozzle_size.default_value;
+            if (!find(leftNozzleDiameterList, { value: activeLeftNozzleSize })) {
+                onChangeDiameter(LEFT, leftNozzleDiameterList.length ? leftNozzleDiameterList[0].value : null);
+            }
+        } else {
+            const activeRightNozzleSize = extruderRDefinition?.settings?.machine_nozzle_size.default_value;
+            if (!find(rightNozzleDiameterList, { value: activeRightNozzleSize })) {
+                onChangeDiameter(RIGHT, rightNozzleDiameterList.length ? rightNozzleDiameterList[0].value : null);
+            }
+        }
+    };
+    useEffect(() => {
+        checkNozzleDiameter(LEFT);
+        checkNozzleDiameter(RIGHT);
+    }, [leftNozzleDiameterList, rightNozzleDiameterList]);
 
     const _setNozzleDiameterList = (direction, _defaultNozzleDiameterList, _currentSerial) => {
         if (direction === LEFT) {
@@ -398,17 +418,15 @@ const MachineSettings = forwardRef(({
         }
     }, [currentSerial, currentToolHead, extruderLDefinition?.settings?.machine_nozzle_size?.default_value, extruderRDefinition?.settings?.machine_nozzle_size?.default_value]);
 
-    useImperativeHandle(ref, () => ({
-        checkNozzleDiameter() {
-            const activeLeftNozzleSize = extruderLDefinition?.settings?.machine_nozzle_size.default_value;
-            const activeRightNozzleSize = extruderRDefinition?.settings?.machine_nozzle_size.default_value;
+    const switchToolHead = (toolHeadItem) => {
+        setCurrentToolHead(toolHeadItem.value);
+        setActiveNozzle(LEFT);
+    };
 
-            if (!find(leftNozzleDiameterList, { value: Number(activeLeftNozzleSize) })) {
-                onChangeDiameter(LEFT, leftNozzleDiameterList.length ? leftNozzleDiameterList[0].value : null);
-            }
-            if (!find(rightNozzleDiameterList, { value: Number(activeRightNozzleSize) })) {
-                onChangeDiameter(RIGHT, rightNozzleDiameterList.length ? rightNozzleDiameterList[0].value : null);
-            }
+    useImperativeHandle(ref, () => ({
+        checkNozzleDiameter: () => {
+            checkNozzleDiameter(LEFT);
+            checkNozzleDiameter(RIGHT);
         }
     }));
 
@@ -463,8 +481,7 @@ const MachineSettings = forwardRef(({
                             return (
                                 <Anchor
                                     onClick={() => {
-                                        setCurrentToolHead(toolHeadItem.value);
-                                        setActiveNozzle(LEFT);
+                                        switchToolHead(toolHeadItem);
                                     }}
                                     className={`${index === 0 ? 'margin-right-16' : ''}`}
                                 >

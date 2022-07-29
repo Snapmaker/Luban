@@ -149,6 +149,8 @@ const RotateOverlay = React.memo(({
         dispatch(printingActions.displayModel());
     };
 
+    const disabled = !isSingleSelected || !!transformDisabled;
+
     const faceDownMannuallySvgs = () => {
         const dataModal = [{
             name: 'ViewLeft',
@@ -173,14 +175,18 @@ const RotateOverlay = React.memo(({
         }];
 
         return dataModal.map(v => (
-            <div key={v.name} className={classNames(styles['rotate-svg'])} disabled={!isSingleSelected || !!transformDisabled}>
+            <div key={v.name} className={classNames(styles['rotate-svg'])} disabled={disabled}>
                 <SvgIcon
                     name={v.name}
                     size={24}
                     type={['static']}
-                    disabled={!isSingleSelected || !!transformDisabled}
+                    disabled={disabled}
                     onClick={v.click}
-                    onMouseEnter={v.mouseEnter}
+                    onMouseEnter={() => {
+                        if (!disabled) {
+                            v.mouseEnter();
+                        }
+                    }}
                     onMouseLeave={() => setHoverFace('null')}
                 />
             </div>

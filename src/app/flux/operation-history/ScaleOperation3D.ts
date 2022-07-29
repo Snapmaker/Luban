@@ -38,9 +38,13 @@ export default class ScaleOperation3D extends Operation<ScaleOperationState> {
         const modelGroup = this.state.modelGroup;
         modelGroup.unselectAllModels();
 
-
         modelGroup.addModelToSelectedGroup(model);
-        modelGroup.updateSelectedGroupTransformation({ ...transform }, false);
+        // Only set the scale, and then trigger the stickToPlate to restore the position of the same group of models
+        modelGroup.updateSelectedGroupTransformation({
+            scaleX: transform.scaleX,
+            scaleY: transform.scaleY,
+            scaleZ: transform.scaleZ
+        }, false);
         modelGroup.unselectAllModels();
         model.onTransform();
 

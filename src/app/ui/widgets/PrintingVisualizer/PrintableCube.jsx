@@ -233,7 +233,7 @@ class PrintableCube extends Object3D {
                 opacity: 1,
                 transparent: true,
                 polygonOffset: true,
-                polygonOffsetFactor: -12,
+                polygonOffsetFactor: 0,
                 polygonOffsetUnits: -20
             }));
             mesh.renderOrder = -1;
@@ -252,15 +252,13 @@ class PrintableCube extends Object3D {
             const matLite = new MeshBasicMaterial({
                 color: color,
                 side: FrontSide,
-                depthWrite: true,
+                depthWrite: false,
+                wireframe: false,
                 polygonOffset: true,
                 polygonOffsetFactor: 0,
-                polygonOffsetUnits: -3
+                polygonOffsetUnits: 2
             });
-            // let size = 9;
-            // if (this.series.indexOf('Original') !== -1) {
-            //     size = 4;
-            // }
+
             const fontSize = this.size.y * 0.025;
 
             let machineText = '';
@@ -288,11 +286,6 @@ class PrintableCube extends Object3D {
             this.add(text);
 
             // Add logo
-            // const minSideLength = Math.min(this.size.x, this.size.y);
-            // const logoGeometry = new PlaneGeometry(
-            //     (geometry.boundingBox.max.y - geometry.boundingBox.min.y) * 0.63 * 4,
-            //     (geometry.boundingBox.max.y - geometry.boundingBox.min.y) * 0.63,
-            // );
             new SVGLoader().load(`${DEFAULT_LUBAN_HOST}/resources/images/logo.svg`, (data) => {
                 const paths = data.paths;
 
@@ -312,7 +305,10 @@ class PrintableCube extends Object3D {
                             transparent: true,
                             side: FrontSide,
                             depthWrite: false,
-                            wireframe: false
+                            wireframe: false,
+                            polygonOffset: true,
+                            polygonOffsetFactor: 0,
+                            polygonOffsetUnits: 2
                         });
 
                         const pathShape = SVGLoader.createShapes(path);
@@ -339,32 +335,7 @@ class PrintableCube extends Object3D {
                     geometry.boundingBox.max.y + geometry.boundingBox.max.y - geometry.boundingBox.min.y + fontHeight * 0.4,
                     0.01
                 );
-                // group.scale.set(
-                //     logoHeight / fontHeight,
-                //     logoHeight / fontHeight,
-                //     1
-                // );
-
                 this.add(group);
-
-                // const logoMaterial = new MeshBasicMaterial({
-                //     map: data,
-                //     side: FrontSide,
-                //     opacity: 0.75,
-                //     transparent: true
-                // });
-
-                // const logoMesh = new Mesh(logoGeometry, logoMaterial);
-                // // const boundingBox2 = ThreeUtils.computeBoundingBox(logoMesh);
-                // // console.log(boundingBox2);
-                // // logoMesh.scale.set(0.1, 0.1, 0.1);
-                // const boundingBox = ThreeUtils.computeBoundingBox(logoMesh);
-                // logoMesh.position.set(
-                //     this.size.x / 2 - boundingBox.max.x - (this.size.x / 2 % 10 || 10) - 10,
-                //     geometry.boundingBox.max.y + (geometry.boundingBox.max.y - geometry.boundingBox.min.y) / 2,
-                //     0.01
-                // );
-                // this.add(logoMesh);
             });
         });
     }

@@ -182,13 +182,12 @@ class ThreeModel extends BaseModel {
         bufferGeometry.rotateY(-this.meshObject.rotation.y);
         bufferGeometry.rotateZ(-this.meshObject.rotation.z);
 
+        this.meshObject.geometry = bufferGeometry;
+
         bufferGeometry.computeVertexNormals();
         ThreeUtils.computeBoundingBox(this.meshObject, true);
 
-        this.meshObject.geometry = bufferGeometry;
-
         recovery();
-
         this.stickToPlate();
         this.clipper.init();
     }

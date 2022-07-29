@@ -50,7 +50,7 @@ function VisualizerClippingControl({ simplifying }) {
 
     const update = useRef(throttle((v) => {
         return dispatch(printingActions.updateClippingPlane(v));
-    }));
+    }, 300));
 
     const onChange = (v) => {
         const height = Number(v.toFixed(2));
