@@ -716,8 +716,11 @@ class SVGActionsFactory {
      * @param t
      * @private
      */
-    _setSelectedElementsTransformation(t) {
-        this.selectedElementsTransformation = t;
+    _setSelectedElementsTransformation(t = {}) {
+        this.selectedElementsTransformation = {
+            ...this.selectedElementsTransformation,
+            ...t
+        };
     }
 
     static calculateElementsTransformation(elements) {
@@ -1471,10 +1474,10 @@ class SVGActionsFactory {
                     ...baseUpdateData,
                     config: newConfig
                 });
-                // TODO: change width and height of elements but not apply the scale
-                // const elements = this.svgContentGroup.selectedElements;
-                // const t = SVGActionsFactory.calculateElementsTransformation(elements);
-                // this._setSelectedElementsTransformation(t);
+                this._setSelectedElementsTransformation({
+                    width: baseUpdateData.transformation.width,
+                    height: baseUpdateData.transformation.height,
+                });
 
                 this.resetSelection();
             });

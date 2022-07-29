@@ -403,20 +403,20 @@ function Printing({ location }) {
     }, [enabledIntro]);
 
     async function onDropAccepted(files) {
-        const allFiles = files.map(d => d.name).join();
-        try {
-            await dispatch(printingActions.uploadModel(files));
-        } catch (e) {
-            modal({
-                title: i18n._('key-Printing/Page-Failed to open model.'),
-                body: (
-                    <React.Fragment>
-                        <p>{e.message || e.body.msg}</p>
-                        <p>{i18n._('key-Printing/ContextMenu-Model source name')}: {allFiles}</p>
-                    </React.Fragment>
-                )
-            });
-        }
+        // const allFiles = files.map(d => d.name).join();
+        // try {
+        await dispatch(printingActions.uploadModel(files));
+        // } catch (e) {
+        //     modal({
+        //         title: i18n._('key-Printing/Page-Failed to open model.'),
+        //         body: (
+        //             <React.Fragment>
+        //                 <p>{e.message || e.body.msg}</p>
+        //                 <p>{i18n._('key-Printing/ContextMenu-Model source name')}: {allFiles}</p>
+        //             </React.Fragment>
+        //         )
+        //     });
+        // }
     }
     function onDropRejected() {
         const title = i18n._('key-Printing/Page-Warning');

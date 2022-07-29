@@ -125,7 +125,7 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                     newDefinition.settings.dwell_time.default_value = 5;
                     newDefinition.settings.fill_interval.default_value = 0.14;
                     newDefinition.settings.jog_speed.default_value = 3000;
-                    // newDefinition.settings.work_speed.default_value = 2500;
+                    newDefinition.settings.work_speed.default_value = 2500;
                     newDefinition.settings.fixed_power.default_value = 60;
                 }
                 if (key === 'movement_mode' && value === 'greyscale-line') {

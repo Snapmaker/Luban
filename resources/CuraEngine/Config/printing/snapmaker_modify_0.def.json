@@ -2986,7 +2986,7 @@
                             "calcu_value": "support_generate_type !== 'none'",
                             "settable_per_mesh": true,
                             "settable_per_extruder": false,
-                            "visible": "true"
+                            "visible": "false"
                         },
                         "support_structure": {
                             "label": "Support Structure",
@@ -4368,7 +4368,7 @@
                             "default_value": 6,
                             "minimum_value": "0",
                             "maximum_value_warning": "((prime_tower_size) * 0.5) ** 2 * 3.14159 * (layer_height) - sum(prime_tower_min_volume) + prime_tower_min_volume",
-                            "calcu_value": "dual_helper_type === 'prime_tower'",
+                            "visible": "dual_helper_type === 'prime_tower'",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
                             "filter": [

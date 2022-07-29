@@ -32,7 +32,6 @@ var asistantMapInitialized = false;
 var allValues = {};
 var affectKey = '';
 var hasValue = false;
-let i = 0;
 function flatAffectedValue(affectKey, affectSet, originalAffectSet, isDeep) {
     affectSet.forEach(function (item) {
         if (item !== affectKey) {
@@ -121,9 +120,10 @@ function resolveDefinition(definition, modifiedParams) {
                 var calcValue = insideValue.calcu_value && eval("(function calcValue() {\n                    hasValue = true;\n                    with (context) {\n                        return ".concat(insideValue.calcu_value, ";\n                    }\n                })()"));
                 if (_.isUndefined(calcValue)) {
                     hasValue = false;
-                };
-                // insideValue.minimum_value && eval("(function calcMinMax() {\n                hasValue = true;\n                with (context) {\n                    return ".concat(insideValue.minimum_value, ";\n                }\n            })()"));
-                // insideValue.maximum_value && eval("(function calcMinMax() {\n                hasValue = true;\n                with (context) {\n                    return ".concat(insideValue.maximum_value, ";\n                }\n            })()"));
+                }
+                ;
+                insideValue.minimum_value && eval("(function calcMinMax() {\n                hasValue = true;\n                with (context) {\n                    return ".concat(insideValue.minimum_value, ";\n                }\n            })()"));
+                insideValue.maximum_value && eval("(function calcMinMax() {\n                hasValue = true;\n                with (context) {\n                    return ".concat(insideValue.maximum_value, ";\n                }\n            })()"));
                 var calcEnabled = insideValue.visible && eval("(function calcEnable() {\n                hasValue = true;\n                with (context) {\n                    return ".concat(insideValue.visible, ";\n                }\n            })()"));
                 if (typeof calcEnabled !== 'undefined') {
                     definition.settings[key].visible = calcEnabled;
@@ -165,17 +165,27 @@ function resolveDefinition(definition, modifiedParams) {
     var allAsistantArray = new Set();
     var affectArray = [];
     if (modifiedParams) {
-        affectArray = modifiedParams.map(function (item) {
-            allAsistantArray.add(item[0]);
-            return item[0];
+        modifiedParams.forEach(function (param) {
+            Object.entries(allValues).forEach(function (_a) {
+                var _b = __read(_a, 2), valueKey = _b[0], valueItem = _b[1];
+                var valueArray = Array.from(valueItem);
+                var indexOfValue = valueArray.indexOf(param[0]|| []);
+                if (indexOfValue > -1) {
+                    allAsistantArray.add({
+                        param: valueKey,
+                        index: indexOfValue
+                    });
+                }
+            });
         });
-        Object.entries(allValues).forEach(function (_a) {
-            var _b = __read(_a, 2), key = _b[0], item = _b[1];
-            if (_.intersection(Array.from(item), affectArray).length > 0) {
-                allAsistantArray.add(key);
-            }
-        });
+        allAsistantArray = Array.from(allAsistantArray)
+            .sort(function (a, b) {
+            return a.index - b.index;
+        })
+            .map(function (d) { return d.param; });
     }
+    // console.log('allAsistantArray', allAsistantArray);
+
     var _loop_2 = function (key) {
         var value = _.cloneDeep(asistantMap.get(key));
         try {
@@ -229,7 +239,6 @@ function resolveDefinition(definition, modifiedParams) {
         }
     };
     try {
-        // console.log('allAsistantArray', allAsistantArray);
         // calc value & default_value
         for (var allAsistantArray_1 = __values(allAsistantArray), allAsistantArray_1_1 = allAsistantArray_1.next(); !allAsistantArray_1_1.done; allAsistantArray_1_1 = allAsistantArray_1.next()) {
             var key = allAsistantArray_1_1.value;

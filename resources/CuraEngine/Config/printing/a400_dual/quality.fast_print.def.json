@@ -449,7 +449,7 @@
             "default_value": 1
         },
         "extruders_enabled_count": {
-            "default_value": 1
+            "default_value": 2
         },
         "machine_nozzle_tip_outer_diameter": {
             "default_value": 1

@@ -10,6 +10,8 @@ import {
     MACHINE_EXTRUDER_X,
     MACHINE_EXTRUDER_Y,
     KEY_DEFAULT_CATEGORY_CUSTOM,
+    PRINTING_MANAGER_TYPE_MATERIAL,
+    PRINTING_MANAGER_TYPE_QUALITY
 } from '../../constants';
 import PresetDefinitionModel from './PresetDefinitionModel';
 import { resolveDefinition } from '../../../shared/lib/definitionResolver';
@@ -44,7 +46,6 @@ class DefinitionManager {
         // active definition
         const definitionRes = await this.getDefinition('active', false);
         this.activeDefinition = definitionRes;
-        console.log('definitionRes', definitionRes);
 
         res = await api.profileDefinitions.getDefaultDefinitions(
             this.headType,
@@ -157,9 +158,10 @@ class DefinitionManager {
         const definitions = await this.markDefaultDefinitions(
             res.body.definitions
         );
-        console.log('definitions', definitions[0], definitions[0].settings?.support_enable);
         const result = definitions.map((item) => {
-            resolveDefinition(item);
+            if ([PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY].includes(prefix)) {
+                resolveDefinition(item);
+            }
             return item
         }).map(this.fillCustomCategory);
 

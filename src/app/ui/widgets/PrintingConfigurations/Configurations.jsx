@@ -93,23 +93,23 @@ export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition
                     iconName = ALL_ICON_NAMES[paramName][1] || 'PrintingSettingNormal';
                 }
                 const eachParamObject = selectedDefinitionSettings[paramName];
-                const displayName = eachParamObject?.label;
-                const displayValue = eachParamObject?.default_value;
-                const segmentedDisplay = true;
-                const showSelect = false;
+                let displayName = eachParamObject?.label;
+                let displayValue = eachParamObject?.default_value;
+                let segmentedDisplay = true;
+                let showSelect = false;
                 const selectOptions = [];
                 if (paramName === 'infill_sparse_density') {
-                    // const modelStructure = selectedDefinitionSettings.model_structure_type;
-                    // showSelect = true;
-                    // displayName = modelStructure?.label;
-                    // displayValue = modelStructure?.default_value;
-                    // if (displayValue !== 'normal') {
-                    //     segmentedDisplay = false;
-                    //     iconName = ALL_ICON_NAMES[paramName][3];
-                    // }
-                    // Object.entries(modelStructure?.options).forEach(([value, label]) => {
-                    //     selectOptions.push({ value, label });
-                    // });
+                    const modelStructure = selectedDefinitionSettings.model_structure_type;
+                    showSelect = true;
+                    displayName = modelStructure?.label;
+                    displayValue = modelStructure?.default_value;
+                    if (displayValue !== 'normal') {
+                        segmentedDisplay = false;
+                        iconName = ALL_ICON_NAMES[paramName][3];
+                    }
+                    Object.entries(modelStructure?.options).forEach(([value, label]) => {
+                        selectOptions.push({ value, label });
+                    });
                 }
                 return (
                     <div key={paramName} className="margin-vertical-16">

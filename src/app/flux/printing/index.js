@@ -1842,18 +1842,22 @@ export const actions = {
             const { originalName, uploadName, children = [] } = res.body;
             return { originalName, uploadName, children };
         });
-        const fileNames = await Promise.all(ps);
+        const promiseResults = await Promise.allSettled(ps);
+        const fileNames = promiseResults.map((promiseTask) => {
+            return promiseTask.value || promiseTask
+        })
         const allChild = []
-        fileNames.map((item) => {
-            if (item.children.length) {
-                item.isGroup = true
+        fileNames.forEach((item) => {
+            if (item.children) {
+                if (item.children.length) {
+                    item.isGroup = true
+                }
+                allChild.push(...item.children)
             }
-            allChild.push(...item.children)
         });
         if (allChild.length) {
-            actions.__loadModel(allChild)(dispatch, getState).then(() => {
-                actions.__loadModel(fileNames)(dispatch, getState);
-            })
+            allChild.push(...fileNames);
+            actions.__loadModel(allChild)(dispatch, getState)
         } else {
             actions.__loadModel(fileNames)(dispatch, getState);
         }
@@ -3773,7 +3777,7 @@ export const actions = {
         const { promptDamageModel } = getState().machine;
         const { size } = getState().machine;
         const models = [...modelGroup.models];
-        const modelNames = files || [{ originalName, uploadName, sourcePly, isGroup, parentUploadName }];
+        const modelNames = files || [{ originalName, uploadName, sourcePly, isGroup, parentUploadName, children }];
         let _progress = 0;
         const promptTasks = [];
 
@@ -3814,7 +3818,7 @@ export const actions = {
                     resolve();
                 }
                 const uploadPath = `${DATA_PREFIX}/${model.uploadName}`;
-                if (isGroup) {
+                if (model.isGroup) {
                     const modelState = await modelGroup.generateModel({
                         loadFrom,
                         limitSize: size,
@@ -3822,7 +3826,7 @@ export const actions = {
                         sourceType,
                         originalName: model.originalName,
                         uploadName: model.uploadName,
-                        modelName,
+                        modelName: model.modelName,
                         mode: mode,
                         sourceWidth,
                         width: sourceWidth,
@@ -3831,10 +3835,10 @@ export const actions = {
                         geometry: null,
                         material: null,
                         transformation,
-                        modelID,
+                        modelID: model.modelID,
                         extruderConfig,
-                        isGroup,
-                        children
+                        isGroup: model.isGroup,
+                        children: model.children,
                     });
                     dispatch(actions.updateState(modelState));
 
@@ -3855,7 +3859,6 @@ export const actions = {
                         switch (type) {
                             case 'LOAD_MODEL_POSITIONS': {
                                 const { positions, originalPosition } = data;
-
                                 const bufferGeometry = new THREE.BufferGeometry();
                                 const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
                                 const material = new THREE.MeshPhongMaterial({
@@ -3890,7 +3893,7 @@ export const actions = {
                                         material: material,
                                         transformation,
                                         originalPosition,
-                                        modelID,
+                                        modelID: model.modelID,
                                         extruderConfig,
                                         parentModelID,
                                         parentUploadName: model.parentUploadName,
@@ -4013,6 +4016,35 @@ export const actions = {
 
         const newModels = modelGroup.models.filter(model => {
             return !models.includes(model) && model;
+        });
+        modelGroup.groupsChildrenMap.forEach((subModels, group) => {
+            if (subModels.every(id => id instanceof ThreeModel)) {
+                modelGroup.unselectAllModels();
+
+                group.meshObject.updateMatrixWorld();
+                const groupMatrix = group.meshObject.matrixWorld.clone();
+                const allSubmodelsId = subModels.map(d => d.modelID);
+                const leftModels = modelGroup.models.filter((model) => {
+                    return !(model instanceof ThreeModel && allSubmodelsId.includes(model.modelID))
+                });
+                group.add(subModels);
+                const point = modelGroup._computeAvailableXY(group, leftModels);
+                group.meshObject.position.x = point.x;
+                group.meshObject.position.y = point.y;
+
+                modelGroup.groupsChildrenMap.delete(group);
+                modelGroup.models = [...leftModels, group];
+                group.meshObject.applyMatrix4(groupMatrix);
+
+                group.stickToPlate();
+                group.computeBoundingBox();
+                const overstepped = modelGroup._checkOverstepped(group);
+
+
+
+                group.setOversteppedAndSelected(overstepped, group.isSelected);
+                modelGroup.addModelToSelectedGroup(group);
+            }
         });
         newModels.forEach((model) => {
             if (model instanceof ThreeModel) {

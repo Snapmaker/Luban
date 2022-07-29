@@ -29,12 +29,13 @@ const Dialog = {
         if (isElectron()) {
             const { remote } = window.require('electron');
             const currentWindow = remote.getCurrentWindow();
+            const defaultProperties = ['createDirectory', 'openFile'];
             const openDialogReturnValue = await remote.dialog.showOpenDialog(
                 currentWindow,
                 {
                     title: 'Snapmaker Luban',
                     filters: [{ name: 'files', extensions }],
-                    properties: isMultiSelect ? ['multiSelections'] : []
+                    properties: isMultiSelect ? defaultProperties.concat('multiSelections') : defaultProperties
                 }
             );
             const filePaths = openDialogReturnValue.filePaths;
