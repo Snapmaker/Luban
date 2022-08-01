@@ -103,6 +103,7 @@ export const actions = {
                 results: []
             };
         }
+        const { recovery } = modelGroup.unselectAllModels();
 
         progressStatesManager.startProgress(
             PROCESS_STAGE.PRINTING_REPAIRING_MODEL
@@ -216,7 +217,8 @@ export const actions = {
                 )
             }, headType)
         );
-
+        progressStatesManager.finishProgress(true);
+        recovery();
         return {
             allPepaired: promptTasks.length === 0,
             results

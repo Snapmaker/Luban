@@ -1021,7 +1021,7 @@
     "key-Progress/3DP-Ordinary": "全局视图",
     "key-Progress/3DP-Previewed G-code successfully.": "预览 G 代码成功",
     "key-Progress/3DP-Previewing G-code...{{progress}}%": "预览 G 代码中...{{progress}}%",
-    "key-Progress/3DP-Repair model successfully.": "",
+    "key-Progress/3DP-Repair model successfully.": "模型修复成功",
     "key-Progress/3DP-Repairing model... {{progress}}%": "模型修复中...{{progress}}%",
     "key-Progress/3DP-Scale to fit...{{progress}}%": "自适应缩放中...{{progress}}%",
     "key-Progress/3DP-Simplify model...{{prgress}}%": "模型简化中...{{progress}}%",

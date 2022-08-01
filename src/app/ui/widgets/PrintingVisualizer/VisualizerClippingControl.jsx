@@ -64,7 +64,7 @@ function VisualizerClippingControl({ simplifying }) {
         return (
             <React.Fragment>
                 <div className={styles['layer-wrapper']}>
-                    {/* <span className={styles['layer-label']}>{value || ''}</span> */}
+                    <span className={styles['layer-label']}>{value || ''}</span>
                     <div
                         style={{
                             position: 'relative',

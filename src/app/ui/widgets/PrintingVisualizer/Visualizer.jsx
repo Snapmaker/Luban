@@ -54,7 +54,6 @@ class Visualizer extends PureComponent {
         stage: PropTypes.number.isRequired,
         promptTasks: PropTypes.array.isRequired,
         selectedModelArray: PropTypes.array,
-        transformation: PropTypes.object,
         modelGroup: PropTypes.object.isRequired,
         gcodeLineGroup: PropTypes.object.isRequired,
         transformMode: PropTypes.string.isRequired,
@@ -207,27 +206,6 @@ class Visualizer extends PureComponent {
         },
         scaleToFitSelectedModel: (models) => {
             this.props.scaleToFitSelectedModel(models);
-        },
-        mirrorSelectedModel: (value) => {
-            switch (value) {
-                case 'X':
-                    this.props.updateSelectedModelTransformation({
-                        scaleX: this.props.transformation.scaleX * -1
-                    }, false);
-                    break;
-                case 'Y':
-                    this.props.updateSelectedModelTransformation({
-                        scaleY: this.props.transformation.scaleY * -1
-                    }, false);
-                    break;
-                case 'Z':
-                    this.props.updateSelectedModelTransformation({
-                        scaleZ: this.props.transformation.scaleZ * -1
-                    }, false);
-                    break;
-                default:
-                    break;
-            }
         },
         autoRotateSelectedModel: () => {
             this.props.autoRotateSelectedModel();
@@ -538,6 +516,7 @@ class Visualizer extends PureComponent {
         const { size, selectedModelArray, modelGroup, gcodeLineGroup, inProgress, hasModel, displayedType, transformMode } = this.props; // transformMode
 
         const isModelSelected = (selectedModelArray.length > 0);
+        const isModelHide = isModelSelected && !selectedModelArray[0].visible;
         const isMultipleModel = selectedModelArray.length > 1;
 
         const notice = this.getNotice();
@@ -695,7 +674,7 @@ class Visualizer extends PureComponent {
                             {
                                 type: 'item',
                                 label: i18n._('key-Printing/ContextMenu-Auto Rotate'),
-                                disabled: inProgress || !isModelSelected || isMultipleModel,
+                                disabled: inProgress || !isModelSelected || isModelHide || isMultipleModel,
                                 onClick: this.actions.autoRotateSelectedModel
                             },
                             {

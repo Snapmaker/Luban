@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import { TransferDescriptor } from 'threads';
-import { BufferAttribute, BufferGeometry, Line3, Matrix4, Plane, Vector3 } from 'three';
+import { Box3, BufferAttribute, BufferGeometry, Line3, Matrix4, Plane, Vector3 } from 'three';
 import { MeshBVH } from 'three-mesh-bvh';
 
 type TPoint = { x: number, y: number, z?: number }
@@ -12,8 +12,10 @@ export type IMessage = {
         normalized: boolean;
     }>,
     modelMatrix: Matrix4,
-    height: number,
-    layerHeight: number
+    // height: number,
+    layerHeight: number,
+    modelName?: string,
+    boundingBox: Box3
 }
 
 export type IResult = {
@@ -21,7 +23,13 @@ export type IResult = {
     vectors: TPoint[]
 }
 
-const calculateSectionPoints = ({ positionAttribute, modelMatrix, height, layerHeight }: IMessage) => {
+const calculateSectionPoints = ({ positionAttribute, modelMatrix, layerHeight, boundingBox }: IMessage) => {
+    layerHeight = Number(layerHeight);
+    const tempVector = new Vector3();
+    const tempLine = new Line3();
+    let positions: TPoint[] = [];
+    const plane = new Plane(new Vector3(0, 0, -1), 0);
+
     // let number = 0;
     // const now = new Date().getTime();
     return new Observable<IResult>((observer) => {
@@ -38,13 +46,17 @@ const calculateSectionPoints = ({ positionAttribute, modelMatrix, height, layerH
         bvhGeometry.setAttribute('position', position);
         let colliderBvh = new MeshBVH(bvhGeometry, { maxLeafTris: 3 });
 
-        const plane = new Plane(new Vector3(0, 0, -1), 0);
-        for (let layerTop = layerHeight; layerTop <= height; layerTop = Number((layerTop + layerHeight).toFixed(2))) {
+        for (let layerTop = layerHeight; layerTop < boundingBox.max.z; layerTop = Number((layerTop + layerHeight).toFixed(2))) {
+            if (layerTop <= boundingBox.min.z) {
+                observer.next({
+                    layerTop,
+                    vectors: []
+                });
+                continue;
+            }
             plane.constant = layerTop;
             let index = 0;
-            const tempVector = new Vector3();
-            const tempLine = new Line3();
-            const positions: TPoint[] = [];
+            positions = [];
             colliderBvh.shapecast({
                 intersectsBounds: (box) => {
                     return plane.intersectsBox(box);

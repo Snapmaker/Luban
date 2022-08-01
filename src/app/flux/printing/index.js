@@ -1046,7 +1046,7 @@ export const actions = {
             uploadName,
             sourcePly,
             reloadSimplifyModel: true
-        }]));
+        }], true));
     },
 
     logGenerateGcode: () => (dispatch, getState) => {
@@ -3102,6 +3102,28 @@ export const actions = {
         recovery();
     },
 
+    getMirrorType: (model) => (dispatch, getState) => {
+        const { targetTmpState, modelGroup } = getState().printing;
+
+        let isMirror = ''
+        const x = targetTmpState[model.modelID].from.scaleX
+            * targetTmpState[model.modelID].to.scaleX;
+        const y = targetTmpState[model.modelID].from.scaleY
+            * targetTmpState[model.modelID].to.scaleY;
+        const z = targetTmpState[model.modelID].from.scaleZ
+            * targetTmpState[model.modelID].to.scaleZ;
+        if (x / Math.abs(x) === -1) {
+            return 'mirrorX'
+        }
+        if (y / Math.abs(y) === -1) {
+            return 'mirrorY'
+        }
+        if (z / Math.abs(z) === -1) {
+            return 'mirrorZ'
+        }
+        return ''
+    },
+
     recordModelAfterTransform: (
         transformMode,
         modelGroup,
@@ -3124,6 +3146,7 @@ export const actions = {
 
         const selectedModelArray = modelGroup.selectedModelArray.concat();
         const { recovery } = modelGroup.unselectAllModels();
+        let isMirror = false
         for (const model of selectedModelArray) {
             modelGroup.unselectAllModels();
             modelGroup.addModelToSelectedGroup(model);
@@ -3159,9 +3182,14 @@ export const actions = {
                     });
                     break;
                 case 'scale':
+                    const mirrorType = dispatch(actions.getMirrorType(model))
+                    if (mirrorType) {
+                        isMirror = true
+                    }
                     operation = new ScaleOperation3D({
                         target: model,
-                        ...targetTmpState[model.modelID]
+                        ...targetTmpState[model.modelID],
+                        mirrorType
                     });
                     break;
                 default:
@@ -3170,23 +3198,8 @@ export const actions = {
             operations.push(operation);
         }
 
-        if (transformMode === 'scale') {
-            const isMirror = modelGroup.selectedModelArray.some((model) => {
-                const x = targetTmpState[model.modelID].from.scaleX
-                    * targetTmpState[model.modelID].to.scaleX;
-                const y = targetTmpState[model.modelID].from.scaleY
-                    * targetTmpState[model.modelID].to.scaleY;
-                const z = targetTmpState[model.modelID].from.scaleZ
-                    * targetTmpState[model.modelID].to.scaleZ;
-                return (
-                    x / Math.abs(x) === -1
-                    || y / Math.abs(y) === -1
-                    || z / Math.abs(z) === -1
-                );
-            });
-            if (isMirror) {
-                dispatch(actions.clearAllManualSupport(operations));
-            }
+        if (transformMode === 'scale' && isMirror) {
+            dispatch(actions.clearAllManualSupport(operations));
         }
 
         operations.registCallbackAfterAll(() => {
@@ -4924,9 +4937,11 @@ export const actions = {
     /**
      * @param {*} modelInfos: { modelID:string, uploadName:string, reloadSimplifyModel?: bool }[]
      */
-    updateModelMesh: (modelInfos) => async (dispatch, getState) => {
+    updateModelMesh: (modelInfos, silentLoading = false) => async (dispatch, getState) => {
         const { modelGroup, progressStatesManager } = getState().printing;
-        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
+        if (!silentLoading) {
+            progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
+        }
         let _progress = 0;
         const promptTasks = [];
         const { recovery } = modelGroup.unselectAllModels();
@@ -4946,7 +4961,7 @@ export const actions = {
 
                             model.updateBufferGeometry(positions);
 
-                            if (modelInfos.length > 1) {
+                            if (!silentLoading && modelInfos.length > 1) {
                                 _progress += 1 / modelInfos.length;
                                 dispatch(
                                     actions.updateState({
@@ -4981,7 +4996,7 @@ export const actions = {
                             if (modelInfos.length === 1) {
                                 const state = getState().printing;
                                 const progress = 0.25 + data.progress * 0.5;
-                                if (progress - state.progress > 0.01 || progress > 0.75 - EPSILON) {
+                                if (!silentLoading && progress - state.progress > 0.01 || progress > 0.75 - EPSILON) {
                                     dispatch(
                                         actions.updateState({
                                             stage: STEP_STAGE.PRINTING_LOADING_MODEL,
@@ -4997,7 +5012,7 @@ export const actions = {
                                 status: 'load-model-fail',
                                 originalName: model.originalName
                             });
-                            if (modelInfos.length > 1) {
+                            if (!silentLoading && modelInfos.length > 1) {
                                 _progress += 1 / modelInfos.length;
                                 dispatch(
                                     actions.updateState({
@@ -5021,14 +5036,14 @@ export const actions = {
         modelGroup.models = modelGroup.models.concat();
 
         recovery();
-        dispatch(
-            actions.updateState({
+        if (!silentLoading) {
+            dispatch(actions.updateState({
                 modelGroup,
                 stage: STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE,
                 progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1),
                 promptTasks
-            })
-        );
+            }));
+        }
         modelGroup.updatePrimeTowerHeight()
         dispatch(actions.applyProfileToAllModels());
         dispatch(actions.displayModel());
@@ -5041,7 +5056,7 @@ export const actions = {
 
         const { results, allPepaired } = await dispatch(appGlobalActions.repairSelectedModels(HEAD_PRINTING));
 
-        await dispatch(actions.updateModelMesh(results));
+        await dispatch(actions.updateModelMesh(results, true));
 
         return { allPepaired };
     }

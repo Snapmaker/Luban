@@ -1,13 +1,14 @@
 import type ModelGroup from '../../models/ModelGroup';
 import { ModelTransformation } from '../../models/ThreeBaseModel';
-import type ThreeGroup from '../../models/ThreeGroup';
+import ThreeGroup from '../../models/ThreeGroup';
 import ThreeModel from '../../models/ThreeModel';
 import Operation from './Operation';
 
 type ScaleOperationProp = {
     target: ThreeGroup | ThreeModel,
     from: ModelTransformation,
-    to: ModelTransformation
+    to: ModelTransformation,
+    mirrorType: 'mirrorX' | 'mirrorY' | 'mirrorZ'
 }
 
 type ScaleOperationState = ScaleOperationProp & {
@@ -21,8 +22,16 @@ export default class ScaleOperation3D extends Operation<ScaleOperationState> {
             target: props.target,
             modelGroup: props.target.modelGroup,
             from: props.from,
-            to: props.to
+            to: props.to,
+            mirrorType: props.mirrorType
         };
+        this.changeGroupMirrorFlag();
+    }
+
+    private changeGroupMirrorFlag() {
+        if (this.state.target instanceof ThreeGroup && this.state.mirrorType) {
+            this.state.target[this.state.mirrorType] = !this.state.target[this.state.mirrorType];
+        }
     }
 
     public redo() {
@@ -54,5 +63,6 @@ export default class ScaleOperation3D extends Operation<ScaleOperationState> {
         const overstepped = modelGroup._checkOverstepped(model);
         model.setOversteppedAndSelected(overstepped, model.isSelected);
         modelGroup.calaClippingMap();
+        this.changeGroupMirrorFlag();
     }
 }

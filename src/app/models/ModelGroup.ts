@@ -1811,7 +1811,7 @@ class ModelGroup extends EventEmitter {
             }
             if (model.parentUploadName) {
                 this.groupsChildrenMap.forEach((subModelIDs, group) => {
-                    if (modelInfo.parentUploadName === group.uploadName) {
+                    if ((modelInfo as ModelInfo).parentUploadName === group.uploadName) {
                         const newSubModelIDs = subModelIDs.map((id) => {
                             if (id === model.modelID) {
                                 return model;
