@@ -6,7 +6,7 @@
  */
 import * as THREE from 'three';
 import EventEmitter from 'events';
-import { isUndefined } from 'lodash';
+import { isUndefined, throttle } from 'lodash';
 import TransformControls from './TransformControls';
 import TransformControls2D from './TransformControls2D';
 // const EPSILON = 0.000001;
@@ -122,6 +122,10 @@ class Controls extends EventEmitter {
     isMouseDown = false;
 
     isClickOnPeripheral = false;
+
+    highLightOnMouseMove = throttle(() => {
+        this.hoverLine();
+    }, 300)
 
     constructor(
         sourceType, displayedType, camera, group, domElement, onScale, onPan, supportActions, minScale = undefined, maxScale = undefined, scaleSize = undefined
@@ -373,7 +377,7 @@ class Controls extends EventEmitter {
             this.transformControl.onMouseHover(coord);
         }
 
-        this.hoverLine();
+        this.highLightOnMouseMove();
 
         if (!(this.selectedGroup && this.selectedGroup.children.length > 0) || this.state !== STATE.NONE) {
             return;

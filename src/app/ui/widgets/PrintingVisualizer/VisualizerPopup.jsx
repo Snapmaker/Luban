@@ -17,16 +17,21 @@ export const loadModelFailPopup = (fileName) => {
     });
 };
 
-export const repairModelFailPopup = (fileName) => {
+export const repairModelFailPopup = (models, onClose) => {
+    const modelNames = models.map((c) => {
+        return c.originalName;
+    }).join();
     return modal({
         cancelTitle: i18n._(''),
         title: i18n._('key-Printing/ContextMenu-Repair Error'),
         body: (
             <React.Fragment>
                 <p>{i18n._('Failed to repair this object. \n')}</p>
-                <p>{i18n._('key-Printing/ContextMenu-Model source name')}: {fileName}</p>
+                <p>{i18n._('key-Printing/ContextMenu-Model source name')}: {modelNames}</p>
             </React.Fragment>
         )
+    }).close(() => {
+        onClose();
     });
 };
 

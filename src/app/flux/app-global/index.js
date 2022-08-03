@@ -110,7 +110,6 @@ export const actions = {
         );
         dispatch(
             actions.updateState({
-                stage: STEP_STAGE.PRINTING_REPAIRING_MODEL,
                 progress: progressStatesManager.updateProgress(
                     STEP_STAGE.PRINTING_REPAIRING_MODEL,
                     0.01
@@ -176,6 +175,9 @@ export const actions = {
                                     status: 'repair-model-fail',
                                     originalName: model.originalName
                                 });
+                                if (models.length === 1) {
+                                    progressStatesManager.finishProgress(false);
+                                }
                                 break;
                             case 'success':
                                 if (models.length > 1) {
@@ -205,19 +207,23 @@ export const actions = {
             }
         });
 
-        await Promise.all([minimumTime, ...promises]);
+        await Promise.allSettled([minimumTime, ...promises]);
+        if (promptTasks.length) {
+            dispatch(
+                actions.updateState({
+                    promptTasks,
+                    stage: STEP_STAGE.PRINTING_REPAIRING_MODEL,
+                    progress: progressStatesManager.updateProgress(
+                        STEP_STAGE.PRINTING_REPAIRING_MODEL,
+                        1
+                    )
+                }, headType)
+            );
+        }
 
-        dispatch(
-            actions.updateState({
-                promptTasks,
-                stage: STEP_STAGE.PRINTING_REPAIRING_MODEL,
-                progress: progressStatesManager.updateProgress(
-                    STEP_STAGE.PRINTING_REPAIRING_MODEL,
-                    1
-                )
-            }, headType)
+        progressStatesManager.finishProgress(
+            !((models.length === 1 && promptTasks.length))
         );
-        progressStatesManager.finishProgress(true);
         recovery();
         return {
             allPepaired: promptTasks.length === 0,

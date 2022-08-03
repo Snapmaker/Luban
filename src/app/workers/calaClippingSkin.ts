@@ -1,9 +1,11 @@
 import { Observable } from 'rxjs';
+import { Transfer, TransferDescriptor } from 'threads';
 import { polyDiff, polyIntersection, polyOffset } from '../../shared/lib/clipper/cLipper-adapter';
+import { bufferToPoint, expandBuffer, pointToBuffer } from '../lib/buffer-utils';
 
 type TPoint = { x: number, y: number, z?: number }
 
-type TPolygon = TPoint[][]
+type TPolygon = ArrayBuffer[]
 
 const intersectionSkin = (subPaths, vectorsArray) => {
     if (!subPaths || subPaths.length === 0 || !vectorsArray || vectorsArray.length === 0) {
@@ -13,24 +15,39 @@ const intersectionSkin = (subPaths, vectorsArray) => {
 };
 
 export type TMessage = {
-    currentInnerWall: TPolygon[],
-    otherLayers: TPolygon[][],
-    lineWidth: number
+    innerWall: TransferDescriptor<TPolygon[][]>,
+    otherLayers: TransferDescriptor<TPolygon[][]>,
+    lineWidth: number,
+    innerWallCount: number
 }
 
 export type TResult = {
-    infill: TPolygon[],
-    skin: TPolygon[]
+    infill: TransferDescriptor<TPolygon[]>,
+    skin: TransferDescriptor<TPolygon[]>,
+    innerWall: TransferDescriptor<TPolygon[][]>
 }
 
-const unionPolygons = (polygons: TPolygon[]): TPolygon => {
+const unionPolygons = (polygons: TPoint[][][]): TPoint[][] => {
     return polygons.reduce((p, c) => {
         p.push(...c);
         return p;
     }, []);
 };
 
-const calaClippingSkin = ({ currentInnerWall, otherLayers, lineWidth }: TMessage) => {
+const calaClippingSkin = ({ innerWall, otherLayers: _otherLayers, lineWidth, innerWallCount }: TMessage) => {
+    const currentInnerWall = innerWall.send ? innerWall.send[innerWallCount - 1].map((polygon) => {
+        return polygon.map((item) => {
+            return bufferToPoint(item);
+        });
+    }) : [];
+    const otherLayers = _otherLayers.send.map((polygons) => {
+        return polygons.map((polygon) => {
+            return polygon.map((item) => {
+                return bufferToPoint(item);
+            });
+        });
+    });
+
     return new Observable((observer) => {
         try {
             const commonArea = otherLayers.reduce((p, c) => {
@@ -54,9 +71,22 @@ const calaClippingSkin = ({ currentInnerWall, otherLayers, lineWidth }: TMessage
                 skin = polyOffset(unionPolygons(skin), -lineWidth);
                 skin = [skin];
             }
+
+            skin = skin.map((item: TPoint[][]) => {
+                return item.map((j) => {
+                    return pointToBuffer(j);
+                });
+            });
+            infill = infill.map((item: TPoint[][]) => {
+                return item.map((j) => {
+                    return pointToBuffer(j);
+                });
+            });
+
             observer.next({
-                infill,
-                skin
+                infill: Transfer(infill, expandBuffer(infill)),
+                skin: Transfer(skin, expandBuffer(skin)),
+                innerWall: Transfer(innerWall.send, expandBuffer(innerWall.send))
             });
         } catch (error) {
             console.error('[web worker]: calaClippingSkin', error);

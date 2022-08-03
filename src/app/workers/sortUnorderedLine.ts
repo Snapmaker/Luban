@@ -4,12 +4,13 @@ import { Transfer, TransferDescriptor } from 'threads';
 import { polyOffset } from '../../shared/lib/clipper/cLipper-adapter';
 import { Polygon, Polygons } from '../../shared/lib/clipper/Polygons';
 import { PolygonsUtils } from '../../shared/lib/math/PolygonsUtils';
+import { bufferToPoint, expandBuffer, pointToBuffer } from '../lib/buffer-utils';
 
 type TPoint = { x: number, y: number, z?: number }
-export type TPolygon = TPoint[][]
+export type TPolygon = ArrayBuffer[]
 
 export type TMessage = {
-    fragments: TransferDescriptor<TPoint[]>,
+    fragments: TransferDescriptor<ArrayBuffer>,
     layerHeight: number,
     innerWallCount: number,
     lineWidth: number
@@ -99,7 +100,8 @@ const cleanStack = (stack: TPointValue[], ringIndex: number) => {
 };
 
 const sortUnorderedLine = ({ fragments, innerWallCount, lineWidth, layerHeight }: TMessage) => {
-    let pointsMap = toPointMap(fragments.send);
+    const points = bufferToPoint(fragments.send);
+    let pointsMap = toPointMap(points);
     fragments = null;
     const findChain: string[] = [];
     let stack: TPointValue[] = [];
@@ -196,14 +198,22 @@ const sortUnorderedLine = ({ fragments, innerWallCount, lineWidth, layerHeight }
 
             let innerWall = Array(innerWallCount).fill('').map((_, index) => {
                 return marged.map((item) => {
-                    return polyOffset(item, -lineWidth * (index + 1));
+                    return polyOffset(item, -lineWidth * (index + 1)).map((k) => {
+                        return pointToBuffer(k);
+                    });
+                });
+            });
+
+            marged = marged.map((t) => {
+                return t.map((item) => {
+                    return pointToBuffer(item);
                 });
             });
             const n3 = new Date().getTime();
 
             observer.next({
-                outWall: Transfer(marged as unknown as ArrayBuffer),
-                innerWall: Transfer(innerWall as unknown as ArrayBuffer),
+                outWall: Transfer(marged, expandBuffer(marged)),
+                innerWall: Transfer(innerWall, expandBuffer(innerWall)),
                 time: n3
             });
             marged = null;

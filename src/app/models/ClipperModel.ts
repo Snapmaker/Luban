@@ -9,14 +9,9 @@ import { ModelTransformation } from './ThreeBaseModel';
 import generateLine from '../lib/generate-line';
 import { CLIPPING_LINE_COLOR, PLANE_MAX_HEIGHT } from './ModelGroup';
 import clippingPoolManager from '../lib/manager/ClippingPoolManager';
+import { bufferToPoint, expandBuffer } from '../lib/buffer-utils';
 
-type TPoint = {
-    x: number,
-    y: number,
-    z?: number
-}
-
-export type TPolygon = TPoint[][]
+export type TPolygon = ArrayBuffer[]
 
 type TInfillPattern = 'lines' | 'grid' | 'triangles' | 'trihexagon' | 'cubic'
 
@@ -158,7 +153,7 @@ class ClippingModel {
         this.group.add(this.meshObjectGroup);
     }
 
-    public async updateClippingMap(transformation: ModelTransformation, boundingBox: Box3) {
+    public updateClippingMap(transformation: ModelTransformation, boundingBox: Box3) {
         this.modelBoundingBox = boundingBox;
         let tags = ['rotationX', 'rotationY', 'rotationZ', 'scaleX', 'scaleY', 'scaleZ'];
         let re = tags.some((tag) => {
@@ -168,7 +163,7 @@ class ClippingModel {
             this.cancalWorkers();
             this.updateBvhGeometry(transformation);
             this.reCala();
-            return;
+            return true;
         }
 
         tags = ['positionX', 'positionY', 'positionZ'];
@@ -178,7 +173,9 @@ class ClippingModel {
         if (re) {
             this.updateBvhGeometry(transformation);
             this.reCala();
+            return true;
         }
+        return false;
     }
 
     public updateBvhGeometry(transformation: ModelTransformation) {
@@ -221,8 +218,6 @@ class ClippingModel {
         }
         // stop worker pool
         this.clear().then(() => {
-            console.log('==>>> start calaClippingWall', this.model.modelName, this.model.boundingBox);
-
             this.model.computeBoundingBox();
 
             const modelMatrix = new THREE.Matrix4();
@@ -240,10 +235,12 @@ class ClippingModel {
                     boundingBox: this.model.boundingBox
                 }, ({ layerTop, vectors }) => {
                     layerCount++;
-                    if (vectors.length) {
+                    this.clippingWorkerMap.set(layerTop, () => null);
+
+                    if (vectors.send && vectors.send.byteLength) {
                         // const now2 = new Date().getTime();
-                        const task = clippingPoolManager.sortUnorderedLine({
-                            fragments: Transfer(vectors as unknown as ArrayBuffer),
+                        clippingPoolManager.sortUnorderedLine({
+                            fragments: Transfer(vectors.send),
                             layerHeight: layerTop,
                             innerWallCount: wallCount,
                             lineWidth: this.clippingConfig.lineWidth,
@@ -253,8 +250,8 @@ class ClippingModel {
                                 this.clippingMap.set(layerTop, res.outWall.send);
                                 this.innerWallMap.set(layerTop, res.innerWall.send);
                             } else {
-                                this.clippingMap.set(layerTop, [[]]);
-                                this.innerWallMap.set(layerTop, [[]]);
+                                this.clippingMap.set(layerTop, [[new ArrayBuffer(0)]]);
+                                this.innerWallMap.set(layerTop, [[[new ArrayBuffer(0)]]]);
                             }
                             this.clippingWorkerMap.delete(layerTop);
                             subscriber.next(this.clippingWorkerMap);
@@ -262,11 +259,12 @@ class ClippingModel {
                                 // wall complete
                                 subscriber.complete();
                             }
+                        }).then((task) => {
+                            this.clippingWorkerMap.set(layerTop, task.terminate);
                         });
-                        this.clippingWorkerMap.set(layerTop, task.terminate);
                     } else {
-                        this.clippingMap.set(layerTop, [[]]);
-                        this.innerWallMap.set(layerTop, [[]]);
+                        this.clippingMap.set(layerTop, [[new ArrayBuffer(0)]]);
+                        this.innerWallMap.set(layerTop, [[[new ArrayBuffer(0)]]]);
                     }
                 }, () => {
                     this.layerCount = layerCount;
@@ -286,32 +284,39 @@ class ClippingModel {
 
     public calaClippingSkin() {
         const wallCount = Math.max(1, Math.round((this.clippingConfig.wallThickness - this.clippingConfig.lineWidth) / this.clippingConfig.lineWidth) + 1);
-
         const observable = new Observable(subscriber => {
             clippingPoolManager.mapClippingSkinArea({
-                innerWallMap: this.innerWallMap,
+                innerWallMap: Transfer(
+                    this.innerWallMap, expandBuffer(
+                        Array.from(this.innerWallMap.values())
+                    )
+                ),
                 innerWallCount: wallCount,
                 lineWidth: this.clippingConfig.lineWidth,
                 bottomLayers: this.clippingConfig.bottomLayers,
                 topLayers: this.clippingConfig.topLayers,
                 modelBoundingBox: this.modelBoundingBox,
                 layerHeight: this.clippingConfig.layerHeight
-            }, ({ otherLayers, layerTop }) => {
-                const currentInnerWall = this.innerWallMap.get(layerTop) ? this.innerWallMap.get(layerTop)[wallCount - 1] : [];
-                const task = clippingPoolManager.calaClippingSkin({
-                    currentInnerWall,
-                    otherLayers: otherLayers.send,
-                    lineWidth: this.clippingConfig.lineWidth
+            }, ({ innerWall, otherLayers, layerTop }) => {
+                this.clippingWorkerMap.set(layerTop, () => null);
+
+                clippingPoolManager.calaClippingSkin({
+                    innerWall: Transfer(innerWall.send, expandBuffer(innerWall.send)),
+                    otherLayers: Transfer(otherLayers.send, expandBuffer(otherLayers.send)),
+                    lineWidth: this.clippingConfig.lineWidth,
+                    innerWallCount: wallCount,
                 }, (res) => {
-                    this.skinMap.set(layerTop, res.skin);
-                    this.infillMap.set(layerTop, res.infill);
+                    this.innerWallMap.set(layerTop, res.innerWall.send);
+                    this.skinMap.set(layerTop, res.skin.send);
+                    this.infillMap.set(layerTop, res.infill.send);
                     this.clippingWorkerMap.delete(layerTop);
                     subscriber.next(this.clippingWorkerMap);
                     if (this.layerCount !== null && this.clippingWorkerMap.size === 0 && this.layerCount === this.infillMap.size) {
                         subscriber.complete();
                     }
+                }).then((task) => {
+                    this.clippingWorkerMap.set(layerTop, task.terminate);
                 });
-                this.clippingWorkerMap.set(layerTop, task.terminate);
             }, () => {
                 this.clippingWorkerMap.delete(0);
             }).then((worker) => {
@@ -369,9 +374,10 @@ class ClippingModel {
         const arr = [];
         infillArea.forEach((polygon) => {
             polygon.forEach((vectors) => {
-                for (let i = 0; i < vectors.length; i++) {
-                    const begin = vectors[i];
-                    const end = vectors[i + 1];
+                const points = bufferToPoint(vectors);
+                for (let i = 0; i < points.length; i++) {
+                    const begin = points[i];
+                    const end = points[i + 1];
                     arr.push(begin, end);
                 }
             });
@@ -422,9 +428,10 @@ class ClippingModel {
             const arr = [];
             polygons.forEach((polygon) => {
                 polygon.forEach((vectors) => {
-                    for (let k = 0; k < vectors.length; k++) {
-                        const begin = vectors[k];
-                        const end = vectors[k + 1];
+                    const points = bufferToPoint(vectors);
+                    for (let k = 0; k < points.length; k++) {
+                        const begin = points[k];
+                        const end = points[k + 1];
                         if (end) {
                             arr.push(begin, end);
                         }
@@ -468,7 +475,8 @@ class ClippingModel {
     }
 
     private setPointFromPolygon(arr, polygon, clippingHeight) {
-        polygon.forEach((paths) => {
+        polygon.forEach((buffer) => {
+            const paths = bufferToPoint(buffer);
             for (let i = 0; i < paths.length; i++) {
                 const start = paths[i];
                 const end = paths[i + 1];
@@ -493,9 +501,10 @@ class ClippingModel {
                 polygonss.forEach((_polygons) => {
                     _polygons.forEach((polygon) => {
                         polygon.forEach((vectors) => {
-                            for (let i = 0; i < vectors.length; i++) {
-                                const begin = vectors[i];
-                                const end = vectors[i + 1];
+                            const points = bufferToPoint(vectors);
+                            for (let i = 0; i < points.length; i++) {
+                                const begin = points[i];
+                                const end = points[i + 1];
                                 if (end) {
                                     arr.push(begin.x, begin.y, clippingHeight);
                                     arr.push(end.x, end.y, clippingHeight);

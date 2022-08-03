@@ -15,11 +15,11 @@ class ClippingPoolManager {
         this.getPool();
     }
 
-    public sortUnorderedLine(message: sortUnorderedLine.TMessage, onMessage?: (data: sortUnorderedLine.IResult) => void, onComplete?: () => void) {
+    public async sortUnorderedLine(message: sortUnorderedLine.TMessage, onMessage?: (data: sortUnorderedLine.IResult) => void, onComplete?: () => void) {
         return this.execTask<sortUnorderedLine.IResult>('sortUnorderedLine', message, onMessage, onComplete);
     }
 
-    public calaClippingSkin(
+    public async calaClippingSkin(
         message: calaClippingSkin.TMessage, onMessage: (data: calaClippingSkin.TResult) => void, onComplete?: () => void
     ) {
         return this.execTask('calaClippingSkin', message, onMessage, onComplete);
@@ -40,6 +40,7 @@ class ClippingPoolManager {
 
         return {
             terminate: async () => {
+                this.worker = null;
                 return Thread.terminate(worker);
             }
         };
@@ -59,32 +60,52 @@ class ClippingPoolManager {
 
         return {
             terminate: async () => {
+                this.worker = null;
                 return Thread.terminate(worker);
             }
         };
     }
 
-    private execTask<T>(workerName: string, message: unknown, onMessage: ((data: T) => void), onComplete?: () => void) {
-        const workerPool = this.getPool();
-
-        const task = workerPool.queue(async (worker) => {
-            return new Promise<void>((resolve) => {
-                const subscribe = worker[workerName](message).subscribe({
-                    next: onMessage,
-                    complete() {
-                        resolve();
-                        subscribe.unsubscribe();
-                        onComplete && onComplete();
-                    }
-                });
-            });
+    private async cancelTask(task) {
+        return new Promise<void>((_resolve) => {
+            const workLoop = async (deadline) => {
+                if (deadline.timeRemaining() > 0) {
+                    _resolve(task.cancel());
+                } else {
+                    window.requestIdleCallback(workLoop);
+                }
+            };
+            window.requestIdleCallback(workLoop);
         });
+    }
 
-        return {
-            terminate: () => {
-                task && task.cancel();
-            }
-        };
+    private async execTask<T>(workerName: string, message: unknown, onMessage: ((data: T) => void), onComplete?: () => void) {
+        return new Promise<{ terminate:() => Promise<void> }>((_resolve) => {
+            const workLoop = async (deadline) => {
+                if (deadline.timeRemaining() > 0) {
+                    const workerPool = this.getPool();
+
+                    const task = workerPool.queue(async (worker) => {
+                        return new Promise<void>((resolve) => {
+                            const subscribe = worker[workerName](message).subscribe({
+                                next: onMessage,
+                                complete() {
+                                    resolve();
+                                    subscribe.unsubscribe();
+                                    onComplete && onComplete();
+                                }
+                            });
+                        });
+                    });
+                    _resolve({
+                        terminate: async () => this.cancelTask(task)
+                    });
+                } else {
+                    window.requestIdleCallback(workLoop);
+                }
+            };
+            window.requestIdleCallback(workLoop);
+        });
     }
 
     public terminate() {

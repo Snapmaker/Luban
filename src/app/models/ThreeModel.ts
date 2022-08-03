@@ -197,9 +197,12 @@ class ThreeModel extends BaseModel {
         this.clipper.init();
     }
 
-    public async updateClippingMap() {
+    public updateClippingMap() {
         this.onTransform();
-        this.clipper && this.clipper.updateClippingMap(this.transformation, this.boundingBox);
+        if (this.clipper) {
+            return this.clipper.updateClippingMap(this.transformation, this.boundingBox);
+        }
+        return false;
     }
 
     public updateDisplayedType(value) {

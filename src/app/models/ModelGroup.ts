@@ -29,6 +29,7 @@ import workerManager from '../lib/manager/workerManager';
 import { IResult as TBrimResult } from '../workers/plateAdhesion/generateBrim';
 import { IResult as TRaftResult } from '../workers/plateAdhesion/generateRaft';
 import { IResult as TSkirtResult } from '../workers/plateAdhesion/generateSkirt';
+import { bufferToPoint } from '../lib/buffer-utils';
 
 const CUSTOM_EVENTS = {
     UPDATE: { type: 'update' }
@@ -890,8 +891,8 @@ class ModelGroup extends EventEmitter {
                 break;
             default:
         }
-
-        this.modelChanged();
+        // TODO: Performance optimization test
+        // this.modelChanged();
         this.emit(ModelEvents.ModelSelect);
         return this.getState(false);
     }
@@ -1495,8 +1496,7 @@ class ModelGroup extends EventEmitter {
         this.updateClippingPlane(PLANE_MAX_HEIGHT);
         this.emit(ModelEvents.ClippingHeightReset, true);
 
-        this.stopClipper();
-        this.plateAdhesion.clear();
+        this.plateAdhesion.visible = false;
     }
 
     // model transformation triggered by controls
@@ -2615,7 +2615,9 @@ class ModelGroup extends EventEmitter {
             const polygonss = model.clipper.clippingMap.get(model.clipper.clippingConfig.layerHeight) || [];
             polygonss && polygonss.forEach((polygons) => {
                 const _paths = (() => {
-                    const res = PolygonsUtils.simplify(polygons, 0.2);
+                    const res = PolygonsUtils.simplify(polygons.map((polygon) => {
+                        return bufferToPoint(polygon);
+                    }), 0.2);
                     if (this.adhesionConfig.adhesionType === 'skirt') {
                         return res;
                     } else {
@@ -2746,9 +2748,13 @@ class ModelGroup extends EventEmitter {
     }
 
     public calaClippingMap() {
-        this.getThreeModels().forEach((model) => {
-            model.updateClippingMap();
+        const shouldUpdate = this.getThreeModels().some((model) => {
+            return model.updateClippingMap();
         });
+        if (shouldUpdate) {
+            this.plateAdhesion.clear();
+        }
+        this.plateAdhesion.visible = true;
     }
 
     public setSectionMesh() {

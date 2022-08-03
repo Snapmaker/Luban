@@ -1,7 +1,8 @@
 import { Observable } from 'rxjs';
-import { TransferDescriptor } from 'threads';
+import { Transfer, TransferDescriptor } from 'threads';
 import { Box3, BufferAttribute, BufferGeometry, Line3, Matrix4, Plane, Vector3 } from 'three';
 import { MeshBVH } from 'three-mesh-bvh';
+import { pointToBuffer } from '../lib/buffer-utils';
 
 type TPoint = { x: number, y: number, z?: number }
 
@@ -20,7 +21,7 @@ export type IMessage = {
 
 export type IResult = {
     layerTop: number,
-    vectors: TPoint[]
+    vectors: TransferDescriptor<ArrayBuffer>
 }
 
 const calculateSectionPoints = ({ positionAttribute, modelMatrix, layerHeight, boundingBox }: IMessage) => {
@@ -50,7 +51,7 @@ const calculateSectionPoints = ({ positionAttribute, modelMatrix, layerHeight, b
             if (layerTop <= boundingBox.min.z) {
                 observer.next({
                     layerTop,
-                    vectors: []
+                    vectors: Transfer(new ArrayBuffer(0))
                 });
                 continue;
             }
@@ -103,7 +104,7 @@ const calculateSectionPoints = ({ positionAttribute, modelMatrix, layerHeight, b
             });
             observer.next({
                 layerTop,
-                vectors: positions
+                vectors: Transfer(pointToBuffer(positions))
             });
             // number++;
         }
