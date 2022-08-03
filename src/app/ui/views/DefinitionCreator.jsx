@@ -160,32 +160,36 @@ const DefinitionCreator = ({
                             dropdownRender={menu => (
                                 <>
                                     {menu}
-                                    <Divider style={{ margin: '0' }} />
-                                    <TextInput
-                                        value={newOptionValue}
-                                        bordered={false}
-                                        placeholder={i18n._(
-                                            'key-Printing/PrintingConfigurations-Add Item'
-                                        )}
-                                        onChange={e => setNewOptionsValue(e.target.value)}
-                                    />
-                                    {!!newOptionValue && (
-                                        <SvgIcon
-                                            className="margin-top-2"
-                                            color="#1890FF"
-                                            name="CameraCaptureExtract"
-                                            onClick={() => {
-                                                setMaterialOptions([
-                                                    ...materialOptions,
-                                                    {
-                                                        label: newOptionValue,
-                                                        value: newOptionValue,
-                                                        i18n: newOptionValue
-                                                    }
-                                                ]);
-                                                setNewOptionsValue(newOptionValue);
-                                            }}
-                                        />
+                                    {!(managerType === PRINTING_MANAGER_TYPE_MATERIAL && !isCreate) && (
+                                        <>
+                                            <Divider style={{ margin: '0' }} />
+                                            <TextInput
+                                                value={newOptionValue}
+                                                bordered={false}
+                                                placeholder={i18n._(
+                                                    'key-Printing/PrintingConfigurations-Add Item'
+                                                )}
+                                                onChange={e => setNewOptionsValue(e.target.value)}
+                                            />
+                                            {!!newOptionValue && (
+                                                <SvgIcon
+                                                    className="margin-top-2"
+                                                    color="#1890FF"
+                                                    name="CameraCaptureExtract"
+                                                    onClick={() => {
+                                                        setMaterialOptions([
+                                                            ...materialOptions,
+                                                            {
+                                                                label: newOptionValue,
+                                                                value: newOptionValue,
+                                                                i18n: newOptionValue
+                                                            }
+                                                        ]);
+                                                        setNewOptionsValue('');
+                                                    }}
+                                                />
+                                            )}
+                                        </>
                                     )}
                                 </>
                             )}

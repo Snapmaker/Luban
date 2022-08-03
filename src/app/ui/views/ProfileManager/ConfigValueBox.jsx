@@ -39,10 +39,9 @@ function ConfigValueBox({
     setCustomMode,
     onChangeCustomConfig
 }) {
-    const { printingParamsType, materialParamsType } = useSelector(state => state?.printing);
+    const { printingParamsType, materialParamsType, showParamsProfile } = useSelector(state => state?.printing);
     const [activeCateId, setActiveCateId] = useState(2);
     const [selectParamsType, setSelectParamsType] = useState(managerType === PRINTING_MANAGER_TYPE_MATERIAL ? materialParamsType : printingParamsType);
-    const [showProfileDocs, setShowProfileDocs] = useState(true);
     const [selectProfile, setSelectProfile] = useState('');
     const [selectCategory, setSelectCategory] = useState('');
     const [mdContent, setMdContent] = useState('');
@@ -473,16 +472,16 @@ function ConfigValueBox({
                                         })}
                                 </div>
                             </div>
-                            <div className={classNames(styles['manager-params-docs'], 'width-percent-40 background-grey-3 border-radius-16 position-re', showProfileDocs ? '' : 'width-1-important min-width-1 margin-right-16')}>
-                                <Anchor onClick={() => setShowProfileDocs(!showProfileDocs)} className="background-color-white border-default-grey-1 border-radius-12 position-ab left-minus-12 bottom-24">
+                            <div className={classNames(styles['manager-params-docs'], styles[showParamsProfile ? 'open-params-profile' : 'close-params-profile'], 'width-percent-40 background-grey-3 border-radius-16 position-re', showParamsProfile ? '' : 'width-1-important min-width-1 margin-right-16')}>
+                                <Anchor onClick={() => dispatch(printingActions.updateParamsProfileShow(!showParamsProfile))} className={classNames(styles['profile-params-show-icon'], 'background-color-white border-default-grey-1 border-radius-12 position-ab left-minus-12 bottom-24')}>
                                     <SvgIcon
                                         name="MainToolbarBack"
                                         size={24}
                                         type={['static']}
-                                        className={classNames(showProfileDocs ? 'rotate180' : '')}
+                                        className={classNames(showParamsProfile ? 'rotate180' : '')}
                                     />
                                 </Anchor>
-                                {showProfileDocs && (
+                                {showParamsProfile && (
                                     <ReactMarkdown>
                                         {mdContent}
                                     </ReactMarkdown>
@@ -499,16 +498,16 @@ function ConfigValueBox({
                                 allParams={definitionForManager.params}
                             />
                         </div>
-                        <div className={classNames(styles['manager-params-docs'], 'width-percent-40 background-grey-3 border-radius-16 position-re', showProfileDocs ? '' : 'width-1-important min-width-1 margin-right-16')}>
-                            <Anchor onClick={() => setShowProfileDocs(!showProfileDocs)} className="background-color-white border-default-grey-1 border-radius-12 position-ab left-minus-12 bottom-24">
+                        <div className={classNames(styles['manager-params-docs'], 'width-percent-40 background-grey-3 border-radius-16 position-re', showParamsProfile ? '' : 'width-1-important min-width-1 margin-right-16')}>
+                            <Anchor onClick={() => dispatch(printingActions.updateParamsProfileShow(!showParamsProfile))} className="background-color-white border-default-grey-1 border-radius-12 position-ab left-minus-12 bottom-24">
                                 <SvgIcon
                                     name="MainToolbarBack"
                                     size={24}
                                     type={['static']}
-                                    className={classNames(showProfileDocs ? 'rotate180' : '')}
+                                    className={classNames(showParamsProfile ? 'rotate180' : '')}
                                 />
                             </Anchor>
-                            {showProfileDocs && (
+                            {showParamsProfile && (
                                 <ReactMarkdown>
                                     {mdContent}
                                 </ReactMarkdown>

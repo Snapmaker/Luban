@@ -8,7 +8,7 @@ import Select from '../../components/Select';
 import { TextInput as Input, NumberInput as NInput } from '../../components/Input';
 import ColorSelector from '../../components/ColorSelector';
 import Checkbox from '../../components/Checkbox';
-import { PRINTING_MATERIAL_CONFIG_COLORS } from '../../../constants';
+import { PRINTING_MATERIAL_CONFIG_COLORS, BLACK_COLOR } from '../../../constants';
 import { Button } from '../../components/Buttons';
 
 const materialTypeOptions = [
@@ -64,7 +64,7 @@ const AddMaterialModel = ({
 }) => {
     const [materialType, setMaterialType] = useState('PLA');
     const [materialName, setMaterialName] = useState('');
-    const [materialColor, setMaterialColor] = useState('#ffffff');
+    const [materialColor, setMaterialColor] = useState(BLACK_COLOR);
     const [showColor, setShowColor] = useState(false);
     const [printingTemperatureUp, setPrintingTemperatureUp] = useState(null);
     const [printingTemperatureDown, setPrintingTemperatureDown] = useState(null);
@@ -98,7 +98,7 @@ const AddMaterialModel = ({
                             />
                         </div>
                         <div className="sm-flex justify-space-between align-center margin-bottom-8">
-                            <span className="width-160 display-inline text-overflow-ellipsis">{i18n._('key-profileManager/Material Name')}</span>
+                            <span className="width-160 display-inline text-overflow-ellipsis">{i18n._('key-profileManager/Material Name')}<span className="color-red-1">*</span></span>
                             <Input
                                 value={materialName}
                                 onChange={(e) => setMaterialName(e.target.value)}
@@ -141,13 +141,14 @@ const AddMaterialModel = ({
                             </div>
                         </div>
                         <div className="sm-flex justify-space-between align-center margin-bottom-8">
-                            <span className="width-160 display-inline text-overflow-ellipsis">{i18n._('key-profileManager/Printing Temperature')}</span>
+                            <span className="width-160 display-inline text-overflow-ellipsis">{i18n._('key-profileManager/Printing Temperature')}<span className="color-red-1">*</span></span>
                             <div className="sm-flex align-center">
                                 <NInput
                                     value={printingTemperatureDown}
                                     onChange={(value) => setPrintingTemperatureDown(value)}
                                     size="small-level-one"
                                     suffix="°C"
+                                    min={0}
                                 />
                                 <span className="margin-horizontal-8 width-16 border-bottom-black-5" />
                                 <NInput
@@ -155,17 +156,19 @@ const AddMaterialModel = ({
                                     onChange={(value) => setPrintingTemperatureUp(value)}
                                     size="small-level-one"
                                     suffix="°C"
+                                    min={printingTemperatureDown || 1}
                                 />
                             </div>
                         </div>
                         <div className="sm-flex justify-space-between align-center margin-bottom-8">
-                            <span className="width-160 display-inline text-overflow-ellipsis">{i18n._('key-profileManager/Build plate Temperature')}</span>
+                            <span className="width-160 display-inline text-overflow-ellipsis">{i18n._('key-profileManager/Build plate Temperature')}<span className="color-red-1">*</span></span>
                             <div className="sm-flex align-center">
                                 <NInput
                                     value={buildPlateTemperatureDown}
                                     onChange={(value) => { setBuildPlateTemperatureDown(value); }}
                                     size="small-level-one"
                                     suffix="°C"
+                                    min={0}
                                 />
                                 <span className="margin-horizontal-8 width-16 border-bottom-black-5" />
                                 <NInput
@@ -173,6 +176,7 @@ const AddMaterialModel = ({
                                     onChange={(value) => setBuildPlateTemperatureUp(value)}
                                     size="small-level-one"
                                     suffix="°C"
+                                    min={buildPlateTemperatureDown || 1}
                                 />
                             </div>
                         </div>
