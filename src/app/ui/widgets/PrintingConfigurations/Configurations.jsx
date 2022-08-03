@@ -368,7 +368,6 @@ function Configurations() {
             shouldSaveEnv && dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
         },
         onSelectCustomDefinitionById: (definitionId) => {
-            console.log('selectCustomDefinition', definitionId);
             const definition = qualityDefinitionModels.find(d => d.definitionId === definitionId);
             actions.onSelectOfficialDefinition(definition);
             actions.displayModel();

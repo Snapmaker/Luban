@@ -167,7 +167,6 @@ function ProfileManager({
         },
         // onSelectedQualityDefinition
         onSelectDefinitionById: (definitionId, name) => {
-            console.log('profileSelectDefinition', definitionId, managerType);
             const { definitionForManager, isCategorySelected } = definitionState;
             if (!isCategorySelected && definitionId === definitionForManager.definitionId) {
                 return;
@@ -747,7 +746,7 @@ function ProfileManager({
                                                             >
                                                                 <div className="width-112 height-88 sm-flex sm-flex-direction-c align-center margin-right-8">
                                                                     <SvgIcon
-                                                                        name="TitleSetting"
+                                                                        name="PresetQuickCreate"
                                                                         className="margin-bottom-8"
                                                                         size={48}
                                                                     />
@@ -760,7 +759,7 @@ function ProfileManager({
                                                         <Anchor onClick={() => actions.importFile(refs.fileInput)}>
                                                             <div className="width-112 height-88 sm-flex sm-flex-direction-c align-center">
                                                                 <SvgIcon
-                                                                    name="TitleSetting"
+                                                                    name="PresetLocal"
                                                                     className="margin-bottom-8"
                                                                     size={48}
                                                                 />
