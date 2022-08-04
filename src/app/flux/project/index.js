@@ -1,6 +1,6 @@
 /* eslint-disable import/no-cycle */
 import cloneDeep from 'lodash/cloneDeep';
-import { find, includes } from 'lodash';
+import { find, includes, keys, some } from 'lodash';
 import pkg from '../../../package.json';
 import {
     HEAD_CNC,
@@ -148,7 +148,7 @@ export const actions = {
         dispatch(actions.updateState(headType, { unSaved: false }));
     },
 
-    recoverModels: (promiseArray = [], modActions, models, envHeadType) => (dispatch) => {
+    recoverModels: (promiseArray = [], modActions, models, envHeadType, isGuideTours = false) => (dispatch) => {
         for (let k = 0; k < models.length; k++) {
             const { headType, originalName, uploadName, modelName, config, sourceType, gcodeConfig,
                 sourceWidth, sourceHeight, mode, transformation, modelID, supportTag, extruderConfig, children, parentModelID } = models[k];
@@ -180,7 +180,8 @@ export const actions = {
                     isGroup: !!children,
                     parentModelID,
                     children,
-                    primeTowerTag
+                    primeTowerTag,
+                    isGuideTours
                 }))
             );
             if (children && children.length > 0) {
@@ -189,13 +190,13 @@ export const actions = {
         }
     },
 
-    onRecovery: (envHeadType, envObj, backendRecover = true, shouldSetFileName = true) => async (dispatch, getState) => {
+    onRecovery: (envHeadType, envObj, backendRecover = true, shouldSetFileName = true, isGuideTours = false) => async (dispatch, getState) => {
         const { progressStatesManager } = getState().printing;
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
 
         UniApi.Window.setOpenedFile();
         let { content } = getState().project[envHeadType];
-        const { toolHead: { printingToolhead } } = getState().machine;
+        const { toolHead: { printingToolhead }, size: currentSize } = getState().machine;
         if (!envObj) {
             envObj = JSON.parse(content);
         }
@@ -237,20 +238,29 @@ export const actions = {
         await modState?.SVGActions?.svgContentGroup.removeAllElements();
         // eslint-disable-next-line prefer-const
         let { models, toolpaths, materials, coordinateMode, coordinateSize, machineInfo, ...restState } = envObj;
+        console.log({ envObj, currentSize });
         if (envHeadType === HEAD_CNC || envHeadType === HEAD_LASER) {
             if (materials) {
                 dispatch(editorActions.updateMaterials(envHeadType, materials));
             }
             const isRotate = materials ? materials.isRotate : false;
+            const oversize = some(keys(coordinateSize), (key) => {
+                console.log(currentSize[key], coordinateSize[key]);
+                return currentSize[key] < coordinateSize[key];
+            });
+            console.log({ oversize });
+            if (oversize) coordinateSize = currentSize;
             if (coordinateMode) {
                 dispatch(editorActions.updateState(envHeadType, {
                     coordinateMode: coordinateMode,
-                    coordinateSize: coordinateSize ?? machineInfo.size
+                    coordinateSize: coordinateSize ?? machineInfo.size,
+                    projectFileOversize: oversize
                 }));
             } else {
                 dispatch(editorActions.updateState(envHeadType, {
                     coordinateMode: (!isRotate ? COORDINATE_MODE_CENTER : COORDINATE_MODE_BOTTOM_CENTER),
-                    coordinateSize: coordinateSize ?? machineInfo.size
+                    coordinateSize: coordinateSize ?? machineInfo.size,
+                    projectFileOversize: oversize
                 }));
             }
         }
@@ -263,7 +273,7 @@ export const actions = {
             }
         }
         const promiseArray = [];
-        dispatch(actions.recoverModels(promiseArray, modActions, models, envHeadType));
+        dispatch(actions.recoverModels(promiseArray, modActions, models, envHeadType, isGuideTours));
 
         const { toolPathGroup } = modState;
         if (toolPathGroup && toolPathGroup.toolPaths && toolPathGroup.toolPaths.length) {
@@ -496,7 +506,7 @@ export const actions = {
             }
             history.push(`/${headType}`);
 
-            await dispatch(actions.onRecovery(headType, envObj, false, shouldSetFileName));
+            await dispatch(actions.onRecovery(headType, envObj, false, shouldSetFileName, isGuideTours));
             if (shouldSetFileName) {
                 if (file instanceof File) {
                     const newOpenedFile = {

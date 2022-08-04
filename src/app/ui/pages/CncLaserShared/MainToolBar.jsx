@@ -1,6 +1,6 @@
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import i18next from 'i18next';
 import { includes } from 'lodash';
 import Menu from '../../components/Menu';
@@ -29,7 +29,10 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
     const workspaceHeadType = useSelector(state => state?.workspace?.headType);
     const workspaceToolHead = useSelector(state => state?.workspace?.toolHead);
     const workspaceIsRotate = useSelector(state => state?.workspace?.isRotate);
-
+    const [machineInfo, setMachineInfo] = useState({
+        series: machineSeries,
+        toolHead: machineToolHead[`${headType}Toolhead`]
+    });
     // Laser
     const isConnected = useSelector(state => state?.machine?.isConnected, shallowEqual);
     const connectionType = useSelector(state => state?.machine?.connectionType, shallowEqual);
@@ -45,6 +48,12 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
 
     const [showStlModal, setShowStlModal] = useState(true);
     const dispatch = useDispatch();
+    useEffect(() => {
+        setMachineInfo({
+            series: machineSeries,
+            toolHead: machineToolHead[`${headType}Toolhead`]
+        });
+    }, [machineSeries, machineToolHead, headType]);
     function handleHideStlModal() {
         setShowStlModal(false);
     }
@@ -344,7 +353,9 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                     leftItems={leftItems}
                     lang={i18next.language}
                     headType={headType}
-                    hasMachineSettings={false}
+                    hasMachineSettings
+                    machineInfo={machineInfo}
+                    isConnected={isConnected}
                 />
             );
         }

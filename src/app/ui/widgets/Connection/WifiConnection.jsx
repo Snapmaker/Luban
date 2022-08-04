@@ -656,7 +656,7 @@ function WifiConnection() {
                         checked={connectionAuto}
                         onChange={e => actions.handleAutoConnection(e?.target?.checked || false)}
                     >
-                        <span className="display-inherit width-120 text-overflow-ellipsis">{i18n._('key-Workspace/Connection-Auto Connect')}</span>
+                        <span className="display-inherit max-width-120 width-percent-100 text-overflow-ellipsis">{i18n._('key-Workspace/Connection-Auto Connect')}</span>
                     </Checkbox>
                 )}
                 {isConnected && (

@@ -468,7 +468,7 @@ M3`;
     }
 
     loadFilament = (socket, options) => {
-        if (this.protocol === SACP_PROTOCOL) {
+        if (this.protocol === SACP_PROTOCOL || this.connectionType === CONNECTION_TYPE_WIFI) {
             const { extruderIndex, eventName } = options;
             this.socket.loadFilament(extruderIndex, eventName);
         } else {
@@ -695,11 +695,9 @@ M3`;
             this.executeGcode(this.socket, {
                 gcode: 'G28'
             });
-            if (headType === HEAD_LASER || headType === HEAD_CNC) {
-                this.executeGcode(this.socket, {
-                    gcode: 'G54'
-                });
-            }
+            (headType === HEAD_LASER || headType === HEAD_CNC) && this.executeGcode(this.socket, {
+                gcode: 'G54'
+            });
         }
     }
 

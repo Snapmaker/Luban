@@ -135,7 +135,8 @@ const INITIAL_STATE = {
         stlInfo: {}
     },
 
-    enableShortcut: true
+    enableShortcut: true,
+    projectFileOversize: false
 };
 
 const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';

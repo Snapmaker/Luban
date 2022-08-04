@@ -4,6 +4,7 @@ import path from 'path';
 import PropTypes from 'prop-types';
 import { useHistory, withRouter } from 'react-router-dom';
 import 'intro.js/introjs.css';
+import { message } from 'antd';
 import i18n from '../../lib/i18n';
 import useSetState from '../../lib/hooks/set-state';
 import modal from '../../lib/modal';
@@ -51,6 +52,7 @@ function Laser({ location }) {
     const materials = useSelector(state => state[HEAD_LASER]?.materials, shallowEqual);
     const series = useSelector(state => state.machine.series, shallowEqual);
     const page = useSelector(state => state[HEAD_LASER]?.page, shallowEqual);
+    const projectFileOversize = useSelector(state => state[HEAD_LASER]?.projectFileOversize, shallowEqual);
     const [isRotate, setIsRotate] = useState(materials?.isRotate);
     const [jobTypeState, setJobTypeState] = useSetState({
         coordinateMode,
@@ -397,6 +399,16 @@ function Laser({ location }) {
                     toolPathGroup={toolPathGroup}
                 />
             </ProjectLayout>
+            {projectFileOversize && message.info({
+                content: <span>{i18n._('key-Laser/Page-Project file oversize')}</span>,
+                duration: 5,
+                onClose: () => (
+                    dispatch(editorActions.updateState(pageHeadType, {
+                        projectFileOversize: false
+                    }))
+                ),
+                key: pageHeadType
+            })}
             {warningRemovingModels}
             {jobTypeModal}
             {setBackgroundModal}

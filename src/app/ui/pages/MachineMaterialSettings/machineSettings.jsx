@@ -11,6 +11,7 @@ import {
 } from '../../../constants';
 import SvgIcon from '../../components/SvgIcon';
 import { NumberInput as Input } from '../../components/Input';
+import { Badge } from '../../components/Badge';
 import { actions as printingActions } from '../../../flux/printing';
 import { machineStore } from '../../../store/local-storage';
 import styles from './styles.styl';
@@ -18,7 +19,7 @@ import styles from './styles.styl';
 const machineList = [{
     value: 'Original',
     label: 'key-Luban/Machine/MachineSeries-Snapmaker Original',
-    image: '/resources/images/machine/size-1.0-original.jpg'
+    image: '/resources/images/machine/size-1.0-original.jpg',
 }, {
     value: 'A150',
     label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A150',
@@ -39,6 +40,23 @@ const machineList = [{
 
 const toolHeadMap = {
     [MACHINE_SERIES.ORIGINAL.value]: {
+        [HEAD_PRINTING]: [{
+            value: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
+            label: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].label,
+            image: '/resources/images/machine/original_3dp.png'
+        }],
+        [HEAD_LASER]: [{
+            value: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value,
+            label: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].label,
+            image: '/resources/images/machine/original_laser.png'
+        }],
+        [HEAD_CNC]: [{
+            value: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value,
+            label: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].label,
+            image: '/resources/images/machine/original_cnc.png'
+        }]
+    },
+    [MACHINE_SERIES.ORIGINAL_LZ.value]: {
         [HEAD_PRINTING]: [{
             value: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
             label: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].label,
@@ -223,9 +241,12 @@ const defaultNozzleDiameterListForDualExtruder = [{
 const MachineSettings = forwardRef(({
     serial,
     toolHead,
+    connectSerial,
+    connectMachineName = 'Manual',
     leftNozzleDiameter: defaultLeftDiameter,
     rightNozzleDiameter: defaultRightDiameter,
-    hasZAxis, // for original long zAxis
+    // hasZAxis, // for original long zAxis
+    isConnected,
     setSeries,
     setToolhead
 }, ref) => {
@@ -240,7 +261,8 @@ const MachineSettings = forwardRef(({
     const dispatch = useDispatch();
 
     // for original long zAxis
-    const [zAxis, setZAxis] = useState(hasZAxis);
+    // console.log({ hasZAxis });
+    const [zAxis, setZAxis] = useState(serial === MACHINE_SERIES.ORIGINAL_LZ.value);
     const [leftNozzleDiameterList, setLeftNozzleDiameterList] = useState(defaultNozzleDiameterList);
     const [rightNozzleDiameterList, setRightNozzleDiameterList] = useState(defaultNozzleDiameterList);
     const [addDiameterStatus, setAddDiameterStatus] = useState(false);
@@ -249,6 +271,7 @@ const MachineSettings = forwardRef(({
         setCurrentSerial(value);
         if (value === MACHINE_SERIES.ORIGINAL.value) {
             setCurrentToolHead(SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL);
+            setZAxis(false);
         } else {
             setCurrentToolHead(SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2);
         }
@@ -468,7 +491,16 @@ const MachineSettings = forwardRef(({
                                 className="padding-vertical-16 padding-horizontal-16"
                             >
                                 <div className="width-percent-100 height-percent-100">
-                                    <img src={item.image} alt="" className={`width-percent-100 ${currentSerial === item.value ? 'border-radius-16 border-blod-blue-2' : ''}`} style={{ height: 'calc(100% - 22px)' }} />
+                                    <div className={`width-percent-100 position-re ${includes(currentSerial, item.value) ? 'border-radius-16 border-blod-blue-2' : ''}`} style={{ height: 'calc(100% - 22px)' }}>
+                                        <img src={item.image} alt="" className="width-percent-100 border-radius-16 height-percent-100 display-block margin-auto" />
+                                        {(isConnected && includes(currentSerial, item.value)) && (
+                                            <div className="position-ab bottom-2 right-1 background-grey-3 border-radius-8 font-size-small padding-vertical-4 padding-horizontal-8 line-height-14">
+                                                <Badge status="success" />
+                                                <span>online | </span>
+                                                <span className="max-width-106 text-overflow-ellpsis">{connectMachineName}</span>
+                                            </div>
+                                        )}
+                                    </div>
                                     <div className="heading-3 align-c text-overflow-ellipsis width-percent-100">
                                         {i18n._(item.label)}
                                     </div>
@@ -479,17 +511,25 @@ const MachineSettings = forwardRef(({
                 }
             </div>
             <div className="width-296 background-grey-3 border-radius-24 padding-vertical-32 padding-horizontal-24">
-                {currentSerial === MACHINE_SERIES.ORIGINAL.value && (
+                {(currentSerial === MACHINE_SERIES.ORIGINAL.value || currentSerial === MACHINE_SERIES.ORIGINAL_LZ.value) && (
                     <div>
                         <div className="heading-3 margin-bottom-16">{i18n._('key-settings/Z-axis Module')}</div>
                         <div className="sm-flex justify-space-between">
-                            <Anchor onClick={() => setZAxis(false)}>
+                            <Anchor onClick={() => {
+                                setZAxis(false);
+                                setCurrentSerial(MACHINE_SERIES.ORIGINAL.value);
+                            }}
+                            >
                                 <div className={`width-116 height-116 border-radius-8 ${zAxis ? 'border-default-grey-1' : 'border-default-grey-1 border-color-blue-2'}`}>
                                     <img src="/resources/images/machine/z_axis_standard.png" alt="" className="width-percent-100" />
                                 </div>
                                 <div className="align-c">{i18n._('key-settings/Z-axis Standard')}</div>
                             </Anchor>
-                            <Anchor onClick={() => setZAxis(true)}>
+                            <Anchor onClick={() => {
+                                setZAxis(true);
+                                setCurrentSerial(MACHINE_SERIES.ORIGINAL_LZ.value);
+                            }}
+                            >
                                 <div className={`width-116 height-116 border-radius-8 ${!zAxis ? 'border-default-grey-1' : 'border-default-grey-1 border-color-blue-2'}`}>
                                     <img src="/resources/images/machine/z_axis_extension.png" alt="" className="width-percent-100" />
                                 </div>
@@ -499,7 +539,7 @@ const MachineSettings = forwardRef(({
                     </div>
                 )}
                 <div>
-                    <div className={`heading-3 ${currentSerial === MACHINE_SERIES.ORIGINAL.value ? 'margin-top-32' : ''} margin-bottom-16`}>
+                    <div className={`heading-3 ${(includes([MACHINE_SERIES.ORIGINAL.value, MACHINE_SERIES.ORIGINAL_LZ.value], currentSerial)) ? 'margin-top-32' : ''} margin-bottom-16`}>
                         {i18n._('key-App/Settings/MachineSettings-3D Print Toolhead')}
                     </div>
                     <div className="sm-flex">
@@ -631,7 +671,11 @@ const MachineSettings = forwardRef(({
 MachineSettings.propTypes = {
     serial: PropTypes.string,
     toolHead: PropTypes.object,
-    hasZAxis: PropTypes.bool,
+    connectSerial: PropTypes.string,
+    connectMachineName: PropTypes.string,
+    // nozzleDiameter: PropTypes.number,
+    // hasZAxis: PropTypes.bool,
+    isConnected: PropTypes.bool,
     leftNozzleDiameter: PropTypes.number,
     rightNozzleDiameter: PropTypes.number,
     setSeries: PropTypes.func,

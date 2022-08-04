@@ -83,6 +83,9 @@ const SimplifyModelOverlay = ({ handleApplySimplify, handleCancelSimplify, handl
                             size="small"
                             min={1}
                             max={100}
+                            formatter={(value) => {
+                                return Math.round(value);
+                            }}
                         />
                     </div>
                 </div>

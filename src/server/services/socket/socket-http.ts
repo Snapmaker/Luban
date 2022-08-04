@@ -478,8 +478,7 @@ class SocketHttp {
             });
     };
 
-    public loadFilament = (options: EventOptions) => {
-        const { eventName } = options;
+    public loadFilament = (options: EventOptions, eventName: string) => {
         const api = `${this.host}/api/v1/filament_load`;
         request
             .post(api)

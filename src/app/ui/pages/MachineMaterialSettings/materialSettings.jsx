@@ -145,10 +145,6 @@ const MaterialSettings = ({
     };
     const renderMaterialMore = (definition) => {
         return (
-            // <div>
-            //     <Anchor className="display-block" onClick={onShowPrintingManager}>{i18n._('key-machineMaterialSettings/Profile update')}</Anchor>
-            //     {!definition?.isDefault && (<Anchor className="display-block" onClick={e => handleDeleteMaterial(e, definition)}>{i18n._('key-App/Menu-Delete')}</Anchor>)}
-            // </div>
             <Menu>
                 <Menu.Item>
                     <Anchor className="display-block" onClick={onShowPrintingManager}>{i18n._('key-machineMaterialSettings/Profile-update')}</Anchor>
@@ -240,7 +236,7 @@ const MaterialSettings = ({
                                 size={48}
                                 type={['hoverNormal', 'pressNormal']}
                             />
-                            <span className="width-percent-100 height-16 text-overflow-ellipsis margin-top-16">{i18n._('key-Printing/ProfileManager-Quick Create')}</span>
+                            <span className="width-percent-100 height-16 text-overflow-ellipsis margin-top-16 align-c">{i18n._('key-Printing/ProfileManager-Quick Create')}</span>
                         </Anchor>
                     </Tooltip>
                 </Menu.Item>
@@ -251,7 +247,7 @@ const MaterialSettings = ({
                             size={48}
                             type={['hoverNormal', 'pressNormal']}
                         />
-                        <span className="width-percent-100 height-16 text-overflow-ellipsis margin-top-16">{i18n._('key-Printing/ProfileManager-Local Import')}</span>
+                        <span className="width-percent-100 height-16 text-overflow-ellipsis margin-top-16 align-c">{i18n._('key-Printing/ProfileManager-Local Import')}</span>
                     </Anchor>
                 </Menu.Item>
             </Menu>
@@ -341,9 +337,9 @@ const MaterialSettings = ({
                                                 onClick={(e) => handleUpdateDefinition(e, definition.definitionId)}
                                                 onDoubleClick={onShowPrintingManager}
                                             >
-                                                <div className="sm-flex align-center">
+                                                <div className="sm-flex align-center width-percent-100">
                                                     <div className="width-16 height-16 border-default-grey-1 margin-right-8 " style={{ background: `${definition?.settings?.color?.default_value}` }} />
-                                                    <span>{i18n._(definition.i18nName || definition.name)}</span>
+                                                    <span className="display-inline width-all-minus-45 text-overflow-ellipsis">{i18n._(definition.i18nName || definition.name)}</span>
                                                 </div>
                                                 <div className={classNames(styles['material-more-action'])}>
                                                     <Dropdown
