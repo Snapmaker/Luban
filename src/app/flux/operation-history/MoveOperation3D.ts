@@ -46,13 +46,15 @@ export default class MoveOperation3D extends Operation<MoveOperationState> {
         modelGroup.unselectAllModels();
         modelGroup.addModelToSelectedGroup(model);
 
+        const modelHeight = model.boundingBox.max.z - model.boundingBox.min.z;
+
         const current = modelGroup.getSelectedModelTransformationForPrinting();
-        if (this.state.to.positionZ > 0 && current.positionZ < this.state.to.positionZ) {
+        if (this.state.to.positionZ > 0 && this.state.to.positionZ - current.positionZ > 10e-5) {
             this.exec({
                 ...this.state.from,
-                positionZ: current.positionZ - this.state.to.positionZ
+                positionZ: current.positionZ - this.state.to.positionZ + modelHeight / 2
             });
-        } else if (this.state.to.positionZ < 0 && current.positionZ > this.state.to.positionZ) {
+        } else if (this.state.to.positionZ < 0 && current.positionZ - this.state.to.positionZ > 10e-5) {
             this.exec({
                 ...this.state.from,
                 positionZ: -this.state.to.positionZ + current.positionZ + this.state.from.positionZ

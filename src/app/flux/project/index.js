@@ -30,6 +30,7 @@ import ThreeModel from '../../models/ThreeModel';
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
 import { logModuleVisit } from '../../lib/gaEvent';
+import { PROCESS_STAGE } from '../../lib/manager/ProgressManager';
 
 const INITIAL_STATE = {
     [HEAD_PRINTING]: {
@@ -189,6 +190,9 @@ export const actions = {
     },
 
     onRecovery: (envHeadType, envObj, backendRecover = true, shouldSetFileName = true) => async (dispatch, getState) => {
+        const { progressStatesManager } = getState().printing;
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
+
         UniApi.Window.setOpenedFile();
         let { content } = getState().project[envHeadType];
         const { toolHead: { printingToolhead } } = getState().machine;

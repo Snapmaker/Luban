@@ -96,39 +96,30 @@
             "type": "category",
             "children": {
                 "skin_angles": {
-                    "label": "Top/B‰ottom Line Directions",
                     "default_value": "[  ]"
                 },
                 "optimize_wall_printing_order": {
-                    "label": "Optimize Wall Printing Order",
                     "default_value": true
                 },
                 "alternate_extra_perimeter": {
-                    "label": "Alternate Extra Wall",
                     "default_value": true
                 },
                 "travel_compensate_overlapping_walls_enabled": {
-                    "label": "Compensate Wall Overlaps",
                     "default_value": true
                 },
                 "travel_compensate_overlapping_walls_0_enabled": {
-                    "label": "Compensate Outer Wall Overlaps",
                     "default_value": true
                 },
                 "travel_compensate_overlapping_walls_x_enabled": {
-                    "label": "Compensate Inner Wall Overlaps",
                     "default_value": true
                 },
                 "filter_out_tiny_gaps": {
-                    "label": "Filter Out Tiny Gaps",
                     "default_value": true
                 },
                 "z_seam_type": {
-                    "label": "Z Seam Alignment",
                     "default_value": "sharpest_corner"
                 },
                 "z_seam_corner": {
-                    "label": "Seam Corner Preference",
                     "default_value": "z_seam_corner_inner"
                 }
             }
@@ -137,31 +128,24 @@
             "type": "category",
             "children": {
                 "infill_pattern": {
-                    "label": "Infill Pattern",
                     "default_value": "trihexagon"
                 },
                 "zig_zaggify_infill": {
-                    "label": "Connect Infill Lines",
                     "default_value": true
                 },
                 "infill_angles": {
-                    "label": "Infill Line Directions",
                     "default_value": "[  ]"
                 },
                 "infill_wipe_dist": {
-                    "label": "Infill Wipe Distance",
                     "default_value": 0.1
                 },
                 "infill_before_walls": {
-                    "label": "Infill Before Walls",
                     "default_value": true
                 },
                 "min_skin_width_for_expansion": {
-                    "label": "Minimum Skin Width for Expansion",
                     "default_value": 0
                 },
                 "skin_edge_support_layers": {
-                    "label": "Skin Edge Support Layers",
                     "default_value": 0
                 }
             }
@@ -170,39 +154,25 @@
             "type": "category",
             "children": {
                 "default_material_print_temperature": {
-                    "label": "Default Printing Temperature",
                     "default_value": 205
                 },
                 "material_initial_print_temperature": {
-                    "label": "Initial Printing Temperature",
                     "default_value": 205
                 },
                 "retraction_retract_speed": {
-                    "label": "Retraction Retract Speed",
                     "default_value": 60
                 },
                 "retraction_prime_speed": {
-                    "label": "Retraction Prime Speed",
                     "default_value": 60
                 },
                 "retraction_min_travel": {
-                    "label": "Retraction Minimum Travel",
                     "default_value": 0.8
                 },
                 "retraction_extrusion_window": {
-                    "label": "Minimum Extrusion Distance Window",
                     "default_value": 5
                 },
                 "switch_extruder_retraction_amount": {
-                    "label": "Nozzle Switch Retraction Distance",
                     "default_value": 16
-                }
-            }
-        },
-        "support": {
-            "children": {
-                "support_enable": {
-                    "label": "Generate Auto Support"
                 }
             }
         },
@@ -210,7 +180,6 @@
             "type": "category",
             "children": {
                 "speed_layer_0": {
-                    "label": "Initial Layer Speed",
                     "default_value": 18
                 }
             }

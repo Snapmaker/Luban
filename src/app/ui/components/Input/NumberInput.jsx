@@ -5,18 +5,21 @@ import { Input } from 'antd';
 import log from '../../../lib/log';
 import styles from './styles.styl';
 
+const maxDecimal = (number, decimalPlaces) => {
+    const reg = new RegExp(`^(.*\\..{${decimalPlaces}}).*$`);
+    return Number(String(number).replace(reg, '$1'));
+};
+
+
 const NumberInput = ({
-    className = '', size = 'middle', value, defaultValue, disabled = false, min, max, onChange, placeholder, allowUndefined, formatter, ...rest
+    className = '', size = 'middle', value, defaultValue, disabled = false, min, max, onChange, placeholder, allowUndefined, decimalPlaces, ...rest
 }) => {
     const [displayValue, setDisplayValue] = useState(value);
     const ref = useRef();
     function onInsideChange(event) {
-        if (displayValue !== event.target.value) {
-            let tempValue = event.target.value;
-            if (formatter) {
-                tempValue = formatter(tempValue);
-            }
-            setDisplayValue(tempValue);
+        const v = decimalPlaces === undefined ? event.target.value : maxDecimal(event.target.value, decimalPlaces);
+        if (displayValue !== v) {
+            setDisplayValue(v);
         }
     }
 
@@ -110,7 +113,6 @@ const NumberInput = ({
                 onChange={onInsideChange}
                 onBlur={onBlur}
                 onKeyUp={onKeyUp}
-                formatter={formatter}
                 {...rest}
             />
         </span>
@@ -128,7 +130,7 @@ NumberInput.propTypes = {
     onChange: PropTypes.func,
     placeholder: PropTypes.string,
     allowUndefined: PropTypes.bool,
-    formatter: PropTypes.func
+    decimalPlaces: PropTypes.number
 };
 
 export default NumberInput;

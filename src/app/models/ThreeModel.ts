@@ -1,7 +1,7 @@
 import { v4 as uuid } from 'uuid';
 import * as THREE from 'three';
 import noop from 'lodash/noop';
-import { BufferGeometry, DoubleSide, Geometry, Mesh, MeshBasicMaterial, MeshLambertMaterial, Object3D, ObjectLoader, Plane } from 'three';
+import { DoubleSide, Geometry, Mesh, MeshBasicMaterial, MeshLambertMaterial, Object3D, ObjectLoader, Plane } from 'three';
 import {
     LOAD_MODEL_FROM_INNER
 } from '../constants';
@@ -161,32 +161,48 @@ class ThreeModel extends BaseModel {
         this.clipper.setLocalPlane(height);
     }
 
-    public updateBufferGeometry(bufferGeometry: BufferGeometry) {
+    public updateBufferGeometry(positions) {
         const { recovery } = this.modelGroup.unselectAllModels();
 
+        const bufferGeometry = this.meshObject.geometry;
+        bufferGeometry.setAttribute(
+            'position',
+            new THREE.BufferAttribute(positions, 3)
+        );
+        // Keep scale information
         if (this.parent) {
-            bufferGeometry.scale(1 / this.meshObject.parent.scale.x, 1 / this.meshObject.parent.scale.y, 1 / this.meshObject.parent.scale.z);
-            bufferGeometry.rotateX(-this.meshObject.parent.rotation.x);
-            bufferGeometry.rotateY(-this.meshObject.parent.rotation.y);
-            bufferGeometry.rotateZ(-this.meshObject.parent.rotation.z);
+            bufferGeometry.scale(
+                1 / Math.abs(this.transformation.scaleX) / Math.abs(this.parent.transformation.scaleX),
+                1 / Math.abs(this.transformation.scaleY) / Math.abs(this.parent.transformation.scaleY),
+                1 / Math.abs(this.transformation.scaleZ) / Math.abs(this.parent.transformation.scaleZ)
+            );
+        } else {
+            bufferGeometry.scale(1 / Math.abs(this.transformation.scaleX), 1 / Math.abs(this.transformation.scaleY), 1 / Math.abs(this.transformation.scaleZ));
         }
-        bufferGeometry.scale(1 / this.meshObject.scale.x, 1 / this.meshObject.scale.y, 1 / this.meshObject.scale.z);
-        bufferGeometry.rotateX(-this.meshObject.rotation.x);
-        bufferGeometry.rotateY(-this.meshObject.rotation.y);
-        bufferGeometry.rotateZ(-this.meshObject.rotation.z);
+        // reset rotation
+        this.meshObject.rotation.set(0, 0, 0);
+        // reset sacle and mirror
+        this.meshObject.scale.set(
+            Math.abs(this.transformation.scaleX) * (this.parent?.mirrorX ? -1 : 1),
+            Math.abs(this.transformation.scaleY) * (this.parent?.mirrorY ? -1 : 1),
+            Math.abs(this.transformation.scaleZ) * (this.parent?.mirrorZ ? -1 : 1)
+        );
 
         bufferGeometry.computeVertexNormals();
-
-        this.meshObject.geometry = bufferGeometry;
+        // Ignore cache, force update boundingBox
+        ThreeUtils.computeBoundingBox(this.meshObject, true);
 
         recovery();
-
+        this.stickToPlate();
         this.clipper.init();
     }
 
-    public async updateClippingMap() {
+    public updateClippingMap() {
         this.onTransform();
-        this.clipper && this.clipper.updateClippingMap(this.transformation, this.boundingBox);
+        if (this.clipper) {
+            return this.clipper.updateClippingMap(this.transformation, this.boundingBox);
+        }
+        return false;
     }
 
     public updateDisplayedType(value) {
@@ -367,6 +383,7 @@ class ThreeModel extends BaseModel {
         const clone = new ThreeModel(modelInfo, modelGroup);
         clone.originModelID = this.modelID;
         clone.modelID = uuid();
+        clone.meshObject.geometry = this.meshObject.geometry.clone();
         this.meshObject.updateMatrixWorld();
 
         clone.setMatrix(this.meshObject.matrixWorld);

@@ -107,6 +107,8 @@ function useRenderMainToolBar(setSimplifying) {
     const [showWorkspace, setShowWorkspace] = useState(false);
     const [showMachineMaterialSettings, setShowMachineMaterialSettings] = useState(false);
     const { series, toolHead } = useSelector(state => state?.machine);
+    const seriesRef = useRef(series);
+    const toolHeadRef = useRef(toolHead);
     const [currentSeries, setCurrentSeries] = useState(series);
     const [currentToolhead, setCurrentToolHead] = useState(toolHead.printingToolhead);
     const dispatch = useDispatch();
@@ -139,7 +141,7 @@ function useRenderMainToolBar(setSimplifying) {
     function renderMachineMaterialSettings() {
         const onClose = async () => {
             setShowMachineMaterialSettings(false);
-            if (currentSeries !== series || currentToolhead !== toolHead.printingToolhead) {
+            if (currentSeries !== seriesRef.current || currentToolhead !== toolHeadRef.current.printingToolhead) {
                 dispatch(machineActions.updateMachineSeries(currentSeries));
                 dispatch(machineActions.updateMachineToolHead({
                     ...toolHead,
@@ -403,20 +405,20 @@ function Printing({ location }) {
     }, [enabledIntro]);
 
     async function onDropAccepted(files) {
-        const allFiles = files.map(d => d.name).join();
-        try {
-            await dispatch(printingActions.uploadModel(files));
-        } catch (e) {
-            modal({
-                title: i18n._('key-Printing/Page-Failed to open model.'),
-                body: (
-                    <React.Fragment>
-                        <p>{e.message || e.body.msg}</p>
-                        <p>{i18n._('key-Printing/ContextMenu-Model source name')}: {allFiles}</p>
-                    </React.Fragment>
-                )
-            });
-        }
+        // const allFiles = files.map(d => d.name).join();
+        // try {
+        await dispatch(printingActions.uploadModel(files));
+        // } catch (e) {
+        //     modal({
+        //         title: i18n._('key-Printing/Page-Failed to open model.'),
+        //         body: (
+        //             <React.Fragment>
+        //                 <p>{e.message || e.body.msg}</p>
+        //                 <p>{i18n._('key-Printing/ContextMenu-Model source name')}: {allFiles}</p>
+        //             </React.Fragment>
+        //         )
+        //     });
+        // }
     }
     function onDropRejected() {
         const title = i18n._('key-Printing/Page-Warning');

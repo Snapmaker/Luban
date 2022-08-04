@@ -20,6 +20,15 @@ export default class ThreeGroup extends BaseModel {
 
     private mergedGeometry: THREE.BufferGeometry;
 
+    /**
+     * Record the mirror information of the model.
+     * @note Because when we set the mirrorY of the model, we expect the result to be equal to scale(1, -1, 1)
+     * But the result of threejs processing is scale(-1, 1, 1) and rotation(0, 0, -3.14), This leads to the loss of mirror informatio
+     */
+    public mirrorX = false;
+    public mirrorY = false;
+    public mirrorZ = false;
+
     public constructor(modelInfo: ModelInfo, modelGroup: ModelGroup) {
         super(modelInfo, modelGroup);
         this.meshObject = new THREE.Group();

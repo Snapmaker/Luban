@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import { CaretRightOutlined } from '@ant-design/icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Menu, message, Tooltip } from 'antd';
+import { Menu, message, Tooltip, Spin } from 'antd';
 import { actions as printingActions } from '../../../flux/printing';
 import { useGetDefinitions } from '../../views/ProfileManager';
 import i18n from '../../../lib/i18n';
@@ -21,10 +21,11 @@ import styles from './styles.styl';
 import Dropdown from '../../components/Dropdown';
 
 const MaterialSettings = ({
-    toolHead
+    toolHead, loading
 }) => {
     const materialActiveCategory = machineStore.get('settings.materialActiveCategory');
     const { defaultMaterialId, defaultMaterialIdRight, materialDefinitions, materialManagerDirection } = useSelector(state => state.printing);
+
     const [leftMaterialDefinitionId, setLeftMaterialDefinitionId] = useState(defaultMaterialId);
     const [leftMaterialDefinition, setLeftMaterialDefinition] = useState(find(materialDefinitions, { definitionId: leftMaterialDefinitionId }));
     const [rightMaterialDefinitionId, setRightMaterialDefinitionId] = useState(defaultMaterialIdRight);
@@ -54,24 +55,28 @@ const MaterialSettings = ({
         const definition = materialDefinitions.find(
             (d) => d.definitionId === leftMaterialDefinitionId
         );
-        dispatch(
-            printingActions.updateDefaultMaterialId(
-                definition.definitionId,
-                LEFT_EXTRUDER
-            )
-        );
-    }, [leftMaterialDefinitionId]);
+        if (definition) {
+            dispatch(
+                printingActions.updateDefaultMaterialId(
+                    definition.definitionId,
+                    LEFT_EXTRUDER
+                )
+            );
+        }
+    }, [materialDefinitions, leftMaterialDefinitionId]);
     useEffect(() => {
         const definition = materialDefinitions.find(
             (d) => d.definitionId === rightMaterialDefinitionId
         );
-        dispatch(
-            printingActions.updateDefaultMaterialId(
-                definition.definitionId,
-                RIGHT_EXTRUDER
-            )
-        );
-    }, [rightMaterialDefinitionId]);
+        if (definition) {
+            dispatch(
+                printingActions.updateDefaultMaterialId(
+                    definition.definitionId,
+                    RIGHT_EXTRUDER
+                )
+            );
+        }
+    }, [materialDefinitions, rightMaterialDefinitionId]);
     useEffect(() => {
         const definitionByCategoryTemp = {};
         materialDefinitions.forEach((definition) => {
@@ -252,6 +257,13 @@ const MaterialSettings = ({
             </Menu>
         );
     };
+    if (loading) {
+        return (
+            <div className="position-ab position-ab-center">
+                <Spin />
+            </div>
+        );
+    }
     return (
         <div className="padding-vertical-40 padding-horizontal-40 height-all-minus-60 overflow-y-auto">
             <div className="sm-flex justify-space-between">
@@ -366,7 +378,8 @@ const MaterialSettings = ({
 };
 
 MaterialSettings.propTypes = {
-    toolHead: PropTypes.string
+    toolHead: PropTypes.string,
+    loading: PropTypes.bool
 };
 
 export default MaterialSettings;

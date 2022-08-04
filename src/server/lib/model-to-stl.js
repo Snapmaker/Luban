@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import { MeshBasicMaterial, Mesh } from 'three';
+import { v4 as uuid } from 'uuid';
 import AMFLoader from '../../shared/lib/AMFLoader';
 import ThreeMFLoader from '../../shared/lib/3MFLoader';
 import STLExporter from '../../shared/lib/STL/STLExporter';
@@ -58,7 +59,8 @@ function loadModel(file, format, separateGroup, Loader) {
                     const partFilePath = `${DataStorage.tmpDir}/${partFilename}`;
                     fs.writeFileSync(partFilePath, new STLExporter().parse(mesh, { binary: true }), 'utf8');
                     children.push({
-                        uploadName: partFilename
+                        uploadName: partFilename,
+                        modelID: uuid()
                     });
                 });
             } else {

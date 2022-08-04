@@ -17,16 +17,21 @@ export const loadModelFailPopup = (fileName) => {
     });
 };
 
-export const repairModelFailPopup = (fileName) => {
+export const repairModelFailPopup = (models, onClose) => {
+    const modelNames = models.map((c) => {
+        return c.originalName;
+    }).join();
     return modal({
         cancelTitle: i18n._(''),
         title: i18n._('key-Printing/ContextMenu-Repair Error'),
         body: (
             <React.Fragment>
                 <p>{i18n._('Failed to repair this object. \n')}</p>
-                <p>{i18n._('key-Printing/ContextMenu-Model source name')}: {fileName}</p>
+                <p>{i18n._('key-Printing/ContextMenu-Model source name')}: {modelNames}</p>
             </React.Fragment>
         )
+    }).close(() => {
+        onClose();
     });
 };
 
@@ -108,9 +113,11 @@ export const repairGuidePopup = () => {
         title: i18n._('key-Modal/tips-Tips'),
         body: (
             <React.Fragment>
-                <p>{i18n._('key-Modal/tips-To repair deficient models, you can also click Repair in the top main toolbar.')}</p>
+                <Trans i18nKey="key-Modal/tips-To repair deficient models, you can also click Repair in the top main toolbar.">
+                    To repair deficient models, you can also click <b>Repair</b> in the top main toolbar.
+                </Trans>
                 <Trans i18nKey="key-Modal/tips-To enable the pop-up reminder of  Repair Model(s), go to Settings > Preferences > General.">
-                    To enable the pop-up reminder of  Repair Model(s), go to <b>Settings</b> <b>Preferences</b>  <b>  General</b>
+                    To enable the pop-up reminder of <b>Repair Model(s)</b>, go to <b>Settings</b> <b>Preferences</b>  <b>  General</b>
                 </Trans>
             </React.Fragment>
         )

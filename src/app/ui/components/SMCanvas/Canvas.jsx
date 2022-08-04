@@ -209,7 +209,8 @@ class Canvas extends PureComponent {
         if (this.controls && this.props.inProgress) {
             this.controls.setInProgress(this.props.inProgress);
         }
-        this.renderScene();
+        // TODO: Performance optimization test
+        // this.renderScene();
 
         window.addEventListener('resize', this.resizeWindow, false);
     }

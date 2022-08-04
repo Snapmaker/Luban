@@ -65,6 +65,8 @@ export const getDefinitionsByPrefixName = (req, res) => {
     // const definitions = loadMaterialDefinitions();
     const { headType, prefix, series } = req.params;
     const definitions = loadDefinitionsByPrefixName(headType, prefix, series);
+    const filePath = path.join(`${DataStorage.tmpDir}`, 'jt.json');
+    fs.writeFileSync(filePath, JSON.stringify(definitions[0]), 'utf-8');
     res.send({ definitions });
 };
 

@@ -40,8 +40,11 @@ export default class RotateOperation3D extends Operation<RotateOperationState> {
         modelGroup.unselectAllModels();
 
         modelGroup.addModelToSelectedGroup(model);
+        // Only set the rotation, and then trigger the stickToPlate to restore the position of the same group of models
         modelGroup.updateSelectedGroupTransformation({
-            ...transform
+            rotationX: transform.rotationX,
+            rotationY: transform.rotationY,
+            rotationZ: transform.rotationZ
         });
         modelGroup.unselectAllModels();
         model.onTransform();

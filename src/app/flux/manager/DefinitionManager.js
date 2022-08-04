@@ -10,6 +10,8 @@ import {
     MACHINE_EXTRUDER_X,
     MACHINE_EXTRUDER_Y,
     KEY_DEFAULT_CATEGORY_CUSTOM,
+    PRINTING_MANAGER_TYPE_MATERIAL,
+    PRINTING_MANAGER_TYPE_QUALITY
 } from '../../constants';
 import PresetDefinitionModel from './PresetDefinitionModel';
 import { resolveDefinition } from '../../../shared/lib/definitionResolver';
@@ -68,11 +70,14 @@ class DefinitionManager {
 
             res = await this.getDefinition('snapmaker_extruder_1', false);
             this.extruderRDefinition = res;
+            return {
+                printingProfileLevel: definitionRes.printingProfileLevel,
+                materialProfileLevel: definitionRes.materialProfileLevel
+            };
+        }else {
+            return {}
         }
-        return {
-            printingProfileLevel: definitionRes.printingProfileLevel,
-            materialProfileLevel: definitionRes.materialProfileLevel
-        };
+
     }
 
     /**
@@ -154,7 +159,9 @@ class DefinitionManager {
             res.body.definitions
         );
         const result = definitions.map((item) => {
-            resolveDefinition(item);
+            if ([PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY].includes(prefix)) {
+                resolveDefinition(item);
+            }
             return item
         }).map(this.fillCustomCategory);
 
@@ -291,7 +298,7 @@ class DefinitionManager {
                     1,
                     Math.round(
                         (wallThickness - wallOutLineWidthL)
-                                  / wallInnerLineWidthL
+                        / wallInnerLineWidthL
                     ) + 1
                 )
                 : 0;
@@ -307,7 +314,7 @@ class DefinitionManager {
                     1,
                     Math.round(
                         (wallThickness - wallOutLineWidthR)
-                                  / wallInnerLineWidthR
+                        / wallInnerLineWidthR
                     ) + 1
                 )
                 : 0;
@@ -364,7 +371,7 @@ class DefinitionManager {
             settings.support_line_distance.default_value = supportInfillRate === 0
                 ? 0
                 : ((supportLineWidth * 100) / supportInfillRate)
-                      * supportPatternRate;
+                * supportPatternRate;
             settings.support_initial_layer_line_distance.default_value = settings.support_line_distance.default_value;
         }
         if (settings.support_pattern) {

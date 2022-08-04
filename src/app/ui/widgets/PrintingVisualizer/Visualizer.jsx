@@ -54,7 +54,6 @@ class Visualizer extends PureComponent {
         stage: PropTypes.number.isRequired,
         promptTasks: PropTypes.array.isRequired,
         selectedModelArray: PropTypes.array,
-        transformation: PropTypes.object,
         modelGroup: PropTypes.object.isRequired,
         gcodeLineGroup: PropTypes.object.isRequired,
         transformMode: PropTypes.string.isRequired,
@@ -114,7 +113,8 @@ class Visualizer extends PureComponent {
         loadSimplifyModel: PropTypes.func,
         modelSimplify: PropTypes.func,
         resetSimplifyOriginModelInfo: PropTypes.func,
-        recordSimplifyModel: PropTypes.func
+        recordSimplifyModel: PropTypes.func,
+        updateState: PropTypes.func
     };
 
     printableArea = null;
@@ -207,27 +207,6 @@ class Visualizer extends PureComponent {
         },
         scaleToFitSelectedModel: (models) => {
             this.props.scaleToFitSelectedModel(models);
-        },
-        mirrorSelectedModel: (value) => {
-            switch (value) {
-                case 'X':
-                    this.props.updateSelectedModelTransformation({
-                        scaleX: this.props.transformation.scaleX * -1
-                    }, false);
-                    break;
-                case 'Y':
-                    this.props.updateSelectedModelTransformation({
-                        scaleY: this.props.transformation.scaleY * -1
-                    }, false);
-                    break;
-                case 'Z':
-                    this.props.updateSelectedModelTransformation({
-                        scaleZ: this.props.transformation.scaleZ * -1
-                    }, false);
-                    break;
-                default:
-                    break;
-            }
         },
         autoRotateSelectedModel: () => {
             this.props.autoRotateSelectedModel();
@@ -419,8 +398,17 @@ class Visualizer extends PureComponent {
             //     const model = modelGroup.models.find(d => d.modelID === modelID);
             //     modelGroup.selectedGroup.add(model.meshObject);
             // });
-            this.canvas.current.updateBoundingBox();
-            this.canvas.current.attach(modelGroup.selectedGroup);
+            // TODO: Performance optimization test
+            const prevSelectedKey = prevProps.selectedModelArray.map((i) => {
+                return i.modelID;
+            }).sort().join('');
+            const SelectedKey = selectedModelArray.map((i) => {
+                return i.modelID;
+            }).sort().join('');
+            if (SelectedKey !== prevSelectedKey || transformMode !== prevProps.transformMode) {
+                this.canvas.current.updateBoundingBox();
+                this.canvas.current.attach(modelGroup.selectedGroup);
+            }
 
             if (selectedModelArray.length === 1 && selectedModelArray[0].supportTag && !['translate', 'scale'].includes(transformMode)) {
                 this.actions.setTransformMode('translate');
@@ -479,8 +467,9 @@ class Visualizer extends PureComponent {
                 } else if (stage === STEP_STAGE.PRINTING_SLICE_FAILED) {
                     sliceFailPopup();
                 } else if (stage === STEP_STAGE.PRINTING_REPAIRING_MODEL) {
-                    promptTasks.filter(item => item.status === 'repair-model-fail').forEach(item => {
-                        repairModelFailPopup(item.originalName);
+                    const models = promptTasks.filter(item => item.status === 'repair-model-fail');
+                    repairModelFailPopup(models, () => {
+                        this.props.updateState({ stage: STEP_STAGE.EMPTY });
                     });
                 }
             }
@@ -538,6 +527,7 @@ class Visualizer extends PureComponent {
         const { size, selectedModelArray, modelGroup, gcodeLineGroup, inProgress, hasModel, displayedType, transformMode } = this.props; // transformMode
 
         const isModelSelected = (selectedModelArray.length > 0);
+        const isModelHide = isModelSelected && !selectedModelArray[0].visible;
         const isMultipleModel = selectedModelArray.length > 1;
 
         const notice = this.getNotice();
@@ -695,7 +685,7 @@ class Visualizer extends PureComponent {
                             {
                                 type: 'item',
                                 label: i18n._('key-Printing/ContextMenu-Auto Rotate'),
-                                disabled: inProgress || !isModelSelected || isMultipleModel,
+                                disabled: inProgress || !isModelSelected || isModelHide || isMultipleModel,
                                 onClick: this.actions.autoRotateSelectedModel
                             },
                             {
@@ -821,7 +811,9 @@ const mapDispatchToProps = (dispatch) => ({
     loadSimplifyModel: (modelID, modelOutputName, isCancelSimplify) => dispatch(printingActions.loadSimplifyModel({ modelID, modelOutputName, isCancelSimplify })),
     modelSimplify: (type, percent) => dispatch(printingActions.modelSimplify(type, percent)),
     resetSimplifyOriginModelInfo: () => dispatch(printingActions.resetSimplifyOriginModelInfo()),
-    recordSimplifyModel: () => dispatch(printingActions.recordSimplifyModel())
+    recordSimplifyModel: () => dispatch(printingActions.recordSimplifyModel()),
+
+    updateState: (obj) => dispatch(printingActions.updateState(obj))
 });
 
 export default withRouter(connect(mapStateToProps, mapDispatchToProps)(Visualizer));

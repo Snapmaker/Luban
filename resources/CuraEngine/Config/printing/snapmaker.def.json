@@ -2,7 +2,7 @@
     "id": "snapmaker",
     "version": "4.2.0",
     "name": "Snapmaker Original",
-    "inherits": "fdmprinter",
+    "inherits": "snapmaker_modify_0",
     "metadata": {
         "visible": true,
         "readonly": true,
@@ -15,67 +15,53 @@
     },
     "overrides": {
         "color": {
-            "label": "Color",
             "description": "Set Luban render color.",
             "type": "color",
             "default_value": "#464646"
         },
         "adhesion_extruder_nr": {
-            "label": "Heated Bed Adhesion Extruder",
             "description": "The extruder train to use for printing the skirt/brim/raft. This is used in multi-extrusion."
         },
         "adhesion_type": {
-            "label": "Build Plate Adhesion Type",
             "description": "Different options that help improve priming your extrusion and adhesion to the build plate. Skirt is a line printed around the model, but not connected to the model. Brim adds a single layer flat area around the base of your model to prevent warping. Raft adds a thick grid with a roof below the model."
         },
         "bottom_thickness": {
-            "label": "Bottom Thickness",
             "description": "The thickness of the bottom layers of the print. This value divided by the layer height defines the number of bottom layers."
         },
         "brim_line_count": {
-            "label": "Brim Line Count",
             "description": "The number of lines used for a brim. More brim lines enhance adhesion to the heated bed, but also reduces the effective print area."
         },
         "brim_width": {
             "description": "The distance from the model to the outermost brim line. A larger brim enhances adhesion to the heated bed, but also reduces the effective print area."
         },
         "cool_fan_enabled": {
-            "label": "Enable Print Cooling",
             "description": "Enables the print cooling fans while printing. The fans improve print quality on layers with short layer times and bridging / overhangs."
         },
         "cool_fan_speed": {
-            "label": "Fan Speed",
             "description": "The speed at which the print cooling fans spin."
         },
         "conical_overhang_angle": {
             "description": "The maximum angle of overhangs after the they have been made printable. At a value of 0° all overhangs are replaced by a piece of model connected to the heated bed, 90° will not change the model in any way."
         },
         "default_material_bed_temperature": {
-            "label": "Default Heated Bed Temperature",
             "description": "The default temperature used for the heated bed. This should be the \"base\" temperature of a heated bed. All other print temperatures should use offsets based on this value"
         },
         "infill_sparse_density": {
-            "label": "Infill Density",
             "description": "Adjusts the density of infill of the print."
         },
         "infill_pattern": {
-            "label": "Infill Pattern",
             "description": "The pattern of the infill material of the print. The line and zig zag infill swap direction on alternate layers, reducing material cost. The grid, triangle, tri-hexagon, cubic, octet, quarter cubic, cross and concentric patterns are fully printed every layer. Gyroid, cubic, quarter cubic and octet infill change with every layer to provide a more equal distribution of strength over each direction."
         },
         "initial_layer_line_width_factor": {
-            "label": "Initial Layer Line Width",
             "description": "Multiplier of the line width on the first layer. Increasing this could improve bed adhesion."
         },
         "skirt_line_count": {
-            "label": "Skirt Line Count",
             "description": "Multiple skirt lines help to prime your extrusion better for small models. Setting this to 0 will disable the skirt."
         },
         "layer_height": {
-            "label": "Layer Height",
             "description": "The height of each layer in mm. Higher values produce faster prints in lower resolution, lower values produce slower prints in higher resolution."
         },
         "layer_height_0": {
-            "label": "Initial Layer Height",
             "description": "The height of the initial layer in mm. A thicker initial layer makes adhesion to the heated bed easier."
         },
         "machine_name": {
@@ -83,7 +69,6 @@
         },
         "machine_buildplate_type": {
             "default_value": "aluminum",
-            "label": "Heated Bed Material",
             "description": "The material of the heated bed installed on the printer."
         },
         "machine_width": {
@@ -93,7 +78,6 @@
             "default_value": 125
         },
         "machine_heated_bed": {
-            "label": "Enable Heated Build Plate",
             "description": "Whether the machine enables the heated build plate to provide heat to avoid warp.",
             "default_value": true
         },
@@ -143,70 +127,56 @@
             "default_value": 0.05
         },
         "magic_mesh_surface_mode": {
-            "label": "Surface Mode",
             "description": "Treat the model as a surface only, a volume, or volumes with loose surfaces. The normal print mode only prints enclosed volumes. \"Surface\" prints a single wall tracing the mesh surface with no infill and no top/bottom skin."
         },
         "magic_spiralize": {
-            "label": "Spiralize Outer Contour",
             "description": "Spiralize smooths out the Z move of the outer edge. This will create a steady Z increase over the whole print. This feature turns a solid model into a single walled print with a solid bottom. This feature should only be enabled when each layer only contains a single part."
         },
         "material_bed_temperature": {
-            "label": "Build Plate Temperature",
             "description": "The temperature used for the build plate. If this is 0, the bed temperature will not be adjusted."
         },
         "material_bed_temperature_layer_0": {
-            "label": "Initial Build Plate Temperature",
             "description": "The temperature used for the build plate at the first layer."
         },
         "material_flow_layer_0": {
-            "label": "Initial Layer Flow",
             "description": "Flow compensation for the first layer: the amount of material extruded on the initial layer is multiplied by this value."
         },
         "material_bed_temp_prepend": {
-            "label": "Include Heated Bed Temperature",
             "description": "Whether to include heated bed temperature commands at the start of the gcode. When the start_gcode already contains heated bed temperature commands Cura frontend will automatically disable this setting.",
             "default_value": false
         },
         "material_diameter": {
-            "label": "Diameter",
             "description": "Adjusts the diameter of the filament used. Match this value with the diameter of the used filament.",
             "default_value": 1.75
         },
         "material_final_print_temperature": {
-            "label": "Final Printing Temperature",
             "description": "The temperature to which to already start cooling down just before the end of printing."
         },
         "material_flow": {
-            "label": "Flow",
             "description": "Flow compensation: the amount of material extruded is multiplied by this value."
         },
         "material_print_temp_prepend": {
             "default_value": false
         },
         "material_print_temperature": {
-            "label": "Printing Temperature",
             "description": "The temperature used for printing."
         },
         "material_print_temperature_layer_0": {
-            "label": "Initial Layer Printing Temperature",
             "description": "The temperature used for printing the first layer. Set at 0 to disable special handling of the initial layer."
         },
         "mold_enabled": {
             "description": "Print models as a mold, which can be cast in order to get a model which resembles the models on the heated bed."
         },
         "material_bed_temp_wait": {
-            "label": "Wait for Heated Bed Heatup",
             "description": "Whether to insert a command to wait until the heated bed temperature is reached at the start."
         },
         "machine_shape": {
-            "label": "Heated Bed Shape",
             "description": "The shape of the heated bed without taking unprintable areas into account."
         },
         "optimize_wall_printing_order": {
             "description": "Optimize the order in which walls are printed so as to reduce the number of retractions and the distance travelled. Most parts will benefit from this being enabled but some may actually take longer so please compare the print time estimates with and without optimization. First layer is not optimized when choosing brim as heated bed adhesion type."
         },
         "outer_inset_first": {
-            "label": "Outer Before Inner Walls",
             "description": "Prints walls in order of outside to inside when enabled. This can help improve dimensional accuracy in X and Y when using a high viscosity plastic like ABS; however it can decrease outer surface print quality, especially on overhangs."
         },
         "z_seam_relative": {
@@ -218,9 +188,7 @@
         "retraction_hop_after_extruder_switch": {
             "description": "After the machine switched from one extruder to the other, the heated bed is lowered to create clearance between the nozzle and the print. This prevents the nozzle from leaving oozed material on the outside of a print."
         },
-        "platform_adhesion": {
-            "label": "Heated Bed Adhesion"
-        },
+        "platform_adhesion": {},
         "raft_interface_line_width": {
             "description": "Width of the lines in the middle raft layer. Making the second layer extrude more causes the lines to stick to the heated bed."
         },
@@ -234,31 +202,24 @@
             "description": "The distance between the raft lines for the base raft layer. Wide spacing makes for easy removal of the raft from the heated bed."
         },
         "raft_margin": {
-            "label": "Raft Extra Margin",
             "description": "If the raft is enabled, this is the extra raft area around the model which is also given a raft. Increasing this margin will create a stronger raft while using more material and leaving less area for your print."
         },
         "retraction_amount": {
-            "label": "Retraction Distance",
             "description": "The length of material retracted during a retraction move."
         },
         "retraction_enable": {
-            "label": "Enable Retraction",
             "description": "Retract the filament when the nozzle is moving over a non-printed area."
         },
         "retraction_hop": {
-            "label": "Z Hop Height",
             "description": "The height difference when performing a Z Hop."
         },
         "retraction_hop_enabled": {
-            "label": "Z Hop When Retracted",
             "description": "Whenever a retraction is done, the nozzle is raised to create clearance between the nozzle and the print. It prevents the nozzle from hitting the print during travel moves, reducing the chance to knock the print from the build plate."
         },
         "retraction_speed": {
-            "label": "Retraction Speed",
             "description": "The speed at which the filament is retracted and primed during a retraction move."
         },
         "retract_at_layer_change": {
-            "label": "Retract at Layer Change",
             "description": "Retract the filament when the nozzle is moving to the next layer."
         },
         "support_brim_line_count": {
@@ -271,79 +232,62 @@
             "default_value": 0
         },
         "speed_infill": {
-            "label": "Infill Speed",
             "description": "The speed at which infill is printed."
         },
         "speed_layer_0": {
             "description": "The speed for the initial layer. A lower value is advised to improve adhesion to the heated bed."
         },
         "speed_print": {
-            "label": "Printing Speed",
             "description": "The speed at which printing happens."
         },
         "speed_print_layer_0": {
-            "label": "Initial Layer Printing Speed",
             "description": "The speed of printing for the initial layer. A lower value is advised to improve adhesion to the build plate."
         },
         "support": {
             "children": {
                 "support_enable": {
-                    "label": "Generate Auto Support",
                     "description": "Generate structures to support parts of the model which have overhangs. Without these structures, such parts would collapse during printing."
                 },
                 "support_infill_rate": {
-                    "label": "Support Density",
                     "description": "Adjusts the density of the support structure. A higher value results in better overhangs, but the supports are harder to remove."
                 },
                 "support_pattern": {
-                    "label": "Support Pattern",
                     "description": "The pattern of the support structures of the print. The different options available result in sturdy or easy to remove support.",
                     "default_value": "zigzag"
                 },
                 "support_type": {
-                    "label": "Support Placement",
                     "description": "Adjusts the placement of the support structures. The placement can be set to Touching Build Plate or Everywhere. When set to Everywhere, the support structures will also be printed on the model."
                 },
                 "support_z_distance": {
-                    "label": "Support Z Distance",
                     "description": "Distance from the top/bottom of the support structure to the print. This gap provides clearance to remove the supports after the model is printed. This value is rounded up to a multiple of the layer height."
                 },
                 "support_angle": {
-                    "label": "Support Overhang Angle",
                     "description": "The minimum angle of overhangs for which support is added. At a value of 0° all overhangs are supported, 90° will not provide any support."
                 }
             }
         },
         "speed_topbottom": {
-            "label": "Top/Bottom Speed",
             "description": "The speed at which top/bottom layers are printed."
         },
         "speed_travel": {
-            "label": "Travel Speed",
             "description": "The speed at which travel moves are made."
         },
         "speed_travel_layer_0": {
-            "label": "Initial Layer Travel Speed",
             "description": "The speed of travel moves in the initial layer. A lower value is advised to prevent pulling previously printed parts away from the heated bed. The value of this setting can automatically be calculated from the ratio between the Travel Speed and the Print Speed."
         },
         "speed_wall_0": {
-            "label": "Outer Wall Speed",
             "description": "The speed at which the outermost walls are printed. Printing the outer wall at a lower speed improves the final skin quality. However, having a large difference between the inner wall speed and the outer wall speed will affect quality in a negative way."
         },
         "speed_wall_x": {
-            "label": "Inner Wall Speed",
             "description": "The speed at which all inner walls are printed. Printing the inner wall faster than the outer wall will reduce printing time. It works well to set this in between the outer wall speed and the infill speed."
         },
         "top_thickness": {
-            "label": "Top Thickness",
             "description": "The thickness of the top layers of the print. This value divided by the layer height defines the number of top layers."
         },
         "wall_thickness": {
-            "label": "Wall Thickness",
             "description": "The thickness of the walls in the horizontal direction. This value divided by the wall line width defines the number of walls."
         },
         "skin_edge_support_layers": {
-            "label": "Skin Edge Support Layers",
             "default_value": 0
         }
     }

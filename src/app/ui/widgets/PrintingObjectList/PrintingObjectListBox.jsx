@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 // import PropTypes from 'prop-types';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
-import { find, filter, includes } from 'lodash';
+import { find } from 'lodash';
 import classNames from 'classnames';
 import styles from './styles.styl';
 import ModelItem from '../../views/model-item';
@@ -22,7 +22,6 @@ function PrintingObjectListBox() {
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions);
     const [leftMaterialColor, setLeftMaterialColor] = useState(whiteHex);
     const [rightMaterialColor, setRightMaterialColor] = useState(whiteHex);
-    const [expendArr, setExpendArr] = useState([]);
     // const [showList, setShowList] = useState(true);
     const dispatch = useDispatch();
     const actions = {
@@ -55,18 +54,6 @@ function PrintingObjectListBox() {
                     break;
                 default:
                     break;
-            }
-        },
-        onClickChangeExpendArr(modelId) {
-            if (expendArr.includes(modelId)) {
-                const tempArr = filter(expendArr, (item) => {
-                    return item !== modelId;
-                });
-                setExpendArr(tempArr);
-            } else {
-                const tempArr = expendArr;
-                tempArr.push(modelId);
-                setExpendArr(tempArr);
             }
         }
     };
@@ -115,7 +102,6 @@ function PrintingObjectListBox() {
                         isDualExtruder={isDualExtruder}
                         leftMaterialColor={leftMaterialColor}
                         rightMaterialColor={rightMaterialColor}
-                        isExpend={expendArr && includes(expendArr, model.modelID)}
                         onExpend={actions.onClickChangeExpendArr}
                     />
                 );

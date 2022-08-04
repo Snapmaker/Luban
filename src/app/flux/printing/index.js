@@ -1046,7 +1046,7 @@ export const actions = {
             uploadName,
             sourcePly,
             reloadSimplifyModel: true
-        }]));
+        }], true));
     },
 
     logGenerateGcode: () => (dispatch, getState) => {
@@ -1794,6 +1794,7 @@ export const actions = {
         const updateKey = direction === LEFT_EXTRUDER ? 'defaultMaterialId' : 'defaultMaterialIdRight';
         dispatch(actions.updateDefaultConfigId(PRINTING_MANAGER_TYPE_MATERIAL, materialId, direction));
         dispatch(actions.updateState({ [updateKey]: materialId }));
+        dispatch(actions.applyProfileToAllModels());
     },
 
     updateDefaultQualityId: qualityId => dispatch => {
@@ -1830,6 +1831,16 @@ export const actions = {
     // Upload model
     // @param files
     uploadModel: files => async (dispatch, getState) => {
+        const { progressStatesManager } = getState().printing;
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
+
+        dispatch(
+            actions.updateState({
+                stage: STEP_STAGE.PRINTING_LOADING_MODEL,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 0.01)
+            })
+        );
+
         const ps = Array.from(files).map(async file => {
             // Notice user that model is being loading
             const formData = new FormData();
@@ -1838,18 +1849,25 @@ export const actions = {
             const { originalName, uploadName, children = [] } = res.body;
             return { originalName, uploadName, children };
         });
-        const fileNames = await Promise.all(ps);
-        const allChild = []
-        fileNames.map((item) => {
-            if (item.children.length) {
-                item.isGroup = true
-            }
-            allChild.push(...item.children)
-        });
-        actions.__loadModel(allChild)(dispatch, getState).then(() => {
-            actions.__loadModel(fileNames)(dispatch, getState);
+        const promiseResults = await Promise.allSettled(ps);
+        const fileNames = promiseResults.map((promiseTask) => {
+            return promiseTask.value || promiseTask
         })
-
+        const allChild = []
+        fileNames.forEach((item) => {
+            if (item.children) {
+                if (item.children.length) {
+                    item.isGroup = true
+                }
+                allChild.push(...item.children)
+            }
+        });
+        if (allChild.length) {
+            allChild.push(...fileNames);
+            actions.__loadModel(allChild)(dispatch, getState)
+        } else {
+            actions.__loadModel(fileNames)(dispatch, getState);
+        }
     },
 
     setTransformMode: (value) => (dispatch, getState) => {
@@ -1925,6 +1943,7 @@ export const actions = {
             materialDefinitions,
             stopArea: { left, front }
         } = getState().printing;
+        modelGroup.updateClippingPlane()
         const {
             size,
             series,
@@ -2350,7 +2369,6 @@ export const actions = {
         //     };
         // }
         // gcodeParser.setColortypes(undefined, renderLineType);
-        // console.log(gcodeLine, renderLineType);
         if (gcodeLine) {
             // const uniforms = gcodeLine.material.uniforms;
             gcodeLine.children.forEach(mesh => {
@@ -2589,8 +2607,8 @@ export const actions = {
 
         const modelState = modelGroup.selectMultiModel(intersect, selectEvent);
         dispatch(actions.updateState(modelState));
-
-        dispatch(actions.render());
+        // TODO: Performance optimization test
+        // dispatch(actions.render());
     },
 
     selectTargetModel: (model, isMultiSelect) => (dispatch, getState) => {
@@ -3084,6 +3102,28 @@ export const actions = {
         recovery();
     },
 
+    getMirrorType: (model) => (dispatch, getState) => {
+        const { targetTmpState, modelGroup } = getState().printing;
+
+        let isMirror = ''
+        const x = targetTmpState[model.modelID].from.scaleX
+            * targetTmpState[model.modelID].to.scaleX;
+        const y = targetTmpState[model.modelID].from.scaleY
+            * targetTmpState[model.modelID].to.scaleY;
+        const z = targetTmpState[model.modelID].from.scaleZ
+            * targetTmpState[model.modelID].to.scaleZ;
+        if (x / Math.abs(x) === -1) {
+            return 'mirrorX'
+        }
+        if (y / Math.abs(y) === -1) {
+            return 'mirrorY'
+        }
+        if (z / Math.abs(z) === -1) {
+            return 'mirrorZ'
+        }
+        return ''
+    },
+
     recordModelAfterTransform: (
         transformMode,
         modelGroup,
@@ -3106,6 +3146,7 @@ export const actions = {
 
         const selectedModelArray = modelGroup.selectedModelArray.concat();
         const { recovery } = modelGroup.unselectAllModels();
+        let isMirror = false
         for (const model of selectedModelArray) {
             modelGroup.unselectAllModels();
             modelGroup.addModelToSelectedGroup(model);
@@ -3141,9 +3182,14 @@ export const actions = {
                     });
                     break;
                 case 'scale':
+                    const mirrorType = dispatch(actions.getMirrorType(model))
+                    if (mirrorType) {
+                        isMirror = true
+                    }
                     operation = new ScaleOperation3D({
                         target: model,
-                        ...targetTmpState[model.modelID]
+                        ...targetTmpState[model.modelID],
+                        mirrorType
                     });
                     break;
                 default:
@@ -3152,23 +3198,8 @@ export const actions = {
             operations.push(operation);
         }
 
-        if (transformMode === 'scale') {
-            const isMirror = modelGroup.selectedModelArray.some((model) => {
-                const x = targetTmpState[model.modelID].from.scaleX
-                    * targetTmpState[model.modelID].to.scaleX;
-                const y = targetTmpState[model.modelID].from.scaleY
-                    * targetTmpState[model.modelID].to.scaleY;
-                const z = targetTmpState[model.modelID].from.scaleZ
-                    * targetTmpState[model.modelID].to.scaleZ;
-                return (
-                    x / Math.abs(x) === -1
-                    || y / Math.abs(y) === -1
-                    || z / Math.abs(z) === -1
-                );
-            });
-            if (isMirror) {
-                dispatch(actions.clearAllManualSupport(operations));
-            }
+        if (transformMode === 'scale' && isMirror) {
+            dispatch(actions.clearAllManualSupport(operations));
         }
 
         operations.registCallbackAfterAll(() => {
@@ -3766,9 +3797,8 @@ export const actions = {
         const { promptDamageModel } = getState().machine;
         const { size } = getState().machine;
         const models = [...modelGroup.models];
-        const modelNames = files || [{ originalName, uploadName, sourcePly, isGroup, parentUploadName }];
+        const modelNames = files || [{ originalName, uploadName, sourcePly, isGroup, parentUploadName, children }];
         let _progress = 0;
-        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
         const promptTasks = [];
 
         const checkResultMap = new Map();
@@ -3808,7 +3838,7 @@ export const actions = {
                     resolve();
                 }
                 const uploadPath = `${DATA_PREFIX}/${model.uploadName}`;
-                if (isGroup) {
+                if (model.isGroup) {
                     const modelState = await modelGroup.generateModel({
                         loadFrom,
                         limitSize: size,
@@ -3816,7 +3846,7 @@ export const actions = {
                         sourceType,
                         originalName: model.originalName,
                         uploadName: model.uploadName,
-                        modelName,
+                        modelName: model.modelName,
                         mode: mode,
                         sourceWidth,
                         width: sourceWidth,
@@ -3825,10 +3855,10 @@ export const actions = {
                         geometry: null,
                         material: null,
                         transformation,
-                        modelID,
+                        modelID: model.modelID,
                         extruderConfig,
-                        isGroup,
-                        children
+                        isGroup: model.isGroup,
+                        children: model.children,
                     });
                     dispatch(actions.updateState(modelState));
 
@@ -3849,7 +3879,6 @@ export const actions = {
                         switch (type) {
                             case 'LOAD_MODEL_POSITIONS': {
                                 const { positions, originalPosition } = data;
-
                                 const bufferGeometry = new THREE.BufferGeometry();
                                 const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
                                 const material = new THREE.MeshPhongMaterial({
@@ -3884,7 +3913,7 @@ export const actions = {
                                         material: material,
                                         transformation,
                                         originalPosition,
-                                        modelID,
+                                        modelID: model.modelID,
                                         extruderConfig,
                                         parentModelID,
                                         parentUploadName: model.parentUploadName,
@@ -4008,7 +4037,37 @@ export const actions = {
         const newModels = modelGroup.models.filter(model => {
             return !models.includes(model) && model;
         });
+        modelGroup.groupsChildrenMap.forEach((subModels, group) => {
+            if (subModels.every(id => id instanceof ThreeModel)) {
+                modelGroup.unselectAllModels();
+
+                group.meshObject.updateMatrixWorld();
+                const groupMatrix = group.meshObject.matrixWorld.clone();
+                const allSubmodelsId = subModels.map(d => d.modelID);
+                const leftModels = modelGroup.models.filter((model) => {
+                    return !(model instanceof ThreeModel && allSubmodelsId.includes(model.modelID))
+                });
+                group.add(subModels);
+                const point = modelGroup._computeAvailableXY(group, leftModels);
+                group.meshObject.position.x = point.x;
+                group.meshObject.position.y = point.y;
+
+                modelGroup.groupsChildrenMap.delete(group);
+                modelGroup.models = [...leftModels, group];
+                group.meshObject.applyMatrix4(groupMatrix);
+
+                group.stickToPlate();
+                group.computeBoundingBox();
+                const overstepped = modelGroup._checkOverstepped(group);
+
+
+
+                group.setOversteppedAndSelected(overstepped, group.isSelected);
+                modelGroup.addModelToSelectedGroup(group);
+            }
+        });
         newModels.forEach((model) => {
+            modelGroup.selectModelById(model.modelID, true);
             if (model instanceof ThreeModel) {
                 model.initClipper(modelGroup.localPlane);
 
@@ -4421,6 +4480,7 @@ export const actions = {
                 layerHeight,
                 infillSparseDensity: qualitySetting.infill_sparse_density.default_value,
                 infillPattern: qualitySetting.infill_pattern.default_value,
+                magicSpiralize: qualitySetting.magic_spiralize.default_value,
             });
             model.materialPrintTemperature = materialSettings.material_print_temperature.default_value
         });
@@ -4877,9 +4937,11 @@ export const actions = {
     /**
      * @param {*} modelInfos: { modelID:string, uploadName:string, reloadSimplifyModel?: bool }[]
      */
-    updateModelMesh: (modelInfos) => async (dispatch, getState) => {
+    updateModelMesh: (modelInfos, silentLoading = false) => async (dispatch, getState) => {
         const { modelGroup, progressStatesManager } = getState().printing;
-        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
+        if (!silentLoading) {
+            progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
+        }
         let _progress = 0;
         const promptTasks = [];
         const { recovery } = modelGroup.unselectAllModels();
@@ -4896,16 +4958,10 @@ export const actions = {
                     switch (type) {
                         case 'LOAD_MODEL_POSITIONS': {
                             const { positions } = data;
-                            const bufferGeometry = new THREE.BufferGeometry();
-                            const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
-                            bufferGeometry.setAttribute(
-                                'position',
-                                modelPositionAttribute
-                            );
 
-                            model.updateBufferGeometry(bufferGeometry);
+                            model.updateBufferGeometry(positions);
 
-                            if (modelInfos.length > 1) {
+                            if (!silentLoading && modelInfos.length > 1) {
                                 _progress += 1 / modelInfos.length;
                                 dispatch(
                                     actions.updateState({
@@ -4940,7 +4996,7 @@ export const actions = {
                             if (modelInfos.length === 1) {
                                 const state = getState().printing;
                                 const progress = 0.25 + data.progress * 0.5;
-                                if (progress - state.progress > 0.01 || progress > 0.75 - EPSILON) {
+                                if (!silentLoading && progress - state.progress > 0.01 || progress > 0.75 - EPSILON) {
                                     dispatch(
                                         actions.updateState({
                                             stage: STEP_STAGE.PRINTING_LOADING_MODEL,
@@ -4956,7 +5012,7 @@ export const actions = {
                                 status: 'load-model-fail',
                                 originalName: model.originalName
                             });
-                            if (modelInfos.length > 1) {
+                            if (!silentLoading && modelInfos.length > 1) {
                                 _progress += 1 / modelInfos.length;
                                 dispatch(
                                     actions.updateState({
@@ -4980,15 +5036,15 @@ export const actions = {
         modelGroup.models = modelGroup.models.concat();
 
         recovery();
-        dispatch(
-            actions.updateState({
+        if (!silentLoading) {
+            dispatch(actions.updateState({
                 modelGroup,
                 stage: STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE,
                 progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1),
                 promptTasks
-            })
-        );
-
+            }));
+        }
+        modelGroup.updatePrimeTowerHeight()
         dispatch(actions.applyProfileToAllModels());
         dispatch(actions.displayModel());
         dispatch(actions.destroyGcodeLine());
@@ -5000,7 +5056,7 @@ export const actions = {
 
         const { results, allPepaired } = await dispatch(appGlobalActions.repairSelectedModels(HEAD_PRINTING));
 
-        await dispatch(actions.updateModelMesh(results));
+        await dispatch(actions.updateModelMesh(results, true));
 
         return { allPepaired };
     }

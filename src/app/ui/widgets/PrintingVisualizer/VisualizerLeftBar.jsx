@@ -90,14 +90,14 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
         },
         onChangeFile: async (event) => {
             const files = event.target.files;
-            try {
-                await dispatch(printingActions.uploadModel(files));
-            } catch (e) {
-                modal({
-                    title: i18n._('key-Printing/LeftBar-Failed to upload model.'),
-                    body: e.message || e.body.msg
-                });
-            }
+            // try {
+            await dispatch(printingActions.uploadModel(files));
+            // } catch (e) {
+            //     modal({
+            //         title: i18n._('key-Printing/LeftBar-Failed to upload model.'),
+            //         body: e.message || e.body.msg
+            //     });
+            // }
         },
         onModelAfterTransform: () => {
             dispatch(printingActions.onModelAfterTransform());
