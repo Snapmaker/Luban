@@ -3810,7 +3810,7 @@ export const actions = {
         const { promptDamageModel } = getState().machine;
         const { size } = getState().machine;
         const models = [...modelGroup.models];
-        const modelNames = files || [{ originalName, uploadName, sourcePly, isGroup, parentUploadName, children }];
+        const modelNames = files || [{ originalName, uploadName, sourcePly, isGroup, parentUploadName, modelID, children }];
         let _progress = 0;
         const promptTasks = [];
 
@@ -4000,39 +4000,6 @@ export const actions = {
                                     );
                                 }
                                 reject();
-                                break;
-                            }
-                            case 'LOAD_GROUP_POSITIONS': {
-                                const modelsInGroup = modelGroup.models.filter((item) => {
-                                    return item instanceof ThreeModel && (item.parentUploadName === model.uploadName)
-                                })
-                                const { originalPosition } = data;
-                                modelGroup.addGroup({
-                                    loadFrom: LOAD_MODEL_FROM_OUTER,
-                                    limitSize: size,
-                                    headType,
-                                    sourceType,
-                                    originalName: model.originalName,
-                                    uploadName: model.uploadName,
-                                    modelName: null,
-                                    children,
-                                    originalPosition,
-                                    transformation
-                                }, modelsInGroup);
-
-                                const modelState = modelGroup.getState();
-                                dispatch(actions.updateState(modelState));
-                                dispatch(actions.applyProfileToAllModels());
-                                dispatch(actions.displayModel());
-                                dispatch(actions.destroyGcodeLine());
-                                if (modelNames.length > 1) {
-                                    _progress += 1 / modelNames.length;
-                                    dispatch(actions.updateState({
-                                        stage: STEP_STAGE.PRINTING_LOADING_MODEL,
-                                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress)
-                                    }));
-                                }
-                                resolve();
                                 break;
                             }
                             default:

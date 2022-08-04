@@ -76,6 +76,9 @@ function LaserStartModal({
         value = value < 0 ? 0 : value;
         dispatch(machineActions.updateMaterialThickness(value));
     };
+    useEffect(() => {
+        onChangeMaterialThickness(materialThickness);
+    }, []);
 
 
     // i18n._('')

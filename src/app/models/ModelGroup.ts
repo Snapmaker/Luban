@@ -1752,7 +1752,7 @@ class ModelGroup extends EventEmitter {
      *
      * @returns {TModel}
      */
-    public addModel(modelInfo: ModelInfo | SVGModelInfo, immediatelyShow = true) {
+    public addModel(modelInfo: ModelInfo | SVGModelInfo) {
         if (!modelInfo.modelName) {
             modelInfo.modelName = this._createNewModelName({
                 sourceType: modelInfo.sourceType as '3d' | '2d',
@@ -1769,8 +1769,6 @@ class ModelGroup extends EventEmitter {
             this.groupsChildrenMap.set(group, modelInfo.children.map((item) => {
                 return item.modelID;
             }));
-            // this.models.splice(0, 0, group);
-            // this.object.add(group.meshObject);
 
             return group as ThreeGroup;
         }
@@ -1783,6 +1781,7 @@ class ModelGroup extends EventEmitter {
             }
         }
         const model = this.newModel(modelInfo);
+        console.log('modelInfo', modelInfo.modelID, modelInfo.modelName);
 
         model.computeBoundingBox();
 
@@ -1801,16 +1800,14 @@ class ModelGroup extends EventEmitter {
                     }
                 });
             } else {
-                if (immediatelyShow) {
-                    // add to group and select
-                    model.stickToPlate();
-                    this.models.push(model);
-                    // todo, use this to refresh obj list
-                    this.models = [...this.models];
-                    this.object.add(model.meshObject);
+                // add to group and select
+                model.stickToPlate();
+                this.models.push(model);
+                // todo, use this to refresh obj list
+                this.models = [...this.models];
+                this.object.add(model.meshObject);
 
-                    this.selectModelById(model.modelID);
-                }
+                this.selectModelById(model.modelID);
             }
             if (model.parentUploadName) {
                 this.groupsChildrenMap.forEach((subModelIDs, group) => {
@@ -1840,12 +1837,10 @@ class ModelGroup extends EventEmitter {
             this.object.add(model.meshObject);
         }
 
-        if (immediatelyShow) {
-            this.emit(ModelEvents.AddModel, model);
-            // refresh view
-            this.modelChanged();
-            modelInfo.sourceType === '3d' && this.updatePrimeTowerHeight();
-        }
+        this.emit(ModelEvents.AddModel, model);
+        // refresh view
+        this.modelChanged();
+        modelInfo.sourceType === '3d' && this.updatePrimeTowerHeight();
         return model;
     }
 
