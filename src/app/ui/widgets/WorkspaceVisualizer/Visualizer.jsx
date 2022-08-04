@@ -114,6 +114,7 @@ class Visualizer extends PureComponent {
     pubsubTokens = [];
 
     pauseStatus = {
+        pos: {},
         headStatus: false,
         headPower: 0
     };
@@ -332,7 +333,9 @@ class Visualizer extends PureComponent {
                 server.resumeServerGcode({
                     headType: this.props.headType,
                     pause3dpStatus: this.props.pause3dpStatus,
-                    pauseStatus: this.pauseStatus
+                    pauseStatus: this.pauseStatus,
+                    gcodeFile,
+                    sizeZ: this.props.size.z
                 }, ({ msg, code }) => {
                     if (msg) {
                         if (code === 202 || code === 222) {
@@ -363,9 +366,17 @@ class Visualizer extends PureComponent {
             // delay 500ms to let buffer executed. and status propagated
             setTimeout(() => {
                 if (this.state.gcode.received + 1 >= this.state.gcode.sent) {
+                    const workPosition = this.state.workPosition;
+
                     this.pauseStatus = {
                         headStatus: this.state.controller.state.headStatus,
-                        headPower: this.state.controller.state.headPower
+                        headPower: this.state.controller.state.headPower,
+                        pos: {
+                            x: Number(workPosition.x),
+                            y: Number(workPosition.y),
+                            z: Number(workPosition.z),
+                            e: Number(workPosition.e)
+                        }
                     };
                     if (this.pauseStatus.headStatus) {
                         this.props.executeGcode('M5');
@@ -375,7 +386,6 @@ class Visualizer extends PureComponent {
                     if (this.props.pause3dpStatus?.pausing) {
                         const pause3dpStatus = {};
                         pause3dpStatus.pausing = false;
-                        const workPosition = this.state.workPosition;
                         pause3dpStatus.pos = {
                             x: Number(workPosition.x),
                             y: Number(workPosition.y),

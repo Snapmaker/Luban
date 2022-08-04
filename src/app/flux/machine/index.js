@@ -1032,7 +1032,8 @@ export const actions = {
 
     executeGcodeAutoHome: (hasHomingModel = false) => (dispatch, getState) => {
         const { server } = getState().machine;
-        server.goHome(hasHomingModel);
+        const headType = controller.state.headType;
+        server.goHome(hasHomingModel, headType);
     },
 
     // region Enclosure

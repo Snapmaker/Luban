@@ -207,7 +207,7 @@ class SocketBASE {
         }
     };
 
-    public goHome = async (hasHomingModel = false) => {
+    public goHome = async (hasHomingModel = false, headType) => {
         log.info('onClick gohome');
         hasHomingModel && this.socket && this.socket.emit('move:status', { isHoming: true });
         await this.sacpClient.updateCoordinate(CoordinateType.MACHINE).then(res => {
@@ -217,6 +217,11 @@ class SocketBASE {
             log.info(`Go-Home, ${response}`);
             this.socket && this.socket.emit('serialport:read', { data: response.result === 0 ? 'OK' : 'WARNING' });
         });
+        if (headType === HEAD_LASER || headType === HEAD_CNC) {
+            await this.sacpClient.updateCoordinate(CoordinateType.WORKSPACE).then(res => {
+                log.info(`Update Coordinate: ${res}`);
+            });
+        }
     }
 
     public coordinateMove = async ({ moveOrders, jogSpeed, headType }) => {

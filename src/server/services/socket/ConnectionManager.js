@@ -1,5 +1,6 @@
 import net from 'net';
 import SerialPort from 'serialport';
+import fs from 'fs';
 import logger from '../../lib/logger';
 // import workerManager from '../task-manager/workerManager';
 import socketSerial from './socket-serial';
@@ -7,7 +8,7 @@ import socketHttp from './socket-http';
 import socketTcp from './sacp/SACP-TCP';
 import socketSerialNew from './sacp/SACP-SERIAL';
 import {
-    HEAD_PRINTING, HEAD_LASER, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES,
+    HEAD_PRINTING, HEAD_LASER, HEAD_CNC, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES,
     CONNECTION_TYPE_WIFI, CONNECTION_TYPE_SERIAL, WORKFLOW_STATE_PAUSED, PORT_SCREEN_HTTP, PORT_SCREEN_SACP, SACP_PROTOCOL, STANDARD_CNC_TOOLHEAD_FOR_SM2, LEVEL_ONE_POWER_LASER_FOR_SM2
 } from '../../constants';
 import DataStorage from '../../DataStorage';
@@ -290,11 +291,36 @@ class ConnectionManager {
         }
     }
 
+    recoveryCncPosition = (pauseStatus, gcodeFile, sizeZ) => {
+        let code = '';
+        const pos = pauseStatus.pos;
+        const gcodeFilePath = `${DataStorage.tmpDir}/${gcodeFile.uploadName}`;
+        const gcode = fs.readFileSync(gcodeFilePath, 'utf8');
+        const res = gcode.match(/(?<=max_z\(mm\): )(\d)+/);
+        if (res.length) {
+            code += `
+G1 F1500 Z${res[0]}
+G1 X${pos.x} Y${pos.y} B${pos.e}
+G1 Z${pos.z}
+            `;
+        } else {
+            code += `
+G1 F1500 Z${sizeZ}
+G1 X${pos.x} Y${pos.y} B${pos.e}
+G1 Z${pos.z}
+        `;
+        }
+        this.socket.command(this.socket, {
+            cmd: 'gcode',
+            args: [code]
+        });
+    }
+
     resumeGcode = (socket, options, callback) => {
         if (this.protocol === SACP_PROTOCOL || this.connectionType === CONNECTION_TYPE_WIFI) {
             this.socket.resumeGcode(options, callback);
         } else {
-            const { headType, pause3dpStatus, pauseStatus } = options;
+            const { headType, pause3dpStatus, pauseStatus, gcodeFile, sizeZ } = options;
             if (headType === HEAD_PRINTING) {
                 const pos = pause3dpStatus.pos;
                 const code = `G1 X${pos.x} Y${pos.y} Z${pos.z} F1000\n`;
@@ -306,18 +332,23 @@ class ConnectionManager {
                     cmd: 'gcode:resume',
                 });
             } else if (headType === HEAD_LASER) {
+                const pos = pauseStatus.pos;
+                let code = `G1 F1500 Z${pos.z}
+G1 X${pos.x} Y${pos.y} B${pos.e}`;
+
                 if (pauseStatus.headStatus) {
                     // resume laser power
                     const powerPercent = ensureRange(pauseStatus.headPower, 0, 100);
                     const powerStrength = Math.floor(powerPercent * 255 / 100);
-                    const code = powerPercent !== 0 ? `M3 P${powerPercent} S${powerStrength}`
-                        : 'M3';
-                    this.socket.command(this.socket, {
-                        cmd: 'gcode',
-                        args: [code]
-                    });
+                    code += powerPercent !== 0 ? `
+M3 P${powerPercent} S${powerStrength}`
+                        : `
+M3`;
                 }
-
+                this.socket.command(this.socket, {
+                    cmd: 'gcode',
+                    args: [code]
+                });
                 this.socket.command(this.socket, {
                     cmd: 'gcode:resume',
                 });
@@ -331,11 +362,13 @@ class ConnectionManager {
 
                     // for CNC machine, resume need to wait >500ms to let the tool head started
                     setTimeout(() => {
+                        this.recoveryCncPosition(pauseStatus, gcodeFile, sizeZ);
                         this.socket.command(this.socket, {
                             cmd: 'gcode:resume',
                         });
                     }, 1000);
                 } else {
+                    this.recoveryCncPosition(pauseStatus, gcodeFile, sizeZ);
                     this.socket.command(this.socket, {
                         cmd: 'gcode:resume',
                     });
@@ -652,7 +685,7 @@ class ConnectionManager {
     // only for Wifi
 
     goHome = (socket, options) => {
-        const { hasHomingModel } = options;
+        const { hasHomingModel, headType } = options;
         if (this.protocol === SACP_PROTOCOL) {
             this.socket.goHome(hasHomingModel);
         } else {
@@ -662,6 +695,11 @@ class ConnectionManager {
             this.executeGcode(this.socket, {
                 gcode: 'G28'
             });
+            if (headType === HEAD_LASER || headType === HEAD_CNC) {
+                this.executeGcode(this.socket, {
+                    gcode: 'G54'
+                });
+            }
         }
     }
 

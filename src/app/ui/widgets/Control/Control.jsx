@@ -1,6 +1,6 @@
 import map from 'lodash/map';
 import includes from 'lodash/includes';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
 import { isNil } from 'lodash';
@@ -83,6 +83,12 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
     const { jog, axes, dataSource } = widgets[widgetId];
     const { speed = 1500, keypad, selectedDistance, customDistance, selectedAngle, customAngle } = jog;
     const { isConnected, workflowStatus, homingModal, isMoving, server, homingModel } = machine;
+
+    const serverRef = useRef(server);
+    useEffect(() => {
+        serverRef.current = server;
+    }, [server]);
+
     const dispatch = useDispatch();
     function getInitialState() {
         const jogSpeed = speed;
@@ -230,7 +236,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
             dispatch(machineActions.executeGcode(gcode));
         },
         coordinateMove: (gcode, moveOrders, jogSpeed) => {
-            server.coordinateMove(moveOrders, gcode, jogSpeed, headType, homingModel);
+            serverRef.current.coordinateMove(moveOrders, gcode, jogSpeed, headType, homingModel);
         },
         setWorkOrigin: () => {
             if (headType === HEAD_PRINTING) return;
@@ -239,7 +245,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
             const zPosition = parseFloat(workPosition.z);
             const bPosition = workPosition.isFourAxis ? parseFloat(workPosition.b) : null;
             // dispatch(machineActions.setWorkOrigin(xPosition, yPosition, zPosition, bPosition));
-            server.setWorkOrigin(xPosition, yPosition, zPosition, bPosition);
+            serverRef.current.setWorkOrigin(xPosition, yPosition, zPosition, bPosition);
         },
         toggleKeypadJogging: () => {
             setState(stateBefore => ({
