@@ -99,7 +99,7 @@ function CheckingNozzleSize() {
         if (isConnected) {
             if (toolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
                 && ((nozzleSizeList[0] && leftDiameter && nozzleSizeList[0] !== leftDiameter)
-                || nozzleSizeList[1] && rightDiameter && (nozzleSizeList[1] !== rightDiameter))) {
+                    || nozzleSizeList[1] && rightDiameter && (nozzleSizeList[1] !== rightDiameter))) {
                 if (nozzleSizeList[0] !== leftDiameter) {
                     setDiameter(LEFT_EXTRUDER, nozzleSizeList[0]);
                 }
@@ -469,6 +469,11 @@ function WifiConnection() {
                     moduleName: i18n._('key-Workspace/Connection-laser')
                 });
             }
+            newModuleStatusList.push({
+                key: 'laserCamera',
+                moduleName: i18n._('key-Workspace/Connection-Laser camera'),
+                status: laserCamera
+            });
         }
         if (headType === HEAD_CNC) {
             if (toolHead === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2) {
@@ -620,13 +625,13 @@ function WifiConnection() {
                         </span>
                         <span className={styles['connection-state-icon']}>
                             {workflowStatus === WORKFLOW_STATUS_UNKNOWN
-                            && <i className="sm-icon-14 sm-icon-idle" />}
+                                && <i className="sm-icon-14 sm-icon-idle" />}
                             {workflowStatus === WORKFLOW_STATUS_IDLE
-                            && <i className="sm-icon-14 sm-icon-idle" />}
+                                && <i className="sm-icon-14 sm-icon-idle" />}
                             {workflowStatus === WORKFLOW_STATUS_PAUSED
-                            && <i className="sm-icon-14 sm-icon-paused" />}
+                                && <i className="sm-icon-14 sm-icon-paused" />}
                             {workflowStatus === WORKFLOW_STATUS_RUNNING
-                            && <i className="sm-icon-14 sm-icon-running" />}
+                                && <i className="sm-icon-14 sm-icon-running" />}
                         </span>
                     </div>
                     {!!currentModuleStatusList && !!currentModuleStatusList.length && (

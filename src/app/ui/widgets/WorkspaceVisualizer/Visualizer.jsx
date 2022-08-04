@@ -759,8 +759,10 @@ class Visualizer extends PureComponent {
                     </div>
                 )}
                 <div className={styles['canvas-wrapper']}>
-                    {this.props.uploadState === 'uploading' && <Loading />}
-                    {this.props.renderState === 'rendering' && <Rendering />}
+                    {
+                        this.props.uploadState === 'uploading' ? <Loading />
+                            : (this.props.renderState === 'rendering' && <Rendering />)
+                    }
                     {state.printableArea && (
                         <Canvas
                             ref={this.canvas}

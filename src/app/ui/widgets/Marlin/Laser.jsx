@@ -102,6 +102,7 @@ class Laser extends PureComponent {
         }
         if (prevProps.laserPower !== this.props.laserPower && !isNil(this.props.laserPower)) {
             this.setState({
+                laserPower: this.props.laserPower,
                 laserPowerOpen: this.props.laserPower > 0
             });
         }
@@ -128,6 +129,8 @@ class Laser extends PureComponent {
                         inputMax={100}
                         hasSlider
                         inputMin={1}
+                        sliderMin={1}
+                        sliderMax={100}
                     >
                         <div className="width-44 sm-flex sm-flex-direction-c margin-left-16">
                             <span>{Math.floor(laserPower)}%</span>
@@ -153,7 +156,7 @@ class Laser extends PureComponent {
                             name="WarningTipsWarning"
                             color="#FFA940"
                             type={['static']}
-                            onClick={() => {}}
+                            onClick={() => { }}
                         />
                         <span>{i18n._('key-Workspace/Laser-high_power_tips')}</span>
                     </div>

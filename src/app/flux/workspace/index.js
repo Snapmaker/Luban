@@ -36,6 +36,7 @@ const INITIAL_STATE = {
     renderState: 'idle',
     previewRenderState: 'idle',
     gcodeFile: null,
+    activeGcodeFile: null,
     boundingBox: null,
     previewBoundingBox: null,
     gcodeFiles: [],

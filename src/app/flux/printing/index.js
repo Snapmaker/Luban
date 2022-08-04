@@ -2148,7 +2148,7 @@ export const actions = {
             // Use setTimeout to force export executes in next tick, preventing block of updateState()
 
             setTimeout(async () => {
-                const models = modelGroup.models
+                const models = modelGroup.getThreeModels()
                     .filter((i) => i.visible)
                     .reduce((pre, model) => {
                         if (model instanceof ThreeGroup) {

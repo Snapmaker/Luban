@@ -5,7 +5,7 @@ import {
 import EventEmitter from 'events';
 import { CONTAINED, INTERSECTED, NOT_INTERSECTED } from 'three-mesh-bvh';
 import { v4 as uuid } from 'uuid';
-import _ from 'lodash';
+import _, { debounce } from 'lodash';
 import { Transfer } from 'threads';
 import i18n from '../lib/i18n';
 
@@ -1030,65 +1030,12 @@ class ModelGroup extends EventEmitter {
         return this.getState();
     }
 
-    public duplicateSelectedModel(modelID) {
+    public duplicateSelectedModel() {
         this.updateClippingPlane();
         const modelsToCopy = this.selectedModelArray;
         if (modelsToCopy.length === 0) return this._getEmptyState();
 
-        // Unselect all models
-        this.unselectAllModels();
-
-        const newModels = modelsToCopy.map((model) => {
-            let newModel;
-
-            if (model instanceof ThreeModel || model instanceof ThreeGroup) {
-                newModel = model.clone(this) as Model3D;
-                newModel.stickToPlate();
-                newModel.modelName = this._createNewModelName(newModel);
-                newModel.meshObject.position.x = 0;
-                newModel.meshObject.position.y = 0;
-                const point = this._computeAvailableXY(newModel);
-                newModel.meshObject.position.x = point.x;
-                newModel.meshObject.position.y = point.y;
-                newModel.transformation.positionX = point.x;
-                newModel.transformation.positionY = point.y;
-                newModel.meshObject.updateMatrix();
-                newModel.computeBoundingBox();
-
-                newModel.modelID = modelID || uuid();
-            } else {
-                newModel = model.clone(this) as SvgModel;
-                newModel.meshObject.addEventListener('update', this.onModelUpdate);
-                newModel.modelID = modelID || uuid();
-                newModel.computeBoundingBox();
-                newModel.updateTransformation({
-                    positionX: 0,
-                    positionY: 0,
-                    positionZ: 0
-                });
-            }
-
-            this.models.push(newModel);
-            this.object.add(newModel.meshObject);
-            this.addModelToSelectedGroup(newModel);
-            return newModel;
-        });
-        if (this.headType === HEAD_PRINTING) {
-            this.traverseModels(newModels, (model: Model3D) => {
-                model.computeBoundingBox();
-                model.onTransform();
-                if (model instanceof ThreeModel) {
-                    model.initClipper(this.localPlane);
-                } else if (model instanceof ThreeGroup) {
-                    model.children.forEach((subModel) => {
-                        subModel.computeBoundingBox();
-                        (subModel as ThreeModel).initClipper(this.localPlane);
-                    });
-                }
-            });
-        }
-
-        return this.getState();
+        return this.paste(modelsToCopy);
     }
 
     /**
@@ -1101,9 +1048,8 @@ class ModelGroup extends EventEmitter {
     /**
      * Paste action: paste(duplicate) models in clipboard.
      */
-    public paste() {
+    public paste(modelsToCopy = this.clipboard) {
         this.updateClippingPlane();
-        const modelsToCopy = this.clipboard;
         if (modelsToCopy.length === 0) return this._getEmptyState();
 
         // Unselect all models
@@ -2583,14 +2529,14 @@ class ModelGroup extends EventEmitter {
         return models;
     }
 
-    public updatePlateAdhesion(config?: TAdhesionConfig) {
+    private updatePlateAdhesion = debounce(this._updatePlateAdhesion, 300)
+    public _updatePlateAdhesion(config?: TAdhesionConfig) {
         if (config) {
             // init
             if (!this.adhesionConfig) {
                 this.adhesionConfig = config;
                 return;
             }
-            // 判断是否需要更新
             let needUpdate = false;
             for (const [, key] of Object.keys(this.adhesionConfig).entries()) {
                 needUpdate = needUpdate || this.adhesionConfig[key] !== config[key];
@@ -2748,8 +2694,10 @@ class ModelGroup extends EventEmitter {
     }
 
     public calaClippingMap() {
-        const shouldUpdate = this.getThreeModels().some((model) => {
+        const shouldUpdate = this.getThreeModels().map((model) => {
             return model.updateClippingMap();
+        }).some((i) => {
+            return i;
         });
         if (shouldUpdate) {
             this.plateAdhesion.clear();
