@@ -14,7 +14,6 @@ const TextAreaInput = React.memo(({
     function onInsideChange(event) {
         if (displayValue !== event.target.value) {
             setDisplayValue(event.target.value);
-            console.log('d', setDisplayValue);
         }
     }
     const changeHandler = (newValue) => {

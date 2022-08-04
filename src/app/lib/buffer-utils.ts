@@ -1,14 +1,16 @@
 type TPoint = { x: number, y: number }
 
 export const bufferToPoint = (buffer: ArrayBuffer) => {
-    if (buffer instanceof ArrayBuffer) {
+    if (buffer instanceof ArrayBuffer && buffer.byteLength) {
         const view = new DataView(buffer);
-        const points: TPoint[] = [];
+        const points: TPoint[] = new Array(buffer.byteLength / 8 / 2);
+        let j = 0;
         for (let index = 0; index + 8 < buffer.byteLength; index += 16) {
-            points.push({
+            points[j] = {
                 x: view.getFloat64(index),
                 y: view.getFloat64(index + 8)
-            });
+            };
+            j++;
         }
         return points;
     }
