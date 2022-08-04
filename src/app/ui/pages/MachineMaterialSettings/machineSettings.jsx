@@ -493,7 +493,7 @@ const MachineSettings = forwardRef(({
                                 <div className="width-percent-100 height-percent-100">
                                     <div className={`width-percent-100 position-re ${includes(currentSerial, item.value) ? 'border-radius-16 border-blod-blue-2' : ''}`} style={{ height: 'calc(100% - 22px)' }}>
                                         <img src={item.image} alt="" className="width-percent-100 border-radius-16 height-percent-100 display-block margin-auto" />
-                                        {(isConnected && includes(currentSerial, item.value)) && (
+                                        {(isConnected && includes(connectSerial, item.value)) && (
                                             <div className="position-ab bottom-2 right-1 background-grey-3 border-radius-8 font-size-small padding-vertical-4 padding-horizontal-8 line-height-14">
                                                 <Badge status="success" />
                                                 <span>online | </span>
