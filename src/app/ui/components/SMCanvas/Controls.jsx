@@ -694,7 +694,7 @@ class Controls extends EventEmitter {
             }, []);
             if (lines.length) {
                 this.ray.setFromCamera(this.pointer, this.camera);
-                const allIntersectObjects = this.ray.intersectObjects(lines, true);
+                const allIntersectObjects = this.ray.intersectObjects(lines, false);
                 if (allIntersectObjects.length) {
                     const highlightLine = allIntersectObjects[0].object;
                     if (this.highlightLine !== highlightLine) {

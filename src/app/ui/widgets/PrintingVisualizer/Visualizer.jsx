@@ -30,7 +30,7 @@ import VisualizerBottomLeft from './VisualizerBottomLeft';
 import VisualizerInfo from './VisualizerInfo';
 import PrintableCube from './PrintableCube';
 import styles from './styles.styl';
-import { loadModelFailPopup, scaletoFitPopup, sliceFailPopup, repairModelFailPopup, repairModelPopup, repairModelBeforSimplifyPopup } from './VisualizerPopup';
+import { loadModelFailPopup, scaletoFitPopup, sliceFailPopup, repairModelFailPopup, repairModelPopup } from './VisualizerPopup';
 
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 import { emitUpdateControlInputEvent } from '../../components/SMCanvas/TransformControls';
@@ -482,15 +482,6 @@ class Visualizer extends PureComponent {
                     promptTasks.filter(item => item.status === 'repair-model-fail').forEach(item => {
                         repairModelFailPopup(item.originalName);
                     });
-                } else if (stage === STEP_STAGE.PRINTING_EMIT_REPAIRING_MODEL) {
-                    const needRepair = promptTasks.find(item => item.status === 'repair-model-before-simplify');
-                    if (needRepair) {
-                        repairModelBeforSimplifyPopup().then(() => {
-                            needRepair.resolve();
-                        }).catch(() => {
-                            needRepair.reject();
-                        });
-                    }
                 }
             }
         }
@@ -577,7 +568,9 @@ class Visualizer extends PureComponent {
 
                 <div className={styles['visualizer-preview-control']}>
                     <VisualizerPreviewControl />
-                    <VisualizerClippingControl />
+                    <VisualizerClippingControl
+                        simplifying={this.props.simplifying}
+                    />
                 </div>
 
                 <ModeToggleBtn />

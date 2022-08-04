@@ -308,7 +308,8 @@ const INITIAL_STATE = {
     // profile manager params type
     printingParamsType: 'basic',
     materialParamsType: 'basic',
-    customMode: false
+    customMode: false,
+    showParamsProfile: true
 };
 
 const ACTION_UPDATE_STATE = 'printing/ACTION_UPDATE_STATE';
@@ -537,6 +538,12 @@ export const actions = {
                 printingParamsType: value
             }));
         }
+    },
+
+    updateParamsProfileShow: (value) => (dispatch) => {
+        dispatch(actions.updateState({
+            showParamsProfile: value
+        }));
     },
 
     updateCustomMode: (value) => (dispatch) => {
@@ -1332,7 +1339,6 @@ export const actions = {
         const definitionsKey = definitionKeysWithDirection[direction][type];
         let { extruderLDefinition: actualExtruderDefinition } = printingState;
         let UpdatePresetModel = false;
-        resolveDefinition(definitionModel, changedSettingArray);
         // Todo
         if (['snapmaker_extruder_0', 'snapmaker_extruder_1'].includes(id)) {
             if (id === 'snapmaker_extruder_0') {
@@ -1345,6 +1351,7 @@ export const actions = {
                 })
             );
         } else {
+            resolveDefinition(definitionModel, changedSettingArray);
             const definitions = printingState[definitionsKey];
             const index = definitions.findIndex((d) => d.definitionId === id);
             definitions[index] = definitionModel;
@@ -1464,8 +1471,27 @@ export const actions = {
     },
 
     /**
-     * @param {*} type 'material'|'quality'
+     * @param {*}
+     * type: 'material'|'quality'
+     * definition: definitionModel
+     * newCategoryName: string
      */
+    updateDefinitionCategoryName: (type, definition, newCategoryName) => async (dispatch, getState) => {
+        const definitionsKey = defaultDefinitionKeys[type]?.definitions;
+        const definitions = getState().printing[definitionsKey];
+        definition.category = newCategoryName;
+        await definitionManager.updateDefinition(definition);
+        const index = definitions.findIndex(
+            (d) => d.definitionId === definition?.definitionId
+        );
+        definitions[index] = definition;
+        dispatch(
+            actions.updateState({
+                [definitionsKey]: [...definitions]
+            })
+        );
+    },
+
     duplicateDefinitionByType: (
         type,
         definition,
@@ -3703,27 +3729,12 @@ export const actions = {
             return !model.needRepair;
         });
 
-        return new Promise((resolve) => {
+        return new Promise(async (resolve) => {
             if (repaired) {
                 resolve(true);
             } else {
-                dispatch(actions.updateState({
-                    stage: STEP_STAGE.PRINTING_EMIT_REPAIRING_MODEL,
-                    promptTasks: [{
-                        status: 'repair-model-before-simplify',
-                        resolve: async () => {
-                            const { allPepaired } = await dispatch(actions.repairSelectedModels());
-
-                            resolve(allPepaired);
-                        },
-                        reject: () => {
-                            dispatch(actions.updateState({
-                                stage: STEP_STAGE.EMPTY
-                            }));
-                            resolve(false);
-                        }
-                    }]
-                }));
+                const { allPepaired } = await dispatch(actions.repairSelectedModels());
+                resolve(allPepaired);
             }
         });
     },

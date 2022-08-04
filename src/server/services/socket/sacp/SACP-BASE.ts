@@ -4,11 +4,13 @@ import { readString, readUint8 } from 'snapmaker-sacp-sdk/helper';
 import { GetHotBed, CoordinateInfo, CoordinateSystemInfo, ExtruderInfo } from 'snapmaker-sacp-sdk/models';
 import { ResponseCallback } from 'snapmaker-sacp-sdk';
 import { Direction } from 'snapmaker-sacp-sdk/models/CoordinateInfo';
-import { EventOptions, MarlinStateData } from '../types';
-import { COORDINATE_AXIS, WORKFLOW_STATUS_MAP, HEAD_PRINTING, EMERGENCY_STOP_BUTTON, ENCLOSURE_MODULES, AIR_PURIFIER_MODULES, ROTARY_MODULES, MODULEID_TOOLHEAD_MAP, CNC_MODULE, LASER_MODULE, PRINTING_MODULE, HEAD_CNC, HEAD_LASER } from '../../../../app/constants';
-import logger from '../../../lib/logger';
-import SocketServer from '../../../lib/SocketManager';
 import Business, { CoordinateType } from './Business';
+import SocketServer from '../../../lib/SocketManager';
+import logger from '../../../lib/logger';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, CNC_MODULE, LASER_MODULE, PRINTING_MODULE, HEAD_CNC, HEAD_LASER,
+    COORDINATE_AXIS, WORKFLOW_STATUS_MAP, HEAD_PRINTING, EMERGENCY_STOP_BUTTON, ENCLOSURE_MODULES, AIR_PURIFIER_MODULES, ROTARY_MODULES,
+    MODULEID_TOOLHEAD_MAP, A400_HEADT_BED_FOR_SM2, HEADT_BED_FOR_SM2, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_SM2, RIGHT_EXTRUDER, LEFT_EXTRUDER, MODULEID_MAP } from '../../../../app/constants';
+import { EventOptions, MarlinStateData } from '../types';
 
 const log = logger('lib:SocketBASE');
 
@@ -71,6 +73,7 @@ class SocketBASE {
                 log.info('TCP close');
                 this.socket && this.socket.emit('connection:close');
             }, 10000);
+
             await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
                 // log.info(`revice moduleInfo: ${data.response}`);
                 moduleInfos.forEach(module => {
@@ -97,12 +100,22 @@ class SocketBASE {
                         stateData.headType = HEAD_CNC;
                         stateData.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
                     }
+
+
+                    const keys = Object.keys(MODULEID_MAP);
+                    if (includes(keys, String(module.moduleId))) {
+                        if (!this.moduleInfos) {
+                            this.moduleInfos = {};
+                        }
+                        this.moduleInfos[MODULEID_MAP[module.moduleId]] = module;
+                    }
                 });
             });
             // stateData.status = WORKFLOW_STATUS_MAP[statusKey];
             this.socket && this.socket.emit('Marlin:state', {
                 state: {
                     ...stateData,
+                    moduleStatusList,
                     status: WORKFLOW_STATUS_MAP[statusKey],
                     moduleList: moduleStatusList,
                 }
@@ -125,11 +138,14 @@ class SocketBASE {
         });
         this.subscribeNozzleCallback = (data) => {
             const nozzleInfo = new ExtruderInfo().fromBuffer(data.response.data);
-            // log.info(`nozzleInfo, ${nozzleInfo}`);
             const leftInfo = find(nozzleInfo.extruderList, { index: 0 });
-            const rightInfo = find(nozzleInfo.extruderList, { index: 1 });
+
+            const rightInfo = find(nozzleInfo.extruderList, { index: 1 }) || {};
+
+            this.currentWorkNozzle = rightInfo.status === 1 ? 1 : 0;
             stateData = {
                 ...stateData,
+                nozzleSizeList: [leftInfo.diameter, rightInfo.diameter],
                 nozzleTemperature: leftInfo.currentTemperature,
                 nozzleTargetTemperature: leftInfo.targetTemperature,
                 nozzleRightTargetTemperature: rightInfo?.targetTemperature || 0,
@@ -159,7 +175,6 @@ class SocketBASE {
                 b: originCoordinate[3].value
             };
             const isHomed = !(coordinateInfos?.homed); // 0: homed, 1: need to home
-
             stateData = {
                 ...stateData,
                 pos,
@@ -210,7 +225,7 @@ class SocketBASE {
     }
 
     public coordinateMove = async ({ moveOrders, jogSpeed, headType }) => {
-        log.info(`coordinate: ${moveOrders}, ${headType}`);
+        log.info(`coordinate: ${JSON.stringify(moveOrders)}, ${headType}`);
         this.socket && this.socket.emit('move:status', { isMoving: true });
         const distances = [];
         const directions = [];
@@ -218,7 +233,6 @@ class SocketBASE {
             directions.push(COORDINATE_AXIS[item.axis]);
             distances.push(item.distance);
         });
-
         await this.sacpClient.requestAbsoluteCooridateMove(directions, distances, jogSpeed, CoordinateType.MACHINE).then(res => {
             log.info(`Coordinate Move: ${res.response.result}`);
             this.socket && this.socket.emit('serialport:read', { data: res.response.result === 0 ? 'OK' : 'WARNING' });
@@ -232,12 +246,10 @@ class SocketBASE {
         if (bPosition) {
             coordinateInfos.push(new CoordinateInfo(Direction.B1, 0));
         }
-        await this.sacpClient.updateCoordinate(CoordinateType.WORKSPACE).then(res => {
-            log.info(`update CoordinateType, ${res}`);
-        });
         await this.sacpClient.setWorkOrigin(coordinateInfos).then(res => {
             log.info(`Set Work Origin: ${res.data}`);
         });
+        // to: only laser/cnc
     }
 
     public stopGcode = (options) => {
@@ -261,6 +273,205 @@ class SocketBASE {
             log.info(`Resume Print: ${res}`);
             callback && callback({ msg: res.response.result, code: res.response.result });
         });
+    }
+
+    public async switchExtruder(extruderIndex) {
+        const toolhead = this.moduleInfos && this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2];
+        if (!toolhead) {
+            log.error(`no match toolhead 3dp, moduleInfos:${this.moduleInfos}`,);
+            return;
+        }
+
+        await this.goHome();
+        const key = toolhead && toolhead.key;
+        const response = await this.sacpClient.SwitchExtruder(key, extruderIndex);
+        log.info(`SwitchExtruder to extruderIndex:${extruderIndex}, ${JSON.stringify(response)}`);
+    }
+
+    public updateNozzleTemperature = (extruderIndex, temperature) => {
+        const toolhead = this.moduleInfos && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2] || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);
+        if (!toolhead) {
+            log.error(`no match toolhead 3dp:[${toolhead}], moduleInfos:${this.moduleInfos}`,);
+            return;
+        }
+        const key = toolhead && toolhead.key;
+        this.sacpClient.SetExtruderTemperature(key, extruderIndex, temperature).then(({ response }) => {
+            log.info(`SetExtruderTemperature,key:[${key}], extruderIndex:[${extruderIndex}], temperature:[${temperature}] ${JSON.stringify(response)}`);
+        });
+    }
+
+    public async loadFilament(extruderIndex, eventName) {
+        const toolHead = this.moduleInfos && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2] || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);// || this.moduleInfos[HEADT_BED_FOR_SM2]); //
+        if (!toolHead) {
+            log.error(`non-eixst toolHead, moduleInfos:${this.moduleInfos}`,);
+            return;
+        }
+
+        // (this.currentWorkNozzle !== extruderIndex) && await this.goHome();
+        const _ = await this.sacpClient.SwitchExtruder(toolHead.key, extruderIndex);
+        log.info(`loadFilament SwitchExtruder:[${extruderIndex}], ${JSON.stringify(_)}`);
+        const response = await this.sacpClient.ExtruderMovement(toolHead.key, 0, 60, 200, 0, 0);
+        this.socket && this.socket.emit(eventName);
+        log.info(`loadFilament, ${JSON.stringify(response)}`);
+    }
+
+    public async unloadFilament(extruderIndex, eventName) {
+        const toolHead = this.moduleInfos && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2] || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);
+        if (!toolHead) {
+            log.error(`non-eixst toolHead, moduleInfos:${this.moduleInfos}`,);
+            return;
+        }
+
+        // await this.goHome();
+        const _ = await this.sacpClient.SwitchExtruder(toolHead.key, extruderIndex);
+        log.info(`unloadFilament SwitchExtruder:[${extruderIndex}], ${JSON.stringify(_)}`);
+        const response = await this.sacpClient.ExtruderMovement(toolHead.key, 0, 6, 200, 60, 150);
+        this.socket && this.socket.emit(eventName);
+        log.info(`unloadFilament, ${JSON.stringify(response)}`);
+    }
+
+
+    public updateBedTemperature = (zoneIndex, temperature) => {
+        const heatBed = this.moduleInfos && (this.moduleInfos[A400_HEADT_BED_FOR_SM2] || this.moduleInfos[HEADT_BED_FOR_SM2]); //
+        if (!heatBed) {
+            log.error(`non-eixst heatBed, moduleInfos:${this.moduleInfos}`,);
+            return;
+        }
+
+        this.sacpClient.setHotBedTemperature(heatBed.key, zoneIndex, temperature).then(({ response }) => {
+            log.info(`updateBedTemperature, ${JSON.stringify(response)}`);
+        });
+    }
+
+    public async updateNozzleOffset(extruderIndex, direction, distance) {
+        const toolHead = this.moduleInfos && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2] || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);// || this.moduleInfos[HEADT_BED_FOR_SM2]); //
+        if (!toolHead) {
+            log.error(`non-eixst toolHead 3dp, moduleInfos:${this.moduleInfos}`,);
+            return;
+        }
+
+        log.info(`SetExtruderOffset key:${toolHead.key} extruderIndex: ${extruderIndex}, direction: ${direction}, distance:${distance}`);
+        const response = await this.sacpClient.SetExtruderOffset(toolHead.key, extruderIndex, distance);
+        log.info(`SetExtruderOffset, ${JSON.stringify(response)}`);
+    }
+
+    // workspeed
+    public async getWorkSpeed(options) {
+        const { eventName } = options;
+        this.subscribeWorkSpeedCallback = () => {
+            const workSpeedInfo = new GetWorkSpeed().fromBuffer(data.response.data);
+            log.info(`workSpeedInfo, ${workSpeedInfo}`);
+            this.socket && this.socket.emit(eventName, { data: workSpeedInfo.feedRate });
+        };
+
+        this.sacpClient.subscribeWorkSpeed({ interval: 1000 }, this.subscribeWorkSpeedCallback).then((res) => {
+            log.info(`subscribe workspeed success: ${res.code}`);
+        });
+    }
+
+    public async updateWorkSpeed(toolhead, workSpeed, extruderIndex = 0) {
+        const headModule = this.moduleInfos && (this.moduleInfos[toolhead]); //
+        if (!headModule) {
+            log.error(`non-eixst toolhead[${toolhead}], moduleInfos:${JSON.stringify(this.moduleInfos)}`,);
+            return;
+        }
+
+        log.info(`updateWorkSpeed headModule.key: ${headModule.key}, extruderIndex: ${extruderIndex}, workSpeed: ${workSpeed}}`);
+        const leftResponse = await this.sacpClient.setWorkSpeed(headModule.key, extruderIndex, workSpeed);
+        log.info(`updateWorkSpeed leftResponse, ${JSON.stringify(leftResponse)}`);
+
+
+        if (toolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+            const rightResponse = await this.sacpClient.setWorkSpeed(headModule.key, 1, workSpeed);
+            log.info(`updateWorkSpeed rightResponse, ${JSON.stringify(rightResponse)}`);
+        }
+    }
+
+
+    public updateLaserPower = (value) => {
+        const laserLevelTwoHead = this.moduleInfos && (this.moduleInfos[LEVEL_TWO_POWER_LASER_FOR_SM2] || this.moduleInfos[LEVEL_ONE_POWER_LASER_FOR_SM2]); //
+        if (!laserLevelTwoHead) {
+            log.error(`non-eixst laserLevelHead, moduleInfos:${this.moduleInfos}`,);
+            return;
+        }
+
+        this.sacpClient.SetLaserPower(laserLevelTwoHead.key, value).then(({ response }) => {
+            log.info(`updateLaserPower, ${JSON.stringify(response)}`);
+        });
+    }
+
+    public switchCNC = async function (headStatus) {
+        const toolhead = this.moduleInfos && (this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2] || this.moduleInfos[STANDARD_CNC_TOOLHEAD_FOR_SM2]);
+        if (!toolhead) {
+            log.error(`no match ${LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2} or ${STANDARD_CNC_TOOLHEAD_FOR_SM2}:1 , moduleInfos:${this.moduleInfos}`,);
+            return;
+        }
+
+        // return
+        const { response } = await this.sacpClient.switchCNC(toolhead.key, !headStatus);
+        log.info(`switchCNC to [${!headStatus}], ${JSON.stringify(response)}`);
+        // return response;
+    }
+
+    public updateToolHeadSpeed = (speed) => {
+        const toolhead = this.moduleInfos && this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2];
+        if (!toolhead) {
+            log.error(`no match ${LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2}, moduleInfos:${this.moduleInfos}`,);
+            return;
+        }
+
+        this.sacpClient.setToolHeadSpeed(toolhead.key, speed).then(({ response }) => {
+            log.info(`updateToolHeadSpeed Speed:[${speed}], ${JSON.stringify(response)}`);
+        });
+    }
+
+    public setCncPower = (targetPower) => {
+        const toolhead = this.moduleInfos && (this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2] || this.moduleInfos[STANDARD_CNC_TOOLHEAD_FOR_SM2]);
+        if (!toolhead) {
+            log.error(`no match cnc tool head, moduleInfos:${JSON.stringify(this.moduleInfos)}`,);
+            return;
+        }
+
+        this.sacpClient.setCncPower(toolhead.key, targetPower).then(({ response }) => {
+            log.info(`setCncPower setCncPower:[${targetPower}]%, ${JSON.stringify(response)}`);
+        });
+    }
+
+    public async setAbsoluteWorkOrigin({ x, y, z, isRotate = false }) {
+        try {
+            const res1 = await this.sacpClient.updateCoordinate(CoordinateType.MACHINE);
+            log.debug(`updateCoordinate CoordinateType.MACHINE res: ${JSON.stringify(res1)}`);
+            await this.sacpClient.getCurrentCoordinateInfo().then(async ({ coordinateSystemInfo }) => {
+                const xNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.X1).value;
+                const yNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.Y1).value;
+                const zNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.Z1).value;
+                log.debug(`current positions, ${xNow}, ${yNow}, ${zNow}`);
+                // calculate the absolute distance on seperate axis, same reason with coordinate moving func 'coordinateMove'
+
+                const newZ = new CoordinateInfo(Direction.Z1, isRotate ? 0 : zNow - z);
+                const newCoord = [newZ];
+                log.debug(`new positions, ${JSON.stringify(newCoord)}`);
+
+                const res = await this.sacpClient.setWorkOrigin(newCoord);
+                await this.sacpClient.updateCoordinate(CoordinateType.WORKSPACE);
+                log.debug(`setAbsoluteWorkOrigin res:${JSON.stringify(res)}`);
+            });
+        } catch (e) {
+            log.error(`getLaserMaterialThickness error: ${e}`);
+        }
+    }
+
+    //
+    public async laserSetWorkHeight(options) {
+        const { toolHead, materialThickness, isRotate } = options;
+        const headModule = this.moduleInfos && (this.moduleInfos[toolHead]); //
+        if (!headModule) {
+            log.error(`non-eixst toolhead[${toolHead}], moduleInfos:${JSON.stringify(this.moduleInfos)}`,);
+            return;
+        }
+        const { laserToolHeadInfo } = await this.sacpClient.getLaserToolHeadInfo(headModule.key);
+        log.debug(`laserFocalLength:${laserToolHeadInfo.laserFocalLength}, materialThickness: ${materialThickness}, platformHeight:${laserToolHeadInfo.platformHeight}`);
+        await this.setAbsoluteWorkOrigin({ x: 0, y: 0, z: laserToolHeadInfo.laserFocalLength + laserToolHeadInfo.platformHeight + materialThickness, isRotate });
     }
 }
 

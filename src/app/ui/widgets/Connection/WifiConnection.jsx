@@ -3,11 +3,14 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { map } from 'lodash';
+import isElectron from 'is-electron';
+import UniApi from '../../../lib/uni-api';
 // import { InputGroup } from 'react-bootstrap';
 import { Button } from '../../components/Buttons';
 import Checkbox from '../../components/Checkbox';
 import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
+import Anchor from '../../components/Anchor';
 import i18n from '../../../lib/i18n';
 import usePrevious from '../../../lib/hooks/previous';
 import { actions as machineActions } from '../../../flux/machine';
@@ -28,21 +31,27 @@ import {
     WORKFLOW_STATUS_RUNNING,
     WORKFLOW_STATUS_UNKNOWN,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
     HEAD_PRINTING,
     HEAD_LASER,
     HEAD_CNC,
-    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
     LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
-    CUSTOM_SERVER_NAME
+    CUSTOM_SERVER_NAME,
+    LEFT_EXTRUDER,
+    RIGHT_EXTRUDER,
+    PRINTING_MANAGER_TYPE_EXTRUDER,
+    MACHINE_TOOL_HEADS
 } from '../../../constants';
 // import widgetStyles from '../styles.styl';
 import styles from './index.styl';
 // import PrintingState from './PrintingState';
 // import LaserState from './LaserState';
 import ModalSmall from '../../components/Modal/ModalSmall';
+import Modal from '../../components/Modal';
 import ModalSmallInput from '../../components/Modal/ModalSmallInput';
 import { Server } from '../../../flux/machine/Server';
-// import { actions as workspaceActions } from '../../../flux/workspace';
+import { actions as printingActions } from '../../../flux/printing';
 // import { machineStore } from '../../../store/local-storage';
 
 export const ModuleStatus = ({ moduleName, status }) => {
@@ -54,6 +63,95 @@ export const ModuleStatus = ({ moduleName, status }) => {
     );
 };
 let timer = null;
+function CheckingNozzleSize() {
+    const { toolHead } = useSelector(state => state?.workspace);
+    const { nozzleSizeList, isConnected } = useSelector(state => state?.machine);
+    const extruderLDefinition = useSelector(
+        (state) => state?.printing?.extruderLDefinition
+    );
+    const extruderRDefinition = useSelector(
+        (state) => state?.printing?.extruderRDefinition
+    );
+    const leftDiameter = extruderLDefinition?.settings
+        ?.machine_nozzle_size?.default_value;
+    const rightDiameter = extruderRDefinition?.settings
+        ?.machine_nozzle_size?.default_value;
+    const [showNozzleModal, setshowNozzleModal] = useState(false);
+    const dispatch = useDispatch();
+
+    function hideNozzleModal() {
+        setshowNozzleModal(false);
+    }
+    function setDiameter(direction, value) {
+        const def = direction === LEFT_EXTRUDER
+            ? extruderLDefinition
+            : extruderRDefinition;
+        def.settings.machine_nozzle_size.default_value = value;
+        dispatch(
+            printingActions.updateCurrentDefinition({
+                definitionModel: def,
+                managerDisplayType: PRINTING_MANAGER_TYPE_EXTRUDER,
+                direction
+            })
+        );
+    }
+    useEffect(() => {
+        if (isConnected) {
+            if (toolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
+                && ((nozzleSizeList[0] && leftDiameter && nozzleSizeList[0] !== leftDiameter)
+                || nozzleSizeList[1] && rightDiameter && (nozzleSizeList[1] !== rightDiameter))) {
+                if (nozzleSizeList[0] !== leftDiameter) {
+                    setDiameter(LEFT_EXTRUDER, nozzleSizeList[0]);
+                }
+                if (nozzleSizeList[1] !== rightDiameter) {
+                    setDiameter(RIGHT_EXTRUDER, nozzleSizeList[1]);
+                }
+                setshowNozzleModal(true);
+            } else if (toolHead === SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 && nozzleSizeList[0] && leftDiameter && nozzleSizeList[0] !== leftDiameter) {
+                setDiameter(LEFT_EXTRUDER, nozzleSizeList[0]);
+                setshowNozzleModal(true);
+            }
+        }
+    }, [isConnected, toolHead, nozzleSizeList]);
+
+    return (
+        <div>
+            {showNozzleModal && (
+                <Modal
+                    showCloseButton
+                    onClose={hideNozzleModal}
+                    style={{
+                        borderRadius: '8px'
+                    }}
+                >
+                    <Modal.Header>
+                        {i18n._('key-Workspace/Mismatch-Synchronize_Nozzle_Diameter')}
+                    </Modal.Header>
+                    <Modal.Body style={{
+                        maxWidth: '432px'
+                    }}
+                    >
+                        {i18n._('key-Workspace/Mismatch-The configured Nozzle Diameter ({{diameterInfo}}) is inconsistent with that of the connected machine ({{connectedDameterInfo}}). Luban has updated the configuration to be consistent with the machine nozzle.',
+                            {
+                                diameterInfo: toolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? `L: ${leftDiameter}mm; R: ${rightDiameter}mm` : `L: ${leftDiameter}mm`,
+                                connectedDameterInfo: toolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? `L: ${nozzleSizeList[0]}mm; R: ${nozzleSizeList[1]}mm` : `L: ${nozzleSizeList[0]}mm`,
+                            })}
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button
+                            priority="level-two"
+                            className="margin-left-8"
+                            width="96px"
+                            onClick={hideNozzleModal}
+                        >
+                            {i18n._('key-Modal/Common-Confirm')}
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
+            )}
+        </div>
+    );
+}
 function WifiConnection() {
     const {
         servers,
@@ -77,6 +175,8 @@ function WifiConnection() {
     const {
         toolHead, headType, series
     } = useSelector(state => state?.workspace);
+    const machineSeries = useSelector(state => state?.machine?.series);
+    const machineToolHead = useSelector(state => state?.machine?.toolHead);
     const [savedServerAddressState, setSavedServerAddressState] = useState(savedServerAddress);
     const { emergencyStopButton: emergencyStopButtonStatus, airPurifier: airPurifierStatus, rotaryModule: rotaryModuleStatus, enclosure: enclosureStatus } = moduleStatusList;
     const [showConnectionMessage, setShowConnectionMessage] = useState(false);
@@ -89,6 +189,7 @@ function WifiConnection() {
         onConfirm: null
     });
     const [showManualWiFiModal, setShowManualWiFiModal] = useState(false);
+    const [showMismatchModal, setShowMismatchModal] = useState(false);
     const [manualWiFi, setManualWiFi] = useState({
         text: '',
         title: '',
@@ -103,10 +204,23 @@ function WifiConnection() {
     const [currentModuleStatusList, setCurrentModuleStatusList] = useState(null);
     const dispatch = useDispatch();
     const prevProps = usePrevious({
-        connectionStatus
+        connectionStatus,
+        isConnected
     });
 
     const actions = {
+        onShowMachinwSettings: () => {
+            const browserWindow = window.require('electron').remote.BrowserWindow.getFocusedWindow();
+            if (isElectron()) {
+                browserWindow.webContents.send('preferences.show', {
+                    activeTab: 'machine'
+                });
+            } else {
+                UniApi.Event.emit('appbar-menu:preferences.show', {
+                    activeTab: 'machine'
+                });
+            }
+        },
         onRefreshServers: () => {
             dispatch(machineActions.discover.discoverSnapmakerServers());
         },
@@ -312,6 +426,12 @@ function WifiConnection() {
             }
         }
     }, [connectionType, connectionStatus]);
+    useEffect(() => {
+        if (((prevProps && !prevProps?.isConnected) && isConnected) && ((series && series !== machineSeries)
+            || (toolHead && machineToolHead[`${headType}Toolhead`] !== toolHead))) {
+            setShowMismatchModal(true);
+        }
+    }, [prevProps, isConnected, toolHead, headType, series, machineSeries, machineToolHead]);
 
     const updateModuleStatusList = useMemo(() => {
         const newModuleStatusList = [];
@@ -441,6 +561,54 @@ function WifiConnection() {
                         />
                     </div>
                 </div>
+            )}
+            {showMismatchModal && (
+                <Modal
+                    showCloseButton
+                    onClose={() => { setShowMismatchModal(false); }}
+                    style={{
+                        borderRadius: '8px'
+                    }}
+                >
+                    <Modal.Header>
+                        {i18n._(
+                            'key-Workspace/Mismatch-Inconsistent_Machine_Model'
+                        )}
+                    </Modal.Header>
+                    <Modal.Body style={{
+                        maxWidth: '432px'
+                    }}
+                    >
+                        <div>
+                            {i18n._('key-Workspace/Mismatch-The configured Machine Model ({{machineInfo}}) does not match with the connected machine ({{connectedMachineInfo}}). To change the settings, you can go to',
+                                {
+                                    machineInfo: `${machineSeries} ${i18n._(MACHINE_TOOL_HEADS[machineToolHead[`${headType}Toolhead`]]?.label)}`,
+                                    connectedMachineInfo: `${series} ${i18n._(MACHINE_TOOL_HEADS[toolHead]?.label)}`,
+                                })}
+                            <Anchor
+                                onClick={actions.onShowMachinwSettings}
+                                style={{
+                                    fontWeight: 'bold'
+                                }}
+                            >
+                                {i18n._('key-Workspace/Mismatch-Machine Settings')}
+                            </Anchor>
+                        </div>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button
+                            priority="level-two"
+                            className="margin-left-8"
+                            width="96px"
+                            onClick={() => { setShowMismatchModal(false); }}
+                        >
+                            {i18n._('key-Modal/Common-Confirm')}
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
+            )}
+            {headType === HEAD_PRINTING && (
+                <CheckingNozzleSize />
             )}
             {isConnected && series && (
                 <div className="margin-bottom-16 margin-top-12">

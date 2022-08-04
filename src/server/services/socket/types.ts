@@ -17,6 +17,7 @@ export type EventOptions = {
     zOffset?: number,
     headType?: string,
     uploadName?: string,
+    isCameraCapture?: boolean,
     renderGcodeFileName?: string,
     moveOrders?: object
 };
@@ -52,6 +53,7 @@ export type MarlinStateData = {
     moduleStatusList?: object,
     laserCamera?: boolean,
     pos?: object,
+    nozzleSizeList?: number [],
     originOffset?: object,
     isHomed?: boolean,
     headType?: string,

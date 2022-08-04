@@ -80,7 +80,9 @@ export class Server extends events.EventEmitter {
                         isOpen: true,
                         connectionStatus: CONNECTION_STATUS_CONNECTING
                     }));
-                    this.token = data.token;
+                    if (data?.token) {
+                        this.token = data?.token;
+                    }
                     dispatch(connectActions.setServerAddress(this.address));
                     dispatch(connectActions.setServerToken(this.token));
                     controller.emitEvent(CONNECTION_HEARTBEAT);

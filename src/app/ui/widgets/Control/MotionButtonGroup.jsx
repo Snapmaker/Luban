@@ -32,7 +32,7 @@ const MotionButtonGroup = (props) => {
                 <Button
                     width="144px"
                     type="primary"
-                    className="margin-bottom-8"
+                    className="margin-bottom-8 display-block"
                     priority="level-three"
                     onClick={actions.runBoundary}
                     disabled={!canClick}
@@ -47,7 +47,7 @@ const MotionButtonGroup = (props) => {
                 <Button
                     width="144px"
                     type="primary"
-                    className="margin-bottom-8"
+                    className="margin-bottom-8 display-block"
                     priority="level-three"
                     onClick={() => {
                         if (workPosition.z > 0) {
@@ -70,7 +70,7 @@ const MotionButtonGroup = (props) => {
                 <Button
                     width="144px"
                     type="primary"
-                    className="margin-bottom-8"
+                    className="margin-bottom-8 display-block"
                     priority="level-three"
                     onClick={() => {
                         // props.executeGcode('G92 X0 Y0 Z0 B0');

@@ -1,35 +1,38 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
+import { includes } from 'lodash';
 import Modal from '../../components/Modal';
 import { Button } from '../../components/Buttons';
 import i18n from '../../../lib/i18n';
+import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
 
-const PreviewToRunJobModal = (props) => {
-    const headerTextKey = props.isMismatchHead ? i18n._('key-Workspace/RunJobWarningModal-Mismatch header') : i18n._('key-Workspace/RunJobWarningModal-Unknown header');
-    const [bodyTextKey, setBodyTextKey] = useState('--');
+const headTypeArr = [HEAD_PRINTING, HEAD_CNC, HEAD_LASER];
+const PreviewToRunJobModal = ({
+    selectFileType,
+    headType,
+    onClose,
+    onConfirm
+}) => {
+    const headerTextKey = includes(selectFileType, headTypeArr) ? i18n._('key-Workspace/RunJobWarningModal-Mismatch header') : i18n._('key-Workspace/RunJobWarningModal-Unknown header');
 
-    useEffect(() => {
-        if (props.isUnKownHead) {
-            setBodyTextKey(i18n._('key-Workspace/RunJobWarningModal-Unknown toolhead', { gcodeType: props.gcodeType, headType: props.headType }));
-        } else if (props.isMismatchHead) {
-            setBodyTextKey(i18n._('key-Workspace/RunJobWarningModal-Mismatch body', { gcodeType: props.gcodeType, headType: props.headType }));
-        } else {
-            setBodyTextKey(i18n._('key-Workspace/RunJobWarningModal-Unknown body', { gcodeType: props.gcodeType, headType: props.headType }));
-        }
-    }, [props.isUnKownHead, props.isMismatchHead]);
-
+    const handleOK = () => {
+        onConfirm();
+        onClose();
+    };
 
     return (
         <Modal
             centered
             visible
-            onClose={() => { props.onClose(); }}
+            onClose={onClose}
         >
             <Modal.Header>
                 {headerTextKey}
             </Modal.Header>
             <Modal.Body>
-                {bodyTextKey}
+                {
+                    includes(selectFileType, headTypeArr) ? i18n._('key-Workspace/RunJobWarningModal-Unknown body', { headType: headType }) : i18n._('key-Workspace/RunJobWarningModal-Mismatch body', { headType: headType, fileType: selectFileType })
+                }
             </Modal.Body>
             <Modal.Footer>
                 <Button
@@ -37,7 +40,7 @@ const PreviewToRunJobModal = (props) => {
                     priority="level-two"
                     type="default"
                     width="96px"
-                    onClick={() => { props.onClose(); }}
+                    onClick={onClose}
                 >
                     <div className="align-c">Cancel</div>
                 </Button>
@@ -45,7 +48,7 @@ const PreviewToRunJobModal = (props) => {
                     priority="level-two"
                     type="primary"
                     width="96px"
-                    onClick={() => { props.onConfirm(); props.onClose(); }}
+                    onClick={handleOK}
                 >
                     <div className="align-c">Yes</div>
                 </Button>
@@ -55,9 +58,7 @@ const PreviewToRunJobModal = (props) => {
 };
 
 PreviewToRunJobModal.propTypes = {
-    isMismatchHead: PropTypes.bool.isRequired,
-    isUnKownHead: PropTypes.bool.isRequired,
-    gcodeType: PropTypes.string,
+    selectFileType: PropTypes.string,
     headType: PropTypes.string,
     onClose: PropTypes.func.isRequired,
     onConfirm: PropTypes.func.isRequired,

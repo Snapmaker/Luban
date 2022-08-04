@@ -59,8 +59,7 @@ export const STEP_STAGE = {
     PRINTING_SIMPLIFY_MODEL: 48,
     PRINTING_SIMPLIFY_MODEL_SUCCESS: 49,
     PRINTING_SIMPLIFY_MODEL_FAILED: 50,
-    PRINTING_REPAIRING_MODEL: 51,
-    PRINTING_EMIT_REPAIRING_MODEL: 53
+    PRINTING_REPAIRING_MODEL: 51
 };
 
 export const PROCESS_STAGE = {
@@ -284,15 +283,16 @@ class ProgressStatesManager {
             'key-Progress/3DP-Scale to fit...{{progress}}%',
             'key-Progress/3DP-Scale to fit successfully.',
             'key-Progress/3DP-Scale to fit failed.');
-        this.push(PROCESS_STAGE.PRINTING_SIMPLIFY_MODEL, [
-            {
-                stageID: STEP_STAGE.PRINTING_SIMPLIFY_MODEL,
-                percent: 1
-            }
-        ],
-        'key-Progress/3DP-Simplify model...{{prgress}}%',
-        'key-Progress/3DP-Simplify model successfully.',
-        'key-Progress/3DP-Simplify model failed.');
+        this.push(PROCESS_STAGE.PRINTING_SIMPLIFY_MODEL,
+            [
+                {
+                    stageID: STEP_STAGE.PRINTING_SIMPLIFY_MODEL,
+                    percent: 1
+                }
+            ],
+            'key-Progress/3DP-Simplify model...{{prgress}}%',
+            'key-Progress/3DP-Simplify model successfully.',
+            'key-Progress/3DP-Simplify model failed.');
         this.push(PROCESS_STAGE.PRINTING_REPAIRING_MODEL,
             [
                 {

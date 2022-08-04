@@ -21,6 +21,8 @@ import { PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY } from '.
 /* eslint-disable import/no-cycle */
 import { ParamItem } from '../../widgets/PrintingConfigurations/Configurations';
 
+const defaultParamsType = ['all', 'basic', 'advanced'];
+
 function ConfigValueBox({
     optionConfigGroup,
     calculateTextIndex,
@@ -37,10 +39,9 @@ function ConfigValueBox({
     setCustomMode,
     onChangeCustomConfig
 }) {
-    const { printingParamsType, materialParamsType } = useSelector(state => state?.printing);
+    const { printingParamsType, materialParamsType, showParamsProfile } = useSelector(state => state?.printing);
     const [activeCateId, setActiveCateId] = useState(2);
     const [selectParamsType, setSelectParamsType] = useState(managerType === PRINTING_MANAGER_TYPE_MATERIAL ? materialParamsType : printingParamsType);
-    const [showProfileDocs, setShowProfileDocs] = useState(true);
     const [selectProfile, setSelectProfile] = useState('');
     const [selectCategory, setSelectCategory] = useState('');
     const [mdContent, setMdContent] = useState('');
@@ -107,6 +108,9 @@ function ConfigValueBox({
         setSelectCategory(category);
         setSelectProfile(profileKey);
     };
+    const onChangeMaterialType = (newCategoryName) => {
+        dispatch(printingActions.updateDefinitionCategoryName(managerType, definitionForManager, newCategoryName));
+    };
     const renderCheckboxList = ({
         renderList,
         calculateTextIndex: _calculateTextIndex,
@@ -172,7 +176,8 @@ function ConfigValueBox({
         onChangeDefinition: _onChangeCustomConfig,
         managerType: _managerType,
         officalDefinition,
-        categoryKey
+        categoryKey,
+        definitionCategory
         // selectParamsType: _selectParamsType
     }) => {
         return renderList && renderList.map(profileKey => {
@@ -194,6 +199,7 @@ function ConfigValueBox({
                                 officalDefinition={officalDefinition}
                                 onClick={handleUpdateProfileKey}
                                 categoryKey={categoryKey}
+                                definitionCategory={definitionCategory}
                             />
                             {renderSettingItemList({
                                 settings,
@@ -201,6 +207,7 @@ function ConfigValueBox({
                                 isDefaultDefinition,
                                 onChangeDefinition: _onChangeCustomConfig,
                                 managerType: _managerType,
+                                definitionCategory,
                                 officalDefinition
                             })}
                         </div>
@@ -222,6 +229,8 @@ function ConfigValueBox({
                             officalDefinition={officalDefinition}
                             onClick={handleUpdateProfileKey}
                             categoryKey={categoryKey}
+                            definitionCategory={definitionCategory}
+                            onChangeMaterialType={onChangeMaterialType}
                         />
                     </div>
                 );
@@ -251,48 +260,48 @@ function ConfigValueBox({
     };
     const materialParamsTypeOptions = [{
         value: 'basic',
-        label: i18n._('key-profileManager/Params Basic')
+        label: i18n._('key-profileManager/Params-Basic')
     }, {
         value: 'all',
-        label: i18n._('key-profileManager/Params All')
+        label: i18n._('key-profileManager/Params-All')
     }];
     const qualityParamsTypeOptions = [{
         value: 'recommed',
-        label: i18n._('key-profileManager/Params Recommed')
+        label: i18n._('key-profileManager/Params-Recommed')
     }, {
         value: 'custom',
-        label: i18n._('key-profileManager/Params Custom')
+        label: i18n._('key-profileManager/Params-Custom')
     }, {
         value: 'basic',
-        label: i18n._('key-profileManager/Params Basic')
+        label: i18n._('key-profileManager/Params-Basic')
     }, {
         value: 'advanced',
-        label: i18n._('key-profileManager/Params Advanced')
+        label: i18n._('key-profileManager/Params-Advanced')
     }, {
         value: 'all',
-        label: i18n._('key-profileManager/Params All')
+        label: i18n._('key-profileManager/Params-All')
     }];
     const qualityDetailTypeOptions = [{
         value: 'no_limit',
-        label: i18n._('key-profileManager/Params No Limit')
+        label: i18n._('key-profileManager/Params-No Limit')
     }, {
         value: 'efficiency',
-        label: i18n._('key-profileManager/Params Efficiency')
+        label: i18n._('key-profileManager/Params-Efficiency')
     }, {
         value: 'strength',
-        label: i18n._('key-profileManager/Params Strength')
+        label: i18n._('key-profileManager/Params-Strength')
     }, {
         value: 'surface_quality',
-        label: i18n._('key-profileManager/Params Surface_quality')
+        label: i18n._('key-profileManager/Params-Surface_quality')
     }, {
         value: 'accuracy',
-        label: i18n._('key-profileManager/Params Accuracy')
+        label: i18n._('key-profileManager/Params-Accuracy')
     }, {
         value: 'material',
-        label: i18n._('key-profileManager/Params Material')
+        label: i18n._('key-profileManager/Params-Material')
     }, {
         value: 'success',
-        label: i18n._('key-profileManager/Params Success')
+        label: i18n._('key-profileManager/Params-Success')
     }];
 
     return (
@@ -313,7 +322,7 @@ function ConfigValueBox({
                             bordered={false}
                             disabled={customMode}
                         />
-                        {managerType === PRINTING_MANAGER_TYPE_QUALITY && selectParamsType === 'all' && (
+                        {managerType === PRINTING_MANAGER_TYPE_QUALITY && defaultParamsType.includes(selectParamsType) && (
                             <Select
                                 options={qualityDetailTypeOptions}
                                 clearable={false}
@@ -329,7 +338,7 @@ function ConfigValueBox({
                         )}
                     </div>
                     {selectParamsType === 'custom' && (
-                        <Button width="120px" priority="levle-two" type="default" className="margin-top-12" onClick={() => setCustomMode(!customMode)}>
+                        <Button width="160px" priority="levle-two" type="default" className="margin-top-4" onClick={() => setCustomMode(!customMode)}>
                             <span>{customMode ? i18n._('key-profileManager/Finish') : i18n._('key-profileManager/Manager Custom Params')}</span>
                         </Button>
                     )}
@@ -451,7 +460,8 @@ function ConfigValueBox({
                                                                     onChangeDefinition,
                                                                     managerType,
                                                                     officalDefinition: !!definitionForManager?.isDefault,
-                                                                    categoryKey: key
+                                                                    categoryKey: key,
+                                                                    definitionCategory: definitionForManager.category
                                                                     // selectParamsType
                                                                 })}
                                                             </div>
@@ -462,16 +472,16 @@ function ConfigValueBox({
                                         })}
                                 </div>
                             </div>
-                            <div className={classNames(styles['manager-params-docs'], 'width-percent-40 background-grey-3 border-radius-16 position-re', showProfileDocs ? '' : 'width-1-important min-width-1 margin-right-16')}>
-                                <Anchor onClick={() => setShowProfileDocs(!showProfileDocs)} className="background-color-white border-default-grey-1 border-radius-12 position-ab left-minus-12 bottom-24">
+                            <div className={classNames(styles['manager-params-docs'], styles[showParamsProfile ? 'open-params-profile' : 'close-params-profile'], 'width-percent-40 background-grey-3 border-radius-16 position-re', showParamsProfile ? '' : 'width-1-important min-width-1 margin-right-16')}>
+                                <Anchor onClick={() => dispatch(printingActions.updateParamsProfileShow(!showParamsProfile))} className={classNames(styles['profile-params-show-icon'], 'background-color-white border-default-grey-1 border-radius-12 position-ab left-minus-12 bottom-24')}>
                                     <SvgIcon
                                         name="MainToolbarBack"
                                         size={24}
                                         type={['static']}
-                                        className={classNames(showProfileDocs ? 'rotate180' : '')}
+                                        className={classNames(showParamsProfile ? 'rotate180' : '')}
                                     />
                                 </Anchor>
-                                {showProfileDocs && (
+                                {showParamsProfile && (
                                     <ReactMarkdown>
                                         {mdContent}
                                     </ReactMarkdown>
@@ -488,16 +498,16 @@ function ConfigValueBox({
                                 allParams={definitionForManager.params}
                             />
                         </div>
-                        <div className={classNames(styles['manager-params-docs'], 'width-percent-40 background-grey-3 border-radius-16 position-re', showProfileDocs ? '' : 'width-1-important min-width-1 margin-right-16')}>
-                            <Anchor onClick={() => setShowProfileDocs(!showProfileDocs)} className="background-color-white border-default-grey-1 border-radius-12 position-ab left-minus-12 bottom-24">
+                        <div className={classNames(styles['manager-params-docs'], 'width-percent-40 background-grey-3 border-radius-16 position-re', showParamsProfile ? '' : 'width-1-important min-width-1 margin-right-16')}>
+                            <Anchor onClick={() => dispatch(printingActions.updateParamsProfileShow(!showParamsProfile))} className="background-color-white border-default-grey-1 border-radius-12 position-ab left-minus-12 bottom-24">
                                 <SvgIcon
                                     name="MainToolbarBack"
                                     size={24}
                                     type={['static']}
-                                    className={classNames(showProfileDocs ? 'rotate180' : '')}
+                                    className={classNames(showParamsProfile ? 'rotate180' : '')}
                                 />
                             </Anchor>
-                            {showProfileDocs && (
+                            {showParamsProfile && (
                                 <ReactMarkdown>
                                     {mdContent}
                                 </ReactMarkdown>

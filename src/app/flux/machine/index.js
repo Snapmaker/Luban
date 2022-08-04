@@ -190,7 +190,12 @@ const INITIAL_STATE = {
         'support_enable'
     ],
 
-    printingCustomConfigsWithCategory: {},
+    printingCustomConfigsWithCategory: {
+        quality: ['layer_height'],
+        model_structure: ['infill_sparse_density', 'wall_thickness'],
+        platform_adhesion: ['adhesion_type'],
+        support: ['support_enable'],
+    },
 
     // security warning
     shouldShowCncWarning: true,
@@ -212,6 +217,7 @@ const INITIAL_STATE = {
     promptDamageModel: true,
     // connect info
     moduleStatusList: {},
+    nozzleSizeList: [],
     // wifi connection, home button in control widget
     homingModal: false,
     // if XYZ axis move finished, value is false, else moving, value is true
@@ -389,6 +395,7 @@ export const actions = {
                         || Number(machineState.workPosition.y) !== Number(pos.y)
                         || Number(machineState.workPosition.z) !== Number(pos.z)
                         || Number(machineState.workPosition.b) !== Number(pos.b)
+                        || machineState.workPosition.isFourAxis !== pos.isFourAxis
                     ) {
                         dispatch(
                             baseActions.updateState({
@@ -408,6 +415,7 @@ export const actions = {
                         Number(machineState.workPosition.x) !== Number(pos.x)
                         || Number(machineState.workPosition.y) !== Number(pos.y)
                         || Number(machineState.workPosition.z) !== Number(pos.z)
+                        || machineState.workPosition.isFourAxis !== pos.isFourAxis
                     ) {
                         dispatch(
                             baseActions.updateState({
@@ -457,6 +465,7 @@ export const actions = {
                     airPurifierFilterHealth,
                     isEmergencyStopped,
                     moduleList: moduleStatusList,
+                    nozzleSizeList,
                     laserCamera,
                     nozzleRightTargetTemperature,
                     nozzleRightTemperature,
@@ -474,6 +483,11 @@ export const actions = {
                 if (!isNil(isHomed)) {
                     dispatch(baseActions.updateState({
                         isHomed
+                    }));
+                }
+                if (!isNil(nozzleSizeList)) {
+                    dispatch(baseActions.updateState({
+                        nozzleSizeList
                     }));
                 }
                 if (!isNil(laserFocalLength)) {

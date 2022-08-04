@@ -16,7 +16,7 @@ const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
     const workspaceState = useSelector(state => state?.workspace);
     const { series: serial, toolHead, isConnected, zAxisModule: hasZAxis } = machineState;
     const { serial: connectSerial } = workspaceState;
-    const [selectTab, setSelectTab] = useState(MACHINE_TAB);
+    const [selectTab, setSelectTab] = useState(MATERIAL_TAB);
     const leftDiameter = useSelector(
         (state) => state?.printing?.extruderLDefinition?.settings?.machine_nozzle_size
             ?.default_value

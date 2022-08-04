@@ -78,6 +78,18 @@ class ModalSmall extends PureComponent {
                     )}
 
                 </Modal.Body>
+                {onConfirm && !onCancel && (
+                    <Modal.Footer>
+                        <Button
+                            priority="level-two"
+                            className="margin-left-8"
+                            width="96px"
+                            onClick={onConfirm}
+                        >
+                            {i18n._('key-Modal/Common-Confirm')}
+                        </Button>
+                    </Modal.Footer>
+                )}
                 {onCancel && onConfirm && (
                     <Modal.Footer>
                         <Button

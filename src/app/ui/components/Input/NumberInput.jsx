@@ -6,13 +6,17 @@ import log from '../../../lib/log';
 import styles from './styles.styl';
 
 const NumberInput = ({
-    className = '', size = 'middle', value, defaultValue, disabled = false, min, max, onChange, placeholder, allowUndefined, ...rest
+    className = '', size = 'middle', value, defaultValue, disabled = false, min, max, onChange, placeholder, allowUndefined, formatter, ...rest
 }) => {
     const [displayValue, setDisplayValue] = useState(value);
     const ref = useRef();
     function onInsideChange(event) {
         if (displayValue !== event.target.value) {
-            setDisplayValue(event.target.value);
+            let tempValue = event.target.value;
+            if (formatter) {
+                tempValue = formatter(tempValue);
+            }
+            setDisplayValue(tempValue);
         }
     }
 
@@ -76,10 +80,6 @@ const NumberInput = ({
         }
     };
 
-    const onFocus = () => {
-        ref.current?.select();
-    };
-
 
     useEffect(() => {
         if (defaultValue !== undefined) {
@@ -110,7 +110,7 @@ const NumberInput = ({
                 onChange={onInsideChange}
                 onBlur={onBlur}
                 onKeyUp={onKeyUp}
-                onFocus={onFocus}
+                formatter={formatter}
                 {...rest}
             />
         </span>
@@ -127,7 +127,8 @@ NumberInput.propTypes = {
     max: PropTypes.number,
     onChange: PropTypes.func,
     placeholder: PropTypes.string,
-    allowUndefined: PropTypes.bool
+    allowUndefined: PropTypes.bool,
+    formatter: PropTypes.func
 };
 
 export default NumberInput;

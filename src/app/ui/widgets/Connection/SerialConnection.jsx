@@ -29,7 +29,8 @@ function SerialConnection() {
         heatedBedTemperature, laserCamera, workflowStatus, emergencyStopOnline, connectLoading
     } = useSelector(state => state.machine);
     const {
-        toolHead, headType, series: seriesInfo
+        toolHead, headType, series: seriesInfo,
+        isRotate
     } = useSelector(state => state?.workspace);
     // Selected port
     const [portState, setPortState] = useState(server);
@@ -210,10 +211,15 @@ function SerialConnection() {
                 moduleName: i18n._('key-Workspace/Connection-emergencyStopButton'),
                 status: emergencyStopOnline
             });
+            isRotate && newModuleStatusList.push({
+                key: 'rotaryModule',
+                moduleName: i18n._('key-Workspace/Connection-rotaryModule'),
+                status: isRotate
+            });
         }
         setModuleStatusList(newModuleStatusList);
     }, [
-        headType, airPurifier, airPurifierHasPower, toolHead,
+        headType, airPurifier, airPurifierHasPower, toolHead, isRotate,
         enclosureOnline, heatedBedTemperature > 0, laserCamera, emergencyStopOnline, seriesInfo
     ]);
 

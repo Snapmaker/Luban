@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSelector, shallowEqual, useDispatch } from 'react-redux';
 import { find as lodashFind, noop, throttle } from 'lodash';
+import PropTypes from 'prop-types';
 import Slider from '../../components/Slider';
 import styles from './styles.styl';
 import { actions as printingActions } from '../../../flux/printing';
 import { ModelEvents } from '../../../models/events';
 
-function VisualizerClippingControl() {
+function VisualizerClippingControl({ simplifying }) {
     const transformMode = useSelector(state => state?.printing?.transformMode, shallowEqual);
     const modelGroup = useSelector(state => state?.printing?.modelGroup);
     const displayedType = useSelector(state => state?.printing?.displayedType, shallowEqual);
@@ -46,7 +47,7 @@ function VisualizerClippingControl() {
 
     const isSpecialMode = transformMode === 'rotate-placement' || transformMode === 'support-edit';
 
-    if (displayedType === 'model' && !isSpecialMode && modelGroup.models.length && !(modelGroup.models.length === 1 && modelGroup.models[0].type === 'primeTower')) {
+    if (!simplifying && displayedType === 'model' && !isSpecialMode && modelGroup.models.length && !(modelGroup.models.length === 1 && modelGroup.models[0].type === 'primeTower')) {
         return (
             <React.Fragment>
                 <div className={styles['layer-wrapper']}>
@@ -76,6 +77,8 @@ function VisualizerClippingControl() {
         return null;
     }
 }
-
+VisualizerClippingControl.propTypes = {
+    simplifying: PropTypes.bool.isRequired,
+};
 
 export default VisualizerClippingControl;
