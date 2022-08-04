@@ -297,9 +297,7 @@ class Visualizer extends PureComponent {
                     background,
                     size,
                     workPosition,
-                    originOffset,
-                    // // for serialport indiviual
-                    // workflowStatus,
+                    originOffset
                 }, (res) => {
                     if (res) {
                         const { msg, code } = res;

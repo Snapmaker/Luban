@@ -234,7 +234,7 @@ class Printing extends PureComponent {
                                 priority="level-three"
                                 width="96px"
                                 className="display-inline"
-                                disabled={this.state.isUnload}
+                                disabled={this.state.isUnload && !(nozzleTemperature - nozzleTargetTemperature >= -5)}
                                 onClick={() => actions.onClickUnload(LEFT_EXTRUDER_MAP_NUMBER)}
                             >
                                 {i18n._('key-unused-Unload')}
@@ -243,7 +243,7 @@ class Printing extends PureComponent {
                                 className="margin-left-4 display-inline"
                                 priority="level-three"
                                 width="96px"
-                                disabled={this.state.isLoad}
+                                disabled={this.state.isLoad && !(nozzleTemperature - nozzleTargetTemperature >= -5)}
                                 onClick={() => actions.onClickLoad(LEFT_EXTRUDER_MAP_NUMBER)}
                             >
                                 {i18n._('key-unused-Load')}
@@ -279,7 +279,7 @@ class Printing extends PureComponent {
                                 priority="level-three"
                                 width="96px"
                                 className="display-inline"
-                                disabled={this.state.isUnload}
+                                disabled={this.state.isUnload && !(this.props.nozzleRightTemperature - this.props.nozzleRightTargetTemperature >= -5)}
                                 onClick={() => actions.onClickUnload(RIGHT_EXTRUDER_MAP_NUMBER)}
                             >
                                 {i18n._('key-unused-Unload')}
@@ -288,7 +288,7 @@ class Printing extends PureComponent {
                                 className="margin-left-4 display-inline"
                                 priority="level-three"
                                 width="96px"
-                                disabled={this.state.isLoad}
+                                disabled={this.state.isLoad && !(this.props.nozzleRightTemperature - this.props.nozzleRightTargetTemperature >= -5)}
                                 onClick={() => actions.onClickLoad(RIGHT_EXTRUDER_MAP_NUMBER)}
                             >
                                 {i18n._('key-unused-Load')}

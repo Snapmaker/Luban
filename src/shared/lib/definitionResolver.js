@@ -166,6 +166,10 @@ function resolveDefinition(definition, modifiedParams) {
     var affectArray = [];
     if (modifiedParams) {
         modifiedParams.forEach(function (param) {
+            allAsistantArray.add({
+                   param: param[0],
+                   index: 0
+             });
             Object.entries(allValues).forEach(function (_a) {
                 var _b = __read(_a, 2), valueKey = _b[0], valueItem = _b[1];
                 var valueArray = Array.from(valueItem);

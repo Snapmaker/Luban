@@ -98,6 +98,7 @@ class ModalSmallInput extends PureComponent {
                             priority="level-two"
                             className="margin-left-8"
                             width="96px"
+                            disabled={!(inputtext.trim())}
                             onClick={() => { onConfirm(inputtext); }}
                         >
                             {i18n._('key-Modal/Common-Confirm')}

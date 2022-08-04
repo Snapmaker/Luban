@@ -39,7 +39,7 @@ const ALL_ICON_NAMES = {
     'layer_height': ['LayerHeightFine', 'LayerHeightMedium', 'LayerHeightRough'],
     'speed_print': ['SpeedSlow', 'SpeedMedium', 'SpeedFast'],
     'infill_sparse_density': ['ModelStructureThin', 'ModelStructureMedium', 'ModelStructureHard', 'ModelStructureVase'],
-    'support_type': ['SupportLine', 'SupportNone'],
+    'support_generate_type': ['SupportLine', 'SupportNone'],
     'adhesion_type': ['AdhesionSkirt', 'AdhesionBrim', 'AdhesionRaft']
 };
 
@@ -126,7 +126,7 @@ export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition
                                     {i18n._(`key-Luban/Preset/${displayName}`)}
                                 </span>
                             </div>
-                            {!showSelect && !(['Support Placement', 'Build Plate Adhesion Type'].includes(displayName)) && (
+                            {!showSelect && !(['Support Type', 'Build Plate Adhesion Type'].includes(displayName)) && (
                                 <span className="float-r color-black-3">
                                     {displayValue}{eachParamObject?.unit}
                                 </span>
@@ -463,6 +463,7 @@ function Configurations() {
                                         >
                                             <Dropdown
                                                 placement="bottomRight"
+                                                style={{ maxWidth: '160px' }}
                                                 overlay={renderProfileMenu(presetDisplayType)}
                                                 trigger={['click']}
                                             >

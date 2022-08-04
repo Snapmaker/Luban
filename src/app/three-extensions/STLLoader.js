@@ -122,7 +122,7 @@ STLLoader.prototype = {
 					( reader.getUint8( index + 5 ) == 0x3D /*'='*/ ) ) {
 
 					hasColors = true;
-					colors = [];
+					colors = new Float32Array( faces * 3 * 3 );
 
 					defaultR = reader.getUint8( index + 6 ) / 255;
 					defaultG = reader.getUint8( index + 7 ) / 255;
@@ -138,8 +138,8 @@ STLLoader.prototype = {
 
 			var geometry = new THREE.BufferGeometry();
 
-			var vertices = [];
-			var normals = [];
+			const vertices = new Float32Array( faces * 3 * 3 );
+			const normals = new Float32Array( faces * 3 * 3 );
 
             for ( var face = 0; face < faces; face ++ ) {
 			    if (face / faces - progress > 0.01) {
@@ -176,23 +176,27 @@ STLLoader.prototype = {
 
 				for ( var i = 1; i <= 3; i ++ ) {
 					var vertexstart = start + i * 12;
-					vertices.push( reader.getFloat32( vertexstart, true ) );
-					vertices.push( reader.getFloat32( vertexstart + 4, true ) );
-					vertices.push( reader.getFloat32( vertexstart + 8, true ) );
-
-					normals.push( normalX, normalY, normalZ );
+					const componentIdx = face * 3 * 3 + ( i - 1 ) * 3;
+					vertices[ componentIdx ] = reader.getFloat32( vertexstart, true );
+					vertices[ componentIdx + 1 ] = reader.getFloat32( vertexstart + 4, true );
+					vertices[ componentIdx + 2 ] = reader.getFloat32( vertexstart + 8, true );
+					normals[ componentIdx ] = normalX;
+					normals[ componentIdx + 1 ] = normalY;
+					normals[ componentIdx + 2 ] = normalZ;
 					if ( hasColors ) {
-						colors.push( r, g, b );
+						colors[ componentIdx ] = r;
+						colors[ componentIdx + 1 ] = g;
+						colors[ componentIdx + 2 ] = b;
 					}
 				}
 			}
 
-			geometry.setAttribute( 'position', new THREE.BufferAttribute( new Float32Array( vertices ), 3 ) );
-			geometry.setAttribute( 'normal', new THREE.BufferAttribute( new Float32Array( normals ), 3 ) );
+			geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices , 3 ) );
+			geometry.setAttribute( 'normal', new THREE.BufferAttribute( normals , 3 ) );
 
 			if ( hasColors ) {
 
-				geometry.setAttribute( 'color', new THREE.BufferAttribute( new Float32Array( colors ), 3 ) );
+				geometry.setAttribute( 'color', new THREE.BufferAttribute( colors, 3 ) );
 				geometry.hasColors = true;
 				geometry.alpha = alpha;
 

@@ -19,6 +19,7 @@ import {
 } from '../../../constants';
 import { actions as machineActions } from '../../../flux/machine';
 import styles from './index.styl';
+import MismatchModal from './MismatchModal';
 
 let loadingTimer = null;
 function SerialConnection() {
@@ -71,6 +72,7 @@ function SerialConnection() {
 
     function openPort() {
         server.openServer(({ msg }) => {
+            console.log('msg', msg);
             if (!isObject(msg) && msg !== 'inuse') {
                 setErr(i18n._('key-workspace_open_port-Can not open this port'));
                 log.error('Error opening serial port', msg);
@@ -225,7 +227,7 @@ function SerialConnection() {
 
     const canRefresh = !loadingPorts && !isOpen;
     const canChangePort = canRefresh;
-    const canOpenPort = portState.port && !isOpen;
+    const canOpenPort = portState.port && !portState.address && !isOpen;
 
     return (
         <div>
@@ -314,6 +316,7 @@ function SerialConnection() {
                     <span className="margin-horizontal-8">{err}</span>
                 )}
             </div>
+            <MismatchModal />
         </div>
     );
 }

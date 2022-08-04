@@ -80,7 +80,7 @@ function VisualizerClippingControl({ simplifying }) {
                             step={qualitySetting.layer_height.default_value}
                             value={value}
                             onChange={(v) => {
-                                onChange(v);
+                                onChange(Number(v));
                             }}
                         />
                         {/* Placeholder by setting the height of the div */}

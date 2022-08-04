@@ -91,6 +91,7 @@ export const actions = {
         const { initState } = getState().project[headType];
         const { modelGroup } = editorState;
         const models = modelGroup.getModels();
+        console.log('models', models);
         if (!models.length && initState) return;
         const machineState = getState().machine;
         const { size, series, toolHead } = machineState;

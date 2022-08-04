@@ -192,11 +192,11 @@ export class Server extends events.EventEmitter {
             });
     }
 
-    goHome(hasHomingModel, headType, callback) {
-        controller.emitEvent(CONNECTION_GO_HOME, { hasHomingModel, headType })
-            .once(CONNECTION_GO_HOME, (options) => {
-                callback && callback(options);
-            });
+    goHome(hasHomingModel, callback) {
+        controller.emitEvent(CONNECTION_GO_HOME, { hasHomingModel }, callback);
+        // .once(CONNECTION_GO_HOME, (options) => {
+        //     callback && callback(options);
+        // });
     }
 
     setToken(token) {

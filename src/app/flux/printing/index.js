@@ -10,6 +10,7 @@ import {
 } from 'three-mesh-bvh';
 import { timestamp } from '../../../shared/lib/random-utils';
 import api from '../../api';
+import { ModelEvents } from '../../models/events';
 import {
     ABSENT_OBJECT,
     BLACK_COLOR,
@@ -93,6 +94,15 @@ const { Transfer } = require('threads');
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
+THREE.BufferAttribute.prototype.getX = function (index) { return this.array[index * this.itemSize] || 0; };
+THREE.BufferAttribute.prototype.getY = function (index) { return this.array[index * this.itemSize + 1] || 0; };
+THREE.BufferAttribute.prototype.getZ = function (index) { return this.array[index * this.itemSize + 2] || 0; };
+THREE.BufferAttribute.prototype.getW = function (index) { return this.array[index * this.itemSize + 3] || 0; };
+
+THREE.InterleavedBufferAttribute.prototype.getX = function (index) { return this.data.array[index * this.data.stride + this.offset] || 0; };
+THREE.InterleavedBufferAttribute.prototype.getY = function (index) { return this.data.array[index * this.data.stride + this.offset + 1] || 0; };
+THREE.InterleavedBufferAttribute.prototype.getZ = function (index) { return this.data.array[index * this.data.stride + this.offset + 2] || 0; };
+THREE.InterleavedBufferAttribute.prototype.getW = function (index) { return this.data.array[index * this.data.stride + this.offset + 3] || 0; };
 
 const operationHistory = new OperationHistory();
 
@@ -1351,6 +1361,7 @@ export const actions = {
                 })
             );
         } else {
+            UpdatePresetModel = true;
             resolveDefinition(definitionModel, changedSettingArray);
             const definitions = printingState[definitionsKey];
             const index = definitions.findIndex((d) => d.definitionId === id);
@@ -1360,16 +1371,17 @@ export const actions = {
                     [definitionsKey]: [...definitions]
                 })
             );
+            dispatch(actions.updateBoundingBox());
         }
-        dispatch(actions.updateDefinitionModelAndCheckVisible({
-            type,
-            direction,
-            series,
-            machineNozzleSize: actualExtruderDefinition.settings?.machine_nozzle_size?.default_value,
-            originalConfigId: machineStore.get('defaultConfigId') ? JSON.parse(machineStore.get('defaultConfigId')) : {}
-        }))
         definitionManager.updateDefinition(definitionModel);
         if (UpdatePresetModel) {
+            dispatch(actions.updateDefinitionModelAndCheckVisible({
+                type,
+                direction,
+                series,
+                machineNozzleSize: actualExtruderDefinition.settings?.machine_nozzle_size?.default_value,
+                originalConfigId: machineStore.get('defaultConfigId') ? JSON.parse(machineStore.get('defaultConfigId')) : {}
+            }))
             dispatch(actions.updateState({ qualityDefinitions: [...qualityDefinitions] }));
         }
         if (shouldUpdateIsOversteped) {
@@ -2014,6 +2026,7 @@ export const actions = {
             newExtruderRDefinition.settings,
             helpersExtruderConfig
         );
+        console.log('newExtruderLDefinition', Object.keys(newExtruderLDefinition));
         definitionManager.updateDefinition({
             ...newExtruderLDefinition,
             definitionId: 'snapmaker_extruder_0'
@@ -4040,7 +4053,6 @@ export const actions = {
         modelGroup.groupsChildrenMap.forEach((subModels, group) => {
             if (subModels.every(id => id instanceof ThreeModel)) {
                 modelGroup.unselectAllModels();
-
                 group.meshObject.updateMatrixWorld();
                 const groupMatrix = group.meshObject.matrixWorld.clone();
                 const allSubmodelsId = subModels.map(d => d.modelID);
@@ -4060,12 +4072,12 @@ export const actions = {
                 group.computeBoundingBox();
                 const overstepped = modelGroup._checkOverstepped(group);
 
-
-
                 group.setOversteppedAndSelected(overstepped, group.isSelected);
                 modelGroup.addModelToSelectedGroup(group);
             }
+            modelGroup.emit(ModelEvents.AddModel, group);
         });
+
         newModels.forEach((model) => {
             modelGroup.selectModelById(model.modelID, true);
             if (model instanceof ThreeModel) {

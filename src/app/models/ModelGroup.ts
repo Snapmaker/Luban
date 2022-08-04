@@ -1769,6 +1769,9 @@ class ModelGroup extends EventEmitter {
             this.groupsChildrenMap.set(group, modelInfo.children.map((item) => {
                 return item.modelID;
             }));
+            // this.models.splice(0, 0, group);
+            // this.object.add(group.meshObject);
+
             return group as ThreeGroup;
         }
         // Adding the z position for each meshObject when add a model(Corresponding to 'bringSelectedModelToFront' function)
@@ -2748,7 +2751,7 @@ class ModelGroup extends EventEmitter {
     }
 
     public calaClippingMap() {
-        const shouldUpdate = this.getThreeModels().some((model) => {
+        const shouldUpdate = this.getThreeModels().some(async (model) => {
             return model.updateClippingMap();
         });
         if (shouldUpdate) {

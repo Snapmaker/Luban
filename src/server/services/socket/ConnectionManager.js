@@ -8,7 +8,7 @@ import socketHttp from './socket-http';
 import socketTcp from './sacp/SACP-TCP';
 import socketSerialNew from './sacp/SACP-SERIAL';
 import {
-    HEAD_PRINTING, HEAD_LASER, HEAD_CNC, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES,
+    HEAD_PRINTING, HEAD_LASER, HEAD_CNC, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES, SERIAL_PROTOCOL,
     CONNECTION_TYPE_WIFI, CONNECTION_TYPE_SERIAL, WORKFLOW_STATE_PAUSED, PORT_SCREEN_HTTP, PORT_SCREEN_SACP, SACP_PROTOCOL, STANDARD_CNC_TOOLHEAD_FOR_SM2, LEVEL_ONE_POWER_LASER_FOR_SM2
 } from '../../constants';
 import DataStorage from '../../DataStorage';
@@ -59,13 +59,13 @@ class ConnectionManager {
         this.connectionType = connectionType;
         if (connectionType === CONNECTION_TYPE_WIFI) {
             if (sacp) {
-                this.protocol = 'SACP';
+                this.protocol = SACP_PROTOCOL;
                 this.socket = socketTcp;
             } else if (addByUser) {
                 try {
                     const protocol = await this.inspectProtocol(address);
-                    if (protocol === 'SACP') {
-                        this.protocol = 'SACP';
+                    if (protocol === SACP_PROTOCOL) {
+                        this.protocol = SACP_PROTOCOL;
                         this.socket = socketTcp;
                     } else {
                         this.protocol = '';
@@ -110,7 +110,7 @@ class ConnectionManager {
             if (resHTTP.value) {
                 return 'HTTP';
             } else if (resSACP.value) {
-                return 'SACP';
+                return SACP_PROTOCOL;
             }
         } else if (connectionType === CONNECTION_TYPE_SERIAL) {
             let protocol = 'HTTP';
@@ -122,7 +122,7 @@ class ConnectionManager {
             if (timer) clearTimeout(timer);
             timer = setTimeout(() => {
                 if (!hasData) {
-                    protocol = SACP_PROTOCOL;
+                    protocol = SERIAL_PROTOCOL;
                     trySerialConnect?.close();
                 }
             }, 1000);
@@ -130,11 +130,11 @@ class ConnectionManager {
                 hasData = true;
                 const machineData = data.toString();
                 if (data[0].toString(16) === 'aa' && data[1].toString(16) === '55') {
-                    protocol = 'SACP';
+                    protocol = SACP_PROTOCOL;
                     trySerialConnect?.close();
                 }
                 if (machineData.match(/SACP/g)) {
-                    protocol = 'SACP';
+                    protocol = SACP_PROTOCOL;
                     trySerialConnect?.close();
                 }
                 if (machineData.match(/ok/g)) {
@@ -145,6 +145,7 @@ class ConnectionManager {
             trySerialConnect.on('close', () => {
                 callback && callback(protocol);
             });
+            // // TODO: return a promise and throw error
             trySerialConnect.on('error', (err) => {
                 log.error({ err });
             });
@@ -181,9 +182,9 @@ class ConnectionManager {
     }
 
     startGcode = async (socket, options) => {
-        const { headType, isRotate, toolHead, isLaserPrintAutoMode, materialThickness, eventName } = options;
+        const { headType, isRotate, toolHead, isLaserPrintAutoMode, materialThickness, laserFocalLength, eventName } = options;
         if (this.connectionType === CONNECTION_TYPE_WIFI) {
-            const { uploadName, series, laserFocalLength, background, size, workPosition, originOffset } = options;
+            const { uploadName, series, background, size, workPosition, originOffset } = options;
             const gcodeFilePath = `${DataStorage.tmpDir}/${uploadName}`;
             const promises = [];
             if (this.protocol === SACP_PROTOCOL && headType === HEAD_LASER) {
@@ -200,39 +201,54 @@ class ConnectionManager {
                     { axis: 'Z', distance: 0 }
                 ];
                 await this.socket.coordinateMove({ moveOrders, gcode, jogSpeed, headType });
-            } else if (series !== MACHINE_SERIES.ORIGINAL.value && series !== MACHINE_SERIES.CUSTOM.value && headType === HEAD_LASER && !isRotate) {
-                if (laserFocalLength) {
-                    const promise = new Promise((resolve) => {
-                        if (isLaserPrintAutoMode) {
-                            this.socket.executeGcode({ gcode: `G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;` }, () => {
-                                resolve();
-                            });
-                        } else {
-                            if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
-                                this.socket.executeGcode({ gcode: `G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;` }, () => {
+            } else if (series !== MACHINE_SERIES.ORIGINAL.value && series !== MACHINE_SERIES.CUSTOM.value && headType === HEAD_LASER) {
+                if (!isRotate) {
+                    if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                        const promise = new Promise((resolve) => {
+                            if (materialThickness === -1) {
+                                this.socket.executeGcode({ gcode: 'G0 X0 Y0 F1500;\nG0 Z0 F1500;' }, () => {
                                     resolve();
                                 });
                             } else {
-                                this.socket.executeGcode({ gcode: 'G0 Z0 F1500;' }, () => {
+                                this.socket.executeGcode({ gcode: `G0 X0 Y0 F1500;\nG53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;` }, () => {
                                     resolve();
                                 });
                             }
-                        }
-                    });
-                    promises.push(promise);
-                }
+                        });
+                        promises.push(promise);
+                    } else {
+                        const promise = new Promise((resolve) => {
+                            if (isLaserPrintAutoMode) {
+                                this.socket.executeGcode({ gcode: `G0 X0 Y0 F1500;\nG53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;` }, () => {
+                                    resolve();
+                                });
+                            } else {
+                                this.socket.executeGcode({ gcode: 'G0 X0 Y0 F1500;\nG0 Z0 F1500;' }, () => {
+                                    resolve();
+                                });
+                            }
+                        });
+                        promises.push(promise);
+                    }
+                    // Camera Aid Background mode, force machine to work on machine coordinates (Origin = 0,0)
+                    if (background.enabled) {
+                        let x = parseFloat(workPosition.x) - parseFloat(originOffset.x);
+                        let y = parseFloat(workPosition.y) - parseFloat(originOffset.y);
 
-                // Camera Aid Background mode, force machine to work on machine coordinates (Origin = 0,0)
-                if (background.enabled) {
-                    let x = parseFloat(workPosition.x) - parseFloat(originOffset.x);
-                    let y = parseFloat(workPosition.y) - parseFloat(originOffset.y);
+                        // Fix bug for x or y out of range
+                        x = Math.max(0, Math.min(x, size.x - 20));
+                        y = Math.max(0, Math.min(y, size.y - 20));
 
-                    // Fix bug for x or y out of range
-                    x = Math.max(0, Math.min(x, size.x - 20));
-                    y = Math.max(0, Math.min(y, size.y - 20));
-
+                        const promise = new Promise((resolve) => {
+                            this.socket.executeGcode({ gcode: `G53;\nG0 X${x} Y${y};\nG54;\nG92 X${x} Y${y};` }, () => {
+                                resolve();
+                            });
+                        });
+                        promises.push(promise);
+                    }
+                } else {
                     const promise = new Promise((resolve) => {
-                        this.socket.executeGcode({ gcode: `G53;\nG0 X${x} Y${y};\nG54;\nG92 X${x} Y${y};` }, () => {
+                        this.executeGcode(this.socket, { gcode: 'G0 X0 Y0 B0 F1500;\nG0 Z0 F1500;' }, () => {
                             resolve();
                         });
                     });
@@ -267,18 +283,22 @@ class ConnectionManager {
             } else {
                 if (headType === HEAD_LASER && workflowState !== WORKFLOW_STATE_PAUSED) {
                     this.socket.command(socket, {
-                        args: ['G0 X0 Y0 F1000', null]
+                        args: ['G0 X0 Y0 B0 F1000', null]
                     });
                     if (!isRotate) {
-                        if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                        if (materialThickness === -1) {
                             this.socket.command(socket, {
-                                args: [`G0 Z${(isLaserPrintAutoMode ? 0 : materialThickness)} F1000`, null]
+                                args: ['G0 Z0 F1000', null]
                             });
                         } else {
                             this.socket.command(socket, {
-                                args: [`G0 Z${(isLaserPrintAutoMode ? materialThickness : 0)} F1000`, null]
+                                args: [`G53;\nG0 Z${materialThickness + laserFocalLength} ;\nG54;`, null]
                             });
                         }
+                    } else {
+                        this.socket.command(socket, {
+                            args: ['G0 Z0 F1000', null]
+                        });
                     }
                 }
                 setTimeout(() => {
@@ -684,7 +704,7 @@ M3`;
     };
     // only for Wifi
 
-    goHome = (socket, options) => {
+    goHome = (socket, options, callback) => {
         const { hasHomingModel, headType } = options;
         if (this.protocol === SACP_PROTOCOL) {
             this.socket.goHome(hasHomingModel);
@@ -694,12 +714,16 @@ M3`;
             });
             this.executeGcode(this.socket, {
                 gcode: 'G28'
+            }, callback);
+            this.executeGcode(this.socket, {
+                gcode: 'G54'
             });
             if (headType === HEAD_LASER || headType === HEAD_CNC) {
                 this.executeGcode(this.socket, {
                     gcode: 'G54'
                 });
             }
+            socket && socket.emit('move:status', { isHoming: true });
         }
     }
 
@@ -709,6 +733,7 @@ M3`;
         if (this.protocol === SACP_PROTOCOL) {
             this.socket.coordinateMove({ moveOrders, jogSpeed, headType });
         } else {
+            console.log('gcode', gcode);
             this.executeGcode(this.socket, { gcode });
         }
     }
