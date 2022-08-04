@@ -161,62 +161,62 @@ const toolHeadMap = {
     },
 };
 const defaultNozzleDiameterList = [{
-    value: '0.2',
+    value: 0.2,
     label: '0.2',
     isDefault: true
 }, {
-    value: '0.4',
+    value: 0.4,
     label: '0.4',
     isDefault: true
 }, {
-    value: '0.6',
+    value: 0.6,
     label: '0.6',
     isDefault: true
 }, {
-    value: '0.8',
+    value: 0.8,
     label: '0.8',
     isDefault: true
 }];
 const defaultNozzleDiameterListForSingleExtruder = [{
-    value: '0.4',
+    value: 0.4,
     label: '0.4',
     isDefault: true
 }];
 const defaultNozzleDiameterListForDualExtruderArtisan = [{
-    value: '0.2',
+    value: 0.2,
     label: '0.2',
     isDefault: true
 }, {
-    value: '0.4',
+    value: 0.4,
     label: '0.4',
     isDefault: true
 }, {
-    value: '0.4H',
+    value: 0.4,
     label: '0.4H',
     isDefault: true
 }, {
-    value: '0.6',
+    value: 0.6,
     label: '0.6',
     isDefault: true
 }, {
-    value: '0.8',
+    value: 0.8,
     label: '0.8',
     isDefault: true
 }];
 const defaultNozzleDiameterListForDualExtruder = [{
-    value: '0.2',
+    value: 0.2,
     label: '0.2',
     isDefault: true
 }, {
-    value: '0.4',
+    value: 0.4,
     label: '0.4',
     isDefault: true
 }, {
-    value: '0.6',
+    value: 0.6,
     label: '0.6',
     isDefault: true
 }, {
-    value: '0.8',
+    value: 0.8,
     label: '0.8',
     isDefault: true
 }];
@@ -256,17 +256,50 @@ const MachineSettings = forwardRef(({
     const handleAddDiameter = (status) => {
         setAddDiameterStatus(status);
     };
-    const onChangeDiameter = (direction, value) => {
+    const getActiveDiameter = (direction, list) => {
+        const key = `customNozzleDiameter.${currentToolHead}.${currentSerial}.${direction}_active`;
+        const cacheLabel = machineStore.get(key);
+        let machineNozzleSize;
+        const nozzleDiameterList = list;
         if (direction === LEFT) {
-            setLeftNozzleDiameter(value);
+            machineNozzleSize = extruderLDefinition?.settings?.machine_nozzle_size.default_value;
         } else {
-            setRightNozzleDiameter(value);
+            machineNozzleSize = extruderRDefinition?.settings?.machine_nozzle_size.default_value;
+        }
+        let activeDiameter = nozzleDiameterList.find((d) => {
+            return d.label === cacheLabel;
+        });
+        if (activeDiameter) {
+            return activeDiameter;
+        }
+        activeDiameter = nozzleDiameterList.find((d) => {
+            return d.value === machineNozzleSize;
+        });
+        if (activeDiameter) {
+            return activeDiameter;
+        }
+        return nozzleDiameterList[0];
+    };
+    const saveActiveDiameterToStorage = (direction, label) => {
+        const key = `customNozzleDiameter.${currentToolHead}.${currentSerial}.${direction}_active`;
+
+        machineStore.set(key, label);
+    };
+    const onChangeDiameter = (direction, nozzle) => {
+        if (!nozzle) {
+            return;
+        }
+        if (direction === LEFT) {
+            setLeftNozzleDiameter(nozzle.label);
+        } else {
+            setRightNozzleDiameter(nozzle.label);
         }
         const def = direction === LEFT
             ? extruderLDefinition
             : extruderRDefinition;
-        if (def?.settings?.machine_nozzle_size?.default_value) {
-            def.settings.machine_nozzle_size.default_value = value;
+        if (def?.settings?.machine_nozzle_size) {
+            def.settings.machine_nozzle_size.default_value = nozzle.value;
+            saveActiveDiameterToStorage(direction, nozzle.label);
             dispatch(
                 printingActions.updateCurrentDefinition({
                     definitionModel: def,
@@ -278,31 +311,32 @@ const MachineSettings = forwardRef(({
             dispatch(printingActions.displayModel());
         }
     };
-    const saveDiameterToStorage = (direction, value, isDelete = false) => {
+
+    const saveDiameterToStorage = (direction, label, isDelete = false) => {
         const key = `customNozzleDiameter.${currentToolHead}.${currentSerial}.${direction}`;
         const str = machineStore.get(key) || '[]';
         let configs = JSON.parse(str);
         if (isDelete) {
-            configs = configs.filter(i => `${i}` !== `${value}`);
+            configs = configs.filter(i => `${i}` !== `${label}`);
         } else {
-            configs.push(value);
+            configs.push(label);
         }
         machineStore.set(key, JSON.stringify(configs));
     };
-    const handleRemoveDiameter = (e, value, direction) => {
+    const handleRemoveDiameter = (e, label, direction) => {
         e.stopPropagation();
         if (direction === LEFT) {
             const newLeftList = remove(leftNozzleDiameterList, (list) => {
-                return list.value !== value;
+                return list.label !== label;
             });
             setLeftNozzleDiameterList(newLeftList);
         } else {
             const newRightList = remove(rightNozzleDiameterList, (list) => {
-                return list.value !== value;
+                return list.label !== label;
             });
             setRightNozzleDiameterList(newRightList);
         }
-        saveDiameterToStorage(direction, value, true);
+        saveDiameterToStorage(direction, label, true);
     };
     const AddDiameterToList = (e, direction) => {
         const newValue = e.target.value;
@@ -313,26 +347,27 @@ const MachineSettings = forwardRef(({
         let newDiameter = Number(newValue);
         if (newDiameter < 0.1) newDiameter = 0.1;
         if (newDiameter > 1.2) newDiameter = 1.2;
+        const label = `${newDiameter}`;
         if (direction === LEFT) {
-            if (!find(leftNozzleDiameterList, { value: newDiameter })) {
+            if (!find(leftNozzleDiameterList, { label })) {
                 setLeftNozzleDiameterList([...leftNozzleDiameterList, {
-                    label: newValue,
-                    value: newValue,
+                    label,
+                    value: newDiameter,
                     isDefault: false
                 }]);
-                saveDiameterToStorage(direction, newDiameter);
+                saveDiameterToStorage(direction, label);
             }
-            setLeftNozzleDiameter(newDiameter);
+            setLeftNozzleDiameter(label);
         } else {
-            if (!find(rightNozzleDiameterList, { value: newDiameter })) {
+            if (!find(rightNozzleDiameterList, { label })) {
                 setRightNozzleDiameterList([...rightNozzleDiameterList, {
-                    label: newValue,
-                    value: newValue,
+                    label,
+                    value: newDiameter,
                     isDefault: false
                 }]);
-                saveDiameterToStorage(direction, newDiameter);
+                saveDiameterToStorage(direction, label);
             }
-            setRightNozzleDiameter(newDiameter);
+            setRightNozzleDiameter(label);
         }
         setAddDiameterStatus(false);
     };
@@ -362,38 +397,27 @@ const MachineSettings = forwardRef(({
         const configs = JSON.parse(str);
         return configs.map((value) => {
             return {
-                value: `${value}`,
+                value: Number(value),
                 label: `${value}`,
                 isDefault: false
             };
         });
     };
 
-    const checkNozzleDiameter = (direction) => {
-        if (direction === LEFT) {
-            const activeLeftNozzleSize = extruderLDefinition?.settings?.machine_nozzle_size.default_value;
-            if (!find(leftNozzleDiameterList, { value: activeLeftNozzleSize })) {
-                onChangeDiameter(LEFT, leftNozzleDiameterList.length ? leftNozzleDiameterList[0].value : null);
-            }
-        } else {
-            const activeRightNozzleSize = extruderRDefinition?.settings?.machine_nozzle_size.default_value;
-            if (!find(rightNozzleDiameterList, { value: activeRightNozzleSize })) {
-                onChangeDiameter(RIGHT, rightNozzleDiameterList.length ? rightNozzleDiameterList[0].value : null);
-            }
-        }
+    const checkNozzleDiameter = (direction, list) => {
+        const activeNozzleSize = getActiveDiameter(direction, list);
+        onChangeDiameter(direction, activeNozzleSize);
     };
-    useEffect(() => {
-        checkNozzleDiameter(LEFT);
-        checkNozzleDiameter(RIGHT);
-    }, [leftNozzleDiameterList, rightNozzleDiameterList]);
 
     const _setNozzleDiameterList = (direction, _defaultNozzleDiameterList, _currentSerial) => {
         if (direction === LEFT) {
             const list = [..._defaultNozzleDiameterList, ...getNozzleDiameterFromStorage(LEFT, _currentSerial)];
             setLeftNozzleDiameterList(list);
+            checkNozzleDiameter(LEFT, list);
         } else {
             const list = [..._defaultNozzleDiameterList, ...getNozzleDiameterFromStorage(RIGHT, _currentSerial)];
             setRightNozzleDiameterList(list);
+            checkNozzleDiameter(RIGHT, list);
         }
     };
 
@@ -427,8 +451,8 @@ const MachineSettings = forwardRef(({
 
     useImperativeHandle(ref, () => ({
         checkNozzleDiameter: () => {
-            checkNozzleDiameter(LEFT);
-            checkNozzleDiameter(RIGHT);
+            checkNozzleDiameter(LEFT, leftNozzleDiameterList);
+            checkNozzleDiameter(RIGHT, rightNozzleDiameterList);
         }
     }));
 
@@ -515,11 +539,11 @@ const MachineSettings = forwardRef(({
                             <div className="sm-flex sm-flex-wrap margin-top-16">
                                 {leftNozzleDiameterList.map((nozzle, index) => {
                                     return (
-                                        <Anchor onClick={() => onChangeDiameter(LEFT, nozzle.value)} className={`margin-bottom-8 width-56 padding-horizontal-8 height-32 border-radius-8 border-default-grey-1 ${(index === 3 || index === 7) ? '' : 'margin-right-8'} ${leftNozzleDiameter === nozzle.value ? 'border-color-blue-2' : ''}`}>
+                                        <Anchor onClick={() => onChangeDiameter(LEFT, nozzle)} className={`margin-bottom-8 width-56 padding-horizontal-8 height-32 border-radius-8 border-default-grey-1 ${(index === 3 || index === 7) ? '' : 'margin-right-8'} ${`${leftNozzleDiameter}` === nozzle.label ? 'border-color-blue-2' : ''}`}>
                                             <div className={classNames(styles['diameter-item'], 'sm-flex justify-space-between')}>
                                                 <span>{nozzle.label}</span>
-                                                {!nozzle.isDefault && leftNozzleDiameter !== nozzle.value && (
-                                                    <Anchor onClick={(e) => handleRemoveDiameter(e, nozzle.value, LEFT)}>
+                                                {!nozzle.isDefault && `${leftNozzleDiameter}` !== nozzle.label && (
+                                                    <Anchor onClick={(e) => handleRemoveDiameter(e, nozzle.label, LEFT)}>
                                                         <SvgIcon name="Cancel" size={8} type={['static']} />
                                                     </Anchor>
                                                 )}
@@ -558,11 +582,11 @@ const MachineSettings = forwardRef(({
                             <div className="sm-flex sm-flex-wrap margin-top-16">
                                 {rightNozzleDiameterList.map((nozzle, index) => {
                                     return (
-                                        <Anchor onClick={() => onChangeDiameter(RIGHT, nozzle.value)} className={`margin-bottom-8  width-56 padding-horizontal-8 height-32 border-radius-8 border-default-grey-1 ${(index === 3 || index === 7) ? '' : 'margin-right-8'} ${rightNozzleDiameter === nozzle.value ? 'border-color-blue-2' : ''}`}>
+                                        <Anchor onClick={() => onChangeDiameter(RIGHT, nozzle)} className={`margin-bottom-8  width-56 padding-horizontal-8 height-32 border-radius-8 border-default-grey-1 ${(index === 3 || index === 7) ? '' : 'margin-right-8'} ${`${rightNozzleDiameter}` === nozzle.label ? 'border-color-blue-2' : ''}`}>
                                             <div className="sm-flex justify-space-between ">
                                                 <span>{nozzle.label}</span>
-                                                {!nozzle.isDefault && rightNozzleDiameter !== nozzle.value && (
-                                                    <Anchor onClick={(e) => handleRemoveDiameter(e, nozzle.value, RIGHT)}>
+                                                {!nozzle.isDefault && `${rightNozzleDiameter}` !== nozzle.label && (
+                                                    <Anchor onClick={(e) => handleRemoveDiameter(e, nozzle.label, RIGHT)}>
                                                         <SvgIcon name="Cancel" size={8} type={['static']} />
                                                     </Anchor>
                                                 )}
