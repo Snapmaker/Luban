@@ -25,7 +25,6 @@ import { UniformToolpathConfig } from '../../lib/uniform-toolpath-config';
 import { checkIsSnapmakerProjectFile, checkIsGCodeFile } from '../../lib/check-name';
 import { actions as operationHistoryActions } from '../operation-history';
 import { machineStore } from '../../store/local-storage';
-// import ThreeModel from '../../models/ThreeModel';
 
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
@@ -91,7 +90,6 @@ export const actions = {
         const { initState } = getState().project[headType];
         const { modelGroup } = editorState;
         const models = modelGroup.getModels();
-        console.log('models', models);
         if (!models.length && initState) return;
         const machineState = getState().machine;
         const { size, series, toolHead } = machineState;

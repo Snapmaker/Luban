@@ -612,7 +612,7 @@ function Configurations() {
                         {configDisplayType === CONFIG_DISPLAY_TYPES[1] && (
                             <div className="overflow-y-auto height-max-400">
                                 {Object.keys(printingCustomConfigsWithCategory).map((category) => (
-                                    <>
+                                    <div key={category}>
                                         {printingCustomConfigsWithCategory[category].map(key => {
                                             return (
                                                 <SettingItem
@@ -633,7 +633,7 @@ function Configurations() {
                                                 />
                                             );
                                         })}
-                                    </>
+                                    </div>
                                 ))}
                                 <PrintingManager />
                             </div>

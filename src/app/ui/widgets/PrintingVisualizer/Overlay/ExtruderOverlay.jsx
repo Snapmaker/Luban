@@ -123,46 +123,48 @@ const ExtruderOverlay = React.memo(({
         }
         dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
     };
-    const extruderOverlay = (type) => (
-        <Menu>
-            <Menu.Item
-                onClick={() => onChangeExtruder(type, '0')}
-                key="L"
-            >
-                <div className="sm-flex justify-space-between">
-                    <span className="display-inline width-96 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Extruder L')}</span>
-                    {colorL !== whiteHex ? (
-                        <SvgIcon
-                            name="Extruder"
-                            size={24}
-                            color={colorL}
-                            type={['static']}
-                        />
-                    ) : (
-                        <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
-                    )}
-                </div>
-            </Menu.Item>
-            <Menu.Item
-                onClick={() => onChangeExtruder(type, '1')}
-                key="R"
-            >
-                <div className="sm-flex justify-space-between">
-                    <span className="display-inline width-96 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Extruder R')}</span>
-                    {colorR !== whiteHex ? (
-                        <SvgIcon
-                            name="Extruder"
-                            size={24}
-                            color={colorR}
-                            type={['static']}
-                        />
-                    ) : (
-                        <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
-                    )}
-                </div>
-            </Menu.Item>
-        </Menu>
-    );
+    const extruderOverlay = (type) => {
+        return (
+            <Menu>
+                <Menu.Item
+                    onClick={() => onChangeExtruder(type, '0')}
+                    key="L"
+                >
+                    <div className="sm-flex justify-space-between">
+                        <span className="display-inline width-96 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Extruder L')}</span>
+                        {colorL !== whiteHex ? (
+                            <SvgIcon
+                                name="Extruder"
+                                size={24}
+                                color={colorL}
+                                type={['static']}
+                            />
+                        ) : (
+                            <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
+                        )}
+                    </div>
+                </Menu.Item>
+                <Menu.Item
+                    onClick={() => onChangeExtruder(type, '1')}
+                    key="R"
+                >
+                    <div className="sm-flex justify-space-between">
+                        <span className="display-inline width-96 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Extruder R')}</span>
+                        {colorR !== whiteHex ? (
+                            <SvgIcon
+                                name="Extruder"
+                                size={24}
+                                color={colorR}
+                                type={['static']}
+                            />
+                        ) : (
+                            <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
+                        )}
+                    </div>
+                </Menu.Item>
+            </Menu>
+        );
+    };
     const renderExtruderStatus = (status, disabled) => {
         if (!status && selectedModelArray.length === 0) {
             status = '0';
@@ -288,7 +290,7 @@ const ExtruderOverlay = React.memo(({
                         <Dropdown
                             disabled={!isSelectedModelAllVisible}
                             placement="bottomRight"
-                            overlay={() => extruderOverlay('models.multiple')}
+                            overlay={extruderOverlay('models.multiple')}
                             trigger="click"
                         >
                             {renderExtruderStatus(modelsExtruder.multiple, !isSelectedModelAllVisible)}
@@ -298,7 +300,7 @@ const ExtruderOverlay = React.memo(({
                         <span className="display-block width-96 text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-Shells')}</span>
                         <Dropdown
                             placement="bottomRight"
-                            overlay={() => extruderOverlay('models.shell')}
+                            overlay={extruderOverlay('models.shell')}
                             disabled={!isSelectedModelAllVisible}
                             trigger="click"
                         >
@@ -310,7 +312,7 @@ const ExtruderOverlay = React.memo(({
                         <Dropdown
                             disabled={!isSelectedModelAllVisible}
                             placement="bottomRight"
-                            overlay={() => extruderOverlay('models.infill')}
+                            overlay={extruderOverlay('models.infill')}
                             trigger="click"
                         >
                             {renderExtruderStatus(modelsExtruder.infill, !isSelectedModelAllVisible)}
@@ -357,7 +359,7 @@ const ExtruderOverlay = React.memo(({
                         <div role="presentation" onClick={() => handleOpen('helpers')} className="display-block width-96 text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-All Helpers')}</div>
                         <Dropdown
                             placement="bottomRight"
-                            overlay={() => extruderOverlay('helpers.multiple')}
+                            overlay={extruderOverlay('helpers.multiple')}
                             trigger="click"
                         >
                             {renderExtruderStatus(helpersExtrurder.multiple)}
@@ -367,7 +369,7 @@ const ExtruderOverlay = React.memo(({
                         <span className="display-block width-96 text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-Adhesion')}</span>
                         <Dropdown
                             placement="bottomRight"
-                            overlay={() => extruderOverlay('helpers.adhesion')}
+                            overlay={extruderOverlay('helpers.adhesion')}
                             trigger="click"
                         >
                             {renderExtruderStatus(helpersExtrurder.adhesion)}
@@ -377,7 +379,7 @@ const ExtruderOverlay = React.memo(({
                         <span className="display-block width-96 text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-Support')}</span>
                         <Dropdown
                             placement="bottomRight"
-                            overlay={() => extruderOverlay('helpers.support')}
+                            overlay={extruderOverlay('helpers.support')}
                             trigger="click"
                         >
                             {renderExtruderStatus(helpersExtrurder.support)}

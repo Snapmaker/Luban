@@ -26,6 +26,8 @@ export class DefinitionLoader {
 
     materialProfileLevel = {};
 
+    extruderProfileArr = [];
+
     definitionId = '';
 
     name = '';
@@ -181,6 +183,9 @@ export class DefinitionLoader {
                             this.settings[key][field] = setting[field];
                         }
                     }
+                    if (mainCategory === 'quality' && setting.settable_per_extruder) {
+                        this.extruderProfileArr.push(key);
+                    }
                     if (isUndefined(this.settings[key].zIndex)) {
                         this.settings[key].zIndex = zIndex;
                     }
@@ -254,7 +259,8 @@ export class DefinitionLoader {
             typeOfPrinting: this.typeOfPrinting,
             ownKeys: Array.from(this.ownKeys),
             printingProfileLevel: this.printingProfileLevel,
-            materialProfileLevel: this.materialProfileLevel
+            materialProfileLevel: this.materialProfileLevel,
+            extruderProfileArr: this.extruderProfileArr
         };
     }
 

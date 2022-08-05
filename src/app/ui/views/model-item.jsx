@@ -207,7 +207,6 @@ function ModelItem({
                             <ModelIcon name={svgName} model={model} disabled={disabled} />
                         )}
                         <Anchor
-                            isExpend={isExpend}
                             className={classNames(
                                 'height-24',
                                 'sm-flex-width',

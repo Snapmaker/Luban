@@ -94,15 +94,6 @@ const { Transfer } = require('threads');
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
-THREE.BufferAttribute.prototype.getX = function (index) { return this.array[index * this.itemSize] || 0; };
-THREE.BufferAttribute.prototype.getY = function (index) { return this.array[index * this.itemSize + 1] || 0; };
-THREE.BufferAttribute.prototype.getZ = function (index) { return this.array[index * this.itemSize + 2] || 0; };
-THREE.BufferAttribute.prototype.getW = function (index) { return this.array[index * this.itemSize + 3] || 0; };
-
-THREE.InterleavedBufferAttribute.prototype.getX = function (index) { return this.data.array[index * this.data.stride + this.offset] || 0; };
-THREE.InterleavedBufferAttribute.prototype.getY = function (index) { return this.data.array[index * this.data.stride + this.offset + 1] || 0; };
-THREE.InterleavedBufferAttribute.prototype.getZ = function (index) { return this.data.array[index * this.data.stride + this.offset + 2] || 0; };
-THREE.InterleavedBufferAttribute.prototype.getW = function (index) { return this.data.array[index * this.data.stride + this.offset + 3] || 0; };
 
 const operationHistory = new OperationHistory();
 
@@ -405,7 +396,6 @@ export const actions = {
         // await dispatch(machineActions.updateMachineToolHead(toolHead, series, CONFIG_HEADTYPE));
         const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
         await definitionManager.init(CONFIG_HEADTYPE, currentMachine.configPathname[CONFIG_HEADTYPE]);
-
         const allMaterialDefinition = await definitionManager.getDefinitionsByPrefixName(
             'material'
         );
@@ -414,7 +404,7 @@ export const actions = {
         );
         const qualityParamModels = [];
         const activeMaterialType = dispatch(actions.getActiveMaterialType());
-        const extruderLDefinition = await definitionManager.getDefinitionsByPrefixName('snapmaker_extruder_0');
+        const extruderLDefinition = await definitionManager.getDefinition('snapmaker_extruder_0');
 
         allQualityDefinitions.forEach((eachDefinition) => {
             const paramModel = new PresetDefinitionModel(
@@ -440,7 +430,6 @@ export const actions = {
 
     initSize: () => async (dispatch, getState) => {
         // also used in actions.saveAndClose of project/index.js
-
         // state
         const printingState = getState().printing;
         const { modelGroup, gcodeLineGroup, defaultMaterialId } = printingState;
@@ -527,7 +516,7 @@ export const actions = {
                 materialDefinitions: allMaterialDefinition,
                 qualityDefinitions: qualityParamModels,
                 printingProfileLevel: profileLevel.printingProfileLevel,
-                materialProfileLevel: profileLevel.materialProfileLevel
+                materialProfileLevel: profileLevel.materialProfileLevel,
             })
         );
 
@@ -2002,6 +1991,7 @@ export const actions = {
         );
         const newExtruderLDefinition = definitionManager.finalizeExtruderDefinition(
             {
+                activeQualityDefinition,
                 extruderDefinition: extruderLDefinition,
                 materialDefinition: materialDefinitions[indexL],
                 hasPrimeTower,
@@ -2011,6 +2001,7 @@ export const actions = {
         );
         const newExtruderRDefinition = definitionManager.finalizeExtruderDefinition(
             {
+                activeQualityDefinition,
                 extruderDefinition: extruderRDefinition,
                 materialDefinition: materialDefinitions[indexR],
                 hasPrimeTower,
@@ -2021,12 +2012,8 @@ export const actions = {
 
         definitionManager.calculateDependencies(
             activeQualityDefinition.settings,
-            modelGroup && modelGroup.hasSupportModel(),
-            newExtruderLDefinition.settings,
-            newExtruderRDefinition.settings,
-            helpersExtruderConfig
+            modelGroup && modelGroup.hasSupportModel()
         );
-        console.log('newExtruderLDefinition', Object.keys(newExtruderLDefinition));
         definitionManager.updateDefinition({
             ...newExtruderLDefinition,
             definitionId: 'snapmaker_extruder_0'
