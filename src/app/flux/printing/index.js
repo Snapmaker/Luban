@@ -3839,7 +3839,7 @@ export const actions = {
                 }
                 const uploadPath = `${DATA_PREFIX}/${model.uploadName}`;
                 if (model.isGroup) {
-                    const modelState = await modelGroup.generateModel({
+                    await modelGroup.generateModel({
                         loadFrom,
                         limitSize: size,
                         headType,
@@ -3860,6 +3860,7 @@ export const actions = {
                         isGroup: model.isGroup,
                         children: model.children,
                     });
+                    const modelState = modelGroup.getState();
                     dispatch(actions.updateState(modelState));
 
                     dispatch(actions.displayModel());
@@ -3895,7 +3896,7 @@ export const actions = {
 
                                 bufferGeometry.computeVertexNormals();
 
-                                const modelState = await modelGroup.generateModel(
+                                modelGroup.generateModel(
                                     {
                                         loadFrom,
                                         limitSize: size,
@@ -3919,21 +3920,39 @@ export const actions = {
                                         parentUploadName: model.parentUploadName,
                                         sourcePly: model.sourcePly
                                     }
-                                );
-                                dispatch(actions.updateState(modelState));
-                                dispatch(actions.applyProfileToAllModels());
-                                dispatch(actions.displayModel());
-                                dispatch(actions.destroyGcodeLine());
-                                if (modelNames.length > 1) {
-                                    _progress += 1 / modelNames.length;
-                                    dispatch(
-                                        actions.updateState({
-                                            stage: STEP_STAGE.PRINTING_LOADING_MODEL,
-                                            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress)
-                                        })
-                                    );
-                                }
-                                resolve();
+                                ).then(() => {
+                                    const modelState = modelGroup.getState()
+
+                                    dispatch(actions.updateState(modelState));
+                                    dispatch(actions.applyProfileToAllModels());
+                                    dispatch(actions.displayModel());
+                                    dispatch(actions.destroyGcodeLine());
+                                    if (modelNames.length > 1) {
+                                        _progress += 1 / modelNames.length;
+                                        dispatch(
+                                            actions.updateState({
+                                                stage: STEP_STAGE.PRINTING_LOADING_MODEL,
+                                                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress)
+                                            })
+                                        );
+                                    }
+                                    resolve();
+                                }).catch(() => {
+                                    promptTasks.push({
+                                        status: 'load-model-fail',
+                                        originalName: model.originalName
+                                    });
+                                    if (modelNames.length > 1) {
+                                        _progress += 1 / modelNames.length;
+                                        dispatch(
+                                            actions.updateState({
+                                                stage: STEP_STAGE.PRINTING_LOADING_MODEL,
+                                                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress)
+                                            })
+                                        );
+                                    }
+                                    reject();
+                                })
                                 break;
                             }
                             case 'LOAD_MODEL_CONVEX': {
@@ -3949,7 +3968,6 @@ export const actions = {
                                     positionAttribute
                                 );
 
-                                // const model = modelGroup.children.find(m => m.uploadName === uploadName);
                                 modelGroup.setConvexGeometry(
                                     model.uploadName,
                                     convexGeometry
