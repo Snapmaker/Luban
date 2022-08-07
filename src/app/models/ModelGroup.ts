@@ -1770,6 +1770,7 @@ class ModelGroup extends EventEmitter {
             this.groupsChildrenMap.set(group, modelInfo.children.map((item) => {
                 return item.modelID;
             }));
+            resolve && resolve();
 
             return group as ThreeGroup;
         }

@@ -330,7 +330,7 @@ export const processActions = {
 
         let newDisplayedType = displayedType;
         let newNeedToPreview = false;
-        if (!toolPathGroup.checkHasVisibleToolPaths()) {
+        if (!toolPathGroup.checkHasToolPathsWithFile()) {
             newDisplayedType = DISPLAYED_TYPE_MODEL;
             newNeedToPreview = true;
         }

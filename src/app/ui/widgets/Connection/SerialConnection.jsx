@@ -72,7 +72,6 @@ function SerialConnection() {
 
     function openPort() {
         server.openServer(({ msg }) => {
-            console.log('msg', msg);
             if (!isObject(msg) && msg !== 'inuse') {
                 setErr(i18n._('key-workspace_open_port-Can not open this port'));
                 log.error('Error opening serial port', msg);
@@ -227,7 +226,7 @@ function SerialConnection() {
 
     const canRefresh = !loadingPorts && !isOpen;
     const canChangePort = canRefresh;
-    const canOpenPort = portState.port && !portState.address && !isOpen;
+    const canOpenPort = portState.port && !portState.address && !isOpen && servers.length;
 
     return (
         <div>

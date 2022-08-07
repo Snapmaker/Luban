@@ -1851,8 +1851,15 @@ export const actions = {
             return { originalName, uploadName, children };
         });
         const promiseResults = await Promise.allSettled(ps);
-        const fileNames = promiseResults.map((promiseTask) => {
-            return promiseTask.value || promiseTask
+        const fileNames = promiseResults.map((promiseTask, index) => {
+            let res = {};
+            if (promiseTask.value) {
+                res = promiseTask.value
+            }else {
+                promiseTask.originalName = files[index]?.name
+                res  = promiseTask
+            }
+            return res
         })
         const allChild = []
         fileNames.forEach((item) => {
@@ -2897,7 +2904,7 @@ export const actions = {
         );
 
         const models = [];
-        modelGroup.getModels().forEach(model => {
+        modelGroup.getVisibleValidModels().forEach(model => {
             if (model instanceof PrimeTowerModel) {
                 return;
             }
@@ -3821,8 +3828,12 @@ export const actions = {
                 }
             });
         });
+        console.log('modelNames', modelNames);
 
         const promises = modelNames.map((model) => {
+            if (model.parentUploadName) {
+                dispatch(operationHistoryActions.excludeModelById(HEAD_PRINTING, model.modelID));
+            }
             return new Promise(async (resolve, reject) => {
                 const {
                     toolHead: { printingToolhead }
@@ -3834,12 +3845,12 @@ export const actions = {
                         progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress)
                     })
                 );
-                if (!model.uploadName) {
-                    resolve();
-                }
+                // if (!model.uploadName) {
+                //     resolve();
+                // }
                 const uploadPath = `${DATA_PREFIX}/${model.uploadName}`;
                 if (model.isGroup) {
-                    await modelGroup.generateModel({
+                    modelGroup.generateModel({
                         loadFrom,
                         limitSize: size,
                         headType,
@@ -3859,13 +3870,14 @@ export const actions = {
                         extruderConfig,
                         isGroup: model.isGroup,
                         children: model.children,
-                    });
-                    const modelState = modelGroup.getState();
-                    dispatch(actions.updateState(modelState));
+                    }).then(() => {
+                        const modelState = modelGroup.getState();
+                        dispatch(actions.updateState(modelState));
 
-                    dispatch(actions.displayModel());
-                    dispatch(actions.destroyGcodeLine());
-                    resolve();
+                        dispatch(actions.displayModel());
+                        dispatch(actions.destroyGcodeLine());
+                        resolve();
+                    })
                 } else if (
                     primeTowerTag
                     && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
@@ -3922,7 +3934,6 @@ export const actions = {
                                     }
                                 ).then(() => {
                                     const modelState = modelGroup.getState()
-
                                     dispatch(actions.updateState(modelState));
                                     dispatch(actions.applyProfileToAllModels());
                                     dispatch(actions.displayModel());

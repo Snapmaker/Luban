@@ -705,9 +705,10 @@ M3`;
     // only for Wifi
 
     goHome = (socket, options, callback) => {
-        const { hasHomingModel, headType } = options;
+        const { headType } = options;
         if (this.protocol === SACP_PROTOCOL) {
-            this.socket.goHome(hasHomingModel);
+            this.socket.goHome();
+            socket && socket.emit('move:status', { isHoming: true });
         } else {
             this.executeGcode(this.socket, {
                 gcode: 'G53'
@@ -723,7 +724,9 @@ M3`;
                     gcode: 'G54'
                 });
             }
-            socket && socket.emit('move:status', { isHoming: true });
+            if (this.connectionType === CONNECTION_TYPE_WIFI) {
+                socket && socket.emit('move:status', { isHoming: true });
+            }
         }
     }
 

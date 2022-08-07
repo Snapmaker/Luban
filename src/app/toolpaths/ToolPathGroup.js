@@ -556,6 +556,19 @@ class ToolPathGroup {
             }
         );
     }
+
+    checkHasToolPathsWithFile() {
+        const toolPaths = this.getToolPaths();
+        if (toolPaths.length) {
+            return toolPaths.every(
+                (toolPath) => {
+                    return toolPath.toolPathFiles.every(d => d);
+                }
+            );
+        } else {
+            return false;
+        }
+    }
 }
 
 export default ToolPathGroup;

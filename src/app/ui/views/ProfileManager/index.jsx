@@ -79,8 +79,8 @@ export function useGetDefinitions(allDefinitions, activeDefinitionID, getDefault
                 isHidden: !d.settings || Object.keys(d.settings).length === 0,
                 isDefault: !!d.isDefault,
                 color: (
-                    managerType === PRINTING_MANAGER_TYPE_MATERIAL && d.ownKeys.find(key => key === 'color') && d.settings.color
-                ) ? d.settings.color.default_value : ''
+                    managerType === PRINTING_MANAGER_TYPE_MATERIAL && d.settings.color
+                ) ? d.settings.color.default_value : '#000000'
             };
         });
         setDefinitionState((prev) => {
@@ -190,6 +190,7 @@ function ProfileManager({
                         selectedName: selected.name,
                         selectedSettingDefaultValue: selectedSettingDefaultValue
                     });
+                    dispatch(printingActions.updateDefaultMaterialId(selected.definitionId));
                 } else {
                     dispatch(printingActions.updateDefaultQualityId(selected.definitionId));
                     dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));

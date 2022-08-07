@@ -262,7 +262,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                                 />
                                 <Input
                                     suffix="°"
-                                    disabled={disabled || !selectedNotHide || !canRotate || drawing}
+                                    disabled={disabled || !selectedNotHide || !canRotate || isCNC4AxisImage3d || drawing}
                                     value={toFixedNumber(logicalAngle, 1)}
                                     className="margin-horizontal-2"
                                     size="small"
