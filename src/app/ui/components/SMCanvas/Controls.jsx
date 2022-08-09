@@ -251,9 +251,17 @@ class Controls extends EventEmitter {
         this.offset.copy(this.camera.position).sub(this.target);
         // calculate move distance of target in perspective view of camera
         const distance = 2 * this.offset.length() * Math.tan(this.camera.fov / 2 * Math.PI / 180);
-
-        this.panLeft(distance * deltaX / elem.clientWidth, this.camera.matrix);
-        this.panUp(distance * deltaY / elem.clientHeight, this.camera.matrix);
+        let leftDistance = distance * deltaX / elem.clientWidth;
+        let upDistance = distance * deltaY / elem.clientHeight;
+        if (Math.abs(distance / elem.clientWidth) < 0.05) {
+            leftDistance = 0.05 * deltaX;
+        }
+        if (Math.abs(distance / elem.clientHeight) < 0.05) {
+            upDistance = 0.05 * deltaY;
+        }
+        console.log('distance * deltaX / elem.clientWidth', distance, deltaX, elem.clientWidth, leftDistance);
+        this.panLeft(leftDistance, this.camera.matrix);
+        this.panUp(upDistance, this.camera.matrix);
     }
 
     setScale(scale) {
@@ -763,6 +771,7 @@ class Controls extends EventEmitter {
             // we use a Vector3 to swap Y and Z as a little calculation trick.
             if (this.camera.up.z === 1) {
                 spherialOffset.set(this.offset.x, this.offset.z, -this.offset.y);
+                console.log('this.offset', this.offset);
             } else {
                 spherialOffset.copy(this.offset);
             }

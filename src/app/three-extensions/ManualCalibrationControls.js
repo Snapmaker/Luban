@@ -109,10 +109,11 @@ function ManualCalibrationControls(camera, domElement, scale, remapBox2, cornerP
 
         const geometry = new THREE.Geometry();
         dashedLine = new THREE.Line(geometry, new THREE.LineDashedMaterial({
-            color: 0x28a7e1,
-            scale: 1,
-            dashSize: 4,
-            gapSize: 3
+            color: 0x123ABC,
+            linewidth: 2,
+            scale: 10,
+            dashSize: 2,
+            gapSize: 1
         }));
         scope.add(dashedLine);
         updateDashedLine();

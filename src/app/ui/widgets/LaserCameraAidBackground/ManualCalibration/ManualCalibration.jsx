@@ -37,10 +37,16 @@ class ManualCalibration extends Component {
         this.photoMesh = null;
         this.backgroundMesh = null;
 
+        this.spherical = new THREE.Spherical();
+
+        this.sphericalDelta = new THREE.Spherical();
         // scale
-        this.translatePosition = { x: 0, y: 0 }; // todo
-        this.offset = { x: 0, y: 0 }; // todo
-        this.lastPosition = { x: 0, y: 0 }; // todo
+        this.offset = new THREE.Vector3(); // todo
+        this.panOffset = new THREE.Vector3();
+        this.panPosition = new THREE.Vector2();
+        this.mouse3D = new THREE.Vector3();
+        this.target = new THREE.Vector3(0, 0, 100);
+        this.maxDistance = 540;
         this.mouseWheelX = 0;
         this.mouseWheelY = 0;
         this.scale = 1;
@@ -50,6 +56,7 @@ class ManualCalibration extends Component {
         this.setupThreejs();
         this.setupExtractControls();
         this.setupPlate();
+        this.updateCamera(false, true);
         this.animate();
         this.bindEventListeners();
     }
@@ -97,38 +104,62 @@ class ManualCalibration extends Component {
     onMouseWheel = (event) => {
         event.preventDefault();
         event.stopPropagation();
-        this.mouseWheelX = event.offsetX;
-        this.mouseWheelY = event.offsetY;
         this.handleMouseWheel(event);
     };
 
+    panLeft(distance, matrix) {
+        const v = new THREE.Vector3().setFromMatrixColumn(matrix, 0); // Get X column
+        v.multiplyScalar(-distance);
+        this.panOffset.add(v);
+    }
+
+    panUp(distance, matrix) {
+        const v = new THREE.Vector3().setFromMatrixColumn(matrix, 1); // Get Y column
+        v.multiplyScalar(distance);
+        this.panOffset.add(v);
+    }
+
+    pan(deltaX, deltaY) {
+        const elem = this.renderer.domElement === document ? document.body : this.renderer.domElement;
+
+        this.offset.copy(this.camera.position).sub(this.target);
+        // calculate move distance of target in perspective view of camera
+        const distance = 2 * this.offset.length() * Math.tan(this.camera.fov / 2 * Math.PI / 180);
+        let leftDistance = distance * deltaX / elem.clientWidth;
+        let upDistance = distance * deltaY / elem.clientHeight;
+        if (Math.abs(distance / elem.clientWidth) < 0.3) {
+            leftDistance = 0.3 * deltaX;
+        }
+        if (Math.abs(distance / elem.clientHeight) < 0.3) {
+            upDistance = 0.3 * deltaY;
+        }
+        this.panLeft(leftDistance, this.camera.matrix);
+        this.panUp(upDistance, this.camera.matrix);
+    }
+
+
     onMouseDown = (event) => {
         event.preventDefault();
-        this.translatePosition.x = event.clientX;
-        this.translatePosition.y = event.clientY;
+        this.panPosition.set(event.clientX, event.clientY);
+        // this.translatePosition.x = event.clientX;
+        // this.translatePosition.y = event.clientY;
         if (event.button === THREE.MOUSE.MIDDLE || event.button === THREE.MOUSE.RIGHT) {
             document.addEventListener('mousemove', this.onDocumentMouseMove, false);
             document.addEventListener('mouseup', this.onDocumentMouseUp, false);
         }
     };
 
-    onDocumentMouseMove = (event) => {
-        // Coordinate axis adaptation
-        const [offsetX, offsetY] = [this.translatePosition.x - event.clientX, event.clientY - this.translatePosition.y];
-        this.camera.position.set(this.offset.x + offsetX, this.offset.y + offsetY, Math.max(this.props.width, this.props.height) * 0.5 * this.scale);
-        this.lastPosition = {
-            x: this.offset.x + offsetX,
-            y: this.offset.y + offsetY
-        };
+    handleMouseMovePan = (event) => {
+        this.pan(event.clientX - this.panPosition.x, event.clientY - this.panPosition.y);
+        this.panPosition.set(event.clientX, event.clientY);
+        this.updateCamera();
     };
 
-    onDocumentMouseUp = (event) => {
-        if (this.translatePosition.x - event.clientX !== 0 || this.translatePosition.y - event.clientY !== 0) {
-            this.offset = {
-                x: this.lastPosition.x,
-                y: this.lastPosition.y
-            };
-        }
+    onDocumentMouseMove = (event) => {
+        this.handleMouseMovePan(event);
+    };
+
+    onDocumentMouseUp = () => {
         document.removeEventListener('mousemove', this.onDocumentMouseMove, false);
         document.removeEventListener('mouseup', this.onDocumentMouseUp, false);
     };
@@ -143,7 +174,7 @@ class ManualCalibration extends Component {
         this.camera = new THREE.PerspectiveCamera(90, width / height, 0.1, 10000);
         // change position
         this.camera.position.set(0, 0, Math.max(this.props.width, this.props.height) * 0.5);
-        this.camera.lookAt(new THREE.Vector3(0, 0, 0));
+        this.camera.lookAt(this.target);
 
         this.renderer = new WebGLRendererWrapper({ antialias: true });
         this.renderer.setClearColor(new THREE.Color(0xfafafa), 1);
@@ -181,7 +212,7 @@ class ManualCalibration extends Component {
         const { width, height } = this.props;
 
         const grid = new RectangleGridHelper(width / 2, height / 2, 10);
-        grid.material.opacity = 0.25;
+        grid.material.opacity = 1;
         grid.material.transparent = true;
         grid.rotateX(Math.PI / 2);
         this.plateGroup.add(grid);
@@ -190,35 +221,91 @@ class ManualCalibration extends Component {
         const geometry = new THREE.PlaneGeometry(minSideLength / 2, minSideLength / 8);
         const material = new THREE.MeshBasicMaterial({
             side: THREE.DoubleSide,
-            opacity: 0.75,
+            opacity: 1,
             transparent: true
         });
         const mesh = new THREE.Mesh(geometry, material);
         this.plateGroup.add(mesh);
     }
 
-    handleMouseWheel = (event) => {
-        const { width, height } = this.props;
-        if (event.deltaY < 0) {
-            this.scale /= 1.05;
-            this.camera.position.set(this.mouseWheelX * 2 - width / 2,
-                height / 2 - this.mouseWheelY * 2,
-                Math.max(this.props.width, this.props.height) * 0.5 * this.scale);
-        } else if (this.scale < 1 && event.deltaY > 0) {
-            this.scale *= 1.05;
-            this.camera.position.set(
-                this.mouseWheelX * 2 - width / 2,
-                height / 2 - this.mouseWheelY * 2,
-                Math.max(this.props.width, this.props.height) * 0.5 * this.scale
-            );
-            if (this.scale >= 1) {
-                this.camera.position.set(0, 0, Math.max(this.props.width, this.props.height) * 0.5);
-                this.offset = {
-                    x: 0,
-                    y: 0
-                };
+    // update mouse 3D position
+    updateMouse3D = (() => {
+        const scope = this;
+        const v = new THREE.Vector3();
+        const v1 = new THREE.Vector3();
+        return (event) => {
+            const element = scope.renderer.domElement === document ? scope.renderer.domElement.body : scope.renderer.domElement;
+            // Conversion screen coordinates to world coordinates and calculate distance
+            // Calculate mouse relative position, use event.offsetY or event.clientY in different situations
+            v.set((event.offsetX / element.clientWidth) * 2 - 1, -(event.offsetY / element.clientHeight) * 2 + 1, 0.5);
+
+            v.unproject(scope.camera);
+
+            v.sub(scope.camera.position).normalize();
+            // now v is Vector3 which is from mouse position camera position
+            const distanceAll = v1.copy(scope.target).sub(scope.camera.position).length();
+            scope.mouse3D.copy(scope.camera.position).add(v.multiplyScalar(distanceAll));
+        };
+    })();
+
+    updateCamera(shouldUpdateTarget = false, updateScale = false) {
+        this.offset.copy(this.camera.position).sub(this.target);
+
+        const spherialOffset = new THREE.Vector3();
+
+        // rotate & scale
+        if (this.sphericalDelta.theta !== 0 || this.sphericalDelta.phi !== 0 || this.scale !== 1 || updateScale) {
+            spherialOffset.copy(this.offset);
+            this.spherical.setFromVector3(spherialOffset);
+
+            this.spherical.theta += this.sphericalDelta.theta;
+            this.spherical.phi += this.sphericalDelta.phi;
+
+            this.spherical.makeSafe();
+
+            const prevRadius = this.spherical.radius;
+            this.spherical.radius *= this.scale;
+            this.spherical.radius = Math.max(this.spherical.radius, 0.05);
+            this.spherical.radius = Math.min(this.spherical.radius, this.maxDistance);
+            // suport zoomToCursor (mouse only)
+            if (shouldUpdateTarget) {
+                this.target.lerp(this.mouse3D, 1 - this.spherical.radius / prevRadius);
             }
+            spherialOffset.setFromSpherical(this.spherical);
+
+
+            this.offset.copy(spherialOffset);
+
+            this.sphericalDelta.set(1, 0, 0);
         }
+
+        // pan
+        if (this.panOffset.x || this.panOffset.y) {
+            this.target.add(this.panOffset);
+            this.panOffset.set(0, 0, 0);
+        }
+
+
+        // re-position camera
+        this.camera.position.copy(this.target).add(this.offset);
+        this.camera.lookAt(this.target);
+
+        // need to update scale after camera position setted,
+        // because of camera position used to calculate current scale
+        if (this.scale !== 1) {
+            this.scale = 1;
+        }
+    }
+
+
+    handleMouseWheel = (event) => {
+        this.updateMouse3D(event);
+        if (event.deltaY < 0) {
+            this.scale *= 0.9;
+        } else {
+            this.scale /= 0.9;
+        }
+        this.updateCamera(true);
     };
 
     animate = () => {
