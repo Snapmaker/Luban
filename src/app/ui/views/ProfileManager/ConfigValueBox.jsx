@@ -360,7 +360,7 @@ function ConfigValueBox({
                                     <div className="sm-parameter-container">
                                         {Object.keys(optionConfigGroup).map((key, index) => {
                                             return (
-                                                <div key={i18n._(index)}>
+                                                <div key={i18n._(key)}>
                                                     <Anchor
                                                         className={classNames(styles.item, {
                                                             [styles.selected]:
@@ -382,7 +382,7 @@ function ConfigValueBox({
                                 {selectParamsType === 'custom' && !customMode && (
                                     Object.keys(customConfigs).map((key, index) => {
                                         return (
-                                            <div key={i18n._(index)}>
+                                            <div key={i18n._(key)}>
                                                 <Anchor
                                                     className={classNames(styles.item, {
                                                         [styles.selected]:

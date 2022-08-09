@@ -736,7 +736,6 @@ M3`;
         if (this.protocol === SACP_PROTOCOL) {
             this.socket.coordinateMove({ moveOrders, jogSpeed, headType });
         } else {
-            console.log('gcode', gcode);
             this.executeGcode(this.socket, { gcode });
         }
     }

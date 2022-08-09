@@ -47,8 +47,6 @@ class ManualCalibration extends Component {
         this.mouse3D = new THREE.Vector3();
         this.target = new THREE.Vector3(0, 0, 100);
         this.maxDistance = 540;
-        this.mouseWheelX = 0;
-        this.mouseWheelY = 0;
         this.scale = 1;
     }
 

@@ -259,7 +259,6 @@ class Controls extends EventEmitter {
         if (Math.abs(distance / elem.clientHeight) < 0.05) {
             upDistance = 0.05 * deltaY;
         }
-        console.log('distance * deltaX / elem.clientWidth', distance, deltaX, elem.clientWidth, leftDistance);
         this.panLeft(leftDistance, this.camera.matrix);
         this.panUp(upDistance, this.camera.matrix);
     }
@@ -771,7 +770,6 @@ class Controls extends EventEmitter {
             // we use a Vector3 to swap Y and Z as a little calculation trick.
             if (this.camera.up.z === 1) {
                 spherialOffset.set(this.offset.x, this.offset.z, -this.offset.y);
-                console.log('this.offset', this.offset);
             } else {
                 spherialOffset.copy(this.offset);
             }

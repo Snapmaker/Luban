@@ -2752,7 +2752,7 @@ class ModelGroup extends EventEmitter {
     }
 
     public calaClippingMap() {
-        const shouldUpdate = this.getThreeModels().some(async (model) => {
+        const shouldUpdate = this.getThreeModels().some((model) => {
             return model.updateClippingMap();
         });
         if (shouldUpdate) {
