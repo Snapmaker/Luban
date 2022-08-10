@@ -521,7 +521,7 @@ function ConfigValueBox({
 }
 ConfigValueBox.propTypes = {
     definitionForManager: PropTypes.object.isRequired,
-    optionConfigGroup: PropTypes.array.isRequired,
+    optionConfigGroup: PropTypes.object.isRequired,
     isCategorySelected: PropTypes.bool,
     customConfigs: PropTypes.object,
     calculateTextIndex: PropTypes.func,

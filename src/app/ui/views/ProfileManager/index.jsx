@@ -574,7 +574,7 @@ function ProfileManager({
                                                             <div className={classNames(styles['manager-action'])}>
                                                                 <Dropdown
                                                                     placement="bottomRight"
-                                                                    overlay={() => (
+                                                                    overlay={(
                                                                         <Menu>
                                                                             <Menu.Item>
                                                                                 <Anchor onClick={() => { actions.setRenamingStatus(true); }}>
@@ -663,7 +663,7 @@ function ProfileManager({
                                                                                     <div className={classNames(styles['manager-action'])}>
                                                                                         <Dropdown
                                                                                             placement="bottomRight"
-                                                                                            overlay={() => (
+                                                                                            overlay={(
                                                                                                 <Menu>
                                                                                                     {!isOfficialDefinition(definitionState.definitionForManager) && (
                                                                                                         <Menu.Item>
@@ -741,7 +741,7 @@ function ProfileManager({
                                             placement="top"
                                             arrow
                                             overlayClassName="horizontal-menu"
-                                            overlay={() => (
+                                            overlay={(
                                                 <Menu>
                                                     <Menu.Item>
                                                         <Tooltip title={managerType === PRINTING_MANAGER_TYPE_MATERIAL ? i18n._('key-Settings/Create Material Tips') : null} placement="top">

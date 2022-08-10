@@ -351,6 +351,7 @@ function Printing({ location }) {
         if (!definitionManager.extruderLDefinition) {
             dispatch(printingActions.init());
         }
+        dispatch(printingActions.initSocketEvent());
         dispatch(printingActions.checkNewUser());
         logPageView({
             pathname: '/printing'

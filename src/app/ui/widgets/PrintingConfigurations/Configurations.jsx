@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
 import classNames from 'classnames';
 import { cloneDeep, isNil, uniqWith } from 'lodash';
-import { Menu } from 'antd';
+import { Menu, Tooltip, Divider } from 'antd';
 import modal from '../../../lib/modal';
 import DefinitionCreator from '../../views/DefinitionCreator';
 import Select from '../../components/Select';
@@ -42,7 +42,6 @@ const ALL_ICON_NAMES = {
     'support_generate_type': ['SupportLine', 'SupportNone'],
     'adhesion_type': ['AdhesionSkirt', 'AdhesionBrim', 'AdhesionRaft']
 };
-
 
 export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition, setSelectedDefinition }) {
     const allParams = selectedDefinitionModel.params;
@@ -184,6 +183,26 @@ function Configurations() {
     const presetDisplayTypeOptions = Object.entries(presetOptionsObj).map(([key, item]) => {
         return { value: key, label: key, category: item.category, i18nCategory: item.i18nCategory };
     });
+    const i18nContent = {
+        'quality.fast_print': i18n._('Prints in a fast mode. The printing time is short, but the outcome might be rough.'),
+        'quality.normal_quality': i18n._('Prints with general settings. The printing outcome has a standard quality.'),
+        'quality.high_quality': i18n._('Prints the surface of the model more meticulously. It takes longer  time but produces higher-quality surface for the print.'),
+        'quality.engineering_print': i18n._('Enhances dimensional accuracy and overall strength of the model. It takes longer time, but produces robust prints with precise dimensions. This mode is suitable for printing precision machined parts.'),
+    };
+    const getPresetContent = (definitionId, name) => {
+        return (
+            <div>
+                <div>
+                    {name}
+                </div>
+                <Divider style={{ margin: '0' }} />
+                <div>
+                    {i18nContent[definitionId]}
+                </div>
+            </div>
+        );
+    };
+
 
     const actions = {
         checkIsAllDefault: (definitionModelSettings, selectedModelDefaultSetting) => {
@@ -452,31 +471,37 @@ function Configurations() {
                                         selectedDefinition.typeOfPrinting === optionItem.typeOfPrinting ? styles.selected : styles.unselected,
                                     )}
                                 >
-                                    <Anchor
-                                        onClick={() => actions.onSelectCustomDefinitionById(optionItem.definitionId)}
+                                    <Tooltip
+                                        title={getPresetContent(optionItem?.definitionId, optionItem.name)}
+                                        trigger="hover"
+                                        placement="left"
                                     >
-                                        <div className={classNames(
-                                            styles[`preset-recommended__icon-${optionItem.typeOfPrinting}`],
-                                            styles['preset-recommended__icon']
-                                        )}
+                                        <Anchor
+                                            onClick={() => actions.onSelectCustomDefinitionById(optionItem.definitionId)}
                                         >
-                                            <Dropdown
-                                                placement="bottomRight"
-                                                style={{ maxWidth: '160px' }}
-                                                overlay={renderProfileMenu(presetDisplayType)}
-                                                trigger={['click']}
+                                            <div className={classNames(
+                                                styles[`preset-recommended__icon-${optionItem.typeOfPrinting}`],
+                                                styles['preset-recommended__icon']
+                                            )}
                                             >
-                                                <SvgIcon
-                                                    className={classNames(
-                                                        styles['preset-hover'],
-                                                    )}
-                                                    type={['static']}
-                                                    size={24}
-                                                    name="More"
-                                                />
-                                            </Dropdown>
-                                        </div>
-                                    </Anchor>
+                                                <Dropdown
+                                                    placement="bottomRight"
+                                                    style={{ maxWidth: '160px' }}
+                                                    overlay={renderProfileMenu(presetDisplayType)}
+                                                    trigger={['click']}
+                                                >
+                                                    <SvgIcon
+                                                        className={classNames(
+                                                            styles['preset-hover'],
+                                                        )}
+                                                        type={['static']}
+                                                        size={24}
+                                                        name="More"
+                                                    />
+                                                </Dropdown>
+                                            </div>
+                                        </Anchor>
+                                    </Tooltip>
                                     <span className="max-width-76 text-overflow-ellipsis-line-2 height-32-half-line margin-top-4 margin-bottom-8">
                                         {optionItem.name}
                                     </span>

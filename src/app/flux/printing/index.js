@@ -784,36 +784,8 @@ export const actions = {
         }
     },
 
-    // TODO: init should be  re-called
-    init: () => async (dispatch, getState) => {
-        await dispatch(actions.initSize());
-
-        const printingState = getState().printing;
-        const {
-            modelGroup,
-            initEventFlag,
-            qualityDefinitions,
-            defaultQualityId
-        } = printingState;
-        // TODO
-        const {
-            toolHead: { printingToolhead },
-            series
-        } = getState().machine;
-        modelGroup.setSeries(series);
-        // const printingToolhead = machineStore.get('machine.toolHead.printingToolhead');
-        const activeQualityDefinition = lodashFind(qualityDefinitions, {
-            definitionId: defaultQualityId
-        });
-        modelGroup.removeAllModels();
-        const primeTowerModel = modelGroup.primeTower;
-        if (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
-            const enablePrimeTower = activeQualityDefinition?.settings?.prime_tower_enable
-                ?.default_value;
-            primeTowerModel.visible = enablePrimeTower;
-        } else {
-            primeTowerModel.visible = false;
-        }
+    initSocketEvent: () => async (dispatch, getState) => {
+        const { initEventFlag, modelGroup} = getState().printing;
         if (!initEventFlag) {
             dispatch(
                 actions.updateState({
@@ -1020,6 +992,38 @@ export const actions = {
                 actions.loadSimplifyModel({ modelID, modelOutputName, sourcePly })(dispatch, getState);
             });
         }
+    },
+
+    // TODO: init should be  re-called
+    init: () => async (dispatch, getState) => {
+        await dispatch(actions.initSize());
+
+        const printingState = getState().printing;
+        const {
+            modelGroup,
+            qualityDefinitions,
+            defaultQualityId
+        } = printingState;
+        // TODO
+        const {
+            toolHead: { printingToolhead },
+            series
+        } = getState().machine;
+        modelGroup.setSeries(series);
+        // const printingToolhead = machineStore.get('machine.toolHead.printingToolhead');
+        const activeQualityDefinition = lodashFind(qualityDefinitions, {
+            definitionId: defaultQualityId
+        });
+        modelGroup.removeAllModels();
+        const primeTowerModel = modelGroup.primeTower;
+        if (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+            const enablePrimeTower = activeQualityDefinition?.settings?.prime_tower_enable
+                ?.default_value;
+            primeTowerModel.visible = enablePrimeTower;
+        } else {
+            primeTowerModel.visible = false;
+        }
+        dispatch(actions.initSocketEvent());
     },
 
     loadSimplifyModel: ({ modelID, modelOutputName, isCancelSimplify = false, sourcePly }) => async (dispatch, getState) => {
@@ -2042,6 +2046,7 @@ export const actions = {
         progressStatesManager.startProgress(
             PROCESS_STAGE.PRINTING_SLICE_AND_PREVIEW
         );
+
         dispatch(
             actions.updateState({
                 stage: STEP_STAGE.PRINTING_SLICING,
@@ -3828,8 +3833,6 @@ export const actions = {
                 }
             });
         });
-        console.log('modelNames', modelNames);
-
         const promises = modelNames.map((model) => {
             if (model.parentUploadName) {
                 dispatch(operationHistoryActions.excludeModelById(HEAD_PRINTING, model.modelID));
