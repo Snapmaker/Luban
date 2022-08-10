@@ -644,6 +644,22 @@ class Controls extends EventEmitter {
         this.panPosition.set(event.clientX, event.clientY);
     };
 
+    resetPanScale = () => {
+        this.panScale = 1;
+        this.emit(EVENTS.PAN_SCALE, 1);
+    }
+
+    updatePanScale = () => {
+        const v = new THREE.Vector3();
+
+        const distanceAll = v.copy(this.target).sub(this.camera.position).length();
+        this.panScale = Math.round((
+            Math.log(distanceAll / 355.5)
+            / Math.log(this.scaleRate)
+        ) * 10) / 10;
+        this.emit(EVENTS.PAN_SCALE, this.panScale);
+    }
+
     // update mouse 3D position
     updateMouse3D = (() => {
         const scope = this;
@@ -660,7 +676,10 @@ class Controls extends EventEmitter {
             v.sub(scope.camera.position).normalize();
             // now v is Vector3 which is from mouse position camera position
             const distanceAll = v1.copy(scope.target).sub(scope.camera.position).length();
-            this.panScale = Math.round((Math.log(distanceAll / 700) / Math.log(this.scaleRate)) * 10) / 10;
+            this.panScale = Math.round((
+                Math.log(distanceAll / 355.5)
+                / Math.log(this.scaleRate)
+            ) * 10) / 10;
             scope.mouse3D.copy(scope.camera.position).add(v.multiplyScalar(distanceAll));
             this.emit(EVENTS.PAN_SCALE, this.panScale);
         };

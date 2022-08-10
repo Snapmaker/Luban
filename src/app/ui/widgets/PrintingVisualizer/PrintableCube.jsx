@@ -188,7 +188,7 @@ class PrintableCube extends Object3D {
         this.add(scale50line);
         scale10line.renderOrder = -6;
         this.scale10line = scale10line;
-        // scale10line.visible = false;
+        scale10line.visible = false;
         this.add(scale10line);
 
         const top = Rectangle.createRectangle(this.size.x, this.size.y, '#D5D6D9');
@@ -251,6 +251,7 @@ class PrintableCube extends Object3D {
             const color = new Color('#B9BCBF');
             const matLite = new MeshBasicMaterial({
                 color: color,
+                transparent: true,
                 side: FrontSide,
                 depthWrite: false,
                 wireframe: false,

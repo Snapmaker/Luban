@@ -656,7 +656,7 @@ class Canvas extends PureComponent {
         this.controls.setTarget(
             new Vector3(0, 0, this.props.cameraInitialPosition.z)
         );
-        this.controls.panScale = 1;
+        this.controls.resetPanScale();
         this.renderScene();
     }
 
@@ -668,7 +668,7 @@ class Canvas extends PureComponent {
             new Vector3(0, 0, this.props.cameraInitialPosition.z)
         );
         // this.camera.lookAt(new Vector3(0, 0, this.cameraInitialPosition.z));
-        this.controls.panScale = 1;
+        this.controls.resetPanScale();
         this.renderScene();
     }
 
@@ -687,7 +687,7 @@ class Canvas extends PureComponent {
         this.controls.setTarget(
             new Vector3(0, 0, this.props.cameraInitialPosition.z)
         );
-        this.controls.panScale = 1;
+        this.controls.resetPanScale();
         this.renderScene();
     }
 
@@ -706,7 +706,7 @@ class Canvas extends PureComponent {
         this.controls.setTarget(
             new Vector3(0, 0, this.props.cameraInitialPosition.z)
         );
-        this.controls.panScale = 1;
+        this.controls.resetPanScale();
         this.renderScene();
     }
 
@@ -725,12 +725,11 @@ class Canvas extends PureComponent {
         this.controls.setTarget(
             new Vector3(0, 0, this.props.cameraInitialPosition.z)
         );
-        this.controls.panScale = 1;
+        this.controls.resetPanScale();
         this.renderScene();
     }
 
     fitViewIn(center, selectedGroupBsphereRadius) {
-        console.log({ center, selectedGroupBsphereRadius });
         const r = selectedGroupBsphereRadius;
         const newTarget = {
             ...center
@@ -789,6 +788,7 @@ class Canvas extends PureComponent {
             this.controls.setTarget(
                 new Vector3(newTarget.x, newTarget.y, newTarget.z)
             );
+            this.controls.updatePanScale();
             this.renderScene();
         }, ANIMATION_DURATION);
     }
@@ -816,7 +816,7 @@ class Canvas extends PureComponent {
                 this.camera.position.x = this.controls.target.x;
                 this.camera.position.y = this.controls.target.y - Math.sin(rotation) * dist;
                 this.camera.position.z = this.controls.target.z + Math.cos(rotation) * dist;
-                this.controls.panScale = 1;
+                this.controls.resetPanScale();
             });
         this.startTween(tween);
     }

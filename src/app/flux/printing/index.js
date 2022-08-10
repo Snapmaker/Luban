@@ -526,6 +526,9 @@ export const actions = {
 
         // Re-position model group
         gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
+
+        const { stopArea } = getState().printing;
+        modelGroup.primeTower.resetPosition(size, stopArea)
     },
 
     updateProfileParamsType: (managerType, value) => (dispatch) => {
@@ -3864,14 +3867,6 @@ export const actions = {
 
                     dispatch(actions.displayModel());
                     dispatch(actions.destroyGcodeLine());
-                    resolve();
-                } else if (
-                    primeTowerTag
-                    && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
-                ) {
-                    const initHeight = transformation?.scaleZ || 0.1;
-                    const primeTowerModel = modelGroup.primeTower;
-                    primeTowerModel.updateHeight(initHeight, transformation);
                     resolve();
                 } else {
                     const onMessage = async data => {
