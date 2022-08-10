@@ -382,7 +382,7 @@ class DefinitionManager {
             }
         });
         const meshKeys = [
-            'infill_line_distance',
+            // 'infill_line_distance',
             'infill_line_width',
             // 'wall_line_count',
             'wall_line_width',

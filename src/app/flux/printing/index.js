@@ -785,7 +785,10 @@ export const actions = {
     },
 
     initSocketEvent: () => async (dispatch, getState) => {
-        const { initEventFlag, modelGroup} = getState().printing;
+        const { initEventFlag, modelGroup, qualityDefinitions, defaultQualityId} = getState().printing;
+        const {
+            toolHead: { printingToolhead },
+        } = getState().machine;
         if (!initEventFlag) {
             dispatch(
                 actions.updateState({
@@ -992,6 +995,19 @@ export const actions = {
                 actions.loadSimplifyModel({ modelID, modelOutputName, sourcePly })(dispatch, getState);
             });
         }
+
+        const activeQualityDefinition = lodashFind(qualityDefinitions, {
+            definitionId: defaultQualityId
+        });
+
+        const primeTowerModel = modelGroup.primeTower;
+        if (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+            const enablePrimeTower = activeQualityDefinition?.settings?.prime_tower_enable
+                ?.default_value;
+            primeTowerModel.visible = enablePrimeTower;
+        } else {
+            primeTowerModel.visible = false;
+        }
     },
 
     // TODO: init should be  re-called
@@ -1006,23 +1022,10 @@ export const actions = {
         } = printingState;
         // TODO
         const {
-            toolHead: { printingToolhead },
             series
         } = getState().machine;
         modelGroup.setSeries(series);
-        // const printingToolhead = machineStore.get('machine.toolHead.printingToolhead');
-        const activeQualityDefinition = lodashFind(qualityDefinitions, {
-            definitionId: defaultQualityId
-        });
         modelGroup.removeAllModels();
-        const primeTowerModel = modelGroup.primeTower;
-        if (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
-            const enablePrimeTower = activeQualityDefinition?.settings?.prime_tower_enable
-                ?.default_value;
-            primeTowerModel.visible = enablePrimeTower;
-        } else {
-            primeTowerModel.visible = false;
-        }
         dispatch(actions.initSocketEvent());
     },
 
