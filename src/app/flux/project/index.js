@@ -275,7 +275,6 @@ export const actions = {
             toolPathGroup.selectToolPathById(null);
             dispatch(modActions.updateState(envHeadType, toolPathGroup));
         }
-        dispatch(modActions.updateState(envHeadType, restState));
 
         if (envHeadType === HEAD_PRINTING) {
             dispatch(modActions.updateState(restState));
@@ -413,7 +412,6 @@ export const actions = {
     },
 
     afterOpened: (headType) => (dispatch) => {
-        // const { modelGroup } = getState().printing;
         if (headType === HEAD_PRINTING) {
             dispatch(printingActions.applyProfileToAllModels());
         }

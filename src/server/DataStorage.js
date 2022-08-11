@@ -4,7 +4,7 @@ import mkdirp from 'mkdirp';
 import { includes, isUndefined, gt } from 'lodash';
 import isElectron from 'is-electron';
 import semver from 'semver';
-import { CNC_CONFIG_SUBCATEGORY, LASER_CONFIG_SUBCATEGORY, PRINTING_CONFIG_SUBCATEGORY } from './constants';
+import { CNC_CONFIG_SUBCATEGORY, LASER_CONFIG_SUBCATEGORY, PRINTING_CONFIG_SUBCATEGORY, MATERIAL_TYPE_ARRAY } from './constants';
 import { cncUniformProfile } from './lib/profile/cnc-uniform-profile';
 import logger from './lib/logger';
 import { initFonts } from '../shared/lib/FontManager';
@@ -195,8 +195,7 @@ class DataStorage {
                                 'DefaultSGVbit.def.json',
                                 'active.def.json',
                                 'Default.def.json',
-                                'active.defv2.json',
-                                'RAcrylicFEM.defv2.json'], cncFile)) {
+                                'active.defv2.json'], cncFile)) {
                                 const cncConfigPath = path.join(src, cncFile);
                                 cncConfigPaths.push(cncConfigPath);
                             }
@@ -243,6 +242,8 @@ class DataStorage {
                             newFileName = `tool.default_${newFileName.slice(7)}`;
                         } else if (newFileName === 'REpoxySGVbit.defv2.json') {
                             newFileName = 'tool.rEpoxy_SGVbit.def2.json';
+                        } else if (newFileName === 'RAcrylicFEM.defv2.json') {
+                            newFileName = 'tool.rAcrylic_FEM.def2.json';
                         } else {
                             newFileName = `tool.${newFileName}`;
                         }
@@ -251,6 +252,45 @@ class DataStorage {
                         }
                         const newFilePath = `${src}/${newFileName}`;
                         fs.copyFileSync(oldFilePath, newFilePath);
+                    }
+                }
+            }
+        }
+        if (fs.existsSync(srcDir)) {
+            const files = fs.readdirSync(srcDir);
+            for (const file of files) {
+                const src = path.join(srcDir, file);
+                if (file === 'printing') {
+                    const printingSeries = fs.readdirSync(src);
+                    console.log('printingSeries', printingSeries);
+                    for (const series of printingSeries) {
+                        const actualSeriesPath = path.join(src, series);
+                        console.log('actualSeriesPath', actualSeriesPath, fs.statSync(actualSeriesPath).isDirectory());
+                        if (fs.statSync(actualSeriesPath).isDirectory()) {
+                            const profilePaths = fs.readdirSync(actualSeriesPath);
+                            console.log('profilePaths', profilePaths);
+                            for (const profilePath of profilePaths) {
+                                const materialRegex = /^material.*\.def\.json$/;
+                                if (materialRegex.test(profilePath)) {
+                                    const distProfilePath = path.join(actualSeriesPath, profilePath);
+                                    console.log('distProfilePath', distProfilePath);
+                                    const data = fs.readFileSync(distProfilePath, 'utf8');
+                                    const json = JSON.parse(data);
+                                    let category = json.category;
+                                    if (!(MATERIAL_TYPE_ARRAY.includes(category))) {
+                                        category = MATERIAL_TYPE_ARRAY[MATERIAL_TYPE_ARRAY.length - 1];
+                                    }
+                                    if (json.overrides && !(json.overrides.material_type)) {
+                                        console.log('category', category);
+                                        json.category = category;
+                                        json.overrides.material_type = {
+                                            default_value: category.toLowerCase()
+                                        };
+                                        fs.writeFileSync(distProfilePath, JSON.stringify(json));
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -271,6 +311,7 @@ class DataStorage {
             const files = fs.readdirSync(srcDir);
             for (const file of files) {
                 const src = path.join(srcDir, file);
+                console.log('initEnv', fs.statSync(src).isDirectory(), file);
                 if (fs.statSync(src).isDirectory() && file === '3dp') {
                     const newSrc = path.join(srcDir, '3dp');
                     const envFiles = fs.readdirSync(newSrc);

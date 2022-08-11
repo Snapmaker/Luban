@@ -614,7 +614,7 @@ type ParamsModelType = {
 
 class PresetDefinitionModel {
     public headType: string = HEAD_PRINTING;
-    public typeOfPrinting = 'universal';
+    public typeOfPrinting: string;
     public nozzleSize;
     public params: ParamsModelType;
     public materialType: string;
@@ -650,7 +650,7 @@ class PresetDefinitionModel {
             this.materialType = materialType;
             this.nozzleSize = nozzleSize;
             // todo change getting 'typeOfPrinting' from setting's param
-            if (materialType === 'tpu' && Number(nozzleSize) === 0.4) {
+            if (materialType === 'tpu' && Number(nozzleSize) === 0.4 && this.typeOfPrinting) {
                 if (this.typeOfPrinting) {
                     if (this.typeOfPrinting === ALL_PRINTING_TYPES[0]) {
                         this.visible = true;
@@ -662,7 +662,7 @@ class PresetDefinitionModel {
                     this.visible = true;
                     this.params = cloneDeep(DEFAULE_PARAMS_FOR_TPU);
                 }
-            } else if (OTHER_MATERISL_TYPES.includes(materialType) && Number(nozzleSize) === 0.4) {
+            } else if (OTHER_MATERISL_TYPES.includes(materialType) && Number(nozzleSize) === 0.4 && this.typeOfPrinting) {
                 if (this.typeOfPrinting) {
                     this.visible = true;
                     this.params = cloneDeep(DEFAULE_PARAMS_FOR_OTHERS);

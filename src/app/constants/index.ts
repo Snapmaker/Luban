@@ -1641,6 +1641,52 @@ export const MODULEID_MAP = {
     '512': HEADT_BED_FOR_SM2,
     '515': A400_HEADT_BED_FOR_SM2
 };
+export const MATERIAL_TYPE_OPTIONS = [
+    {
+        value: 'PLA',
+        label: 'PLA'
+    },
+    {
+        value: 'Support',
+        label: 'Support'
+    },
+    {
+        value: 'ABS',
+        label: 'ABS'
+    },
+    {
+        value: 'PETG',
+        label: 'PETG'
+    },
+    {
+        value: 'TPE',
+        label: 'TPE'
+    },
+    {
+        value: 'TPU',
+        label: 'TPU'
+    },
+    {
+        value: 'PVA',
+        label: 'PVA'
+    },
+    {
+        value: 'ASA',
+        label: 'ASA'
+    },
+    {
+        value: 'PC',
+        label: 'PC'
+    },
+    {
+        value: 'Nylon',
+        label: 'Nylon'
+    },
+    {
+        value: 'Other',
+        label: 'Other'
+    }
+];
 
 export const AUTO_MDOE = Symbol('auto mode');
 export const SEMI_AUTO_MODE = Symbol('semi_auto_mode by MaterialThickness');

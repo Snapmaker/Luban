@@ -40,7 +40,7 @@
             "max": 10,
             "unit": "mm",
             "description": "Set the shank diameter of the carving tool.",
-            "label": "Shank Diameter",
+            "label": "Shaft Diameter",
             "enabled": "resolveOrValue('tool_type') == 'vbit'"
         },
         "jog_speed": {
@@ -75,7 +75,7 @@
             "type": "float",
             "min": 0.01,
             "unit": "mm",
-            "label": "Stepdown",
+            "label": "Step down",
             "description": "Set the distance along the Z axis per step that the tool is plunged into the material."
         },
         "step_over": {

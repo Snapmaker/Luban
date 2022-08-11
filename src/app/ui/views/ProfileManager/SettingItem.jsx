@@ -129,7 +129,7 @@ function SettingItem({
                     <Input
                         suffix={unit}
                         className="sm-flex-width align-r"
-                        value={settingDefaultValue}
+                        value={Number(settingDefaultValue)}
                         min={min}
                         max={max}
                         size={styleSize}
@@ -142,7 +142,7 @@ function SettingItem({
                     <Input
                         suffix={unit}
                         className="sm-flex-width align-r"
-                        value={settingDefaultValue}
+                        value={Number(settingDefaultValue)}
                         size={styleSize}
                         // disabled={!isDefinitionEditable()}
                         onChange={(value) => {
