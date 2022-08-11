@@ -785,16 +785,10 @@ export const actions = {
     },
 
     initSocketEvent: () => async (dispatch, getState) => {
-        const { initEventFlag, modelGroup, qualityDefinitions, defaultQualityId} = getState().printing;
+        const { modelGroup, qualityDefinitions, defaultQualityId} = getState().printing;
         const {
             toolHead: { printingToolhead },
         } = getState().machine;
-        if (!initEventFlag) {
-            dispatch(
-                actions.updateState({
-                    initEventFlag: true
-                })
-            );
             // generate gcode event
             controller.on('slice:started', () => {
                 const { progressStatesManager } = getState().printing;
@@ -994,7 +988,6 @@ export const actions = {
                 const { modelOutputName, modelID, sourcePly } = params;
                 actions.loadSimplifyModel({ modelID, modelOutputName, sourcePly })(dispatch, getState);
             });
-        }
 
         const activeQualityDefinition = lodashFind(qualityDefinitions, {
             definitionId: defaultQualityId
@@ -2023,11 +2016,13 @@ export const actions = {
                 primeTowerYDefinition
             }
         );
+        console.log('ddd 1', activeQualityDefinition.settings.infill_pattern.default_value);
 
         definitionManager.calculateDependencies(
             activeQualityDefinition.settings,
             modelGroup && modelGroup.hasSupportModel()
         );
+        console.log('ddd 2', activeQualityDefinition.settings.infill_pattern.default_value);
         definitionManager.updateDefinition({
             ...newExtruderLDefinition,
             definitionId: 'snapmaker_extruder_0'
@@ -2083,6 +2078,8 @@ export const actions = {
             size,
             hasPrimeTower
         );
+        console.log('ddd 3', activeQualityDefinition.settings.infill_pattern.default_value);
+
         const adhesionExtruder = helpersExtruderConfig.adhesion;
         const supportExtruder = helpersExtruderConfig.support;
         finalDefinition.settings.adhesion_extruder_nr.default_value = adhesionExtruder;
@@ -2111,6 +2108,8 @@ export const actions = {
             settable_per_meshgroup: false
         }
         await definitionManager.createDefinition(finalDefinition);
+        console.log('ddd 4', activeQualityDefinition.settings.infill_pattern.default_value);
+
         // slice
         /*
         const params = {
