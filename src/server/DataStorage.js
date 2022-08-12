@@ -189,7 +189,8 @@ class DataStorage {
                         }
                         cncConfigFiles = fs.readdirSync(src);
                         for (const cncFile of cncConfigFiles) {
-                            if (!includes(['DefaultCVbit.def.json',
+                            if (!includes([
+                                'DefaultCVbit.def.json',
                                 'DefaultMBEM.def.json',
                                 'DefaultFEM.def.json',
                                 'DefaultSGVbit.def.json',
@@ -238,7 +239,9 @@ class DataStorage {
                     if (!fs.statSync(src).isFile()) {
                         // fix profile name changing in v4.1.0
                         let newFileName = path.basename(oldFilePath);
-                        if (/^Default/.test(newFileName)) {
+                        if (newFileName === 'DefaultFEM.defv2.json') {
+                            newFileName = 'tool.default_FEM1.5.def.json';
+                        } else if (/^Default/.test(newFileName)) {
                             newFileName = `tool.default_${newFileName.slice(7)}`;
                         } else if (newFileName === 'REpoxySGVbit.defv2.json') {
                             newFileName = 'tool.rEpoxy_SGVbit.def2.json';
@@ -262,18 +265,14 @@ class DataStorage {
                 const src = path.join(srcDir, file);
                 if (file === 'printing') {
                     const printingSeries = fs.readdirSync(src);
-                    console.log('printingSeries', printingSeries);
                     for (const series of printingSeries) {
                         const actualSeriesPath = path.join(src, series);
-                        console.log('actualSeriesPath', actualSeriesPath, fs.statSync(actualSeriesPath).isDirectory());
                         if (fs.statSync(actualSeriesPath).isDirectory()) {
                             const profilePaths = fs.readdirSync(actualSeriesPath);
-                            console.log('profilePaths', profilePaths);
                             for (const profilePath of profilePaths) {
                                 const materialRegex = /^material.*\.def\.json$/;
                                 if (materialRegex.test(profilePath)) {
                                     const distProfilePath = path.join(actualSeriesPath, profilePath);
-                                    console.log('distProfilePath', distProfilePath);
                                     const data = fs.readFileSync(distProfilePath, 'utf8');
                                     const json = JSON.parse(data);
                                     let category = json.category;
@@ -281,7 +280,6 @@ class DataStorage {
                                         category = MATERIAL_TYPE_ARRAY[MATERIAL_TYPE_ARRAY.length - 1];
                                     }
                                     if (json.overrides && !(json.overrides.material_type)) {
-                                        console.log('category', category);
                                         json.category = category;
                                         json.overrides.material_type = {
                                             default_value: category.toLowerCase()
@@ -311,7 +309,6 @@ class DataStorage {
             const files = fs.readdirSync(srcDir);
             for (const file of files) {
                 const src = path.join(srcDir, file);
-                console.log('initEnv', fs.statSync(src).isDirectory(), file);
                 if (fs.statSync(src).isDirectory() && file === '3dp') {
                     const newSrc = path.join(srcDir, '3dp');
                     const envFiles = fs.readdirSync(newSrc);
