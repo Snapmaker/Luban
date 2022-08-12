@@ -163,7 +163,6 @@ class SocketHttp {
                     let headType = data.headType;
                     let toolHead: string;
                     switch (data.headType) {
-                        case 0:
                         case 1:
                             headType = HEAD_PRINTING;
                             toolHead = SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2;
@@ -321,6 +320,7 @@ class SocketHttp {
                 return;
             }
             const { data, code } = _getResult(null, result.res);
+            // console.log({ data });
             // No Content
             if (Object.keys(data).length === 0 || code === 204) {
                 return;

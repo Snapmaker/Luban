@@ -76,7 +76,7 @@ export default class MoveOperation3D extends Operation<MoveOperationState> {
 
         modelGroup.unselectAllModels();
         model.onTransform();
-        if (model instanceof ThreeGroup) {
+        if (model instanceof ThreeGroup || model instanceof ThreeModel) {
             modelGroup.stickToPlateAndCheckOverstepped(model);
         }
         if (model.parent && model.parent instanceof ThreeGroup) {

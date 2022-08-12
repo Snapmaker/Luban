@@ -320,14 +320,14 @@ export const actions = {
         });
     },
 
-    exportConfigFile: (targetFile, subCategory) => async (dispatch) => {
+    exportConfigFile: (targetFile, subCategory, exportName) => async (dispatch) => {
         let configFile;
         if (subCategory) {
             configFile = `/Config/${subCategory}/${targetFile}`;
         } else {
             configFile = `/Config/${targetFile}`;
         }
-        await UniApi.File.exportAs(targetFile, configFile, null, (type, filePath = '') => {
+        await UniApi.File.exportAs(targetFile, configFile, exportName, (type, filePath = '') => {
             dispatch(appGlobalActions.updateSavedModal({
                 showSavedModal: true,
                 savedModalType: type,

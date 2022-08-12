@@ -2,16 +2,9 @@
 import events from 'events';
 import { machineStore } from '../../store/local-storage';
 import {
-    // HEAD_CNC,
-    // HEAD_LASER,
-    // HEAD_PRINTING,
-    // MACHINE_SERIES,
-    // LEVEL_TWO_POWER_LASER_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_SM2,
-    // LEVEL_ONE_POWER_LASER_FOR_SM2, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     CONNECTION_HEARTBEAT,
     CONNECTION_STATUS_CONNECTING,
-    WORKFLOW_STATUS_RUNNING,
-    WORKFLOW_STATUS_IDLE,
+    // WORKFLOW_STATUS_RUNNING,
     CONNECTION_OPEN,
     CONNECTION_CLOSE,
     CONNECTION_EXECUTE_GCODE,
@@ -23,7 +16,8 @@ import {
     CONNECTION_TYPE_WIFI,
     CONNECTION_GO_HOME,
     CONNECTION_COORDINATE_MOVE,
-    CONNECTION_SET_WORK_ORIGIN
+    CONNECTION_SET_WORK_ORIGIN,
+    // WORKFLOW_STATUS_STOPPING
 } from '../../constants';
 import { controller } from '../../lib/controller';
 import { actions as workspaceActions } from '../workspace';
@@ -151,9 +145,10 @@ export class Server extends events.EventEmitter {
                 }
                 if (this.isWifi) {
                     this.gcodePrintingInfo.startTime = new Date().getTime();
-                    dispatch(baseActions.updateState({
-                        workflowStatus: WORKFLOW_STATUS_RUNNING
-                    }));
+                    // I cancel the status update by ourselves, this status only update by heartbeat
+                    // dispatch(baseActions.updateState({
+                    //     workflowStatus: WORKFLOW_STATUS_RUNNING
+                    // }));
                 }
             });
 
@@ -186,7 +181,7 @@ export class Server extends events.EventEmitter {
                     return;
                 }
                 dispatch(baseActions.updateState({
-                    workflowStatus: WORKFLOW_STATUS_IDLE,
+                    // workflowStatus: WORKFLOW_STATUS_STOPPING,
                     isSendedOnWifi: true
                 }));
             });

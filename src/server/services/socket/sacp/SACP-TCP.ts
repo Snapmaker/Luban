@@ -89,6 +89,9 @@ class SocketTCP extends SocketBASE {
                 }
             }).then(async ({ response }) => {
                 if (response.result === 0) {
+                    this.sacpClient.wifiConnectionHeartBeat().then(({ response }) => {
+                        log.info(`lubanHeartbeat: ${response}`);
+                    });
                     let state: ConnectedData = {
                         isHomed: true,
                         err: null

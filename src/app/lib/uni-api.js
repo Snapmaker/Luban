@@ -258,7 +258,7 @@ const File = {
             renderGcodeFileName = targetFile;
         } else {
             if (renderGcodeFileName.slice(renderGcodeFileName.length - 9) === '.def.json') {
-                renderGcodeFileName = renderGcodeFileName.slice(renderGcodeFileName.length - 9);
+                renderGcodeFileName = renderGcodeFileName;
             } else {
                 renderGcodeFileName = path.basename(renderGcodeFileName);
             }

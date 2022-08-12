@@ -20,6 +20,7 @@ const SimplifyModelOverlay = ({ handleApplySimplify, handleCancelSimplify, handl
         setSliderValue(simplifyPercent);
     }, [simplifyPercent]);
     const handleSimplifyPercentUpdate = (value) => {
+        value = Math.round(value);
         setSliderValue(value);
         handleUpdateSimplifyConfig(0, value);
     };
