@@ -56,7 +56,7 @@ import Steps from '../components/Steps';
 import Modal from '../components/Modal';
 import { Button } from '../components/Buttons';
 import MachineMaterialSettings from './MachineMaterialSettings';
-// import definitionManager from '../../flux/manager/DefinitionManager';
+import definitionManager from '../../flux/manager/DefinitionManager';
 
 export const openFolder = () => {
     if (isElectron()) {
@@ -348,11 +348,10 @@ function Printing({ location }) {
         }, 1000)();
     };
     useEffect(() => {
-        // if (!definitionManager.extruderLDefinition) {
-        dispatch(printingActions.init());
-        // }
-        console.log('useEffect');
-        // dispatch(printingActions.initSocketEvent());
+        if (!definitionManager.extruderLDefinition) {
+            dispatch(printingActions.init());
+        }
+        dispatch(printingActions.initSocketEvent());
         dispatch(printingActions.checkNewUser());
         logPageView({
             pathname: '/printing'

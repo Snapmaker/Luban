@@ -73,6 +73,10 @@ export function useGetDefinitions(allDefinitions, activeDefinitionID, getDefault
 
     useEffect(() => {
         const definitionOptions = allDefinitions.map(d => {
+            let actualCategory = d.category;
+            if (managerType === PRINTING_MANAGER_TYPE_MATERIAL && !(MATERIAL_TYPE_ARRAY.includes(d.category))) {
+                actualCategory = 'Other';
+            }
             return {
                 label: d.name,
                 value: d.definitionId,
@@ -82,9 +86,7 @@ export function useGetDefinitions(allDefinitions, activeDefinitionID, getDefault
                 color: (
                     managerType === PRINTING_MANAGER_TYPE_MATERIAL && d.settings.color
                 ) ? d.settings.color.default_value : '#000000',
-                category: (
-                    managerType === PRINTING_MANAGER_TYPE_MATERIAL && MATERIAL_TYPE_ARRAY.includes(d.category)
-                ) ? d.category : 'Other'
+                category: actualCategory
             };
         });
         setDefinitionState((prev) => {

@@ -14,6 +14,12 @@ const SETTING_FIELDS = [
     // Snapmaker extended fields:
     'sm_value'
 ];
+const allSettingNameWithType = {
+    'material': new Set(),
+    'quality': new Set()
+};
+const materialRegex = /^material.*/;
+const qualityRegex = /^quality.*/;
 
 const DEFAULT_PREDEFINED_ID = {
     'printing': 'quality.fast_print.def.json',
@@ -21,12 +27,13 @@ const DEFAULT_PREDEFINED_ID = {
     'laser': 'present.default_CUT.def.json',
     '10w-laser': 'basswood.cutting_1.5mm.def.json'
 };
+const initial = false;
 export class DefinitionLoader {
     printingProfileLevel = {};
 
     materialProfileLevel = {};
 
-    extruderProfileArr = [];
+    extruderProfileArr = new Set();
 
     definitionId = '';
 
@@ -183,8 +190,14 @@ export class DefinitionLoader {
                             this.settings[key][field] = setting[field];
                         }
                     }
-                    if (mainCategory === 'quality' && setting.settable_per_extruder) {
-                        this.extruderProfileArr.push(key);
+                    if (mainCategory === 'quality') {
+                        if (setting.settable_per_extruder) {
+                            this.extruderProfileArr.add(key);
+                        }
+                        allSettingNameWithType[mainCategory].add(key);
+                    }
+                    if (mainCategory === 'material') {
+                        allSettingNameWithType[mainCategory].add(key);
                     }
                     if (isUndefined(this.settings[key].zIndex)) {
                         this.settings[key].zIndex = zIndex;
@@ -204,6 +217,13 @@ export class DefinitionLoader {
                     this.settings[key].isLeave = (setting.children === undefined);
 
                     if (definitionId === this.definitionId && !this.ownKeys.has(key)) {
+                        // if (materialRegex.test(definitionId) && allSettingNameWithType.material.has(key)) {
+                        //     this.ownKeys.add(key);
+                        // } else if (qualityRegex.test(definitionId) && allSettingNameWithType.quality.has(key)) {
+                        //     this.ownKeys.add(key);
+                        // } else if (!(materialRegex.test(definitionId)) && !(qualityRegex.test(definitionId))) {
+                        //     this.ownKeys.add(key);
+                        // }
                         this.ownKeys.add(key);
                     }
 
@@ -222,7 +242,11 @@ export class DefinitionLoader {
 
     toJSON() {
         const overrides = {};
-
+        if (materialRegex.test(this.definitionId)) {
+            this.ownKeys = allSettingNameWithType.material;
+        } else if (qualityRegex.test(this.definitionId)) {
+            this.ownKeys = allSettingNameWithType.quality;
+        }
         for (const key of this.ownKeys) {
             if (this.settings[key]) {
                 overrides[key] = {
@@ -260,7 +284,7 @@ export class DefinitionLoader {
             ownKeys: Array.from(this.ownKeys),
             printingProfileLevel: this.printingProfileLevel,
             materialProfileLevel: this.materialProfileLevel,
-            extruderProfileArr: this.extruderProfileArr
+            extruderProfileArr: Array.from(this.extruderProfileArr)
         };
     }
 
