@@ -149,10 +149,8 @@ export const cncUniformProfile = (filename, configDir) => {
         if (!json.i18nCategory && ['Default Material', 'Acrylic', 'Epoxy Tooling Board'].includes(json.category)) {
             json.i18nCategory = `key-default_category-${json.category}`;
         }
-        console.log('i18nCategory', json.definitionId, json.category, json.i18nCategory);
         if (!json.i18nName && json.name) {
-            json.i18nName = `key-default_category-${json.name}`;
-            console.log('i18nName', json.definitionId, json.i18nName);
+            json.i18nName = `key-default_name-${json.name}`;
         }
         fs.writeFileSync(filePath, JSON.stringify(json));
     }

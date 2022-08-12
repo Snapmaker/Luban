@@ -179,6 +179,10 @@ class DataStorage {
                         'material.abs.def.json',
                         'material.pla.def.json',
                         'material.petg.def.json'], file)) {
+                        const data = fs.readFileSync(src, 'utf8');
+                        const json = JSON.parse(data);
+                        json.isRecommended = true;
+                        fs.writeFileSync(src, JSON.stringify(json));
                         printingConfigNames.push(file);
                     }
                 } else {

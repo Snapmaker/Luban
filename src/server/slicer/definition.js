@@ -27,7 +27,6 @@ const DEFAULT_PREDEFINED_ID = {
     'laser': 'present.default_CUT.def.json',
     '10w-laser': 'basswood.cutting_1.5mm.def.json'
 };
-const initial = false;
 export class DefinitionLoader {
     printingProfileLevel = {};
 
