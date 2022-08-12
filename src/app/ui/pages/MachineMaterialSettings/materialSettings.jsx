@@ -227,7 +227,6 @@ const MaterialSettings = ({
         );
     };
     useEffect(() => {
-        console.log('defaultMaterialId', defaultMaterialId, defaultMaterialIdRight);
         if (defaultMaterialId !== leftMaterialDefinitionId) {
             setLeftMaterialDefinitionId(defaultMaterialId);
         }

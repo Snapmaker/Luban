@@ -150,7 +150,11 @@ export const cncUniformProfile = (filename, configDir) => {
             json.i18nCategory = `key-default_category-${json.category}`;
         }
         if (!json.i18nName && json.name) {
-            json.i18nName = `key-default_name-${json.name}`;
+            if (json.name === 'Flat End Mill') {
+                json.i18nName = `key-default_name-${json.name} 1.5`;
+            } else {
+                json.i18nName = `key-default_name-${json.name}`;
+            }
         }
         fs.writeFileSync(filePath, JSON.stringify(json));
     }
