@@ -318,7 +318,7 @@ G1 Z${pos.z}
 
     resumeGcode = (socket, options, callback) => {
         if (this.protocol === SACP_PROTOCOL || this.connectionType === CONNECTION_TYPE_WIFI) {
-            this.socket.resumeGcode(options, callback);
+            this.socket.resumeGcode({ ...options, connectionType: this.connectionType }, callback);
         } else {
             const { headType, pause3dpStatus, pauseStatus, gcodeFile, sizeZ } = options;
             if (headType === HEAD_PRINTING) {
