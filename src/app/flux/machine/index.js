@@ -539,7 +539,7 @@ export const actions = {
                 }
                 !isNil(isEnclosureDoorOpen) && dispatch(baseActions.updateState({ isEnclosureDoorOpen }));
                 !isNil(zAxisModule) && dispatch(baseActions.updateState({ zAxisModule }));
-                !isNil(headStatus) && dispatch(baseActions.updateState({ headStatus }));
+                !isNil(headStatus) && dispatch(baseActions.updateState({ headStatus: !!headStatus }));
                 !isNil(laserCamera) && dispatch(baseActions.updateState({ laserCamera }));
                 if (!isNil(airPurifier)) {
                     dispatch(baseActions.updateState({

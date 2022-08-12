@@ -30,6 +30,7 @@ import { IResult as TBrimResult } from '../workers/plateAdhesion/generateBrim';
 import { IResult as TRaftResult } from '../workers/plateAdhesion/generateRaft';
 import { IResult as TSkirtResult } from '../workers/plateAdhesion/generateSkirt';
 import { bufferToPoint } from '../lib/buffer-utils';
+import { emitUpdateScaleEvent } from '../ui/components/SMCanvas/TransformControls';
 
 const CUSTOM_EVENTS = {
     UPDATE: { type: 'update' }
@@ -1449,6 +1450,11 @@ class ModelGroup extends EventEmitter {
     // Note: the function is only useful for 3D object operations on Canvas
     public onModelAfterTransform(shouldStickToPlate = true) {
         const selectedModelArray = this.selectedModelArray;
+        if (selectedModelArray.length > 1) {
+            emitUpdateScaleEvent({
+                scale: { x: 100, y: 100, z: 100 }
+            });
+        }
         const { recovery } = this.unselectAllModels();
         // update model's boundingbox which has supports
         selectedModelArray.forEach((selected) => {
@@ -2721,7 +2727,7 @@ class ModelGroup extends EventEmitter {
                 stencilZPass: ReplaceStencilOp,
                 polygonOffset: true,
                 polygonOffsetFactor: 1,
-                polygonOffsetUnits: 20
+                polygonOffsetUnits: 0
             });
             this.sectionMesh = new Mesh(planeGeom, planeMat);
             this.sectionMesh.name = 'clippingSection';

@@ -700,7 +700,7 @@ class SvgModel extends BaseModel {
 
     // just for svg file
     public async uploadSourceImage() {
-        if (path.basename(this.resource.originalFile.name) !== '.svg' || this?.mode !== 'vector') {
+        if (path.extname(this.resource.originalFile.name) !== '.svg' || this?.mode !== 'vector') {
             return;
         }
         const content = await fetch(this.resource.originalFile.path, { method: 'GET' })

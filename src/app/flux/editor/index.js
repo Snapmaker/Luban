@@ -815,7 +815,7 @@ export const actions = {
         dispatch(operationHistoryActions.setOperations(headType, operations));
 
         SVGActions.clearSelection();
-        SVGActions.addSelectedSvgModelsByModels([model]);
+        SVGActions.addSelectedSvgModelsByModels([model], materials.isRotate);
 
         if (path.extname(uploadName).toLowerCase() === '.stl') {
             dispatch(actions.prepareStlVisualizer(headType, model));
@@ -881,20 +881,20 @@ export const actions = {
 
     // TODO: method docs
     selectTargetModel: (model, headType, isMultiSelect = false) => (dispatch, getState) => {
-        const { SVGActions, modelGroup } = getState()[headType];
+        const { SVGActions, modelGroup, materials } = getState()[headType];
         let selected = modelGroup.getSelectedModelArray();
         selected = [...selected];
         dispatch(actions.clearSelection(headType));
         if (!isMultiSelect) {
             // remove all selected model
-            SVGActions.addSelectedSvgModelsByModels([model]);
+            SVGActions.addSelectedSvgModelsByModels([model], materials.isRotate);
         } else {
             if (selected.find(item => item === model)) {
                 const selectedModels = selected.filter(item => item !== model);
                 modelGroup.emptySelectedModelArray();
-                SVGActions.addSelectedSvgModelsByModels(selectedModels);
+                SVGActions.addSelectedSvgModelsByModels(selectedModels, materials.isRotate);
             } else {
-                SVGActions.addSelectedSvgModelsByModels([...selected, model]);
+                SVGActions.addSelectedSvgModelsByModels([...selected, model], materials.isRotate);
             }
         }
 
@@ -1405,14 +1405,14 @@ export const actions = {
     },
 
     selectAllElements: headType => async (dispatch, getState) => {
-        const { SVGActions, SVGCanvasMode, SVGCanvasExt } = getState()[headType];
+        const { SVGActions, SVGCanvasMode, SVGCanvasExt, materials } = getState()[headType];
         if (SVGCanvasMode === 'draw' || SVGCanvasExt.elem) {
             await SVGActions.svgContentGroup.exitModelEditing(true);
             dispatch(actions.selectAllElements(headType));
             // SVGActions.selectAllElements();
             // dispatch(baseActions.render(headType));
         } else {
-            SVGActions.selectAllElements();
+            SVGActions.selectAllElements(materials.isRotate);
             dispatch(baseActions.render(headType));
         }
     },
@@ -1459,8 +1459,9 @@ export const actions = {
      * Select models.
      */
     selectElements: (headType, elements) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
-        SVGActions.selectElements(elements);
+        const { SVGActions, materials } = getState()[headType];
+        const isRotate = materials.isRotate;
+        SVGActions.selectElements(elements, isRotate);
 
         dispatch(baseActions.render(headType));
     },

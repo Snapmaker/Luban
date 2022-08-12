@@ -39,6 +39,9 @@ export const EVENTS = {
     UPDATE_CAMERA: 'update:camera'
 };
 
+let inputDOM = null;
+let inputDOM2 = null; // translate has two input for X and Y axis
+
 class Controls extends EventEmitter {
     camera = null;
 
@@ -320,6 +323,11 @@ class Controls extends EventEmitter {
                         this.emit(EVENTS.BEFORE_TRANSFORM_OBJECT);
                         this.isClickOnPeripheral = true;
                         break;
+                    } else {
+                        !inputDOM && (inputDOM = document.getElementById('control-input'));
+                        !inputDOM2 && (inputDOM2 = document.getElementById('control-input-2'));
+                        inputDOM && (inputDOM.style.display = 'none');
+                        inputDOM2 && (inputDOM2.style.display = 'none');
                     }
                 }
 

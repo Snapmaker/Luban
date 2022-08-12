@@ -294,7 +294,12 @@ function useRenderMainToolBar(setSimplifying) {
                 machineInfo={machineInfo}
                 materialInfo={materialInfo}
                 isConnected={isConnected}
-                setShowMachineMaterialSettings={setShowMachineMaterialSettings}
+                setShowMachineMaterialSettings={(bool) => {
+                    seriesRef.current = series;
+                    toolHeadRef.current = toolHead;
+
+                    setShowMachineMaterialSettings(bool);
+                }}
             />
         );
     }

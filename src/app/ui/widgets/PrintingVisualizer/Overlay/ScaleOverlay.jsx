@@ -45,19 +45,17 @@ const ScaleOverlay = React.memo(({
     const [uniformScalingState, setUniformScalingState] = useState(true);
     const dispatch = useDispatch();
     const [modelSize, setModelSize] = useState({});
-    const updateScale = (event) => {
+    const updateScale = throttle((event) => {
         const { detail } = event;
-        throttle(() => {
-            setScalePercentObj(detail.scale);
-            setModelX(Math.round(detail.scale.x * 20) / 100);
-            setModelY(Math.round(detail.scale.y * 20) / 100);
-            // hidden model size after scale
-            // setModelX(Math.round(detail.scale.x * initModelSize.x) / 100);
-            // setModelY(Math.round(detail.scale.y * initModelSize.y) / 100);
-            // setModelZ(Math.round(detail.scale.z * initModelSize.z) / 100);
-            // !detail.isPrimeTower && setModelZ(Math.round(detail.scale.z * initModelSize.z) / 100);
-        }, 1000)();
-    };
+        setScalePercentObj(detail.scale);
+        setModelX(Math.round(detail.scale.x * 20) / 100);
+        setModelY(Math.round(detail.scale.y * 20) / 100);
+        // hidden model size after scale
+        // setModelX(Math.round(detail.scale.x * initModelSize.x) / 100);
+        // setModelY(Math.round(detail.scale.y * initModelSize.y) / 100);
+        // setModelZ(Math.round(detail.scale.z * initModelSize.z) / 100);
+        // !detail.isPrimeTower && setModelZ(Math.round(detail.scale.z * initModelSize.z) / 100);
+    }, 1000);
     useEffect(() => {
         window.addEventListener('update-scale', updateScale);
         return () => {
