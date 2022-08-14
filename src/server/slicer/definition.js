@@ -315,9 +315,11 @@ export class DefinitionLoader {
         this.i18nCategory = i18nCategory;
     }
 
-    updateSettings(settings) {
-        for (const key of Object.keys(settings)) {
-            this.ownKeys.add(key);
+    updateSettings(settings, shouldAddOwnKeys = tru) {
+        if (shouldAddOwnKeys) {
+            for (const key of Object.keys(settings)) {
+                this.ownKeys.add(key);
+            }
         }
         this.settings = {
             ...this.settings,
