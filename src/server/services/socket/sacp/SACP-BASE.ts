@@ -74,7 +74,7 @@ class SocketBASE {
                 this.socket && this.socket.emit('connection:close');
             }, 10000);
             isWifiConnection && this.sacpClient.wifiConnectionHeartBeat().then(({ response }) => {
-                console.log('lubanHeartbeat', response);
+                log.info(`lubanHeartbeat, ${response}`);
             });
             await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
                 // log.info(`revice moduleInfo: ${data.response}`);

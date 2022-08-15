@@ -238,7 +238,6 @@ export const actions = {
         await modState?.SVGActions?.svgContentGroup.removeAllElements();
         // eslint-disable-next-line prefer-const
         let { models, toolpaths, materials, coordinateMode, coordinateSize, machineInfo, ...restState } = envObj;
-        console.log({ envObj, currentSize });
         if (envHeadType === HEAD_CNC || envHeadType === HEAD_LASER) {
             if (materials) {
                 dispatch(editorActions.updateMaterials(envHeadType, materials));
