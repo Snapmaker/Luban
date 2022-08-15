@@ -1360,6 +1360,7 @@ export const MACHINE_HEAD_TYPE = {
 
 export const MACHINE_BRAND_MAP = {
     [MACHINE_SERIES.ORIGINAL.value]: 'Original',
+    [MACHINE_SERIES.ORIGINAL_LZ.value]: 'Original',
     [MACHINE_SERIES.A150.value]: 'Snapmaker 2.0',
     [MACHINE_SERIES.A250.value]: 'Snapmaker 2.0',
     [MACHINE_SERIES.A350.value]: 'Snapmaker 2.0',

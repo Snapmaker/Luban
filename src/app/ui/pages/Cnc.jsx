@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import { useHistory, withRouter } from 'react-router-dom';
 import { Trans } from 'react-i18next';
 import 'intro.js/introjs.css';
+import { message } from 'antd';
 import Steps from '../components/Steps';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
@@ -125,6 +126,7 @@ function Cnc({ location }) {
         coordinateSize,
         materials
     });
+    const projectFileOversize = useSelector(state => state[HEAD_CNC]?.projectFileOversize, shallowEqual);
     const [isRotate, setIsRotate] = useState(materials?.isRotate);
     const dispatch = useDispatch();
     const history = useHistory();
@@ -408,6 +410,16 @@ function Cnc({ location }) {
                     toolPathGroup={toolPathGroup}
                 />
             </ProjectLayout>
+            {projectFileOversize && message.info({
+                content: <span>{i18n._('key-Laser/Page-Project file oversize')}</span>,
+                duration: 5,
+                onClose: () => (
+                    dispatch(editorActions.updateState(HEAD_CNC, {
+                        projectFileOversize: false
+                    }))
+                ),
+                key: HEAD_CNC
+            })}
             {warningModal}
             {removeModelsWarningModal}
             {jobTypeModal}

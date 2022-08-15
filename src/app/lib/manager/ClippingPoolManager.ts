@@ -11,6 +11,11 @@ class ClippingPoolManager {
     private pool: Pool<Thread>;
     private worker: any;
 
+    public constructor() {
+        this.initPool();
+        this.getWorker();
+    }
+
     public initPool() {
         this.getPool();
     }

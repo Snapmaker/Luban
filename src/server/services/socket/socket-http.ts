@@ -163,7 +163,6 @@ class SocketHttp {
                     let headType = data.headType;
                     let toolHead: string;
                     switch (data.headType) {
-                        case 0:
                         case 1:
                             headType = HEAD_PRINTING;
                             toolHead = SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2;
@@ -310,6 +309,35 @@ class SocketHttp {
         });
     };
 
+    private getGcodePrintingInfo(data) {
+        if (!data) {
+            return {};
+        }
+        const { currentLine, estimatedTime, totalLines, fileName = '', progress, elapsedTime, remainingTime, printStatus } = data;
+        if (!currentLine || !estimatedTime || !totalLines) {
+            return {};
+        }
+        const sent = currentLine || 0;
+        const received = currentLine || 0;
+        const total = totalLines || 0;
+        let finishTime = 0;
+        if (received > 0 && received >= totalLines) {
+            finishTime = new Date().getTime();
+        }
+        return {
+            sent,
+            received,
+            total,
+            finishTime,
+            estimatedTime: estimatedTime * 1000,
+            elapsedTime: elapsedTime * 1000,
+            remainingTime: remainingTime * 1000,
+            name: fileName,
+            progress,
+            printStatus
+        };
+    }
+
     public startHeartbeat = () => {
         waitConfirm = true;
         this.heartBeatWorker = workerManager.heartBeat([{
@@ -321,6 +349,7 @@ class SocketHttp {
                 return;
             }
             const { data, code } = _getResult(null, result.res);
+            // console.log({ data });
             // No Content
             if (Object.keys(data).length === 0 || code === 204) {
                 return;
@@ -352,6 +381,9 @@ class SocketHttp {
                     type: CONNECTION_TYPE_WIFI
                 });
             } else {
+                this.socket && this.socket.emit('sender:status', {
+                    data: this.getGcodePrintingInfo(state)
+                });
                 this.socket && this.socket.emit('Marlin:state', {
                     state,
                     type: CONNECTION_TYPE_WIFI
@@ -478,8 +510,7 @@ class SocketHttp {
             });
     };
 
-    public loadFilament = (options: EventOptions) => {
-        const { eventName } = options;
+    public loadFilament = (options: EventOptions, eventName: string) => {
         const api = `${this.host}/api/v1/filament_load`;
         request
             .post(api)

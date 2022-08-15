@@ -208,7 +208,7 @@ export const actions = {
         });
 
         await Promise.allSettled([minimumTime, ...promises]);
-        if (promptTasks.length) {
+        if (!(promptTasks.length === 1 && models.length === 1)) {
             dispatch(
                 actions.updateState({
                     promptTasks,

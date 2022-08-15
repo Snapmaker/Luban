@@ -525,6 +525,9 @@ export const actions = {
 
         // Re-position model group
         gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
+
+        const { stopArea } = getState().printing;
+        modelGroup.primeTower.resetPosition(size, stopArea)
     },
 
     updateProfileParamsType: (managerType, value) => (dispatch) => {
@@ -2161,7 +2164,7 @@ export const actions = {
             // Use setTimeout to force export executes in next tick, preventing block of updateState()
 
             setTimeout(async () => {
-                const models = modelGroup.models
+                const models = modelGroup.getThreeModels()
                     .filter((i) => i.visible)
                     .reduce((pre, model) => {
                         if (model instanceof ThreeGroup) {
@@ -3803,7 +3806,8 @@ export const actions = {
             modelName,
             children,
             primeTowerTag,
-            sourcePly
+            sourcePly,
+            isGuideTours = false
         }
     ) => async (dispatch, getState) => {
         const { progressStatesManager, modelGroup } = getState().printing;
@@ -3882,14 +3886,6 @@ export const actions = {
                         dispatch(actions.destroyGcodeLine());
                         resolve();
                     })
-                } else if (
-                    primeTowerTag
-                    && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
-                ) {
-                    const initHeight = transformation?.scaleZ || 0.1;
-                    const primeTowerModel = modelGroup.primeTower;
-                    primeTowerModel.updateHeight(initHeight, transformation);
-                    resolve();
                 } else {
                     const onMessage = async data => {
                         const { type } = data;
@@ -4071,7 +4067,7 @@ export const actions = {
                 model.initClipper(modelGroup.localPlane);
 
                 const checkResult = checkResultMap.get(model.uploadName);
-                if (checkResult && checkResult.isDamage) {
+                if (checkResult && checkResult.isDamage && !isGuideTours) {
                     promptDamageModel && promptTasks.push({
                         status: 'need-repair-model',
                         model

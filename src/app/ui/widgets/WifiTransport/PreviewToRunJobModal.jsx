@@ -30,9 +30,12 @@ const PreviewToRunJobModal = ({
                 {headerTextKey}
             </Modal.Header>
             <Modal.Body>
-                {
-                    includes(selectFileType, headTypeArr) ? i18n._('key-Workspace/RunJobWarningModal-Unknown body', { headType: headType }) : i18n._('key-Workspace/RunJobWarningModal-Mismatch body', { headType: headType, fileType: selectFileType })
-                }
+                <div className="width-438">
+                    {
+                        includes(selectFileType, headTypeArr) ? i18n._('key-Workspace/RunJobWarningModal-Unknown body', { headType: headType }) : i18n._('key-Workspace/RunJobWarningModal-Mismatch body', { headType: headType, fileType: selectFileType })
+                    }
+                </div>
+
             </Modal.Body>
             <Modal.Footer>
                 <Button

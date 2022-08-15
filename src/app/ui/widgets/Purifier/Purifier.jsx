@@ -19,23 +19,23 @@ import { controller } from '../../../lib/controller';
 function Purifier({ widgetActions }) {
     const { isConnected, airPurifier, airPurifierSwitch, airPurifierFanSpeed, airPurifierFilterHealth } = useSelector(state => state.machine);
     const series = useSelector(state => state.machine.series);
-    const [isFilterEnable, setIsFilterEnable] = useState(true);
-    const [workSpeed, setWorkSpeed] = useState(SPEED_HIGH);
+    const [isFilterEnable, setIsFilterEnable] = useState(airPurifierSwitch);
+    const [workSpeed, setWorkSpeed] = useState(airPurifierFanSpeed || SPEED_HIGH);
     const [filterLife, setFilterLife] = useState(2);
 
     const actions = {
         onHandleFilterEnabled: () => {
+            setIsFilterEnable(!isFilterEnable);
             controller.emitEvent(CONNECTION_FILTER_SWITCH, {
                 enable: !isFilterEnable,
                 value: workSpeed
             });
-            setIsFilterEnable(!isFilterEnable);
         },
         onChangeFilterSpeed: (_workSpeed) => {
+            setWorkSpeed(_workSpeed);
             controller.emitEvent(CONNECTION_FILTER_WORKSPEED, {
                 value: _workSpeed
             });
-            setWorkSpeed(_workSpeed);
         }
     };
 
@@ -58,13 +58,13 @@ function Purifier({ widgetActions }) {
         if (airPurifierSwitch !== isFilterEnable) {
             setIsFilterEnable(airPurifierSwitch);
         }
-    }, [airPurifierSwitch, isFilterEnable]);
+    }, [airPurifierSwitch]);
 
     useEffect(() => {
         if (airPurifierFanSpeed !== workSpeed) {
             setWorkSpeed(airPurifierFanSpeed);
         }
-    }, [airPurifierFanSpeed, workSpeed]);
+    }, [airPurifierFanSpeed]);
 
     useEffect(() => {
         if (airPurifierFilterHealth !== filterLife) {

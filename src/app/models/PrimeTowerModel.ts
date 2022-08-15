@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import ThreeModel from './ThreeModel';
 import type ModelGroup from './ModelGroup';
-import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
+import { ModelInfo, ModelTransformation, TSize } from './ThreeBaseModel';
 
 class PrimeTowerModel extends ThreeModel {
     public constructor(initHeight: number, modelGroup: ModelGroup, transformation: ModelTransformation = { positionX: 100, positionY: 100 }) {
@@ -63,6 +63,18 @@ class PrimeTowerModel extends ThreeModel {
             scaleY,
             scaleZ: height
         });
+    }
+
+    public resetPosition(size: TSize, stopArea) {
+        this.updateHeight(0, {
+            positionX: size.x / 2 - stopArea.right - 15,
+            positionY: size.y / 2 - stopArea.back - 15,
+            scaleX: 1,
+            scaleY: 1,
+            scaleZ: 0
+        });
+        this.overstepped = false;
+        this.setSelected(false);
     }
 }
 

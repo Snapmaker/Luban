@@ -29,14 +29,14 @@ class Laser extends PureComponent {
         workflowStatus: PropTypes.string,
         // workflowState: PropTypes.string,
         // connectionType: PropTypes.string,
-        // headStatus: PropTypes.bool,
+        headStatus: PropTypes.bool,
         isConnected: PropTypes.bool,
         toolHead: PropTypes.string,
         addConsoleLogs: PropTypes.func.isRequired,
     };
 
     state = {
-        laserPowerOpen: this.props.laserPower > 0,
+        laserPowerOpen: this.props.headStatus,
         laserPower: this.props.laserPower || 1,
         // laserPowerMarks: {
         //     0: 0,
@@ -65,7 +65,7 @@ class Laser extends PureComponent {
             }
             controller.emitEvent(CONNECTION_SWITCH_LASER_POWER, {
                 isSM2: this.props.toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2,
-                laserPower: this.state.laserPower,
+                laserPower: 1,
                 laserPowerOpen: this.state.laserPowerOpen
             }).once(CONNECTION_SWITCH_LASER_POWER, (result) => {
                 if (result) {
@@ -102,7 +102,12 @@ class Laser extends PureComponent {
         }
         if (prevProps.laserPower !== this.props.laserPower && !isNil(this.props.laserPower)) {
             this.setState({
-                laserPowerOpen: this.props.laserPower > 0
+                laserPower: this.props.laserPower
+            });
+        }
+        if (prevProps.headStatus !== this.props.headStatus) {
+            this.setState({
+                laserPowerOpen: this.props.headStatus
             });
         }
         return prevProps;
@@ -127,10 +132,12 @@ class Laser extends PureComponent {
                         suffix="%"
                         inputMax={100}
                         hasSlider
-                        inputMin={1}
+                        inputMin={0}
+                        sliderMin={0}
+                        sliderMax={100}
                     >
                         <div className="width-44 sm-flex sm-flex-direction-c margin-left-16">
-                            <span>{Math.floor(laserPower)}%</span>
+                            <span>{laserPower}%</span>
                         </div>
                     </ParamsWrapper>
                 )}
@@ -147,13 +154,13 @@ class Laser extends PureComponent {
                         />
                     </div>
                 )}
-                {!isPrinting && this.props.toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 && (
+                {!isPrinting && (
                     <div className="sm-flex">
                         <SvgIcon
                             name="WarningTipsWarning"
                             color="#FFA940"
                             type={['static']}
-                            onClick={() => {}}
+                            onClick={() => { }}
                         />
                         <span>{i18n._('key-Workspace/Laser-high_power_tips')}</span>
                     </div>

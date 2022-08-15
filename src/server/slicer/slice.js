@@ -115,7 +115,7 @@ function processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox, thumbnail
         + `;min_y(mm): ${boundingBoxMin.y}\n`
         + `;min_z(mm): ${boundingBoxMin.z}\n`
         + `;layer_number: ${others?.layerCount}\n`
-        + `;layer_height: ${activeFinal.settings.speed_infill.default_value}\n`
+        + `;layer_height: ${activeFinal.settings.layer_height.default_value}\n`
         + `;matierial_weight: ${filamentWeight}\n`
         + `;matierial_length: ${filamentLength}\n`
         + `;nozzle_0_material: ${others?.matierial0}\n`

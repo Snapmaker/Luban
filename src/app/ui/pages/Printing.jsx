@@ -56,7 +56,11 @@ import Steps from '../components/Steps';
 import Modal from '../components/Modal';
 import { Button } from '../components/Buttons';
 import MachineMaterialSettings from './MachineMaterialSettings';
+<<<<<<< fix-slice-bug-and-others
 import definitionManager from '../../flux/manager/DefinitionManager';
+=======
+import { MACHINE_SERIES } from '../../../server/constants';
+>>>>>>> master
 
 export const openFolder = () => {
     if (isElectron()) {
@@ -144,6 +148,7 @@ function useRenderMainToolBar(setSimplifying) {
             setShowMachineMaterialSettings(false);
             if (currentSeries !== seriesRef.current || currentToolhead !== toolHeadRef.current.printingToolhead) {
                 dispatch(machineActions.updateMachineSeries(currentSeries));
+                dispatch(machineActions.setZAxisModuleState(currentSeries === MACHINE_SERIES.ORIGINAL_LZ.value));
                 dispatch(machineActions.updateMachineToolHead({
                     ...toolHead,
                     printingToolhead: currentToolhead
@@ -295,7 +300,12 @@ function useRenderMainToolBar(setSimplifying) {
                 machineInfo={machineInfo}
                 materialInfo={materialInfo}
                 isConnected={isConnected}
-                setShowMachineMaterialSettings={setShowMachineMaterialSettings}
+                setShowMachineMaterialSettings={(bool) => {
+                    seriesRef.current = series;
+                    toolHeadRef.current = toolHead;
+
+                    setShowMachineMaterialSettings(bool);
+                }}
             />
         );
     }
