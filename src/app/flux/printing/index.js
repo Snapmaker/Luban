@@ -789,209 +789,208 @@ export const actions = {
         const {
             toolHead: { printingToolhead },
         } = getState().machine;
-            // generate gcode event
-            if (!initEventFlag) {
-                actions.updateState({initEventFlag: true});
-                controller.on('slice:started', () => {
-                    const { progressStatesManager } = getState().printing;
-                    progressStatesManager.startProgress(
-                        PROCESS_STAGE.PRINTING_SLICE_AND_PREVIEW
-                    );
-                    dispatch(
-                        actions.updateState({
-                            stage: STEP_STAGE.PRINTING_SLICING,
-                            progress: progressStatesManager.updateProgress(
-                                STEP_STAGE.PRINTING_SLICING,
-                                0.01
-                            )
-                        })
-                    );
-                });
-                controller.on('slice:completed', (args) => {
-                    const {
-                        gcodeFilename,
-                        gcodeFileLength,
+        // generate gcode event
+        if (!initEventFlag) {
+            actions.updateState({initEventFlag: true});
+            controller.on('slice:started', () => {
+                const { progressStatesManager } = getState().printing;
+                progressStatesManager.startProgress(
+                    PROCESS_STAGE.PRINTING_SLICE_AND_PREVIEW
+                );
+                dispatch(
+                    actions.updateState({
+                        stage: STEP_STAGE.PRINTING_SLICING,
+                        progress: progressStatesManager.updateProgress(
+                            STEP_STAGE.PRINTING_SLICING,
+                            0.01
+                        )
+                    })
+                );
+            });
+            controller.on('slice:completed', (args) => {
+                const {
+                    gcodeFilename,
+                    gcodeFileLength,
+                    printTime,
+                    filamentLength,
+                    filamentWeight,
+                    renderGcodeFileName,
+                    gcodeHeader,
+                } = args;
+                const { progressStatesManager } = getState().printing;
+                dispatch(
+                    actions.updateState({
+                        gcodeFile: {
+                            name: gcodeFilename,
+                            uploadName: gcodeFilename,
+                            size: gcodeFileLength,
+                            lastModified: +new Date(),
+                            thumbnail: '',
+                            renderGcodeFileName,
+
+                            type: gcodeHeader[';header_type'],
+                            tool_head: gcodeHeader[';tool_head'],
+                            nozzle_temperature: gcodeHeader[';nozzle_temperature(°C)'],
+                            build_plate_temperature: gcodeHeader[';build_plate_temperature(°C)'],
+                            work_speed: gcodeHeader[';work_speed(mm/minute)'],
+                            estimated_time: gcodeHeader[';estimated_time(s)'],
+                            matierial_weight: gcodeHeader[';matierial_weight'],
+                            nozzle_1_temperature: gcodeHeader[';nozzle_1_temperature(°C)'],
+                            jog_speed: gcodeHeader[';jog_speed(mm/minute)'],
+                            power: gcodeHeader[';power(%)'],
+                        },
                         printTime,
                         filamentLength,
                         filamentWeight,
-                        renderGcodeFileName,
-                        gcodeHeader,
-                    } = args;
-                    const { progressStatesManager } = getState().printing;
+                        stage: STEP_STAGE.PRINTING_SLICING,
+                        progress: progressStatesManager.updateProgress(
+                            STEP_STAGE.PRINTING_SLICING,
+                            1
+                        )
+                    })
+                );
+                progressStatesManager.startNextStep();
+
+                modelGroup.unselectAllModels();
+                dispatch(actions.loadGcode(gcodeFilename));
+                dispatch(actions.setTransformMode(''));
+            });
+            controller.on('slice:progress', progress => {
+                const state = getState().printing;
+                const { progressStatesManager } = state;
+                if (
+                    progress - state.progress > 0.01
+                    || progress > 1 - EPSILON
+                ) {
                     dispatch(
                         actions.updateState({
-                            gcodeFile: {
-                                name: gcodeFilename,
-                                uploadName: gcodeFilename,
-                                size: gcodeFileLength,
-                                lastModified: +new Date(),
-                                thumbnail: '',
-                                renderGcodeFileName,
-
-                                type: gcodeHeader[';header_type'],
-                                tool_head: gcodeHeader[';tool_head'],
-                                nozzle_temperature: gcodeHeader[';nozzle_temperature(°C)'],
-                                build_plate_temperature: gcodeHeader[';build_plate_temperature(°C)'],
-                                work_speed: gcodeHeader[';work_speed(mm/minute)'],
-                                estimated_time: gcodeHeader[';estimated_time(s)'],
-                                matierial_weight: gcodeHeader[';matierial_weight'],
-                                nozzle_1_temperature: gcodeHeader[';nozzle_1_temperature(°C)'],
-                                jog_speed: gcodeHeader[';jog_speed(mm/minute)'],
-                                power: gcodeHeader[';power(%)'],
-                            },
-                            printTime,
-                            filamentLength,
-                            filamentWeight,
-                            stage: STEP_STAGE.PRINTING_SLICING,
                             progress: progressStatesManager.updateProgress(
                                 STEP_STAGE.PRINTING_SLICING,
-                                1
+                                progress
                             )
                         })
                     );
-                    progressStatesManager.startNextStep();
-
-                    modelGroup.unselectAllModels();
-                    dispatch(actions.loadGcode(gcodeFilename));
-                    dispatch(actions.setTransformMode(''));
-                });
-                controller.on('slice:progress', progress => {
-                    const state = getState().printing;
-                    const { progressStatesManager } = state;
-                    if (
-                        progress - state.progress > 0.01
-                        || progress > 1 - EPSILON
-                    ) {
-                        dispatch(
-                            actions.updateState({
-                                progress: progressStatesManager.updateProgress(
-                                    STEP_STAGE.PRINTING_SLICING,
-                                    progress
-                                )
-                            })
-                        );
-                    }
-                });
-                controller.on('slice:error', () => {
-                    const state = getState().printing;
-                    const { progressStatesManager } = state;
-                    progressStatesManager.finishProgress(false);
-                    dispatch(
-                        actions.updateState({
-                            progress: 100,
-                            stage: STEP_STAGE.PRINTING_SLICE_FAILED,
-                            promptTasks: [
-                                {
-                                    status: 'fail',
-                                    type: 'slice'
-                                }
-                            ]
-                        })
-                    );
-                });
-
-                // generate supports
-                controller.on('generate-support:started', () => {
-                    const { progressStatesManager } = getState().printing;
-                    dispatch(
-                        actions.updateState({
-                            stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_MODEL,
-                            progress: progressStatesManager.updateProgress(
-                                STEP_STAGE.PRINTING_GENERATE_SUPPORT_MODEL,
-                                0.01
-                            )
-                        })
-                    );
-                });
-                controller.on('generate-support:completed', args => {
-                    const { supportFilePaths } = args;
-                    const { progressStatesManager } = getState().printing;
-                    dispatch(
-                        actions.updateState({
-                            stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_MODEL,
-                            progress: progressStatesManager.updateProgress(
-                                STEP_STAGE.PRINTING_GENERATE_SUPPORT_MODEL,
-                                1
-                            )
-                        })
-                    );
-
-                    dispatch(actions.loadSupports(supportFilePaths));
-                });
-                controller.on('generate-support:progress', progress => {
-                    const state = getState().printing;
-                    const { progressStatesManager } = state;
-                    if (
-                        progress - state.progress > 0.01
-                        || progress > 1 - EPSILON
-                    ) {
-                        dispatch(
-                            actions.updateState({
-                                progress: progressStatesManager.updateProgress(
-                                    STEP_STAGE.PRINTING_GENERATE_SUPPORT_MODEL,
-                                    progress
-                                )
-                            })
-                        );
-                    }
-                });
-                controller.on('generate-support:error', () => {
-                    const state = getState().printing;
-                    const { progressStatesManager } = state;
-                    progressStatesManager.finishProgress(false);
-                    dispatch(
-                        actions.updateState({
-                            stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_FAILED
-                        })
-                    );
-                });
-
-                // for simplify-model
-                controller.on('simplify-model:started', ({ firstTime, uploadName, transformation, sourcePly }) => {
-                    const { progressStatesManager, simplifyOriginModelInfo } = getState().printing;
-                    // progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SIMPLIFY_MODEL);
-                    if (firstTime && uploadName) {
-                        dispatch(actions.updateState({
-                            simplifyOriginModelInfo: {
-                                ...simplifyOriginModelInfo,
-                                uploadName: uploadName,
-                                sourcePly: sourcePly,
-                                transformation: transformation,
+                }
+            });
+            controller.on('slice:error', () => {
+                const state = getState().printing;
+                const { progressStatesManager } = state;
+                progressStatesManager.finishProgress(false);
+                dispatch(
+                    actions.updateState({
+                        progress: 100,
+                        stage: STEP_STAGE.PRINTING_SLICE_FAILED,
+                        promptTasks: [
+                            {
+                                status: 'fail',
+                                type: 'slice'
                             }
-                        }));
-                    }
-                    dispatch(actions.updateState({
-                        stage: STEP_STAGE.PRINTING_SIMPLIFY_MODEL,
-                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SIMPLIFY_MODEL, 0.3),
-                    }));
-                });
+                        ]
+                    })
+                );
+            });
 
-                controller.on('simplify-model:progress', _progress => {
-                    const { progressStatesManager, progress } = getState().printing;
-                    if (_progress - progress > 0.01 || progress > 1 - EPSILON) {
-                        dispatch(actions.updateState({
+            // generate supports
+            controller.on('generate-support:started', () => {
+                const { progressStatesManager } = getState().printing;
+                dispatch(
+                    actions.updateState({
+                        stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_MODEL,
+                        progress: progressStatesManager.updateProgress(
+                            STEP_STAGE.PRINTING_GENERATE_SUPPORT_MODEL,
+                            0.01
+                        )
+                    })
+                );
+            });
+            controller.on('generate-support:completed', args => {
+                const { supportFilePaths } = args;
+                const { progressStatesManager } = getState().printing;
+                dispatch(
+                    actions.updateState({
+                        stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_MODEL,
+                        progress: progressStatesManager.updateProgress(
+                            STEP_STAGE.PRINTING_GENERATE_SUPPORT_MODEL,
+                            1
+                        )
+                    })
+                );
+
+                dispatch(actions.loadSupports(supportFilePaths));
+            });
+            controller.on('generate-support:progress', progress => {
+                const state = getState().printing;
+                const { progressStatesManager } = state;
+                if (
+                    progress - state.progress > 0.01
+                    || progress > 1 - EPSILON
+                ) {
+                    dispatch(
+                        actions.updateState({
                             progress: progressStatesManager.updateProgress(
-                                STEP_STAGE.PRINTING_SIMPLIFY_MODEL,
-                                _progress
+                                STEP_STAGE.PRINTING_GENERATE_SUPPORT_MODEL,
+                                progress
                             )
-                        }));
-                    }
-                });
+                        })
+                    );
+                }
+            });
+            controller.on('generate-support:error', () => {
+                const state = getState().printing;
+                const { progressStatesManager } = state;
+                progressStatesManager.finishProgress(false);
+                dispatch(
+                    actions.updateState({
+                        stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_FAILED
+                    })
+                );
+            });
 
-                controller.on('simplify-model:error', () => {
-                    const { progressStatesManager } = getState().printing;
-                    progressStatesManager.finishProgress(false);
+            // for simplify-model
+            controller.on('simplify-model:started', ({ firstTime, uploadName, transformation, sourcePly }) => {
+                const { progressStatesManager, simplifyOriginModelInfo } = getState().printing;
+                // progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SIMPLIFY_MODEL);
+                if (firstTime && uploadName) {
                     dispatch(actions.updateState({
-                        stage: STEP_STAGE.PRINTING_SIMPLIFY_MODEL_FAILED
+                        simplifyOriginModelInfo: {
+                            ...simplifyOriginModelInfo,
+                            uploadName: uploadName,
+                            sourcePly: sourcePly,
+                            transformation: transformation,
+                        }
                     }));
-                });
+                }
+                dispatch(actions.updateState({
+                    stage: STEP_STAGE.PRINTING_SIMPLIFY_MODEL,
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SIMPLIFY_MODEL, 0.3),
+                }));
+            });
 
-                controller.on('simplify-model:completed', (params) => {
-                    const { modelOutputName, modelID, sourcePly } = params;
-                    actions.loadSimplifyModel({ modelID, modelOutputName, sourcePly })(dispatch, getState);
-                });
-            }
+            controller.on('simplify-model:progress', _progress => {
+                const { progressStatesManager, progress } = getState().printing;
+                if (_progress - progress > 0.01 || progress > 1 - EPSILON) {
+                    dispatch(actions.updateState({
+                        progress: progressStatesManager.updateProgress(
+                            STEP_STAGE.PRINTING_SIMPLIFY_MODEL,
+                            _progress
+                        )
+                    }));
+                }
+            });
 
+            controller.on('simplify-model:error', () => {
+                const { progressStatesManager } = getState().printing;
+                progressStatesManager.finishProgress(false);
+                dispatch(actions.updateState({
+                    stage: STEP_STAGE.PRINTING_SIMPLIFY_MODEL_FAILED
+                }));
+            });
+
+            controller.on('simplify-model:completed', (params) => {
+                const { modelOutputName, modelID, sourcePly } = params;
+                actions.loadSimplifyModel({ modelID, modelOutputName, sourcePly })(dispatch, getState);
+            });
+        }
 
         const activeQualityDefinition = lodashFind(qualityDefinitions, {
             definitionId: defaultQualityId
@@ -1341,12 +1340,12 @@ export const actions = {
         const id = definitionModel?.definitionId;
         const definitionsKey = definitionKeysWithDirection[direction][type];
         let { extruderLDefinition: actualExtruderDefinition } = printingState;
-        let UpdatePresetModel = false;
+        let updatePresetModel = false;
         // Todo
         if (['snapmaker_extruder_0', 'snapmaker_extruder_1'].includes(id)) {
             if (id === 'snapmaker_extruder_0') {
                 actualExtruderDefinition = definitionModel
-                UpdatePresetModel = true;
+                updatePresetModel = true;
             }
             dispatch(
                 actions.updateState({
@@ -1354,7 +1353,7 @@ export const actions = {
                 })
             );
         } else {
-            UpdatePresetModel = true;
+            updatePresetModel = true;
             resolveDefinition(definitionModel, changedSettingArray);
             const definitions = printingState[definitionsKey];
             const index = definitions.findIndex((d) => d.definitionId === id);
@@ -1367,7 +1366,7 @@ export const actions = {
             dispatch(actions.updateBoundingBox());
         }
         definitionManager.updateDefinition(definitionModel);
-        if (UpdatePresetModel) {
+        if (updatePresetModel) {
             dispatch(actions.updateDefinitionModelAndCheckVisible({
                 type,
                 direction,

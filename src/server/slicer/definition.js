@@ -315,7 +315,7 @@ export class DefinitionLoader {
         this.i18nCategory = i18nCategory;
     }
 
-    updateSettings(settings, shouldAddOwnKeys = tru) {
+    updateSettings(settings, shouldAddOwnKeys = true) {
         if (shouldAddOwnKeys) {
             for (const key of Object.keys(settings)) {
                 this.ownKeys.add(key);
