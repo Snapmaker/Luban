@@ -11,7 +11,7 @@ import classNames from 'classnames';
 import Canvas from './Canvas';
 import Env3Axis from './Env3Axis';
 import Env4Axis from './Env4Axis';
-
+import { convertSVGPointToLogicalPoint } from '../../../lib/numeric-utils';
 import { actions as cncActions } from '../../../flux/cnc';
 
 import {
@@ -110,7 +110,7 @@ const set3AxisMeshState = (mesh, transformation, platSize) => {
     }
 };
 
-const set4AxisMeshState = async (mesh, transformation, materials, coordinateSize) => {
+const set4AxisMeshState = async (mesh, transformation, materials, coordinateSize, isOverStepped) => {
     mesh.material = new MeshPhongMaterial(
         {
             color: '#ffffff',
@@ -142,7 +142,7 @@ const set4AxisMeshState = async (mesh, transformation, materials, coordinateSize
         mesh.applyMatrix4(new Matrix4().makeRotationZ(-transformation.positionX / radius));
     }
 
-    if (radius > materials.diameter / 2) {
+    if (radius > materials.diameter / 2 || isOverStepped) {
         const material = new MeshPhongMaterial({ color: 0xff0000, specular: 0xb0b0b0, shininess: 0 });
         mesh.material = material;
     }
@@ -179,44 +179,6 @@ class Cnc3DVisualizer extends Component {
         }
     };
 
-    // componentWillReceiveProps(nextProps) {
-    //     if (nextProps.hasModel) {
-    //         console.log(nextProps.placement, this.props.placement);
-    //         const { mesh, materials, sourceScale, transformation, direction, placement, machineSize, coordinateSize, coordinateMode } = nextProps;
-    //         if (mesh !== this.props.mesh || materials.isRotate !== this.props.materials.isRotate
-    //             || materials.diameter !== this.props.materials.diameter
-    //             || materials.length !== this.props.materials.length
-    //             || transformation !== this.props.transformation || direction !== this.props.direction
-    //             || this.props.coordinateSize !== coordinateSize
-    //             || this.props.coordinateMode !== coordinateMode
-    //             || this.props.placement !== nextProps.placement
-    //         ) {
-    //             const t = getModelTransformation(transformation, machineSize, coordinateMode, coordinateSize);
-    //             mesh.remove(...mesh.children);
-    //             mesh.material = new MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 0 });
-
-    //             setMeshTransform(mesh, sourceScale, t, materials.isRotate, direction, placement);
-    //             if (!this.cameraInitialPosition || machineSize.z !== this.props.machineSize.z) {
-    //                 this.cameraInitialPosition = new Vector3(0, -machineSize.z * 1.3, 0);
-    //             }
-
-    //             if (materials.isRotate) {
-    //                 set4AxisMeshState(mesh, t, materials, coordinateSize);
-
-    //                 this.environment = new Env4Axis(mesh, materials);
-    //                 this.worldTransform = new Matrix4().makeRotationY(Math.PI);
-    //             } else {
-    //                 const meshSize = getMeshSize(mesh);
-    //                 const platSize = { x: coordinateSize?.x ?? machineSize.x, y: meshSize.y, z: coordinateSize?.y ?? machineSize.z };
-
-    //                 set3AxisMeshState(mesh, t, platSize);
-
-    //                 this.environment = new Env3Axis(platSize);
-    //                 this.worldTransform = new Matrix4();
-    //             }
-    //         }
-    //     }
-    // }
     componentDidUpdate() {
     }
 
@@ -241,7 +203,14 @@ class Cnc3DVisualizer extends Component {
                     });
                 }
                 if (materials.isRotate) {
-                    set4AxisMeshState(mesh, t, materials, coordinateSize);
+                    const logicPosition = convertSVGPointToLogicalPoint(transformation, machineSize);
+                    let isOverStepped = false;
+
+                    if ((logicPosition.y - transformation.height / 2) < 0 || (logicPosition.y + transformation.height / 2) > coordinateSize.y) {
+                        isOverStepped = true;
+                    }
+
+                    set4AxisMeshState(mesh, t, materials, coordinateSize, isOverStepped);
                     this.setState({
                         environment: new Env4Axis(mesh, materials)
                     });

@@ -156,7 +156,7 @@ export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition
                                                 />
                                             </div>
                                             <div className="height-24">
-                                                {i18n._('key-Luban/Preset/Printing Time')}
+                                                {i18n._('key-Luban/Preset/Printing Quality')}
                                                 <SvgIcon
                                                     size={24}
                                                     hoversize={24}
@@ -168,7 +168,7 @@ export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition
                                         </div>
                                         <div>
                                             <div className="height-24">
-                                                {i18n._('key-Luban/Preset/Printing Quality')}
+                                                {i18n._('key-Luban/Preset/Printing Time')}
                                                 <SvgIcon
                                                     size={24}
                                                     hoversize={24}

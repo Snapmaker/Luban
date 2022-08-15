@@ -27,6 +27,7 @@ function ConfigValueBox({
     const [activeCateId, setActiveCateId] = useState(2);
     const scrollDom = useRef(null);
     const fieldsDom = useRef([]);
+    const [currentFields, setCurrentFields] = useState(fieldsDom.current);
     function setActiveCate(cateId) {
         if (scrollDom.current) {
             const container = scrollDom.current.parentElement;
@@ -51,6 +52,10 @@ function ConfigValueBox({
             Object.keys(optionConfigGroup).length
         );
     }, [Object.keys(optionConfigGroup)]);
+
+    useEffect(() => {
+        setCurrentFields(fieldsDom.current);
+    }, [definitionForManager]);
 
     return (
         <div className="sm-flex">
@@ -105,7 +110,7 @@ function ConfigValueBox({
                 <div className="sm-parameter-container" ref={scrollDom}>
                     {!isCategorySelected
                         && optionConfigGroup.map((group, index) => {
-                            const eachFieldsDom = fieldsDom.current[index];
+                            const eachFieldsDom = currentFields[index];
                             return (
                                 <div key={group.name || group.fields[0]}>
                                     <>

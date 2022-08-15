@@ -80,6 +80,12 @@ const checkVector3NaN = (vector3) => {
         return Number.isNaN(d);
     });
 };
+const convertSVGPointToLogicalPoint = (p, size) => {
+    return {
+        x: p.x - size.x,
+        y: -p.y + size.y
+    };
+};
 
 export {
     EPS,
@@ -87,5 +93,6 @@ export {
     bubbleSortByAttribute,
     toFixed,
     toFixedNumber,
-    checkVector3NaN
+    checkVector3NaN,
+    convertSVGPointToLogicalPoint
 };

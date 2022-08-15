@@ -5,7 +5,7 @@ import { Tooltip, Menu } from 'antd';
 import PropTypes from 'prop-types';
 // import { useSelector, shallowEqual } from 'react-redux';
 import { isUndefined, cloneDeep, uniqWith } from 'lodash';
-import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING,
+import { HEAD_CNC, HEAD_LASER,
     PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY, MATERIAL_TYPE_OPTIONS } from '../../../constants';
 import modal from '../../../lib/modal';
 import DefinitionCreator from '../DefinitionCreator';
@@ -19,7 +19,6 @@ import { Button } from '../../components/Buttons';
 import ConfigValueBox from './ConfigValueBox';
 import styles from './styles.styl';
 import { actions as printingActions } from '../../../flux/printing';
-import { actions as projectActions } from '../../../flux/project';
 import { MaterialWithColor } from '../../widgets/PrintingMaterial/MaterialWithColor';
 import useSetState from '../../../lib/hooks/set-state';
 import AddMaterialModel from '../../pages/MachineMaterialSettings/addMaterialModel';
@@ -73,9 +72,12 @@ export function useGetDefinitions(allDefinitions, activeDefinitionID, getDefault
 
     useEffect(() => {
         const definitionOptions = allDefinitions.map(d => {
-            let actualCategory = d.category;
+            let actualCategory = d.category, actualColor = null;
             if (managerType === PRINTING_MANAGER_TYPE_MATERIAL && !(MATERIAL_TYPE_ARRAY.includes(d.category))) {
                 actualCategory = 'Other';
+            }
+            if (managerType === PRINTING_MANAGER_TYPE_MATERIAL) {
+                actualColor = d.settings.color ? d.settings.color.default_value : '#000000';
             }
             return {
                 label: d.name,
@@ -83,9 +85,7 @@ export function useGetDefinitions(allDefinitions, activeDefinitionID, getDefault
                 i18nCategory: d.i18nCategory,
                 isHidden: !d.settings || Object.keys(d.settings).length === 0,
                 isDefault: !!d.isDefault,
-                color: (
-                    managerType === PRINTING_MANAGER_TYPE_MATERIAL && d.settings.color
-                ) ? d.settings.color.default_value : '#000000',
+                color: actualColor,
                 category: actualCategory
             };
         });
@@ -188,19 +188,13 @@ function ProfileManager({
                 actions.setRenamingStatus(false);
             }
             if (selected) {
-                if (managerType === PRINTING_MANAGER_TYPE_MATERIAL) {
-                    const selectedSettingDefaultValue = outsideActions.getDefaultDefinition(selected.definitionId);
-                    setDefinitionState({
-                        definitionForManager: selected,
-                        isCategorySelected: false,
-                        selectedName: selected.name,
-                        selectedSettingDefaultValue: selectedSettingDefaultValue
-                    });
-                    dispatch(printingActions.updateDefaultMaterialId(selected.definitionId));
-                } else {
-                    dispatch(printingActions.updateDefaultQualityId(selected.definitionId));
-                    dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
-                }
+                const selectedSettingDefaultValue = outsideActions.getDefaultDefinition(selected.definitionId);
+                setDefinitionState({
+                    definitionForManager: selected,
+                    isCategorySelected: false,
+                    selectedName: selected.name,
+                    selectedSettingDefaultValue: selectedSettingDefaultValue
+                });
             }
         },
         onSelectCategory: (category) => {

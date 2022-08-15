@@ -6,7 +6,7 @@ import path from 'path';
 import { includes } from 'lodash';
 
 import i18n from '../../../lib/i18n';
-import { toFixed, toFixedNumber } from '../../../lib/numeric-utils';
+import { toFixed, toFixedNumber, convertSVGPointToLogicalPoint } from '../../../lib/numeric-utils';
 import TipTrigger from '../../components/TipTrigger';
 import SvgIcon from '../../components/SvgIcon';
 import { NumberInput as Input } from '../../components/Input';
@@ -16,12 +16,6 @@ import { actions as editorActions } from '../../../flux/editor';
 import styles from './styles.styl';
 import { HEAD_CNC, SVG_NODE_NAME_TEXT } from '../../../constants';
 
-function convertSVGPointToLogicalPoint(p, size) {
-    return {
-        x: p.x - size.x,
-        y: -p.y + size.y
-    };
-}
 /**
  * Transformation section.
  *
