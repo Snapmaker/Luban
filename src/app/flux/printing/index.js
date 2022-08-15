@@ -3793,7 +3793,8 @@ export const actions = {
             modelName,
             children,
             primeTowerTag,
-            sourcePly
+            sourcePly,
+            isGuideTours = false
         }
     ) => async (dispatch, getState) => {
         const { progressStatesManager, modelGroup } = getState().printing;
@@ -4067,7 +4068,7 @@ export const actions = {
                 model.initClipper(modelGroup.localPlane);
 
                 const checkResult = checkResultMap.get(model.uploadName);
-                if (checkResult && checkResult.isDamage) {
+                if (checkResult && checkResult.isDamage && !isGuideTours) {
                     promptDamageModel && promptTasks.push({
                         status: 'need-repair-model',
                         model

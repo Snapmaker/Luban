@@ -18,7 +18,7 @@ import { ABSENT_OBJECT, CONNECTION_TYPE_SERIAL,
 let pubsubTokens = [];
 let unlisten = null;
 function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderStamp }) {
-    const { port, server, isConnected, connectionType, terminalHistory, consoleHistory, consoleLogs, workflowStatus, workflowState, shouldHideConsole } = useSelector(state => state.machine, shallowEqual);
+    const { port, server, isConnected, connectionType, terminalHistory, consoleHistory, consoleLogs, workflowStatus, shouldHideConsole } = useSelector(state => state.machine, shallowEqual);
     const [shouldRenderFitaddon, setShouldRenderFitaddon] = useState(false);
     const history = useHistory();
     const dispatch = useDispatch();
@@ -283,13 +283,16 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
 
     useEffect(() => {
         const isWorking = workflowStatus === WORKFLOW_STATUS_RUNNING || workflowStatus === WORKFLOW_STATUS_PAUSED || workflowStatus === WORKFLOW_STATUS_PAUSING;
-
-        if (isWorking && shouldHideConsole) {
-            widgetActions.setDisplay(false);
-        } else {
+        if (!isConnected) {
             widgetActions.setDisplay(true);
+        } else {
+            if (isWorking && shouldHideConsole) {
+                widgetActions.setDisplay(false);
+            } else {
+                widgetActions.setDisplay(true);
+            }
         }
-    }, [workflowState, workflowStatus, connectionType]);
+    }, [workflowStatus, connectionType, isConnected]);
 
     useEffect(() => {
         if (prevProps && prevProps.clearRenderStamp !== clearRenderStamp) {

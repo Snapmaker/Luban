@@ -124,7 +124,8 @@ const INITIAL_STATE = {
     progressStatesManager: new ProgressStatesManager(),
 
     enableShortcut: true,
-    promptTasks: []
+    promptTasks: [],
+    projectFileOversize: false
 };
 
 export const actions = {

@@ -39,7 +39,7 @@ class SocketBASE {
 
     public currentWorkNozzle: number;
 
-    public startHeartbeatBase = (sacpClient: Business, client?: net.Socket) => {
+    public startHeartbeatBase = (sacpClient: Business, client?: net.Socket, isWifiConnection?: boolean) => {
         this.sacpClient = sacpClient;
         let stateData: MarlinStateData = {};
         let statusKey = 0;
@@ -81,7 +81,9 @@ class SocketBASE {
                 log.info('TCP close');
                 this.socket && this.socket.emit('connection:close');
             }, 10000);
-
+            isWifiConnection && this.sacpClient.wifiConnectionHeartBeat().then(({ response }) => {
+                log.info(`lubanHeartbeat, ${response}`);
+            });
             await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
                 // log.info(`revice moduleInfo: ${data.response}`);
                 moduleInfos.forEach(module => {
@@ -277,6 +279,7 @@ class SocketBASE {
     }
 
     public resumeGcode = (options, callback) => {
+        console.log('resumeGcodeOptions', options);
         this.sacpClient.resumePrint().then(res => {
             log.info(`Resume Print: ${res}`);
             callback && callback({ msg: res.response.result, code: res.response.result });

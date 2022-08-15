@@ -362,6 +362,12 @@ export default class Business extends Dispatcher {
         });
     }
 
+    public async resumePrintForScreen() {
+        return this.send(0xb0, 0x0a, PeerId.SCREEN, Buffer.alloc(0)).then(({ response, packet }) => {
+            return { response, packet, data: {} };
+        });
+    }
+
     public async getGocdeFile() {
         return this.send(0xac, 0x00, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             const gcodeFileInfo = new GcodeFileInfo().fromBuffer(response.data);
@@ -727,6 +733,12 @@ export default class Business extends Dispatcher {
         });
         return this.send(0x01, 0x05, PeerId.SCREEN, info).then(({ response, packet }) => {
             // return res;
+            return { response, packet };
+        });
+    }
+
+    public async wifiConnectionHeartBeat() {
+        return this.send(0xb0, 0x0b, PeerId.SCREEN, Buffer.alloc(0)).then(({ response, packet }) => {
             return { response, packet };
         });
     }

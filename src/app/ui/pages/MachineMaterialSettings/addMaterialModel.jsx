@@ -149,6 +149,7 @@ const AddMaterialModel = ({
                                     size="small-level-one"
                                     suffix="°C"
                                     min={0}
+                                    allowUndefined
                                 />
                                 <span className="margin-horizontal-8 width-16 border-bottom-black-5" />
                                 <NInput
@@ -157,6 +158,7 @@ const AddMaterialModel = ({
                                     size="small-level-one"
                                     suffix="°C"
                                     min={printingTemperatureDown || 1}
+                                    allowUndefined
                                 />
                             </div>
                         </div>
@@ -169,6 +171,7 @@ const AddMaterialModel = ({
                                     size="small-level-one"
                                     suffix="°C"
                                     min={0}
+                                    allowUndefined
                                 />
                                 <span className="margin-horizontal-8 width-16 border-bottom-black-5" />
                                 <NInput
@@ -177,6 +180,7 @@ const AddMaterialModel = ({
                                     size="small-level-one"
                                     suffix="°C"
                                     min={buildPlateTemperatureDown || 1}
+                                    allowUndefined
                                 />
                             </div>
                         </div>

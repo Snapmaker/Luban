@@ -318,7 +318,7 @@ G1 Z${pos.z}
 
     resumeGcode = (socket, options, callback) => {
         if (this.protocol === SACP_PROTOCOL || this.connectionType === CONNECTION_TYPE_WIFI) {
-            this.socket.resumeGcode(options, callback);
+            this.socket.resumeGcode({ ...options, connectionType: this.connectionType }, callback);
         } else {
             const { headType, pause3dpStatus, pauseStatus, gcodeFile, sizeZ } = options;
             if (headType === HEAD_PRINTING) {
@@ -468,7 +468,7 @@ M3`;
     }
 
     loadFilament = (socket, options) => {
-        if (this.protocol === SACP_PROTOCOL) {
+        if (this.protocol === SACP_PROTOCOL || this.connectionType === CONNECTION_TYPE_WIFI) {
             const { extruderIndex, eventName } = options;
             this.socket.loadFilament(extruderIndex, eventName);
         } else {
@@ -695,11 +695,9 @@ M3`;
             this.executeGcode(this.socket, {
                 gcode: 'G28'
             });
-            if (headType === HEAD_LASER || headType === HEAD_CNC) {
-                this.executeGcode(this.socket, {
-                    gcode: 'G54'
-                });
-            }
+            (headType === HEAD_LASER || headType === HEAD_CNC) && this.executeGcode(this.socket, {
+                gcode: 'G54'
+            });
         }
     }
 

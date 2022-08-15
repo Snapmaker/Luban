@@ -6,8 +6,13 @@ import log from '../../../lib/log';
 import styles from './styles.styl';
 
 const maxDecimal = (number, decimalPlaces) => {
-    const reg = new RegExp(`^(.*\\..{${decimalPlaces}}).*$`);
-    return Number(String(number).replace(reg, '$1'));
+    if (decimalPlaces === 0) {
+        const value = Math.round(Number(number));
+        return value;
+    } else {
+        const reg = new RegExp(`^(.*\\..{${decimalPlaces}}).*$`);
+        return Number(String(number).replace(reg, '$1'));
+    }
 };
 
 

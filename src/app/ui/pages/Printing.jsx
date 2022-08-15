@@ -56,6 +56,7 @@ import Steps from '../components/Steps';
 import Modal from '../components/Modal';
 import { Button } from '../components/Buttons';
 import MachineMaterialSettings from './MachineMaterialSettings';
+import { MACHINE_SERIES } from '../../../server/constants';
 
 export const openFolder = () => {
     if (isElectron()) {
@@ -143,6 +144,7 @@ function useRenderMainToolBar(setSimplifying) {
             setShowMachineMaterialSettings(false);
             if (currentSeries !== seriesRef.current || currentToolhead !== toolHeadRef.current.printingToolhead) {
                 dispatch(machineActions.updateMachineSeries(currentSeries));
+                dispatch(machineActions.setZAxisModuleState(currentSeries === MACHINE_SERIES.ORIGINAL_LZ.value));
                 dispatch(machineActions.updateMachineToolHead({
                     ...toolHead,
                     printingToolhead: currentToolhead
