@@ -509,7 +509,7 @@ export const actions = {
      * 1. Upload image to backend
      * 2. Create Mold from image information
      */
-    uploadImage: (headType, file, mode, onError, isLimit = true) => (dispatch, getState) => {
+    uploadImage: (headType, file, mode, onError, isLimit = true, fileInfo) => (dispatch, getState) => {
         const { materials, progressStatesManager } = getState()[headType];
         progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_UPLOAD_IMAGE, [1, 1]);
         dispatch(
@@ -521,7 +521,22 @@ export const actions = {
         const formData = new FormData();
         formData.append('image', file);
         formData.append('isRotate', materials.isRotate);
+        if (fileInfo) {
+            const { width, height, originalName, uploadName } = fileInfo;
 
+            dispatch(
+                actions.generateModel(headType, {
+                    originalName,
+                    uploadName,
+                    sourceWidth: width,
+                    sourceHeight: height,
+                    mode,
+                    config: { svgNodeName: 'image' },
+                    isLimit
+                })
+            );
+            return;
+        }
         api.uploadImage(formData)
             .then(res => {
                 const { width, height, originalName, uploadName } = res.body;
@@ -554,26 +569,33 @@ export const actions = {
         const formData = new FormData();
         formData.append('image', file);
         formData.append('isRotate', materials.isRotate);
-        api.uploadImage(formData)
-            .then(res => {
-                const { width, height } = res.body;
-                const isOverSize = isOverSizeModel(coordinateSize, width, height);
-                dispatch(
-                    actions.updateState(headType, {
-                        isOverSize: isOverSize
-                    })
-                );
-            })
-            .catch(err => {
-                onError && onError(err);
-                dispatch(
-                    actions.updateState(headType, {
-                        stage: STEP_STAGE.CNC_LASER_UPLOAD_IMAGE_FAILED,
-                        progress: 1
-                    })
-                );
-                progressStatesManager.finishProgress(false);
-            });
+        return new Promise((resolve) => {
+            api.uploadImage(formData)
+                .then(res => {
+                    resolve(res.body);
+                    // Ensure promise is completed first
+                    setTimeout(() => {
+                        const { width, height } = res.body;
+                        const isOverSize = isOverSizeModel(coordinateSize, width, height);
+                        dispatch(
+                            actions.updateState(headType, {
+                                isOverSize: isOverSize
+                            })
+                        );
+                    });
+                })
+                .catch(err => {
+                    resolve();
+                    onError && onError(err);
+                    dispatch(
+                        actions.updateState(headType, {
+                            stage: STEP_STAGE.CNC_LASER_UPLOAD_IMAGE_FAILED,
+                            progress: 1
+                        })
+                    );
+                    progressStatesManager.finishProgress(false);
+                });
+        });
     },
 
     prepareStlVisualizer: (headType, model) => dispatch => {
@@ -793,7 +815,7 @@ export const actions = {
         dispatch(operationHistoryActions.setOperations(headType, operations));
 
         SVGActions.clearSelection();
-        SVGActions.addSelectedSvgModelsByModels([model]);
+        SVGActions.addSelectedSvgModelsByModels([model], materials.isRotate);
 
         if (path.extname(uploadName).toLowerCase() === '.stl') {
             dispatch(actions.prepareStlVisualizer(headType, model));
@@ -859,20 +881,20 @@ export const actions = {
 
     // TODO: method docs
     selectTargetModel: (model, headType, isMultiSelect = false) => (dispatch, getState) => {
-        const { SVGActions, modelGroup } = getState()[headType];
+        const { SVGActions, modelGroup, materials } = getState()[headType];
         let selected = modelGroup.getSelectedModelArray();
         selected = [...selected];
         dispatch(actions.clearSelection(headType));
         if (!isMultiSelect) {
             // remove all selected model
-            SVGActions.addSelectedSvgModelsByModels([model]);
+            SVGActions.addSelectedSvgModelsByModels([model], materials.isRotate);
         } else {
             if (selected.find(item => item === model)) {
                 const selectedModels = selected.filter(item => item !== model);
                 modelGroup.emptySelectedModelArray();
-                SVGActions.addSelectedSvgModelsByModels(selectedModels);
+                SVGActions.addSelectedSvgModelsByModels(selectedModels, materials.isRotate);
             } else {
-                SVGActions.addSelectedSvgModelsByModels([...selected, model]);
+                SVGActions.addSelectedSvgModelsByModels([...selected, model], materials.isRotate);
             }
         }
 
@@ -1383,14 +1405,14 @@ export const actions = {
     },
 
     selectAllElements: headType => async (dispatch, getState) => {
-        const { SVGActions, SVGCanvasMode, SVGCanvasExt } = getState()[headType];
+        const { SVGActions, SVGCanvasMode, SVGCanvasExt, materials } = getState()[headType];
         if (SVGCanvasMode === 'draw' || SVGCanvasExt.elem) {
             await SVGActions.svgContentGroup.exitModelEditing(true);
             dispatch(actions.selectAllElements(headType));
             // SVGActions.selectAllElements();
             // dispatch(baseActions.render(headType));
         } else {
-            SVGActions.selectAllElements();
+            SVGActions.selectAllElements(materials.isRotate);
             dispatch(baseActions.render(headType));
         }
     },
@@ -1437,8 +1459,9 @@ export const actions = {
      * Select models.
      */
     selectElements: (headType, elements) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
-        SVGActions.selectElements(elements);
+        const { SVGActions, materials } = getState()[headType];
+        const isRotate = materials.isRotate;
+        SVGActions.selectElements(elements, isRotate);
 
         dispatch(baseActions.render(headType));
     },

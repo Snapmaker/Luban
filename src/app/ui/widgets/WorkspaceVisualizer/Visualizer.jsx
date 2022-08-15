@@ -524,17 +524,15 @@ class Visualizer extends PureComponent {
         if (!isEqual(nextProps.size, this.props.size) || !isEqual(nextProps.preview, this.props.preview)) {
             const size = nextProps.size;
             if (nextProps.preview) {
-                this.previewPrintableArea && this.previewPrintableArea.updateSize({
+                this.previewPrintableArea && this.previewPrintableArea.updateSize(this.props.series, {
                     x: size.x * 2,
                     y: size.y * 2
                 });
             } else {
-                this.state.printableArea && this.state.printableArea.updateSize(
-                    this.props.series, {
-                        x: size.x * 2,
-                        y: size.y * 2
-                    }
-                );
+                this.state.printableArea && this.state.printableArea.updateSize(this.props.series, {
+                    x: size.x * 2,
+                    y: size.y * 2
+                });
             }
             this.canvas.current && this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(size.z * 2, 300)), new THREE.Vector3());
         }
@@ -759,8 +757,10 @@ class Visualizer extends PureComponent {
                     </div>
                 )}
                 <div className={styles['canvas-wrapper']}>
-                    {this.props.uploadState === 'uploading' && <Loading />}
-                    {this.props.renderState === 'rendering' && <Rendering />}
+                    {
+                        this.props.uploadState === 'uploading' ? <Loading />
+                            : (this.props.renderState === 'rendering' && <Rendering />)
+                    }
                     {state.printableArea && (
                         <Canvas
                             ref={this.canvas}

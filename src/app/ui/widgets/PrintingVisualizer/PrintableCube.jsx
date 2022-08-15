@@ -251,6 +251,7 @@ class PrintableCube extends Object3D {
             const color = new Color('#B9BCBF');
             const matLite = new MeshBasicMaterial({
                 color: color,
+                transparent: true,
                 side: FrontSide,
                 depthWrite: false,
                 wireframe: false,

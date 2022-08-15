@@ -310,6 +310,35 @@ class SocketHttp {
         });
     };
 
+    private getGcodePrintingInfo(data) {
+        if (!data) {
+            return {};
+        }
+        const { currentLine, estimatedTime, totalLines, fileName = '', progress, elapsedTime, remainingTime, printStatus } = data;
+        if (!currentLine || !estimatedTime || !totalLines) {
+            return {};
+        }
+        const sent = currentLine || 0;
+        const received = currentLine || 0;
+        const total = totalLines || 0;
+        let finishTime = 0;
+        if (received > 0 && received >= totalLines) {
+            finishTime = new Date().getTime();
+        }
+        return {
+            sent,
+            received,
+            total,
+            finishTime,
+            estimatedTime: estimatedTime * 1000,
+            elapsedTime: elapsedTime * 1000,
+            remainingTime: remainingTime * 1000,
+            name: fileName,
+            progress,
+            printStatus
+        };
+    }
+
     public startHeartbeat = () => {
         waitConfirm = true;
         this.heartBeatWorker = workerManager.heartBeat([{
@@ -352,6 +381,9 @@ class SocketHttp {
                     type: CONNECTION_TYPE_WIFI
                 });
             } else {
+                this.socket && this.socket.emit('sender:status', {
+                    data: this.getGcodePrintingInfo(state)
+                });
                 this.socket && this.socket.emit('Marlin:state', {
                     state,
                     type: CONNECTION_TYPE_WIFI

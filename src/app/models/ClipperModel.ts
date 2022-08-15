@@ -78,8 +78,6 @@ class ClippingModel {
         return this.clippingWorkerMap.size !== 0;
     }
 
-    private reCala = debounce(this.calaClippingWall, 200)
-
     private createLine(color) {
         const lineGeometry = new THREE.BufferGeometry();
         const linePosAttr = new THREE.BufferAttribute(new Float32Array([]), 3, false);
@@ -211,6 +209,7 @@ class ClippingModel {
         });
     }
 
+    private reCala = debounce(this.calaClippingWall, 200);
     public async calaClippingWall() {
         this.modelGroup.clippingFinish(false);
         if (this.subscriber) {

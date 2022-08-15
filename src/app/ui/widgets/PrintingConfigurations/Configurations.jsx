@@ -371,7 +371,6 @@ function Configurations() {
          * @param definition
          */
         onSelectOfficialDefinition: (definition, shouldSaveEnv = true) => {
-            console.log('selectOfficialDefinition', definition);
             actions.onChangeSelectedDefinition(definition);
             dispatch(printingActions.updateDefaultQualityId(definition.definitionId));
             shouldSaveEnv && dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));

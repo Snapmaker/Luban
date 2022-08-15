@@ -468,9 +468,11 @@ class Visualizer extends PureComponent {
                     sliceFailPopup();
                 } else if (stage === STEP_STAGE.PRINTING_REPAIRING_MODEL) {
                     const models = promptTasks.filter(item => item.status === 'repair-model-fail');
-                    repairModelFailPopup(models, () => {
-                        this.props.updateState({ stage: STEP_STAGE.EMPTY });
-                    });
+                    if (models.length) {
+                        repairModelFailPopup(models, () => {
+                            this.props.updateState({ stage: STEP_STAGE.EMPTY });
+                        });
+                    }
                 }
             }
         }

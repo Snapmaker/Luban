@@ -18,7 +18,9 @@ const log = logger('lib:SocketSerial');
 class SocketSerialNew extends SocketBASE {
     private serialport: SerialPort;
 
-    private availPorts: any;
+    private availPorts: {
+        path: string
+    }[];
 
     public startTime: number;
 
@@ -104,7 +106,7 @@ class SocketSerialNew extends SocketBASE {
     }
 
     public connectionClose = async () => {
-        this.socket && this.socket.emit('connection:connecting', { isConnecting: true })
+        this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
         await this.sacpClient.unSubscribeLogFeedback(this.subscribeLogCallback).then(res => {
             log.info(`unsubscribeLog: ${res}`);
         });

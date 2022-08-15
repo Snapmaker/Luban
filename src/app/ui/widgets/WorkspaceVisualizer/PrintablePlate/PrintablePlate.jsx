@@ -37,7 +37,8 @@ class PrintablePlate extends Object3D {
         this._setup();
     }
 
-    updateSize(size = this.size, materials = this.materials) {
+    updateSize(series, size = this.size, materials = this.materials) {
+        this.series = series;
         this.size = size;
         this.materials = materials;
         this.remove(...this.children);
