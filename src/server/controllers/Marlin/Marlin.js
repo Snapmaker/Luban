@@ -94,14 +94,14 @@ class MarlinReplyParserSeriesSize {
 
 class MarlinReplyParserHeadStatus {
     static parse(line) {
-        const r = line.match(/^Current Status: (.*)$/);
+        const r = line.match(/^Current Status: (ON|OFF)$/);
         if (!r) {
             return null;
         }
         return {
             type: MarlinReplyParserHeadStatus,
             payload: {
-                headStatus: parseFloat(r[1])
+                headStatus: r[1] === 'ON'
             }
         };
     }

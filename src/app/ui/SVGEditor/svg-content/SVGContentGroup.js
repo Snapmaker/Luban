@@ -267,7 +267,7 @@ class SVGContentGroup {
         this.selectedElements = [];
     }
 
-    addToSelection(elements) {
+    addToSelection(elements, isSelectedRotate3D = false) {
         for (const elem of elements) {
             if (!this.selectedElements.includes(elem)) {
                 this.selectedElements.push(elem);
@@ -279,6 +279,9 @@ class SVGContentGroup {
 
         if (hasHideElem) {
             this.showSelectorResizeAndRotateGrips(!hasHideElem);
+        }
+        if (isSelectedRotate3D) {
+            this.operatorPoints.showRotateGrips(false);
         }
         return posAndsize;
     }

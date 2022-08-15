@@ -21,6 +21,11 @@ const EditComponent = React.memo(({
     const [sliderValue, setSliderValue] = useState(initValue);
     const [inputValue, setInputValue] = useState(initValue);
 
+    useEffect(() => {
+        setSliderValue(initValue);
+        setInputValue(initValue);
+    }, [initValue]);
+
     const handleSliderChange = (value) => {
         setSliderValue(value);
         setInputValue(value);
@@ -44,7 +49,7 @@ const EditComponent = React.memo(({
     }, [handleGlobalClick]);
 
     return (
-        <div className="position-re" onClick={e => e.nativeEvent.stopPropagation()} onKeyDown={() => {}} role="toolbar">
+        <div className="position-re" onClick={e => e.nativeEvent.stopPropagation()} onKeyDown={() => { }} role="toolbar">
             <div className="height-percent-100 sm-flex align-flex-end">
                 <SvgIcon
                     className="height-24 width-24 border-radius-4 overflow-x-hidden overflow-y-hidden"
@@ -105,6 +110,8 @@ const EditComponent = React.memo(({
             )}
         </div>
     );
+}, (prevProps, nextProps) => {
+    return prevProps.initValue === nextProps.initValue;
 });
 
 EditComponent.propTypes = {

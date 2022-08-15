@@ -428,14 +428,18 @@ class SVGActionsFactory {
 
 
 
-    addSelectedSvgModelsByModels(models) {
+    addSelectedSvgModelsByModels(models, isRotate = false) {
         this.modelGroup.addSelectedModels(models);
+
+        const isSelectedRotate3D = isRotate && models.find((model) => {
+            return model.sourceType === 'image3d';
+        });
 
         for (const model of models) {
             if (!this.selectedSvgModels.includes(model)) {
                 this.selectedSvgModels.push(model);
                 // todo
-                const posAndSize = this.svgContentGroup.addToSelection([model.elem]);
+                const posAndSize = this.svgContentGroup.addToSelection([model.elem], isSelectedRotate3D);
                 this.modelGroup.updateSelectedGroupTransformation({
                     positionX: posAndSize.positionX - this.size.x,
                     positionY: this.size.y - posAndSize.positionY,
@@ -595,7 +599,7 @@ class SVGActionsFactory {
         }
     }
 
-    selectAllElements() {
+    selectAllElements(isRotate = false) {
         this.clearSelection();
         const childNodes = this.svgContentGroup.group.children;
         const nodes = [];
@@ -607,7 +611,7 @@ class SVGActionsFactory {
             }
         }
         // this.svgContentGroup.addToSelection(nodes);
-        this.selectElements(nodes);
+        this.selectElements(nodes, isRotate);
     }
 
     /**
@@ -615,8 +619,7 @@ class SVGActionsFactory {
      *
      * @param elements
      */
-    selectElements(elements) {
-        this.svgContentGroup.addToSelection(elements);
+    selectElements(elements, isRotate = false) {
         const svgModels = [];
         for (const svgModel of this.modelGroup.models) {
             if (elements.includes(svgModel.elem)) {
@@ -627,6 +630,10 @@ class SVGActionsFactory {
                 }
             }
         }
+        const isSelectedRotate3D = isRotate && this.selectedSvgModels.find((model) => {
+            return model.sourceType === 'image3d';
+        });
+        this.svgContentGroup.addToSelection(elements, isSelectedRotate3D);
         this.modelGroup.addSelectedModels(svgModels);
 
         const selectedElements = this.svgContentGroup.selectedElements;

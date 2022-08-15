@@ -559,7 +559,7 @@ M3`;
         if (laserPowerOpen) {
             this.executeGcode(
                 this.socket,
-                { gcode: 'M3 P0 S0', eventName }
+                { gcode: 'M5', eventName } // M3 P0 S0
             );
         } else {
             if (isSM2) {

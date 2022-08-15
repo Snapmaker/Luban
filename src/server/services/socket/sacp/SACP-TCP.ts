@@ -361,7 +361,7 @@ class SocketTCP extends SocketBASE {
     };
 
     // set z workoringin: laserFocalLength + platformHeight + laserMaterialThickness
-    public async laseAutoSetMaterialHeight(options) {
+    public async laseAutoSetMaterialHeight({ toolHead }) {
         log.info(`laseAutoSetMaterialHeight: ${toolHead}, ${this.thickness}`);
 
         await this.laserSetWorkHeight({ toolHead: toolHead, materialThickness: this.thickness });

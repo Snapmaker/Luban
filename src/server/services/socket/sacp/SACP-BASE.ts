@@ -2,15 +2,19 @@ import { includes, find } from 'lodash';
 import net from 'net';
 import { readString, readUint8 } from 'snapmaker-sacp-sdk/helper';
 import { GetHotBed, CoordinateInfo, CoordinateSystemInfo, ExtruderInfo } from 'snapmaker-sacp-sdk/models';
+import GetWorkSpeed from 'snapmaker-sacp-sdk/models/GetWorkSpeed';
 import { ResponseCallback } from 'snapmaker-sacp-sdk';
 import { Direction } from 'snapmaker-sacp-sdk/models/CoordinateInfo';
 import Business, { CoordinateType } from './Business';
 import SocketServer from '../../../lib/SocketManager';
 import logger from '../../../lib/logger';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, CNC_MODULE, LASER_MODULE, PRINTING_MODULE, HEAD_CNC, HEAD_LASER,
+import {
+    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, CNC_MODULE, LASER_MODULE, PRINTING_MODULE, HEAD_CNC, HEAD_LASER,
     COORDINATE_AXIS, WORKFLOW_STATUS_MAP, HEAD_PRINTING, EMERGENCY_STOP_BUTTON, ENCLOSURE_MODULES, AIR_PURIFIER_MODULES, ROTARY_MODULES,
-    MODULEID_TOOLHEAD_MAP, A400_HEADT_BED_FOR_SM2, HEADT_BED_FOR_SM2, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_SM2, RIGHT_EXTRUDER, LEFT_EXTRUDER, MODULEID_MAP } from '../../../../app/constants';
+    MODULEID_TOOLHEAD_MAP, A400_HEADT_BED_FOR_SM2, HEADT_BED_FOR_SM2, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_SM2, MODULEID_MAP
+} from '../../../../app/constants';
 import { EventOptions, MarlinStateData } from '../types';
+import { SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 } from '../../../constants';
 
 const log = logger('lib:SocketBASE');
 
@@ -30,6 +34,10 @@ class SocketBASE {
     public subscribeHotBedCallback: ResponseCallback;
 
     public subscribeCoordinateCallback: ResponseCallback;
+
+    private moduleInfos: {}
+
+    public currentWorkNozzle: number;
 
     public startHeartbeatBase = (sacpClient: Business, client?: net.Socket, isWifiConnection?: boolean) => {
         this.sacpClient = sacpClient;
@@ -209,7 +217,7 @@ class SocketBASE {
         }
     };
 
-    public goHome = async (hasHomingModel = false, headType) => {
+    public goHome = async (hasHomingModel = false, headType?: string) => {
         log.info('onClick gohome');
         hasHomingModel && this.socket && this.socket.emit('move:status', { isHoming: true });
         await this.sacpClient.updateCoordinate(CoordinateType.MACHINE).then(res => {
@@ -361,13 +369,13 @@ class SocketBASE {
     // workspeed
     public async getWorkSpeed(options) {
         const { eventName } = options;
-        this.subscribeWorkSpeedCallback = () => {
+        const subscribeWorkSpeedCallback = (data) => {
             const workSpeedInfo = new GetWorkSpeed().fromBuffer(data.response.data);
             log.info(`workSpeedInfo, ${workSpeedInfo}`);
             this.socket && this.socket.emit(eventName, { data: workSpeedInfo.feedRate });
         };
 
-        this.sacpClient.subscribeWorkSpeed({ interval: 1000 }, this.subscribeWorkSpeedCallback).then((res) => {
+        this.sacpClient.subscribeWorkSpeed({ interval: 1000 }, subscribeWorkSpeedCallback).then((res) => {
             log.info(`subscribe workspeed success: ${res.code}`);
         });
     }
@@ -440,7 +448,9 @@ class SocketBASE {
         });
     }
 
-    public async setAbsoluteWorkOrigin({ x, y, z, isRotate = false }) {
+    public async setAbsoluteWorkOrigin({ z, isRotate = false }: {
+        x: number, y: number, z: number, isRotate: boolean
+    }) {
         try {
             const res1 = await this.sacpClient.updateCoordinate(CoordinateType.MACHINE);
             log.debug(`updateCoordinate CoordinateType.MACHINE res: ${JSON.stringify(res1)}`);

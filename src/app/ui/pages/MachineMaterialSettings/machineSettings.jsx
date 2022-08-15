@@ -260,6 +260,10 @@ const MachineSettings = forwardRef(({
     const [activeNozzle, setActiveNozzle] = useState(LEFT);
     const dispatch = useDispatch();
 
+    useEffect(() => {
+        setCurrentToolHead(toolHead[`${headType}Toolhead`]);
+    }, [toolHead, headType]);
+
     // for original long zAxis
     // console.log({ hasZAxis });
     const [zAxis, setZAxis] = useState(serial === MACHINE_SERIES.ORIGINAL_LZ.value);
@@ -393,6 +397,10 @@ const MachineSettings = forwardRef(({
             setRightNozzleDiameter(label);
         }
         setAddDiameterStatus(false);
+        onChangeDiameter(direction, {
+            label,
+            value: newDiameter
+        });
     };
     const resizeAction = () => {
         const ele = document.getElementById('machine-list');

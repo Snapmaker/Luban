@@ -73,7 +73,9 @@ const gcodeToArraybufferGeometry = (data: GcodeToArraybufferGeometryData) => {
                 };
 
                 observer.next(_data);
-                observer.complete();
+                if (isDone) {
+                    observer.complete();
+                }
             },
             (progress: number) => {
                 observer.next({
