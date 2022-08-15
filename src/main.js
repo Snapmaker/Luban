@@ -5,7 +5,7 @@ import { autoUpdater } from 'electron-updater';
 import Store from 'electron-store';
 import url from 'url';
 import fs from 'fs';
-import { isUndefined, isNull } from 'lodash';
+import { isUndefined, isNull, debounce } from 'lodash';
 import path from 'path';
 import isReachable from 'is-reachable';
 import fetch from 'node-fetch';
@@ -143,6 +143,7 @@ function updateHandle() {
     autoUpdater.on('update-available', async (downloadInfo) => {
         sendUpdateMessage(message.updateAva);
         if (!downloadInfo.releaseNotes) {
+            // for aliyuncs
             const changelogUrl = `https://snapmaker.oss-cn-beijing.aliyuncs.com/snapmaker.com/download/autoUpdater/Snapmaker-Luban-${downloadInfo.version}.changelog.md`;
             const result = await fetch(changelogUrl, {
                 mode: 'cors',
@@ -157,6 +158,7 @@ function updateHandle() {
                 });
 
             downloadInfo.releaseChangeLog = result;
+            downloadInfo.releaseName = `v${downloadInfo.version}`;
         }
         mainWindow.webContents.send('update-available', { ...downloadInfo, prevVersion: app.getVersion() });
     });
@@ -168,13 +170,13 @@ function updateHandle() {
         mainWindow.setProgressBar(progressObj.percent / 100);
     });
     // downloadInfo — for generic and github providers
-    autoUpdater.on('update-downloaded', (downloadInfo) => {
+    autoUpdater.on('update-downloaded', debounce((downloadInfo) => {
         ipcMain.on('replaceAppNow', () => {
             // some code here to handle event
             autoUpdater.quitAndInstall();
         });
         mainWindow.webContents.send('is-replacing-app-now', downloadInfo);
-    });
+    }), 300);
     // Emitted when the user agrees to download
     ipcMain.on('startingDownloadUpdate', () => {
         mainWindow.webContents.send('download-has-started');
@@ -416,8 +418,6 @@ const showMainWindow = async () => {
     ipcMain.on('open-recover-folder', () => {
         shell.openPath(`${userDataDir}/snapmaker-recover`);
     });
-
-    updateHandle();
 };
 
 // Allow max 4G memory usage

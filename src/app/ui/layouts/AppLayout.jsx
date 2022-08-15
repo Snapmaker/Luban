@@ -7,7 +7,7 @@ import isElectron from 'is-electron';
 import Mousetrap from 'mousetrap';
 import i18next from 'i18next';
 import classNames from 'classnames';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, throttle } from 'lodash';
 import Checkbox from '../components/Checkbox';
 import { Button } from '../components/Buttons';
 import { renderModal } from '../utils';
@@ -106,6 +106,8 @@ class AppLayout extends PureComponent {
 
     activeTab = ''
 
+    downloadingRef = React.createRef(false);
+
     actions = {
         renderSettingModal: () => {
             const onClose = () => {
@@ -188,14 +190,15 @@ class AppLayout extends PureComponent {
                 showDevelopToolsModal: true
             });
         },
-        startingDownloadUpdate: () => {
-            if (this.props.machineInfo.isDownloading) {
+        startingDownloadUpdate: throttle(() => {
+            if (this.downloadingRef.current) {
                 UniApi.Update.downloadHasStarted();
             } else {
+                this.downloadingRef.current = true;
                 const { ipcRenderer } = window.require('electron');
                 ipcRenderer.send('startingDownloadUpdate');
             }
-        },
+        }, 300),
         renderCheckForUpdatesModal: () => {
             const onClose = () => {
                 this.setState({
@@ -552,6 +555,7 @@ class AppLayout extends PureComponent {
             });
             UniApi.Event.on('is-replacing-app-now', (event, downloadInfo) => {
                 UniApi.Update.isReplacingAppNow(downloadInfo);
+                this.downloadingRef.current = false;
                 this.props.updateIsDownloading(false);
             });
             UniApi.Event.on('open-file', (event, file, arr) => {

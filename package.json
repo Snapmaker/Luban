@@ -1,6 +1,6 @@
 {
   "name": "snapmaker-luban",
-  "version": "4.4.0",
+  "version": "4.3.0",
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
   "homepage": "https://github.com/Snapmaker/Luban",
   "author": "Snapmaker Dev Team <whimsycwd@snapmaker.com>",
@@ -57,7 +57,8 @@
     "watch:server-worker": "webpack --config webpack.config.server.worker.development.js",
     "watch:server": "tsc -p ./tsconfig-server.json --watch",
     "build:server": "tsc -p ./tsconfig-server.json",
-    "build:main": "cross-env NODE_ENV=production babel \"./src/*.js\" --config-file ./babel.config.js -d ./output/"
+    "build:main": "cross-env NODE_ENV=production babel \"./src/*.js\" --config-file ./babel.config.js -d ./output/",
+    "build:app": "webpack --config webpack.config.app.production.js"
   },
   "build": {
     "appId": "com.snapmaker.luban",
