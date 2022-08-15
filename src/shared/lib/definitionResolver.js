@@ -32,14 +32,14 @@ var asistantMapInitialized = false;
 var allValues = {};
 var affectKey = '';
 var hasValue = false;
-function flatAffectedValue(affectKey, affectSet, originalAffectSet, isDeep) {
+function flatAffectedValue(insideAffectKey, affectSet, originalAffectSet, isDeep) {
     affectSet.forEach(function (item) {
-        if (item !== affectKey) {
+        if (item !== insideAffectKey) {
             originalAffectSet.add(item);
         }
-        if (allValues[item] && item !== affectKey) {
+        if (allValues[item] && item !== insideAffectKey) {
             if (!isDeep || (isDeep && !originalAffectSet.has(item))) {
-                flatAffectedValue(affectKey, allValues[item], originalAffectSet, true);
+                flatAffectedValue(insideAffectKey, allValues[item], originalAffectSet, true);
             }
         }
     });
@@ -163,13 +163,16 @@ function resolveDefinition(definition, modifiedParams) {
         flatAffectedValue(key, new Set(affectSet), affectSet);
     });
     var allAsistantArray = new Set();
-    var affectArray = [];
     if (modifiedParams) {
         modifiedParams.forEach(function (param) {
+            allAsistantArray.add({
+                param: param[0],
+                index: 0
+            });
             Object.entries(allValues).forEach(function (_a) {
                 var _b = __read(_a, 2), valueKey = _b[0], valueItem = _b[1];
                 var valueArray = Array.from(valueItem);
-                var indexOfValue = valueArray.indexOf(param[0]|| []);
+                var indexOfValue = valueArray.indexOf(param[0]);
                 if (indexOfValue > -1) {
                     allAsistantArray.add({
                         param: valueKey,
@@ -183,9 +186,8 @@ function resolveDefinition(definition, modifiedParams) {
             return a.index - b.index;
         })
             .map(function (d) { return d.param; });
+        // console.log('allAsistantArray', modifiedParams, allAsistantArray);
     }
-    // console.log('allAsistantArray', allAsistantArray);
-
     var _loop_2 = function (key) {
         var value = _.cloneDeep(asistantMap.get(key));
         try {
@@ -235,7 +237,7 @@ function resolveDefinition(definition, modifiedParams) {
             }
         }
         catch (e) {
-            console.error(e, value.visible);
+            console.error(e, key, value.visible);
         }
     };
     try {

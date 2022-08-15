@@ -8,7 +8,7 @@ import { v4 as uuid } from 'uuid';
 import _, { debounce } from 'lodash';
 import { Transfer } from 'threads';
 import i18n from '../lib/i18n';
-
+import { checkVector3NaN } from '../lib/numeric-utils';
 import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
 import { ModelInfo as SVGModelInfo, TMode, TSize } from './BaseModel';
 import ThreeModel from './ThreeModel';
@@ -1139,9 +1139,10 @@ class ModelGroup extends EventEmitter {
         return this._getEmptyState();
     }
 
-    public generateModel(modelInfo: ModelInfo | SVGModelInfo) {
-        this.addModel(modelInfo);
-        return this.getState();
+    public async generateModel(modelInfo: ModelInfo | SVGModelInfo) {
+        return new Promise((resolve, reject) => {
+            this.addModel(modelInfo, resolve, reject);
+        });
     }
 
     public layFlatSelectedModel() {
@@ -1704,7 +1705,7 @@ class ModelGroup extends EventEmitter {
      *
      * @returns {TModel}
      */
-    public addModel(modelInfo: ModelInfo | SVGModelInfo, immediatelyShow = true) {
+    public addModel(modelInfo: ModelInfo | SVGModelInfo, resolve, reject) {
         if (!modelInfo.modelName) {
             modelInfo.modelName = this._createNewModelName({
                 sourceType: modelInfo.sourceType as '3d' | '2d',
@@ -1721,6 +1722,8 @@ class ModelGroup extends EventEmitter {
             this.groupsChildrenMap.set(group, modelInfo.children.map((item) => {
                 return item.modelID;
             }));
+            resolve && resolve();
+
             return group as ThreeGroup;
         }
         // Adding the z position for each meshObject when add a model(Corresponding to 'bringSelectedModelToFront' function)
@@ -1735,22 +1738,24 @@ class ModelGroup extends EventEmitter {
 
         model.computeBoundingBox();
 
-        if (model instanceof ThreeModel && model.sourceType === '3d') {
-            if (modelInfo.parentModelID) {
-                // Updating groupsChildrenMap value to 'model'
-                this.groupsChildrenMap.forEach((subModelIDs, group) => {
-                    if (modelInfo.parentModelID === group.modelID) {
-                        const newSubModelIDs = subModelIDs.map((id) => {
-                            if (id === model.modelID) {
-                                return model;
-                            }
-                            return id;
-                        });
-                        this.groupsChildrenMap.set(group, newSubModelIDs);
-                    }
-                });
-            } else {
-                if (immediatelyShow) {
+        if (checkVector3NaN(model.meshObject.position)) {
+            reject && reject('err');
+        } else {
+            if (model instanceof ThreeModel && model.sourceType === '3d') {
+                if (modelInfo.parentModelID) {
+                    // Updating groupsChildrenMap value to 'model'
+                    this.groupsChildrenMap.forEach((subModelIDs, group) => {
+                        if (modelInfo.parentModelID === group.modelID) {
+                            const newSubModelIDs = subModelIDs.map((id) => {
+                                if (id === model.modelID) {
+                                    return model;
+                                }
+                                return id;
+                            });
+                            this.groupsChildrenMap.set(group, newSubModelIDs);
+                        }
+                    });
+                } else {
                     // add to group and select
                     model.stickToPlate();
                     this.models.push(model);
@@ -1760,41 +1765,40 @@ class ModelGroup extends EventEmitter {
 
                     this.selectModelById(model.modelID);
                 }
+                if (model.parentUploadName) {
+                    this.groupsChildrenMap.forEach((subModelIDs, group) => {
+                        if ((modelInfo as ModelInfo).parentUploadName === group.uploadName) {
+                            const newSubModelIDs = subModelIDs.map((id) => {
+                                if (id === model.modelID) {
+                                    return model;
+                                }
+                                return id;
+                            });
+                            this.groupsChildrenMap.set(group, newSubModelIDs);
+                        }
+                    });
+                    this.updateSelectedGroupTransformation(
+                        {
+                            positionX: model.originalPosition.x,
+                            positionY: model.originalPosition.y,
+                            positionZ: model.originalPosition.z,
+                        }
+                    );
+                }
+                this.updatePrimeTowerHeight();
+            } else {
+                // add to group and select
+                this.models.push(model);
+                // todo, use this to refresh obj list
+                this.models = [...this.models];
+                this.object.add(model.meshObject);
             }
-            if (model.parentUploadName) {
-                this.groupsChildrenMap.forEach((subModelIDs, group) => {
-                    if ((modelInfo as ModelInfo).parentUploadName === group.uploadName) {
-                        const newSubModelIDs = subModelIDs.map((id) => {
-                            if (id === model.modelID) {
-                                return model;
-                            }
-                            return id;
-                        });
-                        this.groupsChildrenMap.set(group, newSubModelIDs);
-                    }
-                });
-                this.updateSelectedGroupTransformation(
-                    {
-                        positionX: model.originalPosition.x,
-                        positionY: model.originalPosition.y,
-                        positionZ: model.originalPosition.z,
-                    }
-                );
-            }
-        } else {
-            // add to group and select
-            this.models.push(model);
-            // todo, use this to refresh obj list
-            this.models = [...this.models];
-            this.object.add(model.meshObject);
         }
 
-        if (immediatelyShow) {
-            this.emit(ModelEvents.AddModel, model);
-            // refresh view
-            this.modelChanged();
-            modelInfo.sourceType === '3d' && this.updatePrimeTowerHeight();
-        }
+        this.emit(ModelEvents.AddModel, model);
+        // refresh view
+        this.modelChanged();
+        resolve && resolve();
         return model;
     }
 

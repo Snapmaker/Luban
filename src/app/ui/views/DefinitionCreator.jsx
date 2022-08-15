@@ -190,6 +190,11 @@ const DefinitionCreator = ({
                                                             }
                                                         ]);
                                                         setNewOptionsValue('');
+                                                        setState({
+                                                            ...state,
+                                                            categoryName: newOptionValue,
+                                                            categoryI18n: newOptionValue
+                                                        });
                                                     }}
                                                 />
                                             )}

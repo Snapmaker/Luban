@@ -25,7 +25,6 @@ import { UniformToolpathConfig } from '../../lib/uniform-toolpath-config';
 import { checkIsSnapmakerProjectFile, checkIsGCodeFile } from '../../lib/check-name';
 import { actions as operationHistoryActions } from '../operation-history';
 import { machineStore } from '../../store/local-storage';
-import ThreeModel from '../../models/ThreeModel';
 
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
@@ -285,7 +284,6 @@ export const actions = {
             toolPathGroup.selectToolPathById(null);
             dispatch(modActions.updateState(envHeadType, toolPathGroup));
         }
-        dispatch(modActions.updateState(envHeadType, restState));
 
         if (envHeadType === HEAD_PRINTING) {
             dispatch(modActions.updateState(restState));
@@ -302,9 +300,6 @@ export const actions = {
 
         Promise.all(promiseArray).then(() => {
             dispatch(actions.afterOpened(envHeadType));
-            if (envHeadType === HEAD_PRINTING) {
-                dispatch(modActions.applyProfileToAllModels());
-            }
         }).catch(console.error);
     },
 
@@ -425,28 +420,9 @@ export const actions = {
         await dispatch(actions.clearSavedEnvironment(headType));
     },
 
-    afterOpened: (headType) => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
+    afterOpened: (headType) => (dispatch) => {
         if (headType === HEAD_PRINTING) {
-            // when recovering project, add model to its group
-            modelGroup.groupsChildrenMap.forEach((subModels, group) => {
-                if (subModels.every(id => id instanceof ThreeModel)) {
-                    modelGroup.unselectAllModels();
-
-                    group.meshObject.updateMatrixWorld();
-                    const groupMatrix = group.meshObject.matrixWorld.clone();
-                    group.add(subModels);
-                    modelGroup.groupsChildrenMap.delete(group);
-                    modelGroup.models = [...modelGroup.models, group];
-                    group.meshObject.applyMatrix4(groupMatrix);
-
-                    group.stickToPlate();
-                    group.computeBoundingBox();
-                    const overstepped = modelGroup._checkOverstepped(group);
-                    group.setOversteppedAndSelected(overstepped, group.isSelected);
-                    modelGroup.addModelToSelectedGroup(group);
-                }
-            });
+            dispatch(printingActions.applyProfileToAllModels());
         }
         dispatch(actions.autoSaveEnvironment(headType));
     },

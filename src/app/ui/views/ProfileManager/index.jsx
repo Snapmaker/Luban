@@ -5,7 +5,8 @@ import { Tooltip, Menu } from 'antd';
 import PropTypes from 'prop-types';
 // import { useSelector, shallowEqual } from 'react-redux';
 import { isUndefined, cloneDeep, uniqWith } from 'lodash';
-import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING, PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
+import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING,
+    PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY, MATERIAL_TYPE_OPTIONS } from '../../../constants';
 import modal from '../../../lib/modal';
 import DefinitionCreator from '../DefinitionCreator';
 import Anchor from '../../components/Anchor';
@@ -37,6 +38,7 @@ import Dropdown from '../../components/Dropdown';
  * @ExportType                  ×    |     ×
  */
 const DEFAULT_DISPLAY_TYPE = 'key-default_category-Default';
+const MATERIAL_TYPE_ARRAY = MATERIAL_TYPE_OPTIONS.map(d => d.label);
 function creatCateArray(optionList) {
     const cates = [];
     optionList.forEach(option => {
@@ -71,16 +73,20 @@ export function useGetDefinitions(allDefinitions, activeDefinitionID, getDefault
 
     useEffect(() => {
         const definitionOptions = allDefinitions.map(d => {
+            let actualCategory = d.category;
+            if (managerType === PRINTING_MANAGER_TYPE_MATERIAL && !(MATERIAL_TYPE_ARRAY.includes(d.category))) {
+                actualCategory = 'Other';
+            }
             return {
                 label: d.name,
                 value: d.definitionId,
-                category: d.category,
                 i18nCategory: d.i18nCategory,
                 isHidden: !d.settings || Object.keys(d.settings).length === 0,
                 isDefault: !!d.isDefault,
                 color: (
-                    managerType === PRINTING_MANAGER_TYPE_MATERIAL && d.ownKeys.find(key => key === 'color') && d.settings.color
-                ) ? d.settings.color.default_value : ''
+                    managerType === PRINTING_MANAGER_TYPE_MATERIAL && d.settings.color
+                ) ? d.settings.color.default_value : '#000000',
+                category: actualCategory
             };
         });
         setDefinitionState((prev) => {
@@ -190,6 +196,7 @@ function ProfileManager({
                         selectedName: selected.name,
                         selectedSettingDefaultValue: selectedSettingDefaultValue
                     });
+                    dispatch(printingActions.updateDefaultMaterialId(selected.definitionId));
                 } else {
                     dispatch(printingActions.updateDefaultQualityId(selected.definitionId));
                     dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
@@ -573,7 +580,7 @@ function ProfileManager({
                                                             <div className={classNames(styles['manager-action'])}>
                                                                 <Dropdown
                                                                     placement="bottomRight"
-                                                                    overlay={() => (
+                                                                    overlay={(
                                                                         <Menu>
                                                                             <Menu.Item>
                                                                                 <Anchor onClick={() => { actions.setRenamingStatus(true); }}>
@@ -662,7 +669,7 @@ function ProfileManager({
                                                                                     <div className={classNames(styles['manager-action'])}>
                                                                                         <Dropdown
                                                                                             placement="bottomRight"
-                                                                                            overlay={() => (
+                                                                                            overlay={(
                                                                                                 <Menu>
                                                                                                     {!isOfficialDefinition(definitionState.definitionForManager) && (
                                                                                                         <Menu.Item>
@@ -740,7 +747,7 @@ function ProfileManager({
                                             placement="top"
                                             arrow
                                             overlayClassName="horizontal-menu"
-                                            overlay={() => (
+                                            overlay={(
                                                 <Menu>
                                                     <Menu.Item>
                                                         <Tooltip title={managerType === PRINTING_MANAGER_TYPE_MATERIAL ? i18n._('key-Settings/Create Material Tips') : null} placement="top">

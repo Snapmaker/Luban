@@ -254,9 +254,16 @@ class Controls extends EventEmitter {
         this.offset.copy(this.camera.position).sub(this.target);
         // calculate move distance of target in perspective view of camera
         const distance = 2 * this.offset.length() * Math.tan(this.camera.fov / 2 * Math.PI / 180);
-
-        this.panLeft(distance * deltaX / elem.clientWidth, this.camera.matrix);
-        this.panUp(distance * deltaY / elem.clientHeight, this.camera.matrix);
+        let leftDistance = distance * deltaX / elem.clientWidth;
+        let upDistance = distance * deltaY / elem.clientHeight;
+        if (Math.abs(distance / elem.clientWidth) < 0.05) {
+            leftDistance = 0.05 * deltaX;
+        }
+        if (Math.abs(distance / elem.clientHeight) < 0.05) {
+            upDistance = 0.05 * deltaY;
+        }
+        this.panLeft(leftDistance, this.camera.matrix);
+        this.panUp(upDistance, this.camera.matrix);
     }
 
     setScale(scale) {

@@ -602,7 +602,7 @@ class ThreeModel extends BaseModel {
     public getSerializableConfig() {
         const {
             modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, mode,
-            transformation, processImageName, supportTag, visible, extruderConfig, modelName
+            transformation, processImageName, supportTag, visible, extruderConfig, modelName, parentUploadName
         } = this;
 
         return {
@@ -620,6 +620,7 @@ class ThreeModel extends BaseModel {
             processImageName,
             supportTag,
             extruderConfig,
+            parentUploadName,
             modelName
         };
     }

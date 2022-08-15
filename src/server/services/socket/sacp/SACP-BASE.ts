@@ -217,9 +217,8 @@ class SocketBASE {
         }
     };
 
-    public goHome = async (hasHomingModel = false, headType?: string) => {
+    public goHome = async (headType?: string) => {
         log.info('onClick gohome');
-        hasHomingModel && this.socket && this.socket.emit('move:status', { isHoming: true });
         await this.sacpClient.updateCoordinate(CoordinateType.MACHINE).then(res => {
             log.info(`Update Coordinate: ${res}`);
         });

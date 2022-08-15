@@ -138,5 +138,3 @@ class ClippingPoolManager {
 const clippingPoolManager = new ClippingPoolManager();
 
 export default clippingPoolManager;
-
-

@@ -23,6 +23,19 @@ const primeTowerDefinitionKeys = [
     'prime_tower_brim_enabled',
     'prime_tower_wipe_enabled',
 ];
+const nozzleSizeRelationSettingsKeys = [
+    'wall_line_width_0',
+    'wall_line_width_x',
+    'skin_line_width',
+    'infill_line_width',
+    'skirt_brim_line_width',
+    'support_line_width',
+    'support_interface_line_width',
+    'support_roof_line_width',
+    'support_bottom_line_width',
+    'prime_tower_line_width',
+    'wall_line_count'
+];
 
 class DefinitionManager {
     headType = HEAD_CNC;
@@ -34,6 +47,8 @@ class DefinitionManager {
     extruderRDefinition = null;
 
     defaultDefinitions = [];
+
+    extruderProfileArr = [];
 
     configPathname = '';
 
@@ -70,6 +85,7 @@ class DefinitionManager {
 
             res = await this.getDefinition('snapmaker_extruder_1', false);
             this.extruderRDefinition = res;
+            this.extruderProfileArr = definitionRes.extruderProfileArr
             return {
                 printingProfileLevel: definitionRes.printingProfileLevel,
                 materialProfileLevel: definitionRes.materialProfileLevel
@@ -252,148 +268,8 @@ class DefinitionManager {
     // Calculate hidden settings
     calculateDependencies(
         settings,
-        hasSupportModel,
-        extruderLDefinitionSettings,
-        extruderRDefinitionSettings,
-        helpersExtruderConfig
+        hasSupportModel
     ) {
-        if (settings.infill_sparse_density) {
-            const infillSparseDensity = settings.infill_sparse_density.default_value;
-            // L: infill_line_distance
-            const infillLineWidthL = extruderLDefinitionSettings.machine_nozzle_size.default_value; // infill_line_width
-
-            const infillLineDistanceL = infillSparseDensity < 1
-                ? 0
-                : ((infillLineWidthL * 100) / infillSparseDensity) * 2;
-            extruderLDefinitionSettings.infill_line_distance = {
-                default_value: infillLineDistanceL
-            };
-
-            // R: infill_line_distance
-            const infillLineWidthR = extruderRDefinitionSettings.machine_nozzle_size.default_value; // infill_line_width
-
-            const infillLineDistanceR = infillSparseDensity < 1
-                ? 0
-                : ((infillLineWidthR * 100) / infillSparseDensity) * 2;
-            extruderRDefinitionSettings.infill_line_distance = {
-                default_value: infillLineDistanceR
-            };
-
-            // top_layers & bottom_layers
-            if (settings.infill_sparse_density.default_value === 100) {
-                settings.top_layers = { default_value: 0 };
-                settings.bottom_layers = { default_value: 999999 };
-            }
-        }
-
-        if (settings.wall_thickness) {
-            // "1 if magic_spiralize else max(1, round((wall_thickness - wall_line_width_0) / wall_line_width_x) + 1) if wall_thickness != 0 else 0"
-            const wallThickness = settings.wall_thickness.default_value;
-
-            // L: wall_line_count
-            const wallOutLineWidthL = extruderLDefinitionSettings.machine_nozzle_size.default_value; // wall_line_width_0
-            const wallInnerLineWidthL = extruderLDefinitionSettings.machine_nozzle_size.default_value; // wall_line_width_x
-            const wallLineCountL = wallThickness !== 0
-                ? Math.max(
-                    1,
-                    Math.round(
-                        (wallThickness - wallOutLineWidthL)
-                        / wallInnerLineWidthL
-                    ) + 1
-                )
-                : 0;
-            extruderLDefinitionSettings.wall_line_count = {
-                default_value: wallLineCountL
-            };
-
-            // R: wall_line_count
-            const wallOutLineWidthR = extruderRDefinitionSettings.machine_nozzle_size.default_value; // wall_line_width_0
-            const wallInnerLineWidthR = extruderRDefinitionSettings.machine_nozzle_size.default_value; // wall_line_width_x
-            const wallLineCountR = wallThickness !== 0
-                ? Math.max(
-                    1,
-                    Math.round(
-                        (wallThickness - wallOutLineWidthR)
-                        / wallInnerLineWidthR
-                    ) + 1
-                )
-                : 0;
-            extruderRDefinitionSettings.wall_line_count = {
-                default_value: wallLineCountR
-            };
-        }
-
-        if (settings.layer_height) {
-            const layerHeight = settings.layer_height.default_value;
-            const infillSparseDensity = settings.infill_sparse_density.default_value;
-
-            // "0 if infill_sparse_density == 100 else math.ceil(round(top_thickness / resolveOrValue('layer_height'), 4))"
-            const topThickness = settings.top_thickness.default_value;
-            const topLayers = infillSparseDensity === 100
-                ? 0
-                : Math.ceil(topThickness / layerHeight);
-            settings.top_layers.default_value = topLayers;
-            settings.top_layers = { default_value: topLayers };
-
-            // "999999 if infill_sparse_density == 100 else math.ceil(round(bottom_thickness / resolveOrValue('layer_height'), 4))"
-            const bottomThickness = settings.bottom_thickness.default_value;
-            const bottomLayers = infillSparseDensity === 100
-                ? 999999
-                : Math.ceil(bottomThickness / layerHeight);
-            settings.bottom_layers.default_value = bottomLayers;
-            settings.bottom_layers = { default_value: bottomLayers };
-        }
-        if (settings.speed_print_layer_0) {
-            // "skirt_brim_speed = speed_print_layer_0"
-            const speedPrintLayer0 = settings.speed_print_layer_0.default_value;
-            settings.skirt_brim_speed = { default_value: speedPrintLayer0 };
-        }
-        if (settings.support_infill_rate) {
-            const supportInfillRate = settings.support_infill_rate.default_value;
-            let supportLineWidth;
-            if (helpersExtruderConfig.support === RIGHT_EXTRUDER_MAP_NUMBER) {
-                supportLineWidth = extruderRDefinitionSettings.machine_nozzle_size
-                    .default_value; // support_line_width
-            } else {
-                supportLineWidth = extruderLDefinitionSettings.machine_nozzle_size
-                    .default_value; // support_line_width
-            }
-
-            // "0 if support_infill_rate == 0 else (support_line_width * 100) / support_infill_rate *
-            // (2 if support_pattern == 'grid' else (3 if support_pattern == 'triangles' else 1))"
-            const supportPattern = settings.support_pattern.default_value;
-            let supportPatternRate = 1;
-            if (supportPattern === 'grid') {
-                supportPatternRate = 2;
-            } else if (supportPattern === 'triangles') {
-                supportPatternRate = 3;
-            }
-            settings.support_line_distance.default_value = supportInfillRate === 0
-                ? 0
-                : ((supportLineWidth * 100) / supportInfillRate)
-                * supportPatternRate;
-            settings.support_initial_layer_line_distance.default_value = settings.support_line_distance.default_value;
-        }
-        if (settings.support_pattern) {
-            settings.support_wall_count = settings.support_pattern.default_value === 'grid'
-                ? { default_value: 1 }
-                : { default_value: 0 };
-        }
-        if (settings.support_z_distance) {
-            // copy cura feature
-            const supportZDistance = settings.support_z_distance.default_value;
-            settings.support_top_distance = { default_value: supportZDistance };
-            settings.support_bottom_distance = {
-                default_value: supportZDistance / 2
-            };
-        }
-        // TODO: useless
-        if (settings.cool_fan_speed) {
-            const coolFanSpeed = settings.cool_fan_speed.default_value;
-            settings.cool_fan_speed_min = { default_value: coolFanSpeed };
-            settings.cool_fan_speed_max = { default_value: coolFanSpeed };
-        }
-
         // fix CuraEngine z_overide_xy not effected on support_mesh
         if (hasSupportModel) {
             if (settings.support_z_distance) {
@@ -408,11 +284,6 @@ class DefinitionManager {
         ) {
             settings.support_xy_distance.default_value = 0.875; // reset xy
         }
-        return {
-            settings,
-            extruderLDefinitionSettings,
-            extruderRDefinitionSettings,
-        };
     }
 
     finalizeActiveDefinition(
@@ -511,9 +382,9 @@ class DefinitionManager {
             }
         });
         const meshKeys = [
-            'infill_line_distance',
+            // 'infill_line_distance',
             'infill_line_width',
-            'wall_line_count',
+            // 'wall_line_count',
             'wall_line_width',
             'wall_line_width_0',
             'wall_line_width_x',
@@ -540,17 +411,17 @@ class DefinitionManager {
         definition.settings.top_bottom_extruder_nr.default_value = item.extruderConfig.shell;
         definition.settings.material_flow_layer_0.default_value = qualityDefinition.settings.material_flow_layer_0.default_value;
         if (item.extruderConfig.infill === '0') {
-            definition.settings.infill_line_distance.default_value = extruderLDefinition.settings.infill_line_distance.default_value;
+            // definition.settings.infill_line_distance.default_value = extruderLDefinition.settings.infill_line_distance.default_value;
             definition.settings.infill_line_width.default_value = extruderLDefinition.settings.infill_line_width.default_value;
             definition.settings.infill_material_flow.default_value = extruderLDefinition.settings.material_flow.default_value;
         } else {
-            definition.settings.infill_line_distance.default_value = extruderRDefinition.settings.infill_line_distance.default_value;
+            // definition.settings.infill_line_distance.default_value = extruderRDefinition.settings.infill_line_distance.default_value;
             definition.settings.infill_line_width.default_value = extruderRDefinition.settings.infill_line_width.default_value;
             definition.settings.infill_material_flow.default_value = extruderRDefinition.settings.material_flow.default_value;
         }
 
         if (item.extruderConfig.shell === '0') {
-            definition.settings.wall_line_count.default_value = extruderLDefinition.settings.wall_line_count.default_value;
+            // definition.settings.wall_line_count.default_value = extruderLDefinition.settings.wall_line_count.default_value;
             definition.settings.wall_line_width.default_value = extruderLDefinition.settings.wall_line_width.default_value;
             definition.settings.wall_line_width_0.default_value = extruderLDefinition.settings.wall_line_width_0.default_value;
             definition.settings.wall_line_width_x.default_value = extruderLDefinition.settings.wall_line_width_x.default_value;
@@ -560,7 +431,7 @@ class DefinitionManager {
             definition.settings.skin_material_flow.default_value = extruderLDefinition.settings.material_flow.default_value;
             definition.settings.roofing_material_flow.default_value = extruderLDefinition.settings.material_flow.default_value;
         } else {
-            definition.settings.wall_line_count.default_value = extruderRDefinition.settings.wall_line_count.default_value;
+            // definition.settings.wall_line_count.default_value = extruderRDefinition.settings.wall_line_count.default_value;
             definition.settings.wall_line_width.default_value = extruderRDefinition.settings.wall_line_width.default_value;
             definition.settings.wall_line_width_0.default_value = extruderRDefinition.settings.wall_line_width_0.default_value;
             definition.settings.wall_line_width_x.default_value = extruderRDefinition.settings.wall_line_width_x.default_value;
@@ -574,16 +445,17 @@ class DefinitionManager {
     }
 
     finalizeExtruderDefinition({
+        activeQualityDefinition,
         extruderDefinition,
         materialDefinition,
         hasPrimeTower,
         primeTowerXDefinition,
         primeTowerYDefinition
     }) {
-        const definition = {
+        const newExtruderDefinition = {
             ...extruderDefinition,
         };
-        const settings = definition.settings;
+        const newQualityDefinition = {settings : {...activeQualityDefinition.settings}};
         const materialFlow = materialDefinition.settings.material_flow;
         if (materialFlow) {
             const extruderKey = [
@@ -593,41 +465,21 @@ class DefinitionManager {
                 'prime_tower_flow'
             ];
             extruderKey.forEach((key) => {
-                definition.settings[key] = {
+                newExtruderDefinition.settings[key] = {
                     default_value: materialFlow.default_value
                 };
             });
         }
         const switchExtruderRetractionSpeeds = materialDefinition.settings.switch_extruder_retraction_speeds;
         if (switchExtruderRetractionSpeeds) {
-            const nozzleSizeRelationSettingsKeys = [
+            const speedsRelationSettingsKeys = [
                 'switch_extruder_retraction_speed',
                 'switch_extruder_prime_speed'
             ];
-            for (const key of nozzleSizeRelationSettingsKeys) {
-                if (!definition.settings[key]) {
-                    definition.settings[key] = {};
-                }
-                definition.settings[key].default_value = switchExtruderRetractionSpeeds.default_value;
-            }
-        }
-        // TODO: move 'machine_nozzle_size' to materialDefinition
-        const nozzleSize = settings.machine_nozzle_size.default_value;
-        if (nozzleSize) {
-            const nozzleSizeRelationSettingsKeys = [
-                'wall_line_width_0',
-                'wall_line_width_x',
-                'skin_line_width',
-                'infill_line_width',
-                'skirt_brim_line_width',
-                'support_line_width',
-                'support_interface_line_width',
-                'support_roof_line_width',
-                'support_bottom_line_width',
-                'prime_tower_line_width'
-            ];
-            for (const key of nozzleSizeRelationSettingsKeys) {
-                definition.settings[key].default_value = nozzleSize;
+            for (const key of speedsRelationSettingsKeys) {
+                newExtruderDefinition.settings[key] = {
+                    default_value: switchExtruderRetractionSpeeds.default_value
+                };
             }
         }
         PRINTING_MATERIAL_CONFIG_KEYS_SINGLE.concat(
@@ -636,24 +488,36 @@ class DefinitionManager {
         ).forEach((key) => {
             const setting = materialDefinition.settings[key];
             if (setting) {
-                definition.settings[key] = {
+                newExtruderDefinition.settings[key] = {
                     default_value: setting.default_value,
                 };
             }
         });
+        const nozzleSize = newExtruderDefinition?.settings?.machine_nozzle_size?.default_value;
+        if (nozzleSize && newExtruderDefinition.definitionId === 'snapmaker_extruder_1') {
+            resolveDefinition(newQualityDefinition, [['machine_nozzle_size', nozzleSize]]);
+        }
+        this.extruderProfileArr.concat(nozzleSizeRelationSettingsKeys).forEach((item) => {
+            if (newQualityDefinition.settings[item]) {
+                newExtruderDefinition.settings[item] = {
+                    default_value: newQualityDefinition.settings[item].default_value,
+                };
+            }
+        });
+
         if (hasPrimeTower) {
             MACHINE_EXTRUDER_X.forEach((keyItem) => {
-                definition.settings[
+                newExtruderDefinition.settings[
                     keyItem
                 ].default_value = primeTowerXDefinition;
             });
             MACHINE_EXTRUDER_Y.forEach((keyItem) => {
-                definition.settings[
+                newExtruderDefinition.settings[
                     keyItem
                 ].default_value = primeTowerYDefinition;
             });
         }
-        return definition;
+        return newExtruderDefinition;
     }
 
     addMachineStartGcode(definition, extruderDefinition) {

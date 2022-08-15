@@ -48,14 +48,16 @@ class SocketSerial {
                         const controller = controllers[port];
                         return controller && controller.isOpen();
                     });
-
-                const availablePorts = allPorts.map((port) => {
+                const availablePorts = allPorts.filter((port) => {
+                    return port.productId;
+                }).map((port) => {
                     return {
                         port: port.path,
                         manufacturer: port.manufacturer,
                         inuse: portsInUse.indexOf(port.path) >= 0
                     };
                 });
+
                 socket.emit('machine:serial-discover', { devices: availablePorts, type: CONNECTION_TYPE_SERIAL });
             })
             .catch((err) => {

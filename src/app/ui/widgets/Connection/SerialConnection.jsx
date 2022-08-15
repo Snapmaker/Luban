@@ -19,6 +19,7 @@ import {
 } from '../../../constants';
 import { actions as machineActions } from '../../../flux/machine';
 import styles from './index.styl';
+import MismatchModal from './MismatchModal';
 
 let loadingTimer = null;
 function SerialConnection() {
@@ -225,7 +226,7 @@ function SerialConnection() {
 
     const canRefresh = !loadingPorts && !isOpen;
     const canChangePort = canRefresh;
-    const canOpenPort = portState.port && !isOpen;
+    const canOpenPort = portState.port && !portState.address && !isOpen && servers.length;
 
     return (
         <div>
@@ -314,6 +315,7 @@ function SerialConnection() {
                     <span className="margin-horizontal-8">{err}</span>
                 )}
             </div>
+            <MismatchModal />
         </div>
     );
 }

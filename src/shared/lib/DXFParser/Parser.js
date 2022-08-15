@@ -228,7 +228,11 @@ export const dxfToSvg = (dxf, strokeWidth = 0.72) => {
                     });
                 } else {
                     vertex = entities.vertices[i];
-                    pathsObj.points.push([vertex.x, vertex.y]);
+                    if (entities.extrusionDirection && entities.extrusionDirection.z === -1) {
+                        pathsObj.points.push([-vertex.x, vertex.y]);
+                    } else {
+                        pathsObj.points.push([vertex.x, vertex.y]);
+                    }
                 }
             }
 

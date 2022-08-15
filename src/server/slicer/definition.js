@@ -14,6 +14,12 @@ const SETTING_FIELDS = [
     // Snapmaker extended fields:
     'sm_value'
 ];
+const allSettingNameWithType = {
+    'material': new Set(),
+    'quality': new Set()
+};
+const materialRegex = /^material.*/;
+const qualityRegex = /^quality.*/;
 
 const DEFAULT_PREDEFINED_ID = {
     'printing': 'quality.fast_print.def.json',
@@ -25,6 +31,8 @@ export class DefinitionLoader {
     printingProfileLevel = {};
 
     materialProfileLevel = {};
+
+    extruderProfileArr = new Set();
 
     definitionId = '';
 
@@ -181,6 +189,15 @@ export class DefinitionLoader {
                             this.settings[key][field] = setting[field];
                         }
                     }
+                    if (mainCategory === 'quality') {
+                        if (setting.settable_per_extruder) {
+                            this.extruderProfileArr.add(key);
+                        }
+                        allSettingNameWithType[mainCategory].add(key);
+                    }
+                    if (mainCategory === 'material') {
+                        allSettingNameWithType[mainCategory].add(key);
+                    }
                     if (isUndefined(this.settings[key].zIndex)) {
                         this.settings[key].zIndex = zIndex;
                     }
@@ -199,6 +216,13 @@ export class DefinitionLoader {
                     this.settings[key].isLeave = (setting.children === undefined);
 
                     if (definitionId === this.definitionId && !this.ownKeys.has(key)) {
+                        // if (materialRegex.test(definitionId) && allSettingNameWithType.material.has(key)) {
+                        //     this.ownKeys.add(key);
+                        // } else if (qualityRegex.test(definitionId) && allSettingNameWithType.quality.has(key)) {
+                        //     this.ownKeys.add(key);
+                        // } else if (!(materialRegex.test(definitionId)) && !(qualityRegex.test(definitionId))) {
+                        //     this.ownKeys.add(key);
+                        // }
                         this.ownKeys.add(key);
                     }
 
@@ -217,7 +241,11 @@ export class DefinitionLoader {
 
     toJSON() {
         const overrides = {};
-
+        if (materialRegex.test(this.definitionId)) {
+            this.ownKeys = allSettingNameWithType.material;
+        } else if (qualityRegex.test(this.definitionId)) {
+            this.ownKeys = allSettingNameWithType.quality;
+        }
         for (const key of this.ownKeys) {
             if (this.settings[key]) {
                 overrides[key] = {
@@ -254,7 +282,8 @@ export class DefinitionLoader {
             typeOfPrinting: this.typeOfPrinting,
             ownKeys: Array.from(this.ownKeys),
             printingProfileLevel: this.printingProfileLevel,
-            materialProfileLevel: this.materialProfileLevel
+            materialProfileLevel: this.materialProfileLevel,
+            extruderProfileArr: Array.from(this.extruderProfileArr)
         };
     }
 
@@ -286,9 +315,11 @@ export class DefinitionLoader {
         this.i18nCategory = i18nCategory;
     }
 
-    updateSettings(settings) {
-        for (const key of Object.keys(settings)) {
-            this.ownKeys.add(key);
+    updateSettings(settings, shouldAddOwnKeys = true) {
+        if (shouldAddOwnKeys) {
+            for (const key of Object.keys(settings)) {
+                this.ownKeys.add(key);
+            }
         }
         this.settings = {
             ...this.settings,

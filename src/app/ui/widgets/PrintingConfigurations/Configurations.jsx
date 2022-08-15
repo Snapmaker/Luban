@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import classNames from 'classnames';
 import { cloneDeep, isNil, uniqWith } from 'lodash';
 import { Menu } from 'antd';
+import Tooltip from '../../components/Tooltip';
 import modal from '../../../lib/modal';
 import DefinitionCreator from '../../views/DefinitionCreator';
 import Select from '../../components/Select';
@@ -39,10 +40,9 @@ const ALL_ICON_NAMES = {
     'layer_height': ['LayerHeightFine', 'LayerHeightMedium', 'LayerHeightRough'],
     'speed_print': ['SpeedSlow', 'SpeedMedium', 'SpeedFast'],
     'infill_sparse_density': ['ModelStructureThin', 'ModelStructureMedium', 'ModelStructureHard', 'ModelStructureVase'],
-    'support_type': ['SupportLine', 'SupportNone'],
+    'support_generate_type': ['SupportLine', 'SupportNone'],
     'adhesion_type': ['AdhesionSkirt', 'AdhesionBrim', 'AdhesionRaft']
 };
-
 
 export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition, setSelectedDefinition }) {
     const allParams = selectedDefinitionModel.params;
@@ -93,12 +93,14 @@ export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition
                 } else {
                     iconName = ALL_ICON_NAMES[paramName][1] || 'PrintingSettingNormal';
                 }
+
                 const eachParamObject = selectedDefinitionSettings[paramName];
                 let displayName = eachParamObject?.label;
                 let displayValue = eachParamObject?.default_value;
                 let segmentedDisplay = true;
                 let showSelect = false;
                 const selectOptions = [];
+
                 if (paramName === 'infill_sparse_density') {
                     const modelStructure = selectedDefinitionSettings.model_structure_type;
                     showSelect = true;
@@ -112,43 +114,203 @@ export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition
                         selectOptions.push({ value, label });
                     });
                 }
-                return (
-                    <div key={paramName} className="margin-vertical-16">
-                        <div className="height-24 margin-bottom-4 sm-flex justify-space-between">
-                            <div className="display-inline">
-                                <SvgIcon
-                                    className="margin-right-8"
-                                    name={iconName}
-                                    type={['static']}
-                                    size={24}
-                                />
-                                <span className="color-black-3">
+
+                let descriptionDom = null;
+                const allKeys = Object.keys(ALL_ICON_NAMES);
+                switch (paramName) {
+                    case allKeys[0]:
+                        descriptionDom = (
+                            <div className="padding-vertical-16 padding-horizontal-16">
+                                <div className="font-weight-bold padding-bottom-16 border-bottom-white">
                                     {i18n._(`key-Luban/Preset/${displayName}`)}
-                                </span>
+                                </div>
+                                <div className="sm-flex justify-space-between">
+                                    <img src="/resources/images/3dp/layer-height-rough.png" alt="arrow" className="display-inline width-72 height-72" />
+                                    <img src="/resources/images/3dp/layer-height-medium.png" alt="arrow" className="display-inline width-72 height-72" />
+                                    <img src="/resources/images/3dp/layer-height-fine.png" alt="arrow" className="display-inline width-72 height-72" />
+                                </div>
+                                <img src="/resources/images/3dp/arrow.png" alt="arrow" className="display-block margin-vertical-8 width-288 height-12" />
+                                <div className="font-size-small padding-top-16">
+                                    {i18n._('key-Luban/Preset/The height of each layer of the model. Higher values produce faster prints in lower resolution, while lower values produce slower prints in higher resolution.')}
+                                </div>
                             </div>
-                            {!showSelect && !(['Support Placement', 'Build Plate Adhesion Type'].includes(displayName)) && (
-                                <span className="float-r color-black-3">
-                                    {displayValue}{eachParamObject?.unit}
-                                </span>
-                            )}
-                            {showSelect && (
-                                <Select
-                                    size="72px"
-                                    bordered={false}
-                                    options={selectOptions}
-                                    value={displayValue}
-                                    onChange={(item) => { onChangeDefinition('model_structure_type', item.value); }}
+                        );
+                        break;
+                    case allKeys[1]:
+                        descriptionDom = (
+                            <div className="padding-vertical-16 padding-horizontal-16">
+                                <div className="font-weight-bold padding-bottom-16 border-bottom-white">
+                                    {i18n._(`key-Luban/Preset/${displayName}`)}
+                                </div>
+                                <div className="font-size-small padding-top-16">
+                                    <div className="sm-flex justify-space-between font-weight-bold">
+                                        <div>
+                                            <div className="height-24">
+                                                {i18n._('key-Luban/Preset/Printing Time')}
+                                                <SvgIcon
+                                                    size={24}
+                                                    hoversize={24}
+                                                    type={['static']}
+                                                    name="TooltipsUp"
+                                                    color="#FF3939"
+                                                />
+                                            </div>
+                                            <div className="height-24">
+                                                {i18n._('key-Luban/Preset/Printing Time')}
+                                                <SvgIcon
+                                                    size={24}
+                                                    hoversize={24}
+                                                    type={['static']}
+                                                    name="TooltipsUp"
+                                                    color="#4CB518"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div className="height-24">
+                                                {i18n._('key-Luban/Preset/Printing Quality')}
+                                                <SvgIcon
+                                                    size={24}
+                                                    hoversize={24}
+                                                    type={['static']}
+                                                    name="TooltipsDown"
+                                                    color="#4CB518"
+                                                />
+                                            </div>
+                                            <div className="height-24">
+                                                {i18n._('key-Luban/Preset/Printing Quality')}
+                                                <SvgIcon
+                                                    size={24}
+                                                    hoversize={24}
+                                                    type={['static']}
+                                                    name="TooltipsDown"
+                                                    color="#FF3939"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <img src="/resources/images/3dp/arrow.png" alt="arrow" className="display-block margin-vertical-8 width-288 height-12" />
+                                    <div>
+                                        {i18n._('key-Luban/Preset/The speed at which printing happens. Higher values decrease your printing time, at the cost of printing quality, while lower values increase the printing quality but require more time.')}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                        break;
+                    case allKeys[2]:
+                        descriptionDom = (
+                            <div className="padding-vertical-16 padding-horizontal-16">
+                                <div className="font-weight-bold padding-bottom-16 border-bottom-white">
+                                    {i18n._(`key-Luban/Preset/${displayName}`)}
+                                </div>
+                                <div className="font-size-small padding-top-16">
+                                    <p className="font-weight-bold">{i18n._('key-Luban/Preset/Model Structure Type-Normal')}</p>
+                                    <p className="margin-vertical-8">
+                                        {i18n._('key-Luban/Preset/Prints all parts of the model integrally. The stronger the model is, the longer printing time it takes and more material it consumes. On the contrary, the thinner the model is, the shorter printing time it takes and less material it consumes.')}
+                                    </p>
+                                    <p className="font-weight-bold">{i18n._('key-Luban/Preset/Model Structure Type-Vase')}</p>
+                                    <p className="margin-vertical-8">
+                                        {i18n._('key-Luban/Preset/Prints only the bottom layer and the outer wall of the model. The structure of the print is similar to that of a vase, with a bottom and a wall, but with no infill or top cover.')}
+                                    </p>
+                                </div>
+                            </div>
+
+                        );
+                        break;
+                    case allKeys[3]:
+                        descriptionDom = (
+                            <div className="padding-vertical-16 padding-horizontal-16">
+                                <div className="font-weight-bold padding-bottom-16 border-bottom-white">
+                                    {i18n._(`key-Luban/Preset/${displayName}`)}
+                                </div>
+                                <div className="font-size-small padding-top-16">
+                                    <p className="font-weight-bold">{i18n._('key-Luban/Preset/Support Type-Normal')}</p>
+                                    <p className="margin-vertical-8">
+                                        {i18n._('key-Luban/Preset/A vertical column generated directly below the overhanging parts of the model. It applies to most models.')}
+                                    </p>
+                                    <p className="font-weight-bold">{i18n._('key-Luban/Preset/Support Type-None')}</p>
+                                    <p className="margin-vertical-8">
+                                        {i18n._('key-Luban/Preset/No support is generated for the model. With this option selected, the overhanging parts of the model may collapse during printing.')}
+                                    </p>
+                                </div>
+                            </div>
+
+                        );
+                        break;
+                    case allKeys[4]:
+                        descriptionDom = (
+                            <div className="padding-vertical-16 padding-horizontal-16">
+                                <div className="font-weight-bold padding-bottom-16 border-bottom-white">
+                                    {i18n._(`key-Luban/Preset/${displayName}`)}
+                                </div>
+                                <div className="font-size-small padding-top-16">
+                                    <p className="font-weight-bold">{i18n._('Skirt')}</p>
+                                    <p className="margin-vertical-8">
+                                        {i18n._('key-Luban/Preset/A single layer ring printed around the base of the model, not connected to the model. It can help prime the nozzle before the printing begins.')}
+                                    </p>
+                                    <p className="font-weight-bold">{i18n._('Brim')}</p>
+                                    <p className="margin-vertical-8">
+                                        {i18n._('key-Luban/Preset/A single layer of flat area around the base of the model, connected to the model. It can prevent the base of the model from warping.')}
+                                    </p>
+                                    <p className="font-weight-bold">{i18n._('Raft')}</p>
+                                    <p className="margin-vertical-8">
+                                        {i18n._('key-Luban/Preset/A multilayer flat area between the bottom of the model and the bulid plate. It produces the strongest adhesion between the print and the build plate.')}
+                                    </p>
+                                    <p>
+                                        {i18n._('key-Luban/Preset/With stronger adhesion, the model is less likely to break away from the heated bed and warp, so the printing is more likely to success. However, a stronger adhesion will cost more printing time.')}
+                                    </p>
+                                </div>
+                            </div>
+
+                        );
+                        break;
+                    default:
+                }
+                return (
+                    <Tooltip
+                        title={descriptionDom}
+                        trigger="hover"
+                        key={paramName}
+                        overlayInnerStyle={{ width: '350px', marginLeft: '-50%' }}
+                        placement="leftBottom"
+                    >
+                        <div className="margin-vertical-16">
+                            <div className="height-24 margin-bottom-4 sm-flex justify-space-between">
+                                <div className="display-inline">
+                                    <SvgIcon
+                                        className="margin-right-8"
+                                        name={iconName}
+                                        type={['static']}
+                                        size={24}
+                                    />
+                                    <span className="color-black-3">
+                                        {i18n._(`key-Luban/Preset/${displayName}`)}
+                                    </span>
+                                </div>
+                                {!showSelect && !(['Support Type', 'Build Plate Adhesion Type'].includes(displayName)) && (
+                                    <span className="float-r color-black-3">
+                                        {displayValue}{eachParamObject?.unit}
+                                    </span>
+                                )}
+                                {showSelect && (
+                                    <Select
+                                        size="72px"
+                                        bordered={false}
+                                        options={selectOptions}
+                                        value={displayValue}
+                                        onChange={(item) => { onChangeDefinition('model_structure_type', item.value); }}
+                                    />
+                                )}
+                            </div>
+                            {segmentedDisplay && (
+                                <Segmented
+                                    options={options}
+                                    value={SegmentedValue}
+                                    onChange={(value) => { onChangeParam(value, paramSetting); }}
                                 />
                             )}
                         </div>
-                        {segmentedDisplay && (
-                            <Segmented
-                                options={options}
-                                value={SegmentedValue}
-                                onChange={(value) => { onChangeParam(value, paramSetting); }}
-                            />
-                        )}
-                    </div>
+                    </Tooltip>
                 );
             })}
         </div>
@@ -184,6 +346,25 @@ function Configurations() {
     const presetDisplayTypeOptions = Object.entries(presetOptionsObj).map(([key, item]) => {
         return { value: key, label: key, category: item.category, i18nCategory: item.i18nCategory };
     });
+    const i18nContent = {
+        'quality.fast_print': i18n._('key-Luban/Preset/Prints in a fast mode. The printing time is short, but the outcome might be rough.'),
+        'quality.normal_quality': i18n._('key-Luban/Preset/Prints with general settings. The printing outcome has a standard quality.'),
+        'quality.high_quality': i18n._('key-Luban/Preset/Prints the surface of the model more meticulously. It takes longer  time but produces higher-quality surface for the print.'),
+        'quality.engineering_print': i18n._('key-Luban/Preset/Enhances dimensional accuracy and overall strength of the model. It takes longer time, but produces robust prints with precise dimensions. This mode is suitable for printing precision machined parts.'),
+    };
+    const getPresetContent = (definitionId, name) => {
+        return (
+            <div className="padding-vertical-16 padding-horizontal-16">
+                <div className="font-weight-bold padding-bottom-16 border-bottom-white">
+                    {name}
+                </div>
+                <div className="margin-top-16">
+                    {i18nContent[definitionId]}
+                </div>
+            </div>
+        );
+    };
+
 
     const actions = {
         checkIsAllDefault: (definitionModelSettings, selectedModelDefaultSetting) => {
@@ -452,30 +633,37 @@ function Configurations() {
                                         selectedDefinition.typeOfPrinting === optionItem.typeOfPrinting ? styles.selected : styles.unselected,
                                     )}
                                 >
-                                    <Anchor
-                                        onClick={() => actions.onSelectCustomDefinitionById(optionItem.definitionId)}
+                                    <Tooltip
+                                        title={getPresetContent(optionItem?.definitionId, optionItem.name)}
+                                        trigger="hover"
+                                        placement="left"
                                     >
-                                        <div className={classNames(
-                                            styles[`preset-recommended__icon-${optionItem.typeOfPrinting}`],
-                                            styles['preset-recommended__icon']
-                                        )}
+                                        <Anchor
+                                            onClick={() => actions.onSelectCustomDefinitionById(optionItem.definitionId)}
                                         >
-                                            <Dropdown
-                                                placement="bottomRight"
-                                                overlay={renderProfileMenu(presetDisplayType)}
-                                                trigger={['click']}
+                                            <div className={classNames(
+                                                styles[`preset-recommended__icon-${optionItem.typeOfPrinting}`],
+                                                styles['preset-recommended__icon']
+                                            )}
                                             >
-                                                <SvgIcon
-                                                    className={classNames(
-                                                        styles['preset-hover'],
-                                                    )}
-                                                    type={['static']}
-                                                    size={24}
-                                                    name="More"
-                                                />
-                                            </Dropdown>
-                                        </div>
-                                    </Anchor>
+                                                <Dropdown
+                                                    placement="bottomRight"
+                                                    style={{ maxWidth: '160px' }}
+                                                    overlay={renderProfileMenu(presetDisplayType)}
+                                                    trigger={['click']}
+                                                >
+                                                    <SvgIcon
+                                                        className={classNames(
+                                                            styles['preset-hover'],
+                                                        )}
+                                                        type={['static']}
+                                                        size={24}
+                                                        name="More"
+                                                    />
+                                                </Dropdown>
+                                            </div>
+                                        </Anchor>
+                                    </Tooltip>
                                     <span className="max-width-76 text-overflow-ellipsis-line-2 height-32-half-line margin-top-4 margin-bottom-8">
                                         {optionItem.name}
                                     </span>
@@ -611,7 +799,7 @@ function Configurations() {
                         {configDisplayType === CONFIG_DISPLAY_TYPES[1] && (
                             <div className="overflow-y-auto height-max-400">
                                 {Object.keys(printingCustomConfigsWithCategory).map((category) => (
-                                    <>
+                                    <div key={category}>
                                         {printingCustomConfigsWithCategory[category].map(key => {
                                             return (
                                                 <SettingItem
@@ -632,7 +820,7 @@ function Configurations() {
                                                 />
                                             );
                                         })}
-                                    </>
+                                    </div>
                                 ))}
                                 <PrintingManager />
                             </div>
@@ -646,6 +834,7 @@ function Configurations() {
                         >
                             {i18n._('key-Printing/PrintingConfigurations-More Parameters >')}
                         </Anchor>
+                        <img src="/resources/images/3dp/arrow.png" alt="arrow" className="display-block margin-vertical-8 width-288 height-12" />
                     </div>
 
                 </div>

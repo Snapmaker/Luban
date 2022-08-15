@@ -8,7 +8,7 @@ i18n._('key-Luban/Preset/Layer Height');
 i18n._('key-Luban/Preset/Print Speed');
 i18n._('key-Luban/Preset/Infill Density');
 i18n._('key-Luban/Preset/Model Structure Type');
-i18n._('key-Luban/Preset/Support Placement');
+i18n._('key-Luban/Preset/Support Type');
 i18n._('key-Luban/Preset/Build Plate Adhesion Type');
 i18n._('key-Luban/Preset/Layer Height-Fine');
 i18n._('key-Luban/Preset/Layer Height-Medium');
@@ -19,8 +19,8 @@ i18n._('key-Luban/Preset/Print Speed-Fast');
 i18n._('key-Luban/Preset/Model Structure-Thin');
 i18n._('key-Luban/Preset/Model Structure-Medium');
 i18n._('key-Luban/Preset/Model Structure-Strong');
-i18n._('key-Luban/Preset/Support Placement-Normal');
-i18n._('key-Luban/Preset/Support Placement-None');
+i18n._('key-Luban/Preset/Support Type-Normal');
+i18n._('key-Luban/Preset/Support Type-None');
 
 
 // machine size name

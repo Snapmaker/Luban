@@ -8,55 +8,8 @@ import Select from '../../components/Select';
 import { TextInput as Input, NumberInput as NInput } from '../../components/Input';
 import ColorSelector from '../../components/ColorSelector';
 import Checkbox from '../../components/Checkbox';
-import { PRINTING_MATERIAL_CONFIG_COLORS, BLACK_COLOR } from '../../../constants';
+import { PRINTING_MATERIAL_CONFIG_COLORS, BLACK_COLOR, MATERIAL_TYPE_OPTIONS } from '../../../constants';
 import { Button } from '../../components/Buttons';
-
-const materialTypeOptions = [
-    {
-        value: 'PLA',
-        label: 'PLA'
-    },
-    {
-        value: 'Support',
-        label: 'Support'
-    },
-    {
-        value: 'ABS',
-        label: 'ABS'
-    },
-    {
-        value: 'PETG',
-        label: 'PETG'
-    },
-    {
-        value: 'TPE',
-        label: 'TPE'
-    },
-    {
-        value: 'TPU',
-        label: 'TPU'
-    },
-    {
-        value: 'PVA',
-        label: 'PVA'
-    },
-    {
-        value: 'ASA',
-        label: 'ASA'
-    },
-    {
-        value: 'PC',
-        label: 'PC'
-    },
-    {
-        value: 'Nylon',
-        label: 'Nylon'
-    },
-    {
-        value: 'Other',
-        label: 'Other'
-    }
-];
 
 const AddMaterialModel = ({
     setShowCreateMaterialModal,
@@ -92,7 +45,7 @@ const AddMaterialModel = ({
                             <span className="width-160 display-inline text-overflow-ellipsis">{i18n._('key-profileManager/Material Type')}</span>
                             <Select
                                 size="large"
-                                options={materialTypeOptions}
+                                options={MATERIAL_TYPE_OPTIONS}
                                 value={materialType}
                                 onChange={(e) => setMaterialType(e.value)}
                             />

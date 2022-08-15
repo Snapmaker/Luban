@@ -350,11 +350,11 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
         'default_value': 'normal_normal'
     },
     // Support Type
-    'support_type': {
+    'support_generate_type': {
         'options': {
             'Normal': {
                 'affect': {
-                    'support_type': 'normal',
+                    'support_generate_type': 'normal',
                     'support_roof_enable': true,
                     'support_roof_height': 2,
                     'support_roof_pattern': 'zigzag',
@@ -362,14 +362,14 @@ const DEFAULE_PARAMS_FOR_OTHERS = {
                     'support_roof_offset': 2
                 },
                 'value': 'normal',
-                'label': 'key-Luban/Preset/Support Placement-Normal'
+                'label': 'key-Luban/Preset/Support Type-Normal'
             },
             'None': {
                 'affect': {
-                    'support_type': 'none'
+                    'support_generate_type': 'none'
                 },
                 'value': 'none',
-                'label': 'key-Luban/Preset/Support Placement-None'
+                'label': 'key-Luban/Preset/Support Type-None'
             },
         },
         'current_value': 'normal',
@@ -520,11 +520,11 @@ const DEFAULE_PARAMS_FOR_TPU = {
         'default_value': 'normal_normal'
     },
     // Support Type
-    'support_type': {
+    'support_generate_type': {
         'options': {
             'Normal': {
                 'affect': {
-                    'support_type': 'normal',
+                    'support_generate_type': 'normal',
                     'support_roof_enable': true,
                     'support_roof_height': 2,
                     'support_roof_pattern': 'zigzag',
@@ -532,14 +532,14 @@ const DEFAULE_PARAMS_FOR_TPU = {
                     'support_roof_offset': 2
                 },
                 'value': 'normal',
-                'label': 'key-Luban/Preset/Support Placement-Normal'
+                'label': 'key-Luban/Preset/Support Type-Normal'
             },
             'None': {
                 'affect': {
-                    'support_type': 'none'
+                    'support_generate_type': 'none'
                 },
                 'value': 'none',
-                'label': 'key-Luban/Preset/Support Placement-None'
+                'label': 'key-Luban/Preset/Support Type-None'
             },
         },
         'current_value': 'Normal',
@@ -608,13 +608,13 @@ type ParamsModelType = {
     'layer_height': ParamsObjectType;
     'speed_print': ParamsObjectType;
     'infill_sparse_density': ParamsObjectType;
-    'support_type': ParamsObjectType;
+    'support_generate_type': ParamsObjectType;
     'adhesion_type': ParamsObjectType;
 }
 
 class PresetDefinitionModel {
     public headType: string = HEAD_PRINTING;
-    public typeOfPrinting = 'universal';
+    public typeOfPrinting: string;
     public nozzleSize;
     public params: ParamsModelType;
     public materialType: string;
@@ -650,7 +650,7 @@ class PresetDefinitionModel {
             this.materialType = materialType;
             this.nozzleSize = nozzleSize;
             // todo change getting 'typeOfPrinting' from setting's param
-            if (materialType === 'tpu' && nozzleSize === 0.4) {
+            if (materialType === 'tpu' && Number(nozzleSize) === 0.4 && this.typeOfPrinting) {
                 if (this.typeOfPrinting) {
                     if (this.typeOfPrinting === ALL_PRINTING_TYPES[0]) {
                         this.visible = true;
@@ -662,7 +662,7 @@ class PresetDefinitionModel {
                     this.visible = true;
                     this.params = cloneDeep(DEFAULE_PARAMS_FOR_TPU);
                 }
-            } else if (OTHER_MATERISL_TYPES.includes(materialType) && nozzleSize === 0.4) {
+            } else if (OTHER_MATERISL_TYPES.includes(materialType) && Number(nozzleSize) === 0.4 && this.typeOfPrinting) {
                 if (this.typeOfPrinting) {
                     this.visible = true;
                     this.params = cloneDeep(DEFAULE_PARAMS_FOR_OTHERS);
@@ -759,11 +759,11 @@ class PresetDefinitionModel {
                         'default_value': 10
                     },
                     // Support Type
-                    'support_type': {
+                    'support_generate_type': {
                         'options': {
                             'Normal': {
                                 'affect': {
-                                    'support_type': 'normal',
+                                    'support_generate_type': 'normal',
                                     'support_roof_enable': true,
                                     'support_roof_height': 2,
                                     'support_roof_pattern': 'zigzag',
@@ -771,14 +771,14 @@ class PresetDefinitionModel {
                                     'support_roof_offset': 2
                                 },
                                 'value': 'normal',
-                                'label': 'key-Luban/Preset/Support Placement-Normal'
+                                'label': 'key-Luban/Preset/Support Type-Normal'
                             },
                             'None': {
                                 'affect': {
-                                    'support_type': 'none'
+                                    'support_generate_type': 'none'
                                 },
                                 'value': 'none',
-                                'label': 'key-Luban/Preset/Support Placement-None'
+                                'label': 'key-Luban/Preset/Support Type-None'
                             },
                         },
                         'current_value': 'Normal',

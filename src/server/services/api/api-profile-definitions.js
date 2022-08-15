@@ -1,6 +1,9 @@
 import fs from 'fs';
 import path from 'path';
-import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR, DEFINITION_SNAPMAKER_EXTRUDER_0, DEFINITION_SNAPMAKER_EXTRUDER_1, DEFINITION_ACTIVE, DEFINITION_ACTIVE_FINAL, KEY_DEFAULT_CATEGORY_CUSTOM, KEY_DEFAULT_CATEGORY_DEFAULT } from '../../constants';
+import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR,
+    DEFINITION_SNAPMAKER_EXTRUDER_0, DEFINITION_SNAPMAKER_EXTRUDER_1,
+    DEFINITION_ACTIVE, DEFINITION_ACTIVE_FINAL, KEY_DEFAULT_CATEGORY_CUSTOM,
+    KEY_DEFAULT_CATEGORY_DEFAULT, HEAD_PRINTING } from '../../constants';
 import { loadDefinitionsByPrefixName, loadAllSeriesDefinitions, DefinitionLoader } from '../../slicer';
 import DataStorage from '../../DataStorage';
 import logger from '../../lib/logger';
@@ -65,8 +68,6 @@ export const getDefinitionsByPrefixName = (req, res) => {
     // const definitions = loadMaterialDefinitions();
     const { headType, prefix, series } = req.params;
     const definitions = loadDefinitionsByPrefixName(headType, prefix, series);
-    const filePath = path.join(`${DataStorage.tmpDir}`, 'jt.json');
-    fs.writeFileSync(filePath, JSON.stringify(definitions[0]), 'utf-8');
     res.send({ definitions });
 };
 
@@ -190,7 +191,6 @@ export const updateDefinition = async (req, res) => {
     }
 
     const { definition } = req.body;
-
     if (definition.name) {
         definitionLoader.updateName(definition.name);
     }
@@ -209,8 +209,13 @@ export const updateDefinition = async (req, res) => {
         definitionLoader.updateI18nName(definition.i18nName);
     }
 
+    // Remove for 3d printing profile
     if (definition.settings) {
-        definitionLoader.updateSettings(definition.settings);
+        if (headType !== HEAD_PRINTING) {
+            definitionLoader.updateSettings(definition.settings);
+        } else {
+            definitionLoader.updateSettings(definition.settings, false);
+        }
     }
 
     let filePath = '';
@@ -234,6 +239,7 @@ export const updateDefinition = async (req, res) => {
             log.error(e);
         }
     }
+
     const data = JSON.stringify(definitionLoader.toJSON(), null, 2);
     const callback = () => {
         fsWriteFile(activeRecoverPath, data, res, (err) => {

@@ -324,8 +324,9 @@ const MachineSettings = forwardRef(({
         const def = direction === LEFT
             ? extruderLDefinition
             : extruderRDefinition;
-        if (def?.settings?.machine_nozzle_size) {
-            def.settings.machine_nozzle_size.default_value = nozzle.value;
+        const oldNozzleSize = def?.settings?.machine_nozzle_size?.default_value;
+        if (oldNozzleSize && oldNozzleSize !== nozzle?.value) {
+            def.settings.machine_nozzle_size.default_value = Number(nozzle.value);
             saveActiveDiameterToStorage(direction, nozzle.label);
             dispatch(
                 printingActions.updateCurrentDefinition({

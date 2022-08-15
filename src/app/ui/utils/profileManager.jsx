@@ -38,6 +38,7 @@ function getPresetOptions(definitionModels) {
     definitionModels.forEach(preset => {
         const typeOfPrinting = preset.typeOfPrinting;
         const category = preset.category && typeOfPrinting ? preset.category : 'Custom';
+        preset.category = category;
         const definitionId = preset.definitionId;
         if (Object.keys(preset?.settings).length > 0) {
             const checkboxAndSelectGroup = {};

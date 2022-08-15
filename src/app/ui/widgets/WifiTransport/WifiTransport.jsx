@@ -531,7 +531,7 @@ function WifiTransport({ widgetActions, controlActions }) {
             case MANUAL_MODE:
                 isLaserAutoFocus = false;
                 await dispatch(machineActions.updateIsLaserPrintAutoMode(false));
-                await dispatch(machineActions.updateMaterialThickness(0));
+                await dispatch(machineActions.updateMaterialThickness(-1));
                 break;
             default:
         }

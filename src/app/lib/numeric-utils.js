@@ -72,10 +72,20 @@ const toFixedNumber = (value, fractionDigits) => {
     return num;
 };
 
+const checkVector3NaN = (vector3) => {
+    if (vector3 && !vector3.isVector3) {
+        return true;
+    }
+    return vector3.toArray().some((d) => {
+        return Number.isNaN(d);
+    });
+};
+
 export {
     EPS,
     ensureRange,
     bubbleSortByAttribute,
     toFixed,
-    toFixedNumber
+    toFixedNumber,
+    checkVector3NaN
 };

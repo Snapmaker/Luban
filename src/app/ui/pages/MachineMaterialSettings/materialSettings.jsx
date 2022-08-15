@@ -222,9 +222,15 @@ const MaterialSettings = ({
             )
         );
     };
-    // const onSelectDefinitionById = (definitionId, name) => {
-    //     const definitionForManager
-    // }
+    useEffect(() => {
+        if (defaultMaterialId !== leftMaterialDefinitionId) {
+            setLeftMaterialDefinitionId(defaultMaterialId);
+        }
+        if (defaultMaterialId !== rightMaterialDefinitionId) {
+            setRightMaterialDefinitionId(defaultMaterialIdRight);
+        }
+    }, [defaultMaterialId, defaultMaterialIdRight]);
+
     const renderAddMaterial = () => {
         return (
             <Menu>
