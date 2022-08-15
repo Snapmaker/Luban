@@ -56,11 +56,8 @@ import Steps from '../components/Steps';
 import Modal from '../components/Modal';
 import { Button } from '../components/Buttons';
 import MachineMaterialSettings from './MachineMaterialSettings';
-<<<<<<< fix-slice-bug-and-others
 import definitionManager from '../../flux/manager/DefinitionManager';
-=======
 import { MACHINE_SERIES } from '../../../server/constants';
->>>>>>> master
 
 export const openFolder = () => {
     if (isElectron()) {
