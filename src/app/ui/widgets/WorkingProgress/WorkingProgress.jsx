@@ -99,8 +99,6 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
     }, [isConnected, currentWorkflowStatus, sent, total, widgetActions]);
 
     const handleMachine = (type) => {
-        // setCurrentWorkflowStatus(type);
-
         try {
             switch (type) {
                 case 'run':

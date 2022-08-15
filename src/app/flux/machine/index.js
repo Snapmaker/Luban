@@ -549,7 +549,6 @@ export const actions = {
                         airPurifierFilterHealth: airPurifierFilterHealth
                     }));
                 }
-                // Only for A400?
                 if (!isNil(gcodePrintingInfo)) {
                     dispatch(baseActions.updateState({
                         gcodePrintingInfo: machineState.server.getGcodePrintingInfo(state)
