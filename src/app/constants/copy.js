@@ -298,6 +298,7 @@ i18n._('key-default_category-ABS');
 i18n._('key-default_category-PVA');
 i18n._('key-default_category-PC');
 i18n._('key-default_category-ASA');
+i18n._('key-default_category-Support');
 i18n._('key-default_category-Other');
 i18n._('key-default_category-Nylon');
 
