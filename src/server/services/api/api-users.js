@@ -76,7 +76,8 @@ export const getProfileDocsDir = (req, res) => {
         const urlPath = `/${langDir}/${selectCategory}/${selectProfile}.md`;
         const content = fs.readFileSync(`${DataStorage.profileDocsDir}${urlPath}`, 'utf-8');
         res.status(200).send({
-            content: content
+            content: content,
+            imagePath: `${DataStorage.profileDocsDir}/`
         });
     } catch (e) {
         log.error(e);
