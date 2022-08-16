@@ -615,7 +615,7 @@ type ParamsModelType = {
 class PresetDefinitionModel {
     public headType: string = HEAD_PRINTING;
     public typeOfPrinting: string;
-    public nozzleSize;
+    public nozzleSize: number;
     public params: ParamsModelType;
     public materialType: string;
     private visible = false;
@@ -646,11 +646,12 @@ class PresetDefinitionModel {
         shouldUpdateDefault = false
     ) {
         const settings = this.settings;
+        nozzleSize = Number(nozzleSize);
         if ((materialType && materialType !== this.materialType) || (nozzleSize && nozzleSize !== this.nozzleSize)) {
             this.materialType = materialType;
             this.nozzleSize = nozzleSize;
             // todo change getting 'typeOfPrinting' from setting's param
-            if (materialType === 'tpu' && Number(nozzleSize) === 0.4 && this.typeOfPrinting) {
+            if (materialType === 'tpu' && nozzleSize === 0.4 && this.typeOfPrinting) {
                 if (this.typeOfPrinting) {
                     if (this.typeOfPrinting === ALL_PRINTING_TYPES[0]) {
                         this.visible = true;
@@ -662,7 +663,7 @@ class PresetDefinitionModel {
                     this.visible = true;
                     this.params = cloneDeep(DEFAULE_PARAMS_FOR_TPU);
                 }
-            } else if (OTHER_MATERISL_TYPES.includes(materialType) && Number(nozzleSize) === 0.4 && this.typeOfPrinting) {
+            } else if (OTHER_MATERISL_TYPES.includes(materialType) && nozzleSize === 0.4 && this.typeOfPrinting) {
                 if (this.typeOfPrinting) {
                     this.visible = true;
                     this.params = cloneDeep(DEFAULE_PARAMS_FOR_OTHERS);
@@ -681,27 +682,27 @@ class PresetDefinitionModel {
                         'options': {
                             'fine': {
                                 'affect': {
-                                    'layer_height': (this.nozzleSize * 0.3).toFixed(2),
+                                    'layer_height': Number((this.nozzleSize * 0.3).toFixed(2)),
                                 },
-                                'value': (this.nozzleSize * 0.3).toFixed(2),
+                                'value': Number((this.nozzleSize * 0.3).toFixed(2)),
                                 'label': 'key-Luban/Preset/Layer Height-Fine'
                             },
                             'balanced': {
                                 'affect': {
-                                    'layer_height': (this.nozzleSize * 0.5).toFixed(2),
+                                    'layer_height': Number((this.nozzleSize * 0.5).toFixed(2)),
                                 },
-                                'value': (this.nozzleSize * 0.5).toFixed(2),
+                                'value': Number((this.nozzleSize * 0.5).toFixed(2)),
                                 'label': 'key-Luban/Preset/Layer Height-Medium'
                             },
                             'rough': {
                                 'affect': {
-                                    'layer_height': (this.nozzleSize * 0.7).toFixed(2)
+                                    'layer_height': Number((this.nozzleSize * 0.7).toFixed(2))
                                 },
-                                'value': (this.nozzleSize * 0.7).toFixed(2),
+                                'value': Number((this.nozzleSize * 0.7).toFixed(2)),
                                 'label': 'key-Luban/Preset/Layer Height-Rough'
                             }
                         },
-                        'current_value': (this.nozzleSize * 0.5).toFixed(2),
+                        'current_value': Number((this.nozzleSize * 0.5).toFixed(2)),
                         'default_value': 'rough'
                     },
                     'speed_print': {

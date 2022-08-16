@@ -36,14 +36,14 @@ class ManualCalibration extends PureComponent {
     };
 
     actions = {
-        onClickToUpload: () => {
+        onClickToUpload: (initialized = false) => {
             api.cameraCalibrationPhoto({ 'address': this.props.server.address, 'toolHead': this.props.toolHead.laserToolhead }).then((res) => {
                 const { fileName, width, height } = JSON.parse(res.text);
                 this.setState({
                     width,
                     height
                 });
-                this.calibrationPreview.current.onChangeImage(fileName, width, height);
+                this.calibrationPreview.current.onChangeImage(fileName, width, height, initialized);
             });
             this.setState({
                 isComfirmPoints: false
@@ -119,7 +119,7 @@ class ManualCalibration extends PureComponent {
                                 width="160px"
                                 priority="level-three"
                                 type="default"
-                                onClick={this.actions.onClickToUpload}
+                                onClick={() => this.actions.onClickToUpload(true)}
                             >
                                 {i18n._('key-Laser/CameraCapture-Reset')}
                             </Button>

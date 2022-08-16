@@ -79,6 +79,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
     const { widgets } = useSelector(state => state.widget);
     const { boundingBox, headType } = useSelector(state => state.workspace);
     const workPosition = useSelector(state => state.machine.workPosition);
+    const isHomed = useSelector(state => state.machine.isHomed);
     const originOffset = useSelector(state => state.machine.originOffset) || {};
     const { jog, axes, dataSource } = widgets[widgetId];
     const { speed = 1500, keypad, selectedDistance, customDistance, selectedAngle, customAngle } = jog;
@@ -530,7 +531,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
                 actions={actions}
                 executeGcode={actions.executeGcode}
             />
-            {homingModalShow && (
+            {homingModalShow && isHomed && (
                 <ModalSmall
                     closable={false}
                     isImage={false}

@@ -560,9 +560,12 @@ class Visualizer extends PureComponent {
 
                 <div className={styles['visualizer-preview-control']}>
                     <VisualizerPreviewControl />
-                    <VisualizerClippingControl
-                        simplifying={this.props.simplifying}
-                    />
+
+                    {hasModel && (
+                        <VisualizerClippingControl
+                            simplifying={this.props.simplifying}
+                        />
+                    )}
                 </div>
 
                 <ModeToggleBtn />
