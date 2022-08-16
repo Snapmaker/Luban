@@ -358,6 +358,7 @@ class Visualizer extends Component {
 
     componentDidMount() {
         this.canvas.current.resizeWindow();
+        // Set the origin to not occlude the model
         this.canvas.current.renderer.setSortObjects(false);
         this.actions.autoFocus();
         this.props.clearOperationHistory();
