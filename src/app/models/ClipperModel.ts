@@ -15,7 +15,7 @@ export type TPolygon = ArrayBuffer[]
 
 type TInfillPattern = 'lines' | 'grid' | 'triangles' | 'trihexagon' | 'cubic'
 
-type TClippingConfig = {
+export type TClippingConfig = {
     wallThickness: number;
     lineWidth: number;
     topLayers: number;
@@ -63,13 +63,14 @@ class ClippingModel {
     private clippingSkinArea: THREE.LineSegments<THREE.BufferGeometry, THREE.LineBasicMaterial>;
     private clippingInfill: THREE.LineSegments<THREE.BufferGeometry, THREE.LineBasicMaterial>;
 
-    public constructor(model: ThreeModel, modelGroup: ModelGroup, localPlane: Plane) {
+    public constructor(model: ThreeModel, modelGroup: ModelGroup, localPlane: Plane, clippingConfig: TClippingConfig) {
         this.model = model;
         this.modelMeshObject = model.meshObject;
         this.modelGeometry = this.modelMeshObject.geometry as unknown as THREE.BufferGeometry;
         this.modelGroup = modelGroup;
         this.modelBoundingBox = model.boundingBox;
         this.localPlane = localPlane;
+        this.clippingConfig = clippingConfig;
 
         this.init();
     }
@@ -217,6 +218,9 @@ class ClippingModel {
         }
         // stop worker pool
         this.clear().then(() => {
+            if (!clippingPoolManager.enable) {
+                return;
+            }
             this.model.computeBoundingBox();
 
             const modelMatrix = new THREE.Matrix4();

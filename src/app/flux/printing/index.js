@@ -4058,7 +4058,7 @@ export const actions = {
         newModels.forEach((model) => {
             modelGroup.selectModelById(model.modelID, true);
             if (model instanceof ThreeModel) {
-                model.initClipper(modelGroup.localPlane);
+                modelGroup.initModelClipper(model)
 
                 const checkResult = checkResultMap.get(model.uploadName);
                 if (checkResult && checkResult.isDamage && !isGuideTours) {
@@ -4449,9 +4449,7 @@ export const actions = {
             brimGap: qualitySetting?.brim_gap?.default_value
         });
         const models = modelGroup.getModels();
-        modelGroup.getThreeModels().filter((model) => {
-            return model.clipper;
-        }).forEach((model) => {
+        modelGroup.getThreeModels().forEach((model) => {
             const materialSettings = dispatch(actions.getModelMaterialSettings(model));
             model.updateMaterialColor(materialSettings.color.default_value);
 
@@ -4460,7 +4458,7 @@ export const actions = {
             const bottomLayers = Math.ceil(Math.round(bottomThickness / layerHeight));
             const topThickness = qualitySetting.top_thickness.default_value;
             const topLayers = Math.ceil(Math.round(topThickness / layerHeight));
-            model.clipper.updateClipperConfig({
+            model.updateClipperConfig({
                 lineWidth: materialSettings.machine_nozzle_size.default_value,
                 wallThickness: qualitySetting.wall_thickness.default_value,
                 topLayers,

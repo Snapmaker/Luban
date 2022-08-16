@@ -10,7 +10,7 @@ import ThreeGroup from './ThreeGroup';
 import BaseModel, { ModelInfo, TSize } from './ThreeBaseModel';
 import { machineStore } from '../store/local-storage';
 import type ModelGroup from './ModelGroup';
-import ClipperModel from './ClipperModel';
+import ClipperModel, { TClippingConfig } from './ClipperModel';
 
 const materialOverstepped = new THREE.Color(0xa80006);
 
@@ -40,7 +40,8 @@ class ThreeModel extends BaseModel {
 
     public hasOversteppedHotArea: boolean
 
-    public clipper: ClipperModel;
+    public clipper?: ClipperModel;
+    private clippingConfig: TClippingConfig;
 
     public constructor(modelInfo: ModelInfo, modelGroup: ModelGroup) {
         super(modelInfo, modelGroup);
@@ -148,9 +149,16 @@ class ThreeModel extends BaseModel {
 
     public initClipper(localPlane: Plane) {
         this.localPlane = localPlane;
-        this.clipper = new ClipperModel(this, this.modelGroup, localPlane);
+        this.clipper = new ClipperModel(this, this.modelGroup, localPlane, this.clippingConfig);
         this.onTransform();
         this.modelGroup.clippingGroup.add(this.clipper.group);
+    }
+
+    public updateClipperConfig(config: TClippingConfig) {
+        this.clippingConfig = config;
+        if (this.clipper) {
+            this.clipper.updateClipperConfig(config);
+        }
     }
 
     public setLocalPlane(height) {
@@ -194,7 +202,7 @@ class ThreeModel extends BaseModel {
 
         recovery();
         this.stickToPlate();
-        this.clipper.init();
+        this.clipper && this.clipper.init();
     }
 
     public updateClippingMap() {
