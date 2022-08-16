@@ -240,7 +240,8 @@ class SvgModel extends BaseModel {
 
         // derive transform action(s) from transform list
         function inferTransformType(svgTransformList: SVGTransformList) {
-            if (svgTransformList.length === 5) {
+            // Long press the key on the keyboard to move, and the length of transformlist will be greater than 5
+            if (svgTransformList.length > 4) {
                 const t = svgTransformList.getItem(0);
                 if (t.type === 2) {
                     return 'move';
@@ -258,9 +259,9 @@ class SvgModel extends BaseModel {
             // [T][T][R][S][T]
             const { x, y, width, height } = element.getBBox();
 
-            const angle = transformList.getItem(2).angle;
-            const scaleX = transformList.getItem(3).matrix.a;
-            const scaleY = transformList.getItem(3).matrix.d;
+            const angle = transformList.getItem(transformList.length - 3).angle;
+            const scaleX = transformList.getItem(transformList.length - 2).matrix.a;
+            const scaleY = transformList.getItem(transformList.length - 2).matrix.d;
 
             const transform = transformList.consolidate();
             const matrix = transform.matrix;
@@ -560,7 +561,10 @@ class SvgModel extends BaseModel {
                 ) {
                     sorted.push({ item, connected: true });
                 } else {
-                    item.reverse();
+                    const a = item.pop();
+                    const b = item.shift();
+                    item.push(b);
+                    item.unshift(a);
                     sorted.push({ item, connected: true });
                 }
             } else {
@@ -588,15 +592,10 @@ class SvgModel extends BaseModel {
                             Math.abs(latestPoints[latestPoints.length - 1][0] - c[0][0]) <= SVG_MOVE_MINI_DISTANCE
                             && Math.abs(latestPoints[latestPoints.length - 1][1] - c[0][1]) <= SVG_MOVE_MINI_DISTANCE)
                         ) {
-                            const arr = latestPoints;
-                            const a = arr.pop();
-                            const b = arr.shift();
-                            arr.push(b);
-                            arr.unshift(a);
-                            sorted[sorted.length - 1] = {
-                                item: arr,
-                                connected: false
-                            };
+                            const a = c.pop();
+                            const b = c.shift();
+                            c.push(b);
+                            c.unshift(a);
                         }
                     }
                     setSort(c, true);
@@ -700,7 +699,7 @@ class SvgModel extends BaseModel {
 
     // just for svg file
     public async uploadSourceImage() {
-        if (path.extname(this.resource.originalFile.name) !== '.svg' || this?.mode !== 'vector') {
+        if (path.extname(this.resource.originalFile.name) !== '.svg' || this?.mode === 'vector') {
             return;
         }
         const content = await fetch(this.resource.originalFile.path, { method: 'GET' })

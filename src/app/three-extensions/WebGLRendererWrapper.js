@@ -39,6 +39,10 @@ class WebGLRendererWrapper {
         this.renderer && this.renderer.setSize(width, height);
     }
 
+    setSortObjects(bool) {
+        this.renderer.sortObjects = bool;
+    }
+
     render(scene, camera) {
         this.renderer.render(scene, camera);
     }

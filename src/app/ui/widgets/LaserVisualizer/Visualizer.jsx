@@ -358,6 +358,7 @@ class Visualizer extends Component {
 
     componentDidMount() {
         this.canvas.current.resizeWindow();
+        this.canvas.current.renderer.setSortObjects(false);
         this.actions.autoFocus();
         this.props.clearOperationHistory();
         UniApi.Event.on('appbar-menu:laser.import', this.actions.importFile);
