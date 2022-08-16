@@ -401,7 +401,6 @@ export function simplifyModel(params, onProgress, onSucceed, onError) {
                                 modelID: modelID,
                                 modelUploadName: `${sourceSimplify}`,
                                 modelOutputName: `${modelName}-simplify.stl`,
-                                sourcePly: `${modelName}-simplify.ply`
                             });
                         }
                     }
@@ -468,7 +467,6 @@ export function repairModel(actions, params) {
                         actions.next({
                             type: 'error',
                             modelID,
-                            sourcePly: `${modelName}_repaired.ply`,
                             uploadName: `${modelName}_repaired.stl`
                         });
                         actions.error(err);
@@ -478,7 +476,6 @@ export function repairModel(actions, params) {
                             actions.next({
                                 type: 'success',
                                 modelID,
-                                sourcePly: `${modelName}_repaired.ply`,
                                 uploadName: `${modelName}_repaired.stl`
                             });
                             actions.complete();
@@ -520,7 +517,6 @@ export function checkModel(actions, params) {
                         type: 'success',
                         modelID,
                         originUploadName: uploadName,
-                        sourcePly: `${modelName}_check.ply`,
                         uploadName: `${modelName}_check.stl`
                     });
                 } else {
@@ -528,7 +524,6 @@ export function checkModel(actions, params) {
                         type: 'error',
                         modelID,
                         originUploadName: uploadName,
-                        sourcePly: `${modelName}_check.ply`
                     });
                 }
                 actions.complete();

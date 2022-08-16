@@ -469,10 +469,6 @@ class SvgModel extends BaseModel {
         }
     }
 
-    public setSourcePly(fileName: string) {
-        this.sourcePly = fileName;
-    }
-
     public appendToParent() {
         this.parent && this.parent.append(this.elem);
     }

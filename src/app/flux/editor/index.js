@@ -683,16 +683,13 @@ export const actions = {
         }
 
         let isDamage = false;
-        let sourcePly = '';
         if (path.extname(uploadName).toLowerCase() === '.stl') {
             await controller.checkModel({
                 uploadName
             }, (data) => {
                 if (data.type === 'error') {
-                    sourcePly = data.sourcePly;
                     isDamage = true;
                 } else if (data.type === 'success') {
-                    sourcePly = data.sourcePly;
                     isDamage = false;
                 }
             });
@@ -797,7 +794,6 @@ export const actions = {
         const model = modelGroup.addModel(options);
         model.setPreSelection(contentGroup.preSelectionGroup);
         model.needRepair = isDamage;
-        model.setSourcePly(sourcePly);
         const promptTasks = [];
         promptDamageModel && isDamage && promptTasks.push({
             status: 'need-repair-model',
