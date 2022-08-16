@@ -51,7 +51,6 @@ const handleSimplifyModel = (socket, params) => {
     socket.emit('simplify-model:started', {
         firstTime: params.isFirstTime,
         uploadName: params.uploadName,
-        sourcePly: params.sourcePly,
         transformation: params.transformation,
         originModel: params.originModel
     });

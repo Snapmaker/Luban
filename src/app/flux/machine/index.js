@@ -218,6 +218,7 @@ const INITIAL_STATE = {
     // Whether hide console when machine is working
     shouldHideConsole: true,
     promptDamageModel: true,
+    enable3dpLivePreview: true,
     // connect info
     moduleStatusList: {},
     nozzleSizeList: [],
@@ -307,6 +308,15 @@ export const actions = {
             dispatch(
                 baseActions.updateState({
                     promptDamageModel: false
+                })
+            );
+        }
+        if (machineStore.get('enable3dpLivePreview') === false) {
+            const { modelGroup } = getState().printing;
+            modelGroup.setClipperEnable(false);
+            dispatch(
+                baseActions.updateState({
+                    enable3dpLivePreview: false
                 })
             );
         }
@@ -1202,6 +1212,13 @@ export const actions = {
     updatePromptDamageModel: (bool) => (dispatch) => {
         dispatch(baseActions.updateState({ promptDamageModel: bool }));
         machineStore.set('promptDamageModel', bool);
+    },
+    updateEnable3dpLivePreview: (bool) => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+
+        machineStore.set('enable3dpLivePreview', bool);
+        dispatch(baseActions.updateState({ enable3dpLivePreview: bool }));
+        modelGroup.setClipperEnable(bool);
     }
     // endregion
 };

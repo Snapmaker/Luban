@@ -8,8 +8,6 @@ type StateMap = {
     sourceSimplify: string,
     simplifyResultFimeName: string,
     dispatch: any,
-    sourcePly: string;
-    resultSourcePly: string;
 };
 
 export default class SimplifyModelOperation extends Operation<StateMap> {
@@ -21,8 +19,6 @@ export default class SimplifyModelOperation extends Operation<StateMap> {
     public async redo() {
         const { simplifyResultFimeName, target: { modelID }, dispatch } = this.state;
 
-        this.state.target.sourcePly = this.state.resultSourcePly;
-
         await dispatch(printingActions.updateModelMesh([{
             modelID,
             uploadName: simplifyResultFimeName,
@@ -32,8 +28,6 @@ export default class SimplifyModelOperation extends Operation<StateMap> {
 
     public async undo() {
         const { sourceSimplify, target: { modelID }, dispatch } = this.state;
-
-        this.state.target.sourcePly = this.state.sourcePly;
 
         await dispatch(printingActions.updateModelMesh([{
             modelID,

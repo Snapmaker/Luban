@@ -64,6 +64,7 @@ class Visualizer extends PureComponent {
         leftBarOverlayVisible: PropTypes.bool.isRequired,
         displayedType: PropTypes.string,
         menuDisabledCount: PropTypes.number,
+        enable3dpLivePreview: PropTypes.bool.isRequired,
         // allModel: PropTypes.array,
 
         hideSelectedModel: PropTypes.func.isRequired,
@@ -560,9 +561,14 @@ class Visualizer extends PureComponent {
 
                 <div className={styles['visualizer-preview-control']}>
                     <VisualizerPreviewControl />
-                    <VisualizerClippingControl
-                        simplifying={this.props.simplifying}
-                    />
+                    {
+                        this.props.enable3dpLivePreview
+                        && (
+                            <VisualizerClippingControl
+                                simplifying={this.props.simplifying}
+                            />
+                        )
+                    }
                 </div>
 
                 <ModeToggleBtn />
@@ -710,7 +716,7 @@ const mapStateToProps = (state, ownProps) => {
     const machine = state.machine;
     const { currentModalPath } = state.appbarMenu;
     const printing = state.printing;
-    const { size, series, toolHead: { printingToolhead } } = machine;
+    const { size, series, toolHead: { printingToolhead }, enable3dpLivePreview } = machine;
     const { menuDisabledCount } = state.appbarMenu;
     // TODO: be to organized
     const {
@@ -769,7 +775,8 @@ const mapStateToProps = (state, ownProps) => {
         enablePrimeTower,
         primeTowerHeight,
         printingToolhead,
-        simplifyOriginModelInfo
+        simplifyOriginModelInfo,
+        enable3dpLivePreview
     };
 };
 

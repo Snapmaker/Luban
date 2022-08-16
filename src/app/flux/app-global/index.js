@@ -130,7 +130,7 @@ export const actions = {
         modelGroup.traverseModels(models, async (model) => {
             if (!(model instanceof ThreeGroup)) {
                 const promise = new Promise(async (resolve, reject) => {
-                    let uploadName = model.sourcePly || model.uploadName;
+                    let uploadName = model.uploadName;
                     if (headType === HEAD_PRINTING) {
                         const mesh = model.meshObject.clone(false);
                         mesh.clear();
@@ -192,7 +192,6 @@ export const actions = {
                                     );
                                 }
                                 results.push(data);
-                                model.setSourcePly(data.sourcePly);
                                 break;
                             default:
                                 break;
@@ -224,7 +223,7 @@ export const actions = {
         progressStatesManager.finishProgress(
             !((models.length === 1 && promptTasks.length))
         );
-        recovery();
+        headType === HEAD_PRINTING && recovery();
         return {
             allPepaired: promptTasks.length === 0,
             results

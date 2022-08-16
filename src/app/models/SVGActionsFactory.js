@@ -376,14 +376,15 @@ class SVGActionsFactory {
     hideSelectedElement() {
         const selectedElement = this.svgContentGroup.getSelected();
         selectedElement.visible = false;
-        selectedElement.setAttribute('display', 'none');
+        // Set display=none will result in getbbox.width equal to 0, So use the visibility property to control the display state
+        selectedElement.setAttribute('visibility', 'hidden');
         this.svgContentGroup.showSelectorGrips(false);
     }
 
     showSelectedElement() {
         const selectedElement = this.svgContentGroup.getSelected();
         selectedElement.visible = true;
-        selectedElement.setAttribute('display', 'inherit');
+        selectedElement.setAttribute('visibility', 'visible');
         this.svgContentGroup.showSelectorGrips(true);
 
         const t = SVGActionsFactory.calculateElementsTransformation(this.getSelectedElements());
