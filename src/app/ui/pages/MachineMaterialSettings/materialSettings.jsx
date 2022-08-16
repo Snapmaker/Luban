@@ -96,6 +96,7 @@ const MaterialSettings = ({
         } else {
             setRightMaterialDefinitionId(id);
         }
+        dispatch(printingActions.updateDefaultIdByType(PRINTING_MANAGER_TYPE_MATERIAL, id, activeNozzle));
     };
     const onShowPrintingManager = () => {
         dispatch(printingActions.updateManagerDisplayType(PRINTING_MANAGER_TYPE_MATERIAL));

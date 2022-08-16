@@ -1281,6 +1281,23 @@ export const actions = {
         return def?.settings;
     },
 
+    updateDefaultDefinition: (id, diameter) => (dispatch, getState) => {
+        const { defaultDefinitions } = getState().printing;
+        const index = defaultDefinitions.findIndex(
+            (d) => d.definitionId === id
+        );
+        const newDefModel = defaultDefinitions[index];
+        resolveDefinition(newDefModel, [['machine_nozzle_size', diameter]]);
+        definitionManager.updateDefaultDefinition(newDefModel);
+        defaultDefinitions[index] = newDefModel;
+
+        dispatch(
+            actions.updateState({
+                defaultDefinitions: [...defaultDefinitions]
+            })
+        );
+    },
+
     resetDefinitionById: (type, definitionId, shouldDestroyGcodeLine) => (
         dispatch,
         getState
@@ -1403,9 +1420,15 @@ export const actions = {
                     definition.isRecommended = false;
                     const definitionsKey = defaultDefinitionKeys[type].definitions;
                     const definitions = getState().printing[definitionsKey];
-                    while (definitions.find((e) => e.name === name)) {
-                        name = `#${name}`;
-                    }
+                    while (definitions.find((e) => {
+                        if((definition.category && e.category === definition.category && e.name === name)
+                            || (!definition.category && e.name === name)) {
+                            name = `#${name}`;
+                            definition.name = name;
+                            console.log('name', name);
+                        }
+                    }))
+                    console.log('definition.name', definition.name);
                     await definitionManager.updateDefinition({
                         definitionId: definition.definitionId,
                         name

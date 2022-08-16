@@ -60,9 +60,9 @@ function VisualizerClippingControl({ simplifying }) {
 
     const isSpecialMode = transformMode === 'rotate-placement' || transformMode === 'support-edit';
 
-    if (!simplifying && displayedType === 'model' && !isSpecialMode && modelGroup.models.length && !(modelGroup.models.length === 1 && modelGroup.models[0].type === 'primeTower')) {
-        return (
-            <React.Fragment>
+    return (
+        <React.Fragment>
+            {!simplifying && displayedType === 'model' && !isSpecialMode && modelGroup.models.length && !(modelGroup.models.length === 1 && modelGroup.models[0].type === 'primeTower') && (
                 <div className={styles['layer-wrapper']}>
                     <span className={styles['layer-label']}>{value || ''}</span>
                     <div
@@ -87,17 +87,15 @@ function VisualizerClippingControl({ simplifying }) {
                         <div style={{ position: 'relative', left: -3, height: '23.22px' }}>
                             {
                                 loading
-                                && <Spin />
+                            && <Spin />
                             }
                         </div>
 
                     </div>
                 </div>
-            </React.Fragment>
-        );
-    } else {
-        return null;
-    }
+            )}
+        </React.Fragment>
+    );
 }
 VisualizerClippingControl.propTypes = {
     simplifying: PropTypes.bool.isRequired,

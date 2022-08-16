@@ -267,6 +267,13 @@ i18n._('key-default_name-PETG_Blue');
 i18n._('key-default_name-PETG_Red');
 i18n._('key-default_name-TPU_Black');
 i18n._('key-default_name-TPU_Yellow');
+i18n._('key-default_name-Support_White');
+i18n._('key-default_name-PVA_White');
+i18n._('key-default_name-PC');
+i18n._('key-default_name-ASA');
+i18n._('key-default_name-Other');
+i18n._('key-default_name-Nylon-CoPA');
+i18n._('key-default_name-Nylon-PA6-CF');
 i18n._('key-default_category-Default Material');
 i18n._('key-default_category-Acrylic');
 i18n._('key-default_category-Epoxy Tooling Board');
@@ -288,6 +295,12 @@ i18n._('key-default_category-Custom');
 i18n._('key-default_category-PLA');
 i18n._('key-default_category-PETG');
 i18n._('key-default_category-ABS');
+i18n._('key-default_category-PVA');
+i18n._('key-default_category-PC');
+i18n._('key-default_category-ASA');
+i18n._('key-default_category-Support');
+i18n._('key-default_category-Other');
+i18n._('key-default_category-Nylon');
 
 // connection message
 i18n._('key-Workspace/Connection-enclosure');

@@ -212,6 +212,7 @@ function registerApis(app) {
     app.post(urljoin(settings.route, 'api/profileTmpDefinition'), api.profileDefinitions.createTmpDefinition);
     app.delete(urljoin(settings.route, 'api/profileDefinition/:headType/:definitionId'), api.profileDefinitions.removeDefinition);
     app.put(urljoin(settings.route, 'api/profileDefinition/:headType/:definitionId'), api.profileDefinitions.updateDefinition);
+    app.put(urljoin(settings.route, 'api/profileDefaultDefinition/:headType/:definitionId'), api.profileDefinitions.updateDefaultDefinition);
     app.post(urljoin(settings.route, 'api/profileDefinition/:headType/upload'), api.profileDefinitions.uploadDefinition);
 
     app.get(urljoin(settings.route, 'api/profiledocs/:selectCategory/:selectProfile'), api.users.getProfileDocsDir);

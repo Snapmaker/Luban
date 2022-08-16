@@ -135,6 +135,9 @@ export class DefinitionLoader {
         if (json.typeOfPrinting) {
             this.typeOfPrinting = json.typeOfPrinting;
         }
+        if (json.qualityType) {
+            this.qualityType = json.qualityType;
+        }
         if (!isNil(json.isRecommended)) {
             this.isRecommended = json.isRecommended;
         }
@@ -216,13 +219,6 @@ export class DefinitionLoader {
                     this.settings[key].isLeave = (setting.children === undefined);
 
                     if (definitionId === this.definitionId && !this.ownKeys.has(key)) {
-                        // if (materialRegex.test(definitionId) && allSettingNameWithType.material.has(key)) {
-                        //     this.ownKeys.add(key);
-                        // } else if (qualityRegex.test(definitionId) && allSettingNameWithType.quality.has(key)) {
-                        //     this.ownKeys.add(key);
-                        // } else if (!(materialRegex.test(definitionId)) && !(qualityRegex.test(definitionId))) {
-                        //     this.ownKeys.add(key);
-                        // }
                         this.ownKeys.add(key);
                     }
 
@@ -261,6 +257,7 @@ export class DefinitionLoader {
             i18nName: this.i18nName,
             i18nCategory: this.i18nCategory,
             typeOfPrinting: this.typeOfPrinting,
+            qualityType: this.qualityType,
             isRecommended: this.isRecommended,
             inherits: this.inherits,
             metadata: this.metadata,
@@ -280,6 +277,7 @@ export class DefinitionLoader {
             settings: this.settings,
             metadata: this.metadata,
             typeOfPrinting: this.typeOfPrinting,
+            qualityType: this.qualityType,
             ownKeys: Array.from(this.ownKeys),
             printingProfileLevel: this.printingProfileLevel,
             materialProfileLevel: this.materialProfileLevel,
@@ -294,6 +292,7 @@ export class DefinitionLoader {
         this.i18nCategory = object.i18nCategory;
         this.inherits = object.inherits;
         this.typeOfPrinting = object.typeOfPrinting;
+        this.qualityType = object.qualityType;
         this.ownKeys = new Set(object.ownKeys);
         this.settings = object.settings;
         this.metadata = object.metadata;

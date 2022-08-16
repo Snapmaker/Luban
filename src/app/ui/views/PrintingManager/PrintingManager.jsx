@@ -127,8 +127,6 @@ function PrintingManager() {
             changedSettingArray,
             shouldUpdateActive
         ) => {
-            // now setDefinitionState is synchronize, so remove setTimeout
-            // newDefinition.updateParams && newDefinition.updateParams();
             await dispatch(
                 printingActions.updateCurrentDefinition({
                     definitionModel: newDefinition,
@@ -241,7 +239,7 @@ function PrintingManager() {
     //     : printingQualityConfigGroup;
     const allDefinitions = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL
         ? materialDefinitions
-        : qualityDefinitionsModels;
+        : qualityDefinitionsModels.filter(d => d?.visible);
 
     const selectedIds = {
         [PRINTING_MANAGER_TYPE_MATERIAL]: {

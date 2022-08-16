@@ -244,6 +244,19 @@ class DefinitionManager {
         );
     }
 
+    async updateDefaultDefinition(definition) {
+        let actualDefinition = definition;
+        if (definition instanceof PresetDefinitionModel) {
+            actualDefinition = definition.getSerializableDefinition()
+        }
+        await api.profileDefinitions.updateDefaultDefinition(
+            this.headType,
+            definition.definitionId,
+            actualDefinition,
+            this.configPathname
+        );
+    }
+
     async markDefaultDefinitions(remoteDefinitions) {
         if (!this.defaultDefinitions) {
             await this.init();
