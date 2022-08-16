@@ -218,6 +218,7 @@ function WifiConnection() {
             serverState.openServer(({ msg, text, code }) => {
                 if (msg) {
                     actions.showWifiError(msg, text, code);
+                    setSavedServerAddressState('');
                 }
                 setserverOpenState(null);
             });
