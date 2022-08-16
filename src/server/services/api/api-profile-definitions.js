@@ -134,6 +134,46 @@ export const createDefinition = async (req, res) => {
     fsWriteFile(filePath, data, res, callback);
 };
 
+
+export const updateDefaultDefinition = (req, res) => {
+    const { definitionId, headType } = req.params;
+    const series = req.body.series;
+
+    const definitionLoader = new DefinitionLoader();
+    if (isPublicProfile(definitionId)) {
+        definitionLoader.loadDefaultDefinition(headType, definitionId);
+    } else {
+        definitionLoader.loadDefaultDefinition(headType, definitionId, series);
+    }
+    const { definition } = req.body;
+
+    // Remove for 3d printing profile
+    if (definition.settings) {
+        if (headType !== HEAD_PRINTING) {
+            definitionLoader.updateSettings(definition.settings);
+        } else {
+            definitionLoader.updateSettings(definition.settings, false);
+        }
+    }
+
+    let filePath = '';
+    if (isPublicProfile(definitionId)) {
+        filePath = path.join(`${DataStorage.defaultConfigDir}/${headType}`, `${definitionId}.def.json`);
+    } else {
+        filePath = path.join(`${DataStorage.defaultConfigDir}/${headType}/${series}`, `${definitionId}.def.json`);
+    }
+    const data = JSON.stringify(definitionLoader.toJSON(), null, 2);
+    fs.writeFile(filePath, data, 'utf8', (err) => {
+        if (err) {
+            log.error(err);
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
+        } else {
+            res.send({ status: 'ok', msg: 'Update success!' });
+        }
+    });
+};
+
+
 export const createTmpDefinition = (req, res) => {
     const { definition, filename } = req.body;
 

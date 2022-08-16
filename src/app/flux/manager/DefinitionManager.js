@@ -82,6 +82,7 @@ class DefinitionManager {
 
             res = await this.getDefinition('snapmaker_extruder_0', false);
             this.extruderLDefinition = res;
+            console.log('this.extruderLDefinition', this.extruderLDefinition.settings.machine_nozzle_size.default_value);
 
             res = await this.getDefinition('snapmaker_extruder_1', false);
             this.extruderRDefinition = res;
@@ -237,6 +238,19 @@ class DefinitionManager {
             actualDefinition = definition.getSerializableDefinition()
         }
         await api.profileDefinitions.updateDefinition(
+            this.headType,
+            definition.definitionId,
+            actualDefinition,
+            this.configPathname
+        );
+    }
+
+    async updateDefaultDefinition(definition) {
+        let actualDefinition = definition;
+        if (definition instanceof PresetDefinitionModel) {
+            actualDefinition = definition.getSerializableDefinition()
+        }
+        await api.profileDefinitions.updateDefaultDefinition(
             this.headType,
             definition.definitionId,
             actualDefinition,

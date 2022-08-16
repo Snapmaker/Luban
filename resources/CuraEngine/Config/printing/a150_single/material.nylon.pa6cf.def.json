@@ -3,7 +3,7 @@
     "name": "PA6-CF",
     "inherits": "snapmaker",
     "category": "Nylon",
-    "i18nName": "key-default_name-Nylon",
+    "i18nName": "key-default_name-Nylon-PA6-CF",
     "i18nCategory": "key-default_category-Nylon",
     "isRecommended": true,
     "overrides": {

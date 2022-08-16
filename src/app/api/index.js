@@ -290,6 +290,10 @@ profileDefinitions.updateDefinition = defaultAPIFactory((headType, definitionId,
     definition,
     series
 }));
+profileDefinitions.updateDefaultDefinition = defaultAPIFactory((headType, definitionId, definition, series) => request.put(`/api/profileDefaultDefinition/${headType}/${definitionId}`).send({
+    definition,
+    series
+}));
 profileDefinitions.uploadDefinition = defaultAPIFactory((headType, definitionId, uploadName, series) => request.post(`/api/profileDefinition/${headType}/upload`).send({
     definitionId,
     uploadName,

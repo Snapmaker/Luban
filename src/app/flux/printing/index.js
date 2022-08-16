@@ -1283,6 +1283,23 @@ export const actions = {
         return def?.settings;
     },
 
+    updateDefaultDefinition: (id, diameter) => (dispatch, getState) => {
+        const { defaultDefinitions } = getState().printing;
+        const index = defaultDefinitions.findIndex(
+            (d) => d.definitionId === id
+        );
+        const newDefModel = defaultDefinitions[index];
+        resolveDefinition(newDefModel, [['machine_nozzle_size', diameter]]);
+        definitionManager.updateDefaultDefinition(newDefModel);
+        defaultDefinitions[index] = newDefModel;
+
+        dispatch(
+            actions.updateState({
+                defaultDefinitions: [...defaultDefinitions]
+            })
+        );
+    },
+
     resetDefinitionById: (type, definitionId, shouldDestroyGcodeLine) => (
         dispatch,
         getState

@@ -3,7 +3,7 @@
     "name": "PC-Black",
     "inherits": "snapmaker",
     "category": "PC",
-    "i18nName": "key-default_name-PC_Black",
+    "i18nName": "key-default_name-PC",
     "i18nCategory": "key-default_category-PC",
     "isRecommended": true,
     "overrides": {

@@ -3,7 +3,7 @@
     "name": "ASA-Black",
     "inherits": "snapmaker",
     "category": "ASA",
-    "i18nName": "key-default_name-ASA_Black",
+    "i18nName": "key-default_name-ASA",
     "i18nCategory": "key-default_category-ASA",
     "isRecommended": true,
     "overrides": {

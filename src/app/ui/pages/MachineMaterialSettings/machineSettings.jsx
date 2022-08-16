@@ -296,16 +296,20 @@ const MachineSettings = forwardRef(({
         let activeDiameter = nozzleDiameterList.find((d) => {
             return d.label === cacheLabel;
         });
-        if (activeDiameter) {
-            return activeDiameter;
+        if (!activeDiameter) {
+            activeDiameter = nozzleDiameterList.find((d) => {
+                return d.value === machineNozzleSize;
+            });
         }
-        activeDiameter = nozzleDiameterList.find((d) => {
-            return d.value === machineNozzleSize;
-        });
-        if (activeDiameter) {
-            return activeDiameter;
+        if (!activeDiameter) {
+            activeDiameter = nozzleDiameterList[0];
         }
-        return nozzleDiameterList[0];
+        if (direction === LEFT && activeDiameter) {
+            console.log('activeDiameter', activeDiameter.value);
+            dispatch(printingActions.updateDefaultDefinition('quality.normal_other_quality', activeDiameter.value));
+        }
+
+        return activeDiameter;
     };
     const saveActiveDiameterToStorage = (direction, label) => {
         const key = `customNozzleDiameter.${currentToolHead}.${currentSerial}.${direction}_active`;
@@ -328,6 +332,7 @@ const MachineSettings = forwardRef(({
         if (oldNozzleSize && oldNozzleSize !== nozzle?.value) {
             def.settings.machine_nozzle_size.default_value = Number(nozzle.value);
             saveActiveDiameterToStorage(direction, nozzle.label);
+            console.log('nozzle.value', nozzle.value);
             dispatch(
                 printingActions.updateCurrentDefinition({
                     definitionModel: def,

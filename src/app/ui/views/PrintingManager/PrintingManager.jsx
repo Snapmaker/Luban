@@ -239,7 +239,7 @@ function PrintingManager() {
     //     : printingQualityConfigGroup;
     const allDefinitions = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL
         ? materialDefinitions
-        : qualityDefinitionsModels;
+        : qualityDefinitionsModels.filter(d => d?.visible);
 
     const selectedIds = {
         [PRINTING_MANAGER_TYPE_MATERIAL]: {

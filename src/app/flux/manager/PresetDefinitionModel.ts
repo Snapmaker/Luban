@@ -619,14 +619,14 @@ class PresetDefinitionModel {
     public params: ParamsModelType;
     public materialType: string;
     public qualityType: string;
-    private visible = false;
+    public visible = false;
     public definitionId = '';
     public name = '';
-    public inherits = '';
+    private inherits = '';
     public category = '';
     public i18nName = '';
     public i18nCategory = '';
-    public settings: string = HEAD_PRINTING;
+    public settings: any;
     public ownKeys: string[];
 
     // init definitionId and definition
