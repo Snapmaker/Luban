@@ -31,6 +31,7 @@ import { IResult as TRaftResult } from '../workers/plateAdhesion/generateRaft';
 import { IResult as TSkirtResult } from '../workers/plateAdhesion/generateSkirt';
 import { bufferToPoint } from '../lib/buffer-utils';
 import { emitUpdateScaleEvent } from '../ui/components/SMCanvas/TransformControls';
+import clippingPoolManager from '../lib/manager/ClippingPoolManager';
 
 const CUSTOM_EVENTS = {
     UPDATE: { type: 'update' }
@@ -119,6 +120,7 @@ class ModelGroup extends EventEmitter {
     public plateAdhesion = new Group();
     public clipping: 'true' | 'false' = 'true';
     private adhesionConfig: TAdhesionConfig;
+    private clipperEnable = true;
 
     public constructor(headType: THeadType) {
         super();
@@ -1083,11 +1085,11 @@ class ModelGroup extends EventEmitter {
                 this.updatePrimeTowerHeight();
                 if (newModel instanceof ThreeModel) {
                     newModel.computeBoundingBox();
-                    newModel.initClipper(this.localPlane);
+                    this.initModelClipper(newModel);
                 } else if (newModel instanceof ThreeGroup) {
                     newModel.children.forEach((subModel) => {
                         subModel.computeBoundingBox();
-                        (subModel as ThreeModel).initClipper(this.localPlane);
+                        this.initModelClipper(subModel as ThreeModel);
                     });
                 }
             }
@@ -2561,7 +2563,7 @@ class ModelGroup extends EventEmitter {
             return;
         }
         this.plateAdhesion.clear();
-        if (this.adhesionConfig.adhesionType === 'none') {
+        if (this.adhesionConfig.adhesionType === 'none' || !this.clipperEnable) {
             return;
         }
         let paths = [];
@@ -2800,6 +2802,25 @@ class ModelGroup extends EventEmitter {
         if (value) {
             this.updateClippingPlane(PLANE_MAX_HEIGHT);
             this.emit(ModelEvents.ClippingHeightReset, true);
+        }
+    }
+
+    public setClipperEnable(enable: boolean) {
+        this.clipperEnable = enable;
+        clippingPoolManager.setEnable(enable);
+        if (enable) {
+            this.getThreeModels().forEach((model) => {
+                !model.clipper && this.initModelClipper(model);
+            });
+        } else {
+            this.updatePlateAdhesion();
+            this.updateClippingPlane();
+        }
+    }
+
+    public initModelClipper(model: ThreeModel) {
+        if (this.clipperEnable) {
+            model.initClipper(this.localPlane);
         }
     }
 }

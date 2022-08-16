@@ -229,6 +229,12 @@ const startToBegin = (data) => {
             }
         }
     );
+
+    // https://github.com/electron/electron/issues/23393
+    protocol.registerFileProtocol('atom', (request, cb) => {
+        const pathname = decodeURI(request.url.replace('atom://', ''));
+        cb(pathname);
+    });
     // https://github.com/electron/electron/issues/21675
     // If needed, resolve CORS. https://stackoverflow.com/questions/51254618/how-do-you-handle-cors-in-an-electron-app
 

@@ -21,7 +21,8 @@ import { PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY } from '.
 /* eslint-disable import/no-cycle */
 import { ParamItem } from '../../widgets/PrintingConfigurations/Configurations';
 
-const defaultParamsType = ['all', 'basic', 'advanced'];
+const defaultParamsType = ['all', 'advanced'];
+const NO_LIMIT = 'no_limit';
 
 function ConfigValueBox({
     optionConfigGroup,
@@ -45,9 +46,11 @@ function ConfigValueBox({
     const [selectProfile, setSelectProfile] = useState('');
     const [selectCategory, setSelectCategory] = useState('');
     const [mdContent, setMdContent] = useState('');
-    const [selectQualityDetailType, setSelectQualityDetailType] = useState('no_limit');
+    const [imgPath, setImgPath] = useState('');
+    const [selectQualityDetailType, setSelectQualityDetailType] = useState(NO_LIMIT);
     const scrollDom = useRef(null);
     const fieldsDom = useRef([]);
+    const [tempDoms, setTempdoms] = useState([]);
     const dispatch = useDispatch();
     const lang = i18next.language;
     useEffect(async () => {
@@ -66,6 +69,7 @@ function ConfigValueBox({
             try {
                 const res = await api.getProfileDocs({ lang, selectCategory, selectProfile });
                 setMdContent(res.body?.content);
+                setImgPath(res.body?.imagePath);
                 // fetch(url, { mode: 'cors',
                 //     method: 'GET',
                 //     headers: {
@@ -181,7 +185,7 @@ function ConfigValueBox({
         // selectParamsType: _selectParamsType
     }) => {
         return renderList && renderList.map(profileKey => {
-            if (selectParamsType === 'custom' || (includes((settings[profileKey].filter || []).concat('all'), selectParamsType) && (selectQualityDetailType === 'no_limit' ? true : includes(settings[profileKey].filter || [], selectQualityDetailType)))) {
+            if (selectParamsType === 'custom' || (includes((settings[profileKey].filter || []).concat('all'), selectParamsType) && (selectQualityDetailType === NO_LIMIT ? true : includes(settings[profileKey].filter || [], selectQualityDetailType)))) {
                 if (settings[profileKey].childKey?.length > 0 && selectParamsType !== 'custom') {
                     return (
                         <div key={profileKey} className={`margin-left-${(settings[profileKey].zIndex - 1) * 16}`}>
@@ -208,7 +212,8 @@ function ConfigValueBox({
                                 onChangeDefinition: _onChangeCustomConfig,
                                 managerType: _managerType,
                                 definitionCategory,
-                                officalDefinition
+                                officalDefinition,
+                                categoryKey
                             })}
                         </div>
                     );
@@ -240,7 +245,7 @@ function ConfigValueBox({
         });
     };
     useEffect(() => {
-        if (selectParamsType !== 'custom') {
+        if (selectParamsType !== 'custom' || selectQualityDetailType) {
             fieldsDom.current = fieldsDom.current.slice(
                 0,
                 Object.keys(optionConfigGroup).length
@@ -251,11 +256,18 @@ function ConfigValueBox({
                 Object.keys(customConfigs).length
             );
         }
-    }, [Object.keys(optionConfigGroup), selectParamsType, Object.keys(customConfigs)]);
+    }, [Object.keys(optionConfigGroup), selectParamsType, Object.keys(customConfigs), selectQualityDetailType]);
+
+    useEffect(() => {
+        setTempdoms(fieldsDom.current);
+    }, [selectParamsType, selectQualityDetailType]);
 
     const handleUpdateParamsType = (e) => {
         setSelectProfile('');
         setSelectParamsType(e.value);
+        if (!includes(defaultParamsType, e.value)) {
+            setSelectQualityDetailType(NO_LIMIT);
+        }
         dispatch(printingActions.updateProfileParamsType(managerType, e.value));
     };
     const materialParamsTypeOptions = [{
@@ -430,7 +442,7 @@ function ConfigValueBox({
                                             return (
                                                 <div key={key}>
                                                     <>
-                                                        {!hideMiniTitle && key && (
+                                                        {!hideMiniTitle && key && (tempDoms[index]?.clientHeight > 0) && (
                                                             <div className="border-bottom-normal padding-bottom-8 margin-vertical-16">
                                                                 <SvgIcon
                                                                     name="TitleSetting"
@@ -482,10 +494,13 @@ function ConfigValueBox({
                                     />
                                 </Anchor>
                                 {showParamsProfile && (
-                                    <ReactMarkdown>
-                                        {mdContent}
-                                    </ReactMarkdown>
+                                    <div className="padding-vertical-16 padding-horizontal-16 overflow-y-auto height-percent-100">
+                                        <ReactMarkdown transformImageUri={(input) => (`atom:///${imgPath}/${input.slice(3)}`)}>
+                                            {mdContent}
+                                        </ReactMarkdown>
+                                    </div>
                                 )}
+                                {/*  transformImageUri={() => (`${imgPath}/test.png`)} */}
                             </div>
                         </div>
                     </>
@@ -508,9 +523,11 @@ function ConfigValueBox({
                                 />
                             </Anchor>
                             {showParamsProfile && (
-                                <ReactMarkdown>
-                                    {mdContent}
-                                </ReactMarkdown>
+                                <div className="padding-vertical-16 padding-horizontal-16 overflow-y-auto height-percent-100">
+                                    <ReactMarkdown transformImageUri={(input) => (`atom:///${imgPath}/${input.slice(3)}`)}>
+                                        {mdContent}
+                                    </ReactMarkdown>
+                                </div>
                             )}
                         </div>
                     </div>

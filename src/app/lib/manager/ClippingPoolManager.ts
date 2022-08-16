@@ -1,19 +1,36 @@
 import { spawn, Worker, Pool, Thread } from 'threads';
 
+import { isUndefined } from 'lodash';
 import * as sortUnorderedLine from '../../workers/sortUnorderedLine';
 import * as calculateSectionPoints from '../../workers/calculateSectionPoints';
 import * as mapClippingSkinArea from '../../workers/mapClippingSkinArea';
 import * as calaClippingSkin from '../../workers/calaClippingSkin';
+import { machineStore } from '../../store/local-storage';
 
 import './clipperPool.worker';
 
 class ClippingPoolManager {
     private pool: Pool<Thread>;
     private worker: any;
+    public enable: boolean;
 
     public constructor() {
-        this.initPool();
-        this.getWorker();
+        let enable3dpLivePreview = machineStore.get('enable3dpLivePreview');
+        if (isUndefined(enable3dpLivePreview)) {
+            enable3dpLivePreview = true;
+        }
+        this.setEnable(enable3dpLivePreview);
+        if (this.enable) {
+            this.initPool();
+            this.getWorker();
+        }
+    }
+
+    public setEnable(bool: boolean) {
+        if (!bool) {
+            this.terminate();
+        }
+        this.enable = bool;
     }
 
     public initPool() {
