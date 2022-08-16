@@ -22,6 +22,7 @@ import { PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY } from '.
 import { ParamItem } from '../../widgets/PrintingConfigurations/Configurations';
 
 const defaultParamsType = ['all', 'advanced'];
+const NO_LIMIT = 'no_limit';
 
 function ConfigValueBox({
     optionConfigGroup,
@@ -46,7 +47,7 @@ function ConfigValueBox({
     const [selectCategory, setSelectCategory] = useState('');
     const [mdContent, setMdContent] = useState('');
     const [imgPath, setImgPath] = useState('');
-    const [selectQualityDetailType, setSelectQualityDetailType] = useState('no_limit');
+    const [selectQualityDetailType, setSelectQualityDetailType] = useState(NO_LIMIT);
     const scrollDom = useRef(null);
     const fieldsDom = useRef([]);
     const [tempDoms, setTempdoms] = useState([]);
@@ -184,7 +185,7 @@ function ConfigValueBox({
         // selectParamsType: _selectParamsType
     }) => {
         return renderList && renderList.map(profileKey => {
-            if (selectParamsType === 'custom' || (includes((settings[profileKey].filter || []).concat('all'), selectParamsType) && (selectQualityDetailType === 'no_limit' ? true : includes(settings[profileKey].filter || [], selectQualityDetailType)))) {
+            if (selectParamsType === 'custom' || (includes((settings[profileKey].filter || []).concat('all'), selectParamsType) && (selectQualityDetailType === NO_LIMIT ? true : includes(settings[profileKey].filter || [], selectQualityDetailType)))) {
                 if (settings[profileKey].childKey?.length > 0 && selectParamsType !== 'custom') {
                     return (
                         <div key={profileKey} className={`margin-left-${(settings[profileKey].zIndex - 1) * 16}`}>
@@ -265,7 +266,7 @@ function ConfigValueBox({
         setSelectProfile('');
         setSelectParamsType(e.value);
         if (!includes(defaultParamsType, e.value)) {
-            setSelectQualityDetailType('no_limit');
+            setSelectQualityDetailType(NO_LIMIT);
         }
         dispatch(printingActions.updateProfileParamsType(managerType, e.value));
     };

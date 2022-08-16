@@ -230,6 +230,7 @@ const startToBegin = (data) => {
         }
     );
 
+    // https://github.com/electron/electron/issues/23393
     protocol.registerFileProtocol('atom', (request, cb) => {
         const pathname = decodeURI(request.url.replace('atom://', ''));
         cb(pathname);
