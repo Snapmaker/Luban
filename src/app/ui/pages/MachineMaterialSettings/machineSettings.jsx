@@ -305,7 +305,6 @@ const MachineSettings = forwardRef(({
             activeDiameter = nozzleDiameterList[0];
         }
         if (direction === LEFT && activeDiameter) {
-            console.log('activeDiameter', activeDiameter.value);
             dispatch(printingActions.updateDefaultDefinition('quality.normal_other_quality', activeDiameter.value));
         }
 
@@ -332,7 +331,6 @@ const MachineSettings = forwardRef(({
         if (oldNozzleSize && oldNozzleSize !== nozzle?.value) {
             def.settings.machine_nozzle_size.default_value = Number(nozzle.value);
             saveActiveDiameterToStorage(direction, nozzle.label);
-            console.log('nozzle.value', nozzle.value);
             dispatch(
                 printingActions.updateCurrentDefinition({
                     definitionModel: def,
