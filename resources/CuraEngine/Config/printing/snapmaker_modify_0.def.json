@@ -936,24 +936,6 @@
                     "description": "Temperature & Cooling",
                     "type": "category",
                     "children": {
-                        "build_volume_temperature": {
-                            "label": "Build Volume Temperature",
-                            "description": "The temperature of the environment to print in. If this is 0, the build volume temperature will not be adjusted.",
-                            "unit": "°C",
-                            "type": "float",
-                            "default_value": 50,
-                            "resolve": "Math.min(build_volume_temperature)",
-                            "minimum_value": "0",
-                            "maximum_value": "heated_bed_maximum_temperature",
-                            "step": "0.1",
-                            "visible": "machine_heated_build_volume",
-                            "settable_per_mesh": false,
-                            "settable_per_extruder": false,
-                            "filter": [
-                                "basic",
-                                "all"
-                            ]
-                        },
                         "material_print_temperature": {
                             "label": "Printing Temperature",
                             "description": "The temperature used for printing.",
@@ -1471,6 +1453,91 @@
                                 "all"
                             ]
                         },
+                        "retraction_hop_enabled": {
+                            "label": "Z Hop When Retracted",
+                            "description": "Whenever a retraction is done, the build plate is lowered to create clearance between the nozzle and the print. It prevents the nozzle from hitting the print during travel moves, reducing the chance to knock the print from the build plate.",
+                            "type": "bool",
+                            "default_value": false,
+                            "visible": "retraction_enable",
+                            "settable_per_mesh": false,
+                            "settable_per_extruder": true,
+                            "filter": [
+                                "basic",
+                                "all"
+                            ],
+                            "children": {
+                                "speed_z_hop": {
+                                    "label": "Z Hop Speed",
+                                    "description": "The speed at which the vertical Z movement is made for Z Hops. This is typically lower than the print speed since the build plate or machine's gantry is harder to move.",
+                                    "unit": "mm/s",
+                                    "type": "float",
+                                    "default_value": 10,
+                                    "minimum_value": "0",
+                                    "maximum_value": "machine_max_feedrate_z",
+                                    "visible": "wipe_hop_enable && clean_between_layers",
+                                    "settable_per_mesh": false,
+                                    "settable_per_extruder": true,
+                                    "filter": [
+                                        "all"
+                                    ]
+                                },
+                                "retraction_hop_only_when_collides": {
+                                    "label": "Z Hop Only Over Printed Parts",
+                                    "description": "Only perform a Z Hop when moving over printed parts which cannot be avoided by horizontal motion by Avoid Printed Parts when Traveling.",
+                                    "type": "bool",
+                                    "default_value": false,
+                                    "visible": "retraction_enable && retraction_hop_enabled && travel_avoid_other_parts",
+                                    "settable_per_mesh": false,
+                                    "settable_per_extruder": true,
+                                    "filter": [
+                                        "all"
+                                    ]
+                                },
+                                "retraction_hop": {
+                                    "label": "Z Hop Height",
+                                    "description": "The height difference when performing a Z Hop.",
+                                    "unit": "mm",
+                                    "type": "float",
+                                    "default_value": 1,
+                                    "minimum_value_warning": "0",
+                                    "maximum_value_warning": "10",
+                                    "visible": "retraction_enable && retraction_hop_enabled",
+                                    "settable_per_mesh": false,
+                                    "settable_per_extruder": true,
+                                    "filter": [
+                                        "all"
+                                    ]
+                                },
+                                "retraction_hop_after_extruder_switch": {
+                                    "label": "Z Hop After Extruder Switch",
+                                    "description": "After the machine switched from one extruder to the other, the build plate is lowered to create clearance between the nozzle and the print. This prevents the nozzle from leaving oozed material on the outside of a print.",
+                                    "type": "bool",
+                                    "default_value": true,
+                                    "visible": "retraction_hop_enabled && extruders_enabled_count > 1",
+                                    "settable_per_mesh": false,
+                                    "settable_per_extruder": true,
+                                    "filter": [
+                                        "all"
+                                    ]
+                                },
+                                "retraction_hop_after_extruder_switch_height": {
+                                    "label": "Z Hop After Extruder Switch Height",
+                                    "description": "The height difference when performing a Z Hop after extruder switch.",
+                                    "unit": "mm",
+                                    "type": "float",
+                                    "default_value": 1,
+                                    "calcu_value": "retraction_hop",
+                                    "minimum_value_warning": "0",
+                                    "maximum_value_warning": "10",
+                                    "visible": "retraction_enable && retraction_hop_after_extruder_switch && extruders_enabled_count > 1",
+                                    "settable_per_mesh": false,
+                                    "settable_per_extruder": true,
+                                    "filter": [
+                                        "all"
+                                    ]
+                                }
+                            }
+                        },
                         "switch_extruder_retraction_amount": {
                             "label": "Nozzle Switch Retraction Distance",
                             "description": "The amount of retraction when switching extruders. Set to 0 for no retraction at all. This should generally be the same as the length of the heat zone.",
@@ -1519,7 +1586,10 @@
                                     "maximum_value": "machine_max_feedrate_e if retraction_enable else Infinity",
                                     "maximum_value_warning": "70",
                                     "settable_per_mesh": false,
-                                    "settable_per_extruder": true
+                                    "settable_per_extruder": true,
+                                    "filter": [
+                                        "all"
+                                    ]
                                 },
                                 "switch_extruder_prime_speed": {
                                     "label": "Nozzle Switch Prime Speed",
@@ -1534,7 +1604,10 @@
                                     "maximum_value": "machine_max_feedrate_e if retraction_enable else Infinity",
                                     "maximum_value_warning": "70",
                                     "settable_per_mesh": false,
-                                    "settable_per_extruder": true
+                                    "settable_per_extruder": true,
+                                    "filter": [
+                                        "all"
+                                    ]
                                 }
                             }
                         },
@@ -1548,7 +1621,10 @@
                             "maximum_value_warning": "100",
                             "visible": "retraction_enable && extruders_enabled_count > 1",
                             "settable_per_mesh": false,
-                            "settable_per_extruder": true
+                            "settable_per_extruder": true,
+                            "filter": [
+                                "all"
+                            ]
                         }
                     }
                 },
@@ -1595,6 +1671,20 @@
                     "description": "First Layer Optimization",
                     "type": "category",
                     "children": {
+                        "build_volume_temperature": {
+                            "label": "Build Volume Temperature",
+                            "description": "The temperature of the environment to print in. If this is 0, the build volume temperature will not be adjusted.",
+                            "unit": "°C",
+                            "type": "float",
+                            "default_value": 50,
+                            "resolve": "Math.min(build_volume_temperature)",
+                            "minimum_value": "0",
+                            "maximum_value": "heated_bed_maximum_temperature",
+                            "step": "0.1",
+                            "visible": "machine_heated_build_volume",
+                            "settable_per_mesh": false,
+                            "settable_per_extruder": false
+                        },
                         "default_material_print_temperature": {
                             "label": "Default Printing Temperature",
                             "description": "The default temperature used for printing. This should be the 'base' temperature of a material. All other print temperatures should use offsets based on this value",
@@ -2887,7 +2977,7 @@
                         "infill_pattern": {
                             "label": "Infill Pattern",
                             "description": "The pattern of the infill material of the print. The line and zig zag infill swap direction on alternate layers, reducing material cost. The grid, triangle, tri-hexagon, cubic, octet, quarter cubic, cross and concentric patterns are fully printed every layer. Gyroid, cubic, quarter cubic and octet infill change with every layer to provide a more equal distribution of strength over each direction.",
-                            "type": "enumWithImage",
+                            "type": "enum",
                             "options": {
                                 "grid": "Grid",
                                 "lines": "Lines",
@@ -2998,6 +3088,7 @@
                             },
                             "visible": "support_enable",
                             "default_value": "normal",
+                            "calcu_value": "support_generate_type === 'normal' ? 'normal':support_generate_type === 'tree' ? 'tree' : 'normal'",
                             "settable_per_mesh": false,
                             "settable_per_extruder": false,
                             "filter": [
@@ -3261,7 +3352,7 @@
                             ]
                         },
                         "support_interface_enable": {
-                            "label": "enabled Support Interface",
+                            "label": "Enabled Support Interface",
                             "description": "Generate a dense interface between the model and the support. This will create a skin at the top of the support on which the model is printed and at the bottom of the support, where it rests on the model.",
                             "type": "bool",
                             "default_value": false,
@@ -3707,16 +3798,15 @@
                             ]
                         },
                         "support_distance": {
-                            "label": "Support Distance",
-                            "description": "Support Distance",
+                            "label": "Support Preference",
+                            "description": "Support Preference",
                             "unit": "mm",
                             "type": "enum",
                             "options": {
-                                "printable": "printable",
-                                "balance": "balance",
-                                "removable": "removable"
+                                "removable": "Removable",
+                                "reliable": "Reliable"
                             },
-                            "default_value": "balance",
+                            "default_value": "removable",
                             "visible": "support_enable || support_meshes_present",
                             "settable_per_mesh": true,
                             "filter": [
@@ -3733,6 +3823,7 @@
                                     "default_value": 0.1,
                                     "limit_to_extruder": "support_interface_extruder_nr if support_interface_enable else support_infill_extruder_nr",
                                     "visible": "support_enable || support_meshes_present",
+                                    "calcu_value": "support_distance ==='removable' ? layer_height*2 : support_distance ==='reliable' ? layer_height : layer_height",
                                     "settable_per_mesh": true,
                                     "filter": [
                                         "advanced"
@@ -3792,6 +3883,7 @@
                                     "default_value": "z_overrides_xy",
                                     "limit_to_extruder": "support_infill_extruder_nr",
                                     "visible": "support_enable || support_meshes_present",
+                                    "calcu_value": "support_distance !== 'reliable' ? 'xy_overrides_z' : 'z_overrides_xy'",
                                     "settable_per_mesh": true,
                                     "filter": [
                                         "advanced"
@@ -3991,7 +4083,7 @@
                                     "minimum_value": "0",
                                     "minimum_value_warning": "25",
                                     "maximum_value_warning": "2500",
-                                    "visible": "resolveOrValue(adhesion_type) === 'skirt' || resolveOrValue(adhesion_type) === 'brim' || resolveOrValue(prime_tower_brim_enable)",
+                                    "visible": "adhesion_type === 'skirt' || adhesion_type === 'brim' || prime_tower_brim_enable",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "filter": [
@@ -4006,7 +4098,7 @@
                                     "minimum_value": "0",
                                     "maximum_value_warning": "50 / skirt_brim_line_width",
                                     "maximum_value": "0.5 * Math.min(machine_width, machine_depth) / skirt_brim_line_width",
-                                    "visible": "resolveOrValue(adhesion_type) === 'brim' || resolveOrValue(prime_tower_brim_enable)",
+                                    "visible": "adhesion_type === 'brim' || prime_tower_brim_enable",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "limit_to_extruder": "adhesion_extruder_nr",
@@ -4312,6 +4404,7 @@
                     "type": "category",
                     "icon": "category_dual",
                     "description": "Settings used for printing with multiple extruders.",
+                    "visible": "extruders_enabled_count > 1",
                     "children": {
                         "dual_helper_type": {
                             "label": "Dual Extrusion Helper Type",
@@ -4319,10 +4412,11 @@
                             "type": "enum",
                             "options": {
                                 "prime_tower": "Prime Tower",
-                                "ooze_shield": "Ooze Shield"
+                                "ooze_shield": "Ooze Shield",
+                                "none": "None"
                             },
                             "visible": "extruders_enabled_count > 1",
-                            "default_value": "prime_tower",
+                            "default_value": "none",
                             "settable_per_mesh": false,
                             "settable_per_extruder": false,
                             "filter": [
@@ -4332,7 +4426,7 @@
                             ]
                         },
                         "prime_tower_enable": {
-                            "label": "enabled Prime Tower",
+                            "label": "Enabled Prime Tower",
                             "description": "Print a tower next to the print which serves to prime the material after each nozzle switch.",
                             "type": "bool",
                             "visible": "false",
@@ -4365,7 +4459,7 @@
                             "description": "The minimum volume for each layer of the prime tower in order to purge enough material.",
                             "unit": "mm³",
                             "type": "float",
-                            "default_value": 6,
+                            "default_value": 12,
                             "minimum_value": "0",
                             "maximum_value_warning": "((prime_tower_size) * 0.5) ** 2 * 3.14159 * (layer_height) - sum(prime_tower_min_volume) + prime_tower_min_volume",
                             "visible": "dual_helper_type === 'prime_tower'",
@@ -4405,6 +4499,7 @@
                             "label": "Wipe Inactive Nozzle on Prime Tower",
                             "description": "After printing the prime tower with one nozzle, wipe the oozed material from the other nozzle off on the prime tower.",
                             "type": "bool",
+                            "visible": "dual_helper_type === 'prime_tower'",
                             "calcu_value": "dual_helper_type === 'prime_tower'",
                             "default_value": true,
                             "settable_per_mesh": false,
@@ -4418,8 +4513,9 @@
                             "description": "Prime-towers might need the extra adhesion afforded by a brim even if the model doesn't. Presently can't be used with the 'Raft' adhesion-type.",
                             "type": "bool",
                             "visible": "dual_helper_type === 'prime_tower' && adhesion_type !== 'raft'",
+                            "calcu_value": "dual_helper_type === 'prime_tower'",
                             "resolve": "(prime_tower_enable) and ((adhesion_type) in (none', 'skirt))",
-                            "default_value": true,
+                            "default_value": false,
                             "settable_per_mesh": false,
                             "settable_per_extruder": false,
                             "filter": [
@@ -4428,7 +4524,7 @@
                             ]
                         },
                         "ooze_shield_enabled": {
-                            "label": "enabled Ooze Shield",
+                            "label": "Enabled Ooze Shield",
                             "description": "enabled exterior ooze shield. This will create a shell around the model which is likely to wipe a second nozzle if it's at the same height as the first nozzle.",
                             "type": "bool",
                             "resolve": "any(ooze_shield_enabled)",
@@ -4637,7 +4733,7 @@
                             ]
                         },
                         "ironing_enabled": {
-                            "label": "enabled Ironing",
+                            "label": "Enabled Ironing",
                             "description": "Go over the top surface one additional time, but this time extruding very little material. This is meant to melt the plastic on top further, creating a smoother surface. The pressure in the nozzle chamber is kept high so that the creases in the surface are filled with material.",
                             "type": "bool",
                             "default_value": false,
@@ -4990,76 +5086,6 @@
                             "filter": [
                                 "success"
                             ]
-                        },
-                        "retraction_hop_enabled": {
-                            "label": "Z Hop When Retracted",
-                            "description": "Whenever a retraction is done, the build plate is lowered to create clearance between the nozzle and the print. It prevents the nozzle from hitting the print during travel moves, reducing the chance to knock the print from the build plate.",
-                            "type": "bool",
-                            "default_value": false,
-                            "visible": "retraction_enable",
-                            "settable_per_mesh": false,
-                            "settable_per_extruder": true,
-                            "filter": [
-                                "basic",
-                                "advanced"
-                            ],
-                            "children": {
-                                "speed_z_hop": {
-                                    "label": "Z Hop Speed",
-                                    "description": "The speed at which the vertical Z movement is made for Z Hops. This is typically lower than the print speed since the build plate or machine's gantry is harder to move.",
-                                    "unit": "mm/s",
-                                    "type": "float",
-                                    "default_value": 10,
-                                    "minimum_value": "0",
-                                    "maximum_value": "machine_max_feedrate_z",
-                                    "visible": "wipe_hop_enable && clean_between_layers",
-                                    "settable_per_mesh": false,
-                                    "settable_per_extruder": true
-                                },
-                                "retraction_hop_only_when_collides": {
-                                    "label": "Z Hop Only Over Printed Parts",
-                                    "description": "Only perform a Z Hop when moving over printed parts which cannot be avoided by horizontal motion by Avoid Printed Parts when Traveling.",
-                                    "type": "bool",
-                                    "default_value": false,
-                                    "visible": "retraction_enable && retraction_hop_enabled && travel_avoid_other_parts",
-                                    "settable_per_mesh": false,
-                                    "settable_per_extruder": true
-                                },
-                                "retraction_hop": {
-                                    "label": "Z Hop Height",
-                                    "description": "The height difference when performing a Z Hop.",
-                                    "unit": "mm",
-                                    "type": "float",
-                                    "default_value": 1,
-                                    "minimum_value_warning": "0",
-                                    "maximum_value_warning": "10",
-                                    "visible": "retraction_enable && retraction_hop_enabled",
-                                    "settable_per_mesh": false,
-                                    "settable_per_extruder": true
-                                },
-                                "retraction_hop_after_extruder_switch": {
-                                    "label": "Z Hop After Extruder Switch",
-                                    "description": "After the machine switched from one extruder to the other, the build plate is lowered to create clearance between the nozzle and the print. This prevents the nozzle from leaving oozed material on the outside of a print.",
-                                    "type": "bool",
-                                    "default_value": true,
-                                    "visible": "retraction_hop_enabled && extruders_enabled_count > 1",
-                                    "settable_per_mesh": false,
-                                    "settable_per_extruder": true
-                                },
-                                "retraction_hop_after_extruder_switch_height": {
-                                    "label": "Z Hop After Extruder Switch Height",
-                                    "description": "The height difference when performing a Z Hop after extruder switch.",
-                                    "unit": "mm",
-                                    "type": "float",
-                                    "default_value": 1,
-                                    "calcu_value": "retraction_hop",
-                                    "minimum_value_warning": "0",
-                                    "maximum_value_warning": "10",
-                                    "visible": "retraction_enable && retraction_hop_after_extruder_switch && extruders_enabled_count > 1",
-                                    "settable_per_mesh": false,
-                                    "settable_per_extruder": true
-                                }
-                            }
                         }
                     }
                 },
@@ -5284,7 +5310,7 @@
                             "description": "The amount of overlap between the infill and the walls as a percentage of the infill line width. A slight overlap allows the walls to connect firmly to the infill.",
                             "unit": "%",
                             "type": "float",
-                            "default_value": 10,
+                            "default_value": 0,
                             "calcu_value": "infill_sparse_density < 95 && infill_pattern !== 'concentric' ? 10 : 0",
                             "minimum_value_warning": "-50",
                             "maximum_value_warning": "100",
@@ -5300,7 +5326,7 @@
                                     "description": "The amount of overlap between the infill and the walls. A slight overlap allows the walls to connect firmly to the infill.",
                                     "unit": "mm",
                                     "type": "float",
-                                    "default_value": 0.04,
+                                    "default_value": 0,
                                     "minimum_value_warning": "-0.5 * machine_nozzle_size",
                                     "maximum_value_warning": "machine_nozzle_size",
                                     "calcu_value": "infill_sparse_density < 95 && infill_pattern !== 'concentric' ? 0.5 * (infill_line_width + (wall_line_count > 1 ? wall_line_width_x : wall_line_width_0)) * infill_overlap / 100 : 0",
@@ -5314,7 +5340,7 @@
                             "description": "Distance of a travel move inserted after every infill line, to make the infill stick to the walls better. This option is similar to infill overlap, but without extrusion and only on one end of the infill line.",
                             "unit": "mm",
                             "type": "float",
-                            "default_value": 0.04,
+                            "default_value": 0,
                             "calcu_value": "wall_line_count === 1 ? wall_line_width_0 / 4 : wall_line_width_x / 4",
                             "minimum_value_warning": "0",
                             "maximum_value_warning": "machine_nozzle_size",
@@ -5331,6 +5357,7 @@
                     "label": "No use",
                     "icon": "category_quality",
                     "desctiption": "No used Parameter.Won't show on UI",
+                    "visible": "false",
                     "type": "category",
                     "children": {
                         "speed_equalize_flow_enabled": {

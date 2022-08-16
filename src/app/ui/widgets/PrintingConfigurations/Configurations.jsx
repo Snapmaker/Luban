@@ -674,10 +674,10 @@ function Configurations() {
                 )}
                 {presetDisplayType !== i18n._(DEFAULT_DISPLAY_TYPE) && (
                     <div className={classNames(styles['preset-customized'], 'margin-top-8')}>
-                        {presetOptionsObj[presetDisplayType] && presetOptionsObj[presetDisplayType].options.map((optionItem) => {
+                        {presetOptionsObj[presetDisplayType] && presetOptionsObj[presetDisplayType].options.map((optionItem, index) => {
                             return (
                                 <div
-                                    key={optionItem.i18nName || optionItem.name}
+                                    key={(optionItem.i18nName + index) || (optionItem.name + index)}
                                     className={classNames(
                                         optionItem.definitionId === selectedDefinition.definitionId ? styles.selected : null,
                                         'border-radius-4',

@@ -5,7 +5,7 @@
     "i18nName": "key-default_name-Normal Print",
     "i18nCategory": "key-default_category-Default",
     "typeOfPrinting": "universal",
-    "qualityType": "abs",
+    "qualityType": "other",
     "isRecommended": true,
     "inherits": "snapmaker2",
     "metadata": {

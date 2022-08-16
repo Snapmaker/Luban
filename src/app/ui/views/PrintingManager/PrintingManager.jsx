@@ -127,8 +127,6 @@ function PrintingManager() {
             changedSettingArray,
             shouldUpdateActive
         ) => {
-            // now setDefinitionState is synchronize, so remove setTimeout
-            // newDefinition.updateParams && newDefinition.updateParams();
             await dispatch(
                 printingActions.updateCurrentDefinition({
                     definitionModel: newDefinition,

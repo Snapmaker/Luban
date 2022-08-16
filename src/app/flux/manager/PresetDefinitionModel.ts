@@ -574,7 +574,7 @@ const DEFAULE_PARAMS_FOR_TPU = {
     }
 };
 const OTHER_MATERISL_TYPES = ['pla', 'abs', 'petg'];
-const ALL_PRINTING_TYPES = ['universal', 'quik', 'fine', 'engineering'];
+// const ALL_PRINTING_TYPES = ['universal', 'quik', 'fine', 'engineering'];
 const DEFAULT_KEYS = [
     'definitionId',
     'name',
@@ -618,8 +618,8 @@ class PresetDefinitionModel {
     public nozzleSize: number;
     public params: ParamsModelType;
     public materialType: string;
+    public qualityType: string;
     private visible = false;
-
     public definitionId = '';
     public name = '';
     public inherits = '';
@@ -651,28 +651,22 @@ class PresetDefinitionModel {
             this.materialType = materialType;
             this.nozzleSize = nozzleSize;
             // todo change getting 'typeOfPrinting' from setting's param
-            if (materialType === 'tpu' && nozzleSize === 0.4 && this.typeOfPrinting) {
-                if (this.typeOfPrinting) {
-                    if (this.typeOfPrinting === ALL_PRINTING_TYPES[0]) {
-                        this.visible = true;
-                        this.params = cloneDeep(DEFAULE_PARAMS_FOR_TPU);
-                    } else {
-                        this.visible = false;
-                    }
+            if (materialType === 'tpu' && nozzleSize === 0.4) {
+                if (this.typeOfPrinting && this.qualityType !== 'tpu') {
+                    this.visible = false;
                 } else {
                     this.visible = true;
                     this.params = cloneDeep(DEFAULE_PARAMS_FOR_TPU);
                 }
-            } else if (OTHER_MATERISL_TYPES.includes(materialType) && nozzleSize === 0.4 && this.typeOfPrinting) {
-                if (this.typeOfPrinting) {
-                    this.visible = true;
-                    this.params = cloneDeep(DEFAULE_PARAMS_FOR_OTHERS);
+            } else if (OTHER_MATERISL_TYPES.includes(materialType) && nozzleSize === 0.4) {
+                if (this.typeOfPrinting && !(OTHER_MATERISL_TYPES.includes(this.qualityType))) {
+                    this.visible = false;
                 } else {
                     this.visible = true;
                     this.params = cloneDeep(DEFAULE_PARAMS_FOR_OTHERS);
                 }
             } else {
-                if (this.typeOfPrinting && this.typeOfPrinting !== ALL_PRINTING_TYPES[0]) {
+                if (this.typeOfPrinting && this.qualityType !== 'other') {
                     this.visible = false;
                 } else {
                     this.visible = true;
