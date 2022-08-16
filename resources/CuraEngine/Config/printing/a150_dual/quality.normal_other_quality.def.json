@@ -5,7 +5,7 @@
     "i18nName": "key-default_name-Normal Print",
     "i18nCategory": "key-default_category-Default",
     "typeOfPrinting": "universal",
-    "qualityType": "abs",
+    "qualityType": "other",
     "isRecommended": true,
     "inherits": "snapmaker2",
     "metadata": {
@@ -63,37 +63,37 @@
             "default_value": 0.4
         },
         "speed_print": {
-            "default_value": 50
+            "default_value": 40
         },
         "speed_infill": {
-            "default_value": 50
+            "default_value": 40
         },
         "speed_wall_0": {
-            "default_value": 15
-        },
-        "speed_wall_x": {
             "default_value": 20
         },
+        "speed_wall_x": {
+            "default_value": 40
+        },
         "speed_topbottom": {
-            "default_value": 25
+            "default_value": 20
         },
         "speed_roofing": {
-            "default_value": 25
+            "default_value": 20
         },
         "speed_support_infill": {
-            "default_value": 50
+            "default_value": 40
         },
         "speed_support_roof": {
-            "default_value": 50
+            "default_value": 40
         },
         "speed_support_bottom": {
-            "default_value": 50
+            "default_value": 40
         },
         "speed_prime_tower": {
-            "default_value": 50
+            "default_value": 40
         },
         "speed_travel": {
-            "default_value": 70
+            "default_value": 48
         },
         "acceleration_enabled": {
             "default_value": false
@@ -453,7 +453,7 @@
             "default_value": 18
         },
         "speed_travel_layer_0": {
-            "default_value": 25.2
+            "default_value": 21.6
         },
         "skirt_brim_speed": {
             "default_value": 18
@@ -486,10 +486,10 @@
             "default_value": 2
         },
         "dual_helper_type": {
-            "default_value": "none"
+            "default_value": "prime_tower"
         },
         "prime_tower_enable": {
-            "default_value": false
+            "default_value": true
         },
         "prime_tower_size": {
             "default_value": 20
@@ -504,10 +504,10 @@
             "default_value": 264.999999
         },
         "prime_tower_wipe_enabled": {
-            "default_value": false
+            "default_value": true
         },
         "prime_tower_brim_enable": {
-            "default_value": false
+            "default_value": true
         },
         "ooze_shield_enabled": {
             "default_value": false
@@ -564,7 +564,7 @@
             "default_value": 0.38
         },
         "speed_ironing": {
-            "default_value": 16.666666666666668
+            "default_value": 13.333333333333334
         },
         "acceleration_ironing": {
             "default_value": 3000
@@ -801,16 +801,16 @@
             "default_value": 1.6
         },
         "raft_speed": {
-            "default_value": 25
+            "default_value": 20
         },
         "raft_surface_speed": {
-            "default_value": 25
+            "default_value": 20
         },
         "raft_interface_speed": {
-            "default_value": 18.75
+            "default_value": 15
         },
         "raft_base_speed": {
-            "default_value": 18.75
+            "default_value": 15
         },
         "raft_acceleration": {
             "default_value": 3000
@@ -882,7 +882,7 @@
             "default_value": 0.5
         },
         "meshfix_maximum_travel_resolution": {
-            "default_value": 0.7
+            "default_value": 0.6
         },
         "meshfix_maximum_deviation": {
             "default_value": 0.025
@@ -1140,7 +1140,7 @@
             "default_value": 50
         },
         "bridge_skin_speed": {
-            "default_value": 12.5
+            "default_value": 10
         },
         "bridge_skin_material_flow": {
             "default_value": 60
@@ -1155,7 +1155,7 @@
             "default_value": true
         },
         "bridge_skin_speed_2": {
-            "default_value": 12.5
+            "default_value": 10
         },
         "bridge_skin_material_flow_2": {
             "default_value": 100
@@ -1167,7 +1167,7 @@
             "default_value": 0
         },
         "bridge_skin_speed_3": {
-            "default_value": 12.5
+            "default_value": 10
         },
         "bridge_skin_material_flow_3": {
             "default_value": 110

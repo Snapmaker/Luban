@@ -1,33 +1,23 @@
 {
     "version": "4.4.0",
-    "name": "PLA-Black",
+    "name": "TPU-Yellow",
     "inherits": "snapmaker",
-    "category": "PLA",
-    "i18nName": "key-default_name-PLA_Black",
-    "i18nCategory": "key-default_category-PLA",
+    "category": "TPU",
+    "i18nName": "key-default_name-TPU_Yellow",
+    "i18nCategory": "key-default_category-TPU",
     "isRecommended": true,
-    "metadata": {
-        "visible": true,
-        "readonly": true,
-        "author": "walker",
-        "manufacturer": "Snapmaker",
-        "file_formats": "text/x-gcode",
-        "machine_extruder_trains": {
-            "0": "snapmaker_extruder_0"
-        }
-    },
     "overrides": {
         "material_type": {
-            "default_value": "pla"
+            "default_value": "tpu"
         },
         "color": {
-            "default_value": "#464646"
+            "default_value": "#fff500"
         },
         "material_print_temperature": {
-            "default_value": 205
+            "default_value": 225
         },
         "material_print_temperature_layer_0": {
-            "default_value": 205
+            "default_value": 225
         },
         "material_initial_print_temperature": {
             "default_value": 200
@@ -42,7 +32,7 @@
             "default_value": 50
         },
         "material_bed_temperature_layer_0": {
-            "default_value": 70
+            "default_value": 60
         },
         "material_standby_temperature": {
             "default_value": 150
@@ -105,16 +95,16 @@
             "default_value": 100
         },
         "retraction_enable": {
-            "default_value": true
+            "default_value": false
         },
         "retraction_amount": {
             "default_value": 5
         },
         "retraction_retract_speed": {
-            "default_value": 60
+            "default_value": 25
         },
         "retraction_prime_speed": {
-            "default_value": 60
+            "default_value": 25
         },
         "retraction_extra_prime_amount": {
             "default_value": 0
@@ -138,7 +128,7 @@
             "default_value": 1
         },
         "switch_extruder_retraction_amount": {
-            "default_value": 20
+            "default_value": 16
         },
         "switch_extruder_retraction_speeds": {
             "default_value": 20

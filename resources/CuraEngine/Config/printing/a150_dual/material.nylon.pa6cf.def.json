@@ -1,39 +1,29 @@
 {
     "version": "4.4.0",
-    "name": "PLA-Black",
+    "name": "PA6-CF",
     "inherits": "snapmaker",
-    "category": "PLA",
-    "i18nName": "key-default_name-PLA_Black",
-    "i18nCategory": "key-default_category-PLA",
+    "category": "Nylon",
+    "i18nName": "key-default_name-Nylon-PA6-CF",
+    "i18nCategory": "key-default_category-Nylon",
     "isRecommended": true,
-    "metadata": {
-        "visible": true,
-        "readonly": true,
-        "author": "walker",
-        "manufacturer": "Snapmaker",
-        "file_formats": "text/x-gcode",
-        "machine_extruder_trains": {
-            "0": "snapmaker_extruder_0"
-        }
-    },
     "overrides": {
         "material_type": {
-            "default_value": "pla"
+            "default_value": "nylon"
         },
         "color": {
-            "default_value": "#464646"
+            "default_value": "#7f7f7f"
         },
         "material_print_temperature": {
-            "default_value": 205
+            "default_value": 290
         },
         "material_print_temperature_layer_0": {
-            "default_value": 205
+            "default_value": 290
         },
         "material_initial_print_temperature": {
-            "default_value": 200
+            "default_value": 280
         },
         "material_final_print_temperature": {
-            "default_value": 195
+            "default_value": 275
         },
         "material_extrusion_cool_down_speed": {
             "default_value": 0.7
@@ -42,19 +32,19 @@
             "default_value": 50
         },
         "material_bed_temperature_layer_0": {
-            "default_value": 70
+            "default_value": 50
         },
         "material_standby_temperature": {
             "default_value": 150
         },
         "cool_fan_speed": {
-            "default_value": 100
+            "default_value": 0
         },
         "cool_fan_speed_min": {
-            "default_value": 100
+            "default_value": 0
         },
         "cool_fan_speed_max": {
-            "default_value": 100
+            "default_value": 0
         },
         "cool_min_layer_time_fan_speed_max": {
             "default_value": 10
@@ -111,10 +101,10 @@
             "default_value": 5
         },
         "retraction_retract_speed": {
-            "default_value": 60
+            "default_value": 25
         },
         "retraction_prime_speed": {
-            "default_value": 60
+            "default_value": 25
         },
         "retraction_extra_prime_amount": {
             "default_value": 0
@@ -195,7 +185,7 @@
             "default_value": 2
         },
         "material_break_preparation_temperature": {
-            "default_value": 50
+            "default_value": 250
         },
         "material_break_retracted_position": {
             "default_value": -50

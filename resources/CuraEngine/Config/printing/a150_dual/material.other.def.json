@@ -1,27 +1,17 @@
 {
     "version": "4.4.0",
-    "name": "PLA-Black",
+    "name": "Default",
     "inherits": "snapmaker",
-    "category": "PLA",
-    "i18nName": "key-default_name-PLA_Black",
-    "i18nCategory": "key-default_category-PLA",
+    "category": "Other",
+    "i18nName": "key-default_name-Other",
+    "i18nCategory": "key-default_category-Other",
     "isRecommended": true,
-    "metadata": {
-        "visible": true,
-        "readonly": true,
-        "author": "walker",
-        "manufacturer": "Snapmaker",
-        "file_formats": "text/x-gcode",
-        "machine_extruder_trains": {
-            "0": "snapmaker_extruder_0"
-        }
-    },
     "overrides": {
         "material_type": {
-            "default_value": "pla"
+            "default_value": "other"
         },
         "color": {
-            "default_value": "#464646"
+            "default_value": "#ffffff"
         },
         "material_print_temperature": {
             "default_value": 205
