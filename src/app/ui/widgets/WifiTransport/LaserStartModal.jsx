@@ -3,6 +3,7 @@ import { isString, isUndefined } from 'lodash';
 import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Tooltip } from 'antd';
+import { Trans } from 'react-i18next';
 import { AUTO_MDOE, SEMI_AUTO_MODE, MANUAL_MODE } from '../../../constants';
 import i18n from '../../../lib/i18n';
 import { Radio } from '../../components/Radio';
@@ -10,8 +11,6 @@ import Modal from '../../components/Modal';
 import { Button } from '../../components/Buttons';
 import { NumberInput as Input } from '../../components/Input';
 import { actions as machineActions } from '../../../flux/machine';
-
-
 
 function LaserStartModal({
     showStartModal,
@@ -129,7 +128,11 @@ function LaserStartModal({
         {
             key: MANUAL_MODE,
             name: i18n._('key-Workspace/LaserStartJob-manual_mode'),
-            description: i18n._('key-Workspace/LaserStartJob-manual_mode_description'),
+            description: () => {
+                <Trans i18nKey="key-Workspace/LaserStartJob-manual_mode_description">
+                    <b>Manually control</b> the movement of the execution head until the laser beam converges into the smallest spot on the surface of the material. Click to <b>start the job</b>, the machine will use the current height as the laser height.
+                </Trans>;
+            },
             display: {},
             disable: false
         },
@@ -150,7 +153,7 @@ function LaserStartModal({
             width="40%"
         >
             <Modal.Header>
-                {i18n._('key-Workspace/LaserStartJob-start_job')}
+                {i18n._('key-Workspace/LaserStartJob-Select Mode')}
             </Modal.Header>
             <Modal.Body>
                 <Radio.Group

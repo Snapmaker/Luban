@@ -314,6 +314,7 @@ i18n._('key-Workspace/Connection-TOOLHEAD_CNC_1');
 i18n._('key-Workspace/Connection-10W Laser');
 i18n._('key-Workspace/Connection-3dp');
 i18n._('key-Workspace/Connection-laser');
+i18n._('Key-Workspace/LaserStartJob-manual_mode_description');
 
 // Progress Manager
 i18n._('key-Progress/LaserCNC-Generate toolpath and preview: {{progress}}%');
@@ -397,3 +398,18 @@ i18n._('key-profileManager/Params-Success');
 i18n._('key-Modal/Common-Ignore');
 i18n._('key-Modal/Common-Do not ask me again');
 i18n._('key-Printing/Repair');
+
+// Definition Catagory
+i18n._('key-Definition/Catagory-material_info');
+i18n._('key-Definition/Catagory-heating_and_cooling');
+i18n._('key-Definition/Catagory-flow');
+i18n._('key-Definition/Catagory-Retraction');
+i18n._('key-Definition/Catagory-first_layer_optimization');
+i18n._('key-Definition/Catagory-quality');
+i18n._('key-Definition/Catagory-printing_speed');
+i18n._('key-Definition/Catagory-model_structure');
+i18n._('key-Definition/Catagory-support');
+i18n._('key-Definition/Catagory-platform_adhesion');
+i18n._('key-Definition/Catagory-dual');
+i18n._('key-Definition/Catagory-path_optimization');
+i18n._('key-Definition/Catagory-model_structure_optimization');

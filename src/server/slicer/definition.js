@@ -205,7 +205,7 @@ export class DefinitionLoader {
                         this.settings[key].zIndex = zIndex;
                     }
                 }
-                if (setting.children) {
+                if (setting.children && setting.visible !== 'false') {
                     this.loadJSONSettings(definitionId, setting.children, zIndex, (setting.type === 'category' || setting.type === 'mainCategory') ? '' : key, mainCategory, smallCategory);
                 }
             }
