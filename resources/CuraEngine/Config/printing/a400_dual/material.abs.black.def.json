@@ -1,287 +1,218 @@
 {
-    "name": "ABS-White",
-    "version": "4.2.0",
+    "version": "4.4.0",
+    "name": "ABS-Black",
     "inherits": "snapmaker",
     "category": "ABS",
-    "isRecommended": true,
-    "i18nName": "key-default_name-ABS_White",
+    "i18nName": "key-default_name-ABS_Black",
     "i18nCategory": "key-default_category-ABS",
+    "isRecommended": true,
     "overrides": {
         "material_type": {
-            "label": "Material Type",
-            "default_value": "PLA",
-            "filter": [
-                "all"
-            ]
+            "default_value": "abs"
         },
         "color": {
-            "label": "Color",
-            "default_value": "#ffffff",
-            "filter": [
-                "basic",
-                "all"
-            ]
+            "default_value": "#464646"
         },
         "material_print_temperature": {
-            "label": "Printing Temperature",
-            "default_value": 200,
-            "minimum_value": "-273.15",
-            "maximum_value": "365",
-            "filter": [
-                "basic",
-                "all"
-            ],
-            "step": "0.1"
-        },
-        "material_standby_temperature": {
-            "label": "Standby Temperature",
-            "default_value": 100,
-            "filter": [
-                "basic",
-                "all"
-            ],
-            "step": "0.1"
-        },
-        "material_initial_print_temperature": {
-            "label": "Initial Printing Temperature",
-            "default_value": 200,
-            "filter": [
-                "all"
-            ],
-            "step": "0.1"
-        },
-        "material_final_print_temperature": {
-            "label": "Final Printing Temperature",
-            "default_value": 200,
-            "filter": [
-                "all"
-            ],
-            "step": "0.1"
-        },
-        "material_bed_temperature": {
-            "label": "Build Plate Temperature",
-            "default_value": 50,
-            "filter": [
-                "basic",
-                "all"
-            ],
-            "step": "1"
-        },
-        "cool_fan_speed": {
-            "label": "Fan Speed",
-            "default_value": 50,
-            "filter": [
-                "basic",
-                "all"
-            ],
-            "step": "1",
-            "children": {
-                "cool_fan_speed_min": {
-                    "label": "Regular Fan Speed",
-                    "default_value": 50,
-                    "filter": [
-                        "all"
-                    ],
-                    "step": "1"
-                },
-                "cool_fan_speed_max": {
-                    "label": "Maximum Fan Speed",
-                    "default_value": 50,
-                    "filter": [
-                        "all"
-                    ],
-                    "step": "1"
-                },
-                "cool_min_layer_time_fan_speed_max": {
-                    "label": "Regular/Maximum Fan Speed Threshold",
-                    "default_value": 50,
-                    "filter": [
-                        "all"
-                    ],
-                    "step": "1"
-                }
-            }
-        },
-        "cool_fan_speed_0": {
-            "label": "Initial Fan Speed",
-            "default_value": 50,
-            "filter": [
-                "all"
-            ],
-            "step": "1"
-        },
-        "cool_fan_full_layer": {
-            "label": "Regular Fan Speed at Layer",
-            "default_value": 50,
-            "filter": [
-                "all"
-            ],
-            "step": "1"
-        },
-        "cool_min_layer_time": {
-            "label": "Minimum Layer Time",
-            "default_value": 50,
-            "filter": [
-                "all"
-            ],
-            "step": "1"
-        },
-        "cool_min_speed": {
-            "label": "Minimum Speed",
-            "default_value": 50,
-            "filter": [
-                "all"
-            ],
-            "step": "1"
-        },
-        "material_flow": {
-            "label": "Flow",
-            "default_value": 100,
-            "filter": [
-                "all"
-            ],
-            "step": "1",
-            "children": {
-                "wall_0_material_flow": {
-                    "label": "Outer Wall Flow",
-                    "default_value": 50,
-                    "filter": [
-                        "all"
-                    ],
-                    "step": "1"
-                },
-                "wall_x_material_flow": {
-                    "label": "Inner Wall(s) Flow",
-                    "default_value": 50,
-                    "filter": [
-                        "all"
-                    ],
-                    "step": "1"
-                },
-                "skin_material_flow": {
-                    "label": "Top/Bottom Flow",
-                    "default_value": 50,
-                    "filter": [
-                        "all"
-                    ],
-                    "step": "1"
-                },
-                "infill_material_flow": {
-                    "label": "Infill Flow",
-                    "default_value": 50,
-                    "filter": [
-                        "all"
-                    ],
-                    "step": "1"
-                },
-                "skirt_brim_material_flow": {
-                    "label": "Skirt/Brim Flow",
-                    "default_value": 50,
-                    "filter": [
-                        "all"
-                    ],
-                    "step": "1"
-                },
-                "prime_tower_flow": {
-                    "label": "Prime Tower Flow",
-                    "default_value": 50,
-                    "filter": [
-                        "all"
-                    ],
-                    "step": "1"
-                }
-            }
-        },
-        "retraction_enable": {
-            "label": "Enable Retraction",
-            "default_value": false,
-            "filter": [
-                "basic",
-                "all"
-            ],
-            "step": "1",
-            "children": {
-                "retraction_amount": {
-                    "label": "Retraction Distance",
-                    "default_value": 50,
-                    "filter": [
-                        "basic",
-                        "all"
-                    ]
-                },
-                "retraction_speed": {
-                    "label": "Retraction Speed",
-                    "default_value": 50,
-                    "filter": [
-                        "basic",
-                        "all"
-                    ],
-                    "step": "0.1",
-                    "children": {
-                        "retraction_retract_speed": {
-                            "label": "Retraction Retract Speed",
-                            "default_value": 50,
-                            "filter": [
-                                "all"
-                            ],
-                            "step": "0.1"
-                        },
-                        "retraction_prime_speed": {
-                            "label": "Retraction Prime Speed",
-                            "default_value": 50,
-                            "filter": [
-                                "all"
-                            ],
-                            "step": "0.1"
-                        }
-                    }
-                }
-            }
-        },
-        "retraction_extra_prime_amount": {
-            "label": "Retraction Extra Prime Amount",
-            "default_value": 50,
-            "filter": [
-                "all"
-            ],
-            "step": "0.1"
-        },
-        "retraction_min_travel": {
-            "label": "Retraction Minimum Travel",
-            "default_value": 50,
-            "step": "0.1"
+            "default_value": 235
         },
         "material_print_temperature_layer_0": {
-            "label": "Printing Temperature Initial Layer",
-            "default_value": 238,
-            "filter": [
-                "all"
-            ],
-            "step": "0.1"
+            "default_value": 238
+        },
+        "material_initial_print_temperature": {
+            "default_value": 225
+        },
+        "material_final_print_temperature": {
+            "default_value": 225
+        },
+        "material_extrusion_cool_down_speed": {
+            "default_value": 0.7
+        },
+        "material_bed_temperature": {
+            "default_value": 80
         },
         "material_bed_temperature_layer_0": {
-            "label": "Build Plate Temperature Initial Layer",
-            "default_value": 238,
-            "filter": [
-                "all"
-            ],
-            "step": "0.1"
+            "default_value": 80
         },
-        "machine_heated_bed": {
-            "default_value": true,
-            "todo": 1
+        "material_standby_temperature": {
+            "default_value": 150
         },
-        "retract_at_layer_change": {
-            "default_value": false,
-            "todo": 1
+        "cool_fan_speed": {
+            "default_value": 0
         },
-        "retraction_hop": {
-            "default_value": 1,
-            "todo": 1
+        "cool_fan_speed_min": {
+            "default_value": 0
+        },
+        "cool_fan_speed_max": {
+            "default_value": 0
+        },
+        "cool_min_layer_time_fan_speed_max": {
+            "default_value": 10
+        },
+        "cool_fan_full_layer": {
+            "default_value": 2
+        },
+        "cool_lift_head": {
+            "default_value": true
+        },
+        "cool_min_layer_time": {
+            "default_value": 10
+        },
+        "cool_min_speed": {
+            "default_value": 10
+        },
+        "material_flow": {
+            "default_value": 100
+        },
+        "wall_0_material_flow": {
+            "default_value": 100
+        },
+        "wall_x_material_flow": {
+            "default_value": 100
+        },
+        "skin_material_flow": {
+            "default_value": 100
+        },
+        "roofing_material_flow": {
+            "default_value": 100
+        },
+        "infill_material_flow": {
+            "default_value": 100
+        },
+        "skirt_brim_material_flow": {
+            "default_value": 100
+        },
+        "support_material_flow": {
+            "default_value": 100
+        },
+        "support_roof_material_flow": {
+            "default_value": 100
+        },
+        "support_bottom_material_flow": {
+            "default_value": 100
+        },
+        "prime_tower_flow": {
+            "default_value": 100
+        },
+        "retraction_enable": {
+            "default_value": true
+        },
+        "retraction_amount": {
+            "default_value": 5
+        },
+        "retraction_retract_speed": {
+            "default_value": 60
+        },
+        "retraction_prime_speed": {
+            "default_value": 60
+        },
+        "retraction_extra_prime_amount": {
+            "default_value": 0
         },
         "retraction_hop_enabled": {
-            "default_value": false,
-            "todo": 1
+            "default_value": false
+        },
+        "speed_z_hop": {
+            "default_value": 10
+        },
+        "retraction_hop_only_when_collides": {
+            "default_value": false
+        },
+        "retraction_hop": {
+            "default_value": 1
+        },
+        "retraction_hop_after_extruder_switch": {
+            "default_value": true
+        },
+        "retraction_hop_after_extruder_switch_height": {
+            "default_value": 1
+        },
+        "switch_extruder_retraction_amount": {
+            "default_value": 20
+        },
+        "switch_extruder_retraction_speeds": {
+            "default_value": 20
+        },
+        "switch_extruder_retraction_speed": {
+            "default_value": 20
+        },
+        "switch_extruder_prime_speed": {
+            "default_value": 20
+        },
+        "switch_extruder_extra_prime_amount": {
+            "default_value": 0
+        },
+        "cool_fan_speed_0": {
+            "default_value": 0
+        },
+        "material_flow_layer_0": {
+            "default_value": 100
+        },
+        "build_volume_temperature": {
+            "default_value": 50
+        },
+        "default_material_print_temperature": {
+            "default_value": 210
+        },
+        "default_material_bed_temperature": {
+            "default_value": 60
+        },
+        "cool_fan_enabled": {
+            "default_value": true
+        },
+        "material_adhesion_tendency": {
+            "default_value": 10
+        },
+        "material_surface_energy": {
+            "default_value": 100
+        },
+        "material_shrinkage_percentage": {
+            "default_value": 100
+        },
+        "material_crystallinity": {
+            "default_value": false
+        },
+        "material_anti_ooze_retracted_position": {
+            "default_value": -4
+        },
+        "material_anti_ooze_retraction_speed": {
+            "default_value": 5
+        },
+        "material_break_preparation_retracted_position": {
+            "default_value": -16
+        },
+        "material_break_preparation_speed": {
+            "default_value": 2
+        },
+        "material_break_preparation_temperature": {
+            "default_value": 50
+        },
+        "material_break_retracted_position": {
+            "default_value": -50
+        },
+        "material_break_speed": {
+            "default_value": 25
+        },
+        "material_break_temperature": {
+            "default_value": 50
+        },
+        "material_flush_purge_speed": {
+            "default_value": 0.5
+        },
+        "material_flush_purge_length": {
+            "default_value": 60
+        },
+        "material_end_of_filament_purge_speed": {
+            "default_value": 0.5
+        },
+        "material_end_of_filament_purge_length": {
+            "default_value": 20
+        },
+        "material_maximum_park_duration": {
+            "default_value": 300
+        },
+        "material_no_load_move_factor": {
+            "default_value": 0.940860215
         }
     }
 }

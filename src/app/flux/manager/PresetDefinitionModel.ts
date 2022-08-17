@@ -574,19 +574,17 @@ const DEFAULE_PARAMS_FOR_TPU = {
     }
 };
 const OTHER_MATERISL_TYPES = ['pla', 'abs', 'petg'];
-// const ALL_PRINTING_TYPES = ['universal', 'quik', 'fine', 'engineering'];
-const DEFAULT_KEYS = [
-    'definitionId',
-    'name',
-    'inherits',
-    'category',
-    'i18nName',
-    'i18nName',
-    'i18nCategory',
-    'typeOfPrinting',
-    'settings',
-    'ownKeys'
-];
+// const DEFAULT_KEYS = [
+//     'definitionId',
+//     'name',
+//     'inherits',
+//     'category',
+//     'i18nName',
+//     'i18nCategory',
+//     'typeOfPrinting',
+//     'settings',
+//     'ownKeys'
+// ];
 
 type ParamsObjectOption = {
     [key: string]: {
@@ -613,8 +611,8 @@ type ParamsModelType = {
 }
 
 class PresetDefinitionModel {
-    public headType: string = HEAD_PRINTING;
-    public typeOfPrinting: string;
+    public headType = HEAD_PRINTING;
+    public typeOfPrinting = 'universal';
     public nozzleSize: number;
     public params: ParamsModelType;
     public materialType: string;
@@ -631,9 +629,7 @@ class PresetDefinitionModel {
 
     // init definitionId and definition
     public constructor(definition, materialType, defaultNozzleSize) {
-        Object.keys(definition).filter(a => {
-            return !(a in DEFAULT_KEYS);
-        })
+        Object.keys(definition)
             .forEach((key) => {
                 this[key] = definition[key];
             });

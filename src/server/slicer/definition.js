@@ -18,6 +18,8 @@ const allSettingNameWithType = {
     'material': new Set(),
     'quality': new Set()
 };
+allSettingNameWithType.quality.add('extruders_enabled_count');
+console.log('allSettingNameWithType', allSettingNameWithType.quality);
 const materialRegex = /^material.*/;
 const qualityRegex = /^quality.*/;
 
@@ -242,6 +244,7 @@ export class DefinitionLoader {
         } else if (qualityRegex.test(this.definitionId)) {
             this.ownKeys = allSettingNameWithType.quality;
         }
+        console.log('allSettingNameWithType.quality', allSettingNameWithType.quality.has('extruders_enabled_count'), this.ownKeys.has('extruders_enabled_count'));
         for (const key of this.ownKeys) {
             if (this.settings[key]) {
                 overrides[key] = {

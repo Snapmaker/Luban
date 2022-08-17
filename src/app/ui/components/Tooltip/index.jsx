@@ -26,7 +26,7 @@ const InsideTooltip = (props) => {
 
 InsideTooltip.propTypes = {
     placement: PropTypes.string,
-    title: PropTypes.string,
+    title: PropTypes.node,
     children: PropTypes.node,
 };
 

@@ -343,6 +343,7 @@ const MaterialSettings = ({
                                                 className={classNames(`height-40 border-radius-100 padding-horizontal-16 sm-flex align-center border-default-grey-1 ${selectedDefinitionId === definition.definitionId ? 'border-blod-blue-2' : ''}`, styles['material-item'])}
                                                 onClick={(e) => handleUpdateDefinition(e, definition.definitionId)}
                                                 onDoubleClick={onShowPrintingManager}
+                                                key={definition.definitionId}
                                             >
                                                 <div className="sm-flex align-center width-percent-100">
                                                     <div className="width-16 height-16 border-default-grey-1 margin-right-8 " style={{ background: `${definition?.settings?.color?.default_value}` }} />
