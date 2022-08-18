@@ -19,7 +19,7 @@ function routeToHeadType(history, headType, forceRefresh = false) {
     if (isCurrent && forceRefresh) {
         history.replace();
     } else {
-        history.replace(routerMap[headType]);
+        history.replace(routerMap[headType], { initialized: true });
     }
 }
 

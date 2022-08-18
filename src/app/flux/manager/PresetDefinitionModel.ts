@@ -648,21 +648,21 @@ class PresetDefinitionModel {
             this.nozzleSize = nozzleSize;
             // todo change getting 'typeOfPrinting' from setting's param
             if (materialType === 'tpu' && nozzleSize === 0.4) {
-                if (this.typeOfPrinting && this.qualityType !== 'tpu') {
+                if (this.typeOfPrinting && this.qualityType && this.qualityType !== 'tpu') {
                     this.visible = false;
                 } else {
                     this.visible = true;
                     this.params = cloneDeep(DEFAULE_PARAMS_FOR_TPU);
                 }
             } else if (OTHER_MATERISL_TYPES.includes(materialType) && nozzleSize === 0.4) {
-                if (this.typeOfPrinting && !(OTHER_MATERISL_TYPES.includes(this.qualityType))) {
+                if (this.typeOfPrinting && this.qualityType && !(OTHER_MATERISL_TYPES.includes(this.qualityType))) {
                     this.visible = false;
                 } else {
                     this.visible = true;
                     this.params = cloneDeep(DEFAULE_PARAMS_FOR_OTHERS);
                 }
             } else {
-                if (this.typeOfPrinting && this.qualityType !== 'other') {
+                if (this.typeOfPrinting && this.qualityType && this.qualityType !== 'other') {
                     this.visible = false;
                 } else {
                     this.visible = true;

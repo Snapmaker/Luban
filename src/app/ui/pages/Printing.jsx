@@ -355,6 +355,7 @@ function Printing({ location }) {
         }, 1000)();
     };
     useEffect(() => {
+        // if (!location?.state?.initialized) {
         if (!definitionManager.extruderLDefinition) {
             dispatch(printingActions.init());
         }

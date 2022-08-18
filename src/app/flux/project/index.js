@@ -228,10 +228,9 @@ export const actions = {
         }
         if (envHeadType === HEAD_PRINTING) {
             modActions = printingActions;
-            await dispatch(printingActions.initSize());
+            // await dispatch(printingActions.initSize());
         }
         const { modelGroup } = modState;
-        // await dispatch(modActions.init(envHeadType));
         modelGroup.removeAllModels();
 
         await modState?.SVGActions?.svgContentGroup.removeAllElements();
@@ -243,10 +242,8 @@ export const actions = {
             }
             const isRotate = materials ? materials.isRotate : false;
             const oversize = some(keys(coordinateSize), (key) => {
-                console.log(currentSize[key], coordinateSize[key]);
                 return currentSize[key] < coordinateSize[key];
             });
-            console.log({ oversize });
             if (oversize) coordinateSize = currentSize;
             if (coordinateMode) {
                 dispatch(editorActions.updateState(envHeadType, {
@@ -480,7 +477,6 @@ export const actions = {
                 history.push('/');
             }
             history.push(`/${headType}`);
-
             await dispatch(actions.onRecovery(headType, envObj, false, shouldSetFileName, isGuideTours));
             if (shouldSetFileName) {
                 if (file instanceof File) {
