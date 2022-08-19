@@ -350,7 +350,6 @@ class MarlinController {
 
         this.controller.on('firmware', (res) => {
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
-                // this.emitAll('serialport:read', res.raw);
                 this.emitAll('serialport:read', { data: res.raw });
             }
         });
@@ -358,7 +357,6 @@ class MarlinController {
             log.silly(`controller.on('series'): source=${this.history.writeSource},
                  line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
-                // this.emitAll('serialport:read', res.raw);
                 this.emitAll('serialport:read', { data: res.raw });
             }
         });
@@ -366,7 +364,6 @@ class MarlinController {
             log.silly(`controller.on('home'): source=${this.history.writeSource},
                  line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
-                // this.emitAll('serialport:read', res.raw);
                 this.emitAll('serialport:read', { data: res.raw });
             }
         });
@@ -374,7 +371,6 @@ class MarlinController {
             // log.silly(`controller.on('originOffset'): source=${this.history.writeSource},
             //      line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
-                // this.emitAll('serialport:read', res.raw);
                 this.emitAll('serialport:read', { data: res.raw });
             }
         });
@@ -382,7 +378,6 @@ class MarlinController {
             // log.silly(`controller.on('originOffset'): source=${this.history.writeSource},
             //      line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
-                // this.emitAll('serialport:read', res.raw);
                 this.emitAll('serialport:read', { data: res.raw });
             }
         });
@@ -390,7 +385,6 @@ class MarlinController {
             // log.silly(`controller.on('originOffset'): source=${this.history.writeSource},
             //      line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
-                // this.emitAll('serialport:read', res.raw);
                 this.emitAll('serialport:read', { data: res.raw });
             }
         });
@@ -398,7 +392,6 @@ class MarlinController {
             // log.silly(`controller.on('originOffset'): source=${this.history.writeSource},
             //      line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
-                // this.emitAll('serialport:read', res.raw);
                 this.emitAll('serialport:read', { data: res.raw });
             }
         });
@@ -406,14 +399,12 @@ class MarlinController {
             log.silly(`controller.on('headType'): source=${this.history.writeSource},
                  line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
-                // this.emitAll('serialport:read', res.raw);
                 this.emitAll('serialport:read', { data: res.raw });
             }
         });
         this.controller.on('pos', (res) => {
             log.silly(`controller.on('pos'): source=${this.history.writeSource}, line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
-                // this.emitAll('serialport:read', res.raw);
                 this.emitAll('serialport:read', { data: res.raw });
             }
         });
@@ -425,13 +416,11 @@ class MarlinController {
             log.silly(`controller.on('temperature'): source=${this.history.writeSource},
                 line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER, WRITE_SOURCE_SENDER], this.history.writeSource)) {
-                // this.emitAll('serialport:read', res.raw);
                 this.emitAll('serialport:read', { data: res.raw });
             }
         });
         this.controller.on('enclosure', (res) => {
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
-                // this.emitAll('serialport:read', res.raw);
                 this.emitAll('serialport:read', { data: res.raw });
             }
         });
@@ -442,7 +431,6 @@ class MarlinController {
         });
         this.controller.on('selected', (res) => {
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
-                // this.emitAll('serialport:read', res.raw);
                 this.emitAll('serialport:read', { data: res.raw });
             }
         });
@@ -473,10 +461,8 @@ class MarlinController {
             // Display info to console, if this is from user-input
             if (res) {
                 if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
-                    // this.emitAll('serialport:read', res.raw);
                     this.emitAll('serialport:read', { data: res.raw });
                 } else if (!this.history.writeSource) {
-                    // this.emitAll('serialport:read', res.raw);
                     // this.emitAll('serialport:read', { data: res.raw });
                     // log.error('"history.writeSource" should NOT be empty');
                 }
@@ -524,7 +510,6 @@ class MarlinController {
         });
 
         this.controller.on('echo', (res) => {
-            // this.emitAll('serialport:read', res.raw);
             this.emitAll('serialport:read', { data: res.raw });
         });
 
@@ -539,7 +524,6 @@ class MarlinController {
 
                 // this.emitAll('serialport:read', `> ${line.trim()} (line=${received + 1})`);
                 this.emitAll('serialport:read', { data: `> ${line.trim()} (line=${received + 1})` });
-                // this.emitAll('serialport:read', res.raw);
                 this.emitAll('serialport:read', { data: res.raw });
 
                 this.sender.ack();
@@ -547,7 +531,6 @@ class MarlinController {
                 return;
             }
 
-            // this.emitAll('serialport:read', res.raw);
             this.emitAll('serialport:read', { data: res.raw });
         });
 

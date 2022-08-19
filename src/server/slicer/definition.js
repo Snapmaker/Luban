@@ -18,6 +18,7 @@ const allSettingNameWithType = {
     'material': new Set(),
     'quality': new Set()
 };
+allSettingNameWithType.quality.add('extruders_enabled_count');
 const materialRegex = /^material.*/;
 const qualityRegex = /^quality.*/;
 

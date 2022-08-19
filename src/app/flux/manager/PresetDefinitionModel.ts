@@ -574,19 +574,17 @@ const DEFAULE_PARAMS_FOR_TPU = {
     }
 };
 const OTHER_MATERISL_TYPES = ['pla', 'abs', 'petg'];
-// const ALL_PRINTING_TYPES = ['universal', 'quik', 'fine', 'engineering'];
-const DEFAULT_KEYS = [
-    'definitionId',
-    'name',
-    'inherits',
-    'category',
-    'i18nName',
-    'i18nName',
-    'i18nCategory',
-    'typeOfPrinting',
-    'settings',
-    'ownKeys'
-];
+// const DEFAULT_KEYS = [
+//     'definitionId',
+//     'name',
+//     'inherits',
+//     'category',
+//     'i18nName',
+//     'i18nCategory',
+//     'typeOfPrinting',
+//     'settings',
+//     'ownKeys'
+// ];
 
 type ParamsObjectOption = {
     [key: string]: {
@@ -613,8 +611,8 @@ type ParamsModelType = {
 }
 
 class PresetDefinitionModel {
-    public headType: string = HEAD_PRINTING;
-    public typeOfPrinting: string;
+    public headType = HEAD_PRINTING;
+    public typeOfPrinting = 'universal';
     public nozzleSize: number;
     public params: ParamsModelType;
     public materialType: string;
@@ -631,9 +629,7 @@ class PresetDefinitionModel {
 
     // init definitionId and definition
     public constructor(definition, materialType, defaultNozzleSize) {
-        Object.keys(definition).filter(a => {
-            return !(a in DEFAULT_KEYS);
-        })
+        Object.keys(definition)
             .forEach((key) => {
                 this[key] = definition[key];
             });
@@ -652,21 +648,21 @@ class PresetDefinitionModel {
             this.nozzleSize = nozzleSize;
             // todo change getting 'typeOfPrinting' from setting's param
             if (materialType === 'tpu' && nozzleSize === 0.4) {
-                if (this.typeOfPrinting && this.qualityType !== 'tpu') {
+                if (this.typeOfPrinting && this.qualityType && this.qualityType !== 'tpu') {
                     this.visible = false;
                 } else {
                     this.visible = true;
                     this.params = cloneDeep(DEFAULE_PARAMS_FOR_TPU);
                 }
             } else if (OTHER_MATERISL_TYPES.includes(materialType) && nozzleSize === 0.4) {
-                if (this.typeOfPrinting && !(OTHER_MATERISL_TYPES.includes(this.qualityType))) {
+                if (this.typeOfPrinting && this.qualityType && !(OTHER_MATERISL_TYPES.includes(this.qualityType))) {
                     this.visible = false;
                 } else {
                     this.visible = true;
                     this.params = cloneDeep(DEFAULE_PARAMS_FOR_OTHERS);
                 }
             } else {
-                if (this.typeOfPrinting && this.qualityType !== 'other') {
+                if (this.typeOfPrinting && this.qualityType && this.qualityType !== 'other') {
                     this.visible = false;
                 } else {
                     this.visible = true;

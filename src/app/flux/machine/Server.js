@@ -64,9 +64,9 @@ export class Server extends events.EventEmitter {
             addByUser: this.addByUser,
             address: this.address
         })
-            .once(CONNECTION_OPEN, ({ msg, data, text }) => {
+            .once(CONNECTION_OPEN, ({ msg, data, text, code }) => {
                 if (msg) {
-                    callback && callback({ msg, data, text });
+                    callback && callback({ msg, data, text, code });
                     return;
                 }
                 if (this.isWifi) {

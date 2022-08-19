@@ -284,7 +284,7 @@
                             "settable_per_meshgroup": false
                         },
                         "machine_nozzle_temp_enabled": {
-                            "label": "enabled Nozzle Temperature Control",
+                            "label": "Enabled Nozzle Temperature Control",
                             "description": "Whether to control temperature from Cura. Turn this off to control nozzle temperature from outside of Cura.",
                             "default_value": true,
                             "calcu_value": "machine_gcode_flavor !== 'UltiGCode'",

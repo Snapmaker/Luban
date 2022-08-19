@@ -29,7 +29,6 @@ import { machineStore } from '../../store/local-storage';
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
 import { logModuleVisit } from '../../lib/gaEvent';
-import { PROCESS_STAGE } from '../../lib/manager/ProgressManager';
 
 const INITIAL_STATE = {
     [HEAD_PRINTING]: {
@@ -190,9 +189,6 @@ export const actions = {
     },
 
     onRecovery: (envHeadType, envObj, backendRecover = true, shouldSetFileName = true, isGuideTours = false) => async (dispatch, getState) => {
-        const { progressStatesManager } = getState().printing;
-        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
-
         UniApi.Window.setOpenedFile();
         let { content } = getState().project[envHeadType];
         const { toolHead: { printingToolhead }, size: currentSize } = getState().machine;
@@ -231,7 +227,6 @@ export const actions = {
             await dispatch(printingActions.initSize());
         }
         const { modelGroup } = modState;
-        // await dispatch(modActions.init(envHeadType));
         modelGroup.removeAllModels();
 
         await modState?.SVGActions?.svgContentGroup.removeAllElements();
@@ -243,10 +238,8 @@ export const actions = {
             }
             const isRotate = materials ? materials.isRotate : false;
             const oversize = some(keys(coordinateSize), (key) => {
-                console.log(currentSize[key], coordinateSize[key]);
                 return currentSize[key] < coordinateSize[key];
             });
-            console.log({ oversize });
             if (oversize) coordinateSize = currentSize;
             if (coordinateMode) {
                 dispatch(editorActions.updateState(envHeadType, {
@@ -480,7 +473,6 @@ export const actions = {
                 history.push('/');
             }
             history.push(`/${headType}`);
-
             await dispatch(actions.onRecovery(headType, envObj, false, shouldSetFileName, isGuideTours));
             if (shouldSetFileName) {
                 if (file instanceof File) {

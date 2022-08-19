@@ -61,7 +61,7 @@ function creatCateArray(optionList) {
 export function useGetDefinitions(allDefinitions, activeDefinitionID, getDefaultDefinition, managerType) {
     const [definitionState, setDefinitionState] = useSetState({
         activeDefinitionID,
-        definitionForManager: allDefinitions.find(d => d.definitionId === activeDefinitionID),
+        definitionForManager: allDefinitions.find(d => d.definitionId === activeDefinitionID) || allDefinitions[0],
         selectedSettingDefaultValue: getDefaultDefinition(activeDefinitionID),
         definitionOptions: [],
         selectedName: '',
@@ -92,11 +92,11 @@ export function useGetDefinitions(allDefinitions, activeDefinitionID, getDefault
         setDefinitionState((prev) => {
             let definitionForManager;
             let selectedSettingDefaultValue;
-            if (prev.activeDefinitionID === activeDefinitionID && prev.definitionForManager) {
+            if (prev.definitionForManager === definitionState.definitionForManager?.definitionId) {
                 definitionForManager = prev.definitionForManager;
                 selectedSettingDefaultValue = prev.selectedSettingDefaultValue;
             } else {
-                definitionForManager = allDefinitions.find(d => d.definitionId === activeDefinitionID) || allDefinitions[0];
+                definitionForManager = allDefinitions.find(d => d.definitionId === (definitionState.definitionForManager?.definitionId || activeDefinitionID)) || allDefinitions[0];
                 selectedSettingDefaultValue = getDefaultDefinition(definitionForManager?.definitionId);
             }
             return {
@@ -107,6 +107,7 @@ export function useGetDefinitions(allDefinitions, activeDefinitionID, getDefault
             };
         });
     }, [allDefinitions, activeDefinitionID]);
+
 
     return [definitionState, setDefinitionState];
 }
@@ -130,7 +131,6 @@ function ProfileManager({
         refCreateModal: useRef(null)
     };
     const customMode = useSelector(state => state?.printing?.customMode);
-
     const [definitionState, setDefinitionState] = useGetDefinitions(allDefinitions, activeDefinitionID, outsideActions.getDefaultDefinition, managerType);
     const [showCreateMaterialModal, setShowCreateMaterialModal] = useState(false);
     const currentDefinitions = useRef(allDefinitions);
@@ -730,10 +730,12 @@ function ProfileManager({
                                             multiple={false}
                                             onChange={async (e) => {
                                                 const definition = await outsideActions.onChangeFileForManager(e);
-                                                actions.onSelectDefinitionById(
-                                                    definition.definitionId,
-                                                    definition.name
-                                                );
+                                                setTimeout(() => {
+                                                    actions.onSelectDefinitionById(
+                                                        definition.definitionId,
+                                                        definition.name
+                                                    );
+                                                }, 50);
                                             }}
                                         />
                                         <Dropdown

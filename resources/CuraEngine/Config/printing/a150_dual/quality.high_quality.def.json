@@ -20,6 +20,9 @@
         }
     },
     "overrides": {
+        "extruders_enabled_count": {
+            "default_value": 2
+        },
         "layer_height": {
             "default_value": 0.08
         },
@@ -486,7 +489,7 @@
             "default_value": 2
         },
         "dual_helper_type": {
-            "default_value": "none"
+            "default_value": "prime_tower"
         },
         "prime_tower_enable": {
             "default_value": false

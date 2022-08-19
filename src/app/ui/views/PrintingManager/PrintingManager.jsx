@@ -66,6 +66,7 @@ function PrintingManager() {
     const printingProfileLevel = useSelector((state) => state?.printing?.printingProfileLevel);
     const materialProfileLevel = useSelector((state) => state?.printing?.materialProfileLevel);
     const dispatch = useDispatch();
+    const [allDefinitions, setAllDefinitions] = useState();
     const customConfigs = useSelector(state => state?.machine?.printingCustomConfigsWithCategory);
     const onChangeCustomConfig = useCallback((key, checked, category) => {
         const newCustomConfig = { ...customConfigs };
@@ -77,24 +78,13 @@ function PrintingManager() {
         }
         dispatch(machineActions.updatePrintingCustomConfigsWithCategory(newCustomConfig[category], category));
     }, [customConfigs]);
-    // let printingMaterialConfigGroup, printingQualityConfigGroup;
-    // if (toolHead.printingToolhead === SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2) {
-    //     printingMaterialConfigGroup = PRINTING_MATERIAL_CONFIG_GROUP_SINGLE;
-    //     printingQualityConfigGroup = PRINTING_QUALITY_CONFIG_GROUP_SINGLE;
-    // } else {
-    //     printingMaterialConfigGroup = PRINTING_MATERIAL_CONFIG_GROUP_DUAL;
-    //     printingQualityConfigGroup = PRINTING_QUALITY_CONFIG_GROUP_DUAL;
-    // }
 
-    const [allDefinitions, setAllDefinitions] = useState([]);
     useEffect(() => {
-        setAllDefinitions(
-            managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL
-                ? materialDefinitions
-                : qualityDefinitionsModels.filter(d => d?.visible)
-        );
+        const actualDefinitions = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL
+            ? materialDefinitions
+            : qualityDefinitionsModels.filter(d => d?.visible);
+        setAllDefinitions(actualDefinitions);
     }, [managerDisplayType, materialDefinitions, qualityDefinitionsModels]);
-
     if (!showPrintingManager) {
         return null;
     }
@@ -243,10 +233,6 @@ function PrintingManager() {
             );
         }
     };
-
-    // const optionConfigGroup = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL
-    //     ? printingMaterialConfigGroup
-    //     : printingQualityConfigGroup;
 
     const selectedIds = {
         [PRINTING_MANAGER_TYPE_MATERIAL]: {

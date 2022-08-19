@@ -1789,7 +1789,6 @@ class ModelGroup extends EventEmitter {
                         }
                     );
                 }
-                this.updatePrimeTowerHeight();
             } else {
                 // add to group and select
                 this.models.push(model);

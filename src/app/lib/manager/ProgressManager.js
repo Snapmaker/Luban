@@ -133,6 +133,7 @@ class ProgressStatesManager {
 
     _init() {
         this.progressStates = {};
+        this.stagesProcessStageID = {};
 
         // cnc & laser
         this.push(PROCESS_STAGE.CNC_LASER_GENERATE_TOOLPATH_AND_PREVIEW,
@@ -306,6 +307,9 @@ class ProgressStatesManager {
     }
 
     push(processStageID, stages, notice, successNotice, failedNotice) {
+        if (stages[0].stageID) {
+            this.stagesProcessStageID[stages[0].stageID] = processStageID;
+        }
         this.progressStates[processStageID] = new ProgressState(stages, notice, successNotice, failedNotice);
     }
 
@@ -331,6 +335,9 @@ class ProgressStatesManager {
     }
 
     updateProgress(stageID, progress) {
+        if (!this.processStageID && this.stagesProcessStageID[stageID]) {
+            this.startProgress(this.stagesProcessStageID[stageID]);
+        }
         const totalCount = this.totalCounts && this.totalCounts[this.stage];
         const count = this.counts && this.counts[this.stage];
         const newProgress = this.getProgress(this.processStageID, stageID, progress, (totalCount ?? 1) + 1 - (count ?? 1), totalCount ?? 1);

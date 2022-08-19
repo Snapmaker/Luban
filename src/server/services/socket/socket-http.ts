@@ -57,7 +57,7 @@ const _getResult = (err, res) => {
         } else {
             return {
                 msg: err.message,
-                code: res && res.status,
+                code: (res && res.status) || (err && err.code),
                 text: res && res.text,
                 data: res && res.body
             };

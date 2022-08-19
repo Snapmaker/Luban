@@ -132,7 +132,6 @@ const TerminalWrapper = forwardRef(({ inputValue: inputValueProp, terminalHistor
             // Reset the index to the last position of the location array
             consoleHistory.push(event.target.value);
             event.target.value = '';
-
             setInputValue(event.target.value);
             terminalHistory.set(0, event.target.value);
         }
