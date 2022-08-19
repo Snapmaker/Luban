@@ -1003,7 +1003,7 @@ export const actions = {
         if (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
             const enablePrimeTower = activeQualityDefinition?.settings?.prime_tower_enable
                 ?.default_value;
-            primeTowerModel.visible = enablePrimeTower;
+            primeTowerModel.visible = !!enablePrimeTower;
         } else {
             primeTowerModel.visible = false;
         }
@@ -4104,6 +4104,7 @@ export const actions = {
             }
             modelGroup.emit(ModelEvents.AddModel, group);
         });
+        modelGroup.updatePrimeTowerHeight();
 
         newModels.forEach((model) => {
             modelGroup.selectModelById(model.modelID, true);
