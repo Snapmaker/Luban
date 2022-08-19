@@ -145,7 +145,7 @@ const autoRotateModels = (data: AutoRotateModelsData) => {
                         isFinish: index + 1 >= selectedModelLength,
                     },
                 });
-                observer.complete();
+                index + 1 >= selectedModelLength && observer.complete();
             });
         } catch (err) {
             observer.next({ status: 'ERROR', value: err });
