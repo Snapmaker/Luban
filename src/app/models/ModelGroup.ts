@@ -323,14 +323,16 @@ class ModelGroup extends EventEmitter {
         models.forEach((model) => {
             model.visible = visible;
             model.meshObject.visible = visible;
-            if (model instanceof ThreeModel) {
+            if (model instanceof ThreeModel && model.clipper) {
                 model.clipper.group.visible = visible;
             }
             if (model instanceof ThreeGroup) {
                 model.traverse((subModel) => {
                     subModel.visible = visible;
                     subModel.meshObject.visible = visible;
-                    subModel.clipper.group.visible = visible;
+                    if (subModel.clipper) {
+                        subModel.clipper.group.visible = visible;
+                    }
                 });
             } else if (model.parent && model.parent instanceof ThreeGroup) {
                 let parentVisible = false;
@@ -367,7 +369,7 @@ class ModelGroup extends EventEmitter {
 
     public recoverModelClippingGroup(model: TModel) {
         this.updateClippingPlane();
-        if (model instanceof ThreeModel) {
+        if (model instanceof ThreeModel && model.clipper) {
             this.clippingGroup.add(model.clipper.group);
         } else if (model instanceof ThreeGroup) {
             model.children.forEach((m) => {
@@ -447,8 +449,8 @@ class ModelGroup extends EventEmitter {
         for (const model of models) {
             model.meshObject.removeEventListener('update', this.onModelUpdate);
             model.meshObject.parent && model.meshObject.parent.remove(model.meshObject);
-            if (model instanceof ThreeModel) {
-                model.clipper && this.clippingGroup.remove(model.clipper.group);
+            if (model instanceof ThreeModel && model.clipper) {
+                this.clippingGroup.remove(model.clipper.group);
                 model.clipper = null;
             }
         }

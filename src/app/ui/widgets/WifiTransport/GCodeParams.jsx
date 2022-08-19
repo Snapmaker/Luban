@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import i18n from '../../../lib/i18n';
 import { humanReadableTime } from '../../../lib/time-utils';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_UNKNOWN, MACHINE_TOOL_HEADS } from '../../../constants';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_UNKNOWN, MACHINE_HEAD_TYPE, MACHINE_TOOL_HEADS } from '../../../constants';
 
 const GCodeParams = (props) => {
     const [gcodeFile, setGcodeFile] = useState({});
@@ -13,7 +13,7 @@ const GCodeParams = (props) => {
         const isDualExture = toolHead === MACHINE_TOOL_HEADS[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2].value;
         let tmpGcodeFile;
         const defaultGcodeFile = {
-            type: { key: i18n._('key-Workspace/GCodeParams-GCode Type'), value: props.gcodeFile.type },
+            type: { key: i18n._('key-Workspace/GCodeParams-GCode Type'), value: (props.gcodeFile?.type) ? i18n._(MACHINE_HEAD_TYPE[props.gcodeFile.type.toUpperCase()].label) : '' },
             nozzle_temperature: { key: i18n._('key-Workspace/GCodeParams-Nozzle temperature'), value: `${props.gcodeFile.nozzle_temperature}°C` },
             work_speed: { key: i18n._('key-Workspace/GCodeParams-Work speed'), value: `${props.gcodeFile.work_speed}mm/min` },
             estimated_time: { key: i18n._('key-Workspace/GCodeParams-Estimated time'), value: `${humanReadableTime(props.gcodeFile.estimated_time)}s` },

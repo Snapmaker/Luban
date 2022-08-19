@@ -41,7 +41,16 @@ class ThreeModel extends BaseModel {
     public hasOversteppedHotArea: boolean
 
     public clipper?: ClipperModel;
-    private clippingConfig: TClippingConfig;
+    private clippingConfig: TClippingConfig = {
+        bottomLayers: 1,
+        infillSparseDensity: 15,
+        layerHeight: 1,
+        lineWidth: 0.4,
+        topLayers: 1,
+        wallThickness: 0.8,
+        infillPattern: 'cubic',
+        magicSpiralize: false
+    };
 
     public constructor(modelInfo: ModelInfo, modelGroup: ModelGroup) {
         super(modelInfo, modelGroup);

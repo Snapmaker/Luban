@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { includes } from 'lodash';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import { actions as printingActions } from '../../../flux/printing';
@@ -233,8 +233,6 @@ function PrintingManager() {
             );
         }
     };
-
-
 
     const selectedIds = {
         [PRINTING_MANAGER_TYPE_MATERIAL]: {

@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { throttle } from 'lodash';
 import { generateRandomPathName } from '../../../../shared/lib/random-utils';
 import { editorProcess } from '../../../lib/editor/process';
 import { SOURCE_TYPE_RASTER, TOOLPATH_TYPE_VECTOR } from '../../../constants';
@@ -73,9 +74,10 @@ const generateToolPath = allTasks => {
         return sendMessage({ status: 'fail', value: `Unsupported type: ${headType}` });
     }
 
-    const onProgress = num => {
-        sendMessage({ status: 'progress', value: num });
-    };
+    // Fix: Too frequent communication leads to socket reconnection
+    const onProgress = throttle(num => {
+        allTasks.length === 1 && sendMessage({ status: 'progress', value: num });
+    }, 300);
 
     return new Promise((resolve, reject) => {
         generateLaserToolPathFromEngine(allTasks, onProgress)
