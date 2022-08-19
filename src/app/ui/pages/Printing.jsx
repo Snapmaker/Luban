@@ -56,7 +56,6 @@ import Steps from '../components/Steps';
 import Modal from '../components/Modal';
 import { Button } from '../components/Buttons';
 import MachineMaterialSettings from './MachineMaterialSettings';
-import definitionManager from '../../flux/manager/DefinitionManager';
 import { MACHINE_SERIES } from '../../../server/constants';
 
 export const openFolder = () => {
@@ -355,9 +354,7 @@ function Printing({ location }) {
         }, 1000)();
     };
     useEffect(() => {
-        // if (!location?.state?.initialized) {
-        console.log('history', history, location);
-        if (!definitionManager.extruderLDefinition) {
+        if (!location?.state?.initialized) {
             dispatch(printingActions.init());
         }
         dispatch(printingActions.initSocketEvent());
