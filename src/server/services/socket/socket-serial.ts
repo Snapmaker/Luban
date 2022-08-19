@@ -16,14 +16,11 @@ class SocketSerial {
 
     private dataSource = '';
 
-    public onConnection = (socket: SocketServer) => {
-        intervalHandle = setInterval(() => {
-            this.serialportList(socket);
-        }, 1000);
-    }
+    private machineSubscriber = []
 
     public onDisconnection = (socket: SocketServer) => {
-        clearInterval(intervalHandle);
+        this.onDisSubscribe(socket);
+
         const controllers = store.get('controllers', {});
         Object.keys(controllers).forEach((port) => {
             log.debug(`port, ${port}`);
@@ -35,8 +32,29 @@ class SocketSerial {
         });
     };
 
-    public serialportList = (socket: SocketServer) => {
-        // const { dataSource = 'text' } = options;
+    public onSubscribe = (socket: SocketServer) => {
+        this.machineSubscriber.push(socket);
+        this.serialportList();
+
+        if (!intervalHandle) {
+            intervalHandle = setInterval(() => {
+                this.serialportList();
+            }, 1000);
+        }
+    }
+
+    public onDisSubscribe = (socket: SocketServer) => {
+        this.machineSubscriber = this.machineSubscriber.filter(e => e !== socket);
+        if (this.machineSubscriber.length === 0) {
+            clearInterval(intervalHandle);
+            intervalHandle = null;
+        }
+    }
+
+    public serialportList = () => {
+        if (this.machineSubscriber.length === 0) {
+            return;
+        }
 
         serialport.list()
             .then((ports) => {
@@ -58,7 +76,9 @@ class SocketSerial {
                     };
                 });
 
-                socket.emit('machine:serial-discover', { devices: availablePorts, type: CONNECTION_TYPE_SERIAL });
+                for (const socket of this.machineSubscriber) {
+                    socket.emit('machine:serial-discover', { devices: availablePorts, type: CONNECTION_TYPE_SERIAL });
+                }
             })
             .catch((err) => {
                 log.error(err);

@@ -289,6 +289,10 @@ class SerialPortClient {
         socketController.emit('taskCancel:cutModel', taskId);
     }
 
+    subscribeDiscover(bool) {
+        socketController.emit('subscribe:discover', bool);
+    }
+
     // command(cmd, ...args) {
     command(cmd, ...args) {
         // const { port } = this;

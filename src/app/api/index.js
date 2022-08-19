@@ -2,6 +2,7 @@ import superagent from 'superagent';
 import superagentUse from 'superagent-use';
 import ensureArray from '../lib/ensure-array';
 import { machineStore } from '../store/local-storage';
+import TaskQueue from './TaskQueue';
 
 const bearer = (request) => {
     const token = machineStore.get('session.token');
@@ -25,18 +26,24 @@ const request = superagentUse(superagent);
 request.use(bearer);
 request.use(noCache);
 
+const taskQueue = new TaskQueue(4);
 
 // Default API factory that performs the request, and then convert its result to `Promise`.
 const defaultAPIFactory = (genRequest) => {
     return (...args) => new Promise((resolve, reject) => {
-        genRequest(...args)
-            .end((err, res) => {
-                if (err) {
-                    reject(res);
-                } else {
-                    resolve(res);
-                }
-            });
+        taskQueue.push(
+            () => genRequest(...args),
+            (response, cb) => {
+                response.end((err, res) => {
+                    if (err) {
+                        reject(res);
+                    } else {
+                        resolve(res);
+                    }
+                    cb();
+                });
+            }
+        );
     });
 };
 

@@ -114,13 +114,20 @@ class SocketHttp {
 
     private getLaserMaterialThicknessReq = null;
 
-    public onConnection = (socket: SocketServer) => {
-        wifiServerManager.onConnection(socket);
-        this.heartBeatWorker && this.heartBeatWorker.terminate();
+    public onConnection = () => {
+        this.stopHeartBeat();
     }
 
     public onDisconnection = (socket: SocketServer) => {
         wifiServerManager.onDisconnection(socket);
+    }
+
+    public onSubscribe = (socket: SocketServer) => {
+        wifiServerManager.onSubscribe(socket);
+    }
+
+    public onDisSubscribe = (socket: SocketServer) => {
+        wifiServerManager.onDisSubscribe(socket);
     }
 
     public refreshDevices = () => {
@@ -203,12 +210,17 @@ class SocketHttp {
                 });
             this.host = '';
             this.token = '';
-            this.heartBeatWorker && this.heartBeatWorker.terminate();
+            this.stopHeartBeat();
         } else {
             socket && socket.emit(eventName, _getResult(new Error('connection not exist'), null));
         }
         clearInterval(intervalHandle);
     };
+
+    private stopHeartBeat = () => {
+        this.heartBeatWorker && this.heartBeatWorker.terminate();
+        this.heartBeatWorker = null;
+    }
 
     public startGcode = (options: EventOptions) => {
         const { eventName } = options;
@@ -339,6 +351,7 @@ class SocketHttp {
     }
 
     public startHeartbeat = () => {
+        this.stopHeartBeat();
         waitConfirm = true;
         this.heartBeatWorker = workerManager.heartBeat([{
             host: this.host,
@@ -381,6 +394,8 @@ class SocketHttp {
                     type: CONNECTION_TYPE_WIFI
                 });
             } else {
+                console.log(new Date().getTime());
+
                 this.socket && this.socket.emit('sender:status', {
                     data: this.getGcodePrintingInfo(state)
                 });

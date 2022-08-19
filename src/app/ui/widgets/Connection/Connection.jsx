@@ -18,6 +18,7 @@ import Modal from '../../components/Modal';
 import SerialConnection from './SerialConnection';
 import WifiConnection from './WifiConnection';
 import { actions as machineActions } from '../../../flux/machine';
+import { controller } from '../../../lib/controller';
 
 
 function Connection({ widgetId, widgetActions }) {
@@ -68,6 +69,13 @@ function Connection({ widgetId, widgetActions }) {
             }
         }
     }, [isHomed, isConnected]);
+
+    useEffect(() => {
+        controller.subscribeDiscover(!isConnected);
+        return () => {
+            controller.subscribeDiscover(false);
+        };
+    }, [isConnected]);
 
     const isOriginal = series === MACHINE_SERIES.ORIGINAL.value;
     return (

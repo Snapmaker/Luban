@@ -49,8 +49,8 @@ class SocketTCP extends SocketBASE {
         });
     }
 
-    public onConnection = (socket: SocketServer) => {
-        wifiServerManager.onConnection(socket);
+    public onConnection = () => {
+        // wifiServerManager.onConnection(socket);
     }
 
     public onDisconnection = (socket: SocketServer) => {

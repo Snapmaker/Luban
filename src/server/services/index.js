@@ -71,7 +71,7 @@ function startServices(server) {
 
     // communication: http & serial port
     socketServer.registerEvent('machine:discover', connectionManager.refreshDevices);
-
+    socketServer.registerEvent('subscribe:discover', connectionManager.subscribeDevices);
 
     // socketServer.registerEvent('serialport:close', socketSerial.serialportClose);
     socketServer.registerEvent('command', socketSerial.command);

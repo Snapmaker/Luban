@@ -64,7 +64,6 @@ import ModelLoader from '../../ui/widgets/PrintingVisualizer/ModelLoader';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 // eslint-disable-next-line import/no-cycle
 import { actions as appGlobalActions } from '../app-global';
-import { actions as projectActions } from '../project';
 import definitionManager from '../manager/DefinitionManager';
 import PresetDefinitionModel from '../manager/PresetDefinitionModel';
 // eslint-disable-next-line import/no-cycle
@@ -5054,7 +5053,6 @@ export const actions = {
         dispatch(actions.applyProfileToAllModels());
         dispatch(actions.displayModel());
         dispatch(actions.destroyGcodeLine());
-        dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
     },
 
     repairSelectedModels: () => async (dispatch, getState) => {

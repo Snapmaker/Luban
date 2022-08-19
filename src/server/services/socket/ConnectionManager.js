@@ -35,7 +35,6 @@ class ConnectionManager {
 
     onConnection = (socket) => {
         socketHttp.onConnection(socket);
-        socketSerial.onConnection(socket);
         this.scheduledTasksHandle = new ScheduledTasks(socket);
     }
 
@@ -51,6 +50,16 @@ class ConnectionManager {
             socketHttp.refreshDevices(socket);
         } else if (connectionType === CONNECTION_TYPE_SERIAL) {
             socketSerial.serialportList(socket);
+        }
+    }
+
+    subscribeDevices = (socket, bool) => {
+        if (bool) {
+            socketHttp.onSubscribe(socket);
+            socketSerial.onSubscribe(socket);
+        } else {
+            socketHttp.onDisSubscribe(socket);
+            socketSerial.onDisSubscribe(socket);
         }
     }
 

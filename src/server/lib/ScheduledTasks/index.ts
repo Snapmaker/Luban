@@ -11,7 +11,7 @@ class ScheduledTasks extends EventEmitter {
 
     private taskHandles: schedule.Job[] = []
 
-    constructor(socket) {
+    public constructor(socket) {
         super();
         this.socket = socket;
         log.warn('Starting ...........^v^');

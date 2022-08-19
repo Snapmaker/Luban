@@ -518,9 +518,12 @@ class SvgModel extends BaseModel {
         }
     }
 
-    public calculationPath(pathss: string) {
+    /**
+     * Split the drawn path
+     */
+    public static calculationPath(d: string) {
         const allPoints: [number, number][][] = [];
-        svgPath(pathss).iterate((segment, __, x, y) => {
+        svgPath(d).iterate((segment, __, x, y) => {
             const arr = cloneDeep(segment);
             const mark = arr.shift();
 
@@ -537,7 +540,14 @@ class SvgModel extends BaseModel {
             }
         });
 
+        /**
+         * connected: Identifies whether it is connected to the previous segment
+         */
         const sorted: { item: [number, number][], connected: boolean }[] = [];
+        /**
+         * Find connected segments
+         * @param arr: points of the current segment
+         */
         const findConnect = (arr) => {
             const latest = sorted[sorted.length - 1];
             const latestPoints = latest.item;
@@ -548,6 +558,9 @@ class SvgModel extends BaseModel {
                 });
             });
         };
+        /**
+         * Store sorted fragments
+         */
         const setSort = (item, connected) => {
             const latest = sorted[sorted.length - 1];
             if (connected && latest) {
@@ -567,7 +580,9 @@ class SvgModel extends BaseModel {
                 sorted.push({ item, connected: false });
             }
         };
-
+        /**
+         * Loop through all connected fragments
+         */
         const setupConnection = () => {
             let flag = true;
             while (flag) {
@@ -581,7 +596,8 @@ class SvgModel extends BaseModel {
                 const latestPoints = latest.item;
 
                 if (connected.length > 0) {
-                    const c = allPoints[connected[0]._index];
+                    const next = connected.shift()._index;
+                    const c = allPoints[next];
                     // flip first point
                     if (!latest.connected) {
                         if (!(
@@ -595,7 +611,7 @@ class SvgModel extends BaseModel {
                         }
                     }
                     setSort(c, true);
-                    allPoints[connected[0]._index] = null;
+                    allPoints[next] = null;
                     flag = true;
                 } else {
                     flag = false;
@@ -605,6 +621,7 @@ class SvgModel extends BaseModel {
 
         for (let index = 0; index < allPoints.length; index++) {
             if (sorted.length === 0) {
+                // At the beginning of the first fragment, connect is set to false
                 setSort(allPoints[index], false);
                 allPoints[index] = null;
                 setupConnection();
@@ -612,6 +629,7 @@ class SvgModel extends BaseModel {
             if (allPoints[index]) {
                 // TODO: Judge whether the new point is connected to the head of the latest clip. Flip the latest clip
                 setSort(allPoints[index], false);
+                allPoints[index] = null;
                 setupConnection();
             }
         }
@@ -628,15 +646,17 @@ class SvgModel extends BaseModel {
                     return '';
             }
         };
-
+        let connected = false;
+        // Process sorted fragment data and generate multiple paths
         const paths = sorted.reduce((p: string[], c) => {
             const arr = c.item;
-            if (c.connected) {
+            if (c.connected && connected) {
                 arr.shift();
                 p[p.length - 1] += ` ${mark(arr.length)} ${arr.map((item) => item.join(' ')).join(' ')}`;
             } else {
                 p.push(`M ${arr.shift().join(' ')} ${mark(arr.length)} ${arr.map((item) => item.join(' ')).join(' ')}`);
             }
+            connected = c.connected;
             return p;
         }, []);
 
@@ -653,7 +673,7 @@ class SvgModel extends BaseModel {
 
         if (elem instanceof SVGPathElement && isDraw) {
             const dPath = elem.getAttribute('d');
-            const paths = this.calculationPath(dPath);
+            const paths = SvgModel.calculationPath(dPath);
             const segments = paths.map((item) => {
                 const clone = elem.cloneNode(true) as SVGPathElement;
                 clone.setAttribute('d', item);
