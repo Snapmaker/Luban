@@ -217,7 +217,7 @@ export const actions = {
         const x = dx + width / 2;
         const y = dy + height / 2;
 
-        mesh.position.set(x, y, -0.001);
+        mesh.position.set(x, y, -0.5);
         const { group } = state.background;
         group.remove(...group.children);
         group.add(mesh);

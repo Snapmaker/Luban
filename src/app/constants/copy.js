@@ -373,6 +373,7 @@ i18n._('key-App/Settings/MachineSettings-1600mW Laser');
 i18n._('key-App/Settings/MachineSettings-Standard CNC');
 i18n._('key-App/Settings/MachineSettings-Dual Extruder Toolhead');
 i18n._('key-App/Settings/MachineSettings-10W Laser');
+i18n._('key-App/Settings/MachineSettings-High CNC');
 
 i18n._('key-settings_message-update_not_ava'); // Snapmaker Luban is up to date.
 i18n._('key-settings_message-updateAva'); // Updates are available.
@@ -413,3 +414,5 @@ i18n._('key-Definition/Catagory-platform_adhesion');
 i18n._('key-Definition/Catagory-dual');
 i18n._('key-Definition/Catagory-path_optimization');
 i18n._('key-Definition/Catagory-model_structure_optimization');
+i18n._('key-2D/Model_basename-Text');
+i18n._('key-2D/Model_basename-Shape');

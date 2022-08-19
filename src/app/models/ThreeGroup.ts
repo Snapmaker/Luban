@@ -308,9 +308,12 @@ export default class ThreeGroup extends BaseModel {
          * 4. Then perform group operation
          * 5. undo
          */
-        if (this.meshObject.children.length !== this.children.length) {
-            return;
-        }
+        /**
+         * Annotated by fashu-issus-id-1224048
+         */
+        // if (this.meshObject.children.length !== this.children.length) {
+        //     return;
+        // }
         const revert = ThreeUtils.removeObjectParent(this.meshObject);
 
         this.computeBoundingBox();
