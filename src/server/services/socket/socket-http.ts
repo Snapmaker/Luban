@@ -394,8 +394,6 @@ class SocketHttp {
                     type: CONNECTION_TYPE_WIFI
                 });
             } else {
-                console.log(new Date().getTime());
-
                 this.socket && this.socket.emit('sender:status', {
                     data: this.getGcodePrintingInfo(state)
                 });
