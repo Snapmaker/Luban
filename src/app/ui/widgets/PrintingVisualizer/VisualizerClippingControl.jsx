@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSelector, shallowEqual, useDispatch } from 'react-redux';
-import { find as lodashFind, noop, throttle } from 'lodash';
+import { find as lodashFind, throttle } from 'lodash';
 import PropTypes from 'prop-types';
 import { Spin } from 'antd';
 import Slider from '../../components/Slider';
@@ -32,19 +32,16 @@ function VisualizerClippingControl({ simplifying }) {
 
     const [loading, setLoading] = useState(false);
     useEffect(() => {
-        modelGroup.on(ModelEvents.ClippingHeightReset, () => {
-            setValue(PLANE_MAX_HEIGHT);
-        });
-        modelGroup.on(ModelEvents.ClippingStart, () => {
-            setLoading(true);
-        });
-        modelGroup.on(ModelEvents.ClippingFinish, () => {
-            setLoading(false);
-        });
+        const onClippingHeightReset = () => setValue(PLANE_MAX_HEIGHT);
+        modelGroup.on(ModelEvents.ClippingHeightReset, onClippingHeightReset);
+        const onClippingStart = () => setLoading(true);
+        modelGroup.on(ModelEvents.ClippingStart, onClippingStart);
+        const onClippingFinish = () => setLoading(false);
+        modelGroup.on(ModelEvents.ClippingFinish, onClippingFinish);
         return () => {
-            modelGroup.off(ModelEvents.ClippingHeightReset, noop);
-            modelGroup.off(ModelEvents.ClippingStart, noop);
-            modelGroup.off(ModelEvents.ClippingFinish, noop);
+            modelGroup.off(ModelEvents.ClippingHeightReset, onClippingHeightReset);
+            modelGroup.off(ModelEvents.ClippingStart, onClippingStart);
+            modelGroup.off(ModelEvents.ClippingFinish, onClippingFinish);
         };
     }, []);
 
