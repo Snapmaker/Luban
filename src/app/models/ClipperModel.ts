@@ -47,16 +47,7 @@ class ClippingModel {
     declare private modelMeshObject: THREE.Mesh;
 
     // private extraSkinWallCount = 1
-    public clippingConfig: TClippingConfig = {
-        bottomLayers: 1,
-        infillSparseDensity: 15,
-        layerHeight: 1,
-        lineWidth: 0.4,
-        topLayers: 1,
-        wallThickness: 0.8,
-        infillPattern: 'cubic',
-        magicSpiralize: false
-    }
+    public clippingConfig: TClippingConfig;
 
     private clippingWall: THREE.LineSegments<THREE.BufferGeometry, THREE.LineBasicMaterial>;
     private clippingSkin: THREE.LineSegments<THREE.BufferGeometry, THREE.LineBasicMaterial>;

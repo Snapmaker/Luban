@@ -212,7 +212,7 @@ function General({ state: generalState, actions }) {
                             </span>
                         </div>
                     </div>
-                    <SubMenuitemWrapper title={i18n._('key-App/Settings/General-Workspace Settting')}>
+                    <SubMenuitemWrapper title={i18n._('key-App/Settings/General-Workspace Setting')}>
                         <Checkbox
                             checked={shouldHideConsole}
                             onChange={(event) => { updateShouldHideConsole(event.target.checked); }}

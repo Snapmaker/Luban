@@ -10,6 +10,7 @@ let intervalHandle = null;
 
 const stopBeat = (msg?: string) => {
     clearInterval(intervalHandle);
+    intervalHandle = null;
     sendMessage({ status: 'offline', msg });
 };
 
@@ -53,6 +54,9 @@ const heartBeat = async (param: IParam) => {
                         });
                     }
                 });
+        }
+        if (intervalHandle) {
+            return;
         }
         beat();
         intervalHandle = setInterval(beat, 1000);

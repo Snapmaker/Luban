@@ -19,7 +19,7 @@ class WifiServerManager extends EventEmitter {
 
     devices = new Map();
 
-    sockets = [];
+    machineSubscriber = [];
 
     refreshing = false;
 
@@ -64,7 +64,7 @@ class WifiServerManager extends EventEmitter {
     refreshDevices = () => {
         // console.log('refreshDevices');
         // Clear devices and send broadcast only when not refreshing to avoid duplicated refresh
-        if (this.refreshing) {
+        if (this.refreshing || this.machineSubscriber.length === 0) {
             return;
         }
         this.refreshing = true;
@@ -106,7 +106,7 @@ class WifiServerManager extends EventEmitter {
                     result.push(server);
                 }
             }
-            for (const socket of this.sockets) {
+            for (const socket of this.machineSubscriber) {
                 socket.emit('machine:discover', {
                     devices: result,
                     type: CONNECTION_TYPE_WIFI
@@ -115,15 +115,26 @@ class WifiServerManager extends EventEmitter {
         }, 1000);
     };
 
-    onConnection = (socket) => {
-        this.sockets.push(socket);
-        this.refreshDevices();
-        intervalHandle = setInterval(this.refreshDevices, 3000);
-    };
-
     onDisconnection = (socket) => {
-        this.sockets = this.sockets.filter(e => e !== socket);
-        clearInterval(intervalHandle);
+        this.onDisSubscribe(socket);
+    }
+
+    onSubscribe = (socket) => {
+        this.machineSubscriber.push(socket);
+
+        this.refreshDevices();
+        if (!intervalHandle) {
+            intervalHandle = setInterval(this.refreshDevices, 3000);
+        }
+    }
+
+    onDisSubscribe = (socket) => {
+        this.machineSubscriber = this.machineSubscriber.filter(e => e !== socket);
+
+        if (this.machineSubscriber.length === 0) {
+            clearInterval(intervalHandle);
+            intervalHandle = null;
+        }
     }
 }
 

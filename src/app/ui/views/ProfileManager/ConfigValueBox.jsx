@@ -383,7 +383,7 @@ function ConfigValueBox({
                                                         }}
                                                     >
                                                         <span className="sm-parameter-header__title">
-                                                            {i18n._(key)}
+                                                            {i18n._(`key-Definition/Catagory-${key}`)}
                                                         </span>
                                                     </Anchor>
                                                 </div>
@@ -405,7 +405,7 @@ function ConfigValueBox({
                                                     }}
                                                 >
                                                     <span className="sm-parameter-header__title">
-                                                        {i18n._(key)}
+                                                        {i18n._(`key-Definition/Catagory-${key}`)}
                                                     </span>
                                                 </Anchor>
                                             </div>
@@ -449,7 +449,7 @@ function ConfigValueBox({
                                                                     type={['static']}
                                                                 />
                                                                 <span className="margin-left-2">
-                                                                    {i18n._(key)}
+                                                                    {i18n._(`key-Definition/Catagory-${key}`)}
                                                                 </span>
                                                             </div>
                                                         )}

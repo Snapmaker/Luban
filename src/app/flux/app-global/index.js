@@ -5,6 +5,8 @@ import { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 
 import { baseActions as editorActions } from '../editor/actions-base';
 // eslint-disable-next-line import/no-cycle
+import { actions as projectActions } from '../project';
+// eslint-disable-next-line import/no-cycle
 import { actions as printingActions, uploadMesh } from '../printing/index';
 import ThreeGroup from '../../models/ThreeGroup';
 
@@ -224,6 +226,7 @@ export const actions = {
             !((models.length === 1 && promptTasks.length))
         );
         headType === HEAD_PRINTING && recovery();
+        dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
         return {
             allPepaired: promptTasks.length === 0,
             results

@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { includes } from 'lodash';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import { actions as printingActions } from '../../../flux/printing';
@@ -85,6 +85,16 @@ function PrintingManager() {
     //     printingMaterialConfigGroup = PRINTING_MATERIAL_CONFIG_GROUP_DUAL;
     //     printingQualityConfigGroup = PRINTING_QUALITY_CONFIG_GROUP_DUAL;
     // }
+
+    const [allDefinitions, setAllDefinitions] = useState([]);
+    useEffect(() => {
+        setAllDefinitions(
+            managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL
+                ? materialDefinitions
+                : qualityDefinitionsModels.filter(d => d?.visible)
+        );
+    }, [managerDisplayType, materialDefinitions, qualityDefinitionsModels]);
+
     if (!showPrintingManager) {
         return null;
     }
@@ -237,9 +247,6 @@ function PrintingManager() {
     // const optionConfigGroup = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL
     //     ? printingMaterialConfigGroup
     //     : printingQualityConfigGroup;
-    const allDefinitions = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL
-        ? materialDefinitions
-        : qualityDefinitionsModels.filter(d => d?.visible);
 
     const selectedIds = {
         [PRINTING_MANAGER_TYPE_MATERIAL]: {
