@@ -10,6 +10,7 @@ import Modal from '../../components/Modal';
 import Loading from './Loading';
 import { WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_PAUSING, WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_STOPPING, WROKFLOW_STATUS_RESUMING } from '../../../constants';
 
+const COMPLETE_STATUS = 'Complete';
 const Text = ({ name, value }) => {
     return (
         <div className="margin-top-8 sm-flex align-c">
@@ -120,6 +121,12 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
             setIsPausing(false);
         }
     };
+    let actualProgress = 0;
+    if (printStatus === COMPLETE_STATUS) {
+        actualProgress = 100;
+    } else {
+        actualProgress = Math.floor(progress ? progress * 100 : (sent / total) * 100) - 1;
+    }
 
     return (
         <div>
@@ -130,9 +137,9 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
                     <Text name={i18n._('key-Workspace/Workprogress-Remaining Time')} value={formatDuration(remainingTime, false)} />
                     <Text name={i18n._('key-Workspace/Workprogress-GCode Line')} value={`${sent} / ${total}`} />
                 </div>
-                <Progress percent={Math.floor(progress ? progress * 100 : (sent / total) * 100)} type="circle" width={88} />
+                <Progress percent={actualProgress} type="circle" width={88} />
             </div>
-            {printStatus !== 'Complete' && (
+            {printStatus !== COMPLETE_STATUS && (
                 <div className="sm-flex justify-space-between align-center margin-top-16">
                     <Button width="160px" type="default" onClick={() => handleMachine(currentWorkflowStatus === 'running' ? 'pause' : 'run')}>
                         {!isPausing && (

@@ -356,6 +356,7 @@ function Printing({ location }) {
     };
     useEffect(() => {
         // if (!location?.state?.initialized) {
+        console.log('history', history, location);
         if (!definitionManager.extruderLDefinition) {
             dispatch(printingActions.init());
         }

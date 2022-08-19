@@ -1021,9 +1021,22 @@ export const actions = {
         } = printingState;
         // TODO
         const {
+            toolHead: { printingToolhead },
             series
         } = getState().machine;
         modelGroup.setSeries(series);
+        const activeQualityDefinition = lodashFind(qualityDefinitions, {
+            definitionId: defaultQualityId
+        });
+        modelGroup.removeAllModels();
+        const primeTowerModel = modelGroup.primeTower;
+        if (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+            const enablePrimeTower = activeQualityDefinition?.settings?.prime_tower_enable
+                ?.default_value;
+            primeTowerModel.visible = enablePrimeTower;
+        } else {
+            primeTowerModel.visible = false;
+        }
         modelGroup.removeAllModels();
         dispatch(actions.initSocketEvent());
     },
@@ -1405,6 +1418,8 @@ export const actions = {
     },
 
     onUploadManagerDefinition: (file, type) => (dispatch, getState) => {
+        const state = getState().printing;
+
         return new Promise(resolve => {
             const formData = new FormData();
             formData.append('file', file);
@@ -1412,38 +1427,47 @@ export const actions = {
                 .then(async (res) => {
                     const response = res.body;
                     const definitionId = `${type}.${timestamp()}`;
-                    const definition = await definitionManager.uploadDefinition(
+                    let definition = await definitionManager.uploadDefinition(
                         definitionId,
                         response.uploadName
                     );
                     let name = definition.name;
                     definition.isRecommended = false;
                     const definitionsKey = defaultDefinitionKeys[type].definitions;
-                    const definitions = getState().printing[definitionsKey];
+                    const definitions = state[definitionsKey];
+                    const extruderLDefinition = state.extruderLDefinition;
+                    const activeMaterialType = dispatch(actions.getActiveMaterialType());
                     while (definitions.find((e) => {
                         if((definition.category && e.category === definition.category && e.name === name)
                             || (!definition.category && e.name === name)) {
-                            name = `#${name}`;
-                            definition.name = name;
-                            console.log('name', name);
+                            return true
                         }
-                    }))
-                    console.log('definition.name', definition.name);
+                        return false
+                    })) {
+                        name = `#${name}`;
+                        definition.name = name;
+                    }
+                    if (definition.definitionId.indexOf('quality.') === 0) {
+                        definition = new PresetDefinitionModel(
+                            definition,
+                            activeMaterialType,
+                            extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
+                        );
+                    }
                     await definitionManager.updateDefinition({
                         definitionId: definition.definitionId,
                         name
                     });
-                    dispatch(
+                    await dispatch(
                         actions.updateState({
                             [definitionsKey]: [...definitions, definition]
-                            // Newly imported profiles should not be automatically applied
-                            // [defaultId]: definitionId
                         })
                     );
                     resolve(definition);
                 })
-                .catch(() => {
+                .catch((err) => {
                     // Ignore error
+                    console.log('err',err);
                 });
         });
     },
@@ -2002,17 +2026,20 @@ export const actions = {
             const primeTowerWidth = primeTowerModel.boundingBox.max.x
                 - primeTowerModel.boundingBox.min.x;
             const primeTowerPositionX = modelGroupBBox.max.x
-                - (primeTowerModel.boundingBox.max.x
-                    + primeTowerModel.boundingBox.min.x
-                    + primeTowerWidth)
-                / 2;
-            const primeTowerPositionY = modelGroupBBox.max.y
-                - (primeTowerModel.boundingBox.max.y
-                    + primeTowerModel.boundingBox.min.y
-                    - primeTowerWidth)
-                / 2;
-            primeTowerXDefinition = size.x - primeTowerPositionX - left;
-            primeTowerYDefinition = size.y - primeTowerPositionY - front;
+                 - (primeTowerModel.boundingBox.max.x
+                     + primeTowerModel.boundingBox.min.x
+                     + primeTowerWidth)
+                 / 2;
+             const primeTowerPositionY = modelGroupBBox.max.y
+                 - (primeTowerModel.boundingBox.max.y
+                     + primeTowerModel.boundingBox.min.y
+                     - primeTowerWidth)
+                 / 2;
+             primeTowerXDefinition = size.x - primeTowerPositionX - left;
+             primeTowerYDefinition = size.y - primeTowerPositionY - front;
+            //  primeTowerXDefinition = size.x * 0.5 + primeTowerModel.transformation.positionX- left;;
+            //  primeTowerYDefinition = size.y * 0.5 + primeTowerModel.transformation.positionY - front;
+
             activeQualityDefinition.settings.prime_tower_position_x.default_value = primeTowerXDefinition;
             activeQualityDefinition.settings.prime_tower_position_y.default_value = primeTowerYDefinition;
             activeQualityDefinition.settings.prime_tower_size.default_value = primeTowerWidth;
@@ -4114,15 +4141,17 @@ export const actions = {
         modelGroup.models = modelGroup.models.concat();
 
         if (modelNames.length === 1 && newModels.length === 0) {
-            progressStatesManager.finishProgress(false);
-            dispatch(
-                actions.updateState({
-                    modelGroup,
-                    stage: STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE,
-                    progress: 0,
-                    promptTasks
-                })
-            );
+            if (!(modelNames[0].children)) {
+                progressStatesManager.finishProgress(false);
+                dispatch(
+                    actions.updateState({
+                        modelGroup,
+                        stage: STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE,
+                        progress: 0,
+                        promptTasks
+                    })
+                );
+            }
         } else {
             dispatch(
                 actions.updateState({
