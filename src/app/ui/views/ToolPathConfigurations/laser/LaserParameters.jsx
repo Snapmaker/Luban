@@ -121,6 +121,7 @@ class LaserParameters extends PureComponent {
                     <TipTrigger
                         title={i18n._('key-Laser/ToolpathParameters-Name')}
                         content={i18n._('key-Laser/ToolpathParameters-Enter the toolpath name.')}
+                        maxWidth="middle"
                     >
                         <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
                             <span>{i18n._('key-Laser/ToolpathParameters-Name')}</span>

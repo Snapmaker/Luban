@@ -11,7 +11,7 @@ const init = () => (dispatch) => {
     // const connectionType = machineStore.get('connection.type') || CONNECTION_TYPE_SERIAL;
     const connectionType = machineStore.get('connection.type') || CONNECTION_TYPE_WIFI;
     const connectionTimeout = machineStore.get('connection.timeout') || 3000;
-    const connectionAuto = !(machineStore.get('connection.isAuto') === false);
+    const connectionAuto = machineStore.get('connection.isAuto') === true;
 
     dispatch(baseActions.updateState({
         connectionType,
