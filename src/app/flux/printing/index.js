@@ -1458,7 +1458,7 @@ export const actions = {
                         definitionId: definition.definitionId,
                         name
                     });
-                    await dispatch(
+                    dispatch(
                         actions.updateState({
                             [definitionsKey]: [...definitions, definition]
                         })
@@ -1467,7 +1467,7 @@ export const actions = {
                 })
                 .catch((err) => {
                     // Ignore error
-                    console.log('err',err);
+                    console.error('err', err);
                 });
         });
     },
