@@ -1,12 +1,11 @@
 import _ from 'lodash';
 import xml2js from 'xml2js';
 import * as opentype from 'opentype.js';
+import svgPath from 'svgpath';
 import BaseTagParser from './BaseTagParser';
 import fontManager from '../FontManager';
 import PathTagParser from './PathTagParser';
 import AttributesParser from './AttributesParser';
-import { xformPoint } from './Utils';
-
 
 const DEFAULT_MILLIMETER_PER_PIXEL = 25.4 / 72;
 const TOLERANCE = 0.3 * DEFAULT_MILLIMETER_PER_PIXEL;
@@ -168,15 +167,10 @@ class textParser extends BaseTagParser {
             positionY = actualY + dy;
         }
 
-        const arrPoint = [positionX, positionY];
-        xformPoint(attributes.xform, arrPoint);
-        positionX = arrPoint[0];
-        positionY = arrPoint[1];
         const result = {
             positionX,
             positionY
         };
-
         let addResult = {};
         if (!_.isUndefined(text)) {
             let fontObj = await fontManager.getFont(font);
@@ -188,9 +182,12 @@ class textParser extends BaseTagParser {
             const p = fontObj.getPath(text, positionX, positionY, Math.floor(size));
             fullPath.extend(p);
             fullPath.stroke = 'black';
-
+            const d = fullPath.toPathData();
+            const newPath = svgPath(d)
+                .matrix(attributes.xform)
+                .toString();
             const gString = _.template(TEMPLATE)({
-                path: fullPath.toSVG()
+                path: `<path d="${newPath}" stroke="black" stroke-width="1"/>`
             });
             addResult = await this.parseString(gString, 'g');
         }

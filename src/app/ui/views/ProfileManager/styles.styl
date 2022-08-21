@@ -143,28 +143,170 @@ div.manager-detail-and-docs {
 .settings-select-wrapper {
     max-width: 384px;
     max-height: 256px;
-    .settings-select {
-        height: 76px;
-        width: 76px;
-        border-radius: 8px;
-        &:not(:last-child) {
+    padding-right: 4px;
+    overflow-y: scroll;
+    flex-flow: wrap;
+    word-wrap: break-word;
+    &_scroll {
+        padding-right: 4px !important;
+        overflow-y: scroll !important;
+    }
+    .settings-item {
+        &:not(:nth-child(4n)) {
             margin-right: 16px;
         }
-        &_adhesion_type_brim {
-            background: url("./images/adhesion_type_brim.svg") no-repeat 0 0
-            background-size: 100%
+        .settings-select {
+            width: 76px;
+            height: 76px;
+            border-radius: 8px;
+            white-space: nowrap;
+            border: 1px solid #B9BCBF;
+            overflow: hidden;
+            .img {
+                width: 100%;
+                height: 100%;
+                background-size: 100%
+                &:hover {
+                    transform: scale(1.05);
+                }
+                &_adhesion_type_brim {
+                    background: url("./images/adhesion_type_brim.svg") no-repeat 0 0
+                }
+                &_adhesion_type_none {
+                    background: url("./images/adhesion_type_none.svg") no-repeat 0 0
+                }
+                &_adhesion_type_raft {
+                    background: url("./images/adhesion_type_raft.svg") no-repeat 0 0
+                }
+                &_adhesion_type_skirt {
+                    background: url("./images/adhesion_type_skirt.svg") no-repeat 0 0
+                }
+                &_infill_pattern_concentric {
+                    background: url("./images/infill_pattern_concentric.svg") no-repeat 0 0
+                }
+                &_infill_pattern_cross_3d {
+                    background: url("./images/infill_pattern_cross_3d.svg") no-repeat 0 0
+                }
+                &_infill_pattern_cross {
+                    background: url("./images/infill_pattern_cross.svg") no-repeat 0 0
+                }
+                &_infill_pattern_cubicsubdivn {
+                    background: url("./images/infill_pattern_cubicsubdivn.svg") no-repeat 0 0
+                }
+                &_infill_pattern_cubic {
+                    background: url("./images/infill_pattern_cubic.svg") no-repeat 0 0
+                }
+                &_infill_pattern_grid {
+                    background: url("./images/infill_pattern_grid.svg") no-repeat 0 0
+                }
+                &_infill_pattern_gyroid {
+                    background: url("./images/infill_pattern_gyroid.svg") no-repeat 0 0
+                }
+                &_infill_pattern_lines {
+                    background: url("./images/infill_pattern_lines.svg") no-repeat 0 0
+                }
+                &_infill_pattern_quarter_cubic {
+                    background: url("./images/infill_pattern_quarter_cubic.svg") no-repeat 0 0
+                }
+                &_infill_pattern_tetrahedral {
+                    background: url("./images/infill_pattern_tetrahedral.svg") no-repeat 0 0
+                }
+                &_infill_pattern_triangles {
+                    background: url("./images/infill_pattern_triangles.svg") no-repeat 0 0
+                }
+                &_infill_pattern_trihexagon {
+                    background: url("./images/infill_pattern_trihexagon.svg") no-repeat 0 0
+                }
+                &_infill_pattern_zigzag {
+                    background: url("./images/infill_pattern_zigzag.svg") no-repeat 0 0
+                }
+                &_model_structure_type_normal {
+                    background: url("./images/model_structure_type_normal.svg") no-repeat 0 0
+                }
+                &_model_structure_type_vase {
+                    background: url("./images/model_structure_type_vase.svg") no-repeat 0 0
+                }
+                &_support_pattern_concentric {
+                    background: url("./images/support_pattern_concentric.svg") no-repeat 0 0
+                }
+                &_support_pattern_cross {
+                    background: url("./images/support_pattern_cross.svg") no-repeat 0 0
+                }
+                &_support_pattern_grid {
+                    background: url("./images/support_pattern_grid.svg") no-repeat 0 0
+                }
+                &_support_pattern_gyroid {
+                    background: url("./images/support_pattern_gyroid.svg") no-repeat 0 0
+                }
+                &_support_pattern_lines {
+                    background: url("./images/support_pattern_lines.svg") no-repeat 0 0
+                }
+                &_support_pattern_triangles {
+                    background: url("./images/support_pattern_triangles.svg") no-repeat 0 0
+                }
+                &_support_pattern_zigzag {
+                    background: url("./images/support_pattern_zigzag.svg") no-repeat 0 0
+                }
+                &_support_roof_pattern_concentric {
+                    background: url("./images/support_roof_pattern_concentric.svg") no-repeat 0 0
+                }
+                &_support_roof_pattern_grid {
+                    background: url("./images/support_roof_pattern_grid.svg") no-repeat 0 0
+                }
+                &_support_roof_pattern_lines {
+                    background: url("./images/support_roof_pattern_lines.svg") no-repeat 0 0
+                }
+                &_support_roof_pattern_triangles {
+                    background: url("./images/support_roof_pattern_triangles.svg") no-repeat 0 0
+                }
+                &_support_roof_pattern_zigzag {
+                    background: url("./images/support_roof_pattern_zigzag.svg") no-repeat 0 0
+                }
+                &_support_type_buildplate {
+                    background: url("./images/support_type_buildplate.svg") no-repeat 0 0
+                }
+                &_support_type_everywhere {
+                    background: url("./images/support_type_everywhere.svg") no-repeat 0 0
+                }
+                &_z_seam_type_back {
+                    background: url("./images/z_seam_type_back.svg") no-repeat 0 0
+                }
+                &_z_seam_type_random {
+                    background: url("./images/z_seam_type_random.svg") no-repeat 0 0
+                }
+                &_z_seam_type_sharpest_corner {
+                    background: url("./images/z_seam_type_sharpest_corner.svg") no-repeat 0 0
+                }
+                &_z_seam_type_shortest {
+                    background: url("./images/z_seam_type_shortest.svg") no-repeat 0 0
+                }
+                &_top_bottom_pattern_lines {
+                    background: url("./images/support_roof_pattern_lines.svg") no-repeat 0 0
+                }
+                &_top_bottom_pattern_concentric {
+                    background: url("./images/support_pattern_concentric.svg") no-repeat 0 0
+                }
+                &_top_bottom_pattern_zigzag {
+                    background: url("./images/support_pattern_zigzag.svg") no-repeat 0 0
+                }
+                &_top_bottom_pattern_0_lines {
+                    background: url("./images/support_roof_pattern_lines.svg") no-repeat 0 0
+                }
+                &_top_bottom_pattern_0_concentric {
+                    background: url("./images/support_pattern_concentric.svg") no-repeat 0 0
+                }
+                &_top_bottom_pattern_0_zigzag {
+                    background: url("./images/support_pattern_zigzag.svg") no-repeat 0 0
+                }
+            }
         }
-        &_adhesion_type_raft {
-            background: url("./images/adhesion_type_raft.svg") no-repeat 0 0
-            background-size: 100%
-        }
-        &_adhesion_type_skirt {
-            background: url("./images/adhesion_type_skirt.svg") no-repeat 0 0
-            background-size: 100%
-        }
-        &_adhesion_type_none {
-            background: url("./images/adhesion_type_none.svg") no-repeat 0 0
-            background-size: 100%
+        &_selected {
+            span {
+                color: #1890FF;
+            }
+            .settings-select {
+                border-color: #1890FF;
+            }
         }
     }
 }

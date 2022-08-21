@@ -36,7 +36,9 @@ class ChangedReactSelect extends PureComponent {
                 PropTypes.string
             ])
         }),
-        dropdownRender: PropTypes.func
+        dropdownRender: PropTypes.func,
+        placement: PropTypes.string,
+        dropdownStyle: PropTypes.object
     };
 
     static defaultProps = {
@@ -197,6 +199,7 @@ class ChangedReactSelect extends PureComponent {
                 <div className={classNames(styles['override-select'], className)}>
                     <Select
                         dropdownRender={this.props.dropdownRender}
+                        dropdownStyle={this.props.dropdownStyle}
                         className={classNames(
                             styles[size]
                         )}
@@ -207,6 +210,7 @@ class ChangedReactSelect extends PureComponent {
                         disabled={disabled}
                         onChange={this.actions.handleChange}
                         bordered={bordered}
+                        placement={this.props.placement}
                     >
                         {(options.map((option) => {
                             return (<Option key={option.value + option.label} value={option.value}>{i18n._(option.label)}</Option>);
