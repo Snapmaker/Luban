@@ -1162,7 +1162,7 @@ export const STANDARD_CNC_TOOLHEAD_FOR_SM2 = 'standardCNCToolheadForSM2';
 export const LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2 = 'levelTwoCNCToolheadForSM2';
 
 export const DUAL_EXTRUDER_LIMIT_WIDTH_L = 0;
-export const DUAL_EXTRUDER_LIMIT_WIDTH_R = 0;
+export const DUAL_EXTRUDER_LIMIT_WIDTH_R = 26;
 
 export const MACHINE_TOOL_HEADS = {
     [SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL]: {

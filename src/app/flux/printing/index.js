@@ -623,7 +623,9 @@ export const actions = {
             : 0;
 
             const adhesionType = activeQualityDefinition?.settings?.adhesion_type?.default_value;
-        const primeTowerBrimEnable = activeQualityDefinition?.settings?.prime_tower_brim_enable?.default_value;
+            const primeTowerBrimEnable = activeQualityDefinition?.settings?.prime_tower_brim_enable?.default_value;
+        const initialLayerLineWidthFactor = activeQualityDefinition?.settings?.initial_layer_line_width_factor?.default_value;
+
         let border = 0;
         let supportLineWidth = 0;
         switch (adhesionType) {
@@ -640,7 +642,7 @@ export const actions = {
                         supportLineWidth = extruderRDefinitionSettings.machine_nozzle_size
                             .default_value;
                     }
-                    border = 7 + (skirtLineCount - 1) * supportLineWidth;
+                    border = 7 + (skirtLineCount - 1) * supportLineWidth * initialLayerLineWidthFactor / 100;
                     console.log('skirtLineCount', skirtLineCount, supportLineWidth);
                 }else {
                     const brimLineCount = activeQualityDefinition?.settings?.brim_line_count
@@ -653,7 +655,7 @@ export const actions = {
                         supportLineWidth = extruderRDefinitionSettings.machine_nozzle_size
                             .default_value;
                     }
-                    border = brimLineCount * supportLineWidth;
+                    border = brimLineCount * supportLineWidth * initialLayerLineWidthFactor / 100;
                     console.log('brimLineCount', brimLineCount, supportLineWidth);
                 }
                 break;

@@ -21,7 +21,7 @@
             "default_value": "unknown"
         },
         "machine_nozzle_offset_x": {
-            "default_value": 26
+            "default_value": 0
         },
         "machine_nozzle_offset_y": {
             "default_value": 0
@@ -30,7 +30,7 @@
             "default_value": ""
         },
         "machine_extruder_start_pos_abs": {
-            "default_value": true
+            "default_value": false
         },
         "machine_extruder_start_pos_x": {
             "default_value": 0

@@ -744,7 +744,7 @@ export const actions = {
             },
             'sender:status': (options) => {
                 const { data } = options;
-                const { total, sent, received, startTime, finishTime, elapsedTime, remainingTime } = data;
+                const { total, sent, received, startTime, finishTime, elapsedTime, remainingTime, printStatus } = data;
                 dispatch(baseActions.updateState({
                     gcodePrintingInfo: {
                         total,
@@ -753,7 +753,8 @@ export const actions = {
                         startTime,
                         finishTime,
                         elapsedTime,
-                        remainingTime
+                        remainingTime,
+                        printStatus
                     }
                 }));
             },
