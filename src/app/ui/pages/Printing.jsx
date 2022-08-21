@@ -353,10 +353,12 @@ function Printing({ location }) {
             }
         }, 1000)();
     };
-    useEffect(async () => {
-        if (!location?.state?.initialized) {
-            await dispatch(printingActions.init());
-        }
+    useEffect(() => {
+        (async () => {
+            if (!location?.state?.initialized) {
+                await dispatch(printingActions.init());
+            }
+        })();
         // Make sure execute 'initSocketEvent' after 'printingActions.init' on openning project
         setTimeout(() => {
             dispatch(printingActions.initSocketEvent());

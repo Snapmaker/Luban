@@ -1090,8 +1090,20 @@ class TransformControls extends Object3D {
             }
             case 'scale': {
                 const objectPosition = new Vector3().copy(this.object.position); // TODO: optimize?
-                const parentSVec = new Vector3().copy(this.pointStart).sub(objectPosition).applyQuaternion(this.parentQuaternionInv);
-                const parentEVec = new Vector3().copy(this.pointEnd).sub(objectPosition).applyQuaternion(this.parentQuaternionInv);
+                const absStartVector = new Vector3().copy(this.pointStart).sub(objectPosition);
+                const absEndVector = new Vector3().copy(this.pointEnd).sub(objectPosition);
+                if (this.axis === 'X') {
+                    absStartVector.setX(Math.abs(absStartVector.x));
+                    absEndVector.setX(Math.abs(absEndVector.x));
+                } else if (this.axis === 'Y') {
+                    absStartVector.setY(Math.abs(absStartVector.y));
+                    absEndVector.setY(Math.abs(absEndVector.y));
+                } else {
+                    absStartVector.setZ(Math.abs(absStartVector.z));
+                    absEndVector.setZ(Math.abs(absEndVector.z));
+                }
+                const parentSVec = absStartVector.applyQuaternion(this.parentQuaternionInv);
+                const parentEVec = absEndVector.applyQuaternion(this.parentQuaternionInv);
                 parentEVec.divide(parentSVec);
                 if (this.object.uniformScalingState === true) {
                     if (this.axis === 'X') {
