@@ -141,28 +141,56 @@
 .settings-select-wrapper {
     max-width: 384px;
     max-height: 256px;
-    .settings-select {
-        height: 76px;
-        width: 76px;
-        border-radius: 8px;
-        &:not(:last-child) {
+    padding-right: 4px;
+    overflow-y: scroll;
+    flex-flow: wrap;
+    word-wrap: break-word;
+    &_scroll {
+        padding-right: 4px !important;
+        overflow-y: scroll !important;
+    }
+    .settings-item {
+        &:not(:nth-child(4n)) {
             margin-right: 16px;
         }
-        &_adhesion_type_brim {
-            background: url("./images/adhesion_type_brim.svg") no-repeat 0 0
-            background-size: 100%
+        .settings-select {
+            width: 76px;
+            height: 76px;
+            border-radius: 8px;
+            white-space: nowrap;
+            border: 1px solid #B9BCBF;
+            overflow: hidden;
+            .img {
+                width: 100%;
+                height: 100%;
+                &:hover {
+                    transform: scale(1.05);
+                }
+                &_adhesion_type_brim {
+                    background: url("./images/adhesion_type_brim.svg") no-repeat 0 0
+                    background-size: 100%
+                }
+                &_adhesion_type_raft {
+                    background: url("./images/adhesion_type_raft.svg") no-repeat 0 0
+                    background-size: 100%
+                }
+                &_adhesion_type_skirt {
+                    background: url("./images/adhesion_type_skirt.svg") no-repeat 0 0
+                    background-size: 100%
+                }
+                &_adhesion_type_none {
+                    background: url("./images/adhesion_type_none.svg") no-repeat 0 0
+                    background-size: 100%
+                }
+            }
         }
-        &_adhesion_type_raft {
-            background: url("./images/adhesion_type_raft.svg") no-repeat 0 0
-            background-size: 100%
-        }
-        &_adhesion_type_skirt {
-            background: url("./images/adhesion_type_skirt.svg") no-repeat 0 0
-            background-size: 100%
-        }
-        &_adhesion_type_none {
-            background: url("./images/adhesion_type_none.svg") no-repeat 0 0
-            background-size: 100%
+        &_selected {
+            span {
+                color: #1890FF;
+            }
+            .settings-select {
+                border-color: #1890FF;
+            }
         }
     }
 }

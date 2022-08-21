@@ -13,33 +13,41 @@ import SvgIcon from '../../components/SvgIcon';
 import Popover from '../../components/Popover';
 import styles from './styles.styl';
 
-function dropdownRender(opts, key, onChangeDefinition) {
+function dropdownRender(opts, key, onChangeDefinition, currentValue) {
     return () => (
         <div
             className={classNames(
-                styles['settings-select-wrapper'],
                 'sm-flex',
                 'padding-vertical-16',
-                'padding-horizontal-16'
+                'padding-horizontal-16',
+                styles['settings-select-wrapper'],
+                opts.length > 8 ? styles['settings-select-wrapper_scroll'] : ''
             )}
         >
             {opts.map((settingItem) => {
                 const value = settingItem.value;
                 const label = settingItem.label;
                 return (
-                    <span>
+                    <span className={classNames(
+                        styles['settings-item'],
+                        currentValue === value ? styles['settings-item_selected'] : ''
+                    )}
+                    >
                         <Anchor
                             onClick={() => onChangeDefinition(key, value)}
                         >
                             <div className={classNames(
-                                styles[`settings-select_${key}_${value}`],
                                 styles['settings-select']
                             )}
-                            />
+                            >
+                                <div className={classNames(
+                                    styles.img,
+                                    styles[`img_${key}_${value}`],
+                                )}
+                                />
+                            </div>
                         </Anchor>
-                        <span className="max-width-76 align-center text-overflow-ellipsis-line-2 height-16 margin-top-4 margin-bottom-8">
-                            {label}
-                        </span>
+                        <span className="align-c max-width-76 text-overflow-ellipsis-line-2 height-32-half-line margin-top-4 margin-bottom-8">{label}</span>
                     </span>
                 );
             })}
@@ -194,8 +202,12 @@ function SettingItem({
                 )}
                 {type === 'enumWithImage' && (
                     <Select
+                        placement="bottomRight"
                         className="sm-flex-width align-r"
-                        dropdownRender={dropdownRender(opts, definitionKey, onChangeDefinition)}
+                        dropdownRender={dropdownRender(opts, definitionKey, onChangeDefinition, settingDefaultValue)}
+                        dropdownStyle={{
+                            maxWidth: '500px'
+                        }}
                         size={styleSize}
                         name={definitionKey}
                         options={opts}
@@ -239,7 +251,7 @@ function SettingItem({
                             }}
                             role="button"
                             tabIndex="-1"
-                            onKeyPress={() => {}}
+                            onKeyPress={() => { }}
                             onClick={() => setShowColor(!showColor)}
                         />
                     </Popover>
