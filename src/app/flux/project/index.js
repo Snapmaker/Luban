@@ -472,7 +472,12 @@ export const actions = {
             if (oldHeadType === headType && !unReload) {
                 history.push('/');
             }
-            history.push(`/${headType}`);
+            history.push(
+                {
+                    pathname: `/${headType}`,
+                    state: { initialized: true }
+                }
+            );
             await dispatch(actions.onRecovery(headType, envObj, false, shouldSetFileName, isGuideTours));
             if (shouldSetFileName) {
                 if (file instanceof File) {
@@ -587,12 +592,11 @@ export const actions = {
         modState.SVGActions && modState.SVGActions.svgContentGroup.removeAllElements();
         UniApi.Window.setOpenedFile();
     },
-    closeProject: (headType) => async (dispatch, getState) => {
+    closeProject: (headType) => (dispatch, getState) => {
         const modState = getState()[headType];
 
         if (headType === HEAD_PRINTING) {
             dispatch(printingActions.destroyGcodeLine());
-            await dispatch(printingActions.initSize());
         }
         modState.toolPathGroup && modState.toolPathGroup.deleteAllToolPaths();
         modState.modelGroup.removeAllModels();

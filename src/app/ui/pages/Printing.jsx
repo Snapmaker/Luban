@@ -354,10 +354,15 @@ function Printing({ location }) {
         }, 1000)();
     };
     useEffect(() => {
-        if (!location?.state?.initialized) {
-            dispatch(printingActions.init());
-        }
-        dispatch(printingActions.initSocketEvent());
+        (async () => {
+            if (!location?.state?.initialized) {
+                await dispatch(printingActions.init());
+            }
+        })();
+        // Make sure execute 'initSocketEvent' after 'printingActions.init' on openning project
+        setTimeout(() => {
+            dispatch(printingActions.initSocketEvent());
+        }, 50);
         dispatch(printingActions.checkNewUser());
         logPageView({
             pathname: '/printing'

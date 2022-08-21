@@ -1023,6 +1023,7 @@ export const SELECTEVENT = {
 // todo: refactor this data structure
 export const MACHINE_SERIES = {
     ORIGINAL: {
+        seriesLabel: 'Original',
         value: 'Original',
         label: 'key-Luban/Machine/MachineSeries-Snapmaker Original',
         setting: {
@@ -1039,6 +1040,7 @@ export const MACHINE_SERIES = {
         }
     },
     ORIGINAL_LZ: {
+        seriesLabel: 'Original Long Z-axis',
         value: 'Original Long Z-axis',
         configPath: 'Original',
         label:
@@ -1057,6 +1059,7 @@ export const MACHINE_SERIES = {
         }
     },
     A150: {
+        seriesLabel: 'A150',
         value: 'A150',
         label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A150',
         setting: {
@@ -1074,6 +1077,7 @@ export const MACHINE_SERIES = {
         alias: ['SM2-S', 'Snapmaker 2.0 A150']
     },
     A250: {
+        seriesLabel: 'A250',
         value: 'A250',
         label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A250',
         setting: {
@@ -1091,6 +1095,7 @@ export const MACHINE_SERIES = {
         alias: ['SM2-M', 'Snapmaker 2.0 A250']
     },
     A350: {
+        seriesLabel: 'A350',
         value: 'A350',
         label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A350',
         setting: {
@@ -1109,6 +1114,7 @@ export const MACHINE_SERIES = {
     },
     A400: {
         value: 'A400',
+        seriesLabel: 'Artisan',
         label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A400',
         setting: {
             size: {
@@ -1126,6 +1132,7 @@ export const MACHINE_SERIES = {
     },
     CUSTOM: {
         value: 'Custom',
+        seriesLabel: 'Custom',
         label: 'key-Luban/Machine/MachineSeries-Custom',
         setting: {
             size: {

@@ -622,37 +622,40 @@ export const actions = {
             ? DUAL_EXTRUDER_LIMIT_WIDTH_R
             : 0;
 
-        const adhesionType = activeQualityDefinition?.settings?.adhesion_type?.default_value;
+            const adhesionType = activeQualityDefinition?.settings?.adhesion_type?.default_value;
+            const primeTowerBrimEnable = activeQualityDefinition?.settings?.prime_tower_brim_enable?.default_value;
+        const initialLayerLineWidthFactor = activeQualityDefinition?.settings?.initial_layer_line_width_factor?.default_value;
+
         let border = 0;
         let supportLineWidth = 0;
         switch (adhesionType) {
-            case 'skirt': {
-                const skirtLineCount = activeQualityDefinition?.settings?.skirt_line_count
-                    ?.default_value;
-                supportLineWidth = extruderLDefinitionSettings?.machine_nozzle_size
-                    ?.default_value ?? 0;
-                if (
-                    helpersExtruderConfig.adhesion === RIGHT_EXTRUDER_MAP_NUMBER
-                ) {
-                    supportLineWidth = extruderRDefinitionSettings.machine_nozzle_size
-                        .default_value;
-                }
-                border = 7 + (skirtLineCount - 1) * supportLineWidth;
-
-                break;
-            }
+            case 'skirt':
             case 'brim': {
-                const brimLineCount = activeQualityDefinition?.settings?.brim_line_count
-                    ?.default_value;
-                supportLineWidth = extruderLDefinitionSettings?.machine_nozzle_size
-                    ?.default_value ?? 0;
-                if (
-                    helpersExtruderConfig.adhesion === RIGHT_EXTRUDER_MAP_NUMBER
-                ) {
-                    supportLineWidth = extruderRDefinitionSettings.machine_nozzle_size
-                        .default_value;
+                if (!primeTowerBrimEnable && adhesionType === 'skirt') {
+                    const skirtLineCount = activeQualityDefinition?.settings?.skirt_line_count
+                        ?.default_value;
+                    supportLineWidth = extruderLDefinitionSettings?.machine_nozzle_size
+                        ?.default_value ?? 0;
+                    if (
+                        helpersExtruderConfig.adhesion === RIGHT_EXTRUDER_MAP_NUMBER
+                    ) {
+                        supportLineWidth = extruderRDefinitionSettings.machine_nozzle_size
+                            .default_value;
+                    }
+                    border = 7 + (skirtLineCount - 1) * supportLineWidth * initialLayerLineWidthFactor / 100;
+                }else {
+                    const brimLineCount = activeQualityDefinition?.settings?.brim_line_count
+                        ?.default_value;
+                    supportLineWidth = extruderLDefinitionSettings?.machine_nozzle_size
+                        ?.default_value ?? 0;
+                    if (
+                        helpersExtruderConfig.adhesion === RIGHT_EXTRUDER_MAP_NUMBER
+                    ) {
+                        supportLineWidth = extruderRDefinitionSettings.machine_nozzle_size
+                            .default_value;
+                    }
+                    border = brimLineCount * supportLineWidth * initialLayerLineWidthFactor / 100;
                 }
-                border = brimLineCount * supportLineWidth;
                 break;
             }
             case 'raft': {
@@ -2036,8 +2039,8 @@ export const actions = {
                  / 2;
              primeTowerXDefinition = size.x - primeTowerPositionX - left;
              primeTowerYDefinition = size.y - primeTowerPositionY - front;
-            //  primeTowerXDefinition = size.x * 0.5 + primeTowerModel.transformation.positionX- left;;
-            //  primeTowerYDefinition = size.y * 0.5 + primeTowerModel.transformation.positionY - front;
+             // primeTowerXDefinition = size.x * 0.5 + primeTowerModel.transformation.positionX- left;;
+             // primeTowerYDefinition = size.y * 0.5 + primeTowerModel.transformation.positionY - front;
 
             activeQualityDefinition.settings.prime_tower_position_x.default_value = primeTowerXDefinition;
             activeQualityDefinition.settings.prime_tower_position_y.default_value = primeTowerYDefinition;

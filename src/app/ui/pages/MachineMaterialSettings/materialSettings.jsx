@@ -210,8 +210,21 @@ const MaterialSettings = ({
             }
         }
         message.info({
-            content: <span>{i18n._('key-profileManager/Create Success')}<Anchor onClick={onShowPrintingManager}>{i18n._('key-profileManager/Open material profile')}</Anchor></span>,
-            duration: 5
+            content: (
+                <span className="height-30">
+                    {i18n._('key-profileManager/Create Success')}
+                    <Anchor onClick={onShowPrintingManager} style={{ color: '#1890FF', marginLeft: '32px' }}>
+                        {i18n._('key-profileManager/Open material profile')}
+                    </Anchor>
+                    <SvgIcon
+                        name="Cancel"
+                        type={['hoverNormal', 'pressNormal']}
+                        onClick={() => { message.destroy(); }}
+                    />
+                </span>
+            ),
+            className: classNames(styles['custom-message']),
+            duration: 0
         });
     };
     const onChangeFileForManager = (event) => {
