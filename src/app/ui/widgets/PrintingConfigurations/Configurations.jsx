@@ -700,13 +700,13 @@ function Configurations() {
                                         </span>
                                         <Dropdown
                                             placement="left"
+                                            className="display-inline float-right"
                                             content={renderProfileMenu(presetDisplayType)}
                                             trigger={['click']}
                                         >
                                             <SvgIcon
                                                 className={classNames(
                                                     styles['preset-hover'],
-                                                    'float-right'
                                                 )}
                                                 type={['static']}
                                                 size={24}
@@ -714,6 +714,7 @@ function Configurations() {
                                             />
                                         </Dropdown>
                                     </Anchor>
+
                                 </div>
                             );
                         })}

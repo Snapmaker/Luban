@@ -21,7 +21,7 @@
             "default_value": "unknown"
         },
         "machine_nozzle_offset_x": {
-            "default_value": 0
+            "default_value": 26
         },
         "machine_nozzle_offset_y": {
             "default_value": 0
