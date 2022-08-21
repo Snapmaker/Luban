@@ -82,12 +82,12 @@ const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
                 <div className="height-56 padding-left-80 border-bottom-normal sm-flex">
 
                     <Anchor onClick={() => setSelectTabHandle(MACHINE_TAB)} className={`${selectTab === MACHINE_TAB ? 'border-bottom-black-3' : ''}  margin-right-64`}>
-                        <div className="heading-2">
+                        <div className={`${selectTab === MACHINE_TAB ? 'heading-2' : 'heading-2-unselect'}`}>
                             {i18n._('key-Settings/Select Machine')}
                         </div>
                     </Anchor>
                     <Anchor onClick={() => setSelectTabHandle(MATERIAL_TAB)} className={`${selectTab === MATERIAL_TAB ? 'border-bottom-black-3' : ''}`}>
-                        <div className="heading-2">
+                        <div className={`${selectTab === MATERIAL_TAB ? 'heading-2' : 'heading-2-unselect'}`}>
                             {i18n._('key-Settings/Select Material')}
                         </div>
                     </Anchor>

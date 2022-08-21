@@ -25,7 +25,7 @@ import styles from './styles.styl';
 // }
 
 const TipTrigger = (props) => {
-    const { maxWidth, placement = 'left', title = '', content, isIcon = false, children, ...rest } = props;
+    const { maxWidth = 'middle', placement = 'left', title = '', content, isIcon = false, children, ...rest } = props;
     let placementValue = 'left';
     if (isIcon) {
         placementValue = 'bottom';

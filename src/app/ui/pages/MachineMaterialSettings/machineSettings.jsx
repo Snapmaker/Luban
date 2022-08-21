@@ -265,7 +265,6 @@ const MachineSettings = forwardRef(({
     }, [toolHead, headType]);
 
     // for original long zAxis
-    // console.log({ hasZAxis });
     const [zAxis, setZAxis] = useState(serial === MACHINE_SERIES.ORIGINAL_LZ.value);
     const [leftNozzleDiameterList, setLeftNozzleDiameterList] = useState(defaultNozzleDiameterList);
     const [rightNozzleDiameterList, setRightNozzleDiameterList] = useState(defaultNozzleDiameterList);
@@ -409,10 +408,12 @@ const MachineSettings = forwardRef(({
     const resizeAction = () => {
         const ele = document.getElementById('machine-list');
         if (ele) {
-            if (window.innerWidth < 1360) {
-                ele.className = 'overflow-y-auto sm-grid grid-column-gap-32 grid-row-column-60 grid-template-columns-for-machine-settings grid-template-row-for-machine-settings-small-screen width-all-minus-328';
+            if (window.innerWidth < 1440) {
+                ele.className = 'overflow-y-auto sm-grid grid-column-gap-32 grid-row-column-60 grid-template-row-for-machine-settings grid-template-columns-for-machine-settings-small-screen width-all-minus-328';
+            } else if (window.innerWidth <= 1920) {
+                ele.className = 'overflow-y-auto sm-grid grid-column-gap-32 grid-row-column-60 grid-template-row-for-machine-settings grid-template-columns-for-machine-settings width-all-minus-328';
             } else {
-                ele.className = 'overflow-y-auto sm-grid grid-column-gap-32 grid-row-column-60 grid-template-columns-for-machine-settings grid-template-row-for-machine-settings width-all-minus-328';
+                ele.className = 'overflow-y-auto sm-grid grid-column-gap-32 grid-row-column-60 grid-template-row-for-machine-settings-large-screen grid-template-columns-for-machine-settings-large-screen width-all-minus-328';
             }
         }
     };
@@ -508,8 +509,8 @@ const MachineSettings = forwardRef(({
                                         {(isConnected && includes(connectSerial, item.value)) && (
                                             <div className="position-ab bottom-2 right-1 background-grey-3 border-radius-8 font-size-small padding-vertical-4 padding-horizontal-8 line-height-14">
                                                 <Badge status="success" />
-                                                <span>online | </span>
-                                                <span className="max-width-106 text-overflow-ellpsis">{connectMachineName}</span>
+                                                <span>online</span>
+                                                <span className="max-width-106 text-overflow-ellpsis">{connectMachineName ? ` | ${connectMachineName}` : ''}</span>
                                             </div>
                                         )}
                                     </div>
@@ -566,7 +567,7 @@ const MachineSettings = forwardRef(({
                                     <div className={`width-116 height-116 border-radius-8 border-default-grey-1 ${currentToolHead === toolHeadItem.value ? 'border-color-blue-2' : ''}`}>
                                         <img src={toolHeadItem.image} alt="" className="width-percent-100" />
                                     </div>
-                                    <div>{i18n._(`${toolHeadItem.label}`)}</div>
+                                    <div className="align-c">{i18n._(`${toolHeadItem.label}`)}</div>
                                 </Anchor>
                             );
                         })}
@@ -591,11 +592,11 @@ const MachineSettings = forwardRef(({
                             <div className="sm-flex sm-flex-wrap margin-top-16">
                                 {leftNozzleDiameterList.map((nozzle, index) => {
                                     return (
-                                        <Anchor onClick={() => onChangeDiameter(LEFT, nozzle)} className={`margin-bottom-8 width-56 padding-horizontal-8 height-32 border-radius-8 border-default-grey-1 ${(index === 3 || index === 7) ? '' : 'margin-right-8'} ${`${leftNozzleDiameter}` === nozzle.label ? 'border-color-blue-2' : ''}`}>
+                                        <Anchor onClick={() => onChangeDiameter(LEFT, nozzle)} className={classNames(styles['diameter-item-wrapper'], `margin-bottom-8 width-56 padding-horizontal-8 height-32 border-radius-8 border-default-grey-1 ${(index === 3 || index === 7) ? '' : 'margin-right-8'} ${`${leftNozzleDiameter}` === nozzle.label ? 'border-color-blue-2' : ''}`)}>
                                             <div className={classNames(styles['diameter-item'], 'sm-flex justify-space-between')}>
                                                 <span>{nozzle.label}</span>
                                                 {!nozzle.isDefault && `${leftNozzleDiameter}` !== nozzle.label && (
-                                                    <Anchor onClick={(e) => handleRemoveDiameter(e, nozzle.label, LEFT)}>
+                                                    <Anchor onClick={(e) => handleRemoveDiameter(e, nozzle.label, LEFT)} className={styles['close-icon']}>
                                                         <SvgIcon name="Cancel" size={8} type={['static']} />
                                                     </Anchor>
                                                 )}
@@ -604,7 +605,7 @@ const MachineSettings = forwardRef(({
                                     );
                                 })}
                                 {leftNozzleDiameterList.length < 8 && (
-                                    <Anchor className={(classNames(addDiameterStatus ? '' : 'padding-left-8', 'width-56 height-32 border-radius-8 border-dashed-grey-1'))} onClick={() => handleAddDiameter(true)}>
+                                    <Anchor className={(classNames(addDiameterStatus ? 'border-blue-2' : 'padding-left-8 border-dashed-grey-1', 'width-56 height-32 border-radius-8', styles['add-nozzle-diameter-input']))} onClick={() => handleAddDiameter(true)}>
                                         {addDiameterStatus ? (
                                             <Input
                                                 min={0.1}
