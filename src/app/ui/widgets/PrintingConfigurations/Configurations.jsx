@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
 import classNames from 'classnames';
-import { cloneDeep, isNil, uniqWith } from 'lodash';
+import { cloneDeep, isNil, uniqWith, find as lodashFind } from 'lodash';
 import { Menu } from 'antd';
 import Tooltip from '../../components/Tooltip';
 import modal from '../../../lib/modal';
@@ -43,6 +43,12 @@ const ALL_ICON_NAMES = {
     'support_generate_type': ['SupportLine', 'SupportNone'],
     'adhesion_type': ['AdhesionSkirt', 'AdhesionBrim', 'AdhesionRaft']
 };
+const qualitySettingRank = [
+    'quality.normal_quality',
+    'quality.fast_print',
+    'quality.high_quality',
+    'quality.engineering_print'
+];
 
 export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition, setSelectedDefinition }) {
     const allParams = selectedDefinitionModel.params;
@@ -625,9 +631,10 @@ function Configurations() {
                     value={presetDisplayType}
                     onChange={actions.onChangePresetDisplayType}
                 />
+                {console.log(presetOptionsObj[presetDisplayType].options)}
                 {presetDisplayType === i18n._(DEFAULT_DISPLAY_TYPE) && (
                     <div className={classNames(styles['preset-recommended'], 'sm-flex', 'margin-vertical-16', 'align-c', 'justify-space-between')}>
-                        {presetOptionsObj[presetDisplayType].options.map((optionItem) => {
+                        {/* {presetOptionsObj[presetDisplayType].options.map((optionItem) => {
                             return (
                                 <div
                                     key={optionItem.typeOfPrinting}
@@ -671,6 +678,56 @@ function Configurations() {
                                     </span>
                                 </div>
                             );
+                        })} */}
+                        {qualitySettingRank.map((qualityId) => {
+                            const optionItem = lodashFind(presetOptionsObj[presetDisplayType].options, { definitionId: qualityId });
+                            if (optionItem) {
+                                return (
+                                    <div
+                                        key={optionItem.typeOfPrinting}
+                                        className={classNames(
+                                            selectedDefinition.typeOfPrinting === optionItem.typeOfPrinting ? styles.selected : styles.unselected,
+                                        )}
+                                    >
+                                        <Tooltip
+                                            title={getPresetContent(optionItem?.definitionId, optionItem.name)}
+                                            trigger="hover"
+                                            placement="left"
+                                        >
+                                            <Anchor
+                                                onClick={() => actions.onSelectCustomDefinitionById(optionItem.definitionId)}
+                                            >
+                                                <div className={classNames(
+                                                    styles[`preset-recommended__icon-${optionItem.typeOfPrinting}`],
+                                                    styles['preset-recommended__icon']
+                                                )}
+                                                >
+                                                    <Dropdown
+                                                        placement="bottomRight"
+                                                        style={{ maxWidth: '160px' }}
+                                                        overlay={renderProfileMenu(presetDisplayType)}
+                                                        trigger={['click']}
+                                                    >
+                                                        <SvgIcon
+                                                            className={classNames(
+                                                                styles['preset-hover'],
+                                                            )}
+                                                            type={['static']}
+                                                            size={24}
+                                                            name="More"
+                                                        />
+                                                    </Dropdown>
+                                                </div>
+                                            </Anchor>
+                                        </Tooltip>
+                                        <span className="max-width-76 text-overflow-ellipsis-line-2 height-32-half-line margin-top-4 margin-bottom-8">
+                                            {optionItem.name}
+                                        </span>
+                                    </div>
+                                );
+                            } else {
+                                return null;
+                            }
                         })}
                     </div>
                 )}

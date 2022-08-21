@@ -427,7 +427,7 @@ class ModelGroup extends EventEmitter {
             this.models = this.models.filter((item) => item !== model);
         }
         const modelNameMap = this.namesMap.get(model.originalName);
-        if (modelNameMap.count <= 1) {
+        if (modelNameMap && modelNameMap.count <= 1) {
             this.namesMap.delete(model.originalName);
         } else {
             const modelNumber = replace(model.modelName, model.originalName, '').replace('(', '').replace(')', '');
