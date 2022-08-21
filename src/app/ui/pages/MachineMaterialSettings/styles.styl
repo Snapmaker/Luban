@@ -1,18 +1,26 @@
+@import "../../../styles/global-var.styl";
+
 .material-item {
     position: relative;
     .material-more-action {
         position: absolute;
         visibility hidden
         right: 18px;
-        background: #ffffff;
+        background: transparent;
     }
     &:hover {
         .material-more-action {
             visibility: visible;
         }
+        background: $blue-6;
     }
 }
 
+.diameter-item-wrapper {
+    &:hover {
+        background: $blue-6;
+    }
+}
 .diameter-item {
     .close-icon {
         visibility: hidden;
@@ -21,5 +29,11 @@
         .close-icon {
             visibility visible
         }
+    }
+}
+
+.add-nozzle-diameter-input {
+    &:hover {
+        border-color: $blue-2;
     }
 }

@@ -5,7 +5,7 @@ import {
 import EventEmitter from 'events';
 import { CONTAINED, INTERSECTED, NOT_INTERSECTED } from 'three-mesh-bvh';
 import { v4 as uuid } from 'uuid';
-import _, { debounce } from 'lodash';
+import _, { debounce, replace } from 'lodash';
 import { Transfer } from 'threads';
 import i18n from '../lib/i18n';
 import { checkVector3NaN } from '../lib/numeric-utils';
@@ -86,7 +86,7 @@ type TAdhesionConfig = {
 }
 
 class ModelGroup extends EventEmitter {
-    private namesMap: Map<string, number> = new Map();
+    private namesMap: Map<string, { number: number, count: number }> = new Map();
     public object: Group;
     public grayModeObject: Group;
     public models: (TModel)[];
@@ -425,6 +425,18 @@ class ModelGroup extends EventEmitter {
             this.models = this.models.concat();
         } else {
             this.models = this.models.filter((item) => item !== model);
+        }
+        const modelNameMap = this.namesMap.get(model.originalName);
+        if (modelNameMap.count <= 1) {
+            this.namesMap.delete(model.originalName);
+        } else {
+            const modelNumber = replace(model.modelName, model.originalName, '').replace('(', '').replace(')', '');
+            const tempCount = modelNameMap.count - 1;
+            const tempNumber = (modelNumber && Number(modelNumber) >= modelNameMap.number) ? modelNameMap.number - 1 : modelNameMap.number;
+            this.namesMap.set(model.originalName, {
+                number: tempNumber,
+                count: tempCount
+            });
         }
         this.updatePlateAdhesion();
         this.modelChanged();
@@ -1908,32 +1920,37 @@ class ModelGroup extends EventEmitter {
             const isText = (config && config.svgNodeName === 'text');
             const isShape = (model.mode === 'vector' && config && config.svgNodeName !== 'image');
             if (isText) {
-                baseName = i18n._('key-2D_model_basename-Text');
+                baseName = i18n._('key-2D/Model_basename-Text');
             } else if (isShape) {
-                baseName = i18n._('key-2D_model_basename-Shape');
+                baseName = i18n._('key-2D/Model_basename-Shape');
             } else {
                 baseName = model.originalName;
             }
         }
 
-        const count = this.namesMap.get(baseName) || 1;
-        this.namesMap.set(baseName, count + 1);
+        const value = this.namesMap.get(baseName) || {
+            number: 0,
+            count: 0
+        };
+        value.number += 1;
+        value.count += 1;
+        this.namesMap.set(baseName, value);
 
         let name = '';
         if (baseName === 'Text' || baseName === 'Shape') {
-            name = `${baseName} ${count}`;
+            name = `${baseName} ${value.number}`;
         } else {
-            if (count === 1) {
+            if (value.number === 1) {
                 if (model instanceof ThreeGroup) {
-                    name = `${baseName} ${count}`;
+                    name = `${baseName} ${value.number}`;
                 } else {
                     name = baseName;
                 }
             } else {
                 if (model instanceof ThreeGroup) {
-                    name = `${baseName} ${count}`;
+                    name = `${baseName} ${value.number}`;
                 } else {
-                    name = `${baseName} (${count})`;
+                    name = `${baseName} (${value.number})`;
                 }
             }
         }

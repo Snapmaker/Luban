@@ -48,6 +48,7 @@ function ConfigValueBox({
     const [mdContent, setMdContent] = useState('');
     const [imgPath, setImgPath] = useState('');
     const [selectQualityDetailType, setSelectQualityDetailType] = useState(NO_LIMIT);
+    const [profileDomOffset, setProfileDomOffset] = useState(null);
     const scrollDom = useRef(null);
     const fieldsDom = useRef([]);
     const [tempDoms, setTempdoms] = useState([]);
@@ -108,9 +109,12 @@ function ConfigValueBox({
             setActiveCateId(cateId);
         }
     }
-    const handleUpdateProfileKey = (category, profileKey) => {
+    const handleUpdateProfileKey = (category, profileKey, e) => {
+        const scrollTop = e.target.offsetParent.scrollTop;
+        const offsetTop = e.target.offsetTop;
         setSelectCategory(category);
         setSelectProfile(profileKey);
+        setProfileDomOffset(offsetTop - scrollTop);
     };
     const onChangeMaterialType = (newCategoryName) => {
         dispatch(printingActions.updateDefinitionCategoryName(managerType, definitionForManager, newCategoryName));
@@ -317,7 +321,7 @@ function ConfigValueBox({
     }];
 
     return (
-        <div className={classNames(styles['config-value-box-wrapper'], 'width-percent-100 margin-vertical-16 margin-horizontal-16 background-color-white border-radius-16')}>
+        <div className={classNames(styles['config-value-box-wrapper'], 'margin-vertical-16 margin-horizontal-16 background-color-white border-radius-16')}>
             <div className="height-56 sm-flex border-bottom-normal padding-left-16">
                 <div className="sm-flex">
                     <div className="sm-flex align-center margin-right-64">
@@ -325,7 +329,7 @@ function ConfigValueBox({
                         <Select
                             options={managerType === PRINTING_MANAGER_TYPE_MATERIAL ? materialParamsTypeOptions : qualityParamsTypeOptions}
                             clearable={false}
-                            size="large"
+                            size="middle"
                             showSearch={false}
                             value={selectParamsType}
                             onChange={(e) => {
@@ -493,6 +497,13 @@ function ConfigValueBox({
                                         className={classNames(showParamsProfile ? 'rotate180' : '')}
                                     />
                                 </Anchor>
+                                <div className="position-ab" style={{ left: -24, top: profileDomOffset + 3, visibility: `${(profileDomOffset !== null && profileDomOffset > 0) ? 'visible' : 'hidden'}` }}>
+                                    <SvgIcon
+                                        name="LeftSlipNormal"
+                                        size={24}
+                                        type={['static']}
+                                    />
+                                </div>
                                 {showParamsProfile && (
                                     <div className="padding-vertical-16 padding-horizontal-16 overflow-y-auto height-percent-100">
                                         <ReactMarkdown transformImageUri={(input) => (`atom:///${imgPath}/${input.slice(3)}`)}>
@@ -522,6 +533,7 @@ function ConfigValueBox({
                                     className={classNames(showParamsProfile ? 'rotate180' : '')}
                                 />
                             </Anchor>
+                            <div style={{ left: -12, top: profileDomOffset }}>test</div>
                             {showParamsProfile && (
                                 <div className="padding-vertical-16 padding-horizontal-16 overflow-y-auto height-percent-100">
                                     <ReactMarkdown transformImageUri={(input) => (`atom:///${imgPath}/${input.slice(3)}`)}>

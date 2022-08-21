@@ -83,7 +83,7 @@ class WidgetContainer extends PureComponent {
         const actions = this.actions;
         return (
             <Widget
-                style={{ display: this.state.display ? '' : 'none', margin: '16px 16px 0' }}
+                style={{ display: this.state.display ? '' : 'none', margin: '16px 16px 60px' }}
                 className="border-bottom-normal padding-bottom-16"
                 fullscreen={state.fullscreen}
             >

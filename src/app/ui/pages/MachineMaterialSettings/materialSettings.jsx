@@ -239,7 +239,7 @@ const MaterialSettings = ({
                     <Tooltip title={i18n._('key-Settings/Create Material Tips')}>
                         <Anchor className="sm-flex sm-flex-direction-c align-center width-112 height-88 border-radius-12" onClick={() => setShowCreateMaterialModal(true)}>
                             <SvgIcon
-                                name="TitleSetting"
+                                name="PresetQuickCreate"
                                 size={48}
                                 type={['hoverNormal', 'pressNormal']}
                             />
@@ -250,7 +250,7 @@ const MaterialSettings = ({
                 <Menu.Item>
                     <Anchor className="sm-flex sm-flex-direction-c width-112 height-88 align-center border-radius-12" onClick={() => importFile(fileInput)}>
                         <SvgIcon
-                            name="TitleSetting"
+                            name="PresetLocal"
                             size={48}
                             type={['hoverNormal', 'pressNormal']}
                         />
@@ -312,7 +312,6 @@ const MaterialSettings = ({
                         placement="top"
                         trigger={['click']}
                         overlayClassName="horizontal-menu"
-                        arrow
                     >
                         <Button
                             priority="level-two"
@@ -346,7 +345,7 @@ const MaterialSettings = ({
                                                 key={definition.definitionId}
                                             >
                                                 <div className="sm-flex align-center width-percent-100">
-                                                    <div className="width-16 height-16 border-default-grey-1 margin-right-8 " style={{ background: `${definition?.settings?.color?.default_value}` }} />
+                                                    <div className="width-16 height-16 border-default-grey-1 margin-right-8 border-radius-4" style={{ background: `${definition?.settings?.color?.default_value}` }} />
                                                     <span className="display-inline width-all-minus-45 text-overflow-ellipsis">{i18n._(definition.i18nName || definition.name)}</span>
                                                 </div>
                                                 <div className={classNames(styles['material-more-action'])}>

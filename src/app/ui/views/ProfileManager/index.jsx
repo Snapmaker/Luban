@@ -741,7 +741,6 @@ function ProfileManager({
                                         <Dropdown
                                             trigger={['click']}
                                             placement="top"
-                                            arrow
                                             overlayClassName="horizontal-menu"
                                             overlay={(
                                                 <Menu>

@@ -772,7 +772,7 @@ function Configurations() {
                                 <Select
                                     clearable={false}
                                     style={{ border: 'none' }}
-                                    size="100px"
+                                    size="150px"
                                     bordered={false}
                                     options={CONFIG_DISPLAY_TYPES_OPTIONS}
                                     value={configDisplayType}
