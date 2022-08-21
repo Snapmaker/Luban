@@ -643,7 +643,6 @@ export const actions = {
                             .default_value;
                     }
                     border = 7 + (skirtLineCount - 1) * supportLineWidth * initialLayerLineWidthFactor / 100;
-                    console.log('skirtLineCount', skirtLineCount, supportLineWidth);
                 }else {
                     const brimLineCount = activeQualityDefinition?.settings?.brim_line_count
                         ?.default_value;
@@ -656,7 +655,6 @@ export const actions = {
                             .default_value;
                     }
                     border = brimLineCount * supportLineWidth * initialLayerLineWidthFactor / 100;
-                    console.log('brimLineCount', brimLineCount, supportLineWidth);
                 }
                 break;
             }
@@ -676,7 +674,6 @@ export const actions = {
             front: border,
             back: border
         };
-        console.log('newStopArea.getModels()', newStopArea, primeTowerBrimEnable);
         dispatch(
             actions.updateState({
                 stopArea: newStopArea
