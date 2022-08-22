@@ -3027,7 +3027,7 @@
                             "maximum_value_warning": "infill_line_distance / infill_line_width",
                             "limit_to_extruder": "infill_extruder_nr",
                             "settable_per_mesh": true,
-                            "visible": "infill_sparse_density > 0 && infill_sparse_density !== 100 && model_structure_type === 'normal'",
+                            "visible": "false",
                             "filter": [
                                 "advanced",
                                 "strength"
@@ -4592,12 +4592,12 @@
                                 "shortest": "Shortest",
                                 "random": "Random",
                                 "sharpest_corner": "Sharpest Corner",
-                                "filter": [
-                                    "basic",
-                                    "advanced",
-                                    "surface_quality"
-                                ]
                             },
+                            "filter": [
+                                "basic",
+                                "advanced",
+                                "surface_quality"
+                            ],
                             "default_value": "sharpest_corner",
                             "limit_to_extruder": "wall_0_extruder_nr",
                             "settable_per_mesh": true,
@@ -4697,7 +4697,8 @@
                             "label": "Optimize Wall Printing Order",
                             "description": "Optimize the order in which walls are printed so as to reduce the number of retractions and the distance travelled. Most parts will benefit from this being enabled but some may actually take longer so please compare the print time estimates with and without optimization. First layer is not optimized when choosing brim as build plate adhesion type.",
                             "type": "bool",
-                            "default_value": false,
+                            "default_value": true,
+                            "visible": "false",
                             "settable_per_mesh": true,
                             "filter": [
                                 "basic",
