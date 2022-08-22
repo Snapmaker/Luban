@@ -86,7 +86,7 @@ type TAdhesionConfig = {
 }
 
 class ModelGroup extends EventEmitter {
-    private namesMap: Map<string, { number: number, count: number }> = new Map();
+    public namesMap: Map<string, { number: number, count: number }> = new Map();
     public object: Group;
     public grayModeObject: Group;
     public models: (TModel)[];
@@ -426,24 +426,46 @@ class ModelGroup extends EventEmitter {
         } else {
             this.models = this.models.filter((item) => item !== model);
         }
-        const modelNameMap = this.namesMap.get(model.originalName);
-        if (modelNameMap.count <= 1) {
-            this.namesMap.delete(model.originalName);
-        } else {
-            const modelNumber = replace(model.modelName, model.originalName, '').replace('(', '').replace(')', '');
-            const tempCount = modelNameMap.count - 1;
-            const tempNumber = (modelNumber && Number(modelNumber) >= modelNameMap.number) ? modelNameMap.number - 1 : modelNameMap.number;
-            this.namesMap.set(model.originalName, {
-                number: tempNumber,
-                count: tempCount
-            });
-        }
+        this.updateModelNameMap(model.modelName, model.baseName, 'minus');
         this.updatePlateAdhesion();
         this.modelChanged();
         this.selectedModelArray = this.selectedModelArray.filter((item) => item !== model);
         model.sourceType === '3d' && this.updatePrimeTowerHeight();
     }
 
+    public updateModelNameMap(modelName: string, baseName: string, action: string) {
+        let modelNumber: number | string = replace(modelName, baseName, '').replace('(', '').replace(')', '');
+        modelNumber = modelNumber ? Number(modelNumber) : 1;
+        const modelNameMap = this.namesMap.get(baseName);
+        let tempNumber = modelNameMap.number || 0;
+        let tempCount = modelNameMap.count || 0;
+        switch (action) {
+            case 'add':
+                tempCount++;
+                if (modelNumber - tempNumber <= 1) {
+                    tempNumber += 1;
+                } else {
+                    tempNumber = modelNumber;
+                }
+                this.namesMap.set(baseName, {
+                    count: tempCount,
+                    number: tempNumber
+                });
+                break;
+            case 'minus':
+                tempCount--;
+                if (modelNumber === tempNumber) {
+                    tempNumber -= 1;
+                }
+                this.namesMap.set(baseName, {
+                    count: tempCount,
+                    number: tempCount === 0 ? 0 : tempNumber
+                });
+                break;
+            default:
+                break;
+        }
+    }
 
     /**
      * Remove selected models and reset selected state.
@@ -1076,11 +1098,14 @@ class ModelGroup extends EventEmitter {
         // paste objects from clipboard
         // TODO: paste all objects from clipboard without losing their relative positions
         modelsToCopy.forEach((model) => {
+            if (model instanceof PrimeTowerModel) return;
             const newModel = model.clone(this);
 
             if (newModel.sourceType === '3d') {
                 newModel.stickToPlate();
-                newModel.modelName = this._createNewModelName(newModel);
+                const modelNameObj = this._createNewModelName(newModel);
+                newModel.modelName = modelNameObj.name;
+                newModel.baseName = modelNameObj.baseName;
                 newModel.meshObject.position.x = 0;
                 newModel.meshObject.position.y = 0;
                 const point = this._computeAvailableXY(newModel);
@@ -1724,7 +1749,7 @@ class ModelGroup extends EventEmitter {
      */
     public addModel(modelInfo: ModelInfo | SVGModelInfo, resolve, reject) {
         if (!modelInfo.modelName) {
-            modelInfo.modelName = this._createNewModelName({
+            const modelNameObj = this._createNewModelName({
                 sourceType: modelInfo.sourceType as '3d' | '2d',
                 mode: modelInfo?.mode as unknown as TMode,
                 originalName: modelInfo.originalName,
@@ -1732,6 +1757,8 @@ class ModelGroup extends EventEmitter {
                     svgNodeName: string
                 }
             });
+            modelInfo.modelName = modelNameObj.name;
+            modelInfo.baseName = modelNameObj.baseName;
         }
         if (modelInfo.headType === HEAD_PRINTING && modelInfo.isGroup) {
             const group = new ThreeGroup(modelInfo, this);
@@ -1820,7 +1847,6 @@ class ModelGroup extends EventEmitter {
 
     public addGroup(modelInfo: ModelInfo, modelsInGroup: Model3D[]) {
         const group = new ThreeGroup(modelInfo, this);
-        group.modelName = this._createNewModelName(group);
 
         modelsInGroup.forEach((model) => {
             if (model.parent && model.parent instanceof ThreeGroup) {
@@ -1837,7 +1863,9 @@ class ModelGroup extends EventEmitter {
             return this.models.indexOf(model);
         });
         const modelsToGroup = this._flattenGroups(modelsInGroup);
-        group.modelName = this._createNewModelName(group);
+        const groupNameObj = this._createNewModelName(group);
+        group.modelName = groupNameObj.name;
+        group.baseName = groupNameObj.baseName;
         group.add(modelsToGroup);
         const insertIndex = Math.min(...indexesOfSelectedModels);
         this.models.splice(insertIndex, 0, group);
@@ -1955,7 +1983,7 @@ class ModelGroup extends EventEmitter {
                 }
             }
         }
-        return name;
+        return { name, baseName };
     }
 
     /**
@@ -2171,7 +2199,9 @@ class ModelGroup extends EventEmitter {
                 return this.models.indexOf(model);
             });
             const modelsToGroup = this._flattenGroups(selectedModelArray);
-            group.modelName = this._createNewModelName(group);
+            const modelNameObj = this._createNewModelName(group);
+            group.modelName = modelNameObj.name;
+            group.baseName = modelNameObj.baseName;
             group.add(modelsToGroup);
             const insertIndex = Math.min(...indexesOfSelectedModels);
             this.models.splice(insertIndex, 0, group);

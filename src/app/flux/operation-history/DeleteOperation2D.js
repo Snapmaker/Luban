@@ -61,6 +61,7 @@ export default class DeleteOperation2D extends Operation {
         model.meshObject.addEventListener('update', modelGroup.onModelUpdate);
         modelGroup.models.push(model);
         modelGroup.models = [...modelGroup.models]; // trigger <ModelItem> component to show the unselected model
+        modelGroup.updateModelNameMap(model.modelName, model.baseName, 'add');
         modelGroup.modelChanged();
         svgActions.clearSelection();
 

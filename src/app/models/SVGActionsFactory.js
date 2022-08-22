@@ -484,7 +484,9 @@ class SVGActionsFactory {
             svgModel.elem.id = svgModel.modelID;
             svgModel.setParent(this.svgContentGroup.group);
             svgModel.setPreSelection(this.svgContentGroup.preSelectionGroup);
-            svgModel.modelName = this.modelGroup._createNewModelName(svgModel);
+            const modelNameObj = this.modelGroup._createNewModelName(svgModel);
+            svgModel.modelName = modelNameObj.name;
+            svgModel.baseName = modelNameObj.baseName;
             this.modelGroup.resetModelsPositionZByOrder();
             svgModel.transformation.positionZ = (this.modelGroup.models.length + 1) * INDEXMARGIN;
             svgModel.onTransform();

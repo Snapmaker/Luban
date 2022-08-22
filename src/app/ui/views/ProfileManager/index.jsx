@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Tooltip, Menu } from 'antd';
 import PropTypes from 'prop-types';
 // import { useSelector, shallowEqual } from 'react-redux';
-import { isUndefined, cloneDeep, uniqWith } from 'lodash';
+import { isUndefined, cloneDeep, uniqWith, findIndex, orderBy } from 'lodash';
 import { HEAD_CNC, HEAD_LASER,
     PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY, MATERIAL_TYPE_OPTIONS } from '../../../constants';
 import modal from '../../../lib/modal';
@@ -38,8 +38,21 @@ import Dropdown from '../../components/Dropdown';
  */
 const DEFAULT_DISPLAY_TYPE = 'key-default_category-Default';
 const MATERIAL_TYPE_ARRAY = MATERIAL_TYPE_OPTIONS.map(d => d.label);
-function creatCateArray(optionList) {
-    const cates = [];
+const materialCategoryRank = [
+    'PLA',
+    'Support',
+    'ABS',
+    'PETG',
+    'TPE',
+    'TPU',
+    'PVA',
+    'ASA',
+    'PC',
+    'Nylon',
+    'Other'
+];
+function creatCateArray(optionList, managerType) {
+    let cates = [];
     optionList.forEach(option => {
         // Make sure that the copied description file is displayed in the correct position after switching the language
         const cateItem = cates.find((cate) => {
@@ -52,9 +65,21 @@ function creatCateArray(optionList) {
             eachCate.category = option.category;
             eachCate.i18nCategory = option.i18nCategory;
             eachCate.items.push(option);
+            if (managerType === PRINTING_MANAGER_TYPE_MATERIAL) {
+                eachCate.rank = findIndex(materialCategoryRank, arr => {
+                    return arr === option.category;
+                });
+            } else {
+                if (option.category === 'Default') {
+                    eachCate.rank = 1;
+                } else {
+                    eachCate.rank = 0;
+                }
+            }
             cates.push(eachCate);
         }
     });
+    cates = orderBy(cates, ['rank'], [`${managerType === PRINTING_MANAGER_TYPE_MATERIAL ? 'asc' : 'desc'}`]);
     return cates;
 }
 
@@ -101,7 +126,7 @@ export function useGetDefinitions(allDefinitions, activeDefinitionID, getDefault
             }
             return {
                 definitionOptions,
-                cates: creatCateArray(definitionOptions),
+                cates: creatCateArray(definitionOptions, managerType),
                 definitionForManager,
                 selectedSettingDefaultValue
             };

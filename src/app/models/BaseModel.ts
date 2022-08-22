@@ -79,7 +79,8 @@ export type ModelInfo = {
     height?: number;
     elem: SvgModelElement;
     size: TSize,
-    reloadSimplifyModel?: boolean
+    reloadSimplifyModel?: boolean,
+    baseName?: string
 };
 
 
@@ -94,6 +95,7 @@ abstract class BaseModel {
     public originModelID = '';
     public originalName: string;
     public modelName = '';
+    public baseName: string;
     public uploadImageName = '';
     public sourceType: SOURCE_TYPE;
     public sourceHeight: number;

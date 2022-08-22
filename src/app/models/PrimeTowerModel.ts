@@ -12,7 +12,7 @@ class PrimeTowerModel extends ThreeModel {
         }) as unknown as THREE.MeshStandardMaterial;
         geometry.rotateX(Math.PI / 2);
         const originalName = `prime_tower_${(Math.random() * 1000).toFixed(0)}`;
-        const modelName = modelGroup._createNewModelName({
+        const modelNameObj = modelGroup._createNewModelName({
             sourceType: '3d',
             originalName: originalName
         });
@@ -20,7 +20,8 @@ class PrimeTowerModel extends ThreeModel {
             sourceType: '3d',
             originalName,
             uploadName: `${originalName}.stl`,
-            modelName,
+            modelName: modelNameObj.name,
+            baseName: modelNameObj.baseName,
             mode: '3d',
             geometry,
             material,

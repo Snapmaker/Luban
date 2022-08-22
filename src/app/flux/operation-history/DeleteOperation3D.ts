@@ -107,6 +107,7 @@ export default class DeleteOperation3D extends Operation<DeleteOperationState> {
                 }
             } else {
                 modelGroup.models = modelGroup.models.concat(model);
+                console.log(modelGroup.namesMap);
                 modelGroup.recoverModelClippingGroup(model);
                 modelGroup.object.add(model.meshObject);
                 setGlobalTransform(modelGroup, model, this.state.modelTransformation.get(model.modelID));
@@ -114,6 +115,7 @@ export default class DeleteOperation3D extends Operation<DeleteOperationState> {
         } else if (model instanceof ThreeGroup) {
             model.children = this.state.childrens;
             modelGroup.models = modelGroup.models.concat(model);
+            modelGroup.updateModelNameMap(model.modelName, model.baseName, 'add');
             modelGroup.recoverModelClippingGroup(model);
             ThreeUtils.setObjectParent(model.meshObject, modelGroup.object);
             model.children.forEach((subModel) => {

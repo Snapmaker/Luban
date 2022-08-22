@@ -86,7 +86,8 @@ function Purifier({ widgetActions }) {
                 <span
                     className={classNames(
                         'border-radius-8',
-                        styles['btn-3btns']
+                        styles['btn-3btns'],
+                        isFilterEnable ? '' : styles['disabled-btns']
                     )}
                 >
                     <button
