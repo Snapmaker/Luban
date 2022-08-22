@@ -1943,7 +1943,6 @@ export const actions = {
     destroyGcodeLine: () => (dispatch, getState) => {
         const { gcodeLine, gcodeLineGroup } = getState().printing;
         if (gcodeLine) {
-            console.trace('gcodeLine', gcodeLine);
             gcodeLineGroup.remove(gcodeLine);
             // gcodeLine.geometry.dispose();
             dispatch(actions.updateState({
