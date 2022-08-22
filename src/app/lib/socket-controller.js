@@ -79,8 +79,10 @@ class SocketController {
                         onMessage && onMessage(result);
                     } else if (_STATUS_ === 'complete') {
                         resolve();
+                        this.socket.off(topic, listener);
                     } else if (_STATUS_ === 'error') {
                         reject();
+                        this.socket.off(topic, listener);
                     }
                 }
             };

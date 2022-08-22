@@ -149,9 +149,9 @@ class textParser extends BaseTagParser {
         const x = attributes.x;
         const y = attributes.y;
         const baselineX = _.isUndefined(previousElementAttributes.positionX)
-            ? 0 : previousElementAttributes.positionX;
+            ? previousElementAttributes.actualX : previousElementAttributes.positionX;
         const baselineY = _.isUndefined(previousElementAttributes.positionY)
-            ? 0 : previousElementAttributes.positionY;
+            ? previousElementAttributes.actualY : previousElementAttributes.positionY;
         let positionX = 0;
         let positionY = 0;
 

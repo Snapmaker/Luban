@@ -452,6 +452,7 @@ class ModelGroup extends EventEmitter {
     public removeSelectedModel() {
         this._removeSelectedModels();
         this.unselectAllModels();
+        this.plateAdhesion.clear();
         this.updatePlateAdhesion();
         return this.getState();
     }
