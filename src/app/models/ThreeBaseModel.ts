@@ -76,7 +76,8 @@ export type ModelInfo = {
     positionsArr?: {
         children: Array<ModelLoadedInGroup>;
         matrix?: number[];
-    }
+    },
+    baseName?: string
 };
 
 const DEFAULT_TRANSFORMATION: ModelTransformation = {
@@ -103,6 +104,7 @@ export default class BaseModel extends EventEmitter {
     public modelID: string;
     public originModelID: string;
     public modelName: string;
+    public baseName: string;
     public sourceHeight: number;
     public sourceWidth: number;
     public originalName: string;

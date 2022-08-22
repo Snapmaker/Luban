@@ -39,6 +39,7 @@ export default class AddOperation2D extends Operation {
         model.meshObject.addEventListener('update', modelGroup.onModelUpdate);
         modelGroup.models.push(model);
         modelGroup.models = [...modelGroup.models];
+        modelGroup.updateModelNameMap(model.modelName, model.baseName, 'add');
         modelGroup.modelChanged();
         svgActions.clearSelection();
     }

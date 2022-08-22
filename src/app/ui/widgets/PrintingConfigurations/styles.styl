@@ -82,6 +82,10 @@
         background: url("./images/preset-universal.svg") no-repeat 0 0
         background-size: 100%
 .preset-customized {
+    min-height: 60px;
+    max-height: 154px;
+    overflow-y: auto;
+    overflow-x: hidden;
     .selected {
        background-color: $blue-6;
     }
@@ -108,12 +112,14 @@
 .printing-settings-wrapper {
   position: relative;
   .printing-settings {
+    display: flex;
+    align-items: center;
     text-align: center;
      margin-bottom: -16px;
      border-radius: 100px;
      border: 1px $grey-1 solid;
      position: absolute;
-     width: 200px;
+     max-width: 200px;
      top: -16px;
      left: 50%;
      transform: translateX(-50%);

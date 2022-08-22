@@ -58,6 +58,7 @@ export default class AddOperation3D extends Operation<AddOperationState> {
 
         model.meshObject.addEventListener('update', modelGroup.onModelUpdate);
         modelGroup.models = modelGroup.models.concat(model); // trigger <ModelItem> component to show the unselected model
+        modelGroup.updateModelNameMap(model.modelName, model.baseName, 'add');
         modelGroup.recoverModelClippingGroup(model);
         modelGroup.updatePrimeTowerHeight();
         modelGroup.modelChanged();

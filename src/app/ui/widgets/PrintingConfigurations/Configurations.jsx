@@ -631,54 +631,8 @@ function Configurations() {
                     value={presetDisplayType}
                     onChange={actions.onChangePresetDisplayType}
                 />
-                {console.log(presetOptionsObj[presetDisplayType].options)}
                 {presetDisplayType === i18n._(DEFAULT_DISPLAY_TYPE) && (
                     <div className={classNames(styles['preset-recommended'], 'sm-flex', 'margin-vertical-16', 'align-c', 'justify-space-between')}>
-                        {/* {presetOptionsObj[presetDisplayType].options.map((optionItem) => {
-                            return (
-                                <div
-                                    key={optionItem.typeOfPrinting}
-                                    className={classNames(
-                                        selectedDefinition.typeOfPrinting === optionItem.typeOfPrinting ? styles.selected : styles.unselected,
-                                    )}
-                                >
-                                    <Tooltip
-                                        title={getPresetContent(optionItem?.definitionId, optionItem.name)}
-                                        trigger="hover"
-                                        placement="left"
-                                    >
-                                        <Anchor
-                                            onClick={() => actions.onSelectCustomDefinitionById(optionItem.definitionId)}
-                                        >
-                                            <div className={classNames(
-                                                styles[`preset-recommended__icon-${optionItem.typeOfPrinting}`],
-                                                styles['preset-recommended__icon']
-                                            )}
-                                            >
-                                                <Dropdown
-                                                    placement="bottomRight"
-                                                    style={{ maxWidth: '160px' }}
-                                                    overlay={renderProfileMenu(presetDisplayType)}
-                                                    trigger={['click']}
-                                                >
-                                                    <SvgIcon
-                                                        className={classNames(
-                                                            styles['preset-hover'],
-                                                        )}
-                                                        type={['static']}
-                                                        size={24}
-                                                        name="More"
-                                                    />
-                                                </Dropdown>
-                                            </div>
-                                        </Anchor>
-                                    </Tooltip>
-                                    <span className="max-width-76 text-overflow-ellipsis-line-2 height-32-half-line margin-top-4 margin-bottom-8">
-                                        {optionItem.name}
-                                    </span>
-                                </div>
-                            );
-                        })} */}
                         {qualitySettingRank.map((qualityId) => {
                             const optionItem = lodashFind(presetOptionsObj[presetDisplayType].options, { definitionId: qualityId });
                             if (optionItem) {
@@ -758,7 +712,7 @@ function Configurations() {
                                         <Dropdown
                                             placement="left"
                                             className="display-inline float-right"
-                                            content={renderProfileMenu(presetDisplayType)}
+                                            overlay={() => renderProfileMenu(presetDisplayType)}
                                             trigger={['click']}
                                         >
                                             <SvgIcon
@@ -785,7 +739,7 @@ function Configurations() {
             )}
             />
             <div className={classNames(styles['printing-settings-wrapper'], 'background-grey-1', 'margin-bottom-16')}>
-                <div className={classNames(styles['printing-settings'], 'height-32', 'background-color-white', 'padding-horizontal-24')}>
+                <div className={classNames(styles['printing-settings'], 'height-32', 'background-color-white', 'padding-horizontal-16')}>
                     <span className={classNames(styles['printing-settings-text'], 'align-c')}>
                         {i18n._('key-Printing/PrintingConfigurations-Printing Settings')}
                     </span>
