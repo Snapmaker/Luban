@@ -2,6 +2,7 @@ export const WORKSPACE_UNIFORMS = {
     u_visible_index_count: { value: 0.0 }
 };
 export const WORKSPACE_VERT_SHADER = [
+    'precision lowp float;',
     'uniform float u_visible_index_count;',
 
     'varying vec3 v_color;',
@@ -21,6 +22,7 @@ export const WORKSPACE_VERT_SHADER = [
     '}'
 ].join('');
 export const WORKSPACE_FRAG_SHADER = [
+    'precision lowp float;',
     'uniform float u_visible_index_count;',
 
     'varying vec3 v_color;',

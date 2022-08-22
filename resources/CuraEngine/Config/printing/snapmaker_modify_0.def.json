@@ -3027,7 +3027,7 @@
                             "maximum_value_warning": "infill_line_distance / infill_line_width",
                             "limit_to_extruder": "infill_extruder_nr",
                             "settable_per_mesh": true,
-                            "visible": "infill_sparse_density > 0 && infill_sparse_density !== 100 && model_structure_type === 'normal'",
+                            "visible": "false",
                             "filter": [
                                 "advanced",
                                 "strength"
@@ -3062,34 +3062,6 @@
                             },
                             "default_value": "none",
                             "settable_per_mesh": true,
-                            "settable_per_extruder": false,
-                            "filter": [
-                                "basic",
-                                "advanced"
-                            ]
-                        },
-                        "support_enable": {
-                            "label": "Generate Support",
-                            "description": "Generate structures to support parts of the model which have overhangs. Without these structures, such parts would collapse during printing.",
-                            "type": "bool",
-                            "default_value": false,
-                            "calcu_value": "support_generate_type !== 'none'",
-                            "settable_per_mesh": true,
-                            "settable_per_extruder": false,
-                            "visible": "false"
-                        },
-                        "support_structure": {
-                            "label": "Support Structure",
-                            "description": "Chooses between the techniques available to generate support. 'Normal' support creates a support structure directly below the overhanging parts and drops those areas straight down. 'Tree' support creates branches towards the overhanging areas that support the model on the tips of those branches, and allows the branches to crawl around the model to support it from the build plate as much as possible.",
-                            "type": "enum",
-                            "options": {
-                                "normal": "Normal",
-                                "tree": "Tree"
-                            },
-                            "visible": "support_enable",
-                            "default_value": "normal",
-                            "calcu_value": "support_generate_type === 'normal' ? 'normal':support_generate_type === 'tree' ? 'tree' : 'normal'",
-                            "settable_per_mesh": false,
                             "settable_per_extruder": false,
                             "filter": [
                                 "basic",
@@ -3164,6 +3136,34 @@
                                     "settable_per_extruder": true
                                 }
                             }
+                        },
+                        "support_enable": {
+                            "label": "Generate Support",
+                            "description": "Generate structures to support parts of the model which have overhangs. Without these structures, such parts would collapse during printing.",
+                            "type": "bool",
+                            "default_value": false,
+                            "calcu_value": "support_generate_type !== 'none'",
+                            "settable_per_mesh": true,
+                            "settable_per_extruder": false,
+                            "visible": "false"
+                        },
+                        "support_structure": {
+                            "label": "Support Structure",
+                            "description": "Chooses between the techniques available to generate support. 'Normal' support creates a support structure directly below the overhanging parts and drops those areas straight down. 'Tree' support creates branches towards the overhanging areas that support the model on the tips of those branches, and allows the branches to crawl around the model to support it from the build plate as much as possible.",
+                            "type": "enum",
+                            "options": {
+                                "normal": "Normal",
+                                "tree": "Tree"
+                            },
+                            "visible": "false",
+                            "default_value": "normal",
+                            "calcu_value": "support_generate_type === 'normal' ? 'normal':support_generate_type === 'tree' ? 'tree' : 'normal'",
+                            "settable_per_mesh": false,
+                            "settable_per_extruder": false,
+                            "filter": [
+                                "basic",
+                                "advanced"
+                            ]
                         },
                         "support_pattern": {
                             "label": "Support Pattern",
@@ -4591,13 +4591,13 @@
                                 "back": "User Specified",
                                 "shortest": "Shortest",
                                 "random": "Random",
-                                "sharpest_corner": "Sharpest Corner",
-                                "filter": [
-                                    "basic",
-                                    "advanced",
-                                    "surface_quality"
-                                ]
+                                "sharpest_corner": "Sharpest Corner"
                             },
+                            "filter": [
+                                "basic",
+                                "advanced",
+                                "surface_quality"
+                            ],
                             "default_value": "sharpest_corner",
                             "limit_to_extruder": "wall_0_extruder_nr",
                             "settable_per_mesh": true,
@@ -4697,7 +4697,8 @@
                             "label": "Optimize Wall Printing Order",
                             "description": "Optimize the order in which walls are printed so as to reduce the number of retractions and the distance travelled. Most parts will benefit from this being enabled but some may actually take longer so please compare the print time estimates with and without optimization. First layer is not optimized when choosing brim as build plate adhesion type.",
                             "type": "bool",
-                            "default_value": false,
+                            "default_value": true,
+                            "visible": "false",
                             "settable_per_mesh": true,
                             "filter": [
                                 "basic",

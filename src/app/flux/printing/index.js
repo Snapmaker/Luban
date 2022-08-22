@@ -89,7 +89,7 @@ import ThreeModel from '../../models/ThreeModel';
 import SimplifyModelOperation from '../operation-history/SimplifyModelOperation';
 
 const { Transfer } = require('threads');
-
+let initEventFlag = false;
 // register methods for three-mesh-bvh
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
@@ -264,7 +264,6 @@ const INITIAL_STATE = {
     renderingTimestamp: 0,
 
     // check not to duplicated create event
-    initEventFlag: false,
 
     // progress states manager
     progressStatesManager: new ProgressStatesManager(),
@@ -791,13 +790,13 @@ export const actions = {
     },
 
     initSocketEvent: () => async (dispatch, getState) => {
-        const { initEventFlag, modelGroup, qualityDefinitions, defaultQualityId } = getState().printing;
+        const { modelGroup, qualityDefinitions, defaultQualityId} = getState().printing;
         const {
             toolHead: { printingToolhead },
         } = getState().machine;
         // generate gcode event
         if (!initEventFlag) {
-            actions.updateState({ initEventFlag: true });
+            initEventFlag = true;
             controller.on('slice:started', () => {
                 const { progressStatesManager } = getState().printing;
                 progressStatesManager.startProgress(
