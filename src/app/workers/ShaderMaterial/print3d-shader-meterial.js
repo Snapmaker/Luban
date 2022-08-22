@@ -31,6 +31,7 @@ export const PRINT3D_UNIFORMS = {
 
 };
 export const PRINT3D_VERT_SHADER = `
+precision lowp float;
 varying vec3 v_normal;
 // varying vec3 v_eye_vector;
 
@@ -43,6 +44,7 @@ void main(){
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }`;
 export const PRINT3D_FRAG_SHADER = `
+precision lowp float;
 uniform int u_visible_layer_range_start;
 uniform int u_visible_layer_range_end;
 

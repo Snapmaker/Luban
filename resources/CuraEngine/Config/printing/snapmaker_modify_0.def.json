@@ -3066,34 +3066,6 @@
                             "filter": [
                                 "basic",
                                 "advanced"
-                            ]
-                        },
-                        "support_enable": {
-                            "label": "Generate Support",
-                            "description": "Generate structures to support parts of the model which have overhangs. Without these structures, such parts would collapse during printing.",
-                            "type": "bool",
-                            "default_value": false,
-                            "calcu_value": "support_generate_type !== 'none'",
-                            "settable_per_mesh": true,
-                            "settable_per_extruder": false,
-                            "visible": "false"
-                        },
-                        "support_structure": {
-                            "label": "Support Structure",
-                            "description": "Chooses between the techniques available to generate support. 'Normal' support creates a support structure directly below the overhanging parts and drops those areas straight down. 'Tree' support creates branches towards the overhanging areas that support the model on the tips of those branches, and allows the branches to crawl around the model to support it from the build plate as much as possible.",
-                            "type": "enum",
-                            "options": {
-                                "normal": "Normal",
-                                "tree": "Tree"
-                            },
-                            "visible": "support_enable",
-                            "default_value": "normal",
-                            "calcu_value": "support_generate_type === 'normal' ? 'normal':support_generate_type === 'tree' ? 'tree' : 'normal'",
-                            "settable_per_mesh": false,
-                            "settable_per_extruder": false,
-                            "filter": [
-                                "basic",
-                                "advanced"
                             ],
                             "children": {
                                 "support_tree_angle": {
@@ -3164,6 +3136,34 @@
                                     "settable_per_extruder": true
                                 }
                             }
+                        },
+                        "support_enable": {
+                            "label": "Generate Support",
+                            "description": "Generate structures to support parts of the model which have overhangs. Without these structures, such parts would collapse during printing.",
+                            "type": "bool",
+                            "default_value": false,
+                            "calcu_value": "support_generate_type !== 'none'",
+                            "settable_per_mesh": true,
+                            "settable_per_extruder": false,
+                            "visible": "false"
+                        },
+                        "support_structure": {
+                            "label": "Support Structure",
+                            "description": "Chooses between the techniques available to generate support. 'Normal' support creates a support structure directly below the overhanging parts and drops those areas straight down. 'Tree' support creates branches towards the overhanging areas that support the model on the tips of those branches, and allows the branches to crawl around the model to support it from the build plate as much as possible.",
+                            "type": "enum",
+                            "options": {
+                                "normal": "Normal",
+                                "tree": "Tree"
+                            },
+                            "visible": "support_enable",
+                            "default_value": "normal",
+                            "calcu_value": "support_generate_type === 'normal' ? 'normal':support_generate_type === 'tree' ? 'tree' : 'normal'",
+                            "settable_per_mesh": false,
+                            "settable_per_extruder": false,
+                            "filter": [
+                                "basic",
+                                "advanced"
+                            ]
                         },
                         "support_pattern": {
                             "label": "Support Pattern",
@@ -4591,7 +4591,7 @@
                                 "back": "User Specified",
                                 "shortest": "Shortest",
                                 "random": "Random",
-                                "sharpest_corner": "Sharpest Corner",
+                                "sharpest_corner": "Sharpest Corner"
                             },
                             "filter": [
                                 "basic",
