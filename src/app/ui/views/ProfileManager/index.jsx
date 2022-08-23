@@ -531,7 +531,7 @@ function ProfileManager({
                     size="lg-profile-manager"
                     className={classNames(styles['manager-body'])}
                     style={{ minWidth: '700px' }}
-                    onClose={customMode ? () => {} : outsideActions.closeManager}
+                    onClose={outsideActions.closeManager}
                 >
                     <Modal.Header>
                         <div className={classNames('heading-3')}>
