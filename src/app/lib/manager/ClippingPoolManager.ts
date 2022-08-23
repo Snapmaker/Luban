@@ -93,6 +93,7 @@ class ClippingPoolManager {
             const workLoop = async (deadline) => {
                 if (deadline.timeRemaining() > 0) {
                     _resolve(task.cancel());
+                    task = null;
                 } else {
                     window.requestIdleCallback(workLoop);
                 }
@@ -107,7 +108,7 @@ class ClippingPoolManager {
                 if (deadline.timeRemaining() > 0) {
                     const workerPool = this.getPool();
 
-                    const task = workerPool.queue(async (worker) => {
+                    let task = workerPool.queue(async (worker) => {
                         return new Promise<void>((resolve) => {
                             const subscribe = worker[workerName](message).subscribe({
                                 next: onMessage,
@@ -115,6 +116,7 @@ class ClippingPoolManager {
                                     resolve();
                                     subscribe.unsubscribe();
                                     onComplete && onComplete();
+                                    task = null;
                                 }
                             });
                         });
