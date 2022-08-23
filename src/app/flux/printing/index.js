@@ -4108,7 +4108,6 @@ export const actions = {
         modelGroup.updatePrimeTowerHeight();
 
         newModels.forEach((model) => {
-            modelGroup.selectModelById(model.modelID, true);
             if (model instanceof ThreeModel) {
                 modelGroup.initModelClipper(model)
 

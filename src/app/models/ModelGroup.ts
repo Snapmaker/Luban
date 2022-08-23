@@ -320,6 +320,7 @@ class ModelGroup extends EventEmitter {
     }
 
     public toggleModelsVisible(visible: boolean, models: TModel[]) {
+        this.plateAdhesion.clear();
         models.forEach((model) => {
             model.visible = visible;
             model.meshObject.visible = visible;
@@ -357,6 +358,7 @@ class ModelGroup extends EventEmitter {
 
     public showSelectedModel(targetModels: TModel[] = null) {
         const models = targetModels || this.getSelectedModelArray();
+
         return this.toggleModelsVisible(true, models);
     }
 

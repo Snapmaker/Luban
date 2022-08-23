@@ -45,6 +45,8 @@ const ALL_ICON_NAMES = {
 };
 const qualitySettingRank = [
     'quality.normal_quality',
+    'quality.normal_other_quality',
+    'quality.normal_tpu_quality',
     'quality.fast_print',
     'quality.high_quality',
     'quality.engineering_print'
@@ -72,7 +74,7 @@ export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition
                 changedSettingArray
             })
         );
-        setSelectedDefinition(selectedDefinitionModel);
+        setSelectedDefinition && setSelectedDefinition(selectedDefinitionModel);
         dispatch(printingActions.destroyGcodeLine());
         dispatch(printingActions.displayModel());
     }

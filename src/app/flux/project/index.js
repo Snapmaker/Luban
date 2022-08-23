@@ -279,7 +279,19 @@ export const actions = {
         }
 
         if (envHeadType === HEAD_PRINTING) {
-            dispatch(modActions.updateState(restState));
+            const { materialDefinitions, qualityDefinitions, defaultMaterialId: originalMaterialId, defaultQualityId: originalQualityId } = modState;
+            let { defaultMaterialId, defaultQualityId } = envObj;
+            if (!materialDefinitions.find(d => d.definitionId === defaultMaterialId)) {
+                defaultMaterialId = originalMaterialId;
+            }
+            if (!qualityDefinitions.find(d => d.definitionId === defaultQualityId)) {
+                defaultQualityId = originalQualityId;
+            }
+            dispatch(modActions.updateState({
+                ...restState,
+                defaultMaterialId,
+                defaultQualityId
+            }));
         } else {
             dispatch(modActions.updateState(envHeadType, restState));
         }
