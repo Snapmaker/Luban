@@ -321,7 +321,7 @@ const MaterialSettings = ({
                         <span className="display-inline width-142 text-overflow-ellipsis">{i18n._('key-settings/Profile Manager')}</span>
                     </Button>
                     <Dropdown
-                        overlay={renderAddMaterial}
+                        overlay={renderAddMaterial()}
                         placement="top"
                         trigger={['click']}
                         overlayClassName="horizontal-menu"
@@ -363,7 +363,7 @@ const MaterialSettings = ({
                                                 </div>
                                                 <div className={classNames(styles['material-more-action'])}>
                                                     <Dropdown
-                                                        overlay={() => renderMaterialMore(definition)}
+                                                        overlay={renderMaterialMore(definition)}
                                                         placement="bottomRight"
                                                     >
                                                         <SvgIcon
@@ -394,7 +394,7 @@ const MaterialSettings = ({
 };
 
 MaterialSettings.propTypes = {
-    toolHead: PropTypes.string,
+    toolHead: PropTypes.object,
     loading: PropTypes.bool
 };
 

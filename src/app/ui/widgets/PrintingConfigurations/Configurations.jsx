@@ -576,7 +576,9 @@ function Configurations() {
         let isAllValueDefault = true;
         if (hasResetButton) {
             const selectedDefaultSetting = actions.getDefaultDefinition(selectedDefinition.definitionId);
-            isAllValueDefault = actions.checkIsAllDefault(selectedDefinition.settings, selectedDefaultSetting);
+            if (selectedDefaultSetting) {
+                isAllValueDefault = actions.checkIsAllDefault(selectedDefinition.settings, selectedDefaultSetting);
+            }
         }
         return (
             <Menu>
@@ -712,7 +714,7 @@ function Configurations() {
                                         <Dropdown
                                             placement="left"
                                             className="display-inline float-right"
-                                            overlay={() => renderProfileMenu(presetDisplayType)}
+                                            overlay={renderProfileMenu(presetDisplayType)}
                                             trigger={['click']}
                                         >
                                             <SvgIcon
@@ -740,7 +742,7 @@ function Configurations() {
             />
             <div className={classNames(styles['printing-settings-wrapper'], 'background-grey-1', 'margin-bottom-16')}>
                 <div className={classNames(styles['printing-settings'], 'height-32', 'background-color-white', 'padding-horizontal-16')}>
-                    <span className={classNames(styles['printing-settings-text'], 'align-c')}>
+                    <span className={classNames(styles['printing-settings-text'], 'align-c', 'white-space-nowrap')}>
                         {i18n._('key-Printing/PrintingConfigurations-Printing Settings')}
                     </span>
                     <SvgIcon

@@ -85,10 +85,10 @@ class MainToolBar extends PureComponent {
                             <div className="width-144">
                                 <div className="width-144 sm-flex">
                                     <Badge status={isConnected ? 'success' : 'default'} />
-                                    <span className="width-130 text-overflow-ellipsis display-inline">{`${find(MACHINE_SERIES, { value: machineInfo?.series })?.seriesLabel}`}</span>
+                                    <span className="width-130 text-overflow-ellipsis display-inline">{i18n._(find(MACHINE_SERIES, { value: machineInfo?.series })?.seriesLabel)}</span>
                                 </div>
                                 <div className="margin-left-14 opacity-precent-50">
-                                    {i18n._(`key-Luban/Machine/Brand-${MACHINE_BRAND_MAP[machineInfo?.series]}`)}
+                                    {i18n._(`key-Luban/Machine/Brand-${MACHINE_BRAND_MAP[machineInfo.series]}`)}
                                 </div>
                             </div>
                             {headType === HEAD_PRINTING && (
