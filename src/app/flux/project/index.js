@@ -281,14 +281,12 @@ export const actions = {
         if (envHeadType === HEAD_PRINTING) {
             const { materialDefinitions, qualityDefinitions, defaultMaterialId: originalMaterialId, defaultQualityId: originalQualityId } = modState;
             let { defaultMaterialId, defaultQualityId } = envObj;
-            console.log('before', defaultMaterialId, defaultQualityId);
             if (!materialDefinitions.find(d => d.definitionId === defaultMaterialId)) {
                 defaultMaterialId = originalMaterialId;
             }
             if (!qualityDefinitions.find(d => d.definitionId === defaultQualityId)) {
                 defaultQualityId = originalQualityId;
             }
-            console.log('after', defaultMaterialId, defaultQualityId);
             dispatch(modActions.updateState({
                 ...restState,
                 defaultMaterialId,

@@ -181,11 +181,21 @@ class DataStorage {
                         'material.petg.def.json'], file)) {
                         const data = fs.readFileSync(src, 'utf8');
                         const json = JSON.parse(data);
-                        if (includes([
-                            'material.abs.def.json',
-                            'material.pla.def.json',
-                            'material.petg.def.json'], file)) {
+                        if (file === 'material.abs.def.json') {
                             json.isRecommended = true;
+                            json.settings.material_type = {
+                                default_value: 'abs'
+                            };
+                        } else if (file === 'material.pla.def.json') {
+                            json.isRecommended = true;
+                            json.settings.material_type = {
+                                default_value: 'pla'
+                            };
+                        } else if (file === 'material.petg.def.json') {
+                            json.isRecommended = true;
+                            json.settings.material_type = {
+                                default_value: 'petg'
+                            };
                         }
                         fs.writeFileSync(src, JSON.stringify(json));
                         printingConfigNames.push(file);

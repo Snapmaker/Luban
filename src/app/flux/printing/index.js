@@ -2040,6 +2040,7 @@ export const actions = {
              primeTowerYDefinition = size.y - primeTowerPositionY - front;
              // const a = size.x * 0.5 + primeTowerModel.transformation.positionX- left;;
              // const b = size.y * 0.5 + primeTowerModel.transformation.positionY - front;
+            console.log('primeTowerBrimEnable && adhesionType', primeTowerBrimEnable, adhesionType);
             if (primeTowerBrimEnable && adhesionType !== 'raft') {
                 const initialLayerLineWidthFactor = activeQualityDefinition?.settings?.initial_layer_line_width_factor?.default_value;
                 const brimLineCount = activeQualityDefinition?.settings?.brim_line_count?.default_value;
