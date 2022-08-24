@@ -2015,44 +2015,7 @@ export const actions = {
         const activeQualityDefinition = qualityDefinitions.find(
             (d) => d.definitionId === defaultQualityId
         );
-        const hasPrimeTower = printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
-            && activeQualityDefinition.settings.prime_tower_enable.default_value;
-        let primeTowerXDefinition = 0;
-        let primeTowerYDefinition = 0;
-        if (hasPrimeTower) {
-            const modelGroupBBox = modelGroup._bbox;
-            const primeTowerModel = modelGroup.primeTower;
-            const primeTowerBrimEnable = activeQualityDefinition?.settings?.prime_tower_brim_enable?.default_value;
-            const adhesionType = activeQualityDefinition?.settings?.adhesion_type?.default_value;
-            const primeTowerWidth = primeTowerModel.boundingBox.max.x
-                - primeTowerModel.boundingBox.min.x;
-            const primeTowerPositionX = modelGroupBBox.max.x
-                 - (primeTowerModel.boundingBox.max.x
-                     + primeTowerModel.boundingBox.min.x
-                     + primeTowerWidth)
-                 / 2;
-             const primeTowerPositionY = modelGroupBBox.max.y
-                 - (primeTowerModel.boundingBox.max.y
-                     + primeTowerModel.boundingBox.min.y
-                     - primeTowerWidth)
-                 / 2;
-             primeTowerXDefinition = size.x - primeTowerPositionX - left;
-             primeTowerYDefinition = size.y - primeTowerPositionY - front;
-             // const a = size.x * 0.5 + primeTowerModel.transformation.positionX- left;;
-             // const b = size.y * 0.5 + primeTowerModel.transformation.positionY - front;
-            console.log('primeTowerBrimEnable && adhesionType', primeTowerBrimEnable, adhesionType);
-            if (primeTowerBrimEnable && adhesionType !== 'raft') {
-                const initialLayerLineWidthFactor = activeQualityDefinition?.settings?.initial_layer_line_width_factor?.default_value;
-                const brimLineCount = activeQualityDefinition?.settings?.brim_line_count?.default_value;
-                const skirtBrimLineWidth = activeQualityDefinition?.settings?.skirt_brim_line_width?.default_value;
-                const diff =  brimLineCount * skirtBrimLineWidth * initialLayerLineWidthFactor / 100;
-                primeTowerXDefinition += diff
-                primeTowerYDefinition += diff
-            }
-            activeQualityDefinition.settings.prime_tower_position_x.default_value = primeTowerXDefinition;
-            activeQualityDefinition.settings.prime_tower_position_y.default_value = primeTowerYDefinition;
-            activeQualityDefinition.settings.prime_tower_size.default_value = primeTowerWidth;
-        }
+
         const indexL = materialDefinitions.findIndex(
             (d) => d.definitionId === defaultMaterialId
         );
@@ -2092,7 +2055,50 @@ export const actions = {
             ...newExtruderRDefinition,
             definitionId: 'snapmaker_extruder_1'
         });
+        console.log('newExtruderLDefinition', newExtruderLDefinition, newExtruderLDefinition?.settings?.skirt_brim_line_width);
+        const hasPrimeTower = printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
+            && activeQualityDefinition.settings.prime_tower_enable.default_value;
+        const adhesionExtruder = helpersExtruderConfig.adhesion;
 
+        let primeTowerXDefinition = 0;
+        let primeTowerYDefinition = 0;
+        if (hasPrimeTower) {
+            const modelGroupBBox = modelGroup._bbox;
+            const primeTowerModel = modelGroup.primeTower;
+            const primeTowerBrimEnable = activeQualityDefinition?.settings?.prime_tower_brim_enable?.default_value;
+            const adhesionType = activeQualityDefinition?.settings?.adhesion_type?.default_value;
+            const primeTowerWidth = primeTowerModel.boundingBox.max.x
+                - primeTowerModel.boundingBox.min.x;
+            const primeTowerPositionX = modelGroupBBox.max.x
+                 - (primeTowerModel.boundingBox.max.x
+                     + primeTowerModel.boundingBox.min.x
+                     + primeTowerWidth)
+                 / 2;
+             const primeTowerPositionY = modelGroupBBox.max.y
+                 - (primeTowerModel.boundingBox.max.y
+                     + primeTowerModel.boundingBox.min.y
+                     - primeTowerWidth)
+                 / 2;
+             primeTowerXDefinition = size.x - primeTowerPositionX - left;
+             primeTowerYDefinition = size.y - primeTowerPositionY - front;
+             // const a = size.x * 0.5 + primeTowerModel.transformation.positionX- left;;
+             // const b = size.y * 0.5 + primeTowerModel.transformation.positionY - front;
+            if (primeTowerBrimEnable && adhesionType !== 'raft') {
+                const initialLayerLineWidthFactor = activeQualityDefinition?.settings?.initial_layer_line_width_factor?.default_value;
+                const brimLineCount = activeQualityDefinition?.settings?.brim_line_count?.default_value;
+                let skirtBrimLineWidth = newExtruderLDefinition?.settings?.skirt_brim_line_width?.default_value;
+                if (adhesionExtruder === '1') {
+                    skirtBrimLineWidth = newExtruderRDefinition?.settings?.skirt_brim_line_width?.default_value;
+                }
+                console.log('primeTowerBrimEnable && adhesionType', primeTowerBrimEnable, adhesionType, brimLineCount, skirtBrimLineWidth, initialLayerLineWidthFactor);
+                const diff =  brimLineCount * skirtBrimLineWidth * initialLayerLineWidthFactor / 100;
+                primeTowerXDefinition += diff;
+                primeTowerYDefinition += diff;
+            }
+            activeQualityDefinition.settings.prime_tower_position_x.default_value = primeTowerXDefinition;
+            activeQualityDefinition.settings.prime_tower_position_y.default_value = primeTowerYDefinition;
+            activeQualityDefinition.settings.prime_tower_size.default_value = primeTowerWidth;
+        }
         modelGroup.unselectAllModels();
         if (isGuideTours) {
             dispatch(
@@ -2140,7 +2146,6 @@ export const actions = {
             hasPrimeTower
         );
 
-        const adhesionExtruder = helpersExtruderConfig.adhesion;
         const supportExtruder = helpersExtruderConfig.support;
         finalDefinition.settings.adhesion_extruder_nr.default_value = adhesionExtruder;
         finalDefinition.settings.support_extruder_nr.default_value = supportExtruder;
