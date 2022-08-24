@@ -29,6 +29,7 @@ import { machineStore } from '../../store/local-storage';
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
 import { logModuleVisit } from '../../lib/gaEvent';
+import { PROCESS_STAGE } from '../../lib/manager/ProgressManager';
 
 const INITIAL_STATE = {
     [HEAD_PRINTING]: {
@@ -189,6 +190,8 @@ export const actions = {
     },
 
     onRecovery: (envHeadType, envObj, backendRecover = true, shouldSetFileName = true, isGuideTours = false) => async (dispatch, getState) => {
+        const { progressStatesManager } = getState().printing;
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
         UniApi.Window.setOpenedFile();
         let { content } = getState().project[envHeadType];
         const { toolHead: { printingToolhead }, size: currentSize } = getState().machine;
@@ -279,7 +282,19 @@ export const actions = {
         }
 
         if (envHeadType === HEAD_PRINTING) {
-            dispatch(modActions.updateState(restState));
+            const { materialDefinitions, qualityDefinitions, defaultMaterialId: originalMaterialId, defaultQualityId: originalQualityId } = modState;
+            let { defaultMaterialId, defaultQualityId } = envObj;
+            if (!materialDefinitions.find(d => d.definitionId === defaultMaterialId)) {
+                defaultMaterialId = originalMaterialId;
+            }
+            if (!qualityDefinitions.find(d => d.definitionId === defaultQualityId)) {
+                defaultQualityId = originalQualityId;
+            }
+            dispatch(modActions.updateState({
+                ...restState,
+                defaultMaterialId,
+                defaultQualityId
+            }));
         } else {
             dispatch(modActions.updateState(envHeadType, restState));
         }

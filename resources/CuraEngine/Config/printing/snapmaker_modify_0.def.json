@@ -1670,6 +1670,7 @@
                     "icon": "first_layer_optimization",
                     "description": "First Layer Optimization",
                     "type": "category",
+                    "visible": "false",
                     "children": {
                         "build_volume_temperature": {
                             "label": "Build Volume Temperature",

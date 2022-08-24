@@ -521,7 +521,7 @@ function ConfigValueBox({
                         <div className="width-percent-70 margin-right-46">
                             <ParamItem
                                 selectedDefinitionModel={definitionForManager}
-                                allParams={definitionForManager.params}
+                                onChangeDefinition={onChangeDefinition}
                             />
                         </div>
                         <div className={classNames(styles['manager-params-docs'], 'width-percent-40 background-grey-3 border-radius-16 position-re', showParamsProfile ? '' : 'width-1-important min-width-1 margin-right-16')}>

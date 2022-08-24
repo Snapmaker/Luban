@@ -361,7 +361,12 @@ function ProfileManager({
                         width="96px"
                         onClick={async () => {
                             const data = refs.refCreateModal.current.getData();
-                            const newDefinitionForManager = cloneDeep(definitionState.definitionForManager);
+                            let newDefinitionForManager;
+                            if (definitionState.definitionForManager.getSerializableDefinition) {
+                                newDefinitionForManager = cloneDeep(definitionState.definitionForManager.getSerializableDefinition());
+                            } else {
+                                newDefinitionForManager = cloneDeep(definitionState.definitionForManager);
+                            }
                             let newName = '';
                             popupActions.close();
                             if (!isCreate) {
@@ -374,7 +379,9 @@ function ProfileManager({
                                     newDefinitionForManager.i18nCategory = data.categoryI18n;
                                     newName = data.itemName;
                                     const newDefinition = await outsideActions.onCreateManagerDefinition(newDefinitionForManager, newName, isCategorySelected);
-                                    actions.onSelectDefinitionById(newDefinition.definitionId, newDefinition.name);
+                                    setTimeout(() => {
+                                        actions.onSelectDefinitionById(newDefinition.definitionId, newDefinition.name);
+                                    }, 50);
                                 }
                             } else {
                                 if (data.createType === 'Category') {
@@ -531,7 +538,7 @@ function ProfileManager({
                     size="lg-profile-manager"
                     className={classNames(styles['manager-body'])}
                     style={{ minWidth: '700px' }}
-                    onClose={customMode ? () => {} : outsideActions.closeManager}
+                    onClose={outsideActions.closeManager}
                 >
                     <Modal.Header>
                         <div className={classNames('heading-3')}>

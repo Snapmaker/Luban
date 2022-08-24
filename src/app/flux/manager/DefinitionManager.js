@@ -507,7 +507,7 @@ class DefinitionManager {
             }
         });
         const nozzleSize = newExtruderDefinition?.settings?.machine_nozzle_size?.default_value;
-        if (nozzleSize && newExtruderDefinition.definitionId === 'snapmaker_extruder_1') {
+        if (nozzleSize) {
             resolveDefinition(newQualityDefinition, [['machine_nozzle_size', nozzleSize]]);
         }
         this.extruderProfileArr.concat(nozzleSizeRelationSettingsKeys).forEach((item) => {

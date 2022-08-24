@@ -80,11 +80,13 @@ function PrintingManager() {
     }, [customConfigs]);
 
     useEffect(() => {
-        const actualDefinitions = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL
-            ? materialDefinitions
-            : qualityDefinitionsModels.filter(d => d?.visible);
-        setAllDefinitions(actualDefinitions);
-    }, [managerDisplayType, materialDefinitions, qualityDefinitionsModels]);
+        if (defaultMaterialId) {
+            const actualDefinitions = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL
+                ? materialDefinitions
+                : qualityDefinitionsModels.filter(d => d?.visible);
+            setAllDefinitions(actualDefinitions);
+        }
+    }, [managerDisplayType, materialDefinitions, qualityDefinitionsModels, defaultMaterialId]);
     if (!showPrintingManager) {
         return null;
     }

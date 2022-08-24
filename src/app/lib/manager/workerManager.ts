@@ -35,7 +35,7 @@ class WorkerManager {
 
     public getPool() {
         if (!this.pool) {
-            this.pool = Pool(async () => spawn(new Worker('./Pool.worker.js'))) as unknown as Pool<Thread>;
+            this.pool = Pool(async () => spawn(new Worker('./Pool.worker.js')), 2) as unknown as Pool<Thread>;
         }
 
         return this.pool;

@@ -45,6 +45,8 @@ const ALL_ICON_NAMES = {
 };
 const qualitySettingRank = [
     'quality.normal_quality',
+    'quality.normal_other_quality',
+    'quality.normal_tpu_quality',
     'quality.fast_print',
     'quality.high_quality',
     'quality.engineering_print'
@@ -72,7 +74,7 @@ export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition
                 changedSettingArray
             })
         );
-        setSelectedDefinition(selectedDefinitionModel);
+        setSelectedDefinition && setSelectedDefinition(selectedDefinitionModel);
         dispatch(printingActions.destroyGcodeLine());
         dispatch(printingActions.displayModel());
     }
@@ -576,7 +578,9 @@ function Configurations() {
         let isAllValueDefault = true;
         if (hasResetButton) {
             const selectedDefaultSetting = actions.getDefaultDefinition(selectedDefinition.definitionId);
-            isAllValueDefault = actions.checkIsAllDefault(selectedDefinition.settings, selectedDefaultSetting);
+            if (selectedDefaultSetting) {
+                isAllValueDefault = actions.checkIsAllDefault(selectedDefinition.settings, selectedDefaultSetting);
+            }
         }
         return (
             <Menu>
@@ -712,7 +716,7 @@ function Configurations() {
                                         <Dropdown
                                             placement="left"
                                             className="display-inline float-right"
-                                            overlay={() => renderProfileMenu(presetDisplayType)}
+                                            overlay={renderProfileMenu(presetDisplayType)}
                                             trigger={['click']}
                                         >
                                             <SvgIcon
@@ -740,7 +744,7 @@ function Configurations() {
             />
             <div className={classNames(styles['printing-settings-wrapper'], 'background-grey-1', 'margin-bottom-16')}>
                 <div className={classNames(styles['printing-settings'], 'height-32', 'background-color-white', 'padding-horizontal-16')}>
-                    <span className={classNames(styles['printing-settings-text'], 'align-c')}>
+                    <span className={classNames(styles['printing-settings-text'], 'align-c', 'white-space-nowrap')}>
                         {i18n._('key-Printing/PrintingConfigurations-Printing Settings')}
                     </span>
                     <SvgIcon
@@ -783,8 +787,7 @@ function Configurations() {
                                 </span>
                                 <Select
                                     clearable={false}
-                                    style={{ border: 'none' }}
-                                    size="150px"
+                                    style={{ border: 'none', width: '100px' }}
                                     bordered={false}
                                     options={CONFIG_DISPLAY_TYPES_OPTIONS}
                                     value={configDisplayType}
