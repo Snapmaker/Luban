@@ -2055,7 +2055,6 @@ export const actions = {
             ...newExtruderRDefinition,
             definitionId: 'snapmaker_extruder_1'
         });
-        console.log('newExtruderLDefinition', newExtruderLDefinition, newExtruderLDefinition?.settings?.skirt_brim_line_width);
         const hasPrimeTower = printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
             && activeQualityDefinition.settings.prime_tower_enable.default_value;
         const adhesionExtruder = helpersExtruderConfig.adhesion;
@@ -2084,13 +2083,12 @@ export const actions = {
              // const a = size.x * 0.5 + primeTowerModel.transformation.positionX- left;;
              // const b = size.y * 0.5 + primeTowerModel.transformation.positionY - front;
             if (primeTowerBrimEnable && adhesionType !== 'raft') {
-                const initialLayerLineWidthFactor = activeQualityDefinition?.settings?.initial_layer_line_width_factor?.default_value;
-                const brimLineCount = activeQualityDefinition?.settings?.brim_line_count?.default_value;
+                const initialLayerLineWidthFactor = activeQualityDefinition?.settings?.initial_layer_line_width_factor?.default_value || 0;
+                const brimLineCount = activeQualityDefinition?.settings?.brim_line_count?.default_value || 0;
                 let skirtBrimLineWidth = newExtruderLDefinition?.settings?.skirt_brim_line_width?.default_value;
                 if (adhesionExtruder === '1') {
                     skirtBrimLineWidth = newExtruderRDefinition?.settings?.skirt_brim_line_width?.default_value;
                 }
-                console.log('primeTowerBrimEnable && adhesionType', primeTowerBrimEnable, adhesionType, brimLineCount, skirtBrimLineWidth, initialLayerLineWidthFactor);
                 const diff =  brimLineCount * skirtBrimLineWidth * initialLayerLineWidthFactor / 100;
                 primeTowerXDefinition += diff;
                 primeTowerYDefinition += diff;
