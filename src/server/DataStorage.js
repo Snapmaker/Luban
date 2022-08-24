@@ -183,17 +183,17 @@ class DataStorage {
                         const json = JSON.parse(data);
                         if (file === 'material.abs.def.json') {
                             json.isRecommended = true;
-                            json.settings.material_type = {
+                            json.overrides.material_type = {
                                 default_value: 'abs'
                             };
                         } else if (file === 'material.pla.def.json') {
                             json.isRecommended = true;
-                            json.settings.material_type = {
+                            json.overrides.material_type = {
                                 default_value: 'pla'
                             };
                         } else if (file === 'material.petg.def.json') {
                             json.isRecommended = true;
-                            json.settings.material_type = {
+                            json.overrides.material_type = {
                                 default_value: 'petg'
                             };
                         }
