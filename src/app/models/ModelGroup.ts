@@ -31,7 +31,6 @@ import { IResult as TRaftResult } from '../workers/plateAdhesion/generateRaft';
 import { IResult as TSkirtResult } from '../workers/plateAdhesion/generateSkirt';
 import { bufferToPoint } from '../lib/buffer-utils';
 import { emitUpdateScaleEvent } from '../ui/components/SMCanvas/TransformControls';
-import clippingPoolManager from '../lib/manager/ClippingPoolManager';
 
 const CUSTOM_EVENTS = {
     UPDATE: { type: 'update' }
@@ -2858,7 +2857,7 @@ class ModelGroup extends EventEmitter {
 
     public setClipperEnable(enable: boolean) {
         this.clipperEnable = enable;
-        clippingPoolManager.setEnable(enable);
+        workerManager.setClipperWorkerEnable(enable);
         if (enable) {
             this.getThreeModels().forEach((model) => {
                 !model.clipper && this.initModelClipper(model);

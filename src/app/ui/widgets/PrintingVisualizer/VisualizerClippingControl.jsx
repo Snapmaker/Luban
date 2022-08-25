@@ -27,7 +27,7 @@ function VisualizerClippingControl({ simplifying }) {
 
     const [value, setValue] = useState(0);
     useEffect(() => {
-        setValue(primeTowerHeight);
+        setValue(primeTowerHeight || PLANE_MAX_HEIGHT);
     }, [primeTowerHeight]);
 
     const [loading, setLoading] = useState(false);
@@ -84,7 +84,7 @@ function VisualizerClippingControl({ simplifying }) {
                         <div style={{ position: 'relative', left: -3, height: '23.22px' }}>
                             {
                                 loading
-                            && <Spin />
+                                && <Spin />
                             }
                         </div>
 
