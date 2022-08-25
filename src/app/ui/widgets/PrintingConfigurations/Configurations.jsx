@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
 import classNames from 'classnames';
 import { cloneDeep, isNil, uniqWith, find as lodashFind } from 'lodash';
-import { Menu } from 'antd';
+import { Menu, Spin } from 'antd';
 import Tooltip from '../../components/Tooltip';
 import modal from '../../../lib/modal';
 import DefinitionCreator from '../../views/DefinitionCreator';
@@ -335,6 +335,7 @@ ParamItem.propTypes = {
 // {i18n._(`key-Printing/PrintingConfigurations-${optionItem.typeOfPrinting}`)}
 function Configurations() {
     const [selectedDefinition, setSelectedDefinition] = useState(null);
+    const [initialized, setInitialized] = useState(false);
     const [minimized, setMinimized] = useState(printingStore.get('printingSettingMinimized') || false);
     const [presetDisplayType, setPresetDisplayType] = useState();
     const [configDisplayType, setConfigDisplayType] = useState(printingStore.get('printingSettingDisplayType') || CONFIG_DISPLAY_TYPES[0]);
@@ -604,6 +605,7 @@ function Configurations() {
     useEffect(() => {
         // re-select definition based on new properties
         if (qualityDefinitionModels.length > 0) {
+            setInitialized(true);
             const definition = qualityDefinitionModels.find(
                 (d) => d.definitionId === defaultQualityId
             );
@@ -618,8 +620,15 @@ function Configurations() {
         }
     }, [defaultQualityId, qualityDefinitionModels]);
 
-    if (!selectedDefinition) {
-        return null;
+    if (!initialized) {
+        return (
+            <div className="height-528">
+                <div className="text-align-center absolute-center">
+                    <Spin />
+                    <div>{i18n._('key-Workspace/Page-Loading...')}</div>
+                </div>
+            </div>
+        );
     }
     return (
         <div>

@@ -92,7 +92,7 @@ const allWidgets = {
 
 
 const pageHeadType = HEAD_PRINTING;
-function useRenderMainToolBar(setSimplifying) {
+function useRenderMainToolBar(setSimplifying, profileInitialized = false) {
     const unSaved = useSelector(state => state?.project[pageHeadType]?.unSaved, shallowEqual);
     const { inProgress, simplifyType, simplifyPercent } = useSelector(state => state?.printing, shallowEqual);
     const enableShortcut = useSelector(state => state?.printing?.enableShortcut, shallowEqual);
@@ -266,6 +266,7 @@ function useRenderMainToolBar(setSimplifying) {
             },
             {
                 title: i18n._('key-3DP/MainToolBar-MaterialSetting'),
+                disabled: !profileInitialized,
                 type: 'button',
                 name: 'MainToolbarMaterialSetting',
                 action: () => {
@@ -275,6 +276,7 @@ function useRenderMainToolBar(setSimplifying) {
             },
             {
                 title: i18n._('key-3DP/MainToolBar-QualitySetting'),
+                disabled: !profileInitialized,
                 type: 'button',
                 name: 'MainToolbarPrintingSetting',
                 action: () => {
@@ -290,6 +292,7 @@ function useRenderMainToolBar(setSimplifying) {
         return (
             <MainToolBar
                 leftItems={leftItems}
+                profileInitialized={profileInitialized}
                 lang={i18next.language}
                 headType={HEAD_PRINTING}
                 hasMachineSettings
@@ -299,7 +302,6 @@ function useRenderMainToolBar(setSimplifying) {
                 setShowMachineMaterialSettings={(bool) => {
                     seriesRef.current = series;
                     toolHeadRef.current = toolHead;
-
                     setShowMachineMaterialSettings(bool);
                 }}
             />
@@ -332,7 +334,7 @@ function Printing({ location }) {
     const [simplifying, setSimplifying] = useState(false);
     const dispatch = useDispatch();
     const history = useHistory();
-    const [renderHomepage, renderMainToolBar, renderWorkspace, renderMachineMaterialSettings] = useRenderMainToolBar(setSimplifying);
+    const [renderHomepage, renderMainToolBar, renderWorkspace, renderMachineMaterialSettings] = useRenderMainToolBar(setSimplifying, materialDefinitions.length);
     const modelGroup = useSelector(state => state.printing.modelGroup);
     const isNewUser = useSelector(state => state.printing.isNewUser);
     const thumbnail = useRef();

@@ -399,7 +399,9 @@ function ProfileManager({
                                         newDefinitionForManager.settings = cloneDeep(allDefinitions[0].settings);
                                     }
                                     const newDefinition = await outsideActions.onCreateManagerDefinition(newDefinitionForManager, newName, data.createType === 'Category', isCreate);
-                                    actions.onSelectDefinitionById(newDefinition.definitionId, newDefinition.name);
+                                    setTimeout(() => {
+                                        actions.onSelectDefinitionById(newDefinition.definitionId, newDefinition.name);
+                                    }, 50);
                                 }
                             }
                         }}

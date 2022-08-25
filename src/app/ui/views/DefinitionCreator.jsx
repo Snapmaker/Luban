@@ -83,7 +83,7 @@ const DefinitionCreator = ({
     const [newOptionValue, setNewOptionsValue] = useState('');
     const [materialOptions, setMaterialOptions] = useState(_materialOptions);
     const [state, setState] = useState({
-        createType: 'Category',
+        createType: copyType || 'Category',
         categoryName: '',
         categoryI18n: '',
         itemName: '',

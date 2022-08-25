@@ -3,7 +3,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
-
+import classNames from 'classnames';
 import { connect } from 'react-redux';
 import Widget from '../../components/Widget';
 import SvgIcon from '../../components/SvgIcon';
@@ -84,7 +84,9 @@ class WidgetContainer extends PureComponent {
         return (
             <Widget
                 style={{ display: this.state.display ? '' : 'none', margin: '16px 16px 60px' }}
-                className="border-bottom-normal padding-bottom-16"
+                className={classNames(
+                    widgetId !== '3dp-configurations' ? 'border-bottom-normal padding-bottom-16' : 'padding-bottom-16',
+                )}
                 fullscreen={state.fullscreen}
             >
                 {state.title && (

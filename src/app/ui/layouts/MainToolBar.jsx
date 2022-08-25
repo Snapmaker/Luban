@@ -19,6 +19,7 @@ class MainToolBar extends PureComponent {
         mainBarClassName: PropTypes.string,
         lang: PropTypes.string,
         headType: PropTypes.string,
+        profileInitialized: PropTypes.bool,
         hasMachineSettings: PropTypes.bool,
         machineInfo: PropTypes.object,
         isConnected: PropTypes.bool,
@@ -80,7 +81,11 @@ class MainToolBar extends PureComponent {
                     }))}
                 </div> */}
                 {hasMachineSettings && (
-                    <Anchor onClick={() => (headType === HEAD_PRINTING ? setShowMachineMaterialSettings(true) : null)} key="machineMaterialSettings">
+                    <Anchor
+                        onClick={() => (headType === HEAD_PRINTING ? setShowMachineMaterialSettings(true) : null)}
+                        key="machineMaterialSettings"
+                        disabled={!this.props.profileInitialized}
+                    >
                         <div className="machine-setting width-360 background-grey-3 height-50 float-r border-radius-8 sm-flex justify-space-between padding-vertical-4 padding-horizontal-8">
                             <div className="width-144">
                                 <div className="width-144 sm-flex">
