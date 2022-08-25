@@ -92,7 +92,7 @@ class ClippingModel {
         this.clippingSkin = this.createLine(CLIPPING_LINE_COLOR);
         this.clippingSkinArea = this.createLine(CLIPPING_LINE_COLOR);
         this.clippingInfill = this.createLine(CLIPPING_LINE_COLOR);
-        this.reCala();
+        this.startCala();
 
         this.createPlaneStencilGroup();
         this.group.add(this.clippingWall, this.clippingSkin, this.clippingSkinArea, this.clippingInfill);
@@ -143,7 +143,7 @@ class ClippingModel {
         });
         if (re) {
             this.updateBvhGeometry(transformation);
-            this.reCala();
+            this.startCala();
             return true;
         }
 
@@ -153,7 +153,7 @@ class ClippingModel {
         });
         if (re) {
             this.updateBvhGeometry(transformation);
-            this.reCala();
+            this.startCala();
             return true;
         }
         return false;
@@ -170,15 +170,17 @@ class ClippingModel {
         this.infillMap.clear();
     }
 
-    private reCala = debounce(this.calaClippingWall, 1000);
-    public async calaClippingWall() {
+    private startCala = () => {
+        this.busy = true;
+        this.calaClippingWall();
+    }
+
+    private calaClippingWall = debounce(() => {
         this.modelGroup.clippingFinish(false);
         this.clear();
-
         if (!workerManager.clipperWorkerEnable) {
             return;
         }
-        this.busy = true;
         this.model.computeBoundingBox();
 
         const modelMatrix = new THREE.Matrix4();
@@ -214,7 +216,7 @@ class ClippingModel {
             this.clear();
             this.modelGroup.clippingFinish(false);
         });
-    }
+    }, 1000)
 
 
     private getInfillConfig(clippingHeight: number) {
@@ -286,7 +288,7 @@ class ClippingModel {
         ) {
             this.clippingConfig = config;
             this.setLocalPlane(PLANE_MAX_HEIGHT);
-            this.reCala();
+            this.startCala();
         } else if (this.clippingConfig.infillPattern !== config.infillPattern) {
             this.clippingConfig = config;
             this.updateClippingInfill(this.localPlane.constant);
@@ -438,6 +440,8 @@ class ClippingModel {
     }
 
     public onTransform() {
+        workerManager.stopCalculateSectionPoints(this.model.modelID);
+
         const position = new THREE.Vector3();
         this.modelMeshObject.getWorldPosition(position);
         const scale = new THREE.Vector3();
