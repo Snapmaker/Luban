@@ -30,7 +30,6 @@ import { TRANSLATE_MODE } from '../../../constants';
 import { toast } from '../Toast';
 import { ToastWapper } from '../Toast/toastContainer';
 import i18n from '../../../lib/i18n';
-import ControlsInput from './ControlsInput';
 
 const ANIMATION_DURATION = 500;
 const DEFAULT_MODEL_POSITION = new Vector3(0, 0, 0);
@@ -70,7 +69,6 @@ class Canvas extends PureComponent {
         onModelAfterTransform: PropTypes.func,
         onModelBeforeTransform: PropTypes.func,
         onRotationPlacementSelect: PropTypes.func,
-        onControlInputTransform: PropTypes.func,
 
         // tmp
         canOperateModel: PropTypes.bool,
@@ -385,7 +383,7 @@ class Canvas extends PureComponent {
         this.node.current.appendChild(this.renderer.domElement);
     }
 
-    checkoutModelsLocatin() {
+    detectionLocation() {
         toast.dismiss();
         const hasOverstepped = this.modelGroup.selectedModelArray.some((model) => {
             return model.overstepped;
@@ -463,7 +461,7 @@ class Canvas extends PureComponent {
                 this.controls.transformControl.mode,
                 this.controls.transformControl.axis
             );
-            this.checkoutModelsLocatin();
+            this.detectionLocation();
         });
         this.controls.on(EVENTS.SELECT_PLACEMENT_FACE, (userData) => {
             this.onRotationPlacementSelect(userData);
@@ -898,9 +896,6 @@ class Canvas extends PureComponent {
 
     renderScene() {
         if (!this.isCanvasInitialized()) return;
-        if (this.modelGroup.selectedModelIsHidden instanceof Function && this.modelGroup.selectedModelIsHidden()) {
-            this.transformSourceType === '3D' && this.controls.transformControl.hideAllPeripherals();
-        }
         if (this.transformSourceType === '2D') {
             this.light.position.copy(this.camera.position);
         }
@@ -1002,18 +997,13 @@ class Canvas extends PureComponent {
             return Detector.getWebGLErrorMessage();
         }
         return (
-            <>
-                <div
-                    id="smcanvas"
-                    ref={this.node}
-                    style={{
-                        backgroundColor: '#F5F5F7'
-                    }}
-                />
-                {
-                    this.props.onControlInputTransform && <ControlsInput onControlInputTransform={this.props.onControlInputTransform} />
-                }
-            </>
+            <div
+                id="smcanvas"
+                ref={this.node}
+                style={{
+                    backgroundColor: '#F5F5F7'
+                }}
+            />
         );
     }
 }
