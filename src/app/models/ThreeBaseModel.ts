@@ -4,8 +4,12 @@ import EventEmitter from 'events';
 import { HEAD_PRINTING } from '../constants';
 import { SvgModelElement } from './BaseModel';
 import type ModelGroup from './ModelGroup';
-import type ThreeGroup from './ThreeGroup';
+import ThreeGroup from './ThreeGroup';
 import { TDisplayedType } from './ModelGroup';
+import ThreeUtils from '../three-extensions/ThreeUtils';
+import workerManager from '../lib/manager/workerManager';
+/* eslint-disable-next-line */
+const { Transfer } = require('threads');
 
 export type ModelTransformation = {
     positionX?: number;
@@ -227,6 +231,72 @@ export default class BaseModel extends EventEmitter {
         }
         this.transformation = { ...this.transformation };
         return this.transformation;
+    }
+
+
+    public async analyzeRotation() {
+        return new Promise((resolve, reject) => {
+            if (this.sourceType !== '3d' || !this.convexGeometry) {
+                resolve(null);
+            }
+            const selectedModelInfo = [],
+                positionAttribute = [],
+                normalAttribute = [];
+            const revertParentArr = [];
+            let geometry = null;
+            if (this instanceof ThreeGroup) {
+                this.computeConvex && this.computeConvex();
+                geometry = this.mergedGeometry;
+            } else {
+                geometry = this.meshObject.geometry;
+            }
+            const revertParent = ThreeUtils.removeObjectParent(
+                this.meshObject
+            );
+            revertParentArr.push(revertParent);
+            this.meshObject.updateMatrixWorld();
+            geometry.computeBoundingBox();
+            const inverseNormal = this.transformation.scaleX / Math.abs(this.transformation.scaleX) < 0;
+
+            const modelItemInfo = {
+                matrixWorld: this.meshObject.matrixWorld,
+                convexGeometry: this.convexGeometry,
+                inverseNormal
+            };
+            selectedModelInfo.push(modelItemInfo);
+            positionAttribute.push(geometry.getAttribute('position'));
+            normalAttribute.push(geometry.getAttribute('normal'));
+
+            workerManager.autoRotateModels(
+                {
+                    selectedModelInfo,
+                    positionAttribute: Transfer(positionAttribute),
+                    normalAttribute: Transfer(normalAttribute)
+                },
+                payload => {
+                    const { status, value } = payload;
+                    switch (status) {
+                        case 'PARTIAL_SUCCESS': {
+                            const { index } = value;
+                            const { planes } = value;
+                            value.planes = planes.map(({ normal, constant }) => {
+                                return new THREE.Plane(new THREE.Vector3(normal.x, normal.y, normal.z), constant);
+                            });
+                            const revertParentFunc = revertParentArr[index];
+                            revertParentFunc && revertParentFunc();
+                            resolve(value);
+                            break;
+                        }
+                        case 'ERROR': {
+                            reject();
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                }
+            );
+        });
     }
 
     private setSelectedGroup(isSelected?: boolean) {
