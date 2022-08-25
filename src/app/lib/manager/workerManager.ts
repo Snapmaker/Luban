@@ -55,39 +55,47 @@ class WorkerManager extends EventEmitter {
     }
 
     public arrangeModels<T>(data: unknown, onMessage: (data: T) => void, onComplete?: () => void) {
-        this.exec('arrangeModels', data, onMessage, onComplete);
+        return this.exec('arrangeModels', data, onMessage, onComplete);
     }
 
     public autoRotateModels<T>(data: unknown, onMessage: (data: T) => void, onComplete?: () => void) {
-        this.exec('autoRotateModels', data, onMessage, onComplete);
+        return this.exec('autoRotateModels', data, onMessage, onComplete);
     }
 
     public boxSelect<T>(data: unknown, onMessage: (data: T) => void, onComplete?: () => void) {
-        this.exec('boxSelect', data, onMessage, onComplete);
+        return this.exec('boxSelect', data, onMessage, onComplete);
     }
 
     public gcodeToArraybufferGeometry<T>(data: unknown, onMessage: (data: T) => void, onComplete?: () => void) {
-        this.exec('gcodeToArraybufferGeometry', data, onMessage, onComplete);
+        return this.exec('gcodeToArraybufferGeometry', data, onMessage, onComplete);
     }
 
     public gcodeToBufferGeometry<T>(data: unknown, onMessage: (data: T) => void, onComplete?: () => void) {
-        this.exec('gcodeToBufferGeometry', data, onMessage, onComplete);
+        return this.exec('gcodeToBufferGeometry', data, onMessage, onComplete);
     }
 
     public loadModel<T>(data: unknown, onMessage: (data: T) => void, onComplete?: () => void) {
-        this.exec('loadModel', data, onMessage, onComplete);
+        return this.exec('loadModel', data, onMessage, onComplete);
     }
 
     public scaleToFitWithRotate<T>(data: unknown, onMessage: (data: T) => void, onComplete?: () => void) {
-        this.exec('scaleToFitWithRotate', data, onMessage, onComplete);
+        return this.exec('scaleToFitWithRotate', data, onMessage, onComplete);
     }
 
     public toolpathRenderer<T>(data: unknown, onMessage: (data: T) => void, onComplete?: () => void) {
-        this.exec('toolpathRenderer', data, onMessage, onComplete);
+        return this.exec('toolpathRenderer', data, onMessage, onComplete);
     }
 
     public generatePlateAdhesion<T>(data: unknown, onMessage: (data: T) => void, onComplete?: () => void) {
-        this.exec('generatePlateAdhesion', data, onMessage, onComplete);
+        return this.exec('generatePlateAdhesion', data, onMessage, onComplete);
+    }
+
+    public async stopCalculateSectionPoints(modelID: string) {
+        const preListener = this.listenerMap.get(modelID);
+        if (preListener) {
+            // remove the last listening in time
+            this.removeListener(...preListener);
+        }
     }
 
     public async calculateSectionPoints<T>(data: TCalculateSectionPointsMessage) {
@@ -103,11 +111,6 @@ class WorkerManager extends EventEmitter {
         const jobID = Math.random();
         const modelID = data.modelID;
         return new Promise<T>((resolve, reject) => {
-            const preListener = this.listenerMap.get(modelID);
-            if (preListener) {
-                // remove the last listening in time
-                this.removeListener(...preListener);
-            }
             const listener = (res) => {
                 // get from worker
                 if (res.type === 'CANCEL') {

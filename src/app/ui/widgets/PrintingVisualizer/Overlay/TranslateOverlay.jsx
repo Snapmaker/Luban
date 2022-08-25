@@ -119,13 +119,11 @@ const TranslateOverlay = React.memo(({
         dispatch(machineActions.updateArrangeSettings(settings));
     };
 
-    const updatePosition = (event) => {
+    const updatePosition = throttle((event) => {
         const { detail } = event;
-        throttle(() => {
-            setMoveX(detail.position.x);
-            setMoveY(detail.position.y);
-        }, 1000)();
-    };
+        setMoveX(detail.position.x);
+        setMoveY(detail.position.y);
+    }, 1000);
     useEffect(() => {
         window.addEventListener('update-position', updatePosition);
         return () => {
