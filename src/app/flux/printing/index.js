@@ -4239,6 +4239,7 @@ export const actions = {
                 combinedOperations: []
             })
         );
+        modelGroup.calaClippingMap();
     },
 
     rotateByPlane: targetPlane => (dispatch, getState) => {

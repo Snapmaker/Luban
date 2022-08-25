@@ -8,6 +8,7 @@ import styles from './styles.styl';
 import { actions as printingActions } from '../../../flux/printing';
 import { ModelEvents } from '../../../models/events';
 import { PLANE_MAX_HEIGHT } from '../../../models/ModelGroup';
+import workerManager from '../../../lib/manager/workerManager';
 
 function VisualizerClippingControl({ simplifying }) {
     const transformMode = useSelector(state => state?.printing?.transformMode, shallowEqual);
@@ -45,6 +46,17 @@ function VisualizerClippingControl({ simplifying }) {
         };
     }, []);
 
+    const [isSpecialMode, setIsSpecialMode] = useState(false);
+    useEffect(() => {
+        if (transformMode === 'rotate-placement' || transformMode === 'support-edit') {
+            workerManager.clipperWorkerEnable = false;
+            setIsSpecialMode(true);
+        } else {
+            workerManager.setClipperWorkerEnable();
+            setIsSpecialMode(false);
+        }
+    }, [transformMode]);
+
     const update = useRef(throttle((v) => {
         return dispatch(printingActions.updateClippingPlane(v));
     }, 300));
@@ -54,8 +66,6 @@ function VisualizerClippingControl({ simplifying }) {
         setValue(height);
         update.current(height);
     };
-
-    const isSpecialMode = transformMode === 'rotate-placement' || transformMode === 'support-edit';
 
     return (
         <React.Fragment>

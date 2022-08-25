@@ -7,19 +7,6 @@ import CalculateSectionPoints, { IMessage as TCalculateSectionPointsMessage } fr
 import { machineStore } from '../../store/local-storage';
 
 type TListener = [string, (res: unknown) => void]
-
-export enum WorkerMethods {
-    arrangeModels = 'arrangeModels',
-    autoRotateModels = 'autoRotateModels',
-    boxSelect = 'boxSelect',
-    gcodeToArraybufferGeometry = 'gcodeToArraybufferGeometry',
-    gcodeToBufferGeometry = 'gcodeToBufferGeometry',
-    loadModel = 'loadModel',
-    scaleToFitWithRotate = 'scaleToFitWithRotate',
-    toolpathRenderer = 'toolpathRenderer',
-    generatePlateAdhesion = 'generatePlateAdhesion',
-}
-
 class WorkerManager extends EventEmitter {
     private pool: Pool<Thread>;
     private clipperWorker: Worker;
@@ -29,19 +16,24 @@ class WorkerManager extends EventEmitter {
 
     public constructor() {
         super();
-        let enable3dpLivePreview = machineStore.get('enable3dpLivePreview');
-        if (isUndefined(enable3dpLivePreview)) {
-            enable3dpLivePreview = true;
-        }
-        this.clipperWorkerEnable = enable3dpLivePreview;
+        this.setClipperWorkerEnable();
     }
 
+    public setClipperWorkerEnable(bool?: boolean): void;
     public setClipperWorkerEnable(bool: boolean) {
-        if (!bool && this.clipperWorkerEnable) {
-            this.clipperWorker.terminate();
-            this.clipperWorker = null;
+        if (isUndefined(bool)) {
+            let enable3dpLivePreview = machineStore.get('enable3dpLivePreview');
+            if (isUndefined(enable3dpLivePreview)) {
+                enable3dpLivePreview = true;
+            }
+            this.clipperWorkerEnable = enable3dpLivePreview;
+        } else {
+            if (!bool && this.clipperWorkerEnable) {
+                this.clipperWorker.terminate();
+                this.clipperWorker = null;
+            }
+            this.clipperWorkerEnable = bool;
         }
-        this.clipperWorkerEnable = bool;
     }
 
     public getPool() {
@@ -154,5 +146,5 @@ class WorkerManager extends EventEmitter {
     }
 }
 
-const manager = new WorkerManager();
-export default manager;
+const workerManager = new WorkerManager();
+export default workerManager;
