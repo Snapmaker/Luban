@@ -386,6 +386,7 @@ class Controls extends EventEmitter {
             // const mousePosition = new THREE.Vector3();
             // this.ray.ray.intersectPlane(this.horizontalPlane, mousePosition);
             this.emit(EVENTS.UPDATE);
+            return;
         }
         if (this.state === STATE.ROTATE_PLACEMENT) {
             // Let transform control deal with mouse move

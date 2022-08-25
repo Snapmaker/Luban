@@ -61,7 +61,7 @@ class MainToolBar extends PureComponent {
                         'white-space-nowrap'
                     )}
                 >
-                    {leftItems && (leftItems.map((menuItem) => {
+                    {leftItems && (leftItems.filter(item => item).map((menuItem) => {
                         return <MenuItem key={key++} menuItem={menuItem} actions={actions} lang={lang} headType={headType} />;
                     }))}
                 </div>

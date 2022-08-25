@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Tooltip } from 'antd';
 import { noop, includes } from 'lodash';
@@ -10,15 +10,18 @@ import { longLangWithType } from '../../constants';
 // import Anchor from '../components/Anchor';
 
 function MenuItem({ menuItem, actions, lang, headType }) {
-    if (!menuItem) {
-        return null;
-    }
     const { type = 'button', name = 'Copy', iconClassName, title, inputInfo, disabled = false } = menuItem;
     const { customRender = noop } = menuItem;
     function handleClick() {
         actions.handleClick(menuItem.action);
     }
-    switch (type) {
+
+    const [itemType, setTtemType] = useState(type);
+    useEffect(() => {
+        setTtemType(type);
+    }, [type]);
+
+    switch (itemType) {
         case 'separator':
             return (
                 <div className={styles.separator} />

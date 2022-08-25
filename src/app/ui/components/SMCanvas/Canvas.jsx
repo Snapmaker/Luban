@@ -383,6 +383,40 @@ class Canvas extends PureComponent {
         this.node.current.appendChild(this.renderer.domElement);
     }
 
+    detectionLocation() {
+        toast.dismiss();
+        const hasOverstepped = this.modelGroup.selectedModelArray.some((model) => {
+            return model.overstepped;
+        });
+        if (hasOverstepped) {
+            toast(ToastWapper(i18n._('key-Printing/This is the non printable area'), 'WarningTipsWarning', '#FFA940'));
+        } else if (this.props.printableArea.isPointInShape) {
+            const useHotMatialModels = this.modelGroup.isOversteppedHotArea();
+            if (useHotMatialModels) {
+                let hasOversteppedHotArea = false;
+                useHotMatialModels.forEach((model) => {
+                    const bbox = model.boundingBox;
+                    const points = [
+                        bbox.max,
+                        bbox.min,
+                        new Vector3(bbox.max.x, bbox.min.y, 0),
+                        new Vector3(bbox.min.x, bbox.max.y, 0),
+                    ];
+                    const inHotArea = points.every((point) => {
+                        return this.props.printableArea.isPointInShape(point);
+                    });
+                    model.hasOversteppedHotArea = !inHotArea;
+                    if (!inHotArea) {
+                        hasOversteppedHotArea = true;
+                    }
+                });
+                if (hasOversteppedHotArea) {
+                    toast(ToastWapper(i18n._('key-Printing/Place the model within the High-temperature Zone to get a temperature higher than 80℃.'), 'WarningTipsWarning', '#1890FF'));
+                }
+            }
+        }
+    }
+
     setupControls() {
         this.initialTarget = this.props.cameraInitialTarget;
 
@@ -427,38 +461,7 @@ class Canvas extends PureComponent {
                 this.controls.transformControl.mode,
                 this.controls.transformControl.axis
             );
-            const hasOverstepped = this.modelGroup.selectedModelArray.some((model) => {
-                return model.overstepped;
-            });
-            if (hasOverstepped) {
-                toast.dismiss();
-                toast(ToastWapper(i18n._('key-Printing/This is the non printable area'), 'WarningTipsWarning', '#FFA940'));
-            } else if (this.props.printableArea.isPointInShape) {
-                const useHotMatialModels = this.modelGroup.isOversteppedHotArea();
-                if (useHotMatialModels) {
-                    let hasOversteppedHotArea = false;
-                    useHotMatialModels.forEach((model) => {
-                        const bbox = model.boundingBox;
-                        const points = [
-                            bbox.max,
-                            bbox.min,
-                            new Vector3(bbox.max.x, bbox.min.y, 0),
-                            new Vector3(bbox.min.x, bbox.max.y, 0),
-                        ];
-                        const inHotArea = points.every((point) => {
-                            return this.props.printableArea.isPointInShape(point);
-                        });
-                        model.hasOversteppedHotArea = !inHotArea;
-                        if (!inHotArea) {
-                            hasOversteppedHotArea = true;
-                        }
-                    });
-                    if (hasOversteppedHotArea) {
-                        toast.dismiss();
-                        toast(ToastWapper(i18n._('key-Printing/Place the model within the High-temperature Zone to get a temperature higher than 80℃.'), 'WarningTipsWarning', '#1890FF'));
-                    }
-                }
-            }
+            this.detectionLocation();
         });
         this.controls.on(EVENTS.SELECT_PLACEMENT_FACE, (userData) => {
             this.onRotationPlacementSelect(userData);
@@ -892,103 +895,101 @@ class Canvas extends PureComponent {
     }
 
     renderScene() {
-        throttle(() => {
-            if (!this.isCanvasInitialized()) return;
-            if (this.transformSourceType === '2D') {
-                this.light.position.copy(this.camera.position);
+        if (!this.isCanvasInitialized()) return;
+        if (this.transformSourceType === '2D') {
+            this.light.position.copy(this.camera.position);
+        }
+        if (
+            this.transformSourceType === '3D'
+            && this.controls.transformControl.mode !== 'mirror'
+            && this.modelGroup?.selectedModelArray
+            && this.modelGroup.selectedModelArray[0]?.type !== 'primeTower'
+        ) {
+            switch (this.controls.transformControl.mode) {
+                case 'translate':
+                    this.cloneControlPeripheral = this.controls.transformControl.translatePeripheral.clone();
+                    break;
+                case 'rotate':
+                    this.cloneControlPeripheral = this.controls.transformControl.rotatePeripheral.clone();
+                    break;
+                case 'scale':
+                    this.cloneControlPeripheral = this.controls.transformControl.scalePeripheral.clone();
+                    break;
+                default:
+                    this.cloneControlPeripheral = this.controls.transformControl.translatePeripheral.clone();
+                    break;
             }
+            this.cloneControlPeripheral.updateMatrixWorld();
+            this.controlFrontLeftTop.setFromMatrixPosition(
+                this.cloneControlPeripheral.matrixWorld
+            );
+            this.controlFrontLeftTop.project(this.camera);
+            inputDOM = document.getElementById('control-input');
+            inputDOM2 = document.getElementById('control-input-2');
+            parentDOM = document.getElementById('smcanvas');
+            this.inputLeftOffset = inputDOM2 ? 104 : 48; // one input width is 96, if has inputDOM2, inputDOM has marginRight 16px
+            this.canvasWidthHalf = parentDOM.clientWidth * 0.5;
+            this.canvasHeightHalf = parentDOM.clientHeight * 0.5;
             if (
-                this.transformSourceType === '3D'
-                && this.controls.transformControl.mode !== 'mirror'
-                && this.modelGroup?.selectedModelArray
-                && this.modelGroup.selectedModelArray[0]?.type !== 'primeTower'
-            ) {
-                switch (this.controls.transformControl.mode) {
-                    case 'translate':
-                        this.cloneControlPeripheral = this.controls.transformControl.translatePeripheral.clone();
-                        break;
-                    case 'rotate':
-                        this.cloneControlPeripheral = this.controls.transformControl.rotatePeripheral.clone();
-                        break;
-                    case 'scale':
-                        this.cloneControlPeripheral = this.controls.transformControl.scalePeripheral.clone();
-                        break;
-                    default:
-                        this.cloneControlPeripheral = this.controls.transformControl.translatePeripheral.clone();
-                        break;
-                }
-                this.cloneControlPeripheral.updateMatrixWorld();
-                this.controlFrontLeftTop.setFromMatrixPosition(
-                    this.cloneControlPeripheral.matrixWorld
-                );
-                this.controlFrontLeftTop.project(this.camera);
-                inputDOM = document.getElementById('control-input');
-                inputDOM2 = document.getElementById('control-input-2');
-                parentDOM = document.getElementById('smcanvas');
-                this.inputLeftOffset = inputDOM2 ? 104 : 48; // one input width is 96, if has inputDOM2, inputDOM has marginRight 16px
-                this.canvasWidthHalf = parentDOM.clientWidth * 0.5;
-                this.canvasHeightHalf = parentDOM.clientHeight * 0.5;
-                if (
-                    Math.abs(
-                        parseFloat(this.inputPositionLeft)
-                        - (this.controlFrontLeftTop.x * this.canvasWidthHalf
-                            + this.canvasWidthHalf
-                            - this.inputLeftOffset)
-                    ) > 10
-                    || Math.abs(
-                        parseFloat(this.inputPositionTop)
-                        - (-(
-                            this.controlFrontLeftTop.y
-                            * this.canvasHeightHalf
-                        )
-                            + this.canvasHeightHalf
-                            - 220)
-                    ) > 10
-                ) {
-                    this.inputPositionLeft = `${this.controlFrontLeftTop.x * this.canvasWidthHalf
+                Math.abs(
+                    parseFloat(this.inputPositionLeft)
+                    - (this.controlFrontLeftTop.x * this.canvasWidthHalf
                         + this.canvasWidthHalf
-                        - this.inputLeftOffset}px`;
-                    this.inputPositionTop = `${-(this.controlFrontLeftTop.y * this.canvasHeightHalf)
+                        - this.inputLeftOffset)
+                ) > 10
+                || Math.abs(
+                    parseFloat(this.inputPositionTop)
+                    - (-(
+                        this.controlFrontLeftTop.y
+                        * this.canvasHeightHalf
+                    )
                         + this.canvasHeightHalf
-                        - 220}px`;
-                }
-                inputDOM && (inputDOM.style.top = this.inputPositionTop);
-                inputDOM && (inputDOM.style.left = this.inputPositionLeft);
-                if (
-                    this.controls.transformControl.mode === TRANSLATE_MODE
-                    && (this.controls.transformControl.axis === 'XY'
-                        || this.controls.transformControl.axis === null)
-                ) {
-                    inputDOM2 && (inputDOM2.style.top = this.inputPositionTop);
-                    inputDOM2
-                        && (inputDOM2.style.left = `${parseFloat(this.inputPositionLeft) + 120}px`);
-                    inputDOM2
-                        && this.controls.transformControl.dragging
-                        && (inputDOM2.style.display = 'block');
-                }
-                this.controls.transformControl.dragging
-                    && inputDOM
-                    && (inputDOM.style.display = 'block');
-            }
-            if (
-                this.transformSourceType === '3D'
-                && (!this.modelGroup.selectedModelArray?.length
-                    || !this.modelGroup.isSelectedModelAllVisible())
+                        - 220)
+                ) > 10
             ) {
-                inputDOM && (inputDOM.style.display = 'none');
-                inputDOM2 && (inputDOM2.style.display = 'none');
+                this.inputPositionLeft = `${this.controlFrontLeftTop.x * this.canvasWidthHalf
+                    + this.canvasWidthHalf
+                    - this.inputLeftOffset}px`;
+                this.inputPositionTop = `${-(this.controlFrontLeftTop.y * this.canvasHeightHalf)
+                    + this.canvasHeightHalf
+                    - 220}px`;
             }
-            if (this.controls.transformControl.mode === null) {
-                inputDOM && (inputDOM.style.display = 'none');
-                inputDOM2 && (inputDOM2.style.display = 'none');
+            inputDOM && (inputDOM.style.top = this.inputPositionTop);
+            inputDOM && (inputDOM.style.left = this.inputPositionLeft);
+            if (
+                this.controls.transformControl.mode === TRANSLATE_MODE
+                && (this.controls.transformControl.axis === 'XY'
+                    || this.controls.transformControl.axis === null)
+            ) {
+                inputDOM2 && (inputDOM2.style.top = this.inputPositionTop);
+                inputDOM2
+                    && (inputDOM2.style.left = `${parseFloat(this.inputPositionLeft) + 120}px`);
+                inputDOM2
+                    && this.controls.transformControl.dragging
+                    && (inputDOM2.style.display = 'block');
             }
-            if (this.controls.transformControl.mode === 'scale' && this.modelGroup.selectedModelArray?.length > 1) {
-                inputDOM && (inputDOM.style.display = 'none');
-                inputDOM2 && (inputDOM2.style.display = 'none');
-            }
-            this.renderer.render(this.scene, this.camera);
-            TWEEN.update();
-        }, renderT)();
+            this.controls.transformControl.dragging
+                && inputDOM
+                && (inputDOM.style.display = 'block');
+        }
+        if (
+            this.transformSourceType === '3D'
+            && (!this.modelGroup.selectedModelArray?.length
+                || !this.modelGroup.isSelectedModelAllVisible())
+        ) {
+            inputDOM && (inputDOM.style.display = 'none');
+            inputDOM2 && (inputDOM2.style.display = 'none');
+        }
+        if (this.controls.transformControl.mode === null) {
+            inputDOM && (inputDOM.style.display = 'none');
+            inputDOM2 && (inputDOM2.style.display = 'none');
+        }
+        if (this.controls.transformControl.mode === 'scale' && this.modelGroup.selectedModelArray?.length > 1) {
+            inputDOM && (inputDOM.style.display = 'none');
+            inputDOM2 && (inputDOM2.style.display = 'none');
+        }
+        this.renderer.render(this.scene, this.camera);
+        TWEEN.update();
     }
 
     render() {

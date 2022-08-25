@@ -318,17 +318,6 @@ const ACTION_UPDATE_TRANSFORMATION = 'printing/ACTION_UPDATE_TRANSFORMATION';
 const createLoadModelWorker = (uploadPath, onMessage) => {
     const task = {
         worker: workerManager.loadModel(uploadPath, data => {
-            const { type } = data;
-
-            switch (type) {
-                case 'LOAD_MODEL_FAILED':
-                    task.worker.then(result => {
-                        result.terminate();
-                    });
-                    break;
-                default:
-                    break;
-            }
             for (const fn of task.cbOnMessage) {
                 if (typeof fn === 'function') {
                     fn(data);
@@ -627,22 +616,7 @@ export const actions = {
         let supportLineWidth = 0;
         switch (adhesionType) {
             case 'skirt': {
-               const skirtLineCount = activeQualityDefinition?.settings?.skirt_line_count
-                   ?.default_value;
-               supportLineWidth = extruderLDefinitionSettings?.machine_nozzle_size
-                   ?.default_value ?? 0;
-               if (
-                   helpersExtruderConfig.adhesion === RIGHT_EXTRUDER_MAP_NUMBER
-               ) {
-                   supportLineWidth = extruderRDefinitionSettings.machine_nozzle_size
-                       .default_value;
-               }
-               border = 7 + (skirtLineCount - 1) * supportLineWidth ;
-
-               break;
-           }
-            case 'brim': {
-                    const brimLineCount = activeQualityDefinition?.settings?.brim_line_count
+                const skirtLineCount = activeQualityDefinition?.settings?.skirt_line_count
                     ?.default_value;
                 supportLineWidth = extruderLDefinitionSettings?.machine_nozzle_size
                     ?.default_value ?? 0;
@@ -652,7 +626,22 @@ export const actions = {
                     supportLineWidth = extruderRDefinitionSettings.machine_nozzle_size
                         .default_value;
                 }
-                border = brimLineCount * supportLineWidth ;
+                border = 7 + (skirtLineCount - 1) * supportLineWidth;
+
+                break;
+            }
+            case 'brim': {
+                const brimLineCount = activeQualityDefinition?.settings?.brim_line_count
+                    ?.default_value;
+                supportLineWidth = extruderLDefinitionSettings?.machine_nozzle_size
+                    ?.default_value ?? 0;
+                if (
+                    helpersExtruderConfig.adhesion === RIGHT_EXTRUDER_MAP_NUMBER
+                ) {
+                    supportLineWidth = extruderRDefinitionSettings.machine_nozzle_size
+                        .default_value;
+                }
+                border = brimLineCount * supportLineWidth;
                 break;
             }
             case 'raft': {
@@ -788,7 +777,7 @@ export const actions = {
     },
 
     initSocketEvent: () => async (dispatch, getState) => {
-        const { modelGroup, qualityDefinitions, defaultQualityId} = getState().printing;
+        const { modelGroup, qualityDefinitions, defaultQualityId } = getState().printing;
         const {
             toolHead: { printingToolhead },
         } = getState().machine;
@@ -1437,7 +1426,7 @@ export const actions = {
                     const extruderLDefinition = state.extruderLDefinition;
                     const activeMaterialType = dispatch(actions.getActiveMaterialType());
                     while (definitions.find((e) => {
-                        if((definition.category && e.category === definition.category && e.name === name)
+                        if ((definition.category && e.category === definition.category && e.name === name)
                             || (!definition.category && e.name === name)) {
                             return true
                         }
@@ -2069,19 +2058,19 @@ export const actions = {
             const primeTowerWidth = primeTowerModel.boundingBox.max.x
                 - primeTowerModel.boundingBox.min.x;
             const primeTowerPositionX = modelGroupBBox.max.x
-                 - (primeTowerModel.boundingBox.max.x
-                     + primeTowerModel.boundingBox.min.x
-                     + primeTowerWidth)
-                 / 2;
-             const primeTowerPositionY = modelGroupBBox.max.y
-                 - (primeTowerModel.boundingBox.max.y
-                     + primeTowerModel.boundingBox.min.y
-                     - primeTowerWidth)
-                 / 2;
-             primeTowerXDefinition = size.x - primeTowerPositionX - left;
-             primeTowerYDefinition = size.y - primeTowerPositionY - front;
-             // const a = size.x * 0.5 + primeTowerModel.transformation.positionX- left;;
-             // const b = size.y * 0.5 + primeTowerModel.transformation.positionY - front;
+                - (primeTowerModel.boundingBox.max.x
+                    + primeTowerModel.boundingBox.min.x
+                    + primeTowerWidth)
+                / 2;
+            const primeTowerPositionY = modelGroupBBox.max.y
+                - (primeTowerModel.boundingBox.max.y
+                    + primeTowerModel.boundingBox.min.y
+                    - primeTowerWidth)
+                / 2;
+            primeTowerXDefinition = size.x - primeTowerPositionX - left;
+            primeTowerYDefinition = size.y - primeTowerPositionY - front;
+            // const a = size.x * 0.5 + primeTowerModel.transformation.positionX- left;;
+            // const b = size.y * 0.5 + primeTowerModel.transformation.positionY - front;
             if (primeTowerBrimEnable && adhesionType !== 'raft') {
                 const initialLayerLineWidthFactor = activeQualityDefinition?.settings?.initial_layer_line_width_factor?.default_value || 0;
                 const brimLineCount = activeQualityDefinition?.settings?.brim_line_count?.default_value || 0;
@@ -2089,7 +2078,7 @@ export const actions = {
                 if (adhesionExtruder === '1') {
                     skirtBrimLineWidth = newExtruderRDefinition?.settings?.skirt_brim_line_width?.default_value;
                 }
-                const diff =  brimLineCount * skirtBrimLineWidth * initialLayerLineWidthFactor / 100;
+                const diff = brimLineCount * skirtBrimLineWidth * initialLayerLineWidthFactor / 100;
                 primeTowerXDefinition += diff;
                 primeTowerYDefinition += diff;
             }
@@ -4153,7 +4142,7 @@ export const actions = {
         modelGroup.models = modelGroup.models.concat();
 
         if (modelNames.length === 1 && newModels.length === 0) {
-            if (!(modelNames[0].children)) {
+            if (!(modelNames[0]?.children?.length)) {
                 progressStatesManager.finishProgress(false);
                 dispatch(
                     actions.updateState({
@@ -4250,6 +4239,7 @@ export const actions = {
                 combinedOperations: []
             })
         );
+        modelGroup.calaClippingMap();
     },
 
     rotateByPlane: targetPlane => (dispatch, getState) => {
@@ -4839,13 +4829,11 @@ export const actions = {
     moveSupportBrush: raycastResult => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.moveSupportBrush(raycastResult);
-        dispatch(actions.render());
     },
 
     applySupportBrush: raycastResult => (dispatch, getState) => {
         const { modelGroup, supportBrushStatus } = getState().printing;
         modelGroup.applySupportBrush(raycastResult, supportBrushStatus);
-        dispatch(actions.render());
     },
 
     clearAllSupport: () => (dispatch, getState) => {
