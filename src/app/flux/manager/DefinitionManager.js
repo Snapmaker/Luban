@@ -15,14 +15,7 @@ import {
 } from '../../constants';
 import PresetDefinitionModel from './PresetDefinitionModel';
 import { resolveDefinition } from '../../../shared/lib/definitionResolver';
-const primeTowerDefinitionKeys = [
-    'prime_tower_enable',
-    'prime_tower_size',
-    'prime_tower_position_x',
-    'prime_tower_position_y',
-    'prime_tower_brim_enabled',
-    'prime_tower_wipe_enabled',
-];
+
 const nozzleSizeRelationSettingsKeys = [
     'wall_line_width_0',
     'wall_line_width_x',
@@ -349,22 +342,6 @@ class DefinitionManager {
                 };
                 definition.ownKeys.push(key);
             }
-            // if (setting.type === 'extruder') {
-            //     definition.settings[key] = {
-            //         label: setting.label,
-            //         default_value: '0'
-            //     };
-            //     definition.ownKeys.push(key);
-            // }
-            // if (hasPrimeTower) {
-            //     if (includes(primeTowerDefinitionKeys, key)) {
-            //         definition.settings[key] = {
-            //             label: setting.label,
-            //             default_value: setting.default_value
-            //         };
-            //         definition.ownKeys.push(key);
-            //     }
-            // }
         });
         definition.ownKeys.push('machine_start_gcode');
         definition.ownKeys.push('machine_end_gcode');
