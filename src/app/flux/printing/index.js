@@ -764,7 +764,7 @@ export const actions = {
             }
         });
         if (!isSelectedModelVisible) {
-            const newQualityId = qualityDefinitions.find(item => item.visible)?.definitionId;
+            const newQualityId = qualityDefinitions.find(item => item.visible && item.qualityType)?.definitionId;
             if (originalConfigId[series]) { // Avoid first load error
                 originalConfigId[series][PRINTING_MANAGER_TYPE_QUALITY] = newQualityId;
                 dispatch(

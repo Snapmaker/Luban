@@ -458,12 +458,10 @@ class DefinitionManager {
             }
         });
         const nozzleSize = newExtruderDefinition?.settings?.machine_nozzle_size?.default_value;
-        let allOverrideArr = this.extruderProfileArr;
         if (nozzleSize && newExtruderDefinition.definitionId === 'snapmaker_extruder_1') {
             resolveDefinition(newQualityDefinition, [['machine_nozzle_size', nozzleSize]]);
-            allOverrideArr = allOverrideArr.concat(nozzleSizeRelationSettingsKeys)
         }
-        allOverrideArr.forEach((item) => {
+        this.extruderProfileArr.concat(nozzleSizeRelationSettingsKeys).forEach((item) => {
             if (newQualityDefinition.settings[item]) {
                 newExtruderDefinition.settings[item] = {
                     default_value: newQualityDefinition.settings[item].default_value,
