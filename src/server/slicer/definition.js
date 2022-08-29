@@ -35,6 +35,8 @@ export class DefinitionLoader {
 
     extruderProfileArr = new Set();
 
+    materialProfileArr = new Set();
+
     definitionId = '';
 
     name = '';
@@ -200,6 +202,7 @@ export class DefinitionLoader {
                         allSettingNameWithType[mainCategory].add(key);
                     }
                     if (mainCategory === 'material') {
+                        this.materialProfileArr.add(key);
                         allSettingNameWithType[mainCategory].add(key);
                     }
                     if (isUndefined(this.settings[key].zIndex)) {
@@ -282,6 +285,7 @@ export class DefinitionLoader {
             ownKeys: Array.from(this.ownKeys),
             printingProfileLevel: this.printingProfileLevel,
             materialProfileLevel: this.materialProfileLevel,
+            materialProfileArr: Array.from(this.materialProfileArr),
             extruderProfileArr: Array.from(this.extruderProfileArr)
         };
     }
