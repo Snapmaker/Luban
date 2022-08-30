@@ -5,8 +5,10 @@ import { autoUpdater } from 'electron-updater';
 import Store from 'electron-store';
 import url from 'url';
 import fs from 'fs';
-import { isUndefined, isNull } from 'lodash';
+import { isUndefined, isNull, debounce } from 'lodash';
 import path from 'path';
+import isReachable from 'is-reachable';
+import fetch from 'node-fetch';
 import { configureWindow } from './electron-app/window';
 import MenuBuilder, { addRecentFile, cleanAllRecentFiles } from './electron-app/Menu';
 import DataStorage from './DataStorage';
@@ -138,8 +140,26 @@ function updateHandle() {
         sendUpdateMessage(message.checking);
     });
     // Emitted when there is an available update. The update is downloaded automatically if autoDownload is true.
-    autoUpdater.on('update-available', (downloadInfo) => {
+    autoUpdater.on('update-available', async (downloadInfo) => {
         sendUpdateMessage(message.updateAva);
+        if (!downloadInfo.releaseNotes) {
+            // for aliyuncs
+            const changelogUrl = `https://snapmaker.oss-cn-beijing.aliyuncs.com/snapmaker.com/download/luban/Snapmaker-Luban-${downloadInfo.version}.changelog.md`;
+            const result = await fetch(changelogUrl, {
+                mode: 'cors',
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'text/markdown'
+                }
+            })
+                .then((response) => {
+                    response.headers['access-control-allow-origin'] = { value: '*' };
+                    return response.text();
+                });
+
+            downloadInfo.releaseChangeLog = result;
+            downloadInfo.releaseName = `v${downloadInfo.version}`;
+        }
         mainWindow.webContents.send('update-available', { ...downloadInfo, prevVersion: app.getVersion() });
     });
     // Emitted when there is no available update.
@@ -150,13 +170,13 @@ function updateHandle() {
         mainWindow.setProgressBar(progressObj.percent / 100);
     });
     // downloadInfo — for generic and github providers
-    autoUpdater.on('update-downloaded', (downloadInfo) => {
+    autoUpdater.on('update-downloaded', debounce((downloadInfo) => {
         ipcMain.on('replaceAppNow', () => {
             // some code here to handle event
             autoUpdater.quitAndInstall();
         });
         mainWindow.webContents.send('is-replacing-app-now', downloadInfo);
-    });
+    }), 300);
     // Emitted when the user agrees to download
     ipcMain.on('startingDownloadUpdate', () => {
         mainWindow.webContents.send('download-has-started');
@@ -200,10 +220,36 @@ if (process.platform === 'win32') {
     }
 }
 
+const checkUpdateServer = () => {
+    const hosts = [
+        ['snapmaker.oss-cn-beijing.aliyuncs.com', 'aliyuncs'],
+        ['github.com', 'github']
+    ];
+    const promises = hosts.map(([host, flag]) => {
+        return new Promise((resolve) => {
+            isReachable(host).then(() => {
+                resolve(flag);
+            });
+        });
+    });
+    return Promise.race(promises);
+};
+
 const startToBegin = (data) => {
     serverData = data;
     const { address, port } = { ...serverData };
     configureWindow(mainWindow);
+
+    checkUpdateServer().then((host) => {
+        if (host === 'aliyuncs') {
+            autoUpdater.setFeedURL({
+                provider: 'generic',
+                url: 'https://snapmaker.oss-cn-beijing.aliyuncs.com/snapmaker.com/download/luban'
+            });
+        }
+        updateHandle();
+    });
+
     loadUrl = `http://${address}:${port}`;
     const filter = {
         urls: [
@@ -378,8 +424,6 @@ const showMainWindow = async () => {
     ipcMain.on('open-recover-folder', () => {
         shell.openPath(`${userDataDir}/snapmaker-recover`);
     });
-
-    updateHandle();
 };
 
 // Allow max 4G memory usage

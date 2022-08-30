@@ -7,7 +7,7 @@ import isElectron from 'is-electron';
 import Mousetrap from 'mousetrap';
 import i18next from 'i18next';
 import classNames from 'classnames';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, throttle } from 'lodash';
 import Checkbox from '../components/Checkbox';
 import { Button } from '../components/Buttons';
 import { renderModal } from '../utils';
@@ -106,6 +106,8 @@ class AppLayout extends PureComponent {
 
     activeTab = ''
 
+    downloadingRef = React.createRef(false);
+
     actions = {
         renderSettingModal: () => {
             const onClose = () => {
@@ -188,6 +190,15 @@ class AppLayout extends PureComponent {
                 showDevelopToolsModal: true
             });
         },
+        startingDownloadUpdate: throttle(() => {
+            if (this.downloadingRef.current) {
+                UniApi.Update.downloadHasStarted();
+            } else {
+                this.downloadingRef.current = true;
+                const { ipcRenderer } = window.require('electron');
+                ipcRenderer.send('startingDownloadUpdate');
+            }
+        }, 300),
         renderCheckForUpdatesModal: () => {
             const onClose = () => {
                 this.setState({
@@ -206,9 +217,8 @@ class AppLayout extends PureComponent {
             });
         },
         renderDownloadUpdateModal: () => {
-            const { releaseNotes, prevVersion, version } = this.state;
+            const { releaseNotes, releaseChangeLog, prevVersion, version } = this.state;
             const { shouldCheckForUpdate } = this.props;
-            const { ipcRenderer } = window.require('electron');
             const onClose = () => {
                 this.setState({
                     showDownloadUpdateModal: false
@@ -220,6 +230,7 @@ class AppLayout extends PureComponent {
                     return (
                         <DownloadUpdate
                             releaseNotes={releaseNotes}
+                            releaseChangeLog={releaseChangeLog}
                             prevVersion={prevVersion}
                             version={version}
                         />
@@ -253,7 +264,7 @@ class AppLayout extends PureComponent {
                                     className="margin-left-8"
                                     width="auto"
                                     type="primary"
-                                    onClick={() => ipcRenderer.send('startingDownloadUpdate')}
+                                    onClick={() => this.actions.startingDownloadUpdate()}
                                 >
                                     {i18n._('key-App/Update-Update Now')}
                                 </Button>
@@ -274,6 +285,7 @@ class AppLayout extends PureComponent {
             if (downloadInfo) {
                 this.setState({
                     releaseNotes: downloadInfo.releaseNotes,
+                    releaseChangeLog: downloadInfo.releaseChangeLog,
                     prevVersion: downloadInfo.prevVersion,
                     version: downloadInfo.version,
                     showDownloadUpdateModal: true
@@ -543,6 +555,7 @@ class AppLayout extends PureComponent {
             });
             UniApi.Event.on('is-replacing-app-now', (event, downloadInfo) => {
                 UniApi.Update.isReplacingAppNow(downloadInfo);
+                this.downloadingRef.current = false;
                 this.props.updateIsDownloading(false);
             });
             UniApi.Event.on('open-file', (event, file, arr) => {

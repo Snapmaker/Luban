@@ -1,14 +1,15 @@
 import classNames from 'classnames';
 import React, { useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import ReactMarkdown from 'react-markdown';
 import i18n from '../../../../lib/i18n';
 import styles from './index.styl';
 
-function DownloadUpdate({ releaseNotes, prevVersion, version }) {
+function DownloadUpdate({ releaseNotes, releaseChangeLog, prevVersion, version }) {
     const notesRef = useRef('');
 
     useEffect(() => {
-        if (notesRef.current) {
+        if (notesRef.current && releaseNotes) {
             notesRef.current.innerHTML = releaseNotes;
         }
     }, [releaseNotes]);
@@ -28,7 +29,15 @@ function DownloadUpdate({ releaseNotes, prevVersion, version }) {
                             className={classNames(styles['about-product-description'],
                                 'color-black-4')}
                             ref={notesRef}
-                        />
+                        >
+                            {
+                                releaseChangeLog && (
+                                    <ReactMarkdown>
+                                        {releaseChangeLog}
+                                    </ReactMarkdown>
+                                )
+                            }
+                        </div>
                         <div className="color-black-3">
                             {i18n._('key-App/Learn more about release notes please checkout ')}
                             <a
@@ -48,6 +57,7 @@ function DownloadUpdate({ releaseNotes, prevVersion, version }) {
 }
 DownloadUpdate.propTypes = {
     releaseNotes: PropTypes.string,
+    releaseChangeLog: PropTypes.string,
     prevVersion: PropTypes.string,
     version: PropTypes.string,
 };

@@ -36,6 +36,15 @@ jobs:
 
       - run: npm run build
 
+      - name: Init OSS
+        if: github.repository == 'Snapmaker/Luban'
+        uses: yizhoumo/setup-ossutil@v1
+        with:
+          ossutil-version: '1.7.0'
+          endpoint: ${{ secrets.OSS_ENDPOINT }}
+          access-key-id: ${{ secrets.OSS_ACCESS_KEY_ID }}
+          access-key-secret: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+
       # ----------------------------------------------------------------
       # Build Windows x64
       # ----------------------------------------------------------------
@@ -54,6 +63,7 @@ jobs:
           $RELEASE="${PACKAGE_NAME}-${PACKAGE_VERSION}"
 
           $INSTALLER_ASSET_PATH="./output/${PRODUCT_NAME} ${PACKAGE_VERSION}.exe"
+          $INSTALLER_ASSET_DEFAULT_NAME="${RELEASE}.exe"
           $INSTALLER_ASSET_NAME="${RELEASE}-win-x64.exe"
 
           $INSTALLER_AU_ASSET_NAME="${PACKAGE_NAME}-${PACKAGE_VERSION}.exe"
@@ -61,6 +71,7 @@ jobs:
           echo "INSTALLER_ASSET_PATH=${INSTALLER_ASSET_PATH}" >> ${Env:GITHUB_ENV}
           echo "INSTALLER_ASSET_NAME=${INSTALLER_ASSET_NAME}" >> ${Env:GITHUB_ENV}
           echo "INSTALLER_AU_ASSET_NAME=${INSTALLER_AU_ASSET_NAME}" >> ${Env:GITHUB_ENV}
+          echo "INSTALLER_ASSET_DEFAULT_NAME=${INSTALLER_ASSET_DEFAULT_NAME}" >> ${Env:GITHUB_ENV}
 
       - name: Upload Release Asset - Windows x64 Installer
         id: upload-release-asset-x64
@@ -94,6 +105,14 @@ jobs:
           asset_path: ${{ env.INSTALLER_ASSET_PATH }}
           asset_name: ${{ env.INSTALLER_AU_ASSET_NAME }}
           asset_content_type: application/octet-stream
+    
+      - name: Upload Release Windows x64 Installer To OSS
+        if: github.repository == 'Snapmaker/Luban'
+        run: |
+          ossutil cp -f "${{env.INSTALLER_ASSET_PATH}}" ${{secrets.OSS_UPDATE_PATH}}/${{env.INSTALLER_ASSET_NAME}} 
+          ossutil cp -f ${{secrets.OSS_UPDATE_PATH}}/${{env.INSTALLER_ASSET_NAME}} ${{secrets.OSS_UPDATE_PATH}}/${{env.INSTALLER_ASSET_DEFAULT_NAME}} 
+          ossutil cp -f ./output/latest.yml ${{secrets.OSS_UPDATE_PATH}}/latest.yml
+
 
       # ----------------------------------------------------------------
       # Build Windows x86
@@ -129,6 +148,10 @@ jobs:
           asset_name: ${{ env.INSTALLER_ASSET_NAME }}
           asset_content_type: application/octet-stream
 
+      - name: Upload Release Windows x86 Installer To OSS
+        if: github.repository == 'Snapmaker/Luban'
+        run: ossutil cp -f "${{env.INSTALLER_ASSET_PATH}}" ${{secrets.OSS_UPDATE_PATH}}/${{env.INSTALLER_ASSET_NAME}}
+
   build-macos:
     name: Build macOS Packages
 
@@ -154,6 +177,15 @@ jobs:
       - run: npm install
 
       - run: npm run build
+
+      - name: Init OSS
+        if: github.repository == 'Snapmaker/Luban'
+        uses: yizhoumo/setup-ossutil@v1
+        with:
+          ossutil-version: '1.7.0'
+          endpoint: ${{ secrets.OSS_ENDPOINT }}
+          access-key-id: ${{ secrets.OSS_ACCESS_KEY_ID }}
+          access-key-secret: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
 
       # ----------------------------------------------------------------
       # Build macOS x64
@@ -218,6 +250,13 @@ jobs:
           asset_name: ${{ env.ZIP_ASSET_NAME }}
           asset_content_type: application/octet-stream
 
+      - name: Upload Release macOS Installer OSS
+        if: github.repository == 'Snapmaker/Luban'
+        run: | 
+          ossutil cp -f ./output/*.zip ${{secrets.OSS_UPDATE_PATH}}/${{env.INSTALLER_ASSET_NAME}} 
+          ossutil cp -f ./output/*.dmg ${{secrets.OSS_UPDATE_PATH}}/${{env.ZIP_ASSET_NAME}} 
+          ossutil cp -f ./output/latest-mac.yml ${{secrets.OSS_UPDATE_PATH}}/latest-mac.yml
+
   build-linux:
     name: Build Linux Packages
 
@@ -243,6 +282,15 @@ jobs:
       - run: npm install
 
       - run: npm run build
+
+      - name: Init OSS
+        if: github.repository == 'Snapmaker/Luban'
+        uses: yizhoumo/setup-ossutil@v1
+        with:
+          ossutil-version: '1.7.0'
+          endpoint: ${{ secrets.OSS_ENDPOINT }}
+          access-key-id: ${{ secrets.OSS_ACCESS_KEY_ID }}
+          access-key-secret: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
 
       # ----------------------------------------------------------------
       # Build Linux x64
@@ -314,3 +362,10 @@ jobs:
           asset_path: ${{ env.TAR_ASSET_PATH }}
           asset_name: ${{ env.TAR_ASSET_NAME }}
           asset_content_type: application/octet-stream
+
+      - name: Upload Release linux Installer To OSS
+        if: github.repository == 'Snapmaker/Luban'
+        run: |
+          ossutil cp -f ./output/*.deb* ${{secrets.OSS_UPDATE_PATH}}/${{ env.DEB_ASSET_NAME }} 
+          ossutil cp -f ./output/*.rpm* ${{secrets.OSS_UPDATE_PATH}}/${{ env.RPM_ASSET_NAME }} 
+          ossutil cp -f ./output/*.tar* ${{secrets.OSS_UPDATE_PATH}}/${{ env.TAR_ASSET_NAME }}
