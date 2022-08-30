@@ -144,7 +144,7 @@ function updateHandle() {
         sendUpdateMessage(message.updateAva);
         if (!downloadInfo.releaseNotes) {
             // for aliyuncs
-            const changelogUrl = `https://snapmaker.oss-cn-beijing.aliyuncs.com/snapmaker.com/download/autoUpdater/Snapmaker-Luban-${downloadInfo.version}.changelog.md`;
+            const changelogUrl = `https://snapmaker.oss-cn-beijing.aliyuncs.com/snapmaker.com/download/luban/Snapmaker-Luban-${downloadInfo.version}.changelog.md`;
             const result = await fetch(changelogUrl, {
                 mode: 'cors',
                 method: 'GET',
@@ -244,7 +244,7 @@ const startToBegin = (data) => {
         if (host === 'aliyuncs') {
             autoUpdater.setFeedURL({
                 provider: 'generic',
-                url: 'https://snapmaker.oss-cn-beijing.aliyuncs.com/snapmaker.com/download/autoUpdater'
+                url: 'https://snapmaker.oss-cn-beijing.aliyuncs.com/snapmaker.com/download/luban'
             });
         }
         updateHandle();
