@@ -15,14 +15,7 @@ import {
 } from '../../constants';
 import PresetDefinitionModel from './PresetDefinitionModel';
 import { resolveDefinition } from '../../../shared/lib/definitionResolver';
-const primeTowerDefinitionKeys = [
-    'prime_tower_enable',
-    'prime_tower_size',
-    'prime_tower_position_x',
-    'prime_tower_position_y',
-    'prime_tower_brim_enabled',
-    'prime_tower_wipe_enabled',
-];
+
 const nozzleSizeRelationSettingsKeys = [
     'wall_line_width_0',
     'wall_line_width_x',
@@ -47,6 +40,8 @@ class DefinitionManager {
     extruderRDefinition = null;
 
     defaultDefinitions = [];
+
+    materialProfileArr = [];
 
     extruderProfileArr = [];
 
@@ -85,7 +80,8 @@ class DefinitionManager {
 
             res = await this.getDefinition('snapmaker_extruder_1', false);
             this.extruderRDefinition = res;
-            this.extruderProfileArr = definitionRes.extruderProfileArr
+            this.extruderProfileArr = definitionRes.extruderProfileArr;
+            this.materialProfileArr = definitionRes.materialProfileArr;
             return {
                 printingProfileLevel: definitionRes.printingProfileLevel,
                 materialProfileLevel: definitionRes.materialProfileLevel
@@ -346,22 +342,6 @@ class DefinitionManager {
                 };
                 definition.ownKeys.push(key);
             }
-            if (setting.type === 'extruder') {
-                definition.settings[key] = {
-                    label: setting.label,
-                    default_value: '0'
-                };
-                definition.ownKeys.push(key);
-            }
-            if (hasPrimeTower) {
-                if (includes(primeTowerDefinitionKeys, key)) {
-                    definition.settings[key] = {
-                        label: setting.label,
-                        default_value: setting.default_value
-                    };
-                    definition.ownKeys.push(key);
-                }
-            }
         });
         definition.ownKeys.push('machine_start_gcode');
         definition.ownKeys.push('machine_end_gcode');
@@ -469,36 +449,7 @@ class DefinitionManager {
             ...extruderDefinition,
         };
         const newQualityDefinition = {settings : {...activeQualityDefinition.settings}};
-        const materialFlow = materialDefinition.settings.material_flow;
-        if (materialFlow) {
-            const extruderKey = [
-                'skirt_brim_material_flow',
-                'support_material_flow',
-                'support_interface_material_flow',
-                'prime_tower_flow'
-            ];
-            extruderKey.forEach((key) => {
-                newExtruderDefinition.settings[key] = {
-                    default_value: materialFlow.default_value
-                };
-            });
-        }
-        const switchExtruderRetractionSpeeds = materialDefinition.settings.switch_extruder_retraction_speeds;
-        if (switchExtruderRetractionSpeeds) {
-            const speedsRelationSettingsKeys = [
-                'switch_extruder_retraction_speed',
-                'switch_extruder_prime_speed'
-            ];
-            for (const key of speedsRelationSettingsKeys) {
-                newExtruderDefinition.settings[key] = {
-                    default_value: switchExtruderRetractionSpeeds.default_value
-                };
-            }
-        }
-        PRINTING_MATERIAL_CONFIG_KEYS_SINGLE.concat(
-            'cool_fan_speed_min',
-            'cool_fan_speed_max'
-        ).forEach((key) => {
+        this.materialProfileArr.forEach((key) => {
             const setting = materialDefinition.settings[key];
             if (setting) {
                 newExtruderDefinition.settings[key] = {

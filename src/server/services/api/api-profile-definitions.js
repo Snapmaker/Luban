@@ -251,11 +251,7 @@ export const updateDefinition = async (req, res) => {
 
     // Remove for 3d printing profile
     if (definition.settings) {
-        if (headType !== HEAD_PRINTING) {
-            definitionLoader.updateSettings(definition.settings);
-        } else {
-            definitionLoader.updateSettings(definition.settings, false);
-        }
+        definitionLoader.updateSettings(definition.settings);
     }
 
     let filePath = '';

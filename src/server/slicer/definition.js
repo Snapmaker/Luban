@@ -28,12 +28,14 @@ const DEFAULT_PREDEFINED_ID = {
     'laser': 'present.default_CUT.def.json',
     '10w-laser': 'basswood.cutting_1.5mm.def.json'
 };
+const extruderProfileArr = new Set();
+
+const materialProfileArr = new Set();
+
 export class DefinitionLoader {
     printingProfileLevel = {};
 
     materialProfileLevel = {};
-
-    extruderProfileArr = new Set();
 
     definitionId = '';
 
@@ -195,11 +197,12 @@ export class DefinitionLoader {
                     }
                     if (mainCategory === 'quality') {
                         if (setting.settable_per_extruder) {
-                            this.extruderProfileArr.add(key);
+                            extruderProfileArr.add(key);
                         }
                         allSettingNameWithType[mainCategory].add(key);
                     }
                     if (mainCategory === 'material') {
+                        materialProfileArr.add(key);
                         allSettingNameWithType[mainCategory].add(key);
                     }
                     if (isUndefined(this.settings[key].zIndex)) {
@@ -282,7 +285,8 @@ export class DefinitionLoader {
             ownKeys: Array.from(this.ownKeys),
             printingProfileLevel: this.printingProfileLevel,
             materialProfileLevel: this.materialProfileLevel,
-            extruderProfileArr: Array.from(this.extruderProfileArr)
+            materialProfileArr: Array.from(materialProfileArr),
+            extruderProfileArr: Array.from(extruderProfileArr)
         };
     }
 

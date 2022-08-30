@@ -1,4 +1,5 @@
 name: Publish to WinGet
+if: github.repository == 'Snapmaker/Luban'
 on:
   release:
     types: [released]
