@@ -34,6 +34,9 @@ jobs:
       - run: npm install -g npm@7.24.0
       - run: npm install
 
+      - name: Set Sentry Config
+        run: node build/set-config.js --SentryToken=${{ secrets.SENTRY_TOKEN }} --SentryDsn=${{ secrets.SENTRY_DSN }} --tagName=${{ github.event.release.tag_name }}
+
       - run: npm run build
 
       - name: Init OSS
@@ -176,6 +179,9 @@ jobs:
       - run: npm install -g npm@7.24.0
       - run: npm install
 
+      - name: Set Sentry Config
+        run: node build/set-config.js --SentryToken=${{ secrets.SENTRY_TOKEN }} --SentryDsn=${{ secrets.SENTRY_DSN }} --tagName=${{ github.event.release.tag_name }}
+
       - run: npm run build
 
       - name: Init OSS
@@ -280,6 +286,9 @@ jobs:
 
       - run: npm install -g npm@7.24.0
       - run: npm install
+
+      - name: Set Sentry Config
+        run: node build/set-config.js --SentryToken=${{ secrets.SENTRY_TOKEN }} --SentryDsn=${{ secrets.SENTRY_DSN }} --tagName=${{ github.event.release.tag_name }}
 
       - run: npm run build
 

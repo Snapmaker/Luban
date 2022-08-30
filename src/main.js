@@ -9,6 +9,7 @@ import { isUndefined, isNull, debounce } from 'lodash';
 import path from 'path';
 import isReachable from 'is-reachable';
 import fetch from 'node-fetch';
+import * as Sentry from '@sentry/electron';
 import { configureWindow } from './electron-app/window';
 import MenuBuilder, { addRecentFile, cleanAllRecentFiles } from './electron-app/Menu';
 import DataStorage from './DataStorage';
@@ -20,6 +21,19 @@ const userDataDir = app.getPath('userData');
 global.luban = {
     userDataDir
 };
+if (pkg.tagName && pkg?.sentry?.auth?.dsn) {
+    Sentry.init({
+        dsn: pkg.sentry.auth.dsn,
+        environment: process.env.NODE_ENV,
+        release: `${pkg.tagName}-server`,
+        sampleRate: 1,
+        enableOutOfMemoryTracking: true
+    });
+    Sentry.setUser({
+        id: config.get('gaUserId')
+    });
+}
+
 let serverData = null;
 let mainWindow = null;
 // https://www.electronjs.org/docs/latest/breaking-changes#planned-breaking-api-changes-100
@@ -304,6 +318,13 @@ const startToBegin = (data) => {
             console.log('err', err.message);
         }));
 
+    mainWindow.webContents.on('render-process-gone', (_event, details) => {
+        Sentry.setTag('webContents-event', 'render-process-gone');
+        Sentry.captureMessage(`render-process-gone: exitCode=${details.exitCode}, reason=${details?.reason}`);
+
+        console.error(`render-process-gone, ${JSON.stringify(details)}`);
+    });
+
     try {
         // TODO: move to server
         DataStorage.init();
@@ -334,6 +355,10 @@ const showMainWindow = async () => {
                 port: SERVER_PORT,
                 host: '127.0.0.1'
             }, (err, data) => {
+                Sentry.setUser({
+                    id: data.userID
+                });
+
                 startToBegin({ ...data, port: CLIENT_PORT });
             });
         } else {
@@ -349,6 +374,10 @@ const showMainWindow = async () => {
             );
             serverProcess.on('message', (data) => {
                 if (data.type === SERVER_DATA) {
+                    Sentry.setUser({
+                        id: data.userID
+                    });
+
                     startToBegin(data);
                 } else if (data.type === UPLOAD_WINDOWS) {
                     window.loadURL(loadUrl).catch(err => {

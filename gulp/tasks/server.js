@@ -3,6 +3,7 @@ import nodemon from 'gulp-nodemon';
 import log from 'fancy-log';
 import PluginError from 'plugin-error';
 import webpack from 'webpack';
+import del from 'del';
 
 //
 // Development Copy
@@ -81,6 +82,10 @@ export function serverCopyProduction() {
         .pipe(gulp.dest('dist/Luban/server'));
 }
 
+function clearSourceMap() {
+    return del('dist/Luban/server/*.js.map');
+}
+
 //
 // Production Build
 //
@@ -91,6 +96,7 @@ export function serverBuildProduction() {
             if (err) {
                 throw new PluginError('server:build', err);
             }
+            clearSourceMap();
             log('[server:build]', stats.toString({ colors: true }));
             resolve();
         });
