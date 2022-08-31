@@ -6,13 +6,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Menu, message, Tooltip, Spin } from 'antd';
 import { actions as printingActions } from '../../../flux/printing';
+import { actions as projectActions } from '../../../flux/project';
 import { useGetDefinitions } from '../../views/ProfileManager';
 import i18n from '../../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { LEFT, RIGHT } from '../../../../server/constants';
 import { Button } from '../../components/Buttons';
 import AddMaterialModel from './addMaterialModel';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_MATERIAL, RIGHT_EXTRUDER } from '../../../constants';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_MATERIAL, RIGHT_EXTRUDER, HEAD_PRINTING } from '../../../constants';
 import PrintingManager from '../../views/PrintingManager';
 import { machineStore } from '../../../store/local-storage';
 import SvgIcon from '../../components/SvgIcon';
@@ -25,6 +26,7 @@ const MaterialSettings = ({
 }) => {
     const materialActiveCategory = machineStore.get('settings.materialActiveCategory');
     const { defaultMaterialId, defaultMaterialIdRight, materialDefinitions, materialManagerDirection } = useSelector(state => state.printing);
+    console.log('defaultMaterialId', defaultMaterialId);
 
     const [leftMaterialDefinitionId, setLeftMaterialDefinitionId] = useState(defaultMaterialId);
     const [leftMaterialDefinition, setLeftMaterialDefinition] = useState(find(materialDefinitions, { definitionId: leftMaterialDefinitionId }));
@@ -97,6 +99,7 @@ const MaterialSettings = ({
             setRightMaterialDefinitionId(id);
         }
         dispatch(printingActions.updateDefaultIdByType(PRINTING_MANAGER_TYPE_MATERIAL, id, activeNozzle));
+        dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
     };
     const onShowPrintingManager = () => {
         dispatch(printingActions.updateManagerDisplayType(PRINTING_MANAGER_TYPE_MATERIAL));

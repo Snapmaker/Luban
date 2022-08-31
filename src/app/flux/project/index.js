@@ -106,10 +106,11 @@ export const actions = {
             envObj.coordinateMode = coordinateMode;
             envObj.coordinateSize = coordinateSize;
         } else if (headType === HEAD_PRINTING) {
-            const { defaultMaterialId, defaultMaterialIdRight, defaultQualityId } = editorState;
+            const { defaultMaterialId, defaultMaterialIdRight, defaultQualityId, helpersExtruderConfig } = editorState;
             envObj.defaultMaterialId = defaultMaterialId;
             envObj.defaultMaterialIdRight = defaultMaterialIdRight;
             envObj.defaultQualityId = defaultQualityId;
+            envObj.helpersExtruderConfig = helpersExtruderConfig;
             envObj.models.push(modelGroup.primeTower.getSerializableConfig());
         }
         for (let key = 0; key < models.length; key++) {
@@ -282,18 +283,8 @@ export const actions = {
         }
 
         if (envHeadType === HEAD_PRINTING) {
-            const { materialDefinitions, qualityDefinitions, defaultMaterialId: originalMaterialId, defaultQualityId: originalQualityId } = modState;
-            let { defaultMaterialId, defaultQualityId } = envObj;
-            if (!materialDefinitions.find(d => d.definitionId === defaultMaterialId)) {
-                defaultMaterialId = originalMaterialId;
-            }
-            if (!qualityDefinitions.find(d => d.definitionId === defaultQualityId)) {
-                defaultQualityId = originalQualityId;
-            }
             dispatch(modActions.updateState({
-                ...restState,
-                defaultMaterialId,
-                defaultQualityId
+                ...restState
             }));
         } else {
             dispatch(modActions.updateState(envHeadType, restState));
