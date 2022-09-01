@@ -71,7 +71,6 @@ class SocketTCP extends SocketBASE {
             log.info('TCP connected');
 
             this.sacpClient = new Business('tcp', this.client);
-            this.sacpClient.setLogger(log);
             this.socket && this.socket.emit('connection:open', {});
             const hostName = os.hostname();
             log.info(`os hostname: ${hostName}`);
@@ -87,11 +86,11 @@ class SocketTCP extends SocketBASE {
                     };
                     socket && socket.emit('connection:close', result);
                 }
-            }).then(async ({ response }) => {
+            }).then(async ({ response, packet }) => {
                 if (response.result === 0) {
-                    this.sacpClient.wifiConnectionHeartBeat().then(({ response }) => {
-                        log.info(`lubanHeartbeat: ${response}`);
-                    });
+                    this.sacpClient.setLogger(log);
+                    this.sacpClient.wifiConnectionHeartBeat();
+                    this.setROTSubscribeApi();
                     let state: ConnectedData = {
                         isHomed: true,
                         err: null
@@ -182,6 +181,19 @@ class SocketTCP extends SocketBASE {
         });
     }
 
+    public connectionCloseImproper = () => {
+        this.client && this.client.destroy();
+        if (this.client.destroyed) {
+            log.info('TCP manually closed');
+            const result = {
+                code: 200,
+                data: {},
+                msg: '',
+                text: ''
+            };
+            this.socket && this.socket.emit('connection:close', result);
+        }
+    }
     public connectionClose = (socket: SocketServer, options: EventOptions) => {
         this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
         // await this.sacpClient.unSubscribeLogFeedback(this.subscribeLogCallback).then(res => {

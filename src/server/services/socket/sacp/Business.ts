@@ -127,6 +127,74 @@ export default class Business extends Dispatcher {
         });
     }
 
+    // set Handler API list for RTO
+    // 0x10, 0x05
+    public handlerSwitchNozzleReturn(callback: any) {
+        this.setHandler(0x10, 0x0b, (request: RequestData) => {
+            const result = readUint8(request.packet.payload);
+            this.ack(0x10, 0x0b, request.packet, Buffer.alloc(1, 0));
+            callback && callback(result);
+        });
+    }
+
+    // 0x10, 0x09
+    public handlerExtruderMovementReturn(callback) {
+        this.setHandler(0x10, 0x0c, (request: RequestData) => {
+            this.ack(0x10, 0x0c, request.packet, Buffer.alloc(1, 0));
+            callback && callback(request);
+        });
+    }
+
+    // 0xa0, 0x15
+    public handlerExtruderZOffsetReturn(callback) {
+        this.setHandler(0xa0, 0x19, (request: RequestData) => {
+            this.ack(0xa0, 0x19, request.packet, Buffer.alloc(1, 0));
+            callback && callback(request);
+        });
+    }
+
+    // 0x10, 0x34
+    public async handlerCoordinateMovementReturn(callback) {
+        this.setHandler(0x01, 0x33, (request: RequestData) => {
+            this.ack(0x01, 0x33, request.packet, Buffer.alloc(1, 0));
+            this.log.info('request coordinate');
+            callback && callback(request);
+        });
+    }
+
+    public handlerStartPrintReturn(callback) {
+        this.setHandler(0xac, 0x14, (request: RequestData) => {
+            this.ack(0xac, 0x14, request.packet, Buffer.alloc(1, 0));
+            this.log.info('request startprint return');
+            callback && callback(request);
+        });
+    }
+
+    public handlerStopPrintReturn(callback) {
+        this.setHandler(0xac, 0x17, (request: RequestData) => {
+            this.ack(0xac, 0x17, request.packet, Buffer.alloc(1, 0));
+            this.log.info('request stopprint return');
+            callback && callback(request);
+        });
+    }
+
+    public handlerPausePrintReturn(callback) {
+        this.setHandler(0xac, 0x15, (request: RequestData) => {
+            this.ack(0xac, 0x15, request.packet, Buffer.alloc(1, 0));
+            this.log.info('request pause print return');
+            callback && callback(request);
+        });
+    }
+
+    public handlerResumePrintReturn(callback) {
+        this.setHandler(0xac, 0x16, (request: RequestData) => {
+            this.ack(0xac, 0x16, request.packet, Buffer.alloc(1, 0));
+            this.log.info('request resume print return');
+            const result = readUint8(request.packet.payload);
+            callback && callback(result);
+        });
+    }
+
     public async getEmergencyStopInfo() {
         return this.send(0x01, 0x3b, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             // const isTouch = readBool(response.data);
@@ -332,32 +400,32 @@ export default class Business extends Dispatcher {
 
     public async requestAbsoluteCooridateMove(directions: MoveDirection[] = [0], distances: number[] = [0], jogSpeed = 0.1, coordinateType: CoordinateType) {
         const paramBuffer = new MovementInstruction(undefined, undefined, jogSpeed, directions, distances, coordinateType).toArrayBuffer();
-        return this.send(0x01, 0x34, PeerId.CONTROLLER, paramBuffer).then(({ response, packet }) => {
+        return this.send(0x01, 0x34, PeerId.CONTROLLER, paramBuffer, true).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
     public async startPrint(md5: string, gcodeName: string, headType: number) {
         const info = new GcodeFileInfo(md5, gcodeName, headType);
-        return this.send(0xac, 0x03, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
+        return this.send(0xac, 0x03, PeerId.CONTROLLER, info.toBuffer(), true).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
     public async stopPrint() {
-        return this.send(0xac, 0x06, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
+        return this.send(0xac, 0x06, PeerId.CONTROLLER, Buffer.alloc(0), true).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
     public async pausePrint() {
-        return this.send(0xac, 0x04, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
+        return this.send(0xac, 0x04, PeerId.CONTROLLER, Buffer.alloc(0), true).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
 
     public async resumePrint() {
-        return this.send(0xac, 0x05, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
+        return this.send(0xac, 0x05, PeerId.CONTROLLER, Buffer.alloc(0), true).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
@@ -528,7 +596,7 @@ export default class Business extends Dispatcher {
 
     public async SetExtruderOffset(key: number, index: number, distance: number) {
         const info = new ExtruderOffset(key, index, distance);
-        return this.send(0xa0, 0x15, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
+        return this.send(0xa0, 0x15, PeerId.CONTROLLER, info.toBuffer(), true).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
@@ -543,6 +611,7 @@ export default class Business extends Dispatcher {
     public async ExtruderMovement(key: number, movementType: number, lengthIn: number, speedIn: number, lengthOut: number, speedOut: number) {
         const info = new ExtruderMovement(key, movementType, lengthIn, speedIn, lengthOut, speedOut);
         return this.send(0x10, 0x09, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
+            console.log('extruderMovementResult', response);
             return { response, packet };
         });
     }
@@ -574,7 +643,6 @@ export default class Business extends Dispatcher {
                 // writeUint16(chunkLengthBuffer, 0, finalBuf.byteLength);
                 // const chunkBuffer = Buffer.concat([chunkLengthBuffer, finalBuf]); //stringToBuffer(finalBuf.toString());
                 const chunkBuffer = stringToBuffer(finalBuf as unknown as string);
-
                 buffer = Buffer.concat([Buffer.alloc(1, 0), md5Buffer, indexBuffer, chunkBuffer]);
                 // console.log('>--', buffer);
                 this.ack(0xb0, 0x01, data.packet, buffer);
@@ -731,7 +799,8 @@ export default class Business extends Dispatcher {
             this.ack(0x01, 0x06, packet, res.toBuffer());
             callback && callback();
         });
-        return this.send(0x01, 0x05, PeerId.SCREEN, info).then(({ response, packet }) => {
+        return this.send(0x01, 0x05, PeerId.SCREEN, info, false).then(({ response, packet }) => {
+            console.log('wifiConnection', response, packet);
             // return res;
             return { response, packet };
         });

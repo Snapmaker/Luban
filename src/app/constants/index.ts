@@ -9,6 +9,7 @@ export const CUSTOM_SERVER_NAME = 'Manual';
 export const EPSILON = 1e-6;
 export const CONNECTION_OPEN = 'connection:open';
 export const CONNECTION_CLOSE = 'connection:close';
+export const CONNECTION_CLOSE_IMPROPER = 'connection:closeImproper';
 export const CONNECTION_EXECUTE_GCODE = 'connection:executeGcode';
 export const CONNECTION_START_GCODE = 'connection:startGcode';
 export const CONNECTION_RESUME_GCODE = 'connection:resumeGcode';
@@ -64,6 +65,9 @@ export const WORKFLOW_STATUS_FINISHING = 'finishing';
 export const WORKFLOW_STATUS_COMPLETED = 'completed';
 export const WORKFLOW_STATUS_RECOVERING = 'recovering';
 export const WROKFLOW_STATUS_RESUMING = 'resuming';
+
+export const LOAD_FIMAMENT = 'load';
+export const UNLOAD_FILAMENT = 'unload';
 
 export const WORKFLOW_STATUS_MAP = {
     '0': WORKFLOW_STATE_IDLE,

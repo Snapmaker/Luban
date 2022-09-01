@@ -84,13 +84,13 @@ class DisplayPanel extends PureComponent {
 
     render() {
         const { state, workPosition, originOffset, headType } = this.props;
-        const { x, y, z } = originOffset;
+        const { x, y, z, b } = originOffset;
         const { units, canClick, axes } = state;
         const lengthUnits = (units === METRIC_UNITS) ? i18n._('key-Workspace/Control/DisplayPanel-mm') : i18n._('key-Workspace/Control/DisplayPanel-in');
         let machinePositionX = (Math.round((parseFloat(workPosition.x) - x) * 1000) / 1000).toFixed(3);
         let machinePositionY = (Math.round((parseFloat(workPosition.y) - y) * 1000) / 1000).toFixed(3);
         let machinePositionZ = (Math.round((parseFloat(workPosition.z) - z) * 1000) / 1000).toFixed(3);
-        let machinePositionB = (Math.round(parseFloat(workPosition.b) * 1000) / 1000).toFixed(3);
+        let machinePositionB = (Math.round((parseFloat(workPosition.b) - b) * 1000) / 1000).toFixed(3);
         if (headType === HEAD_PRINTING) {
             machinePositionX = workPosition.x;
             machinePositionY = workPosition.y;
@@ -209,9 +209,9 @@ class DisplayPanel extends PureComponent {
                                 </td>
                                 <td className={styles['field-position']}>
                                     <div>
-                                        <span className={styles['integer-part']}>{machinePositionB.split('.')[0]}</span>
+                                        <span className={styles['integer-part']}>{workPosition.b.split('.')[0]}</span>
                                         <span className={styles['decimal-point']}>.</span>
-                                        <span className={styles['fractional-part']}>{machinePositionB.split('.')[1]}</span>
+                                        <span className={styles['fractional-part']}>{workPosition.b.split('.')[1]}</span>
                                     </div>
                                     <span className={styles.unit}>°</span>
                                 </td>

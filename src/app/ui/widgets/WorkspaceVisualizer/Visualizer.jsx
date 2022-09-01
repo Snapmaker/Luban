@@ -395,11 +395,13 @@ class Visualizer extends PureComponent {
                         // experience params for retraction: F3000, E->(E-5)
                         const targetE = Math.max(pos.e - 5, 0);
                         const targetZ = Math.min(pos.z + 30, this.props.size.z);
+                        console.log({ targetE, targetZ });
                         const gcode = [
                             `G1 E${targetE}\n`,
                             `G1 Z${targetZ}\n`,
                             `G1 E${pos.e}\n`
                         ];
+                        // const gcode = `G1 E${targetE}\nG1 Z${targetZ}\nG1 E${pos.e}\n`;
                         this.props.executeGcode(gcode);
                         this.props.updatePause3dpStatus(pause3dpStatus);
                     }

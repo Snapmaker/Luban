@@ -57,5 +57,6 @@ export type MarlinStateData = {
     originOffset?: object,
     isHomed?: boolean,
     headType?: string,
-    toolHead?: string
+    toolHead?: string,
+    currentWorkNozzle?: number
 };

@@ -17,6 +17,7 @@ import {
     CONNECTION_GO_HOME,
     CONNECTION_COORDINATE_MOVE,
     CONNECTION_SET_WORK_ORIGIN,
+    CONNECTION_CLOSE_IMPROPER,
     // WORKFLOW_STATUS_STOPPING
 } from '../../constants';
 import { controller } from '../../lib/controller';
@@ -97,6 +98,16 @@ export class Server extends events.EventEmitter {
                     toolHead: ''
                 }));
             });
+    }
+
+    closeServerImproper() {
+        controller.emitEvent(CONNECTION_CLOSE_IMPROPER).once(CONNECTION_CLOSE_IMPROPER, () => {
+            dispatch(machineActions.resetMachineState());
+            dispatch(workspaceActions.updateMachineState({
+                headType: '',
+                toolHead: ''
+            }));
+        });
     }
 
     coordinateMove(moveOrders, gcode, jogSpeed, headType, homingModel) {
