@@ -7,6 +7,9 @@
     "i18nCategory": "key-default_category-PVA",
     "isRecommended": true,
     "overrides": {
+        "extruders_enabled_count": {
+            "default_value": 2
+        },
         "material_type": {
             "default_value": "pva"
         },

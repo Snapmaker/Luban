@@ -26,7 +26,6 @@ const MaterialSettings = ({
 }) => {
     const materialActiveCategory = machineStore.get('settings.materialActiveCategory');
     const { defaultMaterialId, defaultMaterialIdRight, materialDefinitions, materialManagerDirection } = useSelector(state => state.printing);
-    console.log('defaultMaterialId', defaultMaterialId);
 
     const [leftMaterialDefinitionId, setLeftMaterialDefinitionId] = useState(defaultMaterialId);
     const [leftMaterialDefinition, setLeftMaterialDefinition] = useState(find(materialDefinitions, { definitionId: leftMaterialDefinitionId }));

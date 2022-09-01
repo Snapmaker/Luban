@@ -3156,6 +3156,7 @@ export const actions = {
             if (model.supportTag) {
                 dispatch(actions.onModelTransform());
             }
+            console.log('modelGroup.getSelectedModelTransformationForPrinting()', modelGroup.getSelectedModelTransformationForPrinting());
             dispatch(
                 operationHistoryActions.updateTargetTmpState(INITIAL_STATE.name, model.modelID, {
                     from: {
@@ -3248,6 +3249,7 @@ export const actions = {
                     break;
                 case 'scale':
                     const mirrorType = dispatch(actions.getMirrorType(model))
+                    console.log('mirrorType', mirrorType);
                     if (mirrorType) {
                         isMirror = true
                     }
@@ -3868,7 +3870,7 @@ export const actions = {
 
         const checkResultMap = new Map();
         const checkPromises = modelNames.filter((item) => {
-            return !item.isGroup && ['.obj', '.stl'].includes(path.extname(item.uploadName))
+            return !item.isGroup && ['.obj', '.stl'].includes(path.extname(item.uploadName)) && item.uploadName.indexOf('prime_tower_') !== 0
         }).map(async (item) => {
             return controller.checkModel({
                 uploadName: item.uploadName
@@ -3932,7 +3934,10 @@ export const actions = {
                         dispatch(actions.destroyGcodeLine());
                         resolve();
                     })
-                } else {
+                } else if (primeTowerTag && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+                    modelGroup.primeTower && modelGroup.primeTower.updateTowerTransformation(transformation);
+                    resolve();
+               }else {
                     const onMessage = async data => {
                         const { type } = data;
                         switch (type) {
@@ -4994,7 +4999,7 @@ export const actions = {
                         case 'LOAD_MODEL_POSITIONS': {
                             const { positions } = data;
 
-                            model.updateBufferGeometry(positions);
+                            model.updateBufferGeometry(positions, res.reverse);
 
                             if (!silentLoading && modelInfos.length > 1) {
                                 _progress += 1 / modelInfos.length;

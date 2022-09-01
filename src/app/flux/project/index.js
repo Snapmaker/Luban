@@ -1,6 +1,6 @@
 /* eslint-disable import/no-cycle */
 import cloneDeep from 'lodash/cloneDeep';
-import { find, includes, keys, some } from 'lodash';
+import { find, keys, some } from 'lodash';
 import pkg from '../../../package.json';
 import {
     HEAD_CNC,
@@ -152,9 +152,9 @@ export const actions = {
         for (let k = 0; k < models.length; k++) {
             const { headType, originalName, uploadName, modelName, config, sourceType, gcodeConfig,
                 sourceWidth, sourceHeight, mode, transformation, modelID, supportTag, extruderConfig, children, parentModelID } = models[k];
-            const primeTowerTag = includes(originalName, 'prime_tower');
+            const primeTowerTag = uploadName.indexOf('prime_tower_') === 0;
             // prevent project recovery recorded into operation history
-            if (supportTag || originalName?.indexOf('prime_tower') === 0) {
+            if (supportTag) {
                 continue;
             }
             if (!children) {
