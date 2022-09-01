@@ -93,16 +93,25 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
                 || currentWorkflowStatus === WROKFLOW_STATUS_RESUMING || (total !== 0 && sent >= total))
         ) {
             widgetActions.setDisplay(true);
-            setIsPausing(false);
         } else {
             widgetActions.setDisplay(false);
         }
     }, [isConnected, currentWorkflowStatus, sent, total, widgetActions]);
 
+    useEffect(() => {
+        console.log({ currentWorkflowStatus, isPausing });
+        if (currentWorkflowStatus !== WORKFLOW_STATUS_PAUSING && currentWorkflowStatus !== WROKFLOW_STATUS_RESUMING) {
+            setIsPausing(false);
+        } else {
+            setIsPausing(true);
+        }
+    }, [currentWorkflowStatus]);
+
     const handleMachine = (type) => {
         try {
             switch (type) {
                 case 'run':
+                    setIsPausing(true);
                     controlActions.onCallBackRun();
                     break;
                 case 'pause':
@@ -156,7 +165,7 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
                                 className="margin-right-4"
                             />
                         )}
-                        <span className="height-24">{currentWorkflowStatus === 'running' ? i18n._('key-Workspace/WorkflowControl-Pause') : i18n._('key-Workspace/WorkflowControl-Run')}</span>
+                        <span className="height-24">{(currentWorkflowStatus === WORKFLOW_STATUS_RUNNING || currentWorkflowStatus === WORKFLOW_STATUS_PAUSING) ? i18n._('key-Workspace/WorkflowControl-Pause') : i18n._('key-Workspace/WorkflowControl-Run')}</span>
                     </Button>
                     <Button width="160px" type="default" onClick={() => handleMachine('stop')}>
                         <SvgIcon

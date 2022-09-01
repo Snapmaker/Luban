@@ -11,7 +11,8 @@ import logger from '../../../lib/logger';
 import {
     DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, CNC_MODULE, LASER_MODULE, PRINTING_MODULE, HEAD_CNC, HEAD_LASER,
     COORDINATE_AXIS, WORKFLOW_STATUS_MAP, HEAD_PRINTING, EMERGENCY_STOP_BUTTON, ENCLOSURE_MODULES, AIR_PURIFIER_MODULES, ROTARY_MODULES,
-    MODULEID_TOOLHEAD_MAP, A400_HEADT_BED_FOR_SM2, HEADT_BED_FOR_SM2, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_SM2, MODULEID_MAP
+    MODULEID_TOOLHEAD_MAP, A400_HEADT_BED_FOR_SM2, HEADT_BED_FOR_SM2, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_SM2, MODULEID_MAP,
+    LOAD_FIMAMENT, UNLOAD_FILAMENT
 } from '../../../../app/constants';
 import { EventOptions, MarlinStateData } from '../types';
 import { SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 } from '../../../constants';
@@ -35,9 +36,15 @@ class SocketBASE {
 
     public subscribeCoordinateCallback: ResponseCallback;
 
+    private filamentAction: boolean = false;
+
+    private filamentActionType: string = 'load';
+
     private moduleInfos: {}
 
     public currentWorkNozzle: number;
+
+    private resumeGcodeCallback: any = null;
 
     public startHeartbeatBase = (sacpClient: Business, client?: net.Socket, isWifiConnection?: boolean) => {
         this.sacpClient = sacpClient;
@@ -81,9 +88,7 @@ class SocketBASE {
                 log.info('TCP close');
                 this.socket && this.socket.emit('connection:close');
             }, 10000);
-            isWifiConnection && this.sacpClient.wifiConnectionHeartBeat().then(({ response }) => {
-                log.info(`lubanHeartbeat, ${response}`);
-            });
+            isWifiConnection && this.sacpClient.wifiConnectionHeartBeat();
             await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
                 // log.info(`revice moduleInfo: ${data.response}`);
                 moduleInfos.forEach(module => {
@@ -159,7 +164,8 @@ class SocketBASE {
                 nozzleTemperature: leftInfo.currentTemperature,
                 nozzleTargetTemperature: leftInfo.targetTemperature,
                 nozzleRightTargetTemperature: rightInfo?.targetTemperature || 0,
-                nozzleRightTemperature: rightInfo?.currentTemperature || 0
+                nozzleRightTemperature: rightInfo?.currentTemperature || 0,
+                currentWorkNozzle: this.currentWorkNozzle
             };
         };
         this.sacpClient.subscribeNozzleInfo({ interval: 1000 }, this.subscribeNozzleCallback).then(res => {
@@ -175,14 +181,14 @@ class SocketBASE {
                 x: currentCoordinate[0].value,
                 y: currentCoordinate[1].value,
                 z: currentCoordinate[2].value,
-                b: currentCoordinate[3].value,
+                b: currentCoordinate[4].value,
                 isFourAxis: moduleStatusList.rotaryModule
             };
             const originOffset = {
                 x: originCoordinate[0].value,
                 y: originCoordinate[1].value,
                 z: originCoordinate[2].value,
-                b: originCoordinate[3].value
+                b: originCoordinate[4].value
             };
             const isHomed = !(coordinateInfos?.homed); // 0: homed, 1: need to home
             stateData = {
@@ -196,6 +202,55 @@ class SocketBASE {
         this.sacpClient.subscribeCurrentCoordinateInfo({ interval: 1000 }, this.subscribeCoordinateCallback).then(res => {
             log.info(`subscribe coordination success: ${res}`);
         });
+    };
+
+    public setROTSubscribeApi = () => {
+        log.info('ack ROT api');
+        this.sacpClient.handlerCoordinateMovementReturn((data) => {
+            this.socket && this.socket.emit('move:status', { isMoving: false });
+        });
+        this.sacpClient.handlerSwitchNozzleReturn((data) => {
+            if (this.filamentAction && data === 0) {
+                const toolHead = this.moduleInfos && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2] || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);// || this.moduleInfos[HEADT_BED_FOR_SM2]); //
+                if (this.filamentActionType === UNLOAD_FILAMENT) {
+                    this.sacpClient.ExtruderMovement(toolHead.key, 0, 6, 200, 60, 150).then(({ response }) => {
+                        if (response.result !== 0) {
+                            this.socket && this.socket.emit('connection:unloadFilament')
+                        }
+                    })
+                } else {
+                    this.sacpClient.ExtruderMovement(toolHead.key, 0, 60, 200, 0, 0).then(({ response }) => {
+                        if (response.result !== 0) {
+                            this.socket && this.socket.emit('connection:loadFilament')
+                        }
+                    })
+                }
+            } else {
+                this.socket && this.socket.emit(this.filamentActionType === LOAD_FIMAMENT ? 'connection:loadFilament' : 'connection:unloadFilament');
+            }
+        });
+        this.sacpClient.handlerExtruderMovementReturn((data) => {
+            this.filamentAction = false;
+            this.socket && this.socket.emit(this.filamentActionType === LOAD_FIMAMENT ? 'connection:loadFilament' : 'connection:unloadFilament');
+        });
+        this.sacpClient.handlerExtruderZOffsetReturn((data) => {
+            log.info(`extruderZOffsetReturn, ${data}`);
+        });
+        this.sacpClient.handlerStartPrintReturn((data) => {
+            log.info(`handlerStartPrintReturn, ${data}`);
+        });
+        this.sacpClient.handlerStopPrintReturn((data) => {
+            log.info(`handlerStopPrintReturn, ${data}`);
+            this.socket && this.socket.emit('connection:stopGcode', {});
+        });
+        this.sacpClient.handlerPausePrintReturn((data) => {
+            log.info(`handlerPausePrintReturn, ${data}`);
+            this.socket && this.socket.emit('connection:pauseGcode', {});
+        });
+        this.sacpClient.handlerResumePrintReturn((data) => {
+            log.info(`handlerResumePrintreturn, ${data}`);
+            this.resumeGcodeCallback && this.resumeGcodeCallback({ msg: data, code: data });
+        })
     };
 
     public executeGcode = async (options: EventOptions, callback: () => void) => {
@@ -244,8 +299,7 @@ class SocketBASE {
         });
         await this.sacpClient.requestAbsoluteCooridateMove(directions, distances, jogSpeed, CoordinateType.MACHINE).then(res => {
             log.info(`Coordinate Move: ${res.response.result}`);
-            this.socket && this.socket.emit('serialport:read', { data: res.response.result === 0 ? 'OK' : 'WARNING' });
-            this.socket && this.socket.emit('move:status', { isMoving: false });
+            this.socket && this.socket.emit('serialport:read', { data: res.response.result === 0 ? 'CANRUNNING' : 'WARNING' });
         });
     }
 
@@ -264,24 +318,22 @@ class SocketBASE {
     public stopGcode = (options) => {
         this.sacpClient.stopPrint().then(res => {
             log.info(`Stop Print: ${res}`);
-            const { eventName } = options;
-            eventName && this.socket && this.socket.emit(eventName, {});
+            // eventName && this.socket && this.socket.emit(eventName, {});
         });
     }
 
     public pauseGcode = (options) => {
         this.sacpClient.pausePrint().then(res => {
             log.info(`Pause Print: ${res}`);
-            const { eventName } = options;
-            eventName && this.socket && this.socket.emit(eventName, {});
+            // eventName && this.socket && this.socket.emit(eventName, {});
         });
     }
 
     public resumeGcode = (options, callback) => {
-        console.log('resumeGcodeOptions', options);
+        callback && (this.resumeGcodeCallback = callback);
         this.sacpClient.resumePrint().then(res => {
             log.info(`Resume Print: ${res}`);
-            callback && callback({ msg: res.response.result, code: res.response.result });
+            // callback && callback({ msg: res.response.result, code: res.response.result });
         });
     }
 
@@ -292,7 +344,6 @@ class SocketBASE {
             return;
         }
 
-        await this.goHome();
         const key = toolhead && toolhead.key;
         const response = await this.sacpClient.SwitchExtruder(key, extruderIndex);
         log.info(`SwitchExtruder to extruderIndex:${extruderIndex}, ${JSON.stringify(response)}`);
@@ -316,13 +367,21 @@ class SocketBASE {
             log.error(`non-eixst toolHead, moduleInfos:${this.moduleInfos}`,);
             return;
         }
-
-        // (this.currentWorkNozzle !== extruderIndex) && await this.goHome();
-        const _ = await this.sacpClient.SwitchExtruder(toolHead.key, extruderIndex);
-        log.info(`loadFilament SwitchExtruder:[${extruderIndex}], ${JSON.stringify(_)}`);
-        const response = await this.sacpClient.ExtruderMovement(toolHead.key, 0, 60, 200, 0, 0);
-        this.socket && this.socket.emit(eventName);
-        log.info(`loadFilament, ${JSON.stringify(response)}`);
+        if (Number(extruderIndex) === this.currentWorkNozzle) {
+            this.filamentAction = true;
+            this.filamentActionType = LOAD_FIMAMENT;
+            this.sacpClient.ExtruderMovement(toolHead.keys, 0, 60, 200, 0, 0);
+        } else {
+            this.sacpClient.SwitchExtruder(toolHead.key, extruderIndex).then(({ response }) => {
+                if (response.result === 0) {
+                    this.filamentAction = true;
+                    this.filamentActionType = LOAD_FIMAMENT;
+                } else {
+                    this.filamentAction = false;
+                    this.socket && this.socket.emit(eventName);
+                }
+            });
+        }
     }
 
     public async unloadFilament(extruderIndex, eventName) {
@@ -332,12 +391,26 @@ class SocketBASE {
             return;
         }
 
-        // await this.goHome();
-        const _ = await this.sacpClient.SwitchExtruder(toolHead.key, extruderIndex);
-        log.info(`unloadFilament SwitchExtruder:[${extruderIndex}], ${JSON.stringify(_)}`);
-        const response = await this.sacpClient.ExtruderMovement(toolHead.key, 0, 6, 200, 60, 150);
-        this.socket && this.socket.emit(eventName);
-        log.info(`unloadFilament, ${JSON.stringify(response)}`);
+        if (Number(extruderIndex) === this.currentWorkNozzle) {
+            this.filamentAction = true;
+            this.filamentActionType = UNLOAD_FILAMENT;
+            this.sacpClient.ExtruderMovement(toolHead.keys, 0, 6, 200, 60, 150);
+        } else {
+            this.sacpClient.SwitchExtruder(toolHead.key, extruderIndex).then(({ response }) => {
+                if (response.result === 0) {
+                    this.filamentAction = true;
+                    this.filamentActionType = UNLOAD_FILAMENT;
+                    console.log(eventName, response);
+                } else {
+                    this.filamentAction = false;
+                    this.socket && this.socket.emit(eventName);
+                }
+            });
+        }
+        // log.info(`unloadFilament SwitchExtruder:[${extruderIndex}], ${JSON.stringify(_)}`);
+        // const response = await this.sacpClient.ExtruderMovement(toolHead.key, 0, 6, 200, 60, 150);
+        // this.socket && this.socket.emit(eventName);
+        // log.info(`unloadFilament, ${JSON.stringify(response)}`);
     }
 
 

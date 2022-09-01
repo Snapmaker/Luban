@@ -21,6 +21,7 @@ export {
 const connectionEventsObject = {
     'connection:open': connectionManager.connectionOpen,
     'connection:close': connectionManager.connectionClose,
+    'connection:closeImproper': connectionManager.connectionCloseImproper,
     'connection:startGcode': connectionManager.startGcode,
     'connection:resumeGcode': connectionManager.resumeGcode,
     'connection:pauseGcode': connectionManager.pauseGcode,

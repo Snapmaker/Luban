@@ -107,7 +107,11 @@ class ConnectionManager {
     };
 
     connectionClose = (socket, options) => {
-        this.socket && this.socket.connectionClose(socket, options);
+        this.protocol === SACP_PROTOCOL && this.socket && this.socket.connectionClose(socket, options);
+    };
+
+    connectionCloseImproper = () => {
+        this.socket && this.socket.connectionCloseImproper();
     };
 
     inspectProtocol = async (address, connectionType = CONNECTION_TYPE_WIFI, options, callback) => {
@@ -432,7 +436,7 @@ M3`;
             socket && socket.emit(options.eventName, {});
         } else {
             if (this.protocol === SACP_PROTOCOL) {
-                this.socket.stopGcode();
+                this.socket.stopGcode(options);
             } else {
                 this.socket.command(this.socket, {
                     cmd: 'gcode:pause',
