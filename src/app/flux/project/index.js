@@ -30,6 +30,7 @@ import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
 import { logModuleVisit } from '../../lib/gaEvent';
 import { PROCESS_STAGE } from '../../lib/manager/ProgressManager';
+import workerManager from '../../lib/manager/workerManager';
 
 const INITIAL_STATE = {
     [HEAD_PRINTING]: {
@@ -572,6 +573,7 @@ export const actions = {
                 const propName = `guideTours${toPath}`;
                 isGuideTours = machineStore.get('guideTours') ? !!machineStore.get('guideTours')[propName] : undefined;
             }
+            workerManager.setClipperWorkerEnable(false);
         } else {
             isGuideTours = machineStore.get('guideTours')?.guideTours3dp;
         }
@@ -612,6 +614,11 @@ export const actions = {
 
         if (headType === HEAD_PRINTING) {
             dispatch(printingActions.destroyGcodeLine());
+            dispatch(printingActions.updateState({
+                enableShortcut: true,
+                leftBarOverlayVisible: false,
+                transformMode: ''
+            }));
         }
         modState.toolPathGroup && modState.toolPathGroup.deleteAllToolPaths();
         modState.modelGroup.removeAllModels();

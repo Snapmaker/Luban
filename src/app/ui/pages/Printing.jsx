@@ -334,7 +334,9 @@ function Printing({ location }) {
     const [simplifying, setSimplifying] = useState(false);
     const dispatch = useDispatch();
     const history = useHistory();
-    const [renderHomepage, renderMainToolBar, renderWorkspace, renderMachineMaterialSettings] = useRenderMainToolBar(setSimplifying, materialDefinitions.length);
+    const [
+        renderHomepage, renderMainToolBar, renderWorkspace, renderMachineMaterialSettings
+    ] = useRenderMainToolBar(setSimplifying, !!materialDefinitions.length);
     const modelGroup = useSelector(state => state.printing.modelGroup);
     const isNewUser = useSelector(state => state.printing.isNewUser);
     const thumbnail = useRef();

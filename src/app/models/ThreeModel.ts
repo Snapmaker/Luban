@@ -178,36 +178,33 @@ class ThreeModel extends BaseModel {
         this.clipper.setLocalPlane(height);
     }
 
-    public updateBufferGeometry(positions) {
-        const { recovery } = this.modelGroup.unselectAllModels();
-
+    private applyBufferGeometry(positions) {
         const bufferGeometry = this.meshObject.geometry;
         bufferGeometry.setAttribute(
             'position',
             new THREE.BufferAttribute(positions, 3)
         );
-        // Keep scale information
-        if (this.parent) {
-            bufferGeometry.scale(
-                1 / Math.abs(this.transformation.scaleX) / Math.abs(this.parent.transformation.scaleX),
-                1 / Math.abs(this.transformation.scaleY) / Math.abs(this.parent.transformation.scaleY),
-                1 / Math.abs(this.transformation.scaleZ) / Math.abs(this.parent.transformation.scaleZ)
-            );
-        } else {
-            bufferGeometry.scale(1 / Math.abs(this.transformation.scaleX), 1 / Math.abs(this.transformation.scaleY), 1 / Math.abs(this.transformation.scaleZ));
-        }
-        // reset rotation
-        this.meshObject.rotation.set(0, 0, 0);
-        // reset sacle and mirror
-        this.meshObject.scale.set(
-            Math.abs(this.transformation.scaleX) * (this.parent?.mirrorX ? -1 : 1),
-            Math.abs(this.transformation.scaleY) * (this.parent?.mirrorY ? -1 : 1),
-            Math.abs(this.transformation.scaleZ) * (this.parent?.mirrorZ ? -1 : 1)
-        );
-
         bufferGeometry.computeVertexNormals();
         // Ignore cache, force update boundingBox
         ThreeUtils.computeBoundingBox(this.meshObject, true);
+
+        // reset rotation
+        this.meshObject.rotation.set(0, 0, 0);
+        this.meshObject.scale.set(1, 1, 1);
+        this.onTransform();
+    }
+
+    public updateBufferGeometry(positions) {
+        const { recovery } = this.modelGroup.unselectAllModels();
+
+        if (this.parent) {
+            const parent = this.parent;
+            const subModels = this.parent.disassemble();
+            this.applyBufferGeometry(positions);
+            parent.add(subModels);
+        } else {
+            this.applyBufferGeometry(positions);
+        }
 
         recovery();
         this.stickToPlate();
@@ -217,7 +214,7 @@ class ThreeModel extends BaseModel {
     public updateClippingMap() {
         this.onTransform();
         if (this.clipper) {
-            return this.clipper.updateClippingMap(this.transformation, this.boundingBox);
+            return this.clipper.updateClippingMap(this.meshObject.matrixWorld, this.boundingBox);
         }
         return false;
     }

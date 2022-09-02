@@ -97,7 +97,7 @@ export const actions = {
         let models = selectedModels.length > 0 ? selectedModels : allModels;
 
         models = models.filter((model) => {
-            return model.visible;
+            return model.visible && model !== modelGroup.primeTower;
         });
         if (models.length === 0) {
             return {
