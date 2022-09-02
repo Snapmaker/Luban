@@ -37,7 +37,7 @@ import Dropdown from '../../components/Dropdown';
  * @ExportType                  ×    |     ×
  */
 const DEFAULT_DISPLAY_TYPE = 'key-default_category-Default';
-const MATERIAL_TYPE_ARRAY = MATERIAL_TYPE_OPTIONS.map(d => d.label);
+const MATERIAL_TYPE_ARRAY = MATERIAL_TYPE_OPTIONS.map(d => d.category);
 const materialCategoryRank = [
     'PLA',
     'Support',
@@ -315,7 +315,7 @@ function ProfileManager({
 
             let materialOptions = definitionState?.definitionOptions.map(option => {
                 return {
-                    label: option.category,
+                    label: option.i18nCategory || option.category,
                     value: option.category,
                     i18n: option.i18nCategory
                 };
@@ -604,7 +604,7 @@ function ProfileManager({
                                                                 />
                                                             ) : <span className="text-overflow-ellipsis">{cate.category}</span>}
                                                         </div>
-                                                        {!isOfficialDefinition(definitionState.definitionForManager) && (
+                                                        {!isOfficialDefinition(definitionState.definitionForManager) && managerType !== PRINTING_MANAGER_TYPE_MATERIAL && (
                                                             <div className={classNames(styles['manager-action'])}>
                                                                 <Dropdown
                                                                     placement="bottomRight"

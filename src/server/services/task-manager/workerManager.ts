@@ -40,7 +40,7 @@ class WorkerManager {
             //     config.maxWorkers = 2;
             //     config.forkOpts.execArgv = ['--inspect=8888'];
             // } else {
-            config.minWorkers = 'max';
+            config.minWorkers = 3;
             // }
             this.pool = workerpool.pool('./Pool.worker.js', config);
         }

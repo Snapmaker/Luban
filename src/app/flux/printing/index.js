@@ -3156,7 +3156,6 @@ export const actions = {
             if (model.supportTag) {
                 dispatch(actions.onModelTransform());
             }
-            console.log('modelGroup.getSelectedModelTransformationForPrinting()', modelGroup.getSelectedModelTransformationForPrinting());
             dispatch(
                 operationHistoryActions.updateTargetTmpState(INITIAL_STATE.name, model.modelID, {
                     from: {
@@ -3249,7 +3248,6 @@ export const actions = {
                     break;
                 case 'scale':
                     const mirrorType = dispatch(actions.getMirrorType(model))
-                    console.log('mirrorType', mirrorType);
                     if (mirrorType) {
                         isMirror = true
                     }
