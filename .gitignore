@@ -12,6 +12,7 @@ npm-debug.log*
 
 # local files
 /local/
+/logs/
 
 # Development Env (Jetbrains, Vim, macOS)
 .idea/

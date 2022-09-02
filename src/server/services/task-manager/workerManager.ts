@@ -33,6 +33,7 @@ class WorkerManager {
                 forkOpts: {
                     env: {
                         Tmpdir: DataStorage.tmpDir,
+                        userDataDir: global.luban.userDataDir,
                     }
                 }
             };

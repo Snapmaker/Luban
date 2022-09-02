@@ -26,6 +26,7 @@ import {
     LanguageDetector as i18nextLanguageDetector,
     handle as i18nextHandle
 } from 'i18next-express-middleware';
+import log4js from 'log4js';
 import urljoin from './lib/urljoin';
 import logger from './lib/logger';
 import { registerApis } from './services';
@@ -43,6 +44,7 @@ import {
 import DataStorage from './DataStorage';
 
 const log = logger('app');
+const log4jslog = logger('http');
 
 const renderPage = (view = 'index', cb = _.noop) => (req, res) => {
     // Override IE's Compatibility View Settings
@@ -248,7 +250,11 @@ const createApplication = () => {
 
         next();
     });
-
+    app.use(log4js.connectLogger(log4jslog, {
+        level: 'auto',
+        // https://github.com/log4js-node/log4js-node/blob/39218cc8d0e42773dd5513ca3d24cb397d0b4d50/lib/connect-logger.js#L222
+        format: (req, res, format) => format(`:method :url :status body=${JSON.stringify(req.body)}, cost=:response-timems`),
+    }));
     // register http service api
     registerApis(app);
     // Also see "src/app/app.js"
