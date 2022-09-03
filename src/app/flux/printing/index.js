@@ -4997,7 +4997,7 @@ export const actions = {
                         case 'LOAD_MODEL_POSITIONS': {
                             const { positions } = data;
 
-                            model.updateBufferGeometry(positions, res.reverse);
+                            model.updateBufferGeometry(positions);
 
                             if (!silentLoading && modelInfos.length > 1) {
                                 _progress += 1 / modelInfos.length;

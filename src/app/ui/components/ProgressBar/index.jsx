@@ -50,9 +50,10 @@ class ProgressBar extends React.PureComponent {
         const { display } = this.state;
         return (
             <div>
-                {display === 'lost' && (
+                {display === 'block' && (
                     <Modal
                         size="lg"
+                        closable={false}
                         centered={false}
                         zIndex={2000}
                         style={{ top: 'calc(100vh - 126px)', padding: '16px 0 0' }}
