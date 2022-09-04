@@ -47,7 +47,10 @@ const ScaleOverlay = React.memo(({
     const [modelSize, setModelSize] = useState({});
     const updateScale = throttle((event) => {
         const { detail } = event;
-        setScalePercentObj(detail.scale);
+        // When multiple models are selected, delayed updating is required
+        setTimeout(() => {
+            setScalePercentObj(detail.scale);
+        });
         setModelX(Math.round(detail.scale.x * 20) / 100);
         setModelY(Math.round(detail.scale.y * 20) / 100);
         // hidden model size after scale
@@ -90,12 +93,15 @@ const ScaleOverlay = React.memo(({
         setUniformScalingState(transformation.uniformScalingState);
     }, [selectedModelArray]);
 
-    const changeUniformScalingState = (_uniformScalingState) => {
-        const newTransformation = {
-            uniformScalingState: !_uniformScalingState
-        };
-        dispatch(printingActions.updateSelectedModelTransformation(newTransformation));
-        onModelAfterTransform();
+    const changeUniformScalingState = () => {
+        setUniformScalingState((_uniformScalingState) => {
+            const newTransformation = {
+                uniformScalingState: !_uniformScalingState
+            };
+            dispatch(printingActions.updateSelectedModelTransformation(newTransformation));
+            onModelAfterTransform();
+            return !_uniformScalingState;
+        });
     };
     const onModelTransform = (transformations, isReset, _isPrimeTowerSelected = false) => {
         const newTransformation = {};
@@ -206,6 +212,12 @@ const ScaleOverlay = React.memo(({
                             disabled={!isSelectedModelAllVisible && !isPrimeTowerSelected}
                             value={scalePercentObj.x}
                             onChange={(value) => {
+                                setScalePercentObj((obj) => {
+                                    return {
+                                        ...obj,
+                                        x: value
+                                    };
+                                });
                                 onModelTransform({ 'scaleX': value / 100 }, false, isPrimeTowerSelected);
                                 onModelAfterTransform();
                             }}
@@ -235,6 +247,12 @@ const ScaleOverlay = React.memo(({
                             value={scalePercentObj.y}
                             disabled={!isPrimeTowerSelected && !isSelectedModelAllVisible}
                             onChange={(value) => {
+                                setScalePercentObj((obj) => {
+                                    return {
+                                        ...obj,
+                                        y: value
+                                    };
+                                });
                                 onModelTransform({ 'scaleY': value / 100 }, false, isPrimeTowerSelected);
                                 onModelAfterTransform();
                             }}
@@ -264,6 +282,12 @@ const ScaleOverlay = React.memo(({
                                 value={scalePercentObj.z}
                                 disabled={!isSelectedModelAllVisible}
                                 onChange={(value) => {
+                                    setScalePercentObj((obj) => {
+                                        return {
+                                            ...obj,
+                                            z: value
+                                        };
+                                    });
                                     onModelTransform({ 'scaleZ': value / 100 });
                                     onModelAfterTransform();
                                 }}
@@ -276,9 +300,9 @@ const ScaleOverlay = React.memo(({
                         defaultChecked={isPrimeTowerSelected ? true : uniformScalingState}
                         checked={isPrimeTowerSelected ? true : uniformScalingState}
                         onClick={() => {
-                            changeUniformScalingState(uniformScalingState); // Todo: bug, state error
+                            changeUniformScalingState(); // Todo: bug, state error
                         }}
-                        disabled={!isSelectedModelAllVisible || isPrimeTowerSelected}
+                        disabled={!isSelectedModelAllVisible || isPrimeTowerSelected || selectedModelArray.length > 1}
                     />
                     <span
                         className="height-32 margin-horizontal-8"

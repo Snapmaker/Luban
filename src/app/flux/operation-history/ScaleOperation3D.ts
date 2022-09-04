@@ -7,8 +7,7 @@ import Operation from './Operation';
 type ScaleOperationProp = {
     target: ThreeGroup | ThreeModel,
     from: ModelTransformation,
-    to: ModelTransformation,
-    mirrorType: 'mirrorX' | 'mirrorY' | 'mirrorZ'
+    to: ModelTransformation
 }
 
 type ScaleOperationState = ScaleOperationProp & {
@@ -22,16 +21,8 @@ export default class ScaleOperation3D extends Operation<ScaleOperationState> {
             target: props.target,
             modelGroup: props.target.modelGroup,
             from: props.from,
-            to: props.to,
-            mirrorType: props.mirrorType
+            to: props.to
         };
-        this.changeGroupMirrorFlag();
-    }
-
-    private changeGroupMirrorFlag() {
-        if (this.state.target instanceof ThreeGroup && this.state.mirrorType) {
-            this.state.target[this.state.mirrorType] = !this.state.target[this.state.mirrorType];
-        }
     }
 
     public redo() {
@@ -48,7 +39,8 @@ export default class ScaleOperation3D extends Operation<ScaleOperationState> {
         modelGroup.unselectAllModels();
 
         modelGroup.addModelToSelectedGroup(model);
-        // Only set the scale, and then trigger the stickToPlate to restore the position of the same group of models
+        // when we set the mirrorY of the model, we expect the result to be equal to scale(1, -1, 1)
+        // But the result of threejs processing is scale(-1, 1, 1) and rotation(0, 0, -3.14)
         modelGroup.updateSelectedGroupTransformation({ ...transform }, false);
         modelGroup.unselectAllModels();
         model.onTransform();
@@ -59,6 +51,5 @@ export default class ScaleOperation3D extends Operation<ScaleOperationState> {
         const overstepped = modelGroup._checkOverstepped(model);
         model.setOversteppedAndSelected(overstepped, model.isSelected);
         modelGroup.calaClippingMap();
-        this.changeGroupMirrorFlag();
     }
 }

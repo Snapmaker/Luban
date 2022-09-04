@@ -36,6 +36,7 @@ const SimplifyModelOverlay = ({ handleApplySimplify, handleCancelSimplify, handl
             <div className="sm-flex justify-space-between padding-top-8 padding-horizontal-16 padding-bottom-24">
 
                 <TipTrigger
+                    overlayClassName="simplify-overlay-tip"
                     title={i18n._('key-Printing/LeftBar-Simplify by Custom Rate')}
                     content={(
                         <div style={{ width: '270px' }}>
@@ -54,6 +55,7 @@ const SimplifyModelOverlay = ({ handleApplySimplify, handleCancelSimplify, handl
                     </Anchor>
                 </TipTrigger>
                 <TipTrigger
+                    overlayClassName="simplify-overlay-tip"
                     title={i18n._('key-Printing/LeftBar-Simplify by Layer Height')}
                     content={(
                         <div style={{ width: '270px' }}>

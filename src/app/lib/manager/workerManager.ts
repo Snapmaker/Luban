@@ -28,7 +28,7 @@ class WorkerManager extends EventEmitter {
             }
             this.clipperWorkerEnable = enable3dpLivePreview;
         } else {
-            if (!bool && this.clipperWorkerEnable) {
+            if (!bool && this.clipperWorkerEnable && this.clipperWorker) {
                 this.clipperWorker.terminate();
                 this.clipperWorker = null;
             }
@@ -104,7 +104,7 @@ class WorkerManager extends EventEmitter {
         const modelID = data.modelID;
         return new Promise<T>((resolve, reject) => {
             const listener = (res) => {
-                // get from worker
+                // get from worker, jobID=${jobID}, modelID=${modelID}, res.type=${res.type}
                 if (res.type === 'CANCEL') {
                     reject();
                 } else {
@@ -115,7 +115,7 @@ class WorkerManager extends EventEmitter {
             this.listenerMap.set(modelID, [
                 `CLIPPER:${jobID}`, listener
             ]);
-            // send to worker
+            // send to worker, jobID=${jobID}, modelID=${modelID}
             this.clipperWorker.postMessage([data, jobID]);
         });
     }

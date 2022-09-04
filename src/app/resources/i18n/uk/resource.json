@@ -1583,7 +1583,7 @@
     "key-ProfileManager-Are you sure to delete profile \"{{name}}\"?": "Ви насправді бажаєту вилучити профіль \"{{name}}\"?",
     "key-ProfileManager/Add Profile": "Додати профіль",
     "key-Progress/3DP-Arrange models failed.": "Збій впорядкування моделей",
-    "key-Progress/3DP-Arrange models successfully.": "Впорядкування моделей… {{progress}}%",
+    "key-Progress/3DP-Arrange models successfully.": "Успішно Впорядкування моделі",
     "key-Progress/3DP-Arranging models...{{progress}}%": "Впорядкування моделей… {{progress}}%",
     "key-Progress/3DP-Auto Rotate models failed.": "Збій автообертання моделей.",
     "key-Progress/3DP-Auto Rotate models successfully.": "Автообертання моделей завершено.",
