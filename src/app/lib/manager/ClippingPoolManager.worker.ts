@@ -225,7 +225,6 @@ async function calculateSectionPoints({
             break;
         }
         if (layerTop <= boundingBox.min.z) {
-            sortUnorderedLine(layerTop, wallCount, clippingConfig.lineWidth);
             continue;
         }
         plane.constant = layerTop;
@@ -244,9 +243,9 @@ async function calculateSectionPoints({
                     tempLine.start.copy(start);
                     tempLine.end.copy(end);
                     if (plane.intersectLine(tempLine, tempVector)) {
-                        const x = Number(tempVector.x.toFixed(5));
-                        const y = Number(tempVector.y.toFixed(5));
-                        const z = Number(tempVector.z.toFixed(5));
+                        const x = Math.round(tempVector.x * 10000) / 10000;
+                        const y = Math.round(tempVector.y * 10000) / 10000;
+                        const z = Math.round(tempVector.z * 10000) / 10000;
                         positions[index] = { x, y, z };
                         p.push({ x, y, z });
                         count++;
@@ -305,6 +304,7 @@ async function calculateSectionPoints({
                             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                             // @ts-ignore
                             postMessage({ type: 'FINISH', modelID, clippingMap, innerWallMap, skinMap, infillMap, jobID }, expandBuffer(transferList));
+                            // finish execution job, runningJob=${runningJob.jobID}, modelID=${runningJob.modelID}
 
                             runningJob = null;
                             subscriber2.unsubscribe();
@@ -342,14 +342,14 @@ function runJob() {
 
     if (jobs.length && !runningJob) {
         runningJob = jobs.shift();
-        // start execution job
+        // start execution job, runningJob=${runningJob.jobID}, modelID=${runningJob.modelID}
         calculateSectionPoints(runningJob);
     } else if (!runningJob) {
         clearPoolhandle = setTimeout(() => {
             pool.terminate();
             pool = null;
-            clearTaskTmp();
         }, 1000 * 10);
+        clearTaskTmp();
     }
 }
 
@@ -360,6 +360,7 @@ onmessage = async (e) => {
     if (runningJob && runningJob.modelID === job.modelID) {
         poolTaskQueue = [];
         const runningJobID = runningJob.jobID;
+        // emit to cancel worker, runningJob=${runningJob.jobID}, modelID=${runningJob.modelID}
         // emit to cancel worker
         postMessage({ type: 'CANCEL', modelID: runningJob.modelID, jobID: runningJobID });
         layerCount = 0;

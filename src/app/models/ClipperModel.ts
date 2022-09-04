@@ -1,9 +1,9 @@
-import { Box3, DynamicDrawUsage, Plane } from 'three';
+import { Box3, DynamicDrawUsage, Matrix4, Plane } from 'three';
 import * as THREE from 'three';
 import { debounce } from 'lodash';
 import type ThreeModel from './ThreeModel';
 import type ModelGroup from './ModelGroup';
-import { ModelTransformation } from './ThreeBaseModel';
+// import { ModelTransformation } from './ThreeBaseModel';
 import generateLine from '../lib/generate-line';
 import { CLIPPING_LINE_COLOR, PLANE_MAX_HEIGHT } from './ModelGroup';
 import { bufferToPoint } from '../lib/buffer-utils';
@@ -26,7 +26,7 @@ export type TClippingConfig = {
 
 class ClippingModel {
     private localPlane: Plane;
-    private colliderBvhTransform: ModelTransformation;
+    private colliderBvhMatrix: Matrix4;
     public clippingMap = new Map<number, TPolygon[]>();
     private innerWallMap = new Map<number, TPolygon[][]>();
     private skinMap = new Map<number, TPolygon[]>();
@@ -87,7 +87,7 @@ class ClippingModel {
         this.modelGeometry = this.modelMeshObject.geometry as unknown as THREE.BufferGeometry;
         this.modelBoundingBox = this.model.boundingBox;
 
-        this.colliderBvhTransform = { ...this.model.transformation };
+        this.colliderBvhMatrix = this.model.meshObject.matrixWorld.clone();
         this.clippingWall = this.createLine(CLIPPING_LINE_COLOR);
         this.clippingSkin = this.createLine(CLIPPING_LINE_COLOR);
         this.clippingSkinArea = this.createLine(CLIPPING_LINE_COLOR);
@@ -135,32 +135,18 @@ class ClippingModel {
         this.group.add(this.meshObjectGroup);
     }
 
-    public updateClippingMap(transformation: ModelTransformation, boundingBox: Box3) {
+    public updateClippingMap(matrixWorld: Matrix4, boundingBox: Box3) {
         this.modelBoundingBox = boundingBox;
-        let tags = ['rotationX', 'rotationY', 'rotationZ', 'scaleX', 'scaleY', 'scaleZ'];
-        let re = tags.some((tag) => {
-            return this.colliderBvhTransform[tag] !== transformation[tag];
-        });
-        if (re) {
-            this.updateBvhGeometry(transformation);
-            this.startCala();
-            return true;
+        if (this.colliderBvhMatrix.equals(matrixWorld)) {
+            return false;
         }
-
-        tags = ['positionX', 'positionY', 'positionZ'];
-        re = tags.some((tag) => {
-            return this.colliderBvhTransform[tag] !== transformation[tag];
-        });
-        if (re) {
-            this.updateBvhGeometry(transformation);
-            this.startCala();
-            return true;
-        }
-        return false;
+        this.updateBvhMatrix(matrixWorld.clone());
+        this.startCala();
+        return true;
     }
 
-    public updateBvhGeometry(transformation: ModelTransformation) {
-        this.colliderBvhTransform = { ...transformation };
+    public updateBvhMatrix(transformation: Matrix4) {
+        this.colliderBvhMatrix = transformation;
     }
 
     public clear = async () => {

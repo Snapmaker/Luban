@@ -35,7 +35,7 @@ const unionPolygons = (polygons: TPoint[][][]): TPoint[][] => {
 };
 
 const calaClippingSkin = ({ innerWall, otherLayers: _otherLayers, lineWidth, innerWallCount }: TMessage) => {
-    const currentInnerWall = innerWall.send ? innerWall.send[innerWallCount - 1].map((polygon) => {
+    const currentInnerWall = (innerWall.send && innerWall.send[innerWallCount - 1]) ? innerWall.send[innerWallCount - 1].map((polygon) => {
         return polygon.map((item) => {
             return bufferToPoint(item);
         });

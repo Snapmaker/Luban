@@ -107,7 +107,6 @@ export default class DeleteOperation3D extends Operation<DeleteOperationState> {
                 }
             } else {
                 modelGroup.models = modelGroup.models.concat(model);
-                console.log(modelGroup.namesMap);
                 modelGroup.recoverModelClippingGroup(model);
                 modelGroup.object.add(model.meshObject);
                 setGlobalTransform(modelGroup, model, this.state.modelTransformation.get(model.modelID));
@@ -119,17 +118,18 @@ export default class DeleteOperation3D extends Operation<DeleteOperationState> {
             modelGroup.recoverModelClippingGroup(model);
             ThreeUtils.setObjectParent(model.meshObject, modelGroup.object);
             model.children.forEach((subModel) => {
+                ThreeUtils.setObjectParent(subModel.meshObject, model.meshObject);
                 setGlobalTransform(modelGroup, subModel, this.state.modelTransformation.get(subModel.modelID));
             });
         }
         if (model.isSelected) {
             model.setSelected(false);
         }
+        this.state.modelGroup.unselectAllModels();
         modelGroup.stickToPlateAndCheckOverstepped(model);
 
         model.meshObject.addEventListener('update', modelGroup.onModelUpdate);
         modelGroup.updatePrimeTowerHeight();
         modelGroup.modelChanged();
-        this.state.modelGroup.unselectAllModels();
     }
 }

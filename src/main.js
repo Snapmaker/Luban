@@ -142,7 +142,7 @@ function updateHandle() {
     // Emitted when there is an available update. The update is downloaded automatically if autoDownload is true.
     autoUpdater.on('update-available', async (downloadInfo) => {
         sendUpdateMessage(message.updateAva);
-        if (!downloadInfo.releaseNotes) {
+        if (!downloadInfo.releaseNotes && process.platform !== 'linux') {
             // for aliyuncs
             const changelogUrl = `https://snapmaker.oss-cn-beijing.aliyuncs.com/snapmaker.com/download/luban/Snapmaker-Luban-${downloadInfo.version}.changelog.md`;
             const result = await fetch(changelogUrl, {
@@ -221,6 +221,9 @@ if (process.platform === 'win32') {
 }
 
 const checkUpdateServer = () => {
+    if (process.platform === 'linux') {
+        return Promise.resolve('github');
+    }
     const hosts = [
         ['snapmaker.oss-cn-beijing.aliyuncs.com', 'aliyuncs'],
         ['github.com', 'github']
