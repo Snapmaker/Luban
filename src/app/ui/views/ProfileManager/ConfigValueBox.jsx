@@ -159,21 +159,23 @@ function ConfigValueBox({
                 );
             }
             return (
-                <CheckboxItem
-                    calculateTextIndex={_calculateTextIndex}
-                    settings={settings}
-                    defaultValue={includes(
-                        customConfigs ? customConfigs[categoryKey] : [],
-                        profileKey
-                    )}
-                    definitionKey={
-                        profileKey
-                    }
-                    key={profileKey}
-                    isOfficialDefinitionKey={_isOfficialDefinitionKey}
-                    onChangeDefinition={_onChangeCustomConfig}
-                    configCategory={categoryKey}
-                />
+                <div key={profileKey} className={`margin-left-${(settings[profileKey].zIndex < 3 ? settings[profileKey].zIndex - 1 : 1) * 16}`}>
+                    <CheckboxItem
+                        calculateTextIndex={_calculateTextIndex}
+                        settings={settings}
+                        defaultValue={includes(
+                            customConfigs ? customConfigs[categoryKey] : [],
+                            profileKey
+                        )}
+                        definitionKey={
+                            profileKey
+                        }
+                        key={profileKey}
+                        isOfficialDefinitionKey={_isOfficialDefinitionKey}
+                        onChangeDefinition={_onChangeCustomConfig}
+                        configCategory={categoryKey}
+                    />
+                </div>
             );
         });
     };

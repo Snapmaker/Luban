@@ -126,6 +126,8 @@ class Visualizer extends PureComponent {
 
     canvas = React.createRef();
 
+    randomKey = Math.random();
+
     actions = {
         // canvas
         zoomIn: () => {
@@ -605,12 +607,18 @@ class Visualizer extends PureComponent {
                             <Input
                                 size="small"
                                 placeholder="0"
+                                key={this.randomKey}
                                 value={this.props.controlInputValue ? this.props.controlInputValue[this.props.controlAxis[0]] : null}
                                 suffix={modeSuffix[this.props.controlMode]}
                                 allowUndefined
                                 prefix={`${this.props.controlAxis[0].toUpperCase()}:`}
                                 onPressEnter={(event) => {
-                                    this.actions.controlInputTransform(this.props.controlMode, this.props.controlAxis[0], event.target.value);
+                                    let value = event.target.value;
+                                    if (this.props.controlMode === SCALE_MODE) {
+                                        value = (value <= 0 ? 1 : value);
+                                    }
+                                    this.actions.controlInputTransform(this.props.controlMode, this.props.controlAxis[0], value);
+                                    this.randomKey = Math.random();
                                 }}
                             />
                         </div>

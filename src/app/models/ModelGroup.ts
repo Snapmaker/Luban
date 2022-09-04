@@ -214,7 +214,7 @@ class ModelGroup extends EventEmitter {
      * Note: for performance consideration, don't call this method in render.
      */
     public getBoundingBox() {
-        return ThreeUtils.computeBoundingBox(this.object) as Box3;
+        return ThreeUtils.computeBoundingBox(this.object);
     }
 
     /**
@@ -1511,7 +1511,8 @@ class ModelGroup extends EventEmitter {
             }
             selected.computeBoundingBox();
         });
-        this.selectedGroup.shouldUpdateBoundingbox = false;
+        // after update transformation
+        this.selectedGroup.shouldUpdateBoundingbox = true;
 
         this.prepareSelectedGroup();
         this.updatePrimeTowerHeight();

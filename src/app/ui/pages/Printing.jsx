@@ -442,7 +442,7 @@ function Printing({ location }) {
         const body = i18n._('key-Printing/Page-Only STL/OBJ files are supported.');
         modal({
             title: title,
-            cancelTitle: 'Close',
+            cancelTitle: i18n._('key-Workspace/WorkflowControl-Close'),
             body: body
         });
     }

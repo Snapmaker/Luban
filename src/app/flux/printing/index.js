@@ -2191,7 +2191,7 @@ export const actions = {
             renderGcodeFileName,
             layerCount,
             matierial0: materialDefinitions[indexL]?.name,
-            matierial1: materialDefinitions[indexR]?.name,
+            matierial1: printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? materialDefinitions[indexR]?.name : null,
             printingToolhead,
             series
         };

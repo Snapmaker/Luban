@@ -459,8 +459,24 @@ const MachineSettings = forwardRef(({
 
     useEffect(() => {
         setSeries(currentSerial);
+        let tempToolhead = { ...toolHead };
+        if (currentSerial === MACHINE_SERIES.ORIGINAL.value) {
+            const markForOrigin = 'ForOriginal';
+            tempToolhead = {
+                printingToolhead: includes(toolHead.printToolhead, markForOrigin) ? toolHead.printToolhead : SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
+                laserToolhead: includes(toolHead.laserToolhead, markForOrigin) ? toolHead.laserToolhead : LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
+                cncToolhead: includes(toolHead.cncToolhead, markForOrigin) ? toolHead.cncToolhead : STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL
+            };
+        } else {
+            const markForSM2 = 'ForSM2';
+            tempToolhead = {
+                printingToolhead: includes(toolHead.printToolhead, markForSM2) ? toolHead.printToolhead : SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+                laserToolhead: includes(toolHead.laserToolhead, markForSM2) ? toolHead.laserToolhead : LEVEL_ONE_POWER_LASER_FOR_SM2,
+                cncToolhead: includes(toolHead.cncToolhead, markForSM2) ? toolHead.cncToolhead : STANDARD_CNC_TOOLHEAD_FOR_SM2
+            };
+        }
         setToolhead({
-            ...toolHead,
+            ...tempToolhead,
             [`${headType}Toolhead`]: currentToolHead
         });
         if (currentToolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {

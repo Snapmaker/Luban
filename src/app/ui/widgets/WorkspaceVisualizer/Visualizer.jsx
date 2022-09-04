@@ -395,9 +395,9 @@ class Visualizer extends PureComponent {
                         const targetE = Math.max(pos.e - 5, 0);
                         const targetZ = Math.min(pos.z + 30, this.props.size.z);
                         const gcode = [
-                            `G1 F3000 E${targetE}\n`,
-                            `G1 Z${targetZ} F3000\n`,
-                            `G1 F100 E${pos.e}\n`
+                            `G1 E${targetE}\n`,
+                            `G1 Z${targetZ}\n`,
+                            `G1 E${pos.e}\n`
                         ];
                         this.props.executeGcode(gcode);
                         this.props.updatePause3dpStatus(pause3dpStatus);
