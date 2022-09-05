@@ -110,7 +110,7 @@ function SettingItem({
 
     return (
         <Anchor className="sm-flex justify-space-between height-32 margin-vertical-8" onClick={(e) => onClick && onClick(categoryKey, definitionKey, e)}>
-            <span className="text-overflow-ellipsis width-auto main-text-normal" style={{ maxWidth: '171px' }}>
+            <span className="text-overflow-ellipsis width-auto main-text-normal" style={{ maxWidth: 'calc(100% - 224px)' }}>
                 {i18n._(label)}
             </span>
             <div className="sm-flex-auto">

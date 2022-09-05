@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
-import { Tooltip } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
 import i18n from '../../../lib/i18n';
 import MachineSettings from './machineSettings';
@@ -79,16 +78,13 @@ const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
     return (
         <div className="padding-top-16 padding-horizontal-40 height-100vh">
             {isPopup && (
-                <Tooltip title={i18n._('key-Workspace/Page-Back')}>
-                    <Anchor onClick={() => onCloseHandle()}>
-                        <SvgIcon
-                            size={24}
-                            name="MainToolbarBack"
-                            type={['static']}
-                        />
-                        <span>{i18n._('key-Workspace/Page-Back')}</span>
-                    </Anchor>
-                </Tooltip>
+                <Anchor onClick={() => onCloseHandle()} className="sm-flex justify-flex-end">
+                    <SvgIcon
+                        size={24}
+                        name="Cancel"
+                        type={['static']}
+                    />
+                </Anchor>
             )}
             <div className="background-color-white margin-top-16 border-radius-24 height-all-minus-98">
                 <div className="height-56 padding-left-80 border-bottom-normal sm-flex">

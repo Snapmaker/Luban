@@ -19,7 +19,7 @@ import { actions as projectActions } from '../../flux/project';
 import { actions as machineActions } from '../../flux/machine';
 import ProjectLayout from '../layouts/ProjectLayout';
 import MainToolBar from '../layouts/MainToolBar';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_PRINTING, LEFT, PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY, ROTATE_MODE } from '../../constants';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_PRINTING, ROTATE_MODE } from '../../constants';
 import { renderPopup, renderWidgetList, logPageView, useUnsavedTitle } from '../utils';
 import { machineStore } from '../../store/local-storage';
 
@@ -216,6 +216,9 @@ function useRenderMainToolBar(setSimplifying, profileInitialized = false) {
                 }
             },
             {
+                type: 'separator'
+            },
+            {
                 title: i18n._('key-3DP/MainToolBar-Align'),
                 disabled: !canMerge || !enableShortcut,
                 type: 'button',
@@ -243,6 +246,9 @@ function useRenderMainToolBar(setSimplifying, profileInitialized = false) {
                 }
             },
             {
+                type: 'separator'
+            },
+            {
                 title: i18n._('key-3DP/MainToolBar-Model Simplify'),
                 disabled: !canSimplify || !enableShortcut,
                 type: 'button',
@@ -262,30 +268,6 @@ function useRenderMainToolBar(setSimplifying, profileInitialized = false) {
                 name: 'MainToolbarFixModel',
                 action: () => {
                     dispatch(printingActions.repairSelectedModels());
-                }
-            },
-            {
-                title: i18n._('key-3DP/MainToolBar-MaterialSetting'),
-                disabled: !profileInitialized,
-                type: 'button',
-                name: 'MainToolbarMaterialSetting',
-                action: () => {
-                    dispatch(printingActions.updateManagerDisplayType(PRINTING_MANAGER_TYPE_MATERIAL));
-                    dispatch(printingActions.updateShowPrintingManager(true, LEFT));
-                }
-            },
-            {
-                title: i18n._('key-3DP/MainToolBar-QualitySetting'),
-                disabled: !profileInitialized,
-                type: 'button',
-                name: 'MainToolbarPrintingSetting',
-                action: () => {
-                    dispatch(
-                        printingActions.updateManagerDisplayType(
-                            PRINTING_MANAGER_TYPE_QUALITY
-                        )
-                    );
-                    dispatch(printingActions.updateShowPrintingManager(true));
                 }
             }
         ];
