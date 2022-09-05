@@ -291,20 +291,12 @@ export default class ThreeGroup extends BaseModel {
         }
 
         /**
-         * In order to solve the problem of landing the model in the group when DeleteSupportsOperation3D
-         *
-         * 1. Group two models
-         * 2. Move an intra group model in the z-axis direction
-         * 3. Generate customized support for modified model
-         * 4. Then perform group operation
-         * 5. undo
+         * Annotated by fashu-issus-id-1224048, 1408279, 1409789
          */
-        /**
-         * Annotated by fashu-issus-id-1224048
-         */
-        // if (this.meshObject.children.length !== this.children.length) {
-        //     return;
-        // }
+        if (this.meshObject.children.length < this.children.length) {
+            return;
+        }
+
         const revert = ThreeUtils.removeObjectParent(this.meshObject);
 
         this.computeBoundingBox();

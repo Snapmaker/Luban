@@ -3,7 +3,6 @@ import * as THREE from 'three';
 import { debounce } from 'lodash';
 import type ThreeModel from './ThreeModel';
 import type ModelGroup from './ModelGroup';
-// import { ModelTransformation } from './ThreeBaseModel';
 import generateLine from '../lib/generate-line';
 import { CLIPPING_LINE_COLOR, PLANE_MAX_HEIGHT } from './ModelGroup';
 import { bufferToPoint } from '../lib/buffer-utils';
