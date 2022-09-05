@@ -658,7 +658,7 @@ function Configurations() {
                                     >
                                         <Tooltip
                                             title={getPresetContent(optionItem?.definitionId, optionItem.name)}
-                                            trigger="hover"
+                                            zIndex={10}
                                             placement="left"
                                         >
                                             <Anchor

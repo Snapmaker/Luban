@@ -1,6 +1,6 @@
 /* eslint-disable import/no-cycle */
 import cloneDeep from 'lodash/cloneDeep';
-import { find, includes, keys, some } from 'lodash';
+import { find, keys, some } from 'lodash';
 import pkg from '../../../package.json';
 import {
     HEAD_CNC,
@@ -30,6 +30,7 @@ import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
 import { logModuleVisit } from '../../lib/gaEvent';
 import { PROCESS_STAGE } from '../../lib/manager/ProgressManager';
+import workerManager from '../../lib/manager/workerManager';
 
 const INITIAL_STATE = {
     [HEAD_PRINTING]: {
@@ -106,10 +107,11 @@ export const actions = {
             envObj.coordinateMode = coordinateMode;
             envObj.coordinateSize = coordinateSize;
         } else if (headType === HEAD_PRINTING) {
-            const { defaultMaterialId, defaultMaterialIdRight, defaultQualityId } = editorState;
+            const { defaultMaterialId, defaultMaterialIdRight, defaultQualityId, helpersExtruderConfig } = editorState;
             envObj.defaultMaterialId = defaultMaterialId;
             envObj.defaultMaterialIdRight = defaultMaterialIdRight;
             envObj.defaultQualityId = defaultQualityId;
+            envObj.helpersExtruderConfig = helpersExtruderConfig;
             envObj.models.push(modelGroup.primeTower.getSerializableConfig());
         }
         for (let key = 0; key < models.length; key++) {
@@ -151,9 +153,9 @@ export const actions = {
         for (let k = 0; k < models.length; k++) {
             const { headType, originalName, uploadName, modelName, config, sourceType, gcodeConfig,
                 sourceWidth, sourceHeight, mode, transformation, modelID, supportTag, extruderConfig, children, parentModelID } = models[k];
-            const primeTowerTag = includes(originalName, 'prime_tower');
+            const primeTowerTag = uploadName && uploadName.indexOf('prime_tower_') === 0;
             // prevent project recovery recorded into operation history
-            if (supportTag || originalName?.indexOf('prime_tower') === 0) {
+            if (supportTag) {
                 continue;
             }
             if (!children) {
@@ -282,18 +284,8 @@ export const actions = {
         }
 
         if (envHeadType === HEAD_PRINTING) {
-            const { materialDefinitions, qualityDefinitions, defaultMaterialId: originalMaterialId, defaultQualityId: originalQualityId } = modState;
-            let { defaultMaterialId, defaultQualityId } = envObj;
-            if (!materialDefinitions.find(d => d.definitionId === defaultMaterialId)) {
-                defaultMaterialId = originalMaterialId;
-            }
-            if (!qualityDefinitions.find(d => d.definitionId === defaultQualityId)) {
-                defaultQualityId = originalQualityId;
-            }
             dispatch(modActions.updateState({
-                ...restState,
-                defaultMaterialId,
-                defaultQualityId
+                ...restState
             }));
         } else {
             dispatch(modActions.updateState(envHeadType, restState));
@@ -572,6 +564,7 @@ export const actions = {
                 const propName = `guideTours${toPath}`;
                 isGuideTours = machineStore.get('guideTours') ? !!machineStore.get('guideTours')[propName] : undefined;
             }
+            workerManager.setClipperWorkerEnable(false);
         } else {
             isGuideTours = machineStore.get('guideTours')?.guideTours3dp;
         }
@@ -612,6 +605,11 @@ export const actions = {
 
         if (headType === HEAD_PRINTING) {
             dispatch(printingActions.destroyGcodeLine());
+            dispatch(printingActions.updateState({
+                enableShortcut: true,
+                leftBarOverlayVisible: false,
+                transformMode: ''
+            }));
         }
         modState.toolPathGroup && modState.toolPathGroup.deleteAllToolPaths();
         modState.modelGroup.removeAllModels();

@@ -110,7 +110,7 @@ function ConfigValueBox({
         }
     }
     const handleUpdateProfileKey = (category, profileKey, e) => {
-        const scrollTop = e.target.offsetParent.scrollTop;
+        const scrollTop = e.target.offsetParent?.scrollTop || 0;
         const offsetTop = e.target.offsetTop;
         setSelectCategory(category);
         setSelectProfile(profileKey);

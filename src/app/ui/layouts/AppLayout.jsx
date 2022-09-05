@@ -85,7 +85,7 @@ class AppLayout extends PureComponent {
         updateMachineToolHead: PropTypes.func.isRequired,
         longTermBackupConfig: PropTypes.func.isRequired,
         showSavedModal: PropTypes.bool.isRequired,
-        savedModalType: PropTypes.string.isRequired,
+        savedModalType: PropTypes.string,
         savedModalFilePath: PropTypes.string.isRequired,
         savedModalZIndex: PropTypes.number.isRequired,
         updateSavedModal: PropTypes.func.isRequired,
@@ -520,12 +520,14 @@ class AppLayout extends PureComponent {
                 format = filePath.split('.').pop();
             }
             const outputObject = new Group();
-            this.props.modelGroup.models.forEach(item => {
+            const modelGroup = this.props.modelGroup;
+            modelGroup.models.forEach(item => {
                 if (item.visible) {
                     const tempMeshObject = cloneDeep(item.meshObject);
                     outputObject.add(tempMeshObject);
                 }
             });
+            outputObject.add(cloneDeep(modelGroup.selectedGroup));
             const output = new ModelExporter().parse(outputObject, format, isBinary);
             if (!output) {
                 // export error

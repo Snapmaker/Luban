@@ -237,7 +237,7 @@ function resolveDefinition(definition, modifiedParams) {
             }
         }
         catch (e) {
-            console.error(e, key, value.visible);
+            console.error(e, key);
         }
     };
     try {

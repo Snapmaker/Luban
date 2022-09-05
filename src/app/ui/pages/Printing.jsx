@@ -313,8 +313,9 @@ function useRenderMainToolBar(setSimplifying, profileInitialized = false) {
 function Printing({ location }) {
     const widgets = useSelector(state => state?.widget[pageHeadType].default.widgets, shallowEqual);
     const series = useSelector(state => state?.machine?.series);
-    const printingState = useSelector(state => state?.printing);
-    const { materialDefinitions, defaultMaterialId, defaultMaterialIdRight } = printingState;
+    const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions);
+    const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId);
+    const defaultMaterialIdRight = useSelector(state => state?.printing?.defaultMaterialIdRight);
     const leftMaterial = find(materialDefinitions, { definitionId: defaultMaterialId });
     const rightMaterial = find(materialDefinitions, { definitionId: defaultMaterialIdRight });
     const machineState = useSelector(state => state?.machine);
@@ -334,7 +335,9 @@ function Printing({ location }) {
     const [simplifying, setSimplifying] = useState(false);
     const dispatch = useDispatch();
     const history = useHistory();
-    const [renderHomepage, renderMainToolBar, renderWorkspace, renderMachineMaterialSettings] = useRenderMainToolBar(setSimplifying, materialDefinitions.length);
+    const [
+        renderHomepage, renderMainToolBar, renderWorkspace, renderMachineMaterialSettings
+    ] = useRenderMainToolBar(setSimplifying, !!materialDefinitions.length);
     const modelGroup = useSelector(state => state.printing.modelGroup);
     const isNewUser = useSelector(state => state.printing.isNewUser);
     const thumbnail = useRef();

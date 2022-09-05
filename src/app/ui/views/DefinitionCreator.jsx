@@ -76,7 +76,7 @@ const describeCreator = (managerType) => {
     };
 };
 
-const DefinitionCreator = ({
+const DefinitionCreator = forwardRef(({
     showRadio = true, managerType, isCreate, copyType, copyCategoryName, copyCategoryI18n, copyItemName, materialOptions: _materialOptions
 }, ref) => {
     const [displayDescribe] = useState(describeCreator(managerType));
@@ -246,7 +246,7 @@ const DefinitionCreator = ({
             return renderItemCreate();
         }
     }
-};
+});
 
 DefinitionCreator.propTypes = {
     managerType: PropTypes.string.isRequired,
@@ -258,4 +258,4 @@ DefinitionCreator.propTypes = {
     copyItemName: PropTypes.string,
     materialOptions: PropTypes.array
 };
-export default forwardRef(DefinitionCreator);
+export default DefinitionCreator;

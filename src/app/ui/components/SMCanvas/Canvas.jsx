@@ -383,7 +383,7 @@ class Canvas extends PureComponent {
         this.node.current.appendChild(this.renderer.domElement);
     }
 
-    detectionLocation() {
+    checkoutModelsLocatin() {
         toast.dismiss();
         const hasOverstepped = this.modelGroup.selectedModelArray.some((model) => {
             return model.overstepped;
@@ -461,7 +461,7 @@ class Canvas extends PureComponent {
                 this.controls.transformControl.mode,
                 this.controls.transformControl.axis
             );
-            this.detectionLocation();
+            this.checkoutModelsLocatin();
         });
         this.controls.on(EVENTS.SELECT_PLACEMENT_FACE, (userData) => {
             this.onRotationPlacementSelect(userData);

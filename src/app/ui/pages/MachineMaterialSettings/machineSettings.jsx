@@ -521,7 +521,7 @@ const MachineSettings = forwardRef(({
                             >
                                 <div className="width-percent-100 height-percent-100">
                                     <div className={`width-percent-100 position-re ${includes(currentSerial, item.value) ? 'border-radius-16 border-blod-blue-2' : ''}`} style={{ height: 'calc(100% - 22px)' }}>
-                                        <img src={item.image} alt="" className="width-percent-100 border-radius-16 height-percent-100 display-block margin-auto" />
+                                        <img src={item.image} alt="" draggable={false} className="width-percent-100 border-radius-16 height-percent-100 display-block margin-auto" />
                                         {(isConnected && includes(connectSerial, item.value)) && (
                                             <div className="position-ab bottom-2 right-1 background-grey-3 border-radius-8 font-size-small padding-vertical-4 padding-horizontal-8 line-height-14">
                                                 <Badge status="success" />
@@ -581,7 +581,7 @@ const MachineSettings = forwardRef(({
                                     className={`${index === 0 ? 'margin-right-16' : ''}`}
                                 >
                                     <div className={`width-116 height-116 border-radius-8 border-default-grey-1 ${currentToolHead === toolHeadItem.value ? 'border-color-blue-2' : ''}`}>
-                                        <img src={toolHeadItem.image} alt="" className="width-percent-100" />
+                                        <img src={toolHeadItem.image} draggable={false} alt="" className="width-percent-100" />
                                     </div>
                                     <div className="align-c">{i18n._(`${toolHeadItem.label}`)}</div>
                                 </Anchor>

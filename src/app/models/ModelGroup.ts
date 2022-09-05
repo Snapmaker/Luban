@@ -894,7 +894,7 @@ class ModelGroup extends EventEmitter {
                     // prevent selected models outside group
                     let isModelAcrossGroup = false;
                     for (const selectedModel of this.selectedModelArray) {
-                        if (selectedModel.parent !== model.parent) {
+                        if (selectedModel.parent !== model.parent && (selectedModel.parent || model.parent)) {
                             isModelAcrossGroup = true;
                             break;
                         }
@@ -1101,9 +1101,12 @@ class ModelGroup extends EventEmitter {
         modelsToCopy.forEach((model) => {
             if (model instanceof PrimeTowerModel) return;
             const newModel = model.clone(this);
+            if (newModel.parent) {
+                ThreeUtils.removeObjectParent(newModel.meshObject);
+                newModel.parent = null;
+            }
 
             if (newModel.sourceType === '3d') {
-                newModel.stickToPlate();
                 const modelNameObj = this._createNewModelName(newModel);
                 newModel.modelName = modelNameObj.name;
                 newModel.baseName = modelNameObj.baseName;
@@ -1116,20 +1119,18 @@ class ModelGroup extends EventEmitter {
                 newModel.transformation.positionY = point.y;
                 // Once the position of selectedGroup is changed, updateMatrix must be called
                 newModel.meshObject.updateMatrix();
-                newModel.computeBoundingBox();
-                newModel.onTransform();
                 newModel.modelID = uuid();
 
                 this.models.push(newModel);
                 this.object.add(newModel.meshObject);
+                newModel.stickToPlate();
                 this.addModelToSelectedGroup(newModel);
+
                 this.updatePrimeTowerHeight();
                 if (newModel instanceof ThreeModel) {
-                    newModel.computeBoundingBox();
                     this.initModelClipper(newModel);
                 } else if (newModel instanceof ThreeGroup) {
                     newModel.children.forEach((subModel) => {
-                        subModel.computeBoundingBox();
                         this.initModelClipper(subModel as ThreeModel);
                     });
                 }
@@ -2271,7 +2272,7 @@ class ModelGroup extends EventEmitter {
     public canSimplify() {
         if (this.selectedModelArray.length === 1) {
             const model = this.selectedModelArray[0];
-            if (model instanceof ThreeModel && model.visible) {
+            if (model instanceof ThreeModel && model.visible && model !== this.primeTower) {
                 return true;
             } else {
                 return false;
@@ -2288,7 +2289,12 @@ class ModelGroup extends EventEmitter {
         if (this.selectedModelArray.length === 1 && !this.selectedModelArray[0].visible) {
             return false;
         }
-        return true;
+        if (this.selectedModelArray.length === 1 && this.selectedModelArray[0] === this.primeTower) {
+            return false;
+        }
+        return this.getThreeModels().filter((model) => {
+            return model !== this.primeTower && model.visible;
+        }).length > 0;
     }
 
     // prime tower

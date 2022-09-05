@@ -6,13 +6,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Menu, message, Tooltip, Spin } from 'antd';
 import { actions as printingActions } from '../../../flux/printing';
+import { actions as projectActions } from '../../../flux/project';
 import { materialCategoryRank, useGetDefinitions } from '../../views/ProfileManager';
 import i18n from '../../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { LEFT, RIGHT } from '../../../../server/constants';
 import { Button } from '../../components/Buttons';
 import AddMaterialModel from './addMaterialModel';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_MATERIAL, RIGHT_EXTRUDER } from '../../../constants';
+import { MATERIAL_TYPE_OPTIONS, DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_MATERIAL, RIGHT_EXTRUDER, HEAD_PRINTING } from '../../../constants';
 import PrintingManager from '../../views/PrintingManager';
 import { machineStore } from '../../../store/local-storage';
 import SvgIcon from '../../components/SvgIcon';
@@ -20,6 +21,7 @@ import modal from '../../../lib/modal';
 import styles from './styles.styl';
 import Dropdown from '../../components/Dropdown';
 
+const MATERIAL_TYPE_ARRAY = MATERIAL_TYPE_OPTIONS.map(d => d.category);
 const MaterialSettings = ({
     toolHead, loading
 }) => {
@@ -80,6 +82,9 @@ const MaterialSettings = ({
     useEffect(() => {
         let definitionByCategoryTemp = {};
         materialDefinitions.forEach((definition) => {
+            if (!(MATERIAL_TYPE_ARRAY.includes(definition.category))) {
+                definition.category = 'Other';
+            }
             if (definitionByCategoryTemp[definition.category]) {
                 definitionByCategoryTemp[definition.category].push(definition);
             } else {
@@ -102,6 +107,7 @@ const MaterialSettings = ({
             setRightMaterialDefinitionId(id);
         }
         dispatch(printingActions.updateDefaultIdByType(PRINTING_MANAGER_TYPE_MATERIAL, id, activeNozzle));
+        dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
     };
     const onShowPrintingManager = () => {
         dispatch(printingActions.updateManagerDisplayType(PRINTING_MANAGER_TYPE_MATERIAL));
@@ -218,7 +224,7 @@ const MaterialSettings = ({
             content: (
                 <span className="height-30">
                     {i18n._('key-profileManager/Create Success')}
-                    <Anchor onClick={onShowPrintingManager} style={{ color: '#1890FF', marginLeft: '32px' }}>
+                    <Anchor onClick={() => { onShowPrintingManager(); message.destroy(); }} style={{ color: '#1890FF', marginLeft: '32px' }}>
                         {i18n._('key-profileManager/Open material profile')}
                     </Anchor>
                     <SvgIcon
@@ -229,7 +235,7 @@ const MaterialSettings = ({
                 </span>
             ),
             className: classNames(styles['custom-message']),
-            duration: 0
+            duration: 15
         });
     };
     const onChangeFileForManager = (event) => {

@@ -3093,7 +3093,6 @@ export const actions = {
                                 })
                             );
                         }
-                        res.then(websocket => websocket.terminate());
                         break;
                     }
                     case 'progress': {
@@ -3135,7 +3134,6 @@ export const actions = {
                                 showArrangeModelsError: true
                             })
                         );
-                        res.then(websocket => websocket.terminate());
                         break;
                     }
                     default:
@@ -3167,7 +3165,7 @@ export const actions = {
         recovery();
     },
 
-    getMirrorType: (model) => (dispatch, getState) => {
+    isMirrored: (model) => (dispatch, getState) => {
         const { targetTmpState, modelGroup } = getState().printing;
 
         let isMirror = ''
@@ -3247,14 +3245,13 @@ export const actions = {
                     });
                     break;
                 case 'scale':
-                    const mirrorType = dispatch(actions.getMirrorType(model))
+                    const mirrorType = dispatch(actions.isMirrored(model))
                     if (mirrorType) {
                         isMirror = true
                     }
                     operation = new ScaleOperation3D({
                         target: model,
-                        ...targetTmpState[model.modelID],
-                        mirrorType
+                        ...targetTmpState[model.modelID]
                     });
                     break;
                 default:
@@ -3868,7 +3865,7 @@ export const actions = {
 
         const checkResultMap = new Map();
         const checkPromises = modelNames.filter((item) => {
-            return !item.isGroup && ['.obj', '.stl'].includes(path.extname(item.uploadName))
+            return !item.isGroup && ['.obj', '.stl'].includes(path.extname(item.uploadName)) && item.uploadName.indexOf('prime_tower_') !== 0
         }).map(async (item) => {
             return controller.checkModel({
                 uploadName: item.uploadName
@@ -3932,7 +3929,10 @@ export const actions = {
                         dispatch(actions.destroyGcodeLine());
                         resolve();
                     })
-                } else {
+                } else if (primeTowerTag && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+                    modelGroup.primeTower && modelGroup.primeTower.updateTowerTransformation(transformation);
+                    resolve();
+               }else {
                     const onMessage = async data => {
                         const { type } = data;
                         switch (type) {
@@ -4442,6 +4442,7 @@ export const actions = {
         const operations = new Operations();
 
         const modelState = modelGroup.ungroup();
+        modelGroup.calaClippingMap();
 
         groups.forEach((group) => {
             const operation = new UngroupOperation3D({
@@ -5100,7 +5101,9 @@ export const actions = {
 export default function reducer(state = INITIAL_STATE, action) {
     switch (action.type) {
         case ACTION_UPDATE_STATE: {
-            return Object.assign({}, state, action.state);
+            const s = Object.assign({}, state, action.state);
+            window.pp = s
+            return s
         }
         case ACTION_UPDATE_TRANSFORMATION: {
             return Object.assign({}, state, {

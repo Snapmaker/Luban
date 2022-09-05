@@ -70,7 +70,7 @@ CancelButton.propTypes = {
 };
 function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox,
     autoRotateSelectedModel, arrangeAllModels, setHoverFace, fitViewIn, simplifying, handleApplySimplify,
-    handleCancelSimplify, handleUpdateSimplifyConfig }) {
+    handleCancelSimplify, handleUpdateSimplifyConfig, handleCheckModelLocation }) {
     const size = useSelector(state => state?.machine?.size, shallowEqual);
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
     const modelGroup = useSelector(state => state?.printing?.modelGroup);
@@ -102,6 +102,8 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
         onModelAfterTransform: () => {
             dispatch(printingActions.onModelAfterTransform());
             updateBoundingBox();
+
+            handleCheckModelLocation();
         },
         importFile: (fileObj) => {
             if (fileObj) {
@@ -375,7 +377,8 @@ VisualizerLeftBar.propTypes = {
     simplifying: PropTypes.bool,
     handleApplySimplify: PropTypes.func,
     handleCancelSimplify: PropTypes.func,
-    handleUpdateSimplifyConfig: PropTypes.func
+    handleUpdateSimplifyConfig: PropTypes.func,
+    handleCheckModelLocation: PropTypes.func
 };
 
 export default React.memo(VisualizerLeftBar);

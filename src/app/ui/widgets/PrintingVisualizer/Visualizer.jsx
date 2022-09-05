@@ -528,6 +528,10 @@ class Visualizer extends PureComponent {
         this.props.modelSimplify(type, percent);
     }
 
+    checkoutModelsLocatin = () => {
+        this.canvas.current.checkoutModelsLocatin();
+    }
+
     render() {
         const { size, selectedModelArray, modelGroup, gcodeLineGroup, inProgress, hasModel, displayedType, transformMode } = this.props; // transformMode
 
@@ -556,6 +560,7 @@ class Visualizer extends PureComponent {
                     handleApplySimplify={this.handleApplySimplify}
                     handleCancelSimplify={this.handleCancelSimplify}
                     handleUpdateSimplifyConfig={this.handleUpdateSimplifyConfig}
+                    handleCheckModelLocation={this.checkoutModelsLocatin}
                 />
                 <div className={styles['visualizer-bottom-left']}>
                     <VisualizerBottomLeft actions={this.actions} />

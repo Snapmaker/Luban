@@ -5,8 +5,10 @@ import { Tooltip, Menu } from 'antd';
 import PropTypes from 'prop-types';
 // import { useSelector, shallowEqual } from 'react-redux';
 import { isUndefined, cloneDeep, uniqWith, findIndex, orderBy } from 'lodash';
-import { HEAD_CNC, HEAD_LASER,
-    PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY, MATERIAL_TYPE_OPTIONS } from '../../../constants';
+import {
+    HEAD_CNC, HEAD_LASER,
+    PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY, MATERIAL_TYPE_OPTIONS
+} from '../../../constants';
 import modal from '../../../lib/modal';
 import DefinitionCreator from '../DefinitionCreator';
 import Anchor from '../../components/Anchor';
@@ -37,7 +39,7 @@ import Dropdown from '../../components/Dropdown';
  * @ExportType                  ×    |     ×
  */
 const DEFAULT_DISPLAY_TYPE = 'key-default_category-Default';
-const MATERIAL_TYPE_ARRAY = MATERIAL_TYPE_OPTIONS.map(d => d.label);
+const MATERIAL_TYPE_ARRAY = MATERIAL_TYPE_OPTIONS.map(d => d.category);
 export const materialCategoryRank = [
     'PLA',
     'Support',
@@ -315,7 +317,7 @@ function ProfileManager({
 
             let materialOptions = definitionState?.definitionOptions.map(option => {
                 return {
-                    label: option.category,
+                    label: option.i18nCategory || option.category,
                     value: option.category,
                     i18n: option.i18nCategory
                 };
@@ -375,8 +377,13 @@ function ProfileManager({
                                     const newDefinition = await outsideActions.onCreateManagerDefinition(newDefinitionForManager, newName, isCategorySelected);
                                     actions.onSelectCategory(newDefinition.category);
                                 } else {
-                                    newDefinitionForManager.category = data.categoryName;
-                                    newDefinitionForManager.i18nCategory = data.categoryI18n;
+                                    if (data.categoryName === 'Custom') {
+                                        newDefinitionForManager.category = '';
+                                        newDefinitionForManager.i18nCategory = '';
+                                    } else {
+                                        newDefinitionForManager.category = data.categoryName;
+                                        newDefinitionForManager.i18nCategory = data.categoryI18n;
+                                    }
                                     newName = data.itemName;
                                     const newDefinition = await outsideActions.onCreateManagerDefinition(newDefinitionForManager, newName, isCategorySelected);
                                     setTimeout(() => {
@@ -392,8 +399,13 @@ function ProfileManager({
                                     const newDefinition = await outsideActions.onCreateManagerDefinition(newDefinitionForManager, newName, data.createType === 'Category', isCreate);
                                     actions.onSelectCategory(newDefinition.category);
                                 } else {
-                                    newDefinitionForManager.category = data.categoryName;
-                                    newDefinitionForManager.i18nCategory = data.categoryI18n;
+                                    if (data.categoryName === 'Custom') {
+                                        newDefinitionForManager.category = '';
+                                        newDefinitionForManager.i18nCategory = '';
+                                    } else {
+                                        newDefinitionForManager.category = data.categoryName;
+                                        newDefinitionForManager.i18nCategory = data.categoryI18n;
+                                    }
                                     newName = data.itemName;
                                     if (Object.keys(newDefinitionForManager.settings).length === 0) {
                                         newDefinitionForManager.settings = cloneDeep(allDefinitions[0].settings);
@@ -604,7 +616,7 @@ function ProfileManager({
                                                                 />
                                                             ) : <span className="text-overflow-ellipsis">{cate.category}</span>}
                                                         </div>
-                                                        {!isOfficialDefinition(definitionState.definitionForManager) && (
+                                                        {!isOfficialDefinition(definitionState.definitionForManager) && managerType !== PRINTING_MANAGER_TYPE_MATERIAL && (
                                                             <div className={classNames(styles['manager-action'])}>
                                                                 <Dropdown
                                                                     placement="bottomRight"

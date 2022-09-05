@@ -1652,47 +1652,53 @@ export const MODULEID_MAP = {
 export const MATERIAL_TYPE_OPTIONS = [
     {
         value: 'PLA',
-        label: 'PLA'
+        category: 'PLA',
+        label: 'key-default_category-PLA'
     },
     {
         value: 'Support',
-        label: 'Support'
+        category: 'Support',
+        label: 'key-default_category-Support'
     },
     {
         value: 'ABS',
-        label: 'ABS'
+        category: 'ABS',
+        label: 'key-default_category-ABS'
     },
     {
         value: 'PETG',
-        label: 'PETG'
-    },
-    {
-        value: 'TPE',
-        label: 'TPE'
+        category: 'PETG',
+        label: 'key-default_category-PETG'
     },
     {
         value: 'TPU',
-        label: 'TPU'
+        category: 'TPU',
+        label: 'key-default_category-TPU'
     },
     {
         value: 'PVA',
-        label: 'PVA'
+        category: 'PVA',
+        label: 'key-default_category-PVA'
     },
     {
         value: 'ASA',
-        label: 'ASA'
+        category: 'ASA',
+        label: 'key-default_category-ASA'
     },
     {
         value: 'PC',
-        label: 'PC'
+        category: 'PC',
+        label: 'key-default_category-PC'
     },
     {
         value: 'Nylon',
-        label: 'Nylon'
+        category: 'Nylon',
+        label: 'key-default_category-Nylon'
     },
     {
         value: 'Other',
-        label: 'Other'
+        category: 'Other',
+        label: 'key-default_category-Other'
     }
 ];
 
