@@ -22,7 +22,10 @@ i18n._('key-Luban/Preset/Model Structure-Strong');
 i18n._('key-Luban/Preset/Support Type-Normal');
 i18n._('key-Luban/Preset/Support Type-None');
 
-
+i18n._('key-PrintingCncLaser/ObjectList-This is a deficient model. Select it and click Repair.');
+i18n._('key-App/Settings/MachineSettings-3D Printing');
+i18n._('key-App/Settings/MachineSettings-Laser');
+i18n._('key-App/Settings/MachineSettings-CNC');
 // machine size name
 i18n._('key-Luban/Machine/MachineSeries-Snapmaker Original');
 i18n._('key-Luban/Machine/MachineSeries-Snapmaker Original with Z-axis Extension Module');

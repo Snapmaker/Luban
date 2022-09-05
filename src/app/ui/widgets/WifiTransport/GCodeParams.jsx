@@ -16,7 +16,7 @@ const GCodeParams = (props) => {
             type: { key: i18n._('key-Workspace/GCodeParams-GCode Type'), value: (props.gcodeFile?.type) ? i18n._(MACHINE_HEAD_TYPE[props.gcodeFile.type.toUpperCase()].label) : '' },
             nozzle_temperature: { key: i18n._('key-Workspace/GCodeParams-Nozzle temperature'), value: `${props.gcodeFile.nozzle_temperature}°C` },
             work_speed: { key: i18n._('key-Workspace/GCodeParams-Work speed'), value: `${props.gcodeFile.work_speed}mm/min` },
-            estimated_time: { key: i18n._('key-Workspace/GCodeParams-Estimated time'), value: `${humanReadableTime(props.gcodeFile.estimated_time)}s` },
+            estimated_time: { key: i18n._('key-Workspace/GCodeParams-Estimated time'), value: `${humanReadableTime(props.gcodeFile.estimated_time)}` },
         };
 
         switch (props.gcodeFile.type) {

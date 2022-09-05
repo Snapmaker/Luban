@@ -297,7 +297,7 @@ export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition
                                 </div>
                                 {!showSelect && !(['Support Type', 'Build Plate Adhesion Type'].includes(displayName)) && (
                                     <span className="float-r color-black-3">
-                                        {displayValue}{eachParamObject?.unit}
+                                        {displayValue} {eachParamObject?.unit}
                                     </span>
                                 )}
                                 {showSelect && (
