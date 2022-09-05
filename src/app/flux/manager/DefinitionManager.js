@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { includes } from 'lodash';
+import { includes, cloneDeep } from 'lodash';
 import api from '../../api';
 import i18n from '../../lib/i18n';
 import {
@@ -16,6 +16,8 @@ import {
 import PresetDefinitionModel from './PresetDefinitionModel';
 import { resolveDefinition } from '../../../shared/lib/definitionResolver';
 
+const materialRegex = /^material.*/;
+const qualityRegex = /^quality.*/;
 const nozzleSizeRelationSettingsKeys = [
     'wall_line_width_0',
     'wall_line_width_x',
@@ -68,6 +70,9 @@ class DefinitionManager {
             }
             if (item.i18nName) {
                 item.name = i18n._(item.i18nName);
+            }
+            if (materialRegex.test(item.definitionId) || qualityRegex.test(item.definitionId)) {
+                resolveDefinition(item);
             }
             return item;
         });
@@ -448,7 +453,7 @@ class DefinitionManager {
         const newExtruderDefinition = {
             ...extruderDefinition,
         };
-        const newQualityDefinition = {settings : {...activeQualityDefinition.settings}};
+        const newQualityDefinition = {settings : cloneDeep(activeQualityDefinition.settings)};
         this.materialProfileArr.forEach((key) => {
             const setting = materialDefinition.settings[key];
             if (setting) {
@@ -509,10 +514,10 @@ class DefinitionManager {
          */
 
         const gcode = [';Start GCode begin', `M104 S${printTempLayer0}`];
+        gcode.push('G28 ;home');
         if (machineHeatedBed) {
             gcode.push(`M140 S${bedTempLayer0}`);
         }
-        gcode.push('G28 ;home');
         gcode.push('G90 ;absolute positioning');
         gcode.push('G1 X-10 Y-10 F3000');
         gcode.push('G1 Z0 F1800');

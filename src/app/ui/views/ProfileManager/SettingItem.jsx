@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { isNil, noop } from 'lodash';
+import { Switch } from 'antd';
 import i18n from '../../../lib/i18n';
 import Select from '../../components/Select';
 import { NumberInput as Input } from '../../components/Input';
-import Checkbox from '../../components/Checkbox';
 import Anchor from '../../components/Anchor';
 import ColorSelector from '../../components/ColorSelector';
 import { HEAD_CNC, PRINTING_MATERIAL_CONFIG_COLORS } from '../../../constants';
@@ -159,13 +159,13 @@ function SettingItem({
                     />
                 )}
                 {type === 'bool' && (
-                    <Checkbox
+                    <Switch
                         className="sm-flex-width align-r"
                         defaultChecked={settingDefaultValue}
                         // disabled={!isDefinitionEditable()}
                         type="checkbox"
                         checked={settingDefaultValue}
-                        onChange={(event) => onChangeDefinition(definitionKey, event.target.checked)}
+                        onChange={(checked) => onChangeDefinition(definitionKey, checked)}
                     />
                 )}
                 {type === 'enum' && definitionKey === 'material_type' && (

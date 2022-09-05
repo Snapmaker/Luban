@@ -21,7 +21,8 @@ import {
     LEFT,
     RIGHT,
     TOP,
-    DEFAULT_LUBAN_HOST
+    DEFAULT_LUBAN_HOST,
+    SVG_MOVE_MINI_DISTANCE
 } from '../../../constants';
 
 import i18n from '../../../lib/i18n';
@@ -205,8 +206,8 @@ class Cnc3DVisualizer extends Component {
                 if (materials.isRotate) {
                     const logicPosition = convertSVGPointToLogicalPoint(transformation, machineSize);
                     let isOverStepped = false;
-
-                    if ((logicPosition.y - transformation.height / 2) < 0 || (logicPosition.y + transformation.height / 2) > coordinateSize.y) {
+                    const actualHeight = transformation.height * transformation.scaleY / 2;
+                    if ((logicPosition.y - actualHeight) < 0 - SVG_MOVE_MINI_DISTANCE || (logicPosition.y + actualHeight) > coordinateSize.y + SVG_MOVE_MINI_DISTANCE) {
                         isOverStepped = true;
                     }
 

@@ -10,6 +10,9 @@
         "material_type": {
             "default_value": "other"
         },
+        "extruders_enabled_count": {
+            "default_value": 2
+        },
         "color": {
             "default_value": "#ffffff"
         },

@@ -6,17 +6,10 @@
     "i18nName": "key-default_name-PLA_Black",
     "i18nCategory": "key-default_category-PLA",
     "isRecommended": true,
-    "metadata": {
-        "visible": true,
-        "readonly": true,
-        "author": "walker",
-        "manufacturer": "Snapmaker",
-        "file_formats": "text/x-gcode",
-        "machine_extruder_trains": {
-            "0": "snapmaker_extruder_0"
-        }
-    },
     "overrides": {
+        "extruders_enabled_count": {
+            "default_value": 2
+        },
         "material_type": {
             "default_value": "pla"
         },

@@ -3865,7 +3865,7 @@ export const actions = {
 
         const checkResultMap = new Map();
         const checkPromises = modelNames.filter((item) => {
-            return !item.isGroup && ['.obj', '.stl'].includes(path.extname(item.uploadName))
+            return !item.isGroup && ['.obj', '.stl'].includes(path.extname(item.uploadName)) && item.uploadName.indexOf('prime_tower_') !== 0
         }).map(async (item) => {
             return controller.checkModel({
                 uploadName: item.uploadName
@@ -3929,7 +3929,10 @@ export const actions = {
                         dispatch(actions.destroyGcodeLine());
                         resolve();
                     })
-                } else {
+                } else if (primeTowerTag && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+                    modelGroup.primeTower && modelGroup.primeTower.updateTowerTransformation(transformation);
+                    resolve();
+               }else {
                     const onMessage = async data => {
                         const { type } = data;
                         switch (type) {
