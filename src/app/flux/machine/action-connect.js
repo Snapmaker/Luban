@@ -91,9 +91,10 @@ const addServer = (server) => (dispatch, getState) => {
 };
 
 const setServerAddress = (serverAddress) => (dispatch) => {
-    dispatch(baseActions.updateState({ savedServerAddress: serverAddress }));
-
+    const isAuto = (machineStore.get('connection.isAuto') === true);
+    dispatch(baseActions.updateState({ savedServerAddress: serverAddress, savedServerAddressIsAuto: isAuto }));
     machineStore.set('server.address', serverAddress);
+    machineStore.set('server.isAuto', isAuto);
 };
 
 const setServerToken = (token) => (dispatch) => {

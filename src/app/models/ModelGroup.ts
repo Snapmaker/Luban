@@ -1512,7 +1512,8 @@ class ModelGroup extends EventEmitter {
             }
             selected.computeBoundingBox();
         });
-        this.selectedGroup.shouldUpdateBoundingbox = false;
+        // after update transformation
+        this.selectedGroup.shouldUpdateBoundingbox = true;
 
         this.prepareSelectedGroup();
         this.updatePrimeTowerHeight();

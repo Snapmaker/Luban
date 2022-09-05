@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { isNull } from 'lodash';
+import { isNumber } from 'lodash';
 import Popover from '../../components/Popover';
 import i18n from '../../../lib/i18n';
 import Modal from '../../components/Modal';
@@ -11,6 +11,17 @@ import Checkbox from '../../components/Checkbox';
 import { PRINTING_MATERIAL_CONFIG_COLORS, BLACK_COLOR, MATERIAL_TYPE_OPTIONS } from '../../../constants';
 import { Button } from '../../components/Buttons';
 
+const materialInitPrintTemperature = {
+    'PLA': 200,
+    'Support': 225,
+    'ABS': 255,
+    'PETG': 235,
+    'ASA': 250,
+    'TPE': 220,
+    'PC': 260,
+    'Nylon': 280,
+    'PVA': 220
+};
 const AddMaterialModel = ({
     setShowCreateMaterialModal,
     onSubmit
@@ -23,7 +34,27 @@ const AddMaterialModel = ({
     const [printingTemperatureDown, setPrintingTemperatureDown] = useState(null);
     const [buildPlateTemperatureDown, setBuildPlateTemperatureDown] = useState(null);
     const [buildPlateTemperatureUp, setBuildPlateTemperatureUp] = useState(null);
+    const [currentPrintintTemperature, setCurrentPrintingTemperature] = useState(210);
+    const [currentBuildPlateTemperature, setCurrentBuildPlateTemperature] = useState(0);
     const [openFan, setOpenFan] = useState(false);
+    useEffect(() => {
+        if (!isNumber(printingTemperatureDown) && !isNumber(printingTemperatureUp)) {
+            setCurrentPrintingTemperature(materialInitPrintTemperature[materialType]);
+        } else {
+            if (isNumber(printingTemperatureDown) && isNumber(printingTemperatureUp)) {
+                setCurrentPrintingTemperature((Number(printingTemperatureDown) + Number(printingTemperatureUp)) / 2);
+            } else {
+                setCurrentPrintingTemperature(Number(printingTemperatureDown) || Number(printingTemperatureUp));
+            }
+        }
+    }, [materialType, printingTemperatureDown, printingTemperatureUp]);
+    useEffect(() => {
+        if (!isNumber(buildPlateTemperatureDown) && !isNumber(buildPlateTemperatureUp)) {
+            setCurrentBuildPlateTemperature(0);
+        } else {
+            setCurrentBuildPlateTemperature(Number(buildPlateTemperatureUp) || Number(buildPlateTemperatureDown));
+        }
+    }, [buildPlateTemperatureDown, buildPlateTemperatureUp]);
     return (
         <Modal
             onClose={() => setShowCreateMaterialModal(false)}
@@ -103,6 +134,7 @@ const AddMaterialModel = ({
                                     suffix="°C"
                                     min={0}
                                     allowUndefined
+                                    allowNaN={false}
                                 />
                                 <span className="margin-horizontal-8 width-16 border-bottom-black-5" />
                                 <NInput
@@ -112,6 +144,7 @@ const AddMaterialModel = ({
                                     suffix="°C"
                                     min={printingTemperatureDown || 1}
                                     allowUndefined
+                                    allowNaN={false}
                                 />
                             </div>
                         </div>
@@ -125,6 +158,7 @@ const AddMaterialModel = ({
                                     suffix="°C"
                                     min={0}
                                     allowUndefined
+                                    allowNaN={false}
                                 />
                                 <span className="margin-horizontal-8 width-16 border-bottom-black-5" />
                                 <NInput
@@ -134,6 +168,7 @@ const AddMaterialModel = ({
                                     suffix="°C"
                                     min={buildPlateTemperatureDown || 1}
                                     allowUndefined
+                                    allowNaN={false}
                                 />
                             </div>
                         </div>
@@ -163,13 +198,13 @@ const AddMaterialModel = ({
                         className="margin-left-8"
                         width="96px"
                         type="primary"
-                        disabled={!materialName || isNull(printingTemperatureDown) || isNull(printingTemperatureUp) || isNull(buildPlateTemperatureDown) || isNull(buildPlateTemperatureUp)}
+                        disabled={!materialName}
                         onClick={() => onSubmit({
                             type: materialType,
                             color: materialColor,
                             name: materialName,
-                            printingTemperature: printingTemperatureUp || printingTemperatureDown,
-                            buildPlateTemperature: buildPlateTemperatureUp || buildPlateTemperatureDown,
+                            printingTemperature: currentPrintintTemperature,
+                            buildPlateTemperature: currentBuildPlateTemperature,
                             openFan: openFan
                         })}
                     >

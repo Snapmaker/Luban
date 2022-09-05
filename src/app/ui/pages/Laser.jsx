@@ -163,7 +163,7 @@ function Laser({ location }) {
         onDropRejected: () => {
             modal({
                 title: i18n._('key-Laser/Page-Warning'),
-                cancelTitle: 'Close',
+                cancelTitle: i18n._('key-Workspace/WorkflowControl-Close'),
                 body: i18n._('key-Laser/Page-Only {{accept}} files are supported.', { accept: ACCEPT })
             });
         }

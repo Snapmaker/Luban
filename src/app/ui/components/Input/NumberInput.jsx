@@ -17,7 +17,7 @@ const maxDecimal = (number, decimalPlaces) => {
 
 
 const NumberInput = ({
-    className = '', size = 'middle', value, defaultValue, disabled = false, min, max, onChange, placeholder, allowUndefined, decimalPlaces, ...rest
+    className = '', size = 'middle', value, defaultValue, disabled = false, min, max, onChange, placeholder, allowUndefined, decimalPlaces, allowNaN = true, ...rest
 }) => {
     const [displayValue, setDisplayValue] = useState(value);
     const ref = useRef();
@@ -61,6 +61,10 @@ const NumberInput = ({
             useEdgeValue = true;
         }
 
+        if (Number.isNaN(numericValue) && !allowNaN) {
+            setDisplayValue(null);
+            return;
+        }
         // multiple .setState on edge values won't change props from outside, we
         // need to change display manually
         useEdgeValue && setDisplayValue(numericValue);
@@ -135,7 +139,8 @@ NumberInput.propTypes = {
     onChange: PropTypes.func,
     placeholder: PropTypes.string,
     allowUndefined: PropTypes.bool,
-    decimalPlaces: PropTypes.number
+    decimalPlaces: PropTypes.number,
+    allowNaN: PropTypes.bool
 };
 
 export default NumberInput;

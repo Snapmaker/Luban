@@ -7,8 +7,10 @@ import MachineSettings from './machineSettings';
 import MaterialSettings from './materialSettings';
 import SvgIcon from '../../components/SvgIcon';
 import Anchor from '../../components/Anchor';
-import { MACHINE_SERIES, SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL } from '../../../constants';
+import { LEVEL_ONE_POWER_LASER_FOR_ORIGINAL, MACHINE_SERIES, SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 } from '../../../constants';
 import { actions as machineActions } from '../../../flux/machine/index';
+import { STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL } from '../../../../server/controllers/constants';
+import { LEVEL_ONE_POWER_LASER_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_SM2 } from '../../../../server/constants';
 
 const MACHINE_TAB = 'machine';
 const MATERIAL_TAB = 'material';
@@ -32,7 +34,17 @@ const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
 
     const [loading, setLoading] = useState(true);
     useEffect(() => {
-        const tempToolhead = currentSeries === MACHINE_SERIES.ORIGINAL.value ? { ...currentToolhead, printingToolhead: SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL } : { ...currentToolhead };
+        const originToolhead = {
+            cncToolhead: STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
+            laserToolhead: LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
+            printingToolhead: SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL
+        };
+        const sm2Toolhead = {
+            cncToolhead: STANDARD_CNC_TOOLHEAD_FOR_SM2,
+            laserToolhead: LEVEL_ONE_POWER_LASER_FOR_SM2,
+            printingToolhead: SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2
+        };
+        const tempToolhead = currentSeries === MACHINE_SERIES.ORIGINAL.value ? originToolhead : sm2Toolhead;
         setCurrentToolhead(tempToolhead);
         setLoading(true);
         onCallBack(currentSeries, tempToolhead);

@@ -1,4 +1,4 @@
-import { find, includes, filter, cloneDeep } from 'lodash';
+import { find, includes, filter, cloneDeep, findIndex, orderBy } from 'lodash';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { CaretRightOutlined } from '@ant-design/icons';
@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Menu, message, Tooltip, Spin } from 'antd';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
-import { useGetDefinitions } from '../../views/ProfileManager';
+import { materialCategoryRank, useGetDefinitions } from '../../views/ProfileManager';
 import i18n from '../../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { LEFT, RIGHT } from '../../../../server/constants';
@@ -80,7 +80,7 @@ const MaterialSettings = ({
         }
     }, [materialDefinitions, rightMaterialDefinitionId]);
     useEffect(() => {
-        const definitionByCategoryTemp = {};
+        let definitionByCategoryTemp = {};
         materialDefinitions.forEach((definition) => {
             if (!(MATERIAL_TYPE_ARRAY.includes(definition.category))) {
                 definition.category = 'Other';
@@ -89,8 +89,13 @@ const MaterialSettings = ({
                 definitionByCategoryTemp[definition.category].push(definition);
             } else {
                 definitionByCategoryTemp[definition.category] = [definition];
+                const rank = findIndex(materialCategoryRank, arr => {
+                    return arr === definition.category;
+                });
+                definitionByCategoryTemp[definition.category].rank = rank;
             }
         });
+        definitionByCategoryTemp = orderBy(definitionByCategoryTemp, ['rank'], ['asc']);
         setDefinitionByCategory(definitionByCategoryTemp);
     }, [materialDefinitions]);
 

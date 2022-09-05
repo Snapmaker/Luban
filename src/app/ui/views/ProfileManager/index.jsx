@@ -40,7 +40,7 @@ import Dropdown from '../../components/Dropdown';
  */
 const DEFAULT_DISPLAY_TYPE = 'key-default_category-Default';
 const MATERIAL_TYPE_ARRAY = MATERIAL_TYPE_OPTIONS.map(d => d.category);
-const materialCategoryRank = [
+export const materialCategoryRank = [
     'PLA',
     'Support',
     'ABS',
@@ -706,54 +706,56 @@ function ProfileManager({
                                                                                         />
                                                                                     )
                                                                                         : <span className="text-overflow-ellipsis">{displayName}</span>}
-                                                                                    <div className={classNames(styles['manager-action'])}>
-                                                                                        <Dropdown
-                                                                                            placement="bottomRight"
-                                                                                            overlay={(
-                                                                                                <Menu>
-                                                                                                    {!isOfficialDefinition(definitionState.definitionForManager) && (
+                                                                                    {!(isSelected && definitionState.renamingStatus) && (
+                                                                                        <div className={classNames(styles['manager-action'])}>
+                                                                                            <Dropdown
+                                                                                                placement="bottomRight"
+                                                                                                overlay={(
+                                                                                                    <Menu>
+                                                                                                        {!isOfficialDefinition(definitionState.definitionForManager) && (
+                                                                                                            <Menu.Item>
+                                                                                                                <Anchor onClick={() => { actions.setRenamingStatus(true); }}>
+                                                                                                                    <div className="width-120 text-overflow-ellipsis">{i18n._('key-App/Menu-Rename')}</div>
+                                                                                                                </Anchor>
+                                                                                                            </Menu.Item>
+                                                                                                        )}
                                                                                                         <Menu.Item>
-                                                                                                            <Anchor onClick={() => { actions.setRenamingStatus(true); }}>
-                                                                                                                <div className="width-120 text-overflow-ellipsis">{i18n._('key-App/Menu-Rename')}</div>
+                                                                                                            <Anchor onClick={() => { actions.showDuplicateModal(); }}>
+                                                                                                                <div className="width-120 text-overflow-ellipsis">{i18n._('key-App/Menu-Copy')}</div>
                                                                                                             </Anchor>
                                                                                                         </Menu.Item>
-                                                                                                    )}
-                                                                                                    <Menu.Item>
-                                                                                                        <Anchor onClick={() => { actions.showDuplicateModal(); }}>
-                                                                                                            <div className="width-120 text-overflow-ellipsis">{i18n._('key-App/Menu-Copy')}</div>
-                                                                                                        </Anchor>
-                                                                                                    </Menu.Item>
-                                                                                                    {!isAllValueDefault && (
+                                                                                                        {!isAllValueDefault && (
+                                                                                                            <Menu.Item>
+                                                                                                                <Anchor
+                                                                                                                    onClick={() => actions.resetDefinition(currentOption.value)}
+                                                                                                                >
+                                                                                                                    <div className="width-120 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Reset')}</div>
+                                                                                                                </Anchor>
+                                                                                                            </Menu.Item>
+                                                                                                        )}
                                                                                                         <Menu.Item>
-                                                                                                            <Anchor
-                                                                                                                onClick={() => actions.resetDefinition(currentOption.value)}
-                                                                                                            >
-                                                                                                                <div className="width-120 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Reset')}</div>
+                                                                                                            <Anchor onClick={() => outsideActions.exportConfigFile(definitionState.definitionForManager)}>
+                                                                                                                <div className="width-120 text-overflow-ellipsis">{i18n._('key-Printing/ProfileManager-Export')}</div>
                                                                                                             </Anchor>
                                                                                                         </Menu.Item>
-                                                                                                    )}
-                                                                                                    <Menu.Item>
-                                                                                                        <Anchor onClick={() => outsideActions.exportConfigFile(definitionState.definitionForManager)}>
-                                                                                                            <div className="width-120 text-overflow-ellipsis">{i18n._('key-Printing/ProfileManager-Export')}</div>
-                                                                                                        </Anchor>
-                                                                                                    </Menu.Item>
-                                                                                                    {!isOfficialDefinition(definitionState.definitionForManager) && (
-                                                                                                        <Menu.Item>
-                                                                                                            <Anchor onClick={() => actions.onRemoveManagerDefinition(definitionState.definitionForManager, definitionState.isCategorySelected)}>
-                                                                                                                <div>{i18n._('key-Printing/ProfileManager-Delete')}</div>
-                                                                                                            </Anchor>
-                                                                                                        </Menu.Item>
-                                                                                                    )}
-                                                                                                </Menu>
-                                                                                            )}
-                                                                                        >
-                                                                                            <SvgIcon
-                                                                                                name="More"
-                                                                                                size={24}
-                                                                                                className="margin-left-n-30"
-                                                                                            />
-                                                                                        </Dropdown>
-                                                                                    </div>
+                                                                                                        {!isOfficialDefinition(definitionState.definitionForManager) && (
+                                                                                                            <Menu.Item>
+                                                                                                                <Anchor onClick={() => actions.onRemoveManagerDefinition(definitionState.definitionForManager, definitionState.isCategorySelected)}>
+                                                                                                                    <div>{i18n._('key-Printing/ProfileManager-Delete')}</div>
+                                                                                                                </Anchor>
+                                                                                                            </Menu.Item>
+                                                                                                        )}
+                                                                                                    </Menu>
+                                                                                                )}
+                                                                                            >
+                                                                                                <SvgIcon
+                                                                                                    name="More"
+                                                                                                    size={24}
+                                                                                                    className="margin-left-n-30"
+                                                                                                />
+                                                                                            </Dropdown>
+                                                                                        </div>
+                                                                                    )}
                                                                                 </Anchor>
                                                                             </div>
                                                                         </li>

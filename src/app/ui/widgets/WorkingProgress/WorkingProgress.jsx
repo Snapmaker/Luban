@@ -70,10 +70,10 @@ StopConfirmModal.propTypes = {
 const WorkingProgress = ({ widgetActions, controlActions }) => {
     const {
         isConnected, workflowStatus,
-        gcodePrintingInfo: { progress, elapsedTime, remainingTime, total, sent, printStatus }
+        gcodePrintingInfo: { progress, elapsedTime, estimatedTime, total, sent, printStatus },
+        gcodeFileName
     } = useSelector(state => state.machine);
-    const activeGcodeFile = useSelector(state => state.workspace.activeGcodeFile);
-    const fileName = activeGcodeFile?.renderGcodeFileName ?? activeGcodeFile?.name;
+    const fileName = gcodeFileName;
     const [currentWorkflowStatus, setCurrentWorkflowStatus] = useState(null);
     const [isPausing, setIsPausing] = useState(false);
     const [showStopComfirmModal, setShowStopComfirmModal] = useState(false);
@@ -134,7 +134,7 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
                 <div>
                     <Text name={i18n._('key-Workspace/Workprogress-File')} value={fileName || i18n._('key-Workspace/Workprogress-Unknow')} />
                     <Text name={i18n._('key-Workspace/Workprogress-Elapsed Time')} value={formatDuration(elapsedTime, false)} />
-                    <Text name={i18n._('key-Workspace/Workprogress-Remaining Time')} value={formatDuration(remainingTime, false)} />
+                    <Text name={i18n._('key-Workspace/Workprogress-Remaining Time')} value={formatDuration(estimatedTime, false)} />
                     <Text name={i18n._('key-Workspace/Workprogress-GCode Line')} value={`${sent} / ${total}`} />
                 </div>
                 <Progress percent={actualProgress} type="circle" width={88} />

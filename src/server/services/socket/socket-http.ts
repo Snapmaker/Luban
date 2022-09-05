@@ -370,6 +370,7 @@ class SocketHttp {
             const state = {
                 ...data,
                 ...this.state,
+                gcodePrintingInfo: this.getGcodePrintingInfo(data),
                 isHomed: data?.homed,
                 status: data.status.toLowerCase(),
                 airPurifier: !isNil(data.airPurifierSwitch),
@@ -394,9 +395,9 @@ class SocketHttp {
                     type: CONNECTION_TYPE_WIFI
                 });
             } else {
-                this.socket && this.socket.emit('sender:status', {
-                    data: this.getGcodePrintingInfo(state)
-                });
+                // this.socket && this.socket.emit('sender:status', {
+                //     data: this.getGcodePrintingInfo(state)
+                // });
                 this.socket && this.socket.emit('Marlin:state', {
                     state,
                     type: CONNECTION_TYPE_WIFI

@@ -221,7 +221,7 @@ function Cnc({ location }) {
         onDropRejected: () => {
             modal({
                 title: i18n._('key-Cnc/Page-Warning'),
-                cancelTitle: 'Close',
+                cancelTitle: i18n._('key-Workspace/WorkflowControl-Close'),
                 body: i18n._('key-Cnc/Page-Only {{accept}} files are supported.', { accept: ACCEPT })
             });
         }

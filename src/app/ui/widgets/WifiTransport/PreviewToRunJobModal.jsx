@@ -32,7 +32,7 @@ const PreviewToRunJobModal = ({
             <Modal.Body>
                 <div className="width-438">
                     {
-                        includes(selectFileType, headTypeArr) ? i18n._('key-Workspace/RunJobWarningModal-Unknown body', { headType: headType }) : i18n._('key-Workspace/RunJobWarningModal-Mismatch body', { headType: headType, fileType: selectFileType })
+                        includes(selectFileType, headTypeArr) ? i18n._('key-Workspace/RunJobWarningModal-Mismatch body', { headType: headType, fileType: selectFileType }) : i18n._('key-Workspace/RunJobWarningModal-Unknown body', { headType: headType })
                     }
                 </div>
 
@@ -45,7 +45,7 @@ const PreviewToRunJobModal = ({
                     width="96px"
                     onClick={onClose}
                 >
-                    <div className="align-c">Cancel</div>
+                    <div className="align-c">{i18n._('key-Modal/Common-Cancel')}</div>
                 </Button>
                 <Button
                     priority="level-two"
@@ -53,7 +53,7 @@ const PreviewToRunJobModal = ({
                     width="96px"
                     onClick={handleOK}
                 >
-                    <div className="align-c">Yes</div>
+                    <div className="align-c">{i18n._('key-Modal/Common-Confirm')}</div>
                 </Button>
             </Modal.Footer>
         </Modal>

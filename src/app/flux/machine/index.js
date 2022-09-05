@@ -482,11 +482,14 @@ export const actions = {
                     laserCamera,
                     nozzleRightTargetTemperature,
                     nozzleRightTemperature,
-                    gcodePrintingInfo
+                    gcodePrintingInfo,
+                    fileName
                 } = state;
                 dispatch(baseActions.updateState({
                     laser10WErrorState,
-                    isEmergencyStopped
+                    isEmergencyStopped,
+                    gcodeFileName: fileName,
+                    gcodePrintingInfo
                 }));
                 if (!isNil(status)) {
                     dispatch(baseActions.updateState({
@@ -557,11 +560,6 @@ export const actions = {
                         airPurifierSwitch: airPurifierSwitch,
                         airPurifierFanSpeed: airPurifierFanSpeed,
                         airPurifierFilterHealth: airPurifierFilterHealth
-                    }));
-                }
-                if (!isNil(gcodePrintingInfo)) {
-                    dispatch(baseActions.updateState({
-                        gcodePrintingInfo: machineState.server.getGcodePrintingInfo(state)
                     }));
                 }
                 // TODO: wifi emergencyStop goes there

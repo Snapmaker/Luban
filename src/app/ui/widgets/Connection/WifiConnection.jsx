@@ -156,6 +156,7 @@ function WifiConnection() {
         connectionAuto,
         server,
         savedServerAddress,
+        savedServerAddressIsAuto,
         savedServerToken,
         manualIp,
         // machine status headType,
@@ -301,6 +302,8 @@ function WifiConnection() {
         },
         onCloseWifiConnectionMessage: () => {
             actions.hideWifiConnectionMessage();
+            server.closeServer();
+            setSavedServerAddressState('');
         },
 
         /**
@@ -398,14 +401,14 @@ function WifiConnection() {
     }, [JSON.stringify(servers), server]);
 
     useEffect(() => {
-        if (serverState?.address === savedServerAddressState && connectionAuto && !isConnected) {
+        if (serverState?.address === savedServerAddressState && connectionAuto && !isConnected && savedServerAddressIsAuto) {
             if (timer) {
                 clearInterval(timer);
                 timer = null;
             }
             actions.openServer();
         }
-    }, [serverState, savedServerAddressState]);
+    }, [serverState, savedServerAddressState, savedServerAddressIsAuto]);
 
     useEffect(() => {
         if (connectionType === CONNECTION_TYPE_WIFI) {
