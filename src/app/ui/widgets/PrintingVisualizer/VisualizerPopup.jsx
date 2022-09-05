@@ -111,6 +111,7 @@ export const repairGuidePopup = () => {
     modal({
         isConfirm: true,
         title: i18n._('key-Modal/tips-Tips'),
+        cancelTitle: 'key-Modal/Common-OK',
         body: (
             <React.Fragment>
                 <Trans i18nKey="key-Modal/tips-To repair deficient models, you can also click Repair in the top main toolbar.">
