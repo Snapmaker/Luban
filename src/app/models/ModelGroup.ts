@@ -214,7 +214,7 @@ class ModelGroup extends EventEmitter {
      * Note: for performance consideration, don't call this method in render.
      */
     public getBoundingBox() {
-        return ThreeUtils.computeBoundingBox(this.object);
+        return ThreeUtils.computeBoundingBox(this.object) as Box3;
     }
 
     /**

@@ -41,7 +41,6 @@ const NumberInput = ({
     function onAfterChangeWrapper(changedValue) {
         let numericValue = parseFloat(changedValue);
         let useEdgeValue = false;
-        console.log({ numericValue });
 
         // If changedValue is invalid, use defaultValue
         if (Number.isNaN(numericValue) && !allowUndefined) {

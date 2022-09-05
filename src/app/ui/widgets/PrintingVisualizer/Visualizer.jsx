@@ -607,7 +607,7 @@ class Visualizer extends PureComponent {
                             <Input
                                 size="small"
                                 placeholder="0"
-                                key={this.randomKey}
+                                key={String(this.randomKey)}
                                 value={this.props.controlInputValue ? this.props.controlInputValue[this.props.controlAxis[0]] : null}
                                 suffix={modeSuffix[this.props.controlMode]}
                                 allowUndefined
