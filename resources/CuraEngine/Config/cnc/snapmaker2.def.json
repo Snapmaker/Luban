@@ -18,7 +18,7 @@
             "default_value": 0.2,
             "type": "float",
             "min": 0.1,
-            "max": 10,
+            "max": 50,
             "unit": "mm",
             "description": "Set the diameter of the carving tool.",
             "label": "Cutting Diameter"
