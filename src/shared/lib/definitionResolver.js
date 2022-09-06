@@ -60,7 +60,7 @@ function resolveDefinition(definition, modifiedParams) {
                     return degree / 180 * Math.PI;
                 }
             },
-            resolveOrValue: function (input) { return _.isUndefined(context[input]) ? input : context[input]; },
+            resolveOrValue: function (input) { return (_.isUndefined(context[input]) ? input : context[input]); },
             extruderValue: function (ignore, input) { return context[input]; },
             extruderValues: function (input) { return [context[input]]; },
             defaultExtruderPosition: function () { return 0; }
@@ -75,7 +75,7 @@ function resolveDefinition(definition, modifiedParams) {
         var value = obj[key];
         if (value.type && (value.type !== 'category' && value.type !== 'mainCategory')) {
             if (!asistantMapInitialized) {
-                cloneValue = _.cloneDeep(value);
+                var cloneValue = _.cloneDeep(value);
                 asistantMap.set(key, cloneValue);
             }
             Object.defineProperties(context, (_g = {},
@@ -97,7 +97,6 @@ function resolveDefinition(definition, modifiedParams) {
             context[key] = value.default_value;
         }
     };
-    var cloneValue;
     try {
         for (var _d = __values(Object.keys(obj)), _e = _d.next(); !_e.done; _e = _d.next()) {
             var key = _e.value;
@@ -121,14 +120,19 @@ function resolveDefinition(definition, modifiedParams) {
                 if (_.isUndefined(calcValue)) {
                     hasValue = false;
                 }
-                ;
-                insideValue.minimum_value && eval("(function calcMinMax() {\n                hasValue = true;\n                with (context) {\n                    return ".concat(insideValue.minimum_value, ";\n                }\n            })()"));
-                insideValue.maximum_value && eval("(function calcMinMax() {\n                hasValue = true;\n                with (context) {\n                    return ".concat(insideValue.maximum_value, ";\n                }\n            })()"));
+                var calcMinValue = insideValue.min && eval("(function calcMinMax() {\n                hasValue = true;\n                with (context) {\n                    return ".concat(insideValue.min, ";\n                }\n            })()"));
+                var calcMaxValue = insideValue.max && eval("(function calcMinMax() {\n                hasValue = true;\n                with (context) {\n                    return ".concat(insideValue.max, ";\n                }\n            })()"));
                 var calcEnabled = insideValue.visible && eval("(function calcEnable() {\n                hasValue = true;\n                with (context) {\n                    return ".concat(insideValue.visible, ";\n                }\n            })()"));
                 if (typeof calcEnabled !== 'undefined') {
                     definition.settings[key].visible = calcEnabled;
                 }
                 if (insideValue.type === 'float' || insideValue.type === 'int') {
+                    if (!_.isNil(calcMinValue)) {
+                        definition.settings[key].min = calcMinValue;
+                    }
+                    if (!_.isNil(calcMaxValue)) {
+                        definition.settings[key].max = calcMaxValue;
+                    }
                     if (Math.abs(calcValue - defaultValue) > 1e-6 && !_.isUndefined(calcValue)) {
                         definition.settings[key].mismatch = true;
                     }
@@ -193,8 +197,8 @@ function resolveDefinition(definition, modifiedParams) {
         try {
             var defaultValue = void 0;
             var calcValue = value.calcu_value && eval("(function calcValue() {\n                with (context) {\n                    return ".concat(value.calcu_value, ";\n                }\n            })()"));
-            var calcMinValue = value.minimum_value && eval("(function calcMinMax() {\n                with (context) {\n                    return ".concat(value.minimum_value, ";\n                }\n            })()"));
-            var calcMaxValue = value.maximum_value && eval("(function calcMinMax() {\n                with (context) {\n                    return ".concat(value.maximum_value, ";\n                }\n            })()"));
+            var calcMinValue = value.min && eval("(function calcMinMax() {\n                with (context) {\n                    return ".concat(value.min, ";\n                }\n            })()"));
+            var calcMaxValue = value.max && eval("(function calcMinMax() {\n                with (context) {\n                    return ".concat(value.max, ";\n                }\n            })()"));
             var calcEnabled = value.visible && eval("(function calcEnable() {\n                with (context) {\n                    return ".concat(value.visible, ";\n                }\n            })()"));
             if (typeof calcValue !== 'undefined') {
                 defaultValue = calcValue;

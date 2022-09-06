@@ -87,16 +87,16 @@ function resolveDefinition(definition, modifiedParams) {
             if (_.isUndefined(calcValue)) {
                 hasValue = false;
             }
-            insideValue.minimum_value && eval(`(function calcMinMax() {
+            const calcMinValue = insideValue.min && eval(`(function calcMinMax() {
                 hasValue = true;
                 with (context) {
-                    return ${insideValue.minimum_value};
+                    return ${insideValue.min};
                 }
             })()`);
-            insideValue.maximum_value && eval(`(function calcMinMax() {
+            const calcMaxValue = insideValue.max && eval(`(function calcMinMax() {
                 hasValue = true;
                 with (context) {
-                    return ${insideValue.maximum_value};
+                    return ${insideValue.max};
                 }
             })()`);
             const calcEnabled = insideValue.visible && eval(`(function calcEnable() {
@@ -111,6 +111,12 @@ function resolveDefinition(definition, modifiedParams) {
             }
 
             if (insideValue.type === 'float' || insideValue.type === 'int') {
+                if (!_.isNil(calcMinValue)) {
+                    definition.settings[key].min = calcMinValue;
+                }
+                if (!_.isNil(calcMaxValue)) {
+                    definition.settings[key].max = calcMaxValue;
+                }
                 if (Math.abs(calcValue - defaultValue) > 1e-6 && !_.isUndefined(calcValue)) {
                     definition.settings[key].mismatch = true;
                 } else {
@@ -170,14 +176,14 @@ function resolveDefinition(definition, modifiedParams) {
                     return ${value.calcu_value};
                 }
             })()`);
-            const calcMinValue = value.minimum_value && eval(`(function calcMinMax() {
+            const calcMinValue = value.min && eval(`(function calcMinMax() {
                 with (context) {
-                    return ${value.minimum_value};
+                    return ${value.min};
                 }
             })()`);
-            const calcMaxValue = value.maximum_value && eval(`(function calcMinMax() {
+            const calcMaxValue = value.max && eval(`(function calcMinMax() {
                 with (context) {
-                    return ${value.maximum_value};
+                    return ${value.max};
                 }
             })()`);
             const calcEnabled = value.visible && eval(`(function calcEnable() {
@@ -225,7 +231,7 @@ function resolveDefinition(definition, modifiedParams) {
                 }
             }
         } catch (e) {
-            console.error(e, key, value.visible);
+            console.error(e, key);
         }
     }
 }
