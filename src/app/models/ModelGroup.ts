@@ -794,8 +794,7 @@ class ModelGroup extends EventEmitter {
                     }
                     let isModelAcrossGroup = false;
                     for (const selectedModel of this.selectedModelArray) {
-                        // Todo: change this condition make it more resonable
-                        if (selectedModel.parent !== selectModel.parent) {
+                        if (selectedModel.parent !== selectModel.parent && (selectedModel.parent || selectModel.parent)) {
                             isModelAcrossGroup = true;
                             break;
                         }
