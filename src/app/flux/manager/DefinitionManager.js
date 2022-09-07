@@ -513,7 +513,8 @@ class DefinitionManager {
          * M190 S60
          */
 
-        const gcode = [';Start GCode begin','G28 ;home', `M104 S${printTempLayer0}`];
+        const gcode = [';Start GCode begin',`M104 S${printTempLayer0}`];
+        gcode.push('G28 ;home');
         if (machineHeatedBed) {
             gcode.push(`M140 S${bedTempLayer0}`);
         }
