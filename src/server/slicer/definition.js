@@ -392,7 +392,7 @@ export function loadDefinitionsByRegex(headType, configPath, regex, defaultId) {
 export function loadDefinitionsByPrefixName(headType, prefix = 'material', configPath) {
     let defaultId;
     /* eslint-disable-next-line */
-    const regex = new RegExp(`^${prefix}\.([A-Za-z0-9_]+).([A-Za-z0-9_]+?)\.def\.json$`);
+    const regex = new RegExp(`^${prefix}\.([A-Za-z0-9_]+)\.(([A-Za-z0-9_\.]+)?)def\.json$`);
     if (prefix === 'material') {
         defaultId = 'material.pla.def.json';
     } else if (prefix === 'quality') {

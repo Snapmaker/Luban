@@ -835,6 +835,12 @@ export const actions = {
         series && dispatch(actions.updateMachineSeries(series));
     },
 
+    updateStateGcodeFileName: (name) => (dispatch) => {
+        dispatch(baseActions.updateState({
+            gcodeFileName: name
+        }));
+    },
+
     onChangeMachineSeries: (toolHead, series) => async (
         dispatch,
         getState

@@ -17,9 +17,9 @@ const maxDecimal = (number, decimalPlaces) => {
 
 
 const NumberInput = ({
-    className = '', size = 'middle', value, defaultValue, disabled = false, min, max, onChange, placeholder, allowUndefined, decimalPlaces, allowNaN = true, ...rest
+    className = '', size = 'middle', value, defaultValue, disabled = false, min, max, onChange, placeholder, allowUndefined, decimalPlaces = 3, allowNaN, ...rest
 }) => {
-    const [displayValue, setDisplayValue] = useState(value);
+    const [displayValue, setDisplayValue] = useState(!decimalPlaces ? value : maxDecimal(value, decimalPlaces));
     const ref = useRef();
     function onInsideChange(event) {
         const v = decimalPlaces === undefined ? event.target.value : maxDecimal(event.target.value, decimalPlaces);
@@ -105,7 +105,7 @@ const NumberInput = ({
     }, [defaultValue, max, min]);
 
     useEffect(() => {
-        setDisplayValue(value);
+        setDisplayValue(!decimalPlaces ? value : maxDecimal(value, decimalPlaces));
     }, [value]);
 
     return (
@@ -116,7 +116,7 @@ const NumberInput = ({
                 ref={ref}
                 type="number"
                 disabled={disabled}
-                placeholder={placeholder || 'Input a Number'}
+                placeholder={placeholder}
                 className={classNames(styles.input, styles[size])}
                 value={displayValue}
                 onChange={onInsideChange}

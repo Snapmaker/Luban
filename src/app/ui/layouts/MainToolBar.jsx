@@ -7,7 +7,7 @@ import MenuItem from './MenuItem';
 import { Badge } from '../components/Badge';
 import Anchor from '../components/Anchor';
 import i18n from '../../lib/i18n';
-import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING, MACHINE_BRAND_MAP, MACHINE_TOOL_HEADS, MACHINE_SERIES } from '../../constants';
+import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING, MACHINE_TOOL_HEADS, MACHINE_SERIES, WHITE_COLOR } from '../../constants';
 import SvgIcon from '../components/SvgIcon';
 // import { timestamp } from '../../../shared/lib/random-utils';
 
@@ -86,45 +86,47 @@ class MainToolBar extends PureComponent {
                         key="machineMaterialSettings"
                         disabled={!this.props.profileInitialized}
                     >
-                        <div className="machine-setting width-360 background-grey-3 height-50 float-r border-radius-8 sm-flex justify-space-between padding-vertical-4 padding-horizontal-8">
+                        <div className={classNames(styles['hover-background'], 'machine-setting position-re width-360 float-r border-left-grey-3 height-66 sm-flex sm-flex-direction-c justify-space-between padding-vertical-8 padding-horizontal-16')}>
                             <div className="width-144">
                                 <div className="width-144 sm-flex">
                                     <Badge status={isConnected ? 'success' : 'default'} />
                                     <span className="width-130 text-overflow-ellipsis display-inline">{i18n._(find(MACHINE_SERIES, { value: machineInfo?.series })?.seriesLabel)}</span>
                                 </div>
-                                <div className="margin-left-14 opacity-precent-50">
-                                    {i18n._(`key-Luban/Machine/Brand-${MACHINE_BRAND_MAP[machineInfo.series]}`)}
-                                </div>
                             </div>
                             {headType === HEAD_PRINTING && (
-                                <div className="width-192 sm-flex sm-flex-direction-c">
-                                    <div className="sm-flex">
+                                <div className="width-percent-100 sm-flex">
+                                    <div className="sm-flex width-percent-50 text-overflow-ellipsis">
                                         {/* <div className="height-24 width-24 border-default-grey-1" style={{ borderColor: `${materialInfo?.leftExtruder?.color}`, backgroundColor: `${materialInfo?.leftExtruder?.color}` }} /> */}
-                                        <div className="position-re">
+                                        {materialInfo?.leftExtruder?.color === WHITE_COLOR ? (
+                                            <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
+                                        ) : (
                                             <SvgIcon
+                                                // name={`${materialInfo?.leftExtruder?.color === WHITE_COLOR ? 'ExtruderWhite' : 'Extruder'}`}
                                                 name="Extruder"
                                                 size={24}
                                                 color={materialInfo?.leftExtruder?.color}
                                                 type={['static']}
                                             />
-                                            {materialInfo?.rightExtruder && (
-                                                <div className={classNames(materialInfo?.leftExtruder?.color === '#ffffff' ? 'color-black-3' : 'color-white', 'position-ab left-10 top-2 font-size-small')}>L</div>
-                                            )}
-                                        </div>
-                                        <span className="max-width-160 display-inline text-overflow-ellipsis">{materialInfo?.leftExtruder?.name}</span>
+                                        )}
+                                        {materialInfo?.rightExtruder && (
+                                            <div className="margin-right-4">L:</div>
+                                        )}
+                                        <span className="display-inline text-overflow-ellipsis">{materialInfo?.leftExtruder?.name}</span>
                                     </div>
                                     {materialInfo?.rightExtruder && (
-                                        <div className="sm-flex">
-                                            <div className="position-re">
+                                        <div className="sm-flex width-percent-50 text-overflow-ellipsis">
+                                            {materialInfo?.rightExtruder?.color === WHITE_COLOR ? (
+                                                <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
+                                            ) : (
                                                 <SvgIcon
                                                     name="Extruder"
                                                     size={24}
                                                     color={materialInfo?.rightExtruder?.color}
                                                     type={['static']}
                                                 />
-                                                <div className={classNames(materialInfo?.rightExtruder?.color === '#ffffff' ? 'color-black-3' : 'color-white', 'position-ab left-10 top-2 font-size-small')}>R</div>
-                                            </div>
-                                            <span className="max-width-160 display-inline text-overflow-ellipsis">{materialInfo?.rightExtruder?.name}</span>
+                                            )}
+                                            <div className="margin-right-4">R:</div>
+                                            <span className="display-inline text-overflow-ellipsis">{materialInfo?.rightExtruder?.name}</span>
                                         </div>
                                     )}
                                 </div>
@@ -140,6 +142,14 @@ class MainToolBar extends PureComponent {
                                         <span>{i18n._(`${MACHINE_TOOL_HEADS[machineInfo?.toolHead].label}`)}</span>
                                     </div>
                                 </div>
+                            )}
+                            {headType === HEAD_PRINTING && (
+                                <SvgIcon
+                                    name="RightSlipNormal"
+                                    size={24}
+                                    type={['static']}
+                                    className="position-ab top-22 right-16"
+                                />
                             )}
                         </div>
                     </Anchor>
