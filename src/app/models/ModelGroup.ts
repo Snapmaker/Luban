@@ -5,7 +5,7 @@ import {
 import EventEmitter from 'events';
 import { CONTAINED, INTERSECTED, NOT_INTERSECTED } from 'three-mesh-bvh';
 import { v4 as uuid } from 'uuid';
-import _, { debounce, replace } from 'lodash';
+import _, { debounce, filter, includes, replace } from 'lodash';
 import { Transfer } from 'threads';
 import i18n from '../lib/i18n';
 import { checkVector3NaN } from '../lib/numeric-utils';
@@ -214,7 +214,12 @@ class ModelGroup extends EventEmitter {
      * Note: for performance consideration, don't call this method in render.
      */
     public getBoundingBox() {
-        return ThreeUtils.computeBoundingBox(this.object) as Box3;
+        const cloneObject = this.object.clone();
+        cloneObject.children = filter(cloneObject.children, (child) => {
+            return child.name !== 'clippingSection' && !includes(child.name, 'prime_tower');
+        });
+        const bounding = ThreeUtils.computeBoundingBox(cloneObject) as Box3;
+        return bounding;
     }
 
     /**
@@ -285,6 +290,7 @@ class ModelGroup extends EventEmitter {
         const selectedGroup = this.selectedGroup;
         if (selectedGroup.children.length > 0 && selectedGroup.shouldUpdateBoundingbox) {
             const whd = new Vector3(0, 0, 0);
+
             ThreeUtils.computeBoundingBox(this.selectedGroup).getSize(whd);
             return `${whd.x.toFixed(1)} × ${whd.y.toFixed(1)} × ${whd.z.toFixed(1)} mm`;
             // width-depth-height
@@ -643,7 +649,15 @@ class ModelGroup extends EventEmitter {
 
     public setConvexGeometry(uploadName: string, convexGeometry: BufferGeometry) {
         // SvgModel
-        const models = this.models.filter((m) => m instanceof ThreeModel && m.uploadName === uploadName);
+        const models = [];
+        this.models.forEach(model => {
+            if (model instanceof ThreeModel && model.uploadName === uploadName) models.push(model);
+            else if (model instanceof ThreeGroup) {
+                model.children.forEach(child => {
+                    if (child.uploadName === uploadName) models.push(child);
+                });
+            }
+        });
         if (models.length) {
             for (let idx = 0; idx < models.length; idx++) {
                 const model = models[idx] as ThreeModel;
@@ -698,6 +712,10 @@ class ModelGroup extends EventEmitter {
             }
             return true;
         });
+    }
+
+    public selectedModelIsHidden() {
+        return this.selectedModelArray.every(model => !model.visible);
     }
 
     public setSeries(series: string) {

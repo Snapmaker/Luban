@@ -86,7 +86,7 @@ const AddMaterialModel = ({
                             <Input
                                 value={materialName}
                                 onChange={(e) => setMaterialName(e.target.value)}
-                                placeholder="Material Name"
+                                placeholder=""
                                 size="large"
                             />
                         </div>
@@ -135,6 +135,7 @@ const AddMaterialModel = ({
                                     min={0}
                                     allowUndefined
                                     allowNaN={false}
+                                    placeholder=""
                                 />
                                 <span className="margin-horizontal-8 width-16 border-bottom-black-5" />
                                 <NInput
@@ -145,6 +146,7 @@ const AddMaterialModel = ({
                                     min={printingTemperatureDown || 1}
                                     allowUndefined
                                     allowNaN={false}
+                                    placeholder=""
                                 />
                             </div>
                         </div>
@@ -159,6 +161,7 @@ const AddMaterialModel = ({
                                     min={0}
                                     allowUndefined
                                     allowNaN={false}
+                                    placeholder=""
                                 />
                                 <span className="margin-horizontal-8 width-16 border-bottom-black-5" />
                                 <NInput
@@ -169,6 +172,7 @@ const AddMaterialModel = ({
                                     min={buildPlateTemperatureDown || 1}
                                     allowUndefined
                                     allowNaN={false}
+                                    placeholder=""
                                 />
                             </div>
                         </div>

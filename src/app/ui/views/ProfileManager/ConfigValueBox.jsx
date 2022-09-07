@@ -499,15 +499,16 @@ function ConfigValueBox({
                                         className={classNames(showParamsProfile ? 'rotate180' : '')}
                                     />
                                 </Anchor>
-                                <div className="position-ab" style={{ left: -24, top: profileDomOffset + 3, visibility: `${(profileDomOffset !== null && profileDomOffset > 0) ? 'visible' : 'hidden'}` }}>
+                                <div className="position-ab" style={{ left: -12, top: profileDomOffset + 6, visibility: `${(profileDomOffset !== null && profileDomOffset > 0) ? 'visible' : 'hidden'}` }}>
                                     <SvgIcon
-                                        name="LeftSlipNormal"
+                                        name="PointingArrow"
                                         size={24}
                                         type={['static']}
+                                        color="#F5F5F7"
                                     />
                                 </div>
                                 {showParamsProfile && (
-                                    <div className="padding-vertical-16 padding-horizontal-16 overflow-y-auto height-percent-100">
+                                    <div className={classNames(styles['manager-params-docs-content'], 'padding-vertical-16 padding-horizontal-16 overflow-y-auto height-percent-100')}>
                                         <ReactMarkdown transformImageUri={(input) => (`atom:///${imgPath}/${input.slice(3)}`)}>
                                             {mdContent}
                                         </ReactMarkdown>
@@ -535,9 +536,8 @@ function ConfigValueBox({
                                     className={classNames(showParamsProfile ? 'rotate180' : '')}
                                 />
                             </Anchor>
-                            <div style={{ left: -12, top: profileDomOffset }}>test</div>
                             {showParamsProfile && (
-                                <div className="padding-vertical-16 padding-horizontal-16 overflow-y-auto height-percent-100">
+                                <div className={classNames(styles['manager-params-docs-content'], 'padding-vertical-16 padding-horizontal-16 overflow-y-auto height-percent-100')}>
                                     <ReactMarkdown transformImageUri={(input) => (`atom:///${imgPath}/${input.slice(3)}`)}>
                                         {mdContent}
                                     </ReactMarkdown>

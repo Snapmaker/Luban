@@ -38,6 +38,9 @@ function LaserStartModal({
 
     const onChange = (event) => {
         setSelectedValue(event.target.value);
+        if (event.target.value === SEMI_AUTO_MODE) {
+            dispatch(machineActions.updateMaterialThickness(1.5));
+        }
     };
 
     const handlerAxis = (value) => {
@@ -128,11 +131,11 @@ function LaserStartModal({
         {
             key: MANUAL_MODE,
             name: i18n._('key-Workspace/LaserStartJob-manual_mode'),
-            description: () => {
+            description: () => (
                 <Trans i18nKey="key-Workspace/LaserStartJob-manual_mode_description">
                     <b>Manually control</b> the movement of the execution head until the laser beam converges into the smallest spot on the surface of the material. Click to <b>start the job</b>, the machine will use the current height as the laser height.
-                </Trans>;
-            },
+                </Trans>
+            ),
             display: {},
             disable: false
         },
