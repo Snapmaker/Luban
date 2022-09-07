@@ -1179,6 +1179,7 @@
     "key-Laser/CamaeraCaptureDescription_7_1": "如果使用 U 盘保存项目，请务必在软件中而非触控屏上设置工作原点。",
     "key-Laser/CamaeraCaptureDescription_8": "8. 设置<1>工作功率</1>并开始雕刻。",
     "key-Laser/CamaeraCaptureDescription_main": "摄像捕捉功能允许你用手机摄像头拍摄材料和图片，并将其上传至软件。该功能有助于你更准确地在材料上雕刻图像。",
+    "key-Workspace/LaserStartJob-manual_mode_description": "手动执行控制执行头移动，直至激光光束在材料表面聚合成面积最小的光斑。点击开始作业，机器将会以当前高度作为激光高度",
     "key-Laser/CameraCapture-Apply": "应用",
     "key-Laser/CameraCapture-Back": "返回",
     "key-Laser/CameraCapture-Calibrate": "校准",

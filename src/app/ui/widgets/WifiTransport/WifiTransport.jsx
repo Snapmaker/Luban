@@ -333,7 +333,7 @@ function WifiTransport({ widgetActions, controlActions }) {
             }
             await dispatch(workspaceActions.renderGcodeFile(find, false, true));
             await dispatch(workspaceActions.updateState({ activeGcodeFile: find }));
-            await dispatch(machineActions.updateState({ gcodeFileName: find.renderGcodeFileName || find.name }));
+            await dispatch(machineActions.updateStateGcodeFileName(find.renderGcodeFileName || find.name));
 
 
             if (toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && isLaserAutoFocus && !isRotate) {

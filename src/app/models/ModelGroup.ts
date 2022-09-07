@@ -5,7 +5,7 @@ import {
 import EventEmitter from 'events';
 import { CONTAINED, INTERSECTED, NOT_INTERSECTED } from 'three-mesh-bvh';
 import { v4 as uuid } from 'uuid';
-import _, { debounce, replace } from 'lodash';
+import _, { debounce, filter, includes, replace } from 'lodash';
 import { Transfer } from 'threads';
 import i18n from '../lib/i18n';
 import { checkVector3NaN } from '../lib/numeric-utils';
@@ -214,7 +214,12 @@ class ModelGroup extends EventEmitter {
      * Note: for performance consideration, don't call this method in render.
      */
     public getBoundingBox() {
-        return ThreeUtils.computeBoundingBox(this.object) as Box3;
+        const cloneObject = this.object.clone();
+        cloneObject.children = filter(cloneObject.children, (child) => {
+            return child.name !== 'clippingSection' && !includes(child.name, 'prime_tower');
+        });
+        const bounding = ThreeUtils.computeBoundingBox(cloneObject) as Box3;
+        return bounding;
     }
 
     /**
@@ -285,6 +290,7 @@ class ModelGroup extends EventEmitter {
         const selectedGroup = this.selectedGroup;
         if (selectedGroup.children.length > 0 && selectedGroup.shouldUpdateBoundingbox) {
             const whd = new Vector3(0, 0, 0);
+            console.log(ThreeUtils.computeBoundingBox(this.selectedGroup));
             ThreeUtils.computeBoundingBox(this.selectedGroup).getSize(whd);
             return `${whd.x.toFixed(1)} × ${whd.y.toFixed(1)} × ${whd.z.toFixed(1)} mm`;
             // width-depth-height
