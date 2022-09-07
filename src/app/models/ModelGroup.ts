@@ -502,8 +502,7 @@ class ModelGroup extends EventEmitter {
             model.meshObject.removeEventListener('update', this.onModelUpdate);
             model.meshObject.parent && model.meshObject.parent.remove(model.meshObject);
             if (model instanceof ThreeModel && model.clipper) {
-                this.clippingGroup.remove(model.clipper.group);
-                model.clipper = null;
+                model.clipper.destroy();
             }
         }
         this.plateAdhesion.clear();
@@ -2649,6 +2648,7 @@ class ModelGroup extends EventEmitter {
             return;
         }
         this.plateAdhesion.clear();
+        ThreeUtils.dispose(this.plateAdhesion);
         if (this.adhesionConfig.adhesionType === 'none' || !this.clipperEnable) {
             return;
         }
@@ -2900,6 +2900,9 @@ class ModelGroup extends EventEmitter {
         } else {
             this.updatePlateAdhesion();
             this.updateClippingPlane();
+            this.getThreeModels().forEach((model) => {
+                model?.clipper.destroy();
+            });
         }
     }
 

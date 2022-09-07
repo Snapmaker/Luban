@@ -1931,8 +1931,8 @@ export const actions = {
     destroyGcodeLine: () => (dispatch, getState) => {
         const { gcodeLine, gcodeLineGroup } = getState().printing;
         if (gcodeLine) {
-            ThreeUtils.dispose(gcodeLine);
-            gcodeLineGroup.remove(gcodeLine);
+            ThreeUtils.dispose(gcodeLineGroup);
+            gcodeLineGroup.clear();
             dispatch(actions.updateState({
                 gcodeFile: null,
                 gcodeLine: null,

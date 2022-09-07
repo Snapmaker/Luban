@@ -52,6 +52,8 @@ class PrintableCube extends Object3D {
     updateSize(series, size, stopArea) {
         this.series = series;
         this.size = size;
+
+        ThreeUtils.dispose(this);
         this.remove(...this.children);
         this._setup();
 

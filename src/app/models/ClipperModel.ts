@@ -7,6 +7,7 @@ import generateLine from '../lib/generate-line';
 import { CLIPPING_LINE_COLOR, PLANE_MAX_HEIGHT } from './ModelGroup';
 import { bufferToPoint } from '../lib/buffer-utils';
 import workerManager from '../lib/manager/workerManager';
+import ThreeUtils from '../three-extensions/ThreeUtils';
 
 export type TPolygon = ArrayBuffer[]
 
@@ -81,7 +82,8 @@ class ClippingModel {
     }
 
     public init() {
-        this.group.remove(...this.group.children);
+        ThreeUtils.dispose(this.group);
+        this.group.clear();
 
         this.modelMeshObject = this.model.meshObject;
         this.modelGeometry = this.modelMeshObject.geometry as unknown as THREE.BufferGeometry;
@@ -205,7 +207,7 @@ class ClippingModel {
             this.modelGroup.clippingFinish(true);
         }).finally(() => {
             if (this.shouldDestroy) {
-                this.model.clipper = null;
+                this.destroy();
             }
         });
     }, 1000)
@@ -448,6 +450,13 @@ class ClippingModel {
         this.meshObjectGroup?.rotation.copy(rotation);
 
         this.model.setLocalPlane(PLANE_MAX_HEIGHT);
+    }
+
+    public destroy() {
+        ThreeUtils.dispose(this.group);
+        this.group.parent.remove(this.group);
+
+        this.model.clipper = null;
     }
 }
 

@@ -466,10 +466,10 @@ const ThreeUtils = {
             mesh.children.forEach(m => {
                 this.dispose(m);
             });
-        } else {
-            mesh.geometry && mesh.geometry.dispose();
-            mesh.material && mesh.material.dispose();
         }
+
+        mesh.geometry && mesh.geometry.dispose();
+        mesh.material && mesh.material.dispose();
     }
 };
 
