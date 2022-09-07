@@ -74,7 +74,7 @@ export default class ThreeGroup extends BaseModel {
         const models = [] as ThreeModel[];
         // this.meshObject.updateMatrixWorld();
         this.children.forEach((model) => {
-            model.parent = null;
+            model.parent = undefined;
             // model.meshObject.applyMatrix4(this.meshObject.matrixWorld);
             if (model instanceof ThreeGroup) {
                 const children = model.disassemble();

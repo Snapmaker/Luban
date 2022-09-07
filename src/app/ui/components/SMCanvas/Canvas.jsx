@@ -897,8 +897,8 @@ class Canvas extends PureComponent {
     renderScene() {
         if (!this.isCanvasInitialized()) return;
         // all model was hidden, control also hide.
-        if (this.modelGroup.getVisibleModels && !this.modelGroup.getVisibleModels().length) {
-            this.controls.transformControl.hideAllPeripherals && this.controls.transformControl.hideAllPeripherals();
+        if (this.modelGroup.getVisibleModels().length) {
+            this.controls.transformControl.hideAllPeripherals();
         }
         if (this.transformSourceType === '2D') {
             this.light.position.copy(this.camera.position);

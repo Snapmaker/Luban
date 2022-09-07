@@ -550,7 +550,7 @@ const MachineSettings = forwardRef(({
                             }}
                             >
                                 <div className={`width-116 height-116 border-radius-8 ${zAxis ? 'border-default-grey-1' : 'border-default-grey-1 border-color-blue-2'}`}>
-                                    <img src="/resources/images/machine/z_axis_standard.png" alt="" className="width-percent-100" />
+                                    <img src="/resources/images/machine/z_axis_standard.png" draggable={false} alt="" className="width-percent-100" />
                                 </div>
                                 <div className="align-c">{i18n._('key-settings/Z-axis Standard')}</div>
                             </Anchor>
@@ -560,7 +560,7 @@ const MachineSettings = forwardRef(({
                             }}
                             >
                                 <div className={`width-116 height-116 border-radius-8 ${!zAxis ? 'border-default-grey-1' : 'border-default-grey-1 border-color-blue-2'}`}>
-                                    <img src="/resources/images/machine/z_axis_extension.png" alt="" className="width-percent-100" />
+                                    <img src="/resources/images/machine/z_axis_extension.png" draggable={false} alt="" className="width-percent-100" />
                                 </div>
                                 <div className="align-c">{i18n._('key-settings/Z-axis Extension')}</div>
                             </Anchor>

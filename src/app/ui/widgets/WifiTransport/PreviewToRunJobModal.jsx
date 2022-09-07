@@ -16,7 +16,6 @@ const PreviewToRunJobModal = ({
     const headerTextKey = includes(headTypeArr, selectFileType) ? i18n._('key-Workspace/RunJobWarningModal-Mismatch header') : i18n._('key-Workspace/RunJobWarningModal-Unknown header');
     const headTypeWithI18n = i18n._(START_JOB_MISMATCH_HEAD_INFO[headType]);
     const fileTypeWithI18n = i18n._(START_JOB_MISMATCH_GCODE_INFO[selectFileType]);
-    console.log('selectFileType', selectFileType, headTypeArr, headTypeWithI18n, fileTypeWithI18n);
     const handleOK = () => {
         onConfirm();
         onClose();

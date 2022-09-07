@@ -488,12 +488,16 @@ export const actions = {
                 dispatch(baseActions.updateState({
                     laser10WErrorState,
                     isEmergencyStopped,
-                    gcodeFileName: fileName,
-                    gcodePrintingInfo
+                    gcodeFileName: fileName
                 }));
                 if (!isNil(status)) {
                     dispatch(baseActions.updateState({
                         workflowStatus: status
+                    }));
+                }
+                if (!isNil(gcodePrintingInfo)) {
+                    dispatch(baseActions.updateState({
+                        gcodePrintingInfo
                     }));
                 }
                 if (!isNil(isHomed)) {

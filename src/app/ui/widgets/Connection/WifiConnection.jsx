@@ -276,6 +276,7 @@ function WifiConnection() {
             let actualText = text;
             switch (code) {
                 case 'EHOSTDOWN':
+                case 'ENETUNREACH':
                 case 'EADDRNOTAVAIL':
                 case 'ECONNABORTED':
                     actualText = i18n._('key-Workspace/Connection-Connection timed out. Please check your network settings.');
@@ -283,6 +284,7 @@ function WifiConnection() {
                 case 403:
                     actualText = i18n._('key-Workspace/Connection-Connection failed. The machine has been connected to other device.');
                     break;
+                case 404:
                 case 'ECONNRESET':
                 case 'EACCES':
                     actualText = i18n._('key-Workspace/Connection-Connection failed. The target machine actively refused your connection.  Please check if the input IP address is correct.');
