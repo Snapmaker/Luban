@@ -1100,7 +1100,7 @@ export const MACHINE_SERIES = {
     },
     A350: {
         seriesLabel: 'key-Luban/Machine/MachineSeries-A350',
-        seriesLabelWithoutI18n: 'A350/A350T F350',
+        seriesLabelWithoutI18n: 'A350 A350T F350',
         value: 'A350',
         label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A350',
         setting: {
