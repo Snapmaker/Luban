@@ -1935,7 +1935,8 @@ export const actions = {
             gcodeLineGroup.remove(gcodeLine);
             dispatch(actions.updateState({
                 gcodeFile: null,
-                gcodeLine: null
+                gcodeLine: null,
+                displayedType: 'model'
             }));
         }
     },
