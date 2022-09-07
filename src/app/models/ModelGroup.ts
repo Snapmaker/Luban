@@ -643,7 +643,15 @@ class ModelGroup extends EventEmitter {
 
     public setConvexGeometry(uploadName: string, convexGeometry: BufferGeometry) {
         // SvgModel
-        const models = this.models.filter((m) => m instanceof ThreeModel && m.uploadName === uploadName);
+        const models = [];
+        this.models.forEach(model => {
+            if (model instanceof ThreeModel && model.uploadName === uploadName) models.push(model);
+            else if (model instanceof ThreeGroup) {
+                model.children.forEach(child => {
+                    if (child.uploadName === uploadName) models.push(child);
+                });
+            }
+        });
         if (models.length) {
             for (let idx = 0; idx < models.length; idx++) {
                 const model = models[idx] as ThreeModel;
@@ -698,6 +706,10 @@ class ModelGroup extends EventEmitter {
             }
             return true;
         });
+    }
+
+    public selectedModelIsHidden() {
+        return this.selectedModelArray.every(model => !model.visible);
     }
 
     public setSeries(series: string) {

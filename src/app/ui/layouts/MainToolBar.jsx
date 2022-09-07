@@ -97,12 +97,17 @@ class MainToolBar extends PureComponent {
                                 <div className="width-percent-100 sm-flex">
                                     <div className="sm-flex width-percent-50 text-overflow-ellipsis">
                                         {/* <div className="height-24 width-24 border-default-grey-1" style={{ borderColor: `${materialInfo?.leftExtruder?.color}`, backgroundColor: `${materialInfo?.leftExtruder?.color}` }} /> */}
-                                        <SvgIcon
-                                            name={`${materialInfo?.leftExtruder?.color === WHITE_COLOR ? 'ExtruderWhite' : 'Extruder'}`}
-                                            size={24}
-                                            color={materialInfo?.leftExtruder?.color === WHITE_COLOR ? '#b9bcbf' : materialInfo?.leftExtruder?.color}
-                                            type={['static']}
-                                        />
+                                        {materialInfo?.leftExtruder?.color === WHITE_COLOR ? (
+                                            <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
+                                        ) : (
+                                            <SvgIcon
+                                                // name={`${materialInfo?.leftExtruder?.color === WHITE_COLOR ? 'ExtruderWhite' : 'Extruder'}`}
+                                                name="Extruder"
+                                                size={24}
+                                                color={materialInfo?.leftExtruder?.color}
+                                                type={['static']}
+                                            />
+                                        )}
                                         {materialInfo?.rightExtruder && (
                                             <div className="margin-right-4">L:</div>
                                         )}
@@ -110,12 +115,16 @@ class MainToolBar extends PureComponent {
                                     </div>
                                     {materialInfo?.rightExtruder && (
                                         <div className="sm-flex width-percent-50 text-overflow-ellipsis">
-                                            <SvgIcon
-                                                name={`${materialInfo?.rightExtruder?.color === WHITE_COLOR ? 'ExtruderWhite' : 'Extruder'}`}
-                                                size={24}
-                                                color={materialInfo?.rightExtruder?.color === WHITE_COLOR ? '#B9BCBF' : materialInfo?.rightExtruder?.color}
-                                                type={['static']}
-                                            />
+                                            {materialInfo?.rightExtruder?.color === WHITE_COLOR ? (
+                                                <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
+                                            ) : (
+                                                <SvgIcon
+                                                    name="Extruder"
+                                                    size={24}
+                                                    color={materialInfo?.rightExtruder?.color}
+                                                    type={['static']}
+                                                />
+                                            )}
                                             <div className="margin-right-4">R:</div>
                                             <span className="display-inline text-overflow-ellipsis">{materialInfo?.rightExtruder?.name}</span>
                                         </div>
@@ -134,12 +143,14 @@ class MainToolBar extends PureComponent {
                                     </div>
                                 </div>
                             )}
-                            <SvgIcon
-                                name="RightSlipNormal"
-                                size={24}
-                                type={['static']}
-                                className="position-ab top-22 right-16"
-                            />
+                            {headType === HEAD_PRINTING && (
+                                <SvgIcon
+                                    name="RightSlipNormal"
+                                    size={24}
+                                    type={['static']}
+                                    className="position-ab top-22 right-16"
+                                />
+                            )}
                         </div>
                     </Anchor>
                 )}
