@@ -17,7 +17,7 @@ const maxDecimal = (number, decimalPlaces) => {
 
 
 const NumberInput = ({
-    className = '', size = 'middle', value, defaultValue, disabled = false, min, max, onChange, placeholder, allowUndefined, decimalPlaces = 3, ...rest
+    className = '', size = 'middle', value, defaultValue, disabled = false, min, max, onChange, placeholder, allowUndefined, decimalPlaces = 3, allowNaN, ...rest
 }) => {
     const [displayValue, setDisplayValue] = useState(!decimalPlaces ? value : maxDecimal(value, decimalPlaces));
     const ref = useRef();
