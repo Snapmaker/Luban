@@ -1024,6 +1024,7 @@ export const SELECTEVENT = {
 export const MACHINE_SERIES = {
     ORIGINAL: {
         seriesLabel: 'key-Luban/Machine/MachineSeries-Original',
+        seriesLabelWithoutI18n: 'Original',
         value: 'Original',
         label: 'key-Luban/Machine/MachineSeries-Snapmaker Original',
         setting: {
@@ -1041,6 +1042,7 @@ export const MACHINE_SERIES = {
     },
     ORIGINAL_LZ: {
         seriesLabel: 'key-Workspace/MachineSetting-Z-Axis Extension Module',
+        seriesLabelWithoutI18n: 'Original with Z-axis Extension Module',
         value: 'Original Long Z-axis',
         configPath: 'Original',
         label:
@@ -1060,6 +1062,7 @@ export const MACHINE_SERIES = {
     },
     A150: {
         seriesLabel: 'key-Luban/Machine/MachineSeries-A150',
+        seriesLabelWithoutI18n: 'A150',
         value: 'A150',
         label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A150',
         setting: {
@@ -1078,6 +1081,7 @@ export const MACHINE_SERIES = {
     },
     A250: {
         seriesLabel: 'key-Luban/Machine/MachineSeries-A250',
+        seriesLabelWithoutI18n: 'A250 A250T F250',
         value: 'A250',
         label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A250',
         setting: {
@@ -1096,6 +1100,7 @@ export const MACHINE_SERIES = {
     },
     A350: {
         seriesLabel: 'key-Luban/Machine/MachineSeries-A350',
+        seriesLabelWithoutI18n: 'A350 A350T F350',
         value: 'A350',
         label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A350',
         setting: {
@@ -1115,6 +1120,7 @@ export const MACHINE_SERIES = {
     A400: {
         value: 'A400',
         seriesLabel: 'key-Luban/Machine/MachineSeries-A400',
+        seriesLabelWithoutI18n: 'Artisan',
         label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A400',
         setting: {
             size: {
@@ -1612,6 +1618,17 @@ export const SERIAL_MAP_SACP = {
     '1': 'A250',
     '2': 'A350',
     '3': 'A400'
+};
+
+export const START_JOB_MISMATCH_HEAD_INFO = {
+    [HEAD_PRINTING]: 'key-App/Settings/MachineSettings-3D Print Toolhead',
+    [HEAD_LASER]: 'key-App/Settings/MachineSettings-3D Print Toolhead',
+    [HEAD_CNC]: 'key-App/Settings/MachineSettings-3D Print Toolhead',
+};
+export const START_JOB_MISMATCH_GCODE_INFO = {
+    [HEAD_PRINTING]: 'key-App/Settings/MachineSettings-3D Printing',
+    [HEAD_LASER]: 'key-App/Settings/MachineSettings-Laser',
+    [HEAD_CNC]: 'key-App/Settings/MachineSettings-CNC',
 };
 
 export const PRINTING_MODULE = [0, 13];

@@ -8,7 +8,8 @@ import UniApi from '../../../lib/uni-api';
 import i18n from '../../../lib/i18n';
 import usePrevious from '../../../lib/hooks/previous';
 import {
-    MACHINE_TOOL_HEADS
+    MACHINE_TOOL_HEADS,
+    MACHINE_SERIES
 } from '../../../constants';
 
 function MismatchModal() {
@@ -20,7 +21,6 @@ function MismatchModal() {
     const machineToolHead = useSelector(state => state?.machine?.toolHead);
     const [showMismatchModal, setShowMismatchModal] = useState(false);
     const prevIsConnected = usePrevious(isConnected);
-
     function onShowMachinwSettings() {
         const browserWindow = window.require('electron').remote.BrowserWindow.getFocusedWindow();
         if (isElectron()) {
@@ -39,6 +39,7 @@ function MismatchModal() {
             setShowMismatchModal(true);
         }
     }, [prevIsConnected, isConnected, toolHead, headType, series, machineSeries, machineToolHead]);
+
 
     return (
         <>
@@ -62,8 +63,8 @@ function MismatchModal() {
                         <div>
                             {i18n._('key-Workspace/Mismatch-The configured Machine Model ({{machineInfo}}) does not match with the connected machine ({{connectedMachineInfo}}). To change the settings, you can go to',
                                 {
-                                    machineInfo: `${machineSeries} ${i18n._(MACHINE_TOOL_HEADS[machineToolHead[`${headType}Toolhead`]]?.label)}`,
-                                    connectedMachineInfo: `${series} ${i18n._(MACHINE_TOOL_HEADS[toolHead]?.label)}`,
+                                    machineInfo: `${MACHINE_SERIES[machineSeries.toUpperCase()].seriesLabelWithoutI18n} ${i18n._(MACHINE_TOOL_HEADS[machineToolHead[`${headType}Toolhead`]]?.label)}`,
+                                    connectedMachineInfo: `${MACHINE_SERIES[series.toUpperCase()].seriesLabelWithoutI18n} ${i18n._(MACHINE_TOOL_HEADS[toolHead]?.label)}`,
                                 })}
                             <Anchor
                                 onClick={onShowMachinwSettings}

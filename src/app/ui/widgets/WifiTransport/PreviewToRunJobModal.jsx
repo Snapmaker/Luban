@@ -4,7 +4,7 @@ import { includes } from 'lodash';
 import Modal from '../../components/Modal';
 import { Button } from '../../components/Buttons';
 import i18n from '../../../lib/i18n';
-import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
+import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING, START_JOB_MISMATCH_GCODE_INFO, START_JOB_MISMATCH_HEAD_INFO } from '../../../constants';
 
 const headTypeArr = [HEAD_PRINTING, HEAD_CNC, HEAD_LASER];
 const PreviewToRunJobModal = ({
@@ -13,8 +13,9 @@ const PreviewToRunJobModal = ({
     onClose,
     onConfirm
 }) => {
-    const headerTextKey = includes(selectFileType, headTypeArr) ? i18n._('key-Workspace/RunJobWarningModal-Mismatch header') : i18n._('key-Workspace/RunJobWarningModal-Unknown header');
-
+    const headerTextKey = includes(headTypeArr, selectFileType) ? i18n._('key-Workspace/RunJobWarningModal-Mismatch header') : i18n._('key-Workspace/RunJobWarningModal-Unknown header');
+    const headTypeWithI18n = i18n._(START_JOB_MISMATCH_HEAD_INFO[headType]);
+    const fileTypeWithI18n = i18n._(START_JOB_MISMATCH_GCODE_INFO[selectFileType]);
     const handleOK = () => {
         onConfirm();
         onClose();
@@ -32,7 +33,9 @@ const PreviewToRunJobModal = ({
             <Modal.Body>
                 <div className="width-438">
                     {
-                        includes(selectFileType, headTypeArr) ? i18n._('key-Workspace/RunJobWarningModal-Mismatch body', { headType: headType, fileType: selectFileType }) : i18n._('key-Workspace/RunJobWarningModal-Unknown body', { headType: headType })
+                        includes(headTypeArr, selectFileType)
+                            ? i18n._('key-Workspace/RunJobWarningModal-Mismatch body', { headType: headTypeWithI18n, fileType: fileTypeWithI18n })
+                            : i18n._('key-Workspace/RunJobWarningModal-Unknown body', { headType: headTypeWithI18n })
                     }
                 </div>
 
@@ -53,7 +56,7 @@ const PreviewToRunJobModal = ({
                     width="96px"
                     onClick={handleOK}
                 >
-                    <div className="align-c">{i18n._('key-Modal/Common-Confirm')}</div>
+                    <div className="align-c">{i18n._('key-Modal/Common-Start')}</div>
                 </Button>
             </Modal.Footer>
         </Modal>

@@ -1,8 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Switch } from 'antd';
+// import { Switch } from 'antd';
 import i18n from '../../../lib/i18n';
-// import Checkbox from '../../components/Checkbox';
+import Checkbox from '../../components/Checkbox';
 
 function CheckboxItem({
     definitionKey,
@@ -18,15 +18,14 @@ function CheckboxItem({
     const { label } = setting;
     return (
         <div className="sm-flex height-32 margin-vertical-8">
-            <Switch
+            <Checkbox
                 className="sm-flex-auto sm-flex-order-negative"
                 style={{
                     width: width,
-                    margin: '5px 0',
                     marginLeft: calculateTextIndex(definitionKey)
                 }}
                 checked={defaultValue}
-                onChange={(checked) => onChangeDefinition(definitionKey, checked, configCategory)}
+                onChange={(e) => onChangeDefinition(definitionKey, e.target.checked, configCategory)}
             />
             <span className="margin-left-8">{i18n._(label)}</span>
         </div>

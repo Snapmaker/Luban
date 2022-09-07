@@ -146,16 +146,20 @@ export const cncUniformProfile = (filename, configDir) => {
         const data = fs.readFileSync(filePath, 'utf8');
         const json = JSON.parse(data);
         json.inherits = 'snapmaker2';
-        if (!json.i18nCategory && ['Default Material', 'Acrylic', 'Epoxy Tooling Board'].includes(json.category)) {
-            json.i18nCategory = `key-default_category-${json.category}`;
-        }
-        if (!json.i18nName && json.name) {
-            if (json.name === 'Flat End Mill') {
-                json.i18nName = `key-default_name-${json.name} 1.5`;
-            } else {
-                json.i18nName = `key-default_name-${json.name}`;
+        if (json.settings && json.settings.diameter) {
+            if (!json.i18nCategory && ['Default Material', 'Acrylic', 'Epoxy Tooling Board'].includes(json.category)) {
+                json.i18nCategory = `key-default_category-${json.category}`;
             }
+            if (!json.i18nName && json.name) {
+                if (json.name === 'Flat End Mill') {
+                    json.i18nName = `key-default_name-${json.name} 1.5`;
+                } else {
+                    json.i18nName = `key-default_name-${json.name}`;
+                }
+            }
+            fs.writeFileSync(filePath, JSON.stringify(json));
+        } else {
+            fs.unlinkSync(filePath);
         }
-        fs.writeFileSync(filePath, JSON.stringify(json));
     }
 };

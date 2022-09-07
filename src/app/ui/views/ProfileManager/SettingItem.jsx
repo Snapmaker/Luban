@@ -151,6 +151,8 @@ function SettingItem({
                         suffix={unit}
                         className="sm-flex-width align-r"
                         value={Number(settingDefaultValue)}
+                        min={min}
+                        max={max}
                         size={styleSize}
                         // disabled={!isDefinitionEditable()}
                         onChange={(value) => {

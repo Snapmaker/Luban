@@ -352,6 +352,7 @@ export const actions = {
                                         toolpath.onGenerateToolpathFinail();
                                     }
                                     if (toolPathGroup && toolPathGroup._getCheckAndSuccessToolPaths()) {
+                                        toolPathGroup.addSelectedToolpathColor();
                                         dispatch(
                                             baseActions.updateState(headType, {
                                                 shouldGenerateGcodeCounter: shouldGenerateGcodeCounter + 1
@@ -712,7 +713,7 @@ export const actions = {
                 height = transformation?.height;
             }
             if (sourceType === SOURCE_TYPE.IMAGE3D) {
-                const newModelSize = sizeModel(size, materials, sourceWidth, sourceHeight);
+                const newModelSize = sizeModel(coordinateSize, materials, sourceWidth, sourceHeight);
                 scale = newModelSize?.scale;
             }
         } else {

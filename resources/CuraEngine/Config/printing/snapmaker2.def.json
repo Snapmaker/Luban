@@ -15,10 +15,6 @@
         }
     },
     "overrides": {
-        "layer_height": {
-            "min": 0.05,
-            "max": 2
-        },
         "machine_name": {
             "default_value": "Snapmaker"
         },

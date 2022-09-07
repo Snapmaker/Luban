@@ -6,10 +6,9 @@ import MachineSettings from './machineSettings';
 import MaterialSettings from './materialSettings';
 import SvgIcon from '../../components/SvgIcon';
 import Anchor from '../../components/Anchor';
-import { LEVEL_ONE_POWER_LASER_FOR_ORIGINAL, MACHINE_SERIES, SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 } from '../../../constants';
+import { LEVEL_ONE_POWER_LASER_FOR_ORIGINAL, MACHINE_SERIES, SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL } from '../../../constants';
 import { actions as machineActions } from '../../../flux/machine/index';
 import { STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL } from '../../../../server/controllers/constants';
-import { LEVEL_ONE_POWER_LASER_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_SM2 } from '../../../../server/constants';
 
 const MACHINE_TAB = 'machine';
 const MATERIAL_TAB = 'material';
@@ -38,11 +37,7 @@ const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
             laserToolhead: LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
             printingToolhead: SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL
         };
-        const sm2Toolhead = {
-            cncToolhead: STANDARD_CNC_TOOLHEAD_FOR_SM2,
-            laserToolhead: LEVEL_ONE_POWER_LASER_FOR_SM2,
-            printingToolhead: SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2
-        };
+        const sm2Toolhead = currentToolhead;
         const tempToolhead = currentSeries === MACHINE_SERIES.ORIGINAL.value ? originToolhead : sm2Toolhead;
         setCurrentToolhead(tempToolhead);
         setLoading(true);
@@ -51,17 +46,7 @@ const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
             await dispatch(machineActions.onChangeMachineSeries(tempToolhead, currentSeries));
             setLoading(false);
         })();
-    }, [currentSeries]);
-
-    useEffect(() => {
-        setLoading(true);
-        onCallBack(currentSeries, currentToolhead);
-        (async () => {
-            await dispatch(machineActions.onChangeMachineSeries(currentToolhead, currentSeries));
-            setLoading(false);
-        })();
-    }, [currentToolhead.printingToolhead]);
-
+    }, [currentSeries, currentToolhead.printingToolhead]);
 
     const ref = useRef(null);
     // Before switching models, make sure that the nozzle diameter exists

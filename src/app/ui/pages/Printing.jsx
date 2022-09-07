@@ -592,12 +592,14 @@ function Printing({ location }) {
                     <Modal.Body>
                         <div className="width-432">
                             <span>
-                                {i18n._('key-Printing/Modal-Retraction profile migrated')},
-                                <a href="https://support.snapmaker.com/hc/en-us/articles/4438318910231-Retract-Z-Hop-Migrated-from-Printing-Settings-to-Material-Settings" target="_blank" rel="noreferrer" className="link-text">{i18n._('key-Printing/Modal-Click here to learn more')}</a>.
+                                {i18n._('key-Printing/Modal-Retraction profile migrated')}
+                                <a href="https://support.snapmaker.com/hc/en-us/articles/4438318910231-Retract-Z-Hop-Migrated-from-Printing-Settings-to-Material-Settings" target="_blank" rel="noreferrer" className="link-text">{i18n._('key-Printing/Modal-Click here to learn more')}</a>
                             </span>
-                            <Trans i18nKey="key-Printing/Modal-Backup Tip">
-                                For your historical data back up in <span role="presentation" onClick={openFolder} className="link-text">here</span>.
-                            </Trans>
+                            <p>
+                                <Trans i18nKey="key-Printing/Modal-Backup Tip">
+                                    For your historical data back up in <span role="presentation" onClick={openFolder} className="link-text">here</span>
+                                </Trans>
+                            </p>
                         </div>
                     </Modal.Body>
                     <Modal.Footer>

@@ -108,6 +108,7 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
                             <Input
                                 suffix="pt"
                                 disabled={disabled}
+                                max={2000}
                                 className="sm-flex-width align-r"
                                 value={parseInt(fontSize, 10)}
                                 onChange={actions.onChangeSize}
