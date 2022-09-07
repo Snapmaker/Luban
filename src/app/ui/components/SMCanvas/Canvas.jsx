@@ -895,7 +895,9 @@ class Canvas extends PureComponent {
     }
 
     renderScene() {
-        if (this.modelGroup.selectedModelIsHidden instanceof Function && this.modelGroup.selectedModelIsHidden()) this.controls.transformControl.hideAllPeripherals();
+        if (this.modelGroup.selectedModelIsHidden instanceof Function && this.modelGroup.selectedModelIsHidden()) {
+            this.transformSourceType === '3D' && this.controls.transformControl.hideAllPeripherals();
+        }
         if (!this.isCanvasInitialized()) return;
         if (this.transformSourceType === '2D') {
             this.light.position.copy(this.camera.position);
