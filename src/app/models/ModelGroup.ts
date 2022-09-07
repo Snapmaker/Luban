@@ -290,7 +290,7 @@ class ModelGroup extends EventEmitter {
         const selectedGroup = this.selectedGroup;
         if (selectedGroup.children.length > 0 && selectedGroup.shouldUpdateBoundingbox) {
             const whd = new Vector3(0, 0, 0);
-            console.log(ThreeUtils.computeBoundingBox(this.selectedGroup));
+
             ThreeUtils.computeBoundingBox(this.selectedGroup).getSize(whd);
             return `${whd.x.toFixed(1)} × ${whd.y.toFixed(1)} × ${whd.z.toFixed(1)} mm`;
             // width-depth-height
