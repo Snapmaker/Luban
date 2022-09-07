@@ -164,7 +164,6 @@ class ClippingModel {
     private calaClippingWall = debounce(() => {
         this.modelGroup.clippingFinish(false);
         this.clear();
-        console.log('^^^^^^^^^^', workerManager.clipperWorkerEnable);
         if (!workerManager.clipperWorkerEnable) {
             this.busy = false;
             this.modelGroup.clippingFinish(true);

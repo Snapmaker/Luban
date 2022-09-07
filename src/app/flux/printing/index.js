@@ -1205,13 +1205,6 @@ export const actions = {
             case 'succeed': {
                 const { gcodeEntityLayers: bufferGeometry, layerCount, bounds } = value;
 
-                dispatch(actions.destroyGcodeLine('gcode'));
-                // const length = Object.values(bufferGeometry).reduce((p, c) => {
-                //     return p + c.reduce((p1, c1) => {
-                //         return p1 + c1.positions.length
-                //     }, 0)
-                // }, 0)
-
                 const object3D = gcodeBufferGeometryToObj3d('3DP', bufferGeometry, null, {
                     ...gcodeEntity,
                     extruderColors
@@ -1935,14 +1928,14 @@ export const actions = {
         dispatch(actions.render());
     },
 
-    destroyGcodeLine: (displayedType) => (dispatch, getState) => {
+    destroyGcodeLine: () => (dispatch, getState) => {
         const { gcodeLine, gcodeLineGroup } = getState().printing;
         if (gcodeLine) {
-            ThreeUtils.dispose(gcodeLineGroup);
+            ThreeUtils.dispose(gcodeLine);
+            gcodeLineGroup.remove(gcodeLine);
             dispatch(actions.updateState({
                 gcodeFile: null,
-                gcodeLine: null,
-                displayedType: displayedType || 'model'
+                gcodeLine: null
             }));
         }
     },
@@ -1950,7 +1943,10 @@ export const actions = {
     generateGrayModeObject: () => async (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         if (modelGroup.grayModeObject) {
-            ThreeUtils.dispose(modelGroup.grayModeObject);
+            modelGroup.grayModeObject.children.forEach(child => {
+                ThreeUtils.dispose(child);
+            })
+            modelGroup.grayModeObject.clear();
         } else {
             modelGroup.grayModeObject = new THREE.Group();
         }
@@ -3949,7 +3945,7 @@ export const actions = {
                 } else if (primeTowerTag && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
                     modelGroup.primeTower && modelGroup.primeTower.updateTowerTransformation(transformation);
                     resolve();
-               }else {
+                } else {
                     const onMessage = async data => {
                         const { type } = data;
                         switch (type) {

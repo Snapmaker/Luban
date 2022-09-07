@@ -465,7 +465,6 @@ const ThreeUtils = {
         if (mesh.children) {
             mesh.children.forEach(m => {
                 this.dispose(m);
-                mesh.remove(m);
             });
         } else {
             mesh.geometry && mesh.geometry.dispose();

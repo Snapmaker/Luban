@@ -66,7 +66,10 @@ class Thumbnail extends PureComponent {
             this.camera.position.copy(new Vector3(0, 120, 500));
         }
         if (this.object) {
-            ThreeUtils.dispose(this.object);
+            this.object.children.forEach(child => {
+                ThreeUtils.dispose(child);
+            });
+            this.object.clear();
         } else {
             this.object = new Group();
             this.scene.add(this.object);

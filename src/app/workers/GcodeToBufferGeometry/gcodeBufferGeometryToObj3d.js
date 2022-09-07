@@ -135,11 +135,11 @@ function lineToGeometry(originalPositions, breakPositionsIndex, width, height) {
         }
         currentIndex += 8;
     }
-    return [
-        indices,
-        new THREE.Float32BufferAttribute(vertices, 3),
-        new THREE.Float32BufferAttribute(normals, 3)
-    ];
+    const geometry = new THREE.BufferGeometry();
+    geometry.setIndex(indices);
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+    return geometry;
 }
 
 const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) => {
@@ -156,15 +156,11 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) 
             const r1 = parseInt(params.extruderColors.toolColor1.substring(1, 3), 16) / 0xff;
             const g1 = parseInt(params.extruderColors.toolColor1.substring(3, 5), 16) / 0xff;
             const b1 = parseInt(params.extruderColors.toolColor1.substring(5), 16) / 0xff;
-
-            let positions = [], index = 0, width = 0, height = 0, segmentPositions = [], indices, position, normal;
-
             Object.entries(gcodeEntityLayers).forEach(([indexKey, layer]) => {
-                index = Number(indexKey);
+                const index = Number(indexKey);
                 layer.forEach(layerType => {
                     if (layerType.typeCode !== 7) {
-                        width = 0;
-                        height = params.layerHeight;
+                        let width = 0, height = params.layerHeight;
                         if (layerType.toolCode === 0) {
                             width = params.extruderLlineWidth;
                             if (index === 0) {
@@ -179,13 +175,7 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) 
                             }
                         }
                         // console.log('breakPositionsIndex', layerType.breakPositionsIndex);
-                        [indices, position, normal] = lineToGeometry(layerType.positions, layerType.breakPositionsIndex, width, height);
-                        const geometry = new THREE.BufferGeometry();
-
-                        geometry.setIndex(indices);
-                        geometry.setAttribute('position', position);
-                        geometry.setAttribute('normal', normal);
-
+                        const geometry = lineToGeometry(layerType.positions, layerType.breakPositionsIndex, width, height);
                         const mesh = new THREE.Mesh(geometry, new THREE.ShaderMaterial({
                             vertexShader: PRINT3D_VERT_SHADER,
                             fragmentShader: PRINT3D_FRAG_SHADER,
@@ -219,17 +209,15 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) 
                         object3D.add(mesh);
                     } else {
                         // travel should render as a line
-                        positions = null;
-                        positions = elementToVector3(layerType.positions);
-                        segmentPositions = [];
+                        const geometry = new THREE.BufferGeometry();
+                        const positions = elementToVector3(layerType.positions);
+                        const segmentPositions = [];
                         for (let i = 0; i < positions.length - 1; i++) {
                             if (layerType.breakPositionsIndex.indexOf(i) > -1) {
                                 continue;
                             }
                             segmentPositions.push(...positions[i].toArray(), ...positions[i + 1].toArray());
                         }
-                        const geometry = new THREE.BufferGeometry();
-
                         geometry.setAttribute('position', new THREE.Float32BufferAttribute(segmentPositions, 3));
                         const line = new THREE.LineSegments(geometry, new THREE.ShaderMaterial({
                             vertexShader: PRINT3D_VERT_SHADER,
@@ -255,7 +243,6 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) 
                         }));
                         object3D.add(line);
                     }
-                    layer = null;
                 });
             });
 
