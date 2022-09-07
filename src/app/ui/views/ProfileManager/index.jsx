@@ -329,8 +329,8 @@ function ProfileManager({
                 });
                 if (materialOptions.length === 0) {
                     materialOptions.push({
-                        label: 'Custom',
-                        value: 'Custom',
+                        label: i18n._('key-default_category-Custom'),
+                        value: i18n._('key-default_category-Custom'),
                         i18n: 'key-default_category-Custom'
                     });
                 }
@@ -377,7 +377,7 @@ function ProfileManager({
                                     const newDefinition = await outsideActions.onCreateManagerDefinition(newDefinitionForManager, newName, isCategorySelected);
                                     actions.onSelectCategory(newDefinition.category);
                                 } else {
-                                    if (data.categoryName === 'Custom') {
+                                    if (data.categoryName === i18n._('key-default_category-Custom')) {
                                         newDefinitionForManager.category = '';
                                         newDefinitionForManager.i18nCategory = '';
                                     } else {
@@ -399,7 +399,7 @@ function ProfileManager({
                                     const newDefinition = await outsideActions.onCreateManagerDefinition(newDefinitionForManager, newName, data.createType === 'Category', isCreate);
                                     actions.onSelectCategory(newDefinition.category);
                                 } else {
-                                    if (data.categoryName === 'Custom') {
+                                    if (data.categoryName === i18n._('key-default_category-Custom')) {
                                         newDefinitionForManager.category = '';
                                         newDefinitionForManager.i18nCategory = '';
                                     } else {

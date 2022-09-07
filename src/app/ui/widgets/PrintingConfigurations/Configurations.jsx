@@ -20,6 +20,7 @@ import { actions as projectActions } from '../../../flux/project';
 
 import {
     HEAD_PRINTING,
+    KEY_DEFAULT_CATEGORY_CUSTOM,
     PRINTING_MANAGER_TYPE_QUALITY,
 } from '../../../constants';
 /* eslint-disable import/no-cycle */
@@ -436,9 +437,9 @@ function Configurations() {
                 });
             if (materialOptions.length === 0) {
                 materialOptions.push({
-                    label: 'Custom',
-                    value: 'Custom',
-                    i18n: 'key-default_category-Custom'
+                    label: i18n._(KEY_DEFAULT_CATEGORY_CUSTOM),
+                    value: i18n._(KEY_DEFAULT_CATEGORY_CUSTOM),
+                    i18n: KEY_DEFAULT_CATEGORY_CUSTOM
                 });
             }
             materialOptions = uniqWith(materialOptions, (a, b) => {
@@ -470,8 +471,13 @@ function Configurations() {
                             const data = refCreateModal.current.getData();
                             const newName = data.itemName;
                             popupActions.close();
-                            newSelectedDefinition.category = data.categoryName;
-                            newSelectedDefinition.i18nCategory = data.categoryI18n;
+                            if (data.categoryName === i18n._(KEY_DEFAULT_CATEGORY_CUSTOM)) {
+                                newSelectedDefinition.category = '';
+                                newSelectedDefinition.i18nCategory = '';
+                            } else {
+                                newSelectedDefinition.category = data.categoryName;
+                                newSelectedDefinition.i18nCategory = data.categoryI18n;
+                            }
                             newSelectedDefinition.name = newName;
 
                             // TODO: need update

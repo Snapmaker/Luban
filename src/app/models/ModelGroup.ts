@@ -370,8 +370,11 @@ class ModelGroup extends EventEmitter {
 
     public recoverModelClippingGroup(model: TModel) {
         this.updateClippingPlane();
-        if (model instanceof ThreeModel && model.clipper) {
-            this.clippingGroup.add(model.clipper.group);
+        if (model instanceof ThreeModel) {
+            if (!model.clipper) {
+                this.initModelClipper(model);
+            }
+            model.clipper?.group && this.clippingGroup.add(model.clipper.group);
         } else if (model instanceof ThreeGroup) {
             model.children.forEach((m) => {
                 this.recoverModelClippingGroup(m);
@@ -432,6 +435,13 @@ class ModelGroup extends EventEmitter {
         this.modelChanged();
         this.selectedModelArray = this.selectedModelArray.filter((item) => item !== model);
         model.sourceType === '3d' && this.updatePrimeTowerHeight();
+
+        if (model instanceof ThreeModel) {
+            workerManager.stopCalculateSectionPoints(model.modelID);
+            if (model.clipper) {
+                model.clipper.shouldDestroy = true;
+            }
+        }
     }
 
     public updateModelNameMap(modelName: string, baseName: string, action: string) {
@@ -1520,6 +1530,7 @@ class ModelGroup extends EventEmitter {
         this.calaClippingMap();
         recovery();
 
+        this.plateAdhesion.visible = true;
         if (selectedModelArray.length === 0) {
             return {};
         } else {
@@ -2230,7 +2241,7 @@ class ModelGroup extends EventEmitter {
 
     public canGroup() {
         return this.selectedModelArray.some((model) => {
-            return model?.visible;
+            return model?.visible && model !== this.primeTower;
         });
     }
 
@@ -2627,7 +2638,7 @@ class ModelGroup extends EventEmitter {
         this.getThreeModels().filter((model) => {
             return model.visible && model.clipper;
         }).forEach((model) => {
-            const polygonss = model.clipper.clippingMap.get(model.clipper.clippingConfig.layerHeight) || [];
+            const polygonss = model.clipper?.clippingMap?.get(model.clipper?.clippingConfig?.layerHeight) || [];
             polygonss && polygonss.forEach((polygons) => {
                 const _paths = (() => {
                     const res = PolygonsUtils.simplify(polygons.map((polygon) => {
@@ -2771,7 +2782,6 @@ class ModelGroup extends EventEmitter {
         if (shouldUpdate) {
             this.plateAdhesion.clear();
         }
-        this.plateAdhesion.visible = true;
     }
 
     public setSectionMesh() {

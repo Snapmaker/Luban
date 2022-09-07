@@ -459,6 +459,18 @@ const ThreeUtils = {
             curveFaceVertex[i].z = (curveFaceVertex[i].z < modelBoundingBox.min.z ? modelBoundingBox.min.z : curveFaceVertex[i].z);
         }
         return curveFaceVertex;
+    },
+
+    dispose(mesh) {
+        if (mesh.children) {
+            mesh.children.forEach(m => {
+                this.dispose(m);
+                mesh.remove(m);
+            });
+        } else {
+            mesh.geometry && mesh.geometry.dispose();
+            mesh.material && mesh.material.dispose();
+        }
     }
 };
 

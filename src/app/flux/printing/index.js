@@ -980,6 +980,7 @@ export const actions = {
             controller.on('simplify-model:completed', (params) => {
                 const { modelOutputName, modelID } = params;
                 actions.loadSimplifyModel({ modelID, modelOutputName })(dispatch, getState);
+                workerManager.continueClipper();
             });
         }
 
@@ -1204,7 +1205,12 @@ export const actions = {
             case 'succeed': {
                 const { gcodeEntityLayers: bufferGeometry, layerCount, bounds } = value;
 
-                dispatch(actions.destroyGcodeLine());
+                dispatch(actions.destroyGcodeLine('gcode'));
+                // const length = Object.values(bufferGeometry).reduce((p, c) => {
+                //     return p + c.reduce((p1, c1) => {
+                //         return p1 + c1.positions.length
+                //     }, 0)
+                // }, 0)
 
                 const object3D = gcodeBufferGeometryToObj3d('3DP', bufferGeometry, null, {
                     ...gcodeEntity,
@@ -1402,7 +1408,9 @@ export const actions = {
             );
             dispatch(actions.updateState({ isAnyModelOverstepped }));
         }
-        dispatch(actions.applyProfileToAllModels());
+        setTimeout(() => {
+            dispatch(actions.applyProfileToAllModels());
+        });
     },
 
     onUploadManagerDefinition: (file, type) => (dispatch, getState) => {
@@ -1927,22 +1935,25 @@ export const actions = {
         dispatch(actions.render());
     },
 
-    destroyGcodeLine: () => (dispatch, getState) => {
+    destroyGcodeLine: (displayedType) => (dispatch, getState) => {
         const { gcodeLine, gcodeLineGroup } = getState().printing;
         if (gcodeLine) {
-            gcodeLineGroup.remove(gcodeLine);
-            // gcodeLine.geometry.dispose();
+            ThreeUtils.dispose(gcodeLineGroup);
             dispatch(actions.updateState({
                 gcodeFile: null,
                 gcodeLine: null,
-                displayedType: 'model'
+                displayedType: displayedType || 'model'
             }));
         }
     },
 
     generateGrayModeObject: () => async (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        modelGroup.grayModeObject = new THREE.Group();
+        if (modelGroup.grayModeObject) {
+            ThreeUtils.dispose(modelGroup.grayModeObject);
+        } else {
+            modelGroup.grayModeObject = new THREE.Group();
+        }
         const materialNormal = new THREE.MeshLambertMaterial({
             color: '#2a2c2e',
             side: THREE.FrontSide,
@@ -1975,6 +1986,8 @@ export const actions = {
     },
 
     generateGcode: (thumbnail, isGuideTours = false) => async (dispatch, getState) => {
+        workerManager.setClipperWorkerEnable(false)
+
         const {
             hasModel,
             modelGroup,
@@ -2625,6 +2638,7 @@ export const actions = {
             })
         );
         dispatch(actions.render());
+        workerManager.setClipperWorkerEnable()
     },
 
     updateSelectedModelTransformation: (
@@ -3742,6 +3756,8 @@ export const actions = {
     },
 
     displayGcode: () => (dispatch, getState) => {
+        workerManager.setClipperWorkerEnable(false);
+
         const { gcodeLineGroup, modelGroup } = getState().printing;
         modelGroup.setDisplayType('gcode');
         gcodeLineGroup.visible = true;
@@ -3855,6 +3871,7 @@ export const actions = {
             isGuideTours = false
         }
     ) => async (dispatch, getState) => {
+        workerManager.stopClipper();
         const { progressStatesManager, modelGroup } = getState().printing;
         const { promptDamageModel } = getState().machine;
         const { size } = getState().machine;
@@ -3937,7 +3954,7 @@ export const actions = {
                         const { type } = data;
                         switch (type) {
                             case 'LOAD_MODEL_POSITIONS': {
-                                const { positions, originalPosition } = data;
+                                let { positions, originalPosition } = data;
                                 const bufferGeometry = new THREE.BufferGeometry();
                                 const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
                                 const material = new THREE.MeshPhongMaterial({
@@ -4009,10 +4026,12 @@ export const actions = {
                                     }
                                     reject();
                                 })
+                                positions = null
+                                originalPosition = null
                                 break;
                             }
                             case 'LOAD_MODEL_CONVEX': {
-                                const { positions } = data;
+                                let { positions } = data;
 
                                 const convexGeometry = new THREE.BufferGeometry();
                                 const positionAttribute = new THREE.BufferAttribute(
@@ -4028,7 +4047,7 @@ export const actions = {
                                     model.uploadName,
                                     convexGeometry
                                 );
-
+                                positions = null
                                 break;
                             }
                             case 'LOAD_MODEL_PROGRESS': {
@@ -4163,6 +4182,7 @@ export const actions = {
                 })
             );
         }
+        workerManager.continueClipper();
     },
     recordAddOperation: model => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
@@ -4940,6 +4960,7 @@ export const actions = {
             transformation: transformation,
             layerHeight: layerHeight,
         };
+        workerManager.stopClipper();
         controller.simplifyModel(params);
     },
 
