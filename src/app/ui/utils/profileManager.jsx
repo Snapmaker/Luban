@@ -1,5 +1,6 @@
 import React from 'react';
 import { MaterialWithColor } from '../widgets/PrintingMaterial/MaterialWithColor';
+import i18n from '../../lib/i18n';
 
 function getSelectOptions(printingDefinitions) {
     const toolDefinitionOptionsObj = {};
@@ -37,7 +38,7 @@ function getPresetOptions(definitionModels) {
     const presetOptionsObj = {};
     definitionModels.forEach(preset => {
         const typeOfPrinting = preset.typeOfPrinting;
-        const category = preset.category && typeOfPrinting ? preset.category : 'Custom';
+        const category = preset.category && typeOfPrinting ? preset.category : i18n._('key-default_category-Custom');
         preset.category = category;
         const definitionId = preset.definitionId;
         if (Object.keys(preset?.settings).length > 0) {

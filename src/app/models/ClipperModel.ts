@@ -36,6 +36,7 @@ class ClippingModel {
     private model: ThreeModel
     private modelGroup: ModelGroup
 
+    public shouldDestroy = false;
     public busy = false
     public group: THREE.Group = new THREE.Group();
 
@@ -149,10 +150,10 @@ class ClippingModel {
     }
 
     public clear = async () => {
-        this.clippingMap.clear();
-        this.innerWallMap.clear();
-        this.skinMap.clear();
-        this.infillMap.clear();
+        this.clippingMap?.clear();
+        this.innerWallMap?.clear();
+        this.skinMap?.clear();
+        this.infillMap?.clear();
     }
 
     private startCala = () => {
@@ -164,6 +165,8 @@ class ClippingModel {
         this.modelGroup.clippingFinish(false);
         this.clear();
         if (!workerManager.clipperWorkerEnable) {
+            this.busy = false;
+            this.modelGroup.clippingFinish(true);
             return;
         }
         this.model.computeBoundingBox();
@@ -199,7 +202,11 @@ class ClippingModel {
         }).catch(() => {
             // This calculation is cancelled
             this.clear();
-            this.modelGroup.clippingFinish(false);
+            this.modelGroup.clippingFinish(true);
+        }).finally(() => {
+            if (this.shouldDestroy) {
+                this.model.clipper = null;
+            }
         });
     }, 1000)
 
@@ -278,6 +285,7 @@ class ClippingModel {
             this.clippingConfig = config;
             this.updateClippingInfill(this.localPlane.constant);
         } else if (this.clippingConfig.magicSpiralize !== config.magicSpiralize) {
+            this.clippingConfig.magicSpiralize = config.magicSpiralize;
             this.setLocalPlane(this.localPlane.constant);
         }
     }
@@ -290,7 +298,7 @@ class ClippingModel {
         }
         const posAttr = this.clippingSkin.geometry;
         const posAttrArea = this.clippingSkinArea.geometry;
-        const polygons = this.skinMap.get(clippingHeight);
+        const polygons = this.skinMap?.get(clippingHeight);
         const arr1 = [];
         const arr2 = [];
         if (polygons && polygons.length > 0) {
@@ -360,13 +368,13 @@ class ClippingModel {
     private updateClippingWall(clippingHeight: number) {
         const posAttr = this.clippingWall.geometry;
         const arr = [];
-        const polygons = this.clippingMap.get(clippingHeight);
+        const polygons = this.clippingMap?.get(clippingHeight);
         if (polygons && polygons.length > 0 && clippingHeight <= this.modelBoundingBox.max.z) {
             polygons.forEach((polygon) => {
                 this.setPointFromPolygon(arr, polygon, clippingHeight);
             });
             if (!this.clippingConfig.magicSpiralize) {
-                const polygonss = this.innerWallMap.get(clippingHeight) || [];
+                const polygonss = this.innerWallMap?.get(clippingHeight) || [];
                 polygonss.forEach((_polygons) => {
                     _polygons.forEach((polygon) => {
                         polygon.forEach((vectors) => {
@@ -397,7 +405,7 @@ class ClippingModel {
     private updateClippingInfill(clippingHeight: number) {
         const posAttr = this.clippingInfill.geometry;
         const arr = [];
-        const polygons = this.infillMap.get(clippingHeight);
+        const polygons = this.infillMap?.get(clippingHeight);
         if (!this.clippingConfig.magicSpiralize && polygons && polygons.length !== 0 && clippingHeight <= this.modelBoundingBox.max.z) {
             const skinLines = this.generateLineInfill(clippingHeight, polygons);
             if (!skinLines.length) {

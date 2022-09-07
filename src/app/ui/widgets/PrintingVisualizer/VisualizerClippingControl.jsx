@@ -69,7 +69,7 @@ function VisualizerClippingControl({ simplifying }) {
 
     return (
         <React.Fragment>
-            {!simplifying && displayedType === 'model' && !isSpecialMode && modelGroup.models.length && !(modelGroup.models.length === 1 && modelGroup.models[0].type === 'primeTower') ? (
+            {workerManager.clipperWorkerEnable && !simplifying && displayedType === 'model' && !isSpecialMode && modelGroup.models.length && !(modelGroup.models.length === 1 && modelGroup.models[0].type === 'primeTower') ? (
                 <div className={styles['layer-wrapper']}>
                     {/* <span className={styles['layer-label']}>{value || ''}</span> */}
                     <div

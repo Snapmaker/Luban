@@ -9,6 +9,7 @@ import { actions as projectActions } from '../project';
 // eslint-disable-next-line import/no-cycle
 import { actions as printingActions, uploadMesh } from '../printing/index';
 import ThreeGroup from '../../models/ThreeGroup';
+import workerManager from '../../lib/manager/workerManager';
 
 const ACTION_UPDATE_STATE = 'app-global/ACTION_UPDATE_STATE';
 const DEFAULT_MODAL_ZINDEX = 9999;
@@ -145,7 +146,7 @@ export const actions = {
                         const uploadResult = await uploadMesh(mesh, sourceRepairName);
                         uploadName = uploadResult?.body?.uploadName;
                     }
-
+                    workerManager.stopClipper();
                     const task = await controller.repairModel({
                         uploadName: uploadName,
                         modelID: model.modelID,
@@ -194,6 +195,7 @@ export const actions = {
                                     );
                                 }
                                 results.push(data);
+                                workerManager.continueClipper();
                                 break;
                             default:
                                 break;

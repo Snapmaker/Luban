@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import PropTypes from 'prop-types';
 // import { useSelector, shallowEqual } from 'react-redux';
 import { isUndefined, cloneDeep, uniqWith } from 'lodash';
-import { HEAD_CNC, HEAD_LASER, PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
+import { HEAD_CNC, HEAD_LASER, KEY_DEFAULT_CATEGORY_CUSTOM, PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
 import modal from '../../../lib/modal';
 import DefinitionCreator from '../DefinitionCreator';
 import Anchor from '../../components/Anchor';
@@ -247,6 +247,19 @@ function ProfileManager({
                 isCreate: false
             });
         },
+        createManagerDefinition: async (newDefinition, newName, isCategorySelected) => {
+            const isCustom = newDefinition.category === i18n._(KEY_DEFAULT_CATEGORY_CUSTOM);
+            const res = await outsideActions.onCreateManagerDefinition({
+                ...newDefinition,
+                category: isCustom ? '' : newDefinition.category,
+                i18nCategory: isCustom ? '' : newDefinition.i18nCategory
+            }, newName, isCategorySelected);
+            if (isCustom) {
+                res.category = i18n._(KEY_DEFAULT_CATEGORY_CUSTOM);
+                res.i18nCategory = '';
+            }
+            return res;
+        },
         showInputModal: ({ isCreate }) => {
             const definitionForManager = definitionState?.definitionForManager;
             const isCategorySelected = definitionState?.isCategorySelected;
@@ -309,13 +322,13 @@ function ProfileManager({
                             if (!isCreate) {
                                 if (isCategorySelected) {
                                     newName = data.categoryName;
-                                    const newDefinition = await outsideActions.onCreateManagerDefinition(newDefinitionForManager, newName, isCategorySelected);
+                                    const newDefinition = await actions.createManagerDefinition(newDefinitionForManager, newName, isCategorySelected);
                                     actions.onSelectCategory(newDefinition.category);
                                 } else {
                                     newDefinitionForManager.category = data.categoryName;
                                     newDefinitionForManager.i18nCategory = data.categoryI18n;
                                     newName = data.itemName;
-                                    const newDefinition = await outsideActions.onCreateManagerDefinition(newDefinitionForManager, newName, isCategorySelected);
+                                    const newDefinition = await actions.createManagerDefinition(newDefinitionForManager, newName, isCategorySelected);
                                     actions.onSelectDefinitionById(newDefinition.definitionId, newDefinition.name);
                                 }
                             } else {
@@ -324,7 +337,7 @@ function ProfileManager({
                                     newDefinitionForManager.i18nCategory = data.categoryI18n;
                                     newName = data.categoryName;
                                     newDefinitionForManager.settings = {};
-                                    const newDefinition = await outsideActions.onCreateManagerDefinition(newDefinitionForManager, newName, data.createType === 'Category', isCreate);
+                                    const newDefinition = await actions.createManagerDefinition(newDefinitionForManager, newName, data.createType === 'Category', isCreate);
                                     actions.onSelectCategory(newDefinition.category);
                                 } else {
                                     newDefinitionForManager.category = data.categoryName;
@@ -333,7 +346,7 @@ function ProfileManager({
                                     if (Object.keys(newDefinitionForManager.settings).length === 0) {
                                         newDefinitionForManager.settings = cloneDeep(allDefinitions[0].settings);
                                     }
-                                    const newDefinition = await outsideActions.onCreateManagerDefinition(newDefinitionForManager, newName, data.createType === 'Category', isCreate);
+                                    const newDefinition = await actions.createManagerDefinition(newDefinitionForManager, newName, data.createType === 'Category', isCreate);
                                     actions.onSelectDefinitionById(newDefinition.definitionId, newDefinition.name);
                                 }
                             }

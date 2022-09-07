@@ -2460,6 +2460,14 @@ export const actions = {
             model.resource.originalFile.path = `/data/Tmp/${data.uploadName}`;
             dispatch(actions.prepareStlVisualizer(headType, model));
         });
+
+        dispatch(
+            baseActions.updateState(headType, {
+                displayedType: DISPLAYED_TYPE_MODEL,
+                needToPreview: true,
+                page: PAGE_EDITOR
+            })
+        );
     },
 };
 

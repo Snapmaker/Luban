@@ -19,8 +19,7 @@ class WorkerManager extends EventEmitter {
         this.setClipperWorkerEnable();
     }
 
-    public setClipperWorkerEnable(bool?: boolean): void;
-    public setClipperWorkerEnable(bool: boolean) {
+    public setClipperWorkerEnable(bool?: boolean) {
         if (isUndefined(bool)) {
             let enable3dpLivePreview = machineStore.get('enable3dpLivePreview');
             if (isUndefined(enable3dpLivePreview)) {
@@ -29,6 +28,18 @@ class WorkerManager extends EventEmitter {
             this.clipperWorkerEnable = enable3dpLivePreview;
         } else {
             if (!bool && this.clipperWorkerEnable && this.clipperWorker) {
+                for (const [modelID, listener] of this.listenerMap) {
+                    const [topic] = listener;
+                    this.emit(`${topic}`, {
+                        type: 'FINISH',
+                        clippingMap: null,
+                        innerWallMap: null,
+                        skinMap: null,
+                        infillMap: null
+                    });
+                    this.listenerMap.delete(modelID);
+                }
+
                 this.clipperWorker.terminate();
                 this.clipperWorker = null;
             }
@@ -86,7 +97,29 @@ class WorkerManager extends EventEmitter {
         const preListener = this.listenerMap.get(modelID);
         if (preListener) {
             // remove the last listening in time
-            this.removeListener(...preListener);
+            const [topic] = preListener;
+            this.emit(`${topic}`, {
+                type: 'FINISH',
+                clippingMap: null,
+                innerWallMap: null,
+                skinMap: null,
+                infillMap: null
+            });
+            this.listenerMap.delete(modelID);
+
+            this.clipperWorker && this.clipperWorker.postMessage(['cancel-job', { modelID }]);
+        }
+    }
+
+    public stopClipper() {
+        if (this.clipperWorker) {
+            this.clipperWorker.postMessage(['stop-job']);
+        }
+    }
+
+    public continueClipper() {
+        if (this.clipperWorker) {
+            this.clipperWorker.postMessage(['continue-job']);
         }
     }
 
@@ -111,16 +144,17 @@ class WorkerManager extends EventEmitter {
                     resolve(res);
                 }
             };
+            // send to worker, jobID=${jobID}, modelID=${modelID}
             this.once(`CLIPPER:${jobID}`, listener);
             this.listenerMap.set(modelID, [
                 `CLIPPER:${jobID}`, listener
             ]);
-            // send to worker, jobID=${jobID}, modelID=${modelID}
-            this.clipperWorker.postMessage([data, jobID]);
+            this.clipperWorker.postMessage(['set-job', data, jobID]);
         });
     }
 
     private exec<T>(method: string, data: unknown, onMessage?: (payload: T) => void, onComplete?: () => void) {
+        this.stopClipper();
         let task = this.getPool().queue(async (eachPool) => {
             return new Promise<void>((resolve) => {
                 const subscribe = eachPool[method](data).subscribe({
@@ -137,6 +171,9 @@ class WorkerManager extends EventEmitter {
                     }
                 });
             });
+        });
+        task.then(() => {
+            this.continueClipper();
         });
         return {
             terminate: () => {

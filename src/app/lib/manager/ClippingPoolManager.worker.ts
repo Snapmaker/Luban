@@ -46,6 +46,8 @@ export type IResult = {
     infillMap
 }
 
+type ClipperMessageType = 'set-job' | 'stop-job' | 'continue-job' | 'cancel-job'
+
 const defaultPoolSize = typeof navigator !== 'undefined' && navigator.hardwareConcurrency
     ? navigator.hardwareConcurrency
     : 4;
@@ -80,9 +82,12 @@ const clearTaskTmp = () => {
     transferList = [];
 };
 
+let sleep = false;
 const scheduleWork = () => {
     // There are no idle workers or the task queue is empty
-    if (!idleWorkerNum || poolTaskQueue.length === 0) {
+    if (sleep || !idleWorkerNum || poolTaskQueue.length === 0) {
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        runJob();
         return;
     }
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
@@ -329,6 +334,7 @@ function runJob() {
         const subscriber = pool.events()
             .filter(event => event.type === PoolEventType.initialized)
             .subscribe(() => {
+                idleWorkerNum = defaultPoolSize;
                 runJob();
                 subscriber.unsubscribe();
             });
@@ -340,7 +346,7 @@ function runJob() {
         clearPoolhandle = null;
     }
 
-    if (jobs.length && !runningJob) {
+    if (jobs.length && !runningJob && idleWorkerNum === defaultPoolSize) {
         runningJob = jobs.shift();
         // start execution job, runningJob=${runningJob.jobID}, modelID=${runningJob.modelID}
         calculateSectionPoints(runningJob);
@@ -354,8 +360,15 @@ function runJob() {
 }
 
 onmessage = async (e) => {
-    const [job, jobID] = e.data as [TJobMessage, string];
-    job.jobID = jobID;
+    const [type, job, jobID] = e.data as [ClipperMessageType, TJobMessage, string];
+    if (type === 'stop-job') {
+        sleep = true;
+        return;
+    } else if (type === 'continue-job') {
+        sleep = false;
+        scheduleWork();
+        return;
+    }
 
     if (runningJob && runningJob.modelID === job.modelID) {
         poolTaskQueue = [];
@@ -367,7 +380,11 @@ onmessage = async (e) => {
         runningJob = null;
     }
     jobs = jobs.filter(t => t.modelID !== job.modelID);
-    jobs.push(job);
+
+    if (type !== 'cancel-job' && jobID) {
+        job.jobID = jobID;
+        jobs.push(job);
+    }
     if (!runningJob) {
         runJob();
     }

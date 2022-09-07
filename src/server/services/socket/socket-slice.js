@@ -1,12 +1,17 @@
+import { throttle } from 'lodash';
 import { parseLubanGcodeHeader } from '../../lib/parseGcodeHeader';
 import slice, { generateSupport, simplifyModel, repairModel, checkModel } from '../../slicer/slice';
+
+const progressHandle = throttle((socket, topic, progress) => {
+    return socket.emit(topic, progress);
+}, 300);
 
 const handleSlice = (socket, params) => {
     socket.emit('slice:started');
     slice(
         params,
         (progress) => {
-            socket.emit('slice:progress', progress);
+            progressHandle(socket, 'slice:progress', progress);
         },
         (sliceResult) => {
             const { gcodeFilename, gcodeFileLength, printTime, filamentLength, filamentWeight, gcodeFilePath, renderGcodeFileName } = { ...sliceResult };
@@ -34,7 +39,7 @@ const handleGenerateSupport = (socket, params) => {
     generateSupport(
         params,
         (progress) => {
-            socket.emit('generate-support:progress', progress);
+            progressHandle(socket, 'generate-support:progress', progress);
         },
         (result) => {
             socket.emit('generate-support:completed', {
@@ -57,7 +62,7 @@ const handleSimplifyModel = (socket, params) => {
     simplifyModel(
         params,
         (progress) => {
-            socket.emit('simplify-model:progress', progress);
+            progressHandle(socket, 'simplify-model:progress', progress);
         },
         (simplifyConfig) => {
             socket.emit('simplify-model:completed', simplifyConfig);

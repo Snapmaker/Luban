@@ -166,7 +166,7 @@ class ThreeModel extends BaseModel {
     public updateClipperConfig(config: TClippingConfig) {
         this.clippingConfig = config;
         if (this.clipper) {
-            this.clipper.updateClipperConfig(config);
+            this.clipper?.updateClipperConfig(config);
         }
     }
 
@@ -175,7 +175,7 @@ class ThreeModel extends BaseModel {
             this.localPlane
         ];
 
-        this.clipper.setLocalPlane(height);
+        this.clipper?.setLocalPlane(height);
     }
 
     private applyBufferGeometry(positions) {

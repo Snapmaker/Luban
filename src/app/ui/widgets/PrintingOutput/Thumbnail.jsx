@@ -65,9 +65,16 @@ class Thumbnail extends PureComponent {
             this.renderer.setSize(600, 600);
             this.camera.position.copy(new Vector3(0, 120, 500));
         }
-        this.object && (this.scene.remove(this.object));
-        this.object = new Group();
-        this.object.add(...this.props.modelGroup.getModels().map(d => d.clone().meshObject));
+        if (this.object) {
+            this.object.children.forEach(child => {
+                ThreeUtils.dispose(child);
+            });
+            this.object.clear();
+        } else {
+            this.object = new Group();
+            this.scene.add(this.object);
+        }
+        this.object.add(...this.props.modelGroup.getModels().map(d => d.meshObject.clone()));
 
         // calculate center point
         const boundingBox = ThreeUtils.computeBoundingBox(this.object);
@@ -96,7 +103,6 @@ class Thumbnail extends PureComponent {
         this.camera.position.copy(new Vector3(0, 0, p));
 
         this.object.visible = true;
-        this.scene.add(this.object);
         this.renderScene();
 
         const toDataURL = this.renderer.domElement.toDataURL();
