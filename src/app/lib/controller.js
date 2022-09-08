@@ -269,6 +269,12 @@ class SerialPortClient {
         return socketController.channel('check-model', params, onMessage);
     }
 
+    getFreeMemory() {
+        return new Promise((resolve) => {
+            return socketController.channel('get-free-memory', null, resolve);
+        });
+    }
+
     commitViewPathTask(task) {
         socketController.emit('taskCommit:generateViewPath', task);
     }

@@ -309,7 +309,8 @@ const INITIAL_STATE = {
     printingParamsType: 'basic',
     materialParamsType: 'basic',
     customMode: false,
-    showParamsProfile: true
+    showParamsProfile: true,
+    outOfMemoryForRenderGcode: false
 };
 
 const ACTION_UPDATE_STATE = 'printing/ACTION_UPDATE_STATE';
@@ -1197,42 +1198,46 @@ export const actions = {
         }
     },
 
-    gcodeRenderingCallback: (data, extruderColors) => (dispatch, getState) => {
+    gcodeRenderingCallback: (data, extruderColors) => async (dispatch, getState) => {
         const { gcodeLineGroup, gcodePreviewMode, gcodeEntity } = getState().printing;
 
         const { status, value } = data;
         switch (status) {
             case 'succeed': {
-                const { gcodeEntityLayers: bufferGeometry, layerCount, bounds } = value;
+                const { vertexNumber, gcodeEntityLayers: bufferGeometry, layerCount, bounds } = value;
+                const freeMemory = await controller.getFreeMemory()
 
-                const object3D = gcodeBufferGeometryToObj3d('3DP', bufferGeometry, null, {
-                    ...gcodeEntity,
-                    extruderColors
-                });
-                gcodeLineGroup.add(object3D);
+                const outOfMemoryForRenderGcode = (freeMemory - vertexNumber * 0.25) < 0;
+                if (!outOfMemoryForRenderGcode) {
+                    const object3D = gcodeBufferGeometryToObj3d('3DP', bufferGeometry, null, {
+                        ...gcodeEntity,
+                        extruderColors
+                    });
+                    gcodeLineGroup.add(object3D);
 
-                object3D.position.copy(new THREE.Vector3());
-                dispatch(actions.updateState({
-                    layerCount,
-                    layerRangeDisplayed: [0, layerCount - 1],
-                    gcodeLine: object3D
-                }));
+                    object3D.position.copy(new THREE.Vector3());
+                    dispatch(actions.updateState({
+                        layerCount,
+                        layerRangeDisplayed: [0, layerCount - 1],
+                        gcodeLine: object3D
+                    }));
 
-                dispatch(actions.updateGcodePreviewMode(gcodePreviewMode));
+                    dispatch(actions.updateGcodePreviewMode(gcodePreviewMode));
 
-                const { minX, minY, minZ, maxX, maxY, maxZ } = bounds;
-                dispatch(
-                    actions.checkGcodeBoundary(
-                        minX,
-                        minY,
-                        minZ,
-                        maxX,
-                        maxY,
-                        maxZ
-                    )
-                );
-                dispatch(actions.showGcodeLayers([0, layerCount - 1]));
-                dispatch(actions.displayGcode());
+                    const { minX, minY, minZ, maxX, maxY, maxZ } = bounds;
+                    dispatch(
+                        actions.checkGcodeBoundary(
+                            minX,
+                            minY,
+                            minZ,
+                            maxX,
+                            maxY,
+                            maxZ
+                        )
+                    );
+                    dispatch(actions.showGcodeLayers([0, layerCount - 1]));
+                    dispatch(actions.displayGcode());
+                }
 
                 const { progressStatesManager } = getState().printing;
                 dispatch(actions.updateState({
@@ -1241,7 +1246,8 @@ export const actions = {
                 progressStatesManager.startNextStep();
                 dispatch(
                     actions.updateState({
-                        stage: STEP_STAGE.PRINTING_PREVIEWING
+                        stage: STEP_STAGE.PRINTING_PREVIEWING,
+                        outOfMemoryForRenderGcode
                     })
                 );
                 dispatch(actions.logGenerateGcode(layerCount));
@@ -1929,8 +1935,8 @@ export const actions = {
     },
 
     destroyGcodeLine: () => (dispatch, getState) => {
-        const { gcodeLine, gcodeLineGroup } = getState().printing;
-        if (gcodeLine) {
+        const { gcodeFile, gcodeLineGroup } = getState().printing;
+        if (gcodeFile) {
             ThreeUtils.dispose(gcodeLineGroup);
             gcodeLineGroup.clear();
             dispatch(actions.updateState({

@@ -27,10 +27,10 @@ export type TClippingConfig = {
 class ClippingModel {
     private localPlane: Plane;
     private colliderBvhMatrix: Matrix4;
-    public clippingMap = new Map<number, TPolygon[]>();
-    private innerWallMap = new Map<number, TPolygon[][]>();
-    private skinMap = new Map<number, TPolygon[]>();
-    private infillMap = new Map<number, TPolygon[]>();
+    public clippingMap: Map<number, TPolygon[]>;
+    private innerWallMap: Map<number, TPolygon[][]>;
+    private skinMap: Map<number, TPolygon[]>;
+    private infillMap: Map<number, TPolygon[]>;
     private meshObjectGroup: THREE.Group;
     private modelGeometry: THREE.BufferGeometry;
     private modelBoundingBox: Box3
@@ -38,7 +38,7 @@ class ClippingModel {
     private modelGroup: ModelGroup
 
     public shouldDestroy = false;
-    public busy = false
+
     public group: THREE.Group = new THREE.Group();
 
     declare private modelMeshObject: THREE.Mesh;
@@ -56,6 +56,9 @@ class ClippingModel {
         this.modelMeshObject = model.meshObject;
         this.modelGeometry = this.modelMeshObject.geometry as unknown as THREE.BufferGeometry;
         this.modelGroup = modelGroup;
+        if (!model.boundingBox) {
+            model.computeBoundingBox();
+        }
         this.modelBoundingBox = model.boundingBox;
         this.localPlane = localPlane;
         this.clippingConfig = clippingConfig;
@@ -82,12 +85,19 @@ class ClippingModel {
     }
 
     public init() {
+        if (this.colliderBvhMatrix && this.colliderBvhMatrix.equals(this.model.meshObject.matrixWorld)) {
+            if (!this.clippingMap || !this.clippingMap.size) {
+                this.startCala();
+            }
+            return;
+        }
         ThreeUtils.dispose(this.group);
         this.group.clear();
 
         this.modelMeshObject = this.model.meshObject;
         this.modelGeometry = this.modelMeshObject.geometry as unknown as THREE.BufferGeometry;
         this.modelBoundingBox = this.model.boundingBox;
+        this.createPlaneStencilGroup();
 
         this.colliderBvhMatrix = this.model.meshObject.matrixWorld.clone();
         this.clippingWall = this.createLine(CLIPPING_LINE_COLOR);
@@ -96,7 +106,6 @@ class ClippingModel {
         this.clippingInfill = this.createLine(CLIPPING_LINE_COLOR);
         this.startCala();
 
-        this.createPlaneStencilGroup();
         this.group.add(this.clippingWall, this.clippingSkin, this.clippingSkinArea, this.clippingInfill);
         this.model.onTransform();
     }
@@ -130,11 +139,10 @@ class ClippingModel {
         const meshFrontSide = new THREE.Mesh(this.modelGeometry, mat1);
         group.add(meshFrontSide);
 
-        const position = new THREE.Vector3();
-
-        group.position.copy(position);
         this.meshObjectGroup = group;
         this.group.add(this.meshObjectGroup);
+
+        this.onTransform();
     }
 
     public updateClippingMap(matrixWorld: Matrix4, boundingBox: Box3) {
@@ -159,16 +167,14 @@ class ClippingModel {
     }
 
     private startCala = () => {
-        this.busy = true;
+        this.clear();
         this.calaClippingWall();
     }
 
     private calaClippingWall = debounce(() => {
-        this.modelGroup.clippingFinish(false);
-        this.clear();
+        this.modelGroup.onClippingStart();
         if (!workerManager.clipperWorkerEnable) {
-            this.busy = false;
-            this.modelGroup.clippingFinish(true);
+            this.modelGroup.onClippingFinished();
             return;
         }
         this.model.computeBoundingBox();
@@ -194,20 +200,21 @@ class ClippingModel {
             clippingConfig: this.clippingConfig,
             modelBoundingBox: this.modelBoundingBox,
         }).then(({ clippingMap, innerWallMap, skinMap, infillMap }) => {
-            this.busy = false;
             this.clippingMap = clippingMap;
             this.innerWallMap = innerWallMap;
             this.skinMap = skinMap;
             this.infillMap = infillMap;
             // emit modelGroup, to updatePlateAdhesion
-            this.modelGroup.clippingFinish(true);
+            this.modelGroup.onClippingFinished();
         }).catch(() => {
             // This calculation is cancelled
             this.clear();
-            this.modelGroup.clippingFinish(true);
+            this.modelGroup.onClippingFinished();
         }).finally(() => {
             if (this.shouldDestroy) {
                 this.destroy();
+            } else {
+                this.setLocalPlane(this.localPlane.constant);
             }
         });
     }, 1000)
@@ -435,6 +442,10 @@ class ClippingModel {
     }
 
     public onTransform() {
+        this.model.meshObject.updateMatrixWorld();
+        if (this.colliderBvhMatrix && this.colliderBvhMatrix.equals(this.model.meshObject.matrixWorld)) {
+            return;
+        }
         workerManager.stopCalculateSectionPoints(this.model.modelID);
 
         const position = new THREE.Vector3();
@@ -453,9 +464,11 @@ class ClippingModel {
     }
 
     public destroy() {
-        ThreeUtils.dispose(this.group);
-        this.group.parent.remove(this.group);
-
+        workerManager.stopCalculateSectionPoints(this.model.modelID);
+        if (this.group) {
+            ThreeUtils.dispose(this.group);
+            this.group.parent && this.group.parent.remove(this.group);
+        }
         this.model.clipper = null;
     }
 }

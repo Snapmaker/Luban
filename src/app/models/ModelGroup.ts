@@ -23,7 +23,7 @@ import { polyUnion } from '../../shared/lib/clipper/cLipper-adapter';
 import { ModelEvents } from './events';
 import { TPolygon } from './ClipperModel';
 import { PolygonsUtils } from '../../shared/lib/math/PolygonsUtils';
-import workerManager from '../lib/manager/workerManager';
+import workerManager, { WorkerEvents } from '../lib/manager/workerManager';
 // import ConvexGeometry from '../three-extensions/ConvexGeometry';
 
 import { IResult as TBrimResult } from '../workers/plateAdhesion/generateBrim';
@@ -145,6 +145,13 @@ class ModelGroup extends EventEmitter {
         this.selectedModelConvexMeshGroup = new Group();
         // The selectedToolPathModelIDs is used to generate the toolpath
         this.selectedToolPathModelIDs = [];
+
+        this.setWorkerLis();
+    }
+
+    private setWorkerLis() {
+        workerManager.on(WorkerEvents.clipperWorkerBusy, () => this.onClippingStart);
+        workerManager.on(WorkerEvents.clipperWorkerIdle, () => this.onClippingFinished);
     }
 
     // TODO: save last value and compare changes
@@ -219,6 +226,7 @@ class ModelGroup extends EventEmitter {
             return child.name !== 'clippingSection' && !includes(child.name, 'prime_tower');
         });
         const bounding = ThreeUtils.computeBoundingBox(cloneObject) as Box3;
+        ThreeUtils.dispose(cloneObject);
         return bounding;
     }
 
@@ -408,13 +416,19 @@ class ModelGroup extends EventEmitter {
         }
         if (model.meshObject && model.meshObject.parent) {
             model.meshObject.parent.remove(model.meshObject);
+
+            ThreeUtils.dispose(model.meshObject);
         }
         if (model instanceof SvgModel) {
             model.meshObject.remove(model.modelObject3D);
             model.meshObject.remove(model.processObject3D);
+
+            ThreeUtils.dispose(model.modelObject3D);
+            ThreeUtils.dispose(model.processObject3D);
         }
-        if (model instanceof ThreeModel) {
-            this.clippingGroup && model.clipper && this.clippingGroup.remove(model.clipper.group);
+        if (model instanceof ThreeModel && this.clippingGroup && model.clipper) {
+            this.clippingGroup.remove(model.clipper.group);
+            ThreeUtils.dispose(model.clipper.group);
         }
         model.meshObject.removeEventListener('update', this.onModelUpdate);
         if (model.parent instanceof ThreeGroup) {
@@ -2640,7 +2654,7 @@ class ModelGroup extends EventEmitter {
             }
             if (needUpdate) {
                 this.adhesionConfig = config;
-                this.clippingFinish(true);
+                this.onClippingFinished();
             }
             return;
         }
@@ -2650,6 +2664,7 @@ class ModelGroup extends EventEmitter {
         this.plateAdhesion.clear();
         ThreeUtils.dispose(this.plateAdhesion);
         if (this.adhesionConfig.adhesionType === 'none' || !this.clipperEnable) {
+            this.onModelUpdate();
             return;
         }
         let paths = [];
@@ -2855,32 +2870,18 @@ class ModelGroup extends EventEmitter {
         this.localPlane.constant = height;
     }
 
-    public hasClipped() {
-        let flag = true;
-        this.traverseModels(this.models, (model) => {
-            if (model instanceof ThreeModel && model.clipper?.busy) {
-                flag = false;
-            }
-        });
-        return flag;
+    public onClippingStart() {
+        this.plateAdhesion.clear();
+        this.onModelUpdate();
+        this.updateClippingPlane();
+        this.emit(ModelEvents.ClippingStart);
     }
 
-    public clippingFinish(finished: boolean) {
-        if (finished) {
-            const allDone = this.hasClipped();
-            if (allDone) {
-                this.updatePlateAdhesion();
-                this.updateClippingPlane(this.localPlane.constant);
-                this.models = [...this.models];
-                this.emit(ModelEvents.ClippingFinish);
-            }
-        } else {
-            this.clipping = 'true';
-            this.plateAdhesion.clear();
-            this.onModelUpdate();
-            this.updateClippingPlane();
-            this.emit(ModelEvents.ClippingStart);
-        }
+    public onClippingFinished() {
+        this.updatePlateAdhesion();
+        this.updateClippingPlane(this.localPlane.constant);
+        this.models = [...this.models];
+        this.emit(ModelEvents.ClippingFinish);
     }
 
     public setTransformMode(value: string) {

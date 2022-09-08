@@ -51,6 +51,7 @@ function Output() {
     const displayedType = useSelector(state => state?.printing?.displayedType, shallowEqual);
     const defaultThumbnail = useSelector(state => state?.printing?.thumbnail);
     const leftBarOverlayVisible = useSelector(state => state?.printing?.leftBarOverlayVisible, shallowEqual);
+    const outOfMemoryForRenderGcode = useSelector(state => state?.printing?.outOfMemoryForRenderGcode, shallowEqual);
     const workflowState = useSelector(state => state?.machine?.workflowState, shallowEqual);
     const series = useSelector(state => state?.machine?.series, shallowEqual);
 
@@ -111,7 +112,7 @@ function Output() {
             <Menu.Item
                 onClick={actions.onClickLoadGcode}
                 key="Load G-code to Workspace"
-                disabled={workflowState === 'running' || !gcodeLine}
+                disabled={workflowState === 'running' || !gcodeFile}
             >
                 <div className={classNames('align-c', 'padding-vertical-4')}>
                     {i18n._('key-Printing/G-codeAction-Load G-code to Workspace')}
@@ -119,7 +120,7 @@ function Output() {
             </Menu.Item>
             <Menu.Item
                 key="Export G-code to File"
-                disabled={!gcodeLine}
+                disabled={!gcodeFile}
                 onClick={actions.onClickExportGcode}
             >
                 <div className={classNames('align-c', 'padding-vertical-4')}>
@@ -132,7 +133,7 @@ function Output() {
     return (
         <div className={classNames('position-fixed', 'border-radius-bottom-8', 'bottom-8', 'background-color-white', 'width-360', 'module-default-shadow', 'print-output-intro')}>
             <div className={classNames('position-re', 'margin-horizontal-16', 'margin-vertical-16')}>
-                {!gcodeLine && (
+                {!gcodeFile && (
                     <Button
                         type="primary"
                         priority="level-one"
@@ -142,7 +143,7 @@ function Output() {
                         {i18n._('key-Printing/G-codeAction-Generate G-code')}
                     </Button>
                 )}
-                {gcodeLine && (
+                {gcodeFile && !outOfMemoryForRenderGcode && (
                     <Button
                         type="default"
                         priority="level-one"
@@ -152,7 +153,7 @@ function Output() {
                         {displayedType === 'gcode' ? i18n._('key-Printing/G-codeAction-Close Preview') : i18n._('key-Printing/G-codeAction-Preview')}
                     </Button>
                 )}
-                {gcodeLine && (
+                {gcodeFile && (
                     <div
                         onKeyDown={noop}
                         role="button"

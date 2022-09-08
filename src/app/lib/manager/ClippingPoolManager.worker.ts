@@ -325,6 +325,7 @@ async function calculateSectionPoints({
 let clearPoolhandle;
 function runJob() {
     if (!pool) {
+        postMessage({ WORKER_STATUS: 'clipperWorkerBusy' });
         pool = Pool(
             async () => spawn(new Worker('clipperPool.worker.js'), {
                 timeout: 20000
@@ -348,9 +349,12 @@ function runJob() {
 
     if (jobs.length && !runningJob && idleWorkerNum === defaultPoolSize) {
         runningJob = jobs.shift();
+        postMessage({ WORKER_STATUS: 'clipperWorkerBusy' });
         // start execution job, runningJob=${runningJob.jobID}, modelID=${runningJob.modelID}
         calculateSectionPoints(runningJob);
     } else if (!runningJob) {
+        postMessage({ WORKER_STATUS: 'clipperWorkerIdle' });
+
         clearPoolhandle = setTimeout(() => {
             pool.terminate();
             pool = null;
@@ -363,6 +367,7 @@ onmessage = async (e) => {
     const [type, job, jobID] = e.data as [ClipperMessageType, TJobMessage, string];
     if (type === 'stop-job') {
         sleep = true;
+        postMessage({ WORKER_STATUS: 'clipperWorkerStop' });
         return;
     } else if (type === 'continue-job') {
         sleep = false;
@@ -385,9 +390,7 @@ onmessage = async (e) => {
         job.jobID = jobID;
         jobs.push(job);
     }
-    if (!runningJob) {
-        runJob();
-    }
+    runJob();
 };
 
 export default null;

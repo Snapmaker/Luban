@@ -7,7 +7,6 @@ import { DEFAULT_LUBAN_HOST, MACHINE_SERIES } from '../../../constants';
 import Rectangle from '../../../three-extensions/objects/Rectangle';
 import { FontLoader } from '../../../three-extensions/FontLoader';
 import STLLoader from '../../../three-extensions/STLLoader';
-// import ThreeUtils from '../../../three-extensions/ThreeUtils';
 import SVGLoader from '../../../three-extensions/SVGLoader';
 import ThreeUtils from '../../../three-extensions/ThreeUtils';
 import i18n from '../../../lib/i18n';

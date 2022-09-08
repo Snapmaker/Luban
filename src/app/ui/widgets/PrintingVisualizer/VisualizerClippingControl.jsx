@@ -8,7 +8,7 @@ import styles from './styles.styl';
 import { actions as printingActions } from '../../../flux/printing';
 import { ModelEvents } from '../../../models/events';
 import { PLANE_MAX_HEIGHT } from '../../../models/ModelGroup';
-import workerManager from '../../../lib/manager/workerManager';
+import workerManager, { WorkerEvents } from '../../../lib/manager/workerManager';
 
 function VisualizerClippingControl({ simplifying }) {
     const transformMode = useSelector(state => state?.printing?.transformMode, shallowEqual);
@@ -36,13 +36,14 @@ function VisualizerClippingControl({ simplifying }) {
         const onClippingHeightReset = () => setValue(PLANE_MAX_HEIGHT);
         modelGroup.on(ModelEvents.ClippingHeightReset, onClippingHeightReset);
         const onClippingStart = () => setLoading(true);
-        modelGroup.on(ModelEvents.ClippingStart, onClippingStart);
         const onClippingFinish = () => setLoading(false);
-        modelGroup.on(ModelEvents.ClippingFinish, onClippingFinish);
+        workerManager.on(WorkerEvents.clipperWorkerBusy, onClippingStart);
+        workerManager.on(WorkerEvents.clipperWorkerIdle, onClippingFinish);
+
         return () => {
             modelGroup.off(ModelEvents.ClippingHeightReset, onClippingHeightReset);
-            modelGroup.off(ModelEvents.ClippingStart, onClippingStart);
-            modelGroup.off(ModelEvents.ClippingFinish, onClippingFinish);
+            workerManager.off(WorkerEvents.clipperWorkerBusy, onClippingStart);
+            workerManager.off(WorkerEvents.clipperWorkerIdle, onClippingFinish);
         };
     }, []);
 

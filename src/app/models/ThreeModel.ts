@@ -214,6 +214,9 @@ class ThreeModel extends BaseModel {
     public updateClippingMap() {
         this.onTransform();
         if (this.clipper) {
+            if (!this.boundingBox) {
+                this.computeBoundingBox();
+            }
             return this.clipper.updateClippingMap(this.meshObject.matrixWorld, this.boundingBox);
         }
         return false;

@@ -242,6 +242,7 @@ class Visualizer extends PureComponent {
                 this.props.recordModelAfterTransform('rotate', this.props.modelGroup);
                 this.props.destroyGcodeLine();
                 this.props.displayModel();
+                this.checkoutModelsLocatin();
             } else {
                 let newTransformation = {};
                 if (mode === TRANSLATE_MODE) {
@@ -254,6 +255,7 @@ class Visualizer extends PureComponent {
                     };
                 }
                 this.props.updateSelectedModelTransformation(newTransformation);
+                this.checkoutModelsLocatin();
                 emitUpdateControlInputEvent({
                     controlValue: {
                         mode,

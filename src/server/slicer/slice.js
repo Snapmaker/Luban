@@ -434,7 +434,7 @@ export function repairModel(actions, params) {
     if (fs.existsSync(outputPath)) {
         fs.unlinkSync(outputPath);
     }
-    let stepCount = 0;
+    let stepCount = 1;
 
     const config = {
         version: pkg.version,
