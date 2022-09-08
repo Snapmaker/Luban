@@ -26,7 +26,7 @@ function VisualizerClippingControl({ simplifying }) {
     const qualitySetting = activeQualityDefinition?.settings;
 
 
-    const [value, setValue] = useState(0);
+    const [value, setValue] = useState(PLANE_MAX_HEIGHT);
     useEffect(() => {
         setValue(primeTowerHeight || PLANE_MAX_HEIGHT);
     }, [primeTowerHeight]);
@@ -39,11 +39,13 @@ function VisualizerClippingControl({ simplifying }) {
         const onClippingFinish = () => setLoading(false);
         workerManager.on(WorkerEvents.clipperWorkerBusy, onClippingStart);
         workerManager.on(WorkerEvents.clipperWorkerIdle, onClippingFinish);
+        workerManager.on(WorkerEvents.clipperWorkerDestroyed, onClippingFinish);
 
         return () => {
             modelGroup.off(ModelEvents.ClippingHeightReset, onClippingHeightReset);
             workerManager.off(WorkerEvents.clipperWorkerBusy, onClippingStart);
             workerManager.off(WorkerEvents.clipperWorkerIdle, onClippingFinish);
+            workerManager.off(WorkerEvents.clipperWorkerDestroyed, onClippingFinish);
         };
     }, []);
 

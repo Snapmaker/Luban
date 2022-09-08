@@ -177,8 +177,6 @@ class ClippingModel {
             this.modelGroup.onClippingFinished();
             return;
         }
-        this.model.computeBoundingBox();
-
         const modelMatrix = new THREE.Matrix4();
         this.modelMeshObject.updateMatrixWorld();
         modelMatrix.copy(this.modelMeshObject.matrixWorld);

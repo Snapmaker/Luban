@@ -135,19 +135,17 @@ function lineToGeometry(originalPositions, breakPositionsIndex, width, height) {
         }
         currentIndex += 8;
     }
-    return [
-        indices,
-        new THREE.Float32BufferAttribute(vertices, 3),
-        new THREE.Float32BufferAttribute(normals, 3)
-    ];
+    const geometry = new THREE.BufferGeometry();
+    geometry.setIndex(indices);
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+    return geometry;
 }
 
-const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) => {
+const gcodeBufferGeometryToObj3d = (func, gcodeEntityLayers, renderMethod, params) => {
     let obj3d = null;
     switch (func) {
         case '3DP': {
-            const gcodeEntityLayers = bufferGeometry;
-
             const object3D = new THREE.Group();
             const r0 = parseInt(params.extruderColors.toolColor0.substring(1, 3), 16) / 0xff;
             const g0 = parseInt(params.extruderColors.toolColor0.substring(3, 5), 16) / 0xff;
@@ -157,7 +155,7 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) 
             const g1 = parseInt(params.extruderColors.toolColor1.substring(3, 5), 16) / 0xff;
             const b1 = parseInt(params.extruderColors.toolColor1.substring(5), 16) / 0xff;
 
-            let positions = [], index = 0, width = 0, height = 0, segmentPositions = [], indices, position, normal;
+            let positions = [], index = 0, width = 0, height = 0, segmentPositions = [];
 
             Object.entries(gcodeEntityLayers).forEach(([indexKey, layer]) => {
                 index = Number(indexKey);
@@ -179,12 +177,7 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) 
                             }
                         }
                         // console.log('breakPositionsIndex', layerType.breakPositionsIndex);
-                        [indices, position, normal] = lineToGeometry(layerType.positions, layerType.breakPositionsIndex, width, height);
-                        const geometry = new THREE.BufferGeometry();
-
-                        geometry.setIndex(indices);
-                        geometry.setAttribute('position', position);
-                        geometry.setAttribute('normal', normal);
+                        const geometry = lineToGeometry(layerType.positions, layerType.breakPositionsIndex, width, height);
 
                         const mesh = new THREE.Mesh(geometry, new THREE.ShaderMaterial({
                             vertexShader: PRINT3D_VERT_SHADER,
@@ -255,10 +248,10 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) 
                         }));
                         object3D.add(line);
                     }
-                    layer = null;
                 });
             });
 
+            gcodeEntityLayers = null;
             obj3d = object3D;
         }
 
@@ -266,7 +259,7 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) 
         case 'WORKSPACE':
             if (renderMethod === 'point') {
                 obj3d = new THREE.Points(
-                    bufferGeometry,
+                    gcodeEntityLayers,
                     new THREE.ShaderMaterial({
                         uniforms: WORKSPACE_UNIFORMS,
                         vertexShader: WORKSPACE_VERT_SHADER,
@@ -277,7 +270,7 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) 
                 );
             } else {
                 obj3d = new THREE.Line(
-                    bufferGeometry,
+                    gcodeEntityLayers,
                     new THREE.ShaderMaterial({
                         uniforms: WORKSPACE_UNIFORMS,
                         vertexShader: WORKSPACE_VERT_SHADER,
