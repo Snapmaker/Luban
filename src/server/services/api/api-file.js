@@ -11,7 +11,7 @@ import { parseLubanGcodeHeader } from '../../lib/parseGcodeHeader';
 import { zipFolder, unzipFile } from '../../lib/archive';
 import { packFirmware } from '../../lib/firmware-build';
 import {
-    ERR_INTERNAL_SERVER_ERROR, HEAD_PRINTING, ERR_BAD_REQUEST
+    ERR_INTERNAL_SERVER_ERROR, HEAD_PRINTING, ERR_BAD_REQUEST, HEAD_LASER, HEAD_CNC
 } from '../../constants';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, getMachineSeriesWithToolhead, INITIAL_TOOL_HEAD_FOR_ORIGINAL, INITIAL_TOOL_HEAD_FOR_SM2 } from '../../../app/constants';
 import { removeSpecialChars } from '../../../shared/lib/utils';
@@ -339,6 +339,13 @@ export const saveEnv = async (req, res) => {
         if (config.defaultQualityId && /^quality.([0-9_]+)$/.test(config.defaultQualityId)) {
             copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultQualityId}.def.json`, `${envDir}/${config.defaultQualityId}.def.json`);
         }
+        if (machineInfo?.headType === HEAD_CNC || machineInfo?.headType === HEAD_LASER) {
+            !!config.toolpaths?.length && config.toolpaths.forEach(toolpath => {
+                if (toolpath.toolParams?.definitionId && /^tool.([0-9_]+)$/.test(toolpath.toolParams.definitionId)) {
+                    copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${toolpath.toolParams.definitionId}.def.json`, `${envDir}/${toolpath.toolParams.definitionId}.def.json`)
+                }
+            })
+        }
         res.send(result);
         res.end();
     } catch (e) {
@@ -495,6 +502,17 @@ export const recoverProjectFile = async (req, res) => {
                 fs.copyFileSync(fname, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultQualityId}.def.json`);
             }
         }
+        if (headType === HEAD_LASER || headType === HEAD_CNC) {
+            config.toolpaths?.length && config.toolpaths.map(toolpath => {
+                if (toolpath?.toolParams?.definitionId && /^tool.([0-9_]+)$/.test(toolpath?.toolParams?.definitionId)) {
+                    const fname = `${DataStorage.tmpDir}/${toolpath.toolParams.definitionId}.def.json`;
+                    if (fs.existsSync(fname)) {
+                        fs.copyFileSync(fname, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${toolpath.toolParams.definitionId}.def.json`);
+                    }
+                }
+            })
+        }
+        console.log(config);
 
         res.send({ content, projectPath: file.path });
         res.end();
