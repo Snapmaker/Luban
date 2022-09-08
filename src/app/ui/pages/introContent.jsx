@@ -11,15 +11,30 @@ const printIntroStepTwo = (text) => (
         {text}
     </div>
 );
-
-const printIntroStepThree = (text1, text2, text3) => (
+const printIntroStepThree = (text1) => (
+    <div>
+        {text1}
+    </div>
+);
+const printIntroStepFour = (text1) => (
+    <div>
+        {text1}
+    </div>
+);
+const printIntroStepFive = (text1, text2) => (
+    <div>
+        <div>{text1}</div>
+        <div>{text2}</div>
+    </div>
+);
+const printIntroStepSix = (text1, text2, text3) => (
     <div>
         <div>{text1}</div>
         <div>{text2} <img src="/resources/images/guide-tours/icon_setting_32x32.png" alt="" className="width-32" /> {text3}</div>
     </div>
 );
 
-const printIntroStepFour = (text1, text2, isOriginal) => (
+const printIntroStepSeven = (text1, text2, isOriginal) => (
     <div>
         <div>{text1}</div>
         <div>{text2}</div>
@@ -27,13 +42,12 @@ const printIntroStepFour = (text1, text2, isOriginal) => (
     </div>
 );
 
-const printIntroStepFive = (text1) => (
+const printIntroStepEight = (text1) => (
     <div>
         {text1}
     </div>
 );
-
-const printIntroStepSix = (text1) => (
+const printIntroStepNine = (text1) => (
     <div>
         {text1}
     </div>
@@ -146,6 +160,9 @@ export {
     printIntroStepFour,
     printIntroStepFive,
     printIntroStepSix,
+    printIntroStepSeven,
+    printIntroStepEight,
+    printIntroStepNine,
     laserCncIntroStepOne,
     laserCncIntroStepTwo,
     laserCncIntroStepFive,

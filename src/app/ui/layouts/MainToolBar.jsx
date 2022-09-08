@@ -62,7 +62,24 @@ class MainToolBar extends PureComponent {
                     )}
                 >
                     {leftItems && (leftItems.filter(item => item).map((menuItem) => {
-                        return <MenuItem key={key++} menuItem={menuItem} actions={actions} lang={lang} headType={headType} />;
+                        if (menuItem.children) {
+                            return (
+                                <span
+                                    key={key++}
+                                    className={classNames(
+                                        menuItem.className ? menuItem.className : '',
+                                        'display-inline'
+                                    )}
+                                >
+                                    {menuItem.children.map((childItem) => {
+                                        return (<MenuItem key={childItem.name + (key++)} menuItem={childItem} actions={actions} lang={lang} headType={headType} />);
+                                    })}
+                                </span>
+                            );
+                        } else if (menuItem) {
+                            return <MenuItem key={key++} menuItem={menuItem} actions={actions} lang={lang} headType={headType} />;
+                        }
+                        return null;
                     }))}
                 </div>
                 {/* <div className={styles['bar-item']}>
@@ -86,7 +103,7 @@ class MainToolBar extends PureComponent {
                         key="machineMaterialSettings"
                         disabled={!this.props.profileInitialized}
                     >
-                        <div className={classNames(styles['hover-background'], 'machine-setting position-re width-360 float-r border-left-grey-3 height-66 sm-flex sm-flex-direction-c justify-space-between padding-vertical-8 padding-horizontal-16')}>
+                        <div className={classNames(styles['hover-background'], 'print-machine-material-intro machine-setting position-re width-360 float-r border-left-grey-3 height-66 sm-flex sm-flex-direction-c justify-space-between padding-vertical-8 padding-horizontal-16')}>
                             <div className="width-144">
                                 <div className="width-144 sm-flex">
                                     <Badge status={isConnected ? 'success' : 'default'} />

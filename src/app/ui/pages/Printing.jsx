@@ -49,7 +49,8 @@ import HomePage from './HomePage';
 import Workspace from './Workspace';
 import {
     printIntroStepOne, printIntroStepTwo, printIntroStepThree,
-    printIntroStepFour, printIntroStepFive, printIntroStepSix
+    printIntroStepSeven, printIntroStepEight, printIntroStepNine,
+    printIntroStepFour, printIntroStepFive
 } from './introContent';
 import '../../styles/introCustom.styl';
 import Steps from '../components/Steps';
@@ -185,7 +186,8 @@ function useRenderMainToolBar(setSimplifying, profileInitialized = false) {
                 }
             },
             {
-                type: 'separator'
+                type: 'separator',
+                name: 'separator'
             },
             {
                 title: i18n._('key-Printing/Page-Save'),
@@ -216,59 +218,66 @@ function useRenderMainToolBar(setSimplifying, profileInitialized = false) {
                 }
             },
             {
-                type: 'separator'
+                type: 'separator',
+                name: 'separator'
             },
             {
-                title: i18n._('key-3DP/MainToolBar-Align'),
-                disabled: !canMerge || !enableShortcut,
-                type: 'button',
-                name: 'MainToolbarMerge',
-                action: () => {
-                    dispatch(printingActions.groupAndAlign());
-                }
-            },
-            {
-                title: i18n._('key-3DP/MainToolBar-Group'),
-                disabled: !canGroup || !enableShortcut,
-                type: 'button',
-                name: 'MainToolbarGroup',
-                action: () => {
-                    dispatch(printingActions.group());
-                }
-            },
-            {
-                title: i18n._('key-3DP/MainToolBar-Ungroup'),
-                disabled: !canUngroup || !enableShortcut,
-                type: 'button',
-                name: 'MainToolbarUngroup',
-                action: () => {
-                    dispatch(printingActions.ungroup());
-                }
-            },
-            {
-                type: 'separator'
-            },
-            {
-                title: i18n._('key-3DP/MainToolBar-Model Simplify'),
-                disabled: !canSimplify || !enableShortcut,
-                type: 'button',
-                name: 'MainToolbarSimplifiedModel',
-                action: async () => {
-                    const repaired = await dispatch(printingActions.isModelsRepaired());
-                    if (repaired) {
-                        setSimplifying(true);
-                        dispatch(printingActions.modelSimplify(simplifyType, simplifyPercent, true));
+                className: 'print-edit-model-intro',
+                children: [
+                    {
+                        title: i18n._('key-3DP/MainToolBar-Align'),
+                        disabled: !canMerge || !enableShortcut,
+                        type: 'button',
+                        name: 'MainToolbarMerge',
+                        action: () => {
+                            dispatch(printingActions.groupAndAlign());
+                        }
+                    },
+                    {
+                        title: i18n._('key-3DP/MainToolBar-Group'),
+                        disabled: !canGroup || !enableShortcut,
+                        type: 'button',
+                        name: 'MainToolbarGroup',
+                        action: () => {
+                            dispatch(printingActions.group());
+                        }
+                    },
+                    {
+                        title: i18n._('key-3DP/MainToolBar-Ungroup'),
+                        disabled: !canUngroup || !enableShortcut,
+                        type: 'button',
+                        name: 'MainToolbarUngroup',
+                        action: () => {
+                            dispatch(printingActions.ungroup());
+                        }
+                    },
+                    {
+                        type: 'separator',
+                        name: 'separator'
+                    },
+                    {
+                        title: i18n._('key-3DP/MainToolBar-Model Simplify'),
+                        disabled: !canSimplify || !enableShortcut,
+                        type: 'button',
+                        name: 'MainToolbarSimplifiedModel',
+                        action: async () => {
+                            const repaired = await dispatch(printingActions.isModelsRepaired());
+                            if (repaired) {
+                                setSimplifying(true);
+                                dispatch(printingActions.modelSimplify(simplifyType, simplifyPercent, true));
+                            }
+                        }
+                    },
+                    {
+                        title: i18n._('key-3DP/MainToolBar-Model repair'),
+                        disabled: !canRepair || !enableShortcut,
+                        type: 'button',
+                        name: 'MainToolbarFixModel',
+                        action: () => {
+                            dispatch(printingActions.repairSelectedModels());
+                        }
                     }
-                }
-            },
-            {
-                title: i18n._('key-3DP/MainToolBar-Model repair'),
-                disabled: !canRepair || !enableShortcut,
-                type: 'button',
-                name: 'MainToolbarFixModel',
-                action: () => {
-                    dispatch(printingActions.repairSelectedModels());
-                }
+                ]
             }
         ];
         return (
@@ -469,7 +478,7 @@ function Printing({ location }) {
                 name: '3dp_original_single.snap3dp'
             };
             dispatch(projectActions.openProject(isOriginal ? pathConfigForOriginal : pathConfigForSM2, history, true, true));
-        } else if (nextIndex === 4) {
+        } else if (nextIndex === 5) {
             const thumbnailRef = thumbnail.current.getThumbnail();
             await dispatch(printingActions.generateGcode(thumbnailRef, true));
         }
@@ -524,51 +533,68 @@ function Printing({ location }) {
                             element: '.print-tool-bar-open',
                             intro: printIntroStepOne(i18n._('key-Printing/Page-Import an object, or drag an object to Luban.')),
                             position: 'right',
-                            title: `${i18n._('key-Printing/Page-Import Object')} (1/6)`,
+                            title: `${i18n._('key-Printing/Page-Import Object')} (1/8)`,
                             disableInteraction: true,
                             tooltipClass: 'printing-import-intro'
                         }, {
                             element: '.print-intro-three',
                             intro: printIntroStepTwo(i18n._('key-Printing/Page-Place or transform the object using icons, including Move, Scale, Rotate, Mirror, and Manual Support.')),
                             position: 'right',
-                            title: `${i18n._('key-Printing/Page-Placement')} (2/6)`,
+                            title: `${i18n._('key-Printing/Page-Placement')} (2/8)`,
                             disableInteraction: true,
                             tooltipClass: 'printing-placement-intro'
                         }, {
-                            element: '.printing-widget-list-intro',
+                            element: '.print-edit-model-intro',
                             intro: printIntroStepThree(
-                                i18n._('key-Printing/Page-Select the material settings and printing settings.'),
-                                i18n._('key-Printing/Page-Click'),
-                                i18n._('key-Printing/Page-to set and manage detailed parameters.')
+                                i18n._('key-Printing/Page-Arrange and edit objects to achieve the intended 3D printing effect.')
+                            ),
+                            position: 'bottom',
+                            title: `${i18n._('key-Printing/Page-Edit Objects')} (3/8)`,
+                            disableInteraction: true,
+                            tooltipClass: 'printing-edit-model-intro'
+                        }, {
+                            element: '.print-machine-material-intro',
+                            intro: printIntroStepFour(
+                                i18n._('key-Printing/Page-Select the machine model and the materials you use.')
                             ),
                             position: 'left',
-                            title: `${i18n._('key-Printing/Page-Configure Parameters')} (3/6)`,
+                            title: `${i18n._('key-Printing/Page-Select Machine and Materials')} (4/8)`,
                             disableInteraction: true,
-                            tooltipClass: 'printing-slice-intro'
+                            tooltipClass: 'printing-machine-material-intro'
+                        }, {
+                            element: '.print-configure-parameters-intro',
+                            intro: printIntroStepFive(
+                                i18n._('key-Printing/Page-Select a printing mode.'),
+                                i18n._('key-Printing/Page-Unfold Printing Settings to adjust printing parameters.')
+                            ),
+                            position: 'left',
+                            title: `${i18n._('key-Printing/Page-Configure Parameters')} (5/8)`,
+                            disableInteraction: true,
+                            tooltipClass: 'printing-configure-parameters-intro'
                         }, {
                             element: '.print-output-intro',
-                            intro: printIntroStepFour(
+                            intro: printIntroStepSeven(
                                 i18n._('key-Printing/Page-Slice and preview the object.'),
                                 i18n._('key-Printing/Page-In Preview, you can see printing paths using features, including Line Type and Layer View.'),
                                 isOriginal
                             ),
                             position: 'top',
-                            title: `${i18n._('key-Printing/Page-Generate G-code and Preview')} (4/6)`,
+                            title: `${i18n._('key-Printing/Page-Generate G-code and Preview')} (6/8)`,
                             disableInteraction: true,
                             tooltipClass: 'printing-preview-intro'
                         }, {
                             element: '.print-output-intro',
-                            intro: printIntroStepFive(i18n._('key-Printing/Page-Export the G-code file to a local device or load it to Workspace. Use Touchscreen or Luban to start printing.')),
+                            intro: printIntroStepEight(i18n._('key-Printing/Page-Export the G-code file to a local device or load it to Workspace. Use Touchscreen or Luban to start printing.')),
                             position: 'top',
-                            title: `${i18n._('key-Printing/Page-Export and Print')} (5/6)`,
+                            title: `${i18n._('key-Printing/Page-Export and Print')} (7/8)`,
                             disableInteraction: true,
                             highlightClass: 'printing-export-highlight-part',
                             tooltipClass: 'printing-export-intro'
                         }, {
                             element: '.printing-save-icon',
-                            intro: printIntroStepSix(i18n._('key-Printing/Page-Save the project to a local device for reuse.')),
+                            intro: printIntroStepNine(i18n._('key-Printing/Page-Save the project to a local device for reuse.')),
                             position: 'bottom',
-                            title: `${i18n._('key-Printing/Page-Save Project')} (6/6)`,
+                            title: `${i18n._('key-Printing/Page-Save Project')} (8/8)`,
                             disableInteraction: true,
                             tooltipClass: 'printing-save-intro'
                         }]}

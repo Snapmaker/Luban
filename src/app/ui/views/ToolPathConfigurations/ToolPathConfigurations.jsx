@@ -64,12 +64,9 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
         const { toolParams, gcodeConfig } = toolPath;
         const activeToolDefinition = _.cloneDeep(currentToolDefinition);
 
-        let oldTooldefinition = toolDefinitions?.find((d) => {
+        const oldTooldefinition = toolDefinitions?.find((d) => {
             return d.definitionId === toolParams.definitionId;
         });
-        if (!oldTooldefinition) {
-            oldTooldefinition = toolDefinitions[0];
-        }
         if (oldTooldefinition) {
             activeToolDefinition.definitionId = oldTooldefinition.definitionId;
             activeToolDefinition.name = oldTooldefinition.name;
@@ -99,6 +96,9 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                 if (newSettings.multi_pass_depth) newSettings.multi_pass_depth.default_value = gcodeConfig?.multiPassDepth;
                 if (newSettings.fixed_power) newSettings.fixed_power.default_value = gcodeConfig?.fixedPower;
             }
+            // if (!oldTooldefinition && activeToolDefinition) {
+            //     activeToolDefinition.definitionId = toolDefinitions[0].definitionId;
+            // }
         }
 
         setCurrentToolDefinition(activeToolDefinition);

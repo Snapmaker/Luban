@@ -1293,7 +1293,7 @@
                             "filter": [
                                 "all"
                             ],
-                            "min": 0,
+                            "min": 1,
                             "max": 20000
                         }
                     }
@@ -1550,7 +1550,7 @@
                                 "basic",
                                 "all"
                             ],
-                            "min": 0,
+                            "min": 1,
                             "max": 20000
                         },
                         "retraction_prime_speed": {
@@ -1569,7 +1569,7 @@
                                 "basic",
                                 "all"
                             ],
-                            "min": 0,
+                            "min": 1,
                             "max": 20000
                         },
                         "retraction_extra_prime_amount": {
@@ -1949,8 +1949,8 @@
                             "maximum_value_warning": "0",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
-                            "min": 0,
-                            "max": 20000
+                            "min": -10,
+                            "max": 0
                         },
                         "material_anti_ooze_retraction_speed": {
                             "label": "Anti-ooze Retraction Speed",
@@ -1977,8 +1977,8 @@
                             "maximum_value_warning": "0",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
-                            "min": 0,
-                            "max": 20000
+                            "min": "-retraction_amount * 4",
+                            "max": 0
                         },
                         "material_break_preparation_speed": {
                             "label": "Break Preparation Retraction Speed",
@@ -2021,8 +2021,8 @@
                             "maximum_value_warning": "0",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true,
-                            "min": 0,
-                            "max": 20000
+                            "min": -100,
+                            "max": 0
                         },
                         "material_break_speed": {
                             "label": "Break Retraction Speed",
@@ -2819,7 +2819,7 @@
                                     "filter": [
                                         "advanced"
                                     ],
-                                    "min": 0,
+                                    "min": 1,
                                     "max": 20000
                                 },
                                 "jerk_infill": {
@@ -2834,7 +2834,7 @@
                                     "visible": "resolveOrValue(jerk_enabled) && infill_sparse_density > 0",
                                     "limit_to_extruder": "infill_extruder_nr",
                                     "settable_per_mesh": true,
-                                    "min": 0,
+                                    "min": 1,
                                     "max": 20000
                                 },
                                 "jerk_wall_0": {
@@ -2849,7 +2849,7 @@
                                     "visible": "jerk_enabled",
                                     "limit_to_extruder": "wall_0_extruder_nr",
                                     "settable_per_mesh": true,
-                                    "min": 0,
+                                    "min": 1,
                                     "max": 20000
                                 },
                                 "jerk_wall_x": {
@@ -2864,7 +2864,7 @@
                                     "visible": "jerk_enabled",
                                     "limit_to_extruder": "wall_x_extruder_nr",
                                     "settable_per_mesh": true,
-                                    "min": 0,
+                                    "min": 1,
                                     "max": 20000
                                 },
                                 "jerk_topbottom": {
@@ -2879,7 +2879,7 @@
                                     "visible": "(top_layers > 0 || bottom_layers > 0) && resolveOrValue(jerk_enabled)",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
                                     "settable_per_mesh": true,
-                                    "min": 0,
+                                    "min": 1,
                                     "max": 20000
                                 },
                                 "jerk_roofing": {
@@ -2894,7 +2894,7 @@
                                     "visible": "resolveOrValue(jerk_enabled) && roofing_layer_count > 0 && top_layers > 0",
                                     "limit_to_extruder": "roofing_extruder_nr",
                                     "settable_per_mesh": true,
-                                    "min": 0,
+                                    "min": 1,
                                     "max": 20000
                                 },
                                 "jerk_support_infill": {
@@ -2910,7 +2910,7 @@
                                     "limit_to_extruder": "support_infill_extruder_nr",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
-                                    "min": 0,
+                                    "min": 1,
                                     "max": 20000
                                 },
                                 "jerk_support_roof": {
@@ -2926,7 +2926,7 @@
                                     "limit_to_extruder": "support_roof_extruder_nr",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
-                                    "min": 0,
+                                    "min": 1,
                                     "max": 20000
                                 },
                                 "jerk_support_bottom": {
@@ -2942,7 +2942,7 @@
                                     "limit_to_extruder": "support_bottom_extruder_nr",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
-                                    "min": 0,
+                                    "min": 1,
                                     "max": 20000
                                 },
                                 "jerk_prime_tower": {
@@ -2956,7 +2956,7 @@
                                     "calcu_value": "jerk_print",
                                     "visible": "resolveOrValue(prime_tower_enable) && resolveOrValue(jerk_enabled)",
                                     "settable_per_mesh": false,
-                                    "min": 0,
+                                    "min": 1,
                                     "max": 20000
                                 },
                                 "jerk_travel": {
@@ -2973,7 +2973,7 @@
                                     "filter": [
                                         "advanced"
                                     ],
-                                    "min": 0,
+                                    "min": 1,
                                     "max": 20000
                                 }
                             }
@@ -3685,8 +3685,8 @@
                             "filter": [
                                 "advanced"
                             ],
-                            "min": 0,
-                            "max": 20000
+                            "min": "-1 * machine_nozzle_size",
+                            "max": "10 * machine_nozzle_size"
                         },
                         "support_interface_enable": {
                             "label": "Enabled Support Interface",
@@ -4622,7 +4622,7 @@
                                     "filter": [
                                         "success"
                                     ],
-                                    "min": 0,
+                                    "min": 1,
                                     "max": 20000
                                 },
                                 "speed_travel_layer_0": {
@@ -4640,7 +4640,7 @@
                                     "filter": [
                                         "success"
                                     ],
-                                    "min": 0,
+                                    "min": 1,
                                     "max": 20000
                                 },
                                 "skirt_brim_speed": {
@@ -4660,11 +4660,11 @@
                                     "filter": [
                                         "success"
                                     ],
-                                    "min": 0,
+                                    "min": 1,
                                     "max": 20000
                                 }
                             },
-                            "min": 0,
+                            "min": 1,
                             "max": 20000
                         },
                         "acceleration_layer_0": {
@@ -4699,7 +4699,7 @@
                                     "filter": [
                                         "success"
                                     ],
-                                    "min": 0,
+                                    "min": 1,
                                     "max": 20000
                                 },
                                 "acceleration_travel_layer_0": {
@@ -4718,7 +4718,7 @@
                                     "filter": [
                                         "success"
                                     ],
-                                    "min": 0,
+                                    "min": 1,
                                     "max": 20000
                                 },
                                 "acceleration_skirt_brim": {
@@ -4737,11 +4737,11 @@
                                     "filter": [
                                         "success"
                                     ],
-                                    "min": 0,
+                                    "min": 1,
                                     "max": 20000
                                 }
                             },
-                            "min": 0,
+                            "min": 1,
                             "max": 20000
                         },
                         "jerk_layer_0": {
@@ -4774,7 +4774,7 @@
                                     "filter": [
                                         "success"
                                     ],
-                                    "min": 0,
+                                    "min": 1,
                                     "max": 20000
                                 },
                                 "jerk_travel_layer_0": {
@@ -4792,7 +4792,7 @@
                                     "filter": [
                                         "success"
                                     ],
-                                    "min": 0,
+                                    "min": 1,
                                     "max": 20000
                                 },
                                 "jerk_skirt_brim": {
@@ -4810,11 +4810,11 @@
                                     "filter": [
                                         "success"
                                     ],
-                                    "min": 0,
+                                    "min": 1,
                                     "max": 20000
                                 }
                             },
-                            "min": 0,
+                            "min": 1,
                             "max": 20000
                         },
                         "speed_slowdown_layers": {
@@ -5294,7 +5294,7 @@
                                     "filter": [
                                         "surface_quality"
                                     ],
-                                    "min": 0,
+                                    "min": 1,
                                     "max": 20000
                                 },
                                 "acceleration_ironing": {
@@ -5313,7 +5313,7 @@
                                     "filter": [
                                         "surface_quality"
                                     ],
-                                    "min": 0,
+                                    "min": 1,
                                     "max": 20000
                                 },
                                 "jerk_ironing": {
@@ -5331,7 +5331,7 @@
                                     "filter": [
                                         "surface_quality"
                                     ],
-                                    "min": 0,
+                                    "min": 1,
                                     "max": 20000
                                 }
                             }
@@ -5361,11 +5361,11 @@
                                     "minimum_value_warning": "25",
                                     "maximum_value_warning": "100",
                                     "settable_per_mesh": true,
-                                    "min": 0,
+                                    "min": 1,
                                     "max": 20000
                                 }
                             },
-                            "min": 0,
+                            "min": 1,
                             "max": 20000
                         },
                         "bridge_settings_enabled": {
@@ -5691,8 +5691,8 @@
                             "filter": [
                                 "advanced"
                             ],
-                            "min": 0,
-                            "max": 20000
+                            "min": -1,
+                            "max": 1
                         },
                         "xy_offset_layer_0": {
                             "label": "Initial Layer Horizontal Expansion",
@@ -5708,8 +5708,8 @@
                             "filter": [
                                 "advanced"
                             ],
-                            "min": 0,
-                            "max": 20000
+                            "min": -1,
+                            "max": 1
                         },
                         "hole_xy_offset": {
                             "label": "Hole Horizontal Expansion",
@@ -5724,8 +5724,8 @@
                             "filter": [
                                 "advanced"
                             ],
-                            "min": 0,
-                            "max": 20000
+                            "min": -1,
+                            "max": 1
                         },
                         "alternate_extra_perimeter": {
                             "label": "Alternate Extra Wall",
@@ -5796,12 +5796,12 @@
                                     "calcu_value": "top_bottom_pattern !== 'concentric' ? 0.5 * (skin_line_width + (wall_line_count > 1 ? wall_line_width_x : wall_line_width_0)) * skin_overlap / 100 : 0",
                                     "visible": "(top_layers > 0 || bottom_layers > 0) && top_bottom_pattern !== 'concentric'",
                                     "settable_per_mesh": true,
-                                    "min": 0,
-                                    "max": 20000
+                                    "min": "-0.5 * machine_nozzle_size",
+                                    "max": "machine_nozzle_size"
                                 }
                             },
-                            "min": 0,
-                            "max": 20000
+                            "min": -50,
+                            "max": 100
                         },
                         "infill_overlap": {
                             "label": "Infill Overlap Percentage",
@@ -5834,8 +5834,8 @@
                                     "max": 20000
                                 }
                             },
-                            "min": 0,
-                            "max": 20000
+                            "min": -50,
+                            "max": 100
                         },
                         "infill_wipe_dist": {
                             "label": "Infill Wipe Distance",
@@ -5990,8 +5990,8 @@
                             "limit_to_extruder": "infill_extruder_nr",
                             "settable_per_mesh": true,
                             "visible": "false",
-                            "min": 0,
-                            "max": 20000
+                            "min": "-1 * infill_line_distance",
+                            "max": "5 * infill_line_distance"
                         },
                         "gradual_infill_steps": {
                             "label": "Gradual Infill Steps",
@@ -7400,8 +7400,8 @@
                                     "visible": "support_conical_enabled && support_enable && support_structure !== 'tree'",
                                     "limit_to_extruder": "support_infill_extruder_nr",
                                     "settable_per_mesh": true,
-                                    "min": 0,
-                                    "max": 20000
+                                    "min": -45,
+                                    "max": 45
                                 },
                                 "support_conical_min_width": {
                                     "label": "Conical Support Minimum Width",
@@ -8249,7 +8249,7 @@
                                     "settable_per_extruder": true,
                                     "settable_per_meshgroup": false,
                                     "min": 0,
-                                    "max": 20000
+                                    "max": 10
                                 },
                                 "wipe_retraction_extra_prime_amount": {
                                     "label": "Wipe Retraction Extra Prime Amount",
@@ -8264,7 +8264,7 @@
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": true,
                                     "min": 0,
-                                    "max": 20000
+                                    "max": 10
                                 },
                                 "wipe_retraction_speed": {
                                     "label": "Wipe Retraction Speed",
