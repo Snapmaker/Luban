@@ -201,7 +201,11 @@ function resolveDefinition(definition, modifiedParams) {
             var calcMaxValue = value.max && eval("(function calcMinMax() {\n                with (context) {\n                    return ".concat(value.max, ";\n                }\n            })()"));
             var calcEnabled = value.visible && eval("(function calcEnable() {\n                with (context) {\n                    return ".concat(value.visible, ";\n                }\n            })()"));
             if (typeof calcValue !== 'undefined') {
-                defaultValue = calcValue;
+                if (value.type === 'float' || value.type === 'int') {
+                    defaultValue = Number((calcValue).toFixed(3));
+                }else {
+                    defaultValue = calcValue;
+                }
                 definition.settings[key].default_value = defaultValue;
             }
             if (typeof calcEnabled !== 'undefined') {

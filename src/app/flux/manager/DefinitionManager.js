@@ -41,6 +41,8 @@ class DefinitionManager {
 
     extruderRDefinition = null;
 
+    qualityProfileArr;
+
     defaultDefinitions = [];
 
     materialProfileArr = [];
@@ -87,6 +89,7 @@ class DefinitionManager {
             this.extruderRDefinition = res;
             this.extruderProfileArr = definitionRes.extruderProfileArr;
             this.materialProfileArr = definitionRes.materialProfileArr;
+            this.qualityProfileArr = definitionRes.qualityProfileArr;
             return {
                 printingProfileLevel: definitionRes.printingProfileLevel,
                 materialProfileLevel: definitionRes.materialProfileLevel

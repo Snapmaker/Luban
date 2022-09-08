@@ -637,7 +637,7 @@ function Configurations() {
         );
     }
     return (
-        <div className="print-configure-parameters-intro">
+        <div className={classNames('print-configure-parameters-intro')}>
             <div
                 className={classNames(
                     'margin-top-16'

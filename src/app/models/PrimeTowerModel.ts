@@ -47,6 +47,7 @@ class PrimeTowerModel extends ThreeModel {
         });
         this.stickToPlate();
 
+
         const stencilGroup = this.createPlaneStencilGroup(geometry);
         this.meshObject.add(stencilGroup);
     }
@@ -91,6 +92,7 @@ class PrimeTowerModel extends ThreeModel {
             scaleY: 1,
             scaleZ: 0
         });
+        this.computeBoundingBox();
         this.overstepped = false;
         this.setSelected(false);
     }

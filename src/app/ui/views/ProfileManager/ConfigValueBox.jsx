@@ -13,7 +13,7 @@ import CheckboxItem from './CheckboxItem';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
 import SvgIcon from '../../components/SvgIcon';
-// import Dropdown from '../../components/Dropdown';
+import definitionManager from '../../../flux/manager/DefinitionManager';
 import Select from '../../components/Select';
 import { Button } from '../../components/Buttons';
 import api from '../../../api';
@@ -128,6 +128,9 @@ function ConfigValueBox({
         categoryKey
     }) => {
         return renderList && renderList.map(profileKey => {
+            if (definitionManager.qualityProfileArr && !(definitionManager.qualityProfileArr.includes(profileKey))) {
+                return null;
+            }
             if (settings[profileKey].childKey?.length > 0) {
                 return (
                     <div key={profileKey} className={`margin-left-${(settings[profileKey].zIndex - 1) * 16}`}>
@@ -444,7 +447,6 @@ function ConfigValueBox({
                                 <div className="sm-parameter-container" ref={scrollDom}>
                                     {!isCategorySelected
                                         && Object.keys((selectParamsType === 'custom' && !customMode) ? customConfigs : optionConfigGroup).map((key, index) => {
-                                            // const eachFieldsDom = fieldsDom.current[index];
                                             return (
                                                 <div key={key}>
                                                     <>

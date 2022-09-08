@@ -23,7 +23,7 @@ const HomePage = (props) => { // Todo, what's the props ?
     useEffect(() => {
         const settingStore = machineStore.get('settings');
         document.querySelector('body').setAttribute('style', 'height: calc(100vh - 82px); background: #f5f5f7;');
-        if (gte(pkg?.version, '3.16.0') && (!settingStore || !settingStore?.finishGuide || settingStore?.guideVersion !== 3)) {
+        if (gte(pkg?.version, '3.16.0') && (!settingStore || !settingStore?.finishGuide || settingStore?.guideVersion !== 4)) {
             setModalShow(true);
         } else {
             setModalShow(false);
