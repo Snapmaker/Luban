@@ -99,9 +99,6 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
         }
     }, [isConnected, currentWorkflowStatus, sent, total, widgetActions]);
 
-    if (!fileName) {
-        return null;
-    }
     const handleMachine = (type) => {
         try {
             switch (type) {

@@ -191,7 +191,7 @@ class ConnectionManager {
     }
 
     startGcode = async (socket, options) => {
-        const { headType, isRotate, toolHead, isLaserPrintAutoMode, materialThickness, laserFocalLength, eventName } = options;
+        const { headType, isRotate, toolHead, isLaserPrintAutoMode, materialThickness, laserFocalLength, renderName, eventName } = options;
         if (this.connectionType === CONNECTION_TYPE_WIFI) {
             const { uploadName, series, background, size, workPosition, originOffset } = options;
             const gcodeFilePath = `${DataStorage.tmpDir}/${uploadName}`;
@@ -266,7 +266,7 @@ class ConnectionManager {
             }
             Promise.all(promises)
                 .then(() => {
-                    this.socket.uploadGcodeFile(gcodeFilePath, headType, (msg) => {
+                    this.socket.uploadGcodeFile(gcodeFilePath, headType, renderName, (msg) => {
                         if (msg) {
                             return;
                         }

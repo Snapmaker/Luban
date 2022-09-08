@@ -297,7 +297,8 @@ class Visualizer extends PureComponent {
                     background,
                     size,
                     workPosition,
-                    originOffset
+                    originOffset,
+                    renderName: gcodeFile?.name || gcodeFile.uploadName
                 }, (res) => {
                     if (res) {
                         const { msg, code } = res;
