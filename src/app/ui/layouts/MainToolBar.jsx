@@ -7,9 +7,9 @@ import MenuItem from './MenuItem';
 import { Badge } from '../components/Badge';
 import Anchor from '../components/Anchor';
 import i18n from '../../lib/i18n';
-import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING, MACHINE_TOOL_HEADS, MACHINE_SERIES, WHITE_COLOR } from '../../constants';
+import { HEAD_PRINTING, MACHINE_SERIES, WHITE_COLOR } from '../../constants';
+// import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING, MACHINE_TOOL_HEADS, MACHINE_SERIES, WHITE_COLOR } from '../../constants';
 import SvgIcon from '../components/SvgIcon';
-// import { timestamp } from '../../../shared/lib/random-utils';
 
 class MainToolBar extends PureComponent {
     static propTypes = {
@@ -146,18 +146,6 @@ class MainToolBar extends PureComponent {
                                             <span className="display-inline text-overflow-ellipsis">{materialInfo?.rightExtruder?.name}</span>
                                         </div>
                                     )}
-                                </div>
-                            )}
-                            {(headType === HEAD_CNC || headType === HEAD_LASER) && (
-                                <div className="width-192">
-                                    <div className="sm-flex">
-                                        <SvgIcon
-                                            name="Extruder"
-                                            size={24}
-                                            type={['static']}
-                                        />
-                                        <span>{i18n._(`${MACHINE_TOOL_HEADS[machineInfo?.toolHead].label}`)}</span>
-                                    </div>
                                 </div>
                             )}
                             {headType === HEAD_PRINTING && (
