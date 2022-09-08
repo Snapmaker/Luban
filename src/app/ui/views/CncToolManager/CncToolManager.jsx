@@ -37,7 +37,7 @@ function CncToolManager({ closeToolManager, shouldSaveToolpath = false, saveTool
             const definitionId = definitionForManager.definitionId;
             const targetFile = `${definitionId}.def.json`;
             const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
-            dispatch(projectActions.exportConfigFile(targetFile, `${HEAD_CNC}/${currentMachine.configPathname[HEAD_CNC]}`));
+            dispatch(projectActions.exportConfigFile(targetFile, `${HEAD_CNC}/${currentMachine.configPathname[HEAD_CNC]}`, `${i18n._(definitionForManager.i18nName || definitionForManager.name)}.def.json`));
         },
         onUpdateDefaultDefinition: (definitionForManager) => {
             const { definitionId, name } = definitionForManager;
