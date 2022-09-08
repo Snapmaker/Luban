@@ -96,9 +96,6 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                 if (newSettings.multi_pass_depth) newSettings.multi_pass_depth.default_value = gcodeConfig?.multiPassDepth;
                 if (newSettings.fixed_power) newSettings.fixed_power.default_value = gcodeConfig?.fixedPower;
             }
-            // if (!oldTooldefinition && activeToolDefinition) {
-            //     activeToolDefinition.definitionId = toolDefinitions[0].definitionId;
-            // }
         }
 
         setCurrentToolDefinition(activeToolDefinition);
