@@ -149,12 +149,9 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
     const updateActiveToolDefinition = (currentToolPath) => {
         const { toolParams, gcodeConfig } = currentToolPath;
         const activeToolDefinition = cloneDeep(activeToolListDefinition);
-        let oldTooldefinition = toolDefinitions?.find((d) => {
+        const oldTooldefinition = toolDefinitions?.find((d) => {
             return d.definitionId === toolParams.definitionId;
         });
-        if (!oldTooldefinition) {
-            oldTooldefinition = toolDefinitions[0];
-        }
         if (oldTooldefinition) {
             activeToolDefinition.definitionId = oldTooldefinition.definitionId;
             activeToolDefinition.name = oldTooldefinition.name;

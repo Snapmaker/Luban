@@ -7,9 +7,9 @@ import MenuItem from './MenuItem';
 import { Badge } from '../components/Badge';
 import Anchor from '../components/Anchor';
 import i18n from '../../lib/i18n';
-import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING, MACHINE_TOOL_HEADS, MACHINE_SERIES, WHITE_COLOR } from '../../constants';
+import { HEAD_PRINTING, MACHINE_SERIES, WHITE_COLOR } from '../../constants';
+// import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING, MACHINE_TOOL_HEADS, MACHINE_SERIES, WHITE_COLOR } from '../../constants';
 import SvgIcon from '../components/SvgIcon';
-// import { timestamp } from '../../../shared/lib/random-utils';
 
 class MainToolBar extends PureComponent {
     static propTypes = {
@@ -62,7 +62,24 @@ class MainToolBar extends PureComponent {
                     )}
                 >
                     {leftItems && (leftItems.filter(item => item).map((menuItem) => {
-                        return <MenuItem key={key++} menuItem={menuItem} actions={actions} lang={lang} headType={headType} />;
+                        if (menuItem.children) {
+                            return (
+                                <span
+                                    key={key++}
+                                    className={classNames(
+                                        menuItem.className ? menuItem.className : '',
+                                        'display-inline'
+                                    )}
+                                >
+                                    {menuItem.children.map((childItem) => {
+                                        return (<MenuItem key={childItem.name + (key++)} menuItem={childItem} actions={actions} lang={lang} headType={headType} />);
+                                    })}
+                                </span>
+                            );
+                        } else if (menuItem) {
+                            return <MenuItem key={key++} menuItem={menuItem} actions={actions} lang={lang} headType={headType} />;
+                        }
+                        return null;
                     }))}
                 </div>
                 {/* <div className={styles['bar-item']}>
@@ -86,7 +103,7 @@ class MainToolBar extends PureComponent {
                         key="machineMaterialSettings"
                         disabled={!this.props.profileInitialized}
                     >
-                        <div className={classNames(styles['hover-background'], 'machine-setting position-re width-360 float-r border-left-grey-3 height-66 sm-flex sm-flex-direction-c justify-space-between padding-vertical-8 padding-horizontal-16')}>
+                        <div className={classNames(styles['hover-background'], 'print-machine-material-intro machine-setting position-re width-360 float-r border-left-grey-3 height-66 sm-flex sm-flex-direction-c justify-space-between padding-vertical-8 padding-horizontal-16')}>
                             <div className="width-144">
                                 <div className="width-144 sm-flex">
                                     <Badge status={isConnected ? 'success' : 'default'} />
@@ -129,18 +146,6 @@ class MainToolBar extends PureComponent {
                                             <span className="display-inline text-overflow-ellipsis">{materialInfo?.rightExtruder?.name}</span>
                                         </div>
                                     )}
-                                </div>
-                            )}
-                            {(headType === HEAD_CNC || headType === HEAD_LASER) && (
-                                <div className="width-192">
-                                    <div className="sm-flex">
-                                        <SvgIcon
-                                            name="Extruder"
-                                            size={24}
-                                            type={['static']}
-                                        />
-                                        <span>{i18n._(`${MACHINE_TOOL_HEADS[machineInfo?.toolHead].label}`)}</span>
-                                    </div>
                                 </div>
                             )}
                             {headType === HEAD_PRINTING && (

@@ -186,7 +186,7 @@ const SettingGuideModal = (props) => {
     };
     const handleSubmit = () => {
         // if update guide content, change the version
-        machineStore.set('settings.guideVersion', 3);
+        machineStore.set('settings.guideVersion', 4);
         machineStore.set('settings.finishGuide', true);
         i18next.changeLanguage(lang, () => {
             const uri = new Uri(window.location.search);
@@ -214,7 +214,7 @@ const SettingGuideModal = (props) => {
         };
         dispatch(machineActions.updateMachineSeries('A350'));
         dispatch(machineActions.updateMachineToolHead(toolHead, 'A350'));
-        machineStore.set('settings.guideVersion', 3);
+        machineStore.set('settings.guideVersion', 4);
         machineStore.set('settings.finishGuide', true);
         i18next.changeLanguage(props.initLanguage, () => {
             const uri = new Uri(window.location.search);

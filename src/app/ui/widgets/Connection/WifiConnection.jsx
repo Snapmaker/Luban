@@ -286,10 +286,14 @@ function WifiConnection() {
                     break;
                 case 404:
                 case 'ECONNRESET':
+                case 'ENOTFOUND':
                 case 'EACCES':
                     actualText = i18n._('key-Workspace/Connection-Connection failed. The target machine actively refused your connection.  Please check if the input IP address is correct.');
                     break;
                 default:
+                    if (msg) {
+                        actualText = msg;
+                    }
             }
             setConnectionMessage({
                 text: actualText,

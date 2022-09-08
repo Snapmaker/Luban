@@ -22,9 +22,8 @@ const NumberInput = ({
     const [displayValue, setDisplayValue] = useState(!decimalPlaces ? value : maxDecimal(value, decimalPlaces));
     const ref = useRef();
     function onInsideChange(event) {
-        const v = decimalPlaces === undefined ? event.target.value : maxDecimal(event.target.value, decimalPlaces);
-        if (displayValue !== v) {
-            setDisplayValue(v);
+        if (displayValue !== event.target.value) {
+            setDisplayValue(event.target.value);
         }
     }
 
@@ -105,7 +104,8 @@ const NumberInput = ({
     }, [defaultValue, max, min]);
 
     useEffect(() => {
-        setDisplayValue(!decimalPlaces ? value : maxDecimal(value, decimalPlaces));
+        setDisplayValue(value);
+        // setDisplayValue(!decimalPlaces ? value : maxDecimal(value, decimalPlaces));
     }, [value]);
 
     return (

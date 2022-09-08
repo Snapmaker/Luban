@@ -32,6 +32,8 @@ const extruderProfileArr = new Set();
 
 const materialProfileArr = new Set();
 
+const qualityProfileArr = new Set();
+
 export class DefinitionLoader {
     printingProfileLevel = {};
 
@@ -199,6 +201,9 @@ export class DefinitionLoader {
                         if (setting.settable_per_extruder) {
                             extruderProfileArr.add(key);
                         }
+                        if (setting.visible !== 'false') {
+                            qualityProfileArr.add(key);
+                        }
                         allSettingNameWithType[mainCategory].add(key);
                     }
                     if (mainCategory === 'material') {
@@ -285,6 +290,7 @@ export class DefinitionLoader {
             ownKeys: Array.from(this.ownKeys),
             printingProfileLevel: this.printingProfileLevel,
             materialProfileLevel: this.materialProfileLevel,
+            qualityProfileArr: Array.from(qualityProfileArr),
             materialProfileArr: Array.from(materialProfileArr),
             extruderProfileArr: Array.from(extruderProfileArr)
         };

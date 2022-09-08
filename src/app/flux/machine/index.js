@@ -1,5 +1,5 @@
 /* eslint-disable import/no-cycle */
-import _, { cloneDeep, isEmpty, isNil } from 'lodash';
+import _, { cloneDeep, isEmpty, isNil, uniq } from 'lodash';
 import {
     ABSENT_OBJECT,
     CONNECTION_STATUS_CONNECTED,
@@ -285,7 +285,7 @@ export const actions = {
         if (printingCustomConfigsWithCategory) {
             const tempConfigs = {};
             Object.keys(printingCustomConfigsWithCategory).forEach(category => {
-                tempConfigs[category] = [...printingCustomConfigsWithCategory[category]];
+                tempConfigs[category] = uniq(printingCustomConfigsWithCategory[category]);
             });
             dispatch(baseActions.updateState({
                 printingCustomConfigsWithCategory: tempConfigs

@@ -193,7 +193,11 @@ function resolveDefinition(definition, modifiedParams) {
             })()`);
 
             if (typeof calcValue !== 'undefined') {
-                defaultValue = calcValue;
+                if (value.type === 'float' || value.type === 'int') {
+                    defaultValue = Number((calcValue).toFixed(3));
+                }else {
+                    defaultValue = calcValue;
+                }
                 definition.settings[key].default_value = defaultValue;
             }
             if (typeof calcEnabled !== 'undefined') {
