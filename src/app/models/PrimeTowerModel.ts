@@ -68,8 +68,8 @@ class PrimeTowerModel extends ThreeModel {
     }
 
     public updateTowerTransformation(transformation: ModelTransformation) {
-        const positionX = transformation?.positionX || Math.max(modelGroup._bbox.max.x - 50, modelGroup._bbox.min.x - 50);
-        const positionY = transformation?.positionY || Math.max(modelGroup._bbox.max.y - 50, modelGroup._bbox.min.y - 50);
+        const positionX = transformation?.positionX || Math.max(this.modelGroup._bbox.max.x - 50, this.modelGroup._bbox.min.x - 50);
+        const positionY = transformation?.positionY || Math.max(this.modelGroup._bbox.max.y - 50, this.modelGroup._bbox.min.y - 50);
         const scaleX = transformation?.scaleX || 1;
         const scaleY = transformation?.scaleY || 1;
         const initHeight = transformation?.scaleZ || 0.1;

@@ -2879,7 +2879,7 @@ class ModelGroup extends EventEmitter {
     public hasClipped() {
         let flag = true;
         this.traverseModels(this.models, (model) => {
-            if (model instanceof ThreeModel && !model.clipper?.clippingMap?.size) {
+            if (model instanceof ThreeModel && model !== this.primeTower && !model.clipper?.clippingMap?.size) {
                 flag = false;
             }
         });
