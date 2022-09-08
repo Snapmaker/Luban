@@ -2874,14 +2874,24 @@ class ModelGroup extends EventEmitter {
         this.plateAdhesion.clear();
         this.onModelUpdate();
         this.updateClippingPlane();
-        this.emit(ModelEvents.ClippingStart);
+    }
+
+    public hasClipped() {
+        let flag = true;
+        this.traverseModels(this.models, (model) => {
+            if (model instanceof ThreeModel && !model.clipper?.clippingMap?.size) {
+                flag = false;
+            }
+        });
+        return flag;
     }
 
     public onClippingFinished() {
-        this.updatePlateAdhesion();
-        this.updateClippingPlane(this.localPlane.constant);
-        this.models = [...this.models];
-        this.emit(ModelEvents.ClippingFinish);
+        if (this.hasClipped()) {
+            this.updatePlateAdhesion();
+            this.updateClippingPlane(this.localPlane.constant);
+            this.models = [...this.models];
+        }
     }
 
     public setTransformMode(value: string) {

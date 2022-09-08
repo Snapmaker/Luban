@@ -146,6 +146,7 @@ class WorkerManager extends EventEmitter {
                     this.emit(`CLIPPER:${jobID}`, res.data);
                 }
                 if (WORKER_STATUS) {
+                    console.error(`WORKER_STATUS=${WORKER_STATUS}`);
                     this.emit(WORKER_STATUS);
                 }
             };
