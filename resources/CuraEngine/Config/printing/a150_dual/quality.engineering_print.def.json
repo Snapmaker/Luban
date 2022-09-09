@@ -210,7 +210,7 @@
             "default_value": 25
         },
         "infill_line_distance": {
-            "default_value": 4.800000000000001
+            "default_value": 4.8
         },
         "infill_angles": {
             "default_value": "[  ]"
@@ -726,22 +726,22 @@
             "default_value": 40
         },
         "skin_preshrink": {
-            "default_value": 1.2000000000000002
+            "default_value": 1.2
         },
         "top_skin_preshrink": {
-            "default_value": 1.2000000000000002
+            "default_value": 1.2
         },
         "bottom_skin_preshrink": {
-            "default_value": 1.2000000000000002
+            "default_value": 1.2
         },
         "expand_skins_expand_distance": {
-            "default_value": 1.2000000000000002
+            "default_value": 1.2
         },
         "top_skin_expand_distance": {
-            "default_value": 1.2000000000000002
+            "default_value": 1.2
         },
         "bottom_skin_expand_distance": {
-            "default_value": 1.2000000000000002
+            "default_value": 1.2
         },
         "max_skin_angle_for_expansion": {
             "default_value": 90
@@ -999,7 +999,7 @@
             "default_value": 90
         },
         "cross_infill_pocket_size": {
-            "default_value": 4.800000000000001
+            "default_value": 4.8
         },
         "cross_infill_density_image": {
             "default_value": ""

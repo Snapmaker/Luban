@@ -723,22 +723,22 @@
             "default_value": 40
         },
         "skin_preshrink": {
-            "default_value": 1.2000000000000002
+            "default_value": 1.2
         },
         "top_skin_preshrink": {
-            "default_value": 1.2000000000000002
+            "default_value": 1.2
         },
         "bottom_skin_preshrink": {
-            "default_value": 1.2000000000000002
+            "default_value": 1.2
         },
         "expand_skins_expand_distance": {
-            "default_value": 1.2000000000000002
+            "default_value": 1.2
         },
         "top_skin_expand_distance": {
-            "default_value": 1.2000000000000002
+            "default_value": 1.2
         },
         "bottom_skin_expand_distance": {
-            "default_value": 1.2000000000000002
+            "default_value": 1.2
         },
         "max_skin_angle_for_expansion": {
             "default_value": 90

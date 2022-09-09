@@ -505,7 +505,7 @@ M3`;
             this.socket.command(this.socket, {
                 args: ['G91;\nG0 E60 F200;\nG90;']
             });
-            this.socket.emit(eventName);
+            socket && socket.emit(eventName);
         }
     }
 
@@ -520,7 +520,7 @@ M3`;
             this.socket.command(this.socket, {
                 args: ['G91;\nG0 E6 F200;\nG0 E-60 F150;\nG90;']
             });
-            this.socket.emit(eventName);
+            socket && socket.emit(eventName);
         }
     }
 
