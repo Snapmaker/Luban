@@ -562,7 +562,7 @@ function Printing({ location }) {
                             disableInteraction: true,
                             tooltipClass: 'printing-machine-material-intro'
                         }, {
-                            element: '.print-configure-parameters-intro',
+                            element: '.widget-list-intro',
                             intro: printIntroStepFive(
                                 i18n._('key-Printing/Page-Select a printing mode.'),
                                 i18n._('key-Printing/Page-Unfold Printing Settings to adjust printing parameters.')

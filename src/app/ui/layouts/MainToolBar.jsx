@@ -97,9 +97,9 @@ class MainToolBar extends PureComponent {
                         return <MenuItem key={key++} menuItem={menuItem} actions={actions} lang={lang} />;
                     }))}
                 </div> */}
-                {hasMachineSettings && (
+                {hasMachineSettings && headType === HEAD_PRINTING && (
                     <Anchor
-                        onClick={() => (headType === HEAD_PRINTING ? setShowMachineMaterialSettings(true) : null)}
+                        onClick={() => (setShowMachineMaterialSettings(true))}
                         key="machineMaterialSettings"
                         disabled={!this.props.profileInitialized}
                     >
@@ -148,14 +148,12 @@ class MainToolBar extends PureComponent {
                                     )}
                                 </div>
                             )}
-                            {headType === HEAD_PRINTING && (
-                                <SvgIcon
-                                    name="RightSlipNormal"
-                                    size={24}
-                                    type={['static']}
-                                    className="position-ab top-22 right-16"
-                                />
-                            )}
+                            <SvgIcon
+                                name="RightSlipNormal"
+                                size={24}
+                                type={['static']}
+                                className="position-ab top-22 right-16"
+                            />
                         </div>
                     </Anchor>
                 )}
