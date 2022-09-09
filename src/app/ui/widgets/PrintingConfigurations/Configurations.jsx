@@ -637,7 +637,7 @@ function Configurations() {
         );
     }
     return (
-        <div className={classNames('print-configure-parameters-intro')}>
+        <div>
             <div
                 className={classNames(
                     'margin-top-16'
@@ -845,9 +845,9 @@ function Configurations() {
                                                     }
                                                     defaultValue={{
                                                         value:
-                                                            selectedSettingDefaultValue
-                                                            && selectedSettingDefaultValue[key]
-                                                                .default_value
+                                                                selectedSettingDefaultValue
+                                                                && selectedSettingDefaultValue[key]
+                                                                    .default_value
                                                     }}
                                                 />
                                             );

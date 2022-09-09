@@ -497,19 +497,22 @@ M3`;
     }
 
     loadFilament = (socket, options) => {
+        const { eventName } = options;
         if (this.protocol === SACP_PROTOCOL || this.connectionType === CONNECTION_TYPE_WIFI) {
-            const { extruderIndex, eventName } = options;
+            const { extruderIndex } = options;
             this.socket.loadFilament(extruderIndex, eventName);
         } else {
             this.socket.command(this.socket, {
                 args: ['G91;\nG0 E60 F200;\nG90;']
             });
+            this.socket.emit(eventName);
         }
     }
 
     unloadFilament = (socket, options) => {
+        const { eventName } = options;
         if (this.protocol === SACP_PROTOCOL) {
-            const { extruderIndex, eventName } = options;
+            const { extruderIndex } = options;
             this.socket.unloadFilament(extruderIndex, eventName);
         } else if (this.connectionType === CONNECTION_TYPE_WIFI) {
             this.socket.unloadFilament(options);
@@ -517,6 +520,7 @@ M3`;
             this.socket.command(this.socket, {
                 args: ['G91;\nG0 E6 F200;\nG0 E-60 F150;\nG90;']
             });
+            this.socket.emit(eventName);
         }
     }
 

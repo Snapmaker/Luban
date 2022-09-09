@@ -95,15 +95,19 @@ function ConfigValueBox({
         if (scrollDom.current) {
             const container = scrollDom.current.parentElement;
             const offsetTops = [...scrollDom.current.children].map(
-                (i) => i.offsetTop - 92
+                (i) => i.offsetTop
             );
             if (cateId !== undefined) {
                 container.scrollTop = offsetTops[cateId];
             } else {
-                cateId = offsetTops.findIndex(
-                    (item, idx) => item < container.scrollTop
-                        && offsetTops[idx + 1] > container.scrollTop
-                );
+                cateId = offsetTops.findIndex((item, idx) => {
+                    if (idx < offsetTops.length - 1) {
+                        return item < container.scrollTop
+                            && offsetTops[idx + 1] > container.scrollTop;
+                    } else {
+                        return item < container.scrollTop;
+                    }
+                });
                 cateId = Math.max(cateId, 0);
             }
             setActiveCateId(cateId);
@@ -269,7 +273,7 @@ function ConfigValueBox({
 
     useEffect(() => {
         setTempdoms(fieldsDom.current);
-    }, [selectParamsType, selectQualityDetailType]);
+    }, [customMode, selectParamsType, selectQualityDetailType]);
 
     const handleUpdateParamsType = (e) => {
         setSelectProfile('');
@@ -402,23 +406,27 @@ function ConfigValueBox({
                                 )}
                                 {selectParamsType === 'custom' && !customMode && (
                                     Object.keys(customConfigs).map((key, index) => {
-                                        return (
-                                            <div key={i18n._(key)}>
-                                                <Anchor
-                                                    className={classNames(styles.item, {
-                                                        [styles.selected]:
-                                                        index === activeCateId
-                                                    })}
-                                                    onClick={() => {
-                                                        setActiveCate(index);
-                                                    }}
-                                                >
-                                                    <span className="sm-parameter-header__title">
-                                                        {i18n._(`key-Definition/Catagory-${key}`)}
-                                                    </span>
-                                                </Anchor>
-                                            </div>
-                                        );
+                                        if (customConfigs[key] && customConfigs[key].length) {
+                                            return (
+                                                <div key={i18n._(key)}>
+                                                    <Anchor
+                                                        className={classNames(styles.item, {
+                                                            [styles.selected]:
+                                                            index === activeCateId
+                                                        })}
+                                                        onClick={() => {
+                                                            setActiveCate(index);
+                                                        }}
+                                                    >
+                                                        <span className="sm-parameter-header__title">
+                                                            {i18n._(`key-Definition/Catagory-${key}`)}
+                                                        </span>
+                                                    </Anchor>
+                                                </div>
+                                            );
+                                        } else {
+                                            return null;
+                                        }
                                     })
                                 )}
                             </div>

@@ -35,7 +35,7 @@ const machineList = [{
 }, {
     value: 'A400',
     label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A400',
-    image: '/resources/images/machine/size-2.0-A350.jpg'
+    image: '/resources/images/machine/size-2.0-A400.jpeg'
 }];
 
 const toolHeadMap = {
