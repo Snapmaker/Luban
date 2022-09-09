@@ -62,7 +62,7 @@ const machineSeriesOptions = [
         value: MACHINE_SERIES.A400.value,
         label: MACHINE_SERIES.A400.label,
         size: MACHINE_SERIES.A400.setting.size,
-        img: '/resources/images/machine/size-2.0-A350.jpg'
+        img: '/resources/images/machine/size-2.0-A400.jpeg'
     }
 ];
 const languageOptions = [
