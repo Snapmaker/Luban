@@ -352,7 +352,7 @@ G1 Z${pos.z}
             const { headType, pause3dpStatus, pauseStatus, gcodeFile, sizeZ } = options;
             if (headType === HEAD_PRINTING) {
                 const pos = pause3dpStatus.pos;
-                const code = `G1 X${pos.x} Y${pos.y} Z${pos.z} F1000\n`;
+                const code = `G1 X${pos.x} Y${pos.y} Z${pos.z}\n`;
                 this.socket.command(this.socket, {
                     cmd: 'gcode',
                     args: [code]
@@ -362,7 +362,7 @@ G1 Z${pos.z}
                 });
             } else if (headType === HEAD_LASER) {
                 const pos = pauseStatus.pos;
-                let code = `G1 F1500 Z${pos.z}
+                let code = `G1 Z${pos.z}
 G1 X${pos.x} Y${pos.y} B${pos.e}`;
 
                 if (pauseStatus.headStatus) {
