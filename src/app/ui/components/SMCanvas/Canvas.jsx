@@ -30,6 +30,7 @@ import { TRANSLATE_MODE } from '../../../constants';
 import { toast } from '../Toast';
 import { ToastWapper } from '../Toast/toastContainer';
 import i18n from '../../../lib/i18n';
+import ControlsInput from './ControlsInput';
 
 const ANIMATION_DURATION = 500;
 const DEFAULT_MODEL_POSITION = new Vector3(0, 0, 0);
@@ -69,6 +70,7 @@ class Canvas extends PureComponent {
         onModelAfterTransform: PropTypes.func,
         onModelBeforeTransform: PropTypes.func,
         onRotationPlacementSelect: PropTypes.func,
+        onControlInputTransform: PropTypes.func,
 
         // tmp
         canOperateModel: PropTypes.bool,
@@ -1000,13 +1002,18 @@ class Canvas extends PureComponent {
             return Detector.getWebGLErrorMessage();
         }
         return (
-            <div
-                id="smcanvas"
-                ref={this.node}
-                style={{
-                    backgroundColor: '#F5F5F7'
-                }}
-            />
+            <>
+                <div
+                    id="smcanvas"
+                    ref={this.node}
+                    style={{
+                        backgroundColor: '#F5F5F7'
+                    }}
+                />
+                {
+                    this.props.onControlInputTransform && <ControlsInput onControlInputTransform={this.props.onControlInputTransform} />
+                }
+            </>
         );
     }
 }

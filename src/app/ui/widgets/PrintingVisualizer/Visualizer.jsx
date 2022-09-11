@@ -20,7 +20,6 @@ import i18n from '../../../lib/i18n';
 import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';
 import Canvas from '../../components/SMCanvas';
-import { NumberInput as Input } from '../../components/Input';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as machineActions } from '../../../flux/machine';
@@ -40,11 +39,6 @@ import VisualizerClippingControl from './VisualizerClippingControl';
 import { ModelEvents } from '../../../models/events';
 
 const initQuaternion = new Quaternion();
-const modeSuffix = {
-    [ROTATE_MODE]: '°',
-    [TRANSLATE_MODE]: 'mm',
-    [SCALE_MODE]: '%'
-};
 
 class Visualizer extends PureComponent {
     static propTypes = {
@@ -104,9 +98,6 @@ class Visualizer extends PureComponent {
         primeTowerHeight: PropTypes.number.isRequired,
         printingToolhead: PropTypes.string,
         stopArea: PropTypes.object,
-        controlAxis: PropTypes.array,
-        controlInputValue: PropTypes.object,
-        controlMode: PropTypes.string,
         displayModel: PropTypes.func,
         simplifying: PropTypes.bool,
         setSimplifying: PropTypes.func,
@@ -125,8 +116,6 @@ class Visualizer extends PureComponent {
     visualizerRef = React.createRef();
 
     canvas = React.createRef();
-
-    randomKey = Math.random();
 
     actions = {
         // canvas
@@ -231,7 +220,7 @@ class Visualizer extends PureComponent {
         onRotationPlacementSelect: (userData) => {
             this.props.setRotationPlacementFace(userData);
         },
-        controlInputTransform: (mode, axis, data) => {
+        controlInputTransform: (mode, axis, data, controlInputValue) => {
             if (mode === ROTATE_MODE) {
                 this.props.recordModelBeforeTransform(this.props.modelGroup);
                 const _rotateAxis = new Vector3(axis === 'x' ? 1 : 0, axis === 'y' ? 1 : 0, axis === 'z' ? 1 : 0);
@@ -260,7 +249,7 @@ class Visualizer extends PureComponent {
                     controlValue: {
                         mode,
                         data: {
-                            ...this.props.controlInputValue,
+                            ...controlInputValue,
                             [axis]: Number(data)
                         }
                     }
@@ -608,43 +597,8 @@ class Visualizer extends PureComponent {
                         showContextMenu={this.showContextMenu}
                         primeTowerSelected={primeTowerSelected}
                         transformMode={transformMode}
+                        onControlInputTransform={this.actions.controlInputTransform}
                     />
-                    {!(this.props.controlMode === TRANSLATE_MODE && this.props.controlAxis[0] === 'z') && (
-                        <div className={`canvas-input position-ab border-${this.props.controlAxis[0]} translate-animation-3`} id="control-input" style={{ display: 'none' }}>
-                            <Input
-                                size="small"
-                                placeholder="0"
-                                key={String(this.randomKey)}
-                                value={this.props.controlInputValue ? this.props.controlInputValue[this.props.controlAxis[0]] : null}
-                                suffix={modeSuffix[this.props.controlMode]}
-                                allowUndefined
-                                prefix={`${this.props.controlAxis[0].toUpperCase()}:`}
-                                onPressEnter={(event) => {
-                                    let value = event.target.value;
-                                    if (this.props.controlMode === SCALE_MODE) {
-                                        value = (value <= 0 ? 1 : value);
-                                    }
-                                    this.actions.controlInputTransform(this.props.controlMode, this.props.controlAxis[0], value);
-                                    this.randomKey = Math.random();
-                                }}
-                            />
-                        </div>
-                    )}
-                    {this.props.controlAxis[1] && (
-                        <div className={`canvas-input position-ab border-${this.props.controlAxis[1]} translate-animation-3`} id="control-input-2">
-                            <Input
-                                size="small"
-                                placeholder="0"
-                                value={this.props.controlInputValue ? this.props.controlInputValue[this.props.controlAxis[1]] : null}
-                                suffix={modeSuffix[this.props.controlMode]}
-                                prefix={`${this.props.controlAxis[1].toUpperCase()}:`}
-                                allowUndefined
-                                onPressEnter={(event) => {
-                                    this.actions.controlInputTransform(this.props.controlMode, this.props.controlAxis[1], event.target.value);
-                                }}
-                            />
-                        </div>
-                    )}
                 </div>
                 <ContextMenu
                     ref={this.contextMenuRef}

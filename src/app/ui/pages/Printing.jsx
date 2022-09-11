@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import { useHistory, withRouter } from 'react-router-dom';
-import { find, includes, throttle } from 'lodash';
+import { find, includes } from 'lodash';
 import isElectron from 'is-electron';
 import i18next from 'i18next';
 // import { Steps } from 'intro.js-react';
@@ -19,7 +19,7 @@ import { actions as projectActions } from '../../flux/project';
 import { actions as machineActions } from '../../flux/machine';
 import ProjectLayout from '../layouts/ProjectLayout';
 import MainToolBar from '../layouts/MainToolBar';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_PRINTING, ROTATE_MODE } from '../../constants';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_PRINTING } from '../../constants';
 import { renderPopup, renderWidgetList, logPageView, useUnsavedTitle } from '../utils';
 import { machineStore } from '../../store/local-storage';
 
@@ -315,11 +315,6 @@ function Printing({ location }) {
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [enabledIntro, setEnabledIntro] = useState(null);
     const [initIndex, setInitIndex] = useState(0);
-    // const [rotateInputValue, setRotateInputValue] = useState(null);
-    // const [rotateAxis, setRotateAxis] = useState('x');
-    const [controlInputValue, setControlInputValue] = useState(null);
-    const [controlAxis, setControlAxis] = useState(['x']);
-    const [controlMode, setControlMode] = useState(null);
     const [machineInfo, setMachineInfo] = useState({});
     const [materialInfo, setMaterialInfo] = useState({});
     // for simplify model, if true, visaulizerLeftbar and main tool bar can't be use
@@ -335,20 +330,7 @@ function Printing({ location }) {
     const stepRef = useRef();
     useUnsavedTitle(pageHeadType);
     const [showTipModal, setShowTipModal] = useState(!isNewUser);
-    const updateControlInput = (event) => {
-        const { detail } = event;
-        throttle(() => {
-            setControlMode(detail.controlValue.mode);
-            if (detail.controlValue.mode === ROTATE_MODE && detail.controlValue.axis === null) {
-                setControlInputValue(null);
-            } else {
-                if (detail.controlValue.axis) {
-                    setControlAxis(detail.controlValue.axis.split(''));
-                }
-                setControlInputValue({ ...detail.controlValue.data });
-            }
-        }, 1000)();
-    };
+
     useEffect(() => {
         (async () => {
             if (!location?.state?.initialized) {
@@ -363,10 +345,6 @@ function Printing({ location }) {
         logPageView({
             pathname: '/printing'
         });
-        window.addEventListener('update-control-input', updateControlInput);
-        return () => {
-            window.removeEventListener('update-control-input', updateControlInput);
-        };
     }, []);
     useEffect(() => {
         const readTip = machineStore.get('readTip', false);
@@ -509,9 +487,6 @@ function Printing({ location }) {
             >
                 <PrintingVisualizer
                     widgetId="printingVisualizer"
-                    controlInputValue={controlInputValue}
-                    controlAxis={controlAxis}
-                    controlMode={controlMode}
                     simplifying={simplifying}
                     setSimplifying={setSimplifying}
                 />
