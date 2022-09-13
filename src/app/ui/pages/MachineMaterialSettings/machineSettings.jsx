@@ -6,7 +6,7 @@ import { find, includes, remove } from 'lodash';
 import i18n from '../../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import {
-    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, PRINTING_MANAGER_TYPE_EXTRUDER, getCurrentHeadType, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, LEVEL_ONE_POWER_LASER_FOR_ORIGINAL, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES, MACHINE_TOOL_HEADS, PRINTING_SINGLE_EXTRUDER_HEADTOOL, SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL, STANDARD_CNC_TOOLHEAD_FOR_SM2,
+    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, getCurrentHeadType, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, LEVEL_ONE_POWER_LASER_FOR_ORIGINAL, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES, MACHINE_TOOL_HEADS, PRINTING_SINGLE_EXTRUDER_HEADTOOL, SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL, STANDARD_CNC_TOOLHEAD_FOR_SM2,
     LEFT, RIGHT
 } from '../../../constants';
 import SvgIcon from '../../components/SvgIcon';
@@ -304,7 +304,8 @@ const MachineSettings = forwardRef(({
             activeDiameter = nozzleDiameterList[0];
         }
         if (direction === LEFT && activeDiameter) {
-            dispatch(printingActions.updateDefaultDefinition('quality.normal_other_quality', activeDiameter.value));
+            console.log('activeDiameter', activeDiameter);
+            // dispatch(printingActions.updateDefaultDefinition('quality.normal_other_quality', activeDiameter.value));
         }
 
         return activeDiameter;
@@ -328,15 +329,15 @@ const MachineSettings = forwardRef(({
             : extruderRDefinition;
         const oldNozzleSize = def?.settings?.machine_nozzle_size?.default_value;
         if (oldNozzleSize && oldNozzleSize !== nozzle?.value) {
-            def.settings.machine_nozzle_size.default_value = Number(nozzle.value);
             saveActiveDiameterToStorage(direction, nozzle.label);
             dispatch(
-                printingActions.updateCurrentDefinition({
-                    definitionModel: def,
-                    managerDisplayType: PRINTING_MANAGER_TYPE_EXTRUDER,
+                printingActions.updateMachineDefinition({
+                    paramKey: 'machine_nozzle_size',
+                    paramValue: Number(nozzle.value),
                     direction
                 })
             );
+            console.log('direction, nozzle', direction, nozzle, nozzle.value);
             dispatch(printingActions.destroyGcodeLine());
             dispatch(printingActions.displayModel());
         }

@@ -25,6 +25,7 @@ const allContext = {};
 
 function resolveDefinition(definition, modifiedParams) {
     // make context
+    let shouldReCalcu = true;
     let context = {};
     if (!allContext[definition.definitionId]) {
         context = {
@@ -43,35 +44,38 @@ function resolveDefinition(definition, modifiedParams) {
             defaultExtruderPosition: () => 0
         };
     } else {
+        shouldReCalcu = false;
         context = allContext[definition.definitionId];
     }
 
     const obj = definition.settings;
 
-    for (const key of Object.keys(obj)) {
-        const value = obj[key];
-        if (value.type && (value.type !== 'category' && value.type !== 'mainCategory')) {
-            if (!asistantMapInitialized) {
-                const cloneValue = _.cloneDeep(value);
-                asistantMap.set(key, cloneValue);
-            }
-            Object.defineProperties(context, {
-                [key]: {
-                    get() {
-                        if (hasValue) {
-                            if (!(allValues[affectKey] instanceof Set)) {
-                                allValues[affectKey] = new Set();
-                            }
-                            allValues[affectKey].add(key);
-                        }
-                        return value.default_value;
-                    },
-                    set(newValue) {
-                        value.default_value = newValue;
-                    }
+    if (shouldReCalcu) {
+        for (const key of Object.keys(obj)) {
+            const value = obj[key];
+            if (value.type && (value.type !== 'category' && value.type !== 'mainCategory')) {
+                if (!asistantMapInitialized) {
+                    const cloneValue = _.cloneDeep(value);
+                    asistantMap.set(key, cloneValue);
                 }
-            });
-            context[key] = value.default_value;
+                Object.defineProperties(context, {
+                    [key]: {
+                        get() {
+                            if (hasValue) {
+                                if (!(allValues[affectKey] instanceof Set)) {
+                                    allValues[affectKey] = new Set();
+                                }
+                                allValues[affectKey].add(key);
+                            }
+                            return value.default_value;
+                        },
+                        set(newValue) {
+                            value.default_value = newValue;
+                        }
+                    }
+                });
+                context[key] = value.default_value;
+            }
         }
     }
     for (const [key, insideValue] of asistantMap) {

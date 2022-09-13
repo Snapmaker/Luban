@@ -9,9 +9,7 @@ import {
     PRINTING_MATERIAL_CONFIG_KEYS_SINGLE,
     MACHINE_EXTRUDER_X,
     MACHINE_EXTRUDER_Y,
-    KEY_DEFAULT_CATEGORY_CUSTOM,
-    PRINTING_MANAGER_TYPE_MATERIAL,
-    PRINTING_MANAGER_TYPE_QUALITY
+    KEY_DEFAULT_CATEGORY_CUSTOM
 } from '../../constants';
 import PresetDefinitionModel from './PresetDefinitionModel';
 import { resolveDefinition } from '../../../shared/lib/definitionResolver';
@@ -31,6 +29,21 @@ const nozzleSizeRelationSettingsKeys = [
     'prime_tower_line_width',
     'wall_line_count'
 ];
+const extruderRelationSettingsKeys = [
+    'machine_nozzle_size',
+];
+
+function resolveMachineDefinition(item, changedArray = [], changedArrayWithoutExtruder = []){
+    if (materialRegex.test(item.definitionId)) {
+        resolveDefinition(item, changedArray);
+    }else if (qualityRegex.test(item.definitionId)) {
+        if (item.isDefault && item.definitionId !== 'quality.normal_other_quality') {
+            resolveDefinition(item, changedArrayWithoutExtruder);
+        }else {
+            resolveDefinition(item, changedArray);
+        }
+    }
+}
 
 class DefinitionManager {
     headType = HEAD_CNC;
@@ -45,9 +58,15 @@ class DefinitionManager {
 
     defaultDefinitions = [];
 
+    machineDefinition = null;
+
     materialProfileArr = [];
 
     extruderProfileArr = [];
+
+    changedArray = [];
+
+    changedArrayWithoutExtruder = [];
 
     configPathname = '';
 
@@ -60,7 +79,18 @@ class DefinitionManager {
         // active definition
         const definitionRes = await this.getDefinition('active', false);
         this.activeDefinition = definitionRes;
-
+        if (headType === HEAD_PRINTING) {
+            res = await this.getDefinition('machine');
+            this.machineDefinition = res;
+            this.changedArray = Object.entries(this.machineDefinition.settings).map(([key, setting]) => {
+                const value = setting.default_value;
+                return [key, value]
+            })
+            this.changedArrayWithoutExtruder = this.changedArray
+                .filter(([key]) => {
+                    return !(extruderRelationSettingsKeys.includes(key))
+                })
+        }
         res = await api.profileDefinitions.getDefaultDefinitions(
             this.headType,
             this.configPathname
@@ -73,20 +103,20 @@ class DefinitionManager {
             if (item.i18nName) {
                 item.name = i18n._(item.i18nName);
             }
-            if (materialRegex.test(item.definitionId) || qualityRegex.test(item.definitionId)) {
-                resolveDefinition(item);
-            }
+            resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder);
             return item;
         });
         if (headType === HEAD_PRINTING) {
-            res = await this.getDefinition('machine');
-            this.machineDefinition = res;
 
             res = await this.getDefinition('snapmaker_extruder_0', false);
             this.extruderLDefinition = res;
+            if (this.extruderLDefinition.settings.machine_nozzle_size) {
+                this.extruderLDefinition.settings.machine_nozzle_size.default_value = this.machineDefinition.settings.machine_nozzle_size.default_value;
+            }
 
             res = await this.getDefinition('snapmaker_extruder_1', false);
             this.extruderRDefinition = res;
+
             this.extruderProfileArr = definitionRes.extruderProfileArr;
             this.materialProfileArr = definitionRes.materialProfileArr;
             this.qualityProfileArr = definitionRes.qualityProfileArr;
@@ -127,6 +157,9 @@ class DefinitionManager {
             );
         }
         const definition = res.body.definition;
+        if (materialRegex.test(definitionId) || qualityRegex.test(definitionId)) {
+            resolveMachineDefinition(definition, this.changedArray, this.changedArrayWithoutExtruder)
+        }
         if (definition.i18nCategory) {
             definition.category = i18n._(definition.i18nCategory);
         }
@@ -179,9 +212,7 @@ class DefinitionManager {
             res.body.definitions
         );
         const result = definitions.map((item) => {
-            if ([PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY].includes(prefix)) {
-                resolveDefinition(item);
-            }
+            resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder);
             return item
         }).map(this.fillCustomCategory);
 
@@ -246,6 +277,45 @@ class DefinitionManager {
             actualDefinition,
             this.configPathname
         );
+    }
+
+    async updateMachineDefinition({
+        isNozzleSize,
+        machineDefinition,
+        materialDefinitions,
+        qualityDefinitions
+    }) {
+        this.changedArray = Object.entries(this.machineDefinition.settings).map(([key, setting]) => {
+            const value = setting.default_value;
+            return [key, value]
+        })
+        this.changedArrayWithoutExtruder = this.changedArray
+            .filter(([key]) => {
+                return !(extruderRelationSettingsKeys.includes(key))
+            })
+            console.log('before');
+        await this.updateDefinition(machineDefinition);
+        console.log('after', isNozzleSize, qualityDefinitions, this.machineDefinition.settings, );
+        if (isNozzleSize) {
+            qualityDefinitions.forEach((item) => {
+                resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder)
+            })
+            console.log('qualityDefinitions', qualityDefinitions);
+            return {
+                newQualityDefinitions: qualityDefinitions
+            }
+        }else {
+            materialDefinitions.forEach((item) => {
+                resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder)
+            })
+            qualityDefinitions.forEach((item) => {
+                resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder)
+            })
+            return {
+                newMaterialDefinitions: materialDefinitions,
+                newQualityDefinitions: qualityDefinitions
+            }
+        }
     }
 
     async updateDefaultDefinition(definition) {

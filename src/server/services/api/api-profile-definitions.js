@@ -227,6 +227,7 @@ export const updateDefinition = async (req, res) => {
     if (isPublicProfile(definitionId)) {
         definitionLoader.loadDefinition(headType, definitionId);
     } else {
+        console.log('definitionId, headType', definitionId, headType, series);
         definitionLoader.loadDefinition(headType, definitionId, series);
     }
 
