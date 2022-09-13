@@ -81,6 +81,9 @@ export class DefinitionLoader {
         try {
             const data = fs.readFileSync(filePath, 'utf8');
             json = JSON.parse(data);
+            if (definitionId === 'machine') {
+                console.log('json', json);
+            }
             this.loadJSON(headType, definitionId, json);
         } catch (e) {
             log.error(`JSON Syntax error of: ${definitionId}`);
@@ -424,8 +427,10 @@ export function loadAllSeriesDefinitions(isDefault = false, headType, series = '
 
     if (isDefault) {
         for (const filename of defaultFilenames) {
-            const definitionLoader = loadDefinitionLoaderByFilename(headType, filename, series, isDefault);
-            definitions.push(definitionLoader.toObject());
+            if (filename !== 'machine.def.json' && ConfigV1Regex.test(filename)) {
+                const definitionLoader = loadDefinitionLoaderByFilename(headType, filename, series, isDefault);
+                definitions.push(definitionLoader.toObject());
+            }
         }
     } else {
         const defaultDefinitionLoader = loadDefinitionLoaderByFilename(headType, predefined, series);
