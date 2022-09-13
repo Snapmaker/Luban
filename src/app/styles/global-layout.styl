@@ -17,9 +17,17 @@
 .display-inherit {
     display: inherit;
 }
-
+.visibility-hidden {
+    visibility: hidden;
+}
+.visibility-visible {
+    visibility: visible;
+}
 .overflow-x-hidden {
     overflow-x: hidden
+}
+.overflow-x-auto {
+    overflow-x: auto;
 }
 .overflow-y-hidden {
     overflow-y: hidden
@@ -46,6 +54,7 @@
     position: absolute;
 }
 .position-ab-center {
+    position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -135,6 +144,15 @@
 .min-width-1 {
     min-width: 1px !important;
 }
+.min-width-408 {
+    min-width: $px-grade-204;
+}
+.min-width-356 {
+    min-width: 356px;
+}
+.min-width-528 {
+    min-width: $px-grade-264;
+}
 .height-8 {
     height: $px-grade-4;
     line-height: $px-grade-4;
@@ -159,6 +177,9 @@
 .height-22 {
     height: $px-grade-11;
     line-height: $px-grade-11;
+}
+.line-height-24 {
+    line-height: $px-grade-12;
 }
 .width-24 {
     width: $px-grade-12;
@@ -189,6 +210,9 @@
     height: $px-grade-20;
     line-height: $px-grade-20;
 }
+.height-40-only {
+    height: $px-grade-20;
+}
 .height-48 {
     height: $px-grade-24;
     line-height: $px-grade-24;
@@ -203,6 +227,9 @@
     height: $px-grade-28;
     line-height: $px-grade-28;
 }
+.height-60 {
+    height: $px-grade-30;
+}
 .width-64 {
     width: $px-grade-32;
 }
@@ -215,6 +242,9 @@
 }
 .height-68 {
     height: $px-grade-34;
+}
+.line-height-68 {
+    line-height: $px-grade-34;
 }
 .width-72 {
     width: $px-grade-36;
@@ -378,18 +408,28 @@
 .height-percent-100 {
     height: 100%;
 }
-
+.height-all-minus-164 {
+    height: calc(100vh - 164px);
+}
+.height-all-minus-132 {
+    height: calc(100vh - 132px);
+}
 .height-all-minus-98 {
     height: calc(100vh - 98px);
 }
 .width-all-minus-24 {
     width: calc(100% - 24px)
 }
+.width-all-minus-36 {
+    width: calc(100% - 36px);
+}
 
 .width-all-minus-45 {
     width: calc(100% - 45px);
 }
-
+.width-all-minus-296 {
+    width: calc(100% - 296px);
+}
 .width-all-minus-328 {
     width: calc(100% - 328px);
 }
@@ -399,6 +439,9 @@
 }
 .height-100-percent-minus-56 {
     height: calc(100% - 56px);
+}
+.height-100-percent-minus-40 {
+    height: calc(100% - 40px);
 }
 .width-auto {
     width: auto!important;
@@ -449,6 +492,10 @@
 }
 .max-width-360 {
     max-width: $px-grade-180;
+}
+
+.min-width-264 {
+    min-width: $px-grade-132;
 }
 
 .z-index-top-modal {

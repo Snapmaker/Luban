@@ -44,7 +44,7 @@ const ALL_ICON_NAMES = {
     'support_generate_type': ['SupportLine', 'SupportNone'],
     'adhesion_type': ['AdhesionSkirt', 'AdhesionBrim', 'AdhesionRaft']
 };
-const qualitySettingRank = [
+export const qualitySettingRank = [
     'quality.normal_quality',
     'quality.normal_other_quality',
     'quality.normal_tpu_quality',
