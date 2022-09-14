@@ -683,7 +683,7 @@ const MachineSettings = forwardRef(({
                                             />
                                         ) : (
                                             <span>
-                                                +{i18n._('key-Settings/Nozazle-Add')}
+                                                + {i18n._('key-Settings/Nozazle-Add')}
                                             </span>
                                         )}
                                     </Anchor>

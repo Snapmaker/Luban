@@ -123,6 +123,7 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                 // Movement Mode
                 if (key === 'movement_mode' && value === 'greyscale-dot') {
                     newDefinition.settings.dwell_time.default_value = 5;
+                    newDefinition.settings.direction.default_value = 'Horizontal';
                     newDefinition.settings.fill_interval.default_value = 0.14;
                     newDefinition.settings.jog_speed.default_value = 3000;
                     newDefinition.settings.work_speed.default_value = 2500;

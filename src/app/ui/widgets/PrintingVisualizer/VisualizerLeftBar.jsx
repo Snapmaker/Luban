@@ -7,6 +7,7 @@ import UniApi from '../../../lib/uni-api';
 import styles from './styles.styl';
 import { actions as printingActions } from '../../../flux/printing';
 import modal from '../../../lib/modal';
+import ThreeGroup from '../../../models/ThreeGroup';
 import SvgIcon from '../../components/SvgIcon';
 import RotationAnalysisOverlay from './Overlay/RotationAnalysisOverlay';
 import EditSupportOverlay from './Overlay/EditSupportOverlay';
@@ -143,10 +144,24 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
             setShowEditSupportModal(true);
         }, [setShowEditSupportModal, fitViewIn]),
         isNonUniformScaled: () => {
-            const { scaleX, scaleY, scaleZ } = selectedModelArray[0].transformation;
-            return Math.abs(Math.abs(scaleX) - Math.abs(scaleY)) > EPSILON
-                || Math.abs(Math.abs(scaleX) - Math.abs(scaleZ)) > EPSILON
-                || Math.abs(Math.abs(scaleY) - Math.abs(scaleZ)) > EPSILON;
+            if (selectedModelArray.length === 1) {
+                if (selectedModelArray[0] instanceof ThreeGroup) {
+                    return selectedModelArray[0].children.some(modelItem => {
+                        const { scaleX, scaleY, scaleZ } = modelItem.transformation;
+                        return Math.abs(Math.abs(scaleX) - Math.abs(scaleY)) > EPSILON
+                            || Math.abs(Math.abs(scaleX) - Math.abs(scaleZ)) > EPSILON
+                            || Math.abs(Math.abs(scaleY) - Math.abs(scaleZ)) > EPSILON;
+                    });
+                } else {
+                    return false;
+                }
+            }
+            return selectedModelArray.some(modelItem => {
+                const { scaleX, scaleY, scaleZ } = modelItem.transformation;
+                return Math.abs(Math.abs(scaleX) - Math.abs(scaleY)) > EPSILON
+                    || Math.abs(Math.abs(scaleX) - Math.abs(scaleZ)) > EPSILON
+                    || Math.abs(Math.abs(scaleY) - Math.abs(scaleZ)) > EPSILON;
+            });
         },
     };
 

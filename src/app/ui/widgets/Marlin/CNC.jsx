@@ -23,6 +23,7 @@ class CNC extends PureComponent {
         headStatus: PropTypes.bool,
         workflowStatus: PropTypes.string,
         toolHead: PropTypes.string.isRequired,
+        addConsoleLogs: PropTypes.func.isRequired,
         cncCurrentSpindleSpeed: PropTypes.number.isRequired,
         cncTargetSpindleSpeed: PropTypes.number.isRequired
     };
@@ -37,9 +38,11 @@ class CNC extends PureComponent {
                 headStatus: this.state.headStatus,
                 speed: this.props.cncTargetSpindleSpeed,
                 toolHead: this.props.toolHead,
-            }).once(CONNECTION_SWITCH_CNC, (result) => {
-                console.log(`${CONNECTION_SWITCH_CNC} ok, get${JSON.stringify(result)}`);
-            });
+            }, (result) => {
+                if (result) {
+                    this.props.addConsoleLogs(result);
+                }
+            }).once(CONNECTION_SWITCH_CNC);
             this.setState({
                 headStatus: !this.state.headStatus
             });
@@ -47,9 +50,11 @@ class CNC extends PureComponent {
         updateToolHeadSpeed: (speed) => {
             controller.emitEvent(CONNECTION_UPDATE_TOOLHEAD_SPEED, {
                 speed: speed
-            }).once(CONNECTION_UPDATE_TOOLHEAD_SPEED, (result) => {
-                console.log(`${CONNECTION_UPDATE_TOOLHEAD_SPEED} ok, get${JSON.stringify(result)}`);
-            });
+            }, (result) => {
+                if (result) {
+                    this.props.addConsoleLogs(result);
+                }
+            }).once(CONNECTION_UPDATE_TOOLHEAD_SPEED);
             // this.setState({ toolHeadSpeepd: speed });
         },
         isPrinting: () => {
@@ -150,7 +155,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode))
+        executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode)),
+        addConsoleLogs: (gcode, context) => dispatch(machineActions.addConsoleLogs(gcode, context)),
     };
 };
 

@@ -218,7 +218,7 @@ const INITIAL_STATE = {
     // Whether hide console when machine is working
     shouldHideConsole: true,
     promptDamageModel: true,
-    enable3dpLivePreview: true,
+    enable3dpLivePreview: false,
     // connect info
     moduleStatusList: {},
     nozzleSizeList: [],

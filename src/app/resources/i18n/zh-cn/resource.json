@@ -780,7 +780,7 @@
     "Y Endstop in Positive Direction": "",
     "Z Endstop in Positive Direction": "",
     "Z Hop After Extruder Switch": "挤出机切换后的 Z 抬升",
-    "Z Hop After Extruder Switch Height": "",
+    "Z Hop After Extruder Switch Height": "挤出机切换后的 Z 抬升高度",
     "Z Hop Height": "Z 抬升高度",
     "Z Hop Only Over Printed Parts": "仅在已打印部分上 Z 抬升",
     "Z Hop Speed": "Z 抬升速度",

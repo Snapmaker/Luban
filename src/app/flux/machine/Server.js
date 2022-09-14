@@ -125,10 +125,10 @@ export class Server extends events.EventEmitter {
             controller
                 .emitEvent(CONNECTION_EXECUTE_GCODE, { gcode, context, cmd })
                 .once(CONNECTION_EXECUTE_GCODE, (gcodeArray) => {
-                    resolve();
                     if (gcodeArray) {
                         dispatch(baseActions.addConsoleLogs(gcodeArray));
                     }
+                    resolve();
                 });
         });
     }
@@ -188,10 +188,15 @@ export class Server extends events.EventEmitter {
     }
 
     goHome(hasHomingModel, callback) {
-        controller.emitEvent(CONNECTION_GO_HOME, { hasHomingModel }, callback);
-        // .once(CONNECTION_GO_HOME, (options) => {
-        //     callback && callback(options);
-        // });
+        controller.emitEvent(CONNECTION_GO_HOME, { hasHomingModel })
+            .on(CONNECTION_EXECUTE_GCODE, (gcodeArray) => {
+                if (gcodeArray) {
+                    if (gcodeArray[0] === 'G28') {
+                        callback && callback();
+                    }
+                    dispatch(machineActions.addConsoleLogs(gcodeArray));
+                }
+            });
     }
 
     setToken(token) {

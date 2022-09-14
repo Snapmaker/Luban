@@ -9,6 +9,7 @@ import { actions as printingActions } from '../../../../flux/printing';
 /* eslint-disable-next-line import/no-cycle */
 import { CancelButton } from '../VisualizerLeftBar';
 import modal from '../../../../lib/modal';
+import ThreeGroup from '../../../../models/ThreeGroup';
 import { NumberInput as Input } from '../../../components/Input';
 import { Button } from '../../../components/Buttons';
 import SvgIcon from '../../../components/SvgIcon';
@@ -18,13 +19,24 @@ import { logTransformOperation } from '../../../../lib/gaEvent';
 import styles from './styles.styl';
 
 const isNonUniformScaled = (autoRotateModelArray) => {
-    const result = autoRotateModelArray.every(modelItem => {
+    if (autoRotateModelArray.length === 1) {
+        if (autoRotateModelArray[0] instanceof ThreeGroup) {
+            return autoRotateModelArray[0].children.some(modelItem => {
+                const { scaleX, scaleY, scaleZ } = modelItem.transformation;
+                return Math.abs(Math.abs(scaleX) - Math.abs(scaleY)) > EPSILON
+                    || Math.abs(Math.abs(scaleX) - Math.abs(scaleZ)) > EPSILON
+                    || Math.abs(Math.abs(scaleY) - Math.abs(scaleZ)) > EPSILON;
+            });
+        } else {
+            return false;
+        }
+    }
+    return autoRotateModelArray.some(modelItem => {
         const { scaleX, scaleY, scaleZ } = modelItem.transformation;
         return Math.abs(Math.abs(scaleX) - Math.abs(scaleY)) > EPSILON
             || Math.abs(Math.abs(scaleX) - Math.abs(scaleZ)) > EPSILON
             || Math.abs(Math.abs(scaleY) - Math.abs(scaleZ)) > EPSILON;
     });
-    return result;
 };
 
 const rotateOnlyForUniformScale = (rotateFn, autoRotateModelArray) => {

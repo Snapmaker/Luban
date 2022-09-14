@@ -356,9 +356,8 @@ function WifiTransport({ widgetActions, controlActions }) {
                     controller.emitEvent(CONNECTION_MATERIALTHICKNESS_ABORT);
                 });
                 controller.emitEvent(CONNECTION_MATERIALTHICKNESS, args)
-                    .once(CONNECTION_MATERIALTHICKNESS, ({ status, thickness, err }) => {
-                        // TODO: if status is false, will not start print in this logic
-                        if (err || !status) {
+                    .once(CONNECTION_MATERIALTHICKNESS, ({ data: { status, thickness }, msg }) => {
+                        if (msg || !status) {
                             modalSmallHOC({
                                 title: i18n._('key-Workspace/WifiTransport-Failed to measure thickness.'),
                                 text: i18n._('key-Workspace/WifiTransport-Thickness Measurement failed. Please retry.'),
