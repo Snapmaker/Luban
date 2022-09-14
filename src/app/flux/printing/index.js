@@ -3949,7 +3949,7 @@ export const actions = {
                         dispatch(actions.destroyGcodeLine());
                         resolve();
                     })
-                } else if (primeTowerTag && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+                } else if (primeTowerTag) {
                     modelGroup.primeTower && modelGroup.primeTower.updateTowerTransformation(transformation);
                     resolve();
                 } else {
@@ -4582,6 +4582,7 @@ export const actions = {
 
     generateSupports: (models, angle) => async (dispatch, getState) => {
         const { progressStatesManager } = getState().printing;
+        const { size } = getState().machine;
 
         if (!models || models.length === 0) {
             return;
@@ -4605,6 +4606,7 @@ export const actions = {
         const params = await dispatch(
             actions.uploadModelsForSupport(models, angle)
         );
+        params.size = size;
         controller.generateSupport(params);
     },
 

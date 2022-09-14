@@ -360,8 +360,10 @@ const initPool = async () => {
             const subscriber = pool.events()
                 .filter(event => event.type === PoolEventType.initialized)
                 .subscribe(() => {
-                    // Pool initialized
                     resolve();
+                    if (!preparingPool) {
+                        destroyPool(true);
+                    }
                     preparingPool = false;
                     subscriber.unsubscribe();
                 });

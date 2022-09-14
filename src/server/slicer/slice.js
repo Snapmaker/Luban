@@ -420,7 +420,8 @@ export function repairModel(actions, params) {
     const {
         uploadName,
         modelID,
-        size
+        size,
+        outputName
     } = params;
 
     const extname = path.extname(uploadName);
@@ -430,8 +431,9 @@ export function repairModel(actions, params) {
     );
 
     const modeltPath = `${DataStorage.tmpDir}/${uploadName}`;
-    const outputPath = `${DataStorage.tmpDir}/${modelName}_repaired`;
-    if (fs.existsSync(outputPath)) {
+    const _outputName = outputName || `${modelName}_repaired`;
+    const outputPath = `${DataStorage.tmpDir}/${_outputName}`;
+    if ((outputName !== uploadName) && fs.existsSync(outputPath)) {
         fs.unlinkSync(outputPath);
     }
     let stepCount = 1;
@@ -456,7 +458,7 @@ export function repairModel(actions, params) {
                     if (item.indexOf('Step:') !== -1) {
                         actions.next({
                             type: 'progress',
-                            progress: stepCount / 7
+                            progress: stepCount / 8
                         });
                         stepCount++;
                     }
@@ -467,7 +469,7 @@ export function repairModel(actions, params) {
                         actions.next({
                             type: 'error',
                             modelID,
-                            uploadName: `${modelName}_repaired.stl`
+                            uploadName: _outputName
                         });
                         actions.error(err);
                     } else {
@@ -476,7 +478,7 @@ export function repairModel(actions, params) {
                             actions.next({
                                 type: 'success',
                                 modelID,
-                                uploadName: `${modelName}_repaired.stl`
+                                uploadName: _outputName
                             });
                             actions.complete();
                         }

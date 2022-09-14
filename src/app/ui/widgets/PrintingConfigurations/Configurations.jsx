@@ -119,9 +119,11 @@ export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition
                         segmentedDisplay = false;
                         iconName = ALL_ICON_NAMES[paramName][3];
                     }
-                    Object.entries(modelStructure?.options).forEach(([value, label]) => {
-                        selectOptions.push({ value, label });
-                    });
+                    if (modelStructure?.options) {
+                        Object.entries(modelStructure.options).forEach(([value, label]) => {
+                            selectOptions.push({ value, label });
+                        });
+                    }
                 }
 
                 let descriptionDom = null;
@@ -845,9 +847,9 @@ function Configurations() {
                                                     }
                                                     defaultValue={{
                                                         value:
-                                                                selectedSettingDefaultValue
-                                                                && selectedSettingDefaultValue[key]
-                                                                    .default_value
+                                                            selectedSettingDefaultValue
+                                                            && selectedSettingDefaultValue[key]
+                                                                .default_value
                                                     }}
                                                 />
                                             );

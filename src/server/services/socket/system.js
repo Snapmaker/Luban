@@ -1,7 +1,8 @@
 import { freemem } from 'os';
+import isElectron from 'is-electron';
 
 const getSystemFreeMemorySize = (actions) => {
-    if (process.getSystemMemoryInfo) {
+    if (isElectron) {
         actions.next(process.getSystemMemoryInfo().free);
     } else {
         actions.next(freemem() / 1024);

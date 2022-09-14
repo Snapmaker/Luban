@@ -313,7 +313,7 @@ class Controls extends EventEmitter {
                     const coord = this.getMouseCoord(event);
                     this.ray.setFromCamera(coord, this.camera);
                     this.ray.firstHitOnly = true;
-                    const res = this.ray.intersectObject(this.selectedGroup, true);
+                    const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
                     if (res.length) {
                         this.state = STATE.SUPPORT;
                         this.supportActions.applyBrush(res);
@@ -379,7 +379,7 @@ class Controls extends EventEmitter {
         if (this.state === STATE.SUPPORT) {
             this.ray.setFromCamera(coord, this.camera);
             this.ray.firstHitOnly = true;
-            const res = this.ray.intersectObject(this.selectedGroup, true);
+            const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
             if (res.length) {
                 this.supportActions.moveSupport(res);
             }
@@ -426,7 +426,7 @@ class Controls extends EventEmitter {
                     const coord = this.getMouseCoord(event);
                     this.ray.setFromCamera(coord, this.camera);
                     this.ray.firstHitOnly = true;
-                    const res = this.ray.intersectObject(this.selectedGroup, true);
+                    const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
                     if (res.length) {
                         this.supportActions.applyBrush(res);
                     }
