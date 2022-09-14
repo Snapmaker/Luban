@@ -365,6 +365,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                             });
                         } else if (status) {
                             actions.onChangeMaterialThickness(thickness);
+                            actions.onChangeMaterialThicknessSource('auto');
                             controlActions.onCallBackRun();
                         }
                     });
@@ -427,6 +428,10 @@ function WifiTransport({ widgetActions, controlActions }) {
                 value = 0;
             }
             dispatch(machineActions.updateMaterialThickness(value));
+        },
+
+        onChangeMaterialThicknessSource: (value) => {
+            dispatch(machineActions.updateMaterialThicknessSource(value));
         },
 
         onChangeFourAxisMaterialThickness: async (value) => {

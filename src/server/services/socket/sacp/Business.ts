@@ -127,6 +127,24 @@ export default class Business extends Dispatcher {
         });
     }
 
+    public async subscribeGetPrintCurrentLineNumber({ interval = 1000 }, callback: ResponseCallback) {
+        return this.subscribe(0xac, 0xa0, interval, callback).then(({ response, packet }) => {
+            return { code: response.result, packet, data: {} };
+        });
+    }
+
+    public async unSubscribeGetPrintCurrentLineNumber(callback: ResponseCallback) {
+        return this.unsubscribe(0xac, 0xa0, callback).then(({ response, packet }) => {
+            return { code: response.result, packet, data: {} };
+        });
+    }
+
+    public async subscribeGetPrintingTime({ interval = 1000 }, callback: ResponseCallback) {
+        return this.subscribe(0xac, 0xa5, interval, callback).then(({ response, packet }) => {
+            return { code: response.result, packet, data: {} };
+        });
+    }
+
     // set Handler API list for RTO
     // 0x10, 0x05
     public handlerSwitchNozzleReturn(callback: any) {
@@ -296,7 +314,6 @@ export default class Business extends Dispatcher {
 
         coordinateInfos.forEach(item => {
             const m = new CoordinateInfo(item.key, item.value).toBuffer();
-            console.log('buffer', m);
             buffer = Buffer.concat([buffer, m]);
         });
         return this.send(0x01, 0x32, PeerId.CONTROLLER, buffer);
@@ -724,7 +741,8 @@ export default class Business extends Dispatcher {
             callback && callback({ lineNumber: batchBufferInfo.lineNumber, length: content.length, elapsedTime });
         });
         this.setHandler(0xac, 0x01, (request: RequestData) => {
-            console.log({ request });
+            console.log('0xac, 0x01', request);
+            this.ack(0xac, 0x01, request.packet, Buffer.alloc(1, 0));
         });
     }
 
@@ -742,6 +760,12 @@ export default class Business extends Dispatcher {
 
     public async subscribeCncSpeedState({ interval = 1000 }, callback: ResponseCallback) {
         return this.subscribe(0x11, 0xa0, interval, callback).then(({ response, packet }) => {
+            return { response, packet, data: {} };
+        });
+    }
+
+    public async subscribeLaserPowerState({ interval = 1000 }, callback: ResponseCallback) {
+        return this.subscribe(0x12, 0xa1, interval, callback).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
     }
