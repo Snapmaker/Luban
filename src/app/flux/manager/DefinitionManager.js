@@ -9,13 +9,13 @@ import {
     PRINTING_MATERIAL_CONFIG_KEYS_SINGLE,
     MACHINE_EXTRUDER_X,
     MACHINE_EXTRUDER_Y,
+    MATERIAL_REGEX,
+    QUALITY_REGEX,
     KEY_DEFAULT_CATEGORY_CUSTOM
 } from '../../constants';
 import PresetDefinitionModel from './PresetDefinitionModel';
 import { resolveDefinition } from '../../../shared/lib/definitionResolver';
 
-const materialRegex = /^material.*/;
-const qualityRegex = /^quality.*/;
 const nozzleSizeRelationSettingsKeys = [
     'wall_line_width_0',
     'wall_line_width_x',
@@ -34,9 +34,9 @@ const extruderRelationSettingsKeys = [
 ];
 
 function resolveMachineDefinition(item, changedArray = [], changedArrayWithoutExtruder = []){
-    if (materialRegex.test(item.definitionId)) {
+    if (MATERIAL_REGEX.test(item.definitionId)) {
         resolveDefinition(item, changedArray);
-    }else if (qualityRegex.test(item.definitionId)) {
+    }else if (QUALITY_REGEX.test(item.definitionId)) {
         if (item.isDefault && item.definitionId !== 'quality.normal_other_quality') {
             resolveDefinition(item, changedArrayWithoutExtruder);
         }else {
@@ -157,7 +157,7 @@ class DefinitionManager {
             );
         }
         const definition = res.body.definition;
-        if (materialRegex.test(definitionId) || qualityRegex.test(definitionId)) {
+        if (MATERIAL_REGEX.test(definitionId) || QUALITY_REGEX.test(definitionId)) {
             resolveMachineDefinition(definition, this.changedArray, this.changedArrayWithoutExtruder)
         }
         if (definition.i18nCategory) {

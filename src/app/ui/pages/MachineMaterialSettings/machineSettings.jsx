@@ -303,10 +303,6 @@ const MachineSettings = forwardRef(({
         if (!activeDiameter) {
             activeDiameter = nozzleDiameterList[0];
         }
-        if (direction === LEFT && activeDiameter) {
-            console.log('activeDiameter', activeDiameter);
-            // dispatch(printingActions.updateDefaultDefinition('quality.normal_other_quality', activeDiameter.value));
-        }
 
         return activeDiameter;
     };
@@ -337,7 +333,6 @@ const MachineSettings = forwardRef(({
                     direction
                 })
             );
-            console.log('direction, nozzle', direction, nozzle, nozzle.value);
             dispatch(printingActions.destroyGcodeLine());
             dispatch(printingActions.displayModel());
         }
