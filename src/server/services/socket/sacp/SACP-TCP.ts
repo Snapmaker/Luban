@@ -1,5 +1,6 @@
 import net from 'net';
 import fs from 'fs';
+import readline from 'readline';
 import path from 'path';
 import crypto from 'crypto';
 import os from 'os';
@@ -359,7 +360,6 @@ class SocketTCP extends SocketBASE {
 
                     const zMove = new MovementInstruction(MoveDirection.Z1, 0);
                     await this.sacpClient.moveAbsolutely([zMove], 0);
-
                     this.socket && this.socket.emit(eventName, { data: result });
                 });
             } catch (e) {
@@ -379,7 +379,25 @@ class SocketTCP extends SocketBASE {
         await this.laserSetWorkHeight({ toolHead: toolHead, materialThickness: this.thickness });
     }
 
-    public uploadGcodeFile = (gcodeFilePath: string, type: string, callback: (msg: string, data: boolean) => void) => {
+    public uploadGcodeFile = (gcodeFilePath: string, type: string, renderName: string, callback: (msg: string, data: boolean) => void) => {
+        this.totalLine = null;
+        this.estimatedTime = null;
+        const rl = readline.createInterface({
+            input: fs.createReadStream(gcodeFilePath),
+            output: process.stdout,
+            terminal: false
+        });
+        rl.on('line', (data) => {
+            if (includes(data, ';file_total_lines')) {
+                this.totalLine = parseFloat(data.slice(18));
+            }
+            if (includes(data, ';estimated_time(s)')) {
+                this.estimatedTime = parseFloat(data.slice(19));
+            }
+            if (includes(data, ';')) {
+                rl.close();
+            }
+        });
         this.sacpClient.uploadFile(gcodeFilePath).then(({ response }) => {
             let msg = '', data = false;
             if (response.result === 0) {
@@ -404,10 +422,12 @@ class SocketTCP extends SocketBASE {
         const md5 = crypto.createHash('md5');
         const gcodeFullPath = path.resolve(DataStorage.tmpDir, uploadName);
         const readStream = fs.createReadStream(gcodeFullPath);
+        this.sacpClient.subscribeGetPrintCurrentLineNumber({ interval: 1000 }, this.subscribeGetCurrentGcodeLineCallback);
         readStream.on('data', buf => {
             md5.update(buf);
         });
         readStream.once('end', async () => {
+            this.startTime = new Date().getTime();
             this.sacpClient.startScreenPrint({
                 headType: type, filename: uploadName, hash: md5.digest().toString('hex')
             }).then((res) => {

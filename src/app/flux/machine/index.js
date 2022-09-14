@@ -24,7 +24,8 @@ import {
     LEFT_EXTRUDER,
     HEAD_PRINTING,
     getMachineSeriesWithToolhead,
-    RIGHT_EXTRUDER
+    RIGHT_EXTRUDER,
+    CONNECTION_HEAD_BEGIN_WORK
 } from '../../constants';
 
 import i18n from '../../lib/i18n';
@@ -177,6 +178,7 @@ const INITIAL_STATE = {
     // laser print mode
     isLaserPrintAutoMode: true,
     materialThickness: 1.5,
+    materialThicknessSource: 'user',
 
     gcodePrintingInfo: {
         sent: 0,
@@ -486,13 +488,17 @@ export const actions = {
                     nozzleRightTargetTemperature,
                     nozzleRightTemperature,
                     gcodePrintingInfo,
-                    fileName,
-                    currentWorkNozzle
+                    currentWorkNozzle,
+                    cncTargetSpindleSpeed,
+                    cncCurrentSpindleSpeed,
+                    fileName
                 } = state;
                 dispatch(baseActions.updateState({
                     laser10WErrorState,
                     isEmergencyStopped,
-                    currentWorkNozzle: !currentWorkNozzle ? LEFT_EXTRUDER : RIGHT_EXTRUDER
+                    currentWorkNozzle: !currentWorkNozzle ? LEFT_EXTRUDER : RIGHT_EXTRUDER,
+                    cncTargetSpindleSpeed,
+                    cncCurrentSpindleSpeed
                 }));
                 if (!isNil(fileName)) {
                     dispatch(baseActions.updateState({
@@ -782,6 +788,13 @@ export const actions = {
                         homingModal: isHoming
                     }));
                 }
+            },
+            'connection:headBeginWork': (options) => {
+                const { gcodeFile } = getState().workspace;
+                controller.emitEvent(CONNECTION_HEAD_BEGIN_WORK, {
+                    headType: options.headType,
+                    uploadName: gcodeFile.uploadName
+                });
             }
         };
 
@@ -972,6 +985,9 @@ export const actions = {
 
     updateMaterialThickness: (materialThickness) => (dispatch) => {
         dispatch(baseActions.updateState({ materialThickness }));
+    },
+    updateMaterialThicknessSource: (source) => (dispatch) => {
+        dispatch(baseActions.updateState({ materialThicknessSource: source }));
     },
     updatePause3dpStatus: (pause3dpStatus) => (dispatch) => {
         dispatch(baseActions.updateState({ pause3dpStatus }));

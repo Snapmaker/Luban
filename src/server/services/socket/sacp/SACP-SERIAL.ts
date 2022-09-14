@@ -22,7 +22,7 @@ class SocketSerialNew extends SocketBASE {
         path: string
     }[];
 
-    public startTime: number;
+    // public startTime: number;
 
     // public sent: number;
 
@@ -131,6 +131,7 @@ class SocketSerialNew extends SocketBASE {
 
     public startGcode = async (options: EventOptions) => {
         const { headType } = options;
+        log.info(`serial start gcode, ${headType}`);
         let type = 0;
         if (headType === HEAD_PRINTING) {
             type = 0;

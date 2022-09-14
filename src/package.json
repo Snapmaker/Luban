@@ -70,7 +70,7 @@
     "shortid": "2.2.16",
     "snapmaker-luban-engine": "^0.9.1",
     "snapmaker-lunar": "^1.1.1",
-    "snapmaker-sacp-sdk": "0.0.10",
+    "snapmaker-sacp-sdk": "0.0.11-alpha.0",
     "socket.io": "4.0.2",
     "socketio-jwt": "4.5.1",
     "spawn-default-shell": "2.0.0",

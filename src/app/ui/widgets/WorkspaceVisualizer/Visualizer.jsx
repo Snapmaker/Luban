@@ -83,6 +83,7 @@ class Visualizer extends PureComponent {
 
         isLaserPrintAutoMode: PropTypes.bool.isRequired,
         materialThickness: PropTypes.number.isRequired,
+        materialThicknessSource: PropTypes.string.isRequired,
         laserFocalLength: PropTypes.number,
         background: PropTypes.object.isRequired,
         workPosition: PropTypes.object.isRequired,
@@ -270,6 +271,7 @@ class Visualizer extends PureComponent {
                 workflowStatus,
                 headType, isLaserPrintAutoMode,
                 materialThickness,
+                materialThicknessSource,
                 isRotate,
                 toolHead,
                 gcodeFile,
@@ -288,6 +290,7 @@ class Visualizer extends PureComponent {
                     workflowStatus,
                     isLaserPrintAutoMode,
                     materialThickness,
+                    materialThicknessSource,
                     isRotate,
                     toolHead,
                     // for wifi indiviual
@@ -395,7 +398,6 @@ class Visualizer extends PureComponent {
                         // experience params for retraction: F3000, E->(E-5)
                         const targetE = Math.max(pos.e - 5, 0);
                         const targetZ = Math.min(pos.z + 30, this.props.size.z);
-                        console.log({ targetE, targetZ });
                         const gcode = [
                             `G1 E${targetE}\n`,
                             `G1 Z${targetZ}\n`,
@@ -850,6 +852,7 @@ const mapStateToProps = (state) => {
         isLaserPrintAutoMode: machine.isLaserPrintAutoMode,
         // type
         materialThickness: machine.materialThickness,
+        materialThicknessSource: machine.materialThicknessSource,
         background: laser.background,
         isRotate: workspace.isRotate,
         // type

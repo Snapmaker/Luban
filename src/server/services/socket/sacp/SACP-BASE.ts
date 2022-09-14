@@ -1,8 +1,8 @@
 import { includes, find } from 'lodash';
 import net from 'net';
 import { readString, readUint8 } from 'snapmaker-sacp-sdk/helper';
-import { GetHotBed, CoordinateInfo, CoordinateSystemInfo, ExtruderInfo } from 'snapmaker-sacp-sdk/models';
-import GetWorkSpeed from 'snapmaker-sacp-sdk/models/GetWorkSpeed';
+import { GetHotBed, CoordinateInfo, CoordinateSystemInfo, ExtruderInfo, CncSpeedState, LaserTubeState, GcodeCurrentLine } from 'snapmaker-sacp-sdk/models';
+// import GetWorkSpeed from 'snapmaker-sacp-sdk/models/GetWorkSpeed';
 import { ResponseCallback } from 'snapmaker-sacp-sdk';
 import { Direction } from 'snapmaker-sacp-sdk/models/CoordinateInfo';
 import Business, { CoordinateType } from './Business';
@@ -15,7 +15,7 @@ import {
     LOAD_FIMAMENT, UNLOAD_FILAMENT
 } from '../../../../app/constants';
 import { EventOptions, MarlinStateData } from '../types';
-import { SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 } from '../../../constants';
+import { SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2, COMPLUTE_STATUS } from '../../../constants';
 
 const log = logger('lib:SocketBASE');
 
@@ -36,6 +36,12 @@ class SocketBASE {
 
     public subscribeCoordinateCallback: ResponseCallback;
 
+    public subscribeCncSpeedStateCallback: ResponseCallback;
+
+    public subscribeLaserPowerCallback: ResponseCallback;
+
+    public subscribeGetCurrentGcodeLineCallback: ResponseCallback;
+
     private filamentAction: boolean = false;
 
     private filamentActionType: string = 'load';
@@ -45,6 +51,19 @@ class SocketBASE {
     public currentWorkNozzle: number;
 
     private resumeGcodeCallback: any = null;
+
+    public readyToWork: boolean = false;
+
+    public headType: string = HEAD_PRINTING;
+
+    public cncTargetSpeed: number;
+
+    // gcode total lines
+    public totalLine: number | null = null;
+
+    public estimatedTime: number | null = null;
+
+    public startTime: any;
 
     public startHeartbeatBase = (sacpClient: Business, client?: net.Socket, isWifiConnection?: boolean) => {
         this.sacpClient = sacpClient;
@@ -107,12 +126,15 @@ class SocketBASE {
                     }
                     if (includes(PRINTING_MODULE, module.moduleId)) {
                         stateData.headType = HEAD_PRINTING;
+                        this.headType = HEAD_PRINTING;
                         stateData.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
                     } else if (includes(LASER_MODULE, module.moduleId)) {
                         stateData.headType = HEAD_LASER;
+                        this.headType = HEAD_LASER;
                         stateData.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
                     } else if (includes(CNC_MODULE, module.moduleId)) {
                         stateData.headType = HEAD_CNC;
+                        this.headType = HEAD_CNC;
                         stateData.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
                     }
 
@@ -202,12 +224,58 @@ class SocketBASE {
         this.sacpClient.subscribeCurrentCoordinateInfo({ interval: 1000 }, this.subscribeCoordinateCallback).then(res => {
             log.info(`subscribe coordination success: ${res}`);
         });
+        this.subscribeCncSpeedStateCallback = (data) => {
+            const cncSpeedState = new CncSpeedState().fromBuffer(data.response.data);
+            const { targetSpeed, currentSpeed } = cncSpeedState;
+            this.cncTargetSpeed = targetSpeed;
+            stateData = {
+                ...stateData,
+                cncTargetSpindleSpeed: targetSpeed,
+                cncCurrentSpindleSpeed: currentSpeed
+            }
+        };
+        this.sacpClient.subscribeCncSpeedState({ interval: 1000 }, this.subscribeCncSpeedStateCallback).then(res => {
+            log.info(`subscribe cnc speed state success: ${res}`);
+        });
+        this.subscribeLaserPowerCallback = (data) => {
+            const laserTubeState = new LaserTubeState().fromBuffer(data.response.data.slice(1));
+            const { currentPower: laserCurrentPower, targetPower: laserTargetPower } = laserTubeState;
+            stateData = {
+                ...stateData,
+                laserPower: laserCurrentPower,
+                laserTargetPower
+            }
+        };
+        this.sacpClient.subscribeLaserPowerState({ interval: 1000 }, this.subscribeLaserPowerCallback).then(res => {
+            log.info(`subscribe laser power state success: ${res}`);
+        });
+        this.subscribeGetCurrentGcodeLineCallback = ({ response }) => {
+            const { currentLine } = new GcodeCurrentLine().fromBuffer(response.data);
+            const progress = currentLine / this.totalLine;
+            const sliceTime = new Date().getTime() - this.startTime;
+            const remainingTime = (1 - (progress)) * progress * (this.estimatedTime * 1000) / progress + (1 - progress) * (1 - progress) * sliceTime;
+            const data = {
+                sent: currentLine,
+                total: this.totalLine,
+                elapsedTime: sliceTime,
+                estimatedTime: this.estimatedTime * 1000,
+                progress: currentLine === this.totalLine ? 1 : progress,
+                remainingTime: remainingTime,
+                printStatus: currentLine === this.totalLine ? COMPLUTE_STATUS : ''
+            }
+            this.socket && this.socket.emit('sender:status', ({ data }));
+        };
     };
 
     public setROTSubscribeApi = () => {
         log.info('ack ROT api');
         this.sacpClient.handlerCoordinateMovementReturn((data) => {
             this.socket && this.socket.emit('move:status', { isMoving: false });
+            if (this.readyToWork) {
+                log.info('ready to work');
+                this.socket && this.socket.emit('connection:headBeginWork', { headType: this.headType });
+                this.readyToWork = false;
+            }
         });
         this.sacpClient.handlerSwitchNozzleReturn((data) => {
             if (this.filamentAction && data === 0) {
@@ -288,7 +356,7 @@ class SocketBASE {
         }
     }
 
-    public coordinateMove = async ({ moveOrders, jogSpeed, headType }) => {
+    public coordinateMove = async ({ moveOrders, jogSpeed, headType, beforeGcodeStart = false }) => {
         log.info(`coordinate: ${JSON.stringify(moveOrders)}, ${headType}`);
         this.socket && this.socket.emit('move:status', { isMoving: true });
         const distances = [];
@@ -297,6 +365,7 @@ class SocketBASE {
             directions.push(COORDINATE_AXIS[item.axis]);
             distances.push(item.distance);
         });
+        this.readyToWork = beforeGcodeStart;
         await this.sacpClient.requestAbsoluteCooridateMove(directions, distances, jogSpeed, CoordinateType.MACHINE).then(res => {
             log.info(`Coordinate Move: ${res.response.result}`);
             this.socket && this.socket.emit('serialport:read', { data: res.response.result === 0 ? 'CANRUNNING' : 'WARNING' });
@@ -400,7 +469,6 @@ class SocketBASE {
                 if (response.result === 0) {
                     this.filamentAction = true;
                     this.filamentActionType = UNLOAD_FILAMENT;
-                    console.log(eventName, response);
                 } else {
                     this.filamentAction = false;
                     this.socket && this.socket.emit(eventName);
@@ -438,19 +506,19 @@ class SocketBASE {
         log.info(`SetExtruderOffset, ${JSON.stringify(response)}`);
     }
 
-    // workspeed
-    public async getWorkSpeed(options) {
-        const { eventName } = options;
-        const subscribeWorkSpeedCallback = (data) => {
-            const workSpeedInfo = new GetWorkSpeed().fromBuffer(data.response.data);
-            log.info(`workSpeedInfo, ${workSpeedInfo}`);
-            this.socket && this.socket.emit(eventName, { data: workSpeedInfo.feedRate });
-        };
+    // // workspeed
+    // public async getWorkSpeed(options) {
+    //     const { eventName } = options;
+    //     const subscribeWorkSpeedCallback = (data) => {
+    //         const workSpeedInfo = new GetWorkSpeed().fromBuffer(data.response.data);
+    //         log.info(`workSpeedInfo, ${workSpeedInfo}`);
+    //         this.socket && this.socket.emit(eventName, { data: workSpeedInfo.feedRate });
+    //     };
 
-        this.sacpClient.subscribeWorkSpeed({ interval: 1000 }, subscribeWorkSpeedCallback).then((res) => {
-            log.info(`subscribe workspeed success: ${res.code}`);
-        });
-    }
+    //     this.sacpClient.subscribeWorkSpeed({ interval: 1000 }, subscribeWorkSpeedCallback).then((res) => {
+    //         log.info(`subscribe workspeed success: ${res.code}`);
+    //     });
+    // }
 
     public async updateWorkSpeed(toolhead, workSpeed, extruderIndex = 0) {
         const headModule = this.moduleInfos && (this.moduleInfos[toolhead]); //
@@ -491,8 +559,11 @@ class SocketBASE {
         }
 
         // return
-        const { response } = await this.sacpClient.switchCNC(toolhead.key, !headStatus);
-        log.info(`switchCNC to [${!headStatus}], ${JSON.stringify(response)}`);
+        const { response: responseForSpeed } = await this.sacpClient.setToolHeadSpeed(toolhead.key, this.cncTargetSpeed);
+        if (responseForSpeed.result === 0) {
+            const { response: responseForOpen } = await this.sacpClient.switchCNC(toolhead.key, !headStatus);
+            log.info(`switchCNC to [${!headStatus}], ${JSON.stringify(responseForOpen)}`);
+        }
         // return response;
     }
 
@@ -527,18 +598,15 @@ class SocketBASE {
             const res1 = await this.sacpClient.updateCoordinate(CoordinateType.MACHINE);
             log.debug(`updateCoordinate CoordinateType.MACHINE res: ${JSON.stringify(res1)}`);
             await this.sacpClient.getCurrentCoordinateInfo().then(async ({ coordinateSystemInfo }) => {
-                const xNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.X1).value;
-                const yNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.Y1).value;
                 const zNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.Z1).value;
-                log.debug(`current positions, ${xNow}, ${yNow}, ${zNow}`);
+                log.debug(`current positions, ${zNow}, ${z}`);
                 // calculate the absolute distance on seperate axis, same reason with coordinate moving func 'coordinateMove'
 
                 const newZ = new CoordinateInfo(Direction.Z1, isRotate ? 0 : zNow - z);
                 const newCoord = [newZ];
-                log.debug(`new positions, ${JSON.stringify(newCoord)}`);
-
-                const res = await this.sacpClient.setWorkOrigin(newCoord);
+                log.debug(`new positions, ${zNow - z}, ${JSON.stringify(newCoord)}`);
                 await this.sacpClient.updateCoordinate(CoordinateType.WORKSPACE);
+                const res = await this.sacpClient.setWorkOrigin(newCoord);
                 log.debug(`setAbsoluteWorkOrigin res:${JSON.stringify(res)}`);
             });
         } catch (e) {
