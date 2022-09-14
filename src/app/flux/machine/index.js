@@ -759,7 +759,7 @@ export const actions = {
                         startTime,
                         finishTime,
                         elapsedTime,
-                        remainingTime,
+                        estimatedTime: remainingTime,
                         printStatus
                     }
                 }));

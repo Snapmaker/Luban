@@ -38,7 +38,7 @@ const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
             printingToolhead: SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL
         };
         const sm2Toolhead = currentToolhead;
-        const tempToolhead = currentSeries === MACHINE_SERIES.ORIGINAL.value ? originToolhead : sm2Toolhead;
+        const tempToolhead = (currentSeries === MACHINE_SERIES.ORIGINAL.value || currentSeries === MACHINE_SERIES.ORIGINAL_LZ.value) ? originToolhead : sm2Toolhead;
         setCurrentToolhead(tempToolhead);
         setLoading(true);
         onCallBack(currentSeries, tempToolhead);
