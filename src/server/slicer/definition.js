@@ -81,9 +81,6 @@ export class DefinitionLoader {
         try {
             const data = fs.readFileSync(filePath, 'utf8');
             json = JSON.parse(data);
-            if (definitionId === 'machine') {
-                console.log('json', json);
-            }
             this.loadJSON(headType, definitionId, json);
         } catch (e) {
             log.error(`JSON Syntax error of: ${definitionId}`);
