@@ -134,7 +134,7 @@ class ThreeModel extends BaseModel {
 
         this.updateTransformation(this.transformation);
         this.meshObject.addEventListener('update', this.modelGroup.onModelUpdate);
-        if (modelInfo.loadFrom === LOAD_MODEL_FROM_INNER) {
+        if (modelInfo.loadFrom === LOAD_MODEL_FROM_INNER && !modelInfo.parentUploadName) {
             if (this.sourceType === '3d' && this.transformation.positionX === 0 && this.transformation.positionY === 0) {
                 this.stickToPlate();
                 const point = modelGroup._computeAvailableXY(this);
