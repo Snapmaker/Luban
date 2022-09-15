@@ -49,7 +49,6 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
         },
         'connection:executeGcode': (gcodeArray) => {
             if (gcodeArray) {
-                console.log('', gcodeArray);
                 dispatch(machineActions.addConsoleLogs(gcodeArray));
             }
         }

@@ -101,7 +101,7 @@ export class Server extends events.EventEmitter {
 
     coordinateMove(moveOrders, gcode, jogSpeed, headType, homingModel) {
         controller.emitEvent(CONNECTION_COORDINATE_MOVE, { moveOrders, gcode, jogSpeed, headType }, () => {
-            if (homingModel && gcode === 'G29') {
+            if (homingModel && gcode === 'G28') {
                 dispatch(baseActions.updateState({
                     homingModel: false
                 }));

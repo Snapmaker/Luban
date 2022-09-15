@@ -3,7 +3,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import i18n from '../../../lib/i18n';
 import styles from './index.styl';
-
+import SvgIcon from '../../components/SvgIcon';
 
 const JogPad = React.memo((props) => {
     const { state, actions, workPosition } = props;
@@ -29,7 +29,10 @@ const JogPad = React.memo((props) => {
                                 disabled={!canClick}
                                 title={i18n._('key-Workspace/Control/JogPad-Move X- Y+')}
                             >
-                                <i className={classNames('fa', 'fa-arrow-circle-up', styles['rotate--45deg'])} style={{ fontSize: 16 }} />
+                                <SvgIcon
+                                    borderRadius={8}
+                                    name="TopLeft"
+                                />
                             </button>
                         </div>
                     </div>
@@ -71,7 +74,10 @@ const JogPad = React.memo((props) => {
                                 disabled={!canClick}
                                 title={i18n._('key-Workspace/Control/JogPad-Move X+ Y+')}
                             >
-                                <i className={classNames('fa', 'fa-arrow-circle-up', styles['rotate-45deg'])} style={{ fontSize: 16 }} />
+                                <SvgIcon
+                                    borderRadius={8}
+                                    name="TopRight"
+                                />
                             </button>
                         </div>
                     </div>
@@ -243,7 +249,10 @@ const JogPad = React.memo((props) => {
                                 disabled={!canClick}
                                 title={i18n._('key-Workspace/Control/JogPad-Move X- Y-')}
                             >
-                                <i className={classNames('fa', 'fa-arrow-circle-down', styles['rotate-45deg'])} style={{ fontSize: 16 }} />
+                                <SvgIcon
+                                    borderRadius={8}
+                                    name="BottomLeft"
+                                />
                             </button>
                         </div>
                     </div>
@@ -286,7 +295,10 @@ const JogPad = React.memo((props) => {
                                 disabled={!canClick}
                                 title={i18n._('key-Workspace/Control/JogPad-Move X+ Y-')}
                             >
-                                <i className={classNames('fa', 'fa-arrow-circle-down', styles['rotate--45deg'])} style={{ fontSize: 16 }} />
+                                <SvgIcon
+                                    borderRadius={8}
+                                    name="BottomRight"
+                                />
                             </button>
                         </div>
                     </div>
