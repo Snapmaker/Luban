@@ -305,7 +305,7 @@ export const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition
                                 )}
                                 {showSelect && (
                                     <Select
-                                        size="72px"
+                                        size="100px"
                                         bordered={false}
                                         options={selectOptions}
                                         value={displayValue}

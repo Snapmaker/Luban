@@ -306,7 +306,16 @@ const MaterialSettings = ({
                 />
                 <div className={`padding-horizontal-4 padding-vertical-4 border-radius-16 sm-flex background-grey-2 ${toolHead.printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? 'width-532' : 'width-272'}`}>
                     <Anchor onClick={() => setActiveNozzle(LEFT)} className={`padding-horizontal-16 padding-vertical-8 border-radius-12 width-264 height-68 ${activeNozzle === LEFT ? 'background-color-white' : ''}`}>
-                        <div className="heading-3">{i18n._('key-setting/Left-Nozzle')}</div>
+                        {toolHead.printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
+                            <div className="heading-3">
+                                {i18n._('key-setting/Left-Nozzle')}
+                            </div>
+                        )}
+                        {toolHead.printingToolhead !== DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
+                            <div className="heading-3">
+                                {i18n._('key-Laser/ToolpathParameters-Material')}
+                            </div>
+                        )}
                         <div className="sm-flex align-center margin-top-8">
                             <div className="height-16 width-16 border-default-grey-1 " style={{ background: `${leftMaterialDefinition?.settings?.color?.default_value}` }} />
                             <span className="margin-left-8">{i18n._(leftMaterialDefinition?.i18nName || leftMaterialDefinition?.name)}</span>
