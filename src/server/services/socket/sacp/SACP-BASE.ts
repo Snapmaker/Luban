@@ -1,7 +1,7 @@
 import { includes, find } from 'lodash';
 import net from 'net';
 import { readString, readUint8 } from 'snapmaker-sacp-sdk/helper';
-import { GetHotBed, CoordinateInfo, CoordinateSystemInfo, ExtruderInfo, CncSpeedState, LaserTubeState, GcodeCurrentLine } from 'snapmaker-sacp-sdk/models';
+import { GetHotBed, CoordinateInfo, CoordinateSystemInfo, ExtruderInfo, CncSpeedState, LaserTubeState, GcodeCurrentLine, EnclosureInfo, AirPurifierInfo } from 'snapmaker-sacp-sdk/models';
 // import GetWorkSpeed from 'snapmaker-sacp-sdk/models/GetWorkSpeed';
 import { ResponseCallback } from 'snapmaker-sacp-sdk';
 import { Direction } from 'snapmaker-sacp-sdk/models/CoordinateInfo';
@@ -12,7 +12,7 @@ import {
     DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, CNC_MODULE, LASER_MODULE, PRINTING_MODULE, HEAD_CNC, HEAD_LASER,
     COORDINATE_AXIS, WORKFLOW_STATUS_MAP, HEAD_PRINTING, EMERGENCY_STOP_BUTTON, ENCLOSURE_MODULES, AIR_PURIFIER_MODULES, ROTARY_MODULES,
     MODULEID_TOOLHEAD_MAP, A400_HEADT_BED_FOR_SM2, HEADT_BED_FOR_SM2, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_SM2, MODULEID_MAP,
-    LOAD_FIMAMENT, UNLOAD_FILAMENT
+    LOAD_FIMAMENT, UNLOAD_FILAMENT, ENCLOSURE_FOR_ARTISAN, ENCLOSURE_FOR_SM2, AIR_PURIFIER
 } from '../../../../app/constants';
 import { EventOptions, MarlinStateData } from '../types';
 import { SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2, COMPLUTE_STATUS } from '../../../constants';
@@ -41,6 +41,10 @@ class SocketBASE {
     public subscribeLaserPowerCallback: ResponseCallback;
 
     public subscribeGetCurrentGcodeLineCallback: ResponseCallback;
+
+    public subscribeEnclosureInfoCallback: ResponseCallback;
+
+    public subscribePurifierInfoCallback: ResponseCallback;
 
     private filamentAction: boolean = false;
 
@@ -265,6 +269,46 @@ class SocketBASE {
             }
             this.socket && this.socket.emit('sender:status', ({ data }));
         };
+        this.subscribeEnclosureInfoCallback = (data) => {
+            const { ledValue, testStatus, fanlevel } = new EnclosureInfo().fromBuffer(data.response.data);
+            let headTypeKey = 0;
+            switch (this.headType) {
+                case HEAD_PRINTING:
+                    headTypeKey = 0;
+                    break;
+                case HEAD_LASER:
+                    headTypeKey = 1;
+                    break;
+                case HEAD_CNC:
+                    headTypeKey = 2;
+                    break;
+                default:
+                    break;
+            }
+            const { State } = find(testStatus, { workType: headTypeKey });
+            stateData = {
+                ...stateData,
+                ledValue,
+                fanLevel: fanlevel,
+                isDoorEnable: State
+            }
+        };
+        this.sacpClient.subscribeEnclosureInfo({ interval: 1000 }, this.subscribeEnclosureInfoCallback).then(res => {
+            log.info(`subscribe enclosure info, ${res.response.result}`);
+        });
+        this.subscribePurifierInfoCallback = (data) => {
+            const { airPurifierStatus: { fanState, speedLevel, lifeLevel, powerState } } = new AirPurifierInfo().fromBuffer(data.response.data);
+            stateData = {
+                ...stateData,
+                airPurifier: powerState,
+                airPurifierSwitch: fanState,
+                airPurifierFanSpeed: speedLevel,
+                airPurifierFilterHealth: lifeLevel - 1
+            }
+        };
+        this.sacpClient.subscribePurifierInfo({ interval: 1000 }, this.subscribePurifierInfoCallback).then(res => {
+            log.info(`subscribe purifier info, ${res.response.result}`);
+        })
     };
 
     public setROTSubscribeApi = () => {
@@ -625,6 +669,38 @@ class SocketBASE {
         const { laserToolHeadInfo } = await this.sacpClient.getLaserToolHeadInfo(headModule.key);
         log.debug(`laserFocalLength:${laserToolHeadInfo.laserFocalLength}, materialThickness: ${materialThickness}, platformHeight:${laserToolHeadInfo.platformHeight}`);
         await this.setAbsoluteWorkOrigin({ x: 0, y: 0, z: laserToolHeadInfo.laserFocalLength + laserToolHeadInfo.platformHeight + materialThickness, isRotate });
+    }
+
+    // set enclosure light status
+    public async setEnclosureLight(options) {
+        const moduleInfo = this.moduleInfos && (this.moduleInfos[ENCLOSURE_FOR_ARTISAN] || this.moduleInfos[ENCLOSURE_FOR_SM2])
+        this.sacpClient.setEnclosureLight(moduleInfo.key, options.value).then(({ response }) => {
+            log.info(`Update enclosure light result, ${response.result}`);
+        });
+    }
+
+    public async setEnclosureFan(options) {
+        const moduleInfo = this.moduleInfos && (this.moduleInfos[ENCLOSURE_FOR_ARTISAN] || this.moduleInfos[ENCLOSURE_FOR_SM2])
+        this.sacpClient.setEnclosureFan(moduleInfo.key, options.value).then(({ response }) => {
+            log.info(`Update enclosure fan result, ${response.result}`);
+        });
+    }
+
+    public async setFilterSwitch(options) {
+        const moduleInfo = this.moduleInfos && this.moduleInfos[AIR_PURIFIER];
+        options.enable && this.sacpClient.setPurifierSpeed(moduleInfo.key, options.value).then(({ response }) => {
+            log.info(`Update Purifier speed, ${response.result}, ${options.value}`);
+        });
+        this.sacpClient.setPurifierSwitch(moduleInfo.key, options.enable).then(({ response }) => {
+            log.info(`Switch Purifier update, ${ response.result }`);
+        })
+    }
+
+    public async setFilterWorkSpeed(options) {
+        const moduleInfo = this.moduleInfos && this.moduleInfos[AIR_PURIFIER];
+        this.sacpClient.setPurifierSpeed(moduleInfo.key, options.value).then(({ response, packet }) => {
+            log.info(`Update Purifier speed, ${ response.result }, ${options.value}`);
+        });
     }
 }
 
