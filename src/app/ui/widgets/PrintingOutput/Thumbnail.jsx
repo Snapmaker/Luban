@@ -72,8 +72,6 @@ class Thumbnail extends PureComponent {
             this.object.clear();
             this.scene.remove(this.object);
         }
-        // this.object.add(...this.props.modelGroup.getModels().map(d => d.meshObject.clone()));
-        // this.object && (this.scene.remove(this.object));
         this.object = new Group();
         this.object.add(...this.props.modelGroup.getModels().map(d => d.clone().meshObject));
 
@@ -86,7 +84,6 @@ class Thumbnail extends PureComponent {
         for (const child of this.object.children) {
             child.position.x -= x;
             child.position.y -= y;
-            console.log('child.position', child.position.z, z);
             child.position.z -= z;
         }
 

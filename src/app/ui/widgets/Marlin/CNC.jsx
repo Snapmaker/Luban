@@ -2,7 +2,6 @@ import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { isNil, includes } from 'lodash';
-import { actions as machineActions } from '../../../flux/machine';
 import WorkSpeed from './WorkSpeed';
 import i18n from '../../../lib/i18n';
 import Switch from '../../components/Switch';
@@ -23,7 +22,6 @@ class CNC extends PureComponent {
         headStatus: PropTypes.bool,
         workflowStatus: PropTypes.string,
         toolHead: PropTypes.string.isRequired,
-        addConsoleLogs: PropTypes.func.isRequired,
         cncCurrentSpindleSpeed: PropTypes.number.isRequired,
         cncTargetSpindleSpeed: PropTypes.number.isRequired
     };
@@ -38,11 +36,7 @@ class CNC extends PureComponent {
                 headStatus: this.state.headStatus,
                 speed: this.props.cncTargetSpindleSpeed,
                 toolHead: this.props.toolHead,
-            }, (result) => {
-                if (result) {
-                    this.props.addConsoleLogs(result);
-                }
-            }).once(CONNECTION_SWITCH_CNC);
+            });
             this.setState({
                 headStatus: !this.state.headStatus
             });
@@ -50,11 +44,7 @@ class CNC extends PureComponent {
         updateToolHeadSpeed: (speed) => {
             controller.emitEvent(CONNECTION_UPDATE_TOOLHEAD_SPEED, {
                 speed: speed
-            }, (result) => {
-                if (result) {
-                    this.props.addConsoleLogs(result);
-                }
-            }).once(CONNECTION_UPDATE_TOOLHEAD_SPEED);
+            });
             // this.setState({ toolHeadSpeepd: speed });
         },
         isPrinting: () => {
@@ -153,11 +143,5 @@ const mapStateToProps = (state) => {
     };
 };
 
-const mapDispatchToProps = (dispatch) => {
-    return {
-        executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode)),
-        addConsoleLogs: (gcode, context) => dispatch(machineActions.addConsoleLogs(gcode, context)),
-    };
-};
 
-export default connect(mapStateToProps, mapDispatchToProps)(CNC);
+export default connect(mapStateToProps)(CNC);

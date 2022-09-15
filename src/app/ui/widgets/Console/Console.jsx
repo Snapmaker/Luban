@@ -46,6 +46,12 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
             const { data } = options;
             const terminal = terminalRef.current;
             terminal && terminal.writeln(data);
+        },
+        'connection:executeGcode': (gcodeArray) => {
+            if (gcodeArray) {
+                console.log('', gcodeArray);
+                dispatch(machineActions.addConsoleLogs(gcodeArray));
+            }
         }
     };
 

@@ -1083,16 +1083,13 @@ export const actions = {
         controller.emitEvent(
             CONNECTION_EXECUTE_GCODE,
             { gcode, context, cmd },
-            (gcodeArray) => {
-                if (gcodeArray) {
-                    if (homingModal && gcode === 'G28') {
-                        dispatch(
-                            baseActions.updateState({
-                                homingModal: false
-                            })
-                        );
-                    }
-                    dispatch(actions.addConsoleLogs(gcodeArray));
+            () => {
+                if (homingModal && gcode === 'G28') {
+                    dispatch(
+                        baseActions.updateState({
+                            homingModal: false
+                        })
+                    );
                 }
             }
         );

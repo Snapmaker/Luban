@@ -100,34 +100,24 @@ export class Server extends events.EventEmitter {
     }
 
     coordinateMove(moveOrders, gcode, jogSpeed, headType, homingModel) {
-        controller.emitEvent(CONNECTION_COORDINATE_MOVE, { moveOrders, gcode, jogSpeed, headType }, (gcodeArray) => {
-            if (gcodeArray) {
-                if (homingModel && gcode === 'G28') {
-                    dispatch(baseActions.updateState({
-                        homingModel: false
-                    }));
-                }
-                dispatch(machineActions.addConsoleLogs(gcodeArray));
+        controller.emitEvent(CONNECTION_COORDINATE_MOVE, { moveOrders, gcode, jogSpeed, headType }, () => {
+            if (homingModel && gcode === 'G29') {
+                dispatch(baseActions.updateState({
+                    homingModel: false
+                }));
             }
         });
     }
 
     setWorkOrigin(xPosition, yPosition, zPosition, bPosition) {
-        controller.emitEvent(CONNECTION_SET_WORK_ORIGIN, { xPosition, yPosition, zPosition, bPosition }, (gcodeArray) => {
-            if (gcodeArray) {
-                dispatch(machineActions.addConsoleLogs(gcodeArray));
-            }
-        });
+        controller.emitEvent(CONNECTION_SET_WORK_ORIGIN, { xPosition, yPosition, zPosition, bPosition });
     }
 
     executeGcode(gcode, context, cmd) {
         return new Promise((resolve) => {
             controller
                 .emitEvent(CONNECTION_EXECUTE_GCODE, { gcode, context, cmd })
-                .once(CONNECTION_EXECUTE_GCODE, (gcodeArray) => {
-                    if (gcodeArray) {
-                        dispatch(baseActions.addConsoleLogs(gcodeArray));
-                    }
+                .once(CONNECTION_EXECUTE_GCODE, () => {
                     resolve();
                 });
         });
@@ -188,15 +178,7 @@ export class Server extends events.EventEmitter {
     }
 
     goHome(hasHomingModel, callback) {
-        controller.emitEvent(CONNECTION_GO_HOME, { hasHomingModel })
-            .on(CONNECTION_EXECUTE_GCODE, (gcodeArray) => {
-                if (gcodeArray) {
-                    if (gcodeArray[0] === 'G28') {
-                        callback && callback();
-                    }
-                    dispatch(machineActions.addConsoleLogs(gcodeArray));
-                }
-            });
+        controller.emitEvent(CONNECTION_GO_HOME, { hasHomingModel }, callback);
     }
 
     setToken(token) {
