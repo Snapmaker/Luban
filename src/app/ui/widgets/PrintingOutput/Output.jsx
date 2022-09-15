@@ -7,6 +7,8 @@ import { noop } from 'lodash';
 import Menu from '../../components/Menu';
 import { Button } from '../../components/Buttons';
 import Dropdown from '../../components/Dropdown';
+import { toast } from '../../components/Toast';
+import { ToastWapper } from '../../components/Toast/toastContainer';
 
 // import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import i18n from '../../../lib/i18n';
@@ -104,6 +106,22 @@ function Output() {
             UniApi.Event.off('appbar-menu:printing.export-gcode', actions.onClickExportGcode);
         };
     }, [isGcodeOverstepped, gcodeFile]);
+
+    const toastRef = useRef();
+    useEffect(() => {
+        if (outOfMemoryForRenderGcode) {
+            window.requestAnimationFrame(() => {
+                if (toastRef.current) {
+                    toast.dismiss(toastRef.current);
+                }
+                toastRef.current = toast(ToastWapper(i18n._('key-Printing/Out of memory.Failed to load preview.'), 'WarningTipsWarning', '#FFA940'));
+            });
+        } else {
+            if (toastRef.current) {
+                toast.dismiss(toastRef.current);
+            }
+        }
+    }, [outOfMemoryForRenderGcode]);
 
 
     const isSlicing = stage === STEP_STAGE.PRINTING_SLICING;

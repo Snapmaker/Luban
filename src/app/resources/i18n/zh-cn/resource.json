@@ -1489,6 +1489,7 @@
     "key-Printing/Modal-Profile migrated": "参数位置变更",
     "key-Printing/Modal-Retraction profile migrated": "回抽与 Z 抬升已从打印设置迁移至材料设置，",
     "key-Printing/ObjectList-Object List": "对象列表",
+    "key-Printing/Out of memory.Failed to load preview.": "剩余内存不足，加载预览失败。",
     "key-Printing/Page-Arrange and edit objects to achieve the intended 3D printing effect.": "使用对齐、编组、解组等功能组合对象，使用简化模型、修复模型等工具编辑对象。",
     "key-Printing/Page-Configure Parameters": "配置切片参数",
     "key-Printing/Page-Drop an STL/OBJ file here.": "在此处拖放 STL 或 OBJ 文件。",
