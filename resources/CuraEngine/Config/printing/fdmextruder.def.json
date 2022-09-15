@@ -240,7 +240,7 @@
                 "machine_heated_bed": {
                     "label": "Enable Heated Build Plate",
                     "description": "Whether the machine enables the heated build plate to provide heat to avoid warp.",
-                    "default_value": false,
+                    "default_value": true,
                     "type": "bool",
                     "settable_per_mesh": false,
                     "settable_per_extruder": false,

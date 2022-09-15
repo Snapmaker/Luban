@@ -1098,6 +1098,7 @@ export const actions = {
 
     executeGcodeAutoHome: (hasHomingModel = false) => (dispatch, getState) => {
         const { server, homingModal, isConnected } = getState().machine;
+        const { headType } = getState().workspace;
         if (!isConnected) {
             if (homingModal) {
                 dispatch(
@@ -1108,7 +1109,7 @@ export const actions = {
             }
             return;
         }
-        server.goHome(hasHomingModel, () => {
+        server.goHome({ hasHomingModel, headType }, () => {
             dispatch(
                 baseActions.updateState({
                     homingModal: false

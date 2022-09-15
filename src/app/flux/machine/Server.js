@@ -177,8 +177,8 @@ export class Server extends events.EventEmitter {
             });
     }
 
-    goHome(hasHomingModel, callback) {
-        controller.emitEvent(CONNECTION_GO_HOME, { hasHomingModel }, callback);
+    goHome(data, callback) {
+        controller.emitEvent(CONNECTION_GO_HOME, data, callback);
     }
 
     setToken(token) {

@@ -554,33 +554,36 @@ M3`;
 
             this.socket.updateLaserPower(laserPower);
         } else {
-            const { isPrinting, laserPower, laserPowerOpen, eventName } = options;
+            const { isPrinting, laserPower, laserPowerOpen } = options;
             if (isPrinting) {
                 if (this.connectionType === CONNECTION_TYPE_WIFI) {
-                    this.socket.updateLaserPower(options);
+                    this.socket.updateLaserPower({
+                        ...options,
+                        eventName: 'connection:executeGcode'
+                    });
                 } else {
                     this.executeGcode(
                         this.socket,
-                        { gcode: `M3 P${laserPower} S${laserPower * 255 / 100}`, eventName }
+                        { gcode: `M3 P${laserPower} S${laserPower * 255 / 100}` }
                     );
                 }
             } else {
                 if (laserPowerOpen) {
                     this.executeGcode(
                         this.socket,
-                        { gcode: `M3 P${laserPower} S${laserPower * 255 / 100}`, eventName }
+                        { gcode: `M3 P${laserPower} S${laserPower * 255 / 100}` }
                     );
                 }
                 this.executeGcode(
                     this.socket,
-                    { gcode: 'M500', eventName }
+                    { gcode: 'M500' }
                 );
             }
         }
     }
 
     switchLaserPower = (socket, options) => {
-        const { isSM2, laserPower, laserPowerOpen, eventName } = options;
+        const { isSM2, laserPower, laserPowerOpen } = options;
         if (this.protocol === SACP_PROTOCOL) {
             if (laserPowerOpen) {
                 this.socket.updateLaserPower(0);
@@ -592,18 +595,18 @@ M3`;
         if (laserPowerOpen) {
             this.executeGcode(
                 this.socket,
-                { gcode: 'M5', eventName } // M3 P0 S0
+                { gcode: 'M5' } // M3 P0 S0
             );
         } else {
             if (isSM2) {
                 this.executeGcode(
                     this.socket,
-                    { gcode: 'M3 P1 S2.55', eventName }
+                    { gcode: 'M3 P1 S2.55' }
                 );
             } else {
                 this.executeGcode(
                     this.socket,
-                    { gcode: `M3 P${laserPower} S${laserPower * 255 / 100}`, eventName }
+                    { gcode: `M3 P${laserPower} S${laserPower * 255 / 100}` }
                 );
             }
         }
