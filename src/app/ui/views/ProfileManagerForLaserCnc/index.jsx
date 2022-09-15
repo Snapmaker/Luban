@@ -247,13 +247,13 @@ function ProfileManager({
                 isCreate: false
             });
         },
-        createManagerDefinition: async (newDefinition, newName, isCategorySelected) => {
+        createManagerDefinition: async (newDefinition, newName, isCategorySelected, isCreate) => {
             const isCustom = newDefinition.category === i18n._(KEY_DEFAULT_CATEGORY_CUSTOM);
             const res = await outsideActions.onCreateManagerDefinition({
                 ...newDefinition,
                 category: isCustom ? '' : newDefinition.category,
                 i18nCategory: isCustom ? '' : newDefinition.i18nCategory
-            }, newName, isCategorySelected);
+            }, newName, isCategorySelected, isCreate);
             if (isCustom) {
                 res.category = i18n._(KEY_DEFAULT_CATEGORY_CUSTOM);
                 res.i18nCategory = '';

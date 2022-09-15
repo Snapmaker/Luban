@@ -142,12 +142,10 @@ function lineToGeometry(originalPositions, breakPositionsIndex, width, height) {
     return geometry;
 }
 
-const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) => {
+const gcodeBufferGeometryToObj3d = (func, gcodeEntityLayers, renderMethod, params) => {
     let obj3d = null;
     switch (func) {
         case '3DP': {
-            const gcodeEntityLayers = bufferGeometry;
-
             const object3D = new THREE.Group();
             const r0 = parseInt(params.extruderColors.toolColor0.substring(1, 3), 16) / 0xff;
             const g0 = parseInt(params.extruderColors.toolColor0.substring(3, 5), 16) / 0xff;
@@ -156,11 +154,15 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) 
             const r1 = parseInt(params.extruderColors.toolColor1.substring(1, 3), 16) / 0xff;
             const g1 = parseInt(params.extruderColors.toolColor1.substring(3, 5), 16) / 0xff;
             const b1 = parseInt(params.extruderColors.toolColor1.substring(5), 16) / 0xff;
+
+            let positions = [], index = 0, width = 0, height = 0, segmentPositions = [];
+
             Object.entries(gcodeEntityLayers).forEach(([indexKey, layer]) => {
-                const index = Number(indexKey);
+                index = Number(indexKey);
                 layer.forEach(layerType => {
                     if (layerType.typeCode !== 7) {
-                        let width = 0, height = params.layerHeight;
+                        width = 0;
+                        height = params.layerHeight;
                         if (layerType.toolCode === 0) {
                             width = params.extruderLlineWidth;
                             if (index === 0) {
@@ -176,6 +178,7 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) 
                         }
                         // console.log('breakPositionsIndex', layerType.breakPositionsIndex);
                         const geometry = lineToGeometry(layerType.positions, layerType.breakPositionsIndex, width, height);
+
                         const mesh = new THREE.Mesh(geometry, new THREE.ShaderMaterial({
                             vertexShader: PRINT3D_VERT_SHADER,
                             fragmentShader: PRINT3D_FRAG_SHADER,
@@ -209,15 +212,17 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) 
                         object3D.add(mesh);
                     } else {
                         // travel should render as a line
-                        const geometry = new THREE.BufferGeometry();
-                        const positions = elementToVector3(layerType.positions);
-                        const segmentPositions = [];
+                        positions = null;
+                        positions = elementToVector3(layerType.positions);
+                        segmentPositions = [];
                         for (let i = 0; i < positions.length - 1; i++) {
                             if (layerType.breakPositionsIndex.indexOf(i) > -1) {
                                 continue;
                             }
                             segmentPositions.push(...positions[i].toArray(), ...positions[i + 1].toArray());
                         }
+                        const geometry = new THREE.BufferGeometry();
+
                         geometry.setAttribute('position', new THREE.Float32BufferAttribute(segmentPositions, 3));
                         const line = new THREE.LineSegments(geometry, new THREE.ShaderMaterial({
                             vertexShader: PRINT3D_VERT_SHADER,
@@ -246,6 +251,7 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) 
                 });
             });
 
+            gcodeEntityLayers = null;
             obj3d = object3D;
         }
 
@@ -253,7 +259,7 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) 
         case 'WORKSPACE':
             if (renderMethod === 'point') {
                 obj3d = new THREE.Points(
-                    bufferGeometry,
+                    gcodeEntityLayers,
                     new THREE.ShaderMaterial({
                         uniforms: WORKSPACE_UNIFORMS,
                         vertexShader: WORKSPACE_VERT_SHADER,
@@ -264,7 +270,7 @@ const gcodeBufferGeometryToObj3d = (func, bufferGeometry, renderMethod, params) 
                 );
             } else {
                 obj3d = new THREE.Line(
-                    bufferGeometry,
+                    gcodeEntityLayers,
                     new THREE.ShaderMaterial({
                         uniforms: WORKSPACE_UNIFORMS,
                         vertexShader: WORKSPACE_VERT_SHADER,

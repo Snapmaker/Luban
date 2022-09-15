@@ -1,4 +1,5 @@
-import { throttle } from 'lodash';
+import { noop, throttle } from 'lodash';
+import path from 'path';
 import { parseLubanGcodeHeader } from '../../lib/parseGcodeHeader';
 import slice, { generateSupport, simplifyModel, repairModel, checkModel } from '../../slicer/slice';
 
@@ -34,6 +35,31 @@ const handleSlice = (socket, params) => {
     );
 };
 
+const repairSupport = (files, size) => {
+    const promises = files.map((file) => {
+        return new Promise((resolve, reject) => {
+            const uploadName = file.supportStlFilename;
+            const extname = path.extname(uploadName);
+            const outputName = uploadName.slice(
+                0,
+                uploadName.indexOf(extname)
+            );
+
+            repairModel({
+                complete: resolve,
+                next: noop,
+                error: reject
+            }, {
+                uploadName,
+                modelID: file.modelID,
+                size,
+                outputName
+            });
+        });
+    });
+    return Promise.all(promises);
+};
+
 const handleGenerateSupport = (socket, params) => {
     socket.emit('generate-support:started');
     generateSupport(
@@ -41,10 +67,16 @@ const handleGenerateSupport = (socket, params) => {
         (progress) => {
             progressHandle(socket, 'generate-support:progress', progress);
         },
-        (result) => {
-            socket.emit('generate-support:completed', {
-                supportFilePaths: result.files
-            });
+        async (result) => {
+            try {
+                await repairSupport(result.files, params.size);
+
+                socket.emit('generate-support:completed', {
+                    supportFilePaths: result.files
+                });
+            } catch (error) {
+                socket.emit('generate-support:error', error.message);
+            }
         },
         (err) => {
             socket.emit('generate-support:error', err);

@@ -7,6 +7,14 @@ import CalculateSectionPoints, { IMessage as TCalculateSectionPointsMessage } fr
 import { machineStore } from '../../store/local-storage';
 
 type TListener = [string, (res: unknown) => void]
+
+export const WorkerEvents = {
+    clipperWorkerBusy: 'clipperWorkerBusy',
+    clipperWorkerDestroyed: 'clipperWorkerDestroyed',
+    clipperWorkerStop: 'clipperWorkerStop',
+    clipperWorkerIdle: 'clipperWorkerIdle'
+};
+
 class WorkerManager extends EventEmitter {
     private pool: Pool<Thread>;
     private clipperWorker: Worker;
@@ -28,8 +36,14 @@ class WorkerManager extends EventEmitter {
             this.clipperWorkerEnable = enable3dpLivePreview;
         } else {
             if (!bool && this.clipperWorkerEnable && this.clipperWorker) {
+                this.clipperWorker.terminate();
+                this.clipperWorker = null;
+
+                this.emit(WorkerEvents.clipperWorkerDestroyed);
+
                 for (const [modelID, listener] of this.listenerMap) {
                     const [topic] = listener;
+                    // set clipperWorkerEnable=false, and kill listener.
                     this.emit(`${topic}`, {
                         type: 'FINISH',
                         clippingMap: null,
@@ -39,9 +53,6 @@ class WorkerManager extends EventEmitter {
                     });
                     this.listenerMap.delete(modelID);
                 }
-
-                this.clipperWorker.terminate();
-                this.clipperWorker = null;
             }
             this.clipperWorkerEnable = bool;
         }
@@ -113,12 +124,14 @@ class WorkerManager extends EventEmitter {
 
     public stopClipper() {
         if (this.clipperWorker) {
+            // stop-job
             this.clipperWorker.postMessage(['stop-job']);
         }
     }
 
     public continueClipper() {
         if (this.clipperWorker) {
+            // continue-job
             this.clipperWorker.postMessage(['continue-job']);
         }
     }
@@ -128,8 +141,13 @@ class WorkerManager extends EventEmitter {
             this.clipperWorker = new CalculateSectionPoints();
             this.clipperWorker.onmessage = (res) => {
                 // message pipeline
-                const { jobID } = res.data;
-                this.emit(`CLIPPER:${jobID}`, res.data);
+                const { WORKER_STATUS, jobID } = res.data;
+                if (jobID) {
+                    this.emit(`CLIPPER:${jobID}`, res.data);
+                }
+                if (WORKER_STATUS) {
+                    this.emit(WORKER_STATUS);
+                }
             };
         }
 

@@ -607,6 +607,8 @@ class ThreeModel extends BaseModel {
 
         this.onTransform();
         revertParent();
+
+        convexGeometryClone.dispose();
     }
 
     public getSerializableConfig() {

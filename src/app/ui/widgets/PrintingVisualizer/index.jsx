@@ -5,13 +5,10 @@ import Visualizer from './Visualizer';
 import styles from '../styles.styl';
 
 
-const PrintingVisualizerWidget = ({ controlInputValue, controlAxis, controlMode, simplifying, setSimplifying }) => (
+const PrintingVisualizerWidget = ({ simplifying, setSimplifying }) => (
     <Widget borderless className={styles.visualizer}>
         <Widget.Content className={styles['visualizer-content-wrapper']}>
             <Visualizer
-                controlInputValue={controlInputValue}
-                controlAxis={controlAxis}
-                controlMode={controlMode}
                 simplifying={simplifying}
                 setSimplifying={setSimplifying}
             />
@@ -20,9 +17,6 @@ const PrintingVisualizerWidget = ({ controlInputValue, controlAxis, controlMode,
 );
 
 PrintingVisualizerWidget.propTypes = {
-    controlInputValue: PropTypes.object,
-    controlAxis: PropTypes.array,
-    controlMode: PropTypes.string,
     simplifying: PropTypes.bool,
     setSimplifying: PropTypes.func
 };

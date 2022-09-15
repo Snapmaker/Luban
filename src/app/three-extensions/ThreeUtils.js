@@ -462,14 +462,17 @@ const ThreeUtils = {
     },
 
     dispose(mesh) {
-        if (mesh.children) {
+        if (!mesh) {
+            return;
+        }
+        if (mesh?.children && Array.isArray(mesh.children)) {
             mesh.children.forEach(m => {
                 this.dispose(m);
             });
-        } else {
-            mesh.geometry && mesh.geometry.dispose();
-            mesh.material && mesh.material.dispose();
         }
+
+        mesh.geometry && mesh.geometry.dispose();
+        mesh.material && mesh.material.dispose();
     }
 };
 

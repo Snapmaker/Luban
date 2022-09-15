@@ -7,7 +7,6 @@ import { DEFAULT_LUBAN_HOST, MACHINE_SERIES } from '../../../constants';
 import Rectangle from '../../../three-extensions/objects/Rectangle';
 import { FontLoader } from '../../../three-extensions/FontLoader';
 import STLLoader from '../../../three-extensions/STLLoader';
-// import ThreeUtils from '../../../three-extensions/ThreeUtils';
 import SVGLoader from '../../../three-extensions/SVGLoader';
 import ThreeUtils from '../../../three-extensions/ThreeUtils';
 import i18n from '../../../lib/i18n';
@@ -52,6 +51,8 @@ class PrintableCube extends Object3D {
     updateSize(series, size, stopArea) {
         this.series = series;
         this.size = size;
+
+        ThreeUtils.dispose(this);
         this.remove(...this.children);
         this._setup();
 
@@ -81,9 +82,9 @@ class PrintableCube extends Object3D {
         // front
         const geometry1 = new PlaneGeometry(x, front);
         const material = new MeshBasicMaterial({
-            color: '#FFEDED',
+            color: '#DCDDDF',
             side: FrontSide,
-            opacity: 1,
+            opacity: 0.7,
             transparent: true,
             depthWrite: false,
             polygonOffset: true,

@@ -10,6 +10,7 @@ import { actions as projectActions } from '../project';
 import { actions as printingActions, uploadMesh } from '../printing/index';
 import ThreeGroup from '../../models/ThreeGroup';
 import workerManager from '../../lib/manager/workerManager';
+import ThreeUtils from '../../three-extensions/ThreeUtils';
 
 const ACTION_UPDATE_STATE = 'app-global/ACTION_UPDATE_STATE';
 const DEFAULT_MODAL_ZINDEX = 9999;
@@ -106,6 +107,7 @@ export const actions = {
                 results: []
             };
         }
+        workerManager.stopClipper();
         const { recovery } = modelGroup.unselectAllModels();
 
         progressStatesManager.startProgress(
@@ -135,6 +137,7 @@ export const actions = {
                 const promise = new Promise(async (resolve, reject) => {
                     let uploadName = model.uploadName;
                     if (headType === HEAD_PRINTING) {
+                        workerManager.stopCalculateSectionPoints(model.modelID);
                         const mesh = model.meshObject.clone(false);
                         mesh.clear();
                         const basenameWithoutExt = path.basename(
@@ -145,8 +148,9 @@ export const actions = {
 
                         const uploadResult = await uploadMesh(mesh, sourceRepairName);
                         uploadName = uploadResult?.body?.uploadName;
+
+                        ThreeUtils.dispose(mesh);
                     }
-                    workerManager.stopClipper();
                     const task = await controller.repairModel({
                         uploadName: uploadName,
                         modelID: model.modelID,

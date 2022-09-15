@@ -4,6 +4,8 @@ import TaskManager from './task-manager';
 import socketSerial from './socket/socket-serial';
 import socketSlice from './socket/socket-slice';
 import connectionManager from './socket/ConnectionManager';
+import system from './socket/system';
+
 
 import urljoin from '../lib/urljoin';
 import settings from '../config/settings';
@@ -88,6 +90,8 @@ function startServices(server) {
     socketServer.registerEvent('taskCommit:cutModel', TaskManager.addCutModelTask);
 
     socketServer.registerEvent('taskCancel:cutModel', TaskManager.cancelTask);
+
+    socketServer.registerChannel('get-free-memory', system.getSystemFreeMemorySize);
 
     socketServer.start(server);
 }

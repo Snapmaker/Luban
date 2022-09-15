@@ -1,3 +1,4 @@
+import { throttle } from 'lodash';
 import isEmpty from 'lodash/isEmpty';
 import { Observable } from 'rxjs';
 import { gcodeToBufferGeometry as _gcodeToBufferGeometry } from './GcodeToBufferGeometry/index';
@@ -22,8 +23,11 @@ type GcodeBoundsData = {
     minZ: number;
     maxZ: number;
 };
+type TGcodeEntityLayer = {
+    positions: []
+}[]
 type GcodeParsedData = {
-    gcodeEntityLayers: any;
+    gcodeEntityLayers: TGcodeEntityLayer[];
     layerCount: number;
     bounds: GcodeBoundsData;
     gcode: string;
@@ -51,6 +55,10 @@ const gcodeToBufferGeometry = (message: GcodeToBufferGeometryData) => {
             return;
         }
 
+        const progressHandle = throttle((progress) => {
+            return observer.next({ status: 'progress', value: progress });
+        }, 300);
+
         _gcodeToBufferGeometry(
             func.toUpperCase(),
             gcodeFilename,
@@ -75,6 +83,11 @@ const gcodeToBufferGeometry = (message: GcodeToBufferGeometryData) => {
                 // const toolCodes = Transfer(
                 //     bufferGeometry.getAttribute('a_tool_code').array
                 // );
+                const vertexNumber = Object.values(gcodeEntityLayers).reduce((p, c) => {
+                    return p + c.reduce((p1, c1) => {
+                        return p1 + c1.positions.length;
+                    }, 0);
+                }, 0) / 3;
                 const data = {
                     status: 'succeed',
                     value: {
@@ -84,6 +97,7 @@ const gcodeToBufferGeometry = (message: GcodeToBufferGeometryData) => {
                         // layerIndices,
                         // typeCodes,
                         // toolCodes,
+                        vertexNumber,
                         gcodeEntityLayers,
                         layerCount,
                         bounds,
@@ -94,7 +108,7 @@ const gcodeToBufferGeometry = (message: GcodeToBufferGeometryData) => {
                 observer.complete();
             },
             (progress: number) => {
-                observer.next({ status: 'progress', value: progress });
+                progressHandle(progress);
             },
             (err: string) => {
                 observer.next({ status: 'err', value: err });

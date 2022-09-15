@@ -1,3 +1,4 @@
+import { delay } from 'lodash';
 import { Pool, spawn, Transfer, Worker } from 'threads';
 import { PoolEventType } from 'threads/dist/master/pool-types';
 import { Box3, BufferAttribute, BufferGeometry, Line3, Matrix4, Plane, Vector3 } from 'three';
@@ -66,8 +67,6 @@ let transferList: Transferable[] = [];
 let layerCount = 0,
     jobs: TJobMessage[] = [],
     runningJob: TJobMessage,
-    poolTaskQueue = [],
-    idleWorkerNum = defaultPoolSize,
     subscriber1,
     subscriber2;
 
@@ -78,38 +77,22 @@ const clearTaskTmp = () => {
     infillMap.clear();
     layerCount = 0;
 
-    poolTaskQueue = [];
     transferList = [];
 };
-
 let sleep = false;
-const scheduleWork = () => {
-    // There are no idle workers or the task queue is empty
-    if (sleep || !idleWorkerNum || poolTaskQueue.length === 0) {
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        runJob();
-        return;
-    }
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    poolExecute();
-};
 
-function poolExecute() {
-    idleWorkerNum--;
-
-    const task = poolTaskQueue.shift();
-
-    pool.queue(async (worker) => {
+function poolExecute(task) {
+    pool?.queue(async (worker) => {
         return new Promise<void>((resolve) => {
-            const subscribe = worker[task.workerName](task.message).subscribe({
+            task.stop = worker.stop;
+            const subscriber = worker[task.workerName](task.message);
+
+            const subscribe = subscriber.subscribe({
                 next: task.onMessage,
                 complete() {
                     resolve();
                     subscribe.unsubscribe();
                     task.onComplete && task.onComplete();
-
-                    idleWorkerNum++;
-                    scheduleWork();
                 }
             });
         });
@@ -121,8 +104,7 @@ function poolExecute() {
  */
 const setPoolTask = async (workerName: string, message: unknown, onMessage: ((data) => void), onComplete?: () => void) => {
     // Put into execution queue
-    poolTaskQueue.push({ workerName, message, onMessage, onComplete });
-    scheduleWork();
+    poolExecute({ workerName, message, onMessage, onComplete });
 };
 
 const sortUnorderedLine = (layerTop: number, wallCount: number, lineWidth: number, buffer?: ArrayBuffer) => {
@@ -150,26 +132,19 @@ const sortUnorderedLine = (layerTop: number, wallCount: number, lineWidth: numbe
 };
 
 const mapClippingSkinArea = (wallCount: number, clippingConfig: TClippingConfig, modelBoundingBox: Box3, callback) => {
-    pool.queue(async (worker) => {
-        const subscribe = worker.mapClippingSkinArea({
-            innerWallMap: Transfer(
-                innerWallMap, expandBuffer(
-                    Array.from(innerWallMap.values())
-                )
-            ),
-            innerWallCount: wallCount,
-            lineWidth: clippingConfig.lineWidth,
-            bottomLayers: clippingConfig.bottomLayers,
-            topLayers: clippingConfig.topLayers,
-            modelBoundingBox,
-            layerHeight: clippingConfig.layerHeight
-        }).subscribe({
-            next: callback,
-            complete() {
-                subscribe.unsubscribe();
-            }
-        });
-    });
+    setPoolTask('mapClippingSkinArea', {
+        innerWallMap: Transfer(
+            innerWallMap, expandBuffer(
+                Array.from(innerWallMap.values())
+            )
+        ),
+        innerWallCount: wallCount,
+        lineWidth: clippingConfig.lineWidth,
+        bottomLayers: clippingConfig.bottomLayers,
+        topLayers: clippingConfig.topLayers,
+        modelBoundingBox,
+        layerHeight: clippingConfig.layerHeight
+    }, callback);
 };
 
 const calaClippingSkin = (clippingConfig, wallCount, { innerWall, otherLayers, layerTop }) => {
@@ -290,7 +265,7 @@ async function calculateSectionPoints({
     if (subscriber1) {
         subscriber1.unsubscribe();
     }
-    subscriber1 = pool.events()
+    subscriber1 = pool?.events()
         .filter(event => event.type === PoolEventType.taskCompleted)
         .subscribe(() => {
             if (layerCount && layerCount === innerWallMap.size) {
@@ -302,7 +277,7 @@ async function calculateSectionPoints({
                 if (subscriber2) {
                     subscriber2.unsubscribe();
                 }
-                subscriber2 = pool.events()
+                subscriber2 = pool?.events()
                     .filter(event => event.type === PoolEventType.taskCompleted)
                     .subscribe(() => {
                         if (layerCount && layerCount === infillMap.size) {
@@ -313,7 +288,6 @@ async function calculateSectionPoints({
 
                             runningJob = null;
                             subscriber2.unsubscribe();
-
                             // eslint-disable-next-line @typescript-eslint/no-use-before-define
                             runJob();
                         }
@@ -322,22 +296,90 @@ async function calculateSectionPoints({
         });
 }
 
+let preparingPool;
+const destroyPool = async (force?: boolean) => {
+    preparingPool = false;
+    return new Promise<void>((resolve) => {
+        clearTaskTmp();
+        if (pool && (force || runningJob)) {
+            const subscriber = pool.events()
+                .filter(event => event.type === PoolEventType.terminated)
+                .subscribe(() => {
+                    pool = null;
+                    subscriber.unsubscribe();
+                    resolve();
+                });
+            pool.terminate(true);
+        } else {
+            resolve();
+        }
+    });
+};
+
+// const getWorkerContent = async () => {
+//     if (workerContent) {
+//         return workerContent;
+//     }
+//     return new Promise<null>((resolve) => {
+//         fetch('clipperPool.worker.js')
+//             .then(async (response) => {
+//                 return response.blob();
+//             })
+//             .then((blob) => {
+//                 workerContent = URL.createObjectURL(blob);
+//                 resolve(workerContent);
+//             });
+//     });
+// };
 let clearPoolhandle;
-function runJob() {
-    if (!pool) {
-        pool = Pool(
-            async () => spawn(new Worker('clipperPool.worker.js'), {
-                timeout: 20000
-            }),
-            defaultPoolSize
-        );
-        const subscriber = pool.events()
-            .filter(event => event.type === PoolEventType.initialized)
-            .subscribe(() => {
-                idleWorkerNum = defaultPoolSize;
-                runJob();
-                subscriber.unsubscribe();
-            });
+const initPool = async () => {
+    return new Promise<void>(async (resolve) => {
+        if (clearPoolhandle) {
+            clearTimeout(clearPoolhandle);
+            clearPoolhandle = null;
+        }
+
+        postMessage({ WORKER_STATUS: 'clipperWorkerBusy' });
+        if (pool || preparingPool) {
+            resolve();
+            return;
+        }
+        // Avoid the problem of repeated creation of thread pool in high concurrency
+        preparingPool = true;
+        delay(() => {
+            if (!preparingPool) {
+                resolve();
+            }
+            // await getWorkerContent();
+            pool = Pool(
+                async () => spawn(new Worker('clipperPool.worker.js'), {
+                    timeout: 20000
+                }),
+                defaultPoolSize
+            );
+            const subscriber = pool.events()
+                .filter(event => event.type === PoolEventType.initialized)
+                .subscribe(() => {
+                    resolve();
+                    if (!preparingPool) {
+                        destroyPool(true);
+                    }
+                    preparingPool = false;
+                    subscriber.unsubscribe();
+                });
+        }, 1000, 'later');
+    });
+};
+
+
+async function runJob() {
+    if (sleep) {
+        return;
+    }
+    if (!pool && jobs.length && !preparingPool) {
+        postMessage({ WORKER_STATUS: 'clipperWorkerBusy' });
+        await initPool();
+        runJob();
         return;
     }
 
@@ -346,37 +388,63 @@ function runJob() {
         clearPoolhandle = null;
     }
 
-    if (jobs.length && !runningJob && idleWorkerNum === defaultPoolSize) {
-        runningJob = jobs.shift();
-        // start execution job, runningJob=${runningJob.jobID}, modelID=${runningJob.modelID}
-        calculateSectionPoints(runningJob);
-    } else if (!runningJob) {
-        clearPoolhandle = setTimeout(() => {
-            pool.terminate();
-            pool = null;
-        }, 1000 * 10);
-        clearTaskTmp();
+    if (pool) {
+        if (jobs.length && !runningJob) {
+            runningJob = jobs.shift();
+            postMessage({ WORKER_STATUS: 'clipperWorkerBusy' });
+            // [start execution job]: , modelName=${runningJob.modelName}
+            calculateSectionPoints(runningJob);
+        } else if (!runningJob && !jobs.length) {
+            postMessage({ WORKER_STATUS: 'clipperWorkerIdle' });
+
+            clearPoolhandle = setTimeout(async () => {
+                await destroyPool(true);
+            }, 1000 * 10);
+            clearTaskTmp();
+        }
     }
 }
+
+const onStopWorker = () => {
+    sleep = true;
+    postMessage({ WORKER_STATUS: 'clipperWorkerStop' });
+    destroyPool();
+};
+
+const onContinueWorker = async () => {
+    if (!sleep) {
+        return;
+    }
+    sleep = false;
+    if (!runningJob && jobs.length === 0) {
+        return;
+    }
+    await initPool();
+    if (runningJob) {
+        jobs.unshift(runningJob);
+        runningJob = null;
+    }
+
+    runJob();
+};
 
 onmessage = async (e) => {
     const [type, job, jobID] = e.data as [ClipperMessageType, TJobMessage, string];
     if (type === 'stop-job') {
-        sleep = true;
+        onStopWorker();
         return;
     } else if (type === 'continue-job') {
-        sleep = false;
-        scheduleWork();
+        onContinueWorker();
         return;
     }
 
     if (runningJob && runningJob.modelID === job.modelID) {
-        poolTaskQueue = [];
         const runningJobID = runningJob.jobID;
-        // emit to cancel worker, runningJob=${runningJob.jobID}, modelID=${runningJob.modelID}
+        // emit to cancel worker, modelID=${runningJob.modelID}
         // emit to cancel worker
         postMessage({ type: 'CANCEL', modelID: runningJob.modelID, jobID: runningJobID });
-        layerCount = 0;
+
+        await destroyPool();
         runningJob = null;
     }
     jobs = jobs.filter(t => t.modelID !== job.modelID);
@@ -385,9 +453,7 @@ onmessage = async (e) => {
         job.jobID = jobID;
         jobs.push(job);
     }
-    if (!runningJob) {
-        runJob();
-    }
+    runJob();
 };
 
 export default null;
