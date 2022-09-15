@@ -1207,7 +1207,6 @@ export const actions = {
             case 'succeed': {
                 const { vertexNumber, gcodeEntityLayers: bufferGeometry, layerCount, bounds } = value;
                 const freeMemory = await controller.getFreeMemory()
-
                 const outOfMemoryForRenderGcode = (freeMemory - vertexNumber * 0.25) < 0;
                 if (!outOfMemoryForRenderGcode) {
                     const object3D = gcodeBufferGeometryToObj3d('3DP', bufferGeometry, null, {
@@ -1584,9 +1583,9 @@ export const actions = {
 
         const definitionsWithSameCategory = state[definitionsKey].filter(
             (d) => {
-                if (definition.category=== '') {
+                if (definition.category === '') {
                     return d.category === i18n._(KEY_DEFAULT_CATEGORY_CUSTOM)
-                }else {
+                } else {
                     return d.category === definition.category
                 }
             }
@@ -1949,7 +1948,8 @@ export const actions = {
             dispatch(actions.updateState({
                 gcodeFile: null,
                 gcodeLine: null,
-                displayedType: 'model'
+                displayedType: 'model',
+                outOfMemoryForRenderGcode: false
             }));
         }
     },
@@ -2644,7 +2644,8 @@ export const actions = {
         gcodeLineGroup.visible = false;
         dispatch(
             actions.updateState({
-                displayedType: 'model'
+                displayedType: 'model',
+                outOfMemoryForRenderGcode: false
             })
         );
         dispatch(actions.render());
