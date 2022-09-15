@@ -829,7 +829,7 @@ function Configurations() {
                             </div>
                         )}
                         {configDisplayType === CONFIG_DISPLAY_TYPES[1] && (
-                            <div className="overflow-y-auto height-max-400">
+                            <div className="overflow-y-auto height-max-400 margin-bottom-8">
                                 {Object.keys(printingCustomConfigsWithCategory).map((category) => (
                                     <div key={category}>
                                         {printingCustomConfigsWithCategory[category].map(key => {
@@ -866,7 +866,7 @@ function Configurations() {
                         >
                             {i18n._('key-Printing/PrintingConfigurations-More Parameters >')}
                         </Anchor>
-                        <img src="/resources/images/3dp/arrow.png" alt="arrow" className="display-block margin-vertical-8 width-288 height-12" />
+                        {/* <img src="/resources/images/3dp/arrow.png" alt="arrow" className="display-block margin-vertical-8 width-288 height-12" /> */}
                     </div>
 
                 </div>
