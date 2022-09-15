@@ -61,5 +61,8 @@ export type MarlinStateData = {
     currentWorkNozzle?: number,
     cncTargetSpindleSpeed?: number,
     cncCurrentSpindleSpeed?: number,
-    laserTargetPower?: number
+    laserTargetPower?: number,
+    ledValue?: number,
+    fanLevel?: number,
+    isDoorEnable?: boolean
 };

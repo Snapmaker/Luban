@@ -491,14 +491,18 @@ export const actions = {
                     currentWorkNozzle,
                     cncTargetSpindleSpeed,
                     cncCurrentSpindleSpeed,
-                    fileName
+                    fileName,
+                    ledValue,
+                    fanLevel
                 } = state;
                 dispatch(baseActions.updateState({
                     laser10WErrorState,
                     isEmergencyStopped,
                     currentWorkNozzle: !currentWorkNozzle ? LEFT_EXTRUDER : RIGHT_EXTRUDER,
                     cncTargetSpindleSpeed,
-                    cncCurrentSpindleSpeed
+                    cncCurrentSpindleSpeed,
+                    enclosureLight: ledValue,
+                    enclosureFan: fanLevel
                 }));
                 if (!isNil(fileName)) {
                     dispatch(baseActions.updateState({

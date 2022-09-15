@@ -1171,6 +1171,9 @@ export const LEVEL_TWO_POWER_LASER_FOR_SM2 = 'levelTwoLaserToolheadForSM2';
 export const STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL = 'standardCNCToolheadForOriginal';
 export const STANDARD_CNC_TOOLHEAD_FOR_SM2 = 'standardCNCToolheadForSM2';
 export const LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2 = 'levelTwoCNCToolheadForSM2';
+export const ENCLOSURE_FOR_SM2 = 'enclosureForSM2';
+export const ENCLOSURE_FOR_ARTISAN = 'enclosureForArtisan';
+export const AIR_PURIFIER = 'airPurifier';
 
 export const DUAL_EXTRUDER_LIMIT_WIDTH_L = 0;
 export const DUAL_EXTRUDER_LIMIT_WIDTH_R = 0;
@@ -1669,7 +1672,10 @@ export const MODULEID_MAP = {
     '14': LEVEL_TWO_POWER_LASER_FOR_SM2,
     '15': LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
     '512': HEADT_BED_FOR_SM2,
-    '515': A400_HEADT_BED_FOR_SM2
+    '515': A400_HEADT_BED_FOR_SM2,
+    '5': ENCLOSURE_FOR_SM2,
+    '16': ENCLOSURE_FOR_ARTISAN,
+    '7': AIR_PURIFIER
 };
 export const MATERIAL_TYPE_OPTIONS = [
     {

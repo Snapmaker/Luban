@@ -559,6 +559,18 @@ export default class Business extends Dispatcher {
         });
     }
 
+    public async subscribeEnclosureInfo({ interval = 1000 }, callback: ResponseCallback) {
+        return this.subscribe(0x15, 0xa0, interval, callback).then(({ response, packet }) => {
+            return { response, packet, data: {} };
+        });
+    }
+
+    public async subscribePurifierInfo({ interval = 1000 }, callback: ResponseCallback) {
+        return this.subscribe(0x17, 0xa0, interval, callback).then(({ response, packet }) => {
+            return { response, packet, data: {} };
+        });
+    }
+
     public async subscribeWorkSpeed({ interval = 1000 }, callback: ResponseCallback) {
         this.log.info('subscribeWorkSpeed');
         return this.subscribe(0xac, 0xa4, interval, callback).then(({ response, packet }) => {
@@ -840,6 +852,44 @@ export default class Business extends Dispatcher {
         return this.send(0x01, 0x06, PeerId.SCREEN, Buffer.alloc(0)).then(({ response, packet }) => {
             this.log.info('close response');
             return { response, packet };
+        });
+    }
+
+    public async setEnclosureLight(key, value) {
+        const buffer = Buffer.alloc(2);
+        writeUint8(buffer, 0, key);
+        writeUint8(buffer, 1, value);
+        return this.send(0x15, 0x02, PeerId.CONTROLLER, buffer).then(({ response, packet }) => {
+            this.log.info(`set Enclosure light: ${response.result}`);
+            return { response, packet };
+        });
+    }
+
+    public async setEnclosureFan(key, value) {
+        const buffer = Buffer.alloc(2);
+        writeUint8(buffer, 0, key);
+        writeUint8(buffer, 1, value);
+        return this.send(0x15, 0x04, PeerId.CONTROLLER, buffer).then(({ response, packet }) => {
+            this.log.info(`set Enclosure fan: ${response.result}`);
+            return { response, packet };
+        });
+    }
+
+    public async setPurifierSpeed(key, speed) {
+        const buffer = Buffer.alloc(2);
+        writeUint8(buffer, 0, key);
+        writeUint8(buffer, 1, speed);
+        return this.send(0x17, 0x02, PeerId.CONTROLLER, buffer).then(({ response, packet }) => {
+            return { response, packet };
+        });
+    }
+
+    public async setPurifierSwitch(key, value) {
+        const buffer = Buffer.alloc(2);
+        writeUint8(buffer, 0, key);
+        writeBool(buffer, 1, value ? 1 : 0);
+        return this.send(0x17, 0x03, PeerId.CONTROLLER, buffer).then(({ response, packet }) => {
+            return { response, packet, data: {} };
         });
     }
 }
