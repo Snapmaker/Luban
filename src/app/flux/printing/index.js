@@ -39,7 +39,8 @@ import {
     RIGHT_EXTRUDER,
     RIGHT_EXTRUDER_MAP_NUMBER,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
-    WHITE_COLOR
+    WHITE_COLOR,
+    KEY_DEFAULT_CATEGORY_CUSTOM
 } from '../../constants';
 import { controller } from '../../lib/controller';
 import {
@@ -1576,7 +1577,13 @@ export const actions = {
         const definitionsKey = defaultDefinitionKeys[type].definitions;
 
         const definitionsWithSameCategory = state[definitionsKey].filter(
-            (d) => d.category === definition.category
+            (d) => {
+                if (definition.category=== '') {
+                    return d.category === i18n._(KEY_DEFAULT_CATEGORY_CUSTOM)
+                }else {
+                    return d.category === definition.category
+                }
+            }
         );
         // make sure name is not repeated
         while (

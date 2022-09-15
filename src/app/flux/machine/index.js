@@ -218,7 +218,7 @@ const INITIAL_STATE = {
     // Whether hide console when machine is working
     shouldHideConsole: true,
     promptDamageModel: true,
-    enable3dpLivePreview: true,
+    enable3dpLivePreview: false,
     // connect info
     moduleStatusList: {},
     nozzleSizeList: [],
@@ -1083,16 +1083,13 @@ export const actions = {
         controller.emitEvent(
             CONNECTION_EXECUTE_GCODE,
             { gcode, context, cmd },
-            (gcodeArray) => {
-                if (gcodeArray) {
-                    if (homingModal && gcode === 'G28') {
-                        dispatch(
-                            baseActions.updateState({
-                                homingModal: false
-                            })
-                        );
-                    }
-                    dispatch(actions.addConsoleLogs(gcodeArray));
+            () => {
+                if (homingModal && gcode === 'G28') {
+                    dispatch(
+                        baseActions.updateState({
+                            homingModal: false
+                        })
+                    );
                 }
             }
         );

@@ -2,7 +2,6 @@ import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { isNil, includes } from 'lodash';
-import { actions as machineActions } from '../../../flux/machine';
 import WorkSpeed from './WorkSpeed';
 import i18n from '../../../lib/i18n';
 import Switch from '../../components/Switch';
@@ -37,8 +36,6 @@ class CNC extends PureComponent {
                 headStatus: this.state.headStatus,
                 speed: this.props.cncTargetSpindleSpeed,
                 toolHead: this.props.toolHead,
-            }).once(CONNECTION_SWITCH_CNC, (result) => {
-                console.log(`${CONNECTION_SWITCH_CNC} ok, get${JSON.stringify(result)}`);
             });
             this.setState({
                 headStatus: !this.state.headStatus
@@ -47,8 +44,6 @@ class CNC extends PureComponent {
         updateToolHeadSpeed: (speed) => {
             controller.emitEvent(CONNECTION_UPDATE_TOOLHEAD_SPEED, {
                 speed: speed
-            }).once(CONNECTION_UPDATE_TOOLHEAD_SPEED, (result) => {
-                console.log(`${CONNECTION_UPDATE_TOOLHEAD_SPEED} ok, get${JSON.stringify(result)}`);
             });
             // this.setState({ toolHeadSpeepd: speed });
         },
@@ -148,10 +143,5 @@ const mapStateToProps = (state) => {
     };
 };
 
-const mapDispatchToProps = (dispatch) => {
-    return {
-        executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode))
-    };
-};
 
-export default connect(mapStateToProps, mapDispatchToProps)(CNC);
+export default connect(mapStateToProps)(CNC);

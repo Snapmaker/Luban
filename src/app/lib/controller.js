@@ -40,6 +40,7 @@ class SerialPortClient {
         // Serial Port events
         'connection:connected': [],
         'connection:connecting': [],
+        'connection:executeGcode': [],
         'serialport:emergencyStop': [],
         'serialport:read': [],
         'serialport:write': [],

@@ -95,7 +95,7 @@ function SettingItem({
     const { visible } = setting;
     const settingDefaultValue = setting.default_value;
     const isDefault = defaultValue && (defaultValue.value === settingDefaultValue);
-    if (!visible && !isNil(visible)) {
+    if ((!visible || visible === 'false') && !isNil(visible)) {
         return null;
     }
     const opts = [];

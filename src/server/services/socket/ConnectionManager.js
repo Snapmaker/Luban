@@ -729,9 +729,6 @@ M3`;
             this.executeGcode(this.socket, {
                 gcode: 'G28'
             }, callback);
-            this.executeGcode(this.socket, {
-                gcode: 'G54'
-            });
             if (this.connectionType === CONNECTION_TYPE_WIFI) {
                 socket && socket.emit('move:status', { isHoming: true });
             }
@@ -741,22 +738,22 @@ M3`;
         }
     }
 
-    coordinateMove = (socket, options) => {
+    coordinateMove = (socket, options, callback) => {
         const { moveOrders, gcode, jogSpeed, headType } = options;
         // const { moveOrders, gcode, context, cmd, jogSpeed, headType } = options;
         if (this.protocol === SACP_PROTOCOL) {
             this.socket.coordinateMove({ moveOrders, jogSpeed, headType });
         } else {
-            this.executeGcode(this.socket, { gcode });
+            this.executeGcode(this.socket, { gcode }, callback);
         }
     }
 
-    setWorkOrigin = (socket, options) => {
+    setWorkOrigin = (socket, options, callback) => {
         const { xPosition, yPosition, zPosition, bPosition } = options;
         if (this.protocol === SACP_PROTOCOL) {
             this.socket.setWorkOrigin({ xPosition, yPosition, zPosition, bPosition });
         } else {
-            this.executeGcode(this.socket, { gcode: 'G92 X0 Y0 Z0 B0' });
+            this.executeGcode(this.socket, { gcode: 'G92 X0 Y0 Z0 B0' }, callback);
         }
     }
 
@@ -767,7 +764,7 @@ M3`;
         }
     }
 
-    switchCNC = async (socket, options) => {
+    switchCNC = async (socket, options, callback) => {
         const { headStatus, speed, toolHead } = options;
         if (this.protocol === SACP_PROTOCOL) {
             if (toolHead === STANDARD_CNC_TOOLHEAD_FOR_SM2) {
@@ -778,9 +775,9 @@ M3`;
             await this.socket.switchCNC(headStatus);
         } else {
             if (headStatus) {
-                this.executeGcode(this.socket, { gcode: 'M5' });
+                this.executeGcode(this.socket, { gcode: 'M5' }, callback);
             } else {
-                this.executeGcode(this.socket, { gcode: 'M3 P100' });
+                this.executeGcode(this.socket, { gcode: 'M3 P100' }, callback);
             }
         }
     }

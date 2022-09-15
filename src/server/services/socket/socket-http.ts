@@ -362,7 +362,6 @@ class SocketHttp {
                 return;
             }
             const { data, code } = _getResult(null, result.res);
-            // console.log({ data });
             // No Content
             if (Object.keys(data).length === 0 || code === 204) {
                 return;
