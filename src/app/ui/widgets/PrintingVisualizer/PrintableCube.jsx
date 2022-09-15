@@ -82,9 +82,9 @@ class PrintableCube extends Object3D {
         // front
         const geometry1 = new PlaneGeometry(x, front);
         const material = new MeshBasicMaterial({
-            color: '#FFEDED',
+            color: '#DCDDDF',
             side: FrontSide,
-            opacity: 1,
+            opacity: 0.7,
             transparent: true,
             depthWrite: false,
             polygonOffset: true,
