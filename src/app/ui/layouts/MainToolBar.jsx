@@ -103,16 +103,16 @@ class MainToolBar extends PureComponent {
                         key="machineMaterialSettings"
                         disabled={!this.props.profileInitialized}
                     >
-                        <div className={classNames(styles['hover-background'], 'print-machine-material-intro machine-setting position-re width-360 float-r border-left-grey-3 height-66 sm-flex sm-flex-direction-c justify-space-between padding-vertical-8 padding-horizontal-16')}>
-                            <div className="width-144">
-                                <div className="width-144 sm-flex">
+                        <div className={classNames(styles['hover-background'], 'hover-background-blue-svg print-machine-material-intro machine-setting position-re width-360 float-r border-left-grey-3 height-66 sm-flex sm-flex-direction-c justify-space-between padding-vertical-8 padding-horizontal-16')}>
+                            <div className="width-percent-70">
+                                <div className="width-percent-100 sm-flex">
                                     <Badge status={isConnected ? 'success' : 'default'} />
-                                    <span className="width-130 text-overflow-ellipsis display-inline">{i18n._(find(MACHINE_SERIES, { value: machineInfo?.series })?.seriesLabel)}</span>
+                                    <span className="width-percent-100 text-overflow-ellipsis display-inline font-weight-500">{i18n._(find(MACHINE_SERIES, { value: machineInfo?.series })?.seriesLabel)}</span>
                                 </div>
                             </div>
                             {headType === HEAD_PRINTING && (
                                 <div className="width-percent-100 sm-flex">
-                                    <div className="sm-flex width-percent-50 text-overflow-ellipsis">
+                                    <div className="sm-flex width-percent-50 text-overflow-ellipsis font-size-small">
                                         {/* <div className="height-24 width-24 border-default-grey-1" style={{ borderColor: `${materialInfo?.leftExtruder?.color}`, backgroundColor: `${materialInfo?.leftExtruder?.color}` }} /> */}
                                         {materialInfo?.leftExtruder?.color === WHITE_COLOR ? (
                                             <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
@@ -126,12 +126,12 @@ class MainToolBar extends PureComponent {
                                             />
                                         )}
                                         {materialInfo?.rightExtruder && (
-                                            <div className="margin-right-4">L:</div>
+                                            <div className="margin-right-4 line-heigh-24">L:</div>
                                         )}
-                                        <span className="display-inline text-overflow-ellipsis">{materialInfo?.leftExtruder?.name}</span>
+                                        <span className="display-inline text-overflow-ellipsis line-heigh-24">{materialInfo?.leftExtruder?.name}</span>
                                     </div>
                                     {materialInfo?.rightExtruder && (
-                                        <div className="sm-flex width-percent-50 text-overflow-ellipsis">
+                                        <div className="sm-flex width-percent-50 text-overflow-ellipsis font-size-small">
                                             {materialInfo?.rightExtruder?.color === WHITE_COLOR ? (
                                                 <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
                                             ) : (
@@ -142,8 +142,8 @@ class MainToolBar extends PureComponent {
                                                     type={['static']}
                                                 />
                                             )}
-                                            <div className="margin-right-4">R:</div>
-                                            <span className="display-inline text-overflow-ellipsis">{materialInfo?.rightExtruder?.name}</span>
+                                            <div className="margin-right-4 line-heigh-24">R:</div>
+                                            <span className="display-inline text-overflow-ellipsis line-heigh-24">{materialInfo?.rightExtruder?.name}</span>
                                         </div>
                                     )}
                                 </div>
@@ -152,7 +152,7 @@ class MainToolBar extends PureComponent {
                                 name="RightSlipNormal"
                                 size={24}
                                 type={['static']}
-                                className="position-ab top-22 right-16"
+                                className="position-ab top-22 right-16 svg-hover-blue"
                             />
                         </div>
                     </Anchor>
