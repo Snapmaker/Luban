@@ -57,7 +57,7 @@ const repairSupport = (files, size) => {
             });
         });
     });
-    return Promise.all(promises);
+    return Promise.allSettled(promises);
 };
 
 const handleGenerateSupport = (socket, params) => {
@@ -68,15 +68,11 @@ const handleGenerateSupport = (socket, params) => {
             progressHandle(socket, 'generate-support:progress', progress);
         },
         async (result) => {
-            try {
-                await repairSupport(result.files, params.size);
+            await repairSupport(result.files, params.size);
 
-                socket.emit('generate-support:completed', {
-                    supportFilePaths: result.files
-                });
-            } catch (error) {
-                socket.emit('generate-support:error', error.message);
-            }
+            socket.emit('generate-support:completed', {
+                supportFilePaths: result.files
+            });
         },
         (err) => {
             socket.emit('generate-support:error', err);
