@@ -84,6 +84,7 @@ const MaterialSettings = ({
         materialDefinitions.forEach((definition) => {
             if (!(MATERIAL_TYPE_ARRAY.includes(definition.category))) {
                 definition.category = 'Other';
+                definition.i18nCategory = 'Other';
             }
             if (definitionByCategoryTemp[definition.category]) {
                 definitionByCategoryTemp[definition.category].push(definition);
@@ -180,11 +181,15 @@ const MaterialSettings = ({
         const newDefinitionForManager = cloneDeep(definitionState.definitionForManager);
         newDefinitionForManager.category = data.type;
         newDefinitionForManager.name = data.name;
+        newDefinitionForManager.i18nCategory = data.type;
         if (Object.keys(newDefinitionForManager.settings).length === 0) {
             newDefinitionForManager.settings = cloneDeep(materialDefinitions[0].settings);
         }
         newDefinitionForManager.settings = {
             ...newDefinitionForManager.settings,
+            material_type: {
+                default_value: (data.type).toLowerCase()
+            },
             color: {
                 default_value: data.color
             },
