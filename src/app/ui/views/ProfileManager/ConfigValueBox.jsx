@@ -121,6 +121,7 @@ function ConfigValueBox({
         setProfileDomOffset(offsetTop - scrollTop);
     };
     const onChangeMaterialType = (newCategoryName) => {
+        definitionForManager.i18nCategory = newCategoryName;
         dispatch(printingActions.updateDefinitionCategoryName(managerType, definitionForManager, newCategoryName));
     };
     const renderCheckboxList = ({

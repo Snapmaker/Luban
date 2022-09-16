@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { isNil, noop } from 'lodash';
-import { Switch } from 'antd';
+import { Switch, Tooltip } from 'antd';
 import i18n from '../../../lib/i18n';
 import Select from '../../components/Select';
 import { NumberInput as Input } from '../../components/Input';
@@ -79,6 +79,7 @@ function SettingItem({
     styleSize = 'large',
     managerType,
     officalDefinition,
+    showTooltip = false,
     onClick,
     definitionCategory,
     onChangeMaterialType = noop,
@@ -110,16 +111,24 @@ function SettingItem({
 
     return (
         <Anchor className="sm-flex justify-space-between height-32 margin-vertical-8" onClick={(e) => onClick && onClick(categoryKey, definitionKey, e)}>
-            <span className="text-overflow-ellipsis width-auto main-text-normal" style={{ maxWidth: `calc(100% - ${styleSize === 'large' ? 224 : 176}px)` }}>
-                {i18n._(label)}
-            </span>
+            {!showTooltip && (
+                <span className="text-overflow-ellipsis width-auto main-text-normal" style={{ maxWidth: `calc(100% - ${styleSize === 'large' ? 224 : 176}px)` }}>
+                    {i18n._(label)}
+                </span>
+            )}
+            {showTooltip && (
+                <Tooltip title={i18n._(label)} placement="left">
+                    <span className="text-overflow-ellipsis width-auto main-text-normal" style={{ maxWidth: `calc(100% - ${styleSize === 'large' ? 224 : 176}px)` }}>
+                        {i18n._(label)}
+                    </span>
+                </Tooltip>
+            )}
             <div className="sm-flex-auto">
                 {isProfile && !isDefault && (
                     <SvgIcon
                         className="margin-horizontal-4"
                         name="Reset"
                         size={24}
-                        // className={}
                         onClick={() => {
                             onChangeDefinition(definitionKey, (defaultValue && defaultValue.value) ?? settingDefaultValue);
                         }}
@@ -271,6 +280,7 @@ SettingItem.propTypes = {
     styleSize: PropTypes.string,
     managerType: PropTypes.string,
     officalDefinition: PropTypes.bool,
+    showTooltip: PropTypes.bool,
     definitionCategory: PropTypes.string,
     onChangeMaterialType: PropTypes.func,
     onClick: PropTypes.func,

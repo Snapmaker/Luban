@@ -840,6 +840,7 @@ function Configurations() {
                                                     styleSize="middle"
                                                     settings={selectedDefinition?.settings}
                                                     definitionKey={key}
+                                                    showTooltip
                                                     key={key}
                                                     onChangeDefinition={actions.onChangeDefinition}
                                                     isDefaultDefinition={
