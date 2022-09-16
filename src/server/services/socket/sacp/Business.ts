@@ -865,6 +865,16 @@ export default class Business extends Dispatcher {
         });
     }
 
+    public async setEnclosureDoorEnabled(key, value, headTypeKey) {
+        const buffer = Buffer.alloc(3);
+        writeUint8(buffer, 0, key);
+        writeInt8(buffer, 1, headTypeKey);
+        writeBool(buffer, 2, value);
+        return this.send(0x15, 0x03, PeerId.CONTROLLER, buffer).then(({ response, packet }) => {
+            this.log.info(`set Enclosure door enabled: ${response.result}`);
+            return { response, packet };
+        })
+    }
     public async setEnclosureFan(key, value) {
         const buffer = Buffer.alloc(2);
         writeUint8(buffer, 0, key);

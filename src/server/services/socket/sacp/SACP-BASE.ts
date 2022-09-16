@@ -290,7 +290,7 @@ class SocketBASE {
                 ...stateData,
                 ledValue,
                 fanLevel: fanlevel,
-                isDoorEnable: State
+                isDoorEnable: State,
             }
         };
         this.sacpClient.subscribeEnclosureInfo({ interval: 1000 }, this.subscribeEnclosureInfoCallback).then(res => {
@@ -683,6 +683,27 @@ class SocketBASE {
         const moduleInfo = this.moduleInfos && (this.moduleInfos[ENCLOSURE_FOR_ARTISAN] || this.moduleInfos[ENCLOSURE_FOR_SM2])
         this.sacpClient.setEnclosureFan(moduleInfo.key, options.value).then(({ response }) => {
             log.info(`Update enclosure fan result, ${response.result}`);
+        });
+    }
+
+    public async setDoorDetection(options) {
+        const moduleInfo = this.moduleInfos && (this.moduleInfos[ENCLOSURE_FOR_ARTISAN] || this.moduleInfos[ENCLOSURE_FOR_SM2])
+        let headTypeKey = 0;
+        switch (this.headType) {
+            case HEAD_PRINTING:
+                headTypeKey = 0;
+                break;
+            case HEAD_LASER:
+                headTypeKey = 1;
+                break;
+            case HEAD_CNC:
+                headTypeKey = 2;
+                break;
+            default:
+                break;
+        }
+        this.sacpClient.setEnclosureDoorEnabled(moduleInfo.key, options.enable ? 1 : 0, headTypeKey).then(({ response, packet }) => {
+            log.info(`Update enclosure door enabled: ${response.result}`);
         });
     }
 
