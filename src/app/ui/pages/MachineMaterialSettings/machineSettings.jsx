@@ -377,6 +377,7 @@ const MachineSettings = forwardRef(({
         let newDiameter = Number(newValue);
         if (newDiameter < 0.1) newDiameter = 0.1;
         if (newDiameter > 1.2) newDiameter = 1.2;
+        newDiameter = Math.floor(newDiameter * 100) / 100;
         const label = `${newDiameter}`;
         if (direction === LEFT) {
             if (!find(leftNozzleDiameterList, { label })) {

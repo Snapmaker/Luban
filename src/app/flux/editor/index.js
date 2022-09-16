@@ -1388,6 +1388,7 @@ export const actions = {
 
         const newSVGModel = await SVGActions.createModelFromElement(element);
         if (newSVGModel) {
+            newSVGModel.refresh();
             const operation = new AddOperation2D({
                 toolPathGroup,
                 svgActions: SVGActions,
