@@ -396,7 +396,7 @@ export const actions = {
         const materialParamModels = [];
         const activeMaterialType = dispatch(actions.getActiveMaterialType());
         const extruderLDefinition = await definitionManager.getDefinition('snapmaker_extruder_0');
-        allQualityDefinitions.forEach((eachDefinition) => {
+        allMaterialDefinition.forEach((eachDefinition) => {
             const paramModel = new PresetDefinitionModel(
                 eachDefinition
             );
@@ -766,7 +766,6 @@ export const actions = {
     ) => (dispatch, getState) => {
         const { qualityDefinitions, defaultQualityId } = getState().printing;
         let isSelectedModelVisible = true;
-        console.log('activeMaterialType', activeMaterialType);
         qualityDefinitions.forEach((item) => {
             item?.updateParams && item.updateParams(activeMaterialType, machineNozzleSize);
             if (direction === LEFT_EXTRUDER

@@ -293,14 +293,11 @@ class DefinitionManager {
             .filter(([key]) => {
                 return !(extruderRelationSettingsKeys.includes(key))
             })
-            console.log('before');
         await this.updateDefinition(machineDefinition);
-        console.log('after', isNozzleSize, qualityDefinitions, this.machineDefinition.settings, );
         if (isNozzleSize) {
             qualityDefinitions.forEach((item) => {
                 resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder)
             })
-            console.log('qualityDefinitions', qualityDefinitions);
             return {
                 newQualityDefinitions: qualityDefinitions
             }

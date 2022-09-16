@@ -1,7 +1,6 @@
 import { cloneDeep } from 'lodash';
 import {
     HEAD_PRINTING,
-    // MATERIAL_REGEX,
     QUALITY_REGEX
 } from '../../constants';
 
