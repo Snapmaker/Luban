@@ -107,7 +107,7 @@ export function useGetDefinitions(allDefinitions, activeDefinitionID, getDefault
                 actualColor = d.settings.color ? d.settings.color.default_value : '#000000';
             }
             return {
-                label: d.name,
+                label: i18n._(d.i18nName || d.name),
                 value: d.definitionId,
                 i18nCategory: d.i18nCategory,
                 isHidden: !d.settings || Object.keys(d.settings).length === 0,
