@@ -12,10 +12,10 @@ import {
     DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, CNC_MODULE, LASER_MODULE, PRINTING_MODULE, HEAD_CNC, HEAD_LASER,
     COORDINATE_AXIS, WORKFLOW_STATUS_MAP, HEAD_PRINTING, EMERGENCY_STOP_BUTTON, ENCLOSURE_MODULES, AIR_PURIFIER_MODULES, ROTARY_MODULES,
     MODULEID_TOOLHEAD_MAP, A400_HEADT_BED_FOR_SM2, HEADT_BED_FOR_SM2, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_SM2, MODULEID_MAP,
-    LOAD_FIMAMENT, UNLOAD_FILAMENT, ENCLOSURE_FOR_ARTISAN, ENCLOSURE_FOR_SM2, AIR_PURIFIER
+    LOAD_FIMAMENT, UNLOAD_FILAMENT, ENCLOSURE_FOR_ARTISAN, ENCLOSURE_FOR_SM2, AIR_PURIFIER, WORKFLOW_STATE_RUNNING
 } from '../../../../app/constants';
 import { EventOptions, MarlinStateData } from '../types';
-import { SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2, COMPLUTE_STATUS } from '../../../constants';
+import { SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2, COMPLUTE_STATUS, WORKFLOW_STATE_IDLE, WORKFLOW_STATE_PAUSED } from '../../../constants';
 
 const log = logger('lib:SocketBASE');
 
@@ -69,6 +69,8 @@ class SocketBASE {
 
     public startTime: any;
 
+    public machineStatus: string = WORKFLOW_STATE_IDLE;
+
     public startHeartbeatBase = (sacpClient: Business, client?: net.Socket, isWifiConnection?: boolean) => {
         this.sacpClient = sacpClient;
         let stateData: MarlinStateData = {};
@@ -111,7 +113,6 @@ class SocketBASE {
                 log.info('TCP close');
                 this.socket && this.socket.emit('connection:close');
             }, 10000);
-            isWifiConnection && this.sacpClient.wifiConnectionHeartBeat();
             await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
                 // log.info(`revice moduleInfo: ${data.response}`);
                 moduleInfos.forEach(module => {
@@ -152,6 +153,7 @@ class SocketBASE {
                     }
                 });
             });
+            this.machineStatus = WORKFLOW_STATUS_MAP[statusKey];
             // stateData.status = WORKFLOW_STATUS_MAP[statusKey];
             this.socket && this.socket.emit('Marlin:state', {
                 state: {
@@ -267,8 +269,9 @@ class SocketBASE {
                 remainingTime: remainingTime,
                 printStatus: currentLine === this.totalLine ? COMPLUTE_STATUS : ''
             }
-            this.socket && this.socket.emit('sender:status', ({ data }));
+            includes([WORKFLOW_STATE_RUNNING, WORKFLOW_STATE_PAUSED], this.machineStatus) && this.socket && this.socket.emit('sender:status', ({ data }));
         };
+        this.sacpClient.subscribeGetPrintCurrentLineNumber({ interval: 1000 }, this.subscribeGetCurrentGcodeLineCallback);
         this.subscribeEnclosureInfoCallback = (data) => {
             const { ledValue, testStatus, fanlevel } = new EnclosureInfo().fromBuffer(data.response.data);
             let headTypeKey = 0;

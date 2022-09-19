@@ -404,6 +404,9 @@ class SocketTCP extends SocketBASE {
                 msg = '';
                 data = true;
             }
+            this.socket && this.socket.emit('connection:startGcode', {
+                msg: '', res: null
+            });
             callback(msg, data);
         });
     };
@@ -422,7 +425,6 @@ class SocketTCP extends SocketBASE {
         const md5 = crypto.createHash('md5');
         const gcodeFullPath = path.resolve(DataStorage.tmpDir, uploadName);
         const readStream = fs.createReadStream(gcodeFullPath);
-        this.sacpClient.subscribeGetPrintCurrentLineNumber({ interval: 1000 }, this.subscribeGetCurrentGcodeLineCallback);
         readStream.on('data', buf => {
             md5.update(buf);
         });

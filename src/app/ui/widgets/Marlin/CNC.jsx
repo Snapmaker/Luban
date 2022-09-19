@@ -27,7 +27,7 @@ class CNC extends PureComponent {
     };
 
     state = {
-        headStatus: this.props.headStatus
+        headStatus: this.props.toolHead === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2 ? this.props.cncCurrentSpindleSpeed > 0 : this.props.headStatus
     };
 
     actions = {
@@ -59,6 +59,11 @@ class CNC extends PureComponent {
         if (prevProps.headStatus !== this.props.headStatus && !isNil(this.props.headStatus)) {
             this.setState({
                 headStatus: this.props.headStatus
+            });
+        }
+        if (prevProps.cncCurrentSpindleSpeed !== this.props.cncCurrentSpindleSpeed && this.props.toolHead === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2) {
+            this.setState({
+                headStatus: this.props.cncCurrentSpindleSpeed > 0
             });
         }
         return prevProps;

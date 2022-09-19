@@ -297,6 +297,16 @@ class ConnectionManager {
                             this.socket.startGcode(options);
                         });
                     });
+            } else {
+                Promise.all(promises)
+                    .then(() => {
+                        this.socket.uploadGcodeFile(gcodeFilePath, headType, renderName, (msg) => {
+                            if (msg) {
+                                return;
+                            }
+                            this.socket.startGcode(options);
+                        });
+                    });
             }
         } else {
             const { workflowState } = options;
