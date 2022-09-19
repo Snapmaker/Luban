@@ -3,6 +3,7 @@ import ReactGA from 'react-ga4';
 import { v4 as uuid } from 'uuid';
 import isElectron from 'is-electron';
 import { machineStore } from '../store/local-storage';
+import pkg from '../../package.json';
 
 type THeadType = 'printing' | 'laser' | 'cnc'
 
@@ -20,16 +21,28 @@ type ToolName = 'save' | 'undo' | 'redo' | 'align' | 'group' | 'ungroup'
     // laser_special
     | 'camera_capture_add_backgroup' | 'camera_capture_remove_backgroup'
 
-export function logPageView({ pathname }: { pathname: string, isRotate: boolean }) {
+
+const pageview = (pathname) => {
+    if (process.env.NODE_ENV !== 'production') {
+        return;
+    }
+    ReactGA.send({ hitType: 'pageview', page: pathname });
+};
+export function logPageView({ pathname, isRotate }: { pathname: string, isRotate: boolean }) {
+    const axis = isRotate ? '-4axis' : '-3axis';
+
     if (pathname) {
         switch (pathname) {
             case '/':
+                pageview('/#/home');
                 break;
             case '/printing':
             case '/workspace':
+                pageview(`/#${pathname}`);
                 break;
             case '/laser':
             case '/cnc':
+                pageview(`/#${pathname}${axis}`);
                 break;
             default:
         }
@@ -49,6 +62,9 @@ const getProjectType = (headType: THeadType, isRotate?: boolean) => {
 };
 
 const sendMessage = (messageType: string, category: string, data: Record<string, string | number> = {}) => {
+    if (process.env.NODE_ENV !== 'production') {
+        return;
+    }
     data.userId = machineStore.get('userId');
     data.userLanguage = i18next.language;
     data.machine = machineStore.get('machine.series');
@@ -150,9 +166,14 @@ export const logGcodeExport = (headType: THeadType, to: 'local' | 'workspace', i
 };
 
 export const initialize = (userId: string) => {
+    if (process.env.NODE_ENV !== 'production') {
+        return;
+    }
     ReactGA.initialize('G-PVQS8L8HQM');
     ReactGA.gtag('set', 'user_properties', {
         'crm_id': userId
     });
+    // https://stackoverflow.com/questions/36508241/how-do-i-set-appversion-for-google-analytics-event-tracking
+    ReactGA.gtag('set', 'appVersion', pkg.version);
     lubanVisit();
 };

@@ -1,7 +1,8 @@
 import path from 'path';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
-import { includes, isUndefined, gt } from 'lodash';
+import { includes, isUndefined, gt, isNil } from 'lodash';
+import { v4 as uuid } from 'uuid';
 import isElectron from 'is-electron';
 import semver from 'semver';
 import { CNC_CONFIG_SUBCATEGORY, LASER_CONFIG_SUBCATEGORY, PRINTING_CONFIG_SUBCATEGORY, MATERIAL_TYPE_ARRAY } from './constants';
@@ -97,6 +98,10 @@ class DataStorage {
 
     async init(isReset = false) {
         const definitionUpdated = config.get('DefinitionUpdated');
+        const gaUserId = config.get('gaUserId');
+        if (isNil(gaUserId)) {
+            config.set('gaUserId', uuid());
+        }
         let overwriteProfiles = false;
         if (semver.gte(settings.version, '4.1.0') && (!definitionUpdated || !definitionUpdated[settings.version])) {
             overwriteProfiles = true;
