@@ -120,11 +120,15 @@ function Cnc({ location }) {
     const toolPathGroup = useSelector(state => state[HEAD_CNC]?.toolPathGroup, shallowEqual);
     const coordinateMode = useSelector(state => state[HEAD_CNC]?.coordinateMode, shallowEqual);
     const coordinateSize = useSelector(state => state[HEAD_CNC]?.coordinateSize, shallowEqual);
+    const useLockingBlock = useSelector(state => state[HEAD_CNC]?.useLockingBlock, shallowEqual);
+    const lockingBlockPosition = useSelector(state => state[HEAD_CNC]?.lockingBlockPosition, shallowEqual);
     const materials = useSelector(state => state[HEAD_CNC]?.materials, shallowEqual);
     const [jobTypeState, setJobTypeState] = useSetState({
         coordinateMode,
         coordinateSize,
-        materials
+        materials,
+        useLockingBlock,
+        lockingBlockPosition
     });
     const projectFileOversize = useSelector(state => state[HEAD_CNC]?.projectFileOversize, shallowEqual);
     const [isRotate, setIsRotate] = useState(materials?.isRotate);
@@ -146,9 +150,11 @@ function Cnc({ location }) {
         setJobTypeState({
             coordinateMode,
             coordinateSize,
-            materials
+            materials,
+            useLockingBlock,
+            lockingBlockPosition
         });
-    }, [coordinateMode, coordinateSize, materials]);
+    }, [coordinateMode, coordinateSize, materials, useLockingBlock, lockingBlockPosition]);
 
     useEffect(() => {
         setIsRotate(!!location?.state?.isRotate);
@@ -195,7 +201,19 @@ function Cnc({ location }) {
             key: 'homepage'
         });
     };
-    const jobTypeModal = renderJobTypeModal(HEAD_CNC, dispatch, showJobType, setShowJobType, jobTypeState, setJobTypeState, coordinateMode, coordinateSize, materials);
+    const jobTypeModal = renderJobTypeModal(
+        HEAD_CNC,
+        dispatch,
+        showJobType,
+        setShowJobType,
+        jobTypeState,
+        setJobTypeState,
+        coordinateMode,
+        coordinateSize,
+        materials,
+        useLockingBlock,
+        lockingBlockPosition
+    );
     const warningModal = useRenderWarning();
     const removeModelsWarningModal = useRenderRemoveModelsWarning({ headType: HEAD_CNC });
     const listActions = {

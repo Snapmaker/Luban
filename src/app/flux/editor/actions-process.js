@@ -369,7 +369,7 @@ export const processActions = {
      * @returns {Function}
      */
     commitGenerateGcode: headType => (dispatch, getState) => {
-        const { toolPathGroup, progressStatesManager, coordinateMode } = getState()[headType];
+        const { toolPathGroup, progressStatesManager, coordinateMode, useLockingBlock, lockingBlockPosition, materials: { isRotate } } = getState()[headType];
         const { size, toolHead, series } = getState().machine;
         const currentToolHead = headType === HEAD_CNC ? toolHead.cncToolhead : toolHead.laserToolhead;
         const toolPaths = toolPathGroup.getCommitGenerateGcodeInfos();
@@ -393,7 +393,7 @@ export const processActions = {
                 toolPaths,
                 size,
                 toolHead: currentToolHead,
-                origin: coordinateMode.value,
+                origin: (!isRotate && useLockingBlock) ? `position${lockingBlockPosition}` : coordinateMode.value,
                 series
             }
         });
