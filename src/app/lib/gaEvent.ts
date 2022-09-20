@@ -26,7 +26,11 @@ const pageview = (pathname) => {
     if (process.env.NODE_ENV !== 'production') {
         return;
     }
-    ReactGA.send({ hitType: 'pageview', page: pathname });
+    ReactGA.send({
+        hitType: 'pageview',
+        page: pathname,
+        title: `${pkg.name} ${pkg.version}`
+    });
 };
 export function logPageView({ pathname, isRotate }: { pathname: string, isRotate: boolean }) {
     const axis = isRotate ? '-4axis' : '-3axis';
