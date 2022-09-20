@@ -407,7 +407,7 @@ class SVGCanvas extends PureComponent {
             size: this.props.coordinateSize,
             scale: this.scale,
             getRoot,
-            coordinateMode: this.props.coordinateMode
+            coordinateMode: this.props.coordinateMode,
         });
     }
 

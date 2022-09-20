@@ -4,8 +4,14 @@ import { renderModal } from '../../utils';
 import i18n from '../../../lib/i18n';
 import JobType from '../../widgets/JobType';
 import { actions as editorActions } from '../../../flux/editor';
+import { HEAD_CNC } from '../../../constants';
 
-function renderJobTypeModal(headType, dispatch, showJobType, setShowJobType, jobTypeState, setJobTypeState, coordinateMode, coordinateSize, materials) {
+function renderJobTypeModal(
+    headType, dispatch, showJobType,
+    setShowJobType, jobTypeState, setJobTypeState,
+    coordinateMode, coordinateSize, materials,
+    useLockingBlock, lockingBlockPosition
+) {
     return showJobType && renderModal({
         title: i18n._('key-CncLaser/JobSetup-Job Setup'),
         renderBody() {
@@ -25,7 +31,9 @@ function renderJobTypeModal(headType, dispatch, showJobType, setShowJobType, job
                     setJobTypeState({
                         coordinateMode,
                         coordinateSize,
-                        materials
+                        materials,
+                        useLockingBlock,
+                        lockingBlockPosition
                     });
                     setShowJobType(false);
                 }
@@ -38,6 +46,12 @@ function renderJobTypeModal(headType, dispatch, showJobType, setShowJobType, job
                         jobTypeState.coordinateMode, jobTypeState.coordinateSize));
                     dispatch(editorActions.updateMaterials(headType, jobTypeState.materials));
                     dispatch(editorActions.scaleCanvasToFit(headType));
+                    if (headType === HEAD_CNC) {
+                        dispatch(editorActions.updateState(HEAD_CNC, {
+                            useLockingBlock: jobTypeState.useLockingBlock,
+                            lockingBlockPosition: jobTypeState.lockingBlockPosition
+                        }));
+                    }
                     setShowJobType(false);
                 }
             }
@@ -46,7 +60,9 @@ function renderJobTypeModal(headType, dispatch, showJobType, setShowJobType, job
             setJobTypeState({
                 coordinateMode,
                 coordinateSize,
-                materials
+                materials,
+                useLockingBlock,
+                lockingBlockPosition
             });
             setShowJobType(false);
         }
@@ -60,7 +76,9 @@ renderJobTypeModal.propTypes = {
     setJobTypeState: PropTypes.func.isRequired,
     coordinateMode: PropTypes.object.isRequired,
     coordinateSize: PropTypes.object.isRequired,
-    materials: PropTypes.object.isRequired
+    materials: PropTypes.object.isRequired,
+    useLockingBlock: PropTypes.bool,
+    lockingBlockPosition: PropTypes.number
 };
 
 export default renderJobTypeModal;

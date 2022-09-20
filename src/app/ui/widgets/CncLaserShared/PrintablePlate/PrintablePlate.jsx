@@ -1,11 +1,12 @@
-import { MeshBasicMaterial, Object3D, Group, Mesh, PlaneGeometry, DoubleSide } from 'three';
+import { MeshBasicMaterial, Object3D, Group, Mesh, PlaneGeometry, DoubleSide, ShapeGeometry, Math as ThreeMath } from 'three';
 import each from 'lodash/each';
 
 import TextSprite from '../../../../three-extensions/TextSprite';
 import TargetPoint from '../../../../three-extensions/TargetPoint';
 
 import GridLine from './GridLine';
-import { COORDINATE_MODE_CENTER } from '../../../../constants';
+import { COORDINATE_MODE_CENTER, DEFAULT_LUBAN_HOST, HEAD_CNC } from '../../../../constants';
+import SVGLoader from '../../../../three-extensions/SVGLoader';
 
 const METRIC_GRID_SPACING = 10; // 10 mm
 const METRIC_GRID_BIG_SPACING = 50;
@@ -132,6 +133,36 @@ class PrintablePlate extends Object3D {
         this.targetPoint.visible = true;
         this.add(this.targetPoint);
 
+        if (this.materials.isRotate || !(this.materials.headType === HEAD_CNC && this.materials.useLockingBlock)) return;
+        new SVGLoader().load(`${DEFAULT_LUBAN_HOST}/resources/images/cnc/locking-block-red.svg`, (data) => {
+            const paths = data.paths;
+
+            const svgGroup = new Group();
+
+            for (let i = 0; i < paths.length; i++) {
+                const path = paths[i];
+
+                const material = new MeshBasicMaterial({
+                    color: path.color,
+                    side: DoubleSide,
+                    depthWrite: false,
+                });
+
+                const pathShape = SVGLoader.createShapes(path);
+
+                for (let j = 0; j < pathShape.length; j++) {
+                    const shape = pathShape[j];
+
+                    const geometry = new ShapeGeometry(shape);
+                    const mesh = new Mesh(geometry, material);
+
+                    svgGroup.add(mesh);
+                }
+            }
+            svgGroup.position.set(14, -12, 0.01);
+            svgGroup.rotateZ(ThreeMath.degToRad(90));
+            this.add(svgGroup);
+        });
         // this._setMaterialsRect();
     }
 

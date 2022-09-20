@@ -125,7 +125,9 @@ const INITIAL_STATE = {
 
     enableShortcut: true,
     promptTasks: [],
-    projectFileOversize: false
+    projectFileOversize: false,
+    useLockingBlock: false,
+    lockingBlockPosition: 'A'
 };
 
 export const actions = {
@@ -160,6 +162,10 @@ export const actions = {
                 }));
             }
         }
+        dispatch(editorActions.updateState(HEAD_CNC, {
+            useLockingBlock: false,
+            lockingBlockPosition: 'A'
+        }));
     },
     updateToolListDefinition: (activeToolList) => async (dispatch, getState) => {
         const { toolDefinitions } = getState().cnc;
