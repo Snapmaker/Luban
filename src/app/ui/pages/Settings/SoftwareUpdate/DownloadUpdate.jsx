@@ -39,7 +39,7 @@ function DownloadUpdate({ releaseNotes, releaseChangeLog, prevVersion, version }
                             }
                         </div>
                         <div className="color-black-3">
-                            {i18n._('key-App/Learn more about release notes please checkout ')}
+                            {i18n._('key-App/Learn more about release notes please checkout')}
                             <a
                                 href="https://github.com/Snapmaker/Luban/releases"
                                 target="_blank"
