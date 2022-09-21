@@ -322,6 +322,8 @@ class ConnectionManager {
                         { axis: 'Z', distance: 0 }
                     ];
                     await this.socket.coordinateMove({ moveOrders, gcode, jogSpeed, headType, beforeGcodeStart: true });
+                } else {
+                    this.socket.startGcode(options);
                 }
                 // this.socket.startGcode(options);
             } else {
