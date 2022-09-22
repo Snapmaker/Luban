@@ -12,7 +12,10 @@ class ProgressBar extends React.PureComponent {
     static propTypes = {
         progress: PropTypes.number,
         tips: PropTypes.string,
-        strokeColor: PropTypes.string
+        subTips: PropTypes.string,
+        strokeColor: PropTypes.string,
+        closeIcon: PropTypes.node,
+        closable: PropTypes.bool
     };
 
     timeout = null;
@@ -46,14 +49,15 @@ class ProgressBar extends React.PureComponent {
 
 
     render() {
-        const { progress, tips, strokeColor = '#1890ff' } = this.props;
+        const { progress, tips, subTips, strokeColor = '#1890ff', closeIcon, closable = false } = this.props;
         const { display } = this.state;
         return (
             <div>
                 {display === 'block' && (
                     <Modal
                         size="lg"
-                        closable={false}
+                        closeIcon={closeIcon}
+                        closable={closable}
                         centered={false}
                         zIndex={2000}
                         style={{ top: 'calc(100vh - 126px)', padding: '16px 0 0' }}
@@ -61,6 +65,7 @@ class ProgressBar extends React.PureComponent {
                         <Modal.Body style={{ marginBottom: '-24px', marginTop: '-40px' }}>
                             <div className="position-re height-16 margin-top-24 margin-bottom-16 align-c">
                                 <span>{tips}</span>
+                                {subTips && (<span>{subTips}</span>)}
                             </div>
                             <div className={classNames(styles.progressbar)}>
 

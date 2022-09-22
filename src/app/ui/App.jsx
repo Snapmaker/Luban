@@ -11,16 +11,18 @@ import { actions as cncActions } from '../flux/cnc';
 import { actions as printingActions } from '../flux/printing';
 import { actions as textActions } from '../flux/text';
 import { actions as settingActions } from '../flux/setting';
+import { renderCustomIframe } from './utils';
 import HomePage from './pages/HomePage';
 import Workspace from './pages/Workspace';
 import Printing from './pages/Printing';
 import Cnc from './pages/Cnc';
 import Laser from './pages/Laser';
-import Settings from './pages/Settings';
 import UniApi from '../lib/uni-api';
 import AppLayout from './layouts/AppLayout';
 import { Server } from '../flux/machine/Server';
 import { logErrorToGA } from '../lib/gaEvent';
+import DownloadProgressBar from './widgets/DownloadProgressBar';
+import i18n from '../lib/i18n';
 
 class App extends PureComponent {
     static propTypes = {
@@ -34,7 +36,10 @@ class App extends PureComponent {
         menuDisabledCount: PropTypes.number
     };
 
-    state = { hasError: false };
+    state = {
+        hasError: false,
+        showWorkspace: true
+    };
 
     router = React.createRef();
 
@@ -129,6 +134,19 @@ class App extends PureComponent {
         logErrorToGA(errorInfo);
     }
 
+    renderIframe() {
+        const onClose = () => {
+            this.setState({
+                showWorkspace: false
+            });
+        };
+        return renderCustomIframe({
+            onClose,
+            visible: this.state.showWorkspace,
+            key: 'CustomIframe'
+        });
+    }
+
     render() {
         if (this.state.hasError) {
             // You can render any custom fallback UI
@@ -143,7 +161,6 @@ class App extends PureComponent {
                         <Route path="/printing" component={Printing} />
                         <Route path="/laser" component={Laser} />
                         <Route path="/cnc" component={Cnc} />
-                        <Route path="/settings" component={Settings} />
                         <Route component={HomePage} />
                     </Switch>
                     <ToastContainer
@@ -156,6 +173,11 @@ class App extends PureComponent {
                         pauseOnFocusLoss
                         draggable
                         pauseOnHover
+                    />
+                    {this.renderIframe()}
+                    <DownloadProgressBar
+                        tips={i18n._('downloading case')}
+                        subTips={i18n._('after downloading case')}
                     />
                 </AppLayout>
             </HashRouter>

@@ -198,7 +198,49 @@ function updateHandle() {
     });
 }
 
+function registerDownloadItemEvent() {
+    mainWindow.webContents.session.on('will-download', (event, item, webContents) => {
+        const downloadFileName = item.getFilename();
+        const defaultPath = path.resolve(app.getPath('downloads'), downloadFileName);
+        const allBytes = item.getTotalBytes();
+        item.setSavePath(defaultPath);
+        mainWindow.webContents.send('download-file-start', {
+            downloadFileName,
+            defaultPath,
+        });
+
+        item.on('updated', (event, state) => {
+            if (state === 'interrupted') {
+                console.log('Download is interrupted but can be resumed');
+            } else if (state === 'progressing') {
+                if (item.isPaused()) {
+                    console.log('Download is paused');
+                } else {
+                    mainWindow.webContents.send('download-file-progress', {
+                        downloadFileName,
+                        defaultPath,
+                        allBytes,
+                        receivedBytes: item.getReceivedBytes()
+                    });
+                }
+            }
+        });
+        item.once('done', (event, state) => {
+            if (state === 'completed') {
+                console.log('Download successfully');
+                mainWindow.webContents.send('download-file-completed', {
+                    downloadFileName,
+                    defaultPath
+                });
+            } else {
+                console.log(event, `Download failed: ${state}`);
+            }
+        });
+    });
+}
+
 // https://github.com/electron/electron/blob/v8.5.1/docs/api/app.md#apprequestsingleinstancelock
+
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
     app.quit();
@@ -252,6 +294,8 @@ const startToBegin = (data) => {
         }
         updateHandle();
     });
+
+    registerDownloadItemEvent();
 
     loadUrl = `http://${address}:${port}`;
     const filter = {

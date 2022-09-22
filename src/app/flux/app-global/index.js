@@ -21,7 +21,10 @@ const DEFAULT_STATE = {
     savedModalZIndex: DEFAULT_MODAL_ZINDEX,
 
     showArrangeModelsError: false,
-    arrangeModelZIndex: DEFAULT_MODAL_ZINDEX
+    arrangeModelZIndex: DEFAULT_MODAL_ZINDEX,
+    downloadFiles: [],
+    downloadFilesLength: 0,
+    progress: 0
 };
 const SHOW_MODAL_TIME = 15000;
 let clearSavedModalTimer = null;
@@ -237,6 +240,14 @@ export const actions = {
             allPepaired: promptTasks.length === 0,
             results
         };
+    },
+
+    updateDownloadedFiles: (options) => (dispatch) => {
+        dispatch(actions.updateState(options));
+    },
+    updateGlobalProgress: (progress) => (dispatch) => {
+        console.log('updateProgress', progress);
+        dispatch(actions.updateState({ progress }));
     }
 };
 export default function reducer(state = DEFAULT_STATE, action) {

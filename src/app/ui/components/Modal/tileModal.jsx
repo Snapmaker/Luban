@@ -7,12 +7,14 @@ import UniApi from '../../../lib/uni-api';
 class TileModal extends PureComponent {
     static propTypes = {
         ...Modal.propTypes,
-        closable: PropTypes.bool
+        closable: PropTypes.bool,
+        visible: PropTypes.bool
     }
 
     static defaultProps = {
         ...Modal.defaultProps,
-        closable: true
+        closable: true,
+        visible: true
     }
 
     componentDidMount() {
@@ -29,7 +31,7 @@ class TileModal extends PureComponent {
                 closable={this.props.closable}
                 wrapClassName="tile-modal"
                 width="auto"
-                visible
+                visible={this.props.visible}
                 mask={false}
                 footer={null}
                 onCancel={this.props.onClose}

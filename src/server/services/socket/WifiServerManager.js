@@ -37,6 +37,7 @@ class WifiServerManager extends EventEmitter {
             const message = msg.toString('utf8');
 
             const parts = message.split('|');
+            console.log('parts', parts);
             if (parts.length === 0 || parts[0].indexOf('@') === -1) {
                 // Not a valid message
                 return;
@@ -75,7 +76,7 @@ class WifiServerManager extends EventEmitter {
         for (const key of Object.keys(ifaces)) {
             const iface = ifaces[key];
             for (const address of iface) {
-                if (address.family === 'IPv4' && !address.internal) {
+                if ((address.family === 'IPv4' || address.family === 'IPv6') && !address.internal) {
                     const broadcastAddress = zipWith(
                         address.address.split('.').map(d => Number(d)),
                         address.netmask.split('.').map(d => Number(d)),

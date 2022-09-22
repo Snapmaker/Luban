@@ -91,6 +91,7 @@ class AppLayout extends PureComponent {
         updateSavedModal: PropTypes.func.isRequired,
         showArrangeModelsError: PropTypes.bool.isRequired,
         arrangeModelZIndex: PropTypes.number.isRequired,
+        updateGlobalProgress: PropTypes.func.isRequired,
         updateShowArrangeModelsError: PropTypes.func.isRequired
     };
 
@@ -543,6 +544,26 @@ class AppLayout extends PureComponent {
             });
         },
         initUniEvent: () => {
+            /* Start downloading case file */
+            UniApi.Event.on('download-file-start', (event, { downloadFileName, defaultPath }) => {
+                // printingActions.updateDownloadedFiles({
+                //     downloadFileName,
+                //     defaultPath
+                // });
+                console.log(downloadFileName, defaultPath);
+            });
+            UniApi.Event.on('download-file-progress', (event, { allBytes, receivedBytes }) => {
+                const progress = 0.5;
+                // const progress = allBytes ? Number((receivedBytes / allBytes).toFixed(2)) : 0.5;
+                console.log('downloadFileName, defaultPath, allBytes, receivedBytes', allBytes, receivedBytes, progress);
+                this.props.updateGlobalProgress(progress);
+            });
+            UniApi.Event.on('download-file-completed', (event, { downloadFileName, defaultPath }) => {
+                // this.props.updateGlobalProgress(1);
+                console.log(downloadFileName, defaultPath);
+            });
+            /* End downloading case file */
+
             UniApi.Event.on('message', (event, message) => {
                 this.props.updateAutoupdateMessage(message);
             });
@@ -660,11 +681,20 @@ class AppLayout extends PureComponent {
                 UniApi.Event.emit('appbar-menu:longterm-backup-config', ...args);
             });
 
+            UniApi.Event.on('download-case', (event, ...args) => {
+                UniApi.Event.emit('appbar-menu:download-case', ...args);
+            });
+
             UniApi.Event.on('appbar-menu:open-file', (file, arr) => {
                 this.actions.openProject(file);
                 if (arr && arr.length) {
                     this.actions.updateRecentFile(arr, 'update');
                 }
+            });
+            UniApi.Event.on('appbar-menu:download-case', (message) => {
+                // // TODO:
+                console.log('dd', message);
+                UniApi.Window.downloadCase(message);
             });
             UniApi.Event.on('appbar-menu:window', (type) => {
                 switch (type) {
@@ -946,6 +976,7 @@ const mapDispatchToProps = (dispatch) => {
         updateMachineToolHead: (toolHead, series, headType) => dispatch(machineActions.updateMachineToolHead(toolHead, series, headType)),
         longTermBackupConfig: () => dispatch(settingsActions.longTermBackupConfig()),
         updateSavedModal: (options) => dispatch(appGlobalActions.updateSavedModal(options)),
+        updateGlobalProgress: (progress) => dispatch(appGlobalActions.updateGlobalProgress(progress)),
         updateShowArrangeModelsError: (options) => dispatch(appGlobalActions.updateShowArrangeModelsError(options))
     };
 };

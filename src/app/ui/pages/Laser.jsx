@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import path from 'path';
-import PropTypes from 'prop-types';
-import { useHistory, withRouter } from 'react-router-dom';
+// import PropTypes from 'prop-types';
+import { useHistory, useLocation } from 'react-router-dom';
 import 'intro.js/introjs.css';
 import { message } from 'antd';
 import i18n from '../../lib/i18n';
@@ -36,7 +36,7 @@ import { Button } from '../components/Buttons';
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 const pageHeadType = HEAD_LASER;
 
-function Laser({ location }) {
+function Laser() {
     const widgets = useSelector(state => state?.widget[pageHeadType]?.default?.widgets, shallowEqual);
     const showImportStackedModelModal = useSelector(state => state[pageHeadType].showImportStackedModelModal, shallowEqual);
     const [stackedModelModalDsiabled, setStackedModelModalDsiabled] = useState(false);
@@ -45,6 +45,7 @@ function Laser({ location }) {
     const [showWorkspace, setShowWorkspace] = useState(false);
     const [showJobType, setShowJobType] = useState(true);
     const [enabledIntro, setEnabledIntro] = useState(null);
+    const location = useLocation();
     const initIndex = 0;
     const coordinateMode = useSelector(state => state[HEAD_LASER]?.coordinateMode, shallowEqual);
     const coordinateSize = useSelector(state => state[HEAD_LASER]?.coordinateSize, shallowEqual);
@@ -418,12 +419,8 @@ function Laser({ location }) {
         </div>
     );
 }
-Laser.propTypes = {
-    // history: PropTypes.object
-    location: PropTypes.object
-};
 
-function Guard({ location }) {
+function Guard() {
     const series = useSelector(state => state.machine.series, shallowEqual);
 
     const [hiddenMachineUpdate, setHiddenMachineUpdate] = useState((() => {
@@ -472,13 +469,9 @@ function Guard({ location }) {
                     </Modal>
                 )
             }
-            <Laser location={location} />
+            <Laser />
         </>
     );
 }
-Guard.propTypes = {
-    // history: PropTypes.object
-    location: PropTypes.object
-};
 
-export default withRouter(Guard);
+export default Guard;

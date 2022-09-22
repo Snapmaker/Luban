@@ -5,7 +5,7 @@ import Modal from '../components/Modal/tileModal';
 // import i18n from '../../lib/i18n';
 
 export default function renderPopup(options) {
-    const { onClose, component: Component, key, onCallBack } = options;
+    const { onClose, component: Component, key, onCallBack, props = {} } = options;
 
 
     if (!onClose) {
@@ -20,7 +20,7 @@ export default function renderPopup(options) {
         <Modal closable={false} disableOverlay tile style={{ width: '100%', height: '100%' }} onClose={onClose}>
 
             {/* <Modal.Body style={{ padding: '0' }}> */}
-            <Component isPopup onClose={onClose} key={key} onCallBack={onCallBack} />
+            <Component isPopup onClose={onClose} key={key} onCallBack={onCallBack} {...props} />
             {/* </Modal.Body> */}
 
         </Modal>
