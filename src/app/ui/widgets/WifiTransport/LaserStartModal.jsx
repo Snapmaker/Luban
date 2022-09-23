@@ -133,7 +133,7 @@ function LaserStartModal({
             name: i18n._('key-Workspace/LaserStartJob-manual_mode'),
             description: () => (
                 <Trans i18nKey="key-Workspace/LaserStartJob-manual_mode_description">
-                    <b>Manually control</b> the movement of the execution head until the laser beam converges into the smallest spot on the surface of the material. Click to <b>start the job</b>, the machine will use the current height as the laser height.
+                    In <b>Manually control</b> the movement of the execution head until the laser beam converges into the smallest spot on the surface of the material. Click to <b>start the job</b>, the machine will use the current height as the laser height.
                 </Trans>
             ),
             display: {},

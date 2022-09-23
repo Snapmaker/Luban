@@ -36,7 +36,6 @@ import History from './History';
 import FixedArray from './FixedArray';
 import { controller } from '../../lib/controller';
 import { actions as workspaceActions } from '../workspace';
-import MachineSelectModal from '../../ui/modals/modal-machine-select';
 import setting from '../../config/settings';
 
 import baseActions, { ACTION_UPDATE_STATE } from './action-base';
@@ -705,26 +704,6 @@ export const actions = {
                                 );
                             });
                     }
-                } else {
-                    // TODO: Why is modal code here???
-                    MachineSelectModal({
-                        series: machineSeries,
-                        headType: headType,
-                        toolHead: toolHead,
-                        onConfirm: (seriesT, headTypeT, toolHeadT) => {
-                            dispatch(
-                                workspaceActions.updateMachineState({
-                                    series: seriesT,
-                                    headType: headTypeT,
-                                    toolHead: toolHeadT,
-                                    canReselectMachine: true
-                                })
-                            );
-                            dispatch(
-                                actions.executeGcodeG54(seriesT, headTypeT)
-                            );
-                        }
-                    });
                 }
                 dispatch(
                     baseActions.updateState({

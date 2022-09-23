@@ -716,7 +716,7 @@ class PresetDefinitionModel {
                                     'speed_print': 60
                                 },
                                 'value': 60,
-                                'label': 'key-Luban/Preset/Print Speed-Medium'
+                                'label': 'key-Luban/Preset/Print Speed-Fast'
                             },
                         },
                         'current_value': 40,
