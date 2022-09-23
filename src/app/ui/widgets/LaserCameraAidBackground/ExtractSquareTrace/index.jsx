@@ -211,6 +211,7 @@ class ExtractSquareTrace extends PureComponent {
                     this.setState({
                         isStitched: true
                     });
+                    this.props.executeGcodeG54(this.props.series, this.props.headType);
                 }
                 this.props.changeCanTakePhoto(true);
             });

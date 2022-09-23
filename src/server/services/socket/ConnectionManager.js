@@ -263,6 +263,12 @@ class ConnectionManager {
                     });
                     promises.push(promise);
                 }
+                const promise = new Promise((resolve) => {
+                    this.executeGcode(this.socket, { gcode: 'G54;' }, () => {
+                        resolve();
+                    });
+                });
+                promises.push(promise);
             }
             Promise.all(promises)
                 .then(() => {
