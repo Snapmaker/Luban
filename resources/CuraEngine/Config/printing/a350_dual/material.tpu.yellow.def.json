@@ -1,7 +1,7 @@
 {
     "version": "4.4.0",
     "name": "TPU-Yellow",
-    "inherits": "snapmaker",
+    "inherits": "snapmaker2",
     "category": "TPU",
     "i18nName": "key-default_name-TPU_Yellow",
     "i18nCategory": "key-default_category-TPU",
