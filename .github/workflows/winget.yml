@@ -1,5 +1,4 @@
 name: Publish to WinGet
-if: github.repository == 'Snapmaker/Luban'
 on:
   release:
     types: [released]
@@ -7,7 +6,9 @@ jobs:
   publish:
     runs-on: windows-latest # action can only be run on windows
     steps:
-      - uses: vedantmgoyal2009/winget-releaser@latest
+      - name: Publish to WinGet on Snapmaker/Luban package
+        if: github.repository == 'Snapmaker/Luban'
+        uses: vedantmgoyal2009/winget-releaser@latest
         with:
           identifier: SnapmakerDevTeam.SnapmakerLuban
           installers-regex: '(ia32|x64).exe$'

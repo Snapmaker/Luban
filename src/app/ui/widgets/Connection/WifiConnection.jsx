@@ -150,7 +150,6 @@ function WifiConnection() {
     const {
         servers,
         serverDiscovering,
-
         connectionType,
         connectionStatus,
         connectionAuto,
@@ -225,7 +224,7 @@ function WifiConnection() {
             });
         },
         closeServer: () => {
-            server.closeServer();
+            server.closeServer && server.closeServer();
             setSavedServerAddressState('');
         },
         hideWifiConnectionMessage: () => {
@@ -292,7 +291,7 @@ function WifiConnection() {
                     break;
                 default:
                     if (msg) {
-                        actualText = msg;
+                        actualText = i18n._(msg);
                     }
             }
             setConnectionMessage({

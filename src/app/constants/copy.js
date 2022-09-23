@@ -306,6 +306,7 @@ i18n._('key-default_category-Other');
 i18n._('key-default_category-Nylon');
 
 // connection message
+i18n._('key-Workspace/Connection-The machine or toolhead cannot be correctly recognized. Make sure the firmware is up to date and the machine is wired correctly.');
 i18n._('key-Workspace/Connection-enclosure');
 i18n._('key-Workspace/Connection-rotaryModule');
 i18n._('key-Workspace/Connection-emergencyStopButton');

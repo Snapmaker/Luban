@@ -1692,6 +1692,7 @@
     "key-Workspace/Connection-TOOLHEAD_CNC_1": "CNC",
     "key-Workspace/Connection-TOOLHEAD_LASER_1": "1.6W 레이저",
     "key-Workspace/Connection-TOOLHEAD_LASER_2": "10W 레이저",
+    "key-Workspace/Connection-The machine or toolhead cannot be correctly recognized. Make sure the firmware is up to date and the machine is wired correctly.": "",
     "key-Workspace/Connection-To continue, the machine needs to return to the start position of the X, Y, and Z axes.": "계속하려면 툴헤드가 X, Y, Z축의 시작 위치로 돌아가야 합니다.",
     "key-Workspace/Connection-Unknown": "알 수 없음",
     "key-Workspace/Connection-Wi-Fi": "Wi-Fi",

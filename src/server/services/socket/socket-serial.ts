@@ -105,7 +105,7 @@ class SocketSerial {
             // socket.join(port);
 
             socket.emit('connection:open', { port, dataSource });
-            socket.emit('connection:connected', { state: controller.controller.state, dataSource });
+            socket.emit('connection:connected', { state: controller.controller.state, dataSource, connectionType: 'serial' });
         } else {
             controller.open((err = null) => {
                 if (err) {

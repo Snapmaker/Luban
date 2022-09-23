@@ -1692,6 +1692,7 @@
     "key-Workspace/Connection-TOOLHEAD_CNC_1": "",
     "key-Workspace/Connection-TOOLHEAD_LASER_1": "",
     "key-Workspace/Connection-TOOLHEAD_LASER_2": "",
+    "key-Workspace/Connection-The machine or toolhead cannot be correctly recognized. Make sure the firmware is up to date and the machine is wired correctly.": "",
     "key-Workspace/Connection-To continue, the machine needs to return to the start position of the X, Y, and Z axes.": "",
     "key-Workspace/Connection-Unknown": "",
     "key-Workspace/Connection-Wi-Fi": "",

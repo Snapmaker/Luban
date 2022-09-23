@@ -192,8 +192,15 @@ class SocketHttp {
                     }
                     this.state.headType = headType;
                     this.state.toolHead = toolHead;
+                    if (!(this.state.series && headType && headType !== 'UNKNOWN')) {
+                        this.socket && this.socket.emit('connection:open', {
+                            msg: 'key-Workspace/Connection-The machine or toolhead cannot be correctly recognized. Make sure the firmware is up to date and the machine is wired correctly.',
+                            code: 500
+                        });
+                    } else {
+                        this.socket && this.socket.emit('connection:open', result);
+                    }
                 }
-                this.socket && this.socket.emit('connection:open', result);
             });
     };
 
@@ -358,6 +365,7 @@ class SocketHttp {
             token: this.token
         }], (result: any) => {
             if (result.status === 'offline') {
+                log.debug(`wifi status="${result.status}" msg=${result.msg}`);
                 this.socket && this.socket.emit('connection:close');
                 return;
             }
