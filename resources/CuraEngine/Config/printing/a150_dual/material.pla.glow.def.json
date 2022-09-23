@@ -1,7 +1,7 @@
 {
     "version": "4.4.0",
     "name": "PLA-Green (Glow-in-the-dark)",
-    "inherits": "snapmaker",
+    "inherits": "snapmaker2",
     "category": "PLA",
     "i18nName": "key-default_name-PLA_Glow",
     "i18nCategory": "key-default_category-PLA",

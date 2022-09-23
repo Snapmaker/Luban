@@ -1,7 +1,7 @@
 {
     "version": "4.4.0",
     "name": "Support",
-    "inherits": "snapmaker",
+    "inherits": "snapmaker2",
     "category": "Support",
     "i18nName": "key-default_name-Support_White",
     "i18nCategory": "key-default_category-Support",

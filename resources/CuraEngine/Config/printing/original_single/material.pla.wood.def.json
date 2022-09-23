@@ -1,7 +1,7 @@
 {
     "version": "4.4.0",
     "name": "PLA-Wood",
-    "inherits": "snapmaker",
+    "inherits": "snapmaker2",
     "category": "PLA",
     "i18nName": "key-default_name-PLA_Wood",
     "i18nCategory": "key-default_category-PLA",

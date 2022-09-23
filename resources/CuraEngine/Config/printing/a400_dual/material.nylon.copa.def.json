@@ -1,7 +1,7 @@
 {
     "version": "4.4.0",
     "name": "CoPA",
-    "inherits": "snapmaker",
+    "inherits": "snapmaker2",
     "category": "Nylon",
     "i18nName": "key-default_name-Nylon-CoPA",
     "i18nCategory": "key-default_category-Nylon",
