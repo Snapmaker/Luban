@@ -4,6 +4,7 @@ import {
     ABSENT_OBJECT,
     CONNECTION_STATUS_CONNECTED,
     CONNECTION_STATUS_IDLE,
+    CONNECTION_TYPE_SERIAL,
     CONNECTION_TYPE_WIFI,
     LASER_MOCK_PLATE_HEIGHT,
     MACHINE_SERIES,
@@ -36,6 +37,7 @@ import History from './History';
 import FixedArray from './FixedArray';
 import { controller } from '../../lib/controller';
 import { actions as workspaceActions } from '../workspace';
+import MachineSelectModal from '../../ui/modals/modal-machine-select';
 import setting from '../../config/settings';
 
 import baseActions, { ACTION_UPDATE_STATE } from './action-base';
@@ -623,7 +625,7 @@ export const actions = {
                     connectLoading: isConnecting
                 }));
             },
-            'connection:connected': ({ state, err: _err }) => {
+            'connection:connected': ({ state, err: _err, connectionType }) => {
                 if (_err) {
                     return;
                 }
@@ -703,6 +705,27 @@ export const actions = {
                                     )
                                 );
                             });
+                    }
+                } else {
+                    if (connectionType === CONNECTION_TYPE_SERIAL) {
+                        MachineSelectModal({
+                            series: machineSeries,
+                            headType: headType,
+                            toolHead: toolHead,
+                            onConfirm: (seriesT, headTypeT, toolHeadT) => {
+                                dispatch(
+                                    workspaceActions.updateMachineState({
+                                        series: seriesT,
+                                        headType: headTypeT,
+                                        toolHead: toolHeadT,
+                                        canReselectMachine: true
+                                    })
+                                );
+                                dispatch(
+                                    actions.executeGcodeG54(seriesT, headTypeT)
+                                );
+                            }
+                        });
                     }
                 }
                 dispatch(
