@@ -447,6 +447,14 @@ const Window = {
         } else {
             // TODO:
         }
+    },
+
+    cancelDownloadCase(item) {
+        if (isElectron()) {
+            item && item.cancel();
+        } else {
+            // TODO:
+        }
     }
 };
 

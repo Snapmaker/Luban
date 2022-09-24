@@ -21,8 +21,6 @@ import UniApi from '../lib/uni-api';
 import AppLayout from './layouts/AppLayout';
 import { Server } from '../flux/machine/Server';
 import { logErrorToGA } from '../lib/gaEvent';
-import DownloadProgressBar from './widgets/DownloadProgressBar';
-import i18n from '../lib/i18n';
 
 class App extends PureComponent {
     static propTypes = {
@@ -175,10 +173,6 @@ class App extends PureComponent {
                         pauseOnHover
                     />
                     {this.renderIframe()}
-                    <DownloadProgressBar
-                        tips={i18n._('downloading case')}
-                        subTips={i18n._('after downloading case')}
-                    />
                 </AppLayout>
             </HashRouter>
         );

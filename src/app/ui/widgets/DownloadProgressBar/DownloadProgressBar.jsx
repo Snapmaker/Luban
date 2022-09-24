@@ -3,6 +3,7 @@ import React from 'react';
 // import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 // import classNames from 'classnames';
+import noop from 'lodash';
 import ProgressBar from '../../components/ProgressBar';
 import SvgIcon from '../../components/SvgIcon';
 import Anchor from '../../components/Anchor';
@@ -16,23 +17,23 @@ import Anchor from '../../components/Anchor';
 // } from '../../../constants';
 // import i18n from '../../../lib/i18n';
 
-function DownloadProgressBar({ tips, subTips }) {
+function DownloadProgressBar({ tips, subTips, onClose = noop, onMinimize = noop }) {
     const progress = useSelector(state => state.appGlobal.progress);
 
     function renderProfileMenu() {
         return (
             <div>
-                <Anchor>
+                <Anchor onClick={onMinimize}>
                     <SvgIcon
                         className="margin-right-8"
                         type={['static']}
-                        name="Cancel"
+                        name="Decrease"
                     />
                 </Anchor>
-                <Anchor>
+                <Anchor onClick={onClose}>
                     <SvgIcon
                         type={['static']}
-                        name="Decrease"
+                        name="Cancel"
                     />
                 </Anchor>
             </div>
@@ -52,6 +53,8 @@ function DownloadProgressBar({ tips, subTips }) {
 }
 DownloadProgressBar.propTypes = {
     tips: PropTypes.string,
+    onClose: PropTypes.func,
+    onMinimize: PropTypes.func,
     subTips: PropTypes.string
 };
 

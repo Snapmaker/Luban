@@ -545,17 +545,24 @@ class AppLayout extends PureComponent {
         },
         initUniEvent: () => {
             /* Start downloading case file */
-            UniApi.Event.on('download-file-start', (event, { downloadFileName, defaultPath }) => {
+            UniApi.Event.on('download-file-start', (event, { downloadFileName, defaultPath, downloadItem }) => {
                 // printingActions.updateDownloadedFiles({
                 //     downloadFileName,
                 //     defaultPath
                 // });
                 console.log(downloadFileName, defaultPath);
+                UniApi.Event.on('appbar-menu:cancel-download-case', () => {
+                    UniApi.Window.cancelDownloadCase(downloadItem);
+                });
+                UniApi.Event.on('appbar-menu:pause-download-case', () => {
+                    UniApi.Window.pauseDownloadCase(downloadItem);
+                });
+                UniApi.Event.on('appbar-menu:resume-download-case', () => {
+                    UniApi.Window.resumeDownloadCase(downloadItem);
+                });
             });
             UniApi.Event.on('download-file-progress', (event, { allBytes, receivedBytes }) => {
-                const progress = 0.5;
-                // const progress = allBytes ? Number((receivedBytes / allBytes).toFixed(2)) : 0.5;
-                console.log('downloadFileName, defaultPath, allBytes, receivedBytes', allBytes, receivedBytes, progress);
+                const progress = allBytes ? Number((receivedBytes / allBytes).toFixed(2)) : 0.5;
                 this.props.updateGlobalProgress(progress);
             });
             UniApi.Event.on('download-file-completed', (event, { downloadFileName, defaultPath }) => {
@@ -684,17 +691,19 @@ class AppLayout extends PureComponent {
             UniApi.Event.on('download-case', (event, ...args) => {
                 UniApi.Event.emit('appbar-menu:download-case', ...args);
             });
+            UniApi.Event.on('cancel-download-case', (event, ...args) => {
+                UniApi.Event.emit('appbar-menu:cancel-download-case', ...args);
+            });
+
+            UniApi.Event.on('appbar-menu:download-case', (message) => {
+                UniApi.Window.downloadCase(message);
+            });
 
             UniApi.Event.on('appbar-menu:open-file', (file, arr) => {
                 this.actions.openProject(file);
                 if (arr && arr.length) {
                     this.actions.updateRecentFile(arr, 'update');
                 }
-            });
-            UniApi.Event.on('appbar-menu:download-case', (message) => {
-                // // TODO:
-                console.log('dd', message);
-                UniApi.Window.downloadCase(message);
             });
             UniApi.Event.on('appbar-menu:window', (type) => {
                 switch (type) {

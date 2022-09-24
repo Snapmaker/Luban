@@ -207,6 +207,7 @@ function registerDownloadItemEvent() {
         mainWindow.webContents.send('download-file-start', {
             downloadFileName,
             defaultPath,
+            downloadItem: item
         });
 
         item.on('updated', (event, state) => {

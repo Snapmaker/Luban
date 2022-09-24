@@ -11,6 +11,7 @@ import i18n from '../../../lib/i18n';
 class ProgressBar extends React.PureComponent {
     static propTypes = {
         progress: PropTypes.number,
+        onClose: PropTypes.func,
         tips: PropTypes.string,
         subTips: PropTypes.string,
         strokeColor: PropTypes.string,
@@ -49,13 +50,14 @@ class ProgressBar extends React.PureComponent {
 
 
     render() {
-        const { progress, tips, subTips, strokeColor = '#1890ff', closeIcon, closable = false } = this.props;
+        const { progress, tips, subTips, strokeColor = '#1890ff', closeIcon, closable = false, onClose } = this.props;
         const { display } = this.state;
         return (
             <div>
                 {display === 'block' && (
                     <Modal
                         size="lg"
+                        onClose={onClose}
                         closeIcon={closeIcon}
                         closable={closable}
                         centered={false}
