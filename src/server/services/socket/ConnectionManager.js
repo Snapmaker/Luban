@@ -263,6 +263,12 @@ class ConnectionManager {
                     });
                     promises.push(promise);
                 }
+                const promise = new Promise((resolve) => {
+                    this.executeGcode(this.socket, { gcode: 'G54;' }, () => {
+                        resolve();
+                    });
+                });
+                promises.push(promise);
             }
             Promise.all(promises)
                 .then(() => {
@@ -328,13 +334,13 @@ class ConnectionManager {
         const res = gcode.match(/(?<=max_z\(mm\): )(\d)+/);
         if (res.length) {
             code += `
-G1 F1500 Z${res[0]}
+G1 Z${res[0]}
 G1 X${pos.x} Y${pos.y} B${pos.e}
 G1 Z${pos.z}
             `;
         } else {
             code += `
-G1 F1500 Z${sizeZ}
+G1 Z${sizeZ}
 G1 X${pos.x} Y${pos.y} B${pos.e}
 G1 Z${pos.z}
         `;

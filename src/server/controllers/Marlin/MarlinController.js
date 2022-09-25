@@ -411,7 +411,7 @@ class MarlinController {
         this.controller.on('temperature', (res) => {
             if (!this.ready) {
                 this.ready = true;
-                this.emitAll('connection:connected', { state: this.controller.state, dataSource, type: 'serial' });
+                this.emitAll('connection:connected', { state: this.controller.state, dataSource, type: 'serial', connectionType: 'serial' });
             }
             log.silly(`controller.on('temperature'): source=${this.history.writeSource},
                 line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
@@ -419,6 +419,7 @@ class MarlinController {
                 this.emitAll('serialport:read', { data: res.raw });
             }
         });
+
         this.controller.on('enclosure', (res) => {
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', { data: res.raw });

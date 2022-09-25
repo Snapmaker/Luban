@@ -4,6 +4,7 @@ import {
     ABSENT_OBJECT,
     CONNECTION_STATUS_CONNECTED,
     CONNECTION_STATUS_IDLE,
+    CONNECTION_TYPE_SERIAL,
     CONNECTION_TYPE_WIFI,
     LASER_MOCK_PLATE_HEIGHT,
     MACHINE_SERIES,
@@ -624,7 +625,7 @@ export const actions = {
                     connectLoading: isConnecting
                 }));
             },
-            'connection:connected': ({ state, err: _err }) => {
+            'connection:connected': ({ state, err: _err, connectionType }) => {
                 if (_err) {
                     return;
                 }
@@ -706,25 +707,26 @@ export const actions = {
                             });
                     }
                 } else {
-                    // TODO: Why is modal code here???
-                    MachineSelectModal({
-                        series: machineSeries,
-                        headType: headType,
-                        toolHead: toolHead,
-                        onConfirm: (seriesT, headTypeT, toolHeadT) => {
-                            dispatch(
-                                workspaceActions.updateMachineState({
-                                    series: seriesT,
-                                    headType: headTypeT,
-                                    toolHead: toolHeadT,
-                                    canReselectMachine: true
-                                })
-                            );
-                            dispatch(
-                                actions.executeGcodeG54(seriesT, headTypeT)
-                            );
-                        }
-                    });
+                    if (connectionType === CONNECTION_TYPE_SERIAL) {
+                        MachineSelectModal({
+                            series: machineSeries,
+                            headType: headType,
+                            toolHead: toolHead,
+                            onConfirm: (seriesT, headTypeT, toolHeadT) => {
+                                dispatch(
+                                    workspaceActions.updateMachineState({
+                                        series: seriesT,
+                                        headType: headTypeT,
+                                        toolHead: toolHeadT,
+                                        canReselectMachine: true
+                                    })
+                                );
+                                dispatch(
+                                    actions.executeGcodeG54(seriesT, headTypeT)
+                                );
+                            }
+                        });
+                    }
                 }
                 dispatch(
                     baseActions.updateState({
