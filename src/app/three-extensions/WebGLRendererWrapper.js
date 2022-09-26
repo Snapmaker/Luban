@@ -10,7 +10,7 @@ import Detector from './Detector';
 class WebGLRendererWrapper {
     constructor(options) {
         if (Detector.isWebGLAvailable()) {
-            this.renderer = new WebGLRenderer(options);
+            this.renderer = new WebGLRenderer({ ...options, logarithmicDepthBuffer: true });
             if (options.clearColor) {
                 this.renderer.setClearColor(...options.clearColor);
             } else {

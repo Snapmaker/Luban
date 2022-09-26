@@ -7,12 +7,8 @@ import MainToolBar from '../layouts/MainToolBar';
 // import i18n from '../../lib/i18n';
 
 export default function renderCustomIframe(options) {
-    const { onClose, visible = true } = options;
+    const { onClose, visible = true, showDownloadPopup } = options;
 
-
-    if (!onClose) {
-        console.error('Popup need close action');
-    }
     const renderMainToolBar = () => {
         return (
             <MainToolBar
@@ -21,6 +17,13 @@ export default function renderCustomIframe(options) {
                         title: 'key-Workspace/Page-Back',
                         name: 'MainToolbarBack',
                         action: () => onClose && onClose()
+                    }
+                ]}
+                rightItems={[
+                    {
+                        title: 'key-Workspace/Page-Back',
+                        name: 'MainToolbarBack',
+                        action: () => showDownloadPopup && showDownloadPopup()
                     }
                 ]}
                 mainBarClassName="background-transparent"
@@ -39,7 +42,7 @@ export default function renderCustomIframe(options) {
                     allow="fullscreen"
                     width="100%"
                     height="100%"
-                    src="http://localhost:3000/test.html"
+                    src="http://localhost:3001/test.html"
                     title="A custom made iframe"
                 />
             </WorkspaceLayout>

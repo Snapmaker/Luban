@@ -5,7 +5,7 @@ import { autoUpdater } from 'electron-updater';
 import Store from 'electron-store';
 import url from 'url';
 import fs from 'fs';
-import { isUndefined, isNull, debounce } from 'lodash';
+import { isUndefined, isNull, debounce, findIndex, find } from 'lodash';
 import path from 'path';
 import isReachable from 'is-reachable';
 import fetch from 'node-fetch';
@@ -14,8 +14,28 @@ import MenuBuilder, { addRecentFile, cleanAllRecentFiles } from './electron-app/
 import DataStorage from './DataStorage';
 import pkg from './package.json';
 // const { crashReporter } = require('electron');
-
-const config = new Store();
+const DOWNLOAD_FILES = 'downloadFileLists';
+const config = new Store({
+    migrations: {
+        '4.0.0': store => {
+            store.set('debugPhase', true);
+        }
+    },
+    schema: {
+        downloadPath: {
+            type: 'string'
+        },
+        downloadPathWithName: {
+            type: 'string'
+        },
+        downloadFileLists: {
+            type: 'array',
+            maximum: 100,
+            minimum: 0,
+            default: []
+        }
+    }
+});
 const userDataDir = app.getPath('userData');
 global.luban = {
     userDataDir
@@ -119,6 +139,23 @@ function sendUpdateMessage(text) {
     mainWindow.webContents.send('message', text);
 }
 
+function updateDownloadConfigByAttr(uuid, attr, value) {
+    const downloadFileArr = config.get(DOWNLOAD_FILES);
+    const item = find(downloadFileArr, ['uuid', uuid]);
+    if (attr) {
+        item[attr] = value;
+    }
+    console.log('u', downloadFileArr, item);
+    config.set(DOWNLOAD_FILES, downloadFileArr);
+}
+function deleteDownloadConfigByKey(attr, value) {
+    const downloadFileArr = config.get(DOWNLOAD_FILES);
+    const index = findIndex(downloadFileArr, [attr, value]);
+    downloadFileArr.splice(index, 1);
+    console.log('d', attr, value, downloadFileArr, index);
+    config.set(DOWNLOAD_FILES, downloadFileArr);
+}
+
 // handle update issue
 function updateHandle() {
     const message = {
@@ -198,18 +235,89 @@ function updateHandle() {
     });
 }
 
-function registerDownloadItemEvent() {
-    mainWindow.webContents.session.on('will-download', (event, item, webContents) => {
-        const downloadFileName = item.getFilename();
-        const defaultPath = path.resolve(app.getPath('downloads'), downloadFileName);
-        const allBytes = item.getTotalBytes();
-        item.setSavePath(defaultPath);
-        mainWindow.webContents.send('download-file-start', {
-            downloadFileName,
-            defaultPath,
-            downloadItem: item
+function getMapItemByAttribute(map, attr, attrValue) {
+    const res = {};
+    map.forEach((value, key) => {
+        if (value[attr] && value[attr] === attrValue) {
+            res.key = key;
+            res.currentParam = value;
+            return false;
+        }
+    });
+    return res;
+}
+
+class DownloadManager {
+    paramList = new Map();
+    /*
+      state: downloaded, pause,
+      progress: downloaded progress,
+      savedPath: file saved path,
+      uuid: uuid,
+
+      name: file name,
+      description: description of download item
+      url: url,
+      thumbnailUrl: thumbnail url,
+      type?: file type
+    */
+    constructor() {
+        const historyDownloads = config.get(DOWNLOAD_FILES) || [];
+        historyDownloads.forEach((item) => {
+            this.paramList.set(item.savedPath, item);
+        });
+        ipcMain.handle('cancelDownload', async (e, param) => {
+            const { currentParam, key } = getMapItemByAttribute(this.paramList, 'uuid', param.uuid);
+            console.log('1', currentParam, param);
+            if (currentParam.item) {
+                currentParam.item.cancel();
+                this.paramList.delete(key);
+                deleteDownloadConfigByKey('uuid', param.uuid);
+            }
+            mainWindow.webContents.send('download-file-completed');
+        });
+        ipcMain.handle('pauseDownload', async (e, param) => {
+            const { currentParam } = getMapItemByAttribute(this.paramList, 'uuid', param.uuid);
+            console.log('2', currentParam);
+            currentParam.item && currentParam.item.pause();
+            updateDownloadConfigByAttr(param.uuid, 'state', 'interrupted');
+        });
+        ipcMain.handle('resumeDownload', async (e, param) => {
+            const { currentParam } = getMapItemByAttribute(this.paramList, 'uuid', param.uuid);
+            console.log('2', currentParam);
+            currentParam.item && currentParam.item.resume();
         });
 
+        ipcMain.handle('startDownload', async (e, param) => {
+            const defaultPath = config.get('downloadPath') ? config.get('downloadPath') : path.resolve(app.getPath('downloads'), 'luban/');
+            let name = '3dp_a350_single.snap3dp';
+            const savedPath = path.resolve(defaultPath, name);
+            param.savedPath = savedPath;
+            config.set('downloadPath', defaultPath);
+            // make sure name is not repeated
+            while (
+                this.paramList.has(param.savedPath)
+            ) {
+                const extname = path.extname(name);
+                const basename = `${path.basename(name, extname)}(1)`;
+                name = `${basename}${extname}`;
+                param.savedPath = path.resolve(defaultPath, name);
+            }
+            this.paramList.set(param.savedPath, param);
+            config.set('downloadPathWithName', param.savedPath);
+            const downloadFileArr = config.get(DOWNLOAD_FILES);
+            downloadFileArr.push(param);
+            console.log('3', param, downloadFileArr);
+            config.set(DOWNLOAD_FILES, downloadFileArr);
+
+            e.sender.downloadURL(param.url);
+        });
+    }
+
+    listenDownloadUpdateEvent(param) {
+        const item = param.item;
+        const allBytes = item.getTotalBytes();
+        const savedPath = param.savedPath;
         item.on('updated', (event, state) => {
             if (state === 'interrupted') {
                 console.log('Download is interrupted but can be resumed');
@@ -218,25 +326,45 @@ function registerDownloadItemEvent() {
                     console.log('Download is paused');
                 } else {
                     mainWindow.webContents.send('download-file-progress', {
-                        downloadFileName,
-                        defaultPath,
+                        savedPath,
                         allBytes,
                         receivedBytes: item.getReceivedBytes()
                     });
                 }
             }
         });
-        item.once('done', (event, state) => {
-            if (state === 'completed') {
-                console.log('Download successfully');
-                mainWindow.webContents.send('download-file-completed', {
-                    downloadFileName,
-                    defaultPath
-                });
-            } else {
-                console.log(event, `Download failed: ${state}`);
-            }
+    }
+
+    listenDownloadDoneEvent(param) {
+        const item = param.item;
+        const savedPath = param.savedPath;
+        item.on('done', (event, state) => {
+            mainWindow.webContents.send('download-file-completed', {
+                savedPath
+            });
+            // updateDownloadConfigByAttr(param.uuid, 'state', 'completed');
+            console.log('one done:', state, this.paramList);
         });
+    }
+}
+function registerDownloadItemEvent() {
+    ipcMain.handle('getStoreValue', (event, key) => {
+    	return store.get(key);
+    });
+    const downloadManager = new DownloadManager();
+
+    mainWindow.webContents.session.on('will-download', async (e, item) => {
+        const allBytes = item.getTotalBytes();
+        const actualPath = config.get('downloadPathWithName');
+        if (actualPath) {
+            item.setSavePath(actualPath);
+        }
+        const param = downloadManager.paramList.get(actualPath);
+        if (param) {
+            param.item = item;
+            downloadManager.listenDownloadUpdateEvent(param);
+            downloadManager.listenDownloadDoneEvent(param);
+        }
     });
 }
 

@@ -4,11 +4,10 @@ import { HashRouter, Route, Switch } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { shortcutActions, priorities, ShortcutManager } from '../lib/shortcut';
 import { ToastContainer } from './components/Toast';
+import DonwloadList from './widgets/DonwloadList';
 import { actions as machineActions } from '../flux/machine';
-import { actions as laserActions } from '../flux/laser';
+import { actions as appGlobalActions } from '../flux/app-global';
 import { actions as editorActions } from '../flux/editor';
-import { actions as cncActions } from '../flux/cnc';
-import { actions as printingActions } from '../flux/printing';
 import { actions as textActions } from '../flux/text';
 import { actions as settingActions } from '../flux/setting';
 import { renderCustomIframe } from './utils';
@@ -28,6 +27,10 @@ class App extends PureComponent {
         machineInit: PropTypes.func.isRequired,
         functionsInit: PropTypes.func.isRequired,
         textInit: PropTypes.func.isRequired,
+        updateShowOnlineCase: PropTypes.func.isRequired,
+        updateShowDownloadPopup: PropTypes.func.isRequired,
+        showOnlineCase: PropTypes.bool.isRequired,
+        showDownloadPopup: PropTypes.bool.isRequired,
         shouldCheckForUpdate: PropTypes.bool.isRequired,
         enableShortcut: PropTypes.bool.isRequired,
         updateMultipleEngine: PropTypes.func.isRequired,
@@ -36,7 +39,6 @@ class App extends PureComponent {
 
     state = {
         hasError: false,
-        showWorkspace: true
     };
 
     router = React.createRef();
@@ -134,13 +136,15 @@ class App extends PureComponent {
 
     renderIframe() {
         const onClose = () => {
-            this.setState({
-                showWorkspace: false
-            });
+            this.props.updateShowOnlineCase(false);
+        };
+        const onShowDownloadPopup = () => {
+            this.props.updateShowDownloadPopup(true);
         };
         return renderCustomIframe({
             onClose,
-            visible: this.state.showWorkspace,
+            showDownloadPopup: onShowDownloadPopup,
+            visible: this.props.showOnlineCase,
             key: 'CustomIframe'
         });
     }
@@ -172,7 +176,10 @@ class App extends PureComponent {
                         draggable
                         pauseOnHover
                     />
-                    {this.renderIframe()}
+                    {this.props.showOnlineCase && this.renderIframe()}
+                    {this.props.showDownloadPopup && (
+                        <DonwloadList onClose={() => this.props.updateShowDownloadPopup(false)} />
+                    )}
                 </AppLayout>
             </HashRouter>
         );
@@ -182,23 +189,25 @@ class App extends PureComponent {
 const mapStateToProps = (state) => {
     const machineInfo = state.machine;
     const { menuDisabledCount } = state.appbarMenu;
+    const { showOnlineCase, showDownloadPopup } = state.appGlobal;
     let enableShortcut = state[window.location.hash.slice(2)]?.enableShortcut;
     enableShortcut = (typeof enableShortcut === 'undefined' ? true : enableShortcut);
     const { shouldCheckForUpdate } = machineInfo;
     return {
         enableShortcut,
         menuDisabledCount,
-        shouldCheckForUpdate
+        shouldCheckForUpdate,
+        showOnlineCase,
+        showDownloadPopup
     };
 };
 const mapDispatchToProps = (dispatch) => {
     return {
         resetUserConfig: () => dispatch(settingActions.resetUserConfig()),
         machineInit: () => dispatch(machineActions.init()),
-        laserInit: () => dispatch(laserActions.init()),
-        cncInit: () => dispatch(cncActions.init()),
-        printingInit: () => dispatch(printingActions.init()),
         textInit: () => dispatch(textActions.init()),
+        updateShowOnlineCase: (show) => dispatch(appGlobalActions.updateShowOnlineCase(show)),
+        updateShowDownloadPopup: (show) => dispatch(appGlobalActions.updateShowDownloadPopup(show)),
         functionsInit: () => {
             dispatch(editorActions.initSelectedModelListener('laser'));
             dispatch(editorActions.initSelectedModelListener('cnc'));

@@ -15,7 +15,7 @@ class MainToolBar extends PureComponent {
     static propTypes = {
         leftItems: PropTypes.array,
         // centerItems: PropTypes.array,
-        // rightItems: PropTypes.array,
+        rightItems: PropTypes.array,
         mainBarClassName: PropTypes.string,
         lang: PropTypes.string,
         headType: PropTypes.string,
@@ -44,7 +44,9 @@ class MainToolBar extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { setShowMachineMaterialSettings, leftItems, mainBarClassName, lang, headType, hasMachineSettings, machineInfo, isConnected, materialInfo } = this.props;
+        const { setShowMachineMaterialSettings, leftItems, rightItems,
+            mainBarClassName, lang, headType, hasMachineSettings,
+            machineInfo, isConnected, materialInfo } = this.props;
         let key = 0;
         return (
             <div
@@ -58,6 +60,7 @@ class MainToolBar extends PureComponent {
                     className={classNames(
                         styles.left,
                         styles['bar-item'],
+                        'display-inline',
                         'white-space-nowrap'
                     )}
                 >
@@ -86,17 +89,18 @@ class MainToolBar extends PureComponent {
                     {centerItems && (centerItems.map((menuItem) => {
                         return <MenuItem key={key++} menuItem={menuItem} actions={actions} lang={lang} headType={headType} />;
                     }))}
-                </div>
+                </div>*/}
                 <div
                     className={classNames(
-                        styles.right,
-                        styles['bar-item']
+                        styles['bar-item'],
+                        'sm-flex',
+                        'sm-flex-direction-r-r',
                     )}
                 >
                     {rightItems && (rightItems.map((menuItem) => {
                         return <MenuItem key={key++} menuItem={menuItem} actions={actions} lang={lang} />;
                     }))}
-                </div> */}
+                </div>
                 {hasMachineSettings && headType === HEAD_PRINTING && (
                     <Anchor
                         onClick={() => (setShowMachineMaterialSettings(true))}

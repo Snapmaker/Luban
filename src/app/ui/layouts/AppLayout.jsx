@@ -1,5 +1,6 @@
 import React, { PureComponent } from 'react';
 import { Group } from 'three';
+import { v4 as uuid } from 'uuid';
 import { withRouter } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
@@ -545,29 +546,26 @@ class AppLayout extends PureComponent {
         },
         initUniEvent: () => {
             /* Start downloading case file */
-            UniApi.Event.on('download-file-start', (event, { downloadFileName, defaultPath, downloadItem }) => {
-                // printingActions.updateDownloadedFiles({
-                //     downloadFileName,
-                //     defaultPath
-                // });
-                console.log(downloadFileName, defaultPath);
+            UniApi.Event.on('appbar-menu:download-case', (url) => {
+                const { ipcRenderer } = window.require('electron');
+                const param = { url, uuid: uuid() };
+                ipcRenderer.invoke('startDownload', param);
                 UniApi.Event.on('appbar-menu:cancel-download-case', () => {
-                    UniApi.Window.cancelDownloadCase(downloadItem);
+                    ipcRenderer.invoke('cancelDownload', param);
                 });
                 UniApi.Event.on('appbar-menu:pause-download-case', () => {
-                    UniApi.Window.pauseDownloadCase(downloadItem);
+                    ipcRenderer.invoke('pauseDownload', param);
                 });
                 UniApi.Event.on('appbar-menu:resume-download-case', () => {
-                    UniApi.Window.resumeDownloadCase(downloadItem);
+                    ipcRenderer.invoke('resumeDownload', param);
                 });
             });
             UniApi.Event.on('download-file-progress', (event, { allBytes, receivedBytes }) => {
                 const progress = allBytes ? Number((receivedBytes / allBytes).toFixed(2)) : 0.5;
                 this.props.updateGlobalProgress(progress);
             });
-            UniApi.Event.on('download-file-completed', (event, { downloadFileName, defaultPath }) => {
-                // this.props.updateGlobalProgress(1);
-                console.log(downloadFileName, defaultPath);
+            UniApi.Event.on('download-file-completed', () => {
+                this.props.updateGlobalProgress(1);
             });
             /* End downloading case file */
 
@@ -695,9 +693,6 @@ class AppLayout extends PureComponent {
                 UniApi.Event.emit('appbar-menu:cancel-download-case', ...args);
             });
 
-            UniApi.Event.on('appbar-menu:download-case', (message) => {
-                UniApi.Window.downloadCase(message);
-            });
 
             UniApi.Event.on('appbar-menu:open-file', (file, arr) => {
                 this.actions.openProject(file);

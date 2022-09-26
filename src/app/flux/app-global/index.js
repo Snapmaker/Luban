@@ -20,10 +20,12 @@ const DEFAULT_STATE = {
     savedModalFilePath: '',
     savedModalZIndex: DEFAULT_MODAL_ZINDEX,
 
+    showOnlineCase: true,
+    showDownloadPopup: false,
+
     showArrangeModelsError: false,
     arrangeModelZIndex: DEFAULT_MODAL_ZINDEX,
     downloadFiles: [],
-    downloadFilesLength: 0,
     progress: 0
 };
 const SHOW_MODAL_TIME = 15000;
@@ -241,7 +243,12 @@ export const actions = {
             results
         };
     },
-
+    updateShowOnlineCase: (showOnlineCase) => (dispatch) => {
+        dispatch(actions.updateState({ showOnlineCase }));
+    },
+    updateShowDownloadPopup: (showDownloadPopup) => (dispatch) => {
+        dispatch(actions.updateState({ showDownloadPopup }));
+    },
     updateDownloadedFiles: (options) => (dispatch) => {
         dispatch(actions.updateState(options));
     },

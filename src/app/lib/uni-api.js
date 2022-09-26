@@ -437,24 +437,6 @@ const Window = {
         if (isElectron()) {
             window.require('electron').ipcRenderer.send('show-main-window');
         }
-    },
-
-    downloadCase(url) {
-        if (isElectron()) {
-            console.log('ur;', url);
-            const browserWindow = window.require('electron').remote.BrowserWindow.getFocusedWindow();
-            browserWindow.webContents.session.downloadURL(url);
-        } else {
-            // TODO:
-        }
-    },
-
-    cancelDownloadCase(item) {
-        if (isElectron()) {
-            item && item.cancel();
-        } else {
-            // TODO:
-        }
     }
 };
 
