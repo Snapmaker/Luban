@@ -37,7 +37,6 @@ class WifiServerManager extends EventEmitter {
             const message = msg.toString('utf8');
 
             const parts = message.split('|');
-            console.log('parts', parts);
             if (parts.length === 0 || parts[0].indexOf('@') === -1) {
                 // Not a valid message
                 return;
@@ -63,7 +62,6 @@ class WifiServerManager extends EventEmitter {
 
 
     refreshDevices = () => {
-        // console.log('refreshDevices');
         // Clear devices and send broadcast only when not refreshing to avoid duplicated refresh
         if (this.refreshing || this.machineSubscriber.length === 0) {
             return;

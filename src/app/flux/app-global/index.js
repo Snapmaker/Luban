@@ -20,12 +20,13 @@ const DEFAULT_STATE = {
     savedModalFilePath: '',
     savedModalZIndex: DEFAULT_MODAL_ZINDEX,
 
-    showOnlineCase: true,
+    showOnlineCase: false,
     showDownloadPopup: false,
 
     showArrangeModelsError: false,
     arrangeModelZIndex: DEFAULT_MODAL_ZINDEX,
     downloadFiles: [],
+    currentSavedPath: '',
     progress: 0
 };
 const SHOW_MODAL_TIME = 15000;
@@ -249,12 +250,25 @@ export const actions = {
     updateShowDownloadPopup: (showDownloadPopup) => (dispatch) => {
         dispatch(actions.updateState({ showDownloadPopup }));
     },
-    updateDownloadedFiles: (options) => (dispatch) => {
-        dispatch(actions.updateState(options));
+    updateDownloadedFiles: (downloadFiles) => (dispatch) => {
+        dispatch(actions.updateState({ downloadFiles }));
     },
-    updateGlobalProgress: (progress) => (dispatch) => {
-        console.log('updateProgress', progress);
-        dispatch(actions.updateState({ progress }));
+    updateCurrentDownload: (currentSavedPath) => (dispatch) => {
+        dispatch(actions.updateState({ currentSavedPath }));
+    },
+    updateGlobalProgress: ({ progress, savedPath, allBytes, receivedBytes }) => (dispatch, getState) => {
+        const { downloadFiles, currentSavedPath } = getState().appGlobal;
+        console.log('currentSavedPath === savedPath', currentSavedPath, savedPath);
+        if (currentSavedPath === savedPath) {
+            dispatch(actions.updateState({ progress }));
+        }
+        const currentItem = downloadFiles.find(d => d.savedPath === savedPath);
+        if (currentItem && progress) {
+            currentItem.progress = progress;
+            currentItem.allBytes = allBytes;
+            currentItem.receivedBytes = receivedBytes;
+            dispatch(actions.updateState({ downloadFiles: [...downloadFiles] }));
+        }
     }
 };
 export default function reducer(state = DEFAULT_STATE, action) {

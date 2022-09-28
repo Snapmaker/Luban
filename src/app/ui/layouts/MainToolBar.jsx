@@ -90,17 +90,19 @@ class MainToolBar extends PureComponent {
                         return <MenuItem key={key++} menuItem={menuItem} actions={actions} lang={lang} headType={headType} />;
                     }))}
                 </div>*/}
-                <div
-                    className={classNames(
-                        styles['bar-item'],
-                        'sm-flex',
-                        'sm-flex-direction-r-r',
-                    )}
-                >
-                    {rightItems && (rightItems.map((menuItem) => {
-                        return <MenuItem key={key++} menuItem={menuItem} actions={actions} lang={lang} />;
-                    }))}
-                </div>
+                {rightItems && (
+                    <div
+                        className={classNames(
+                            styles['bar-item'],
+                            'sm-flex',
+                            'sm-flex-direction-r-r',
+                        )}
+                    >
+                        {rightItems.map((menuItem) => {
+                            return <MenuItem key={key++} menuItem={menuItem} actions={actions} lang={lang} />;
+                        })}
+                    </div>
+                )}
                 {hasMachineSettings && headType === HEAD_PRINTING && (
                     <Anchor
                         onClick={() => (setShowMachineMaterialSettings(true))}

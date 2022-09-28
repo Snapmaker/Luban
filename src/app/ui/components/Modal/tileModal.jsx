@@ -29,6 +29,7 @@ class TileModal extends PureComponent {
         return (
             <Modal
                 closable={this.props.closable}
+                getContainer={this.props.getContainer}
                 wrapClassName="tile-modal"
                 width="auto"
                 visible={this.props.visible}

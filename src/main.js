@@ -266,51 +266,59 @@ class DownloadManager {
         historyDownloads.forEach((item) => {
             this.paramList.set(item.savedPath, item);
         });
-        ipcMain.handle('cancelDownload', async (e, param) => {
-            const { currentParam, key } = getMapItemByAttribute(this.paramList, 'uuid', param.uuid);
-            console.log('1', currentParam, param);
-            if (currentParam.item) {
-                currentParam.item.cancel();
+        ipcMain.handle('cancelDownload', async (e, paramArr) => {
+            paramArr.forEach((param) => {
+                const { currentParam, key } = getMapItemByAttribute(this.paramList, 'uuid', param.uuid);
+                console.log('1', currentParam, param);
+                if (currentParam && currentParam.item) {
+                    currentParam.item.cancel();
+                }
                 this.paramList.delete(key);
                 deleteDownloadConfigByKey('uuid', param.uuid);
-            }
-            mainWindow.webContents.send('download-file-completed');
+            });
+            // mainWindow.webContents.send('download-file-completed');
         });
-        ipcMain.handle('pauseDownload', async (e, param) => {
-            const { currentParam } = getMapItemByAttribute(this.paramList, 'uuid', param.uuid);
-            console.log('2', currentParam);
-            currentParam.item && currentParam.item.pause();
-            updateDownloadConfigByAttr(param.uuid, 'state', 'interrupted');
+        ipcMain.handle('pauseDownload', async (e, paramArr) => {
+            paramArr.forEach((param) => {
+                const { currentParam } = getMapItemByAttribute(this.paramList, 'uuid', param.uuid);
+                console.log('2', currentParam);
+                currentParam.item && currentParam.item.pause();
+                updateDownloadConfigByAttr(param.uuid, 'state', 'interrupted');
+            });
         });
-        ipcMain.handle('resumeDownload', async (e, param) => {
-            const { currentParam } = getMapItemByAttribute(this.paramList, 'uuid', param.uuid);
-            console.log('2', currentParam);
-            currentParam.item && currentParam.item.resume();
+        ipcMain.handle('resumeDownload', async (e, paramArr) => {
+            paramArr.forEach((param) => {
+                const { currentParam } = getMapItemByAttribute(this.paramList, 'uuid', param.uuid);
+                console.log('2', currentParam);
+                currentParam.item && currentParam.item.resume();
+            });
         });
 
         ipcMain.handle('startDownload', async (e, param) => {
-            const defaultPath = config.get('downloadPath') ? config.get('downloadPath') : path.resolve(app.getPath('downloads'), 'luban/');
-            let name = '3dp_a350_single.snap3dp';
-            const savedPath = path.resolve(defaultPath, name);
-            param.savedPath = savedPath;
-            config.set('downloadPath', defaultPath);
-            // make sure name is not repeated
-            while (
-                this.paramList.has(param.savedPath)
-            ) {
-                const extname = path.extname(name);
-                const basename = `${path.basename(name, extname)}(1)`;
-                name = `${basename}${extname}`;
-                param.savedPath = path.resolve(defaultPath, name);
-            }
-            this.paramList.set(param.savedPath, param);
-            config.set('downloadPathWithName', param.savedPath);
-            const downloadFileArr = config.get(DOWNLOAD_FILES);
-            downloadFileArr.push(param);
-            console.log('3', param, downloadFileArr);
-            config.set(DOWNLOAD_FILES, downloadFileArr);
+            if (typeof param.url === 'string') {
+                const defaultPath = config.get('downloadPath') ? config.get('downloadPath') : path.resolve(app.getPath('downloads'), 'luban/');
+                let name = '3dp_a350_single.snap3dp';
+                const savedPath = path.resolve(defaultPath, name);
+                param.savedPath = savedPath;
+                config.set('downloadPath', defaultPath);
+                // make sure name is not repeated
+                while (
+                    this.paramList.has(param.savedPath)
+                ) {
+                    const extname = path.extname(name);
+                    const basename = `${path.basename(name, extname)}(1)`;
+                    name = `${basename}${extname}`;
+                    param.savedPath = path.resolve(defaultPath, name);
+                }
+                this.paramList.set(param.savedPath, param);
+                config.set('downloadPathWithName', param.savedPath);
+                const downloadFileArr = config.get(DOWNLOAD_FILES);
+                downloadFileArr.push(param);
+                config.set(DOWNLOAD_FILES, downloadFileArr);
+                mainWindow.webContents.send('download-file-started', param.savedPath);
 
-            e.sender.downloadURL(param.url);
+                e.sender.downloadURL(param.url);
+            }
         });
     }
 
@@ -349,12 +357,11 @@ class DownloadManager {
 }
 function registerDownloadItemEvent() {
     ipcMain.handle('getStoreValue', (event, key) => {
-    	return store.get(key);
+    	return config.get(key);
     });
     const downloadManager = new DownloadManager();
 
     mainWindow.webContents.session.on('will-download', async (e, item) => {
-        const allBytes = item.getTotalBytes();
         const actualPath = config.get('downloadPathWithName');
         if (actualPath) {
             item.setSavePath(actualPath);
@@ -476,6 +483,17 @@ const startToBegin = (data) => {
         .then(() => mainWindow.loadURL(loadUrl).catch(err => {
             console.log('err', err.message);
         }));
+
+    webContentsSession.webRequest.onHeadersReceived({ urls: ['*://*/*'] },
+        (d, c) => {
+            if (d.responseHeaders['X-Frame-Options']) {
+                delete d.responseHeaders['X-Frame-Options'];
+            } else if (d.responseHeaders['x-frame-options']) {
+                delete d.responseHeaders['x-frame-options'];
+            }
+
+            c({ cancel: false, responseHeaders: d.responseHeaders });
+        });
 
     try {
         // TODO: move to server

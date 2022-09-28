@@ -10,7 +10,7 @@ import { actions as appGlobalActions } from '../flux/app-global';
 import { actions as editorActions } from '../flux/editor';
 import { actions as textActions } from '../flux/text';
 import { actions as settingActions } from '../flux/setting';
-import { renderCustomIframe } from './utils';
+import RenderCustomIframe from './utils/renderCustomIframe';
 import HomePage from './pages/HomePage';
 import Workspace from './pages/Workspace';
 import Printing from './pages/Printing';
@@ -134,20 +134,13 @@ class App extends PureComponent {
         logErrorToGA(errorInfo);
     }
 
-    renderIframe() {
-        const onClose = () => {
-            this.props.updateShowOnlineCase(false);
-        };
-        const onShowDownloadPopup = () => {
-            this.props.updateShowDownloadPopup(true);
-        };
-        return renderCustomIframe({
-            onClose,
-            showDownloadPopup: onShowDownloadPopup,
-            visible: this.props.showOnlineCase,
-            key: 'CustomIframe'
-        });
-    }
+    onClose = () => {
+        this.props.updateShowOnlineCase(false);
+    };
+
+    onShowDownloadPopup = () => {
+        this.props.updateShowDownloadPopup(true);
+    };
 
     render() {
         if (this.state.hasError) {
@@ -176,7 +169,12 @@ class App extends PureComponent {
                         draggable
                         pauseOnHover
                     />
-                    {this.props.showOnlineCase && this.renderIframe()}
+                    <div style={{ display: this.props.showOnlineCase ? 'block' : 'none' }}>
+                        <RenderCustomIframe
+                            onClose={this.onClose}
+                            showDownloadPopup={this.onShowDownloadPopup}
+                        />
+                    </div>
                     {this.props.showDownloadPopup && (
                         <DonwloadList onClose={() => this.props.updateShowDownloadPopup(false)} />
                     )}

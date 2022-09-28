@@ -92,6 +92,7 @@ class AppLayout extends PureComponent {
         updateSavedModal: PropTypes.func.isRequired,
         showArrangeModelsError: PropTypes.bool.isRequired,
         arrangeModelZIndex: PropTypes.number.isRequired,
+        updateCurrentDownload: PropTypes.func.isRequired,
         updateGlobalProgress: PropTypes.func.isRequired,
         updateShowArrangeModelsError: PropTypes.func.isRequired
     };
@@ -337,6 +338,7 @@ class AppLayout extends PureComponent {
             }
             if (this.props.savedModalType === 'electron') {
                 const path = window.require('path');
+                console.log('this.props.savedModalFilePath', this.props.savedModalFilePath);
                 const openFolder = () => {
                     const ipc = window.require('electron').ipcRenderer;
                     ipc.send('open-saved-path', path.dirname(this.props.savedModalFilePath));
@@ -550,22 +552,31 @@ class AppLayout extends PureComponent {
                 const { ipcRenderer } = window.require('electron');
                 const param = { url, uuid: uuid() };
                 ipcRenderer.invoke('startDownload', param);
+                const paramArr = [param];
                 UniApi.Event.on('appbar-menu:cancel-download-case', () => {
-                    ipcRenderer.invoke('cancelDownload', param);
+                    ipcRenderer.invoke('cancelDownload', paramArr);
                 });
                 UniApi.Event.on('appbar-menu:pause-download-case', () => {
-                    ipcRenderer.invoke('pauseDownload', param);
+                    ipcRenderer.invoke('pauseDownload', paramArr);
                 });
                 UniApi.Event.on('appbar-menu:resume-download-case', () => {
-                    ipcRenderer.invoke('resumeDownload', param);
+                    ipcRenderer.invoke('resumeDownload', paramArr);
                 });
             });
-            UniApi.Event.on('download-file-progress', (event, { allBytes, receivedBytes }) => {
-                const progress = allBytes ? Number((receivedBytes / allBytes).toFixed(2)) : 0.5;
-                this.props.updateGlobalProgress(progress);
+            UniApi.Event.on('download-file-progress', (event, { allBytes, receivedBytes, savedPath }) => {
+                const progress = allBytes ? Number((receivedBytes / allBytes).toFixed(2)) : 0;
+                this.props.updateGlobalProgress({
+                    progress,
+                    receivedBytes,
+                    allBytes,
+                    savedPath
+                });
             });
             UniApi.Event.on('download-file-completed', () => {
-                this.props.updateGlobalProgress(1);
+                // this.props.updateGlobalProgress(1);
+            });
+            UniApi.Event.on('download-file-started', (event, savedPath) => {
+                this.props.updateCurrentDownload(savedPath);
             });
             /* End downloading case file */
 
@@ -980,7 +991,8 @@ const mapDispatchToProps = (dispatch) => {
         updateMachineToolHead: (toolHead, series, headType) => dispatch(machineActions.updateMachineToolHead(toolHead, series, headType)),
         longTermBackupConfig: () => dispatch(settingsActions.longTermBackupConfig()),
         updateSavedModal: (options) => dispatch(appGlobalActions.updateSavedModal(options)),
-        updateGlobalProgress: (progress) => dispatch(appGlobalActions.updateGlobalProgress(progress)),
+        updateCurrentDownload: (savedPath) => dispatch(appGlobalActions.updateCurrentDownload(savedPath)),
+        updateGlobalProgress: (data) => dispatch(appGlobalActions.updateGlobalProgress(data)),
         updateShowArrangeModelsError: (options) => dispatch(appGlobalActions.updateShowArrangeModelsError(options))
     };
 };

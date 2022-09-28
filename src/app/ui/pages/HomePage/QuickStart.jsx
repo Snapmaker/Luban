@@ -4,9 +4,11 @@ import PropTypes from 'prop-types';
 import _ from 'lodash';
 import classNames from 'classnames';
 import i18n from '../../../lib/i18n';
+import Anchor from '../../components/Anchor';
 import { getCaseList } from '../../../lib/caseLibrary';
 import { timestamp } from '../../../../shared/lib/random-utils';
 import { actions as projectActions } from '../../../flux/project';
+import { actions as appGlobalActions } from '../../../flux/app-global';
 import styles from './styles.styl';
 
 const QuickStart = (props) => {
@@ -26,6 +28,10 @@ const QuickStart = (props) => {
         dispatch(projectActions.openProject(caseItem.pathConfig, history));
     }, 500);
 
+    function onShowOnlineCase() {
+        dispatch(appGlobalActions.updateShowOnlineCase(true));
+    }
+
     //  useEffect
     useEffect(() => {
         const { caseList, caseListFourAxis } = getCaseList(series, toolHead);
@@ -43,6 +49,11 @@ const QuickStart = (props) => {
         <div className={styles['quick-start-container']}>
             <div className={classNames(styles['title-label'], 'highlight-heading', 'margin-bottom-16')}>
                 {i18n._('key-HomePage/Begin-Case Library')}
+            </div>
+            <div>
+                <Anchor onClick={onShowOnlineCase}>
+                    click
+                </Anchor>
             </div>
             <div className={
                 classNames(

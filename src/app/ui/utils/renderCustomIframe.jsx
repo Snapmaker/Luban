@@ -6,8 +6,8 @@ import WorkspaceLayout from '../layouts/WorkspaceLayout';
 import MainToolBar from '../layouts/MainToolBar';
 // import i18n from '../../lib/i18n';
 
-export default function renderCustomIframe(options) {
-    const { onClose, visible = true, showDownloadPopup } = options;
+function renderCustomIframe(options) {
+    const { onClose, showDownloadPopup } = options;
 
     const renderMainToolBar = () => {
         return (
@@ -31,9 +31,17 @@ export default function renderCustomIframe(options) {
             />
         );
     };
+    // src="http://localhost:3000/test.html"
 
     return (
-        <Modal closable={false} disableOverlay tile style={{ width: '100%', height: '100%', display: visible ? 'block' : 'none' }} onClose={onClose}>
+        <Modal
+            closable={false}
+            disableOverlay
+            tile
+            getContainer={false}
+            style={{ width: '100%', height: '100%' }}
+            onClose={onClose}
+        >
 
             <WorkspaceLayout
                 renderMainToolBar={renderMainToolBar}
@@ -42,7 +50,7 @@ export default function renderCustomIframe(options) {
                     allow="fullscreen"
                     width="100%"
                     height="100%"
-                    src="http://localhost:3001/test.html"
+                    src="http://localhost:3000/test.html"
                     title="A custom made iframe"
                 />
             </WorkspaceLayout>
@@ -50,3 +58,4 @@ export default function renderCustomIframe(options) {
         </Modal>
     );
 }
+export default renderCustomIframe;
