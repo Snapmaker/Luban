@@ -116,15 +116,15 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                 useLockingBlock: option.value,
                 coordinateMode: option.value ? COORDINATE_MODE_BOTTOM_LEFT : COORDINATE_MODE_CENTER,
                 coordinateSize: {
-                    x: 390,
-                    y: 400
+                    x: 375,
+                    y: 395
                 }
             });
         },
         changeLockingBlockPosition: (option) => {
             const coordinateSize = {
-                x: option.value === 'A' ? 390 : 300,
-                y: option.value === 'A' ? 400 : 310
+                x: option.value === 'A' ? 375 : 290,
+                y: option.value === 'A' ? 395 : 305
             };
             setJobTypeState({
                 ...jobTypeState,
@@ -136,6 +136,12 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
 
     const { materials, coordinateMode, coordinateSize, useLockingBlock, lockingBlockPosition } = jobTypeState;
     const { isRotate, diameter, length } = materials;
+    let maxX = size.x;
+    let maxY = size.y;
+    if (useLockingBlock) {
+        maxX = lockingBlockPosition === 'A' ? 375 : 290;
+        maxY = lockingBlockPosition === 'A' ? 395 : 305;
+    }
 
     let imgOF3axisCoordinateMode = '';
     const imgLockingBlockPosition = `/resources/images/cnc-laser/lock-block-${lockingBlockPosition?.toLowerCase()}.png`;
@@ -173,7 +179,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                                     suffix="mm"
                                     disabled={inProgress || settingSizeDisabled}
                                     value={toFixed(coordinateSize.x, 1)}
-                                    max={size.x}
+                                    max={maxX}
                                     min={2}
                                     onChange={(value) => {
                                         actions.setCoordinateModeAndCoordinateSize(
@@ -191,7 +197,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                                     suffix="mm"
                                     disabled={inProgress || settingSizeDisabled}
                                     value={toFixed(coordinateSize.y, 1)}
-                                    max={size.y}
+                                    max={maxY}
                                     min={10}
                                     onChange={(value) => {
                                         actions.setCoordinateModeAndCoordinateSize(
