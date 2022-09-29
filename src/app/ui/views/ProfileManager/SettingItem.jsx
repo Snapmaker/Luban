@@ -123,7 +123,7 @@ function SettingItem({
                     </span>
                 </Tooltip>
             )}
-            <div className="sm-flex-auto">
+            <div className="sm-flex-none">
                 {isProfile && !isDefault && (
                     <SvgIcon
                         className="margin-horizontal-4"

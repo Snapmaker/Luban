@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 // import { createPortal } from 'react-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import isElectron from 'is-electron';
 import fetch from 'node-fetch';
@@ -7,6 +8,8 @@ import UniApi from '../lib/uni-api';
 import DownloadProgressBar from './widgets/DownloadProgressBar';
 import i18n from '../lib/i18n';
 import { Button } from './components/Buttons';
+import { downloadPopup } from './widgets/PrintingVisualizer/VisualizerPopup';
+import { actions as machineActions } from '../flux/machine';
 
 const CustomIframe = ({
     src,
@@ -16,18 +19,45 @@ const CustomIframe = ({
 }) => {
     const [contentRef, setContentRef] = useState(null);
     const [iframeOnline, setIframeOnline] = useState(false);
+    const cancelDownloadPopup = useSelector(state => state.machine.cancelDownloadPopup);
+    const minimizeDownloadPopup = useSelector(state => state.machine.minimizeDownloadPopup);
+    const dispatch = useDispatch();
     const [showDownloadProgressBar, setShowDownloadProgressBar] = useState(null);
-    // console.log('contentRef?.contentWindow', contentRef?.contentWindow);
     // const mountNode = null;
     const onMinimize = () => {
-        setShowDownloadProgressBar(false);
+        if (minimizeDownloadPopup) {
+            downloadPopup('minimize').then((ignore) => {
+                dispatch(machineActions.updateFluxAndStorageByKey('minimizeDownloadPopup', !ignore));
+                setShowDownloadProgressBar(false);
+            }).catch((ignore) => {
+                dispatch(machineActions.updateFluxAndStorageByKey('minimizeDownloadPopup', !ignore));
+            });
+        } else {
+            setShowDownloadProgressBar(false);
+        }
     };
     const onClose = () => {
-        if (isElectron()) {
-            const browserWindow = window.require('electron').remote.BrowserWindow.getFocusedWindow();
-            browserWindow.webContents.send('cancel-download-case');
+        if (cancelDownloadPopup) {
+            downloadPopup('cancel').then((ignore) => {
+                dispatch(machineActions.updateFluxAndStorageByKey('cancelDownloadPopup', !ignore));
+                if (isElectron()) {
+                    const browserWindow = window.require('electron').remote.BrowserWindow.getFocusedWindow();
+                    browserWindow.webContents.send('cancel-download-case');
+                } else {
+                    UniApi.Event.emit('appbar-menu:cancel-download-case');
+                }
+                setShowDownloadProgressBar(false);
+            }).catch((ignore) => {
+                dispatch(machineActions.updateFluxAndStorageByKey('cancelDownloadPopup', !ignore));
+            });
         } else {
-            UniApi.Event.emit('appbar-menu:cancel-download-case');
+            if (isElectron()) {
+                const browserWindow = window.require('electron').remote.BrowserWindow.getFocusedWindow();
+                browserWindow.webContents.send('cancel-download-case');
+            } else {
+                UniApi.Event.emit('appbar-menu:cancel-download-case');
+            }
+            setShowDownloadProgressBar(false);
         }
     };
     const receiveMessage = (message) => {

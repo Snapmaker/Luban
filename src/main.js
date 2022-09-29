@@ -145,14 +145,12 @@ function updateDownloadConfigByAttr(uuid, attr, value) {
     if (attr) {
         item[attr] = value;
     }
-    console.log('u', downloadFileArr, item);
     config.set(DOWNLOAD_FILES, downloadFileArr);
 }
 function deleteDownloadConfigByKey(attr, value) {
     const downloadFileArr = config.get(DOWNLOAD_FILES);
     const index = findIndex(downloadFileArr, [attr, value]);
     downloadFileArr.splice(index, 1);
-    console.log('d', attr, value, downloadFileArr, index);
     config.set(DOWNLOAD_FILES, downloadFileArr);
 }
 
@@ -268,28 +266,32 @@ class DownloadManager {
         });
         ipcMain.handle('cancelDownload', async (e, paramArr) => {
             paramArr.forEach((param) => {
-                const { currentParam, key } = getMapItemByAttribute(this.paramList, 'uuid', param.uuid);
-                console.log('1', currentParam, param);
+                let result = {};
+                if (param.savedPath) {
+                    result = getMapItemByAttribute(this.paramList, 'savedPath', param.savedPath);
+                    deleteDownloadConfigByKey('savedPath', param.savedPath);
+                } else {
+                    result = getMapItemByAttribute(this.paramList, 'uuid', param.uuid);
+                    deleteDownloadConfigByKey('uuid', param.uuid);
+                }
+                const { currentParam, key } = result;
                 if (currentParam && currentParam.item) {
                     currentParam.item.cancel();
                 }
                 this.paramList.delete(key);
-                deleteDownloadConfigByKey('uuid', param.uuid);
             });
             // mainWindow.webContents.send('download-file-completed');
         });
         ipcMain.handle('pauseDownload', async (e, paramArr) => {
             paramArr.forEach((param) => {
                 const { currentParam } = getMapItemByAttribute(this.paramList, 'uuid', param.uuid);
-                console.log('2', currentParam);
                 currentParam.item && currentParam.item.pause();
-                updateDownloadConfigByAttr(param.uuid, 'state', 'interrupted');
+                updateDownloadConfigByAttr(param.uuid, 'state', 'paused');
             });
         });
         ipcMain.handle('resumeDownload', async (e, paramArr) => {
             paramArr.forEach((param) => {
                 const { currentParam } = getMapItemByAttribute(this.paramList, 'uuid', param.uuid);
-                console.log('2', currentParam);
                 currentParam.item && currentParam.item.resume();
             });
         });
@@ -313,10 +315,9 @@ class DownloadManager {
                 this.paramList.set(param.savedPath, param);
                 config.set('downloadPathWithName', param.savedPath);
                 const downloadFileArr = config.get(DOWNLOAD_FILES);
-                downloadFileArr.push(param);
+                downloadFileArr.unshift(param);
                 config.set(DOWNLOAD_FILES, downloadFileArr);
                 mainWindow.webContents.send('download-file-started', param.savedPath);
-
                 e.sender.downloadURL(param.url);
             }
         });
@@ -328,17 +329,31 @@ class DownloadManager {
         const savedPath = param.savedPath;
         item.on('updated', (event, state) => {
             if (state === 'interrupted') {
-                console.log('Download is interrupted but can be resumed');
+                mainWindow.webContents.send('download-file-progress', {
+                    state,
+                    savedPath,
+                    allBytes,
+                    receivedBytes: item.getReceivedBytes()
+                });
+                console.log('Download is interrupted but can be resumed', item.getReceivedBytes(), allBytes);
             } else if (state === 'progressing') {
                 if (item.isPaused()) {
-                    console.log('Download is paused');
+                    mainWindow.webContents.send('download-file-progress', {
+                        state: 'paused',
+                        savedPath,
+                        allBytes,
+                        receivedBytes: item.getReceivedBytes()
+                    });
                 } else {
                     mainWindow.webContents.send('download-file-progress', {
+                        state,
                         savedPath,
                         allBytes,
                         receivedBytes: item.getReceivedBytes()
                     });
                 }
+            } else {
+                console.log('state', state);
             }
         });
     }

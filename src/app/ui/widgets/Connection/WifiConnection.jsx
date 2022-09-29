@@ -544,7 +544,7 @@ function WifiConnection() {
                         placeholder={i18n._('key-Workspace/Connection-Choose a machine')}
                         value={serverState ? serverState?.name : ''}
                     />
-                    <div className="sm-flex-auto ">
+                    <div className="sm-flex-none ">
                         <SvgIcon
                             className="border-default-black-5 margin-left-8 border-radius-left-8"
                             name={serverDiscovering ? 'Refresh' : 'Reset'}

@@ -53,7 +53,7 @@ const ConfigRasterVector = ({ disabled }) => {
                             <span className="sm-flex-width">{i18n._('key-Laser/ProcessingModeSection/ConfigRasterVector-Invert')}</span>
                             <Checkbox
                                 disabled={disabled}
-                                className="sm-flex-auto"
+                                className="sm-flex-none"
                                 checked={invert}
                                 onChange={() => {
                                     actions.onToggleInvert();

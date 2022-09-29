@@ -34,7 +34,7 @@ const ColorSelectorPicker = React.memo(({ onChangeComplete, onClose, colors, val
         >
             <div className="sm-flex justify-space-between margin-bottom-8">
                 <span className="width-auto margin-left-2">{i18n._('key-color_selector-Basic Color')}</span>
-                <div className="sm-flex-auto">
+                <div className="sm-flex-none">
                     <SvgIcon
                         name="Cancel"
                         type={['static']}

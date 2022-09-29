@@ -19,7 +19,7 @@ function CheckboxItem({
     return (
         <div className="sm-flex height-32 margin-vertical-8">
             <Checkbox
-                className="sm-flex-auto sm-flex-order-negative"
+                className="sm-flex-none sm-flex-order-negative"
                 style={{
                     width: width,
                     marginLeft: calculateTextIndex(definitionKey)

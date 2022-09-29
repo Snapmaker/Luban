@@ -32,7 +32,9 @@ class ProgressBar extends React.PureComponent {
     }
 
     getSnapshotBeforeUpdate(prevProps) {
-        if (!isEqual(prevProps.progress, this.props.progress) && this.props.progress !== 0) {
+        if (!isEqual(prevProps.progress, this.props.progress)
+        && this.props.progress >= prevProps.progress
+        && this.props.progress !== 0) {
             this.setState({ display: 'block' });
             if (this.timeout) {
                 clearTimeout(this.timeout);
@@ -62,12 +64,15 @@ class ProgressBar extends React.PureComponent {
                         closable={closable}
                         centered={false}
                         zIndex={2000}
-                        style={{ top: 'calc(100vh - 126px)', padding: '16px 0 0' }}
+                        style={{ top: 'calc(100vh - 142px)', padding: '16px 0 0' }}
                     >
                         <Modal.Body style={{ marginBottom: '-24px', marginTop: '-40px' }}>
-                            <div className="position-re height-16 margin-top-24 margin-bottom-16 align-c">
+                            <div className="position-re margin-top-24 margin-bottom-16 align-c">
                                 <span>{tips}</span>
-                                {subTips && (<span>{subTips}</span>)}
+                                {subTips && (
+                                    <p className="margin-top-4 margin-bottom-16">{subTips}
+                                    </p>
+                                )}
                             </div>
                             <div className={classNames(styles.progressbar)}>
 

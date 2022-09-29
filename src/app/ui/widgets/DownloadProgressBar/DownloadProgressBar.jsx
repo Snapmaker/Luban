@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux';
 import noop from 'lodash';
 import ProgressBar from '../../components/ProgressBar';
 import SvgIcon from '../../components/SvgIcon';
-import Anchor from '../../components/Anchor';
+// import Anchor from '../../components/Anchor';
 // import {
 //     SPEED_HIGH,
 //     SPEED_MEDIUM,
@@ -22,20 +22,25 @@ function DownloadProgressBar({ tips, subTips, onClose = noop, onMinimize = noop 
 
     function renderProfileMenu() {
         return (
-            <div>
-                <Anchor onClick={onMinimize}>
+            <div
+                className="margin-right-12 margin-top-8"
+            >
+                <div className="margin-right-12 display-inline">
                     <SvgIcon
-                        className="margin-right-8"
+                        onClick={onMinimize}
                         type={['static']}
+                        size={24}
                         name="Decrease"
                     />
-                </Anchor>
-                <Anchor onClick={onClose}>
+                </div>
+                <div className="display-inline">
                     <SvgIcon
+                        onClick={onClose}
                         type={['static']}
+                        size={24}
                         name="Cancel"
                     />
-                </Anchor>
+                </div>
             </div>
         );
     }
@@ -43,6 +48,7 @@ function DownloadProgressBar({ tips, subTips, onClose = noop, onMinimize = noop 
         <div>
             <ProgressBar
                 closeIcon={renderProfileMenu()}
+                bottomDistance={158}
                 closable
                 tips={`${tips + progress * 100}%`}
                 subTips={subTips}

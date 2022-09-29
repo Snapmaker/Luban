@@ -80,7 +80,7 @@ const ConfigGreyscale = ({ disabled }) => {
                                 <span className="sm-flex-width">{i18n._('key-Laser/ProcessingModeSection/ConfigGreyscale-Invert')}</span>
                                 <Checkbox
                                     disabled={disabled}
-                                    className="sm-flex-auto"
+                                    className="sm-flex-none"
                                     checked={invert}
                                     onChange={() => {
                                         actions.onInverseBW();

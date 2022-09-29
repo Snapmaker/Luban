@@ -189,8 +189,8 @@ const ScaleOverlay = React.memo(({
             </div>
             <div className="padding-vertical-16 padding-horizontal-16">
                 <div className="sm-flex height-32 margin-bottom-8">
-                    <span className="sm-flex-auto width-16 color-red-1">X</span>
-                    <div className="position-ab sm-flex-auto margin-horizontal-24">
+                    <span className="sm-flex-none width-16 color-red-1">X</span>
+                    <div className="position-ab sm-flex-none margin-horizontal-24">
                         {isPrimeTowerSelected && (
                             <Input
                                 suffix="mm"
@@ -225,8 +225,8 @@ const ScaleOverlay = React.memo(({
                     </div>
                 </div>
                 <div className="sm-flex height-32 margin-bottom-8">
-                    <span className="sm-flex-auto width-16 color-green-1">Y</span>
-                    <div className="position-ab sm-flex-auto margin-horizontal-24">
+                    <span className="sm-flex-none width-16 color-green-1">Y</span>
+                    <div className="position-ab sm-flex-none margin-horizontal-24">
                         {isPrimeTowerSelected && (
                             <Input
                                 suffix="mm"
@@ -261,8 +261,8 @@ const ScaleOverlay = React.memo(({
                 </div>
                 {!isPrimeTowerSelected && (
                     <div className="sm-flex height-32 margin-bottom-8">
-                        <span className="sm-flex-auto width-16 color-blue-2">Z</span>
-                        <div className="position-ab sm-flex-auto margin-horizontal-24">
+                        <span className="sm-flex-none width-16 color-blue-2">Z</span>
+                        <div className="position-ab sm-flex-none margin-horizontal-24">
                             {/* hidden model size after scale */}
                             {/* <Input
                                 suffix="mm"

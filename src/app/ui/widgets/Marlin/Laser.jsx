@@ -138,7 +138,7 @@ class Laser extends PureComponent {
                         <span>{i18n._('key-unused-Laser Power')}</span>
 
                         <Switch
-                            className="sm-flex-auto"
+                            className="sm-flex-none"
                             onClick={this.actions.onClickLaserPower}
                             checked={Boolean(laserPowerOpen)}
                         />

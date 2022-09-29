@@ -86,7 +86,7 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
                         content={i18n._('key-CncLaser/TextSection-Select the font of the text.')}
                     >
                         <div className="sm-flex height-32 margin-vertical-8">
-                            <span className="sm-flex-auto sm-flex-order-negative width-56">{i18n._('key-CncLaser/TextSection-Font')}</span>
+                            <span className="sm-flex-none sm-flex-order-negative width-56">{i18n._('key-CncLaser/TextSection-Font')}</span>
                             <Select
                                 disabled={disabled}
                                 className="sm-flex-width align-r"
@@ -104,7 +104,7 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
                         content={i18n._('key-CncLaser/TextSection-Select the font size of the text.')}
                     >
                         <div className="sm-flex height-32 margin-vertical-8">
-                            <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('key-CncLaser/TextSection-Font Size')}</span>
+                            <span className="sm-flex-none sm-flex-order-negative width-64">{i18n._('key-CncLaser/TextSection-Font Size')}</span>
                             <Input
                                 suffix="pt"
                                 disabled={disabled}

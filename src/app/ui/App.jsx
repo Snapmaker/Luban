@@ -169,12 +169,11 @@ class App extends PureComponent {
                         draggable
                         pauseOnHover
                     />
-                    <div style={{ display: this.props.showOnlineCase ? 'block' : 'none' }}>
-                        <RenderCustomIframe
-                            onClose={this.onClose}
-                            showDownloadPopup={this.onShowDownloadPopup}
-                        />
-                    </div>
+                    <RenderCustomIframe
+                        onClose={this.onClose}
+                        visible={this.props.showOnlineCase}
+                        showDownloadPopup={this.onShowDownloadPopup}
+                    />
                     {this.props.showDownloadPopup && (
                         <DonwloadList onClose={() => this.props.updateShowDownloadPopup(false)} />
                     )}

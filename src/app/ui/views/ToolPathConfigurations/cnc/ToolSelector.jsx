@@ -104,7 +104,7 @@ function ToolSelector({ toolDefinitions, setCurrentToolDefinition, setCurrentVal
         <div>
             <React.Fragment>
                 <div className={`margin-vertical-8 ${isModel ? 'position-re sm-flex justify-space-between' : null}`}>
-                    <div className="sm-flex-auto sm-flex-order-negative height-32">
+                    <div className="sm-flex-none sm-flex-order-negative height-32">
                         {i18n._('key-Cnc/ToolpathParameters/ToolSelector-Tool')}
                     </div>
                     <div className="sm-flex position-re padding-bottom-24">

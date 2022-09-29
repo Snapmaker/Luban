@@ -51,7 +51,7 @@ function WorkspaceLayout({ renderLeftView, renderRightView, renderMainToolBar, c
                         'background-color-white',
                         'margin-8',
                         'box-shadow-module'
-                        // 'sm-flex-auto'
+                        // 'sm-flex-none'
                     )}
                 >
                     {renderLeftView && (
@@ -74,7 +74,7 @@ function WorkspaceLayout({ renderLeftView, renderRightView, renderMainToolBar, c
                         'border-radius-8',
                         'background-color-white',
                         'margin-8',
-                        'sm-flex-auto',
+                        'sm-flex-none',
                         'box-shadow-module'
                     )}
                 >

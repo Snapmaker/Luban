@@ -295,7 +295,7 @@ class CncParameters extends PureComponent {
                                 {/*        <input*/}
                                 {/*            disabled={false}*/}
                                 {/*            type="checkbox"*/}
-                                {/*            className="sm-flex-auto"*/}
+                                {/*            className="sm-flex-none"*/}
                                 {/*            checked={smoothY}*/}
                                 {/*            onChange={() => { this.props.updateGcodeConfig({ smoothY: !smoothY }); }}*/}
                                 {/*        />*/}

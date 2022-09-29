@@ -105,8 +105,8 @@ const SupportOverlay = ({ editSupport, setTransformMode }) => {
                         }
                     </Button>
                     <div className="sm-flex justify-space-between height-32 margin-top-8">
-                        <span className="sm-flex-auto">{i18n._('key-Printing/LeftBar/Support-Overhang Angle')}</span>
-                        <div className="sm-flex-auto display-inline">
+                        <span className="sm-flex-none">{i18n._('key-Printing/LeftBar/Support-Overhang Angle')}</span>
+                        <div className="sm-flex-none display-inline">
                             <Input
                                 suffix="°"
                                 size="small"

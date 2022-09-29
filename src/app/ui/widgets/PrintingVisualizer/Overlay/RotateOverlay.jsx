@@ -259,8 +259,8 @@ const RotateOverlay = React.memo(({
                         {i18n._('key-Printing/LeftBar-Free Rotate')}
                     </div>
                     <div className="sm-flex height-32 margin-vertical-8">
-                        <span className="sm-flex-auto width-16 color-red-1">X</span>
-                        <div className="position-ab sm-flex-auto margin-horizontal-24">
+                        <span className="sm-flex-none width-16 color-red-1">X</span>
+                        <div className="position-ab sm-flex-none margin-horizontal-24">
                             <Input
                                 size="large"
                                 placeholder={i18n._('key-Printing/LeftBar-Enter an degree')}
@@ -275,8 +275,8 @@ const RotateOverlay = React.memo(({
                         </div>
                     </div>
                     <div className="sm-flex height-32 margin-bottom-8">
-                        <span className="sm-flex-auto width-16 color-green-1">Y</span>
-                        <div className="position-ab sm-flex-auto margin-horizontal-24">
+                        <span className="sm-flex-none width-16 color-green-1">Y</span>
+                        <div className="position-ab sm-flex-none margin-horizontal-24">
                             <Input
                                 size="large"
                                 placeholder={i18n._('key-Printing/LeftBar-Enter an degree')}
@@ -291,8 +291,8 @@ const RotateOverlay = React.memo(({
                         </div>
                     </div>
                     <div className="sm-flex height-32 margin-bottom-8">
-                        <span className="sm-flex-auto width-16 color-blue-2">Z</span>
-                        <div className="position-ab sm-flex-auto margin-horizontal-24">
+                        <span className="sm-flex-none width-16 color-blue-2">Z</span>
+                        <div className="position-ab sm-flex-none margin-horizontal-24">
                             <Input
                                 size="large"
                                 placeholder={i18n._('key-Printing/LeftBar-Enter an degree')}

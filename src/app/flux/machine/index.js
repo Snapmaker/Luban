@@ -219,6 +219,9 @@ const INITIAL_STATE = {
     shouldHideConsole: true,
     promptDamageModel: true,
     enable3dpLivePreview: false,
+    // download info
+    cancelDownloadPopup: true,
+    minimizeDownloadPopup: true,
     // connect info
     moduleStatusList: {},
     nozzleSizeList: [],
@@ -308,6 +311,20 @@ export const actions = {
             dispatch(
                 baseActions.updateState({
                     promptDamageModel: false
+                })
+            );
+        }
+        if (machineStore.get('minimizeDownloadPopup') === false) {
+            dispatch(
+                baseActions.updateState({
+                    minimizeDownloadPopup: false
+                })
+            );
+        }
+        if (machineStore.get('cancelDownloadPopup') === false) {
+            dispatch(
+                baseActions.updateState({
+                    cancelDownloadPopup: false
                 })
             );
         }
@@ -1224,6 +1241,16 @@ export const actions = {
         dispatch(baseActions.updateState({ promptDamageModel: bool }));
         machineStore.set('promptDamageModel', bool);
     },
+    updateFluxAndStorageByKey: (key, bool) => (dispatch) => {
+        dispatch(baseActions.updateState({ [key]: bool }));
+        machineStore.set(key, bool);
+        // machineStore.set('cancelDownloadPopup', bool);
+    },
+    updateMinimizeDownloadPopup: (bool) => (dispatch) => {
+        dispatch(baseActions.updateState({ minimizeDownloadPopup: bool }));
+        machineStore.set('minimizeDownloadPopup', bool);
+    },
+
     updateEnable3dpLivePreview: (bool) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
 

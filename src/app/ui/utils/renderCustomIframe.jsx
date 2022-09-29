@@ -7,7 +7,7 @@ import MainToolBar from '../layouts/MainToolBar';
 // import i18n from '../../lib/i18n';
 
 function renderCustomIframe(options) {
-    const { onClose, showDownloadPopup } = options;
+    const { onClose, showDownloadPopup, visible } = options;
 
     const renderMainToolBar = () => {
         return (
@@ -37,9 +37,9 @@ function renderCustomIframe(options) {
         <Modal
             closable={false}
             disableOverlay
+            zIndex={1002}
             tile
-            getContainer={false}
-            style={{ width: '100%', height: '100%' }}
+            visible={visible}
             onClose={onClose}
         >
 

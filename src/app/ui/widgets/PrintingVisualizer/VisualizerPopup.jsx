@@ -3,6 +3,7 @@ import { Trans } from 'react-i18next';
 import modal, { FooterCheckBox, FooterPrimaryButton } from '../../../lib/modal';
 import i18n from '../../../lib/i18n';
 import { Button } from '../../components/Buttons';
+import Anchor from '../../components/Anchor';
 
 export const loadModelFailPopup = (fileName) => {
     return modal({
@@ -157,6 +158,63 @@ export const repairModelPopup = (models) => {
                         if (bool) {
                             repairGuidePopup();
                         }
+                        ignore = bool;
+                    }}
+                />
+            ),
+            onClose: () => {
+                reject(ignore);
+            }
+        });
+    });
+};
+
+export const downloadPopup = (type) => {
+    let ignore = true;
+    let title = '', body;
+    if (type === 'cancel') {
+        title = i18n._('key-DonwloadList/Cancel Download');
+        body = (
+            <React.Fragment>
+                <p>{i18n._('key-Modal/Repair-This operation will cancel the downloading process of resources. Are you sure to cancel?')}   </p>
+            </React.Fragment>
+        );
+    } else {
+        title = i18n._('key-DonwloadList/Background Download');
+        body = (
+            <React.Fragment>
+                <span>{i18n._('key-DonwloadList/The download will continue in the background. You can find the downloaded files in ')}   </span>
+                <Anchor
+                    style={{
+                        fontWeight: 'bold'
+                    }}
+                >
+                    {i18n._('key-DonwloadList/Download Directory.')}
+                </Anchor>
+            </React.Fragment>
+        );
+    }
+    return new Promise((resolve, reject) => {
+        const action = modal({
+            zIndex: 2000,
+            title,
+            body,
+            showChangeIgnore: true,
+            cancelTitle: 'key-Modal/Common-No',
+            footer: (
+                <FooterPrimaryButton
+                    i18nKey="key-Modal/Common-Yes"
+                    onClick={() => {
+                        resolve(ignore);
+                        action.close();
+                    }}
+                />
+            ),
+            footerLeft: (
+                <FooterCheckBox
+                    i18nKey="key-Modal/Common-Do not ask me again"
+                    defaultValue={ignore}
+                    onChange={(bool) => {
                         ignore = bool;
                     }}
                 />

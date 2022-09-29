@@ -28,7 +28,7 @@ const ReliefParameters = ({ disabled }) => {
                         <span className="sm-flex-width">{i18n._('key-Cnc/Edit/ReliefParameters-Invert')}</span>
                         <Checkbox
                             disabled={disabled}
-                            className="sm-flex-auto"
+                            className="sm-flex-none"
                             defaultChecked={invert}
                             onChange={() => {
                                 actions.onToggleInvert();

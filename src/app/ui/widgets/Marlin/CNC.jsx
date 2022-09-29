@@ -96,7 +96,7 @@ class CNC extends PureComponent {
                         <div className="height-32 width-176 display-inline text-overflow-ellipsis">{i18n._('key-unused-Toolhead')}</div>
                         <div className="sm-flex margin-left-24 overflow-visible align-center">
                             <Switch
-                                className="sm-flex-auto"
+                                className="sm-flex-none"
                                 style={{ order: 0 }}
                                 onClick={this.actions.onClickToolHead}
                                 checked={headStatus}

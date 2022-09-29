@@ -169,7 +169,7 @@ function LaserStartModal({
                             <Radio
                                 key={`laserStartModal${v.name}`}
                                 style={{ borderRadius: '100%', marginTop: '16px' }}
-                                className="sm-flex-auto "
+                                className="sm-flex-none "
                                 value={v.key}
                                 disabled={handleDisable(v)}
                                 // checked={isLaserPrintAutoMode}

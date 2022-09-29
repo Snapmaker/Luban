@@ -144,7 +144,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
                 <span className="text-overflow-ellipsis width-auto main-text-normal" style={{ maxWidth: '171px' }}>
                     {i18n._(label)}
                 </span>
-                <div className="sm-flex-auto">
+                <div className="sm-flex-none">
                     {isProfile && !isDefault && (
                         <SvgIcon
                             className="margin-horizontal-4"

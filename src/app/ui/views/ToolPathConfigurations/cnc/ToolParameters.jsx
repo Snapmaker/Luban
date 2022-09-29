@@ -56,7 +56,7 @@ function SettingItem(props) {
             maxWidth="middle"
         >
             <div key={settingName} className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
-                <span className="sm-flex-auto sm-flex-order-negative main-text-normal max-width-208 text-overflow-ellipsis">{i18n._(label)}</span>
+                <span className="sm-flex-none sm-flex-order-negative main-text-normal max-width-208 text-overflow-ellipsis">{i18n._(label)}</span>
                 {type === 'bool-switch' && (
                     <div className="height-32">
                         <Switch
@@ -97,7 +97,7 @@ function SettingItem(props) {
                         min={min}
                         max={max}
                         size={styleSize}
-                        className="sm-flex-auto"
+                        className="sm-flex-none"
                         onChange={(value) => {
                             if (setting.isGcodeConfig) {
                                 const gcodeOptions = {};
@@ -138,7 +138,7 @@ function SettingItem(props) {
                         min={min}
                         max={max}
                         size={styleSize}
-                        className="sm-flex-auto"
+                        className="sm-flex-none"
                         onChange={(value) => {
                             if (setting.isGcodeConfig) {
                                 const gcodeOptions = {};

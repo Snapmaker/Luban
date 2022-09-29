@@ -137,7 +137,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                     content={i18n._('key-CncLaser/TransformationSection-Set the coordinate of the selected object. You can also drag the object directly. The object should not be moved beyond work area.')}
                 >
                     <div className="sm-flex height-32 margin-vertical-8 ">
-                        <span className="sm-flex-auto sm-flex-order-negative width-64 text-overflow-ellipsis">{i18n._('key-CncLaser/TransformationSection-Move')}</span>
+                        <span className="sm-flex-none sm-flex-order-negative width-64 text-overflow-ellipsis">{i18n._('key-CncLaser/TransformationSection-Move')}</span>
                         <span className="sm-flex-width sm-flex justify-space-between">
                             <div className="position-re sm-flex align-flex-start">
                                 <span className="width-16 height-32 display-inline unit-text align-c">
@@ -185,7 +185,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                     content={i18n._('key-CncLaser/TransformationSection-Set the size of the selected object. You can also resize the object directly. The object should not exceed the work size.')}
                 >
                     <div className="sm-flex height-32 margin-vertical-8">
-                        <span className="sm-flex-auto sm-flex-order-negative width-64 text-overflow-ellipsis">{i18n._('key-CncLaser/TransformationSection-Size')}</span>
+                        <span className="sm-flex-none sm-flex-order-negative width-64 text-overflow-ellipsis">{i18n._('key-CncLaser/TransformationSection-Size')}</span>
                         <div className="sm-flex-width sm-flex justify-space-between">
                             <div className="position-re sm-flex align-flex-start">
                                 <span className="width-16 height-32 display-inline unit-text align-c">
@@ -247,7 +247,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
                     content={i18n._('key-CncLaser/TransformationSection-Rotate the selected object to the angle you need.')}
                 >
                     <div className="sm-flex height-32 margin-vertical-8">
-                        <span className="sm-flex-auto sm-flex-order-negative width-56 text-overflow-ellipsis">{i18n._('key-CncLaser/TransformationSection-Rotate')}</span>
+                        <span className="sm-flex-none sm-flex-order-negative width-56 text-overflow-ellipsis">{i18n._('key-CncLaser/TransformationSection-Rotate')}</span>
                         <div className="sm-flex-width sm-flex justify-space-between">
                             <div className="display-inline">
                                 <SvgIcon

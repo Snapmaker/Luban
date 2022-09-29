@@ -158,8 +158,8 @@ const TranslateOverlay = React.memo(({
             </div>
             <div className="padding-top-8 padding-horizontal-16">
                 <div className="sm-flex justify-space-between height-32 margin-bottom-8">
-                    <span className="sm-flex-auto color-red-1">X</span>
-                    <div className="sm-flex-auto margin-left-n-28">
+                    <span className="sm-flex-none color-red-1">X</span>
+                    <div className="sm-flex-none margin-left-n-28">
                         <Input
                             suffix="mm"
                             size="small"
@@ -173,8 +173,8 @@ const TranslateOverlay = React.memo(({
                             }}
                         />
                     </div>
-                    <span className="sm-flex-auto color-green-1">Y</span>
-                    <div className="sm-flex-auto margin-left-n-28">
+                    <span className="sm-flex-none color-green-1">Y</span>
+                    <div className="sm-flex-none margin-left-n-28">
                         <Input
                             suffix="mm"
                             size="small"

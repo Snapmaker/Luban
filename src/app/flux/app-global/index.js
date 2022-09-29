@@ -256,15 +256,16 @@ export const actions = {
     updateCurrentDownload: (currentSavedPath) => (dispatch) => {
         dispatch(actions.updateState({ currentSavedPath }));
     },
-    updateGlobalProgress: ({ progress, savedPath, allBytes, receivedBytes }) => (dispatch, getState) => {
+    updateGlobalProgress: ({ progress, savedPath, allBytes, receivedBytes, state }) => (dispatch, getState) => {
         const { downloadFiles, currentSavedPath } = getState().appGlobal;
-        console.log('currentSavedPath === savedPath', currentSavedPath, savedPath);
         if (currentSavedPath === savedPath) {
             dispatch(actions.updateState({ progress }));
         }
         const currentItem = downloadFiles.find(d => d.savedPath === savedPath);
         if (currentItem && progress) {
+            console.log('currentSavedPath === savedPath', currentSavedPath, savedPath, state);
             currentItem.progress = progress;
+            currentItem.state = state;
             currentItem.allBytes = allBytes;
             currentItem.receivedBytes = receivedBytes;
             dispatch(actions.updateState({ downloadFiles: [...downloadFiles] }));

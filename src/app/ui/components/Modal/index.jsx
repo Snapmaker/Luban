@@ -3,10 +3,10 @@ import React, { useEffect } from 'react';
 // import Modal from '@trendmicro/react-modal';
 import PropTypes from 'prop-types';
 
-import './modal.styl';
 import { filter } from 'lodash';
 import { Modal } from 'antd';
 import classNames from 'classnames';
+import './modal.styl';
 import Title from './modalTitle';
 import styles from './styles.styl';
 import Body from './modalBody';
@@ -27,6 +27,7 @@ const ModalWrapper = React.memo(({
     modalWrapperClassName = 'modal-wrapper',
     tile = false,
     visible = true,
+    closeIcon,
     onClose,
     className = '',
     children,
@@ -61,20 +62,32 @@ const ModalWrapper = React.memo(({
             }
         }
     };
+    let wrapClassName = modalWrapperClassName;
+    if (tile) {
+        wrapClassName += ' tile-modal';
+    }
+    if (closeIcon) {
+        wrapClassName += ' custom-close-icon';
+    }
 
     return (
         <Modal
             {...rest}
             width={width}
             visible={visible}
+            closeIcon={closeIcon}
             title={renderSection('modalTitle')}
             footer={renderSection('modalFooter')}
             onCancel={onClose}
             maskClosable={false}
             centered={centered}
             mask={!tile}
-            className={classNames(styles.modal, `${renderSection('modalTitle') ? className : `${className} no-header`}`, `model-${size}`)}
-            wrapClassName={tile ? `${modalWrapperClassName} tile-modal` : modalWrapperClassName}
+            className={classNames(
+                styles.modal,
+                `${renderSection('modalTitle') ? className : `${className} no-header`}`,
+                `model-${size}`,
+            )}
+            wrapClassName={wrapClassName}
             maskStyle={{
                 background: '#2A2C2E30'
             }}
@@ -85,6 +98,8 @@ const ModalWrapper = React.memo(({
 });
 ModalWrapper.propTypes = {
     ...Modal.propTypes,
+    closeIcon: PropTypes.node,
+    zIndex: PropTypes.number,
     modalWrapperClassName: PropTypes.string,
     centered: PropTypes.bool,
     tile: PropTypes.bool,

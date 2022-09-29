@@ -161,7 +161,7 @@ class TestFocus extends PureComponent {
                     <span>{i18n._('key-Workspace/Fine-tuneWorkOrigin-Work Speed')}</span>
                     <TipTrigger
                         placement="right"
-                        className="sm-flex-auto"
+                        className="sm-flex-none"
                         title={i18n._('key-Workspace/Fine-tuneWorkOrigin-Work Speed')}
                         content={i18n._('key-Workspace/Fine-tuneWorkOrigin-Determines how fast the machine moves when it’s working.')}
                     >
@@ -185,7 +185,7 @@ class TestFocus extends PureComponent {
                     />
                     <TipTrigger
                         placement="right"
-                        className="sm-flex-auto"
+                        className="sm-flex-none"
                         title={i18n._('key-Workspace/Fine-tuneWorkOrigin-Laser Power')}
                         content={i18n._('key-Workspace/Fine-tuneWorkOrigin-Set the laser power.')}
                     >

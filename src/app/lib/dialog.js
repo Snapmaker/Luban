@@ -1,9 +1,37 @@
 import isElectron from 'is-electron';
 
+const defaultFileProperties = ['createDirectory', 'openFile'];
+const defaultDirectoryProperties = ['createDirectory', 'openDirectory'];
+
 /**
  * Dialogs control in electron
  */
 const Dialog = {
+    async showOpenDirectoryDialog(isMultiSelect = false) {
+        if (isElectron()) {
+            const { remote } = window.require('electron');
+            const currentWindow = remote.getCurrentWindow();
+            const openDialogReturnValue = await remote.dialog.showOpenDialog(
+                currentWindow,
+                {
+                    title: 'Snapmaker Luban',
+                    properties: isMultiSelect ? defaultDirectoryProperties.concat('multiSelections') : defaultDirectoryProperties
+                }
+            );
+            const filePaths = openDialogReturnValue.filePaths;
+            if (!filePaths || !filePaths[0]) return null;
+            if (isMultiSelect) {
+                return filePaths;
+            } else {
+                const file = { path: filePaths[0], name: window.require('path').basename(filePaths[0]) };
+                console.log('filePaths[0]', filePaths[0]);
+                return file;
+            }
+        }
+        return null;
+    },
+
+
     async showOpenFileDialog(type, isMultiSelect) {
         type = typeof type === 'string' ? type.slice(1) : '';
         let extensions = ['snap3dp', 'snaplzr', 'snapcnc'];
@@ -29,13 +57,12 @@ const Dialog = {
         if (isElectron()) {
             const { remote } = window.require('electron');
             const currentWindow = remote.getCurrentWindow();
-            const defaultProperties = ['createDirectory', 'openFile'];
             const openDialogReturnValue = await remote.dialog.showOpenDialog(
                 currentWindow,
                 {
                     title: 'Snapmaker Luban',
                     filters: [{ name: 'files', extensions }],
-                    properties: isMultiSelect ? defaultProperties.concat('multiSelections') : defaultProperties
+                    properties: isMultiSelect ? defaultFileProperties.concat('multiSelections') : defaultFileProperties
                 }
             );
             const filePaths = openDialogReturnValue.filePaths;

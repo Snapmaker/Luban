@@ -22,10 +22,10 @@ const ControlPanel = (props) => {
             )}
             {!isFourAxis && (
                 <div className="sm-flex justify-space-between">
-                    <div className="sm-flex-auto">
+                    <div className="sm-flex-none">
                         <JogPad {...props} />
                     </div>
-                    <div className="sm-flex-auto">
+                    <div className="sm-flex-none">
                         <MotionButtonGroup {...props} />
                     </div>
                 </div>

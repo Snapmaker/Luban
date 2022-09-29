@@ -49,7 +49,7 @@ const ConfigRasterBW = ({ disabled }) => {
                             <span className="sm-flex-width">{i18n._('key-Laser/ProcessingModeSection/ConfigRasterBW-Invert')}</span>
                             <Checkbox
                                 disabled={disabled}
-                                className="sm-flex-auto"
+                                className="sm-flex-none"
                                 checked={invert}
                                 onChange={() => {
                                     actions.onInverseBW();
@@ -77,7 +77,7 @@ const ConfigRasterBW = ({ disabled }) => {
                             <NumberInput
                                 disabled={disabled}
                                 value={tmpBwThreshold}
-                                className="sm-flex-auto"
+                                className="sm-flex-none"
                                 size="super-small"
                                 min={0}
                                 max={255}

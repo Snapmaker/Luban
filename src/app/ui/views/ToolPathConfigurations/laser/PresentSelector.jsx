@@ -100,7 +100,7 @@ function PresentSelector({ toolDefinitions, setCurrentToolDefinition, setCurrent
         <div>
             <React.Fragment>
                 <div className={`margin-vertical-8 ${isModel ? 'position-re sm-flex justify-space-between' : null}`}>
-                    <div className="sm-flex-auto sm-flex-order-negative height-32">
+                    <div className="sm-flex-none sm-flex-order-negative height-32">
                         {i18n._('Preset')}
                     </div>
                     <div className="sm-flex position-re padding-bottom-24">

@@ -313,7 +313,7 @@ class AppLayout extends PureComponent {
                         }}
                     >
                         <div className="sm-flex justify-space-between">
-                            <div className="sm-flex-auto font-roboto font-weight-normal font-size-middle">
+                            <div className="sm-flex-none font-roboto font-weight-normal font-size-middle">
                                 <SvgIcon
                                     name="WarningTipsSuccess"
                                     size="24"
@@ -324,7 +324,7 @@ class AppLayout extends PureComponent {
                                     {i18n._('key-app_layout-File Saved')}
                                 </span>
                             </div>
-                            <div className="sm-flex-auto">
+                            <div className="sm-flex-none">
                                 <SvgIcon
                                     name="Cancel"
                                     type={['static']}
@@ -353,7 +353,7 @@ class AppLayout extends PureComponent {
                         }}
                     >
                         <div className="sm-flex justify-space-between">
-                            <div className="sm-flex-auto font-roboto font-weight-normal font-size-middle">
+                            <div className="sm-flex-none font-roboto font-weight-normal font-size-middle">
                                 <SvgIcon
                                     name="WarningTipsSuccess"
                                     size="24"
@@ -376,7 +376,7 @@ class AppLayout extends PureComponent {
                                     </span>
                                 </Anchor>
                             </div>
-                            <div className="sm-flex-auto">
+                            <div className="sm-flex-none">
                                 <SvgIcon
                                     name="Cancel"
                                     type={['static']}
@@ -413,7 +413,7 @@ class AppLayout extends PureComponent {
                     }}
                 >
                     <div className="sm-flex justify-space-between">
-                        <div className="sm-flex-auto font-roboto font-weight-normal font-size-middle">
+                        <div className="sm-flex-none font-roboto font-weight-normal font-size-middle">
                             <SvgIcon
                                 name="WarningTipsError"
                                 size="24"
@@ -424,7 +424,7 @@ class AppLayout extends PureComponent {
                                 {i18n._('key-app_layout-Print Area Exceeded')}
                             </span>
                         </div>
-                        <div className="sm-flex-auto">
+                        <div className="sm-flex-none">
                             <SvgIcon
                                 name="Cancel"
                                 type={['static']}
@@ -552,24 +552,27 @@ class AppLayout extends PureComponent {
                 const { ipcRenderer } = window.require('electron');
                 const param = { url, uuid: uuid() };
                 ipcRenderer.invoke('startDownload', param);
-                const paramArr = [param];
-                UniApi.Event.on('appbar-menu:cancel-download-case', () => {
-                    ipcRenderer.invoke('cancelDownload', paramArr);
-                });
-                UniApi.Event.on('appbar-menu:pause-download-case', () => {
-                    ipcRenderer.invoke('pauseDownload', paramArr);
-                });
-                UniApi.Event.on('appbar-menu:resume-download-case', () => {
-                    ipcRenderer.invoke('resumeDownload', paramArr);
-                });
             });
-            UniApi.Event.on('download-file-progress', (event, { allBytes, receivedBytes, savedPath }) => {
+            UniApi.Event.on('appbar-menu:cancel-download-case', (paramArr) => {
+                const { ipcRenderer } = window.require('electron');
+                ipcRenderer.invoke('cancelDownload', paramArr);
+            });
+            // UniApi.Event.on('appbar-menu:pause-download-case', (paramArr) => {
+            //     const { ipcRenderer } = window.require('electron');
+            //     ipcRenderer.invoke('pauseDownload', paramArr);
+            // });
+            // UniApi.Event.on('appbar-menu:resume-download-case', (paramArr) => {
+            //     const { ipcRenderer } = window.require('electron');
+            //     ipcRenderer.invoke('resumeDownload', paramArr);
+            // });
+            UniApi.Event.on('download-file-progress', (event, { allBytes, receivedBytes, savedPath, state }) => {
                 const progress = allBytes ? Number((receivedBytes / allBytes).toFixed(2)) : 0;
                 this.props.updateGlobalProgress({
                     progress,
                     receivedBytes,
                     allBytes,
-                    savedPath
+                    savedPath,
+                    state
                 });
             });
             UniApi.Event.on('download-file-completed', () => {
@@ -577,6 +580,12 @@ class AppLayout extends PureComponent {
             });
             UniApi.Event.on('download-file-started', (event, savedPath) => {
                 this.props.updateCurrentDownload(savedPath);
+                this.props.updateGlobalProgress({
+                    progress: 0.01,
+                    receivedBytes: 1,
+                    allBytes: 100,
+                    savedPath
+                });
             });
             /* End downloading case file */
 
@@ -796,6 +805,10 @@ class AppLayout extends PureComponent {
             UniApi.Event.on('appbar-menu:clear-recent-files', () => {
                 this.actions.updateRecentFile([], 'reset');
                 UniApi.Menu.cleanAllRecentFiles();
+            });
+            UniApi.Event.on('appbar-menu:select-directory', async () => {
+                const files = await UniApi.Dialog.showOpenDirectoryDialog();
+                console.log('files', files);
             });
             UniApi.Event.on('appbar-menu:import', async () => {
                 let fileObj;
