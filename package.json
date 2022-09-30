@@ -54,7 +54,7 @@
     "test": "tape -r @babel/register test/*.js --no-timeout --node-arg=--require --node-arg=babel-register --node-arg=--require --node-arg=babel-polyfill",
     "coveralls": "tape -r @@babel/register test/*.js --coverage --coverage-report=text-lcov --nyc-arg=--require --nyc-arg=babel-register --nyc-arg=--require --nyc-arg=babel-polyfill | coveralls",
     "serve": "node --max-old-space-size=4096 node_modules/webpack/bin/webpack.js serve --config webpack.config.app.development.js --progress",
-    "watch:server-worker": "webpack --config webpack.config.server.production.js",
+    "watch:server-worker": "webpack --config webpack.config.server.worker.development.js",
     "watch:server": "tsc -p ./tsconfig-server.json --watch",
     "build:server": "tsc -p ./tsconfig-server.json",
     "build:main": "cross-env NODE_ENV=production babel \"./src/*.js\" --config-file ./babel.config.js -d ./output/",

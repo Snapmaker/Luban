@@ -8,6 +8,7 @@ import WebGLRendererWrapper from '../../../../three-extensions/WebGLRendererWrap
 import Detector from '../../../../three-extensions/Detector';
 import styles from '../styles.styl';
 import api from '../../../../api';
+import i18n from '../../../../lib/i18n';
 
 export const CALIBRATION_MODE = 1;
 export const CUTOUT_MODE = 2;
@@ -438,7 +439,7 @@ class ManualCalibration extends Component {
 
     setupExtractControls() {
         const { width, height, getPoints } = this.props;
-        this.extractControls = new ManualCalibrationControls(this.camera, this.renderer.domElement, this.scale);
+        this.extractControls = new ManualCalibrationControls(this.camera, this.renderer.domElement, this.scale, null, null, this.props.mode);
         // the order is [leftBottom, rightBottom, rightTop. leftTop]
         if (getPoints.length > 0) {
             this.extractControls.updateRectangleSize(getPoints, width, height);
@@ -621,11 +622,17 @@ class ManualCalibration extends Component {
             return null;
         }
         return (
-            <div className="sm-flex justify-space-between ">
-                <div className={styles['calibrate-wrapper']} style={{ border: '1px solid #c8c8c8', overflow: 'hidden', boxSizing: 'border-box', background: '#F5F5F7', borderRadius: 8 }} ref={this.node} />
-                <div style={{ width: '500px', height: '500px', border: '1px solid #c8c8c8', overflow: 'hidden', boxSizing: 'border-box', background: '#F5F5F7', borderRadius: 8 }}>
-                    <img style={{ height: '100%' }} src={this.state.preview} alt="" />
-                    {/* <canvas2d-zoom ref={this.preview} width={this.props.size.x} height={this.props.size.y} min-zoom="1" max-zoom="8" zoom-factor="1.1" /> */}
+            <div>
+                <div className="sm-flex" style={{ marginBottom: '5px' }}>
+                    <div className="font-weight-bold" style={{ flex: 1, textAlign: 'left' }}>{i18n._('key-Laser/CamaeraCapture-Adjust area')}</div>
+                    <div className="font-weight-bold" style={{ flex: 1, textAlign: 'left' }}>{i18n._('key-Laser/CamaeraCapture-Preview Area')}</div>
+                </div>
+                <div className="sm-flex justify-space-between ">
+                    <div className={styles['calibrate-wrapper']} style={{ border: '1px solid #c8c8c8', overflow: 'hidden', boxSizing: 'border-box', background: '#F5F5F7', borderRadius: 8, marginLeft: '10px' }} ref={this.node} />
+                    <div style={{ width: '500px', height: '500px', border: '1px solid #c8c8c8', overflow: 'hidden', boxSizing: 'border-box', background: '#F5F5F7', borderRadius: 8 }}>
+                        <img style={{ height: '100%' }} src={this.state.preview} alt="" />
+                        {/* <canvas2d-zoom ref={this.preview} width={this.props.size.x} height={this.props.size.y} min-zoom="1" max-zoom="8" zoom-factor="1.1" /> */}
+                    </div>
                 </div>
             </div>
         );

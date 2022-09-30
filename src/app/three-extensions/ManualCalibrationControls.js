@@ -17,7 +17,7 @@ import ThreeUtils from './ThreeUtils';
  * @param cornerPositions { leftTop, leftBottom, rightBottom, rightTop }
  * @constructor
  */
-function ManualCalibrationControls(camera, domElement, scale, remapBox2, cornerPositions) {
+function ManualCalibrationControls(camera, domElement, scale, remapBox2, cornerPositions, mode) {
     THREE.Object3D.call(this);
 
     this.position.z = 1;
@@ -170,6 +170,7 @@ function ManualCalibrationControls(camera, domElement, scale, remapBox2, cornerP
 
 
     function onMouseDown(event) {
+        this.moving = true;
         if (!scope.enabled || !scope.visible) {
             return;
         }
@@ -188,6 +189,9 @@ function ManualCalibrationControls(camera, domElement, scale, remapBox2, cornerP
                 selectedGizmo?.children[0].material.color.set(0x000000);
                 selectedGizmo = null;
             }
+        } else {
+            selectedGizmo?.children[0].material.color.set(0x000000);
+            selectedGizmo = null;
         }
     }
 
@@ -198,73 +202,82 @@ function ManualCalibrationControls(camera, domElement, scale, remapBox2, cornerP
             return;
         }
         event.preventDefault();
-        raycaster.setFromCamera(ThreeUtils.getMouseXY(event, domElement), camera);
-        const intersects = raycaster.intersectObjects(gizmoArr);
-        if (intersects.length > 0) {
-            domElement.style.cursor = 'all-scroll';
-        } else {
+
+        if (!scope.enabled || !selectedGizmo || event.which === 0) {
             domElement.style.cursor = 'default';
             return;
         }
 
-        if (!scope.enabled || !selectedGizmo || event.which === 0) {
-            return;
+        // raycaster.setFromCamera(ThreeUtils.getMouseXY(event, domElement), camera);
+        // const intersects = raycaster.intersectObjects(gizmoArr);
+        // if (intersects.length > 0) {
+        //     domElement.style.cursor = 'all-scroll';
+        // } else {
+        //     domElement.style.cursor = 'default';
+        //     return;
+        // }
+
+        if (this.moving && selectedGizmo) {
+            domElement.style.cursor = 'all-scroll';
+
+            const pos = ThreeUtils.getEventWorldPosition(event, domElement, camera);
+            if (mode === 1) {
+                if (pos.x < remapBox2.min.x) {
+                    pos.x = remapBox2.min.x;
+                }
+                if (pos.x > remapBox2.max.x) {
+                    pos.x = remapBox2.max.x;
+                }
+                if (pos.y < remapBox2.min.y) {
+                    pos.y = remapBox2.min.y;
+                }
+                if (pos.y > remapBox2.max.y) {
+                    pos.y = remapBox2.max.y;
+                }
+
+                if (selectedGizmo === leftTopGizmo) {
+                    if (pos.x > 0) {
+                        pos.x = 0;
+                    }
+                    if (pos.y < 0) {
+                        pos.y = 0;
+                    }
+                    selectedGizmo.position.copy(pos);
+                } else if (selectedGizmo === leftBottomGizmo) {
+                    if (pos.x > 0) {
+                        pos.x = 0;
+                    }
+                    if (pos.y > 0) {
+                        pos.y = 0;
+                    }
+                    selectedGizmo.position.copy(pos);
+                } else if (selectedGizmo === rightTopGizmo) {
+                    if (pos.x < 0) {
+                        pos.x = 0;
+                    }
+                    if (pos.y < 0) {
+                        pos.y = 0;
+                    }
+                    selectedGizmo.position.copy(pos);
+                } else if (selectedGizmo === rightBottomGizmo) {
+                    if (pos.x < 0) {
+                        pos.x = 0;
+                    }
+                    if (pos.y > 0) {
+                        pos.y = 0;
+                    }
+                    selectedGizmo.position.copy(pos);
+                }
+            }
+
+            selectedGizmo.position.copy(pos);
+
+            updateDashedLine();
         }
-
-        const pos = ThreeUtils.getEventWorldPosition(event, domElement, camera);
-
-        // if (pos.x < remapBox2.min.x) {
-        //     pos.x = remapBox2.min.x;
-        // }
-        // if (pos.x > remapBox2.max.x) {
-        //     pos.x = remapBox2.max.x;
-        // }
-        // if (pos.y < remapBox2.min.y) {
-        //     pos.y = remapBox2.min.y;
-        // }
-        // if (pos.y > remapBox2.max.y) {
-        //     pos.y = remapBox2.max.y;
-        // }
-
-        // if (selectedGizmo === leftTopGizmo) {
-        //     if (pos.x > 0) {
-        //         pos.x = 0;
-        //     }
-        //     if (pos.y < 0) {
-        //         pos.y = 0;
-        //     }
-        //     selectedGizmo.position.copy(pos);
-        // } else if (selectedGizmo === leftBottomGizmo) {
-        //     if (pos.x > 0) {
-        //         pos.x = 0;
-        //     }
-        //     if (pos.y > 0) {
-        //         pos.y = 0;
-        //     }
-        //     selectedGizmo.position.copy(pos);
-        // } else if (selectedGizmo === rightTopGizmo) {
-        //     if (pos.x < 0) {
-        //         pos.x = 0;
-        //     }
-        //     if (pos.y < 0) {
-        //         pos.y = 0;
-        //     }
-        //     selectedGizmo.position.copy(pos);
-        // } else if (selectedGizmo === rightBottomGizmo) {
-        //     if (pos.x < 0) {
-        //         pos.x = 0;
-        //     }
-        //     if (pos.y > 0) {
-        //         pos.y = 0;
-        //     }
-        //     selectedGizmo.position.copy(pos);
-        // }
-        selectedGizmo.position.copy(pos);
-
-        updateDashedLine();
     }
 
     function onMouseUp() {
+        this.moving = false;
         // selectedGizmo = null;
     }
 

@@ -25,12 +25,16 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
     const canRedo = useSelector(state => state[headType]?.history?.canRedo, shallowEqual);
     const canUndo = useSelector(state => state[headType]?.history?.canUndo, shallowEqual);
     const isRotate = useSelector(state => state[headType]?.materials?.isRotate, shallowEqual);
+    const modelGroup = useSelector(state => state[headType]?.modelGroup, shallowEqual);
     const machineSeries = useSelector(state => state?.machine?.series);
     const machineToolHead = useSelector(state => state?.machine?.toolHead);
     const workspaceSeries = useSelector(state => state?.workspace?.series);
     const workspaceHeadType = useSelector(state => state?.workspace?.headType);
     const workspaceToolHead = useSelector(state => state?.workspace?.toolHead);
     const workspaceIsRotate = useSelector(state => state?.workspace?.isRotate);
+
+    const dispatch = useDispatch();
+
     const [machineInfo, setMachineInfo] = useState({
         series: machineSeries,
         toolHead: machineToolHead[`${headType}Toolhead`]
@@ -45,6 +49,8 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
         materialThickness: null
     });
     const setShowCameraCapture = (show) => {
+        modelGroup.unselectAllModels();
+        dispatch(editorActions.clearSelection(headType));
         setCameraCaptureInfo({
             display: show,
             mode: '',
@@ -60,7 +66,6 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
     });
 
     const [showStlModal, setShowStlModal] = useState(true);
-    const dispatch = useDispatch();
     useEffect(() => {
         setMachineInfo({
             series: machineSeries,
@@ -349,18 +354,21 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                 modalConfig.title = i18n._('key-Laser/CameraCapture-Camera Capture');
                 modalConfig.shouldRenderFooter = false;
                 return (
-                    <SelectCaptureMode onSelectMode={(mode) => {
-                        setCameraCaptureInfo((pre) => {
-                            return {
-                                ...pre,
-                                mode
-                            };
-                        });
-                    }}
+                    <SelectCaptureMode
+                        series={machineInfo.series}
+                        onSelectMode={(mode) => {
+                            setCameraCaptureInfo((pre) => {
+                                return {
+                                    ...pre,
+                                    mode
+                                };
+                            });
+                        }}
                     />
                 );
             }
             if (cameraCaptureInfo.mode === MODE_THICKNESS_COMPENSATION && cameraCaptureInfo.materialThickness === null) {
+                modalConfig.title = i18n._('key-Laser/CameraCapture-Camera Capture');
                 modalConfig.actions = [{
                     name: i18n._('key-Modal/Common-Next'),
                     isPrimary: true,

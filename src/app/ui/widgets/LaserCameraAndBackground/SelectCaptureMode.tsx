@@ -2,8 +2,11 @@ import React from 'react';
 import classNames from 'classnames';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
+import i18n from '../../../lib/i18n';
+
 
 type TProps = {
+    // series: string;
     onSelectMode: (mode: string) => void;
 }
 
@@ -23,8 +26,8 @@ const SelectCaptureMode = (props: TProps) => {
                     <img src={require('./images/mode_conventional.svg')} alt="" />
                 </div>
                 <div className={classNames(styles.right)}>
-                    <p className="font-weight-bold font-size-middle">常规模式</p>
-                    <p>{'适用于较薄工件 < 10mm'}</p>
+                    <p className="font-weight-bold font-size-middle">{i18n._('key-Laser/CameraCapture-conventional mode')}</p>
+                    <p>{i18n._('key-Laser/CameraCapture-conventional mode describe')}</p>
                 </div>
 
             </Anchor>
@@ -38,10 +41,10 @@ const SelectCaptureMode = (props: TProps) => {
                     <img src={require('./images/mode_thickness_compensation.svg')} alt="" />
                 </div>
                 <div className={classNames(styles.right)}>
-                    <p className="font-weight-bold font-size-middle">厚度补偿模式</p>
-                    <p>{'适用于较厚工件 {范围区间}，应用在薄工件上也会有更精确的结果'}
+                    <p className="font-weight-bold font-size-middle">{i18n._('key-Laser/CameraCapture-thickness compensation mode')}</p>
+                    <p>{i18n._('key-Laser/CameraCapture-thickness compensation mode describe')}
                         <br />
-                        依据材料厚度不同，由于透视畸变，可能会无法适应较大工件
+                        {i18n._('key-Laser/CameraCapture-thickness compensation mode describe2')}
                     </p>
                 </div>
 
