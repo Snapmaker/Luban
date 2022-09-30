@@ -8,14 +8,18 @@ import api from '../../../../api';
 import styles from '../styles.styl';
 import ExtractPreview from './ExtractPreview';
 import ManualCalibration from '../ManualCalibration';
-import { LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2,
-    MACHINE_SERIES, LASER_10W_TAKE_PHOTO_POSITION, getCurrentHeadType } from '../../../../constants';
+import PickObject from '../ManualCalibration/PickObject';
+import {
+    LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2,
+    MACHINE_SERIES, LASER_10W_TAKE_PHOTO_POSITION, getCurrentHeadType
+} from '../../../../constants';
 import { actions } from '../../../../flux/machine';
 import { Button } from '../../../components/Buttons';
 import Modal from '../../../components/Modal';
 
 const PANEL_EXTRACT_TRACE = 1;
 const PANEL_MANUAL_CALIBRATION = 2;
+const PANEL_PICK_OBJECT = 3;
 const DefaultBgiName = '../../../../resources/images/camera-aid/Loading.gif';
 
 class ExtractSquareTrace extends PureComponent {
@@ -35,7 +39,8 @@ class ExtractSquareTrace extends PureComponent {
         changeCanTakePhoto: PropTypes.func.isRequired,
         setBackgroundImage: PropTypes.func.isRequired,
         hideModal: PropTypes.func.isRequired,
-        executeGcodeG54: PropTypes.func.isRequired
+        executeGcodeG54: PropTypes.func.isRequired,
+        materialThickness: PropTypes.number
     };
 
     extractingPreview = [];
@@ -67,8 +72,14 @@ class ExtractSquareTrace extends PureComponent {
             getPoints: [],
             corners: [],
             fileNames: [],
-            stitchFileName: ''
-        }
+            stitchFileName: '',
+            laserToolhead: this.props.toolHead.laserToolhead
+        },
+        // photoInfo: {
+        //     fileName: '',
+        //     width: 1024,
+        //     height: 1280
+        // }
     };
 
 
@@ -96,7 +107,6 @@ class ExtractSquareTrace extends PureComponent {
                 return;
             }
             await this.props.server.executeGcode('G53;');
-
             this.setState({
                 isStitched: false,
                 canStart: false
@@ -110,7 +120,8 @@ class ExtractSquareTrace extends PureComponent {
                 options: {
                     ...this.state.options,
                     corners: resData.corners,
-                    getPoints: resData.points
+                    getPoints: resData.points,
+                    materialThickness: this.props.materialThickness
                 }
             });
             const position = [];
@@ -188,6 +199,8 @@ class ExtractSquareTrace extends PureComponent {
             const takePhotos = this.actions.takePhotos(address, position);
             const getPhototTasks = this.actions.startGetPhotoTasks(length);
             Promise.all([takePhotos, getPhototTasks]).then(() => {
+                this.props.executeGcodeG54(this.props.series, this.props.headType);
+
                 if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
                     if (this.props.series !== MACHINE_SERIES.A150.value) {
                         this.swapItem(this.state.imageNames, 3, 5);
@@ -246,7 +259,7 @@ class ExtractSquareTrace extends PureComponent {
                         'index': position[i].index,
                         'x': position[i].x,
                         'y': position[i].y,
-                        'z': z,
+                        'z': z + this.props.materialThickness || 0,
                         'feedRate': 3000,
                         'address': address,
                         'photoQuality': photoQuality
@@ -491,7 +504,13 @@ class ExtractSquareTrace extends PureComponent {
             });
         },
         setBackgroundImage: () => {
-            this.props.setBackgroundImage(this.state.outputFilename);
+            if (this.props.materialThickness) {
+                this.setState({
+                    panel: PANEL_PICK_OBJECT
+                });
+            } else {
+                this.props.setBackgroundImage(this.state.outputFilename);
+            }
         },
         displayManualCalibration: async () => {
             const resPro = await api.getCameraCalibration({ 'address': this.props.server.address, 'toolHead': this.props.toolHead.laserToolhead });
@@ -503,7 +522,12 @@ class ExtractSquareTrace extends PureComponent {
             this.setState({
                 panel: PANEL_MANUAL_CALIBRATION
             });
-        }
+        },
+        // updateCameraPhoto: (photoInfo) => {
+        //     this.setState({
+        //         photoInfo
+        //     });
+        // }
     };
 
 
@@ -538,7 +562,8 @@ class ExtractSquareTrace extends PureComponent {
                 getPoints: [],
                 corners: [],
                 fileNames: [],
-                stitchFileName: ''
+                stitchFileName: '',
+                laserToolhead: this.props.toolHead.laserToolhead
             }
         });
 
@@ -646,7 +671,7 @@ class ExtractSquareTrace extends PureComponent {
                                 onClick={this.actions.setBackgroundImage}
                                 disabled={!this.state.isStitched}
                             >
-                                {i18n._('key-Laser/CameraCapture-Confirm')}
+                                {this.props.materialThickness ? i18n._('key-Modal/Common-Next') : i18n._('key-Laser/CameraCapture-Confirm')}
                             </Button>
                         </Modal.Footer>
                     </Modal>
@@ -662,8 +687,28 @@ class ExtractSquareTrace extends PureComponent {
                         displayExtractTrace={this.actions.displayExtractTrace}
                         updateStitchEach={this.actions.updateStitchEach}
                         calibrationOnOff={this.actions.calibrationOnOff}
+                    // updateCameraPhoto={this.actions.updateCameraPhoto}
                     />
                 )}
+                {this.state.panel === PANEL_PICK_OBJECT && this.state.outputFilename && (
+                    <PickObject
+                        toolHead={this.props.toolHead}
+                        materialThickness={this.props.materialThickness}
+                        size={this.props.size}
+                        series={this.props.series}
+                        fileName={this.state.outputFilename}
+                        resetPanel={() => this.setState({
+                            panel: ''
+                        })}
+                        onClipImage={(img) => {
+                            if (img) {
+                                this.props.setBackgroundImage(img);
+                            }
+                            console.log('=> onClipImage', img);
+                        }}
+                    />
+                )}
+
             </div>
         );
     }

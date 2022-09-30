@@ -13,7 +13,8 @@ export enum WorkerMethods {
     generateViewPath = 'generateViewPath',
     heartBeat = 'heartBeat',
     loadSize = 'loadSize',
-    processImage = 'processImage'
+    processImage = 'processImage',
+    imageRemap = 'imageRemap'
     // LUBAN worker methods END
 }
 
@@ -69,6 +70,6 @@ Object.entries(WorkerMethods).forEach(([, method]) => {
     };
 });
 
-const manager = new WorkerManager() as unknown as IWorkerManager;
+const workerManager = new WorkerManager() as unknown as IWorkerManager;
 
-export default manager;
+export default workerManager;

@@ -269,7 +269,7 @@ SVGEditor.propTypes = {
     editable: PropTypes.bool,
     menuDisabledCount: PropTypes.number,
     SVGCanvasMode: PropTypes.string.isRequired,
-    SVGCanvasExt: PropTypes.string.isRequired,
+    SVGCanvasExt: PropTypes.object,
 
     updateScale: PropTypes.func.isRequired,
     updateTarget: PropTypes.func.isRequired,

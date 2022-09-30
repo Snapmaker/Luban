@@ -7,8 +7,8 @@ import SetBackground from './SetBackground';
 class LaserAidBackgroundWidget extends PureComponent {
     static propTypes = {
         // isConnected: PropTypes.bool,
-        hideModal: PropTypes.func.isRequired
-        // headType: PropTypes.string
+        hideModal: PropTypes.func.isRequired,
+        materialThickness: PropTypes.number
     };
 
     state = {
@@ -16,10 +16,11 @@ class LaserAidBackgroundWidget extends PureComponent {
     };
 
     render() {
-        const { hideModal } = this.props;
+        const { hideModal, materialThickness } = this.props;
         return (
             <SetBackground
                 hideModal={hideModal}
+                materialThickness={materialThickness}
             />
         );
     }

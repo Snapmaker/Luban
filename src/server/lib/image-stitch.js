@@ -1,19 +1,37 @@
 import Jimp from 'jimp';
 import PerspT from 'perspective-transform';
+import { LEVEL_TWO_POWER_LASER_FOR_SM2 } from '../constants';
 import DataStorage from '../DataStorage';
+import workerManager from '../services/task-manager/workerManager';
 import { pathWithRandomSuffix } from './random-utils';
 
 // TODO: first step in here,we get the points
 async function readImage(filePath) {
     const image = await Jimp.read(filePath);
-    // image.rotate(-90).background(0x808080ff);
     return image;
 }
 
+export const remapImage = (fileName, materialThickness, series) => {
+    return new Promise((resolve) => {
+        workerManager.imageRemap(
+            [fileName, series, materialThickness, DataStorage.tmpDir, DataStorage.configDir],
+            () => {
+                resolve();
+            }
+        );
+    });
+};
+
 export const stitchEach = async (options) => {
-    const { stitchFileName, getPoints, corners, size, currentIndex, centerDis, picAmount } = options;
+    const { stitchFileName, getPoints, corners, size, currentIndex, centerDis, picAmount, materialThickness, laserToolhead, fill, series } = options;
+    if (!stitchFileName) {
+        return Promise.resolve();
+    }
+    if (laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+        await remapImage(stitchFileName, materialThickness, series);
+    }
+
     const density = 3;
-    const d = centerDis;
     // phrase 1 - perspective transform matrix
     const points = [];
     for (let i = 0; i < getPoints.length; i++) {
@@ -45,14 +63,14 @@ export const stitchEach = async (options) => {
 
 
     if (parseInt(currentIndex / 3, 10) === 1) {
-        ySize = d;
+        ySize = centerDis;
     } else {
-        ySize = Math.floor((size.y - d) / 2);
+        ySize = (size.y - centerDis) / 2;
     }
     if (currentIndex % 3 === 1) {
-        xSize = d;
+        xSize = centerDis;
     } else {
-        xSize = Math.floor((size.x - d) / 2);
+        xSize = (size.x - centerDis) / 2;
     }
     let stitched;
 
@@ -89,37 +107,47 @@ export const stitchEach = async (options) => {
             endySize = ySize;
         }
         if (currentIndex % 3 === 0) {
+            // 左侧
             endxSize = xSize;
         } else if (currentIndex % 3 === 1) {
+            // 中间
             startxSize = Math.floor((size.x - xSize) / 2);
             endxSize = Math.floor((size.x + xSize) / 2);
         } else if (currentIndex % 3 === 2) {
+            // 右侧
             startxSize = size.x - xSize;
         }
 
-        stitched = new Jimp(xSize * density, ySize * density);
-
+        const outputWidth = fill ? size.x : xSize;
+        const outputHeight = fill ? size.y : ySize;
+        stitched = new Jimp(outputWidth * density, outputHeight * density);
         for (let y = startySize * density; y < endySize * density; y++) {
             for (let x = startxSize * density; x < endxSize * density; x++) {
                 let dy = -1;
-                if (y >= (size.y / 2 - d / 2) * density) {
+                if (y >= (size.y / 2 - centerDis / 2) * density) {
                     dy = 0;
                 }
-                if (y >= (size.y / 2 + d / 2) * density) {
+                if (y >= (size.y / 2 + centerDis / 2) * density) {
                     dy = 1;
                 }
 
                 let dx = -1;
-                if (x >= (size.x / 2 - d / 2) * density) {
+                if (x >= (size.x / 2 - centerDis / 2) * density) {
                     dx = 0;
                 }
-                if (x >= (size.x / 2 + d / 2) * density) {
+                if (x >= (size.x / 2 + centerDis / 2) * density) {
                     dx = 1;
                 }
-                const index = ((y - startySize * density) * xSize * density + x - startxSize * density) << 2;
+
+                const index = (() => {
+                    if (fill) {
+                        return (y * outputWidth * density + x - outputHeight * density + 30 * density) << 2;
+                    }
+                    return ((y - startySize * density) * xSize * density + x - startxSize * density) << 2;
+                })();
                 // const index = ((y)* xSize * density + x ) << 2;
 
-                const source = perspT.transformInverse((x - dx * d * density), (y - dy * d * density));
+                const source = perspT.transformInverse((x - dx * centerDis * density), (y - dy * centerDis * density));
                 const x0 = Math.round(source[0]);
                 const y0 = Math.round(source[1]);
                 if (x0 < 0 || x0 >= width || y0 < 0 || y0 >= height) {
@@ -163,7 +191,7 @@ export const stitchEach = async (options) => {
                 const index = ((y - startySize * density) * xSize * density + x - startxSize * density) << 2;
                 // const index = ((y)* xSize * density + x ) << 2;
 
-                const source = perspT.transformInverse((x - dx * d / 2 * density), (y - dy * d / 2 * density));
+                const source = perspT.transformInverse((x - dx * centerDis / 2 * density), (y - dy * centerDis / 2 * density));
                 // const so`urce = perspT.transformInverse((x), (y));
                 const x0 = Math.round(source[0]);
                 const y0 = Math.round(source[1]);
@@ -196,7 +224,6 @@ export const stitchEach = async (options) => {
 export const stitch = async (options) => {
     const { fileNames, getPoints, corners, size, centerDis } = options;
     const density = 3;
-    const d = centerDis;
     let width, height;
 
     // phrase 1 - perspective transform matrix
@@ -240,7 +267,7 @@ export const stitch = async (options) => {
                     dx = 1;
                 }
                 const index = (y * size.x * density + x) << 2;
-                let source = perspT.transformInverse(x - dx * d / 2 * density, y - dy * d / 2 * density);
+                let source = perspT.transformInverse(x - dx * centerDis / 2 * density, y - dy * centerDis / 2 * density);
                 let x0 = Math.round(source[0]);
                 let y0 = Math.round(source[1]);
 
@@ -251,7 +278,7 @@ export const stitch = async (options) => {
                     if (y0 < 0 && dy > -1) {
                         dy = -1;
                     }
-                    source = perspT.transformInverse(x - dx * d / 2 * density, y - dy * d / 2 * density);
+                    source = perspT.transformInverse(x - dx * centerDis / 2 * density, y - dy * centerDis / 2 * density);
                     x0 = Math.round(source[0]);
                     y0 = Math.round(source[1]);
                     if (x0 < 0 || y0 < 0) {
@@ -264,7 +291,7 @@ export const stitch = async (options) => {
                     if (y0 > height && dy < 1) {
                         dy = 1;
                     }
-                    source = perspT.transformInverse(x - dx * d / 2 * density, y - dy * d / 2 * density);
+                    source = perspT.transformInverse(x - dx * centerDis / 2 * density, y - dy * centerDis / 2 * density);
                     x0 = Math.round(source[0]);
                     y0 = Math.round(source[1]);
                     if (x0 > width || y0 > height) {
@@ -286,22 +313,22 @@ export const stitch = async (options) => {
         for (let y = 0; y < size.y * density; y++) {
             for (let x = 0; x < size.x * density; x++) {
                 let dy = -1;
-                if (y >= (size.y / 2 - d / 2) * density) {
+                if (y >= (size.y / 2 - centerDis / 2) * density) {
                     dy = 0;
                 }
-                if (y >= (size.y / 2 + d / 2) * density) {
+                if (y >= (size.y / 2 + centerDis / 2) * density) {
                     dy = 1;
                 }
 
                 let dx = -1;
-                if (x >= (size.x / 2 - d / 2) * density) {
+                if (x >= (size.x / 2 - centerDis / 2) * density) {
                     dx = 0;
                 }
-                if (x >= (size.x / 2 + d / 2) * density) {
+                if (x >= (size.x / 2 + centerDis / 2) * density) {
                     dx = 1;
                 }
                 const index = (y * size.x * density + x) << 2;
-                let source = perspT.transformInverse((x - dx * d * density), (y - dy * d * density));
+                let source = perspT.transformInverse((x - dx * centerDis * density), (y - dy * centerDis * density));
                 let x0 = Math.round(source[0]);
                 let y0 = Math.round(source[1]);
                 if (x0 < 0 || y0 < 0) {
@@ -311,7 +338,7 @@ export const stitch = async (options) => {
                     if (y0 < 0 && dy > -1) {
                         dy--;
                     }
-                    source = perspT.transformInverse((x - dx * d * density), (y - dy * d * density));
+                    source = perspT.transformInverse((x - dx * centerDis * density), (y - dy * centerDis * density));
                     x0 = Math.round(source[0]);
                     y0 = Math.round(source[1]);
                     // console.log('eachtotal方向<', x, y, x0, y0);
@@ -325,7 +352,7 @@ export const stitch = async (options) => {
                     if (y0 > height && dy < 1) {
                         dy++;
                     }
-                    source = perspT.transformInverse((x - dx * d * density), (y - dy * d * density));
+                    source = perspT.transformInverse((x - dx * centerDis * density), (y - dy * centerDis * density));
                     x0 = Math.round(source[0]);
                     y0 = Math.round(source[1]);
                     if (x0 > width || y0 > height) {

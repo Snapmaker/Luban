@@ -17,7 +17,7 @@ const maxDecimal = (number, decimalPlaces) => {
 
 const NumberInput = (props) => {
     const {
-        className = '', size = 'middle', value, defaultValue, disabled = false, min, max, onChange, placeholder, allowUndefined, decimalPlaces = 3, allowNaN, ...rest
+        className = '', size = 'middle', value, defaultValue, disabled = false, min, max, onChange, placeholder, allowUndefined, decimalPlaces = 3, allowNaN, suffix, ...rest
     } = props;
     const [displayValue, setDisplayValue] = useState(!decimalPlaces ? value : maxDecimal(value, decimalPlaces));
     const ref = useRef();
@@ -122,6 +122,7 @@ const NumberInput = (props) => {
                 onChange={onInsideChange}
                 onBlur={onBlur}
                 onKeyUp={onKeyUp}
+                suffix={suffix}
                 {...rest}
             />
         </span>
@@ -140,7 +141,8 @@ NumberInput.propTypes = {
     placeholder: PropTypes.string,
     allowUndefined: PropTypes.bool,
     decimalPlaces: PropTypes.number,
-    allowNaN: PropTypes.bool
+    allowNaN: PropTypes.bool,
+    suffix: PropTypes.string
 };
 
 export default NumberInput;
