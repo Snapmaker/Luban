@@ -1,6 +1,6 @@
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import i18next from 'i18next';
 import { includes } from 'lodash';
 import Menu from '../../components/Menu';
@@ -15,8 +15,10 @@ import { HEAD_CNC, HEAD_LASER, MACHINE_SERIES, CONNECTION_TYPE_WIFI, longLangWit
 import { actions as laserActions } from '../../../flux/laser';
 import { renderModal } from '../../utils';
 import LaserSetBackground from '../../widgets/LaserSetBackground';
-import LaserCameraAidBackground from '../../widgets/LaserCameraAidBackground';
+import LaserCameraAndBackground from '../../widgets/LaserCameraAndBackground';
 import ModalSmall from '../../components/Modal/ModalSmall';
+import SelectCaptureMode, { MODE_THICKNESS_COMPENSATION } from '../../widgets/LaserCameraAndBackground/SelectCaptureMode';
+import MaterialThicknessInput from '../../widgets/LaserCameraAndBackground/MaterialThicknessInput';
 
 function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setShowWorkspace }) {
     const unSaved = useSelector(state => state?.project[headType]?.unSaved, shallowEqual);
@@ -37,7 +39,18 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
     const isConnected = useSelector(state => state?.machine?.isConnected, shallowEqual);
     const connectionType = useSelector(state => state?.machine?.connectionType, shallowEqual);
     const series = useSelector(state => state?.machine?.series, shallowEqual);
-    const [showCameraCapture, setShowCameraCapture] = useState(false);
+    const [cameraCaptureInfo, setCameraCaptureInfo] = useState({
+        display: false,
+        mode: '',
+        materialThickness: null
+    });
+    const setShowCameraCapture = (show) => {
+        setCameraCaptureInfo({
+            display: show,
+            mode: '',
+            materialThickness: null
+        });
+    };
     const isOriginalSeries = (series === MACHINE_SERIES.ORIGINAL?.value || series === MACHINE_SERIES.ORIGINAL_LZ?.value);
 
     // cnc
@@ -300,8 +313,14 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
         );
     }
 
-    const setBackgroundModal = showCameraCapture && renderModal({
-        renderBody() {
+    const materialThickness = useRef(null);
+    const setBackgroundModal = cameraCaptureInfo.display && (() => {
+        const modalConfig = {
+            title: '',
+            shouldRenderFooter: true,
+            actions: []
+        };
+        const content = (() => {
             if (!isOriginalSeries && (workspaceSeries !== machineSeries || workspaceHeadType !== HEAD_LASER
                 || machineToolHead.laserToolhead !== workspaceToolHead || workspaceIsRotate)) {
                 // todo, ui
@@ -315,29 +334,77 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                     />
                 );
             }
-            return (
-                <div>
-                    {isOriginalSeries && (
+            if (isOriginalSeries) {
+                return (
+                    <div>
                         <LaserSetBackground
                             hideModal={() => {
                                 setShowCameraCapture(false);
                             }}
                         />
-                    )}
-                    {!isOriginalSeries && (
-                        <LaserCameraAidBackground
-                            hideModal={() => {
-                                setShowCameraCapture(false);
-                            }}
-                        />
-                    )}
-                </div>
-            );
-        },
-        actions: [],
-        onClose: () => { setShowCameraCapture(false); }
-    });
+                    </div>
+                );
+            }
+            if (!cameraCaptureInfo.mode) {
+                modalConfig.title = i18n._('key-Laser/CameraCapture-Camera Capture');
+                modalConfig.shouldRenderFooter = false;
+                return (
+                    <SelectCaptureMode onSelectMode={(mode) => {
+                        setCameraCaptureInfo((pre) => {
+                            return {
+                                ...pre,
+                                mode
+                            };
+                        });
+                    }}
+                    />
+                );
+            }
+            if (cameraCaptureInfo.mode === MODE_THICKNESS_COMPENSATION && cameraCaptureInfo.materialThickness === null) {
+                modalConfig.actions = [{
+                    name: i18n._('key-Modal/Common-Next'),
+                    isPrimary: true,
+                    onClick: () => {
+                        setCameraCaptureInfo((pre) => {
+                            return {
+                                ...pre,
+                                materialThickness: materialThickness.current
+                            };
+                        });
+                    }
+                }];
+                modalConfig.shouldRenderFooter = true;
+                return (
+                    <MaterialThicknessInput
+                        series={machineInfo.series}
+                        onChange={(v) => {
+                            materialThickness.current = v;
+                        }}
+                    />
+                );
+            } else {
+                return (
+                    <LaserCameraAndBackground
+                        mode={cameraCaptureInfo.mode}
+                        materialThickness={cameraCaptureInfo.materialThickness}
+                        hideModal={() => {
+                            setShowCameraCapture(false);
+                        }}
+                    />
+                );
+            }
+        })();
 
+        return renderModal({
+            title: modalConfig.title,
+            shouldRenderFooter: modalConfig.shouldRenderFooter,
+            actions: modalConfig.actions,
+            renderBody() {
+                return content;
+            },
+            onClose: () => { setShowCameraCapture(false); }
+        });
+    })();
     const renderStlModal = () => {
         return (
             <Cnc3DVisualizer show={showStlModal} />

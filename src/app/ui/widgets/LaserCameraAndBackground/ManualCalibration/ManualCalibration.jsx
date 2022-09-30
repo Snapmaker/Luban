@@ -1,28 +1,40 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import * as THREE from 'three';
-import { DATA_PREFIX } from '../../../../constants';
+import { DATA_PREFIX, DEFAULT_LUBAN_HOST, LASER_10W_TAKE_PHOTO_POSITION, LASER_1600MW_CALIBRATION_POSITION, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES } from '../../../../constants';
 import ManualCalibrationControls from '../../../../three-extensions/ManualCalibrationControls';
 import RectangleGridHelper from '../../../../three-extensions/RectangleGridHelper';
 import WebGLRendererWrapper from '../../../../three-extensions/WebGLRendererWrapper';
 import Detector from '../../../../three-extensions/Detector';
 import styles from '../styles.styl';
+import api from '../../../../api';
 
+export const CALIBRATION_MODE = 1;
+export const CUTOUT_MODE = 2;
 
 class ManualCalibration extends Component {
     static propTypes = {
         width: PropTypes.number.isRequired,
         height: PropTypes.number.isRequired,
         getPoints: PropTypes.array.isRequired,
-        updateAffinePoints: PropTypes.func.isRequired
+        updateAffinePoints: PropTypes.func.isRequired,
+        mode: PropTypes.number.isRequired,
+        materialThickness: PropTypes.number,
+        series: PropTypes.string.isRequired,
+        size: PropTypes.object.isRequired,
+        toolHead: PropTypes.object.isRequired,
     };
 
     state = {
-        photoFilename: ''
+        photoFilename: '',
+        preview: ''
     };
 
     // DOM node
     node = React.createRef();
+    preview = React.createRef();
+    callback = React.createRef();
+    sourceImg = React.createRef();
 
     constructor(props) {
         super(props);
@@ -57,6 +69,11 @@ class ManualCalibration extends Component {
         this.updateCamera(false, true);
         this.animate();
         this.bindEventListeners();
+
+        this.callback.current = this.updatePreviewImage.bind(this);
+        window.addEventListener('update-corner-positions', this.callback.current, false);
+
+        this.preview.current = document.createElement('canvas');
     }
 
 
@@ -67,11 +84,239 @@ class ManualCalibration extends Component {
             this.renderer.dispose();
             this.renderer = null;
         }
+
+        window.removeEventListener('update-corner-positions', this.callback.current, false);
+    }
+
+    getLaserSize() {
+        let takePhotoPosition = LASER_10W_TAKE_PHOTO_POSITION[this.props.series].z;
+        if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+            takePhotoPosition = LASER_10W_TAKE_PHOTO_POSITION[this.props.series].z;
+        } else {
+            takePhotoPosition = LASER_1600MW_CALIBRATION_POSITION[this.props.series].z;
+        }
+
+        const laserMaxHeight = MACHINE_SERIES[this.props.series].setting.laserSize.z;
+        return {
+            takePhotoPosition, laserMaxHeight
+        };
+    }
+
+    updateCutoutPreview() {
+        if (!this.state.photoFilename) {
+            return;
+        }
+        const affinePoints = this.getPoints();
+
+        const boundingBox = {
+            minX: Infinity,
+            maxX: -Infinity,
+            minY: Infinity,
+            maxY: -Infinity
+        };
+
+        for (const point of affinePoints) {
+            boundingBox.minX = Math.min(boundingBox.minX, point.x);
+            boundingBox.maxX = Math.max(boundingBox.maxX, point.x);
+            boundingBox.minY = Math.min(boundingBox.minY, point.y);
+            boundingBox.maxY = Math.max(boundingBox.maxY, point.y);
+        }
+        const center = {
+            x: (boundingBox.maxX + boundingBox.minX) / 2,
+            y: (boundingBox.maxY + boundingBox.minY) / 2
+        };
+
+        const machineWidth = this.props.size.x;
+        const machineHeight = this.props.size.y;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = machineWidth;
+        canvas.height = machineHeight;
+
+        const ctx = canvas.getContext('2d');
+        const sourceImg = new Image();
+        sourceImg.crossOrigin = 'Anonymous';
+        const imagePath = `${DATA_PREFIX}/${this.state.photoFilename}`;
+        sourceImg.src = imagePath;
+        sourceImg.onload = () => {
+            affinePoints.forEach((point) => {
+                point.x -= boundingBox.minX;
+                point.y -= boundingBox.minY;
+            });
+            ctx.beginPath();
+            for (let i = 0; i < affinePoints.length; i++) {
+                ctx.lineTo(affinePoints[i].x, affinePoints[i].y);
+            }
+            ctx.lineTo(affinePoints[0].x, affinePoints[0].y);
+            ctx.clip();
+
+            ctx.drawImage(
+                sourceImg,
+                boundingBox.minX * -1,
+                boundingBox.minY * -1,
+                machineWidth,
+                machineHeight
+            );
+
+            const imgData = canvas.toDataURL('image/png');
+
+            const previewCanvas = this.preview.current;
+            const previewCtx = previewCanvas.getContext('2d');
+            // const previewCtx = previewCanvas.canvas().getContext('2d');
+            previewCanvas.width = machineWidth;
+            previewCanvas.height = machineHeight;
+
+            const background = new Image();
+            background.crossOrigin = 'Anonymous';
+            background.src = `${DEFAULT_LUBAN_HOST}/resources/images/aluminum-grid-plate.svg`;
+            background.onload = () => {
+                previewCtx.drawImage(background, 0, 0, machineWidth, machineHeight);
+
+                const material = new Image();
+                material.crossOrigin = 'Anonymous';
+                material.src = imgData;
+                material.onload = () => {
+                    const { takePhotoPosition, laserMaxHeight } = this.getLaserSize();
+                    if (this.props.materialThickness + takePhotoPosition > laserMaxHeight) {
+                        const scale = laserMaxHeight / (this.props.materialThickness + takePhotoPosition);
+                        previewCtx.drawImage(
+                            material,
+                            ((center.x - machineWidth / 2) * scale + machineWidth / 2) - (boundingBox.maxX - boundingBox.minX) * scale / 2,
+                            ((center.y - machineHeight / 2) * scale + machineHeight / 2) - (boundingBox.maxY - boundingBox.minY) * scale / 2,
+                            machineWidth * scale,
+                            machineHeight * scale
+                        );
+                    } else {
+                        previewCtx.drawImage(
+                            material,
+                            boundingBox.minX,
+                            boundingBox.minY,
+                            machineWidth,
+                            machineHeight
+                        );
+                    }
+
+                    this.exportPreviewImage().then((url) => {
+                        this.setState({
+                            preview: url
+                        });
+                    });
+                };
+            };
+        };
+    }
+
+    updateCalibrationPreview() {
+        if (!this.state.photoFilename) {
+            return;
+        }
+        if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+            const affinePoints = this.getPoints();
+            const options = { picAmount: 1, currentIndex: 0, size: this.props.size, series: this.props.series, currentArrIndex: 0, getPoints: affinePoints, corners: [{ 'x': 122, 'y': 228 }, { 'x': 222, 'y': 228 }, { 'x': 222, 'y': 128 }, { 'x': 122, 'y': 128 }], fileNames: [], stitchFileName: this.state.photoFilename, materialThickness: this.props.materialThickness };
+
+            api.processStitchEach(options).then((stitchImg) => {
+                const { filename } = JSON.parse(stitchImg.text);
+                this.sourceImg.current = filename;
+                this.generateCalibrationPreview();
+            });
+        } else {
+            const affinePoints = this.getPoints();
+            const options = {
+                'picAmount': 9,
+                'currentIndex': 4,
+                'size': {
+                    'x': 320,
+                    'y': 350,
+                    'z': 330
+                },
+                'series': 'A350',
+                'centerDis': 150,
+                'currentArrIndex': 0,
+                getPoints: affinePoints,
+                'corners': [
+                    {
+                        'x': 122,
+                        'y': 228
+                    },
+                    {
+                        'x': 222,
+                        'y': 228
+                    },
+                    {
+                        'x': 222,
+                        'y': 128
+                    },
+                    {
+                        'x': 122,
+                        'y': 128
+                    }],
+                'fileNames': [],
+                stitchFileName: this.state.photoFilename,
+                'laserToolhead': this.props.toolHead.laserToolhead,
+                'materialThickness': null,
+                fill: true
+            };
+
+
+            api.processStitchEach(options).then((stitchImg) => {
+                const { filename } = JSON.parse(stitchImg.text);
+                this.sourceImg.current = filename;
+                this.generateCalibrationPreview();
+            });
+        }
+    }
+
+    generateCalibrationPreview() {
+        const machineWidth = this.props.size.x;
+        const machineHeight = this.props.size.y;
+        const options = { corners: [{ 'x': 122, 'y': 228 }, { 'x': 222, 'y': 228 }, { 'x': 222, 'y': 128 }, { 'x': 122, 'y': 128 }] };
+
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        const imgPath = `${DATA_PREFIX}/${this.sourceImg.current}`;
+        img.src = imgPath;
+
+        const canvas = this.preview.current;
+        canvas.width = machineWidth;
+        canvas.height = machineHeight;
+        const ctx = canvas.getContext('2d');
+
+        img.onload = () => {
+            ctx.drawImage(
+                img,
+                0, 0,
+                machineWidth, machineHeight
+            );
+
+            ctx.lineWidth = 0.2;
+            ctx.strokeStyle = '#ff0000';
+            ctx.beginPath();
+            for (let i = 0; i < options.corners.length; i++) {
+                ctx.lineTo(options.corners[i].x, options.corners[i].y - 5);
+            }
+            ctx.lineTo(options.corners[0].x, options.corners[0].y - 5);
+            ctx.stroke();
+
+            this.exportPreviewImage().then((url) => {
+                this.setState({
+                    preview: url
+                });
+            });
+        };
+    }
+
+    updatePreviewImage() {
+        if (!this.preview.current) {
+            return;
+        }
+        if (this.props.mode === CUTOUT_MODE) {
+            this.updateCutoutPreview();
+        } else {
+            this.updateCalibrationPreview();
+        }
     }
 
     onChangeImage(filename, width, height, initialized = false) {
-        // const { size } = this.props;
-
         this.extractControls.resetCornerPositions();
         if (!initialized) {
             this.extractControls.visible = true;
@@ -81,8 +326,8 @@ class ManualCalibration extends Component {
 
             const photoDisplayedWidth = width, photoDisplayedHeight = height;
 
-
             const imgPath = `${DATA_PREFIX}/${filename}`;
+            this.imgPath = imgPath;
             const texture = new THREE.TextureLoader().load(imgPath);
             const material = new THREE.MeshBasicMaterial({
                 color: 0xffffff,
@@ -166,8 +411,8 @@ class ManualCalibration extends Component {
 
 
     setupThreejs() {
-        const width = this.props.width / 2.3;
-        const height = this.props.width / 2.3;
+        const width = 500;
+        const height = 500;
         // width *= 2;
         // height *= 2;
 
@@ -320,10 +565,21 @@ class ManualCalibration extends Component {
     }
 
     // extract background image from photo
-    updateMatrix() {
-        if (!this.state.photoFilename) {
-            return;
-        }
+    exportPreviewImage() {
+        return new Promise((resolve) => {
+            const previewCanvas = this.preview.current;
+            // const url = previewCanvas.canvas().toDataURL('image/png');
+            // resolve(url);
+
+            previewCanvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                // canvas.toDataURL('image/png');
+                resolve(url);
+            });
+        });
+    }
+
+    getPoints() {
         const positions = this.extractControls.getCornerPositions();
         const { leftTop, leftBottom, rightBottom, rightTop } = positions;
         const { width, height } = this.props;
@@ -341,6 +597,17 @@ class ManualCalibration extends Component {
             rightBottom,
             leftBottom
         ];
+
+        return affinePoints;
+    }
+
+    updateMatrix() {
+        if (!this.state.photoFilename) {
+            return;
+        }
+
+        const affinePoints = this.getPoints();
+
         this.props.updateAffinePoints(affinePoints);
     }
 
@@ -354,7 +621,13 @@ class ManualCalibration extends Component {
             return null;
         }
         return (
-            <div className={styles['calibrate-wrapper']} style={{ border: '1px solid #c8c8c8', overflow: 'hidden', boxSizing: 'border-box', background: '#F5F5F7', borderRadius: 8 }} ref={this.node} />
+            <div className="sm-flex justify-space-between ">
+                <div className={styles['calibrate-wrapper']} style={{ border: '1px solid #c8c8c8', overflow: 'hidden', boxSizing: 'border-box', background: '#F5F5F7', borderRadius: 8 }} ref={this.node} />
+                <div style={{ width: '500px', height: '500px', border: '1px solid #c8c8c8', overflow: 'hidden', boxSizing: 'border-box', background: '#F5F5F7', borderRadius: 8 }}>
+                    <img style={{ height: '100%' }} src={this.state.preview} alt="" />
+                    {/* <canvas2d-zoom ref={this.preview} width={this.props.size.x} height={this.props.size.y} min-zoom="1" max-zoom="8" zoom-factor="1.1" /> */}
+                </div>
+            </div>
         );
     }
 }

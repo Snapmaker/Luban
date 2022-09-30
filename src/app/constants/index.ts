@@ -1595,6 +1595,30 @@ export const LASER_10W_TAKE_PHOTO_POSITION = {
     }
 };
 
+export const LASER_1600MW_CALIBRATION_POSITION = {
+    A400: {
+        x: 265,
+        y: 205,
+        z: 330
+    },
+    A350: {
+        x: 192,
+        y: 170,
+        z: 170
+    },
+    A250: {
+        x: 186,
+        y: 130,
+        z: 230
+    },
+    A150: {
+        x: 155,
+        y: 82,
+        z: 150
+    }
+};
+
+
 export const NOZZLE_SIZE_DEFAULT_OPTIONS = [
     { value: 0.2, label: '0.2' },
     { value: 0.4, label: '0.4' },

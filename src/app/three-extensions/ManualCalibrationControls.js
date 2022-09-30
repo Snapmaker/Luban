@@ -4,6 +4,7 @@
  * @author walker https://github.com/liumingzw
  */
 
+import { debounce } from 'lodash';
 import * as THREE from 'three';
 import ThreeUtils from './ThreeUtils';
 
@@ -60,19 +61,28 @@ function ManualCalibrationControls(camera, domElement, scale, remapBox2, cornerP
 
         // TODO: make the circle transparent so we can see beneath engrave trace
         {
-            const geometry = new THREE.CircleGeometry(scale * 10, 64);
-            const material = new THREE.MeshBasicMaterial({ color: 0x000000 });
-            const circle = new THREE.Mesh(geometry, material);
-            gizmo.add(circle);
-        }
-        {
-            const geometry = new THREE.CircleGeometry(scale * 7.2, 64);
-            const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const geometry = new THREE.RingGeometry(5, 6, 30, 1);
+            const material = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.5 });
             const circle = new THREE.Mesh(geometry, material);
             gizmo.add(circle);
         }
         return gizmo;
     }
+
+    function getCornerPositions() {
+        return {
+            leftTop: leftTopGizmo.position.clone(),
+            leftBottom: leftBottomGizmo.position.clone(),
+            rightBottom: rightBottomGizmo.position.clone(),
+            rightTop: rightTopGizmo.position.clone()
+        };
+    }
+
+    const emitUpdateCornerPositions = debounce(() => {
+        return window.dispatchEvent(
+            new CustomEvent('update-corner-positions')
+        );
+    }, 300);
 
     function updateDashedLine() {
         const geometry = dashedLine.geometry;
@@ -84,6 +94,8 @@ function ManualCalibrationControls(camera, domElement, scale, remapBox2, cornerP
         geometry.vertices.push(rightTopGizmo.position);
         geometry.verticesNeedUpdate = true;
         dashedLine.computeLineDistances();
+
+        emitUpdateCornerPositions();
     }
 
     function init() {
@@ -111,9 +123,9 @@ function ManualCalibrationControls(camera, domElement, scale, remapBox2, cornerP
         dashedLine = new THREE.Line(geometry, new THREE.LineDashedMaterial({
             color: 0x123ABC,
             linewidth: 2,
-            scale: 10,
+            scale: 5,
             dashSize: 2,
-            gapSize: 1
+            gapSize: 5
         }));
         scope.add(dashedLine);
         updateDashedLine();
@@ -167,12 +179,21 @@ function ManualCalibrationControls(camera, domElement, scale, remapBox2, cornerP
             raycaster.setFromCamera(ThreeUtils.getMouseXY(event, domElement), camera);
             const intersects = raycaster.intersectObjects(gizmoArr);
             if (intersects.length > 0) {
-                selectedGizmo = intersects[0].object;
+                if (selectedGizmo !== intersects[0].object) {
+                    selectedGizmo?.children[0].material.color.set(0x000000);
+                    selectedGizmo = intersects[0].object;
+                    selectedGizmo?.children[0].material.color.set('red');
+                }
+            } else {
+                selectedGizmo?.children[0].material.color.set(0x000000);
+                selectedGizmo = null;
             }
         }
     }
 
     function onMouseMove(event) {
+        // event.stopPropagation();
+
         if (!scope.visible) {
             return;
         }
@@ -183,75 +204,98 @@ function ManualCalibrationControls(camera, domElement, scale, remapBox2, cornerP
             domElement.style.cursor = 'all-scroll';
         } else {
             domElement.style.cursor = 'default';
+            return;
         }
 
-        if (!scope.enabled || !selectedGizmo) {
+        if (!scope.enabled || !selectedGizmo || event.which === 0) {
             return;
         }
 
         const pos = ThreeUtils.getEventWorldPosition(event, domElement, camera);
 
-        if (pos.x < remapBox2.min.x) {
-            pos.x = remapBox2.min.x;
-        }
-        if (pos.x > remapBox2.max.x) {
-            pos.x = remapBox2.max.x;
-        }
-        if (pos.y < remapBox2.min.y) {
-            pos.y = remapBox2.min.y;
-        }
-        if (pos.y > remapBox2.max.y) {
-            pos.y = remapBox2.max.y;
-        }
+        // if (pos.x < remapBox2.min.x) {
+        //     pos.x = remapBox2.min.x;
+        // }
+        // if (pos.x > remapBox2.max.x) {
+        //     pos.x = remapBox2.max.x;
+        // }
+        // if (pos.y < remapBox2.min.y) {
+        //     pos.y = remapBox2.min.y;
+        // }
+        // if (pos.y > remapBox2.max.y) {
+        //     pos.y = remapBox2.max.y;
+        // }
 
-        if (selectedGizmo === leftTopGizmo) {
-            if (pos.x > 0) {
-                pos.x = 0;
-            }
-            if (pos.y < 0) {
-                pos.y = 0;
-            }
-            selectedGizmo.position.copy(pos);
-        } else if (selectedGizmo === leftBottomGizmo) {
-            if (pos.x > 0) {
-                pos.x = 0;
-            }
-            if (pos.y > 0) {
-                pos.y = 0;
-            }
-            selectedGizmo.position.copy(pos);
-        } else if (selectedGizmo === rightTopGizmo) {
-            if (pos.x < 0) {
-                pos.x = 0;
-            }
-            if (pos.y < 0) {
-                pos.y = 0;
-            }
-            selectedGizmo.position.copy(pos);
-        } else if (selectedGizmo === rightBottomGizmo) {
-            if (pos.x < 0) {
-                pos.x = 0;
-            }
-            if (pos.y > 0) {
-                pos.y = 0;
-            }
-            selectedGizmo.position.copy(pos);
-        }
+        // if (selectedGizmo === leftTopGizmo) {
+        //     if (pos.x > 0) {
+        //         pos.x = 0;
+        //     }
+        //     if (pos.y < 0) {
+        //         pos.y = 0;
+        //     }
+        //     selectedGizmo.position.copy(pos);
+        // } else if (selectedGizmo === leftBottomGizmo) {
+        //     if (pos.x > 0) {
+        //         pos.x = 0;
+        //     }
+        //     if (pos.y > 0) {
+        //         pos.y = 0;
+        //     }
+        //     selectedGizmo.position.copy(pos);
+        // } else if (selectedGizmo === rightTopGizmo) {
+        //     if (pos.x < 0) {
+        //         pos.x = 0;
+        //     }
+        //     if (pos.y < 0) {
+        //         pos.y = 0;
+        //     }
+        //     selectedGizmo.position.copy(pos);
+        // } else if (selectedGizmo === rightBottomGizmo) {
+        //     if (pos.x < 0) {
+        //         pos.x = 0;
+        //     }
+        //     if (pos.y > 0) {
+        //         pos.y = 0;
+        //     }
+        //     selectedGizmo.position.copy(pos);
+        // }
+        selectedGizmo.position.copy(pos);
 
         updateDashedLine();
     }
 
     function onMouseUp() {
-        selectedGizmo = null;
+        // selectedGizmo = null;
     }
 
-    function getCornerPositions() {
-        return {
-            leftTop: leftTopGizmo.position.clone(),
-            leftBottom: leftBottomGizmo.position.clone(),
-            rightBottom: rightBottomGizmo.position.clone(),
-            rightTop: rightTopGizmo.position.clone()
-        };
+    const LEFT = 37;
+    const TOP = 38;
+    const RIGHT = 39;
+    const DOWN = 40;
+    const distance = 0.1;
+    function onKeyDown(e) {
+        if (!selectedGizmo) {
+            return;
+        }
+        const key = e.keyCode;
+        switch (key) {
+            case LEFT:
+                selectedGizmo.position.setX(selectedGizmo.position.x - distance);
+                break;
+            case TOP:
+                selectedGizmo.position.setY(selectedGizmo.position.y + distance);
+                break;
+            case RIGHT:
+                selectedGizmo.position.setX(selectedGizmo.position.x + distance);
+                break;
+            case DOWN:
+                selectedGizmo.position.setY(selectedGizmo.position.y - distance);
+                break;
+
+            default:
+                break;
+        }
+        updateDashedLine();
     }
 
     function resetCornerPositions() {
@@ -266,12 +310,14 @@ function ManualCalibrationControls(camera, domElement, scale, remapBox2, cornerP
         domElement.addEventListener('mousedown', onMouseDown, false);
         domElement.addEventListener('mousemove', onMouseMove, false);
         domElement.addEventListener('mouseup', onMouseUp, false);
+        document.addEventListener('keydown', onKeyDown, false);
     }
 
     function removeListeners() {
         domElement.removeEventListener('mousedown', onMouseDown, false);
         domElement.removeEventListener('mousemove', onMouseMove, false);
         domElement.removeEventListener('mouseup', onMouseUp, false);
+        document.removeEventListener('keydown', onKeyDown, false);
     }
 
     function dispose() {
