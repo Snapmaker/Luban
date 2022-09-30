@@ -30,6 +30,7 @@ const remap = async () => {
         dst.delete();
         sendMessage({ status: 'complete', value: fileName })
     } catch (error) {
+        console.error(error)
         if (src) {
             src.delete();
         }
@@ -37,8 +38,8 @@ const remap = async () => {
             dst.delete();
         }
 
-        jobs.unshift(job)
-        remap()
+        // jobs.unshift(job)
+        // remap()
     }
 }
 

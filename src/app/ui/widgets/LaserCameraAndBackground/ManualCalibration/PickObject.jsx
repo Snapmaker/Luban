@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import i18n from '../../../../lib/i18n';
@@ -9,7 +9,6 @@ import { Button } from '../../../components/Buttons';
 import styles from '../styles.styl';
 
 const PickObject = (props) => {
-    const [hasFinish, setHasFinish] = useState(false);
     const calibrationPreview = useRef(null);
     useEffect(() => {
         if (calibrationPreview.current) {
@@ -22,17 +21,12 @@ const PickObject = (props) => {
 
     const actions = {
         onClickToConfirm: async () => {
-            setHasFinish(true);
             const outputUri = await calibrationPreview.current.exportPreviewImage();
             props.resetPanel();
             props.onClipImage(outputUri);
         },
         previousPanel: () => {
             props.resetPanel();
-        },
-        setCameraCalibrationMatrix: async () => {
-            // 最后一步
-            props.onClipImage();
         }
     };
 
@@ -49,8 +43,8 @@ const PickObject = (props) => {
                     <div className={styles['laser-set-background-modal-content']}>
                         <div className={styles['calibrate-background']}>
                             <div className={styles['calibrate-advise']}>
-                                <p style={{ marginBottom: '1rem', textAlign: 'left', width: '522px' }}>
-                                    工件轮廓匹配
+                                <p style={{ marginBottom: '1rem', textAlign: 'left' }}>
+                                    {i18n._('key-Laser/CamaeraCapture-Workpiece contour matching')}
                                 </p>
                             </div>
 
@@ -69,30 +63,6 @@ const PickObject = (props) => {
 
                             }}
                         />
-
-                        <div className={classNames(
-                            'sm-flex',
-                            'justify-space-between',
-                            'margin-vertical-16',
-                        )}
-                        >
-                            <Button
-                                width="160px"
-                                priority="level-three"
-                                type="default"
-                                onClick={() => actions.onClickToUpload(true)}
-                            >
-                                {i18n._('key-Laser/CameraCapture-Reset')}
-                            </Button>
-                            <Button
-                                width="160px"
-                                priority="level-three"
-                                type="default"
-                                onClick={actions.onClickToConfirm}
-                            >
-                                {i18n._('key-Laser/CameraCapture-Confirm')}
-                            </Button>
-                        </div>
                     </div>
                 </Modal.Body>
                 <Modal.Footer>
@@ -109,18 +79,16 @@ const PickObject = (props) => {
                         >
                             {i18n._('key-Laser/CameraCapture-Back')}
                         </Button>
-                        {hasFinish && (
-                            <Button
-                                priority="level-two"
-                                width="96px"
-                                className={classNames(
-                                    // styles[state.isComfirmPoints ? 'btn-right-camera' : 'btn-right-camera-disabled border-radius-8'],
-                                )}
-                                onClick={actions.setCameraCalibrationMatrix}
-                            >
-                                {i18n._('key-Laser/CameraCapture-Apply')}
-                            </Button>
-                        )}
+                        <Button
+                            priority="level-two"
+                            width="96px"
+                            className={classNames(
+                                // styles[state.isComfirmPoints ? 'btn-right-camera' : 'btn-right-camera-disabled border-radius-8'],
+                            )}
+                            onClick={actions.onClickToConfirm}
+                        >
+                            {i18n._('key-Laser/CameraCapture-Apply')}
+                        </Button>
                     </div>
                 </Modal.Footer>
             </Modal>

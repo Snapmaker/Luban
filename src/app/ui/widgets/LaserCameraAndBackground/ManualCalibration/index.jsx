@@ -96,8 +96,11 @@ class ManualCalibration extends PureComponent {
                     <div className={styles['laser-set-background-modal-content']}>
                         <div className={styles['calibrate-background']}>
                             <div className={styles['calibrate-advise']}>
-                                <p style={{ marginBottom: '1rem', textAlign: 'left', width: '522px' }}>
-                                    {i18n._('key-Laser/CamaeraCapture-Align the four corners of the blue quadrilateral with the engraved square.')}
+                                <p style={{ marginBottom: '1rem', textAlign: 'left' }}>
+                                    1. {i18n._('key-Laser/CamaeraCapture-Align the four corners of the blue quadrilateral with the engraved square.')}
+                                </p>
+                                <p style={{ marginBottom: '1rem', textAlign: 'left' }}>
+                                    2. {i18n._('key-Laser/CamaeraCapture-Fine-tune the position of the four corners')}
                                 </p>
                             </div>
 

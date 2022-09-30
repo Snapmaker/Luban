@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import classNames from 'classnames';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
+import i18n from '../../../lib/i18n';
 
 type TProps = {
     series: string;
     onChange: (num: number) => void;
 }
 
-const MATERIALTHICKNESSMAX = {
+export const MATERIALTHICKNESSMAX = {
     A150: 50,
     A250: 100,
     A350: 150,
@@ -20,11 +21,11 @@ const MaterialThicknessInput = (props: TProps) => {
     return (
         <div className={classNames(styles['laser-material-thickness-input'])}>
 
-            <p className="font-size-middle font-weight-bold">输入材料厚度</p>
-            <p className="font-size-base">测量并输入材料厚度。机器将会依据输入的材料厚度，自动调整激光高度。（极限值）</p>
+            <p className="font-size-middle font-weight-bold">{i18n._('key-Workspace/LaserStartJob-semi_auto_mode')}</p>
+            <p className="font-size-base">{i18n._('key-Laser/CameraCapture-thickness input')}</p>
 
             <div className="sm-flex align-center">
-                <span className="margin-right-8">Material Tickness</span>
+                <span className="margin-right-8">{i18n._('key-StackedModel/Import-Material Thickness')}</span>
                 <Input
                     suffix="mm"
                     value={value}
