@@ -1,6 +1,6 @@
 import path from 'path';
 import mv from 'mv';
-import fs from 'fs';
+import fs, { existsSync, writeFileSync } from 'fs';
 import { v4 as uuid } from 'uuid';
 import { pathWithRandomSuffix } from '../../lib/random-utils';
 import logger from '../../lib/logger';
@@ -350,6 +350,29 @@ export const saveEnv = async (req, res) => {
 };
 
 /**
+ * save model editor or extruder editor
+ */
+export const saveEditor = async (req, res) => {
+    try {
+        const { content, editorDefinition } = req.body;
+        const envDir = `${DataStorage.envDir}/${HEAD_PRINTING}`;
+        const config = JSON.parse(content);
+        const { modelEditor, extruderEditor } = config;
+        Object.keys({ ...extruderEditor, ...modelEditor }).forEach(key => {
+            const targetFile = `${envDir}/${key}.def.json`;
+            if (existsSync(targetFile)) rmDir(targetFile)
+            const editorContent = JSON.parse(editorDefinition);
+            writeFileSync(targetFile, JSON.stringify(editorContent[key]));
+        });
+    }catch(e) {
+        log.error(`Failed to save editor: ${e}`);
+        res.status(ERR_INTERNAL_SERVER_ERROR).send({
+            msg: `Failed to save editor: ${e}`
+        });
+    };
+};
+
+/**
  * get environment data from saved file
  */
 export const getEnv = async (req, res) => {
@@ -505,3 +528,23 @@ export const recoverProjectFile = async (req, res) => {
         });
     }
 };
+
+export const getEditorDefinition = async (req, res) => {
+    try {
+        const { key } = req.body;
+        const editorPath = `${DataStorage.tmpDir}/${key}.def.json`;
+        if (fs.existsSync(editorPath)) {
+            const content = fs.readFileSync(editorPath, 'utf-8')
+            res.send({ editorDefinition: JSON.parse(content) });
+            res.end();
+        } else {
+            res.send({ editorDefinition: {} });
+            res.send();
+        }
+    } catch (e) {
+        log.error(`Failed to get editor definintion: ${e}`);
+        res.status(ERR_INTERNAL_SERVER_ERROR).send({
+            msg: `Failed to get editor definition: ${e}`
+        });
+    }
+}

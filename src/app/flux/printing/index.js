@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { cloneDeep, filter, find as lodashFind, isNil } from 'lodash';
+import { cloneDeep, every, filter, find as lodashFind, findIndex, includes, indexOf, isNil } from 'lodash';
 import path from 'path';
 import * as THREE from 'three';
 import { Mesh, Vector3 } from 'three';
@@ -311,7 +311,13 @@ const INITIAL_STATE = {
     materialParamsType: 'basic',
     customMode: false,
     showParamsProfile: true,
-    outOfMemoryForRenderGcode: false
+    outOfMemoryForRenderGcode: false,
+    showPrintingGroupManager: false,
+    definitionEditorForExtruder: new Map(),
+    definitionEditorForModel: new Map(),
+    editorDefinition: new Map(),
+    // dual extruder, not use PVA/Support is main extruder
+    mainExtruder: LEFT_EXTRUDER
 };
 
 const ACTION_UPDATE_STATE = 'printing/ACTION_UPDATE_STATE';
@@ -393,9 +399,12 @@ export const actions = {
             'quality'
         );
         const qualityParamModels = [];
+        const qualityParamModelsRight = [];
         const materialParamModels = [];
         const activeMaterialType = dispatch(actions.getActiveMaterialType());
+        const activeMaterialTypeRight = dispatch(actions.getActiveMaterialType(undefined, RIGHT_EXTRUDER));
         const extruderLDefinition = await definitionManager.getDefinition('snapmaker_extruder_0');
+        const extruderRDefinition = await definitionManager.getDefinition('snapmaker_extruder_1');
         allMaterialDefinition.forEach((eachDefinition) => {
             const paramModel = new PresetDefinitionModel(
                 eachDefinition
@@ -408,12 +417,19 @@ export const actions = {
                 activeMaterialType,
                 extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
             );
+            const paramModelRight = new PresetDefinitionModel(
+                eachDefinition,
+                activeMaterialTypeRight,
+                extruderRDefinition?.settings?.machine_nozzle_size?.default_value
+            );
+            qualityParamModelsRight.push(paramModel);
             qualityParamModels.push(paramModel);
         });
         dispatch(
             actions.updateState({
                 materialDefinitions: materialParamModels,
                 qualityDefinitions: qualityParamModels,
+                qualityDefinitionsRight: qualityParamModelsRight,
                 extruderLDefinition,
                 extruderRDefinition: await definitionManager.getDefinitionsByPrefixName('snapmaker_extruder_1'),
             })
@@ -483,6 +499,7 @@ export const actions = {
             'material'
         );
         const activeMaterialType = dispatch(actions.getActiveMaterialType());
+        const activeMaterialTypeRight = dispatch(actions.getActiveMaterialType(undefined, RIGHT_EXTRUDER));
         const allQualityDefinitions = await definitionManager.getDefinitionsByPrefixName(
             'quality'
         );
@@ -502,6 +519,14 @@ export const actions = {
             );
             return paramModel
         });
+        const qualityParamModelsRight = allQualityDefinitions.map((eachDefinition) => {
+            const paramModel = new PresetDefinitionModel(
+                eachDefinition,
+                activeMaterialTypeRight,
+                definitionManager.extruderRDefinition?.settings?.machine_nozzle_size?.default_value
+            );
+            return paramModel
+        });
         const defaultDefinitions = definitionManager?.defaultDefinitions.map((eachDefinition) => {
             const paramModel = new PresetDefinitionModel(
                 eachDefinition,
@@ -515,6 +540,7 @@ export const actions = {
                 defaultDefinitions: defaultDefinitions,
                 materialDefinitions: materialParamModels,
                 qualityDefinitions: qualityParamModels,
+                qualityDefinitionsRight: qualityParamModelsRight,
                 printingProfileLevel: profileLevel.printingProfileLevel,
                 materialProfileLevel: profileLevel.materialProfileLevel,
             })
@@ -1018,7 +1044,9 @@ export const actions = {
         const {
             modelGroup,
             qualityDefinitions,
-            defaultQualityId
+            defaultQualityId,
+            defaultMaterialId,
+            defaultMaterialIdRight
         } = printingState;
         // TODO
         const {
@@ -1035,9 +1063,34 @@ export const actions = {
             const enablePrimeTower = activeQualityDefinition?.settings?.prime_tower_enable
                 ?.default_value;
             primeTowerModel.visible = enablePrimeTower;
+            const leftMaterial = defaultMaterialId.split('.')[1];
+            const rightMaterial = defaultMaterialIdRight.split('.')[1];
+            if (every([leftMaterial, rightMaterial], (item) => {
+                return includes(['pva', 'support'], item);
+            }) || every([leftMaterial, rightMaterial], (item) => {
+                return !includes(['pva', 'support'], item);
+            })) {
+                dispatch(actions.updateState({
+                    mainExtruder: LEFT_EXTRUDER
+                }));
+            } else {
+                let mainExtruderIndex = findIndex([leftMaterial, rightMaterial], (item) => {
+                    return item === 'pva' || item === 'support';
+                });
+                dispatch(actions.updateState({
+                    mainExtruder: mainExtruderIndex === 0 ? RIGHT_EXTRUDER : LEFT_EXTRUDER
+                }));
+            }
         } else {
             primeTowerModel.visible = false;
+            dispatch(actions.updateState({
+                mainExtruder: LEFT_EXTRUDER
+            }));
         }
+        dispatch(actions.updateState({
+            definitionEditorForExtruder: new Map(),
+            definitionEditorForModel: new Map()
+        }));
         modelGroup.removeAllModels();
         dispatch(actions.initSocketEvent());
     },
@@ -1369,7 +1422,7 @@ export const actions = {
         if (!isNil(paramValue)) {
             const printingState = getState().printing;
             const machineDefinition = definitionManager.machineDefinition;
-            const { materialDefinitions, qualityDefinitions } = printingState;
+            const { materialDefinitions, qualityDefinitions, mainExtruder } = printingState;
             let updatePresetModel = false;
             if (direction) {
                 const definitionsKey = definitionKeysWithDirection[direction][PRINTING_MANAGER_TYPE_EXTRUDER];
@@ -1378,7 +1431,7 @@ export const actions = {
                     definitionModel.settings[paramKey].default_value = paramValue;
                 }
                 // TODO: add condition for main extruder @wen
-                if (direction === LEFT_EXTRUDER) {
+                if (direction === mainExtruder) {
                     if (paramKey === 'machine_nozzle_size') {
                         updatePresetModel = true;
                     }
@@ -1701,9 +1754,9 @@ export const actions = {
         return createdDefinitionModel;
     },
 
-    getActiveMaterialType: (defaultId) => (undefined, getState) => {
-        const { materialDefinitions, defaultMaterialId } = getState().printing;
-        const id = defaultId || defaultMaterialId;
+    getActiveMaterialType: (defaultId, direction = LEFT_EXTRUDER) => (undefined, getState) => {
+        const { materialDefinitions, defaultMaterialId, defaultMaterialIdRight } = getState().printing;
+        const id = direction === defaultId || (direction === LEFT_EXTRUDER ? defaultMaterialId : defaultMaterialIdRight);
         const activeMaterialDefinition = materialDefinitions.find((d) => d.definitionId === id);
         return activeMaterialDefinition?.settings?.material_type?.default_value;
     },
@@ -1917,10 +1970,32 @@ export const actions = {
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
-    updateDefaultMaterialId: (materialId, direction = LEFT_EXTRUDER) => dispatch => {
+    updateDefaultMaterialId: (materialId, direction = LEFT_EXTRUDER) => (dispatch, getState) => {
         const updateKey = direction === LEFT_EXTRUDER ? 'defaultMaterialId' : 'defaultMaterialIdRight';
+        const { defaultMaterialId, defaultMaterialIdRight, definitionEditorForExtruder } = getState().printing;
+        const otherMaterial = direction === LEFT_EXTRUDER ? defaultMaterialIdRight : defaultMaterialId;
+        let mainExtruder = LEFT_EXTRUDER;
+        if (includes(materialId, 'pva') || includes(materialId, 'support')) {
+            if (!includes(otherMaterial, 'pva') && !includes(otherMaterial, 'support')) mainExtruder = (direction === LEFT_EXTRUDER ? RIGHT_EXTRUDER : LEFT_EXTRUDER);
+            else {
+                definitionEditorForExtruder.clear();
+            }
+            dispatch(actions.updateState({
+                mainExtruder
+            }));
+        } else {
+            if (includes(otherMaterial, 'pva') || includes(otherMaterial, 'support')) mainExtruder = (direction === LEFT_EXTRUDER ? RIGHT_EXTRUDER : LEFT_EXTRUDER);
+            else {
+                mainExtruder = LEFT_EXTRUDER;
+            }
+        }
+        definitionEditorForExtruder.delete(direction);
         dispatch(actions.updateDefaultConfigId(PRINTING_MANAGER_TYPE_MATERIAL, materialId, direction));
-        dispatch(actions.updateState({ [updateKey]: materialId }));
+        dispatch(actions.updateState({
+            [updateKey]: materialId,
+            mainExtruder,
+            definitionEditorForExtruder
+        }));
         dispatch(actions.applyProfileToAllModels());
     },
 
@@ -2888,13 +2963,15 @@ export const actions = {
         dispatch(actions.render());
     },
     removeSelectedModel: () => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
+        const { modelGroup, definitionEditorForModel } = getState().printing;
         const operations = new Operations();
         const selectedModelArray = modelGroup.selectedModelArray.concat();
         const { recovery } = modelGroup.unselectAllModels();
         for (const model of selectedModelArray) {
+            definitionEditorForModel.delete(model.modelID);
             const operation = new DeleteOperation3D({
-                target: model
+                target: model,
+                dispatch
             });
             operations.push(operation);
         }
@@ -2933,6 +3010,11 @@ export const actions = {
         dispatch(actions.updateState(modelState));
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
+    },
+
+    deleteModelEditor: (modelID) => (dispatch, getState) => {
+        const { definitionEditorForModel } = getState().printing;
+        definitionEditorForModel.delete(modelID);
     },
 
     removeAllModels: () => (dispatch, getState) => {
@@ -4619,7 +4701,7 @@ export const actions = {
             const topThickness = qualitySetting.top_thickness.default_value;
             const topLayers = Math.ceil(Math.round(topThickness / layerHeight));
             model.updateClipperConfig({
-                lineWidth: materialSettings.machine_nozzle_size.default_value,
+                lineWidth: materialSettings.machine_nozzle_size?.default_value || 0.4,
                 wallThickness: qualitySetting.wall_thickness.default_value,
                 topLayers,
                 bottomLayers,

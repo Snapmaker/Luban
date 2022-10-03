@@ -74,11 +74,13 @@ const uploadGcodeFile = defaultAPIFactory((formData) => request.post('/api/file/
 const uploadUpdateFile = defaultAPIFactory((formData) => request.post('/api/file/uploadUpdateFile').send(formData));
 const buildFirmwareFile = defaultAPIFactory((formData) => request.post('/api/file/buildFirmwareFile').send(formData));
 const saveEnv = defaultAPIFactory((data) => request.post('/api/file/saveEnv').send(data));
+const saveEditor = defaultAPIFactory((data) => request.post('/api/file/saveEditor').send(data));
 const getEnv = defaultAPIFactory((data) => request.post('/api/file/getEnv').send(data));
 const recoverEnv = defaultAPIFactory((data) => request.post('/api/file/recoverEnv').send(data));
 const removeEnv = defaultAPIFactory((data) => request.post('/api/file/removeEnv').send(data));
 const packageEnv = defaultAPIFactory((data) => request.post('/api/file/packageEnv').send(data));
 const recoverProjectFile = defaultAPIFactory((data) => request.post('/api/file/recoverProjectFile').send(data));
+const getEditorDefinition = defaultAPIFactory((data) => request.post('/api/file/getEditorDefinition').send(data));
 
 
 const uploadImage = defaultAPIFactory((formdata) => request.post('/api/image').send(formdata));
@@ -335,11 +337,13 @@ export default {
     uploadUpdateFile,
     buildFirmwareFile,
     saveEnv,
+    saveEditor,
     getEnv,
     recoverEnv,
     removeEnv,
     packageEnv,
     recoverProjectFile,
+    getEditorDefinition,
     uploadImage,
     stockRemapProcess,
     processImage,
