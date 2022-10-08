@@ -62,6 +62,7 @@ function PrintingObjectListBox() {
                     detail: { type: 'models.multiple', direction }
                 })
             );
+            dispatch(printingActions.updateSelectedModelsExtruder({ infill: direction, shell: direction }));
         }
     };
     const allModels = (models) && models.filter(model => !model.supportTag);
