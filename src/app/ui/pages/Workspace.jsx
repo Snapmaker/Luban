@@ -21,6 +21,7 @@ import {
 } from '../../constants';
 import { actions as workspaceActions } from '../../flux/workspace';
 import { actions as widgetActions } from '../../flux/widget';
+import { actions as appGlobalActions } from '../../flux/app-global';
 
 import { renderWidgetList, logPageView } from '../utils';
 
@@ -96,6 +97,14 @@ function Workspace({ isPopup, onClose, style, className }) {
             name: 'MainToolbarBack',
             action: () => {
                 history.push('/');
+            }
+        },
+        {
+            title: i18n._('key-Workspace/Page-Model Base'),
+            type: 'button',
+            name: 'MainToolbarBack',
+            action: () => {
+                dispatch(appGlobalActions.updateShowOnlineCase(true));
             }
         }
     ]);

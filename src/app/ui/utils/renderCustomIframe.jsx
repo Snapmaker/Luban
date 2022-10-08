@@ -45,12 +45,14 @@ function renderCustomIframe(options) {
 
             <WorkspaceLayout
                 renderMainToolBar={renderMainToolBar}
+                pureCss
             >
                 <CustomIframe
                     allow="fullscreen"
+                    style={{ border: 'solid #D5D6D9', borderWidth: '1px 0 0', backgroundColor: 'white' }}
                     width="100%"
                     height="100%"
-                    src="http://localhost:3000/test.html"
+                    src="http://172.18.0.49:8085/resource-list?client=Luban"
                     title="A custom made iframe"
                 />
             </WorkspaceLayout>

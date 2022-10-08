@@ -8,6 +8,7 @@ import SvgIcon from '../../components/SvgIcon';
 import i18n from '../../../lib/i18n';
 import { actions as projectActions } from '../../../flux/project';
 import { actions as editorActions } from '../../../flux/editor';
+import { actions as appGlobalActions } from '../../../flux/app-global';
 import Dropdown from '../../components/Dropdown';
 import Cnc3DVisualizer from '../../views/Cnc3DVisualizer';
 import MainToolBar from '../../layouts/MainToolBar';
@@ -156,6 +157,14 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             action: async () => {
                 await dispatch(editorActions.onRouterWillLeave(headType));
                 setShowWorkspace(true);
+            }
+        },
+        {
+            title: i18n._('key-Workspace/Page-Model Base'),
+            type: 'button',
+            name: 'MainToolbarBack',
+            action: () => {
+                dispatch(appGlobalActions.updateShowOnlineCase(true));
             }
         },
         {

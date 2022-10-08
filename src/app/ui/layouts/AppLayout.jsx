@@ -555,16 +555,9 @@ class AppLayout extends PureComponent {
             });
             UniApi.Event.on('appbar-menu:cancel-download-case', (paramArr) => {
                 const { ipcRenderer } = window.require('electron');
+                console.log('', paramArr);
                 ipcRenderer.invoke('cancelDownload', paramArr);
             });
-            // UniApi.Event.on('appbar-menu:pause-download-case', (paramArr) => {
-            //     const { ipcRenderer } = window.require('electron');
-            //     ipcRenderer.invoke('pauseDownload', paramArr);
-            // });
-            // UniApi.Event.on('appbar-menu:resume-download-case', (paramArr) => {
-            //     const { ipcRenderer } = window.require('electron');
-            //     ipcRenderer.invoke('resumeDownload', paramArr);
-            // });
             UniApi.Event.on('download-file-progress', (event, { allBytes, receivedBytes, savedPath, state }) => {
                 const progress = allBytes ? Number((receivedBytes / allBytes).toFixed(2)) : 0;
                 this.props.updateGlobalProgress({
@@ -805,10 +798,6 @@ class AppLayout extends PureComponent {
             UniApi.Event.on('appbar-menu:clear-recent-files', () => {
                 this.actions.updateRecentFile([], 'reset');
                 UniApi.Menu.cleanAllRecentFiles();
-            });
-            UniApi.Event.on('appbar-menu:select-directory', async () => {
-                const files = await UniApi.Dialog.showOpenDirectoryDialog();
-                console.log('files', files);
             });
             UniApi.Event.on('appbar-menu:import', async () => {
                 let fileObj;

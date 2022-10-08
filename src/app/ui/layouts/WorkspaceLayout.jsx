@@ -8,7 +8,7 @@ import pubsub from 'pubsub-js';
 import styles from './styles/workspace.styl';
 import { longLang } from '../../constants';
 
-function WorkspaceLayout({ renderLeftView, renderRightView, renderMainToolBar, children }) {
+function WorkspaceLayout({ renderLeftView, renderRightView, renderMainToolBar, children, pureCss }) {
     const primaryContainer = useRef();
     const visualizerContainer = useRef();
     const secondaryContainer = useRef();
@@ -48,8 +48,7 @@ function WorkspaceLayout({ renderLeftView, renderRightView, renderMainToolBar, c
                     className={classNames(
                         'overflow-x-hidden',
                         'border-radius-8',
-                        'background-color-white',
-                        'margin-8',
+                        pureCss ? '' : 'background-color-white margin-8',
                         'box-shadow-module'
                         // 'sm-flex-none'
                     )}
@@ -72,8 +71,7 @@ function WorkspaceLayout({ renderLeftView, renderRightView, renderMainToolBar, c
                     className={classNames(
                         'overflow-x-hidden',
                         'border-radius-8',
-                        'background-color-white',
-                        'margin-8',
+                        pureCss ? '' : 'background-color-white margin-8',
                         'sm-flex-none',
                         'box-shadow-module'
                     )}
@@ -90,6 +88,7 @@ function WorkspaceLayout({ renderLeftView, renderRightView, renderMainToolBar, c
 }
 WorkspaceLayout.propTypes = {
     children: PropTypes.array,
+    pureCss: PropTypes.bool,
     renderLeftView: PropTypes.func,
     renderRightView: PropTypes.func,
     renderMainToolBar: PropTypes.func

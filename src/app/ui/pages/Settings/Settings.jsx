@@ -13,6 +13,7 @@ import confirm from '../../../lib/confirm';
 import i18n from '../../../lib/i18n';
 // import storeManager from '../../store/local-storage';
 import General from './General';
+import DownloadSettings from './DownloadSettings';
 // import FirmwareTool from './FirmwareTool';
 // import Workspace from './Workspace';
 import MachineSettings from './MachineSettings';
@@ -41,13 +42,14 @@ class Settings extends PureComponent {
             path: 'machine',
             title: i18n._('key-App/Settings/Settings-Machine Settings'),
             component: (props) => <MachineSettings {...props} />
-        }
-        // {
-        //     id: 'config',
-        //     path: 'config',
-        //     title: i18n._('key-App/Settings/Settings-Config'),
-        //     component: (props) => <Workspace {...props} />
-        // },
+        },
+        // UniApi.Event.on('appbar-menu:select-directory')
+        {
+            id: 'download',
+            path: 'download',
+            title: i18n._('key-App/Settings/Settings-Download Settings'),
+            component: (props) => <DownloadSettings {...props} />
+        },
         // {
         //     id: 'firmware',
         //     path: 'firmware',
@@ -133,7 +135,8 @@ class Settings extends PureComponent {
         // About
         about: {},
         // Firmware
-        firmware: {}
+        firmware: {},
+        download: {}
     };
 
     getInitialState() {
@@ -162,6 +165,9 @@ class Settings extends PureComponent {
             },
             // Firmware
             firmware: {
+            },
+            download: {
+
             }
         };
     }

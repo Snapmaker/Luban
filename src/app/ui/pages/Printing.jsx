@@ -17,6 +17,7 @@ import Dropzone from '../components/Dropzone';
 import { actions as printingActions } from '../../flux/printing';
 import { actions as projectActions } from '../../flux/project';
 import { actions as machineActions } from '../../flux/machine';
+import { actions as appGlobalActions } from '../../flux/app-global';
 import ProjectLayout from '../layouts/ProjectLayout';
 import MainToolBar from '../layouts/MainToolBar';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_PRINTING } from '../../constants';
@@ -183,6 +184,14 @@ function useRenderMainToolBar(setSimplifying, profileInitialized = false) {
                 name: 'MainToolbarWorkspace',
                 action: () => {
                     setShowWorkspace(true);
+                }
+            },
+            {
+                title: i18n._('key-Workspace/Page-Model Base'),
+                type: 'button',
+                name: 'MainToolbarBack',
+                action: () => {
+                    dispatch(appGlobalActions.updateShowOnlineCase(true));
                 }
             },
             {

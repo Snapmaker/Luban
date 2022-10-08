@@ -7,7 +7,7 @@ import fetch from 'node-fetch';
 import UniApi from '../lib/uni-api';
 import DownloadProgressBar from './widgets/DownloadProgressBar';
 import i18n from '../lib/i18n';
-import { Button } from './components/Buttons';
+import Anchor from './components/Anchor';
 import { downloadPopup } from './widgets/PrintingVisualizer/VisualizerPopup';
 import { actions as machineActions } from '../flux/machine';
 
@@ -19,6 +19,7 @@ const CustomIframe = ({
 }) => {
     const [contentRef, setContentRef] = useState(null);
     const [iframeOnline, setIframeOnline] = useState(false);
+    const currentSavedPath = useSelector(state => state.appGlobal.currentSavedPath);
     const cancelDownloadPopup = useSelector(state => state.machine.cancelDownloadPopup);
     const minimizeDownloadPopup = useSelector(state => state.machine.minimizeDownloadPopup);
     const dispatch = useDispatch();
@@ -37,14 +38,15 @@ const CustomIframe = ({
         }
     };
     const onClose = () => {
+        const cancelArr = [{ savedPath: currentSavedPath }];
         if (cancelDownloadPopup) {
             downloadPopup('cancel').then((ignore) => {
                 dispatch(machineActions.updateFluxAndStorageByKey('cancelDownloadPopup', !ignore));
                 if (isElectron()) {
                     const browserWindow = window.require('electron').remote.BrowserWindow.getFocusedWindow();
-                    browserWindow.webContents.send('cancel-download-case');
+                    browserWindow.webContents.send('cancel-download-case', cancelArr);
                 } else {
-                    UniApi.Event.emit('appbar-menu:cancel-download-case');
+                    UniApi.Event.emit('appbar-menu:cancel-download-case', cancelArr);
                 }
                 setShowDownloadProgressBar(false);
             }).catch((ignore) => {
@@ -53,9 +55,9 @@ const CustomIframe = ({
         } else {
             if (isElectron()) {
                 const browserWindow = window.require('electron').remote.BrowserWindow.getFocusedWindow();
-                browserWindow.webContents.send('cancel-download-case');
+                browserWindow.webContents.send('cancel-download-case', cancelArr);
             } else {
-                UniApi.Event.emit('appbar-menu:cancel-download-case');
+                UniApi.Event.emit('appbar-menu:cancel-download-case', cancelArr);
             }
             setShowDownloadProgressBar(false);
         }
@@ -98,13 +100,23 @@ const CustomIframe = ({
                 <iframe {...props} ref={setContentRef} title={title} src={src} />
             )}
             {!iframeOnline && (
-                <div>
-                    <Button
-                        priority="level-two"
-                        onClick={fetchIframeSrc}
-                    >
-                        refresh
-                    </Button>
+                <div className="absolute-center align-c">
+                    <img
+                        src="/resources/images/downloads/no-connection-illustartion.png"
+                        alt=""
+                        className="width-240"
+                    />
+                    <div>
+                        <span>
+                            {i18n._('key-DonwloadList/Loading failed. Please check your network connection and ')}
+                        </span>
+                        <Anchor
+                            onClick={fetchIframeSrc}
+                            className="color-blue-2"
+                        >
+                            {i18n._('key-DonwloadList/try again.')}
+                        </Anchor>
+                    </div>
                 </div>
             )}
 

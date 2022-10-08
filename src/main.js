@@ -139,12 +139,14 @@ function sendUpdateMessage(text) {
     mainWindow.webContents.send('message', text);
 }
 
-function updateDownloadConfigByAttr(uuid, attr, value) {
+function updateDownloadConfigByObj(uuid, obj) {
     const downloadFileArr = config.get(DOWNLOAD_FILES);
     const item = find(downloadFileArr, ['uuid', uuid]);
-    if (attr) {
-        item[attr] = value;
-    }
+    Object.entries(obj).forEach(([attr, value]) => {
+        if (attr) {
+            item[attr] = value;
+        }
+    });
     config.set(DOWNLOAD_FILES, downloadFileArr);
 }
 function deleteDownloadConfigByKey(attr, value) {
@@ -239,7 +241,6 @@ function getMapItemByAttribute(map, attr, attrValue) {
         if (value[attr] && value[attr] === attrValue) {
             res.key = key;
             res.currentParam = value;
-            return false;
         }
     });
     return res;
@@ -260,7 +261,17 @@ class DownloadManager {
       type?: file type
     */
     constructor() {
-        const historyDownloads = config.get(DOWNLOAD_FILES) || [];
+        let historyDownloads = [];
+        if (config.get(DOWNLOAD_FILES)) {
+            historyDownloads = config.get(DOWNLOAD_FILES).map((item) => {
+                if (item.state === 'paused' || item.state === 'progressing') {
+                    item.state = 'failed';
+                }
+                return item;
+            });
+            config.set(DOWNLOAD_FILES, historyDownloads);
+            console.log('historyDownloads', historyDownloads);
+        }
         historyDownloads.forEach((item) => {
             this.paramList.set(item.savedPath, item);
         });
@@ -286,7 +297,10 @@ class DownloadManager {
             paramArr.forEach((param) => {
                 const { currentParam } = getMapItemByAttribute(this.paramList, 'uuid', param.uuid);
                 currentParam.item && currentParam.item.pause();
-                updateDownloadConfigByAttr(param.uuid, 'state', 'paused');
+                updateDownloadConfigByObj(param.uuid, {
+                    ...param,
+                    state: 'paused'
+                });
             });
         });
         ipcMain.handle('resumeDownload', async (e, paramArr) => {
@@ -296,27 +310,36 @@ class DownloadManager {
             });
         });
 
+        ipcMain.handle('updateDownloadPath', (e, downloadPath) => {
+            config.set('downloadPath', downloadPath);
+        });
+
         ipcMain.handle('startDownload', async (e, param) => {
             if (typeof param.url === 'string') {
                 const defaultPath = config.get('downloadPath') ? config.get('downloadPath') : path.resolve(app.getPath('downloads'), 'luban/');
                 let name = '3dp_a350_single.snap3dp';
                 const savedPath = path.resolve(defaultPath, name);
+                console.log('startDownload', savedPath, defaultPath);
                 param.savedPath = savedPath;
                 config.set('downloadPath', defaultPath);
                 // make sure name is not repeated
-                while (
-                    this.paramList.has(param.savedPath)
-                ) {
-                    const extname = path.extname(name);
-                    const basename = `${path.basename(name, extname)}(1)`;
-                    name = `${basename}${extname}`;
-                    param.savedPath = path.resolve(defaultPath, name);
+                if (!(param.progress)) {
+                    while (
+                        this.paramList.has(param.savedPath)
+                    ) {
+                        const extname = path.extname(name);
+                        const basename = `${path.basename(name, extname)}(1)`;
+                        name = `${basename}${extname}`;
+                        param.savedPath = path.resolve(defaultPath, name);
+                    }
                 }
                 this.paramList.set(param.savedPath, param);
                 config.set('downloadPathWithName', param.savedPath);
                 const downloadFileArr = config.get(DOWNLOAD_FILES);
-                downloadFileArr.unshift(param);
-                config.set(DOWNLOAD_FILES, downloadFileArr);
+                if (!downloadFileArr.find((item) => item.savedPath === param.savedPath)) {
+                    downloadFileArr.unshift(param);
+                    config.set(DOWNLOAD_FILES, downloadFileArr);
+                }
                 mainWindow.webContents.send('download-file-started', param.savedPath);
                 e.sender.downloadURL(param.url);
             }
@@ -365,23 +388,27 @@ class DownloadManager {
             mainWindow.webContents.send('download-file-completed', {
                 savedPath
             });
-            // updateDownloadConfigByAttr(param.uuid, 'state', 'completed');
+            // updateDownloadConfigByObj(param.uuid, {
+            //     ...paramArr,
+            //     state: 'completed'
+            // });
             console.log('one done:', state, this.paramList);
         });
     }
 }
+
 function registerDownloadItemEvent() {
     ipcMain.handle('getStoreValue', (event, key) => {
-    	return config.get(key);
+        return config.get(key);
     });
     const downloadManager = new DownloadManager();
-
     mainWindow.webContents.session.on('will-download', async (e, item) => {
         const actualPath = config.get('downloadPathWithName');
         if (actualPath) {
             item.setSavePath(actualPath);
         }
         const param = downloadManager.paramList.get(actualPath);
+        console.log('will-download', actualPath, param);
         if (param) {
             param.item = item;
             downloadManager.listenDownloadUpdateEvent(param);

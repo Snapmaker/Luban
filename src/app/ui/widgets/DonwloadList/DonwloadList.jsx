@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import classNames from 'classnames';
 import { noop, find } from 'lodash';
-import { Progress, Empty } from 'antd';
+import { Progress } from 'antd';
 import { Button } from '../../components/Buttons';
 import Modal from '../../components/Modal';
 import SvgIcon from '../../components/SvgIcon';
@@ -27,6 +27,11 @@ function resumeDownload(arr) {
     const { ipcRenderer } = window.require('electron');
     ipcRenderer.invoke('resumeDownload', arr);
 }
+function startDownload(list) {
+    const { ipcRenderer } = window.require('electron');
+    delete list.state;
+    ipcRenderer.invoke('startDownload', list);
+}
 
 function DonwloadList({ onClose = noop }) {
     const downloadFiles = useSelector(state => state.appGlobal.downloadFiles);
@@ -37,7 +42,6 @@ function DonwloadList({ onClose = noop }) {
             const { ipcRenderer } = window.require('electron');
             const lists = await ipcRenderer.invoke('getStoreValue', 'downloadFileLists');
             setFileList(lists);
-            console.log('', lists, fileList.length);
             dispatch(appGlobalActions.updateDownloadedFiles(lists));
         };
         fetchData()
@@ -49,7 +53,6 @@ function DonwloadList({ onClose = noop }) {
         const fetchData = async () => {
             const lists = await ipcRenderer.invoke('getStoreValue', 'downloadFileLists');
             setFileList(lists);
-            console.log('', lists, fileList.length);
             dispatch(appGlobalActions.updateDownloadedFiles(lists));
         };
         fetchData()
@@ -69,7 +72,7 @@ function DonwloadList({ onClose = noop }) {
                 </Modal.Header>
                 <Modal.Body className="width-752">
                     <>
-                        {fileList.length && (fileList.map((list) => {
+                        {fileList.length > 0 && (fileList.map((list) => {
                             const downloadFile = (find(downloadFiles, ['uuid', list.uuid]));
                             const progress = downloadFile?.progress * 100;
                             const state = downloadFile?.state;
@@ -125,10 +128,14 @@ function DonwloadList({ onClose = noop }) {
                                         )}
                                         {progress >= 0 && progress < 100 && (
                                             <div>
-                                                <div className="margin-top-8">{`${receivedBytes} MB`} of {`${allBytes} MB` }</div>
-                                                <div className="margin-top-4 margin-bottom-8">
-                                                    <Progress percent={progress} showInfo={false} />
-                                                </div>
+                                                {state !== 'failed' && (
+                                                    <div>
+                                                        <div className="margin-top-8">{`${receivedBytes} MB`} of {`${allBytes} MB` }</div>
+                                                        <div className="margin-top-4 margin-bottom-8">
+                                                            <Progress percent={progress} showInfo={false} />
+                                                        </div>
+                                                    </div>
+                                                )}
                                                 <div>
                                                     {state === 'progressing' && (
                                                         <Button
@@ -152,14 +159,27 @@ function DonwloadList({ onClose = noop }) {
                                                             {i18n._('key-Modal/Common-Resume')}
                                                         </Button>
                                                     )}
-                                                    <Button
-                                                        onClick={() => cancelDownload([list])}
-                                                        type="default"
-                                                        width="96px"
-                                                        priority="level-two"
-                                                    >
-                                                        {i18n._('key-Modal/Common-Cancel')}
-                                                    </Button>
+                                                    {state === 'failed' && (
+                                                        <Button
+                                                            onClick={() => startDownload(list)}
+                                                            className="margin-right-8"
+                                                            type="default"
+                                                            width="96px"
+                                                            priority="level-two"
+                                                        >
+                                                            {i18n._('key-Modal/Common-Resume')}
+                                                        </Button>
+                                                    )}
+                                                    {state !== 'failed' && (
+                                                        <Button
+                                                            onClick={() => cancelDownload([list])}
+                                                            type="default"
+                                                            width="96px"
+                                                            priority="level-two"
+                                                        >
+                                                            {i18n._('key-Modal/Common-Cancel')}
+                                                        </Button>
+                                                    )}
                                                 </div>
                                             </div>
                                         )}
@@ -169,21 +189,19 @@ function DonwloadList({ onClose = noop }) {
                             );
                         }))}
 
-                        {!fileList.length && (
-                            <Empty
-                                image="/resources/images/guide-tours/printing-preview.png"
-                                imageStyle={{
-                                    height: 268,
-                                    width: 200,
-                                }}
-                                description={(
-                                    <span>
-                                        {i18n._(
-                                            'key-DonwloadList/No downloaded files'
-                                        )}
-                                    </span>
-                                )}
-                            />
+                        {fileList.length === 0 && (
+                            <div className="margin-auto align-c">
+                                <img
+                                    src="/resources/images/guide-tours/printing-preview.png"
+                                    alt=""
+                                    className="width-200"
+                                />
+                                <div>
+                                    {i18n._(
+                                        'key-DonwloadList/No downloaded files'
+                                    )}
+                                </div>
+                            </div>
                         )}
                     </>
                 </Modal.Body>

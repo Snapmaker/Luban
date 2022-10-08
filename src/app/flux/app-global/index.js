@@ -251,6 +251,7 @@ export const actions = {
         dispatch(actions.updateState({ showDownloadPopup }));
     },
     updateDownloadedFiles: (downloadFiles) => (dispatch) => {
+        console.log('downloadFiles', downloadFiles);
         dispatch(actions.updateState({ downloadFiles }));
     },
     updateCurrentDownload: (currentSavedPath) => (dispatch) => {
