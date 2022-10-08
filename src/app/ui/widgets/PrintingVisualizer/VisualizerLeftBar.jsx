@@ -5,6 +5,7 @@ import classNames from 'classnames';
 import i18n from '../../../lib/i18n';
 import UniApi from '../../../lib/uni-api';
 import styles from './styles.styl';
+import objectListStyles from '../PrintingObjectList/styles.styl';
 import { actions as printingActions } from '../../../flux/printing';
 import modal from '../../../lib/modal';
 import ThreeGroup from '../../../models/ThreeGroup';
@@ -31,29 +32,40 @@ import { logTransformOperation } from '../../../lib/gaEvent';
 
 export const whiteHex = '#ffffff';
 export const renderExtruderIcon = (leftExtruderColor, rightExtruderColor) => (
-    <div className="position-re width-24">
-        {leftExtruderColor !== whiteHex ? (
+    <div className={classNames('height-24', objectListStyles.extruderIcon)}>
+        <div className={classNames('width-24 height-24 display-inline')}>
+            <div className="position-re ">
+                {leftExtruderColor !== whiteHex ? (
+                    <SvgIcon
+                        color={leftExtruderColor}
+                        size={24}
+                        name="ExtruderLeft"
+                        type={['static']}
+                        className="position-ab"
+                    />
+                ) : (
+                    <img className="position-ab" src="/resources/images/24x24/icon_extruder_white_left_24x24.svg" alt="" />
+                )}
+                {rightExtruderColor !== whiteHex ? (
+                    <SvgIcon
+                        color={rightExtruderColor}
+                        size={24}
+                        name="ExtruderRight"
+                        type={['static']}
+                        className="position-ab right-1"
+                    />
+                ) : (
+                    <img src="/resources/images/24x24/icon_extruder_white_right_24x24.svg" alt="" className="position-ab" />
+                )}
+            </div>
+        </div>
+        <div className={classNames('display-none', objectListStyles.hoverTip)}>
             <SvgIcon
-                color={leftExtruderColor}
-                size={24}
-                name="ExtruderLeft"
+                name="DropdownLine"
+                size={10}
                 type={['static']}
-                className="position-ab"
             />
-        ) : (
-            <img className="position-ab" src="/resources/images/24x24/icon_extruder_white_left_24x24.svg" alt="" />
-        )}
-        {rightExtruderColor !== whiteHex ? (
-            <SvgIcon
-                color={rightExtruderColor}
-                size={24}
-                name="ExtruderRight"
-                type={['static']}
-                className="position-ab right-1"
-            />
-        ) : (
-            <img src="/resources/images/24x24/icon_extruder_white_right_24x24.svg" alt="" className="position-ab" />
-        )}
+        </div>
     </div>
 );
 export const CancelButton = ({ onClick }) => {
