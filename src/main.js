@@ -312,6 +312,7 @@ const startToBegin = (data) => {
     }
 };
 
+let serverProcess;
 const showMainWindow = async () => {
     const windowOptions = getBrowserWindowOptions();
     const window = new BrowserWindow(windowOptions);
@@ -336,7 +337,7 @@ const showMainWindow = async () => {
                 startToBegin({ ...data, port: CLIENT_PORT });
             });
         } else {
-            const child = childProcess.fork(
+            serverProcess = childProcess.fork(
                 path.resolve(__dirname, 'server-cli.js'),
                 [],
                 {
@@ -346,7 +347,7 @@ const showMainWindow = async () => {
                     }
                 }
             );
-            child.on('message', (data) => {
+            serverProcess.on('message', (data) => {
                 if (data.type === SERVER_DATA) {
                     startToBegin(data);
                 } else if (data.type === UPLOAD_WINDOWS) {
@@ -478,7 +479,6 @@ app.on('window-all-closed', () => {
     // after all windows have been closed.
     // if (process.platform !== 'darwin') {
     // }
-
     powerSaveBlocker.stop(powerId);
 
     app.quit();
@@ -488,6 +488,7 @@ app.on('window-all-closed', () => {
  * Final chance to cleanup before app quit.
  */
 app.on('will-quit', () => {
+    serverProcess?.kill();
     DataStorage.clear();
 });
 
