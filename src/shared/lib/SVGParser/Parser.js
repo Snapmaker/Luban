@@ -13,8 +13,10 @@ import PolygonTagParser from './PolygonTagParser';
 import PolylineTagParser from './PolylineTagParser';
 import RectTagParser from './RectTagParser';
 import TextParser from './TextParser';
-import { SVG_ATTR_ID, XLINK_HREF, SVG_ATTR_HREF,
-    SVG_ATTR_TRANSFORM, SVG_TAG_USE, SVG_TAG_SVG } from './constants';
+import {
+    SVG_ATTR_ID, XLINK_HREF, SVG_ATTR_HREF,
+    SVG_ATTR_TRANSFORM, SVG_TAG_USE, SVG_TAG_SVG
+} from './constants';
 // const DEFAULT_DPI = 72;
 const DEFAULT_MILLIMETER_PER_PIXEL = 25.4 / 72;
 // TODO: General tolerance does not work well if original drawing is small,
@@ -191,13 +193,20 @@ class SVGParser {
                 boundingBox.maxY = Math.max(boundingBox.maxY, shape.boundingBox.maxY);
             }
         }
+
+        const width = boundingBox.maxX - boundingBox.minX;
+        const height = boundingBox.maxY - boundingBox.minY;
+        const viewBox = [boundingBox.minX, boundingBox.minY, width, height];
+
+        newSvg.$.viewBox = viewBox.join(' ');
+
         return {
             shapes: root.shapes,
             boundingBox: boundingBox,
             parsedNode: parsedNode,
-            viewBox: root.attributes.viewBox,
-            width: root.attributes.width,
-            height: root.attributes.height
+            viewBox,
+            width,
+            height
         };
     }
 

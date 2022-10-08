@@ -279,7 +279,8 @@ const INITIAL_STATE = {
     // helpers extruder config
     helpersExtruderConfig: {
         adhesion: LEFT_EXTRUDER_MAP_NUMBER,
-        support: LEFT_EXTRUDER_MAP_NUMBER
+        support: LEFT_EXTRUDER_MAP_NUMBER,
+        onlySupportInterface: false
     },
     // extruder modal
     isOpenSelectModals: false,
@@ -2231,11 +2232,14 @@ export const actions = {
             hasPrimeTower
         );
 
+        const isDualExtruder = printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2;
+        const onlySupportInterface = helpersExtruderConfig.onlySupportInterface;
+
         const supportExtruder = helpersExtruderConfig.support;
         finalDefinition.settings.adhesion_extruder_nr.default_value = adhesionExtruder;
         finalDefinition.settings.support_extruder_nr.default_value = supportExtruder;
-        finalDefinition.settings.support_infill_extruder_nr.default_value = supportExtruder;
-        finalDefinition.settings.support_extruder_nr_layer_0.default_value = supportExtruder;
+        finalDefinition.settings.support_infill_extruder_nr.default_value = (isDualExtruder && onlySupportInterface) ? Math.abs(Number(supportExtruder) - 1).toString() : supportExtruder;
+        finalDefinition.settings.support_extruder_nr_layer_0.default_value = isDualExtruder ? Math.abs(Number(supportExtruder) - 1).toString() : supportExtruder;
         finalDefinition.settings.support_interface_extruder_nr.default_value = supportExtruder;
         finalDefinition.settings.support_roof_extruder_nr.default_value = supportExtruder;
         finalDefinition.settings.support_bottom_extruder_nr.default_value = supportExtruder;
