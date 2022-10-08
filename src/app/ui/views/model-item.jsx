@@ -11,6 +11,8 @@ import SvgIcon from '../components/SvgIcon';
 import { normalizeNameDisplay } from '../../lib/normalize-range';
 import { HEAD_PRINTING } from '../../constants';
 import { renderExtruderIcon, whiteHex } from '../widgets/PrintingVisualizer/VisualizerLeftBar';
+import Dropdown from '../components/Dropdown';
+import { extruderOverlayMenu } from '../widgets/PrintingVisualizer/Overlay/ExtruderOverlay';
 
 let svgName = '';
 let modelName = '';
@@ -88,7 +90,8 @@ ModelIcon.propTypes = {
 function ModelItem({
     model, visible, isSelected, styles, onSelect, onToggleVisible,
     inProgress, placment, disabled = false, isDualExtruder = false,
-    leftMaterialColor = whiteHex, rightMaterialColor = whiteHex
+    leftMaterialColor = whiteHex, rightMaterialColor = whiteHex,
+    updateSelectedModelsExtruder
 }) {
     const [tipTriggerVisible, setTipTriggerVisible] = useState('');
     const [isExpend, setIsExpend] = useState(false);
@@ -135,6 +138,31 @@ function ModelItem({
 
     const hasChildren = model.children && !!model.children?.length;
 
+    const getExtruderOverlayMenu = (colorL, colorR, extruderConfig) => {
+        const selectExtruder = (() => {
+            if (extruderConfig.shell === extruderConfig.infill) {
+                switch (extruderConfig.infill.toString()) {
+                    case '0':
+                        return 'L';
+                    case '1':
+                        return 'R';
+                    default:
+                        return null;
+                }
+            }
+            return null;
+        })();
+
+        return extruderOverlayMenu({
+            type: 'models.multiple',
+            colorL: colorL,
+            colorR: colorR,
+            onChange: ({ direction }) => {
+                updateSelectedModelsExtruder(direction);
+            },
+            selectExtruder: selectExtruder
+        });
+    };
     return (
         <div>
             <TipTrigger
@@ -229,9 +257,17 @@ function ModelItem({
                             </span>
                         </Anchor>
                         <div className="sm-flex">
-                            <>
+                            <Dropdown
+                                disabled={!isDualExtruder}
+                                placement="right"
+                                onVisibleChange={() => {
+                                    onSelect(model);
+                                }}
+                                overlay={getExtruderOverlayMenu(leftMaterialColor, rightMaterialColor, model.extruderConfig)}
+                                trigger={['click']}
+                            >
                                 {renderExtruderIcon(leftExtruderColor, rightExtruderColor)}
-                            </>
+                            </Dropdown>
                             <SvgIcon
                                 name={visible ? 'ShowNormal' : 'HideNormal'}
                                 title={visible ? i18n._('key-PrintingCncLaser/ObjectList-Hide') : i18n._('key-PrintingCncLaser/ObjectList-Show')}
@@ -291,9 +327,17 @@ function ModelItem({
                                 </span>
                             </Anchor>
                             <div className="sm-flex">
-                                <>
+                                <Dropdown
+                                    disabled={!isDualExtruder}
+                                    placement="right"
+                                    onVisibleChange={() => {
+                                        onSelect(modelItem);
+                                    }}
+                                    overlay={getExtruderOverlayMenu(leftMaterialColor, rightMaterialColor, modelItem.extruderConfig)}
+                                    trigger={['click']}
+                                >
                                     {renderExtruderIcon(_leftExtruderColor, _rightExtruderColor)}
-                                </>
+                                </Dropdown>
                                 <SvgIcon
                                     name={modelItem.visible ? 'ShowNormal' : 'HideNormal'}
                                     title={modelItem.visible ? i18n._('key-PrintingCncLaser/ObjectList-Hide') : i18n._('key-PrintingCncLaser/ObjectList-Show')}
@@ -323,7 +367,8 @@ ModelItem.propTypes = {
     placment: PropTypes.string,
     isDualExtruder: PropTypes.bool,
     leftMaterialColor: PropTypes.string,
-    rightMaterialColor: PropTypes.string
+    rightMaterialColor: PropTypes.string,
+    updateSelectedModelsExtruder: PropTypes.func
 };
 
 export default React.memo(ModelItem);
