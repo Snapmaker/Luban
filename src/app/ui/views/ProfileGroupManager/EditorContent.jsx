@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { useSelector, useDispatch } from 'react-redux';
 import i18next from 'i18next';
 /* eslint-disable import/no-cycle */
-import { cloneDeep, find, includes, remove } from 'lodash';
+import { cloneDeep, find, includes, remove, throttle } from 'lodash';
 import ReactMarkdown from 'react-markdown';
 import { EXTRUDER_TAB, MODEL_TAB } from './CategorySelector';
 import { actions as printingActions } from '../../../flux/printing';
@@ -18,7 +18,6 @@ import api from '../../../api';
 import SettingItem from '../ProfileManager/SettingItem';
 import { LEFT_EXTRUDER } from '../../../constants';
 import { resolveDefinition } from '../../../../shared/lib/definitionResolver';
-// import { useGetDefinitions } from '../ProfileManager';
 
 const EditorContent = ({
     selectedExtruder,
@@ -41,6 +40,8 @@ const EditorContent = ({
     const [checkedParams, setCheckedParams] = useState({});
     const [mdContent, setMdContent] = useState(null);
     const [imgPath, setImgPath] = useState('');
+    const [activeCateId, setActiveCateId] = useState(0);
+    const scrollDom = useRef(null);
     const dispatch = useDispatch();
     const lang = i18next.language;
     const canUpdateEditor = ((editorType === EXTRUDER_TAB && extruderEditor) || (editorType === MODEL_TAB && modelEditor)) && mode === 'show';
@@ -136,6 +137,29 @@ const EditorContent = ({
         dispatch(printingActions.updateState({
             editorDefinition: newMap
         }));
+    };
+
+    const setActiveCate = (cateId) => {
+        if (scrollDom.current) {
+            const container = scrollDom.current.parentElement;
+            const offsetTops = [...scrollDom.current.children].map(i => {
+                return i.offsetTop - 136;
+            });
+            if (cateId !== undefined) {
+                container.scrollTop = offsetTops[cateId];
+            } else {
+                cateId = offsetTops.findIndex((item, idx) => {
+                    if (idx < offsetTops.length - 1) {
+                        return item < container.scrollTop
+                            && offsetTops[idx + 1] > container.scrollTop;
+                    } else {
+                        return item < container.scrollTop;
+                    }
+                });
+                cateId = Math.max(cateId, 0);
+            }
+            setActiveCateId(cateId);
+        }
     };
 
     const renderCheckboxList = ({
@@ -234,7 +258,7 @@ const EditorContent = ({
                                     {Object.keys(editorType === EXTRUDER_TAB ? extruderEditor : modelEditor)?.map(objectKey => {
                                         const currentEditor = editorType === EXTRUDER_TAB ? extruderEditor : modelEditor;
                                         return (
-                                            <div className="margin-bottom-16">
+                                            <div className="margin-bottom-16" key={objectKey}>
                                                 <div className="font-size-middle font-weight-bold height-32">
                                                     {i18n._(`key-Definition/Catagory-${objectKey}`)}
                                                 </div>
@@ -277,11 +301,18 @@ const EditorContent = ({
                     <div className="sm-flex sm-flex-direction-c height-percent-100">
                         <div className={classNames('background-color-white border-radius-bottom-16 sm-flex  height-100-percent-minus-40', styles['manager-params-docs'])}>
                             <div className="category-menu max-width-208 padding-horizontal-16 padding-top-16 border-right-normal height-percent-100">
-                                {categoryGroup && Object.keys(categoryGroup).map((key) => {
+                                {categoryGroup && Object.keys(categoryGroup).map((key, index) => {
                                     if (categoryGroup[key].length > 0) {
                                         return (
-                                            <Anchor>
-                                                <div className="width-percent-100 text-overflow-ellipsis height-32">
+                                            <Anchor
+                                                onClick={() => setActiveCate(index)}
+                                                key={key}
+                                            >
+                                                <div className={classNames(
+                                                    'width-percent-100 text-overflow-ellipsis height-32 border-radius-4 padding-horizontal-8',
+                                                    { 'background-color-blue': activeCateId === index }
+                                                )}
+                                                >
                                                     {i18n._(`key-Definition/Catagory-${key}`)}
                                                 </div>
                                             </Anchor>
@@ -292,27 +323,38 @@ const EditorContent = ({
                                 })}
                             </div>
                             <div className={classNames('params-detail-wrapper', 'width-percent-100 sm-flex margin-right-16 overflow-x-auto')}>
-                                <div className="min-width-408 width-percent-60 padding-16 height-percent-100 overflow-y-auto">
-                                    {categoryGroup && Object.keys(categoryGroup).map(key => {
-                                        if (categoryGroup[key].length > 0) {
-                                            return (
-                                                <div className="margin-bottom-16">
-                                                    <div className="font-size-middle font-weight-bold">
-                                                        {i18n._(`key-Definition/Catagory-${key}`)}
+                                <div
+                                    className="min-width-408 width-percent-60 padding-16 height-percent-100 overflow-y-auto"
+                                    onWheel={throttle(
+                                        () => {
+                                            setActiveCate();
+                                        },
+                                        200,
+                                        { leading: false, trailing: true }
+                                    )}
+                                >
+                                    <div ref={scrollDom}>
+                                        {categoryGroup && Object.keys(categoryGroup).map(key => {
+                                            if (categoryGroup[key].length > 0) {
+                                                return (
+                                                    <div className="margin-bottom-16" key={key}>
+                                                        <div className="font-size-middle font-weight-bold">
+                                                            {i18n._(`key-Definition/Catagory-${key}`)}
+                                                        </div>
+                                                        {
+                                                            renderCheckboxList({
+                                                                renderList: categoryGroup[key],
+                                                                settings: definitionManager.settings,
+                                                                mainCategory: key
+                                                            })
+                                                        }
                                                     </div>
-                                                    {
-                                                        renderCheckboxList({
-                                                            renderList: categoryGroup[key],
-                                                            settings: definitionManager.settings,
-                                                            mainCategory: key
-                                                        })
-                                                    }
-                                                </div>
-                                            );
-                                        } else {
-                                            return null;
-                                        }
-                                    })}
+                                                );
+                                            } else {
+                                                return null;
+                                            }
+                                        })}
+                                    </div>
                                 </div>
                                 <div className={classNames(
                                     'min-width-264 width-percent-40 background-grey-3 height-perccent-100 overflow-y-auto',
