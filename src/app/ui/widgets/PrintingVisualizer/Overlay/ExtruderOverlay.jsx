@@ -75,7 +75,6 @@ export const extruderOverlayMenu = ({ type, colorL, colorR, onChange, selectExtr
             </Menu.Item>
         </Menu>
     );
-    // ), [type, colorL, colorR, onChange, selectExtruder]);
 };
 
 const ExtruderOverlay = React.memo(({
@@ -207,7 +206,6 @@ const ExtruderOverlay = React.memo(({
             >
                 <span className="text-overflow-ellipsis">{i18n._(`key-Printing/LeftBar-${extruderLabelMap[status]}`)}</span>
                 <div className="sm-flex">
-                    {/* {renderExtruderIcon(extruderColor)} */}
                     {renderExtruderIcon(leftExtruderColor, rightExtruderColor)}
                     <SvgIcon
                         disabled={disabled}
@@ -438,7 +436,7 @@ const ExtruderOverlay = React.memo(({
                                 });
                             }}
                         />
-                        <span className="margin-left-4">Only Support Interface</span>
+                        <span className="margin-left-4">{i18n._('key-Printing/LeftBar-Only Support Interface')}</span>
                     </div>
                 </div>
             </div>
