@@ -213,8 +213,7 @@ class ConnectionManager {
             const gcodeFilePath = `${DataStorage.tmpDir}/${uploadName}`;
             const promises = [];
             if (this.protocol === SACP_PROTOCOL && headType === HEAD_LASER) {
-                this.socket.uploadGcodeFile(gcodeFilePath, headType, renderName, (msg) => {
-                    if (msg) return;
+                this.socket.uploadGcodeFile(gcodeFilePath, headType, renderName, () => {
                 });
                 if (laserFocalLength && toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isRotate && isLaserPrintAutoMode && materialThickness !== 0 && materialThicknessSource === AUTO_STRING) {
                     await this.socket.laseAutoSetMaterialHeight({ toolHead });

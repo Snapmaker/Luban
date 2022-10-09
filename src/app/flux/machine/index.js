@@ -1,5 +1,5 @@
 /* eslint-disable import/no-cycle */
-import _, { cloneDeep, isEmpty, isNil, uniq } from 'lodash';
+import _, { cloneDeep, includes, isEmpty, isNil, uniq } from 'lodash';
 import {
     ABSENT_OBJECT,
     CONNECTION_STATUS_CONNECTED,
@@ -25,7 +25,9 @@ import {
     HEAD_PRINTING,
     getMachineSeriesWithToolhead,
     RIGHT_EXTRUDER,
-    CONNECTION_HEAD_BEGIN_WORK
+    CONNECTION_HEAD_BEGIN_WORK,
+    EMERGENCY_STOP_BUTTON,
+    CONNECTION_CLOSE
 } from '../../constants';
 
 import i18n from '../../lib/i18n';
@@ -481,6 +483,7 @@ export const actions = {
                     airPurifierSwitch,
                     airPurifierFanSpeed,
                     airPurifierFilterHealth,
+                    airPurifierHasPower,
                     isEmergencyStopped,
                     moduleList: moduleStatusList,
                     nozzleSizeList,
@@ -586,6 +589,7 @@ export const actions = {
                 if (!isNil(airPurifier)) {
                     dispatch(baseActions.updateState({
                         airPurifier: airPurifier,
+                        airPurifierHasPower: airPurifierHasPower,
                         airPurifierSwitch: airPurifierSwitch,
                         airPurifierFanSpeed: airPurifierFanSpeed,
                         airPurifierFilterHealth: airPurifierFilterHealth
@@ -797,6 +801,20 @@ export const actions = {
                     dispatch(baseActions.updateState({
                         homingModal: isHoming
                     }));
+                }
+            },
+            'manager:error': (options) => {
+                const { owner, errorCode } = options;
+                if (includes(EMERGENCY_STOP_BUTTON, owner)) {
+                    if (errorCode === 1) {
+                        controller.emitEvent(CONNECTION_CLOSE, () => {
+                            dispatch(baseActions.resetMachineState());
+                            dispatch(workspaceActions.updateMachineState({
+                                headType: '',
+                                toolHead: ''
+                            }));
+                        });
+                    }
                 }
             },
             'connection:headBeginWork': (options) => {
@@ -1084,7 +1102,8 @@ export const actions = {
                 x: 0,
                 y: 0,
                 z: 0
-            }
+            },
+            savedServerAddressIsAuto: false
         }));
     },
 

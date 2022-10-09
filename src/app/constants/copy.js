@@ -318,6 +318,8 @@ i18n._('key-Workspace/Connection-TOOLHEAD_CNC_1');
 i18n._('key-Workspace/Connection-10W Laser');
 i18n._('key-Workspace/Connection-3dp');
 i18n._('key-Workspace/Connection-laser');
+i18n._('Key-Workspace/LaserStartJob-manual_mode_description');
+i18n._('key-Workspace/Marlin-Left Nozzle Temp');
 
 // Progress Manager
 i18n._('key-Progress/LaserCNC-Generate toolpath and preview: {{progress}}%');

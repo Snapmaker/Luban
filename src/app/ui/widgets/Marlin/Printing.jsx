@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import { capitalize } from 'lodash';
 import Anchor from '../../components/Anchor';
 // import SvgIcon from '../../components/SvgIcon';
 import { Button } from '../../components/Buttons';
@@ -197,7 +198,7 @@ class Printing extends PureComponent {
                     <div>
                         <div>
                             <span>{i18n._('key-unused-Current Work Nozzle')}</span>
-                            <span>{i18n._(`key-unused-Nozzle-${currentWorkNozzle}`)}</span>
+                            <span>{i18n._(`key-setting/${capitalize(currentWorkNozzle)}-Nozzle`)}</span>
                         </div>
                         <Button disabled={this.state.squeezing || workflowStatus === WORKFLOW_STATUS_RUNNING} onClick={() => this.actions.siwtchWorkNozzle(currentWorkNozzle === LEFT_EXTRUDER ? RIGHT_EXTRUDER_MAP_NUMBER : LEFT_EXTRUDER_MAP_NUMBER)}>
                             {i18n._('key-Workspace/Marlin-Switch working nozzle')}

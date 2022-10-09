@@ -1,6 +1,6 @@
 import { includes, find } from 'lodash';
 import net from 'net';
-import { readString, readUint8 } from 'snapmaker-sacp-sdk/helper';
+import { readString, readUint16, readUint8 } from 'snapmaker-sacp-sdk/helper';
 import { GetHotBed, CoordinateInfo, CoordinateSystemInfo, ExtruderInfo, CncSpeedState, LaserTubeState, GcodeCurrentLine, EnclosureInfo, AirPurifierInfo } from 'snapmaker-sacp-sdk/models';
 // import GetWorkSpeed from 'snapmaker-sacp-sdk/models/GetWorkSpeed';
 import { ResponseCallback } from 'snapmaker-sacp-sdk';
@@ -71,7 +71,7 @@ class SocketBASE {
 
     public machineStatus: string = WORKFLOW_STATE_IDLE;
 
-    public startHeartbeatBase = (sacpClient: Business, client?: net.Socket, isWifiConnection?: boolean) => {
+    public startHeartbeatBase = async (sacpClient: Business, client?: net.Socket, isWifiConnection?: boolean) => {
         this.sacpClient = sacpClient;
         let stateData: MarlinStateData = {};
         let statusKey = 0;
@@ -104,55 +104,21 @@ class SocketBASE {
             }
             this.socket && this.socket.emit('move:status', { isHoming: false });
         });
+        this.sacpClient.setHandler(0x04, 0x00, ({ param }) => {
+            const level = readUint8(param, 0);
+            const owner = readUint16(param, 1);
+            const error = readUint8(param, 3);
+            this.socket && this.socket.emit('manager:error', { level, owner, errorCode: error });
+        })
         this.subscribeHeartCallback = async (data) => {
             statusKey = readUint8(data.response.data, 0);
-            stateData.airPurifier = false;
+            // stateData.airPurifier = false;
             if (this.heartbeatTimer) clearTimeout(this.heartbeatTimer);
             this.heartbeatTimer = setTimeout(() => {
                 client && client.destroy();
                 log.info('TCP close');
                 this.socket && this.socket.emit('connection:close');
             }, 10000);
-            await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
-                // log.info(`revice moduleInfo: ${data.response}`);
-                moduleInfos.forEach(module => {
-                    if (includes(EMERGENCY_STOP_BUTTON, module.moduleId)) {
-                        moduleStatusList.emergencyStopButton = true;
-                    }
-                    if (includes(ENCLOSURE_MODULES, module.moduleId)) {
-                        moduleStatusList.enclosure = true;
-                    }
-                    if (includes(ROTARY_MODULES, module.moduleId)) {
-                        moduleStatusList.rotaryModule = true;
-                    }
-                    if (includes(AIR_PURIFIER_MODULES, module.moduleId)) {
-                        stateData.airPurifier = true;
-                        // need to update airPurifier status
-                    }
-                    if (includes(PRINTING_MODULE, module.moduleId)) {
-                        stateData.headType = HEAD_PRINTING;
-                        this.headType = HEAD_PRINTING;
-                        stateData.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
-                    } else if (includes(LASER_MODULE, module.moduleId)) {
-                        stateData.headType = HEAD_LASER;
-                        this.headType = HEAD_LASER;
-                        stateData.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
-                    } else if (includes(CNC_MODULE, module.moduleId)) {
-                        stateData.headType = HEAD_CNC;
-                        this.headType = HEAD_CNC;
-                        stateData.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
-                    }
-
-
-                    const keys = Object.keys(MODULEID_MAP);
-                    if (includes(keys, String(module.moduleId))) {
-                        if (!this.moduleInfos) {
-                            this.moduleInfos = {};
-                        }
-                        this.moduleInfos[MODULEID_MAP[module.moduleId]] = module;
-                    }
-                });
-            });
             this.machineStatus = WORKFLOW_STATUS_MAP[statusKey];
             // stateData.status = WORKFLOW_STATUS_MAP[statusKey];
             this.socket && this.socket.emit('Marlin:state', {
@@ -166,6 +132,47 @@ class SocketBASE {
         };
         this.sacpClient.subscribeHeartbeat({ interval: 1000 }, this.subscribeHeartCallback).then((res) => {
             log.info(`subscribe heartbeat success: ${res.code}`);
+        });
+        await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
+            // log.info(`revice moduleInfo: ${data.response}`);
+            stateData.airPurifier = false;
+            moduleInfos.forEach(module => {
+                if (includes(EMERGENCY_STOP_BUTTON, module.moduleId)) {
+                    moduleStatusList.emergencyStopButton = true;
+                }
+                if (includes(ENCLOSURE_MODULES, module.moduleId)) {
+                    moduleStatusList.enclosure = true;
+                }
+                if (includes(ROTARY_MODULES, module.moduleId)) {
+                    moduleStatusList.rotaryModule = true;
+                }
+                if (includes(AIR_PURIFIER_MODULES, module.moduleId)) {
+                    stateData.airPurifier = true;
+                    // need to update airPurifier status
+                }
+                if (includes(PRINTING_MODULE, module.moduleId)) {
+                    stateData.headType = HEAD_PRINTING;
+                    this.headType = HEAD_PRINTING;
+                    stateData.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
+                } else if (includes(LASER_MODULE, module.moduleId)) {
+                    stateData.headType = HEAD_LASER;
+                    this.headType = HEAD_LASER;
+                    stateData.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
+                } else if (includes(CNC_MODULE, module.moduleId)) {
+                    stateData.headType = HEAD_CNC;
+                    this.headType = HEAD_CNC;
+                    stateData.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
+                }
+
+
+                const keys = Object.keys(MODULEID_MAP);
+                if (includes(keys, String(module.moduleId))) {
+                    if (!this.moduleInfos) {
+                        this.moduleInfos = {};
+                    }
+                    this.moduleInfos[MODULEID_MAP[module.moduleId]] = module;
+                }
+            });
         });
         this.subscribeHotBedCallback = (data) => {
             const hotBedInfo = new GetHotBed().fromBuffer(data.response.data);
@@ -257,7 +264,7 @@ class SocketBASE {
         });
         this.subscribeGetCurrentGcodeLineCallback = ({ response }) => {
             const { currentLine } = new GcodeCurrentLine().fromBuffer(response.data);
-            const progress = currentLine / this.totalLine;
+            const progress = Math.round((currentLine / this.totalLine) * 100) / 100;
             const sliceTime = new Date().getTime() - this.startTime;
             const remainingTime = (1 - (progress)) * progress * (this.estimatedTime * 1000) / progress + (1 - progress) * (1 - progress) * sliceTime;
             const data = {
@@ -303,7 +310,7 @@ class SocketBASE {
             const { airPurifierStatus: { fanState, speedLevel, lifeLevel, powerState } } = new AirPurifierInfo().fromBuffer(data.response.data);
             stateData = {
                 ...stateData,
-                airPurifier: powerState,
+                airPurifierHasPower: powerState,
                 airPurifierSwitch: fanState,
                 airPurifierFanSpeed: speedLevel,
                 airPurifierFilterHealth: lifeLevel - 1
@@ -606,7 +613,7 @@ class SocketBASE {
         }
 
         // return
-        const { response: responseForSpeed } = await this.sacpClient.setToolHeadSpeed(toolhead.key, this.cncTargetSpeed);
+        const { response: responseForSpeed } = await this.sacpClient.setToolHeadSpeed(toolhead.key, this.cncTargetSpeed < 8000 ? 16000 : this.cncTargetSpeed);
         if (responseForSpeed.result === 0) {
             const { response: responseForOpen } = await this.sacpClient.switchCNC(toolhead.key, !headStatus);
             log.info(`switchCNC to [${!headStatus}], ${JSON.stringify(responseForOpen)}`);

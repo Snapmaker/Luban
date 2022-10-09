@@ -645,7 +645,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    public async uploadFile(filePath: string) {
+    public async uploadFile(filePath: string, renderName?: string) {
         const sizePerChunk = 60 * 1024;
         this.setHandler(0xb0, 0x01, (data) => {
             const { nextOffset, result: md5HexStr } = readString(data.param);
@@ -710,7 +710,7 @@ export default class Business extends Dispatcher {
                     const fileLength = fs.statSync(filePath).size;
                     const chunks = Math.ceil(fileLength / sizePerChunk);
 
-                    const filenameBuffer = stringToBuffer(filename);
+                    const filenameBuffer = renderName ? stringToBuffer(renderName) : stringToBuffer(filename);
                     const fileLengthBuffer = Buffer.alloc(4, 0);
                     writeUint32(fileLengthBuffer, 0, fileLength);
                     const md5Buffer = stringToBuffer(md5HexStr);
@@ -728,7 +728,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    public startPrintSerial(filePath: string, callback: any) {
+    public startPrintSerial(filePath: string, callback?: any) {
         const content: string[] = [];
         let elapsedTime = 0;
         const rl = readline(filePath);

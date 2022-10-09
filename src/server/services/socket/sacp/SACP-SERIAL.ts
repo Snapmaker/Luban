@@ -141,19 +141,8 @@ class SocketSerialNew extends SocketBASE {
             type = 1;
         }
         const gcodeFilePath = `${DataStorage.tmpDir}/${options.uploadName}`;
-        // headType === HEAD_PRINTING && await this.goHome();
-        await this.sacpClient.startPrintSerial(gcodeFilePath, ({ lineNumber, length, elapsedTime: sliceTime }) => {
-            const elapsedTime = new Date().getTime() - this.startTime;
-            const progress = lineNumber / length;
-            const remainingTime = (1 - (progress)) * progress * elapsedTime / progress + (1 - progress) * (1 - progress) * (sliceTime * 1000);
-            const data = {
-                total: length,
-                sent: lineNumber,
-                progress: lineNumber / length,
-                elapsedTime,
-                remainingTime
-            };
-            this.socket.emit('sender:status', ({ data }));
+        await this.sacpClient.startPrintSerial(gcodeFilePath, ({ length }) => {
+            this.totalLine !== length && (this.totalLine = length);
         });
         const md5 = crypto.createHash('md5');
         const readStream = fs.createReadStream(gcodeFilePath);

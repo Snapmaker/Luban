@@ -189,11 +189,6 @@ function SerialConnection() {
                 moduleName: i18n._('key-Workspace/Connection-Heated bed'),
                 status: heatedBedTemperature > 0
             });
-            headType === HEAD_LASER && newModuleStatusList.push({
-                key: 'laserCamera',
-                moduleName: i18n._('key-Workspace/Connection-Laser camera'),
-                status: laserCamera
-            });
         }
 
         if (seriesInfo !== 'Original' && seriesInfo !== 'Original Long Z-axis') {
@@ -296,6 +291,7 @@ function SerialConnection() {
                         disabled={!canOpenPort}
                         onClick={actions.onOpenPort}
                         loading={loading}
+                        innerClassNames="sm-flex-important justify-center"
                     >
                         {!loading && i18n._('key-Workspace/Connection-Connect')}
                     </Button>
