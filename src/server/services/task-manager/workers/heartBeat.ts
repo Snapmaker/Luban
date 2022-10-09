@@ -33,9 +33,11 @@ const heartBeat = async (param: IParam) => {
                     if (err) {
                         console.log(`beat err=${err?.message}`);
                         if (err.message.includes('Timeout')) {
-                            timeoutHandle = setTimeout(() => {
-                                resolve(stopBeat(err.message, 2));
-                            }, screenTimeout);
+                            if (!timeoutHandle) {
+                                timeoutHandle = setTimeout(() => {
+                                    resolve(stopBeat(err.message, 2));
+                                }, screenTimeout);
+                            }
                         } else {
                             errorCount++;
                             if (errorCount >= 3) {
