@@ -1843,6 +1843,7 @@
     "key-Workspace/Macro-Save": "Зберегти",
     "key-Workspace/Marlin-Actual Data Title": "Поточні",
     "key-Workspace/Marlin-Heated Bed Temp": "Температура робочого столу",
+    "key-Workspace/Marlin-Left Nozzle Temp": "",
     "key-Workspace/Marlin-Right Nozzle Temp": "Температура правого сопла",
     "key-Workspace/Marlin-Spindle Speed": "Швидкість шпинделя",
     "key-Workspace/Marlin-Switch working nozzle": "Перемикання робочого сопла",

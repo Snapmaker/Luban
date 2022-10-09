@@ -12,6 +12,7 @@ import {
     CONNECTION_SWITCH_CNC,
     CONNECTION_UPDATE_TOOLHEAD_SPEED,
     LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
+    MACHINE_SERIES,
     WORKFLOW_STATUS_PAUSED,
     WORKFLOW_STATUS_PAUSING,
     WORKFLOW_STATUS_RUNNING
@@ -23,7 +24,8 @@ class CNC extends PureComponent {
         workflowStatus: PropTypes.string,
         toolHead: PropTypes.string.isRequired,
         cncCurrentSpindleSpeed: PropTypes.number.isRequired,
-        cncTargetSpindleSpeed: PropTypes.number.isRequired
+        cncTargetSpindleSpeed: PropTypes.number.isRequired,
+        series: PropTypes.string.isRequired
     };
 
     state = {
@@ -37,9 +39,11 @@ class CNC extends PureComponent {
                 speed: this.props.cncTargetSpindleSpeed,
                 toolHead: this.props.toolHead,
             });
-            this.setState({
-                headStatus: !this.state.headStatus
-            });
+            if (this.props.series !== MACHINE_SERIES.A400.value) {
+                this.setState({
+                    headStatus: !this.state.headStatus
+                });
+            }
         },
         updateToolHeadSpeed: (speed) => {
             controller.emitEvent(CONNECTION_UPDATE_TOOLHEAD_SPEED, {
@@ -136,13 +140,14 @@ const mapStateToProps = (state) => {
     const { headStatus, workflowStatus, workflowState, connectionType,
         cncCurrentSpindleSpeed,
         cncTargetSpindleSpeed } = machine;
-    const { toolHead } = state.workspace;
+    const { toolHead, series } = state.workspace;
     return {
         headStatus,
         workflowStatus,
         workflowState,
         connectionType,
         toolHead,
+        series,
         cncCurrentSpindleSpeed,
         cncTargetSpindleSpeed
     };

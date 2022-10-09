@@ -90,7 +90,7 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
             isConnected
             && (currentWorkflowStatus === WORKFLOW_STATUS_RUNNING || currentWorkflowStatus === WORKFLOW_STATUS_PAUSED
                 || currentWorkflowStatus === WORKFLOW_STATUS_PAUSING || currentWorkflowStatus === WORKFLOW_STATUS_STOPPING
-                || currentWorkflowStatus === WROKFLOW_STATUS_RESUMING || (total !== 0 && sent >= total))
+                || currentWorkflowStatus === WROKFLOW_STATUS_RESUMING || (total > 0 && sent >= total))
         ) {
             widgetActions.setDisplay(true);
         } else {
@@ -99,7 +99,6 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
     }, [isConnected, currentWorkflowStatus, sent, total, widgetActions]);
 
     useEffect(() => {
-        console.log({ currentWorkflowStatus, isPausing });
         if (currentWorkflowStatus !== WORKFLOW_STATUS_PAUSING && currentWorkflowStatus !== WROKFLOW_STATUS_RESUMING) {
             setIsPausing(false);
         } else {
@@ -178,7 +177,7 @@ const WorkingProgress = ({ widgetActions, controlActions }) => {
                 </div>
             )}
             {showStopComfirmModal && (
-                <StopConfirmModal onClose={() => { setShowStopComfirmModal(false); console.log('on close'); }} onConfirm={() => { controlActions.onCallBackStop(); }} />
+                <StopConfirmModal onClose={() => { setShowStopComfirmModal(false); }} onConfirm={() => { controlActions.onCallBackStop(); }} />
             )}
         </div>
     );

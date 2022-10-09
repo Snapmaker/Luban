@@ -18,7 +18,8 @@ export type EventOptions = {
     headType?: string,
     uploadName?: string,
     isCameraCapture?: boolean,
-    renderGcodeFileName?: string,
+    renderName?: string,
+    renderGcodeFileName?: string, // for http connection type
     moveOrders?: object
 };
 
@@ -46,6 +47,7 @@ export type MarlinStateData = {
     heatedBedTargetTemperature?: number,
     isEnclosureDoorOpen?: boolean,
     airPurifier?: boolean,
+    airPurifierHasPower?: boolean,
     airPurifierSwitch?: boolean,
     airPurifierFanSpeed?: number,
     airPurifierFilterHealth?: number, // Filter lifetime

@@ -175,7 +175,7 @@ class SocketTCP extends SocketBASE {
                             msg: '',
                             text: ''
                         };
-                        socket && socket.emit('connection:close', result);
+                        this.socket && this.socket.emit('connection:close', result);
                     }
                 }
             });
@@ -394,11 +394,11 @@ class SocketTCP extends SocketBASE {
             if (includes(data, ';estimated_time(s)')) {
                 this.estimatedTime = parseFloat(data.slice(19));
             }
-            if (includes(data, ';')) {
+            if (includes(data, ';Header End')) {
                 rl.close();
             }
         });
-        this.sacpClient.uploadFile(gcodeFilePath).then(({ response }) => {
+        this.sacpClient.uploadFile(gcodeFilePath, renderName).then(({ response }) => {
             let msg = '', data = false;
             if (response.result === 0) {
                 msg = '';
@@ -431,7 +431,7 @@ class SocketTCP extends SocketBASE {
         readStream.once('end', async () => {
             this.startTime = new Date().getTime();
             this.sacpClient.startScreenPrint({
-                headType: type, filename: uploadName, hash: md5.digest().toString('hex')
+                headType: type, filename: options.renderName, hash: md5.digest().toString('hex')
             }).then((res) => {
                 log.info(`start printing: ${res.response.result}`);
                 this.socket && this.socket.emit(eventName, {
