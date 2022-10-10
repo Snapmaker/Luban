@@ -236,7 +236,7 @@ export default class BaseModel extends EventEmitter {
 
     public async analyzeRotation() {
         return new Promise((resolve, reject) => {
-            if (this.sourceType !== '3d' || !this.convexGeometry) {
+            if (this.sourceType !== '3d') {
                 resolve(null);
             }
             const selectedModelInfo = [],
