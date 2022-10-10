@@ -155,11 +155,11 @@ class PrintablePlate extends Object3D {
 
                     const geometry = new ShapeGeometry(shape);
                     const mesh = new Mesh(geometry, material);
-
+                    mesh.scale.set(0.7, 0.7, 0.7);
                     svgGroup.add(mesh);
                 }
             }
-            svgGroup.position.set(14, -12, 0.01);
+            svgGroup.position.set(10, -8.5, 0.01);
             svgGroup.rotateZ(ThreeMath.degToRad(90));
             this.add(svgGroup);
         });

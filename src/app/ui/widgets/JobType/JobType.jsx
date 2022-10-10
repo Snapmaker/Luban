@@ -116,8 +116,8 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                 useLockingBlock: option.value,
                 coordinateMode: option.value ? COORDINATE_MODE_BOTTOM_LEFT : COORDINATE_MODE_CENTER,
                 coordinateSize: {
-                    x: 375,
-                    y: 395
+                    x: option.value ? 375 : 400,
+                    y: option.value ? 395 : 400
                 }
             });
         },
