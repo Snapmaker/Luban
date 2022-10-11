@@ -15,10 +15,10 @@ import { HEAD_CNC, HEAD_LASER, MACHINE_SERIES, CONNECTION_TYPE_WIFI, longLangWit
 import { actions as laserActions } from '../../../flux/laser';
 import { renderModal } from '../../utils';
 import LaserSetBackground from '../../widgets/LaserSetBackground';
-import LaserCameraAndBackground from '../../widgets/LaserCameraAndBackground';
+import LaserCameraAndBackground from '../../widgets/LaserCameraAidBackground';
 import ModalSmall from '../../components/Modal/ModalSmall';
-import SelectCaptureMode, { MODE_THICKNESS_COMPENSATION } from '../../widgets/LaserCameraAndBackground/SelectCaptureMode';
-import MaterialThicknessInput from '../../widgets/LaserCameraAndBackground/MaterialThicknessInput';
+import SelectCaptureMode, { MODE_THICKNESS_COMPENSATION } from '../../widgets/LaserCameraAidBackground/SelectCaptureMode';
+import MaterialThicknessInput from '../../widgets/LaserCameraAidBackground/MaterialThicknessInput';
 
 function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setShowWorkspace }) {
     const unSaved = useSelector(state => state?.project[headType]?.unSaved, shallowEqual);
