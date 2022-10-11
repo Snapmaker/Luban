@@ -12,7 +12,7 @@ let Tmpdir, ConfigDir = ''
 
 const remap = async () => {
     const job = jobs.shift()
-    const { fileName, scale } = job
+    const { fileName } = job
     let src, dst
     try {
         const jimpSrc = await Jimp.read(`${Tmpdir}/${fileName}`);
@@ -25,10 +25,11 @@ const remap = async () => {
             height: dst.rows,
             data: Buffer.from(dst.data)
         })
-        result.write(`${Tmpdir}/${fileName}`);
+        const outputFileName = `remaped_${fileName}`
+        result.write(`${Tmpdir}/${outputFileName}`);
         src.delete();
         dst.delete();
-        sendMessage({ status: 'complete', value: fileName })
+        sendMessage({ status: 'complete', input: fileName, output: outputFileName })
     } catch (error) {
         console.error(error)
         if (src) {
@@ -37,6 +38,7 @@ const remap = async () => {
         if (dst) {
             dst.delete();
         }
+        sendMessage({ status: 'error', input: fileName })
 
         // jobs.unshift(job)
         // remap()
@@ -45,30 +47,26 @@ const remap = async () => {
 
 const imageRemap = (fileName, series, materialThickness, _Tmpdir, _ConfigDir) => {
     return new Promise(async (resolve) => {
-        console.log({ fileName, series, _Tmpdir, _ConfigDir });
         Tmpdir = _Tmpdir;
         ConfigDir = _ConfigDir;
         if (!initialized) {
-            await onRuntimeInitialized()
+            await onRuntimeInitialized(series)
         }
-
-        jobs.push({
-            fileName,
-            scale: (290 + materialThickness - 14.5) / (290 - 14.5)
-        })
+        jobs = [{
+            fileName
+        }]
         await remap()
 
         resolve()
     })
 
 }
-async function onRuntimeInitialized() {
-    let txt_x = await fs.readFileSync(`${ConfigDir}/mapx_350.txt`, { encoding: 'utf8' });
-    let txt_y = await fs.readFileSync(`${ConfigDir}/mapy_350.txt`, { encoding: 'utf8' });
+async function onRuntimeInitialized(series) {
+    let txt_x = await fs.readFileSync(`${ConfigDir}/mapx_${series}.txt`, { encoding: 'utf8' });
+    let txt_y = await fs.readFileSync(`${ConfigDir}/mapy_${series}.txt`, { encoding: 'utf8' });
 
     let arr_x = txt_x.split(/\s/).filter(i => i).map(j => Number(j));
     let arr_y = txt_y.split(/\s/).filter(i => i).map(j => Number(j));
-
     map_x = cv.matFromArray(1280, 1024, cv.CV_16SC2, arr_x);
     map_y = cv.matFromArray(1280, 1024, cv.CV_16UC1, arr_y);
 

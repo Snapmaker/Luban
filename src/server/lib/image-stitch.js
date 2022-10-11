@@ -1,6 +1,5 @@
 import Jimp from 'jimp';
 import PerspT from 'perspective-transform';
-import { LEVEL_TWO_POWER_LASER_FOR_SM2 } from '../constants';
 import DataStorage from '../DataStorage';
 import workerManager from '../services/task-manager/workerManager';
 import { pathWithRandomSuffix } from './random-utils';
@@ -15,20 +14,25 @@ export const remapImage = (fileName, materialThickness, series) => {
     return new Promise((resolve) => {
         workerManager.imageRemap(
             [fileName, series, materialThickness, DataStorage.tmpDir, DataStorage.configDir],
-            () => {
-                resolve();
+            (res) => {
+                if (res.status === 'complete') {
+                    resolve(res.output);
+                } else {
+                    resolve(res.input);
+                }
             }
         );
     });
 };
 
 export const stitchEach = async (options) => {
-    const { stitchFileName, getPoints, corners, size, currentIndex, centerDis, picAmount, materialThickness, laserToolhead, fill, series } = options;
+    const { getPoints, corners, size, currentIndex, centerDis, picAmount, materialThickness, applyAntiDistortion, isCalibration, series } = options;
+    let { stitchFileName } = options;
     if (!stitchFileName) {
         return Promise.resolve();
     }
-    if (laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
-        await remapImage(stitchFileName, materialThickness, series);
+    if (applyAntiDistortion) {
+        stitchFileName = await remapImage(stitchFileName, materialThickness, series);
     }
 
     const density = 3;
@@ -118,8 +122,8 @@ export const stitchEach = async (options) => {
             startxSize = size.x - xSize;
         }
 
-        const outputWidth = fill ? size.x : xSize;
-        const outputHeight = fill ? size.y : ySize;
+        const outputWidth = isCalibration ? size.x : xSize;
+        const outputHeight = isCalibration ? size.y : ySize;
         stitched = new Jimp(outputWidth * density, outputHeight * density);
         for (let y = startySize * density; y < endySize * density; y++) {
             for (let x = startxSize * density; x < endxSize * density; x++) {
@@ -139,14 +143,6 @@ export const stitchEach = async (options) => {
                     dx = 1;
                 }
 
-                const index = (() => {
-                    if (fill) {
-                        return (y * outputWidth * density + x - outputHeight * density + 30 * density) << 2;
-                    }
-                    return ((y - startySize * density) * xSize * density + x - startxSize * density) << 2;
-                })();
-                // const index = ((y)* xSize * density + x ) << 2;
-
                 const source = perspT.transformInverse((x - dx * centerDis * density), (y - dy * centerDis * density));
                 const x0 = Math.round(source[0]);
                 const y0 = Math.round(source[1]);
@@ -155,6 +151,16 @@ export const stitchEach = async (options) => {
                 }
 
                 const index0 = ((y0) * width + x0) << 2;
+
+                const index = (() => {
+                    if (isCalibration) {
+                        // return ((y - startySize * density) * outputWidth * density + x - startxSize * density) << 2;
+                        return (y * outputWidth * density + x) << 2;
+                        // return (y * outputWidth * density + x * density) << 2;
+                    }
+                    return ((y - startySize * density) * xSize * density + x - startxSize * density) << 2;
+                })();
+                // const index = ((y)* xSize * density + x ) << 2;
                 stitched.bitmap.data[index] = image.bitmap.data[index0];
                 stitched.bitmap.data[index + 1] = image.bitmap.data[index0 + 1];
                 stitched.bitmap.data[index + 2] = image.bitmap.data[index0 + 2];

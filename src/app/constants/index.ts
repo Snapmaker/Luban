@@ -943,7 +943,7 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
 };
 
 const publicPath = global.PUBLIC_PATH || '';
-export const DATA_PATH = `${publicPath}/data`;
+export const DATA_PATH = `${DEFAULT_LUBAN_HOST}/data`;
 
 export const DATA_PREFIX = `${publicPath}/data/Tmp`;
 
