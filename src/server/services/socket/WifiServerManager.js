@@ -74,7 +74,7 @@ class WifiServerManager extends EventEmitter {
         for (const key of Object.keys(ifaces)) {
             const iface = ifaces[key];
             for (const address of iface) {
-                if ((address.family === 'IPv4' || address.family === 'IPv6') && !address.internal) {
+                if (address.family === 'IPv4' && !address.internal) {
                     const broadcastAddress = zipWith(
                         address.address.split('.').map(d => Number(d)),
                         address.netmask.split('.').map(d => Number(d)),

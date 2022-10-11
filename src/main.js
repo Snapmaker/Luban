@@ -270,7 +270,6 @@ class DownloadManager {
                 return item;
             });
             config.set(DOWNLOAD_FILES, historyDownloads);
-            console.log('historyDownloads', historyDownloads);
         }
         historyDownloads.forEach((item) => {
             this.paramList.set(item.savedPath, item);
@@ -319,7 +318,6 @@ class DownloadManager {
                 const defaultPath = config.get('downloadPath') ? config.get('downloadPath') : path.resolve(app.getPath('downloads'), 'luban/');
                 let name = '3dp_a350_single.snap3dp';
                 const savedPath = path.resolve(defaultPath, name);
-                console.log('startDownload', savedPath, defaultPath);
                 param.savedPath = savedPath;
                 config.set('downloadPath', defaultPath);
                 // make sure name is not repeated
@@ -358,7 +356,6 @@ class DownloadManager {
                     allBytes,
                     receivedBytes: item.getReceivedBytes()
                 });
-                console.log('Download is interrupted but can be resumed', item.getReceivedBytes(), allBytes);
             } else if (state === 'progressing') {
                 if (item.isPaused()) {
                     mainWindow.webContents.send('download-file-progress', {
@@ -375,8 +372,6 @@ class DownloadManager {
                         receivedBytes: item.getReceivedBytes()
                     });
                 }
-            } else {
-                console.log('state', state);
             }
         });
     }
@@ -384,7 +379,7 @@ class DownloadManager {
     listenDownloadDoneEvent(param) {
         const item = param.item;
         const savedPath = param.savedPath;
-        item.on('done', (event, state) => {
+        item.on('done', () => {
             mainWindow.webContents.send('download-file-completed', {
                 savedPath
             });
@@ -392,7 +387,6 @@ class DownloadManager {
             //     ...paramArr,
             //     state: 'completed'
             // });
-            console.log('one done:', state, this.paramList);
         });
     }
 }
@@ -408,7 +402,6 @@ function registerDownloadItemEvent() {
             item.setSavePath(actualPath);
         }
         const param = downloadManager.paramList.get(actualPath);
-        console.log('will-download', actualPath, param);
         if (param) {
             param.item = item;
             downloadManager.listenDownloadUpdateEvent(param);
