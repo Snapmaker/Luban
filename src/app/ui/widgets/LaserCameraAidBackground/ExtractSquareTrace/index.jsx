@@ -11,8 +11,9 @@ import ManualCalibration from '../ManualCalibration';
 import PickObject from '../ManualCalibration/PickObject';
 import {
     LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2,
-    MACHINE_SERIES, LASER_10W_TAKE_PHOTO_POSITION, getCurrentHeadType
+    LASER_10W_TAKE_PHOTO_POSITION, getCurrentHeadType
 } from '../../../../constants';
+import { MACHINE_SERIES } from '../../../../constants/machines';
 import { actions } from '../../../../flux/machine';
 import { Button } from '../../../components/Buttons';
 import Modal from '../../../components/Modal';

@@ -1,6 +1,6 @@
 import isElectron from 'is-electron';
 import UniApi from '../../lib/uni-api';
-import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../constants';
+import { HEAD_PRINTING, HEAD_CNC, HEAD_LASER } from '../../constants/machines';
 
 export default {
     id: 'file',

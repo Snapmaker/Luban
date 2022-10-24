@@ -10,11 +10,11 @@ import i18n from '../../lib/i18n';
 import {
     HEAD_CNC,
     HEAD_LASER,
-    HEAD_PRINTING,
     MACHINE_BRAND_MAP,
-    MACHINE_TOOL_HEADS,
-    MACHINE_SERIES
+    HEAD_PRINTING
 } from '../../constants';
+import { MACHINE_SERIES, MACHINE_TOOL_HEADS } from '../../constants/machines';
+// import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING, MACHINE_TOOL_HEADS, MACHINE_SERIES, WHITE_COLOR } from '../../constants';
 import SvgIcon from '../components/SvgIcon';
 
 // import { timestamp } from '../../../shared/lib/random-utils';

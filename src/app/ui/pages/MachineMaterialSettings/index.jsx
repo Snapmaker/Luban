@@ -6,7 +6,8 @@ import MachineSettings from './machineSettings';
 import MaterialSettings from './materialSettings';
 import SvgIcon from '../../components/SvgIcon';
 import Anchor from '../../components/Anchor';
-import { LEVEL_ONE_POWER_LASER_FOR_ORIGINAL, MACHINE_SERIES, SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL } from '../../../constants';
+import { LEVEL_ONE_POWER_LASER_FOR_ORIGINAL, SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL } from '../../../constants';
+import { MACHINE_SERIES } from '../../../constants/machines';
 import { actions as machineActions } from '../../../flux/machine/index';
 import { STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL } from '../../../../server/controllers/constants';
 

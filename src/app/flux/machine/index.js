@@ -7,7 +7,6 @@ import {
     CONNECTION_TYPE_SERIAL,
     CONNECTION_TYPE_WIFI,
     LASER_MOCK_PLATE_HEIGHT,
-    MACHINE_SERIES,
     HEAD_CNC,
     HEAD_LASER,
     // WORKFLOW_STATE_IDLE,
@@ -15,7 +14,6 @@ import {
     WORKFLOW_STATUS_PAUSED,
     WORKFLOW_STATUS_RUNNING,
     WORKFLOW_STATUS_UNKNOWN,
-    MACHINE_TOOL_HEADS,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
     LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
     STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
@@ -29,6 +27,11 @@ import {
     EMERGENCY_STOP_BUTTON,
     CONNECTION_CLOSE
 } from '../../constants';
+
+import {
+    MACHINE_TOOL_HEADS,
+    MACHINE_SERIES,
+} from '../../constants/machines';
 
 import i18n from '../../lib/i18n';
 import { valueOf } from '../../lib/contants-utils';

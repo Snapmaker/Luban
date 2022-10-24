@@ -11,10 +11,12 @@ import {
     HEAD_PRINTING,
     HEAD_CNC,
     MACHINE_HEAD_TYPE,
-    MACHINE_SERIES,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
     LEVEL_ONE_POWER_LASER_FOR_SM2
 } from '../../constants';
+import {
+    MACHINE_SERIES
+} from '../../constants/machines';
 import Anchor from '../components/Anchor';
 import styles from './styles.styl';
 

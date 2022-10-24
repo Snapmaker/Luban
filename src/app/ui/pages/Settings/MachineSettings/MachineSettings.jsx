@@ -13,8 +13,6 @@ import { actions as projectActions } from '../../../../flux/project';
 import styles from '../form.styl';
 import {
     getCurrentHeadType,
-    MACHINE_SERIES,
-    MACHINE_TOOL_HEADS,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
@@ -26,6 +24,10 @@ import {
     DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
     LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2
 } from '../../../../constants';
+import {
+    MACHINE_SERIES,
+    MACHINE_TOOL_HEADS
+} from '../../../../constants/machines';
 import UniApi from '../../../../lib/uni-api';
 
 
