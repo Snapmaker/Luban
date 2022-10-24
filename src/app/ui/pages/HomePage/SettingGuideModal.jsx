@@ -7,8 +7,7 @@ import { includes } from 'lodash';
 import Uri from 'jsuri';
 import i18n from '../../../lib/i18n';
 import styles from './styles.styl';
-import { MACHINE_SERIES,
-    MACHINE_TOOL_HEADS,
+import {
     SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
@@ -20,6 +19,11 @@ import { MACHINE_SERIES,
     STANDARD_CNC_TOOLHEAD_FOR_SM2,
     LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2
 } from '../../../constants';
+
+import {
+    MACHINE_SERIES,
+    MACHINE_TOOL_HEADS
+} from '../../../constants/machines';
 import { actions as machineActions } from '../../../flux/machine';
 import { machineStore } from '../../../store/local-storage';
 

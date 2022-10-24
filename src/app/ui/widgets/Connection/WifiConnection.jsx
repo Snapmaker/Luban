@@ -11,7 +11,6 @@ import i18n from '../../../lib/i18n';
 import usePrevious from '../../../lib/hooks/previous';
 import { actions as machineActions } from '../../../flux/machine';
 import {
-    MACHINE_SERIES,
     ABSENT_OBJECT,
     CONNECTION_STATUS_CONNECTED,
     CONNECTION_STATUS_CONNECTING,
@@ -38,6 +37,9 @@ import {
     RIGHT_EXTRUDER,
     PRINTING_MANAGER_TYPE_EXTRUDER,
 } from '../../../constants';
+import {
+    MACHINE_SERIES,
+} from '../../../constants/machines';
 // import widgetStyles from '../styles.styl';
 import styles from './index.styl';
 import ModalSmall from '../../components/Modal/ModalSmall';

@@ -10,7 +10,7 @@ import usePrevious from '../../../lib/hooks/previous';
 import {
     MACHINE_TOOL_HEADS,
     MACHINE_SERIES
-} from '../../../constants';
+} from '../../../constants/machines';
 
 function MismatchModal() {
     const {

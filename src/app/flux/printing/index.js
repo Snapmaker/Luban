@@ -28,7 +28,6 @@ import {
     LEFT_EXTRUDER_MAP_NUMBER,
     LOAD_MODEL_FROM_INNER,
     LOAD_MODEL_FROM_OUTER,
-    MACHINE_SERIES,
     PRINTING_MANAGER_TYPE_MATERIAL,
     PRINTING_MANAGER_TYPE_QUALITY,
     PRINTING_MANAGER_TYPE_EXTRUDER,
@@ -42,6 +41,9 @@ import {
     WHITE_COLOR,
     KEY_DEFAULT_CATEGORY_CUSTOM
 } from '../../constants';
+import {
+    MACHINE_SERIES
+} from '../../constants/machines';
 import { controller } from '../../lib/controller';
 import {
     logPritingSlice,

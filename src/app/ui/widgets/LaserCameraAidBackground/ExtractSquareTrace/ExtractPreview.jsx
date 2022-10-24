@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 // import PropTypes from 'prop-types';
 import PropTypes from 'prop-types';
-import { DATA_PREFIX, LEVEL_TWO_POWER_LASER_FOR_SM2, LEVEL_ONE_POWER_LASER_FOR_SM2, MACHINE_SERIES } from '../../../../constants';
+import { DATA_PREFIX, LEVEL_TWO_POWER_LASER_FOR_SM2, LEVEL_ONE_POWER_LASER_FOR_SM2 } from '../../../../constants';
+import { MACHINE_SERIES } from '../../../../constants/machines';
 import styles from '../styles.styl';
 
 class ExtractPreview extends Component {

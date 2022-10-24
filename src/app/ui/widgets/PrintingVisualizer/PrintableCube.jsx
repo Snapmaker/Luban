@@ -3,7 +3,8 @@ import {
     PlaneGeometry, MeshBasicMaterial, Mesh,
     Color, ShapeGeometry, Shape, LineBasicMaterial, Line, BufferGeometry, Float32BufferAttribute, LineSegments, MeshPhongMaterial, Group
 } from 'three';
-import { DEFAULT_LUBAN_HOST, MACHINE_SERIES } from '../../../constants';
+import { DEFAULT_LUBAN_HOST } from '../../../constants';
+import { MACHINE_SERIES } from '../../../constants/machines';
 import Rectangle from '../../../three-extensions/objects/Rectangle';
 import { FontLoader } from '../../../three-extensions/FontLoader';
 import STLLoader from '../../../three-extensions/STLLoader';

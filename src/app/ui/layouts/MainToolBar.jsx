@@ -7,7 +7,8 @@ import MenuItem from './MenuItem';
 import { Badge } from '../components/Badge';
 import Anchor from '../components/Anchor';
 import i18n from '../../lib/i18n';
-import { HEAD_PRINTING, MACHINE_SERIES, WHITE_COLOR } from '../../constants';
+import { HEAD_PRINTING, WHITE_COLOR } from '../../constants';
+import { MACHINE_SERIES } from '../../constants/machines';
 // import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING, MACHINE_TOOL_HEADS, MACHINE_SERIES, WHITE_COLOR } from '../../constants';
 import SvgIcon from '../components/SvgIcon';
 
