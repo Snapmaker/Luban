@@ -8,7 +8,7 @@ jobs:
     steps:
       - name: Publish to WinGet on Snapmaker/Luban package
         if: github.repository == 'Snapmaker/Luban'
-        uses: vedantmgoyal2009/winget-releaser@latest
+        uses: vedantmgoyal2009/winget-releaser@v1
         with:
           identifier: SnapmakerDevTeam.SnapmakerLuban
           installers-regex: '(ia32|x64).exe$'
