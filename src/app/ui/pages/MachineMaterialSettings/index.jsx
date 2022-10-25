@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
 import i18n from '../../../lib/i18n';
-import MachineSettings from './machineSettings';
+import MachineSettings from './MachineSettings';
 import MaterialSettings from './materialSettings';
 import SvgIcon from '../../components/SvgIcon';
 import Anchor from '../../components/Anchor';
@@ -16,7 +16,8 @@ const MATERIAL_TAB = 'material';
 const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
     const machineState = useSelector(state => state?.machine);
     const workspaceState = useSelector(state => state?.workspace);
-    const { series: serial, toolHead, isConnected, server } = machineState;
+
+    const { series, toolHead, isConnected, server } = machineState;
     const { series: connectSerial } = workspaceState;
     const [selectTab, setSelectTab] = useState(MATERIAL_TAB);
     const leftDiameter = useSelector(
@@ -27,7 +28,7 @@ const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
         (state) => state?.printing?.extruderRDefinition?.settings?.machine_nozzle_size
             ?.default_value
     );
-    const [currentSeries, setCurrentSeries] = useState(serial);
+    const [currentSeries, setCurrentSeries] = useState(series);
     const [currentToolhead, setCurrentToolhead] = useState(toolHead);
     const dispatch = useDispatch();
 
@@ -90,7 +91,7 @@ const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
                     <MachineSettings
                         ref={ref}
                         isConnected={isConnected}
-                        serial={currentSeries}
+                        series={currentSeries}
                         toolHead={currentToolhead}
                         connectSerial={connectSerial}
                         connectMachineName={server?.name}

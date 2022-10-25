@@ -7,195 +7,27 @@ import i18n from '../../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import {
     DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
-    getCurrentHeadType,
-    HEAD_CNC,
-    HEAD_LASER,
     HEAD_PRINTING,
+    LEFT,
     LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
     LEVEL_ONE_POWER_LASER_FOR_SM2,
-    LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
-    LEVEL_TWO_POWER_LASER_FOR_SM2,
     PRINTING_SINGLE_EXTRUDER_HEADTOOL,
+    RIGHT,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
-    STANDARD_CNC_TOOLHEAD_FOR_SM2,
-    LEFT,
-    RIGHT
+    STANDARD_CNC_TOOLHEAD_FOR_SM2
 } from '../../../constants';
-import {
-    MACHINE_SERIES,
-    MACHINE_TOOL_HEADS
-} from '../../../constants/machines';
+import { getMachineOptions, getMachineSupportedToolHeadOptions, MACHINE_SERIES } from '../../../constants/machines';
 import SvgIcon from '../../components/SvgIcon';
 import { NumberInput as Input } from '../../components/Input';
 import { Badge } from '../../components/Badge';
 import { actions as printingActions } from '../../../flux/printing';
 import { machineStore } from '../../../store/local-storage';
 import styles from './styles.styl';
+import { getCurrentHeadType } from '../../../lib/url-utils';
 
-const machineList = [{
-    value: 'Original',
-    label: 'key-Luban/Machine/MachineSeries-Snapmaker Original',
-    image: '/resources/images/machine/size-1.0-original.jpg',
-}, {
-    value: 'A150',
-    label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A150',
-    image: '/resources/images/machine/size-2.0-A150.png'
-}, {
-    value: 'A250',
-    label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A250',
-    image: '/resources/images/machine/size-2.0-A250.png'
-}, {
-    value: 'A350',
-    label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A350',
-    image: '/resources/images/machine/size-2.0-A350.jpg'
-}, {
-    value: 'A400',
-    label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A400',
-    image: '/resources/images/machine/size-2.0-A400.jpeg'
-}];
 
-const toolHeadMap = {
-    [MACHINE_SERIES.ORIGINAL.value]: {
-        [HEAD_PRINTING]: [{
-            value: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
-            label: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].label,
-            image: '/resources/images/machine/original_3dp.png'
-        }],
-        [HEAD_LASER]: [{
-            value: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value,
-            label: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].label,
-            image: '/resources/images/machine/original_laser.png'
-        }],
-        [HEAD_CNC]: [{
-            value: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value,
-            label: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].label,
-            image: '/resources/images/machine/original_cnc.png'
-        }]
-    },
-    [MACHINE_SERIES.ORIGINAL_LZ.value]: {
-        [HEAD_PRINTING]: [{
-            value: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
-            label: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].label,
-            image: '/resources/images/machine/original_3dp.png'
-        }],
-        [HEAD_LASER]: [{
-            value: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value,
-            label: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].label,
-            image: '/resources/images/machine/original_laser.png'
-        }],
-        [HEAD_CNC]: [{
-            value: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value,
-            label: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].label,
-            image: '/resources/images/machine/original_cnc.png'
-        }]
-    },
-    [MACHINE_SERIES.A150.value]: {
-        [HEAD_PRINTING]: [{
-            value: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/printing_2.png'
-        }, {
-            value: MACHINE_TOOL_HEADS[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/coming_soon.png'
-        }],
-        [HEAD_LASER]: [{
-            value: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].label,
-            image: '/resources/images/machine/1600mw_laser.png'
-        }, {
-            value: MACHINE_TOOL_HEADS[LEVEL_TWO_POWER_LASER_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[LEVEL_TWO_POWER_LASER_FOR_SM2].label,
-            image: '/resources/images/machine/10w_laser.png'
-        }],
-        [HEAD_CNC]: [{
-            value: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/cnc_2.png'
-        }]
-    },
-    [MACHINE_SERIES.A250.value]: {
-        [HEAD_PRINTING]: [{
-            value: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/printing_2.png'
-        }, {
-            value: MACHINE_TOOL_HEADS[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/coming_soon.png'
-        }],
-        [HEAD_LASER]: [{
-            value: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].label,
-            image: '/resources/images/machine/1600mw_laser.png'
-        }, {
-            value: MACHINE_TOOL_HEADS[LEVEL_TWO_POWER_LASER_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[LEVEL_TWO_POWER_LASER_FOR_SM2].label,
-            image: '/resources/images/machine/10w_laser.png'
-        }],
-        [HEAD_CNC]: [{
-            value: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/cnc_2.png'
-        }]
-    },
-    [MACHINE_SERIES.A350.value]: {
-        [HEAD_PRINTING]: [{
-            value: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/printing_2.png'
-        }, {
-            value: MACHINE_TOOL_HEADS[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/coming_soon.png'
-        }],
-        [HEAD_LASER]: [{
-            value: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].label,
-            image: '/resources/images/machine/1600mw_laser.png'
-        }, {
-            value: MACHINE_TOOL_HEADS[LEVEL_TWO_POWER_LASER_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[LEVEL_TWO_POWER_LASER_FOR_SM2].label,
-            image: '/resources/images/machine/10w_laser.png'
-        }],
-        [HEAD_CNC]: [{
-            value: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/cnc_2.png'
-        }]
-    },
-    [MACHINE_SERIES.A400.value]: {
-        [HEAD_PRINTING]: [{
-            value: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/printing_2.png'
-        }, {
-            value: MACHINE_TOOL_HEADS[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/coming_soon.png'
-        }],
-        [HEAD_LASER]: [{
-            value: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].label,
-            image: '/resources/images/machine/1600mw_laser.png'
-        }, {
-            value: MACHINE_TOOL_HEADS[LEVEL_TWO_POWER_LASER_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[LEVEL_TWO_POWER_LASER_FOR_SM2].label,
-            image: '/resources/images/machine/10w_laser.png'
-        }],
-        [HEAD_CNC]: [{
-            value: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/cnc_2.png'
-        }, {
-            value: MACHINE_TOOL_HEADS[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/coming_soon.png'
-        }]
-    },
-};
 const defaultNozzleDiameterList = [{
     value: 0.2,
     label: '0.2',
@@ -257,7 +89,7 @@ const defaultNozzleDiameterListForDualExtruder = [{
     isDefault: true
 }];
 const MachineSettings = forwardRef(({
-    serial,
+    series,
     toolHead,
     connectSerial,
     connectMachineName = 'Manual',
@@ -270,8 +102,9 @@ const MachineSettings = forwardRef(({
 }, ref) => {
     const extruderLDefinition = useSelector((state) => state?.printing?.extruderLDefinition);
     const extruderRDefinition = useSelector((state) => state?.printing?.extruderRDefinition);
+
     const [headType, setHeadType] = useState(HEAD_PRINTING);
-    const [currentSerial, setCurrentSerial] = useState(serial);
+    const [currentSeries, setCurrentSeries] = useState(series);
     const [currentToolHead, setCurrentToolHead] = useState(toolHead[`${headType}Toolhead`]);
     const [leftNozzleDiameter, setLeftNozzleDiameter] = useState(defaultLeftDiameter);
     const [rightNozzleDiameter, setRightNozzleDiameter] = useState(defaultRightDiameter);
@@ -283,13 +116,13 @@ const MachineSettings = forwardRef(({
     }, [toolHead, headType]);
 
     // for original long zAxis
-    const [zAxis, setZAxis] = useState(serial === MACHINE_SERIES.ORIGINAL_LZ.value);
+    const [zAxis, setZAxis] = useState(series === MACHINE_SERIES.ORIGINAL_LZ.value);
     const [leftNozzleDiameterList, setLeftNozzleDiameterList] = useState(defaultNozzleDiameterList);
     const [rightNozzleDiameterList, setRightNozzleDiameterList] = useState(defaultNozzleDiameterList);
     const [addDiameterStatus, setAddDiameterStatus] = useState(false);
     const handleMachineUpdate = (value) => {
         setActiveNozzle(LEFT);
-        setCurrentSerial(value);
+        setCurrentSeries(value);
         if (value === MACHINE_SERIES.ORIGINAL.value) {
             setCurrentToolHead(SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL);
             setZAxis(false);
@@ -301,7 +134,7 @@ const MachineSettings = forwardRef(({
         setAddDiameterStatus(status);
     };
     const getActiveDiameter = (direction, list) => {
-        const key = `customNozzleDiameter.${currentToolHead}.${currentSerial}.${direction}_active`;
+        const key = `customNozzleDiameter.${currentToolHead}.${currentSeries}.${direction}_active`;
         const cacheLabel = machineStore.get(key);
         let machineNozzleSize;
         const nozzleDiameterList = list;
@@ -325,7 +158,7 @@ const MachineSettings = forwardRef(({
         return activeDiameter;
     };
     const saveActiveDiameterToStorage = (direction, label) => {
-        const key = `customNozzleDiameter.${currentToolHead}.${currentSerial}.${direction}_active`;
+        const key = `customNozzleDiameter.${currentToolHead}.${currentSeries}.${direction}_active`;
 
         machineStore.set(key, label);
     };
@@ -357,7 +190,7 @@ const MachineSettings = forwardRef(({
     };
 
     const saveDiameterToStorage = (direction, label, isDelete = false) => {
-        const key = `customNozzleDiameter.${currentToolHead}.${currentSerial}.${direction}`;
+        const key = `customNozzleDiameter.${currentToolHead}.${currentSeries}.${direction}`;
         const str = machineStore.get(key) || '[]';
         let configs = JSON.parse(str);
         if (isDelete) {
@@ -442,8 +275,8 @@ const MachineSettings = forwardRef(({
         };
     }, []);
 
-    const getNozzleDiameterFromStorage = (direction, _currentSerial) => {
-        const key = `customNozzleDiameter.${currentToolHead}.${_currentSerial}.${direction}`;
+    const getNozzleDiameterFromStorage = (direction, _currentSeries) => {
+        const key = `customNozzleDiameter.${currentToolHead}.${_currentSeries}.${direction}`;
         const str = machineStore.get(key) || '[]';
         const configs = JSON.parse(str);
         return configs.map((value) => {
@@ -460,22 +293,22 @@ const MachineSettings = forwardRef(({
         onChangeDiameter(direction, activeNozzleSize);
     };
 
-    const _setNozzleDiameterList = (direction, _defaultNozzleDiameterList, _currentSerial) => {
+    const _setNozzleDiameterList = (direction, _defaultNozzleDiameterList, _currentSeries) => {
         if (direction === LEFT) {
-            const list = [..._defaultNozzleDiameterList, ...getNozzleDiameterFromStorage(LEFT, _currentSerial)];
+            const list = [..._defaultNozzleDiameterList, ...getNozzleDiameterFromStorage(LEFT, _currentSeries)];
             setLeftNozzleDiameterList(list);
             checkNozzleDiameter(LEFT, list);
         } else {
-            const list = [..._defaultNozzleDiameterList, ...getNozzleDiameterFromStorage(RIGHT, _currentSerial)];
+            const list = [..._defaultNozzleDiameterList, ...getNozzleDiameterFromStorage(RIGHT, _currentSeries)];
             setRightNozzleDiameterList(list);
             checkNozzleDiameter(RIGHT, list);
         }
     };
 
     useEffect(() => {
-        setSeries(currentSerial);
+        setSeries(currentSeries);
         let tempToolhead = { ...toolHead };
-        if (currentSerial === MACHINE_SERIES.ORIGINAL.value) {
+        if (currentSeries === MACHINE_SERIES.ORIGINAL.value) {
             const markForOrigin = 'ForOriginal';
             tempToolhead = {
                 printingToolhead: includes(toolHead.printToolhead, markForOrigin) ? toolHead.printToolhead : SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
@@ -495,21 +328,21 @@ const MachineSettings = forwardRef(({
             [`${headType}Toolhead`]: currentToolHead
         });
         if (currentToolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
-            switch (currentSerial) {
+            switch (currentSeries) {
                 case MACHINE_SERIES.A400.value:
-                    _setNozzleDiameterList(LEFT, defaultNozzleDiameterListForDualExtruderArtisan, currentSerial);
-                    _setNozzleDiameterList(RIGHT, defaultNozzleDiameterListForDualExtruderArtisan, currentSerial);
+                    _setNozzleDiameterList(LEFT, defaultNozzleDiameterListForDualExtruderArtisan, currentSeries);
+                    _setNozzleDiameterList(RIGHT, defaultNozzleDiameterListForDualExtruderArtisan, currentSeries);
                     break;
                 default:
-                    _setNozzleDiameterList(LEFT, defaultNozzleDiameterListForDualExtruder, currentSerial);
-                    _setNozzleDiameterList(RIGHT, defaultNozzleDiameterListForDualExtruder, currentSerial);
+                    _setNozzleDiameterList(LEFT, defaultNozzleDiameterListForDualExtruder, currentSeries);
+                    _setNozzleDiameterList(RIGHT, defaultNozzleDiameterListForDualExtruder, currentSeries);
                     break;
             }
         } else if (includes(PRINTING_SINGLE_EXTRUDER_HEADTOOL, currentToolHead)) {
-            _setNozzleDiameterList(LEFT, defaultNozzleDiameterListForSingleExtruder, currentSerial);
+            _setNozzleDiameterList(LEFT, defaultNozzleDiameterListForSingleExtruder, currentSeries);
             setRightNozzleDiameterList([]);
         }
-    }, [currentSerial, currentToolHead, extruderLDefinition?.settings?.machine_nozzle_size?.default_value, extruderRDefinition?.settings?.machine_nozzle_size?.default_value]);
+    }, [currentSeries, currentToolHead, extruderLDefinition?.settings?.machine_nozzle_size?.default_value, extruderRDefinition?.settings?.machine_nozzle_size?.default_value]);
 
     const switchToolHead = (toolHeadItem) => {
         setCurrentToolHead(toolHeadItem.value);
@@ -523,11 +356,17 @@ const MachineSettings = forwardRef(({
         }
     }));
 
+    const machineOptions = getMachineOptions();
+    console.log('machine options = ', machineOptions);
+
+    // TODO: Make it a state?
+    const availableToolHeads = getMachineSupportedToolHeadOptions(currentSeries, headType);
+
     return (
         <div className="sm-flex padding-vertical-40 padding-horizontal-40 justify-space-between height-all-minus-60">
             <div id="machine-list" className={`overflow-y-auto sm-grid grid-column-gap-32 grid-row-column-60 ${window.innerWidth > 1360 ? 'grid-template-columns-for-machine-settings' : 'grid-template-columns-for-machine-settings-small-screen'} grid-template-row-for-machine-settings width-all-minus-328`}>
                 {
-                    machineList.map(item => {
+                    machineOptions.map(item => {
                         return (
                             <Anchor
                                 onClick={() => handleMachineUpdate(item.value)}
@@ -535,7 +374,7 @@ const MachineSettings = forwardRef(({
                                 className="padding-vertical-16 padding-horizontal-16"
                             >
                                 <div className="width-percent-100 height-percent-100">
-                                    <div className={`width-percent-100 position-re ${includes(currentSerial, item.value) ? 'border-radius-16 border-blod-blue-2' : ''}`} style={{ height: 'calc(100% - 22px)' }}>
+                                    <div className={`width-percent-100 position-re ${includes(currentSeries, item.value) ? 'border-radius-16 border-blod-blue-2' : ''}`} style={{ height: 'calc(100% - 22px)' }}>
                                         <img src={item.image} alt="" draggable={false} className="width-percent-100 border-radius-16 height-percent-100 display-block margin-auto" />
                                         {(isConnected && includes(connectSerial, item.value)) && (
                                             <div className="position-ab bottom-2 right-1 background-grey-3 border-radius-8 font-size-small padding-vertical-4 padding-horizontal-8 line-height-14">
@@ -555,55 +394,63 @@ const MachineSettings = forwardRef(({
                 }
             </div>
             <div className="width-296 background-grey-3 border-radius-24 padding-vertical-32 padding-horizontal-24">
-                {(currentSerial === MACHINE_SERIES.ORIGINAL.value || currentSerial === MACHINE_SERIES.ORIGINAL_LZ.value) && (
-                    <div>
-                        <div className="heading-3 margin-bottom-16">{i18n._('key-settings/Z-axis Module')}</div>
-                        <div className="sm-flex justify-space-between">
-                            <Anchor onClick={() => {
-                                setZAxis(false);
-                                setCurrentSerial(MACHINE_SERIES.ORIGINAL.value);
-                            }}
-                            >
-                                <div className={`width-116 height-116 border-radius-8 ${zAxis ? 'border-default-grey-1' : 'border-default-grey-1 border-color-blue-2'}`}>
-                                    <img src="/resources/images/machine/z_axis_standard.png" draggable={false} alt="" className="width-percent-100" />
-                                </div>
-                                <div className="align-c">{i18n._('key-settings/Z-axis Standard')}</div>
-                            </Anchor>
-                            <Anchor onClick={() => {
-                                setZAxis(true);
-                                setCurrentSerial(MACHINE_SERIES.ORIGINAL_LZ.value);
-                            }}
-                            >
-                                <div className={`width-116 height-116 border-radius-8 ${!zAxis ? 'border-default-grey-1' : 'border-default-grey-1 border-color-blue-2'}`}>
-                                    <img src="/resources/images/machine/z_axis_extension.png" draggable={false} alt="" className="width-percent-100" />
-                                </div>
-                                <div className="align-c">{i18n._('key-settings/Z-axis Extension')}</div>
-                            </Anchor>
-                        </div>
-                    </div>
-                )}
-                <div>
-                    <div className={`heading-3 ${(includes([MACHINE_SERIES.ORIGINAL.value, MACHINE_SERIES.ORIGINAL_LZ.value], currentSerial)) ? 'margin-top-32' : ''} margin-bottom-16`}>
-                        {i18n._('key-App/Settings/MachineSettings-3D Print Toolhead')}
-                    </div>
-                    <div className="sm-flex">
-                        {toolHeadMap[currentSerial][headType].map((toolHeadItem, index) => {
-                            return (
-                                <Anchor
-                                    onClick={() => {
-                                        switchToolHead(toolHeadItem);
-                                    }}
-                                    className={`${index === 0 ? 'margin-right-16' : ''}`}
+                {
+                    (currentSeries === MACHINE_SERIES.ORIGINAL.value || currentSeries === MACHINE_SERIES.ORIGINAL_LZ.value) && (
+                        <div>
+                            <div className="heading-3 margin-bottom-16">{i18n._('key-settings/Z-axis Module')}</div>
+                            <div className="sm-flex justify-space-between">
+                                <Anchor onClick={() => {
+                                    setZAxis(false);
+                                    setCurrentSeries(MACHINE_SERIES.ORIGINAL.value);
+                                }}
                                 >
-                                    <div className={`width-116 height-116 border-radius-8 border-default-grey-1 ${currentToolHead === toolHeadItem.value ? 'border-color-blue-2' : ''}`}>
-                                        <img src={toolHeadItem.image} draggable={false} alt="" className="width-percent-100" />
+                                    <div className={`width-116 height-116 border-radius-8 ${zAxis ? 'border-default-grey-1' : 'border-default-grey-1 border-color-blue-2'}`}>
+                                        <img src="/resources/images/machine/z_axis_standard.png" draggable={false} alt="" className="width-percent-100" />
                                     </div>
-                                    <div className="align-c">{i18n._(`${toolHeadItem.label}`)}</div>
+                                    <div className="align-c">{i18n._('key-settings/Z-axis Standard')}</div>
                                 </Anchor>
-                            );
-                        })}
-                    </div>
-                </div>
+                                <Anchor onClick={() => {
+                                    setZAxis(true);
+                                    setCurrentSeries(MACHINE_SERIES.ORIGINAL_LZ.value);
+                                }}
+                                >
+                                    <div className={`width-116 height-116 border-radius-8 ${!zAxis ? 'border-default-grey-1' : 'border-default-grey-1 border-color-blue-2'}`}>
+                                        <img src="/resources/images/machine/z_axis_extension.png" draggable={false} alt="" className="width-percent-100" />
+                                    </div>
+                                    <div className="align-c">{i18n._('key-settings/Z-axis Extension')}</div>
+                                </Anchor>
+                            </div>
+                        </div>
+                    )
+                }
+                {
+                    availableToolHeads.length > 0 && (
+                        <div>
+                            <div className={`heading-3 ${(includes([MACHINE_SERIES.ORIGINAL.value, MACHINE_SERIES.ORIGINAL_LZ.value], currentSeries)) ? 'margin-top-32' : ''} margin-bottom-16`}>
+                                {i18n._('key-App/Settings/MachineSettings-3D Print Toolhead')}
+                            </div>
+                            <div className="sm-flex">
+                                {
+                                    availableToolHeads.map((toolHeadItem, index) => {
+                                        return (
+                                            <Anchor
+                                                onClick={() => {
+                                                    switchToolHead(toolHeadItem);
+                                                }}
+                                                className={`${index === 0 ? 'margin-right-16' : ''}`}
+                                            >
+                                                <div className={`width-116 height-116 border-radius-8 border-default-grey-1 ${currentToolHead === toolHeadItem.value ? 'border-color-blue-2' : ''}`}>
+                                                    <img src={toolHeadItem.image} draggable={false} alt="" className="width-percent-100" />
+                                                </div>
+                                                <div className="align-c">{i18n._(`${toolHeadItem.label}`)}</div>
+                                            </Anchor>
+                                        );
+                                    })
+                                }
+                            </div>
+                        </div>
+                    )
+                }
                 {headType === HEAD_PRINTING && (
                     <div className="margin-top-32">
                         <div>{i18n._('key-settings/Nozzle Diameter')} mm</div>
@@ -713,7 +560,7 @@ const MachineSettings = forwardRef(({
 });
 
 MachineSettings.propTypes = {
-    serial: PropTypes.string,
+    series: PropTypes.string.isRequired,
     toolHead: PropTypes.object,
     connectSerial: PropTypes.string,
     connectMachineName: PropTypes.string,

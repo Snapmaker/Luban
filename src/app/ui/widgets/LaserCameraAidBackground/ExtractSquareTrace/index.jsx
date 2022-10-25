@@ -11,12 +11,13 @@ import ManualCalibration from '../ManualCalibration';
 import PickObject from '../ManualCalibration/PickObject';
 import {
     LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2,
-    LASER_10W_TAKE_PHOTO_POSITION, getCurrentHeadType
+    LASER_10W_TAKE_PHOTO_POSITION
 } from '../../../../constants';
 import { MACHINE_SERIES } from '../../../../constants/machines';
 import { actions } from '../../../../flux/machine';
 import { Button } from '../../../components/Buttons';
 import Modal from '../../../components/Modal';
+import { getCurrentHeadType } from '../../../../lib/url-utils';
 
 const PANEL_EXTRACT_TRACE = 1;
 const PANEL_MANUAL_CALIBRATION = 2;
