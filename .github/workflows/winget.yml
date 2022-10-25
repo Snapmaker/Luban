@@ -7,7 +7,7 @@ jobs:
     runs-on: windows-latest # action can only be run on windows
     steps:
       - name: Publish to WinGet on Snapmaker/Luban package
-        if: github.repository == 'Snapmaker/Luban'
+        if: ${{ github.repository == 'Snapmaker/Luban' }}
         uses: vedantmgoyal2009/winget-releaser@latest
         with:
           identifier: SnapmakerDevTeam.SnapmakerLuban
