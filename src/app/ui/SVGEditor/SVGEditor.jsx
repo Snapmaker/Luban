@@ -310,7 +310,7 @@ SVGEditor.propTypes = {
     onClickToUpload: PropTypes.func.isRequired,
     fileInput: PropTypes.object.isRequired,
     allowedFiles: PropTypes.string.isRequired,
-    headType: PropTypes.string
+    headType: PropTypes.string,
 };
 
 export default SVGEditor;
