@@ -1,26 +1,4 @@
-
-const machineList = [{
-    value: 'Original',
-    label: 'key-Luban/Machine/MachineSeries-Snapmaker Original',
-    image: '/resources/images/machine/size-1.0-original.jpg',
-}, {
-    value: 'A150',
-    label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A150',
-    image: '/resources/images/machine/size-2.0-A150.png'
-}, {
-    value: 'A250',
-    label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A250',
-    image: '/resources/images/machine/size-2.0-A250.png'
-}, {
-    value: 'A350',
-    label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A350',
-    image: '/resources/images/machine/size-2.0-A350.jpg'
-}, {
-    value: 'A400',
-    label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A400',
-    image: '/resources/images/machine/size-2.0-A400.jpeg'
-}];
-
+import includes from 'lodash/includes';
 
 export const SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL = 'singleExtruderToolheadForOriginal';
 export const SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 = 'singleExtruderToolheadForSM2';
@@ -35,12 +13,15 @@ export const LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2 = 'levelTwoCNCToolheadForSM2';
 export const DUAL_EXTRUDER_LIMIT_WIDTH_L = 0;
 export const DUAL_EXTRUDER_LIMIT_WIDTH_R = 0;
 
+export const MACHINE_TYPE_3D_PRINTER = '3D Printer';
+export const MACHINE_TYPE_MULTI_FUNCTION_PRINTER = 'Multi-function 3D Printer';
+
 // todo: refactor this data structure
 export const MACHINE_SERIES = {
     ORIGINAL: {
+        value: 'Original',
         seriesLabel: 'key-Luban/Machine/MachineSeries-Original',
         seriesLabelWithoutI18n: 'Original',
-        value: 'Original',
         label: 'key-Luban/Machine/MachineSeries-Snapmaker Original',
         setting: {
             size: {
@@ -53,12 +34,18 @@ export const MACHINE_SERIES = {
                 y: 125,
                 z: 125
             }
+        },
+        machineType: MACHINE_TYPE_MULTI_FUNCTION_PRINTER,
+        size: {
+            x: 125,
+            y: 125,
+            z: 125,
         }
     },
     ORIGINAL_LZ: {
+        value: 'Original Long Z-axis',
         seriesLabel: 'key-Workspace/MachineSetting-Z-Axis Extension Module',
         seriesLabelWithoutI18n: 'Original with Z-axis Extension Module',
-        value: 'Original Long Z-axis',
         configPath: 'Original',
         label:
             'key-Luban/Machine/MachineSeries-Snapmaker Original with Z-axis Extension Module',
@@ -73,6 +60,12 @@ export const MACHINE_SERIES = {
                 y: 125,
                 z: 221
             }
+        },
+        machineType: MACHINE_TYPE_MULTI_FUNCTION_PRINTER,
+        size: {
+            x: 125,
+            y: 125,
+            z: 221,
         }
     },
     A150: {
@@ -91,6 +84,12 @@ export const MACHINE_SERIES = {
                 y: 165,
                 z: 150
             }
+        },
+        machineType: MACHINE_TYPE_MULTI_FUNCTION_PRINTER,
+        size: {
+            x: 160,
+            y: 160,
+            z: 145,
         },
         alias: ['SM2-S', 'Snapmaker 2.0 A150']
     },
@@ -111,6 +110,12 @@ export const MACHINE_SERIES = {
                 z: 235
             }
         },
+        machineType: MACHINE_TYPE_MULTI_FUNCTION_PRINTER,
+        size: {
+            x: 230,
+            y: 250,
+            z: 235,
+        },
         alias: ['SM2-M', 'Snapmaker 2.0 A250']
     },
     A350: {
@@ -129,6 +134,12 @@ export const MACHINE_SERIES = {
                 y: 357,
                 z: 334
             }
+        },
+        machineType: MACHINE_TYPE_MULTI_FUNCTION_PRINTER,
+        size: {
+            x: 320,
+            y: 350,
+            z: 330
         },
         alias: ['SM2-L', 'Snapmaker 2.0 A350']
     },
@@ -149,6 +160,12 @@ export const MACHINE_SERIES = {
                 z: 420
             }
         },
+        machineType: MACHINE_TYPE_MULTI_FUNCTION_PRINTER,
+        size: {
+            x: 400,
+            y: 400,
+            z: 400
+        },
         alias: ['SM2-XL', 'Snapmaker 2.0 400']
     },
     CUSTOM: {
@@ -168,10 +185,28 @@ export const MACHINE_SERIES = {
             }
         },
         alias: ['Custom']
+    },
+    J1: {
+        value: 'Snapmaker J1',
+        seriesLabel: 'key-Luban/Machine/MachineSeries-Original',
+        seriesLabelWithoutI18n: 'Snapmaker J1',
+        label: 'Snapmaker J1',
+        machineType: MACHINE_TYPE_3D_PRINTER,
+        size: {
+            x: 324,
+            y: 200,
+            z: 200
+        },
     }
 };
+
+export const HEAD_PRINTING = 'printing';
+export const HEAD_LASER = 'laser';
+export const HEAD_CNC = 'cnc';
+
 export const MACHINE_TOOL_HEADS = {
     [SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL]: {
+        headType: HEAD_PRINTING,
         platform: [
             MACHINE_SERIES.ORIGINAL.value,
             MACHINE_SERIES.ORIGINAL_LZ.value
@@ -189,6 +224,7 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [LEVEL_ONE_POWER_LASER_FOR_ORIGINAL]: {
+        headType: HEAD_LASER,
         platform: [
             MACHINE_SERIES.ORIGINAL.value,
             MACHINE_SERIES.ORIGINAL_LZ.value
@@ -205,6 +241,7 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [LEVEL_TWO_POWER_LASER_FOR_ORIGINAL]: {
+        headType: HEAD_LASER,
         platform: [
             MACHINE_SERIES.ORIGINAL.value,
             MACHINE_SERIES.ORIGINAL_LZ.value
@@ -221,6 +258,7 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL]: {
+        headType: HEAD_CNC,
         platform: [
             MACHINE_SERIES.ORIGINAL.value,
             MACHINE_SERIES.ORIGINAL_LZ.value
@@ -237,6 +275,7 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]: {
+        headType: HEAD_PRINTING,
         platform: [
             MACHINE_SERIES.A150.value,
             MACHINE_SERIES.A250.value,
@@ -259,6 +298,7 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [DUAL_EXTRUDER_TOOLHEAD_FOR_SM2]: {
+        headType: HEAD_PRINTING,
         platform: [
             MACHINE_SERIES.A150.value,
             MACHINE_SERIES.A250.value,
@@ -277,6 +317,7 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [LEVEL_ONE_POWER_LASER_FOR_SM2]: {
+        headType: HEAD_LASER,
         platform: [
             MACHINE_SERIES.A150.value,
             MACHINE_SERIES.A250.value,
@@ -295,6 +336,7 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [LEVEL_TWO_POWER_LASER_FOR_SM2]: {
+        headType: HEAD_LASER,
         platform: [
             MACHINE_SERIES.A150.value,
             MACHINE_SERIES.A250.value,
@@ -313,6 +355,7 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [STANDARD_CNC_TOOLHEAD_FOR_SM2]: {
+        headType: HEAD_CNC,
         platform: [
             MACHINE_SERIES.A150.value,
             MACHINE_SERIES.A250.value,
@@ -331,6 +374,7 @@ export const MACHINE_TOOL_HEADS = {
         }
     },
     [LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2]: {
+        headType: HEAD_CNC,
         platform: [MACHINE_SERIES.A400.value],
         value: LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
         key: 'levelTwoCNCToolheadForSM2',
@@ -341,12 +385,19 @@ export const MACHINE_TOOL_HEADS = {
             y: 0,
             z: 0
         }
+    },
+    'Snapmaker J1 IDEX Tool Head': {
+        headType: HEAD_PRINTING,
+        value: 'Snapmaker J1 IDEX Tool Head',
+        label: 'IDEX',
+        platform: [
+            MACHINE_SERIES.J1.value,
+        ]
     }
 };
-export const HEAD_PRINTING = 'printing';
-export const HEAD_LASER = 'laser';
-export const HEAD_CNC = 'cnc';
-export const HEAD_UNKNOWN = 'unknown';
+
+// TODO: Refactor
+/*
 const toolHeadMap = {
     [MACHINE_SERIES.ORIGINAL.value]: {
         [HEAD_PRINTING]: [{
@@ -487,14 +538,128 @@ const toolHeadMap = {
         }]
     },
 };
+*/
 
+// Machine options
+/*
+const machineList = [{
+    value: 'Original',
+    label: 'key-Luban/Machine/MachineSeries-Snapmaker Original',
+    image: '/resources/images/machine/size-1.0-original.jpg',
+}, {
+    value: 'A150',
+    label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A150',
+    image: '/resources/images/machine/size-2.0-A150.png'
+}, {
+    value: 'A250',
+    label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A250',
+    image: '/resources/images/machine/size-2.0-A250.png'
+}, {
+    value: 'A350',
+    label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A350',
+    image: '/resources/images/machine/size-2.0-A350.jpg'
+}, {
+    value: 'A400',
+    label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A400',
+    image: '/resources/images/machine/size-2.0-A400.jpeg'
+}, {
+    value: MACHINE_SERIES.J1.value,
+    label: 'Snapmaker J1',
+    image: '/resources/images/machine/size-2.0-A400.jpeg'
+}];*/
 
-export function getMachineList() {
-    return machineList;
+export function findMachineByName(name) {
+    for (const key of Object.keys(MACHINE_SERIES)) {
+        const machine = MACHINE_SERIES[key];
+        if (machine.value === name) {
+            return machine;
+        }
+    }
+    return null;
 }
 
-export function getToolHeadMap() {
-    return toolHeadMap;
+function getMachineList() {
+    const machineKeys = [
+        MACHINE_SERIES.ORIGINAL.value,
+        MACHINE_SERIES.ORIGINAL_LZ.value,
+        MACHINE_SERIES.A150.value,
+        MACHINE_SERIES.A250.value,
+        MACHINE_SERIES.A350.value,
+        MACHINE_SERIES.A400.value,
+        MACHINE_SERIES.J1.value,
+    ];
+
+    const machines = [];
+    for (const key of machineKeys) {
+        const machine = findMachineByName(key);
+        if (machine) {
+            machines.push(machine);
+        }
+    }
+    return machines;
+}
+
+
+export function getMachineOptions() {
+    const machines = getMachineList();
+
+    const options = [];
+    for (const machine of machines) {
+        const option = {
+            value: machine.value, // unique key
+            label: machine.label, // for i18n name display
+            machine: machine, // reference of machine for further data fetch
+        };
+        options.push(option);
+    }
+
+    return options;
+}
+
+export function getMachineSupportedToolHeads(machineSeries, headType = undefined) {
+    const toolHeads = [];
+    for (const key of Object.keys(MACHINE_TOOL_HEADS)) {
+        const toolHead = MACHINE_TOOL_HEADS[key];
+
+        if (toolHead.headType === undefined) {
+            console.warn('DJKDJFKAJKFJKFAJ ', toolHead);
+        }
+
+        if (headType !== undefined && toolHead.headType !== headType) {
+            continue;
+        }
+
+        if (!includes(toolHead.platform, machineSeries)) {
+            continue;
+        }
+
+        toolHeads.push(toolHead);
+    }
+    return toolHeads;
+}
+
+export function getMachineSupportedToolHeadOptions(machineSeries, headType = undefined) {
+    /*
+    const seriesMap = toolHeadMap[series];
+    if (!seriesMap) {
+        return [];
+    }
+    return seriesMap[headType];
+    */
+
+    const toolHeads = getMachineSupportedToolHeads(machineSeries, headType);
+
+    const options = [];
+    for (const toolHead of toolHeads) {
+        const option = {
+            value: toolHead.value,
+            label: toolHead.label,
+            toolHead: toolHead,
+        };
+        options.push(option);
+    }
+
+    return options;
 }
 
 

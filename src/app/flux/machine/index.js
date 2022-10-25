@@ -28,6 +28,7 @@ import {
 import {
     MACHINE_TOOL_HEADS,
     MACHINE_SERIES,
+    findMachineByName,
 } from '../../constants/machines';
 
 import i18n from '../../lib/i18n';
@@ -360,20 +361,17 @@ export const actions = {
             toolHead = INITIAL_STATE.toolHead
         } = machineStore.get('machine') || {};
 
-        const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
-        // const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
-        if (seriesInfo === MACHINE_SERIES.CUSTOM) {
-            seriesInfo.setting.size = size;
-            seriesInfo.setting.laserSize = seriesInfo.setting.size;
+        const machine = findMachineByName(series); // valueOf(MACHINE_SERIES, 'value', series);
+        if (!machine) {
+            // warning?
+            return;
         }
 
         dispatch(
             baseActions.updateState({
                 series: series,
-                size: seriesInfo ? seriesInfo.setting.size : size,
-                laserSize: seriesInfo
-                    ? seriesInfo.setting.laserSize
-                    : laserSize,
+                size: machine.size,
+                laserSize: machine.setting ? machine.setting.laserSize : laserSize,
                 toolHead: toolHead
                 // currentMachine
             })
@@ -382,13 +380,13 @@ export const actions = {
         dispatch(
             editorActions.onSizeUpdated(
                 'laser',
-                seriesInfo ? seriesInfo.setting.size : size
+                machine ? machine.size : size
             )
         );
         dispatch(
             editorActions.onSizeUpdated(
                 'cnc',
-                seriesInfo ? seriesInfo.setting.size : size
+                machine ? machine.size : size
             )
         );
     },

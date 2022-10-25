@@ -26,7 +26,6 @@ import {
     HEAD_CNC,
     COORDINATE_MODE_CENTER,
     COORDINATE_MODE_BOTTOM_CENTER,
-    getCurrentHeadType,
     HEAD_TYPE_ENV_NAME,
     SOFTWARE_MANUAL,
     FORUM_URL,
@@ -53,6 +52,7 @@ import ModelExporter from '../widgets/PrintingVisualizer/ModelExporter';
 import Anchor from '../components/Anchor';
 import SvgIcon from '../components/SvgIcon';
 import { logLubanQuit } from '../../lib/gaEvent';
+import { getCurrentHeadType } from '../../lib/url-utils';
 
 class AppLayout extends PureComponent {
     static propTypes = {

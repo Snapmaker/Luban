@@ -1,5 +1,5 @@
 import { valueOf } from '../lib/contants-utils';
-import { MACHINE_TOOL_HEADS, MACHINE_SERIES } from './machines';
+import { MACHINE_SERIES, MACHINE_TOOL_HEADS } from './machines';
 
 export const DEFAULT_LUBAN_HOST = 'luban://127.0.0.1';
 // Metric and Imperial units
@@ -1196,16 +1196,6 @@ export const COORDINATE_MODE_BOTTOM_CENTER = {
         }
     }
 };
-export function getCurrentHeadType(pathname: string) {
-    if (!pathname) {
-        return null;
-    }
-    let headType: string;
-    if (pathname.indexOf(HEAD_CNC) >= 0) headType = HEAD_CNC;
-    if (pathname.indexOf(HEAD_LASER) >= 0) headType = HEAD_LASER;
-    if (pathname.indexOf(HEAD_PRINTING) >= 0) headType = HEAD_PRINTING;
-    return headType;
-}
 
 export function getMachineSeriesWithToolhead(platform: string, toolhead: string) {
     const seriesInfo = valueOf(MACHINE_SERIES, 'value', platform) || MACHINE_SERIES.ORIGINAL;

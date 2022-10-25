@@ -83,7 +83,7 @@ export class DefinitionLoader {
             json = JSON.parse(data);
             this.loadJSON(headType, definitionId, json);
         } catch (e) {
-            log.error(`JSON Syntax error of: ${definitionId}`);
+            log.error(`Failed to read JSON file: ${filePath}`);
         }
     }
 
