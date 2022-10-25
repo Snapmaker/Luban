@@ -14,7 +14,7 @@ const PANEL_EXTRACT_TRACE = 1;
 const PANEL_NOT_CALIBRATION = 3;
 const iconSrc = 'images/camera-aid/ic_warning-64x64.png';
 
-const SetBackground = ({ hideModal }) => {
+const SetBackground = ({ hideModal, materialThickness }) => {
     const dispatch = useDispatch();
     const address = useSelector(state => state?.machine?.server?.address);
     const size = useSelector(state => state?.machine?.size);
@@ -82,6 +82,7 @@ const SetBackground = ({ hideModal }) => {
                     updateEachPicSize={actions.updateEachPicSize}
                     changeLastFileNames={actions.changeLastFileNames}
                     setBackgroundImage={actions.setBackgroundImage}
+                    materialThickness={materialThickness}
                 />
 
                 {panel === PANEL_NOT_CALIBRATION && (
@@ -114,7 +115,8 @@ const SetBackground = ({ hideModal }) => {
 };
 
 SetBackground.propTypes = {
-    hideModal: PropTypes.func.isRequired
+    hideModal: PropTypes.func.isRequired,
+    materialThickness: PropTypes.number
 };
 
 export default SetBackground;

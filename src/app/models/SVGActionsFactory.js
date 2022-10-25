@@ -219,7 +219,7 @@ class SVGActionsFactory {
 
     addImageBackgroundToSVG(options) {
         const { x, y, width, height } = coordGmModelToSvg(this.size, options.transformation);
-        const uploadPath = `${DATA_PREFIX}/${options.uploadName}`;
+        const uploadPath = /^blob:/.test(options.uploadName) ? options.uploadName : `${DATA_PREFIX}/${options.uploadName}`;
         const elem = this.svgContentGroup.addSVGBackgroundElement({
             element: 'image',
             attr: {

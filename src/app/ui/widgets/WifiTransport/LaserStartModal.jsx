@@ -91,7 +91,7 @@ function LaserStartModal({
             name: i18n._('key-Workspace/LaserStartJob-auto_mode'),
             description: i18n._('key-Workspace/LaserStartJob-auto_mode_description'),
             display: {
-            // mean: 'true' will show only can rotate status, false will only show no rotate status , undefined will show not matter what roate is
+                // mean: 'true' will show only can rotate status, false will only show no rotate status , undefined will show not matter what roate is
                 isRotate: false,
                 isHeightPower: true,
             },
@@ -172,14 +172,14 @@ function LaserStartModal({
                                 className="sm-flex-auto "
                                 value={v.key}
                                 disabled={handleDisable(v)}
-                                // checked={isLaserPrintAutoMode}
-                                // onChange={actions.onChangeLaserPrintMode}
+                            // checked={isLaserPrintAutoMode}
+                            // onChange={actions.onChangeLaserPrintMode}
                             >
                                 <Tooltip
                                     placement="right"
                                     title={handleDisable(v) && (<span>{i18n._('key-Workspace/LaserStartJob-Disable reason')}</span>)}
                                 >
-                                    <span className={(handleDisable(v) ? 'heading-3 color-black-5' : 'heading-3')}> { v.name }</span>
+                                    <span className={(handleDisable(v) ? 'heading-3 color-black-5' : 'heading-3')}> {v.name}</span>
                                 </Tooltip>
                                 {v.key === selectedValue && (<div className=" margin-top-8">{isString(v.description) ? v.description : v.description()} </div>)}
                             </Radio>

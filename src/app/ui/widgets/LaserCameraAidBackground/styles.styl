@@ -192,3 +192,50 @@
 .calibrate-wrapper
     canvas 
         margin: 0 auto;
+
+:global(.ant-modal-root) {
+    :global(.ant-modal) {
+        max-height 1000px !important
+        :global(.ant-modal-content) {
+            max-height 1000px !important
+            :global(.ant-modal-body) {
+                max-height 800px !important
+            }
+        }
+    }
+}
+
+.laser-select-capture-mode
+    .item
+        width: 432px;
+        height: 135px;
+        display: flex;
+        align-items: center;
+        background-color: #f5f5f7;
+        &:first-child
+            margin-bottom: 10px;
+        padding-top: 10px;
+        padding-right: 22px;
+        border-radius: 5px;
+        &:hover 
+            border: 1px solid #1890FF;
+            background-color: #E7F3FF;
+        .left
+            flex: 1;
+            text-align: center;
+        .right
+            flex: 2.5;
+            > p
+                &:first-child {
+                    font-size: $font-size-lead;
+                    font-weight: $font-weight-bold;
+                }
+                line-height: 16px
+                font-size: $font-size-large;
+
+.laser-material-thickness-input
+    width: 480px;
+    padding: 10px;
+    .input
+        display: flex;
+        align-items: center;

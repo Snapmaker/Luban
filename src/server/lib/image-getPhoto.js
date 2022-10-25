@@ -5,6 +5,7 @@ import DataStorage from '../DataStorage';
 import { LEVEL_TWO_POWER_LASER_FOR_SM2 } from '../../app/constants';
 import connectionManager from '../services/socket/ConnectionManager';
 import logger from './logger';
+// import { remapImage } from './image-stitch';
 
 const fs = require('fs');
 
@@ -33,6 +34,7 @@ export const takePhoto = (options) => {
             });
         });
     } else {
+        // return Promise.resolve({ 'res': { 'req': { 'method': 'GET', 'url': 'http://172.18.1.183:8080/api/request_capture_photo?index=0&x=232&y=178&z=290&feedRate=3000&photoQuality=0', 'headers': { 'user-agent': 'node-superagent/3.8.3' } }, 'header': { 'cache-control': 'private', 'access-control-allow-origin': '*', 'date': 'Fri, 23 Sep 2022 05:30:03 GMT+00:00', 'server': 'AndServer/2.0.0', 'content-length': '15', 'content-type': 'application/json;charset=UTF-8', 'connection': 'close' }, 'status': 200, 'text': '{"status":true}' } });
         let api = `http://${address}:8080/api/request_capture_photo`;
         api += `?index=${index}&x=${x}&y=${y}&z=${z}&feedRate=${feedRate}`;
         if (photoQuality >= 0 && photoQuality <= 255) {
@@ -129,7 +131,9 @@ export const calibrationPhoto = (options) => {
             connectionManager.getCalibrationPhoto((res) => {
                 if (res.success) {
                     const fileName = res.filename;
-                    Jimp.read(`${DataStorage.tmpDir}/${fileName}`).then((image) => {
+                    Jimp.read(`${DataStorage.tmpDir}/${fileName}`).then(async (image) => {
+                        // await remapImage(fileName);
+
                         const { width, height } = image.bitmap;
                         resolve({
                             fileName,
@@ -155,8 +159,11 @@ export const calibrationPhoto = (options) => {
             request.get(api).end((err, res) => {
                 let fileName = 'calibration.jpg';
                 fileName = pathWithRandomSuffix(fileName);
-                fs.writeFile(`${DataStorage.tmpDir}/${fileName}`, res.body, () => {
+                fs.writeFile(`${DataStorage.tmpDir}/${fileName}`, res.body, async () => {
+                    // await remapImage(fileName);
+
                     Jimp.read(`${DataStorage.tmpDir}/${fileName}`).then((image) => {
+                        image.greyscale();
                         const { width, height } = image.bitmap;
                         resolve({
                             fileName,

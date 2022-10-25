@@ -202,7 +202,7 @@ export const actions = {
             }
         });
 
-        const imgPath = `${DATA_PREFIX}/${filename}`;
+        const imgPath = /^blob:/.test(filename) ? filename : `${DATA_PREFIX}/${filename}`;
         const texture = new THREE.TextureLoader().load(imgPath, () => {
             dispatch(editorActions.render('laser'));
         });

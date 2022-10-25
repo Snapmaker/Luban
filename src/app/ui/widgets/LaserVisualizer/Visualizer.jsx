@@ -67,7 +67,7 @@ class Visualizer extends Component {
         enableShortcut: PropTypes.bool.isRequired,
         isOverSize: PropTypes.bool,
         SVGCanvasMode: PropTypes.string.isRequired,
-        SVGCanvasExt: PropTypes.string.isRequired,
+        SVGCanvasExt: PropTypes.object,
 
         // func
         selectAllElements: PropTypes.func.isRequired,
