@@ -269,7 +269,7 @@ SVGEditor.propTypes = {
     editable: PropTypes.bool,
     menuDisabledCount: PropTypes.number,
     SVGCanvasMode: PropTypes.string.isRequired,
-    SVGCanvasExt: PropTypes.string.isRequired,
+    SVGCanvasExt: PropTypes.object,
 
     updateScale: PropTypes.func.isRequired,
     updateTarget: PropTypes.func.isRequired,
@@ -310,7 +310,7 @@ SVGEditor.propTypes = {
     onClickToUpload: PropTypes.func.isRequired,
     fileInput: PropTypes.object.isRequired,
     allowedFiles: PropTypes.string.isRequired,
-    headType: PropTypes.string
+    headType: PropTypes.string,
 };
 
 export default SVGEditor;

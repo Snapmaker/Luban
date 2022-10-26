@@ -321,6 +321,7 @@ i18n._('key-Workspace/Connection-laser');
 i18n._('Key-Workspace/LaserStartJob-manual_mode_description');
 i18n._('key-Workspace/Marlin-Left Nozzle Temp');
 
+
 // Progress Manager
 i18n._('key-Progress/LaserCNC-Generate toolpath and preview: {{progress}}%');
 i18n._('key-Progress/LaserCNC-Generated toolpath and previewed successfully.');
@@ -338,6 +339,13 @@ i18n._('key-Progress/LaserCNC-Failed to generate simulation.');
 i18n._('key-Progress/Laser-Loading model...');
 i18n._('key-Progress/Laser-Loaded model successfully.');
 i18n._('key-Progress/Laser-Failed to load model.');
+i18n._('key-Laser/CameraCapture-conventional mode');
+i18n._('key-Laser/CameraCapture-conventional mode describe');
+i18n._('key-Laser/CameraCapture-thickness compensation mode');
+i18n._('key-Laser/CameraCapture-thickness compensation mode describe');
+i18n._('key-Laser/CameraCapture-thickness compensation mode describe2');
+i18n._('key-Laser/CameraCapture-thickness input');
+
 
 i18n._('key-Progress/3DP-Loading model...{{progress}}%');
 i18n._('key-Progress/3DP-Loaded model successfully.');

@@ -383,11 +383,6 @@ async function runJob() {
         return;
     }
 
-    if (clearPoolhandle) {
-        clearTimeout(clearPoolhandle);
-        clearPoolhandle = null;
-    }
-
     if (pool) {
         if (jobs.length && !runningJob) {
             runningJob = jobs.shift();

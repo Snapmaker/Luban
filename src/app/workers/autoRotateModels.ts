@@ -62,7 +62,7 @@ const autoRotateModels = (data: AutoRotateModelsData) => {
                 const z = (box3.max.z + box3.min.z) / 2;
                 const center = new Vector3(x, y, z);
                 center.applyMatrix4(matrixWorld);
-                const { planes, areas } = ThreeUtils.computeGeometryPlanes(
+                const { planes, areas, planesPosition } = ThreeUtils.computeGeometryPlanes(
                     convexGeometry,
                     matrixWorld,
                     [],
@@ -70,11 +70,14 @@ const autoRotateModels = (data: AutoRotateModelsData) => {
                     inverseNormal
                 );
                 const maxArea = Math.max.apply(null, areas);
-                const bigPlanes = { planes: null, areas: [] };
+                const bigPlanes = { planes: null, areas: [], planesPosition: [] };
                 bigPlanes.planes = planes.filter((p, idx) => {
                     // filter big planes, 0.1 can be change to improve perfomance
                     const isBig = areas[idx] > maxArea * 0.1;
-                    isBig && bigPlanes.areas.push(areas[idx]);
+                    if (isBig) {
+                        bigPlanes.areas.push(areas[idx]);
+                        bigPlanes.planesPosition.push(planesPosition[idx]);
+                    }
                     return isBig;
                 });
                 if (!bigPlanes.planes.length) {
@@ -99,35 +102,34 @@ const autoRotateModels = (data: AutoRotateModelsData) => {
                     null,
                     objPlanes.supportVolumes
                 );
+                const rates = [];
                 if (minSupportVolume < 1) {
                     const idx = objPlanes.supportVolumes.findIndex(
                         (i) => i === minSupportVolume
                     );
                     targetPlane = objPlanes.planes[idx];
                 }
-                if (!targetPlane) {
-                    const rates = [];
-                    for (
-                        let idx = 0, len = bigPlanes.planes.length;
-                        idx < len;
-                        idx++
-                    ) {
-                        // update rate formula to improve performance
-                        const areasFactor = objPlanes.areas[idx] / bigPlanes.areas[idx];
-                        let supportVolumesFactor = 0;
-                        if (objPlanes.supportVolumes[idx] !== 0) {
-                            supportVolumesFactor = minSupportVolume
-                                / objPlanes.supportVolumes[idx];
-                        } else if (minSupportVolume === 0) {
-                            supportVolumesFactor = 1;
-                        }
-                        rates.push(
-                            objPlanes.areas[idx]
-                            * areasFactor
-                            * supportVolumesFactor
-                        );
+                for (
+                    let idx = 0, len = bigPlanes.planes.length;
+                    idx < len;
+                    idx++
+                ) {
+                    // update rate formula to improve performance
+                    const areasFactor = objPlanes.areas[idx] / bigPlanes.areas[idx];
+                    let supportVolumesFactor = 0;
+                    if (objPlanes.supportVolumes[idx] !== 0) {
+                        supportVolumesFactor = minSupportVolume
+                            / objPlanes.supportVolumes[idx];
+                    } else if (minSupportVolume === 0) {
+                        supportVolumesFactor = 1;
                     }
-
+                    rates.push(
+                        objPlanes.areas[idx]
+                        * areasFactor
+                        * supportVolumesFactor
+                    );
+                }
+                if (!targetPlane) {
                     const maxRate = Math.max.apply(null, rates);
                     const idx = rates.findIndex((r) => r === maxRate);
                     targetPlane = bigPlanes.planes[idx];
@@ -143,7 +145,12 @@ const autoRotateModels = (data: AutoRotateModelsData) => {
                         xyPlaneNormal,
                         index,
                         isFinish: index + 1 >= selectedModelLength,
-                    },
+                        rates: rates,
+                        planes: objPlanes.planes,
+                        planesPosition: bigPlanes.planesPosition,
+                        areas: objPlanes.areas,
+                        supportVolumes: objPlanes.supportVolumes
+                    }
                 });
                 index + 1 >= selectedModelLength && observer.complete();
             });

@@ -1,7 +1,7 @@
 import { v4 as uuid } from 'uuid';
 import { createSVGElement } from './element-utils';
 import {
-    EPSILON
+    EPSILON, HEAD_CNC
 } from '../../constants';
 import { isEqual } from '../../../shared/lib/utils';
 
@@ -54,7 +54,7 @@ class PrintableArea {
             }
         }
         const sizeChange = size && (!isEqual(this.size.x, size.x) || !isEqual(this.size.y, size.y));
-        const materialsChange = materials && (!isEqual(this.materials.x, materials.x) || !isEqual(this.materials.y, materials.y));
+        const materialsChange = materials && (!isEqual(this.materials.x, materials.x) || !isEqual(this.materials.y, materials.y) || !isEqual(this.materials.useLockingBlock, materials.useLockingBlock));
         if (sizeChange || materialsChange) {
             this.size = {
                 ...size
@@ -485,24 +485,43 @@ class PrintableArea {
         // this._setBorder(xMax, yMin, xMax, yMax, '#B9BCBF', false);
     }
 
+    // _setLockingBlock() {
+    //     if ()
+    // }
     _setOriginPoint() {
         if (this.materials.isRotate) {
             return;
         }
         const { x, y } = this.size;
-        const origin = createSVGElement({
-            element: 'circle',
-            attr: {
-                cx: x,
-                cy: y,
-                r: 2,
-                fill: '#FF5759',
-                stroke: '#FF5759',
-                'stroke-width': 1 / this.scale,
-                opacity: 1,
-                'fill-opacity': 1
-            }
-        });
+        let origin = null;
+        if (this.materials.headType === HEAD_CNC && this.materials.useLockingBlock) {
+            origin = createSVGElement({
+                element: 'image',
+                attr: {
+                    x: x - (2.5 * this.scale),
+                    y: y - (6 * this.scale),
+                    width: 10 * this.scale,
+                    height: 10 * this.scale,
+                    href: '/resources/images/cnc/locking-block-red.svg',
+                    id: 'locking-block',
+                    preserveAspectRatio: 'none'
+                }
+            });
+        } else {
+            origin = createSVGElement({
+                element: 'circle',
+                attr: {
+                    cx: x,
+                    cy: y,
+                    r: 2,
+                    fill: '#FF5759',
+                    stroke: '#FF5759',
+                    'stroke-width': 1 / this.scale,
+                    opacity: (this.materials.headType === HEAD_CNC && this.materials.useLockingBlock) ? 0 : 1,
+                    'fill-opacity': 1
+                }
+            });
+        }
         this.printableAreaGroup.append(origin);
     }
 

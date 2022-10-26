@@ -948,7 +948,7 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
 };
 
 const publicPath = global.PUBLIC_PATH || '';
-export const DATA_PATH = `${publicPath}/data`;
+export const DATA_PATH = `${DEFAULT_LUBAN_HOST}/data`;
 
 export const DATA_PREFIX = `${publicPath}/data/Tmp`;
 
@@ -1602,6 +1602,30 @@ export const LASER_10W_TAKE_PHOTO_POSITION = {
         z: 150
     }
 };
+
+export const LASER_1600MW_CALIBRATION_POSITION = {
+    A400: {
+        x: 265,
+        y: 205,
+        z: 330
+    },
+    A350: {
+        x: 192,
+        y: 170,
+        z: 170
+    },
+    A250: {
+        x: 186,
+        y: 130,
+        z: 230
+    },
+    A150: {
+        x: 155,
+        y: 82,
+        z: 150
+    }
+};
+
 
 export const NOZZLE_SIZE_DEFAULT_OPTIONS = [
     { value: 0.2, label: '0.2' },

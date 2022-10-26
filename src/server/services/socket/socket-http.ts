@@ -365,7 +365,7 @@ class SocketHttp {
             token: this.token
         }], (result: any) => {
             if (result.status === 'offline') {
-                log.debug(`wifi status="${result.status}" msg=${result.msg}`);
+                log.info(`[wifi connection offline]: msg=${result.msg}`);
                 this.socket && this.socket.emit('connection:close');
                 return;
             }

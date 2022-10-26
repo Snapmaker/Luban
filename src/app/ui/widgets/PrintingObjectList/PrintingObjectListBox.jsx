@@ -29,7 +29,7 @@ function PrintingObjectListBox() {
             if (disabled) {
                 return;
             }
-            dispatch(printingActions.selectTargetModel(targetModel, event.shiftKey));
+            dispatch(printingActions.selectTargetModel(targetModel, event?.shiftKey));
         },
         onClickModelHideBox(targetModel) {
             if (disabled) {
@@ -55,6 +55,14 @@ function PrintingObjectListBox() {
                 default:
                     break;
             }
+        },
+        updateSelectedModelsExtruder(direction) {
+            window.dispatchEvent(
+                new CustomEvent('change-extruder', {
+                    detail: { type: 'models.multiple', direction }
+                })
+            );
+            dispatch(printingActions.updateSelectedModelsExtruder({ infill: direction, shell: direction }));
         }
     };
     const allModels = (models) && models.filter(model => !model.supportTag);
@@ -103,6 +111,7 @@ function PrintingObjectListBox() {
                         leftMaterialColor={leftMaterialColor}
                         rightMaterialColor={rightMaterialColor}
                         onExpend={actions.onClickChangeExpendArr}
+                        updateSelectedModelsExtruder={actions.updateSelectedModelsExtruder}
                     />
                 );
             })}
