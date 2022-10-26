@@ -27,7 +27,8 @@ class WorkerManager extends EventEmitter {
         this.setClipperWorkerEnable();
     }
 
-    public setClipperWorkerEnable(bool?: boolean) {
+    public setClipperWorkerEnable(bool?: boolean): void;
+    public setClipperWorkerEnable(bool: boolean) {
         if (isUndefined(bool)) {
             let enable3dpLivePreview = machineStore.get('enable3dpLivePreview');
             if (isUndefined(enable3dpLivePreview)) {
@@ -108,31 +109,7 @@ class WorkerManager extends EventEmitter {
         const preListener = this.listenerMap.get(modelID);
         if (preListener) {
             // remove the last listening in time
-            const [topic] = preListener;
-            this.emit(`${topic}`, {
-                type: 'FINISH',
-                clippingMap: null,
-                innerWallMap: null,
-                skinMap: null,
-                infillMap: null
-            });
-            this.listenerMap.delete(modelID);
-
-            this.clipperWorker && this.clipperWorker.postMessage(['cancel-job', { modelID }]);
-        }
-    }
-
-    public stopClipper() {
-        if (this.clipperWorker) {
-            // stop-job
-            this.clipperWorker.postMessage(['stop-job']);
-        }
-    }
-
-    public continueClipper() {
-        if (this.clipperWorker) {
-            // continue-job
-            this.clipperWorker.postMessage(['continue-job']);
+            this.removeListener(...preListener);
         }
     }
 
@@ -155,24 +132,23 @@ class WorkerManager extends EventEmitter {
         const modelID = data.modelID;
         return new Promise<T>((resolve, reject) => {
             const listener = (res) => {
-                // get from worker, jobID=${jobID}, modelID=${modelID}, res.type=${res.type}
+                // get from worker
                 if (res.type === 'CANCEL') {
                     reject();
                 } else {
                     resolve(res);
                 }
             };
-            // send to worker, jobID=${jobID}, modelID=${modelID}
             this.once(`CLIPPER:${jobID}`, listener);
             this.listenerMap.set(modelID, [
                 `CLIPPER:${jobID}`, listener
             ]);
-            this.clipperWorker.postMessage(['set-job', data, jobID]);
+            // send to worker
+            this.clipperWorker.postMessage([data, jobID]);
         });
     }
 
     private exec<T>(method: string, data: unknown, onMessage?: (payload: T) => void, onComplete?: () => void) {
-        this.stopClipper();
         let task = this.getPool().queue(async (eachPool) => {
             return new Promise<void>((resolve) => {
                 const subscribe = eachPool[method](data).subscribe({
@@ -189,9 +165,6 @@ class WorkerManager extends EventEmitter {
                     }
                 });
             });
-        });
-        task.then(() => {
-            this.continueClipper();
         });
         return {
             terminate: () => {
