@@ -1,7 +1,7 @@
 {
     "version": "4.4.0",
     "name": "PVA",
-    "inherits": "snapmaker",
+    "inherits": "snapmaker2",
     "category": "PVA",
     "i18nName": "key-default_name-PVA_White",
     "i18nCategory": "key-default_category-PVA",

@@ -1,7 +1,7 @@
 {
     "version": "4.4.0",
     "name": "ABS-White",
-    "inherits": "snapmaker",
+    "inherits": "snapmaker2",
     "category": "ABS",
     "i18nName": "key-default_name-ABS_White",
     "i18nCategory": "key-default_category-ABS",

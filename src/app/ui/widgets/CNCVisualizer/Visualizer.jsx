@@ -69,7 +69,7 @@ class Visualizer extends Component {
         enableShortcut: PropTypes.bool.isRequired,
         isOverSize: PropTypes.bool,
         SVGCanvasMode: PropTypes.string.isRequired,
-        SVGCanvasExt: PropTypes.string.isRequired,
+        SVGCanvasExt: PropTypes.object,
         // func
         selectAllElements: PropTypes.func.isRequired,
         cut: PropTypes.func.isRequired,
@@ -515,6 +515,7 @@ class Visualizer extends Component {
                         fileInput={this.fileInput}
                         allowedFiles=".svg, .png, .jpg, .jpeg, .bmp, .dxf, .stl, .amf, .3mf"
                         headType={HEAD_CNC}
+                        useLockingBlock={this.props.useLockingBlock}
                     />
                 </div>
                 <div
@@ -706,10 +707,15 @@ const mapStateToProps = (state, ownProps) => {
     const { size, series } = state.machine;
     const { currentModalPath, menuDisabledCount } = state.appbarMenu;
     const { page, materials, modelGroup, toolPathGroup, displayedType, hasModel, isChangedAfterGcodeGenerating,
-        renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize, showSimulation, progressStatesManager, enableShortcut, isOverSize, SVGCanvasMode, SVGCanvasExt, promptTasks } = state.cnc;
+        renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize, showSimulation, progressStatesManager, enableShortcut, isOverSize, SVGCanvasMode, SVGCanvasExt, promptTasks, useLockingBlock } = state.cnc;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedModelID = modelGroup.getSelectedModel().modelID;
     const selectedToolPathModels = modelGroup.getSelectedToolPathModels();
+    const multipleMaterials = {
+        ...materials,
+        headType: HEAD_CNC,
+        useLockingBlock
+    };
 
     return {
         series,
@@ -723,7 +729,7 @@ const mapStateToProps = (state, ownProps) => {
         page,
         scale,
         target,
-        materials,
+        materials: multipleMaterials,
         size,
         coordinateMode,
         coordinateSize,
@@ -743,7 +749,8 @@ const mapStateToProps = (state, ownProps) => {
         isOverSize,
         SVGCanvasMode,
         SVGCanvasExt,
-        promptTasks
+        promptTasks,
+        useLockingBlock
     };
 };
 

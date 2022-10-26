@@ -1,5 +1,5 @@
 /* eslint-disable import/no-cycle */
-import _, { cloneDeep, isEmpty, isNil, uniq } from 'lodash';
+import _, { cloneDeep, includes, isEmpty, isNil, uniq } from 'lodash';
 import {
     ABSENT_OBJECT,
     CONNECTION_STATUS_CONNECTED,
@@ -24,7 +24,10 @@ import {
     LEFT_EXTRUDER,
     HEAD_PRINTING,
     getMachineSeriesWithToolhead,
-    RIGHT_EXTRUDER
+    RIGHT_EXTRUDER,
+    CONNECTION_HEAD_BEGIN_WORK,
+    EMERGENCY_STOP_BUTTON,
+    CONNECTION_CLOSE
 } from '../../constants';
 
 import i18n from '../../lib/i18n';
@@ -177,6 +180,7 @@ const INITIAL_STATE = {
     // laser print mode
     isLaserPrintAutoMode: true,
     materialThickness: 1.5,
+    materialThicknessSource: 'user',
 
     gcodePrintingInfo: {
         sent: 0,
@@ -451,6 +455,7 @@ export const actions = {
                     !== Number(originOffset.y)
                     || Number(machineState.originOffset.z)
                     !== Number(originOffset.z)
+                    || Number(machineState.originOffset.b) !== Number(originOffset.b)
                 ) {
                     dispatch(
                         baseActions.updateState({
@@ -458,6 +463,7 @@ export const actions = {
                                 x: `${Number(originOffset.x).toFixed(3)}`,
                                 y: `${Number(originOffset.y).toFixed(3)}`,
                                 z: `${Number(originOffset.z).toFixed(3)}`,
+                                b: `${Number(originOffset.b).toFixed(3)}`,
                                 a: '0.000'
                             }
                         })
@@ -477,6 +483,7 @@ export const actions = {
                     airPurifierSwitch,
                     airPurifierFanSpeed,
                     airPurifierFilterHealth,
+                    airPurifierHasPower,
                     isEmergencyStopped,
                     moduleList: moduleStatusList,
                     nozzleSizeList,
@@ -484,12 +491,28 @@ export const actions = {
                     nozzleRightTargetTemperature,
                     nozzleRightTemperature,
                     gcodePrintingInfo,
-                    fileName
+                    currentWorkNozzle,
+                    cncTargetSpindleSpeed,
+                    cncCurrentSpindleSpeed,
+                    fileName,
+                    ledValue,
+                    fanLevel,
+                    isDoorEnable
                 } = state;
                 dispatch(baseActions.updateState({
                     laser10WErrorState,
                     isEmergencyStopped,
+                    currentWorkNozzle: !currentWorkNozzle ? LEFT_EXTRUDER : RIGHT_EXTRUDER,
+                    cncTargetSpindleSpeed,
+                    cncCurrentSpindleSpeed,
+                    enclosureLight: ledValue,
+                    enclosureFan: fanLevel
                 }));
+                if (!isNil(isDoorEnable)) {
+                    dispatch(baseActions.updateState({
+                        isDoorEnabled: isDoorEnable
+                    }));
+                }
                 if (!isNil(fileName)) {
                     dispatch(baseActions.updateState({
                         gcodeFileName: fileName
@@ -566,6 +589,7 @@ export const actions = {
                 if (!isNil(airPurifier)) {
                     dispatch(baseActions.updateState({
                         airPurifier: airPurifier,
+                        airPurifierHasPower: airPurifierHasPower,
                         airPurifierSwitch: airPurifierSwitch,
                         airPurifierFanSpeed: airPurifierFanSpeed,
                         airPurifierFilterHealth: airPurifierFilterHealth
@@ -778,6 +802,27 @@ export const actions = {
                         homingModal: isHoming
                     }));
                 }
+            },
+            'manager:error': (options) => {
+                const { owner, errorCode } = options;
+                if (includes(EMERGENCY_STOP_BUTTON, owner)) {
+                    if (errorCode === 1) {
+                        controller.emitEvent(CONNECTION_CLOSE, () => {
+                            dispatch(baseActions.resetMachineState());
+                            dispatch(workspaceActions.updateMachineState({
+                                headType: '',
+                                toolHead: ''
+                            }));
+                        });
+                    }
+                }
+            },
+            'connection:headBeginWork': (options) => {
+                const { gcodeFile } = getState().workspace;
+                controller.emitEvent(CONNECTION_HEAD_BEGIN_WORK, {
+                    headType: options.headType,
+                    uploadName: gcodeFile.uploadName
+                });
             }
         };
 
@@ -969,6 +1014,9 @@ export const actions = {
     updateMaterialThickness: (materialThickness) => (dispatch) => {
         dispatch(baseActions.updateState({ materialThickness }));
     },
+    updateMaterialThicknessSource: (source) => (dispatch) => {
+        dispatch(baseActions.updateState({ materialThicknessSource: source }));
+    },
     updatePause3dpStatus: (pause3dpStatus) => (dispatch) => {
         dispatch(baseActions.updateState({ pause3dpStatus }));
     },
@@ -1054,7 +1102,8 @@ export const actions = {
                 x: 0,
                 y: 0,
                 z: 0
-            }
+            },
+            savedServerAddressIsAuto: false
         }));
     },
 

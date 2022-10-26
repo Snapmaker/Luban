@@ -1,4 +1,3 @@
-import { xformMultiply } from './Utils';
 import BaseTagParser from './BaseTagParser';
 
 /**
@@ -34,22 +33,23 @@ class SVGTagParser extends BaseTagParser {
         this.initialize(attributes);
         // Add x and y to transform coordinates to world coordinates
         // Note: x and y has no effect on outermost SVG element
-        if (attributes.x) {
-            xformMultiply(this.attributes.xform, [1, 0, 0, 1, attributes.x, 0]);
-        }
-        if (attributes.y) {
-            xformMultiply(this.attributes.xform, [1, 0, 0, 1, 0, attributes.y]);
-        }
+        // if (attributes.x) {
+        //     xformMultiply(this.attributes.xform, [1, 0, 0, 1, attributes.x, 0]);
+        // }
+        // if (attributes.y) {
+        //     xformMultiply(this.attributes.xform, [1, 0, 0, 1, 0, attributes.y]);
+        // }
 
-        const scaleX = attributes.width / attributes.viewBox[2];
-        const scaleY = attributes.height / attributes.viewBox[3];
+        // no longer parser viewBox
+        // const scaleX = attributes.width / attributes.viewBox[2];
+        // const scaleY = attributes.height / attributes.viewBox[3];
 
-        xformMultiply(this.attributes.xform, [scaleX, 0, 0, scaleY, 0, 0]);
+        // xformMultiply(this.attributes.xform, [scaleX, 0, 0, scaleY, 0, 0]);
 
-        attributes.viewBox[0] *= scaleX;
-        attributes.viewBox[1] *= scaleY;
-        attributes.viewBox[2] *= scaleX;
-        attributes.viewBox[3] *= scaleY;
+        // attributes.viewBox[0] *= scaleX;
+        // attributes.viewBox[1] *= scaleY;
+        // attributes.viewBox[2] *= scaleX;
+        // attributes.viewBox[3] *= scaleY;
 
         // xformMultiply(this.attributes.xform, [1, 0, 0, 1, -attributes.viewBox[0], -attributes.viewBox[1]]);
     }

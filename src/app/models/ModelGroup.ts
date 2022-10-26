@@ -2084,20 +2084,20 @@ class ModelGroup extends EventEmitter {
     }
 
     public async analyzeSelectedModelRotationAsync() {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             if (this.selectedModelArray.length === 1) {
                 const model = this.selectedModelArray[0] as Model3D;
                 if (model instanceof ThreeGroup) {
-                    const result = this.analyzeSelectedModelRotation();
+                    const result = await this.analyzeSelectedModelRotation();
                     resolve(result);
                 } else {
                     if (!model.convexGeometry) {
-                        this.once(ModelEvents.SetConvex, () => {
-                            const result = this.analyzeSelectedModelRotation();
+                        this.once(ModelEvents.SetConvex, async () => {
+                            const result = await this.analyzeSelectedModelRotation();
                             resolve(result);
                         });
                     } else {
-                        const result = this.analyzeSelectedModelRotation();
+                        const result = await this.analyzeSelectedModelRotation();
                         resolve(result);
                     }
                 }
@@ -2107,10 +2107,10 @@ class ModelGroup extends EventEmitter {
         });
     }
 
-    public analyzeSelectedModelRotation() {
+    public async analyzeSelectedModelRotation() {
         if (this.selectedModelArray.length === 1) {
             const model = this.selectedModelArray[0] as ThreeGroup;
-            const rotationInfo = model.analyzeRotation();
+            const rotationInfo = await model.analyzeRotation();
             const tableResult: TRotationAnalysisTable[] = [];
             // todo
             if (rotationInfo) {

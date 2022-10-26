@@ -1,7 +1,7 @@
 {
     "version": "4.4.0",
     "name": "PC-Black",
-    "inherits": "snapmaker",
+    "inherits": "snapmaker2",
     "category": "PC",
     "i18nName": "key-default_name-PC",
     "i18nCategory": "key-default_category-PC",

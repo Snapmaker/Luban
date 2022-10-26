@@ -7,6 +7,29 @@
     //background: #FFFFFF
 }
 
+
+.object-list-box {
+    .extruderIcon {
+        justify-content: center;
+        align-items: center;
+        align-content: center;
+        display: flex;
+    }
+    .extruderIcon:hover .hoverTip {
+        width: 10px;
+        line-height: 10px;
+    }
+    .hoverTip {
+        width: 0px;
+        height: 10px;
+        transition: width 0.2s;
+        overflow: hidden;
+        position: relative;
+        left: -2px;
+        display: inline-block;
+    }
+}
+
 .selected {
     background-color: #E7F2FD
 }

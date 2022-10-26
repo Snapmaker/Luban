@@ -424,8 +424,10 @@ export function loadAllSeriesDefinitions(isDefault = false, headType, series = '
 
     if (isDefault) {
         for (const filename of defaultFilenames) {
-            const definitionLoader = loadDefinitionLoaderByFilename(headType, filename, series, isDefault);
-            definitions.push(definitionLoader.toObject());
+            if (filename !== 'machine.def.json' && ConfigV1Regex.test(filename)) {
+                const definitionLoader = loadDefinitionLoaderByFilename(headType, filename, series, isDefault);
+                definitions.push(definitionLoader.toObject());
+            }
         }
     } else {
         const defaultDefinitionLoader = loadDefinitionLoaderByFilename(headType, predefined, series);

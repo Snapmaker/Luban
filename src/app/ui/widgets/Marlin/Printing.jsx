@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import { capitalize } from 'lodash';
 import Anchor from '../../components/Anchor';
 // import SvgIcon from '../../components/SvgIcon';
 import { Button } from '../../components/Buttons';
@@ -49,8 +50,7 @@ class Printing extends PureComponent {
         heatedBedTemperatureValue: this.props.heatedBedTargetTemperature,
         leftZOffsetValue: 0.05,
         rightZOffsetValue: 0.05,
-        isLoad: false,
-        isUnload: false,
+        squeezing: false,
         zOffsetMarks: [0.05, 0.1, 0.2]
     };
 
@@ -112,25 +112,25 @@ class Printing extends PureComponent {
         },
         onClickLoad: (extruderIndex) => {
             this.setState({
-                isLoad: true
+                squeezing: true
             });
             controller.emitEvent(CONNECTION_LOAD_FILAMENT, {
                 extruderIndex: extruderIndex
             }).once(CONNECTION_LOAD_FILAMENT, () => {
                 this.setState({
-                    isLoad: false
+                    squeezing: false
                 });
             });
         },
         onClickUnload: (extruderIndex) => {
             this.setState({
-                isUnload: true
+                squeezing: true
             });
             controller.emitEvent(CONNECTION_UNLOAD_FILAMENT, {
                 extruderIndex: extruderIndex
             }).once(CONNECTION_UNLOAD_FILAMENT, () => {
                 this.setState({
-                    isUnload: false
+                    squeezing: false
                 });
             });
         },
@@ -198,13 +198,11 @@ class Printing extends PureComponent {
                     <div>
                         <div>
                             <span>{i18n._('key-unused-Current Work Nozzle')}</span>
-                            <span>{i18n._(`key-unused-Nozzle-${currentWorkNozzle}`)}</span>
+                            <span>{i18n._(`key-setting/${capitalize(currentWorkNozzle)}-Nozzle`)}</span>
                         </div>
-                        {(workflowStatus !== WORKFLOW_STATUS_RUNNING) && (
-                            <Button onClick={() => this.actions.siwtchWorkNozzle(currentWorkNozzle === LEFT_EXTRUDER ? RIGHT_EXTRUDER_MAP_NUMBER : LEFT_EXTRUDER_MAP_NUMBER)}>
-                                {i18n._('key-Workspace/Marlin-Switch working nozzle')}
-                            </Button>
-                        )}
+                        <Button disabled={this.state.squeezing || workflowStatus === WORKFLOW_STATUS_RUNNING} onClick={() => this.actions.siwtchWorkNozzle(currentWorkNozzle === LEFT_EXTRUDER ? RIGHT_EXTRUDER_MAP_NUMBER : LEFT_EXTRUDER_MAP_NUMBER)}>
+                            {i18n._('key-Workspace/Marlin-Switch working nozzle')}
+                        </Button>
                         <div className="dashed-border-use-background" />
                     </div>
                 )}
@@ -234,7 +232,7 @@ class Printing extends PureComponent {
                                 priority="level-three"
                                 width="96px"
                                 className="display-inline"
-                                disabled={this.state.isUnload || !(nozzleTargetTemperature && (nozzleTemperature - nozzleTargetTemperature >= -5))}
+                                disabled={this.state.squeezing || !(nozzleTargetTemperature && (nozzleTemperature - nozzleTargetTemperature >= -5))}
                                 onClick={() => actions.onClickUnload(LEFT_EXTRUDER_MAP_NUMBER)}
                             >
                                 {i18n._('key-unused-Unload')}
@@ -243,7 +241,7 @@ class Printing extends PureComponent {
                                 className="margin-left-4 display-inline"
                                 priority="level-three"
                                 width="96px"
-                                disabled={this.state.isLoad || !(nozzleTargetTemperature && (nozzleTemperature - nozzleTargetTemperature >= -5))}
+                                disabled={this.state.squeezing || !(nozzleTargetTemperature && (nozzleTemperature - nozzleTargetTemperature >= -5))}
                                 onClick={() => actions.onClickLoad(LEFT_EXTRUDER_MAP_NUMBER)}
                             >
                                 {i18n._('key-unused-Load')}
@@ -279,7 +277,7 @@ class Printing extends PureComponent {
                                 priority="level-three"
                                 width="96px"
                                 className="display-inline"
-                                disabled={this.state.isUnload || !(this.props.nozzleRightTargetTemperature && (this.props.nozzleRightTemperature - this.props.nozzleRightTargetTemperature >= -5))}
+                                disabled={this.state.squeezing || !(this.props.nozzleRightTargetTemperature && (this.props.nozzleRightTemperature - this.props.nozzleRightTargetTemperature >= -5))}
                                 onClick={() => actions.onClickUnload(RIGHT_EXTRUDER_MAP_NUMBER)}
                             >
                                 {i18n._('key-unused-Unload')}
@@ -288,7 +286,7 @@ class Printing extends PureComponent {
                                 className="margin-left-4 display-inline"
                                 priority="level-three"
                                 width="96px"
-                                disabled={this.state.isLoad || !(this.props.nozzleRightTargetTemperature && (this.props.nozzleRightTemperature - this.props.nozzleRightTargetTemperature >= -5))}
+                                disabled={this.state.squeezing || !(this.props.nozzleRightTargetTemperature && (this.props.nozzleRightTemperature - this.props.nozzleRightTargetTemperature >= -5))}
                                 onClick={() => actions.onClickLoad(RIGHT_EXTRUDER_MAP_NUMBER)}
                             >
                                 {i18n._('key-unused-Load')}

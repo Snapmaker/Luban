@@ -130,7 +130,7 @@ class SVGCanvas extends PureComponent {
 
         setMode: PropTypes.func.isRequired,
         mode: PropTypes.string.isRequired,
-        ext: PropTypes.string.isRequired
+        ext: PropTypes.object
     };
 
     updateTime = 0;
@@ -407,7 +407,7 @@ class SVGCanvas extends PureComponent {
             size: this.props.coordinateSize,
             scale: this.scale,
             getRoot,
-            coordinateMode: this.props.coordinateMode
+            coordinateMode: this.props.coordinateMode,
         });
     }
 

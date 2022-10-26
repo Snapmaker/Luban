@@ -8,7 +8,8 @@ const screenTimeout = 8 * 1000;
 let timeoutHandle = null;
 let intervalHandle = null;
 
-const stopBeat = (msg?: string) => {
+const stopBeat = (msg?: string, flag?: number) => {
+    console.log(`offline flag=${flag}`);
     clearInterval(intervalHandle);
     intervalHandle = null;
     sendMessage({ status: 'offline', msg });
@@ -18,7 +19,7 @@ const heartBeat = async (param: IParam) => {
     return new Promise((resolve) => {
         const { token, host, stop } = param;
         if (stop && intervalHandle) {
-            resolve(stopBeat());
+            resolve(stopBeat('', 1));
             return;
         }
 
@@ -30,17 +31,21 @@ const heartBeat = async (param: IParam) => {
                 .timeout(3000)
                 .end((err: Error, res) => {
                     if (err) {
+                        console.log(`beat err=${err?.message}`);
                         if (err.message.includes('Timeout')) {
-                            timeoutHandle = setTimeout(() => {
-                                resolve(stopBeat(err.message));
-                            }, screenTimeout);
+                            if (!timeoutHandle) {
+                                timeoutHandle = setTimeout(() => {
+                                    resolve(stopBeat(err.message, 2));
+                                }, screenTimeout);
+                            }
                         } else {
                             errorCount++;
                             if (errorCount >= 3) {
-                                resolve(stopBeat(err.message));
+                                resolve(stopBeat(err.message, 3));
                             }
                         }
                     } else {
+                        console.log(`beat status=${res?.status}`);
                         timeoutHandle = clearTimeout(timeoutHandle);
                         errorCount = 0;
                         sendMessage({

@@ -18,7 +18,8 @@ export type EventOptions = {
     headType?: string,
     uploadName?: string,
     isCameraCapture?: boolean,
-    renderGcodeFileName?: string,
+    renderName?: string,
+    renderGcodeFileName?: string, // for http connection type
     moveOrders?: object
 };
 
@@ -46,6 +47,7 @@ export type MarlinStateData = {
     heatedBedTargetTemperature?: number,
     isEnclosureDoorOpen?: boolean,
     airPurifier?: boolean,
+    airPurifierHasPower?: boolean,
     airPurifierSwitch?: boolean,
     airPurifierFanSpeed?: number,
     airPurifierFilterHealth?: number, // Filter lifetime
@@ -57,5 +59,12 @@ export type MarlinStateData = {
     originOffset?: object,
     isHomed?: boolean,
     headType?: string,
-    toolHead?: string
+    toolHead?: string,
+    currentWorkNozzle?: number,
+    cncTargetSpindleSpeed?: number,
+    cncCurrentSpindleSpeed?: number,
+    laserTargetPower?: number,
+    ledValue?: number,
+    fanLevel?: number,
+    isDoorEnable?: boolean
 };

@@ -83,6 +83,7 @@ class Visualizer extends PureComponent {
 
         isLaserPrintAutoMode: PropTypes.bool.isRequired,
         materialThickness: PropTypes.number.isRequired,
+        materialThicknessSource: PropTypes.string.isRequired,
         laserFocalLength: PropTypes.number,
         background: PropTypes.object.isRequired,
         workPosition: PropTypes.object.isRequired,
@@ -270,6 +271,7 @@ class Visualizer extends PureComponent {
                 workflowStatus,
                 headType, isLaserPrintAutoMode,
                 materialThickness,
+                materialThicknessSource,
                 isRotate,
                 toolHead,
                 gcodeFile,
@@ -288,6 +290,7 @@ class Visualizer extends PureComponent {
                     workflowStatus,
                     isLaserPrintAutoMode,
                     materialThickness,
+                    materialThicknessSource,
                     isRotate,
                     toolHead,
                     // for wifi indiviual
@@ -400,6 +403,7 @@ class Visualizer extends PureComponent {
                             `G1 Z${targetZ}\n`,
                             `G1 E${pos.e}\n`
                         ];
+                        // const gcode = `G1 E${targetE}\nG1 Z${targetZ}\nG1 E${pos.e}\n`;
                         this.props.executeGcode(gcode);
                         this.props.updatePause3dpStatus(pause3dpStatus);
                     }
@@ -848,6 +852,7 @@ const mapStateToProps = (state) => {
         isLaserPrintAutoMode: machine.isLaserPrintAutoMode,
         // type
         materialThickness: machine.materialThickness,
+        materialThicknessSource: machine.materialThicknessSource,
         background: laser.background,
         isRotate: workspace.isRotate,
         // type

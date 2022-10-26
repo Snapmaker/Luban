@@ -17,7 +17,6 @@ import settings from './config/settings';
 import { startServices } from './services';
 import DataStorage from './DataStorage';
 
-
 const log = logger('init');
 
 const EPS = 1e-6;
@@ -123,7 +122,8 @@ const createServer = (options, callback) => {
             const realPort = server.address().port;
             callback && callback(null, {
                 address: realAddress,
-                port: realPort
+                port: realPort,
+                userID: config.get('gaUserId')
             });
 
             log.info(`Starting the server at ${chalk.cyan(`http://${realAddress}:${realPort}`)}`);

@@ -5,15 +5,20 @@ export const DEFAULT_LUBAN_HOST = 'luban://127.0.0.1';
 export const IMPERIAL_UNITS = 'in';
 export const METRIC_UNITS = 'mm';
 
+export const MATERIAL_REGEX = /^material(\.).*$/;
+export const QUALITY_REGEX = /^quality(\.).*$/;
+
 export const CUSTOM_SERVER_NAME = 'Manual';
 export const EPSILON = 1e-6;
 export const CONNECTION_OPEN = 'connection:open';
 export const CONNECTION_CLOSE = 'connection:close';
+export const CONNECTION_CLOSE_IMPROPER = 'connection:closeImproper';
 export const CONNECTION_EXECUTE_GCODE = 'connection:executeGcode';
 export const CONNECTION_START_GCODE = 'connection:startGcode';
 export const CONNECTION_RESUME_GCODE = 'connection:resumeGcode';
 export const CONNECTION_PAUSE_GCODE = 'connection:pauseGcode';
 export const CONNECTION_STOP_GCODE = 'connection:stopGcode';
+export const CONNECTION_HEAD_BEGIN_WORK = 'connection:headBeginWork';
 export const CONNECTION_HEARTBEAT = 'connection:startHeartbeat';
 export const CONNECTION_MATERIALTHICKNESS = 'connection:materialThickness';
 export const CONNECTION_MATERIALTHICKNESS_ABORT = 'connection:materialThickness_abort';
@@ -26,7 +31,7 @@ export const CONNECTION_BED_TEMPERATURE = 'connection:updateBedTemperature';
 export const CONNECTION_LOAD_FILAMENT = 'connection:loadFilament';
 export const CONNECTION_UNLOAD_FILAMENT = 'connection:unloadFilament';
 export const CONNECTION_WORKSPEED_FACTOR = 'connection:updateWorkSpeedFactor';
-export const CONNECTION_GET_WORKSPEED_FACTOR = 'connection:getWorkSpeedFactor';
+// export const CONNECTION_GET_WORKSPEED_FACTOR = 'connection:getWorkSpeedFactor';
 export const CONNECTION_LASER_POWER = 'connection:updateLaserPower';
 export const CONNECTION_SWITCH_LASER_POWER = 'connection:switchLaserPower';
 export const CONNECTION_ENCLOSURE_LIGHT = 'connection:setEnclosureLight';
@@ -64,6 +69,9 @@ export const WORKFLOW_STATUS_FINISHING = 'finishing';
 export const WORKFLOW_STATUS_COMPLETED = 'completed';
 export const WORKFLOW_STATUS_RECOVERING = 'recovering';
 export const WROKFLOW_STATUS_RESUMING = 'resuming';
+
+export const LOAD_FIMAMENT = 'load';
+export const UNLOAD_FILAMENT = 'unload';
 
 export const WORKFLOW_STATUS_MAP = {
     '0': WORKFLOW_STATE_IDLE,
@@ -943,7 +951,7 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
 };
 
 const publicPath = global.PUBLIC_PATH || '';
-export const DATA_PATH = `${publicPath}/data`;
+export const DATA_PATH = `${DEFAULT_LUBAN_HOST}/data`;
 
 export const DATA_PREFIX = `${publicPath}/data/Tmp`;
 
@@ -1166,6 +1174,9 @@ export const LEVEL_TWO_POWER_LASER_FOR_SM2 = 'levelTwoLaserToolheadForSM2';
 export const STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL = 'standardCNCToolheadForOriginal';
 export const STANDARD_CNC_TOOLHEAD_FOR_SM2 = 'standardCNCToolheadForSM2';
 export const LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2 = 'levelTwoCNCToolheadForSM2';
+export const ENCLOSURE_FOR_SM2 = 'enclosureForSM2';
+export const ENCLOSURE_FOR_ARTISAN = 'enclosureForArtisan';
+export const AIR_PURIFIER = 'airPurifier';
 
 export const DUAL_EXTRUDER_LIMIT_WIDTH_L = 0;
 export const DUAL_EXTRUDER_LIMIT_WIDTH_R = 0;
@@ -1595,6 +1606,30 @@ export const LASER_10W_TAKE_PHOTO_POSITION = {
     }
 };
 
+export const LASER_1600MW_CALIBRATION_POSITION = {
+    A400: {
+        x: 265,
+        y: 205,
+        z: 330
+    },
+    A350: {
+        x: 192,
+        y: 170,
+        z: 170
+    },
+    A250: {
+        x: 186,
+        y: 130,
+        z: 230
+    },
+    A150: {
+        x: 155,
+        y: 82,
+        z: 150
+    }
+};
+
+
 export const NOZZLE_SIZE_DEFAULT_OPTIONS = [
     { value: 0.2, label: '0.2' },
     { value: 0.4, label: '0.4' },
@@ -1664,7 +1699,10 @@ export const MODULEID_MAP = {
     '14': LEVEL_TWO_POWER_LASER_FOR_SM2,
     '15': LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
     '512': HEADT_BED_FOR_SM2,
-    '515': A400_HEADT_BED_FOR_SM2
+    '515': A400_HEADT_BED_FOR_SM2,
+    '5': ENCLOSURE_FOR_SM2,
+    '16': ENCLOSURE_FOR_ARTISAN,
+    '7': AIR_PURIFIER
 };
 export const MATERIAL_TYPE_OPTIONS = [
     {
@@ -1722,3 +1760,4 @@ export const MATERIAL_TYPE_OPTIONS = [
 export const AUTO_MDOE = Symbol('auto mode');
 export const SEMI_AUTO_MODE = Symbol('semi_auto_mode by MaterialThickness');
 export const MANUAL_MODE = Symbol('manual mode');
+export const AUTO_STRING = 'auto';

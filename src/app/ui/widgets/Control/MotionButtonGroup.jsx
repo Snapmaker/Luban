@@ -51,11 +51,9 @@ const MotionButtonGroup = (props) => {
                     priority="level-three"
                     onClick={() => {
                         if (workPosition.z > 0) {
-                            actions.move({ x: 0, y: 0, b: 0 });
-                            actions.move({ z: 0 });
+                            actions.move({ x: 0, y: 0, b: 0, z: 0 });
                         } else {
-                            actions.move({ z: 0 });
-                            actions.move({ x: 0, y: 0, b: 0 });
+                            actions.move({ z: 0, x: 0, y: 0, b: 0 });
                         }
                     }}
                     disabled={!canClick}

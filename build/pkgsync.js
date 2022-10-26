@@ -29,6 +29,22 @@ pkgApp.repository = pkg.repository;
 pkgApp.dependencies = _.pick(pkg.dependencies, deps);
 pkgApp.config = pkg.config;
 
+
+const isExists = fs.existsSync(
+    path.resolve(__dirname, '../.sentry.config.json')
+);
+if (isExists) {
+    const sentryConfig = require('../.sentry.config.json');
+
+    pkgApp.tagName = sentryConfig.tagName;
+    pkgApp.sentry = {
+        auth: {
+            dsn: sentryConfig.auth.dsn
+        }
+    };
+}
+
+
 const target = path.resolve(__dirname, '../src/package.json');
 const content = JSON.stringify(pkgApp, null, 2);
 fs.writeFileSync(target, `${content}\n`, 'utf8');

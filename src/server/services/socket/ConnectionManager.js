@@ -13,6 +13,7 @@ import {
 } from '../../constants';
 import DataStorage from '../../DataStorage';
 import ScheduledTasks from '../../lib/ScheduledTasks';
+import { AUTO_STRING } from '../../../app/constants';
 // import SerialPortClient from '../../../app/lib/controller';
 
 const log = logger('lib:ConnectionManager');
@@ -107,7 +108,11 @@ class ConnectionManager {
     };
 
     connectionClose = (socket, options) => {
-        this.socket && this.socket.connectionClose(socket, options);
+        this.protocol === SACP_PROTOCOL && this.socket && this.socket.connectionClose(socket, options);
+    };
+
+    connectionCloseImproper = () => {
+        this.socket && this.socket.connectionCloseImproper();
     };
 
     inspectProtocol = async (address, connectionType = CONNECTION_TYPE_WIFI, options, callback) => {
@@ -190,17 +195,31 @@ class ConnectionManager {
         });
     }
 
+    /**
+     *
+     * @param {*} socket
+     * @param {*} options
+     * Only for toolhead printing action (laser/cnc/3dp)
+     */
+    startGcodeAction = async (socket, options) => {
+        log.info('gcode action begin');
+        this.socket.startGcode(options);
+    }
+
     startGcode = async (socket, options) => {
-        const { headType, isRotate, toolHead, isLaserPrintAutoMode, materialThickness, laserFocalLength, renderName, eventName } = options;
+        const { headType, isRotate, toolHead, isLaserPrintAutoMode, materialThickness, laserFocalLength, renderName, eventName, materialThicknessSource } = options;
         if (this.connectionType === CONNECTION_TYPE_WIFI) {
             const { uploadName, series, background, size, workPosition, originOffset } = options;
             const gcodeFilePath = `${DataStorage.tmpDir}/${uploadName}`;
             const promises = [];
             if (this.protocol === SACP_PROTOCOL && headType === HEAD_LASER) {
-                if (laserFocalLength && toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isRotate && (isLaserPrintAutoMode && materialThickness === 0)) {
+                this.socket.uploadGcodeFile(gcodeFilePath, headType, renderName, (msg) => {
+                    if (msg) return;
+                });
+                if (laserFocalLength && toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isRotate && isLaserPrintAutoMode && materialThickness !== 0 && materialThicknessSource === AUTO_STRING) {
                     await this.socket.laseAutoSetMaterialHeight({ toolHead });
                 }
-                if (((toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isLaserPrintAutoMode) || (toolHead === LEVEL_ONE_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode)) && (materialThickness !== 0 || isRotate)) {
+                if (((toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isLaserPrintAutoMode) || (toolHead === LEVEL_ONE_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode)) && ((materialThickness !== 0 && materialThickness !== -1) || isRotate)) {
                     await this.socket.laserSetWorkHeight({ toolHead, materialThickness, isRotate });
                 }
                 const { gcode, jogSpeed = 1500 } = options;
@@ -209,7 +228,7 @@ class ConnectionManager {
                     { axis: 'Y', distance: 0 },
                     { axis: 'Z', distance: 0 }
                 ];
-                await this.socket.coordinateMove({ moveOrders, gcode, jogSpeed, headType });
+                await this.socket.coordinateMove({ moveOrders, gcode, jogSpeed, headType, beforeGcodeStart: true });
             } else if (series !== MACHINE_SERIES.ORIGINAL.value && series !== MACHINE_SERIES.CUSTOM.value && headType === HEAD_LASER) {
                 if (!isRotate) {
                     if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
@@ -269,16 +288,26 @@ class ConnectionManager {
                     });
                 });
                 promises.push(promise);
-            }
-            Promise.all(promises)
-                .then(() => {
-                    this.socket.uploadGcodeFile(gcodeFilePath, headType, renderName, (msg) => {
-                        if (msg) {
-                            return;
-                        }
-                        this.socket.startGcode(options);
+                Promise.all(promises)
+                    .then(() => {
+                        this.socket.uploadGcodeFile(gcodeFilePath, headType, renderName, (msg) => {
+                            if (msg) {
+                                return;
+                            }
+                            this.socket.startGcode(options);
+                        });
                     });
-                });
+            } else {
+                Promise.all(promises)
+                    .then(() => {
+                        this.socket.uploadGcodeFile(gcodeFilePath, headType, renderName, (msg) => {
+                            if (msg) {
+                                return;
+                            }
+                            this.socket.startGcode(options);
+                        });
+                    });
+            }
         } else {
             const { workflowState } = options;
             if (this.protocol === SACP_PROTOCOL) {
@@ -292,9 +321,11 @@ class ConnectionManager {
                         { axis: 'Y', distance: 0 },
                         { axis: 'Z', distance: 0 }
                     ];
-                    await this.socket.coordinateMove({ moveOrders, gcode, jogSpeed, headType });
+                    await this.socket.coordinateMove({ moveOrders, gcode, jogSpeed, headType, beforeGcodeStart: true });
+                } else {
+                    this.socket.startGcode(options);
                 }
-                this.socket.startGcode(options);
+                // this.socket.startGcode(options);
             } else {
                 if (headType === HEAD_LASER && workflowState !== WORKFLOW_STATE_PAUSED) {
                     this.socket.command(socket, {
@@ -432,7 +463,7 @@ M3`;
             socket && socket.emit(options.eventName, {});
         } else {
             if (this.protocol === SACP_PROTOCOL) {
-                this.socket.stopGcode();
+                this.socket.stopGcode(options);
             } else {
                 this.socket.command(this.socket, {
                     cmd: 'gcode:pause',
@@ -546,11 +577,11 @@ M3`;
         }
     }
 
-    getWorkSpeedFactor = (socket, options) => {
-        if (this.protocol === SACP_PROTOCOL) {
-            this.socket.getWorkSpeed(options);
-        }
-    }
+    // getWorkSpeedFactor = (socket, options) => {
+    //     if (this.protocol === SACP_PROTOCOL) {
+    //         this.socket.getWorkSpeed(options);
+    //     }
+    // }
 
 
     updateLaserPower = (socket, options) => {
@@ -619,7 +650,7 @@ M3`;
     };
 
     setEnclosureLight = (socket, options) => {
-        if (this.connectionType === CONNECTION_TYPE_WIFI) {
+        if (this.connectionType === CONNECTION_TYPE_WIFI || this.protocol === SACP_PROTOCOL) {
             this.socket.setEnclosureLight(options);
         } else {
             const { value, eventName } = options;
@@ -632,7 +663,7 @@ M3`;
     };
 
     setEnclosureFan = (socket, options) => {
-        if (this.connectionType === CONNECTION_TYPE_WIFI) {
+        if (this.connectionType === CONNECTION_TYPE_WIFI || this.protocol === SACP_PROTOCOL) {
             this.socket.setEnclosureFan(options);
         } else {
             const { value, eventName } = options;
@@ -645,7 +676,7 @@ M3`;
     };
 
     setFilterSwitch = (socket, options) => {
-        if (this.connectionType === CONNECTION_TYPE_WIFI) {
+        if (this.connectionType === CONNECTION_TYPE_WIFI || this.protocol === SACP_PROTOCOL) {
             this.socket.setFilterSwitch(options);
         } else {
             const { value, enable } = options;
@@ -657,7 +688,7 @@ M3`;
     };
 
     setFilterWorkSpeed = (socket, options) => {
-        if (this.connectionType === CONNECTION_TYPE_WIFI) {
+        if (this.connectionType === CONNECTION_TYPE_WIFI || this.protocol === SACP_PROTOCOL) {
             this.socket.setFilterWorkSpeed(options);
         } else {
             const { value } = options;
@@ -670,7 +701,7 @@ M3`;
 
     // only for Wifi
     setDoorDetection = (socket, options) => {
-        if (this.connectionType === CONNECTION_TYPE_WIFI) {
+        if (this.connectionType === CONNECTION_TYPE_WIFI || this.protocol === SACP_PROTOCOL) {
             this.socket.setDoorDetection(options);
         }
     };

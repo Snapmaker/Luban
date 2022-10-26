@@ -1,7 +1,7 @@
 {
     "version": "4.4.0",
     "name": "ASA-Black",
-    "inherits": "snapmaker",
+    "inherits": "snapmaker2",
     "category": "ASA",
     "i18nName": "key-default_name-ASA",
     "i18nCategory": "key-default_category-ASA",

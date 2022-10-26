@@ -1,4 +1,4 @@
-import path from 'path';
+import path, { join } from 'path';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
 import { includes, isUndefined, gt, isNil } from 'lodash';
@@ -12,6 +12,7 @@ import { initFonts } from '../shared/lib/FontManager';
 import settings from './config/settings';
 import config from './services/configstore';
 import pkg from '../../package.json';
+import downloadManager from './lib/downloadManager';
 
 const log = logger('server:DataStorage');
 export const rmDir = (dirPath, removeSelf) => {
@@ -135,6 +136,16 @@ class DataStorage {
 
         // if alt+shift+r, cannot init recover config
         !isReset && await this.initRecoverActive();
+
+        downloadManager.downlaod(
+            'https://snapmaker-luban.s3.us-west-1.amazonaws.com/camera-capture/mapx_350.txt',
+            join(this.configDir, 'mapx_350.txt')
+        );
+
+        downloadManager.downlaod(
+            'https://snapmaker-luban.s3.us-west-1.amazonaws.com/camera-capture/mapy_350.txt',
+            join(this.configDir, 'mapy_350.txt')
+        );
     }
 
     async copyDirForInitSlicer({

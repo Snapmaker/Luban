@@ -7,14 +7,17 @@ import { toFixed } from '../../../lib/numeric-utils';
 // import styles from './styles.styl';
 import {
     COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_LEFT, COORDINATE_MODE_BOTTOM_RIGHT, COORDINATE_MODE_TOP_LEFT,
-    COORDINATE_MODE_TOP_RIGHT, COORDINATE_MODE_BOTTOM_CENTER, HEAD_LASER
+    COORDINATE_MODE_TOP_RIGHT, COORDINATE_MODE_BOTTOM_CENTER, HEAD_LASER, HEAD_CNC
 } from '../../../constants';
 import { NumberInput as Input } from '../../components/Input';
 import Select from '../../components/Select';
 
 function JobType({ headType, jobTypeState, setJobTypeState }) {
-    const { size } = useSelector(state => state.machine);
+    const { size, series } = useSelector(state => state.machine);
     const { inProgress, useBackground } = useSelector(state => state[headType]);
+    // const [isUseLockingBlock, setIsUseLockingBlock] = useState(useLockingBlock);
+    // const [lockingBlockPosition, setLockingBlockPosition] = useState(position);
+    const isArtisan = series === 'A400';
 
     const coordinateModeList = [
         {
@@ -43,6 +46,22 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
             mode: COORDINATE_MODE_TOP_RIGHT
         }
     ];
+
+    const lockingBlockUseStatusList = [{
+        label: i18n._('key-Printing/LeftBar/Support-Yes'),
+        value: true
+    }, {
+        label: i18n._('key-Printing/LeftBar/Support-No'),
+        value: false
+    }];
+
+    const lockingBlockPositionList = [{
+        label: i18n._('key-CncLaser/JobSetup-Locking block position A'),
+        value: 'A'
+    }, {
+        label: i18n._('key-CncLaser/JobSetup-Locking block position B'),
+        value: 'B'
+    }];
 
     const actions = {
         changeCoordinateMode: (option) => {
@@ -90,13 +109,42 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                 coordinateSize,
                 materials
             });
+        },
+        changeIsUseLockingBlock: (option) => {
+            setJobTypeState({
+                ...jobTypeState,
+                useLockingBlock: option.value,
+                coordinateMode: option.value ? COORDINATE_MODE_BOTTOM_LEFT : COORDINATE_MODE_CENTER,
+                coordinateSize: {
+                    x: option.value ? 375 : 400,
+                    y: option.value ? 395 : 400
+                }
+            });
+        },
+        changeLockingBlockPosition: (option) => {
+            const coordinateSize = {
+                x: option.value === 'A' ? 375 : 290,
+                y: option.value === 'A' ? 395 : 305
+            };
+            setJobTypeState({
+                ...jobTypeState,
+                lockingBlockPosition: option.value,
+                coordinateSize
+            });
         }
     };
 
-    const { materials, coordinateMode, coordinateSize } = jobTypeState;
+    const { materials, coordinateMode, coordinateSize, useLockingBlock, lockingBlockPosition } = jobTypeState;
     const { isRotate, diameter, length } = materials;
+    let maxX = size.x;
+    let maxY = size.y;
+    if (useLockingBlock) {
+        maxX = lockingBlockPosition === 'A' ? 375 : 290;
+        maxY = lockingBlockPosition === 'A' ? 395 : 305;
+    }
 
     let imgOF3axisCoordinateMode = '';
+    const imgLockingBlockPosition = `/resources/images/cnc-laser/lock-block-${lockingBlockPosition?.toLowerCase()}.png`;
     if (!isRotate && coordinateMode.value !== 'bottom-center') { // TODO
         imgOF3axisCoordinateMode = `/resources/images/cnc-laser/working-origin-3-${coordinateMode.value}.png`;
     }
@@ -131,7 +179,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                                     suffix="mm"
                                     disabled={inProgress || settingSizeDisabled}
                                     value={toFixed(coordinateSize.x, 1)}
-                                    max={size.x}
+                                    max={maxX}
                                     min={2}
                                     onChange={(value) => {
                                         actions.setCoordinateModeAndCoordinateSize(
@@ -149,7 +197,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                                     suffix="mm"
                                     disabled={inProgress || settingSizeDisabled}
                                     value={toFixed(coordinateSize.y, 1)}
-                                    max={size.y}
+                                    max={maxY}
                                     min={10}
                                     onChange={(value) => {
                                         actions.setCoordinateModeAndCoordinateSize(
@@ -173,23 +221,52 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                                 width: '100px',
                                 height: '100px'
                             }}
-                            src={imgOF3axisCoordinateMode}
+                            src={(isArtisan && headType === HEAD_CNC && useLockingBlock) ? imgLockingBlockPosition : imgOF3axisCoordinateMode}
                             role="presentation"
                             alt="3 Axis"
                         />
-                        <div className="margin-left-16 sm-flex-width sm-flex height-32">
-                            <span className="width-88 margin-right-8">{i18n._('key-CncLaser/JobSetup-Origin Position')}</span>
-                            <Select
-                                backspaceRemoves={false}
-                                size="120px"
-                                clearable={false}
-                                options={coordinateModeList}
-                                isGroup={false}
-                                placeholder={i18n._('key-CncLaser/JobSetup-Choose font')}
-                                value={coordinateMode.value ?? COORDINATE_MODE_CENTER.value}
-                                onChange={actions.changeCoordinateMode}
-                                disabled={inProgress || settingSizeDisabled}
-                            />
+                        <div className="margin-left-16">
+                            {/* sm-flex-width sm-flex height-32 */}
+                            {isArtisan && headType === HEAD_CNC && (
+                                <div className="margin-bottom-16 sm-flex height-32">
+                                    <span className="width-88 margin-right-8 text-overflow-ellipsis">{i18n._('key-CncLaser/JobSetup-Use Locking block')}</span>
+                                    <Select
+                                        size="120px"
+                                        clearable={false}
+                                        options={lockingBlockUseStatusList}
+                                        value={useLockingBlock}
+                                        onChange={actions.changeIsUseLockingBlock}
+                                    />
+                                </div>
+                            )}
+                            {!(headType === HEAD_CNC && useLockingBlock) && (
+                                <div className="height-32 sm-flex">
+                                    <span className="width-88 margin-right-8 text-overflow-ellipsis">{i18n._('key-CncLaser/JobSetup-Origin Position')}</span>
+                                    <Select
+                                        backspaceRemoves={false}
+                                        size="120px"
+                                        clearable={false}
+                                        options={coordinateModeList}
+                                        isGroup={false}
+                                        placeholder={i18n._('key-CncLaser/JobSetup-Choose font')}
+                                        value={coordinateMode.value ?? COORDINATE_MODE_CENTER.value}
+                                        onChange={actions.changeCoordinateMode}
+                                        disabled={inProgress || settingSizeDisabled}
+                                    />
+                                </div>
+                            )}
+                            {headType === HEAD_CNC && useLockingBlock && (
+                                <div className="height-32 sm-flex">
+                                    <span className="width-88 margin-right-8 text-overflow-ellipsis">{i18n._('key-CncLaser/JobSetup-Locking block position')}</span>
+                                    <Select
+                                        size="120px"
+                                        clearable={false}
+                                        options={lockingBlockPositionList}
+                                        value={lockingBlockPosition}
+                                        onChange={actions.changeLockingBlockPosition}
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
