@@ -22,7 +22,6 @@ import {
     EPSILON,
     GCODEPREVIEWMODES,
     GCODE_VISIBILITY_TYPE,
-    getMachineSeriesWithToolhead,
     HEAD_PRINTING,
     LEFT_EXTRUDER,
     LEFT_EXTRUDER_MAP_NUMBER,
@@ -42,6 +41,7 @@ import {
     KEY_DEFAULT_CATEGORY_CUSTOM
 } from '../../constants';
 import {
+    getMachineSeriesWithToolhead,
     MACHINE_SERIES
 } from '../../constants/machines';
 import { controller } from '../../lib/controller';
@@ -431,8 +431,10 @@ export const actions = {
         // also used in actions.saveAndClose of project/index.js
         // state
         const printingState = getState().printing;
+
         const { modelGroup, gcodeLineGroup, defaultMaterialId } = printingState;
         const { toolHead } = getState().machine;
+
         modelGroup.setDataChangedCallback(
             () => {
                 dispatch(actions.render());
@@ -445,7 +447,7 @@ export const actions = {
         let { series } = getState().machine;
         let storedDefaultMaterialId = defaultMaterialId;
         series = getRealSeries(series);
-        // await dispatch(machineActions.updateMachineToolHead(toolHead, series, CONFIG_HEADTYPE));
+
         const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
         const profileLevel = await definitionManager.init(
             CONFIG_HEADTYPE,
@@ -1013,7 +1015,7 @@ export const actions = {
         }
     },
 
-    // TODO: init should be  re-called
+    // TODO: init should be re-called
     init: () => async (dispatch, getState) => {
         await dispatch(actions.initSize());
 

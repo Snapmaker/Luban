@@ -1,6 +1,6 @@
 import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../constants/machines';
 
-export function getCurrentHeadType(pathname: string) {
+export function getCurrentHeadType(pathname) {
     if (!pathname) {
         return null;
     }
@@ -10,3 +10,5 @@ export function getCurrentHeadType(pathname: string) {
     if (pathname.indexOf(HEAD_PRINTING) >= 0) headType = HEAD_PRINTING;
     return headType;
 }
+
+export default {};

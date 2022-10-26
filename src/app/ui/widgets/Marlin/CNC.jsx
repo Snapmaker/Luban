@@ -12,11 +12,11 @@ import {
     CONNECTION_SWITCH_CNC,
     CONNECTION_UPDATE_TOOLHEAD_SPEED,
     LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
-    MACHINE_SERIES,
     WORKFLOW_STATUS_PAUSED,
     WORKFLOW_STATUS_PAUSING,
     WORKFLOW_STATUS_RUNNING
 } from '../../../constants';
+import { MACHINE_SERIES } from '../../../constants/machines';
 
 class CNC extends PureComponent {
     static propTypes = {

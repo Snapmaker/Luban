@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
 import i18n from '../../../lib/i18n';
-import MachineSettings from './MachineSettings';
 import MaterialSettings from './materialSettings';
 import SvgIcon from '../../components/SvgIcon';
 import Anchor from '../../components/Anchor';
@@ -10,6 +9,7 @@ import { LEVEL_ONE_POWER_LASER_FOR_ORIGINAL, SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGIN
 import { MACHINE_SERIES } from '../../../constants/machines';
 import { actions as machineActions } from '../../../flux/machine/index';
 import { STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL } from '../../../../server/controllers/constants';
+import MachineSettings from './MachineSettings';
 
 const MACHINE_TAB = 'machine';
 const MATERIAL_TAB = 'material';

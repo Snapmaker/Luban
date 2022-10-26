@@ -6,6 +6,7 @@ import { HEAD_LASER } from '../../../constants';
 import { getCurrentHeadType } from '../../../lib/url-utils';
 
 
+
 class LaserSetBackgroundWidget extends PureComponent {
     static propTypes = {
         isConnected: PropTypes.bool,

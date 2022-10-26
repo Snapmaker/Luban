@@ -9,9 +9,7 @@ import {
     DISPLAYED_TYPE_MODEL,
     HEAD_LASER,
     // MACHINE_TOOL_HEADS,
-    PAGE_EDITOR,
-    getMachineSeriesWithToolhead
-} from '../../constants';
+    PAGE_EDITOR } from '../../constants';
 import ModelGroup from '../../models/ModelGroup';
 import OperationHistory from '../operation-history/OperationHistory';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
@@ -28,6 +26,7 @@ import i18n from '../../lib/i18n';
 import { timestamp } from '../../../shared/lib/random-utils';
 import ProgressStatesManager, { STEP_STAGE } from '../../lib/manager/ProgressManager';
 import { logToolBarOperation } from '../../lib/gaEvent';
+import { getMachineSeriesWithToolhead } from '../../constants/machines';
 
 const initModelGroup = new ModelGroup('laser');
 const operationHistory = new OperationHistory();

@@ -6,7 +6,6 @@ import i18n from '../../../../lib/i18n';
 import { actions as machineActions } from '../../../../flux/machine';
 import { actions as projectActions } from '../../../../flux/project';
 import styles from '../form.styl';
-import { getCurrentHeadType } from '../../../../lib/url-utils';
 import {
     getMachineOptions,
     getMachineSupportedToolHeadOptions,
@@ -15,6 +14,7 @@ import {
     HEAD_PRINTING,
 } from '../../../../constants/machines';
 import UniApi from '../../../../lib/uni-api';
+import { getCurrentHeadType } from '../../../../lib/url-utils';
 
 
 function MachineSettings() {

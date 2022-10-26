@@ -113,7 +113,9 @@ function useRenderMainToolBar(setSimplifying, profileInitialized = false) {
     const toolHeadRef = useRef(toolHead);
     const [currentSeries, setCurrentSeries] = useState(series);
     const [currentToolhead, setCurrentToolHead] = useState(toolHead.printingToolhead);
+
     const dispatch = useDispatch();
+
     function renderHomepage() {
         const onClose = () => {
             setShowHomePage(false);
@@ -127,6 +129,7 @@ function useRenderMainToolBar(setSimplifying, profileInitialized = false) {
             key: 'homepage'
         });
     }
+
     function renderWorkspace() {
         const onClose = () => {
             setShowWorkspace(false);
@@ -140,6 +143,7 @@ function useRenderMainToolBar(setSimplifying, profileInitialized = false) {
             key: 'workspace'
         });
     }
+
     function renderMachineMaterialSettings() {
         const onClose = async () => {
             setShowMachineMaterialSettings(false);
@@ -165,8 +169,8 @@ function useRenderMainToolBar(setSimplifying, profileInitialized = false) {
             onCallBack: onCallBack
         });
     }
-    function renderMainToolBar(machineInfo, materialInfo, isConnected) {
-        // const fileInput = React.createRef();
+
+    function renderMainToolBar(machine, machineInfo, materialInfo, isConnected) {
         const leftItems = [
             {
                 title: i18n._('key-Printing/Page-Home'),
@@ -287,13 +291,13 @@ function useRenderMainToolBar(setSimplifying, profileInitialized = false) {
                 lang={i18next.language}
                 headType={HEAD_PRINTING}
                 hasMachineSettings
-                machineInfo={machineInfo}
+                machine={machine}
                 materialInfo={materialInfo}
                 isConnected={isConnected}
-                setShowMachineMaterialSettings={(bool) => {
+                setShowMachineMaterialSettings={(show) => {
                     seriesRef.current = series;
                     toolHeadRef.current = toolHead;
-                    setShowMachineMaterialSettings(bool);
+                    setShowMachineMaterialSettings(show);
                 }}
             />
         );
@@ -310,8 +314,11 @@ function Printing({ location }) {
     const leftMaterial = find(materialDefinitions, { definitionId: defaultMaterialId });
     const rightMaterial = find(materialDefinitions, { definitionId: defaultMaterialIdRight });
     const machineState = useSelector(state => state?.machine);
+    const machine = useSelector(state => state.machine.machine);
+
     const { isConnected, toolHead: { printingToolhead } } = machineState;
     const isOriginal = includes(series, 'Original');
+
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [enabledIntro, setEnabledIntro] = useState(null);
     const [initIndex, setInitIndex] = useState(0);
@@ -352,7 +359,7 @@ function Printing({ location }) {
     }, [isNewUser]);
 
     useEffect(() => {
-        const machine = {
+        const newMachineInfo = {
             series: series,
             toolHead: printingToolhead
         };
@@ -368,13 +375,13 @@ function Printing({ location }) {
                 color: rightMaterial?.settings?.color?.default_value
             };
         }
-        setMachineInfo(machine);
+        setMachineInfo(newMachineInfo);
         setMaterialInfo(material);
-        renderMainToolBar(machine, material, isConnected);
+        renderMainToolBar(machine, newMachineInfo, material, isConnected);
     }, [series, leftMaterial, rightMaterial, printingToolhead]);
 
     useEffect(() => {
-        renderMainToolBar(machineInfo, materialInfo, isConnected);
+        renderMainToolBar(machine, machineInfo, materialInfo, isConnected);
     }, [isConnected]);
 
     useEffect(() => {
@@ -473,7 +480,7 @@ function Printing({ location }) {
 
     return (
         <ProjectLayout
-            renderMainToolBar={() => renderMainToolBar(machineInfo, materialInfo, isConnected)}
+            renderMainToolBar={() => renderMainToolBar(machine, machineInfo, materialInfo, isConnected)}
             renderRightView={renderRightView}
             renderModalView={renderModalView}
         >
