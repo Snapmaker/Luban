@@ -20,6 +20,7 @@ export const MACHINE_TYPE_MULTI_FUNCTION_PRINTER = 'Multi-function 3D Printer';
 export const MACHINE_SERIES = {
     ORIGINAL: {
         value: 'Original',
+        fullName: 'Snapmaker Original',
         seriesLabel: 'key-Luban/Machine/MachineSeries-Original',
         seriesLabelWithoutI18n: 'Original',
         label: 'key-Luban/Machine/MachineSeries-Snapmaker Original',
@@ -44,6 +45,7 @@ export const MACHINE_SERIES = {
     },
     ORIGINAL_LZ: {
         value: 'Original Long Z-axis',
+        fullName: 'Snapmaker Original with Z-axis Extension Module',
         seriesLabel: 'key-Workspace/MachineSetting-Z-Axis Extension Module',
         seriesLabelWithoutI18n: 'Original with Z-axis Extension Module',
         configPath: 'Original',
@@ -72,6 +74,7 @@ export const MACHINE_SERIES = {
         seriesLabel: 'key-Luban/Machine/MachineSeries-A150',
         seriesLabelWithoutI18n: 'A150',
         value: 'A150',
+        fullName: 'Snapmaker 2.0 A150',
         label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A150',
         setting: {
             size: {
@@ -97,6 +100,7 @@ export const MACHINE_SERIES = {
         seriesLabel: 'key-Luban/Machine/MachineSeries-A250',
         seriesLabelWithoutI18n: 'A250 A250T F250',
         value: 'A250',
+        fullName: 'Snapmaker 2.0 A250/A250T/F250',
         label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A250',
         setting: {
             size: {
@@ -122,6 +126,7 @@ export const MACHINE_SERIES = {
         seriesLabel: 'key-Luban/Machine/MachineSeries-A350',
         seriesLabelWithoutI18n: 'A350 A350T F350',
         value: 'A350',
+        fullName: 'Snapmaker 2.0 A350/A350T/F350',
         label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A350',
         setting: {
             size: {
@@ -145,6 +150,7 @@ export const MACHINE_SERIES = {
     },
     A400: {
         value: 'A400',
+        fullName: 'Snapmaker Artisan',
         seriesLabel: 'key-Luban/Machine/MachineSeries-A400',
         seriesLabelWithoutI18n: 'Artisan',
         label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A400',
@@ -170,6 +176,7 @@ export const MACHINE_SERIES = {
     },
     CUSTOM: {
         value: 'Custom',
+        fullName: 'Custom 3D Printer',
         seriesLabel: 'Custom',
         label: 'key-Luban/Machine/MachineSeries-Custom',
         setting: {
@@ -188,6 +195,7 @@ export const MACHINE_SERIES = {
     },
     J1: {
         value: 'Snapmaker J1',
+        fullName: 'Snapmaker J1',
         seriesLabel: 'key-Luban/Machine/MachineSeries-Original',
         seriesLabelWithoutI18n: 'Snapmaker J1',
         label: 'Snapmaker J1',
@@ -639,14 +647,6 @@ export function getMachineSupportedToolHeads(machineSeries, headType = undefined
 }
 
 export function getMachineSupportedToolHeadOptions(machineSeries, headType = undefined) {
-    /*
-    const seriesMap = toolHeadMap[series];
-    if (!seriesMap) {
-        return [];
-    }
-    return seriesMap[headType];
-    */
-
     const toolHeads = getMachineSupportedToolHeads(machineSeries, headType);
 
     const options = [];
@@ -664,3 +664,35 @@ export function getMachineSupportedToolHeadOptions(machineSeries, headType = und
 
 
 // export default {};
+export function getMachineSeriesWithToolhead(platform: string, toolhead: string) {
+    const machine = findMachineByName(platform);
+    if (!machine) {
+        return {};
+    }
+
+    const size = machine.size;
+    const workSize = {};
+    const configPathname = {};
+
+    console.log('getMachineSeriesWithToolhead(), platform =', platform, 'toolhead =', toolhead);
+
+    Object.keys(toolhead).forEach((key: string) => {
+        const type = key.split('Toolhead')[0];
+        const headToolInfo = MACHINE_TOOL_HEADS[toolhead[key]];
+        console.log('head info =', headToolInfo);
+        workSize[type] = {
+            x: size.x,
+            y: size.y,
+            z: size.z,
+        };
+        configPathname[type] = `${platform === 'Original Long Z-axis'
+            ? 'original'
+            : platform.toLowerCase()
+        }_${headToolInfo?.pathname}`;
+    });
+    return {
+        series: platform,
+        configPathname,
+        workSize: workSize
+    };
+}

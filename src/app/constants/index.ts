@@ -1,4 +1,4 @@
-import { valueOf } from '../lib/contants-utils';
+// import { valueOf } from '../lib/contants-utils';
 import { MACHINE_SERIES, MACHINE_TOOL_HEADS } from './machines';
 
 export const DEFAULT_LUBAN_HOST = 'luban://127.0.0.1';
@@ -1196,31 +1196,6 @@ export const COORDINATE_MODE_BOTTOM_CENTER = {
         }
     }
 };
-
-export function getMachineSeriesWithToolhead(platform: string, toolhead: string) {
-    const seriesInfo = valueOf(MACHINE_SERIES, 'value', platform) || MACHINE_SERIES.ORIGINAL;
-    const size = seriesInfo ? seriesInfo.setting?.size : MACHINE_SERIES.ORIGINAL.setting.size;
-    const workSize = {};
-    const configPathname = {};
-    Object.keys(toolhead).forEach((key: string) => {
-        const type = key.split('Toolhead')[0];
-        const headToolInfo = MACHINE_TOOL_HEADS[toolhead[key]];
-        workSize[type] = {
-            x: size.x - headToolInfo.offset.x,
-            y: size.y - headToolInfo.offset.y,
-            z: size.z - headToolInfo.offset.z
-        };
-        configPathname[type] = `${platform === 'Original Long Z-axis'
-            ? 'original'
-            : platform.toLowerCase()
-        }_${headToolInfo?.pathname}`;
-    });
-    return {
-        series: platform,
-        configPathname,
-        workSize: workSize
-    };
-}
 
 // Laser | CNC canvas min | max scale rate
 export const VISUALIZER_CAMERA_HEIGHT = 300;

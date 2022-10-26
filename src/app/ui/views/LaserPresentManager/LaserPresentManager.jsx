@@ -6,9 +6,10 @@ import { actions as laserActions } from '../../../flux/laser';
 import { actions as projectActions } from '../../../flux/project';
 import { actions as editorActions } from '../../../flux/editor';
 
-import { getMachineSeriesWithToolhead, LASER_PRESENT_CONFIG_GROUP, HEAD_LASER } from '../../../constants';
+import { LASER_PRESENT_CONFIG_GROUP, HEAD_LASER } from '../../../constants';
 import ProfileManager from '../ProfileManagerForLaserCnc';
 import i18n from '../../../lib/i18n';
+import { getMachineSeriesWithToolhead } from '../../../constants/machines';
 
 function isOfficialDefinition(activeToolList) {
     return !!activeToolList.isDefault;
