@@ -63,8 +63,8 @@ function MismatchModal() {
                         <div>
                             {i18n._('key-Workspace/Mismatch-The configured Machine Model ({{machineInfo}}) does not match with the connected machine ({{connectedMachineInfo}}). To change the settings, you can go to',
                                 {
-                                    machineInfo: `${MACHINE_SERIES[machineSeries.toUpperCase()].seriesLabelWithoutI18n} ${i18n._(MACHINE_TOOL_HEADS[machineToolHead[`${headType}Toolhead`]]?.label)}`,
-                                    connectedMachineInfo: `${MACHINE_SERIES[series.toUpperCase()].seriesLabelWithoutI18n} ${i18n._(MACHINE_TOOL_HEADS[toolHead]?.label)}`,
+                                    machineInfo: `${MACHINE_SERIES[machineSeries.toUpperCase()]?.seriesLabelWithoutI18n} ${i18n._(MACHINE_TOOL_HEADS[machineToolHead[`${headType}Toolhead`]]?.label)}`,
+                                    connectedMachineInfo: `${MACHINE_SERIES[series.toUpperCase()]?.seriesLabelWithoutI18n} ${i18n._(MACHINE_TOOL_HEADS[toolHead]?.label)}`,
                                 })}
                             <Anchor
                                 onClick={onShowMachinwSettings}

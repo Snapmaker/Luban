@@ -1,5 +1,6 @@
 import net from 'net';
 import fs from 'fs';
+import readline from 'readline';
 import path from 'path';
 import crypto from 'crypto';
 import os from 'os';
@@ -71,7 +72,6 @@ class SocketTCP extends SocketBASE {
             log.info('TCP connected');
 
             this.sacpClient = new Business('tcp', this.client);
-            this.sacpClient.setLogger(log);
             this.socket && this.socket.emit('connection:open', {});
             const hostName = os.hostname();
             log.info(`os hostname: ${hostName}`);
@@ -87,11 +87,11 @@ class SocketTCP extends SocketBASE {
                     };
                     socket && socket.emit('connection:close', result);
                 }
-            }).then(async ({ response }) => {
+            }).then(async ({ response, packet }) => {
                 if (response.result === 0) {
-                    this.sacpClient.wifiConnectionHeartBeat().then(({ response }) => {
-                        log.info(`lubanHeartbeat: ${response}`);
-                    });
+                    this.sacpClient.setLogger(log);
+                    this.sacpClient.wifiConnectionHeartBeat();
+                    this.setROTSubscribeApi();
                     let state: ConnectedData = {
                         isHomed: true,
                         err: null
@@ -175,13 +175,26 @@ class SocketTCP extends SocketBASE {
                             msg: '',
                             text: ''
                         };
-                        socket && socket.emit('connection:close', result);
+                        this.socket && this.socket.emit('connection:close', result);
                     }
                 }
             });
         });
     }
 
+    public connectionCloseImproper = () => {
+        this.client && this.client.destroy();
+        if (this.client.destroyed) {
+            log.info('TCP manually closed');
+            const result = {
+                code: 200,
+                data: {},
+                msg: '',
+                text: ''
+            };
+            this.socket && this.socket.emit('connection:close', result);
+        }
+    }
     public connectionClose = (socket: SocketServer, options: EventOptions) => {
         this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
         // await this.sacpClient.unSubscribeLogFeedback(this.subscribeLogCallback).then(res => {
@@ -347,7 +360,6 @@ class SocketTCP extends SocketBASE {
 
                     const zMove = new MovementInstruction(MoveDirection.Z1, 0);
                     await this.sacpClient.moveAbsolutely([zMove], 0);
-
                     this.socket && this.socket.emit(eventName, { data: result });
                 });
             } catch (e) {
@@ -367,13 +379,34 @@ class SocketTCP extends SocketBASE {
         await this.laserSetWorkHeight({ toolHead: toolHead, materialThickness: this.thickness });
     }
 
-    public uploadGcodeFile = (gcodeFilePath: string, type: string, callback: (msg: string, data: boolean) => void) => {
-        this.sacpClient.uploadFile(gcodeFilePath).then(({ response }) => {
+    public uploadGcodeFile = (gcodeFilePath: string, type: string, renderName: string, callback: (msg: string, data: boolean) => void) => {
+        this.totalLine = null;
+        this.estimatedTime = null;
+        const rl = readline.createInterface({
+            input: fs.createReadStream(gcodeFilePath),
+            output: process.stdout,
+            terminal: false
+        });
+        rl.on('line', (data) => {
+            if (includes(data, ';file_total_lines')) {
+                this.totalLine = parseFloat(data.slice(18));
+            }
+            if (includes(data, ';estimated_time(s)')) {
+                this.estimatedTime = parseFloat(data.slice(19));
+            }
+            if (includes(data, ';Header End')) {
+                rl.close();
+            }
+        });
+        this.sacpClient.uploadFile(gcodeFilePath, renderName).then(({ response }) => {
             let msg = '', data = false;
             if (response.result === 0) {
                 msg = '';
                 data = true;
             }
+            this.socket && this.socket.emit('connection:startGcode', {
+                msg: '', res: null
+            });
             callback(msg, data);
         });
     };
@@ -396,8 +429,9 @@ class SocketTCP extends SocketBASE {
             md5.update(buf);
         });
         readStream.once('end', async () => {
+            this.startTime = new Date().getTime();
             this.sacpClient.startScreenPrint({
-                headType: type, filename: uploadName, hash: md5.digest().toString('hex')
+                headType: type, filename: options.renderName, hash: md5.digest().toString('hex')
             }).then((res) => {
                 log.info(`start printing: ${res.response.result}`);
                 this.socket && this.socket.emit(eventName, {

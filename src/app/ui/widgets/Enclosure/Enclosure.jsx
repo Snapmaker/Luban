@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 // import PropTypes from 'prop-types';
 import { shallowEqual, useSelector } from 'react-redux';
+import { isUndefined } from 'lodash';
 import TipTrigger from '../../components/TipTrigger';
 import Switch from '../../components/Switch';
 import i18n from '../../../lib/i18n';
@@ -13,10 +14,11 @@ import {
 } from '../../../constants';
 
 function Enclosure() {
-    const { isConnected, headType, connectionType, enclosureLight, enclosureFan } = useSelector(state => state.machine, shallowEqual);
+    const { isConnected, headType, connectionType, enclosureLight, enclosureFan, isDoorEnabled: doorEnabled } = useSelector(state => state.machine, shallowEqual);
     const [isLedReady, setIsLedReady] = useState(true);
     const [isFanReady, setIsFanReady] = useState(true);
-    const [isDoorEnabled, setIsDoorEnabled] = useState(true);
+    const [isDoorEnabledReady, setIsDoorEnabledReady] = useState(true);
+    const [isDoorEnabled, setIsDoorEnabled] = useState(isUndefined(doorEnabled) ? true : doorEnabled);
 
     const actions = {
         onHandleLed: async () => {
@@ -34,6 +36,7 @@ function Enclosure() {
             });
         },
         onHandleDoorEnabled: () => {
+            setIsDoorEnabledReady(false);
             controller.emitEvent(CONNECTION_DOOR_DETECTION, {
                 enable: !isDoorEnabled
             }).once(CONNECTION_DOOR_DETECTION, ({ msg, data }) => {
@@ -55,6 +58,11 @@ function Enclosure() {
     useEffect(() => {
         setIsFanReady(true);
     }, [enclosureFan]);
+
+    useEffect(() => {
+        setIsDoorEnabled(isUndefined(doorEnabled) ? true : doorEnabled);
+        setIsDoorEnabledReady(true);
+    }, [doorEnabled]);
 
     return (
         <div>
@@ -89,7 +97,7 @@ function Enclosure() {
                             <Switch
                                 onClick={actions.onHandleDoorEnabled}
                                 checked={isDoorEnabled}
-                                disabled={(!isFanReady) || !isConnected}
+                                disabled={(!isDoorEnabledReady) || !isConnected}
                             />
                         </div>
                     </TipTrigger>

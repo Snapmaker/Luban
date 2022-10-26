@@ -194,12 +194,12 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
             const sArr = [];
             const s = map(params, (value, axis) => {
                 const axisMoved = axis.toUpperCase();
-                let signNumber = 1;
-                if (axisMoved === 'Y' && state.workPosition.isFourAxis) {
-                    signNumber = -1;
-                } else {
-                    signNumber = 1;
-                }
+                const signNumber = 1;
+                // if (axisMoved === 'Y' && state.workPosition.isFourAxis) {
+                //     signNumber = -1;
+                // } else {
+                //     signNumber = 1;
+                // }
                 sArr.push({
                     axis: axisMoved,
                     distance: parseFloat(state.workPosition[axisMoved.toLowerCase()]) + (signNumber * value)

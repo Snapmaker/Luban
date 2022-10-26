@@ -59,6 +59,8 @@ class SerialPortClient {
         'machine:settings': [],
         'transfer:hex': [],
         'move:status': [],
+        'connection:headBeginWork': [],
+        'manager:error': [],
 
         'slice:started': [],
         'slice:completed': [],

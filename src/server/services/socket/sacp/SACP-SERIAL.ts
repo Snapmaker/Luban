@@ -22,7 +22,7 @@ class SocketSerialNew extends SocketBASE {
         path: string
     }[];
 
-    public startTime: number;
+    // public startTime: number;
 
     // public sent: number;
 
@@ -99,6 +99,7 @@ class SocketSerialNew extends SocketBASE {
                     });
                     this.socket && this.socket.emit('connection:connected', { state: state, err: '' });
                     this.startHeartbeatBase(this.sacpClient);
+                    this.setROTSubscribeApi();
                 }, 200);
             });
             this.serialport.open();
@@ -107,21 +108,21 @@ class SocketSerialNew extends SocketBASE {
 
     public connectionClose = async () => {
         this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
-        await this.sacpClient.unSubscribeLogFeedback(this.subscribeLogCallback).then(res => {
-            log.info(`unsubscribeLog: ${res}`);
-        });
-        await this.sacpClient.unSubscribeCurrentCoordinateInfo(this.subscribeCoordinateCallback).then(res => {
-            log.info(`unSubscribeCoordinate: ${res}`);
-        });
-        await this.sacpClient.unSubscribeHotBedTemperature(this.subscribeHotBedCallback).then(res => {
-            log.info(`unSubscribeHotBed, ${res}`);
-        });
-        await this.sacpClient.unSubscribeNozzleInfo(this.subscribeNozzleCallback).then(res => {
-            log.info(`unSubscribeNozzle: ${res}`);
-        });
-        await this.sacpClient.unsubscribeHeartbeat(this.subscribeHeartCallback).then(res => {
-            log.info(`unSubscribeHeart, ${res}`);
-        });
+        // await this.sacpClient.unSubscribeLogFeedback(this.subscribeLogCallback).then(res => {
+        //     log.info(`unsubscribeLog: ${res}`);
+        // });
+        // await this.sacpClient.unSubscribeCurrentCoordinateInfo(this.subscribeCoordinateCallback).then(res => {
+        //     log.info(`unSubscribeCoordinate: ${res}`);
+        // });
+        // await this.sacpClient.unSubscribeHotBedTemperature(this.subscribeHotBedCallback).then(res => {
+        //     log.info(`unSubscribeHotBed, ${res}`);
+        // });
+        // await this.sacpClient.unSubscribeNozzleInfo(this.subscribeNozzleCallback).then(res => {
+        //     log.info(`unSubscribeNozzle: ${res}`);
+        // });
+        // await this.sacpClient.unsubscribeHeartbeat(this.subscribeHeartCallback).then(res => {
+        //     log.info(`unSubscribeHeart, ${res}`);
+        // });
         this.serialport?.close();
         this.serialport?.destroy();
         // this.sacpClient?.dispose();
@@ -130,6 +131,7 @@ class SocketSerialNew extends SocketBASE {
 
     public startGcode = async (options: EventOptions) => {
         const { headType } = options;
+        log.info(`serial start gcode, ${headType}`);
         let type = 0;
         if (headType === HEAD_PRINTING) {
             type = 0;
@@ -139,19 +141,8 @@ class SocketSerialNew extends SocketBASE {
             type = 1;
         }
         const gcodeFilePath = `${DataStorage.tmpDir}/${options.uploadName}`;
-        headType === HEAD_PRINTING && await this.goHome();
-        await this.sacpClient.startPrintSerial(gcodeFilePath, ({ lineNumber, length, elapsedTime: sliceTime }) => {
-            const elapsedTime = new Date().getTime() - this.startTime;
-            const progress = lineNumber / length;
-            const remainingTime = (1 - (progress)) * progress * elapsedTime / progress + (1 - progress) * (1 - progress) * (sliceTime * 1000);
-            const data = {
-                total: length,
-                sent: lineNumber,
-                progress: lineNumber / length,
-                elapsedTime,
-                remainingTime
-            };
-            this.socket.emit('sender:status', ({ data }));
+        await this.sacpClient.startPrintSerial(gcodeFilePath, ({ length }) => {
+            this.totalLine !== length && (this.totalLine = length);
         });
         const md5 = crypto.createHash('md5');
         const readStream = fs.createReadStream(gcodeFilePath);
@@ -161,7 +152,7 @@ class SocketSerialNew extends SocketBASE {
         readStream.once('end', async () => {
             this.sacpClient.startPrint(md5.digest().toString('hex'), options.uploadName, type).then(({ response }) => {
                 log.info(`startPrinting: ${response.result}`);
-                this.startTime = new Date().getTime();
+                response.result === 0 && (this.startTime = new Date().getTime());
             });
         });
     }

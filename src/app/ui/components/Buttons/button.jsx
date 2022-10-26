@@ -6,7 +6,7 @@ import styles from './styles.styl';
 import '../../../styles/global.styl';
 
 const Button = React.memo((props) => {
-    const { priority = 'level-three', className, suffixIcon, width = '100%', minWidth, ...rest } = props;
+    const { priority = 'level-three', className, suffixIcon, width = '100%', minWidth, innerClassNames = '', ...rest } = props;
     const ref = useRef();
     const type = priority === 'level-three' ? 'default' : (props.type || 'primary');
     return (
@@ -24,7 +24,8 @@ const Button = React.memo((props) => {
                 type={type} // default, primary, link, Text
                 className={classNames(
                     styles[priority],
-                    styles['button-lb']
+                    styles['button-lb'],
+                    innerClassNames
                 )}
             >
                 <div className={classNames('position-re', styles['inside-button'])}>
@@ -48,6 +49,7 @@ Button.propTypes = {
     priority: PropTypes.string,
     className: PropTypes.string,
     suffixIcon: PropTypes.element,
+    innerClassNames: PropTypes.string,
     minWidth: PropTypes.string,
     children: PropTypes.oneOfType([
         PropTypes.number,
