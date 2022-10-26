@@ -1,6 +1,6 @@
 import path from 'path';
 import mv from 'mv';
-import fs from 'fs';
+import fs, { existsSync, writeFileSync } from 'fs';
 import { v4 as uuid } from 'uuid';
 import { pathWithRandomSuffix } from '../../lib/random-utils';
 import logger from '../../lib/logger';
@@ -342,9 +342,9 @@ export const saveEnv = async (req, res) => {
         if (machineInfo?.headType === HEAD_CNC || machineInfo?.headType === HEAD_LASER) {
             !!config.toolpaths?.length && config.toolpaths.forEach(toolpath => {
                 if (toolpath.toolParams?.definitionId && /^tool.([0-9_]+)$/.test(toolpath.toolParams.definitionId)) {
-                    copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${toolpath.toolParams.definitionId}.def.json`, `${envDir}/${toolpath.toolParams.definitionId}.def.json`)
+                    copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${toolpath.toolParams.definitionId}.def.json`, `${envDir}/${toolpath.toolParams.definitionId}.def.json`);
                 }
-            })
+            });
         }
         res.send(result);
         res.end();
@@ -352,6 +352,29 @@ export const saveEnv = async (req, res) => {
         log.error(`Failed to save environment: ${e}`);
         res.status(ERR_INTERNAL_SERVER_ERROR).send({
             msg: `Failed to save environment: ${e}`
+        });
+    }
+};
+
+/**
+ * save model editor or extruder editor
+ */
+export const saveEditor = async (req, res) => {
+    try {
+        const { content, editorDefinition } = req.body;
+        const envDir = `${DataStorage.envDir}/${HEAD_PRINTING}`;
+        const config = JSON.parse(content);
+        const { modelEditor, extruderEditor } = config;
+        Object.keys({ ...extruderEditor, ...modelEditor }).forEach(key => {
+            const targetFile = `${envDir}/${key}.def.json`;
+            if (existsSync(targetFile)) rmDir(targetFile);
+            const editorContent = JSON.parse(editorDefinition);
+            writeFileSync(targetFile, JSON.stringify(editorContent[key]));
+        });
+    } catch (e) {
+        log.error(`Failed to save editor: ${e}`);
+        res.status(ERR_INTERNAL_SERVER_ERROR).send({
+            msg: `Failed to save editor: ${e}`
         });
     }
 };
@@ -503,14 +526,14 @@ export const recoverProjectFile = async (req, res) => {
             }
         }
         if (headType === HEAD_LASER || headType === HEAD_CNC) {
-            config.toolpaths?.length && config.toolpaths.map(toolpath => {
+            config.toolpaths?.length && config.toolpaths.forEach(toolpath => {
                 if (toolpath?.toolParams?.definitionId && /^tool.([0-9_]+)$/.test(toolpath?.toolParams?.definitionId)) {
                     const fname = `${DataStorage.tmpDir}/${toolpath.toolParams.definitionId}.def.json`;
                     if (fs.existsSync(fname)) {
                         fs.copyFileSync(fname, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${toolpath.toolParams.definitionId}.def.json`);
                     }
                 }
-            })
+            });
         }
         console.log(config);
 
@@ -520,6 +543,26 @@ export const recoverProjectFile = async (req, res) => {
         log.error(`Failed to recover file: ${e}`);
         res.status(ERR_INTERNAL_SERVER_ERROR).send({
             msg: `Failed to recover file: ${e}`
+        });
+    }
+};
+
+export const getEditorDefinition = async (req, res) => {
+    try {
+        const { key } = req.body;
+        const editorPath = `${DataStorage.tmpDir}/${key}.def.json`;
+        if (fs.existsSync(editorPath)) {
+            const content = fs.readFileSync(editorPath, 'utf-8');
+            res.send({ editorDefinition: JSON.parse(content) });
+            res.end();
+        } else {
+            res.send({ editorDefinition: {} });
+            res.send();
+        }
+    } catch (e) {
+        log.error(`Failed to get editor definintion: ${e}`);
+        res.status(ERR_INTERNAL_SERVER_ERROR).send({
+            msg: `Failed to get editor definition: ${e}`
         });
     }
 };

@@ -13,8 +13,8 @@ const Button = React.memo((props) => {
         <div
             style={{ width: width, minWidth: minWidth }}
             className={classNames(
-                'display-inline',
-                className
+                className,
+                'display-inline'
             )}
         >
             <AntdButton

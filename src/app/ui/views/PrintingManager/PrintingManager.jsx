@@ -14,6 +14,7 @@ import {
 /* eslint-disable import/no-cycle */
 import ProfileManager from '../ProfileManager';
 import i18n from '../../../lib/i18n';
+import ProfileGroupManager from '../ProfileGroupManager';
 
 // const materialText = (label, color) => {
 //     return (
@@ -33,6 +34,7 @@ function PrintingManager() {
         (state) => state?.printing?.showPrintingManager,
         shallowEqual
     );
+    const showPrintingGroupManager = useSelector((state) => state?.printing?.showPrintingGroupManager);
     const defaultMaterialId = useSelector(
         (state) => state?.printing?.defaultMaterialId,
         shallowEqual
@@ -87,13 +89,18 @@ function PrintingManager() {
             setAllDefinitions(actualDefinitions);
         }
     }, [managerDisplayType, materialDefinitions, qualityDefinitionsModels, defaultMaterialId]);
-    if (!showPrintingManager) {
+    if (!showPrintingManager && !showPrintingGroupManager) {
         return null;
     }
 
     const actions = {
         closeManager: () => {
             dispatch(printingActions.updateShowPrintingManager(false));
+        },
+        closeGroupManager: () => {
+            dispatch(printingActions.updateState({
+                showPrintingGroupManager: false
+            }));
         },
         onChangeFileForManager: (event) => {
             const file = event.target.files[0];
@@ -248,21 +255,30 @@ function PrintingManager() {
         }
     };
     return (
-        <ProfileManager
-            outsideActions={actions}
-            isOfficialDefinition={isOfficialDefinition}
-            customConfig={customConfigs}
-            optionConfigGroup={managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? materialProfileLevel : printingProfileLevel}
-            allDefinitions={allDefinitions}
-            managerTitle={
-                managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL
-                    ? 'key-Printing/PrintingConfigurations-Material Settings'
-                    : 'key-Printing/PrintingConfigurations-Printing Settings'
-            }
-            activeDefinitionID={selectedIds[managerDisplayType].id}
-            managerType={managerDisplayType}
-            onChangeCustomConfig={onChangeCustomConfig}
-        />
+        <>
+            {showPrintingManager && (
+                <ProfileManager
+                    outsideActions={actions}
+                    isOfficialDefinition={isOfficialDefinition}
+                    customConfig={customConfigs}
+                    optionConfigGroup={managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? materialProfileLevel : printingProfileLevel}
+                    allDefinitions={allDefinitions}
+                    managerTitle={
+                        managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL
+                            ? 'key-Printing/PrintingConfigurations-Material Settings'
+                            : 'key-Printing/PrintingConfigurations-Printing Settings'
+                    }
+                    activeDefinitionID={selectedIds[managerDisplayType].id}
+                    managerType={managerDisplayType}
+                    onChangeCustomConfig={onChangeCustomConfig}
+                />
+            )}
+            {showPrintingGroupManager && (
+                <ProfileGroupManager
+                    outsideActions={actions}
+                />
+            )}
+        </>
     );
 }
 

@@ -4,6 +4,8 @@ import ThreeUtils from '../../three-extensions/ThreeUtils';
 import Operation from './Operation';
 import ThreeModel from '../../models/ThreeModel';
 import { ModelTransformation } from '../../models/ThreeBaseModel';
+/* eslint-disable import/no-cycle */
+import { actions as printingActions } from '../printing';
 
 type DeleteOperationProp = {
     target: ThreeGroup | ThreeModel,
@@ -14,7 +16,8 @@ type DeleteOperationState = {
     modelGroup: ModelGroup
     groupTransformation: ModelTransformation,
     modelTransformation: Map<string, ModelTransformation>,
-    childrens?: Array<ThreeGroup | ThreeModel>
+    childrens?: Array<ThreeGroup | ThreeModel>,
+    dispatch?: any
 };
 
 const getGlobalTransform = (modelGroup, model) => {
@@ -82,7 +85,8 @@ export default class DeleteOperation3D extends Operation<DeleteOperationState> {
     public redo() {
         const model = this.state.target;
         const modelGroup = this.state.modelGroup;
-
+        const dispatch = this.state.dispatch;
+        dispatch && dispatch(printingActions.deleteModelEditor(model.modelID));
         modelGroup.removeModel(model);
         if (model.isSelected) {
             model.setSelected(false);

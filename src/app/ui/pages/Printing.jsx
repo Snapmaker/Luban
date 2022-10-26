@@ -276,6 +276,16 @@ function useRenderMainToolBar(setSimplifying, profileInitialized = false) {
                         action: () => {
                             dispatch(printingActions.repairSelectedModels());
                         }
+                    }, {
+                        title: i18n._('key-3DP/MainToolBar-Profile editor'),
+                        disabled: !profileInitialized,
+                        type: 'button',
+                        name: 'MainToolbarModifierSetting',
+                        action: () => {
+                            dispatch(printingActions.updateState({
+                                showPrintingGroupManager: true
+                            }));
+                        }
                     }
                 ]
             }

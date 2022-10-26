@@ -7,7 +7,7 @@ import i18n from '../../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import {
     DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, getCurrentHeadType, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, LEVEL_ONE_POWER_LASER_FOR_ORIGINAL, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES, MACHINE_TOOL_HEADS, PRINTING_SINGLE_EXTRUDER_HEADTOOL, SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL, STANDARD_CNC_TOOLHEAD_FOR_SM2,
-    LEFT, RIGHT
+    LEFT, RIGHT, RIGHT_EXTRUDER
 } from '../../../constants';
 import SvgIcon from '../../components/SvgIcon';
 import { NumberInput as Input } from '../../components/Input';
@@ -250,8 +250,7 @@ const MachineSettings = forwardRef(({
     setSeries,
     setToolhead
 }, ref) => {
-    const extruderLDefinition = useSelector((state) => state?.printing?.extruderLDefinition);
-    const extruderRDefinition = useSelector((state) => state?.printing?.extruderRDefinition);
+    const { extruderLDefinition, extruderRDefinition, definitionEditorForExtruder } = useSelector(state => state?.printing);
     const [headType, setHeadType] = useState(HEAD_PRINTING);
     const [currentSerial, setCurrentSerial] = useState(serial);
     const [currentToolHead, setCurrentToolHead] = useState(toolHead[`${headType}Toolhead`]);
@@ -488,6 +487,7 @@ const MachineSettings = forwardRef(({
                     break;
             }
         } else if (includes(PRINTING_SINGLE_EXTRUDER_HEADTOOL, currentToolHead)) {
+            definitionEditorForExtruder.delete(RIGHT_EXTRUDER);
             _setNozzleDiameterList(LEFT, defaultNozzleDiameterListForSingleExtruder, currentSerial);
             setRightNozzleDiameterList([]);
         }
