@@ -10,8 +10,8 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import XHR from 'i18next-xhr-backend';
 import { TRACE, DEBUG, INFO, WARN, ERROR } from 'universal-logger';
-import * as Sentry from '@sentry/react';
-import { BrowserTracing } from '@sentry/tracing';
+// import * as Sentry from '@sentry/react';
+// import { BrowserTracing } from '@sentry/tracing';
 import settings from './config/settings';
 import { controller } from './lib/controller';
 import log from './lib/log';
@@ -25,7 +25,7 @@ import './styles/app.styl';
 import 'antd/dist/antd.css';
 import { initialize } from './lib/gaEvent';
 
-import pkg from '../package.json';
+// import pkg from '../package.json';
 
 
 series([
@@ -108,6 +108,7 @@ series([
     const userId = machineStore.get('userId');
     initialize(userId);
 
+    /*
     if (pkg.tagName && pkg?.sentry?.auth?.dsn) {
         Sentry.init({
             dsn: pkg.sentry.auth.dsn,
@@ -121,10 +122,11 @@ series([
             release: `${pkg.tagName}-app`,
             sampleRate: 1
         });
-        Sentry.setUser({
-            id: userId
-        });
+        // Sentry.setUser({
+        //     id: userId
+        // });
     }
+    */
 
     ReactDOM.render(
         <ConfigProvider autoInsertSpaceInButton={false}>
