@@ -192,7 +192,7 @@
         "machine_extruder_count": {
             "label": "Number of Extruders",
             "description": "Number of extruder trains. An extruder train is the combination of a feeder, bowden tube, and nozzle.",
-            "default_value": 1,
+            "default_value": 2,
             "minimum_value": "1",
             "maximum_value": "16",
             "type": "int",
@@ -204,7 +204,7 @@
             "label": "Number of Extruders That Are Enabled",
             "description": "Number of extruder trains that are enabled; automatically set in software",
             "value": "machine_extruder_count",
-            "default_value": 1,
+            "default_value": 2,
             "minimum_value": "1",
             "maximum_value": "16",
             "type": "int",

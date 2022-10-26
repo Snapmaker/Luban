@@ -1,6 +1,7 @@
 import { cloneDeep } from 'lodash';
 import {
-    HEAD_PRINTING
+    HEAD_PRINTING,
+    QUALITY_REGEX
 } from '../../constants';
 
 
@@ -633,7 +634,9 @@ class PresetDefinitionModel {
             .forEach((key) => {
                 this[key] = definition[key];
             });
-        this.updateParams(materialType, defaultNozzleSize, true);
+        if (QUALITY_REGEX.test(this.definitionId)) {
+            this.updateParams(materialType, defaultNozzleSize, true);
+        }
     }
 
     public updateParams(

@@ -5,6 +5,9 @@ export const DEFAULT_LUBAN_HOST = 'luban://127.0.0.1';
 export const IMPERIAL_UNITS = 'in';
 export const METRIC_UNITS = 'mm';
 
+export const MATERIAL_REGEX = /^material(\.).*$/;
+export const QUALITY_REGEX = /^quality(\.).*$/;
+
 export const CUSTOM_SERVER_NAME = 'Manual';
 export const EPSILON = 1e-6;
 export const CONNECTION_OPEN = 'connection:open';

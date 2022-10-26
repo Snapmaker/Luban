@@ -1,7 +1,7 @@
 {
     "version": "4.4.0",
     "name": "Default",
-    "inherits": "snapmaker",
+    "inherits": "snapmaker2",
     "category": "Other",
     "i18nName": "key-default_name-Other",
     "i18nCategory": "key-default_category-Other",

@@ -1,7 +1,7 @@
 {
     "name": "Active Definition",
     "version": 2,
-    "inherits": "snapmaker",
+    "inherits": "snapmaker2",
     "overrides": {
         "support_enable": {
             "default_value": false

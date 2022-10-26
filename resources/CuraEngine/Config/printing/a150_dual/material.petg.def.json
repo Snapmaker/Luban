@@ -1,7 +1,7 @@
 {
     "version": "4.4.0",
     "name": "PETG-White",
-    "inherits": "snapmaker",
+    "inherits": "snapmaker2",
     "category": "PETG",
     "i18nName": "key-default_name-PETG_White",
     "i18nCategory": "key-default_category-PETG",

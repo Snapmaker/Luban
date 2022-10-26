@@ -394,9 +394,15 @@ export const actions = {
             'quality'
         );
         const qualityParamModels = [];
+        const materialParamModels = [];
         const activeMaterialType = dispatch(actions.getActiveMaterialType());
         const extruderLDefinition = await definitionManager.getDefinition('snapmaker_extruder_0');
-
+        allMaterialDefinition.forEach((eachDefinition) => {
+            const paramModel = new PresetDefinitionModel(
+                eachDefinition
+            );
+            materialParamModels.push(paramModel);
+        });
         allQualityDefinitions.forEach((eachDefinition) => {
             const paramModel = new PresetDefinitionModel(
                 eachDefinition,
@@ -407,7 +413,7 @@ export const actions = {
         });
         dispatch(
             actions.updateState({
-                materialDefinitions: allMaterialDefinition,
+                materialDefinitions: materialParamModels,
                 qualityDefinitions: qualityParamModels,
                 extruderLDefinition,
                 extruderRDefinition: await definitionManager.getDefinitionsByPrefixName('snapmaker_extruder_1'),
@@ -481,30 +487,34 @@ export const actions = {
         const allQualityDefinitions = await definitionManager.getDefinitionsByPrefixName(
             'quality'
         );
-        const qualityParamModels = [];
-        allQualityDefinitions.forEach((eachDefinition) => {
+        const materialParamModels = allMaterialDefinition.map((eachDefinition) => {
             const paramModel = new PresetDefinitionModel(
                 eachDefinition,
                 activeMaterialType,
                 definitionManager.extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
             );
-            qualityParamModels.push(paramModel);
+            return paramModel
+        });
+        const qualityParamModels = allQualityDefinitions.map((eachDefinition) => {
+            const paramModel = new PresetDefinitionModel(
+                eachDefinition,
+                activeMaterialType,
+                definitionManager.extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
+            );
+            return paramModel
         });
         const defaultDefinitions = definitionManager?.defaultDefinitions.map((eachDefinition) => {
-            if (eachDefinition.definitionId.indexOf('quality.') === 0) {
-                const paramModel = new PresetDefinitionModel(
-                    eachDefinition,
-                    activeMaterialType,
-                    definitionManager.extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
-                );
-                return paramModel
-            }
-            return eachDefinition
+            const paramModel = new PresetDefinitionModel(
+                eachDefinition,
+                activeMaterialType,
+                definitionManager.extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
+            );
+            return paramModel
         })
         dispatch(
             actions.updateState({
                 defaultDefinitions: defaultDefinitions,
-                materialDefinitions: allMaterialDefinition,
+                materialDefinitions: materialParamModels,
                 qualityDefinitions: qualityParamModels,
                 printingProfileLevel: profileLevel.printingProfileLevel,
                 materialProfileLevel: profileLevel.materialProfileLevel,
@@ -1288,13 +1298,13 @@ export const actions = {
         return def?.settings;
     },
 
-    updateDefaultDefinition: (id, diameter) => (dispatch, getState) => {
+    updateDefaultDefinition: (id, paramKey, paramValue) => (dispatch, getState) => {
         const { defaultDefinitions } = getState().printing;
         const index = defaultDefinitions.findIndex(
             (d) => d.definitionId === id
         );
         const newDefModel = defaultDefinitions[index];
-        resolveDefinition(newDefModel, [['machine_nozzle_size', diameter]]);
+        resolveDefinition(newDefModel, [[paramKey, paramValue]]);
         definitionManager.updateDefaultDefinition(newDefModel);
         defaultDefinitions[index] = newDefModel;
 
@@ -1350,6 +1360,76 @@ export const actions = {
 
     updateManagerDisplayType: managerDisplayType => dispatch => {
         dispatch(actions.updateState({ managerDisplayType }));
+    },
+
+    updateMachineDefinition: ({
+        paramKey,
+        paramValue,
+        direction,
+    }) => async(dispatch, getState) => {
+        if (!isNil(paramValue)) {
+            const printingState = getState().printing;
+            const machineDefinition = definitionManager.machineDefinition;
+            const { materialDefinitions, qualityDefinitions } = printingState;
+            let updatePresetModel = false;
+            if (direction) {
+                const definitionsKey = definitionKeysWithDirection[direction][PRINTING_MANAGER_TYPE_EXTRUDER];
+                const definitionModel = printingState[definitionsKey];
+                if (definitionModel.settings[paramKey]) {
+                    definitionModel.settings[paramKey].default_value = paramValue;
+                }
+                // TODO: add condition for main extruder @wen
+                if (direction === LEFT_EXTRUDER) {
+                    if (paramKey === 'machine_nozzle_size') {
+                        updatePresetModel = true;
+                    }
+                }
+                dispatch(
+                    actions.updateState({
+                        [definitionsKey]: definitionModel
+                    })
+                );
+            }
+            if (machineDefinition.settings[paramKey]) {
+                machineDefinition.settings[paramKey].default_value = paramValue;
+            }
+            const { newMaterialDefinitions, newQualityDefinitions } = await definitionManager.updateMachineDefinition({
+                isNozzleSize: updatePresetModel,
+                machineDefinition,
+                materialDefinitions,
+                qualityDefinitions
+            });
+            dispatch(actions.updateDefaultDefinition(
+                'quality.normal_other_quality',
+                paramKey,
+                paramValue
+            ));
+            if (updatePresetModel) {
+                const { series } = getState().machine;
+                dispatch(actions.updateDefinitionModelAndCheckVisible({
+                    type: PRINTING_MANAGER_TYPE_EXTRUDER,
+                    direction,
+                    series,
+                    machineNozzleSize: paramValue,
+                    originalConfigId: machineStore.get('defaultConfigId') ? JSON.parse(machineStore.get('defaultConfigId')) : {}
+                }))
+            }
+            if (newMaterialDefinitions) {
+                dispatch(actions.updateState({
+                    qualityDefinitions: newQualityDefinitions,
+                    materialDefinitions: newMaterialDefinitions,
+                }));
+            }else {
+                dispatch(actions.updateState({
+                    qualityDefinitions: newQualityDefinitions,
+                }));
+            }
+
+            setTimeout(() => {
+                dispatch(actions.applyProfileToAllModels());
+            });
+        }
+
     },
 
     updateCurrentDefinition: ({
@@ -1443,13 +1523,11 @@ export const actions = {
                         name = `#${name}`;
                         definition.name = name;
                     }
-                    if (definition.definitionId.indexOf('quality.') === 0) {
-                        definition = new PresetDefinitionModel(
-                            definition,
-                            activeMaterialType,
-                            extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
-                        );
-                    }
+                    definition = new PresetDefinitionModel(
+                        definition,
+                        activeMaterialType,
+                        extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
+                    );
                     await definitionManager.updateDefinition({
                         definitionId: definition.definitionId,
                         name
@@ -1609,13 +1687,11 @@ export const actions = {
         let createdDefinitionModel = await definitionManager.createDefinition(newDefinition);
         const { extruderLDefinition } = state;
         const activeMaterialType = dispatch(actions.getActiveMaterialType());
-        if (createdDefinitionModel.definitionId.indexOf('quality.') === 0) {
-            createdDefinitionModel = new PresetDefinitionModel(
-                createdDefinitionModel,
-                activeMaterialType,
-                extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
-            );
-        }
+        createdDefinitionModel = new PresetDefinitionModel(
+            createdDefinitionModel,
+            activeMaterialType,
+            extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
+        );
 
         dispatch(
             actions.updateState({
@@ -1673,13 +1749,11 @@ export const actions = {
             const createdDefinitionModel = await definitionManager.createDefinition(
                 newDefinition
             );
-            if (createdDefinitionModel.definitionId.indexOf('quality.') === 0) {
-                createdDefinitionModel = new PresetDefinitionModel(
-                    createdDefinitionModel,
-                    activeMaterialType,
-                    extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
-                );
-            }
+            createdDefinitionModel = new PresetDefinitionModel(
+                createdDefinitionModel,
+                activeMaterialType,
+                extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
+            );
             if (createdDefinitionModel) {
                 allDupliateDefinitions.push(createdDefinitionModel);
             }
