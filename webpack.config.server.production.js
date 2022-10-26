@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
 const TerserPlugin = require('terser-webpack-plugin');
+const SentryWebpackPlugin = require('@sentry/webpack-plugin');
 const babelConfig = require('./babel.config');
 const pkg = require('./package.json');
 
@@ -27,7 +28,7 @@ const publicPath = (function calculatePublicPath(payload) {
     return `/${hash.substr(0, 8)}/`; // 8 digits
 }(pkg.version));
 
-module.exports = {
+const webpackConfig = {
     mode: 'production',
     target: 'node',
     context: path.resolve(__dirname, 'src/server'),
@@ -102,3 +103,33 @@ module.exports = {
         setImmediate: true
     }
 };
+
+const hasSentryConfig = fs.existsSync(
+    path.resolve(__dirname, '.sentry.config.json')
+);
+if (hasSentryConfig) {
+    /* eslint-disable-next-line import/no-unresolved */
+    const sentryConfig = require('./.sentry.config.json');
+
+    if (sentryConfig && sentryConfig.auth && sentryConfig.auth.token) {
+        webpackConfig.devtool = 'source-map';
+        webpackConfig.output.sourceMapFilename = '[name].js.map';
+        webpackConfig.plugins.push(
+            new SentryWebpackPlugin({
+                // see https://docs.sentry.io/product/cli/configuration/ for details
+                authToken: sentryConfig.auth.token,
+                org: sentryConfig.defaults.org,
+                project: sentryConfig.defaults.project,
+                release: `${sentryConfig.tagName}-server`,
+
+                include: ['./dist/Luban/server/*.js', './dist/Luban/server/*.js.map'],
+                ignore: ['node_modules', 'webpack.config.js'],
+                config: {
+                    environment: 'production'
+                }
+            })
+        );
+    }
+}
+
+module.exports = webpackConfig;

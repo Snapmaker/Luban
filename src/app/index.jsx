@@ -10,6 +10,8 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import XHR from 'i18next-xhr-backend';
 import { TRACE, DEBUG, INFO, WARN, ERROR } from 'universal-logger';
+import * as Sentry from '@sentry/react';
+import { BrowserTracing } from '@sentry/tracing';
 import settings from './config/settings';
 import { controller } from './lib/controller';
 import log from './lib/log';
@@ -22,6 +24,8 @@ import './styles/vendor.styl';
 import './styles/app.styl';
 import 'antd/dist/antd.css';
 import { initialize } from './lib/gaEvent';
+
+import pkg from '../package.json';
 
 
 series([
@@ -103,6 +107,24 @@ series([
     document.body.appendChild(container);
     const userId = machineStore.get('userId');
     initialize(userId);
+
+    if (pkg.tagName && pkg?.sentry?.auth?.dsn) {
+        Sentry.init({
+            dsn: pkg.sentry.auth.dsn,
+            integrations: [new BrowserTracing()],
+
+            // Set tracesSampleRate to 1.0 to capture 100%
+            // of transactions for performance monitoring.
+            // We recommend adjusting this value in production
+            tracesSampleRate: 1.0,
+            environment: process.env.NODE_ENV,
+            release: `${pkg.tagName}-app`,
+            sampleRate: 1
+        });
+        Sentry.setUser({
+            id: userId
+        });
+    }
 
     ReactDOM.render(
         <ConfigProvider autoInsertSpaceInButton={false}>

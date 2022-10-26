@@ -2,6 +2,7 @@ import gulp from 'gulp';
 import log from 'fancy-log';
 import PluginError from 'plugin-error';
 import webpack from 'webpack';
+import del from 'del';
 
 //
 // Development Copy
@@ -33,6 +34,9 @@ export function appCopyProduction() {
         .pipe(gulp.dest('dist/Luban/app'));
 }
 
+function clearSourceMap() {
+    return del('dist/Luban/app/*.js.map');
+}
 
 //
 // Production Build
@@ -45,6 +49,7 @@ export function appBuildProduction() {
                 throw new PluginError('app:build-prod', err);
             }
             log('[app:build-prod]', stats.toString({ colors: true }));
+            clearSourceMap();
             resolve();
         });
     });
