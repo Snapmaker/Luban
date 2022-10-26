@@ -134,8 +134,8 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
             actions.rotateOnlyForUniformScale(() => {
                 dispatch(printingActions.startAnalyzeRotationProgress());
                 setTimeout(() => {
-                    setShowRotationAnalyzeModal(true);
                     fitViewIn && fitViewIn();
+                    setShowRotationAnalyzeModal(true);
                 }, 100);
             });
             logTransformOperation(HEAD_PRINTING, 'roate', 'analyze_in');
