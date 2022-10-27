@@ -1,10 +1,13 @@
 import {
-    MACHINE_SERIES,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
     LEVEL_TWO_POWER_LASER_FOR_ORIGINAL, LEVEL_ONE_POWER_LASER_FOR_SM2,
     LEVEL_TWO_POWER_LASER_FOR_SM2
 } from '../constants';
+import {
+    MACHINE_SERIES,
+} from '../constants/machines';
+
 import {
     CaseConfigOriginalPrintingSingle, CaseConfigOriginalLaserPowerOne,
     CaseConfigOriginalLaserPowerTwo, CaseConfigOriginalCncStandard,

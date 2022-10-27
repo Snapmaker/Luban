@@ -8,9 +8,11 @@ import {
     CONNECTION_TYPE_SERIAL,
     CONNECTION_TYPE_WIFI,
     EXPERIMENTAL_WIFI_CONTROL,
-    MACHINE_SERIES,
     PROTOCOL_TEXT
 } from '../../../constants';
+import {
+    MACHINE_SERIES
+} from '../../../constants/machines';
 import i18n from '../../../lib/i18n';
 import Notifications from '../../components/Notifications';
 import Modal from '../../components/Modal';

@@ -8,11 +8,11 @@ import { actions as projectActions } from '../../../flux/project';
 import { actions as editorActions } from '../../../flux/editor';
 
 import {
-    getMachineSeriesWithToolhead,
     CNC_TOOL_CONFIG_GROUP, HEAD_CNC, DEFAULT_CNC_CONFIG_IDS
 } from '../../../constants';
 import ProfileManager from '../ProfileManagerForLaserCnc';
 import i18n from '../../../lib/i18n';
+import { getMachineSeriesWithToolhead } from '../../../constants/machines';
 
 function isOfficialDefinition(activeToolList) {
     return includes(DEFAULT_CNC_CONFIG_IDS,

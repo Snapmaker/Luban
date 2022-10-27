@@ -16,13 +16,12 @@ import {
     HEAD_CNC,
     DISPLAYED_TYPE_MODEL,
     COORDINATE_MODE_CENTER,
-    COORDINATE_MODE_BOTTOM_CENTER,
-    getMachineSeriesWithToolhead
-} from '../../constants';
+    COORDINATE_MODE_BOTTOM_CENTER } from '../../constants';
 import definitionManager from '../manager/DefinitionManager';
 import ToolPathGroup from '../../toolpaths/ToolPathGroup';
 import ProgressStatesManager, { STEP_STAGE } from '../../lib/manager/ProgressManager';
 import OperationHistory from '../operation-history/OperationHistory';
+import { getMachineSeriesWithToolhead } from '../../constants/machines';
 
 const ACTION_CHANGE_TOOL_PARAMS = 'cnc/ACTION_CHANGE_TOOL_PARAMS';
 

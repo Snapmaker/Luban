@@ -8,15 +8,18 @@ import DataStorage, { rmDir } from '../../DataStorage';
 import store from '../../store';
 import { PROTOCOL_TEXT } from '../../controllers/constants';
 import { parseLubanGcodeHeader } from '../../lib/parseGcodeHeader';
-import { zipFolder, unzipFile } from '../../lib/archive';
+import { unzipFile, zipFolder } from '../../lib/archive';
 import { packFirmware } from '../../lib/firmware-build';
+import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../constants';
 import {
-    ERR_INTERNAL_SERVER_ERROR, HEAD_PRINTING, ERR_BAD_REQUEST, HEAD_LASER, HEAD_CNC
-} from '../../constants';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, getMachineSeriesWithToolhead, INITIAL_TOOL_HEAD_FOR_ORIGINAL, INITIAL_TOOL_HEAD_FOR_SM2 } from '../../../app/constants';
+    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+    INITIAL_TOOL_HEAD_FOR_ORIGINAL,
+    INITIAL_TOOL_HEAD_FOR_SM2
+} from '../../../app/constants';
 import { removeSpecialChars } from '../../../shared/lib/utils';
 import { generateRandomPathName } from '../../../shared/lib/random-utils';
 import { convertFileToSTL } from '../../lib/model-to-stl';
+import { getMachineSeriesWithToolhead } from '../../../app/constants/machines';
 
 const log = logger('api:file');
 

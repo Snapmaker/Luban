@@ -9,9 +9,11 @@ import {
     SPEED_MEDIUM,
     SPEED_LOW,
     CONNECTION_FILTER_SWITCH,
-    CONNECTION_FILTER_WORKSPEED,
-    MACHINE_SERIES
+    CONNECTION_FILTER_WORKSPEED
 } from '../../../constants';
+import {
+    MACHINE_SERIES
+} from '../../../constants/machines';
 import i18n from '../../../lib/i18n';
 // import log from '../../../lib/log';
 import { controller } from '../../../lib/controller';

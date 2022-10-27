@@ -1,10 +1,17 @@
 import fs from 'fs';
 import path from 'path';
-import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR,
-    DEFINITION_SNAPMAKER_EXTRUDER_0, DEFINITION_SNAPMAKER_EXTRUDER_1,
-    DEFINITION_ACTIVE, DEFINITION_ACTIVE_FINAL, KEY_DEFAULT_CATEGORY_CUSTOM,
-    KEY_DEFAULT_CATEGORY_DEFAULT, HEAD_PRINTING } from '../../constants';
-import { loadDefinitionsByPrefixName, loadAllSeriesDefinitions, DefinitionLoader } from '../../slicer';
+import {
+    DEFINITION_ACTIVE,
+    DEFINITION_ACTIVE_FINAL,
+    DEFINITION_SNAPMAKER_EXTRUDER_0,
+    DEFINITION_SNAPMAKER_EXTRUDER_1,
+    ERR_BAD_REQUEST,
+    ERR_INTERNAL_SERVER_ERROR,
+    HEAD_PRINTING,
+    KEY_DEFAULT_CATEGORY_CUSTOM,
+    KEY_DEFAULT_CATEGORY_DEFAULT
+} from '../../constants';
+import { DefinitionLoader, loadAllSeriesDefinitions, loadDefinitionsByPrefixName } from '../../slicer';
 import DataStorage from '../../DataStorage';
 import logger from '../../lib/logger';
 

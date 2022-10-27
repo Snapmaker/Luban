@@ -2,7 +2,9 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import SetBackground from './SetBackground';
-import { HEAD_LASER, getCurrentHeadType } from '../../../constants';
+import { HEAD_LASER } from '../../../constants';
+import { getCurrentHeadType } from '../../../lib/url-utils';
+
 
 
 class LaserSetBackgroundWidget extends PureComponent {

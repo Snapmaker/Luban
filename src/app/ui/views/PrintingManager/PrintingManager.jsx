@@ -7,13 +7,13 @@ import { actions as machineActions } from '../../../flux/machine';
 import {
     PRINTING_MANAGER_TYPE_MATERIAL,
     PRINTING_MANAGER_TYPE_QUALITY,
-    getMachineSeriesWithToolhead,
     HEAD_PRINTING,
     LEFT_EXTRUDER
 } from '../../../constants';
 /* eslint-disable import/no-cycle */
 import ProfileManager from '../ProfileManager';
 import i18n from '../../../lib/i18n';
+import { getMachineSeriesWithToolhead } from '../../../constants/machines';
 
 // const materialText = (label, color) => {
 //     return (

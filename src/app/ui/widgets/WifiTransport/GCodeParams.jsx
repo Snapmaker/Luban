@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import i18n from '../../../lib/i18n';
 import { humanReadableTime } from '../../../lib/time-utils';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_UNKNOWN, MACHINE_HEAD_TYPE, MACHINE_TOOL_HEADS } from '../../../constants';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_UNKNOWN, MACHINE_HEAD_TYPE } from '../../../constants';
+import { MACHINE_TOOL_HEADS } from '../../../constants/machines';
 
 const GCodeParams = (props) => {
     const [gcodeFile, setGcodeFile] = useState({});

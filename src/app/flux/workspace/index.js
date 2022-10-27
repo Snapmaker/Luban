@@ -11,9 +11,11 @@ import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcod
 import {
     CONNECTION_STATUS_CONNECTED,
     EPSILON,
-    MACHINE_SERIES,
     PROTOCOL_TEXT,
 } from '../../constants';
+import {
+    MACHINE_SERIES,
+} from '../../constants/machines';
 import { logGcodeExport } from '../../lib/gaEvent';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 

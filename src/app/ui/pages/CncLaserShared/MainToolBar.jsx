@@ -11,7 +11,8 @@ import { actions as editorActions } from '../../../flux/editor';
 import Dropdown from '../../components/Dropdown';
 import Cnc3DVisualizer from '../../views/Cnc3DVisualizer';
 import MainToolBar from '../../layouts/MainToolBar';
-import { HEAD_CNC, HEAD_LASER, MACHINE_SERIES, CONNECTION_TYPE_WIFI, longLangWithType } from '../../../constants';
+import { HEAD_CNC, HEAD_LASER, CONNECTION_TYPE_WIFI, longLangWithType } from '../../../constants';
+import { MACHINE_SERIES } from '../../../constants/machines';
 import { actions as laserActions } from '../../../flux/laser';
 import { renderModal } from '../../utils';
 import LaserSetBackground from '../../widgets/LaserSetBackground';
@@ -429,7 +430,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                     lang={i18next.language}
                     headType={headType}
                     hasMachineSettings
-                    machineInfo={machineInfo}
+                    // machineInfo={machineInfo}
                     isConnected={isConnected}
                 />
             );

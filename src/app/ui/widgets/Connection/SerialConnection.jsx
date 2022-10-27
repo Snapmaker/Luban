@@ -11,12 +11,14 @@ import log from '../../../lib/log';
 import i18n from '../../../lib/i18n';
 import { controller } from '../../../lib/controller';
 import {
-    MACHINE_SERIES,
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATE_PAUSED,
     WORKFLOW_STATE_RUNNING, LEVEL_TWO_POWER_LASER_FOR_SM2,
     HEAD_LASER, HEAD_CNC, HEAD_PRINTING, DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2
 } from '../../../constants';
+import {
+    MACHINE_SERIES,
+} from '../../../constants/machines';
 import { actions as machineActions } from '../../../flux/machine';
 import styles from './index.styl';
 import MismatchModal from './MismatchModal';

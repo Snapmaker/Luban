@@ -14,30 +14,28 @@ import { renderModal } from '../utils';
 import AppBar from '../views/AppBar';
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
-import { checkIsSnapmakerProjectFile, checkIsGCodeFile } from '../../lib/check-name';
+import { checkIsGCodeFile, checkIsSnapmakerProjectFile } from '../../lib/check-name';
 import Settings from '../pages/Settings/Settings';
 import FirmwareTool from '../pages/Settings/FirmwareTool';
 import SoftwareUpdate from '../pages/Settings/SoftwareUpdate';
 import DownloadUpdate from '../pages/Settings/SoftwareUpdate/DownloadUpdate';
 
 import {
-    // HEAD_PRINTING,
-    HEAD_LASER,
-    HEAD_CNC,
-    COORDINATE_MODE_CENTER,
     COORDINATE_MODE_BOTTOM_CENTER,
-    getCurrentHeadType,
-    HEAD_TYPE_ENV_NAME,
-    SOFTWARE_MANUAL,
+    COORDINATE_MODE_CENTER,
     FORUM_URL,
-    SUPPORT_ZH_URL,
-    SUPPORT_EN_URL,
-    TUTORIAL_VIDEO_URL,
-    OFFICIAL_SITE_ZH_URL,
-    OFFICIAL_SITE_EN_URL,
-    MARKET_ZH_URL,
+    HEAD_CNC,
+    HEAD_LASER,
+    HEAD_TYPE_ENV_NAME,
     MARKET_EN_URL,
-    MYMINIFACTORY_URL
+    MARKET_ZH_URL,
+    MYMINIFACTORY_URL,
+    OFFICIAL_SITE_EN_URL,
+    OFFICIAL_SITE_ZH_URL,
+    SOFTWARE_MANUAL,
+    SUPPORT_EN_URL,
+    SUPPORT_ZH_URL,
+    TUTORIAL_VIDEO_URL
 } from '../../constants';
 import { actions as menuActions } from '../../flux/appbar-menu';
 import { actions as machineActions } from '../../flux/machine';
@@ -53,6 +51,7 @@ import ModelExporter from '../widgets/PrintingVisualizer/ModelExporter';
 import Anchor from '../components/Anchor';
 import SvgIcon from '../components/SvgIcon';
 import { logLubanQuit } from '../../lib/gaEvent';
+import { getCurrentHeadType } from '../../lib/url-utils';
 
 class AppLayout extends PureComponent {
     static propTypes = {

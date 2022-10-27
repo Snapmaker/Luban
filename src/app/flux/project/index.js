@@ -9,7 +9,6 @@ import {
     HEAD_TYPE_ENV_NAME,
     SOURCE_TYPE,
     PROCESS_MODE_MESH,
-    getCurrentHeadType,
     COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_CENTER, PAGE_EDITOR, DISPLAYED_TYPE_MODEL,
     MAX_RECENT_FILES_LENGTH,
     LOAD_MODEL_FROM_OUTER,
@@ -31,6 +30,7 @@ import UniApi from '../../lib/uni-api';
 import { logModuleVisit } from '../../lib/gaEvent';
 import { PROCESS_STAGE } from '../../lib/manager/ProgressManager';
 import workerManager from '../../lib/manager/workerManager';
+import { getCurrentHeadType } from '../../lib/url-utils';
 
 const INITIAL_STATE = {
     [HEAD_PRINTING]: {

@@ -7,8 +7,7 @@ import { includes } from 'lodash';
 import Uri from 'jsuri';
 import i18n from '../../../lib/i18n';
 import styles from './styles.styl';
-import { MACHINE_SERIES,
-    MACHINE_TOOL_HEADS,
+import {
     SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
@@ -20,6 +19,11 @@ import { MACHINE_SERIES,
     STANDARD_CNC_TOOLHEAD_FOR_SM2,
     LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2
 } from '../../../constants';
+
+import {
+    MACHINE_SERIES,
+    MACHINE_TOOL_HEADS
+} from '../../../constants/machines';
 import { actions as machineActions } from '../../../flux/machine';
 import { machineStore } from '../../../store/local-storage';
 
@@ -156,18 +160,18 @@ const SettingGuideModal = (props) => {
     const [settingStep, setSettingStep] = useState('lang');
     const [machineSeries, setMachineSeries] = useState(3);
     const [zAxis, setZAxis] = useState(false);
-    const [printingToolheadSelected, setPrintingToolheadSelected] = useState(MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value);
-    const [laserToolheadSelected, setLaserToolheadSelected] = useState(MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value);
-    const [cncToolheadSelected, setCncToolheadSelected] = useState(MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value);
+    const [printingToolHeadSelected, setPrintingToolHeadSelected] = useState(MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value);
+    const [laserToolHeadSelected, setLaserToolHeadSelected] = useState(MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value);
+    const [cncToolHeadSelected, setCncToolHeadSelected] = useState(MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value);
     useEffect(() => {
         if (!machineSeries) {
-            setPrintingToolheadSelected(MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value);
-            setLaserToolheadSelected(MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value);
-            setCncToolheadSelected(MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value);
+            setPrintingToolHeadSelected(MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value);
+            setLaserToolHeadSelected(MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value);
+            setCncToolHeadSelected(MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value);
         } else {
-            setPrintingToolheadSelected(MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value);
-            setLaserToolheadSelected(MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value);
-            setCncToolheadSelected(MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value);
+            setPrintingToolHeadSelected(MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value);
+            setLaserToolHeadSelected(MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value);
+            setCncToolHeadSelected(MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value);
         }
     }, [machineSeries]);
 
@@ -194,9 +198,9 @@ const SettingGuideModal = (props) => {
             window.location.search = uri.toString();
             const currentZAxis = zAxis ? 1 : 0;
             const toolHead = {
-                printingToolhead: printingToolheadSelected,
-                laserToolhead: laserToolheadSelected,
-                cncToolhead: cncToolheadSelected
+                printingToolhead: printingToolHeadSelected,
+                laserToolhead: laserToolHeadSelected,
+                cncToolhead: cncToolHeadSelected
             };
             dispatch(machineActions.updateMachineSeries(machineSeries === 0 && !!zAxis ? machineSeriesOptions[0]?.lz?.value : machineSeriesOptions[machineSeries].value));
             dispatch(machineActions.updateMachineSize(machineSeries === 0 && !!zAxis ? machineSeriesOptions[0]?.lz?.size : machineSeriesOptions[machineSeries].size));
@@ -244,13 +248,13 @@ const SettingGuideModal = (props) => {
         const nextValue = e.value;
         switch (type) {
             case 'printing':
-                setPrintingToolheadSelected(nextValue);
+                setPrintingToolHeadSelected(nextValue);
                 break;
             case 'laser':
-                setLaserToolheadSelected(nextValue);
+                setLaserToolHeadSelected(nextValue);
                 break;
             case 'cnc':
-                setCncToolheadSelected(nextValue);
+                setCncToolHeadSelected(nextValue);
                 break;
             default:
                 break;
@@ -342,7 +346,7 @@ const SettingGuideModal = (props) => {
                                             <div className={classNames(styles.printingSelect, 'margin-bottom-16')}>
                                                 <span className="main-text-normal margin-right-16">{i18n._('key-App/Settings/MachineSettings-3D Print Toolhead')}</span>
                                                 <Select
-                                                    value={printingToolheadSelected}
+                                                    value={printingToolHeadSelected}
                                                     options={(machineSeries === 0 ? printingToolHeadOptionForOriginal : printingToolHeadOption).map(item => {
                                                         return {
                                                             value: item.value,
@@ -356,7 +360,7 @@ const SettingGuideModal = (props) => {
                                             <div className={classNames(styles.laserSelect, 'margin-bottom-16')}>
                                                 <span className="main-text-normal margin-right-16">{i18n._('key-App/Settings/MachineSettings-Laser Toolhead')}</span>
                                                 <Select
-                                                    value={laserToolheadSelected}
+                                                    value={laserToolHeadSelected}
                                                     showSearch={false}
                                                     options={(machineSeries === 0 ? laserToolHeadOptionForOriginal : laserToolHeadOption).map(item => {
                                                         return {
@@ -371,7 +375,7 @@ const SettingGuideModal = (props) => {
                                             <div className={classNames(styles.laserSelect, 'margin-bottom-16')}>
                                                 <span className="main-text-normal margin-right-16">{i18n._('key-App/Settings/MachineSettings-CNC Toolhead')}</span>
                                                 <Select
-                                                    value={cncToolheadSelected}
+                                                    value={cncToolHeadSelected}
                                                     options={(machineSeries === 0 ? cncToolHeadOptionForOriginal : cncToolHeadOption).map(item => ({
                                                         value: item.value,
                                                         label: i18n._(item.label)

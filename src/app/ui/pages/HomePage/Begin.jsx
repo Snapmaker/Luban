@@ -24,6 +24,7 @@ const Begin = () => {
     // useState
     const [showWorkspace, setShowWorkspace] = useState(false);
     const [beginSelected, setBeginSelected] = useState('start-project');
+
     // method
     function renderWorkspace() {
         const onClose = () => setShowWorkspace(false);
@@ -32,6 +33,7 @@ const Begin = () => {
             component: Workspace
         });
     }
+
     function handleSwitchToWorkspace(pathname) {
         const oldPathname = location?.pathname;
         if (oldPathname === '/') {
@@ -70,58 +72,88 @@ const Begin = () => {
                     </Button>
                 </div>
                 <div className={styles.beginContainer}>
-                    {beginSelected === 'start-project' && (
-                        <div className={classNames(styles['link-bar'], 'margin-top-36', 'margin-bottom-72')}>
-                            <div className={classNames(styles['3dp'], 'margin-horizontal-16')}>
-                                <Anchor onClick={() => handleNewFile(false, HEAD_PRINTING)} title={i18n._('key-HomePage/Begin-3D Printing G-code Generator')}>
-                                    <div className={classNames(styles.imgWrapper)}>
-                                        <img src={require('./images/icon_3d_120x120.svg')} alt="" />
-                                    </div>
-                                    <span className={classNames('heading-2', 'align-c', 'text-overflow-ellipsis-line-2', 'width-one-in-six')}>{i18n._('key-HomePage/Begin-3D Printing')}</span>
-                                </Anchor>
-                            </div>
-                            <div className={classNames(styles.laser, 'margin-horizontal-16')}>
-                                <Anchor title={i18n._('key-HomePage/Begin-Laser G-code Generator')}>
-                                    <div className={classNames(styles.imgWrapper)}>
-                                        <img className={classNames(styles['laser-img'])} src={require('./images/icon_laser_120x120.svg')} alt="" />
-                                        <div className={styles['laser-axis-select']}>
-                                            <Button onClick={() => { handleNewFile(false, HEAD_LASER); }} className={classNames(styles['three-axis-select'])} type="default" priority="level-three">
-                                                {i18n._('key-HomePage/Begin-3-axis')}
-                                            </Button>
-                                            <Button onClick={() => { handleNewFile(true, HEAD_LASER); }} className={classNames(styles['four-axis-select'])} type="default" priority="level-three">
-                                                {i18n._('key-HomePage/Begin-4-axis')}
-                                            </Button>
+                    {
+                        beginSelected === 'start-project' && (
+                            <div className={classNames(styles['link-bar'], 'margin-top-36', 'margin-bottom-72')}>
+                                <div className={classNames(styles['3dp'], 'margin-horizontal-16')}>
+                                    <Anchor onClick={() => handleNewFile(false, HEAD_PRINTING)} title={i18n._('key-HomePage/Begin-3D Printing G-code Generator')}>
+                                        <div className={classNames(styles.imgWrapper)}>
+                                            <img src={require('./images/icon_3d_120x120.svg')} alt="" />
                                         </div>
-                                    </div>
-                                    <span className={classNames('heading-2', 'align-c', 'text-overflow-ellipsis-line-2', 'width-one-in-six')}>{i18n._('key-HomePage/Begin-Laser')}</span>
-                                </Anchor>
-                            </div>
-                            <div className={classNames(styles.cnc, 'margin-horizontal-16')}>
-                                <Anchor title={i18n._('key-HomePage/Begin-CNC G-code Generator')}>
-                                    <div className={classNames(styles.imgWrapper)}>
-                                        <img className={classNames(styles['cnc-img'])} src={require('./images/icon_cnc_120x120.svg')} alt="" />
-                                        <div className={styles['cnc-axis-select']}>
-                                            <Button onClick={() => { handleNewFile(false, HEAD_CNC); }} className={classNames(styles['three-axis-select'])} type="default" priority="level-three">
-                                                {i18n._('key-HomePage/Begin-3-axis')}
-                                            </Button>
-                                            <Button onClick={() => { handleNewFile(true, HEAD_CNC); }} className={classNames(styles['four-axis-select'])} type="default" priority="level-three">
-                                                {i18n._('key-HomePage/Begin-4-axis')}
-                                            </Button>
+                                        <span className={classNames('heading-2', 'align-c', 'text-overflow-ellipsis-line-2', 'width-one-in-six')}>{i18n._('key-HomePage/Begin-3D Printing')}</span>
+                                    </Anchor>
+                                </div>
+                                <div className={classNames(styles.laser, 'margin-horizontal-16')}>
+                                    <Anchor title={i18n._('key-HomePage/Begin-Laser G-code Generator')}>
+                                        <div className={classNames(styles.imgWrapper)}>
+                                            <img className={classNames(styles['laser-img'])} src={require('./images/icon_laser_120x120.svg')} alt="" />
+                                            <div className={styles['laser-axis-select']}>
+                                                <Button
+                                                    onClick={() => {
+                                                        handleNewFile(false, HEAD_LASER);
+                                                    }}
+                                                    className={classNames(styles['three-axis-select'])}
+                                                    type="default"
+                                                    priority="level-three"
+                                                >
+                                                    {i18n._('key-HomePage/Begin-3-axis')}
+                                                </Button>
+                                                <Button
+                                                    onClick={() => {
+                                                        handleNewFile(true, HEAD_LASER);
+                                                    }}
+                                                    className={classNames(styles['four-axis-select'])}
+                                                    type="default"
+                                                    priority="level-three"
+                                                >
+                                                    {i18n._('key-HomePage/Begin-4-axis')}
+                                                </Button>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <span className={classNames('heading-2', 'align-c', 'text-overflow-ellipsis-line-2', 'width-one-in-six')}>{i18n._('key-HomePage/Begin-CNC')}</span>
-                                </Anchor>
+                                        <span className={classNames('heading-2', 'align-c', 'text-overflow-ellipsis-line-2', 'width-one-in-six')}>{i18n._('key-HomePage/Begin-Laser')}</span>
+                                    </Anchor>
+                                </div>
+                                <div className={classNames(styles.cnc, 'margin-horizontal-16')}>
+                                    <Anchor title={i18n._('key-HomePage/Begin-CNC G-code Generator')}>
+                                        <div className={classNames(styles.imgWrapper)}>
+                                            <img className={classNames(styles['cnc-img'])} src={require('./images/icon_cnc_120x120.svg')} alt="" />
+                                            <div className={styles['cnc-axis-select']}>
+                                                <Button
+                                                    onClick={() => {
+                                                        handleNewFile(false, HEAD_CNC);
+                                                    }}
+                                                    className={classNames(styles['three-axis-select'])}
+                                                    type="default"
+                                                    priority="level-three"
+                                                >
+                                                    {i18n._('key-HomePage/Begin-3-axis')}
+                                                </Button>
+                                                <Button
+                                                    onClick={() => {
+                                                        handleNewFile(true, HEAD_CNC);
+                                                    }}
+                                                    className={classNames(styles['four-axis-select'])}
+                                                    type="default"
+                                                    priority="level-three"
+                                                >
+                                                    {i18n._('key-HomePage/Begin-4-axis')}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                        <span className={classNames('heading-2', 'align-c', 'text-overflow-ellipsis-line-2', 'width-one-in-six')}>{i18n._('key-HomePage/Begin-CNC')}</span>
+                                    </Anchor>
+                                </div>
+                                <div className={classNames(styles.workspace, 'margin-horizontal-16')}>
+                                    <Anchor onClick={() => handleSwitchToWorkspace('/workspace')} title={i18n._('key-HomePage/Begin-Workspace')}>
+                                        <div className={classNames(styles.imgWrapper)}>
+                                            <img src={require('./images/icon_workspace_120x120.svg')} alt="" />
+                                        </div>
+                                        <span className={classNames('heading-2', 'align-c', 'text-overflow-ellipsis-line-2', 'width-one-in-six')}>{i18n._('key-HomePage/Begin-Workspace')}</span>
+                                    </Anchor>
+                                </div>
                             </div>
-                            <div className={classNames(styles.workspace, 'margin-horizontal-16')}>
-                                <Anchor onClick={() => handleSwitchToWorkspace('/workspace')} title={i18n._('key-HomePage/Begin-Workspace')}>
-                                    <div className={classNames(styles.imgWrapper)}>
-                                        <img src={require('./images/icon_workspace_120x120.svg')} alt="" />
-                                    </div>
-                                    <span className={classNames('heading-2', 'align-c', 'text-overflow-ellipsis-line-2', 'width-one-in-six')}>{i18n._('key-HomePage/Begin-Workspace')}</span>
-                                </Anchor>
-                            </div>
-                        </div>
-                    )}
+                        )
+                    }
                     {
                         beginSelected === 'nearly-file' && (
                             <div className={classNames(styles.nearlyFile, 'margin-vertical-48')}>

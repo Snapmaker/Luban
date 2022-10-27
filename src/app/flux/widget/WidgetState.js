@@ -1,6 +1,7 @@
 import _ from 'lodash';
 
-import { PROTOCOL_TEXT, PROTOCOL_SCREEN, MACHINE_SERIES } from '../../constants';
+import { PROTOCOL_TEXT, PROTOCOL_SCREEN } from '../../constants';
+import { MACHINE_SERIES } from '../../constants/machines';
 
 const DEFAULT_STATE = {
     machine: {
