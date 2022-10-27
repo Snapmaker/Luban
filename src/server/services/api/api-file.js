@@ -342,9 +342,9 @@ export const saveEnv = async (req, res) => {
         if (machineInfo?.headType === HEAD_CNC || machineInfo?.headType === HEAD_LASER) {
             !!config.toolpaths?.length && config.toolpaths.forEach(toolpath => {
                 if (toolpath.toolParams?.definitionId && /^tool.([0-9_]+)$/.test(toolpath.toolParams.definitionId)) {
-                    copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${toolpath.toolParams.definitionId}.def.json`, `${envDir}/${toolpath.toolParams.definitionId}.def.json`)
+                    copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${toolpath.toolParams.definitionId}.def.json`, `${envDir}/${toolpath.toolParams.definitionId}.def.json`);
                 }
-            })
+            });
         }
         res.send(result);
         res.end();
@@ -503,14 +503,14 @@ export const recoverProjectFile = async (req, res) => {
             }
         }
         if (headType === HEAD_LASER || headType === HEAD_CNC) {
-            config.toolpaths?.length && config.toolpaths.map(toolpath => {
+            config.toolpaths?.length && config.toolpaths.forEach(toolpath => {
                 if (toolpath?.toolParams?.definitionId && /^tool.([0-9_]+)$/.test(toolpath?.toolParams?.definitionId)) {
                     const fname = `${DataStorage.tmpDir}/${toolpath.toolParams.definitionId}.def.json`;
                     if (fs.existsSync(fname)) {
                         fs.copyFileSync(fname, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${toolpath.toolParams.definitionId}.def.json`);
                     }
                 }
-            })
+            });
         }
         console.log(config);
 

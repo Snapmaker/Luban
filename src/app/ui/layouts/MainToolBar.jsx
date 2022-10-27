@@ -7,8 +7,16 @@ import MenuItem from './MenuItem';
 import { Badge } from '../components/Badge';
 import Anchor from '../components/Anchor';
 import i18n from '../../lib/i18n';
-import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING, MACHINE_BRAND_MAP, MACHINE_TOOL_HEADS, MACHINE_SERIES } from '../../constants';
+import {
+    HEAD_CNC,
+    HEAD_LASER,
+    HEAD_PRINTING,
+    MACHINE_BRAND_MAP,
+    MACHINE_TOOL_HEADS,
+    MACHINE_SERIES
+} from '../../constants';
 import SvgIcon from '../components/SvgIcon';
+
 // import { timestamp } from '../../../shared/lib/random-utils';
 
 class MainToolBar extends PureComponent {
@@ -28,8 +36,7 @@ class MainToolBar extends PureComponent {
     };
 
 
-    state = {
-    };
+    state = {};
 
     actions = {
         handleClick: (callback) => {
@@ -62,7 +69,25 @@ class MainToolBar extends PureComponent {
                     )}
                 >
                     {leftItems && (leftItems.filter(item => item).map((menuItem) => {
-                        return <MenuItem key={key++} menuItem={menuItem} actions={actions} lang={lang} headType={headType} />;
+                        if (menuItem.children) {
+                            return (
+                                <span
+                                    key={key++}
+                                    className={classNames(
+                                        menuItem.className ? menuItem.className : '',
+                                        'display-inline'
+                                    )}
+                                >
+                                    {menuItem.children.map((childItem) => {
+                                        return (
+                                            <MenuItem key={childItem.name + (key++)} menuItem={childItem} actions={actions} lang={lang} headType={headType} />);
+                                    })}
+                                </span>
+                            );
+                        } else if (menuItem) {
+                            return <MenuItem key={key++} menuItem={menuItem} actions={actions} lang={lang} headType={headType} />;
+                        }
+                        return null;
                     }))}
                 </div>
                 {/* <div className={styles['bar-item']}>
