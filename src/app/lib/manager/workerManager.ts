@@ -7,6 +7,14 @@ import CalculateSectionPoints, { IMessage as TCalculateSectionPointsMessage } fr
 import { machineStore } from '../../store/local-storage';
 
 type TListener = [string, (res: unknown) => void]
+
+export const WorkerEvents = {
+    clipperWorkerBusy: 'clipperWorkerBusy',
+    clipperWorkerDestroyed: 'clipperWorkerDestroyed',
+    clipperWorkerStop: 'clipperWorkerStop',
+    clipperWorkerIdle: 'clipperWorkerIdle'
+};
+
 class WorkerManager extends EventEmitter {
     private pool: Pool<Thread>;
     private clipperWorker: Worker;
@@ -16,24 +24,19 @@ class WorkerManager extends EventEmitter {
 
     public constructor() {
         super();
-        this.setClipperWorkerEnable();
+        let enable3dpLivePreview = machineStore.get('enable3dpLivePreview');
+        if (isUndefined(enable3dpLivePreview)) {
+            enable3dpLivePreview = true;
+        }
+        this.clipperWorkerEnable = enable3dpLivePreview;
     }
 
-    public setClipperWorkerEnable(bool?: boolean): void;
     public setClipperWorkerEnable(bool: boolean) {
-        if (isUndefined(bool)) {
-            let enable3dpLivePreview = machineStore.get('enable3dpLivePreview');
-            if (isUndefined(enable3dpLivePreview)) {
-                enable3dpLivePreview = true;
-            }
-            this.clipperWorkerEnable = enable3dpLivePreview;
-        } else {
-            if (!bool && this.clipperWorkerEnable) {
-                this.clipperWorker.terminate();
-                this.clipperWorker = null;
-            }
-            this.clipperWorkerEnable = bool;
+        if (!bool && this.clipperWorkerEnable && this.clipperWorker) {
+            this.clipperWorker.terminate();
+            this.clipperWorker = null;
         }
+        this.clipperWorkerEnable = bool;
     }
 
     public getPool() {
@@ -47,46 +50,70 @@ class WorkerManager extends EventEmitter {
     }
 
     public arrangeModels<T>(data: unknown, onMessage: (data: T) => void, onComplete?: () => void) {
-        return this.exec('arrangeModels', data, onMessage, onComplete);
+        this.exec('arrangeModels', data, onMessage, onComplete);
     }
 
     public autoRotateModels<T>(data: unknown, onMessage: (data: T) => void, onComplete?: () => void) {
-        return this.exec('autoRotateModels', data, onMessage, onComplete);
+        this.exec('autoRotateModels', data, onMessage, onComplete);
     }
 
     public boxSelect<T>(data: unknown, onMessage: (data: T) => void, onComplete?: () => void) {
-        return this.exec('boxSelect', data, onMessage, onComplete);
+        this.exec('boxSelect', data, onMessage, onComplete);
     }
 
     public gcodeToArraybufferGeometry<T>(data: unknown, onMessage: (data: T) => void, onComplete?: () => void) {
-        return this.exec('gcodeToArraybufferGeometry', data, onMessage, onComplete);
+        this.exec('gcodeToArraybufferGeometry', data, onMessage, onComplete);
     }
 
     public gcodeToBufferGeometry<T>(data: unknown, onMessage: (data: T) => void, onComplete?: () => void) {
-        return this.exec('gcodeToBufferGeometry', data, onMessage, onComplete);
+        this.exec('gcodeToBufferGeometry', data, onMessage, onComplete);
     }
 
     public loadModel<T>(data: unknown, onMessage: (data: T) => void, onComplete?: () => void) {
-        return this.exec('loadModel', data, onMessage, onComplete);
+        this.exec('loadModel', data, onMessage, onComplete);
     }
 
     public scaleToFitWithRotate<T>(data: unknown, onMessage: (data: T) => void, onComplete?: () => void) {
-        return this.exec('scaleToFitWithRotate', data, onMessage, onComplete);
+        this.exec('scaleToFitWithRotate', data, onMessage, onComplete);
     }
 
     public toolpathRenderer<T>(data: unknown, onMessage: (data: T) => void, onComplete?: () => void) {
-        return this.exec('toolpathRenderer', data, onMessage, onComplete);
+        this.exec('toolpathRenderer', data, onMessage, onComplete);
     }
 
     public generatePlateAdhesion<T>(data: unknown, onMessage: (data: T) => void, onComplete?: () => void) {
-        return this.exec('generatePlateAdhesion', data, onMessage, onComplete);
+        this.exec('generatePlateAdhesion', data, onMessage, onComplete);
     }
 
     public async stopCalculateSectionPoints(modelID: string) {
         const preListener = this.listenerMap.get(modelID);
         if (preListener) {
             // remove the last listening in time
-            this.removeListener(...preListener);
+            const [topic] = preListener;
+            this.emit(`${topic}`, {
+                type: 'FINISH',
+                clippingMap: null,
+                innerWallMap: null,
+                skinMap: null,
+                infillMap: null
+            });
+            this.listenerMap.delete(modelID);
+
+            this.clipperWorker && this.clipperWorker.postMessage(['cancel-job', { modelID }]);
+        }
+    }
+
+    public stopClipper() {
+        if (this.clipperWorker) {
+            // stop-job
+            this.clipperWorker.postMessage(['stop-job']);
+        }
+    }
+
+    public continueClipper() {
+        if (this.clipperWorker) {
+            // continue-job
+            this.clipperWorker.postMessage(['continue-job']);
         }
     }
 
@@ -103,6 +130,11 @@ class WorkerManager extends EventEmitter {
         const jobID = Math.random();
         const modelID = data.modelID;
         return new Promise<T>((resolve, reject) => {
+            const preListener = this.listenerMap.get(modelID);
+            if (preListener) {
+                // remove the last listening in time
+                this.removeListener(...preListener);
+            }
             const listener = (res) => {
                 // get from worker
                 if (res.type === 'CANCEL') {
@@ -146,5 +178,5 @@ class WorkerManager extends EventEmitter {
     }
 }
 
-const workerManager = new WorkerManager();
-export default workerManager;
+const manager = new WorkerManager();
+export default manager;
