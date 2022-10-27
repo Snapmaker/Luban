@@ -5,7 +5,6 @@ import os from 'os';
 import path from 'path';
 import _ from 'lodash';
 import bcrypt from 'bcrypt-nodejs';
-import chalk from 'chalk';
 import webappengine from 'webappengine';
 import Jimp from 'jimp';
 
@@ -45,7 +44,7 @@ const createServer = (options, callback) => {
     const profile = path.resolve(settings.rcfile);
 
     // configstore service
-    log.info(`Loading configuration from ${chalk.yellow(JSON.stringify(profile))}`);
+    log.info(`Loading configuration from ${JSON.stringify(profile)}`);
     config.load(profile);
 
     settings.rcfile = profile;
@@ -64,12 +63,12 @@ const createServer = (options, callback) => {
 
     if (watchDirectory) {
         if (fs.existsSync(watchDirectory)) {
-            log.info(`Watching ${chalk.yellow(JSON.stringify(watchDirectory))} for file changes.`);
+            log.info(`Watching ${JSON.stringify(watchDirectory)} for file changes.`);
 
             // monitor service
             monitor.start({ watchDirectory: watchDirectory });
         } else {
-            log.error(`The directory ${chalk.yellow(JSON.stringify(watchDirectory))} does not exist.`);
+            log.error(`The directory ${JSON.stringify(watchDirectory)} does not exist.`);
         }
     }
 
@@ -126,7 +125,7 @@ const createServer = (options, callback) => {
                 port: realPort
             });
 
-            log.info(`Starting the server at ${chalk.cyan(`http://${realAddress}:${realPort}`)}`);
+            log.info(`Starting the server at http://${realAddress}:${realPort}`);
 
             dns.lookup(os.hostname(), { family: 4, all: true }, (err, addresses) => {
                 if (err) {
@@ -135,7 +134,7 @@ const createServer = (options, callback) => {
                 }
 
                 addresses.forEach(({ address }) => {
-                    log.info(`Starting the server at ${chalk.cyan(`http://${address}:${realPort}`)}`);
+                    log.info(`Starting the server at http://${address}:${realPort}`);
                 });
             });
         })

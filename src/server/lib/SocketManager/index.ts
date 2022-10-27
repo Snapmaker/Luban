@@ -22,7 +22,7 @@ class SocketServer extends EventEmitter {
 
     private sockets: Socket[] = [];
 
-    public id: string = '';
+    public id = '';
 
     private events = [];
 
@@ -96,6 +96,16 @@ class SocketServer extends EventEmitter {
             }
         }
 
+        socket.onAny((eventName) => {
+            log.info(`Get [${eventName}]`);
+        });
+
+        socket.prependAnyOutgoing((eventName) => {
+            if (eventName !== 'Marlin:state' && eventName !== 'sender:status') {
+                log.warn(`Send [${eventName}]`);
+            }
+        });
+
         // Disconnect from socket
         socket.on('disconnect', (err) => {
             log.debug(`Disconnected from err=${err}`);
@@ -104,6 +114,8 @@ class SocketServer extends EventEmitter {
             this.emit('disconnection', socket);
 
             this.sockets.splice(this.sockets.indexOf(socket), 1);
+            socket.offAnyOutgoing();
+            socket.offAny();
         });
     };
 

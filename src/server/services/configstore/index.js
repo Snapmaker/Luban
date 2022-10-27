@@ -2,7 +2,6 @@ import events from 'events';
 import fs from 'fs';
 import { v4 as uuid } from 'uuid';
 import _ from 'lodash';
-import chalk from 'chalk';
 import parseJSON from 'parse-json';
 import logger from '../../lib/logger';
 
@@ -113,7 +112,7 @@ class ConfigStore extends events.EventEmitter {
             }
         } catch (err) {
             err.fileName = this.file;
-            log.error(`Unable to load data from ${chalk.yellow(JSON.stringify(this.file))}: err=${err}`);
+            log.error(`Unable to load data from ${JSON.stringify(this.file)}\n: err = ${err} `);
             this.emit('error', err); // emit error event
             return false;
         }
