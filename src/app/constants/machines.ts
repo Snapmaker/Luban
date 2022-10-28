@@ -10,22 +10,26 @@ export const LEVEL_TWO_POWER_LASER_FOR_SM2 = 'levelTwoLaserToolheadForSM2';
 export const STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL = 'standardCNCToolheadForOriginal';
 export const STANDARD_CNC_TOOLHEAD_FOR_SM2 = 'standardCNCToolheadForSM2';
 export const LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2 = 'levelTwoCNCToolheadForSM2';
-export const DUAL_EXTRUDER_LIMIT_WIDTH_L = 0;
-export const DUAL_EXTRUDER_LIMIT_WIDTH_R = 0;
 
+// Machine Types
 export const MACHINE_TYPE_3D_PRINTER = '3D Printer';
 export const MACHINE_TYPE_MULTI_FUNCTION_PRINTER = 'Multi-function 3D Printer';
+
+
+export const DEFAULT_MACHINE_ORIGINAL = 'Original';
+export const DEFAULT_MACHINE_ORIGINAL_LONG_Z_AXIS = 'Original Long Z-axis';
 
 // todo: refactor this data structure
 export const MACHINE_SERIES = {
     ORIGINAL: {
-        value: 'Original',
+        value: DEFAULT_MACHINE_ORIGINAL,
         fullName: 'Snapmaker Original',
         brand: 'Snapmaker',
         series: 'Snapmaker Original',
         seriesLabel: 'key-Luban/Machine/MachineSeries-Original',
         seriesLabelWithoutI18n: 'Original',
         label: 'key-Luban/Machine/MachineSeries-Snapmaker Original',
+        img: '/resources/images/machine/size-1.0-original.jpg',
         setting: {
             size: {
                 x: 125,
@@ -46,7 +50,7 @@ export const MACHINE_SERIES = {
         }
     },
     ORIGINAL_LZ: {
-        value: 'Original Long Z-axis',
+        value: DEFAULT_MACHINE_ORIGINAL_LONG_Z_AXIS,
         fullName: 'Snapmaker Original with Z-axis Extension Module',
         series: 'Snapmaker Original',
         seriesLabel: 'key-Workspace/MachineSetting-Z-Axis Extension Module',
@@ -71,7 +75,8 @@ export const MACHINE_SERIES = {
             x: 125,
             y: 125,
             z: 221,
-        }
+        },
+        img: '/resources/images/machine/size-1.0-original.jpg',
     },
     A150: {
         seriesLabel: 'key-Luban/Machine/MachineSeries-A150',
@@ -98,6 +103,7 @@ export const MACHINE_SERIES = {
             y: 160,
             z: 145,
         },
+        img: '/resources/images/machine/size-2.0-A150.png',
         alias: ['SM2-S', 'Snapmaker 2.0 A150']
     },
     A250: {
@@ -125,6 +131,7 @@ export const MACHINE_SERIES = {
             y: 250,
             z: 235,
         },
+        img: '/resources/images/machine/size-2.0-A250.png',
         alias: ['SM2-M', 'Snapmaker 2.0 A250']
     },
     A350: {
@@ -152,6 +159,7 @@ export const MACHINE_SERIES = {
             y: 350,
             z: 330
         },
+        img: '/resources/images/machine/size-2.0-A350.jpg',
         alias: ['SM2-L', 'Snapmaker 2.0 A350']
     },
     A400: {
@@ -179,6 +187,7 @@ export const MACHINE_SERIES = {
             y: 400,
             z: 400
         },
+        img: '/resources/images/machine/size-2.0-A400.jpeg',
         alias: ['SM2-XL', 'Snapmaker 2.0 400']
     },
     CUSTOM: {
@@ -213,6 +222,7 @@ export const MACHINE_SERIES = {
             y: 200,
             z: 200
         },
+        img: '/resources/images/machine/snapmaker_j1.png',
     }
 };
 

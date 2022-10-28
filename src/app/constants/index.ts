@@ -1,5 +1,4 @@
 // import { valueOf } from '../lib/contants-utils';
-import { MACHINE_SERIES, MACHINE_TOOL_HEADS } from './machines';
 
 export const DEFAULT_LUBAN_HOST = 'luban://127.0.0.1';
 // Metric and Imperial units
@@ -1077,14 +1076,7 @@ export const MACHINE_HEAD_TYPE = {
     }
 };
 
-export const MACHINE_BRAND_MAP = {
-    [MACHINE_SERIES.ORIGINAL.value]: 'Original',
-    [MACHINE_SERIES.ORIGINAL_LZ.value]: 'Original',
-    [MACHINE_SERIES.A150.value]: 'Snapmaker 2.0',
-    [MACHINE_SERIES.A250.value]: 'Snapmaker 2.0',
-    [MACHINE_SERIES.A350.value]: 'Snapmaker 2.0',
-    [MACHINE_SERIES.A400.value]: 'Snapmaker',
-};
+
 export const IMAGE_WIFI_CONNECTING = '/resources/images/connection/Screen.png';
 export const IMAGE_WIFI_CONNECT_WAITING = '/resources/images/connection/ic_waiting-64x64.png';
 export const IMAGE_WIFI_CONNECTED = '/resources/images/connection/ic_complete_64x64.png';
@@ -1227,20 +1219,6 @@ export const MYMINIFACTORY_URL = 'https://www.myminifactory.com/';
 // once you change this number, make sure the number in `electron-app/Menu.js` also changed
 export const MAX_RECENT_FILES_LENGTH = 12;
 
-// Default toolHead for original
-export const INITIAL_TOOL_HEAD_FOR_ORIGINAL = {
-    printingToolhead:
-        MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
-    laserToolhead: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value,
-    cncToolhead: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value
-};
-
-export const INITIAL_TOOL_HEAD_FOR_SM2 = {
-    printingToolhead:
-        MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value,
-    laserToolhead: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value,
-    cncToolhead: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value
-};
 
 export const LASER_10W_TAKE_PHOTO_POSITION = {
     A400: {

@@ -964,6 +964,15 @@ export const actions = {
         seriesInfo && dispatch(actions.updateMachineSize(seriesInfo.size));
         seriesInfo && dispatch(actions.updateLaserSize(seriesInfo.setting.laserSize));
         dispatch(widgetActions.updateMachineSeries(series));
+
+
+        // TODO: machine hard-coded here, refactor later.
+        if (series === MACHINE_SERIES.ORIGINAL.value) {
+            dispatch(actions.setZAxisModuleState(0));
+        }
+        if (series === MACHINE_SERIES.ORIGINAL_LZ.value) {
+            dispatch(actions.setZAxisModuleState(1));
+        }
     },
 
     updateMachineToolHead: (toolHead, series, headType = null) => (
