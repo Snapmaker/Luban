@@ -86,8 +86,6 @@ const SettingGuideModal = (props) => {
         }
     }, [machineIndex]);
 
-    console.log('machine =', machine);
-
     // tool head options
     const [printingToolHeadOptions, setPrintingToolHeadOptions] = useState([]);
     const [laserToolHeadOptions, setLaserToolHeadOptions] = useState([]);

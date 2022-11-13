@@ -381,7 +381,7 @@ export const actions = {
                 size: machine.size,
                 laserSize: machine.setting ? machine.setting.laserSize : laserSize,
                 toolHead: toolHead,
-                machine: machine,
+                activeMachine: machine,
             })
         );
 
@@ -894,8 +894,6 @@ export const actions = {
         dispatch,
         getState
     ) => {
-        console.log('----- onChangeMachineSeries()');
-
         machineStore.set('machine.series', series);
         machineStore.set('machine.toolHead', toolHead);
 
@@ -936,7 +934,6 @@ export const actions = {
     },
 
     updateMachineSeries: (series) => async (dispatch, getState) => {
-        console.log('----- updateMachineSeries()');
         machineStore.set('machine.series', series);
 
         const oldSeries = getState().machine.series;

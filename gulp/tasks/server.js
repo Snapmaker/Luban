@@ -64,7 +64,7 @@ export function serverStartDevelopment(cb) {
         .on('restart', (files) => {
             log('App restarted due to: ', files);
         })
-        .on('readable', function () {
+        .on('readable', function handleReadable() {
             this.stdout.pipe(process.stdout);
             this.stderr.pipe(process.stderr);
         });
