@@ -76,25 +76,30 @@ class DefinitionManager {
         this.configPathname = configPathname;
         this.headType = headType;
         let res;
+
         // active definition
         const definitionRes = await this.getDefinition('active', false);
         this.activeDefinition = definitionRes;
+
         if (headType === HEAD_PRINTING) {
             res = await this.getDefinition('machine');
             this.machineDefinition = res;
             this.changedArray = Object.entries(this.machineDefinition.settings).map(([key, setting]) => {
                 const value = setting.default_value;
                 return [key, value]
-            })
+            });
             this.changedArrayWithoutExtruder = this.changedArray
                 .filter(([key]) => {
                     return !(extruderRelationSettingsKeys.includes(key))
                 })
         }
+
+        // default profiles
         res = await api.profileDefinitions.getDefaultDefinitions(
             this.headType,
             this.configPathname
         );
+
         this.defaultDefinitions = res.body.definitions.map((item) => {
             item.isDefault = true;
             if (item.i18nCategory) {
@@ -106,8 +111,9 @@ class DefinitionManager {
             resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder);
             return item;
         });
-        if (headType === HEAD_PRINTING) {
 
+        // extruder
+        if (headType === HEAD_PRINTING) {
             res = await this.getDefinition('snapmaker_extruder_0', false);
             this.extruderLDefinition = res;
             if (this.extruderLDefinition.settings.machine_nozzle_size) {
@@ -124,7 +130,7 @@ class DefinitionManager {
                 printingProfileLevel: definitionRes.printingProfileLevel,
                 materialProfileLevel: definitionRes.materialProfileLevel
             };
-        }else {
+        } else {
             return {}
         }
 
@@ -156,6 +162,7 @@ class DefinitionManager {
                 definitionId
             );
         }
+
         const definition = res.body.definition;
         if (MATERIAL_REGEX.test(definitionId) || QUALITY_REGEX.test(definitionId)) {
             resolveMachineDefinition(definition, this.changedArray, this.changedArrayWithoutExtruder)

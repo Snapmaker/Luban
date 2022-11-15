@@ -44,6 +44,7 @@ const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
         setCurrentToolhead(tempToolhead);
         setLoading(true);
         onCallBack(currentSeries, tempToolhead);
+
         (async () => {
             await dispatch(machineActions.onChangeMachineSeries(tempToolhead, currentSeries));
             setLoading(false);

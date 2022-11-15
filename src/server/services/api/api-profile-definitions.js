@@ -7,6 +7,7 @@ import {
     DEFINITION_SNAPMAKER_EXTRUDER_1,
     ERR_BAD_REQUEST,
     ERR_INTERNAL_SERVER_ERROR,
+    ERR_NOT_FOUND,
     HEAD_PRINTING,
     KEY_DEFAULT_CATEGORY_CUSTOM,
     KEY_DEFAULT_CATEGORY_DEFAULT
@@ -46,7 +47,8 @@ const isPublicProfile = (definitionId) => {
     return [
         DEFINITION_ACTIVE,
         DEFINITION_ACTIVE_FINAL,
-        DEFINITION_SNAPMAKER_EXTRUDER_0, DEFINITION_SNAPMAKER_EXTRUDER_1
+        DEFINITION_SNAPMAKER_EXTRUDER_0,
+        DEFINITION_SNAPMAKER_EXTRUDER_1,
     ].includes(definitionId);
 };
 
@@ -62,12 +64,18 @@ export const getDefinition = (req, res) => {
 
     const definitionLoader = new DefinitionLoader();
 
+    let loadSuccess = false;
     if (isPublicProfile(definitionId)) {
-        definitionLoader.loadDefinition(headType, definitionId);
+        loadSuccess = definitionLoader.loadDefinition(headType, definitionId);
     } else {
-        definitionLoader.loadDefinition(headType, definitionId, series);
+        loadSuccess = definitionLoader.loadDefinition(headType, definitionId, series);
     }
-    res.send({ definition: definitionLoader.toObject() });
+
+    if (loadSuccess) {
+        res.send({ definition: definitionLoader.toObject() });
+    } else {
+        res.status(ERR_NOT_FOUND).send({ msg: 'Definition not found.' });
+    }
 };
 
 

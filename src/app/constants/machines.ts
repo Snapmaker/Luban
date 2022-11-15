@@ -223,6 +223,7 @@ export const MACHINE_SERIES = {
             z: 200
         },
         img: '/resources/images/machine/snapmaker_j1.png',
+        configPath: 'snapmaker_j1',
     }
 };
 
@@ -681,9 +682,16 @@ export function getMachineSupportedToolHeadOptions(machineSeries, headType = und
 }
 
 
-// export default {};
-export function getMachineSeriesWithToolhead(platform: string, toolhead: string) {
-    const machine = findMachineByName(platform);
+/**
+ * Get additional info about pair of <machine series, toolhead>.
+ *
+ * TODO: refactor this.
+ *
+ * @param series
+ * @param toolhead
+ */
+export function getMachineSeriesWithToolhead(series: string, toolhead: string) {
+    const machine = findMachineByName(series);
     if (!machine) {
         return {};
     }
@@ -692,26 +700,29 @@ export function getMachineSeriesWithToolhead(platform: string, toolhead: string)
     const workSize = {};
     const configPathname = {};
 
-    console.log('getMachineSeriesWithToolhead(), platform =', platform, 'toolhead =', toolhead);
-
     Object.keys(toolhead).forEach((key: string) => {
         const type = key.split('Toolhead')[0];
         const headToolInfo = MACHINE_TOOL_HEADS[toolhead[key]];
-        console.log('head info =', headToolInfo);
         workSize[type] = {
             x: size.x,
             y: size.y,
             z: size.z,
         };
-        configPathname[type] = `${platform === 'Original Long Z-axis'
-            ? 'original'
-            : platform.toLowerCase()
-        }_${headToolInfo?.pathname}`;
+
+        if (machine.configPath && machine.configPath) {
+            configPathname[type] = machine.configPath;
+        } else {
+            configPathname[type] = `${series === MACHINE_SERIES.ORIGINAL_LZ.value
+                ? 'original'
+                : series.toLowerCase()
+            }_${headToolInfo?.pathname}`;
+        }
     });
+
     return {
-        series: platform,
+        series,
         configPathname,
-        workSize: workSize
+        workSize
     };
 }
 

@@ -63,13 +63,21 @@ export class DefinitionLoader {
         return this.printingProfileLevel;
     }
 
+    /**
+     * Load definition with ID {definitionId}.
+     *
+     * @param headType
+     * @param definitionId
+     * @param configPath
+     */
     loadDefinition(headType, definitionId, configPath) {
         if (!this.definitionId) {
             this.definitionId = definitionId;
         }
+
         const suffix = ConfigV1Suffix;
-        const filePath = configPath ? path.join(`${DataStorage.configDir}/${headType}/${configPath}`,
-            `${definitionId}${suffix}`)
+        const filePath = configPath
+            ? path.join(`${DataStorage.configDir}/${headType}/${configPath}`, `${definitionId}${suffix}`)
             : path.join(`${DataStorage.configDir}/${headType}`, `${definitionId}${suffix}`);
 
         // in case of JSON parse error, set default json inherits from snapmaker2.def.json
@@ -82,8 +90,10 @@ export class DefinitionLoader {
             const data = fs.readFileSync(filePath, 'utf8');
             json = JSON.parse(data);
             this.loadJSON(headType, definitionId, json);
+            return true;
         } catch (e) {
             log.error(`Failed to read JSON file: ${filePath}`);
+            return false;
         }
     }
 
@@ -347,6 +357,18 @@ function writeDefinition(headType, filename, series, definitionLoader) {
     });
 }
 
+
+/**
+ * Load Definition by filename.
+ *
+ * TODO: Deal with load failure
+ *
+ * @param headType
+ * @param filename
+ * @param configPath
+ * @param isDefault
+ * @returns {DefinitionLoader}
+ */
 export function loadDefinitionLoaderByFilename(headType, filename, configPath, isDefault = false) {
     let definitionId = '';
     if (ConfigV1Regex.test(filename)) {
@@ -364,30 +386,37 @@ export function loadDefinitionLoaderByFilename(headType, filename, configPath, i
 
 export function loadDefinitionsByRegex(headType, configPath, regex, defaultId) {
     const defaultDefinitionLoader = loadDefinitionLoaderByFilename(headType, defaultId, configPath);
-    const configDir = `${DataStorage.configDir}/${headType}`;
-    let defaultFilenames = [];
-    try {
-        defaultFilenames = fs.readdirSync(`${configDir}/${configPath}`);
-    } catch (e) {
-        log.error(e);
-    }
-    const definitions = [];
+    const funcConfigDir = path.join(DataStorage.configDir, headType);
+    const configDir = path.join(funcConfigDir, configPath);
 
-    for (const filename of defaultFilenames) {
-        if (regex.test(filename)) {
-            const definitionLoader = loadDefinitionLoaderByFilename(headType, filename, configPath);
-            if (!definitionLoader.isRecommended && defaultDefinitionLoader) {
-                const ownKeys = Array.from(defaultDefinitionLoader.ownKeys).filter(e => !definitionLoader.ownKeys.has(e));
-                if (ownKeys && ownKeys.length > 0) {
-                    for (const ownKey of ownKeys) {
-                        definitionLoader.ownKeys.add(ownKey);
-                    }
-                    writeDefinition(headType, filename, configPath, definitionLoader);
-                }
-            }
-            definitions.push(definitionLoader.toObject());
-        }
+    if (!fs.existsSync(funcConfigDir) || !fs.existsSync(configDir)) {
+        return [];
     }
+
+    const filenames = fs.readdirSync(configDir);
+
+    const definitions = [];
+    for (const filename of filenames) {
+        if (!regex.test(filename)) {
+            continue;
+        }
+
+        const definitionLoader = loadDefinitionLoaderByFilename(headType, filename, configPath);
+
+        // add own keys
+        // TODO: Maybe add this to migration, not here...
+        if (!definitionLoader.isRecommended && defaultDefinitionLoader) {
+            const ownKeys = Array.from(defaultDefinitionLoader.ownKeys).filter(e => !definitionLoader.ownKeys.has(e));
+            if (ownKeys && ownKeys.length > 0) {
+                for (const ownKey of ownKeys) {
+                    definitionLoader.ownKeys.add(ownKey);
+                }
+                writeDefinition(headType, filename, configPath, definitionLoader);
+            }
+        }
+        definitions.push(definitionLoader.toObject());
+    }
+
     if (headType === 'printing') {
         return orderBy(definitions, ['isRecommended', 'category'], ['asc', 'desc']);
     }
