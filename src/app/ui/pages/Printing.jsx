@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { shallowEqual, useSelector, useDispatch } from 'react-redux';
+import React, { useEffect, useRef, useState } from 'react';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { useHistory, withRouter } from 'react-router-dom';
 import { find, includes } from 'lodash';
@@ -19,8 +19,8 @@ import { actions as projectActions } from '../../flux/project';
 import { actions as machineActions } from '../../flux/machine';
 import ProjectLayout from '../layouts/ProjectLayout';
 import MainToolBar from '../layouts/MainToolBar';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_PRINTING } from '../../constants';
-import { renderPopup, renderWidgetList, logPageView, useUnsavedTitle } from '../utils';
+import { HEAD_PRINTING, isDualExtruder } from '../../constants/machines';
+import { logPageView, renderPopup, renderWidgetList, useUnsavedTitle } from '../utils';
 import { machineStore } from '../../store/local-storage';
 
 import ControlWidget from '../widgets/Control';
@@ -48,9 +48,14 @@ import JobType from '../widgets/JobType';
 import HomePage from './HomePage';
 import Workspace from './Workspace';
 import {
-    printIntroStepOne, printIntroStepTwo, printIntroStepThree,
-    printIntroStepSeven, printIntroStepEight, printIntroStepNine,
-    printIntroStepFour, printIntroStepFive
+    printIntroStepEight,
+    printIntroStepFive,
+    printIntroStepFour,
+    printIntroStepNine,
+    printIntroStepOne,
+    printIntroStepSeven,
+    printIntroStepThree,
+    printIntroStepTwo
 } from './introContent';
 import '../../styles/introCustom.styl';
 import Steps from '../components/Steps';
@@ -170,7 +175,7 @@ function useRenderMainToolBar(setSimplifying, profileInitialized = false) {
         });
     }
 
-    function renderMainToolBar(machine, machineInfo, materialInfo, isConnected) {
+    function renderMainToolBar(activeMachine, machineInfo, materialInfo, isConnected) {
         const leftItems = [
             {
                 title: i18n._('key-Printing/Page-Home'),
@@ -291,7 +296,7 @@ function useRenderMainToolBar(setSimplifying, profileInitialized = false) {
                 lang={i18next.language}
                 headType={HEAD_PRINTING}
                 hasMachineSettings
-                machine={machine}
+                activeMachine={activeMachine}
                 materialInfo={materialInfo}
                 isConnected={isConnected}
                 setShowMachineMaterialSettings={(show) => {
@@ -314,7 +319,7 @@ function Printing({ location }) {
     const leftMaterial = find(materialDefinitions, { definitionId: defaultMaterialId });
     const rightMaterial = find(materialDefinitions, { definitionId: defaultMaterialIdRight });
     const machineState = useSelector(state => state?.machine);
-    const machine = useSelector(state => state.machine.machine);
+    const activeMachine = useSelector(state => state.machine.activeMachine);
 
     const { isConnected, toolHead: { printingToolhead } } = machineState;
     const isOriginal = includes(series, 'Original');
@@ -369,19 +374,21 @@ function Printing({ location }) {
                 color: leftMaterial?.settings?.color?.default_value
             }
         };
-        if (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+
+        if (isDualExtruder(printingToolhead)) {
             material.rightExtruder = {
                 name: rightMaterial?.name,
                 color: rightMaterial?.settings?.color?.default_value
             };
         }
+
         setMachineInfo(newMachineInfo);
         setMaterialInfo(material);
-        renderMainToolBar(machine, newMachineInfo, material, isConnected);
+        renderMainToolBar(activeMachine, newMachineInfo, material, isConnected);
     }, [series, leftMaterial, rightMaterial, printingToolhead]);
 
     useEffect(() => {
-        renderMainToolBar(machine, machineInfo, materialInfo, isConnected);
+        renderMainToolBar(activeMachine, machineInfo, materialInfo, isConnected);
     }, [isConnected]);
 
     useEffect(() => {
@@ -480,7 +487,7 @@ function Printing({ location }) {
 
     return (
         <ProjectLayout
-            renderMainToolBar={() => renderMainToolBar(machine, machineInfo, materialInfo, isConnected)}
+            renderMainToolBar={() => renderMainToolBar(activeMachine, machineInfo, materialInfo, isConnected)}
             renderRightView={renderRightView}
             renderModalView={renderModalView}
         >

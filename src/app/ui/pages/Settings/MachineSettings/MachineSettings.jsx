@@ -8,7 +8,7 @@ import { actions as projectActions } from '../../../../flux/project';
 import styles from '../form.styl';
 import {
     getMachineOptions,
-    getMachineSupportedToolHeadOptions,
+    getMachineSupportedToolOptions,
     HEAD_CNC,
     HEAD_LASER,
     HEAD_PRINTING,
@@ -52,21 +52,21 @@ function MachineSettings() {
 
     // change options when new machine series selected
     useEffect(() => {
-        const printingOptions = getMachineSupportedToolHeadOptions(state.series, HEAD_PRINTING);
+        const printingOptions = getMachineSupportedToolOptions(state.series, HEAD_PRINTING);
         setPrintingToolHeadOptions(printingOptions);
 
         if (printingOptions.length > 0) {
             setPrintingToolHeadSelected(printingOptions[0].value);
         }
 
-        const laserOptions = getMachineSupportedToolHeadOptions(state.series, HEAD_LASER);
+        const laserOptions = getMachineSupportedToolOptions(state.series, HEAD_LASER);
         setLaserToolHeadOptions(laserOptions);
 
         if (laserOptions.length > 0) {
             setLaserToolHeadSelected(laserOptions[0].value);
         }
 
-        const cncOptions = getMachineSupportedToolHeadOptions(state.series, HEAD_CNC);
+        const cncOptions = getMachineSupportedToolOptions(state.series, HEAD_CNC);
         setCncToolHeadOptions(cncOptions);
 
         if (cncOptions.length > 0) {

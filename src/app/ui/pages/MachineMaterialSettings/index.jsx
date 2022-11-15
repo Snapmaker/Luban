@@ -1,15 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
 import i18n from '../../../lib/i18n';
 import MaterialSettings from './materialSettings';
 import SvgIcon from '../../components/SvgIcon';
 import Anchor from '../../components/Anchor';
-import { LEVEL_ONE_POWER_LASER_FOR_ORIGINAL, SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL } from '../../../constants';
-import { MACHINE_SERIES } from '../../../constants/machines';
+import { getMachineSupportedTools, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants/machines';
 import { actions as machineActions } from '../../../flux/machine/index';
-import { STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL } from '../../../../server/controllers/constants';
 import MachineSettings from './MachineSettings';
+
 
 const MACHINE_TAB = 'machine';
 const MATERIAL_TAB = 'material';
@@ -28,28 +27,66 @@ const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
         (state) => state?.printing?.extruderRDefinition?.settings?.machine_nozzle_size
             ?.default_value
     );
-    const [currentSeries, setCurrentSeries] = useState(series);
-    const [currentToolhead, setCurrentToolhead] = useState(toolHead);
+    const [selectedMachineSeries, setSelectedMachineSeries] = useState(series);
+    const [selectedToolMap, setSelectedToolMap] = useState(toolHead);
     const dispatch = useDispatch();
 
     const [loading, setLoading] = useState(true);
+
+    // series changed
     useEffect(() => {
-        const originToolhead = {
-            cncToolhead: STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
-            laserToolhead: LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
-            printingToolhead: SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL
+        // Update tool head map upon machine series
+        const newToolHead = {
+            printingToolhead: '',
+            laserToolhead: '',
+            cncToolhead: '',
         };
-        const sm2Toolhead = currentToolhead;
-        const tempToolhead = (currentSeries === MACHINE_SERIES.ORIGINAL.value || currentSeries === MACHINE_SERIES.ORIGINAL_LZ.value) ? originToolhead : sm2Toolhead;
-        setCurrentToolhead(tempToolhead);
+        for (const headType of [HEAD_PRINTING, HEAD_LASER, HEAD_CNC]) {
+            const tools = getMachineSupportedTools(selectedMachineSeries, headType);
+
+            const toolName = selectedToolMap[`${headType}Toolhead`];
+            let selectedTool = null;
+            for (const tool of tools) {
+                if (tool.value === toolName) {
+                    selectedTool = tool;
+                    break;
+                }
+            }
+
+            if (!selectedTool && tools.length > 0) {
+                selectedTool = tools[0];
+            }
+
+            if (selectedTool) {
+                newToolHead[`${headType}Toolhead`] = selectedTool.value;
+            }
+        }
+
+        setSelectedToolMap(newToolHead);
+
+        /*
+        // start set active machine & tool head
         setLoading(true);
-        onCallBack(currentSeries, tempToolhead);
+        onCallBack(selectedMachineSeries, newToolHead);
 
         (async () => {
-            await dispatch(machineActions.onChangeMachineSeries(tempToolhead, currentSeries));
+            await dispatch(machineActions.onChangeMachineSeries(newToolHead, selectedMachineSeries));
             setLoading(false);
         })();
-    }, [currentSeries, currentToolhead.printingToolhead]);
+        */
+    }, [selectedMachineSeries]);
+
+    // tool head changed
+    useEffect(() => {
+        // start set active machine & tool head
+        setLoading(true);
+        onCallBack(selectedMachineSeries, selectedToolMap);
+
+        (async () => {
+            await dispatch(machineActions.onChangeMachineSeries(selectedToolMap, selectedMachineSeries));
+            setLoading(false);
+        })();
+    }, [selectedMachineSeries, selectedToolMap]);
 
     const ref = useRef(null);
     // Before switching models, make sure that the nozzle diameter exists
@@ -92,20 +129,20 @@ const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
                     <MachineSettings
                         ref={ref}
                         isConnected={isConnected}
-                        series={currentSeries}
-                        toolHead={currentToolhead}
+                        series={selectedMachineSeries}
+                        toolMap={selectedToolMap}
                         connectSerial={connectSerial}
                         connectMachineName={server?.name}
                         leftNozzleDiameter={leftDiameter}
                         rightNozzleDiameter={rightDiameter}
-                        setSeries={setCurrentSeries}
-                        setToolhead={setCurrentToolhead}
+                        setSeries={setSelectedMachineSeries}
+                        setToolhead={setSelectedToolMap}
                     />
                 )}
                 {selectTab === MATERIAL_TAB && (
                     <MaterialSettings
-                        toolHead={currentToolhead}
-                        series={currentSeries}
+                        toolMap={selectedToolMap}
+                        series={selectedMachineSeries}
                         loading={loading}
                     />
                 )}

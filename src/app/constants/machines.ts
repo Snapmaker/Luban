@@ -243,6 +243,7 @@ export const MACHINE_TOOL_HEADS = {
         pathname: 'single',
         // label: SINGLE_EXTRUDER_TOOLHEAD,
         label: 'key-App/Settings/MachineSettings-Single Extruder Toolhead',
+        image: '/resources/images/machine/original_3dp.png',
         // mock offset data
         offset: {
             x: 0,
@@ -260,6 +261,7 @@ export const MACHINE_TOOL_HEADS = {
         label: 'key-App/Settings/MachineSettings-200mW Laser',
         pathname: '200mw',
         key: 'levelOneLaserToolheadForOriginal',
+        image: '/resources/images/machine/original_laser.png',
         // mock offset data
         offset: {
             x: 0,
@@ -277,6 +279,7 @@ export const MACHINE_TOOL_HEADS = {
         label: 'key-App/Settings/MachineSettings-1600mW Laser',
         pathname: '1600mw',
         key: 'levelTwoLaserToolheadForOriginal',
+        image: '/resources/images/machine/original_laser.png',
         // mock offset data
         offset: {
             x: 0,
@@ -294,6 +297,7 @@ export const MACHINE_TOOL_HEADS = {
         key: 'standardCNCToolheadForOriginal',
         label: 'key-App/Settings/MachineSettings-Standard CNC',
         pathname: 'standard',
+        image: '/resources/images/machine/original_cnc.png',
         // mock offset data
         offset: {
             x: 0,
@@ -317,6 +321,7 @@ export const MACHINE_TOOL_HEADS = {
         //
         // E_EXTRUDER_TOOLHEAD,
         label: 'key-App/Settings/MachineSettings-Single Extruder Toolhead',
+        image: '/resources/images/machine/printing_2.png',
         // mock offset data
         offset: {
             x: 0,
@@ -336,6 +341,7 @@ export const MACHINE_TOOL_HEADS = {
         pathname: 'dual',
         key: 'dualExtruderToolheadForSM2',
         label: 'key-App/Settings/MachineSettings-Dual Extruder Toolhead',
+        image: '/resources/images/machine/coming_soon.png',
         // mock offset data
         offset: {
             x: 0,
@@ -355,6 +361,7 @@ export const MACHINE_TOOL_HEADS = {
         pathname: '1600mw',
         key: 'levelOneLaserToolheadForSM2',
         label: 'key-App/Settings/MachineSettings-1600mW Laser',
+        image: '/resources/images/machine/1600mw_laser.png',
         // mock offset data
         offset: {
             x: 0,
@@ -374,6 +381,7 @@ export const MACHINE_TOOL_HEADS = {
         pathname: '10w',
         label: 'key-App/Settings/MachineSettings-10W Laser',
         key: 'levelTwoLaserToolheadForSM2',
+        image: '/resources/images/machine/10w_laser.png',
         // mock offset data
         offset: {
             x: 0,
@@ -393,6 +401,7 @@ export const MACHINE_TOOL_HEADS = {
         key: 'standardCNCToolheadForSM2',
         pathname: 'standard',
         label: 'key-App/Settings/MachineSettings-Standard CNC',
+        image: '/resources/images/machine/cnc_2.png',
         // mock offset data
         offset: {
             x: 0,
@@ -407,6 +416,7 @@ export const MACHINE_TOOL_HEADS = {
         key: 'levelTwoCNCToolheadForSM2',
         pathname: 'standard', // if have high power cnc profiles, should be update
         label: 'key-App/Settings/MachineSettings-High CNC',
+        image: '/resources/images/machine/coming_soon.png',
         offset: {
             x: 0,
             y: 0,
@@ -417,183 +427,15 @@ export const MACHINE_TOOL_HEADS = {
         headType: HEAD_PRINTING,
         value: 'Snapmaker J1 IDEX Tool Head',
         label: 'IDEX',
+        image: '/resources/images/machine/coming_soon.png',
         platform: [
             MACHINE_SERIES.J1.value,
-        ]
+        ],
+        metadata: {
+            numberOfExtruders: 2,
+        }
     }
 };
-
-// TODO: Refactor
-/*
-const toolHeadMap = {
-    [MACHINE_SERIES.ORIGINAL.value]: {
-        [HEAD_PRINTING]: [{
-            value: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
-            label: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].label,
-            image: '/resources/images/machine/original_3dp.png'
-        }],
-        [HEAD_LASER]: [{
-            value: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value,
-            label: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].label,
-            image: '/resources/images/machine/original_laser.png'
-        }],
-        [HEAD_CNC]: [{
-            value: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value,
-            label: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].label,
-            image: '/resources/images/machine/original_cnc.png'
-        }]
-    },
-    [MACHINE_SERIES.ORIGINAL_LZ.value]: {
-        [HEAD_PRINTING]: [{
-            value: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
-            label: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].label,
-            image: '/resources/images/machine/original_3dp.png'
-        }],
-        [HEAD_LASER]: [{
-            value: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value,
-            label: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].label,
-            image: '/resources/images/machine/original_laser.png'
-        }],
-        [HEAD_CNC]: [{
-            value: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value,
-            label: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].label,
-            image: '/resources/images/machine/original_cnc.png'
-        }]
-    },
-    [MACHINE_SERIES.A150.value]: {
-        [HEAD_PRINTING]: [{
-            value: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/printing_2.png'
-        }, {
-            value: MACHINE_TOOL_HEADS[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/coming_soon.png'
-        }],
-        [HEAD_LASER]: [{
-            value: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].label,
-            image: '/resources/images/machine/1600mw_laser.png'
-        }, {
-            value: MACHINE_TOOL_HEADS[LEVEL_TWO_POWER_LASER_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[LEVEL_TWO_POWER_LASER_FOR_SM2].label,
-            image: '/resources/images/machine/10w_laser.png'
-        }],
-        [HEAD_CNC]: [{
-            value: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/cnc_2.png'
-        }]
-    },
-    [MACHINE_SERIES.A250.value]: {
-        [HEAD_PRINTING]: [{
-            value: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/printing_2.png'
-        }, {
-            value: MACHINE_TOOL_HEADS[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/coming_soon.png'
-        }],
-        [HEAD_LASER]: [{
-            value: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].label,
-            image: '/resources/images/machine/1600mw_laser.png'
-        }, {
-            value: MACHINE_TOOL_HEADS[LEVEL_TWO_POWER_LASER_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[LEVEL_TWO_POWER_LASER_FOR_SM2].label,
-            image: '/resources/images/machine/10w_laser.png'
-        }],
-        [HEAD_CNC]: [{
-            value: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/cnc_2.png'
-        }]
-    },
-    [MACHINE_SERIES.A350.value]: {
-        [HEAD_PRINTING]: [{
-            value: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/printing_2.png'
-        }, {
-            value: MACHINE_TOOL_HEADS[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/coming_soon.png'
-        }],
-        [HEAD_LASER]: [{
-            value: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].label,
-            image: '/resources/images/machine/1600mw_laser.png'
-        }, {
-            value: MACHINE_TOOL_HEADS[LEVEL_TWO_POWER_LASER_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[LEVEL_TWO_POWER_LASER_FOR_SM2].label,
-            image: '/resources/images/machine/10w_laser.png'
-        }],
-        [HEAD_CNC]: [{
-            value: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/cnc_2.png'
-        }]
-    },
-    [MACHINE_SERIES.A400.value]: {
-        [HEAD_PRINTING]: [{
-            value: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/printing_2.png'
-        }, {
-            value: MACHINE_TOOL_HEADS[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/coming_soon.png'
-        }],
-        [HEAD_LASER]: [{
-            value: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].label,
-            image: '/resources/images/machine/1600mw_laser.png'
-        }, {
-            value: MACHINE_TOOL_HEADS[LEVEL_TWO_POWER_LASER_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[LEVEL_TWO_POWER_LASER_FOR_SM2].label,
-            image: '/resources/images/machine/10w_laser.png'
-        }],
-        [HEAD_CNC]: [{
-            value: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/cnc_2.png'
-        }, {
-            value: MACHINE_TOOL_HEADS[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2].value,
-            label: MACHINE_TOOL_HEADS[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2].label,
-            image: '/resources/images/machine/coming_soon.png'
-        }]
-    },
-};
-*/
-
-// Machine options
-/*
-const machineList = [{
-    value: 'Original',
-    label: 'key-Luban/Machine/MachineSeries-Snapmaker Original',
-    image: '/resources/images/machine/size-1.0-original.jpg',
-}, {
-    value: 'A150',
-    label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A150',
-    image: '/resources/images/machine/size-2.0-A150.png'
-}, {
-    value: 'A250',
-    label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A250',
-    image: '/resources/images/machine/size-2.0-A250.png'
-}, {
-    value: 'A350',
-    label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A350',
-    image: '/resources/images/machine/size-2.0-A350.jpg'
-}, {
-    value: 'A400',
-    label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A400',
-    image: '/resources/images/machine/size-2.0-A400.jpeg'
-}, {
-    value: MACHINE_SERIES.J1.value,
-    label: 'Snapmaker J1',
-    image: '/resources/images/machine/size-2.0-A400.jpeg'
-}];*/
 
 export function findMachineByName(name) {
     for (const key of Object.keys(MACHINE_SERIES)) {
@@ -643,13 +485,14 @@ export function getMachineOptions() {
     return options;
 }
 
-export function getMachineSupportedToolHeads(machineSeries, headType = undefined) {
+export function getMachineSupportedTools(machineSeries, headType = undefined) {
     const toolHeads = [];
     for (const key of Object.keys(MACHINE_TOOL_HEADS)) {
         const toolHead = MACHINE_TOOL_HEADS[key];
 
         if (toolHead.headType === undefined) {
-            console.warn('DJKDJFKAJKFJKFAJ ', toolHead);
+            console.warn(`Unknown head type ${toolHead}`);
+            continue;
         }
 
         if (headType !== undefined && toolHead.headType !== headType) {
@@ -665,15 +508,15 @@ export function getMachineSupportedToolHeads(machineSeries, headType = undefined
     return toolHeads;
 }
 
-export function getMachineSupportedToolHeadOptions(machineSeries, headType = undefined) {
-    const toolHeads = getMachineSupportedToolHeads(machineSeries, headType);
+export function getMachineSupportedToolOptions(machineSeries, headType = undefined) {
+    const toolHeads = getMachineSupportedTools(machineSeries, headType);
 
     const options = [];
     for (const toolHead of toolHeads) {
         const option = {
             value: toolHead.value,
             label: toolHead.label,
-            toolHead: toolHead,
+            tool: toolHead,
         };
         options.push(option);
     }
@@ -681,6 +524,13 @@ export function getMachineSupportedToolHeadOptions(machineSeries, headType = und
     return options;
 }
 
+export function isDualExtruder(toolhead: string): boolean {
+    if (includes([MACHINE_TOOL_HEADS['Snapmaker J1 IDEX Tool Head'].value, DUAL_EXTRUDER_TOOLHEAD_FOR_SM2], toolhead)) {
+        return true;
+    }
+
+    return false;
+}
 
 /**
  * Get additional info about pair of <machine series, toolhead>.
