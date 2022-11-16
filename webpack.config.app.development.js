@@ -23,7 +23,7 @@ const { CLIENT_PORT, SERVER_PORT } = pkg.config;
 module.exports = {
     mode: 'development',
     target: 'web',
-    devtool: 'eval-source-map',
+    devtool: 'source-map',
     cache: true,
     context: path.resolve(__dirname, 'src/app'),
     resolve: {

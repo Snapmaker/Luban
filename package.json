@@ -375,7 +375,7 @@
     "electron": "11.5.0",
     "electron-builder": "22.9.1",
     "electron-notarize": "0.2.1",
-    "electron-rebuild": "1.8.8",
+    "@electron/rebuild": "3.2.10",
     "eslint": "7.5.0",
     "eslint-config-airbnb": "18.2.1",
     "eslint-config-airbnb-base": "14.2.1",

@@ -13,7 +13,14 @@ import Anchor from '../../components/Anchor';
 import { LEFT, RIGHT } from '../../../../server/constants';
 import { Button } from '../../components/Buttons';
 import AddMaterialModel from './addMaterialModel';
-import { MATERIAL_TYPE_OPTIONS, DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_MATERIAL, RIGHT_EXTRUDER, HEAD_PRINTING } from '../../../constants';
+import {
+    MATERIAL_TYPE_OPTIONS,
+    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+    LEFT_EXTRUDER,
+    PRINTING_MANAGER_TYPE_MATERIAL,
+    RIGHT_EXTRUDER,
+    HEAD_PRINTING
+} from '../../../constants';
 import PrintingManager from '../../views/PrintingManager';
 import { machineStore } from '../../../store/local-storage';
 import SvgIcon from '../../components/SvgIcon';
@@ -22,9 +29,7 @@ import styles from './styles.styl';
 import Dropdown from '../../components/Dropdown';
 
 const MATERIAL_TYPE_ARRAY = MATERIAL_TYPE_OPTIONS.map(d => d.category);
-const MaterialSettings = ({
-    toolHead, loading
-}) => {
+const MaterialSettings = ({ toolMap, loading }) => {
     const materialActiveCategory = machineStore.get('settings.materialActiveCategory');
     const { defaultMaterialId, defaultMaterialIdRight, materialDefinitions, materialManagerDirection } = useSelector(state => state.printing);
 
@@ -229,13 +234,21 @@ const MaterialSettings = ({
             content: (
                 <span className="height-30">
                     {i18n._('key-profileManager/Create Success')}
-                    <Anchor onClick={() => { onShowPrintingManager(); message.destroy(); }} style={{ color: '#1890FF', marginLeft: '32px' }}>
+                    <Anchor
+                        onClick={() => {
+                            onShowPrintingManager();
+                            message.destroy();
+                        }}
+                        style={{ color: '#1890FF', marginLeft: '32px' }}
+                    >
                         {i18n._('key-profileManager/Open material profile')}
                     </Anchor>
                     <SvgIcon
                         name="Cancel"
                         type={['hoverNormal', 'pressNormal']}
-                        onClick={() => { message.destroy(); }}
+                        onClick={() => {
+                            message.destroy();
+                        }}
                     />
                 </span>
             ),
@@ -309,14 +322,14 @@ const MaterialSettings = ({
                         await onChangeFileForManager(e);
                     }}
                 />
-                <div className={`padding-horizontal-4 padding-vertical-4 border-radius-16 sm-flex background-grey-2 ${toolHead.printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? 'width-532' : 'width-272'}`}>
+                <div className={`padding-horizontal-4 padding-vertical-4 border-radius-16 sm-flex background-grey-2 ${toolMap.printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? 'width-532' : 'width-272'}`}>
                     <Anchor onClick={() => setActiveNozzle(LEFT)} className={`padding-horizontal-16 padding-vertical-8 border-radius-12 width-264 height-68 ${activeNozzle === LEFT ? 'background-color-white' : ''}`}>
-                        {toolHead.printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
+                        {toolMap.printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
                             <div className="heading-3">
                                 {i18n._('key-setting/Left-Nozzle')}
                             </div>
                         )}
-                        {toolHead.printingToolhead !== DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
+                        {toolMap.printingToolhead !== DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
                             <div className="heading-3">
                                 {i18n._('key-Laser/ToolpathParameters-Material')}
                             </div>
@@ -326,7 +339,7 @@ const MaterialSettings = ({
                             <span className="margin-left-8">{i18n._(leftMaterialDefinition?.i18nName || leftMaterialDefinition?.name)}</span>
                         </div>
                     </Anchor>
-                    {toolHead.printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
+                    {toolMap.printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
                         <Anchor onClick={() => setActiveNozzle(RIGHT)} className={`padding-horizontal-16 padding-vertical-8 border-radius-12 width-264 height-68 ${activeNozzle === RIGHT ? 'background-color-white' : ''}`}>
                             <div className="heading-3">{i18n._('key-setting/Right-Nozzle')}</div>
                             <div className="sm-flex align-center margin-top-8">
@@ -419,7 +432,7 @@ const MaterialSettings = ({
 };
 
 MaterialSettings.propTypes = {
-    toolHead: PropTypes.object,
+    toolMap: PropTypes.object,
     loading: PropTypes.bool
 };
 

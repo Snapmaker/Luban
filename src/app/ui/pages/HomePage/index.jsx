@@ -43,7 +43,7 @@ const HomePage = (props) => { // Todo, what's the props ?
     const cncModal = useRenderRecoveryModal(HEAD_CNC);
 
     return (
-        <div className={styles.homepageContainer}>
+        <div className={styles['homepage-container']}>
             {props?.isPopup && (
                 <MainToolBar
                     leftItems={[

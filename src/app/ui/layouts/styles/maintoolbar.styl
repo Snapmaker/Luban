@@ -1,10 +1,12 @@
-.bar-wrapper{
+.toolbar-container {
     width: 100%;
     background-color: #FFFFFF;
-    .bar-item{
+
+    .bar-items {
         display: inline-block;
-        padding: 8px 8px 8px 16px;
-        .bar-icon{
+        padding: 8px
+
+        .bar-icon {
             height: 50px;
             min-height 50px;
             min-width: 64px;
@@ -20,7 +22,7 @@
             height: 58px;
             max-width: 120px;
         }
-        .separator{
+        .separator {
             display: inline-block;
             width: 1.5px;
             background-color: #f5f5f7;
@@ -29,20 +31,26 @@
             margin: 4px 2px;
         }
     }
-    .left{
+
+    .left {
         float: left;
-        // min-width: 30%;
         width: calc(100% - 380px);
         overflow: auto
     }
     .left::-webkit-scrollbar {
         display: none;
     }
-    .right{
+    .right {
         float: right;
-        min-width: 30%;
+        width: 380px;
     }
 
+    // machine settings
+    .machine-settings-item {
+        width: 360px;
+        display: inline-block;
+        height: 50px;
+    }
 }
 .hover-background {
     &:hover {

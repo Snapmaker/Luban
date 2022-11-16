@@ -1,4 +1,4 @@
-.secondLine {
+      .secondLine {
   width 95vw
   height auto
   display flex
@@ -26,130 +26,153 @@
     }
   }
 }
-.create-new-project
+
+.create-new-project {
     width 95vw
     height auto
     background #fff
     margin 48px auto 0
     border-radius 24px
+
     .beginPart {
-      display: flex;
-      flex-direction column
-      align-items center
-      justify-content center
-      padding: 2.22vw 2.22vw 0
-      .headingPart {
-        display flex
-        width 100%
+        display: flex;
+        flex-direction column
+        align-items center
         justify-content center
-        align-item center
-      }
-      .beginContainer {
-        width 100%
-        .link-bar {
-          height 166px
-          display flex
-          flex-direction wrap
-          justify-content center
-          align-items flex-start
-          .3dp, .laser, .cnc, .workspace {
-            > a {
-              display flex
-              flex-direction column
-              justify-content center
-              align-items center
-              width 16.66vw
-              max-width 240px
-              .imgWrapper {
-                width: 100%;
-                max-height 148px
-                height: 10.28vw;
-                min-height 120px
-                display flex
-                justify-content center
-                align-items center
-                margin-bottom 12px
-                > img {
-                  display block
-                }
-                .cnc-axis-select, .laser-axis-select {
-                  display none
-                }
-                .three-axis-select, .four-axis-select {
-                    height 32px
-                    width 100%
-                    text-align center
-                    line-height 32px
-                    // border 1px solid #b9bcbf
-                    border-radius 8px
-                }
-                .three-axis-select {
-                  margin-bottom 12px
-                }
-                &:hover {
-                  cursor pointer
-                  box-shadow 0px 0px 23px -5px #a5a5a550
-                  border-radius: 24px
-                  .cnc-axis-select, .laser-axis-select {
-                    display flex
-                    flex-direction column
-                    justify-content center
-                    height 120px
-                    width 120px
-                  }
-                  .laser-img, .cnc-img {
-                    display none
-                  }
-                }
-              }
-            }
-          }
-          .laser, .cnc {
-            > a {
-              .imgWrapper:hover {
-                cursor: default;
-              }
-            }
-          }
-        }
-        .nearlyFile {
-          height: 166px;
-          width 100%
-          .recent-file-list {
+        padding: 2.22vw 2.22vw 0
+
+        .headingPart {
             display flex
-            flex-wrap wrap
-            justify-content flex-start
-            .file-item {
-              width 20.14vw;
-              border-bottom 1px solid #D5D6D9;
-              margin-right: 2.88vw;
-              height 55.3px
-              line-height 75.3px;
-              &:hover {
-                  cursor pointer
-              }
-                .file-name {
-                    display: inline-block;
-                    max-width: calc(95% - 90px);
-                    overflow hidden
-                    white-space nowrap
-                    text-overflow: ellipsis
-                }
-                .suffix-name {
-                    display: inline-block;
-                    width: 90px;
-                    overflow hidden
-                    white-space nowrap
-                    text-overflow ellipsis
-                }
-            }
-            .file-item:nth-child(4n+4) {
-              margin-right 0px
-            }
-          }
+            width 100%
+            justify-content center
+            align-item center
         }
-      }
+
+        .begin-container {
+            width 100%
+
+            .link-bar {
+                height 166px
+                display flex
+                flex-direction wrap
+                justify-content center
+                align-items flex-start
+
+                .link-bar-item {
+                    > a {
+                        display flex
+                        flex-direction column
+                        justify-content center
+                        align-items center
+                        width 16.66vw
+                        max-width 240px
+
+                        .imgWrapper {
+                            width: 100%;
+                            max-height 148px
+                            height: 10.28vw;
+                            min-height 120px
+                            display flex
+                            justify-content center
+                            align-items center
+                            margin-bottom 12px
+
+                            > img {
+                                display block
+                            }
+
+                            .cnc-axis-select, .laser-axis-select {
+                                display none
+                            }
+
+                            .three-axis-select, .four-axis-select {
+                                height 32px
+                                width 100%
+                                text-align center
+                                line-height 32px
+                                // border 1px solid #b9bcbf
+                                border-radius 8px
+                            }
+
+                            .three-axis-select {
+                                margin-bottom 12px
+                            }
+
+                            &:hover {
+                                cursor pointer
+                                box-shadow 0px 0px 23px -5px #a5a5a550
+                                border-radius: 24px
+
+                                .cnc-axis-select, .laser-axis-select {
+                                    display flex
+                                    flex-direction column
+                                    justify-content center
+                                    height 120px
+                                    width 120px
+                                }
+
+                                .laser-img, .cnc-img {
+                                    display none
+                                }
+                            }
+                        }
+                    }
+                }
+
+                .laser, .cnc {
+                    > a {
+                        .imgWrapper:hover {
+                            cursor: default;
+                        }
+                    }
+                }
+            }
+
+            .recent-files {
+                height: 166px;
+                width 100%
+
+                .recent-file-list {
+                    display flex
+                    flex-wrap wrap
+                    justify-content flex-start
+
+                    .file-item {
+                        width 20.14vw;
+                        border-bottom 1px solid #D5D6D9;
+                        margin-right: 2.88vw;
+                        height 55.3px
+                        line-height 75.3px;
+
+                        &:hover {
+                            cursor pointer
+                        }
+
+                        .file-name {
+                            display: inline-block;
+                            max-width: calc(95% - 90px);
+                            overflow hidden
+                            white-space nowrap
+                            text-overflow: ellipsis
+                        }
+
+                        .suffix-name {
+                            display: inline-block;
+                            width: 90px;
+                            overflow hidden
+                            white-space nowrap
+                            text-overflow ellipsis
+                        }
+                    }
+
+                    .file-item:nth-child(4n+4) {
+                        margin-right 0px
+                    }
+                }
+            }
+        }
     }
+}
 
 .quick-start-container {
   .case-list {
@@ -220,43 +243,68 @@
   }
 }
 
- .setting-modal
-     .lang-select .title-label
+ .setting-modal {
+     .lang-select .title-label {
          margin-bottom 32px
-     .lang-select
+     }
+
+     .lang-select {
          display flex
          flex-direction column
          align-items center
-     .machine-select
+     }
+
+     .machine-select {
          display flex
          flex-direction column
          align-items center
-         .machine-content
+
+         .machine-content {
              margin-top: 24px
              width 100%
              display flex
              justify-content space-evenly
              align-items center
-             .machine-img
+
+             .machine-image {
+                 max-width: 350px
                  display flex
                  align-items center
                  justify-content space-between
-                 svg
-                    border-radius 8px
-                 > img
+
+
+                 svg {
+                     border-radius 8px
+                 }
+
+                 > img {
                      width 160px
-             .machine-info
+                 }
+             }
+
+             .machine-info {
                  min-width 200px
-                 .z-axis-select
+
+                 .z-axis-select {
                      display flex
                      align-items center
                      font-size 14px
                      margin-bottom 28px
-                     > input
+
+                     > input {
                          margin-right 8px
                          cursor pointer
-                 .head-detail
-                    .printing-select, .laser-select, .cnc-select
-                        display flex
-                        justify-content space-between
-                        align-items center
+                     }
+                 }
+
+                 .head-detail {
+                     .tool-select {
+                         display flex
+                         justify-content space-between
+                         align-items center
+                     }
+                 }
+             }
+         }
+     }
+ }

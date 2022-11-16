@@ -356,7 +356,7 @@ export const uploadMesh = async function (mesh, fileName, fileType = 'stl') {
     formData.append('file', fileOfBlob);
     const uploadResult = await api.uploadFile(formData, HEAD_PRINTING);
     return uploadResult;
-}
+};
 
 export const actions = {
     updateState: state => {
@@ -483,7 +483,6 @@ export const actions = {
         );
 
         // Update machine size after active definition is loaded
-        const { size } = getState().machine;
         const allMaterialDefinition = await definitionManager.getDefinitionsByPrefixName(
             'material'
         );
@@ -529,6 +528,7 @@ export const actions = {
         dispatch(actions.updateBoundingBox());
 
         // Re-position model group
+        const { size } = getState().machine;
         gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
 
         const { stopArea } = getState().printing;

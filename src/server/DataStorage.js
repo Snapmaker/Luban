@@ -111,6 +111,7 @@ class DataStorage {
                 [settings.version]: true
             });
         }
+
         mkdirp.sync(this.envDir);
         mkdirp.sync(`${this.envDir}/printing`);
         mkdirp.sync(`${this.envDir}/laser`);
@@ -124,6 +125,7 @@ class DataStorage {
         rmDir(this.tmpDir, false);
         rmDir(this.sessionDir, false);
 
+        // prepare directories
         !isReset && await this.checkNewUser();
         await this.initLongTermRecover(isReset);
         await this.initSlicer(overwriteProfiles, isReset);

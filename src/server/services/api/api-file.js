@@ -13,13 +13,17 @@ import { packFirmware } from '../../lib/firmware-build';
 import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../constants';
 import {
     DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
-    INITIAL_TOOL_HEAD_FOR_ORIGINAL,
-    INITIAL_TOOL_HEAD_FOR_SM2
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
+    LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
+    STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+    LEVEL_ONE_POWER_LASER_FOR_SM2,
+    STANDARD_CNC_TOOLHEAD_FOR_SM2
 } from '../../../app/constants';
 import { removeSpecialChars } from '../../../shared/lib/utils';
 import { generateRandomPathName } from '../../../shared/lib/random-utils';
 import { convertFileToSTL } from '../../lib/model-to-stl';
-import { getMachineSeriesWithToolhead } from '../../../app/constants/machines';
+import { getMachineSeriesWithToolhead, MACHINE_TOOL_HEADS } from '../../../app/constants/machines';
 
 const log = logger('api:file');
 
@@ -38,6 +42,22 @@ function traverse(models, callback) {
         }
     });
 }
+
+// Default toolHead for original
+export const INITIAL_TOOL_HEAD_FOR_ORIGINAL = {
+    printingToolhead:
+        MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
+    laserToolhead: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value,
+    cncToolhead: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value
+};
+
+export const INITIAL_TOOL_HEAD_FOR_SM2 = {
+    printingToolhead:
+        MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value,
+    laserToolhead: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value,
+    cncToolhead: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value
+};
+
 
 function getSeriesPathFromMachineInfo(machineInfo) {
     let currentSeriesPath = '';

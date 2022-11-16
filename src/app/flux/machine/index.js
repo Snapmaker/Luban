@@ -381,7 +381,7 @@ export const actions = {
                 size: machine.size,
                 laserSize: machine.setting ? machine.setting.laserSize : laserSize,
                 toolHead: toolHead,
-                machine: machine,
+                activeMachine: machine,
             })
         );
 
@@ -894,8 +894,6 @@ export const actions = {
         dispatch,
         getState
     ) => {
-        console.log('----- onChangeMachineSeries()');
-
         machineStore.set('machine.series', series);
         machineStore.set('machine.toolHead', toolHead);
 
@@ -936,7 +934,6 @@ export const actions = {
     },
 
     updateMachineSeries: (series) => async (dispatch, getState) => {
-        console.log('----- updateMachineSeries()');
         machineStore.set('machine.series', series);
 
         const oldSeries = getState().machine.series;
@@ -964,6 +961,15 @@ export const actions = {
         seriesInfo && dispatch(actions.updateMachineSize(seriesInfo.size));
         seriesInfo && dispatch(actions.updateLaserSize(seriesInfo.setting.laserSize));
         dispatch(widgetActions.updateMachineSeries(series));
+
+
+        // TODO: machine hard-coded here, refactor later.
+        if (series === MACHINE_SERIES.ORIGINAL.value) {
+            dispatch(actions.setZAxisModuleState(0));
+        }
+        if (series === MACHINE_SERIES.ORIGINAL_LZ.value) {
+            dispatch(actions.setZAxisModuleState(1));
+        }
     },
 
     updateMachineToolHead: (toolHead, series, headType = null) => (
