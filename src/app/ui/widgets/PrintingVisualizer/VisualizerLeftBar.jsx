@@ -1,5 +1,5 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { useDispatch, useSelector, shallowEqual } from 'react-redux';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import i18n from '../../../lib/i18n';
@@ -12,7 +12,7 @@ import ThreeGroup from '../../../models/ThreeGroup';
 import SvgIcon from '../../components/SvgIcon';
 import RotationAnalysisOverlay from './Overlay/RotationAnalysisOverlay';
 import EditSupportOverlay from './Overlay/EditSupportOverlay';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, EPSILON, HEAD_PRINTING } from '../../../constants';
+import { EPSILON, HEAD_PRINTING } from '../../../constants';
 import { machineStore } from '../../../store/local-storage';
 import PrimeTowerModel from '../../../models/PrimeTowerModel';
 /* eslint-disable-next-line import/no-cycle */
@@ -29,6 +29,7 @@ import ExtruderOverlay from './Overlay/ExtruderOverlay';
 import MirrorOverlay from './Overlay/MirrorOverlay';
 import SimplifyModelOverlay from './Overlay/SimplifyOverlay';
 import { logTransformOperation } from '../../../lib/gaEvent';
+import { isDualExtruder } from '../../../constants/machines';
 
 export const whiteHex = '#ffffff';
 export const renderExtruderIcon = (leftExtruderColor, rightExtruderColor) => (
@@ -91,9 +92,12 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
     const isPrimeTowerSelected = useSelector(state => state?.printing?.modelGroup?.isPrimeTowerSelected());
     const transformMode = useSelector(state => state?.printing?.transformMode, shallowEqual);
     const enableShortcut = useSelector(state => state?.printing?.enableShortcut, shallowEqual);
+
     const [showRotationAnalyzeModal, setShowRotationAnalyzeModal] = useState(false);
     const [showEditSupportModal, setShowEditSupportModal] = useState(false);
-    const isDualExtruder = machineStore.get('machine.toolHead.printingToolhead') === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2;
+
+    const isDual = isDualExtruder(machineStore.get('machine.toolHead.printingToolhead'));
+
     const dispatch = useDispatch();
     const fileInput = useRef(null);
     const actions = {
@@ -320,7 +324,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                                         disabled={supportDisabled}
                                     />
                                 </li>
-                                {isDualExtruder && (
+                                {isDual && (
                                     <li className="margin-vertical-4">
                                         <SvgIcon
                                             color="#545659"
@@ -386,7 +390,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                 {simplifying && <SimplifyModelOverlay handleApplySimplify={handleApplySimplify} handleCancelSimplify={handleCancelSimplify} handleUpdateSimplifyConfig={handleUpdateSimplifyConfig} />}
                 {!supportDisabled && transformMode === 'support' && <SupportOverlay setTransformMode={setTransformMode} editSupport={() => { actions.editSupport(); }} />}
 
-                {!extruderDisabled && transformMode === 'extruder' && isDualExtruder && (
+                {!extruderDisabled && transformMode === 'extruder' && isDual && (
                     <ExtruderOverlay setTransformMode={setTransformMode} />
                 )}
             </div>
