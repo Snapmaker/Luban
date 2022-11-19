@@ -29,7 +29,6 @@ jobs:
               uses: actions/setup-node@v3
               with:
                   node-version: 16
-                  cache: 'npm'
 
             - run: npm install -g npm@latest
             - run: npm install
@@ -172,7 +171,6 @@ jobs:
               uses: actions/setup-node@v3
               with:
                   node-version: 16
-                  cache: 'npm'
 
             - run: npm install -g npm@latest
             - run: npm install
@@ -278,7 +276,6 @@ jobs:
               uses: actions/setup-node@v3
               with:
                   node-version: 16
-                  cache: 'npm'
 
             - run: npm install -g npm@latest
             - run: npm install

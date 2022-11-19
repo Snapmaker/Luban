@@ -1,4 +1,4 @@
-import SerialPort from 'serialport';
+import { SerialPort } from 'serialport';
 import fs from 'fs';
 // import path from 'path';
 import crypto from 'crypto';
@@ -33,9 +33,10 @@ class SocketSerialNew extends SocketBASE {
         this.socket = socket;
         if (this.availPorts.length > 0) {
             this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
-            this.serialport = new SerialPort(options.port ?? this.availPorts[0].path, {
+            this.serialport = new SerialPort({
+                path: options.port ?? this.availPorts[0].path,
+                baudRate: 115200,
                 autoOpen: false,
-                baudRate: 115200
             });
             this.sacpClient = new Business('serialport', this.serialport);
             this.serialport.on('data', (data) => {

@@ -1,4 +1,4 @@
-import serialport from 'serialport';
+import { SerialPort } from 'serialport';
 import store from '../../store';
 import logger from '../../lib/logger';
 import type SocketServer from '../../lib/SocketManager';
@@ -56,7 +56,7 @@ class SocketSerial {
             return;
         }
 
-        serialport.list()
+        SerialPort.list()
             .then((ports) => {
                 const allPorts = ports.concat(ensureArray(config.get('ports', [])));
 

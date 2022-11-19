@@ -11,8 +11,7 @@ const stores = {};
 
 // Check if code is running in Electron renderer process
 if (isElectron()) {
-    const electron = window.require('electron');
-    const app = electron.remote.app;
+    const { app } = window.require('@electron/remote');
     userData = {
         path: {
             'widget': path.join(app.getPath('userData'), 'widget.json'),

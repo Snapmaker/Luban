@@ -1,10 +1,10 @@
 import { EventEmitter } from 'events';
-import SerialPort from 'serialport';
+import { SerialPort, ReadlineParser } from 'serialport';
 import { Transform } from 'stream';
 import logger from './logger';
 
 const log = logger('lib:SerialConnection');
-const Readline = SerialPort.parsers.Readline;
+const Readline = ReadlineParser;
 
 const defaultSettings = Object.freeze({
     baudRate: 115200
@@ -153,9 +153,10 @@ class SerialConnection extends EventEmitter {
 
         const { port } = this.settings;
 
-        this.port = new SerialPort(port, {
+        this.port = new SerialPort({
+            path: port,
+            baudRate: 115200,
             autoOpen: false,
-            baudRate: 115200
         });
         if (this.isScreenProtocol) {
             this.parser = this.port.pipe(new ScreenProtocolParser());

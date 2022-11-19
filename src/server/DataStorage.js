@@ -165,9 +165,7 @@ class DataStorage {
                         if (fs.existsSync(dst) && !overwriteTag) {
                             return;
                         }
-                        fs.copyFileSync(src, dst, (err) => {
-                            console.error('err', err);
-                        });
+                        fs.copyFileSync(src, dst);
                     } else {
                         await this.copyDirForInitSlicer({
                             srcDir: src,
@@ -358,8 +356,7 @@ class DataStorage {
                     for (const envFile of envFiles) {
                         const envSrc = path.join(newSrc, envFile);
                         const envDst = path.join(path.join(srcDir, 'printing'), envFile);
-                        fs.copyFileSync(envSrc, envDst, () => {
-                        });
+                        fs.copyFileSync(envSrc, envDst);
                     }
                     rmDir(newSrc);
                 }
@@ -443,8 +440,7 @@ class DataStorage {
                 const dst = path.join(this.fontDir, file);
                 if (fs.statSync(src)
                     .isFile()) {
-                    fs.copyFileSync(src, dst, () => {
-                    });
+                    fs.copyFileSync(src, dst);
                 }
             }
         }
@@ -463,8 +459,7 @@ class DataStorage {
                 const dst = path.join(resultPath, file);
                 if (fs.statSync(src)
                     .isFile()) {
-                    fs.copyFileSync(src, dst, () => {
-                    });
+                    fs.copyFileSync(src, dst);
                 }
             }
         }

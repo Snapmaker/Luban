@@ -106,6 +106,8 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
             fileInput.current.click();
         },
         onChangeFile: async (event) => {
+            console.log('onChangeFile', event.target.files);
+            console.log('onChangeFile', event.file);
             const files = event.target.files;
             // try {
             await dispatch(printingActions.uploadModel(files));
@@ -205,7 +207,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                 <input
                     ref={fileInput}
                     type="file"
-                    accept=".stl, .obj, .3mf, .amf"
+                    // accept=".stl, .obj, .3mf, .amf"
                     className="display-none"
                     multiple
                     onChange={actions.onChangeFile}

@@ -1,5 +1,6 @@
 /* eslint import/no-unresolved: 0 */
-import { app, autoUpdater, BrowserWindow } from 'electron';
+import { autoUpdater } from 'electron';
+import { app, BrowserWindow } from '@electron/remote';
 import os from 'os';
 import log from './log';
 

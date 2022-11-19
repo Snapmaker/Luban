@@ -13,7 +13,10 @@ import { configureWindow } from './electron-app/window';
 import MenuBuilder, { addRecentFile, cleanAllRecentFiles } from './electron-app/Menu';
 import DataStorage from './DataStorage';
 import pkg from './package.json';
-// const { crashReporter } = require('electron');
+
+
+require('@electron/remote/main').initialize();
+
 
 const config = new Store();
 const userDataDir = app.getPath('userData');
@@ -38,12 +41,6 @@ const UPLOAD_WINDOWS = 'uploadWindows';
 
 const { CLIENT_PORT, SERVER_PORT } = pkg.config;
 
-// crashReporter.start({
-//     productName: 'Snapmaker',
-//     globalExtra: { _companyName: 'Snapmaker' },
-//     submitURL: 'https://api.snapmaker.com',
-//     uploadToServer: true
-// });
 
 function getBrowserWindowOptions() {
     const defaultOptions = {
@@ -299,6 +296,8 @@ const startToBegin = (data) => {
     // https://electronjs.org/docs/api/session#sessetproxyconfig-callback
 
     const webContentsSession = mainWindow.webContents.session;
+    require('@electron/remote/main').enable(mainWindow.webContents);
+
     webContentsSession.setProxy({ proxyRules: 'direct://' })
         .then(() => mainWindow.loadURL(loadUrl).catch(err => {
             console.log('err', err.message);

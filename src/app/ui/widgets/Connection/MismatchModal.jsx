@@ -22,7 +22,8 @@ function MismatchModal() {
     const [showMismatchModal, setShowMismatchModal] = useState(false);
     const prevIsConnected = usePrevious(isConnected);
     function onShowMachinwSettings() {
-        const browserWindow = window.require('electron').remote.BrowserWindow.getFocusedWindow();
+        const { BrowserWindow } = window.require('@electron/remote');
+        const browserWindow = BrowserWindow.getFocusedWindow();
         if (isElectron()) {
             browserWindow.webContents.send('preferences.show', {
                 activeTab: 'machine'

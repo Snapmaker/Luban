@@ -1,5 +1,5 @@
 import net from 'net';
-import SerialPort from 'serialport';
+import { SerialPort } from 'serialport';
 import fs from 'fs';
 import logger from '../../lib/logger';
 // import workerManager from '../task-manager/workerManager';
@@ -141,9 +141,10 @@ class ConnectionManager {
         } else if (connectionType === CONNECTION_TYPE_SERIAL) {
             let protocol = 'HTTP';
             let hasData = false;
-            const trySerialConnect = new SerialPort(options.port, {
-                autoOpen: false,
-                baudRate: 115200
+            const trySerialConnect = new SerialPort({
+                path: options.port,
+                baudRate: 115200,
+                autoOpen: false
             });
             if (timer) clearTimeout(timer);
             timer = setTimeout(() => {
