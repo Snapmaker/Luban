@@ -2236,6 +2236,7 @@ export const actions = {
             hasPrimeTower
         );
 
+        // FIXME
         const isDualExtruder = printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2;
         const onlySupportInterface = helpersExtruderConfig.onlySupportInterface;
 

@@ -1,10 +1,10 @@
 {
     "version": "4.4.0",
-    "name": "Precise & Strong",
+    "name": "Smooth Surface",
     "category": "Default",
-    "i18nName": "key-default_name-Precise & Strong",
+    "i18nName": "key-default_name-Smooth Surface",
     "i18nCategory": "key-default_category-Default",
-    "typeOfPrinting": "engineering",
+    "typeOfPrinting": "fine",
     "qualityType": "abs",
     "isRecommended": true,
     "inherits": "snapmaker2",
@@ -20,6 +20,9 @@
         }
     },
     "overrides": {
+        "extruders_enabled_count": {
+            "default_value": 2
+        },
         "layer_height": {
             "default_value": 0.16
         },
@@ -27,10 +30,10 @@
             "default_value": 0.28
         },
         "infill_sparse_thickness": {
-            "default_value": 0.16
+            "default_value": 0.24
         },
         "support_infill_sparse_thickness": {
-            "default_value": 0.16
+            "default_value": 0.24
         },
         "line_width": {
             "default_value": 0.4
@@ -63,55 +66,55 @@
             "default_value": 0.4
         },
         "speed_print": {
-            "default_value": 50
+            "default_value": 60
         },
         "speed_infill": {
-            "default_value": 50
+            "default_value": 60
         },
         "speed_wall_0": {
-            "default_value": 15
+            "default_value": 30
         },
         "speed_wall_x": {
-            "default_value": 20
+            "default_value": 30
         },
         "speed_topbottom": {
-            "default_value": 25
+            "default_value": 30
         },
         "speed_roofing": {
-            "default_value": 25
+            "default_value": 30
         },
         "speed_support_infill": {
-            "default_value": 50
+            "default_value": 60
         },
         "speed_support_roof": {
-            "default_value": 50
+            "default_value": 60
         },
         "speed_support_bottom": {
-            "default_value": 50
+            "default_value": 60
         },
         "speed_prime_tower": {
-            "default_value": 50
+            "default_value": 60
         },
         "speed_travel": {
-            "default_value": 60
+            "default_value": 72
         },
         "acceleration_enabled": {
             "default_value": false
         },
         "acceleration_print": {
-            "default_value": 3000
+            "default_value": 6000
         },
         "acceleration_infill": {
             "default_value": 3000
         },
         "acceleration_wall_0": {
-            "default_value": 1500
+            "default_value": 2000
         },
         "acceleration_wall_x": {
-            "default_value": 3000
+            "default_value": 2000
         },
         "acceleration_topbottom": {
-            "default_value": 3000
+            "default_value": 5000
         },
         "acceleration_roofing": {
             "default_value": 3000
@@ -126,10 +129,10 @@
             "default_value": 3000
         },
         "acceleration_prime_tower": {
-            "default_value": 3000
+            "default_value": 6000
         },
         "acceleration_travel": {
-            "default_value": 3000
+            "default_value": 6000
         },
         "jerk_enabled": {
             "default_value": false
@@ -171,49 +174,49 @@
             "default_value": "normal"
         },
         "wall_thickness": {
-            "default_value": 1.2
+            "default_value": 0.8
         },
         "wall_line_count": {
-            "default_value": 3
+            "default_value": 2
         },
         "top_thickness": {
-            "default_value": 1.2
+            "default_value": 1
         },
         "top_layers": {
-            "default_value": 8
+            "default_value": 4
         },
         "roofing_layer_count": {
             "default_value": 0
         },
         "bottom_thickness": {
-            "default_value": 1.2
+            "default_value": 1
         },
         "bottom_layers": {
-            "default_value": 8
+            "default_value": 4
         },
         "initial_bottom_layers": {
-            "default_value": 8
+            "default_value": 4
         },
         "top_bottom_pattern": {
-            "default_value": "lines"
+            "default_value": "zigzag"
         },
         "top_bottom_pattern_0": {
-            "default_value": "lines"
+            "default_value": "zigzag"
         },
         "skin_angles": {
             "default_value": "[  ]"
         },
         "infill_sparse_density": {
-            "default_value": 25
+            "default_value": 10
         },
         "infill_line_distance": {
-            "default_value": 4.8
+            "default_value": 4
         },
         "infill_angles": {
             "default_value": "[  ]"
         },
         "infill_pattern": {
-            "default_value": "cubic"
+            "default_value": "zigzag"
         },
         "fill_outline_gaps": {
             "default_value": true
@@ -372,22 +375,22 @@
             "default_value": 50
         },
         "support_distance": {
-            "default_value": "removable"
+            "default_value": "balance"
         },
         "support_z_distance": {
-            "default_value": 0.32
+            "default_value": 0.24
         },
         "support_top_distance": {
-            "default_value": 0.32
+            "default_value": 0.24
         },
         "support_bottom_distance": {
-            "default_value": 0.32
+            "default_value": 0.24
         },
         "support_xy_distance": {
             "default_value": 0.7
         },
         "support_xy_overrides_z": {
-            "default_value": "xy_overrides_z"
+            "default_value": "z_overrides_xy"
         },
         "support_xy_distance_overhang": {
             "default_value": 0.2
@@ -486,10 +489,10 @@
             "default_value": 2
         },
         "dual_helper_type": {
-            "default_value": "none"
+            "default_value": "prime_tower"
         },
         "prime_tower_enable": {
-            "default_value": false
+            "default_value": true
         },
         "prime_tower_size": {
             "default_value": 20
@@ -498,10 +501,10 @@
             "default_value": 12
         },
         "prime_tower_position_x": {
-            "default_value": 200
+            "default_value": 175
         },
         "prime_tower_position_y": {
-            "default_value": 200
+            "default_value": 150
         },
         "prime_tower_wipe_enabled": {
             "default_value": false
@@ -561,7 +564,7 @@
             "default_value": 0.38
         },
         "speed_ironing": {
-            "default_value": 16.666666666666668
+            "default_value": 20
         },
         "acceleration_ironing": {
             "default_value": 3000
@@ -594,7 +597,7 @@
             "default_value": true
         },
         "retraction_combing": {
-            "default_value": "infill"
+            "default_value": "all"
         },
         "retraction_combing_max_distance": {
             "default_value": 0
@@ -627,7 +630,7 @@
             "default_value": 0
         },
         "alternate_extra_perimeter": {
-            "default_value": true
+            "default_value": false
         },
         "skin_no_small_gaps_heuristic": {
             "default_value": false
@@ -642,13 +645,13 @@
             "default_value": 0.02
         },
         "infill_overlap": {
-            "default_value": 10
+            "default_value": 0
         },
         "infill_overlap_mm": {
-            "default_value": 0.04
+            "default_value": 0
         },
         "infill_wipe_dist": {
-            "default_value": 0.1
+            "default_value": 0
         },
         "wall_0_inset": {
             "default_value": 0
@@ -684,7 +687,7 @@
             "default_value": 1.5
         },
         "min_infill_area": {
-            "default_value": 5
+            "default_value": 0
         },
         "infill_support_enabled": {
             "default_value": false
@@ -693,28 +696,28 @@
             "default_value": 40
         },
         "skin_preshrink": {
-            "default_value": 1.2
+            "default_value": 0.8
         },
         "top_skin_preshrink": {
-            "default_value": 1.2
+            "default_value": 0.8
         },
         "bottom_skin_preshrink": {
-            "default_value": 1.2
+            "default_value": 0.8
         },
         "expand_skins_expand_distance": {
-            "default_value": 1.2
+            "default_value": 0.8
         },
         "top_skin_expand_distance": {
-            "default_value": 1.2
+            "default_value": 0.8
         },
         "bottom_skin_expand_distance": {
-            "default_value": 1.2
+            "default_value": 0.8
         },
         "max_skin_angle_for_expansion": {
             "default_value": 90
         },
         "min_skin_width_for_expansion": {
-            "default_value": 7.83773951454306e-17
+            "default_value": 5.878304635907295e-17
         },
         "skin_edge_support_thickness": {
             "default_value": 0
@@ -744,7 +747,7 @@
             "default_value": 2
         },
         "raft_surface_thickness": {
-            "default_value": 0.16
+            "default_value": 0.24
         },
         "raft_surface_line_width": {
             "default_value": 0.4
@@ -753,7 +756,7 @@
             "default_value": 0.4
         },
         "raft_interface_thickness": {
-            "default_value": 0.24
+            "default_value": 0.36
         },
         "raft_interface_line_width": {
             "default_value": 0.7
@@ -762,7 +765,7 @@
             "default_value": 0.9
         },
         "raft_base_thickness": {
-            "default_value": 0.3
+            "default_value": 0.336
         },
         "raft_base_line_width": {
             "default_value": 0.8
@@ -771,16 +774,16 @@
             "default_value": 1.6
         },
         "raft_speed": {
-            "default_value": 25
+            "default_value": 30
         },
         "raft_surface_speed": {
-            "default_value": 25
+            "default_value": 30
         },
         "raft_interface_speed": {
-            "default_value": 18.75
+            "default_value": 22.5
         },
         "raft_base_speed": {
-            "default_value": 18.75
+            "default_value": 22.5
         },
         "raft_acceleration": {
             "default_value": 3000
@@ -966,7 +969,7 @@
             "default_value": 90
         },
         "cross_infill_pocket_size": {
-            "default_value": 4.8
+            "default_value": 4
         },
         "cross_infill_density_image": {
             "default_value": ""
@@ -1104,13 +1107,13 @@
             "default_value": 100
         },
         "bridge_wall_speed": {
-            "default_value": 10
+            "default_value": 15
         },
         "bridge_wall_material_flow": {
             "default_value": 50
         },
         "bridge_skin_speed": {
-            "default_value": 12.5
+            "default_value": 15
         },
         "bridge_skin_material_flow": {
             "default_value": 60
@@ -1125,7 +1128,7 @@
             "default_value": true
         },
         "bridge_skin_speed_2": {
-            "default_value": 12.5
+            "default_value": 15
         },
         "bridge_skin_material_flow_2": {
             "default_value": 100
@@ -1137,7 +1140,7 @@
             "default_value": 0
         },
         "bridge_skin_speed_3": {
-            "default_value": 12.5
+            "default_value": 15
         },
         "bridge_skin_material_flow_3": {
             "default_value": 110

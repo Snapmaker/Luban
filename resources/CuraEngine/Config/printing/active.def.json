@@ -12,7 +12,6 @@
         "adhesion_type": {
             "default_value": "skirt"
         },
-
         "skirt_brim_line_width": {
             "default_value": 0.4
         },

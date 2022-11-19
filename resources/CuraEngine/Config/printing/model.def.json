@@ -17,7 +17,7 @@
         },
         "roofing_extruder_nr": {
             "default_value": "0"
-        }, 
+        },
         "top_bottom_extruder_nr": {
             "default_value": "0"
         }

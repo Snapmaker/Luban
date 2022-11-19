@@ -271,7 +271,7 @@ export const PRINTING_QUALITY_CONFIG_KEYS_SINGLE = [
     'wall_thickness',
     'top_thickness',
     'bottom_thickness',
-    'outer_inset_first',
+    'inset_direction',
     'infill_sparse_density',
     'infill_pattern',
     // 'speed_print',
@@ -306,7 +306,7 @@ export const PRINTING_QUALITY_CONFIG_KEYS_DUAL = [
     'wall_thickness',
     'top_thickness',
     'bottom_thickness',
-    'outer_inset_first',
+    'inset_direction',
     'infill_sparse_density',
     'infill_pattern',
     // 'speed_print',
@@ -446,7 +446,7 @@ export const PRINTING_QUALITY_CONFIG_GROUP_SINGLE = [
             'wall_thickness',
             'top_thickness',
             'bottom_thickness',
-            'outer_inset_first'
+            'inset_direction'
         ]
     },
     {
@@ -509,7 +509,7 @@ export const PRINTING_QUALITY_CONFIG_GROUP_DUAL = [
             'wall_thickness',
             'top_thickness',
             'bottom_thickness',
-            'outer_inset_first'
+            'inset_direction'
         ]
     },
     {

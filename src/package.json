@@ -17,6 +17,7 @@
   "main": "main.js",
   "dependencies": {
     "@babel/runtime": "7.12.18",
+    "@snapmaker/snapmaker-lunar": "1.2.0-alpha.0",
     "@xmldom/xmldom": "^0.8.2",
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "1.18.3",

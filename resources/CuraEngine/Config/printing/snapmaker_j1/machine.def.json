@@ -5,7 +5,7 @@
         "machine_name": {
             "label": "Machine Type",
             "description": "The name of your 3D printer model.",
-            "default_value": "Unknown",
+            "default_value": "Snapmaker J1",
             "type": "str",
             "settable_per_mesh": false,
             "settable_per_extruder": false,
@@ -23,7 +23,7 @@
         "machine_start_gcode": {
             "label": "Start G-code",
             "description": "G-code commands to be executed at the very start - separated by \\n.",
-            "default_value": "G28 ;Home\nG1 Z15.0 F6000 ;Move the platform down 15mm\n;Prime the extruder\nG92 E0\nG1 F200 E3\nG92 E0",
+            "default_value": ";--- Start G-code Begin ---\\nM104 S{material_print_temperature_layer_0} ;Set Hotend Temperature\\nM140 S{material_bed_temperature_layer_0} ;Set Bed Temperature\\nG28 ;Home\\nG1 Z0.8\\nM109 S{material_print_temperature_layer_0}\\nM190 S{material_bed_temperature_layer_0}\\nG1 Z0.8 F6000\\nM201 X10000 Y10000 Z500 E5000\\nM205 V5\\nG92 E0\\nG1 F200 E2\\nG92 E0\\n;--- Start G-code End ---\\n",
             "type": "str",
             "settable_per_mesh": false,
             "settable_per_extruder": false,
@@ -32,7 +32,7 @@
         "machine_end_gcode": {
             "label": "End G-code",
             "description": "G-code commands to be executed at the very end - separated by \\n.",
-            "default_value": "M104 S0\nM140 S0\n;Retract the filament\nG92 E1\nG1 E-1 F300\nG28 X0 Y0\nM84",
+            "default_value": ";--- End G-code Begin ---\\nM104 S0\\nM140 S0\\nG92 E0\\nG1 E-1 F300 ;retract the filament\\n\\nG92 E0\\nG28 Z\\nG28 X0 Y0\\nM84\\n;--- End G-code End ---\\n",
             "type": "str",
             "settable_per_mesh": false,
             "settable_per_extruder": false,

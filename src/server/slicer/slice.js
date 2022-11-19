@@ -2,8 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import childProcess from 'child_process';
 
-import lubanEngine, { getPath } from 'snapmaker-luban-engine';
-import lunar from 'snapmaker-lunar';
+import lubanEngine from 'snapmaker-luban-engine';
+import lunar, { getPath } from '@snapmaker/snapmaker-lunar';
 import logger from '../lib/logger';
 import DataStorage from '../DataStorage';
 import settings from '../config/settings';
@@ -17,7 +17,7 @@ const log = logger('service:print3d-slice');
 
 // const lunar = require('snapmaker-lunar');
 
-const enginePath = getPath();
+const enginePath = getPath('Slicer');
 
 /**
  * callCuraEngine
@@ -202,14 +202,19 @@ function slice(params, onProgress, onSucceed, onError) {
     const process = callCuraEngine(modelConfig, supportConfig, gcodeFilePath);
     const renderGcodeFileName = `${renderName}.gcode`;
 
-    process.stderr.on('data', (data) => {
+    process.stdout.on('data', (data) => {
         const array = data.toString()
             .split('\n');
 
-        array.map((item) => {
+        array.forEach((item) => {
             if (item.length < 10) {
-                return null;
+                return;
             }
+            if (item.indexOf('[debug]') !== -1) {
+                return;
+            }
+
+            // progress
             if (item.indexOf('Progress:inset+skin:') === 0 || item.indexOf('Progress:export:') === 0) {
                 const start = item.indexOf('0.');
                 const end = item.indexOf('%');
@@ -223,12 +228,12 @@ function slice(params, onProgress, onSucceed, onError) {
                 filamentLength = filamentLengthArr.map(str => Number(str.trim()
                     .replace('m', '')))
                     .reduce((a, b) => a + b, 0);
+                // volume (cm^3) * density (PLA: 1.24 g/cm^3)
                 filamentWeight = Math.PI * (1.75 / 2) * (1.75 / 2) * filamentLength * 1.24;
-            } else if (item.indexOf('Print time (s):') === 0) {
+            } else if (item.indexOf(';TIME:') === 0) {
                 // Times empirical parameter: 1.07
-                printTime = Number(item.replace('Print time (s):', '')) * 1.07;
+                printTime = Number(item.replace(';TIME:', '')) * 1.07;
             }
-            return null;
         });
     });
 
