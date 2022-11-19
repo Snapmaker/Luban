@@ -1,6 +1,12 @@
 {
     "name": "Machine",
     "version": "4.2.0",
+    "metadata": {
+        "machine_extruder_trains": {
+            "0": "extruder_0",
+            "1": "extruder_1"
+        }
+    },
     "settings": {
         "machine_name": {
             "label": "Machine Type",

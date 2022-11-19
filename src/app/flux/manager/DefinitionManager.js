@@ -114,13 +114,26 @@ class DefinitionManager {
 
         // extruder
         if (headType === HEAD_PRINTING) {
-            res = await this.getDefinition('snapmaker_extruder_0', false);
+            let machineExtruders = {};
+            if (this.machineDefinition.metadata) {
+                machineExtruders = this.machineDefinition.metadata.machine_extruder_trains;
+            }
+
+            if (machineExtruders) {
+                res = await this.getDefinition(machineExtruders['0'], true);
+            } else {
+                res = await this.getDefinition('snapmaker_extruder_0', false);
+            }
             this.extruderLDefinition = res;
             if (this.extruderLDefinition.settings.machine_nozzle_size) {
                 this.extruderLDefinition.settings.machine_nozzle_size.default_value = this.machineDefinition.settings.machine_nozzle_size.default_value;
             }
 
-            res = await this.getDefinition('snapmaker_extruder_1', false);
+            if (machineExtruders) {
+                res = await this.getDefinition(machineExtruders['1'], true);
+            } else {
+                res = await this.getDefinition('snapmaker_extruder_1', false);
+            }
             this.extruderRDefinition = res;
 
             this.extruderProfileArr = definitionRes.extruderProfileArr;
