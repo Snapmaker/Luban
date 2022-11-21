@@ -22,7 +22,7 @@ pushd "$__dirname/../dist/Luban"
 echo "Cleaning up \"`pwd`/node_modules\""
 rm -rf node_modules
 echo "Installing packages..."
-npm install --production
+npm install --omit=dev
 npm dedupe
 popd
 

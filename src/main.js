@@ -1,11 +1,12 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
-import { app, powerSaveBlocker, BrowserWindow, protocol, screen, session, ipcMain, shell, Menu } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu, powerSaveBlocker, protocol, screen, session, shell } from 'electron';
+import { enable as electronEnable, initialize as electronRemoteMainInitialize } from '@electron/remote/main';
 import { autoUpdater } from 'electron-updater';
 import Store from 'electron-store';
 import url from 'url';
 import fs from 'fs';
-import { isUndefined, isNull, debounce } from 'lodash';
+import { debounce, isNull, isUndefined } from 'lodash';
 import path from 'path';
 import isReachable from 'is-reachable';
 import fetch from 'node-fetch';
@@ -13,9 +14,6 @@ import { configureWindow } from './electron-app/window';
 import MenuBuilder, { addRecentFile, cleanAllRecentFiles } from './electron-app/Menu';
 import DataStorage from './DataStorage';
 import pkg from './package.json';
-
-
-require('@electron/remote/main').initialize();
 
 
 const config = new Store();
@@ -295,8 +293,10 @@ const startToBegin = (data) => {
     // Ignore proxy settings
     // https://electronjs.org/docs/api/session#sessetproxyconfig-callback
 
+    electronRemoteMainInitialize();
+
     const webContentsSession = mainWindow.webContents.session;
-    require('@electron/remote/main').enable(mainWindow.webContents);
+    electronEnable(mainWindow.webContents);
 
     webContentsSession.setProxy({ proxyRules: 'direct://' })
         .then(() => mainWindow.loadURL(loadUrl).catch(err => {

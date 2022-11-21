@@ -11,7 +11,7 @@ export function serverCopyDevelopment() {
     const files = ['src/server/{i18n,views}/**/*'];
     return gulp
         .src(files, { base: 'src/server' })
-        .pipe(gulp.dest('output/server'));
+        .pipe(gulp.dest('output/src/server'));
 }
 
 //
@@ -32,7 +32,7 @@ export function serverStartDevelopment(cb) {
 
     nodemon({
         restartable: 'rs',
-        script: './output/main',
+        script: './output/src/main',
         // script: './bin/cli',
         args: args,
         ignore: ['.git', 'node_modules/**/node_modules'],
@@ -78,7 +78,7 @@ export function serverCopyProduction() {
 
     return gulp
         .src(files, { base: 'src/server' })
-        .pipe(gulp.dest('dist/Luban/server'));
+        .pipe(gulp.dest('dist/Luban/src/server'));
 }
 
 //

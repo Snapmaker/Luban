@@ -12,14 +12,20 @@ mkdir output
 rm -rf "$DEST_DIR"
 mkdir -p "$DEST_DIR"
 
+cp -af src/package.json "$DEST_DIR"
+
 #
 # compile src
 #
+SOURCE_DIR="$DEST_DIR/src"
+mkdir -p "$SOURCE_DIR"
+
 npm run pkgsync
-cp -af src/package.json "$DEST_DIR"
+cp -af src/package.json "$SOURCE_DIR"
+
 pushd src
-cross-env NODE_ENV=production babel "*.js" --config-file ../babel.config.js -d "../$DEST_DIR"
-cross-env NODE_ENV=production babel "electron-app/**/*.js" --config-file ../babel.config.js -d "../$DEST_DIR/electron-app"
+cross-env NODE_ENV=production babel "*.js" --config-file ../babel.config.js -d "../$SOURCE_DIR"
+cross-env NODE_ENV=production babel "electron-app/**/*.js" --config-file ../babel.config.js -d "../$SOURCE_DIR/electron-app"
 popd
 
 #

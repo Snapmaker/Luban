@@ -15,7 +15,7 @@ export function appCopyDevelopment() {
     ];
 
     return gulp.src(files, { base: 'src/app' })
-        .pipe(gulp.dest('output/app'));
+        .pipe(gulp.dest('output/src/app'));
 }
 
 //
@@ -30,7 +30,7 @@ export function appCopyProduction() {
     ];
 
     return gulp.src(files, { base: 'src/app' })
-        .pipe(gulp.dest('dist/Luban/app'));
+        .pipe(gulp.dest('dist/Luban/src/app'));
 }
 
 

@@ -371,7 +371,7 @@ class DataStorage {
         mkdirp.sync(`${this.configDir}/${LASER_CONFIG_SUBCATEGORY}`);
         mkdirp.sync(`${this.configDir}/${PRINTING_CONFIG_SUBCATEGORY}`);
 
-        const CURA_ENGINE_CONFIG_LOCAL = '../resources/CuraEngine/Config';
+        const CURA_ENGINE_CONFIG_LOCAL = path.resolve('../../resources/CuraEngine/Config');
         await this.copyDirForInitSlicer({
             srcDir: CURA_ENGINE_CONFIG_LOCAL,
             dstDir: this.configDir,
@@ -432,7 +432,7 @@ class DataStorage {
     async initFonts() {
         mkdirp.sync(this.fontDir);
 
-        const FONTS_LOCAL = '../resources/fonts';
+        const FONTS_LOCAL = path.resolve('../../resources/fonts');
         if (fs.existsSync(FONTS_LOCAL)) {
             const files = fs.readdirSync(FONTS_LOCAL);
             for (const file of files) {
@@ -450,8 +450,9 @@ class DataStorage {
     async initScenes() {
         mkdirp.sync(this.scenesDir);
 
-        const SCENES_LOCAL = '../resources/scenes/';
+        const SCENES_LOCAL = path.resolve('../../resources/scenes/');
         const resultPath = path.resolve(__dirname, this.scenesDir);
+
         if (fs.existsSync(SCENES_LOCAL)) {
             const files = fs.readdirSync(SCENES_LOCAL);
             for (const file of files) {
@@ -468,7 +469,7 @@ class DataStorage {
 
     async initUserCase() {
         mkdirp.sync(this.userCaseDir);
-        const USER_CASE_LOCAL = '../resources/luban-case-library/';
+        const USER_CASE_LOCAL = path.resolve('../../resources/luban-case-library/');
         if (fs.existsSync(USER_CASE_LOCAL)) {
             const files = fs.readdirSync(USER_CASE_LOCAL);
             for (const file of files) {
@@ -488,7 +489,7 @@ class DataStorage {
 
     async initProfileDocs() {
         mkdirp.sync(this.profileDocsDir);
-        const PROFILE_DOCS_LOCAL = '../resources/ProfileDocs/';
+        const PROFILE_DOCS_LOCAL = path.resolve('../../resources/ProfileDocs/');
         if (fs.existsSync(PROFILE_DOCS_LOCAL)) {
             const files = fs.readdirSync(PROFILE_DOCS_LOCAL);
             for (const file of files) {

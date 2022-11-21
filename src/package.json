@@ -14,10 +14,11 @@
     "type": "git",
     "url": "git@github.com:Snapmaker/Luban.git"
   },
-  "main": "main.js",
+  "main": "src/main.js",
   "dependencies": {
     "@babel/runtime": "7.12.18",
-    "@snapmaker/snapmaker-lunar": "1.2.0-alpha.0",
+    "@electron/remote": "2.0.8",
+    "@snapmaker/snapmaker-lunar": "^1.2.0-alpha.1",
     "@xmldom/xmldom": "^0.8.2",
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "1.18.3",
