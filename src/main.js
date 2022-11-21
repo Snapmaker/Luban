@@ -1,11 +1,12 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
-import { app, powerSaveBlocker, BrowserWindow, protocol, screen, session, ipcMain, shell, Menu } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu, powerSaveBlocker, protocol, screen, session, shell } from 'electron';
+import { enable as electronEnable, initialize as electronRemoteMainInitialize } from '@electron/remote/main';
 import { autoUpdater } from 'electron-updater';
 import Store from 'electron-store';
 import url from 'url';
 import fs from 'fs';
-import { isUndefined, isNull, debounce } from 'lodash';
+import { debounce, isNull, isUndefined } from 'lodash';
 import path from 'path';
 import isReachable from 'is-reachable';
 import fetch from 'node-fetch';
@@ -13,7 +14,7 @@ import { configureWindow } from './electron-app/window';
 import MenuBuilder, { addRecentFile, cleanAllRecentFiles } from './electron-app/Menu';
 import DataStorage from './DataStorage';
 import pkg from './package.json';
-// const { crashReporter } = require('electron');
+
 
 const config = new Store();
 const userDataDir = app.getPath('userData');
@@ -38,12 +39,6 @@ const UPLOAD_WINDOWS = 'uploadWindows';
 
 const { CLIENT_PORT, SERVER_PORT } = pkg.config;
 
-// crashReporter.start({
-//     productName: 'Snapmaker',
-//     globalExtra: { _companyName: 'Snapmaker' },
-//     submitURL: 'https://api.snapmaker.com',
-//     uploadToServer: true
-// });
 
 function getBrowserWindowOptions() {
     const defaultOptions = {
@@ -298,7 +293,11 @@ const startToBegin = (data) => {
     // Ignore proxy settings
     // https://electronjs.org/docs/api/session#sessetproxyconfig-callback
 
+    electronRemoteMainInitialize();
+
     const webContentsSession = mainWindow.webContents.session;
+    electronEnable(mainWindow.webContents);
+
     webContentsSession.setProxy({ proxyRules: 'direct://' })
         .then(() => mainWindow.loadURL(loadUrl).catch(err => {
             console.log('err', err.message);

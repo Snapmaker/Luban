@@ -16,8 +16,10 @@ const files = [
 ];
 const deps = [
     '@babel/runtime', // 'babel-runtime' is required for electron app
-    'debug' // 'debug' is required for electron app
+    'debug', // 'debug' is required for electron app
+    '@electron/remote', // '@electron/remote/main' is required
 ].concat(findImports(files, { flatten: true })).sort();
+
 pkgApp.name = pkg.name;
 pkgApp.version = pkg.version;
 pkgApp.homepage = pkg.homepage;

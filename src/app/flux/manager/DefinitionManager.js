@@ -114,13 +114,26 @@ class DefinitionManager {
 
         // extruder
         if (headType === HEAD_PRINTING) {
-            res = await this.getDefinition('snapmaker_extruder_0', false);
+            let machineExtruders = {};
+            if (this.machineDefinition.metadata) {
+                machineExtruders = this.machineDefinition.metadata.machine_extruder_trains;
+            }
+
+            if (machineExtruders) {
+                res = await this.getDefinition(machineExtruders['0'], true);
+            } else {
+                res = await this.getDefinition('snapmaker_extruder_0', false);
+            }
             this.extruderLDefinition = res;
             if (this.extruderLDefinition.settings.machine_nozzle_size) {
                 this.extruderLDefinition.settings.machine_nozzle_size.default_value = this.machineDefinition.settings.machine_nozzle_size.default_value;
             }
 
-            res = await this.getDefinition('snapmaker_extruder_1', false);
+            if (machineExtruders) {
+                res = await this.getDefinition(machineExtruders['1'], true);
+            } else {
+                res = await this.getDefinition('snapmaker_extruder_1', false);
+            }
             this.extruderRDefinition = res;
 
             this.extruderProfileArr = definitionRes.extruderProfileArr;
@@ -427,8 +440,22 @@ class DefinitionManager {
         });
         definition.ownKeys.push('machine_start_gcode');
         definition.ownKeys.push('machine_end_gcode');
-        this.addMachineStartGcode(definition, extruderDefinition);
-        this.addMachineEndGcode(definition);
+
+        // TODO: Refactor this hard-code
+
+        const isJ1 = activeDefinition.settings['machine_name'].default_value === "Snapmaker J1";
+
+        if (isJ1) {
+            this.addMachineStartGcodeJ1(definition, extruderDefinition);
+        } else {
+            this.addMachineStartGcode(definition, extruderDefinition);
+        }
+
+        if (isJ1) {
+            this.addMachineEndGcodeJ1(definition);
+        } else {
+            this.addMachineEndGcode(definition);
+        }
 
         return definition;
     }
@@ -613,6 +640,50 @@ class DefinitionManager {
         };
     }
 
+    addMachineStartGcodeJ1(definition, extruderDefinition) {
+        const settings = extruderDefinition.settings;
+
+        const printTemp = settings.material_print_temperature.default_value;
+        const printTempLayer0 = settings.material_print_temperature_layer_0.default_value
+            || printTemp;
+        const bedTempLayer0 = settings.material_bed_temperature_layer_0.default_value;
+
+        // ;--- Start G-code Begin ---
+        // M104 S{material_print_temperature_layer_0} ;Set Hotend Temperature
+        // M140 S{material_bed_temperature_layer_0} ;Set Bed Temperature
+        // G28 ;Home
+        // G1 Z0.8
+        // M109 S{material_print_temperature_layer_0}
+        // M190 S{material_bed_temperature_layer_0}
+        // G1 Z0.8 F6000
+        // M201 X10000 Y10000 Z500 E5000
+        // M205 V5
+        // G92 E0
+        // G1 F200 E2
+        // G92 E0
+        // ;--- Start G-code End ---
+        const gcode = [
+            ';--- Start G-code Begin ---',
+            `M104 S${printTempLayer0} ;Set Hotend Temperature`,
+            `M140 S${bedTempLayer0} ;Set Bed Temperature`,
+            'G28 ;home',
+            'G1 Z0.8',
+            `M109 S${printTempLayer0}`,
+            `M190 S${bedTempLayer0}`,
+            'G1 Z0.8 F6000',
+            'M201 X10000 Y10000 Z500 E5000',
+            'M205 V5',
+            'G92 E0',
+            'G1 F200 E2',
+            'G92 E0',
+            ';--- Start G-code End ---',
+        ];
+
+        definition.settings.machine_start_gcode = {
+            default_value: gcode.join('\n')
+        };
+    }
+
     addMachineEndGcode(definition) {
         // TODO: use relative to set targetZ(use: current z + 10).
         // It is ok even if targetZ is bigger than 125 because firmware has set limitation
@@ -630,6 +701,35 @@ class DefinitionManager {
             `G1 X${0} F3000 ;move X to min endstops, so the head is out of the way`,
             `G1 Y${y} F3000 ;so the head is out of the way and Plate is moved forward`,
             ';End GCode end',
+        ];
+
+        definition.settings.machine_end_gcode = {
+            default_value: gcode.join('\n')
+        };
+    }
+
+    addMachineEndGcodeJ1(definition) {
+        // ;--- End G-code Begin ---
+        // M104 S0
+        // M140 S0
+        // G92 E0
+        // G1 E-1 F300 ;retract the filament
+        // G92 E0
+        // G28 Z
+        // G28 X0 Y0
+        // M84
+        // ;--- End G-code End ---
+        const gcode = [
+            ';--- End G-code Begin ---',
+            'M104 S0',
+            'M140 S0',
+            'G92 E0',
+            'G1 E-1 F300 ;retract the filament',
+            'G92 E0',
+            'G28 Z',
+            'G28 X0 Y0',
+            'M84',
+            ';--- End G-code End ---',
         ];
 
         definition.settings.machine_end_gcode = {

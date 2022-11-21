@@ -1962,7 +1962,7 @@ export const actions = {
     },
     // Upload model
     // @param files
-    uploadModel: files => async (dispatch, getState) => {
+    uploadModel: (files) => async (dispatch, getState) => {
         const { progressStatesManager } = getState().printing;
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
 
@@ -1973,10 +1973,13 @@ export const actions = {
             })
         );
 
+        console.log('uploadModel, files =', files);
+
         const ps = Array.from(files).map(async file => {
             // Notice user that model is being loading
             const formData = new FormData();
             formData.append('file', file);
+            console.log('formData', file);
             const res = await api.uploadFile(formData, HEAD_PRINTING);
             const { originalName, uploadName, children = [] } = res.body;
             return { originalName, uploadName, children };
@@ -1991,8 +1994,8 @@ export const actions = {
                 res = promiseTask
             }
             return res
-        })
-        const allChild = []
+        });
+        const allChild = [];
         fileNames.forEach((item) => {
             if (item.children) {
                 if (item.children.length) {
@@ -2236,6 +2239,7 @@ export const actions = {
             hasPrimeTower
         );
 
+        // FIXME
         const isDualExtruder = printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2;
         const onlySupportInterface = helpersExtruderConfig.onlySupportInterface;
 

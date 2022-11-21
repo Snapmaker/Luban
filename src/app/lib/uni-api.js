@@ -9,7 +9,8 @@ import pkg from '../../../package.json';
 import { DATA_PATH } from '../constants';
 import Dialog from './dialog';
 
-class AppbarMenuEvent extends events.EventEmitter { }
+class AppbarMenuEvent extends events.EventEmitter {
+}
 
 const menuEvent = new AppbarMenuEvent();
 /**
@@ -73,7 +74,8 @@ const Update = {
     // TODO: useless
     downloadUpdate(downloadInfo, oldVersion, shouldCheckForUpdate) {
         if (isElectron()) {
-            const { remote, ipcRenderer } = window.require('electron');
+            const { ipcRenderer } = window.require('electron');
+            const { remote } = window.require('@electron/remote');
             const { dialog } = remote;
             const { releaseName, releaseNotes } = downloadInfo;
             const dialogOpts = {
@@ -98,7 +100,7 @@ const Update = {
     },
     downloadHasStarted() {
         if (isElectron()) {
-            const { remote } = window.require('electron');
+            const remote = window.require('@electron/remote');
             const { dialog } = remote;
 
             const dialogOpts = {
@@ -112,7 +114,8 @@ const Update = {
     },
     isReplacingAppNow(downloadInfo) {
         if (isElectron()) {
-            const { remote, ipcRenderer } = window.require('electron');
+            const { ipcRenderer } = window.require('electron');
+            const remote = window.require('@electron/remote');
             const { dialog } = remote;
             const { releaseName } = downloadInfo;
 
@@ -139,8 +142,8 @@ const Update = {
 const Menu = {
     setItemEnabled(id, enabled) {
         if (isElectron()) {
-            const { remote } = window.require('electron');
-            const appMenu = remote.Menu.getApplicationMenu();
+            const { Menu: ElectronMenu } = window.require('@electron/remote');
+            const appMenu = ElectronMenu.getApplicationMenu();
             const item = appMenu.getMenuItemById(id);
             item.enabled = enabled;
         }
@@ -153,9 +156,9 @@ const Menu = {
     },
     replaceMenu(newMenuTemplate) {
         if (isElectron()) {
-            const appMenu = window.require('electron').remote.Menu;
-            const menu = appMenu.buildFromTemplate(newMenuTemplate);
-            appMenu.setApplicationMenu(menu);
+            const { Menu: ElectronMenu } = window.require('@electron/remote');
+            const appMenu = ElectronMenu.buildFromTemplate(newMenuTemplate);
+            ElectronMenu.setApplicationMenu(appMenu);
         }
     }
 };
@@ -180,7 +183,7 @@ const File = {
     save(targetFile, tmpFile, callback) {
         if (isElectron()) {
             const fs = window.require('fs');
-            const app = window.require('electron').remote.app;
+            const { app } = window.require('@electron/remote');
             tmpFile = app.getPath('userData') + tmpFile;
 
             fs.copyFileSync(tmpFile, targetFile);
@@ -205,7 +208,7 @@ const File = {
     saveAs(targetFile, tmpFile, callback = undefined) {
         if (isElectron()) {
             const fs = window.require('fs');
-            const { app } = window.require('electron').remote;
+            const { app } = window.require('@electron/remote');
             const defaultPath = path.resolve(app.getPath('downloads'), path.basename(tmpFile));
             tmpFile = app.getPath('userData') + tmpFile;
             // eslint-disable-next-line no-use-before-define
@@ -220,8 +223,6 @@ const File = {
                 const file = { path: targetFile, name: window.require('path').basename(targetFile) };
 
                 fs.copyFileSync(tmpFile, targetFile);
-                // const menu = window.require('electron').remote.require('./electron-app/Menu');
-                // menu.addRecentFile(file);
                 const { ipcRenderer } = window.require('electron');
                 ipcRenderer.send('add-recent-file', file);
 
@@ -265,7 +266,7 @@ const File = {
         }
         if (isElectron()) {
             const fs = window.require('fs');
-            const { app } = window.require('electron').remote;
+            const { app } = window.require('@electron/remote');
             const defaultPath = path.resolve(app.getPath('downloads'), renderGcodeFileName);
             tmpFile = app.getPath('userData') + tmpFile;
             // eslint-disable-next-line no-use-before-define
@@ -328,7 +329,7 @@ const File = {
     },
     resolveDownloadsPath(tmpFile) {
         if (isElectron()) {
-            const { app } = window.require('electron').remote;
+            const { app } = window.require('@electron/remote');
             const defaultPath = path.resolve(app.getPath('downloads'), path.basename(tmpFile));
             return defaultPath;
         } else {
@@ -348,13 +349,15 @@ const Window = {
 
     call(func) {
         if (isElectron()) {
-            window.require('electron').remote.getCurrentWindow()[func]();
+            const { getCurrentWindow } = window.require('@electron/remote');
+            getCurrentWindow()[func]();
         }
     },
 
     initWindow() {
         if (isElectron()) {
-            this.window = window.require('electron').remote.getCurrentWindow();
+            const { getCurrentWindow } = window.require('@electron/remote');
+            this.window = getCurrentWindow();
             this.initTitle = `Snapmaker Luban ${pkg.version}`;
         } else {
             this.window = {
@@ -405,7 +408,8 @@ const Window = {
     },
     toggleFullscreen() {
         if (isElectron()) {
-            const browserWindow = window.require('electron').remote.BrowserWindow.getFocusedWindow();
+            const { BrowserWindow } = window.require('@electron/remote');
+            const browserWindow = BrowserWindow.getFocusedWindow();
             if (browserWindow.isFullScreen()) {
                 browserWindow.setFullScreen(false);
             } else {
@@ -423,12 +427,14 @@ const Window = {
     },
     toggleDeveloperTools() {
         if (isElectron()) {
-            window.require('electron').remote.getCurrentWebContents().toggleDevTools();
+            const { getCurrentWebContents } = window.require('@electron/remote');
+            getCurrentWebContents().toggleDevTools();
         }
     },
     openLink(url) {
         if (isElectron()) {
-            window.require('electron').remote.shell.openExternal(url);
+            const { shell } = window.require('@electron/remote');
+            shell.openExternal(url);
         } else {
             window.open(url);
         }
@@ -449,7 +455,8 @@ const Connection = {
 const APP = {
     quit() {
         if (isElectron()) {
-            window.require('electron').remote.app.quit();
+            const { app } = window.require('@electron/remote');
+            app.quit();
         } else {
             window.top.close();
         }

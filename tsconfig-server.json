@@ -18,7 +18,7 @@
         "noUnusedLocals": true,
         "esModuleInterop": true,
         "rootDir": "./src/",
-        "outDir": "./output/",
+        "outDir": "./output/src",
         "watch": false,
         "skipLibCheck": true,
         "baseUrl": "."

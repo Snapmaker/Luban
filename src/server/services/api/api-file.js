@@ -124,6 +124,7 @@ export const set = async (req, res) => {
                 }
             });
         } else { // post file pathname in electron
+            console.log('req.body', req.body.file);
             const ret = await cpFileToTmp(JSON.parse(req.body.file));
             res.send(ret);
             res.end();

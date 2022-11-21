@@ -542,9 +542,6 @@
         "optimize_wall_printing_order": {
             "default_value": true
         },
-        "outer_inset_first": {
-            "default_value": false
-        },
         "infill_before_walls": {
             "default_value": true
         },
@@ -623,27 +620,6 @@
         "wall_0_wipe_dist": {
             "default_value": 0.2
         },
-        "travel_compensate_overlapping_walls_enabled": {
-            "default_value": true
-        },
-        "travel_compensate_overlapping_walls_0_enabled": {
-            "default_value": true
-        },
-        "travel_compensate_overlapping_walls_x_enabled": {
-            "default_value": true
-        },
-        "wall_min_flow": {
-            "default_value": 0
-        },
-        "wall_min_flow_retract": {
-            "default_value": false
-        },
-        "fill_perimeter_gaps": {
-            "default_value": "everywhere"
-        },
-        "filter_out_tiny_gaps": {
-            "default_value": true
-        },
         "xy_offset": {
             "default_value": 0
         },
@@ -676,12 +652,6 @@
         },
         "infill_wipe_dist": {
             "default_value": 0
-        },
-        "speed_equalize_flow_enabled": {
-            "default_value": false
-        },
-        "speed_equalize_flow_max": {
-            "default_value": 150
         },
         "wall_0_inset": {
             "default_value": 0
@@ -1231,6 +1201,9 @@
         },
         "small_feature_max_length": {
             "default_value": 0
+        },
+        "inset_direction": {
+            "default_value": "inside_out"
         }
     }
 }

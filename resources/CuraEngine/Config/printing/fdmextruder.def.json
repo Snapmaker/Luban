@@ -1,21 +1,26 @@
 {
     "name": "Extruder",
-    "version": "4.2.0",
-    "metadata": {
+    "version": 2,
+    "metadata":
+    {
         "type": "extruder",
         "author": "Ultimaker",
         "manufacturer": "Unknown",
-        "setting_version": 16,
+        "setting_version": 20,
         "visible": false,
         "position": "0"
     },
-    "settings": {
-        "machine_settings": {
+    "settings":
+    {
+        "machine_settings":
+        {
             "label": "Machine",
             "type": "category",
             "description": "Machine specific settings",
-            "children": {
-                "extruder_nr": {
+            "children":
+            {
+                "extruder_nr":
+                {
                     "label": "Extruder",
                     "description": "The extruder train used for printing. This is used in multi-extrusion.",
                     "type": "extruder",
@@ -25,7 +30,8 @@
                     "settable_per_meshgroup": false,
                     "settable_globally": false
                 },
-                "machine_nozzle_id": {
+                "machine_nozzle_id":
+                {
                     "label": "Nozzle ID",
                     "description": "The nozzle ID for an extruder train, such as \"AA 0.4\" and \"BB 0.8\".",
                     "type": "str",
@@ -33,7 +39,8 @@
                     "settable_per_mesh": false,
                     "settable_per_extruder": true
                 },
-                "machine_nozzle_size": {
+                "machine_nozzle_size":
+                {
                     "label": "Nozzle Diameter",
                     "description": "The inner diameter of the nozzle. Change this setting when using a non-standard nozzle size.",
                     "unit": "mm",
@@ -44,7 +51,8 @@
                     "settable_per_mesh": false,
                     "settable_per_extruder": true
                 },
-                "machine_nozzle_offset_x": {
+                "machine_nozzle_offset_x":
+                {
                     "label": "Nozzle X Offset",
                     "description": "The x-coordinate of the offset of the nozzle.",
                     "type": "float",
@@ -55,7 +63,8 @@
                     "settable_per_meshgroup": false,
                     "settable_globally": false
                 },
-                "machine_nozzle_offset_y": {
+                "machine_nozzle_offset_y":
+                {
                     "label": "Nozzle Y Offset",
                     "description": "The y-coordinate of the offset of the nozzle.",
                     "type": "float",
@@ -66,7 +75,8 @@
                     "settable_per_meshgroup": false,
                     "settable_globally": false
                 },
-                "machine_extruder_start_code": {
+                "machine_extruder_start_code":
+                {
                     "label": "Extruder Start G-Code",
                     "description": "Start g-code to execute when switching to this extruder.",
                     "type": "str",
@@ -76,7 +86,8 @@
                     "settable_per_meshgroup": false,
                     "settable_globally": false
                 },
-                "machine_extruder_start_pos_abs": {
+                "machine_extruder_start_pos_abs":
+                {
                     "label": "Extruder Start Position Absolute",
                     "description": "Make the extruder starting position absolute rather than relative to the last-known location of the head.",
                     "type": "bool",
@@ -86,7 +97,8 @@
                     "settable_per_meshgroup": false,
                     "settable_globally": false
                 },
-                "machine_extruder_start_pos_x": {
+                "machine_extruder_start_pos_x":
+                {
                     "label": "Extruder Start Position X",
                     "description": "The x-coordinate of the starting position when turning the extruder on.",
                     "type": "float",
@@ -97,7 +109,8 @@
                     "settable_per_meshgroup": false,
                     "settable_globally": false
                 },
-                "machine_extruder_start_pos_y": {
+                "machine_extruder_start_pos_y":
+                {
                     "label": "Extruder Start Position Y",
                     "description": "The y-coordinate of the starting position when turning the extruder on.",
                     "type": "float",
@@ -108,7 +121,8 @@
                     "settable_per_meshgroup": false,
                     "settable_globally": false
                 },
-                "machine_extruder_end_code": {
+                "machine_extruder_end_code":
+                {
                     "label": "Extruder End G-Code",
                     "description": "End g-code to execute when switching away from this extruder.",
                     "type": "str",
@@ -118,7 +132,8 @@
                     "settable_per_meshgroup": false,
                     "settable_globally": false
                 },
-                "machine_extruder_end_pos_abs": {
+                "machine_extruder_end_pos_abs":
+                {
                     "label": "Extruder End Position Absolute",
                     "description": "Make the extruder ending position absolute rather than relative to the last-known location of the head.",
                     "type": "bool",
@@ -128,7 +143,8 @@
                     "settable_per_meshgroup": false,
                     "settable_globally": false
                 },
-                "machine_extruder_end_pos_x": {
+                "machine_extruder_end_pos_x":
+                {
                     "label": "Extruder End Position X",
                     "description": "The x-coordinate of the ending position when turning the extruder off.",
                     "type": "float",
@@ -139,7 +155,8 @@
                     "settable_per_meshgroup": false,
                     "settable_globally": false
                 },
-                "machine_extruder_end_pos_y": {
+                "machine_extruder_end_pos_y":
+                {
                     "label": "Extruder End Position Y",
                     "description": "The y-coordinate of the ending position when turning the extruder off.",
                     "type": "float",
@@ -150,7 +167,8 @@
                     "settable_per_meshgroup": false,
                     "settable_globally": false
                 },
-                "extruder_prime_pos_z": {
+                "extruder_prime_pos_z":
+                {
                     "label": "Extruder Prime Z Position",
                     "description": "The Z coordinate of the position where the nozzle primes at the start of printing.",
                     "type": "float",
@@ -161,7 +179,8 @@
                     "settable_per_mesh": false,
                     "settable_per_extruder": true
                 },
-                "machine_extruder_cooling_fan_number": {
+               "machine_extruder_cooling_fan_number":
+                {
                     "label": "Extruder Print Cooling Fan",
                     "description": "The number of the print cooling fan associated with this extruder. Only change this from the default value of 0 when you have a different print cooling fan for each extruder.",
                     "type": "int",
@@ -171,16 +190,19 @@
                     "settable_per_extruder": true,
                     "settable_per_meshgroup": false,
                     "settable_globally": false
-                }
+               }
             }
         },
-        "platform_adhesion": {
+        "platform_adhesion":
+        {
             "label": "Build Plate Adhesion",
             "type": "category",
-            "icon": "category_adhesion",
+            "icon": "Adhesion",
             "description": "Adhesion",
-            "children": {
-                "extruder_prime_pos_x": {
+            "children":
+            {
+                "extruder_prime_pos_x":
+                {
                     "label": "Extruder Prime X Position",
                     "description": "The X coordinate of the position where the nozzle primes at the start of printing.",
                     "type": "float",
@@ -192,7 +214,8 @@
                     "settable_per_extruder": true,
                     "enabled": false
                 },
-                "extruder_prime_pos_y": {
+                "extruder_prime_pos_y":
+                {
                     "label": "Extruder Prime Y Position",
                     "description": "The Y coordinate of the position where the nozzle primes at the start of printing.",
                     "type": "float",
@@ -206,13 +229,16 @@
                 }
             }
         },
-        "material": {
+        "material":
+        {
             "label": "Material",
-            "icon": "category_material",
+            "icon": "Spool",
             "description": "Material",
             "type": "category",
-            "children": {
-                "material_diameter": {
+            "children":
+            {
+                "material_diameter":
+                {
                     "label": "Diameter",
                     "description": "Adjusts the diameter of the filament used. Match this value with the diameter of the used filament.",
                     "unit": "mm",
@@ -222,222 +248,6 @@
                     "minimum_value_warning": "0.4",
                     "maximum_value_warning": "3.5",
                     "enabled": "machine_gcode_flavor != \"UltiGCode\"",
-                    "settable_per_mesh": false,
-                    "settable_per_extruder": true
-                },
-                "material_flow": {
-                    "label": "Flow",
-                    "description": "Flow compensation: the amount of material extruded is multiplied by this value.",
-                    "unit": "%",
-                    "default_value": 100,
-                    "type": "float",
-                    "minimum_value": "5",
-                    "minimum_value_warning": "50",
-                    "maximum_value_warning": "150",
-                    "enabled": "machine_gcode_flavor != \"UltiGCode\"",
-                    "settable_per_mesh": true
-                },
-                "machine_heated_bed": {
-                    "label": "Enable Heated Build Plate",
-                    "description": "Whether the machine enables the heated build plate to provide heat to avoid warp.",
-                    "default_value": true,
-                    "type": "bool",
-                    "settable_per_mesh": false,
-                    "settable_per_extruder": false,
-                    "settable_per_meshgroup": false
-                },
-                "material_print_temperature": {
-                    "label": "Default Printing Temperature",
-                    "description": "The default temperature used for printing. This should be the \"base\" temperature of a material. All other print temperatures should use offsets based on this value",
-                    "unit": "°C",
-                    "type": "float",
-                    "default_value": 210,
-                    "minimum_value_warning": "0",
-                    "maximum_value_warning": "285",
-                    "maximum_value": "365",
-                    "enabled": false,
-                    "settable_per_extruder": true,
-                    "settable_per_mesh": false,
-                    "minimum_value": "-273.15"
-                },
-                "material_print_temperature_layer_0": {
-                    "label": "Printing Temperature Initial Layer",
-                    "description": "The temperature used for printing the first layer. Set at 0 to disable special handling of the initial layer.",
-                    "unit": "°C",
-                    "type": "float",
-                    "default_value": 215,
-                    "calcu_value": "material_print_temperature",
-                    "minimum_value": "-273.15",
-                    "minimum_value_warning": "0",
-                    "maximum_value_warning": "285",
-                    "maximum_value": "365",
-                    "enabled": "machine_nozzle_temp_enabled",
-                    "settable_per_mesh": false,
-                    "settable_per_extruder": true
-                },
-                "cool_fan_speed": {
-                    "label": "Fan Speed",
-                    "description": "The speed at which the print cooling fans spin.",
-                    "unit": "%",
-                    "type": "float",
-                    "minimum_value": "0",
-                    "maximum_value": "100",
-                    "default_value": 100,
-                    "calcu_value": "cool_fan_enabled ? 100.0 : 0.0",
-                    "enabled": "cool_fan_enabled",
-                    "settable_per_mesh": false,
-                    "settable_per_extruder": true
-                },
-                "cool_fan_speed_min": {
-                    "label": "Regular Fan Speed",
-                    "description": "The speed at which the fans spin before hitting the threshold. When a layer prints faster than the threshold, the fan speed gradually inclines towards the maximum fan speed.",
-                    "unit": "%",
-                    "type": "float",
-                    "minimum_value": "0",
-                    "maximum_value": "100",
-                    "calcu_value": "cool_fan_speed",
-                    "default_value": 100,
-                    "enabled": "cool_fan_enabled",
-                    "settable_per_mesh": false,
-                    "settable_per_extruder": true
-                },
-                "cool_fan_speed_max": {
-                    "label": "Maximum Fan Speed",
-                    "description": "The speed at which the fans spin on the minimum layer time. The fan speed gradually increases between the regular fan speed and maximum fan speed when the threshold is hit.",
-                    "unit": "%",
-                    "type": "float",
-                    "minimum_value": "max(0, cool_fan_speed_min)",
-                    "maximum_value": "100",
-                    "default_value": 100,
-                    "enabled": "cool_fan_enabled",
-                    "calcu_value": "cool_fan_speed",
-                    "settable_per_mesh": false,
-                    "settable_per_extruder": true
-                },
-                "material_bed_temperature_layer_0": {
-                    "label": "Initial Layer Build Plate Temperature",
-                    "description": "The temperature used for the heated build plate at the first layer. If this is 0, the build plate is left unheated during the first layer.",
-                    "unit": "°C",
-                    "type": "float",
-                    "resolve": "max(extruderValues('material_bed_temperature_layer_0'))",
-                    "default_value": 60,
-                    "calcu_value": "resolveOrValue('material_bed_temperature')",
-                    "minimum_value": "-273.15",
-                    "minimum_value_warning": "max(build_volume_temperature, max(extruderValues('material_bed_temperature')))",
-                    "maximum_value_warning": "130",
-                    "maximum_value": "200",
-                    "enabled": "machine_heated_bed and machine_gcode_flavor != \"UltiGCode\"",
-                    "settable_per_mesh": false,
-                    "settable_per_extruder": false,
-                    "settable_per_meshgroup": false
-                },
-                "material_bed_temperature": {
-                    "label": "Build Plate Temperature",
-                    "description": "The temperature used for the heated build plate. If this is 0, the build plate is left unheated during the first layer.",
-                    "unit": "°C",
-                    "type": "float",
-                    "default_value": 60,
-                    "calcu_value": "default_material_bed_temperature",
-                    "resolve": "max(extruderValues('material_bed_temperature'))",
-                    "minimum_value": "-273.15",
-                    "minimum_value_warning": "build_volume_temperature",
-                    "maximum_value_warning": "130",
-                    "maximum_value": "200",
-                    "enabled": "machine_heated_bed and machine_gcode_flavor != \"UltiGCode\"",
-                    "settable_per_mesh": false,
-                    "settable_per_extruder": false,
-                    "settable_per_meshgroup": false
-                },
-                "retraction_enable": {
-                    "label": "Enable Retraction",
-                    "description": "Retract the filament when the nozzle is moving over a non-printed area.",
-                    "type": "bool",
-                    "default_value": true,
-                    "settable_per_mesh": false,
-                    "settable_per_extruder": true
-                },
-                "retraction_speed": {
-                    "label": "Retraction Speed",
-                    "description": "The speed at which the filament is retracted and primed during a retraction move.",
-                    "unit": "mm/s",
-                    "type": "float",
-                    "default_value": 25,
-                    "minimum_value": "0.0001",
-                    "minimum_value_warning": "1",
-                    "maximum_value": "machine_max_feedrate_e if retraction_enable else float('inf')",
-                    "maximum_value_warning": "70",
-                    "enabled": "retraction_enable and machine_gcode_flavor != \"UltiGCode\"",
-                    "settable_per_mesh": false,
-                    "settable_per_extruder": true
-                },
-                "retraction_retract_speed": {
-                    "label": "Retraction Retract Speed",
-                    "description": "The speed at which the filament is retracted during a retraction move.",
-                    "unit": "mm/s",
-                    "type": "float",
-                    "default_value": 25,
-                    "minimum_value": "0.0001",
-                    "maximum_value": "machine_max_feedrate_e if retraction_enable else float('inf')",
-                    "minimum_value_warning": "1",
-                    "maximum_value_warning": "70",
-                    "enabled": "retraction_enable and machine_gcode_flavor != \"UltiGCode\"",
-                    "calcu_value": "retraction_speed",
-                    "settable_per_mesh": false,
-                    "settable_per_extruder": true
-                },
-                "retraction_prime_speed": {
-                    "label": "Retraction Prime Speed",
-                    "description": "The speed at which the filament is primed during a retraction move.",
-                    "unit": "mm/s",
-                    "type": "float",
-                    "default_value": 25,
-                    "minimum_value": "0.0001",
-                    "maximum_value": "machine_max_feedrate_e if retraction_enable else float('inf')",
-                    "minimum_value_warning": "1",
-                    "maximum_value_warning": "70",
-                    "enabled": "retraction_enable and machine_gcode_flavor != \"UltiGCode\"",
-                    "calcu_value": "retraction_speed",
-                    "settable_per_mesh": false,
-                    "settable_per_extruder": true
-                },
-                "retraction_amount": {
-                    "label": "Retraction Distance",
-                    "description": "The length of material retracted during a retraction move.",
-                    "unit": "mm",
-                    "type": "float",
-                    "default_value": 6.5,
-                    "minimum_value_warning": "-0.0001",
-                    "maximum_value_warning": "10.0",
-                    "enabled": "retraction_enable and machine_gcode_flavor != \"UltiGCode\"",
-                    "settable_per_mesh": false,
-                    "settable_per_extruder": true
-                },
-                "retract_at_layer_change": {
-                    "label": "Retract at Layer Change",
-                    "description": "Retract the filament when the nozzle is moving to the next layer.",
-                    "type": "bool",
-                    "default_value": false,
-                    "settable_per_mesh": false,
-                    "settable_per_extruder": true
-                },
-                "retraction_hop": {
-                    "label": "Z Hop Height",
-                    "description": "The height difference when performing a Z Hop.",
-                    "unit": "mm",
-                    "type": "float",
-                    "default_value": 1,
-                    "minimum_value_warning": "0",
-                    "maximum_value_warning": "10",
-                    "enabled": "retraction_enable and retraction_hop_enabled",
-                    "settable_per_mesh": false,
-                    "settable_per_extruder": true
-                },
-                "retraction_hop_enabled": {
-                    "label": "Z Hop When Retracted",
-                    "description": "Whenever a retraction is done, the nozzle is raised to create clearance between the nozzle and the print. It prevents the nozzle from hitting the print during travel moves, reducing the chance to knock the print from the build plate.",
-                    "type": "bool",
-                    "default_value": false,
-                    "enabled": "retraction_enable",
                     "settable_per_mesh": false,
                     "settable_per_extruder": true
                 }

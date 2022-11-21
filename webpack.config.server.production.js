@@ -31,13 +31,15 @@ module.exports = {
     mode: 'production',
     target: 'node',
     context: path.resolve(__dirname, 'src/server'),
+    resolve: {
+        modules: ['node_modules'],
+        extensions: ['.js', '.json', '.jsx', '.ts']
+    },
     entry: {
-        index: [
-            './index.js'
-        ]
+        index: './index.js'
     },
     output: {
-        path: path.resolve(__dirname, 'dist/Luban/server'),
+        path: path.resolve(__dirname, 'dist/Luban/src/server'),
         filename: '[name].js',
         libraryTarget: 'commonjs2'
     },
@@ -86,9 +88,6 @@ module.exports = {
         ]
     },
     externals: externals,
-    resolve: {
-        extensions: ['.js', '.json', '.jsx', '.ts']
-    },
     resolveLoader: {
         modules: [NODE_MODULES]
     },

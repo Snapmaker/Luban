@@ -54,7 +54,7 @@ const Dialog = {
     },
     showMessageBox(options, modal = true) {
         if (isElectron()) {
-            const remote = window.require('electron').remote;
+            const remote = window.require('@electron/remote');
             const { dialog } = remote;
             options.title = 'Snapmaker Luban';
             if (modal) {
@@ -68,7 +68,7 @@ const Dialog = {
     },
     showSaveDialog(options, modal = true) {
         if (isElectron()) {
-            const remote = window.require('electron').remote;
+            const remote = window.require('@electron/remote');
             const { dialog } = remote;
             options.title = 'Snapmaker Luban';
             if (modal) {

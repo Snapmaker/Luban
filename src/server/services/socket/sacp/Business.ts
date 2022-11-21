@@ -1,14 +1,46 @@
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
-import { includes } from 'lodash';
+import {includes} from 'lodash';
 import readline from 'linebyline';
-import { BatchBufferInfo, CalibrationInfo, CoordinateInfo, CoordinateSystemInfo, ExtruderMovement, ExtruderOffset, FdmToolHeadInfo, GcodeFileInfo, GetHotBed, LaserCalibration, LaserToolHeadInfo, MachineInfo, MachineSize, ModuleInfo, MovementInstruction, PrintBatchGcode, SetLaserPower, WifiConnectionInfo } from 'snapmaker-sacp-sdk/models';
-import { Dispatcher, RequestData, ResponseCallback, ResponseData, Response } from 'snapmaker-sacp-sdk';
-import net from 'net';
-import { stringToBuffer, readString, writeBool, readUint16, readUint32, writeUint16, writeUint8, writeFloat, readFloat, writeInt8, writeInt16, readUint8, writeUint32 } from 'snapmaker-sacp-sdk/helper';
-import { PeerId } from 'snapmaker-sacp-sdk/communication/Header';
-import { MoveDirection } from 'snapmaker-sacp-sdk/models/MovementInstruction';
+import {
+    BatchBufferInfo,
+    CalibrationInfo,
+    CoordinateInfo,
+    CoordinateSystemInfo,
+    ExtruderMovement,
+    ExtruderOffset,
+    FdmToolHeadInfo,
+    GcodeFileInfo,
+    GetHotBed,
+    LaserCalibration,
+    LaserToolHeadInfo,
+    MachineInfo,
+    MachineSize,
+    ModuleInfo,
+    MovementInstruction,
+    PrintBatchGcode,
+    SetLaserPower,
+    WifiConnectionInfo
+} from 'snapmaker-sacp-sdk/models';
+import {Dispatcher, RequestData, Response, ResponseCallback, ResponseData} from 'snapmaker-sacp-sdk';
+import {
+    readFloat,
+    readString,
+    readUint16,
+    readUint32,
+    readUint8,
+    stringToBuffer,
+    writeBool,
+    writeFloat,
+    writeInt16,
+    writeInt8,
+    writeUint16,
+    writeUint32,
+    writeUint8
+} from 'snapmaker-sacp-sdk/helper';
+import {PeerId} from 'snapmaker-sacp-sdk/communication/Header';
+import {MoveDirection} from 'snapmaker-sacp-sdk/models/MovementInstruction';
 import DataStorage from '../../../DataStorage';
 
 export enum CoordinateType {
@@ -35,7 +67,7 @@ export enum ToolHeadType {
 export default class Business extends Dispatcher {
     private log = console;
 
-    public constructor(type: string, socket: net.Socket) {
+    public constructor(type: string, socket) {
         super(type, socket);
         this.setHandler(0xb0, 0x00, async (data) => {
             const { nextOffset, result: filename } = readString(data.param, 0);

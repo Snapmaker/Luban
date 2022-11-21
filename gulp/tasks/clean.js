@@ -1,8 +1,8 @@
 import del from 'del';
 
 const list = [
-    'dist/Luban/server',
-    'dist/Luban/app',
+    'dist/Luban/src/server',
+    'dist/Luban/src/app',
     'src/app/**/*.css',
     'src/app/**/*.css.map',
     'src/app/**/*.js.map',

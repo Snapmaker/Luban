@@ -1929,6 +1929,12 @@
                             "min": 0,
                             "max": 20000
                         },
+                        "material_shrinkage_percentage_xy": {
+                            "default_value": 100
+                        },
+                        "material_shrinkage_percentage_z": {
+                            "default_value": 100
+                        },
                         "material_crystallinity": {
                             "label": "Crystalline Material",
                             "description": "Is this material the type that breaks off cleanly when heated (crystalline), or is it the type that produces long intertwined polymer chains (non-crystalline)?",
@@ -2216,7 +2222,7 @@
                                     "description": "Width of the outermost wall line. By lowering this value, higher levels of detail can be printed.",
                                     "unit": "mm",
                                     "minimum_value": "0.001",
-                                    "minimum_value_warning": "(0.1 + 0.4 * machine_nozzle_size) if outer_inset_first else 0.1 * machine_nozzle_size",
+                                    "minimum_value_warning": "(0.1 + 0.4 * machine_nozzle_size) if inset_direction == \"outside_in\" else 0.1 * machine_nozzle_size",
                                     "maximum_value_warning": "2 * machine_nozzle_size",
                                     "default_value": 0.4,
                                     "calcu_value": "line_width",
@@ -3075,6 +3081,8 @@
                                 "efficiency",
                                 "material"
                             ],
+                            "min": 0,
+                            "max": 20000,
                             "children": {
                                 "top_layers": {
                                     "label": "Top Layers",
@@ -3116,10 +3124,18 @@
                                     ],
                                     "min": 0,
                                     "max": 20000
+                                },
+                                "roofing_monotonic": {
+                                    "label": "Monotonic Top Surface Order",
+                                    "description": "Print top surface lines in an ordering that causes them to always overlap with adjacent lines in a single direction. This takes slightly more time to print, but makes flat surfaces look more consistent.",
+                                    "type": "bool",
+                                    "value": true,
+                                    "default_value": true,
+                                    "enabled": "roofing_layer_count > 0 and top_layers > 0 and roofing_pattern != 'concentric'",
+                                    "limit_to_extruder": "roofing_extruder_nr",
+                                    "settable_per_mesh": true
                                 }
-                            },
-                            "min": 0,
-                            "max": 20000
+                            }
                         },
                         "bottom_thickness": {
                             "label": "Bottom Thickness",
@@ -5160,11 +5176,15 @@
                                 "efficiency"
                             ]
                         },
-                        "outer_inset_first": {
-                            "label": "Outer Before Inner Walls",
-                            "description": "Prints walls in order of outside to inside when enabled. This can help improve dimensional accuracy in X and Y when using a high viscosity plastic like ABS; however it can decrease outer surface print quality, especially on overhangs.",
-                            "type": "bool",
-                            "default_value": false,
+                        "inset_direction": {
+                            "label": "Wall Ordering",
+                            "description": "Determines the order in which walls are printed. Printing outer walls earlier helps with dimensional accuracy, as faults from inner walls cannot propagate to the outside. However printing them later allows them to stack better when overhangs are printed. When there is an uneven amount of total innner walls, the 'center last line' is always printed last.",
+                            "type": "enum",
+                            "options": {
+                                "inside_out": "Inside To Outside",
+                                "outside_in": "Outside To Inside"
+                            },
+                            "default_value": "inside_out",
                             "visible": "wall_0_extruder_nr === wall_x_extruder_nr",
                             "settable_per_mesh": true,
                             "filter": [
@@ -5894,7 +5914,7 @@
                             "unit": "mm",
                             "type": "float",
                             "default_value": 0,
-                            "calcu_value": "wall_line_width_0 < machine_nozzle_size && !outer_inset_first ? (machine_nozzle_size - wall_line_width_0) / 2 : 0",
+                            "calcu_value": "wall_line_width_0 < machine_nozzle_size and inset_direction !== \"outside_in\" ? (machine_nozzle_size - wall_line_width_0) / 2 : 0",
                             "minimum_value_warning": "0",
                             "maximum_value_warning": "machine_nozzle_size",
                             "limit_to_extruder": "wall_0_extruder_nr",

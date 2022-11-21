@@ -52,7 +52,7 @@ module.exports = {
         // 'Pool.worker': path.resolve(__dirname, 'src/app/lib/manager/Pool.worker.js')
     },
     output: {
-        path: path.resolve(__dirname, 'output/app'),
+        path: path.resolve(__dirname, 'output/src/app'),
         filename: '[name].[contenthash:10].bundle.js',
         publicPath: '',
         globalObject: 'this',
