@@ -1,263 +1,17 @@
 import fs from 'fs';
 import path from 'path';
-import childProcess from 'child_process';
-
 import lubanEngine from 'snapmaker-luban-engine';
-import lunar, { getPath } from '@snapmaker/snapmaker-lunar';
+import lunar from '@snapmaker/snapmaker-lunar';
+
 import logger from '../lib/logger';
 import DataStorage from '../DataStorage';
-import settings from '../config/settings';
-import { DefinitionLoader } from './definition';
-import { generateRandomPathName, pathWithRandomSuffix } from '../../shared/lib/random-utils';
-import { HEAD_PRINTING, PRINTING_CONFIG_SUBCATEGORY } from '../constants';
+import { pathWithRandomSuffix } from '../../shared/lib/random-utils';
+import { HEAD_PRINTING } from '../constants';
 import { convertObjectKeyNameToUnderScoreCase } from '../lib/utils';
 import pkg from '../../package.json';
 
 const log = logger('service:print3d-slice');
 
-// const lunar = require('snapmaker-lunar');
-
-const enginePath = getPath('Slicer');
-
-/**
- * callCuraEngine
- *
- * @param modelConfig - information needed to create new model.
- *  modelConfig = {
-                configFilePath,
-                path: [modelPathString]
-            };
- * @param supportConfig same as modelConfig
- * @param outputPath output file path
- * @returns process
- */
-function callCuraEngine(modelConfig, supportConfig, outputPath) {
-    const args = ['slice', '-v', '-p', '-o', outputPath.replace(/\\/g, '/')];
-
-    if (modelConfig && modelConfig.path.length) {
-        args.push('-j', modelConfig.configFilePath.replace(/\\/g, '/'));
-        for (let i = 0; i < modelConfig.path.length; i++) {
-            const filePath = modelConfig.path[i];
-            const fileConfig = modelConfig.modelConfigFilePath[i];
-            args.push('-l', filePath.replace(/\\/g, '/'));
-            args.push('-j', fileConfig.replace(/\\/g, '/'));
-        }
-    }
-    if (supportConfig && supportConfig.path.length) {
-        for (const filePath of supportConfig.path) {
-            args.push('-l', filePath.replace(/\\/g, '/'));
-            // notice that this config just effects the previous model
-            args.push('-j', supportConfig.configFilePath.replace(/\\/g, '/'));
-        }
-    }
-    log.info(`${enginePath} ${args.join(' ')}`);
-    return childProcess.spawn(
-        enginePath,
-        args,
-        {
-            env: {
-                ...process.env,
-                CURA_ENGINE_SEARCH_PATH: `${path.resolve(DataStorage.configDir, HEAD_PRINTING)}`
-            }
-        }
-    );
-}
-
-let sliceProgress, filamentLength, filamentWeight, printTime;
-
-function processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox, thumbnail, others) {
-    const activeFinal = new DefinitionLoader();
-    activeFinal.loadDefinition(PRINTING_CONFIG_SUBCATEGORY, 'active_final');
-    const isTwoExtruder = activeFinal?.settings?.extruders_enabled_count?.default_value;
-
-    const extruderL = new DefinitionLoader();
-    extruderL.loadDefinition(PRINTING_CONFIG_SUBCATEGORY, 'snapmaker_extruder_0');
-    const extruderR = new DefinitionLoader();
-    extruderR.loadDefinition(PRINTING_CONFIG_SUBCATEGORY, 'snapmaker_extruder_1');
-
-    const readFileSync = fs.readFileSync(gcodeFilePath, 'utf8');
-
-    const date = new Date();
-    const splitIndex = readFileSync.indexOf(';Generated');
-    const boundingBoxMax = (boundingBox || {
-        max: {
-            x: 0,
-            y: 0,
-            z: 0
-        }
-    }).max;
-    const boundingBoxMin = (boundingBox || {
-        min: {
-            x: 0,
-            y: 0,
-            z: 0
-        }
-    }).min;
-    const header = `${';Header Start\n'
-        + '\n'
-        + `${readFileSync.substring(0, splitIndex)}\n`
-        + ';header_type: 3dp\n'
-        + `;tool_head: ${others?.printingToolhead}\n`
-        + `;machine: ${others?.series}\n`
-        + `;thumbnail: ${thumbnail}\n`
-        + `;file_total_lines: ${readFileSync.split('\n').length + 20}\n`
-        + `;estimated_time(s): ${printTime}\n`
-        + `;nozzle_temperature(°C): ${extruderL.settings.material_print_temperature_layer_0.default_value}\n`
-        + `;nozzle_1_temperature(°C): ${isTwoExtruder === 2 ? extruderR?.settings?.material_print_temperature_layer_0?.default_value : '-1'}\n`
-        + `;nozzle_0_diameter(mm): ${extruderL.settings.machine_nozzle_size.default_value}\n`
-        + `;nozzle_1_diameter(mm): ${isTwoExtruder === 2 ? extruderR?.settings?.machine_nozzle_size?.default_value : '-1'}\n`
-        + `;build_plate_temperature(°C): ${activeFinal.settings.material_bed_temperature_layer_0.default_value}\n`
-        + `;work_speed(mm/minute): ${activeFinal.settings.speed_infill.default_value * 60}\n`
-        + `;max_x(mm): ${boundingBoxMax.x}\n`
-        + `;max_y(mm): ${boundingBoxMax.y}\n`
-        + `;max_z(mm): ${boundingBoxMax.z}\n`
-        + `;min_x(mm): ${boundingBoxMin.x}\n`
-        + `;min_y(mm): ${boundingBoxMin.y}\n`
-        + `;min_z(mm): ${boundingBoxMin.z}\n`
-        + `;layer_number: ${others?.layerCount}\n`
-        + `;layer_height: ${activeFinal.settings.layer_height.default_value}\n`
-        + `;matierial_weight: ${filamentWeight}\n`
-        + `;matierial_length: ${filamentLength}\n`
-        + `;nozzle_0_material: ${others?.matierial0}\n`
-        + `;nozzle_1_material: ${others?.matierial1}\n`
-        + '\n'
-        + ';Header End\n'
-        + '\n'
-        + '; G-code for 3dp engraving\n'
-        + '; Generated by Snapmaker Luban '}${settings.version}\n`
-        + `; ${date.toDateString()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}\n`
-        + '\n';
-    const nextSplitIndex = readFileSync.indexOf('\n', splitIndex) + 1;
-    const dataLength = header.length + readFileSync.length - nextSplitIndex;
-    fs.writeFileSync(gcodeFilePath, header + readFileSync.substring(nextSplitIndex));
-    return dataLength;
-}
-
-function slice(params, onProgress, onSucceed, onError) {
-    if (!fs.existsSync(enginePath)) {
-        log.error(`Cura Engine not found: ${enginePath}`);
-        onError(`Slice Error: Cura Engine not found: ${enginePath}`);
-        return;
-    }
-
-    const {
-        originalName,
-        model,
-        support,
-        definition,
-        layerCount,
-        matierial0,
-        matierial1,
-        boundingBox,
-        thumbnail,
-        renderGcodeFileName: renderName,
-        printingToolhead,
-        series
-    } = params;
-    const modelConfig = {
-        configFilePath: `${DataStorage.configDir}/${PRINTING_CONFIG_SUBCATEGORY}/active_final.def.json`,
-        path: [],
-        modelConfigFilePath: []
-    };
-    const others = {
-        layerCount,
-        matierial0,
-        matierial1,
-        printingToolhead,
-        series
-    };
-    for (let i = 0; i < model.length; i++) {
-        const modelName = model[i];
-        const definitionName = definition[i];
-        const uploadPath = `${DataStorage.tmpDir}/${modelName}`;
-        const uploadDefinitionPath = `${DataStorage.tmpDir}/${definitionName}`;
-
-        if (!fs.existsSync(uploadPath)) {
-            log.error(`Slice Error: 3d model file does not exist -> ${uploadPath}`);
-            onError(`Slice Error: 3d model file does not exist -> ${uploadPath}`);
-            return;
-        }
-        modelConfig.path.push(uploadPath);
-        modelConfig.modelConfigFilePath.push(uploadDefinitionPath);
-    }
-
-    const supportConfig = {
-        configFilePath: `${DataStorage.configDir}/${PRINTING_CONFIG_SUBCATEGORY}/support.def.json`,
-        path: []
-    };
-    for (const modelName of support) {
-        const uploadPath = `${DataStorage.tmpDir}/${modelName}`;
-
-        if (!fs.existsSync(uploadPath)) {
-            log.error(`Slice Error: 3d model file does not exist -> ${uploadPath}`);
-            onError(`Slice Error: 3d model file does not exist -> ${uploadPath}`);
-            return;
-        }
-        supportConfig.path.push(uploadPath);
-    }
-
-
-    const gcodeFilename = generateRandomPathName(`${path.parse(originalName).name}.gcode`);
-    const gcodeFilePath = `${DataStorage.tmpDir}/${gcodeFilename}`;
-    const process = callCuraEngine(modelConfig, supportConfig, gcodeFilePath);
-    const renderGcodeFileName = `${renderName}.gcode`;
-
-    process.stdout.on('data', (data) => {
-        const array = data.toString()
-            .split('\n');
-
-        array.forEach((item) => {
-            if (item.length < 10) {
-                return;
-            }
-            if (item.indexOf('[debug]') !== -1) {
-                return;
-            }
-
-            // progress
-            if (item.indexOf('Progress:inset+skin:') === 0 || item.indexOf('Progress:export:') === 0) {
-                const start = item.indexOf('0.');
-                const end = item.indexOf('%');
-                sliceProgress = Number(item.slice(start, end));
-                onProgress(sliceProgress);
-            } else if (item.indexOf(';Filament used:') === 0) {
-                // single extruder: ';Filament used: 0.139049m'
-                // dual extruders: ';Filament used: 0.139049m, 0m'
-                const filamentLengthArr = item.replace(';Filament used:', '')
-                    .split(',');
-                filamentLength = filamentLengthArr.map(str => Number(str.trim()
-                    .replace('m', '')))
-                    .reduce((a, b) => a + b, 0);
-                // volume (cm^3) * density (PLA: 1.24 g/cm^3)
-                filamentWeight = Math.PI * (1.75 / 2) * (1.75 / 2) * filamentLength * 1.24;
-            } else if (item.indexOf(';TIME:') === 0) {
-                // Times empirical parameter: 1.07
-                printTime = Number(item.replace(';TIME:', '')) * 1.07;
-            }
-        });
-    });
-
-    process.on('close', (code) => {
-        if (filamentLength && filamentWeight && printTime) {
-            sliceProgress = 1;
-            onProgress(sliceProgress);
-            const gcodeFileLength = processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox, thumbnail, others);
-
-            onSucceed({
-                gcodeFilename: gcodeFilename,
-                gcodeFileLength: gcodeFileLength,
-                printTime: printTime,
-                filamentLength: filamentLength,
-                filamentWeight: filamentWeight,
-                gcodeFilePath: gcodeFilePath,
-                renderGcodeFileName
-            });
-        } else {
-            onError('Slice Error');
-        }
-        log.info(`slice progress closed with code ${code}`);
-    });
-}
 
 /**
  * generate model support
@@ -314,7 +68,7 @@ export function generateSupport(modelInfo, onProgress, onSucceed, onError) {
             if (item.indexOf('Progress:') === 0 && item.indexOf('accomplished') === -1) {
                 const start = item.search('[0-9.]*%');
                 const end = item.indexOf('%');
-                sliceProgress = Number(item.slice(start, end));
+                const sliceProgress = Number(item.slice(start, end));
                 onProgress(sliceProgress);
             }
             return null;
@@ -537,5 +291,3 @@ export function checkModel(actions, params) {
             }
         });
 }
-
-export default slice;
