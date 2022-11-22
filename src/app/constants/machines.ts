@@ -47,7 +47,10 @@ export const MACHINE_SERIES = {
             x: 125,
             y: 125,
             z: 125,
-        }
+        },
+        metadata: {
+            slicerVersion: 0,
+        },
     },
     ORIGINAL_LZ: {
         value: DEFAULT_MACHINE_ORIGINAL_LONG_Z_AXIS,
@@ -77,6 +80,9 @@ export const MACHINE_SERIES = {
             z: 221,
         },
         img: '/resources/images/machine/size-1.0-original.jpg',
+        metadata: {
+            slicerVersion: 0,
+        },
     },
     A150: {
         seriesLabel: 'key-Luban/Machine/MachineSeries-A150',
@@ -104,7 +110,10 @@ export const MACHINE_SERIES = {
             z: 145,
         },
         img: '/resources/images/machine/size-2.0-A150.png',
-        alias: ['SM2-S', 'Snapmaker 2.0 A150']
+        alias: ['SM2-S', 'Snapmaker 2.0 A150'],
+        metadata: {
+            slicerVersion: 0,
+        },
     },
     A250: {
         seriesLabel: 'key-Luban/Machine/MachineSeries-A250',
@@ -132,7 +141,10 @@ export const MACHINE_SERIES = {
             z: 235,
         },
         img: '/resources/images/machine/size-2.0-A250.png',
-        alias: ['SM2-M', 'Snapmaker 2.0 A250']
+        alias: ['SM2-M', 'Snapmaker 2.0 A250'],
+        metadata: {
+            slicerVersion: 0,
+        },
     },
     A350: {
         seriesLabel: 'key-Luban/Machine/MachineSeries-A350',
@@ -160,7 +172,10 @@ export const MACHINE_SERIES = {
             z: 330
         },
         img: '/resources/images/machine/size-2.0-A350.jpg',
-        alias: ['SM2-L', 'Snapmaker 2.0 A350']
+        alias: ['SM2-L', 'Snapmaker 2.0 A350'],
+        metadata: {
+            slicerVersion: 0,
+        },
     },
     A400: {
         value: 'A400',
@@ -188,7 +203,10 @@ export const MACHINE_SERIES = {
             z: 400
         },
         img: '/resources/images/machine/size-2.0-A400.jpeg',
-        alias: ['SM2-XL', 'Snapmaker 2.0 400']
+        alias: ['SM2-XL', 'Snapmaker 2.0 400'],
+        metadata: {
+            slicerVersion: 0,
+        },
     },
     CUSTOM: {
         value: 'Custom',
@@ -224,6 +242,9 @@ export const MACHINE_SERIES = {
         },
         img: '/resources/images/machine/snapmaker_j1.png',
         configPath: 'snapmaker_j1',
+        metadata: {
+            slicerVersion: 1,
+        },
     }
 };
 

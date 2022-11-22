@@ -1,7 +1,9 @@
-import { loadDefinitionsByPrefixName, loadAllSeriesDefinitions, DefinitionLoader } from './definition';
+import { DefinitionLoader, loadAllSeriesDefinitions, loadDefinitionsByPrefixName } from './definition';
 
+import Slicer from './Slicer';
 
 export {
+    Slicer,
     loadDefinitionsByPrefixName,
     loadAllSeriesDefinitions,
     DefinitionLoader

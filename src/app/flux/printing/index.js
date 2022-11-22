@@ -1973,13 +1973,10 @@ export const actions = {
             })
         );
 
-        console.log('uploadModel, files =', files);
-
         const ps = Array.from(files).map(async file => {
             // Notice user that model is being loading
             const formData = new FormData();
             formData.append('file', file);
-            console.log('formData', file);
             const res = await api.uploadFile(formData, HEAD_PRINTING);
             const { originalName, uploadName, children = [] } = res.body;
             return { originalName, uploadName, children };
@@ -2099,7 +2096,8 @@ export const actions = {
         const {
             size,
             series,
-            toolHead: { printingToolhead }
+            toolHead: { printingToolhead },
+            activeMachine,
         } = getState().machine;
         const models = modelGroup.getVisibleValidModels();
         if (!models || models.length === 0 || !hasModel) {
@@ -2268,7 +2266,7 @@ export const actions = {
             settable_per_mesh: false,
             settable_per_extruder: false,
             settable_per_meshgroup: false
-        }
+        };
         await definitionManager.createDefinition(finalDefinition);
 
         // slice
@@ -2291,19 +2289,23 @@ export const actions = {
         }));
 
         const boundingBox = modelGroup.getBoundingBox();
+
+        const version = activeMachine.metadata?.slicerVersion || 0;
+
         const params = {
+            version,
             definition,
             model,
             support,
             originalName,
             boundingBox,
             thumbnail: thumbnail,
-            renderGcodeFileName,
-            layerCount,
-            matierial0: materialDefinitions[indexL]?.name,
-            matierial1: printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? materialDefinitions[indexR]?.name : null,
+            series,
             printingToolhead,
-            series
+            material0: materialDefinitions[indexL]?.name,
+            material1: printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? materialDefinitions[indexR]?.name : '',
+            layerCount,
+            renderGcodeFileName,
         };
         controller.slice(params);
     },

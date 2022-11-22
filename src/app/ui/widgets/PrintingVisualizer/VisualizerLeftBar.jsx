@@ -106,8 +106,6 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
             fileInput.current.click();
         },
         onChangeFile: async (event) => {
-            console.log('onChangeFile', event.target.files);
-            console.log('onChangeFile', event.file);
             const files = event.target.files;
             // try {
             await dispatch(printingActions.uploadModel(files));
