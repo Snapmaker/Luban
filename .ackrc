@@ -1,9 +1,0 @@
---ignore-dir=log
---ignore-dir=tmp
---ignore-dir=vendor
---ignore-dir=.idea
---ignore-dir=nbproject
---ignore-dir=node_modules
---ignore-dir=output
---ignore-dir=dist
---sort-files

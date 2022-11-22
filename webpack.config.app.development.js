@@ -3,14 +3,9 @@
 const without = require('lodash/without');
 const path = require('path');
 const webpack = require('webpack');
-const WriteFileWebpackPlugin = require('write-file-webpack-plugin');
-// const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-// const CSSSplitWebpackPlugin = require('css-split-webpack-plugin').default;
 const ManifestPlugin = require('webpack-manifest-plugin');
-// const InlineChunkWebpackPlugin = require('html-webpack-inline-chunk-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-// const HtmlWebpackPluginAddons = require('html-webpack-plugin-addons');
 const nib = require('nib');
 const stylusLoader = require('stylus-loader');
 const babelConfig = require('./babel.config');
@@ -19,6 +14,27 @@ const languages = require('./webpack.config.app-i18n').languages;
 const pkg = require('./package.json');
 
 const { CLIENT_PORT, SERVER_PORT } = pkg.config;
+
+const devServer = {
+    hot: true,
+    port: CLIENT_PORT,
+    static: {
+        directory: path.resolve(__dirname, 'output/app'),
+    },
+    proxy: {
+        '/api': `http://localhost:${SERVER_PORT}`,
+        '/data': `http://localhost:${SERVER_PORT}`,
+        '/resources': `http://localhost:${SERVER_PORT}`,
+        '/socket.io': {
+            target: `ws://localhost:${SERVER_PORT}`,
+            ws: true
+        }
+    },
+    devMiddleware: {
+        index: true,
+        writeToDisk: true,
+    }
+};
 
 module.exports = {
     mode: 'development',
@@ -35,28 +51,16 @@ module.exports = {
         extensions: ['.js', '.json', '.jsx', '.styl', '.ts', '.tsx']
     },
     entry: {
-        polyfill: [
-            // https://github.com/Yaffle/EventSource
-            'eventsource-polyfill',
-            // https://github.com/glenjamin/webpack-hot-middleware
-            // 'webpack-hot-middleware/client?reload=true',
-            path.resolve(__dirname, 'src/app/polyfill/index.js')
-        ],
-        app: [
-            // https://github.com/Yaffle/EventSource
-            'eventsource-polyfill',
-            // https://github.com/glenjamin/webpack-hot-middleware
-            // 'webpack-hot-middleware/client?reload=true',
-            path.resolve(__dirname, 'src/app/index.jsx')
-        ],
+        app: path.resolve(__dirname, 'src/app/index.jsx'),
+        polyfill: path.resolve(__dirname, 'src/app/polyfill/index.js'),
         // 'Pool.worker': path.resolve(__dirname, 'src/app/lib/manager/Pool.worker.js')
     },
     output: {
         path: path.resolve(__dirname, 'output/src/app'),
-        filename: '[name].[contenthash:10].bundle.js',
+        filename: '[name].[hash].bundle.js',
         publicPath: '',
         globalObject: 'this',
-        libraryTarget: 'umd'
+        libraryTarget: 'umd',
     },
     optimization: {
         minimize: false,
@@ -72,7 +76,6 @@ module.exports = {
         }
     },
     plugins: [
-        // new webpack.HotModuleReplacementPlugin(),
         new webpack.LoaderOptionsPlugin({
             debug: true
         }),
@@ -85,9 +88,6 @@ module.exports = {
                 import: ['~nib/lib/nib/index.styl']
             }
         }),
-        // https://github.com/gajus/write-file-webpack-plugin
-        // Forces webpack-dev-server to write bundle files to the file system.
-        new WriteFileWebpackPlugin(),
         new webpack.ContextReplacementPlugin(
             /moment[/\\]locale$/,
             new RegExp(`^\\./(${without(languages, 'en').join('|')})$`)
@@ -101,7 +101,6 @@ module.exports = {
         new HtmlWebpackPlugin({
             filename: 'index.html',
             template: path.resolve(__dirname, 'src/app/resources/assets/index.html'),
-            chunksSortMode: 'dependency' // Sort chunks by dependency
         })
     ],
     module: {
@@ -226,17 +225,5 @@ module.exports = {
         net: 'empty',
         tls: 'empty'
     },
-    devServer: {
-        port: CLIENT_PORT,
-        contentBase: path.resolve(__dirname, 'output/app'),
-        proxy: {
-            '/api': `http://localhost:${SERVER_PORT}`,
-            '/data': `http://localhost:${SERVER_PORT}`,
-            '/resources': `http://localhost:${SERVER_PORT}`,
-            '/socket.io': {
-                target: `ws://localhost:${SERVER_PORT}`,
-                ws: true
-            }
-        }
-    },
+    devServer: devServer,
 };

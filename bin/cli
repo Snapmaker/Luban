@@ -3,9 +3,9 @@
 var cli;
 
 if (process.env.NODE_ENV === 'development') {
-    cli = require('../output/server-cli').default;
+    cli = require('../output/src/server-cli').default;
 } else {
-    cli = require('../dist/Luban/server-cli').default;
+    cli = require('../dist/Luban/src/server-cli').default;
 }
 
 cli().catch(err => {

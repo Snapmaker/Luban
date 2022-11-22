@@ -6,11 +6,9 @@ const path = require('path');
 const findImports = require('find-imports');
 const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-// const CSSSplitWebpackPlugin = require('css-split-webpack-plugin').default;
 const ManifestPlugin = require('webpack-manifest-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
-// const HtmlWebpackPluginAddons = require('html-webpack-plugin-addons');
 const nib = require('nib');
 const stylusLoader = require('stylus-loader');
 
@@ -83,17 +81,9 @@ module.exports = {
             filename: '[name].css',
             chunkFilename: '[id].css'
         }),
-        /*
-        new CSSSplitWebpackPlugin({
-            size: 4000,
-            imports: '[name].[ext]?[hash]',
-            filename: '[name]-[part].[ext]?[hash]',
-            preserve: false
-        }),*/
         new HtmlWebpackPlugin({
             filename: 'index.html',
             template: path.resolve(__dirname, 'src/app/resources/assets/index.html'),
-            chunksSortMode: 'dependency' // Sort chunks by dependency
         })
     ],
     module: {
