@@ -426,6 +426,7 @@ i18n._('key-Definition/Catagory-platform_adhesion');
 i18n._('key-Definition/Catagory-dual');
 i18n._('key-Definition/Catagory-path_optimization');
 i18n._('key-Definition/Catagory-model_structure_optimization');
+i18n._('key-Definition/Catagory-unclassified');
 i18n._('key-2D/Model_basename-Text');
 i18n._('key-2D/Model_basename-Shape');
 i18n._('key-Workspace/LaserStartJob-manual_mode_description');
