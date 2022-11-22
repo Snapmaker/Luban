@@ -57,8 +57,6 @@ function ConfigValueBox({
         setCurrentFields(fieldsDom.current);
     }, [definitionForManager]);
 
-    console.log(optionConfigGroup.map(g => g.name));
-
     return (
         <div className="sm-flex">
             {showMiddle && (

@@ -1973,13 +1973,10 @@ export const actions = {
             })
         );
 
-        console.log('uploadModel, files =', files);
-
         const ps = Array.from(files).map(async file => {
             // Notice user that model is being loading
             const formData = new FormData();
             formData.append('file', file);
-            console.log('formData', file);
             const res = await api.uploadFile(formData, HEAD_PRINTING);
             const { originalName, uploadName, children = [] } = res.body;
             return { originalName, uploadName, children };
