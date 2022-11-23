@@ -34,9 +34,9 @@ class ClippingModel {
     private infillMap: Map<number, TPolygon[]>;
     private meshObjectGroup: THREE.Group;
     private modelGeometry: THREE.BufferGeometry;
-    private modelBoundingBox: Box3
-    private model: ThreeModel
-    private modelGroup: ModelGroup
+    private modelBoundingBox: Box3;
+    private model: ThreeModel;
+    private modelGroup: ModelGroup;
 
     public shouldDestroy = false;
 

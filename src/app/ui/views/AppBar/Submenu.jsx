@@ -11,7 +11,7 @@ class Submenu extends PureComponent {
         className: PropTypes.string,
         items: PropTypes.array,
         hideMenu: PropTypes.func.isRequired
-    }
+    };
 
     actions = {
         clickMenu: (item) => {
@@ -20,7 +20,7 @@ class Submenu extends PureComponent {
                 this.props.hideMenu();
             }
         }
-    }
+    };
 
     render() {
         if (this.props.items) {

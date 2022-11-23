@@ -27,7 +27,7 @@ class DrawGroup {
 
     private cursorGroup: CursorGroup;
 
-    private cursorPosition: TCoordinate
+    private cursorPosition: TCoordinate;
 
     private operationGroup: OperationGroup;
 
@@ -35,19 +35,19 @@ class DrawGroup {
 
     private endPointsGroup: SVGGElement;
 
-    private drawedLine: Line[] = []
+    private drawedLine: Line[] = [];
 
-    private graph: SVGPathElement
+    private graph: SVGPathElement;
 
     private originGraph: SVGPathElement;
 
     private originGraphPath: string;
 
-    private originTransformation: ModelTransformation
+    private originTransformation: ModelTransformation;
 
-    private guideX: SVGLineElement
+    private guideX: SVGLineElement;
 
-    private guideY: SVGLineElement
+    private guideY: SVGLineElement;
 
     public onDrawLine: (line: SVGPathElement, closedLoop: boolean) => void = noop;
 
@@ -77,9 +77,9 @@ class DrawGroup {
 
     private hasTransform: boolean;
 
-    private beforeTransform: TransformRecord[] = []
+    private beforeTransform: TransformRecord[] = [];
 
-    private afterTransform: TransformRecord[] = []
+    private afterTransform: TransformRecord[] = [];
 
     private attachSpace: number;
 
@@ -87,7 +87,7 @@ class DrawGroup {
 
     private latestDrawingCompleted = false;
 
-    private isAttached: boolean
+    private isAttached: boolean;
 
     public constructor(contentGroup: SVGGElement, scale: number) {
         this.scale = scale;

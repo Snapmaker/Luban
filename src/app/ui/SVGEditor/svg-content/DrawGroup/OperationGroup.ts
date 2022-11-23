@@ -14,7 +14,7 @@ class OperationGroup {
 
     public connectLines: SVGElement;
 
-    private previewLine: SVGPathElement
+    private previewLine: SVGPathElement;
 
     public onDrawgraph: (points: TCoordinate[]) => void;
 

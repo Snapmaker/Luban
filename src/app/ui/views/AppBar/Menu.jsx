@@ -13,7 +13,7 @@ class Menu extends PureComponent {
         items: PropTypes.array.isRequired,
         activateMenu: PropTypes.func.isRequired,
         hideMenu: PropTypes.func.isRequired
-    }
+    };
 
     ulRef = React.createRef();
 
@@ -29,7 +29,7 @@ class Menu extends PureComponent {
                 this.props.hideMenu();
             }
         }
-    }
+    };
 
     componentDidMount() {
         window.document.body.childNodes[0].addEventListener('click', this.actions.hideMenu);

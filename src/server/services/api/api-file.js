@@ -12,17 +12,19 @@ import { unzipFile, zipFolder } from '../../lib/archive';
 import { packFirmware } from '../../lib/firmware-build';
 import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../constants';
 import {
+    getMachineSeriesWithToolhead,
+    isDualExtruder,
     LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
     LEVEL_ONE_POWER_LASER_FOR_SM2,
+    MACHINE_TOOL_HEADS,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
-    STANDARD_CNC_TOOLHEAD_FOR_SM2
+    STANDARD_CNC_TOOLHEAD_FOR_SM2,
 } from '../../../app/constants/machines';
 import { removeSpecialChars } from '../../../shared/lib/utils';
 import { generateRandomPathName } from '../../../shared/lib/random-utils';
 import { convertFileToSTL } from '../../lib/model-to-stl';
-import { getMachineSeriesWithToolhead, isDualExtruder, MACHINE_TOOL_HEADS } from '../../../app/constants/machines';
 
 const log = logger('api:file');
 

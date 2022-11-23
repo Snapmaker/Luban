@@ -56,8 +56,11 @@ const Controls = forwardRef((props, ref) => {
     }, [setSize]);
     return (
         <>
+            {/* eslint-disable */}
             <orbitControls args={[camera, gl.domElement]} ref={controls} />
+            {/* eslint-disable */}
             <hemisphereLight args={[0xdddddd, 0x666666, 1]} position={[0, -1000, 0]} />
+            {/* eslint-disable */}
             <directionalLight args={[0x666666, 0.4]} position={directionalLightPosition} />
         </>
     );

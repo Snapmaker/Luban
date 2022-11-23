@@ -61,7 +61,7 @@ class PreviewTypeBox extends PureComponent {
         this.props.childrenObjects.forEach((child) => {
             child.onChangeValue(event);
         });
-    }
+    };
 
     render() {
         const { fatherContent, fatherColor, isDropdown, childrenObjects } = this.props;

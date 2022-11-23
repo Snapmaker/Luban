@@ -110,14 +110,14 @@ abstract class BaseModel {
     public width: number;
     public height: number;
     public elem: SvgModelElement;
-    public size: TSize
+    public size: TSize;
     public transformation: ModelTransformation = DEFAULT_TRANSFORMATION;
     public visible = true;
 
     public boundingBox: Box2;
-    public limitSize: number
+    public limitSize: number;
 
-    public config: Record<string, string | number | boolean> = {}
+    public config: Record<string, string | number | boolean> = {};
     public needRepair: boolean;
 
     /**

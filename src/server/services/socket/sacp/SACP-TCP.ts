@@ -4,15 +4,15 @@ import readline from 'readline';
 import path from 'path';
 import crypto from 'crypto';
 import os from 'os';
-import {includes} from 'lodash';
+import { includes } from 'lodash';
 import CalibrationInfo from 'snapmaker-sacp-sdk/models/CalibrationInfo';
-import CoordinateInfo, {Direction} from 'snapmaker-sacp-sdk/models/CoordinateInfo';
-import MovementInstruction, {MoveDirection} from 'snapmaker-sacp-sdk/models/MovementInstruction';
+import CoordinateInfo, { Direction } from 'snapmaker-sacp-sdk/models/CoordinateInfo';
+import MovementInstruction, { MoveDirection } from 'snapmaker-sacp-sdk/models/MovementInstruction';
 import wifiServerManager from '../WifiServerManager';
-import {ConnectedData, EventOptions} from '../types';
+import { ConnectedData, EventOptions } from '../types';
 import logger from '../../../lib/logger';
-import {CONNECTION_TYPE_WIFI, HEAD_CNC, HEAD_LASER, HEAD_PRINTING} from '../../../constants';
-import Business, {CoordinateType, RequestPhotoInfo, ToolHeadType} from './Business';
+import { CONNECTION_TYPE_WIFI, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
+import Business, { CoordinateType, RequestPhotoInfo, ToolHeadType } from './Business';
 import DataStorage from '../../../DataStorage';
 // import MovementInstruction, { MoveDirection } from '../../lib/SACP-SDK/SACP/business/models/MovementInstruction';
 import SocketBASE from './SACP-BASE';
@@ -24,7 +24,7 @@ import {
     ROTARY_MODULES,
     SERIAL_MAP_SACP
 } from '../../../../app/constants';
-import {MODULEID_TOOLHEAD_MAP} from '../../../../app/constants/machines';
+import { MODULEID_TOOLHEAD_MAP } from '../../../../app/constants/machines';
 import type SocketServer from '../../../lib/SocketManager';
 
 const log = logger('lib:SocketTCP');
@@ -60,15 +60,15 @@ class SocketTCP extends SocketBASE {
 
     public onConnection = () => {
         // wifiServerManager.onConnection(socket);
-    }
+    };
 
     public onDisconnection = (socket: SocketServer) => {
         wifiServerManager.onDisconnection(socket);
-    }
+    };
 
     public refreshDevices = () => {
         wifiServerManager.refreshDevices();
-    }
+    };
 
     public connectionOpen = (socket: SocketServer, options: EventOptions) => {
         this.socket = socket;
@@ -95,7 +95,7 @@ class SocketTCP extends SocketBASE {
                     };
                     socket && socket.emit('connection:close', result);
                 }
-            }).then(async ({ response, packet }) => {
+            }).then(async ({ response }) => {
                 if (response.result === 0) {
                     this.sacpClient.setLogger(log);
                     this.sacpClient.wifiConnectionHeartBeat();
@@ -172,7 +172,7 @@ class SocketTCP extends SocketBASE {
                         err: state?.err,
                         type: CONNECTION_TYPE_WIFI
                     });
-                    this.startHeartbeatBase(this.sacpClient, this.client, true);
+                    this.startHeartbeatBase(this.sacpClient, this.client);
                 } else {
                     this.client.destroy();
                     if (this.client.destroyed) {
@@ -188,7 +188,7 @@ class SocketTCP extends SocketBASE {
                 }
             });
         });
-    }
+    };
 
     public connectionCloseImproper = () => {
         this.client && this.client.destroy();
@@ -202,7 +202,8 @@ class SocketTCP extends SocketBASE {
             };
             this.socket && this.socket.emit('connection:close', result);
         }
-    }
+    };
+
     public connectionClose = (socket: SocketServer, options: EventOptions) => {
         this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
         // await this.sacpClient.unSubscribeLogFeedback(this.subscribeLogCallback).then(res => {
@@ -238,10 +239,10 @@ class SocketTCP extends SocketBASE {
                 }, 3000);
             }
         });
-    }
+    };
 
     public startHeartbeat = () => {
-        this.startHeartbeatBase(this.sacpClient, undefined, true);
+        this.startHeartbeatBase(this.sacpClient, undefined);
     };
 
     public uploadFile = (options: EventOptions) => {
@@ -271,7 +272,7 @@ class SocketTCP extends SocketBASE {
                 callback({ status: false });
             }
         });
-    }
+    };
 
     public getCameraCalibration = async (callback: (matrix: CalibrationInfo) => void) => {
         return this.sacpClient.getCameraCalibration(ToolHeadType.LASER10000mW).then(({ response }) => {
@@ -282,7 +283,7 @@ class SocketTCP extends SocketBASE {
                 callback(new CalibrationInfo());
             }
         });
-    }
+    };
 
     public getPhoto = async (callback: (result: { success: boolean, filename: string }) => void) => {
         return this.sacpClient.getPhoto(0).then(({ response, data }) => {
@@ -297,7 +298,7 @@ class SocketTCP extends SocketBASE {
                 filename
             });
         });
-    }
+    };
 
     public getCalibrationPhoto = async (callback: (result: { success: boolean, filename: string }) => void) => {
         return this.sacpClient.getCalibrationPhoto(ToolHeadType.LASER10000mW).then(({ response, data }) => {
@@ -312,7 +313,7 @@ class SocketTCP extends SocketBASE {
                 filename
             });
         });
-    }
+    };
 
     public setMatrix = async (params: { matrix: CalibrationInfo }, callback: (result: string) => void) => {
         return this.sacpClient.setMatrix(ToolHeadType.LASER10000mW, params.matrix).then(({ response }) => {
@@ -322,7 +323,7 @@ class SocketTCP extends SocketBASE {
                 callback('error');
             }
         });
-    }
+    };
 
     public getLaserMaterialThickness = async (options: EventOptions) => {
         const { x, y, feedRate, eventName, isCameraCapture = false } = options;
@@ -453,7 +454,7 @@ class SocketTCP extends SocketBASE {
                 res: null
             });
         });
-    }
+    };
 }
 
 export default new SocketTCP();

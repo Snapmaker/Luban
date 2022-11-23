@@ -25,7 +25,7 @@ type SegmentedOptions = (SegmentedRawOption | SegmentedLabeledOption)[];
 
 export interface SegmentedProps
     extends Omit<React.HTMLProps<HTMLDivElement>, 'onChange'> {
-    options: SegmentedOptions;
+    options?: SegmentedOptions;
     defaultValue?: SegmentedValue;
     value?: SegmentedValue;
     onChange?: (value: SegmentedValue) => void;
@@ -223,7 +223,7 @@ const Segmented = React.forwardRef<HTMLDivElement, SegmentedProps>(
 Segmented.displayName = 'Segmented';
 
 Segmented.defaultProps = {
-    options: [],
+    options: []
 };
 
 export default Segmented;

@@ -35,43 +35,43 @@ export class LineTubeGeometry extends BufferGeometry {
      * Saves up to 4 linePoints to generate the model.
      * The oldest one get's dropped after generating as it's not needed anymore.
      */
-    pointsBuffer: LinePoint[] = []
+    private pointsBuffer: LinePoint[] = [];
 
-    private pointsLength: number
+    private pointsLength: number;
 
-    private layer: number
+    private layer: number;
 
-    private readonly radialSegments: number
+    private readonly radialSegments: number;
 
     // buffer
-    private vertices: number[] = []
+    private vertices: number[] = [];
 
-    private normals: number[] = []
+    private normals: number[] = [];
 
-    private colors: number[] = []
+    private colors: number[] = [];
 
-    private colors1: number[] = []
+    private colors1: number[] = [];
 
     private uvs: number[] = [];
 
     private indices: number[] = [];
 
-    private segmentsRadialNumbers: number[] = []
+    private segmentsRadialNumbers: number[] = [];
 
-    private lineTypes: number[] = []
+    private lineTypes: number[] = [];
 
-    private layerIndices: number[] = []
+    private layerIndices: number[] = [];
 
-    private extruders: number[] = []
+    private extruders: number[] = [];
 
     /**
      * color mode
      * 0: line type mode
      * 1: extruder mode
      */
-    private colorMode: number = 0;
+    private colorMode = 0;
 
-    constructor(radialSegments = 8, layer: number) {
+    public constructor(radialSegments = 8, layer: number) {
         super();
         this.type = 'LineTubeGeometry';
         this.layer = layer;
@@ -79,7 +79,7 @@ export class LineTubeGeometry extends BufferGeometry {
         this.radialSegments = radialSegments;
     }
 
-    dispose() {
+    public dispose() {
         super.dispose();
         this.pointsBuffer = [];
         this.normals = [];
@@ -164,7 +164,7 @@ export class LineTubeGeometry extends BufferGeometry {
      * @param start the starting segment
      * @param end the ending segment (excluding)
      */
-    public slice(start: number = 0, end: number = this.pointsLength) {
+    public slice(start = 0, end: number = this.pointsLength) {
         if (start === end) {
             this.setIndex([]);
             return;
@@ -352,7 +352,7 @@ export class LineTubeGeometry extends BufferGeometry {
         }
     }
 
-    toJSON() {
+    public toJSON() {
         throw new Error('not implemented');
     }
 

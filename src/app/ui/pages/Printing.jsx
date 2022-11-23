@@ -175,7 +175,19 @@ function useRenderMainToolBar(setSimplifying, profileInitialized = false) {
         });
     }
 
+    /**
+     * Render main tool bar on the top.
+     *
+     * @param activeMachine
+     * @param machineInfo
+     * @param materialInfo
+     * @param isConnected
+     * @returns {*}
+     */
     function renderMainToolBar(activeMachine, machineInfo, materialInfo, isConnected) {
+        //
+        //
+        //
         const leftItems = [
             {
                 title: i18n._('key-Printing/Page-Home'),

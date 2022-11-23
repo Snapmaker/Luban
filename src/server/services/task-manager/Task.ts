@@ -38,21 +38,21 @@ class Task {
 
     public finishTime: number;
 
-    public filenames = ''
+    public filenames = '';
 
-    public gcodeFile: TGcodeFile = {} as TGcodeFile
+    public gcodeFile: TGcodeFile = {} as TGcodeFile;
 
-    public viewPathFile = ''
+    public viewPathFile = '';
 
-    public filename = ''
+    public filename = '';
 
-    public width = ''
+    public width = '';
 
-    public height = ''
+    public height = '';
 
-    public stlInfo = ''
+    public stlInfo = '';
 
-    public svgInfo = ''
+    public svgInfo = '';
 
     public terminateFn: () => void;
 

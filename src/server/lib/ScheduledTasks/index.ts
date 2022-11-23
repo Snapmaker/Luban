@@ -9,7 +9,7 @@ const log = logger('service:schedule-task');
 class ScheduledTasks extends EventEmitter {
     private socket: Socket;
 
-    private taskHandles: schedule.Job[] = []
+    private taskHandles: schedule.Job[] = [];
 
     public constructor(socket) {
         super();

@@ -1,6 +1,6 @@
-import {find, includes} from 'lodash';
+import { find, includes } from 'lodash';
 import net from 'net';
-import {readString, readUint16, readUint8} from 'snapmaker-sacp-sdk/helper';
+import { readString, readUint16, readUint8 } from 'snapmaker-sacp-sdk/helper';
 import {
     AirPurifierInfo,
     CncSpeedState,
@@ -13,9 +13,9 @@ import {
     LaserTubeState
 } from 'snapmaker-sacp-sdk/models';
 // import GetWorkSpeed from 'snapmaker-sacp-sdk/models/GetWorkSpeed';
-import {ResponseCallback} from 'snapmaker-sacp-sdk';
-import {Direction} from 'snapmaker-sacp-sdk/models/CoordinateInfo';
-import Business, {CoordinateType} from './Business';
+import { ResponseCallback } from 'snapmaker-sacp-sdk';
+import { Direction } from 'snapmaker-sacp-sdk/models/CoordinateInfo';
+import Business, { CoordinateType } from './Business';
 import SocketServer from '../../../lib/SocketManager';
 import logger from '../../../lib/logger';
 import {
@@ -52,7 +52,7 @@ import {
 } from '../../../../app/constants/machines';
 
 
-import {EventOptions, MarlinStateData} from '../types';
+import { EventOptions, MarlinStateData } from '../types';
 import {
     COMPLUTE_STATUS,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
@@ -89,17 +89,17 @@ class SocketBASE {
 
     public subscribePurifierInfoCallback: ResponseCallback;
 
-    private filamentAction: boolean = false;
+    private filamentAction = false;
 
-    private filamentActionType: string = 'load';
+    private filamentActionType = 'load';
 
-    private moduleInfos: {}
+    private moduleInfos: {};
 
     public currentWorkNozzle: number;
 
     private resumeGcodeCallback: any = null;
 
-    public readyToWork: boolean = false;
+    public readyToWork = false;
 
     public headType: string = HEAD_PRINTING;
 
@@ -114,7 +114,7 @@ class SocketBASE {
 
     public machineStatus: string = WORKFLOW_STATE_IDLE;
 
-    public startHeartbeatBase = async (sacpClient: Business, client?: net.Socket, isWifiConnection?: boolean) => {
+    public startHeartbeatBase = async (sacpClient: Business, client?: net.Socket) => {
         this.sacpClient = sacpClient;
         let stateData: MarlinStateData = {};
         let statusKey = 0;
@@ -152,7 +152,7 @@ class SocketBASE {
             const owner = readUint16(param, 1);
             const error = readUint8(param, 3);
             this.socket && this.socket.emit('manager:error', { level, owner, errorCode: error });
-        })
+        });
         this.subscribeHeartCallback = async (data) => {
             statusKey = readUint8(data.response.data, 0);
             // stateData.airPurifier = false;
@@ -288,7 +288,7 @@ class SocketBASE {
                 ...stateData,
                 cncTargetSpindleSpeed: targetSpeed,
                 cncCurrentSpindleSpeed: currentSpeed
-            }
+            };
         };
         this.sacpClient.subscribeCncSpeedState({ interval: 1000 }, this.subscribeCncSpeedStateCallback).then(res => {
             log.info(`subscribe cnc speed state success: ${res}`);
@@ -300,7 +300,7 @@ class SocketBASE {
                 ...stateData,
                 laserPower: laserCurrentPower,
                 laserTargetPower
-            }
+            };
         };
         this.sacpClient.subscribeLaserPowerState({ interval: 1000 }, this.subscribeLaserPowerCallback).then(res => {
             log.info(`subscribe laser power state success: ${res}`);
@@ -318,7 +318,7 @@ class SocketBASE {
                 progress: currentLine === this.totalLine ? 1 : progress,
                 remainingTime: remainingTime,
                 printStatus: currentLine === this.totalLine ? COMPLUTE_STATUS : ''
-            }
+            };
             includes([WORKFLOW_STATE_RUNNING, WORKFLOW_STATE_PAUSED], this.machineStatus) && this.socket && this.socket.emit('sender:status', ({ data }));
         };
         this.sacpClient.subscribeGetPrintCurrentLineNumber({ interval: 1000 }, this.subscribeGetCurrentGcodeLineCallback);
@@ -344,7 +344,7 @@ class SocketBASE {
                 ledValue,
                 fanLevel: fanlevel,
                 isDoorEnable: State,
-            }
+            };
         };
         this.sacpClient.subscribeEnclosureInfo({ interval: 1000 }, this.subscribeEnclosureInfoCallback).then(res => {
             log.info(`subscribe enclosure info, ${res.response.result}`);
@@ -357,16 +357,16 @@ class SocketBASE {
                 airPurifierSwitch: fanState,
                 airPurifierFanSpeed: speedLevel,
                 airPurifierFilterHealth: lifeLevel - 1
-            }
+            };
         };
         this.sacpClient.subscribePurifierInfo({ interval: 1000 }, this.subscribePurifierInfoCallback).then(res => {
             log.info(`subscribe purifier info, ${res.response.result}`);
-        })
+        });
     };
 
     public setROTSubscribeApi = () => {
         log.info('ack ROT api');
-        this.sacpClient.handlerCoordinateMovementReturn((data) => {
+        this.sacpClient.handlerCoordinateMovementReturn(() => {
             this.socket && this.socket.emit('move:status', { isMoving: false });
             if (this.readyToWork) {
                 log.info('ready to work');
@@ -380,21 +380,21 @@ class SocketBASE {
                 if (this.filamentActionType === UNLOAD_FILAMENT) {
                     this.sacpClient.ExtruderMovement(toolHead.key, 0, 6, 200, 60, 150).then(({ response }) => {
                         if (response.result !== 0) {
-                            this.socket && this.socket.emit('connection:unloadFilament')
+                            this.socket && this.socket.emit('connection:unloadFilament');
                         }
-                    })
+                    });
                 } else {
                     this.sacpClient.ExtruderMovement(toolHead.key, 0, 60, 200, 0, 0).then(({ response }) => {
                         if (response.result !== 0) {
-                            this.socket && this.socket.emit('connection:loadFilament')
+                            this.socket && this.socket.emit('connection:loadFilament');
                         }
-                    })
+                    });
                 }
             } else {
                 this.socket && this.socket.emit(this.filamentActionType === LOAD_FIMAMENT ? 'connection:loadFilament' : 'connection:unloadFilament');
             }
         });
-        this.sacpClient.handlerExtruderMovementReturn((data) => {
+        this.sacpClient.handlerExtruderMovementReturn(() => {
             this.filamentAction = false;
             this.socket && this.socket.emit(this.filamentActionType === LOAD_FIMAMENT ? 'connection:loadFilament' : 'connection:unloadFilament');
         });
@@ -415,7 +415,7 @@ class SocketBASE {
         this.sacpClient.handlerResumePrintReturn((data) => {
             log.info(`handlerResumePrintreturn, ${data}`);
             this.resumeGcodeCallback && this.resumeGcodeCallback({ msg: data, code: data });
-        })
+        });
     };
 
     public executeGcode = async (options: EventOptions, callback: () => void) => {
@@ -451,7 +451,7 @@ class SocketBASE {
                 log.info(`Update Coordinate: ${res}`);
             });
         }
-    }
+    };
 
     public coordinateMove = async ({ moveOrders, jogSpeed, headType, beforeGcodeStart = false }) => {
         log.info(`coordinate: ${JSON.stringify(moveOrders)}, ${headType}`);
@@ -467,7 +467,7 @@ class SocketBASE {
             log.info(`Coordinate Move: ${res.response.result}`);
             this.socket && this.socket.emit('serialport:read', { data: res.response.result === 0 ? 'CANRUNNING' : 'WARNING' });
         });
-    }
+    };
 
     public setWorkOrigin = async ({ xPosition, yPosition, zPosition, bPosition }) => {
         log.info(`position: ${xPosition}, ${yPosition}, ${zPosition}, ${bPosition}`);
@@ -479,21 +479,21 @@ class SocketBASE {
             log.info(`Set Work Origin: ${res.data}`);
         });
         // to: only laser/cnc
-    }
+    };
 
-    public stopGcode = (options) => {
+    public stopGcode = () => {
         this.sacpClient.stopPrint().then(res => {
             log.info(`Stop Print: ${res}`);
             // eventName && this.socket && this.socket.emit(eventName, {});
         });
-    }
+    };
 
-    public pauseGcode = (options) => {
+    public pauseGcode = () => {
         this.sacpClient.pausePrint().then(res => {
             log.info(`Pause Print: ${res}`);
             // eventName && this.socket && this.socket.emit(eventName, {});
         });
-    }
+    };
 
     public resumeGcode = (options, callback) => {
         callback && (this.resumeGcodeCallback = callback);
@@ -501,7 +501,7 @@ class SocketBASE {
             log.info(`Resume Print: ${res}`);
             // callback && callback({ msg: res.response.result, code: res.response.result });
         });
-    }
+    };
 
     public async switchExtruder(extruderIndex) {
         const toolhead = this.moduleInfos && this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2];
@@ -525,7 +525,7 @@ class SocketBASE {
         this.sacpClient.SetExtruderTemperature(key, extruderIndex, temperature).then(({ response }) => {
             log.info(`SetExtruderTemperature,key:[${key}], extruderIndex:[${extruderIndex}], temperature:[${temperature}] ${JSON.stringify(response)}`);
         });
-    }
+    };
 
     public async loadFilament(extruderIndex, eventName) {
         const toolHead = this.moduleInfos && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2] || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);// || this.moduleInfos[HEADT_BED_FOR_SM2]); //
@@ -589,7 +589,7 @@ class SocketBASE {
         this.sacpClient.setHotBedTemperature(heatBed.key, zoneIndex, temperature).then(({ response }) => {
             log.info(`updateBedTemperature, ${JSON.stringify(response)}`);
         });
-    }
+    };
 
     public async updateNozzleOffset(extruderIndex, direction, distance) {
         const toolHead = this.moduleInfos && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2] || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);// || this.moduleInfos[HEADT_BED_FOR_SM2]); //
@@ -646,7 +646,7 @@ class SocketBASE {
         this.sacpClient.SetLaserPower(laserLevelTwoHead.key, value).then(({ response }) => {
             log.info(`updateLaserPower, ${JSON.stringify(response)}`);
         });
-    }
+    };
 
     public switchCNC = async function (headStatus) {
         const toolhead = this.moduleInfos && (this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2] || this.moduleInfos[STANDARD_CNC_TOOLHEAD_FOR_SM2]);
@@ -662,7 +662,7 @@ class SocketBASE {
             log.info(`switchCNC to [${!headStatus}], ${JSON.stringify(responseForOpen)}`);
         }
         // return response;
-    }
+    };
 
     public updateToolHeadSpeed = (speed) => {
         const toolhead = this.moduleInfos && this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2];
@@ -674,7 +674,7 @@ class SocketBASE {
         this.sacpClient.setToolHeadSpeed(toolhead.key, speed).then(({ response }) => {
             log.info(`updateToolHeadSpeed Speed:[${speed}], ${JSON.stringify(response)}`);
         });
-    }
+    };
 
     public setCncPower = (targetPower) => {
         const toolhead = this.moduleInfos && (this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2] || this.moduleInfos[STANDARD_CNC_TOOLHEAD_FOR_SM2]);
@@ -686,7 +686,7 @@ class SocketBASE {
         this.sacpClient.setCncPower(toolhead.key, targetPower).then(({ response }) => {
             log.info(`setCncPower setCncPower:[${targetPower}]%, ${JSON.stringify(response)}`);
         });
-    }
+    };
 
     public async setAbsoluteWorkOrigin({ z, isRotate = false }: {
         x: number, y: number, z: number, isRotate: boolean
@@ -726,21 +726,21 @@ class SocketBASE {
 
     // set enclosure light status
     public async setEnclosureLight(options) {
-        const moduleInfo = this.moduleInfos && (this.moduleInfos[ENCLOSURE_FOR_ARTISAN] || this.moduleInfos[ENCLOSURE_FOR_SM2])
+        const moduleInfo = this.moduleInfos && (this.moduleInfos[ENCLOSURE_FOR_ARTISAN] || this.moduleInfos[ENCLOSURE_FOR_SM2]);
         this.sacpClient.setEnclosureLight(moduleInfo.key, options.value).then(({ response }) => {
             log.info(`Update enclosure light result, ${response.result}`);
         });
     }
 
     public async setEnclosureFan(options) {
-        const moduleInfo = this.moduleInfos && (this.moduleInfos[ENCLOSURE_FOR_ARTISAN] || this.moduleInfos[ENCLOSURE_FOR_SM2])
+        const moduleInfo = this.moduleInfos && (this.moduleInfos[ENCLOSURE_FOR_ARTISAN] || this.moduleInfos[ENCLOSURE_FOR_SM2]);
         this.sacpClient.setEnclosureFan(moduleInfo.key, options.value).then(({ response }) => {
             log.info(`Update enclosure fan result, ${response.result}`);
         });
     }
 
     public async setDoorDetection(options) {
-        const moduleInfo = this.moduleInfos && (this.moduleInfos[ENCLOSURE_FOR_ARTISAN] || this.moduleInfos[ENCLOSURE_FOR_SM2])
+        const moduleInfo = this.moduleInfos && (this.moduleInfos[ENCLOSURE_FOR_ARTISAN] || this.moduleInfos[ENCLOSURE_FOR_SM2]);
         let headTypeKey = 0;
         switch (this.headType) {
             case HEAD_PRINTING:
@@ -755,7 +755,7 @@ class SocketBASE {
             default:
                 break;
         }
-        this.sacpClient.setEnclosureDoorEnabled(moduleInfo.key, options.enable ? 1 : 0, headTypeKey).then(({ response, packet }) => {
+        this.sacpClient.setEnclosureDoorEnabled(moduleInfo.key, options.enable ? 1 : 0, headTypeKey).then(({ response }) => {
             log.info(`Update enclosure door enabled: ${response.result}`);
         });
     }
@@ -766,14 +766,14 @@ class SocketBASE {
             log.info(`Update Purifier speed, ${response.result}, ${options.value}`);
         });
         this.sacpClient.setPurifierSwitch(moduleInfo.key, options.enable).then(({ response }) => {
-            log.info(`Switch Purifier update, ${ response.result }`);
-        })
+            log.info(`Switch Purifier update, ${response.result}`);
+        });
     }
 
     public async setFilterWorkSpeed(options) {
         const moduleInfo = this.moduleInfos && this.moduleInfos[AIR_PURIFIER];
-        this.sacpClient.setPurifierSpeed(moduleInfo.key, options.value).then(({ response, packet }) => {
-            log.info(`Update Purifier speed, ${ response.result }, ${options.value}`);
+        this.sacpClient.setPurifierSpeed(moduleInfo.key, options.value).then(({ response }) => {
+            log.info(`Update Purifier speed, ${response.result}, ${options.value}`);
         });
     }
 }

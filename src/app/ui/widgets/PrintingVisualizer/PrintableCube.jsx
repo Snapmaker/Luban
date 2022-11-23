@@ -24,12 +24,12 @@ class PrintableCube extends Object3D {
 
     stopAreaObjects = [];
 
-    scale10line
-    scale50line
-    scale10lineVisible = false
-    scale50lineVisible = true
-    hotArea
-    series
+    scale10line;
+    scale50line;
+    scale10lineVisible = false;
+    scale50lineVisible = true;
+    hotArea;
+    series;
 
     constructor(series, size, stopArea) {
         super();

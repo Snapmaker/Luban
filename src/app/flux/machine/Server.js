@@ -347,7 +347,7 @@ export class Server extends events.EventEmitter {
             data: res.body,
             text: res.text
         };
-    }
+    };
 
     getGcodePrintingInfo(data) {
         if (!data) {

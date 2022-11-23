@@ -1,8 +1,8 @@
-import {SerialPort} from 'serialport';
+import { SerialPort } from 'serialport';
 import fs from 'fs';
 // import path from 'path';
 import crypto from 'crypto';
-import {includes} from 'lodash';
+import { includes } from 'lodash';
 import logger from '../../../lib/logger';
 import Business from './Business';
 import SocketServer from '../../../lib/SocketManager';
@@ -15,9 +15,9 @@ import {
     ROTARY_MODULES,
     SERIAL_MAP_SACP
 } from '../../../../app/constants';
-import {MODULEID_TOOLHEAD_MAP} from '../../../../app/constants/machines';
-import {ConnectedData, EventOptions} from '../types';
-import {HEAD_CNC, HEAD_LASER, HEAD_PRINTING} from '../../../constants';
+import { MODULEID_TOOLHEAD_MAP } from '../../../../app/constants/machines';
+import { ConnectedData, EventOptions } from '../types';
+import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
 import DataStorage from '../../../DataStorage';
 
 const log = logger('lib:SocketSerial');
@@ -112,7 +112,7 @@ class SocketSerialNew extends SocketBASE {
             });
             this.serialport.open();
         }
-    }
+    };
 
     public connectionClose = async () => {
         this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
@@ -135,7 +135,7 @@ class SocketSerialNew extends SocketBASE {
         this.serialport?.destroy();
         // this.sacpClient?.dispose();
         this.socket.emit('connection:close');
-    }
+    };
 
     public startGcode = async (options: EventOptions) => {
         const { headType } = options;
@@ -163,7 +163,7 @@ class SocketSerialNew extends SocketBASE {
                 response.result === 0 && (this.startTime = new Date().getTime());
             });
         });
-    }
+    };
 }
 
 export default new SocketSerialNew();

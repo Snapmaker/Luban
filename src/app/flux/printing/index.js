@@ -302,7 +302,10 @@ const INITIAL_STATE = {
     materialParamsType: 'basic',
     customMode: false,
     showParamsProfile: true,
-    outOfMemoryForRenderGcode: false
+    outOfMemoryForRenderGcode: false,
+
+    // UI: print parameter modifier
+    showPrintParameterModifierDialog: false,
 };
 
 const ACTION_UPDATE_STATE = 'printing/ACTION_UPDATE_STATE';

@@ -378,7 +378,10 @@ class Visualizer extends PureComponent {
     }
 
     componentDidUpdate(prevProps) {
-        const { size, stopArea, transformMode, selectedModelArray, renderingTimestamp, modelGroup, stage, primeTowerHeight, enablePrimeTower, printingToolhead, promptTasks } = this.props;
+        const {
+            size, stopArea, transformMode, selectedModelArray, renderingTimestamp, modelGroup, stage,
+            primeTowerHeight, enablePrimeTower, printingToolhead, promptTasks
+        } = this.props;
         if (transformMode !== prevProps.transformMode) {
             this.canvas.current.setTransformMode(transformMode);
             if (transformMode === 'rotate-placement') {
@@ -503,28 +506,28 @@ class Visualizer extends PureComponent {
 
     showContextMenu = (event) => {
         !this.props.leftBarOverlayVisible && this.contextMenuRef.current.show(event);
-    }
+    };
 
     handleCancelSimplify = () => {
         const { selectedModelArray, simplifyOriginModelInfo: { sourceSimplifyName } } = this.props;
         this.props.loadSimplifyModel(selectedModelArray[0].modelID, sourceSimplifyName, true);
         this.props.resetSimplifyOriginModelInfo();
         this.props.setSimplifying(false);
-    }
+    };
 
     handleApplySimplify = () => {
         this.props.recordSimplifyModel();
         this.props.resetSimplifyOriginModelInfo();
         this.props.setSimplifying(false);
-    }
+    };
 
     handleUpdateSimplifyConfig = (type, percent) => {
         this.props.modelSimplify(type, percent);
-    }
+    };
 
     checkoutModelsLocatin = () => {
         this.canvas.current.checkoutModelsLocatin();
-    }
+    };
 
     render() {
         const { size, selectedModelArray, modelGroup, gcodeLineGroup, inProgress, hasModel, displayedType, transformMode } = this.props; // transformMode

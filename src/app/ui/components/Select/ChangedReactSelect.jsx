@@ -48,7 +48,7 @@ class ChangedReactSelect extends PureComponent {
 
     state = {
         expandedKeys: []
-    }
+    };
 
     actions = {
         onDropdownVisibleChange: (open) => {
@@ -120,7 +120,7 @@ class ChangedReactSelect extends PureComponent {
                 this.props.onChange && this.props.onChange(currentOption);
             }
         }
-    }
+    };
 
     render() {
         const {

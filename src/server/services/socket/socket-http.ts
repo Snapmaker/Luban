@@ -1,6 +1,6 @@
 // import store from '../../store';
 import request from 'superagent';
-import {isEqual, isNil} from 'lodash';
+import { isEqual, isNil } from 'lodash';
 import logger from '../../lib/logger';
 import workerManager from '../task-manager/workerManager';
 import DataStorage from '../../DataStorage';
@@ -15,9 +15,9 @@ import {
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     STANDARD_CNC_TOOLHEAD_FOR_SM2
 } from '../../constants';
-import {valueOf} from '../../lib/contants-utils';
+import { valueOf } from '../../lib/contants-utils';
 import wifiServerManager from './WifiServerManager';
-import {EventOptions} from './types';
+import { EventOptions } from './types';
 import type SocketServer from '../../lib/SocketManager';
 
 
@@ -119,28 +119,28 @@ class SocketHttp {
 
     public onConnection = () => {
         this.stopHeartBeat();
-    }
+    };
 
     public onDisconnection = (socket: SocketServer) => {
         wifiServerManager.onDisconnection(socket);
-    }
+    };
 
     public onSubscribe = (socket: SocketServer) => {
         wifiServerManager.onSubscribe(socket);
-    }
+    };
 
     public onDisSubscribe = (socket: SocketServer) => {
         wifiServerManager.onDisSubscribe(socket);
-    }
+    };
 
     public refreshDevices = () => {
         wifiServerManager.refreshDevices();
-    }
+    };
 
     public init = () => {
         this.gcodeInfos = [];
         this.isGcodeExecuting = false;
-    }
+    };
 
     public connectionOpen = (socket: SocketServer, options: EventOptions) => {
         const { host, token } = options;
@@ -230,7 +230,7 @@ class SocketHttp {
     private stopHeartBeat = () => {
         this.heartBeatWorker && this.heartBeatWorker.terminate();
         this.heartBeatWorker = null;
-    }
+    };
 
     public startGcode = (options: EventOptions) => {
         const { eventName } = options;
@@ -242,7 +242,7 @@ class SocketHttp {
             .end((err, res) => {
                 this.socket && this.socket.emit(eventName, _getResult(err, res) || {});
             });
-    }
+    };
 
     public resumeGcode = (options: EventOptions) => {
         const { eventName } = options;
@@ -414,7 +414,7 @@ class SocketHttp {
                 });
             }
         });
-    }
+    };
 
     public uploadGcodeFile = (gcodeFilePath: string, type: string, renderName: string, callback) => {
         const api = `${this.host}/api/v1/prepare_print`;

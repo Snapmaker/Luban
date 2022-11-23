@@ -15,7 +15,7 @@ class FirmwareTool extends PureComponent {
         mainFile: null,
         moduleFile: null,
         buildVersion: '3.2.0'
-    }
+    };
 
     actions = {
         onChangeMainFile: (event) => {

@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
-import {includes} from 'lodash';
+import { includes } from 'lodash';
 import readline from 'linebyline';
 import {
     BatchBufferInfo,
@@ -23,7 +23,7 @@ import {
     SetLaserPower,
     WifiConnectionInfo
 } from 'snapmaker-sacp-sdk/models';
-import {Dispatcher, RequestData, Response, ResponseCallback, ResponseData} from 'snapmaker-sacp-sdk';
+import { Dispatcher, RequestData, Response, ResponseCallback, ResponseData } from 'snapmaker-sacp-sdk';
 import {
     readFloat,
     readString,
@@ -39,8 +39,8 @@ import {
     writeUint32,
     writeUint8
 } from 'snapmaker-sacp-sdk/helper';
-import {PeerId} from 'snapmaker-sacp-sdk/communication/Header';
-import {MoveDirection} from 'snapmaker-sacp-sdk/models/MovementInstruction';
+import { PeerId } from 'snapmaker-sacp-sdk/communication/Header';
+import { MoveDirection } from 'snapmaker-sacp-sdk/models/MovementInstruction';
 import DataStorage from '../../../DataStorage';
 
 export enum CoordinateType {
@@ -905,8 +905,9 @@ export default class Business extends Dispatcher {
         return this.send(0x15, 0x03, PeerId.CONTROLLER, buffer).then(({ response, packet }) => {
             this.log.info(`set Enclosure door enabled: ${response.result}`);
             return { response, packet };
-        })
+        });
     }
+
     public async setEnclosureFan(key, value) {
         const buffer = Buffer.alloc(2);
         writeUint8(buffer, 0, key);

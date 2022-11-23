@@ -99,7 +99,7 @@ class Controls extends EventEmitter {
     // detection
     selectableObjects = null;
     highlightableObjects = null;
-    highlightLine = null
+    highlightLine = null;
     pointer = new THREE.Vector2();
 
     shouldForbidSelect = false;
@@ -128,7 +128,7 @@ class Controls extends EventEmitter {
 
     highLightOnMouseMove = throttle(() => {
         this.hoverLine();
-    }, 300)
+    }, 300);
 
     constructor(
         sourceType, displayedType, camera, group, domElement, onScale, onPan, supportActions, minScale = undefined, maxScale = undefined, scaleSize = undefined
@@ -663,7 +663,7 @@ class Controls extends EventEmitter {
     resetPanScale = () => {
         this.panScale = 1;
         this.emit(EVENTS.PAN_SCALE, 1);
-    }
+    };
 
     updatePanScale = () => {
         const v = new THREE.Vector3();
@@ -674,7 +674,7 @@ class Controls extends EventEmitter {
             / Math.log(this.scaleRate)
         ) * 10) / 10;
         this.emit(EVENTS.PAN_SCALE, this.panScale);
-    }
+    };
 
     // update mouse 3D position
     updateMouse3D = (() => {

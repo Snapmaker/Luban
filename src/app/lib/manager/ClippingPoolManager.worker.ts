@@ -333,7 +333,7 @@ const destroyPool = async (force?: boolean) => {
 // };
 let clearPoolhandle;
 const initPool = async () => {
-    return new Promise<void>(async (resolve) => {
+    return new Promise<void>((resolve) => {
         if (clearPoolhandle) {
             clearTimeout(clearPoolhandle);
             clearPoolhandle = null;

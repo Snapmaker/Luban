@@ -8,7 +8,7 @@ import UniApi from '../../../lib/uni-api';
 class AppBar extends PureComponent {
     fileInputRef = React.createRef();
 
-    accept = ['.snap3dp', '.snaplzr', '.snapcnc']
+    accept = ['.snap3dp', '.snaplzr', '.snapcnc'];
 
     actions = {
         openDialog: () => {
@@ -23,7 +23,7 @@ class AppBar extends PureComponent {
             };
             UniApi.Event.emit('appbar-menu:open-file', file, [recentFile]);
         }
-    }
+    };
 
     componentDidMount() {
         UniApi.Event.on('appbar-menu:open-file-in-browser', () => {

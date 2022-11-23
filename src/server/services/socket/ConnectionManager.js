@@ -49,13 +49,13 @@ class ConnectionManager {
     onConnection = (socket) => {
         socketHttp.onConnection(socket);
         this.scheduledTasksHandle = new ScheduledTasks(socket);
-    }
+    };
 
     onDisconnection = (socket) => {
         socketHttp.onDisconnection(socket);
         socketSerial.onDisconnection(socket);
         this.scheduledTasksHandle.cancelTasks();
-    }
+    };
 
     refreshDevices = (socket, options) => {
         const { connectionType } = options;
@@ -64,7 +64,7 @@ class ConnectionManager {
         } else if (connectionType === CONNECTION_TYPE_SERIAL) {
             socketSerial.serialportList(socket);
         }
-    }
+    };
 
     subscribeDevices = (socket, bool) => {
         if (bool) {
@@ -74,7 +74,7 @@ class ConnectionManager {
             socketHttp.onDisSubscribe(socket);
             socketSerial.onDisSubscribe(socket);
         }
-    }
+    };
 
     connectionOpen = async (socket, options) => {
         const { connectionType, sacp, addByUser, address } = options;
@@ -182,7 +182,7 @@ class ConnectionManager {
             trySerialConnect.open();
         }
         return '';
-    }
+    };
 
     tryConnect = (host, port) => {
         return new Promise((resolve) => {
@@ -206,7 +206,7 @@ class ConnectionManager {
                 resolve(false);
             });
         });
-    }
+    };
 
     /**
      *
@@ -217,7 +217,7 @@ class ConnectionManager {
     startGcodeAction = async (socket, options) => {
         log.info('gcode action begin');
         this.socket.startGcode(options);
-    }
+    };
 
     startGcode = async (socket, options) => {
         const { headType, isRotate, toolHead, isLaserPrintAutoMode, materialThickness, laserFocalLength, renderName, eventName, materialThicknessSource } = options;
@@ -367,7 +367,7 @@ class ConnectionManager {
                 socket && socket.emit(eventName, {});
             }
         }
-    }
+    };
 
     recoveryCncPosition = (pauseStatus, gcodeFile, sizeZ) => {
         let code = '';
@@ -392,7 +392,7 @@ G1 Z${pos.z}
             cmd: 'gcode',
             args: [code]
         });
-    }
+    };
 
     resumeGcode = (socket, options, callback) => {
         if (this.protocol === SACP_PROTOCOL || this.connectionType === CONNECTION_TYPE_WIFI) {
@@ -503,14 +503,12 @@ M3`;
         }
     };
 
-
     switchExtruder = (socket, options) => {
         if (this.protocol === SACP_PROTOCOL) {
             const { extruderIndex } = options;
             this.socket.switchExtruder(extruderIndex);
         }
-    }
-
+    };
 
     updateNozzleTemperature = (socket, options) => {
         if (this.protocol === SACP_PROTOCOL) {
@@ -526,7 +524,7 @@ M3`;
                 });
             }
         }
-    }
+    };
 
     updateBedTemperature = (socket, options) => {
         if (this.protocol === SACP_PROTOCOL) {
@@ -543,7 +541,7 @@ M3`;
                 });
             }
         }
-    }
+    };
 
     loadFilament = (socket, options) => {
         const { eventName } = options;
@@ -556,7 +554,7 @@ M3`;
             });
             socket && socket.emit(eventName);
         }
-    }
+    };
 
     unloadFilament = (socket, options) => {
         const { eventName } = options;
@@ -571,7 +569,7 @@ M3`;
             });
             socket && socket.emit(eventName);
         }
-    }
+    };
 
     updateWorkSpeedFactor = (socket, options) => {
         if (this.protocol === SACP_PROTOCOL) {
@@ -587,7 +585,7 @@ M3`;
                 });
             }
         }
-    }
+    };
 
     // getWorkSpeedFactor = (socket, options) => {
     //     if (this.protocol === SACP_PROTOCOL) {
@@ -629,7 +627,7 @@ M3`;
                 );
             }
         }
-    }
+    };
 
     switchLaserPower = (socket, options) => {
         const { isSM2, laserPower, laserPowerOpen } = options;
@@ -745,7 +743,7 @@ M3`;
 
     abortLaserMaterialThickness = (socket, options) => {
         this.socket.abortLaserMaterialThickness(options);
-    }
+    };
 
     // camera capture related, currently for socket-tcp
     takePhoto = (params, callback) => {
@@ -788,7 +786,7 @@ M3`;
                 gcode: 'G54'
             });
         }
-    }
+    };
 
     coordinateMove = (socket, options, callback) => {
         const { moveOrders, gcode, jogSpeed, headType } = options;
@@ -798,7 +796,7 @@ M3`;
         } else {
             this.executeGcode(this.socket, { gcode }, callback);
         }
-    }
+    };
 
     setWorkOrigin = (socket, options, callback) => {
         const { xPosition, yPosition, zPosition, bPosition } = options;
@@ -807,14 +805,14 @@ M3`;
         } else {
             this.executeGcode(this.socket, { gcode: 'G92 X0 Y0 Z0 B0' }, callback);
         }
-    }
+    };
 
     updateToolHeadSpeed = (socket, options) => {
         if (this.protocol === SACP_PROTOCOL) {
             const { speed } = options;
             this.socket.updateToolHeadSpeed(speed);
         }
-    }
+    };
 
     switchCNC = async (socket, options, callback) => {
         const { headStatus, speed, toolHead } = options;
@@ -832,7 +830,7 @@ M3`;
                 this.executeGcode(this.socket, { gcode: 'M3 P100' }, callback);
             }
         }
-    }
+    };
 }
 
 const connectionManager = new ConnectionManager();
