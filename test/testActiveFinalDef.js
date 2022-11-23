@@ -3,7 +3,7 @@ import path from 'path';
 import { DefinitionLoader } from '../src/server/slicer/definition';
 import DataStorage from '../src/server/DataStorage';
 
-DataStorage.configDir = path.join(__dirname, '../output/server/userData/Config/');
+DataStorage.configDir = path.join(__dirname, '../output/src/server/userData/Config/');
 
 test('default definition', (t) => {
     const activeDefinitionLoader = new DefinitionLoader();

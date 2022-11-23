@@ -35,7 +35,7 @@ module.exports = {
     context: path.resolve(__dirname, './src/server'),
     entry: path.resolve(__dirname, './src/server/services/task-manager/Pool.worker.js'),
     output: {
-        path: path.resolve(__dirname, 'output/server'),
+        path: path.resolve(__dirname, 'output/src/server'),
         filename: '[name].js',
         libraryTarget: 'commonjs2'
     },
