@@ -1,21 +1,64 @@
-import { includes, find } from 'lodash';
+import {find, includes} from 'lodash';
 import net from 'net';
-import { readString, readUint16, readUint8 } from 'snapmaker-sacp-sdk/helper';
-import { GetHotBed, CoordinateInfo, CoordinateSystemInfo, ExtruderInfo, CncSpeedState, LaserTubeState, GcodeCurrentLine, EnclosureInfo, AirPurifierInfo } from 'snapmaker-sacp-sdk/models';
+import {readString, readUint16, readUint8} from 'snapmaker-sacp-sdk/helper';
+import {
+    AirPurifierInfo,
+    CncSpeedState,
+    CoordinateInfo,
+    CoordinateSystemInfo,
+    EnclosureInfo,
+    ExtruderInfo,
+    GcodeCurrentLine,
+    GetHotBed,
+    LaserTubeState
+} from 'snapmaker-sacp-sdk/models';
 // import GetWorkSpeed from 'snapmaker-sacp-sdk/models/GetWorkSpeed';
-import { ResponseCallback } from 'snapmaker-sacp-sdk';
-import { Direction } from 'snapmaker-sacp-sdk/models/CoordinateInfo';
-import Business, { CoordinateType } from './Business';
+import {ResponseCallback} from 'snapmaker-sacp-sdk';
+import {Direction} from 'snapmaker-sacp-sdk/models/CoordinateInfo';
+import Business, {CoordinateType} from './Business';
 import SocketServer from '../../../lib/SocketManager';
 import logger from '../../../lib/logger';
 import {
-    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, CNC_MODULE, LASER_MODULE, PRINTING_MODULE, HEAD_CNC, HEAD_LASER,
-    COORDINATE_AXIS, WORKFLOW_STATUS_MAP, HEAD_PRINTING, EMERGENCY_STOP_BUTTON, ENCLOSURE_MODULES, AIR_PURIFIER_MODULES, ROTARY_MODULES,
-    MODULEID_TOOLHEAD_MAP, A400_HEADT_BED_FOR_SM2, HEADT_BED_FOR_SM2, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_SM2, MODULEID_MAP,
-    LOAD_FIMAMENT, UNLOAD_FILAMENT, ENCLOSURE_FOR_ARTISAN, ENCLOSURE_FOR_SM2, AIR_PURIFIER, WORKFLOW_STATE_RUNNING
+    A400_HEADT_BED_FOR_SM2,
+    AIR_PURIFIER_MODULES,
+    CNC_MODULE,
+    COORDINATE_AXIS,
+    EMERGENCY_STOP_BUTTON,
+    ENCLOSURE_MODULES,
+    HEAD_CNC,
+    HEAD_LASER,
+    HEAD_PRINTING,
+    HEADT_BED_FOR_SM2,
+    LASER_MODULE,
+    LOAD_FIMAMENT,
+    PRINTING_MODULE,
+    ROTARY_MODULES,
+    UNLOAD_FILAMENT,
+    WORKFLOW_STATE_RUNNING,
+    WORKFLOW_STATUS_MAP
 } from '../../../../app/constants';
-import { EventOptions, MarlinStateData } from '../types';
-import { SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2, COMPLUTE_STATUS, WORKFLOW_STATE_IDLE, WORKFLOW_STATE_PAUSED } from '../../../constants';
+import {
+    AIR_PURIFIER,
+    MODULEID_MAP,
+    ENCLOSURE_FOR_ARTISAN,
+    MODULEID_TOOLHEAD_MAP,
+    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+    STANDARD_CNC_TOOLHEAD_FOR_SM2,
+    LEVEL_ONE_POWER_LASER_FOR_SM2,
+    LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
+    LEVEL_TWO_POWER_LASER_FOR_SM2,
+    ENCLOSURE_FOR_SM2,
+    isDualExtruder
+} from '../../../../app/constants/machines';
+
+
+import {EventOptions, MarlinStateData} from '../types';
+import {
+    COMPLUTE_STATUS,
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+    WORKFLOW_STATE_IDLE,
+    WORKFLOW_STATE_PAUSED
+} from '../../../constants';
 
 const log = logger('lib:SocketBASE');
 
@@ -586,7 +629,7 @@ class SocketBASE {
         log.info(`updateWorkSpeed leftResponse, ${JSON.stringify(leftResponse)}`);
 
 
-        if (toolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+        if (isDualExtruder(toolhead)) {
             const rightResponse = await this.sacpClient.setWorkSpeed(headModule.key, 1, workSpeed);
             log.info(`updateWorkSpeed rightResponse, ${JSON.stringify(rightResponse)}`);
         }

@@ -1,28 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 // import PropTypes from 'prop-types';
-import { useDispatch, useSelector, shallowEqual } from 'react-redux';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import classNames from 'classnames';
 import { find } from 'lodash';
 import isElectron from 'is-electron';
+
 import Slider from '../../components/Slider';
 import PreviewType from '../../components/PreviewType';
 import Anchor from '../../components/Anchor';
-import styles from './styles.styl';
+import { isDualExtruder } from '../../../constants/machines';
 import { actions as printingActions } from '../../../flux/printing';
 import i18n from '../../../lib/i18n';
 import useSetState from '../../../lib/hooks/set-state';
 import Select from '../../components/Select';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, GCODEPREVIEWMODES, GCODEPREVIEWMODES_ICONS, LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
+import { GCODEPREVIEWMODES, GCODEPREVIEWMODES_ICONS, LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
 import { machineStore } from '../../../store/local-storage';
 import SvgIcon from '../../components/SvgIcon';
 import Checkbox from '../../components/Checkbox';
 
+import styles from './styles.styl';
+
 // TODO
 function useShowToggleBtn() {
     const [showToggleBtn, setShowToggleBtn] = useState(true);
+
     function onToggleToggleBtn() {
         setShowToggleBtn(!showToggleBtn);
     }
+
     return {
         renderToggleBtn: () => {
             return (
@@ -92,11 +97,11 @@ function GcodeLayout() {
     );
 }
 
+
 function VisualizerPreviewControl() {
     const [showPreviewPanel, setShowPreviewPanel] = useState(true);
     const [allShowTypes, setAllShowTypes] = useSetState({});
     const [showOriginalModel, setShowOriginalModel] = useState(true);
-    const isDualExtruder = (machineStore.get('machine.toolHead.printingToolhead') === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2);
     const gcodeLine = useSelector(state => state?.printing?.gcodeLine, shallowEqual);
     const displayedType = useSelector(state => state?.printing?.displayedType, shallowEqual);
     // TODO, change init
@@ -104,6 +109,8 @@ function VisualizerPreviewControl() {
     const renderLineType = useSelector(state => state?.printing?.renderLineType, shallowEqual);
     const gcodePreviewMode = useSelector(state => state?.printing?.gcodePreviewMode);
     const gcodePreviewModeToogleVisible = useSelector(state => state?.printing?.gcodePreviewModeToogleVisible);
+
+    const isDual = isDualExtruder(machineStore.get('machine.toolHead.printingToolhead'));
 
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions, shallowEqual);
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
@@ -306,7 +313,7 @@ function VisualizerPreviewControl() {
                                     {i18n._('key-Printing/Preview-Line Type')}
                                 </div>
                                 <div className="padding-vertical-12 padding-left-16">
-                                    {isDualExtruder && (
+                                    {isDual && (
                                         <div className="sm-flex justify-space-between height-24 margin-bottom-10">
                                             <div>
                                                 <span className="v-align-m">
@@ -315,7 +322,7 @@ function VisualizerPreviewControl() {
                                             </div>
                                         </div>
                                     )}
-                                    {isDualExtruder && (
+                                    {isDual && (
                                         <div className="sm-flex justify-space-between margin-top-10">
                                             <Select
                                                 size="large"
@@ -347,9 +354,9 @@ function VisualizerPreviewControl() {
                                                     fatherContent={fatherContent}
                                                     key={fatherContent}
                                                     fatherColor={fatherColor}
-                                                    isDropdown={isDualExtruder}
+                                                    isDropdown={isDual}
                                                     childrenObjects={
-                                                        isDualExtruder ? [
+                                                        isDual ? [
                                                             {
                                                                 value: allShowTypes[LEFT_EXTRUDER][showType],
                                                                 content: i18n._('key-Printing/Preview-Tool0'),

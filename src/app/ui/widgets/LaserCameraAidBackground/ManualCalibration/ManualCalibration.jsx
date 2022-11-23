@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import * as THREE from 'three';
-import { DATA_PREFIX, DEFAULT_LUBAN_HOST, LASER_10W_TAKE_PHOTO_POSITION, LASER_1600MW_CALIBRATION_POSITION, LEVEL_TWO_POWER_LASER_FOR_SM2 } from '../../../../constants';
-import { MACHINE_SERIES } from '../../../../constants/machines';
+import { DATA_PREFIX, DEFAULT_LUBAN_HOST, LASER_10W_TAKE_PHOTO_POSITION, LASER_1600MW_CALIBRATION_POSITION } from '../../../../constants';
+import { LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES } from '../../../../constants/machines';
 import ManualCalibrationControls from '../../../../three-extensions/ManualCalibrationControls';
 import RectangleGridHelper from '../../../../three-extensions/RectangleGridHelper';
 import WebGLRendererWrapper from '../../../../three-extensions/WebGLRendererWrapper';

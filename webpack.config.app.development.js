@@ -19,7 +19,7 @@ const devServer = {
     hot: true,
     port: CLIENT_PORT,
     static: {
-        directory: path.resolve(__dirname, 'output/app'),
+        directory: path.resolve(__dirname, 'output/src/app'),
     },
     proxy: {
         '/api': `http://localhost:${SERVER_PORT}`,

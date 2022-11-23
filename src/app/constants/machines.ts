@@ -10,6 +10,12 @@ export const LEVEL_TWO_POWER_LASER_FOR_SM2 = 'levelTwoLaserToolheadForSM2';
 export const STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL = 'standardCNCToolheadForOriginal';
 export const STANDARD_CNC_TOOLHEAD_FOR_SM2 = 'standardCNCToolheadForSM2';
 export const LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2 = 'levelTwoCNCToolheadForSM2';
+export const ENCLOSURE_FOR_SM2 = 'enclosureForSM2';
+export const ENCLOSURE_FOR_ARTISAN = 'enclosureForArtisan';
+export const AIR_PURIFIER = 'airPurifier';
+
+export const HEADT_BED_FOR_SM2 = 'heatBedForSM2';
+export const A400_HEADT_BED_FOR_SM2 = 'a400HeatBedForSM2';
 
 // Machine Types
 export const MACHINE_TYPE_3D_PRINTER = '3D Printer';
@@ -456,6 +462,29 @@ export const MACHINE_TOOL_HEADS = {
             numberOfExtruders: 2,
         }
     }
+};
+
+export const MODULEID_TOOLHEAD_MAP = {
+    '0': SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+    '1': STANDARD_CNC_TOOLHEAD_FOR_SM2,
+    '2': LEVEL_ONE_POWER_LASER_FOR_SM2,
+    '13': DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+    '14': LEVEL_TWO_POWER_LASER_FOR_SM2,
+    '15': LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2
+};
+
+export const MODULEID_MAP = {
+    '0': SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+    '1': STANDARD_CNC_TOOLHEAD_FOR_SM2,
+    '2': LEVEL_ONE_POWER_LASER_FOR_SM2,
+    '13': DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+    '14': LEVEL_TWO_POWER_LASER_FOR_SM2,
+    '15': LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
+    '512': HEADT_BED_FOR_SM2,
+    '515': A400_HEADT_BED_FOR_SM2,
+    '5': ENCLOSURE_FOR_SM2,
+    '16': ENCLOSURE_FOR_ARTISAN,
+    '7': AIR_PURIFIER
 };
 
 export function findMachineByName(name) {

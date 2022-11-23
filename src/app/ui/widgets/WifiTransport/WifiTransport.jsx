@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState, useImperativeHandle } from 'react';
+import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 // import { Trans } from 'react-i18next';
 import noop from 'lodash/noop';
@@ -16,12 +16,21 @@ import UniApi from '../../../lib/uni-api';
 import { normalizeNameDisplay } from '../../../lib/normalize-range';
 import styles from './index.styl';
 import {
-    CONNECTION_TYPE_WIFI, WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE,
-    HEAD_CNC, HEAD_LASER, HEAD_PRINTING,
-    LEVEL_TWO_POWER_LASER_FOR_SM2, CONNECTION_MATERIALTHICKNESS_ABORT,
-    CONNECTION_TYPE_SERIAL, CONNECTION_MATERIALTHICKNESS, CONNECTION_UPLOAD_FILE,
-    AUTO_MDOE, SEMI_AUTO_MODE, MANUAL_MODE
+    AUTO_MDOE,
+    CONNECTION_MATERIALTHICKNESS,
+    CONNECTION_MATERIALTHICKNESS_ABORT,
+    CONNECTION_TYPE_SERIAL,
+    CONNECTION_TYPE_WIFI,
+    CONNECTION_UPLOAD_FILE,
+    HEAD_CNC,
+    HEAD_LASER,
+    HEAD_PRINTING,
+    MANUAL_MODE,
+    SEMI_AUTO_MODE,
+    WORKFLOW_STATE_IDLE,
+    WORKFLOW_STATUS_IDLE
 } from '../../../constants';
+import { LEVEL_TWO_POWER_LASER_FOR_SM2, } from '../../../constants/machines';
 import { actions as workspaceActions, WORKSPACE_STAGE } from '../../../flux/workspace';
 import { actions as projectActions } from '../../../flux/project';
 

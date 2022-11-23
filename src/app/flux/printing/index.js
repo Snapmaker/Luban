@@ -2,12 +2,8 @@
 import { cloneDeep, filter, find as lodashFind, isNil } from 'lodash';
 import path from 'path';
 import * as THREE from 'three';
-import { Mesh, Vector3 } from 'three';
-import {
-    acceleratedRaycast,
-    computeBoundsTree,
-    disposeBoundsTree
-} from 'three-mesh-bvh';
+import { Vector3 } from 'three';
+import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
 import { timestamp } from '../../../shared/lib/random-utils';
 import api from '../../api';
 import { ModelEvents } from '../../models/events';
@@ -18,44 +14,35 @@ import {
     DATA_PREFIX,
     DUAL_EXTRUDER_LIMIT_WIDTH_L,
     DUAL_EXTRUDER_LIMIT_WIDTH_R,
-    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
     EPSILON,
-    GCODEPREVIEWMODES,
     GCODE_VISIBILITY_TYPE,
+    GCODEPREVIEWMODES,
     HEAD_PRINTING,
+    KEY_DEFAULT_CATEGORY_CUSTOM,
     LEFT_EXTRUDER,
     LEFT_EXTRUDER_MAP_NUMBER,
     LOAD_MODEL_FROM_INNER,
-    LOAD_MODEL_FROM_OUTER,
+    PRINTING_MANAGER_TYPE_EXTRUDER,
     PRINTING_MANAGER_TYPE_MATERIAL,
     PRINTING_MANAGER_TYPE_QUALITY,
-    PRINTING_MANAGER_TYPE_EXTRUDER,
     PRINTING_MATERIAL_CONFIG_GROUP_DUAL,
     PRINTING_MATERIAL_CONFIG_GROUP_SINGLE,
     PRINTING_QUALITY_CONFIG_GROUP_DUAL,
     PRINTING_QUALITY_CONFIG_GROUP_SINGLE,
     RIGHT_EXTRUDER,
     RIGHT_EXTRUDER_MAP_NUMBER,
-    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
-    WHITE_COLOR,
-    KEY_DEFAULT_CATEGORY_CUSTOM
+    WHITE_COLOR
 } from '../../constants';
 import {
     getMachineSeriesWithToolhead,
-    MACHINE_SERIES
+    isDualExtruder,
+    MACHINE_SERIES,
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2
 } from '../../constants/machines';
 import { controller } from '../../lib/controller';
-import {
-    logPritingSlice,
-    logProfileChange,
-    logToolBarOperation,
-    logTransformOperation
-} from '../../lib/gaEvent';
+import { logPritingSlice, logProfileChange, logToolBarOperation, logTransformOperation } from '../../lib/gaEvent';
 import i18n from '../../lib/i18n';
-import ProgressStatesManager, {
-    PROCESS_STAGE,
-    STEP_STAGE
-} from '../../lib/manager/ProgressManager';
+import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 import workerManager from '../../lib/manager/workerManager';
 import ModelGroup from '../../models/ModelGroup';
 import PrimeTowerModel from '../../models/PrimeTowerModel';
@@ -122,6 +109,7 @@ const getGcodeRenderValue = (object, index) => {
         return Object.values(object[RIGHT_EXTRUDER])[index % 8];
     }
 };
+
 function isLarger(a, b) {
     return a - b > EPSILON;
 }
@@ -620,10 +608,10 @@ export const actions = {
             }
         });
 
-        const leftExtruderBorder = useRight && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
+        const leftExtruderBorder = useRight && isDualExtruder(printingToolhead)
             ? DUAL_EXTRUDER_LIMIT_WIDTH_L
             : 0;
-        const rightExtruderBorder = useLeft && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
+        const rightExtruderBorder = useLeft && isDualExtruder(printingToolhead)
             ? DUAL_EXTRUDER_LIMIT_WIDTH_R
             : 0;
 
@@ -701,69 +689,69 @@ export const actions = {
     },
 
     updateDefaultConfigId: (type,
-        defaultId, direction = LEFT_EXTRUDER) => (
-            dispatch,
-            getState
-        ) => {
-            let { series } = getState().machine;
-            series = getRealSeries(series);
-            const printingState = getState().printing;
-            const {
-                defaultMaterialId,
-                defaultMaterialIdRight,
-                defaultQualityId,
-                materialDefinitions,
-                qualityDefinitions
-            } = printingState;
-            let activeMaterialType = dispatch(actions.getActiveMaterialType());
+                            defaultId, direction = LEFT_EXTRUDER) => (
+        dispatch,
+        getState
+    ) => {
+        let { series } = getState().machine;
+        series = getRealSeries(series);
+        const printingState = getState().printing;
+        const {
+            defaultMaterialId,
+            defaultMaterialIdRight,
+            defaultQualityId,
+            materialDefinitions,
+            qualityDefinitions
+        } = printingState;
+        let activeMaterialType = dispatch(actions.getActiveMaterialType());
 
-            let originalConfigId = {};
-            if (machineStore.get('defaultConfigId')) {
-                originalConfigId = JSON.parse(machineStore.get('defaultConfigId'));
-            }
-            if (originalConfigId[series]) {
-                if (type === PRINTING_MANAGER_TYPE_MATERIAL) {
-                    switch (direction) {
-                        case LEFT_EXTRUDER:
-                            originalConfigId[series].material = defaultId;
-                            activeMaterialType = dispatch(actions.getActiveMaterialType(defaultId));
-                            if (defaultMaterialId !== defaultId) {
-                                logProfileChange(HEAD_PRINTING, 'material');
-                            }
-                            break;
-                        case RIGHT_EXTRUDER:
-                            originalConfigId[series].materialRight = defaultId;
-                            if (defaultMaterialIdRight !== defaultId) {
-                                logProfileChange(HEAD_PRINTING, 'materialRight');
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                } else {
-                    originalConfigId[series][type] = defaultId;
-                    if (defaultQualityId !== defaultId) {
-                        logProfileChange(HEAD_PRINTING, type);
-                    }
+        let originalConfigId = {};
+        if (machineStore.get('defaultConfigId')) {
+            originalConfigId = JSON.parse(machineStore.get('defaultConfigId'));
+        }
+        if (originalConfigId[series]) {
+            if (type === PRINTING_MANAGER_TYPE_MATERIAL) {
+                switch (direction) {
+                    case LEFT_EXTRUDER:
+                        originalConfigId[series].material = defaultId;
+                        activeMaterialType = dispatch(actions.getActiveMaterialType(defaultId));
+                        if (defaultMaterialId !== defaultId) {
+                            logProfileChange(HEAD_PRINTING, 'material');
+                        }
+                        break;
+                    case RIGHT_EXTRUDER:
+                        originalConfigId[series].materialRight = defaultId;
+                        if (defaultMaterialIdRight !== defaultId) {
+                            logProfileChange(HEAD_PRINTING, 'materialRight');
+                        }
+                        break;
+                    default:
+                        break;
                 }
             } else {
-                originalConfigId[series] = {
-                    ...CONFIG_ID,
-                    [type]: defaultId
-                };
+                originalConfigId[series][type] = defaultId;
+                if (defaultQualityId !== defaultId) {
+                    logProfileChange(HEAD_PRINTING, type);
+                }
             }
-            dispatch(actions.updateDefinitionModelAndCheckVisible({
-                activeMaterialType,
-                direction,
-                type,
-                series,
-                originalConfigId
-            }))
+        } else {
+            originalConfigId[series] = {
+                ...CONFIG_ID,
+                [type]: defaultId
+            };
+        }
+        dispatch(actions.updateDefinitionModelAndCheckVisible({
+            activeMaterialType,
+            direction,
+            type,
+            series,
+            originalConfigId
+        }))
 
-            machineStore.set('defaultConfigId', JSON.stringify(originalConfigId));
+        machineStore.set('defaultConfigId', JSON.stringify(originalConfigId));
 
 
-        },
+    },
 
     // when switch 'materialType' or 'nozzleSize', has to check defintion visible
     updateDefinitionModelAndCheckVisible: (
@@ -1006,7 +994,7 @@ export const actions = {
         });
 
         const primeTowerModel = modelGroup.primeTower;
-        if (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+        if (isDualExtruder(printingToolhead)) {
             const enablePrimeTower = activeQualityDefinition?.settings?.prime_tower_enable
                 ?.default_value;
             primeTowerModel.visible = !!enablePrimeTower;
@@ -1036,7 +1024,7 @@ export const actions = {
         });
         modelGroup.removeAllModels();
         const primeTowerModel = modelGroup.primeTower;
-        if (printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+        if (isDualExtruder(printingToolhead)) {
             const enablePrimeTower = activeQualityDefinition?.settings?.prime_tower_enable
                 ?.default_value;
             primeTowerModel.visible = enablePrimeTower;
@@ -1098,23 +1086,23 @@ export const actions = {
 
         const settings = {
             layer_height:
-                activeActiveQualityDefinition.settings?.layer_height
-                    ?.default_value,
+            activeActiveQualityDefinition.settings?.layer_height
+                ?.default_value,
             infill_pattern:
-                activeActiveQualityDefinition.settings?.infill_pattern
-                    ?.default_value,
+            activeActiveQualityDefinition.settings?.infill_pattern
+                ?.default_value,
             auto_support:
-                activeActiveQualityDefinition.settings?.support_enable
-                    ?.default_value,
+            activeActiveQualityDefinition.settings?.support_enable
+                ?.default_value,
             initial_layer_height:
-                activeActiveQualityDefinition.settings?.layer_height_0
-                    ?.default_value,
+            activeActiveQualityDefinition.settings?.layer_height_0
+                ?.default_value,
             build_plate_adhesion_type:
-                activeActiveQualityDefinition.settings?.adhesion_type
-                    ?.default_value,
+            activeActiveQualityDefinition.settings?.adhesion_type
+                ?.default_value,
             initial_layer_line_width_factor:
-                activeActiveQualityDefinition.settings
-                    ?.initial_layer_line_width_factor?.default_value
+            activeActiveQualityDefinition.settings
+                ?.initial_layer_line_width_factor?.default_value
         };
 
         if (toolHead.printingToolhead === SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2) {
@@ -1367,10 +1355,10 @@ export const actions = {
     },
 
     updateMachineDefinition: ({
-        paramKey,
-        paramValue,
-        direction,
-    }) => async(dispatch, getState) => {
+                                  paramKey,
+                                  paramValue,
+                                  direction,
+                              }) => async (dispatch, getState) => {
         if (!isNil(paramValue)) {
             const printingState = getState().printing;
             const machineDefinition = definitionManager.machineDefinition;
@@ -1423,7 +1411,7 @@ export const actions = {
                     qualityDefinitions: newQualityDefinitions,
                     materialDefinitions: newMaterialDefinitions,
                 }));
-            }else {
+            } else {
                 dispatch(actions.updateState({
                     qualityDefinitions: newQualityDefinitions,
                 }));
@@ -1437,12 +1425,12 @@ export const actions = {
     },
 
     updateCurrentDefinition: ({
-        definitionModel,
-        managerDisplayType: type,
-        changedSettingArray,
-        direction = LEFT_EXTRUDER,
-        shouldUpdateIsOversteped = false
-    }) => (dispatch, getState) => {
+                                  definitionModel,
+                                  managerDisplayType: type,
+                                  changedSettingArray,
+                                  direction = LEFT_EXTRUDER,
+                                  shouldUpdateIsOversteped = false
+                              }) => (dispatch, getState) => {
         const printingState = getState().printing;
         const { series } = getState().machine;
         const { qualityDefinitions } = printingState;
@@ -1678,7 +1666,7 @@ export const actions = {
             definitionsWithSameCategory.find(
                 (d) => d.name === newDefinition.name
             )
-        ) {
+            ) {
             newDefinition.name = `#${newDefinition.name}`;
         }
 
@@ -1805,11 +1793,11 @@ export const actions = {
             }
         }
         !loop
-            && dispatch(
-                actions.updateState({
-                    [definitionsKey]: defintions
-                })
-            );
+        && dispatch(
+            actions.updateState({
+                [definitionsKey]: defintions
+            })
+        );
     },
 
     removeToolCategoryDefinition: (type, category) => async (
@@ -2114,7 +2102,7 @@ export const actions = {
         const indexR = materialDefinitions.findIndex(
             (d) => d.definitionId === defaultMaterialIdRight
         );
-        const hasPrimeTower = printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
+        const hasPrimeTower = isDualExtruder(printingToolhead)
             && activeQualityDefinition.settings.prime_tower_enable.default_value;
         const adhesionExtruder = helpersExtruderConfig.adhesion;
 
@@ -2238,14 +2226,14 @@ export const actions = {
         );
 
         // FIXME
-        const isDualExtruder = printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2;
+        const isDual = isDualExtruder(printingToolhead);
         const onlySupportInterface = helpersExtruderConfig.onlySupportInterface;
 
         const supportExtruder = helpersExtruderConfig.support;
         finalDefinition.settings.adhesion_extruder_nr.default_value = adhesionExtruder;
         finalDefinition.settings.support_extruder_nr.default_value = supportExtruder;
-        finalDefinition.settings.support_infill_extruder_nr.default_value = (isDualExtruder && onlySupportInterface) ? Math.abs(Number(supportExtruder) - 1).toString() : supportExtruder;
-        finalDefinition.settings.support_extruder_nr_layer_0.default_value = isDualExtruder ? Math.abs(Number(supportExtruder) - 1).toString() : supportExtruder;
+        finalDefinition.settings.support_infill_extruder_nr.default_value = (isDual && onlySupportInterface) ? Math.abs(Number(supportExtruder) - 1).toString() : supportExtruder;
+        finalDefinition.settings.support_extruder_nr_layer_0.default_value = isDual ? Math.abs(Number(supportExtruder) - 1).toString() : supportExtruder;
         finalDefinition.settings.support_interface_extruder_nr.default_value = supportExtruder;
         finalDefinition.settings.support_roof_extruder_nr.default_value = supportExtruder;
         finalDefinition.settings.support_bottom_extruder_nr.default_value = supportExtruder;
@@ -2303,7 +2291,7 @@ export const actions = {
             series,
             printingToolhead,
             material0: materialDefinitions[indexL]?.name,
-            material1: printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? materialDefinitions[indexR]?.name : '',
+            material1: isDual ? materialDefinitions[indexR]?.name : '',
             layerCount,
             renderGcodeFileName,
         };
@@ -3009,21 +2997,21 @@ export const actions = {
                     ...extruderConfig
                 };
                 modelItem.children
-                    && modelItem.children.length
-                    && modelItem.children.forEach((item) => {
-                        if (extruderConfig.infill !== '2') {
-                            item.extruderConfig = {
-                                ...item.extruderConfig,
-                                infill: extruderConfig.infill
-                            };
-                        }
-                        if (extruderConfig.shell !== '2') {
-                            item.extruderConfig = {
-                                ...item.extruderConfig,
-                                shell: extruderConfig.shell
-                            };
-                        }
-                    });
+                && modelItem.children.length
+                && modelItem.children.forEach((item) => {
+                    if (extruderConfig.infill !== '2') {
+                        item.extruderConfig = {
+                            ...item.extruderConfig,
+                            infill: extruderConfig.infill
+                        };
+                    }
+                    if (extruderConfig.shell !== '2') {
+                        item.extruderConfig = {
+                            ...item.extruderConfig,
+                            shell: extruderConfig.shell
+                        };
+                    }
+                });
                 if (
                     modelItem.parent
                     && modelItem.parent instanceof ThreeGroup
@@ -4396,7 +4384,9 @@ export const actions = {
                     dispatch(actions.destroyGcodeLine());
                     dispatch(actions.displayModel());
                 })
-                .catch((err) => { console.log('err', err)});
+                .catch((err) => {
+                    console.log('err', err)
+                });
         }
     },
 
@@ -4782,8 +4772,8 @@ export const actions = {
                         config: {
                             support_angle: angle,
                             layer_height_0:
-                                activeQualityDefinition.settings.layer_height_0
-                                    .default_value,
+                            activeQualityDefinition.settings.layer_height_0
+                                .default_value,
                             support_mark_area: false // tell engine to use marks in binary STL file
                         }
                     });
@@ -4822,7 +4812,8 @@ export const actions = {
                                 operation.state.currentSupport = mesh;
                                 resolve();
                             },
-                            () => { },
+                            () => {
+                            },
                             (err) => {
                                 reject(err);
                             }

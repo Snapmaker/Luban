@@ -1,21 +1,24 @@
 // import store from '../../store';
 import request from 'superagent';
-import { isEqual, isNil } from 'lodash';
-import type SocketServer from '../../lib/SocketManager';
+import {isEqual, isNil} from 'lodash';
 import logger from '../../lib/logger';
 import workerManager from '../task-manager/workerManager';
 import DataStorage from '../../DataStorage';
 import {
-    HEAD_PRINTING, HEAD_LASER, HEAD_CNC, MACHINE_SERIES,
-    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
-    STANDARD_CNC_TOOLHEAD_FOR_SM2,
+    CONNECTION_TYPE_WIFI,
+    HEAD_CNC,
+    HEAD_LASER,
+    HEAD_PRINTING,
     LEVEL_ONE_POWER_LASER_FOR_SM2,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
-    CONNECTION_TYPE_WIFI
+    MACHINE_SERIES,
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+    STANDARD_CNC_TOOLHEAD_FOR_SM2
 } from '../../constants';
-import { valueOf } from '../../lib/contants-utils';
+import {valueOf} from '../../lib/contants-utils';
 import wifiServerManager from './WifiServerManager';
-import { EventOptions } from './types';
+import {EventOptions} from './types';
+import type SocketServer from '../../lib/SocketManager';
 
 
 let waitConfirm: boolean;

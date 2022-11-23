@@ -6,16 +6,11 @@ import classNames from 'classnames';
 import { Button } from '../components/Buttons';
 import i18n from '../../lib/i18n';
 import Modal from '../components/Modal';
+import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING, MACHINE_HEAD_TYPE } from '../../constants';
 import {
-    HEAD_LASER,
-    HEAD_PRINTING,
-    HEAD_CNC,
-    MACHINE_HEAD_TYPE,
+    LEVEL_ONE_POWER_LASER_FOR_SM2,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
-    LEVEL_ONE_POWER_LASER_FOR_SM2
-} from '../../constants';
-import {
-    MACHINE_SERIES
+    MACHINE_SERIES,
 } from '../../constants/machines';
 import Anchor from '../components/Anchor';
 import styles from './styles.styl';

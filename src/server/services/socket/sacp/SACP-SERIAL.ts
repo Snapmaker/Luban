@@ -1,17 +1,24 @@
-import { SerialPort } from 'serialport';
+import {SerialPort} from 'serialport';
 import fs from 'fs';
 // import path from 'path';
 import crypto from 'crypto';
-import { includes } from 'lodash';
+import {includes} from 'lodash';
 import logger from '../../../lib/logger';
 import Business from './Business';
 import SocketServer from '../../../lib/SocketManager';
 import SocketBASE from './SACP-BASE';
-import { SERIAL_MAP_SACP, PRINTING_MODULE, CNC_MODULE, LASER_MODULE, MODULEID_TOOLHEAD_MAP, ROTARY_MODULES, EMERGENCY_STOP_BUTTON } from '../../../../app/constants';
-import { ConnectedData, EventOptions } from '../types';
-import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
+import {
+    CNC_MODULE,
+    EMERGENCY_STOP_BUTTON,
+    LASER_MODULE,
+    PRINTING_MODULE,
+    ROTARY_MODULES,
+    SERIAL_MAP_SACP
+} from '../../../../app/constants';
+import {MODULEID_TOOLHEAD_MAP} from '../../../../app/constants/machines';
+import {ConnectedData, EventOptions} from '../types';
+import {HEAD_CNC, HEAD_LASER, HEAD_PRINTING} from '../../../constants';
 import DataStorage from '../../../DataStorage';
-// import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_PRINTING } from '../../../constants';
 
 const log = logger('lib:SocketSerial');
 

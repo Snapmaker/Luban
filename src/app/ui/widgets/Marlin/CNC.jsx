@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { isNil, includes } from 'lodash';
+import { includes, isNil } from 'lodash';
 import WorkSpeed from './WorkSpeed';
 import i18n from '../../../lib/i18n';
 import Switch from '../../components/Switch';
@@ -11,12 +11,11 @@ import EditComponent from '../../components/Edit';
 import {
     CONNECTION_SWITCH_CNC,
     CONNECTION_UPDATE_TOOLHEAD_SPEED,
-    LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
     WORKFLOW_STATUS_PAUSED,
     WORKFLOW_STATUS_PAUSING,
     WORKFLOW_STATUS_RUNNING
 } from '../../../constants';
-import { MACHINE_SERIES } from '../../../constants/machines';
+import { LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, MACHINE_SERIES, } from '../../../constants/machines';
 
 class CNC extends PureComponent {
     static propTypes = {

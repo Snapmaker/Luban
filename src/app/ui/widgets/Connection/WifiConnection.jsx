@@ -16,31 +16,28 @@ import {
     CONNECTION_STATUS_CONNECTING,
     CONNECTION_STATUS_IDLE,
     CONNECTION_TYPE_WIFI,
-    // HEAD_LASER, HEAD_PRINTING,
+    CUSTOM_SERVER_NAME,
+    HEAD_CNC,
+    HEAD_LASER,
+    HEAD_PRINTING,
     IMAGE_WIFI_CONNECTED,
     IMAGE_WIFI_CONNECTING,
-    // IMAGE_WIFI_ERROR,
     IMAGE_WIFI_WAITING,
+    LEFT_EXTRUDER,
+    PRINTING_MANAGER_TYPE_EXTRUDER,
+    RIGHT_EXTRUDER,
     WORKFLOW_STATUS_IDLE,
     WORKFLOW_STATUS_PAUSED,
     WORKFLOW_STATUS_RUNNING,
     WORKFLOW_STATUS_UNKNOWN,
-    LEVEL_TWO_POWER_LASER_FOR_SM2,
-    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
-    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
-    HEAD_PRINTING,
-    HEAD_LASER,
-    HEAD_CNC,
-    LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
-    CUSTOM_SERVER_NAME,
-    LEFT_EXTRUDER,
-    RIGHT_EXTRUDER,
-    PRINTING_MANAGER_TYPE_EXTRUDER,
 } from '../../../constants';
 import {
+    isDualExtruder,
+    LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
+    LEVEL_TWO_POWER_LASER_FOR_SM2,
     MACHINE_SERIES,
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
 } from '../../../constants/machines';
-// import widgetStyles from '../styles.styl';
 import styles from './index.styl';
 import ModalSmall from '../../components/Modal/ModalSmall';
 import Modal from '../../components/Modal';
@@ -48,17 +45,24 @@ import ModalSmallInput from '../../components/Modal/ModalSmallInput';
 import MismatchModal from './MismatchModal';
 import { Server } from '../../../flux/machine/Server';
 import { actions as printingActions } from '../../../flux/printing';
-// import { machineStore } from '../../../store/local-storage';
 
 export const ModuleStatus = ({ moduleName, status }) => {
     return (
         <div className="sm-flex align-center padding-horizontal-8 background-grey-3 border-radius-12 margin-top-8 margin-right-8">
             <span className="margin-right-8 tooltip-message height-24">{moduleName}</span>
-            <span style={{ display: 'inline-block', backgroundColor: status ? '#4CB518' : '#FFA940', height: 6, width: 6, borderRadius: 3 }} />
+            <span style={{
+                display: 'inline-block',
+                backgroundColor: status ? '#4CB518' : '#FFA940',
+                height: 6,
+                width: 6,
+                borderRadius: 3
+            }}
+            />
         </div>
     );
 };
 let timer = null;
+
 function CheckingNozzleSize() {
     const { toolHead } = useSelector(state => state?.workspace);
     const { nozzleSizeList, isConnected } = useSelector(state => state?.machine);
@@ -78,6 +82,7 @@ function CheckingNozzleSize() {
     function hideNozzleModal() {
         setshowNozzleModal(false);
     }
+
     function setDiameter(direction, value) {
         const def = direction === LEFT_EXTRUDER
             ? extruderLDefinition
@@ -91,9 +96,10 @@ function CheckingNozzleSize() {
             })
         );
     }
+
     useEffect(() => {
         if (isConnected) {
-            if (toolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
+            if (isDualExtruder(toolHead)
                 && ((nozzleSizeList[0] && leftDiameter && nozzleSizeList[0] !== leftDiameter)
                     || nozzleSizeList[1] && rightDiameter && (nozzleSizeList[1] !== rightDiameter))) {
                 if (nozzleSizeList[0] !== leftDiameter) {
@@ -129,8 +135,8 @@ function CheckingNozzleSize() {
                     >
                         {i18n._('key-Workspace/Mismatch-The configured Nozzle Diameter ({{diameterInfo}}) is inconsistent with that of the connected machine ({{connectedDameterInfo}}). Luban has updated the configuration to be consistent with the machine nozzle.',
                             {
-                                diameterInfo: toolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? `L: ${leftDiameter}mm; R: ${rightDiameter}mm` : `L: ${leftDiameter}mm`,
-                                connectedDameterInfo: toolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? `L: ${nozzleSizeList[0]}mm; R: ${nozzleSizeList[1]}mm` : `L: ${nozzleSizeList[0]}mm`,
+                                diameterInfo: isDualExtruder(toolHead) ? `L: ${leftDiameter}mm; R: ${rightDiameter}mm` : `L: ${leftDiameter}mm`,
+                                connectedDameterInfo: isDualExtruder(toolHead) ? `L: ${nozzleSizeList[0]}mm; R: ${nozzleSizeList[1]}mm` : `L: ${nozzleSizeList[0]}mm`,
                             })}
                     </Modal.Body>
                     <Modal.Footer>
@@ -148,6 +154,7 @@ function CheckingNozzleSize() {
         </div>
     );
 }
+
 function WifiConnection() {
     const {
         servers,
@@ -439,7 +446,7 @@ function WifiConnection() {
     const updateModuleStatusList = useMemo(() => {
         const newModuleStatusList = [];
         if (headType === HEAD_PRINTING) {
-            if (toolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+            if (isDualExtruder(toolHead)) {
                 newModuleStatusList.push({
                     key: 'headtype',
                     moduleName: i18n._('key-App/Settings/MachineSettings-Dual Extruder Toolhead'),
@@ -584,13 +591,13 @@ function WifiConnection() {
                         </span>
                         <span className={styles['connection-state-icon']}>
                             {workflowStatus === WORKFLOW_STATUS_UNKNOWN
-                                && <i className="sm-icon-14 sm-icon-idle" />}
+                            && <i className="sm-icon-14 sm-icon-idle" />}
                             {workflowStatus === WORKFLOW_STATUS_IDLE
-                                && <i className="sm-icon-14 sm-icon-idle" />}
+                            && <i className="sm-icon-14 sm-icon-idle" />}
                             {workflowStatus === WORKFLOW_STATUS_PAUSED
-                                && <i className="sm-icon-14 sm-icon-paused" />}
+                            && <i className="sm-icon-14 sm-icon-paused" />}
                             {workflowStatus === WORKFLOW_STATUS_RUNNING
-                                && <i className="sm-icon-14 sm-icon-running" />}
+                            && <i className="sm-icon-14 sm-icon-running" />}
                         </span>
                     </div>
                     {!!currentModuleStatusList && !!currentModuleStatusList.length && (
@@ -661,8 +668,8 @@ function WifiConnection() {
         </div>
     );
 }
-WifiConnection.propTypes = {
-};
+
+WifiConnection.propTypes = {};
 
 ModuleStatus.propTypes = {
     moduleName: PropTypes.string,

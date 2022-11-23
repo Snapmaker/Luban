@@ -3,17 +3,20 @@ import cloneDeep from 'lodash/cloneDeep';
 import { find, keys, some } from 'lodash';
 import pkg from '../../../package.json';
 import {
+    COORDINATE_MODE_BOTTOM_CENTER,
+    COORDINATE_MODE_CENTER,
+    DISPLAYED_TYPE_MODEL,
     HEAD_CNC,
     HEAD_LASER,
     HEAD_PRINTING,
     HEAD_TYPE_ENV_NAME,
-    SOURCE_TYPE,
-    PROCESS_MODE_MESH,
-    COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_CENTER, PAGE_EDITOR, DISPLAYED_TYPE_MODEL,
-    MAX_RECENT_FILES_LENGTH,
     LOAD_MODEL_FROM_OUTER,
-    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2
+    MAX_RECENT_FILES_LENGTH,
+    PAGE_EDITOR,
+    PROCESS_MODE_MESH,
+    SOURCE_TYPE
 } from '../../constants';
+import { SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 } from '../../constants/machines';
 import api from '../../api';
 import { actions as printingActions } from '../printing';
 import { actions as editorActions } from '../editor';
@@ -21,7 +24,7 @@ import { actions as workspaceActions } from '../workspace';
 import { actions as appGlobalActions } from '../app-global';
 import { bubbleSortByAttribute } from '../../lib/numeric-utils';
 import { UniformToolpathConfig } from '../../lib/uniform-toolpath-config';
-import { checkIsSnapmakerProjectFile, checkIsGCodeFile } from '../../lib/check-name';
+import { checkIsGCodeFile, checkIsSnapmakerProjectFile } from '../../lib/check-name';
 import { actions as operationHistoryActions } from '../operation-history';
 import { machineStore } from '../../store/local-storage';
 

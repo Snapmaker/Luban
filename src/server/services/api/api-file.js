@@ -12,18 +12,17 @@ import { unzipFile, zipFolder } from '../../lib/archive';
 import { packFirmware } from '../../lib/firmware-build';
 import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../constants';
 import {
-    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
-    SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
     LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
-    STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
-    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     LEVEL_ONE_POWER_LASER_FOR_SM2,
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+    STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
     STANDARD_CNC_TOOLHEAD_FOR_SM2
-} from '../../../app/constants';
+} from '../../../app/constants/machines';
 import { removeSpecialChars } from '../../../shared/lib/utils';
 import { generateRandomPathName } from '../../../shared/lib/random-utils';
 import { convertFileToSTL } from '../../lib/model-to-stl';
-import { getMachineSeriesWithToolhead, MACHINE_TOOL_HEADS } from '../../../app/constants/machines';
+import { getMachineSeriesWithToolhead, isDualExtruder, MACHINE_TOOL_HEADS } from '../../../app/constants/machines';
 
 const log = logger('api:file');
 
@@ -356,7 +355,8 @@ export const saveEnv = async (req, res) => {
         if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
             copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialId}.def.json`, `${envDir}/${config.defaultMaterialId}.def.json`);
         }
-        if (machineInfo?.toolHead?.printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && config.defaultMaterialIdRight && /^material.([0-9_]+)$/.test(config.defaultMaterialIdRight)) {
+        const isDual = isDualExtruder(machineInfo?.toolHead?.printingToolhead);
+        if (isDual && config.defaultMaterialIdRight && /^material.([0-9_]+)$/.test(config.defaultMaterialIdRight)) {
             copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialIdRight}.def.json`, `${envDir}/${config.defaultMaterialIdRight}.def.json`);
         }
         if (config.defaultQualityId && /^quality.([0-9_]+)$/.test(config.defaultQualityId)) {
@@ -425,7 +425,8 @@ export const recoverEnv = async (req, res) => {
         if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
             copyFileSync(`${envDir}/${config.defaultMaterialId}.def.json`, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialId}.def.json`);
         }
-        if (config.machineInfo?.toolHead?.printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && config.defaultMaterialIdRight && /^material.([0-9_]+)$/.test(config.defaultMaterialIdRight)) {
+        const isDual = isDualExtruder(config.machineInfo?.toolHead?.printingToolhead);
+        if (isDual && config.defaultMaterialIdRight && /^material.([0-9_]+)$/.test(config.defaultMaterialIdRight)) {
             copyFileSync(`${envDir}/${config.defaultMaterialIdRight}.def.json`, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialIdRight}.def.json`);
         }
         if (config.defaultQualityId && /^quality.([0-9_]+)$/.test(config.defaultQualityId)) {

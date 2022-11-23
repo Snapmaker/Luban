@@ -4,20 +4,28 @@ import readline from 'readline';
 import path from 'path';
 import crypto from 'crypto';
 import os from 'os';
-import { includes } from 'lodash';
+import {includes} from 'lodash';
 import CalibrationInfo from 'snapmaker-sacp-sdk/models/CalibrationInfo';
-import CoordinateInfo, { Direction } from 'snapmaker-sacp-sdk/models/CoordinateInfo';
-import MovementInstruction, { MoveDirection } from 'snapmaker-sacp-sdk/models/MovementInstruction';
+import CoordinateInfo, {Direction} from 'snapmaker-sacp-sdk/models/CoordinateInfo';
+import MovementInstruction, {MoveDirection} from 'snapmaker-sacp-sdk/models/MovementInstruction';
 import wifiServerManager from '../WifiServerManager';
-import type SocketServer from '../../../lib/SocketManager';
-import { ConnectedData, EventOptions } from '../types';
+import {ConnectedData, EventOptions} from '../types';
 import logger from '../../../lib/logger';
-import { CONNECTION_TYPE_WIFI, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
-import Business, { CoordinateType, RequestPhotoInfo, ToolHeadType } from './Business';
+import {CONNECTION_TYPE_WIFI, HEAD_CNC, HEAD_LASER, HEAD_PRINTING} from '../../../constants';
+import Business, {CoordinateType, RequestPhotoInfo, ToolHeadType} from './Business';
 import DataStorage from '../../../DataStorage';
 // import MovementInstruction, { MoveDirection } from '../../lib/SACP-SDK/SACP/business/models/MovementInstruction';
 import SocketBASE from './SACP-BASE';
-import { CNC_MODULE, EMERGENCY_STOP_BUTTON, LASER_MODULE, MODULEID_TOOLHEAD_MAP, PRINTING_MODULE, ROTARY_MODULES, SERIAL_MAP_SACP } from '../../../../app/constants';
+import {
+    CNC_MODULE,
+    EMERGENCY_STOP_BUTTON,
+    LASER_MODULE,
+    PRINTING_MODULE,
+    ROTARY_MODULES,
+    SERIAL_MAP_SACP
+} from '../../../../app/constants';
+import {MODULEID_TOOLHEAD_MAP} from '../../../../app/constants/machines';
+import type SocketServer from '../../../lib/SocketManager';
 
 const log = logger('lib:SocketTCP');
 

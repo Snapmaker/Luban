@@ -3,29 +3,26 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { capitalize } from 'lodash';
 import Anchor from '../../components/Anchor';
-// import SvgIcon from '../../components/SvgIcon';
 import { Button } from '../../components/Buttons';
-// import EditComponent from '../../components/Edit';
 import i18n from '../../../lib/i18n';
-// import { NumberInput as Input } from '../../components/Input';
 import { actions as machineActions } from '../../../flux/machine';
 import JogDistance from './JogDistance';
 import WorkSpeed from './WorkSpeed';
 import {
-    WORKFLOW_STATUS_PAUSED,
-    WORKFLOW_STATUS_RUNNING,
-    CONNECTION_Z_OFFSET,
-    CONNECTION_LOAD_FILAMENT,
-    CONNECTION_UNLOAD_FILAMENT,
-    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
-    LEFT_EXTRUDER_MAP_NUMBER,
-    CONNECTION_NOZZLE_TEMPERATURE,
-    RIGHT_EXTRUDER_MAP_NUMBER,
     CONNECTION_BED_TEMPERATURE,
+    CONNECTION_LOAD_FILAMENT,
+    CONNECTION_NOZZLE_TEMPERATURE,
+    CONNECTION_UNLOAD_FILAMENT,
     CONNECTION_WORK_NOZZLE,
-    WORKFLOW_STATUS_PAUSING,
+    CONNECTION_Z_OFFSET,
     LEFT_EXTRUDER,
+    LEFT_EXTRUDER_MAP_NUMBER,
+    RIGHT_EXTRUDER_MAP_NUMBER,
+    WORKFLOW_STATUS_PAUSED,
+    WORKFLOW_STATUS_PAUSING,
+    WORKFLOW_STATUS_RUNNING,
 } from '../../../constants';
+import { isDualExtruder } from '../../../constants/machines';
 import { controller } from '../../../lib/controller';
 import ParamsWrapper from './ParamsWrapper';
 
@@ -189,12 +186,12 @@ class Printing extends PureComponent {
         const { zOffsetMarks, leftZOffsetValue, rightZOffsetValue } = this.state;
         const actions = this.actions;
 
-        const nozzleTempratureTitle = i18n._(`${printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? 'key-Workspace/Marlin-Left Nozzle Temp' : 'key-Workspace/Connection-Nozzle Temp.'}`);
+        const nozzleTempratureTitle = i18n._(`${isDualExtruder(printingToolhead) ? 'key-Workspace/Marlin-Left Nozzle Temp' : 'key-Workspace/Connection-Nozzle Temp.'}`);
         const nozzleRightTempratureTitle = i18n._('key-Workspace/Marlin-Right Nozzle Temp');
 
         return (
             <div>
-                {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
+                {isDualExtruder(printingToolhead) && (
                     <div>
                         <div>
                             <span>{i18n._('key-unused-Current Work Nozzle')}</span>
@@ -250,7 +247,7 @@ class Printing extends PureComponent {
                     </div>
                 )}
 
-                {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
+                {isDualExtruder(printingToolhead) && (
                     <ParamsWrapper
                         handleSubmit={(value) => { this.actions.updateNozzleTemp(RIGHT_EXTRUDER_MAP_NUMBER, value); }}
                         initValue={this.props.nozzleRightTargetTemperature}
@@ -270,7 +267,7 @@ class Printing extends PureComponent {
                     </ParamsWrapper>
 
                 )}
-                {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && !this.isPausingOrPrinting() && (
+                {isDualExtruder(printingToolhead) && !this.isPausingOrPrinting() && (
                     <div className="sm-flex justify-flex-end margin-vertical-8">
                         <div>
                             <Button
@@ -343,7 +340,7 @@ class Printing extends PureComponent {
                         />
                     </div>
                 )}
-                {isConnected && this.isPrinting() && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
+                {isConnected && this.isPrinting() && isDualExtruder(printingToolhead) && (
                     <div className="sm-parameter-row">
                         <span className="sm-parameter-row__label">{i18n._('key-unused-Right Z Offset')}</span>
                         <Anchor

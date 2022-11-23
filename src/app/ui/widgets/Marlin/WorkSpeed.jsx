@@ -33,7 +33,7 @@ class WorkSpeed extends PureComponent {
             });
             controller.emitEvent(CONNECTION_WORKSPEED_FACTOR, {
                 workSpeedValue: value,
-                toolHead: this.props.toolHead, // DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
+                toolHead: this.props.toolHead,
             });
         }
     };

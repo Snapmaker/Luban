@@ -1,10 +1,10 @@
-import { find, includes, filter, cloneDeep, findIndex, orderBy } from 'lodash';
+import { cloneDeep, filter, find, findIndex, includes, orderBy } from 'lodash';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { CaretRightOutlined } from '@ant-design/icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Menu, message, Tooltip, Spin } from 'antd';
+import { Menu, message, Spin, Tooltip } from 'antd';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
 import { materialCategoryRank, useGetDefinitions } from '../../views/ProfileManager';
@@ -14,12 +14,11 @@ import { LEFT, RIGHT } from '../../../../server/constants';
 import { Button } from '../../components/Buttons';
 import AddMaterialModel from './addMaterialModel';
 import {
-    MATERIAL_TYPE_OPTIONS,
-    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+    HEAD_PRINTING,
     LEFT_EXTRUDER,
+    MATERIAL_TYPE_OPTIONS,
     PRINTING_MANAGER_TYPE_MATERIAL,
-    RIGHT_EXTRUDER,
-    HEAD_PRINTING
+    RIGHT_EXTRUDER
 } from '../../../constants';
 import PrintingManager from '../../views/PrintingManager';
 import { machineStore } from '../../../store/local-storage';
@@ -27,6 +26,7 @@ import SvgIcon from '../../components/SvgIcon';
 import modal from '../../../lib/modal';
 import styles from './styles.styl';
 import Dropdown from '../../components/Dropdown';
+import { isDualExtruder } from '../../../constants/machines';
 
 const MATERIAL_TYPE_ARRAY = MATERIAL_TYPE_OPTIONS.map(d => d.category);
 const MaterialSettings = ({ toolMap, loading }) => {
@@ -322,32 +322,38 @@ const MaterialSettings = ({ toolMap, loading }) => {
                         await onChangeFileForManager(e);
                     }}
                 />
-                <div className={`padding-horizontal-4 padding-vertical-4 border-radius-16 sm-flex background-grey-2 ${toolMap.printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 ? 'width-532' : 'width-272'}`}>
+                <div className={`padding-horizontal-4 padding-vertical-4 border-radius-16 sm-flex background-grey-2 ${isDualExtruder(toolMap.printingToolhead) ? 'width-532' : 'width-272'}`}>
                     <Anchor onClick={() => setActiveNozzle(LEFT)} className={`padding-horizontal-16 padding-vertical-8 border-radius-12 width-264 height-68 ${activeNozzle === LEFT ? 'background-color-white' : ''}`}>
-                        {toolMap.printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
-                            <div className="heading-3">
-                                {i18n._('key-setting/Left-Nozzle')}
-                            </div>
-                        )}
-                        {toolMap.printingToolhead !== DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
-                            <div className="heading-3">
-                                {i18n._('key-Laser/ToolpathParameters-Material')}
-                            </div>
-                        )}
+                        {
+                            isDualExtruder(toolMap.printingToolhead) && (
+                                <div className="heading-3">
+                                    {i18n._('key-setting/Left-Nozzle')}
+                                </div>
+                            )
+                        }
+                        {
+                            !isDualExtruder(toolMap.printingToolhead) && (
+                                <div className="heading-3">
+                                    {i18n._('key-Laser/ToolpathParameters-Material')}
+                                </div>
+                            )
+                        }
                         <div className="sm-flex align-center margin-top-8">
                             <div className="height-16 width-16 border-default-grey-1 " style={{ background: `${leftMaterialDefinition?.settings?.color?.default_value}` }} />
                             <span className="margin-left-8">{i18n._(leftMaterialDefinition?.i18nName || leftMaterialDefinition?.name)}</span>
                         </div>
                     </Anchor>
-                    {toolMap.printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
-                        <Anchor onClick={() => setActiveNozzle(RIGHT)} className={`padding-horizontal-16 padding-vertical-8 border-radius-12 width-264 height-68 ${activeNozzle === RIGHT ? 'background-color-white' : ''}`}>
-                            <div className="heading-3">{i18n._('key-setting/Right-Nozzle')}</div>
-                            <div className="sm-flex align-center margin-top-8">
-                                <div className="height-16 width-16 border-default-grey-1" style={{ background: `${rightMaterialDefinition?.settings?.color?.default_value}` }} />
-                                <span className="margin-left-8">{i18n._(rightMaterialDefinition?.i18nName || rightMaterialDefinition?.name)}</span>
-                            </div>
-                        </Anchor>
-                    )}
+                    {
+                        isDualExtruder(toolMap.printingToolhead) && (
+                            <Anchor onClick={() => setActiveNozzle(RIGHT)} className={`padding-horizontal-16 padding-vertical-8 border-radius-12 width-264 height-68 ${activeNozzle === RIGHT ? 'background-color-white' : ''}`}>
+                                <div className="heading-3">{i18n._('key-setting/Right-Nozzle')}</div>
+                                <div className="sm-flex align-center margin-top-8">
+                                    <div className="height-16 width-16 border-default-grey-1" style={{ background: `${rightMaterialDefinition?.settings?.color?.default_value}` }} />
+                                    <span className="margin-left-8">{i18n._(rightMaterialDefinition?.i18nName || rightMaterialDefinition?.name)}</span>
+                                </div>
+                            </Anchor>
+                        )
+                    }
                 </div>
                 <div className="sm-flex">
                     <Button
