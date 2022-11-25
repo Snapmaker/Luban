@@ -189,7 +189,7 @@ function ConfigValueBox({
                                                                     managerType={
                                                                         managerType
                                                                     }
-                                                                    officalDefinition={
+                                                                    officialDefinition={
                                                                         !!definitionForManager?.isDefault
                                                                     }
                                                                 />

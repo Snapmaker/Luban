@@ -62,9 +62,6 @@
         "extruder_prime_pos_y": {
             "default_value": 0
         },
-        "machine_heated_bed": {
-            "default_value": true
-        },
         "material_print_temperature_layer_0": {
             "default_value": 215
         },

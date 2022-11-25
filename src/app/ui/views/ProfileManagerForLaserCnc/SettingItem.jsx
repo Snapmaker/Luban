@@ -11,7 +11,7 @@ import TipTrigger from '../../components/TipTrigger';
 import SvgIcon from '../../components/SvgIcon';
 import Popover from '../../components/Popover';
 
-function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onChangeDefinition, defaultValue, styleSize = 'large', managerType, officalDefinition }) {
+function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onChangeDefinition, defaultValue, styleSize = 'large', managerType, officialDefinition }) {
     const [showColor, setShowColor] = useState(false);
 
     const setting = settings[definitionKey];
@@ -205,7 +205,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
                             onChange={(option) => {
                                 onChangeDefinition(definitionKey, option.value);
                             }}
-                            disabled={officalDefinition && managerType === HEAD_CNC && definitionKey === 'tool_type'}
+                            disabled={officialDefinition && managerType === HEAD_CNC && definitionKey === 'tool_type'}
                         />
                     )}
                     {type === undefined && (
@@ -259,7 +259,7 @@ SettingItem.propTypes = {
     defaultValue: PropTypes.object,
     styleSize: PropTypes.string,
     managerType: PropTypes.string,
-    officalDefinition: PropTypes.bool
+    officialDefinition: PropTypes.bool
 };
 
 export default React.memo(SettingItem);

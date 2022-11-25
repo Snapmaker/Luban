@@ -199,8 +199,6 @@ const Content = ({
 
     const currentEditor = editorType === EXTRUDER_TAB ? extruderEditor : modelEditor;
 
-    console.log('current editor =', currentEditor);
-
     return (
         <div className="margin-horizontal-16 margin-vertical-16 height-all-minus-164 border-radius-16 flex-grow-1 width-all-minus-296">
             <div className="sm-flex sm-flex-direction-c height-percent-100">

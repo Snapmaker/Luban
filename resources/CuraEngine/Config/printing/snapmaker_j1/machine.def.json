@@ -9,225 +9,70 @@
     },
     "settings": {
         "machine_name": {
-            "label": "Machine Type",
-            "description": "The name of your 3D printer model.",
-            "default_value": "Snapmaker J1",
-            "type": "str",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": "Snapmaker J1"
         },
         "machine_show_variants": {
-            "label": "Show Machine Variants",
-            "description": "Whether to show the different variants of this machine, which are described in separate json files.",
-            "default_value": false,
-            "type": "bool",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": false
         },
         "machine_start_gcode": {
-            "label": "Start G-code",
-            "description": "G-code commands to be executed at the very start - separated by \\n.",
-            "default_value": ";--- Start G-code Begin ---\\nM104 S{material_print_temperature_layer_0} ;Set Hotend Temperature\\nM140 S{material_bed_temperature_layer_0} ;Set Bed Temperature\\nG28 ;Home\\nG1 Z0.8\\nM109 S{material_print_temperature_layer_0}\\nM190 S{material_bed_temperature_layer_0}\\nG1 Z0.8 F6000\\nM201 X10000 Y10000 Z500 E5000\\nM205 V5\\nG92 E0\\nG1 F200 E2\\nG92 E0\\n;--- Start G-code End ---\\n",
-            "type": "str",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": ";--- Start G-code Begin ---\\nM104 S{material_print_temperature_layer_0} ;Set Hotend Temperature\\nM140 S{material_bed_temperature_layer_0} ;Set Bed Temperature\\nG28 ;Home\\nG1 Z0.8\\nM109 S{material_print_temperature_layer_0}\\nM190 S{material_bed_temperature_layer_0}\\nG1 Z0.8 F6000\\nM201 X10000 Y10000 Z500 E5000\\nM205 V5\\nG92 E0\\nG1 F200 E2\\nG92 E0\\n;--- Start G-code End ---\\n"
         },
         "machine_end_gcode": {
-            "label": "End G-code",
-            "description": "G-code commands to be executed at the very end - separated by \\n.",
-            "default_value": ";--- End G-code Begin ---\\nM104 S0\\nM140 S0\\nG92 E0\\nG1 E-1 F300 ;retract the filament\\n\\nG92 E0\\nG28 Z\\nG28 X0 Y0\\nM84\\n;--- End G-code End ---\\n",
-            "type": "str",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": ";--- End G-code Begin ---\\nM104 S0\\nM140 S0\\nG92 E0\\nG1 E-1 F300 ;retract the filament\\n\\nG92 E0\\nG28 Z\\nG28 X0 Y0\\nM84\\n;--- End G-code End ---\\n"
         },
         "material_guid": {
-            "label": "Material GUID",
-            "description": "GUID of the material. This is set automatically.",
-            "default_value": "",
-            "type": "str",
-            "enabled": false
+            "default_value": ""
         },
         "material_diameter": {
-            "label": "Diameter",
-            "description": "Adjusts the diameter of the filament used. Match this value with the diameter of the used filament.",
-            "unit": "mm",
-            "type": "float",
-            "default_value": 2.85,
-            "minimum_value": "0.0001",
-            "minimum_value_warning": "0.4",
-            "maximum_value_warning": "3.5",
-            "enabled": "machine_gcode_flavor != \"UltiGCode\"",
-            "settable_per_mesh": false,
-            "settable_per_extruder": true
+            "default_value": 1.75
         },
         "material_bed_temp_wait": {
-            "label": "Wait for Build Plate Heatup",
-            "description": "Whether to insert a command to wait until the build plate temperature is reached at the start.",
-            "default_value": true,
-            "type": "bool",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": true
         },
         "material_print_temp_wait": {
-            "label": "Wait for Nozzle Heatup",
-            "description": "Whether to wait until the nozzle temperature is reached at the start.",
-            "default_value": true,
-            "type": "bool",
-            "enabled": "machine_nozzle_temp_enabled",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": true
         },
         "material_print_temp_prepend": {
-            "label": "Include Material Temperatures",
-            "description": "Whether to include nozzle temperature commands at the start of the gcode. When the start_gcode already contains nozzle temperature commands Cura frontend will automatically disable this setting.",
-            "default_value": true,
-            "type": "bool",
-            "enabled": "machine_nozzle_temp_enabled",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": false
         },
         "material_bed_temp_prepend": {
-            "label": "Include Build Plate Temperature",
-            "description": "Whether to include build plate temperature commands at the start of the gcode. When the start_gcode already contains build plate temperature commands Cura frontend will automatically disable this setting.",
-            "default_value": true,
-            "type": "bool",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": false
         },
         "machine_width": {
-            "label": "Machine Width",
-            "description": "The width (X-direction) of the printable area.",
-            "default_value": 100,
-            "type": "float",
-            "minimum_value": "0.001",
-            "maximum_value": "2000000",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": 100
         },
         "machine_depth": {
-            "label": "Machine Depth",
-            "description": "The depth (Y-direction) of the printable area.",
-            "default_value": 100,
-            "type": "float",
-            "minimum_value": "0.001",
-            "maximum_value": "2000000",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": 100
         },
         "machine_shape": {
-            "label": "Build Plate Shape",
-            "description": "The shape of the build plate without taking unprintable areas into account.",
-            "default_value": "rectangular",
-            "type": "enum",
-            "options": {
-                "rectangular": "Rectangular",
-                "elliptic": "Elliptic"
-            },
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": "rectangular"
         },
         "machine_buildplate_type": {
-            "label": "Build Plate Material",
-            "description": "The material of the build plate installed on the printer.",
-            "default_value": "glass",
-            "type": "enum",
-            "options": {
-                "glass": "Glass",
-                "aluminum": "Aluminum"
-            },
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": "glass"
         },
         "machine_height": {
-            "label": "Machine Height",
-            "description": "The height (Z-direction) of the printable area.",
-            "default_value": 100,
-            "type": "float",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": 100
         },
         "machine_heated_bed": {
-            "label": "Has Heated Build Plate",
-            "description": "Whether the machine has a heated build plate present.",
-            "default_value": false,
-            "type": "bool",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": true
         },
         "machine_heated_build_volume": {
-            "label": "Has Build Volume Temperature Stabilization",
-            "description": "Whether the machine is able to stabilize the build volume temperature.",
-            "default_value": false,
-            "type": "bool",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": false
         },
         "machine_always_write_active_tool": {
-            "label": "Always Write Active Tool",
-            "description": "Write active tool after sending temp commands to inactive tool. Required for Dual Extruder printing with Smoothie or other firmware with modal tool commands.",
-            "default_value": false,
-            "type": "bool",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": false
         },
         "machine_center_is_zero": {
-            "label": "Is Center Origin",
-            "description": "Whether the X/Y coordinates of the zero position of the printer is at the center of the printable area.",
-            "default_value": false,
-            "type": "bool",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": false
         },
         "machine_extruder_count": {
-            "label": "Number of Extruders",
-            "description": "Number of extruder trains. An extruder train is the combination of a feeder, bowden tube, and nozzle.",
-            "default_value": 2,
-            "minimum_value": "1",
-            "maximum_value": "16",
-            "type": "int",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": 2
         },
         "extruders_enabled_count": {
-            "label": "Number of Extruders That Are Enabled",
-            "description": "Number of extruder trains that are enabled; automatically set in software",
-            "value": "machine_extruder_count",
-            "default_value": 2,
-            "minimum_value": "1",
-            "maximum_value": "16",
-            "type": "int",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": 2
         },
         "machine_nozzle_tip_outer_diameter": {
-            "label": "Outer Nozzle Diameter",
-            "description": "The outer diameter of the tip of the nozzle.",
-            "unit": "mm",
-            "default_value": 1,
-            "type": "float",
-            "settable_per_mesh": false,
-            "settable_per_extruder": true,
-            "settable_per_meshgroup": false,
-            "settable_globally": false
+            "default_value": 1
         },
         "machine_nozzle_head_distance": {
             "label": "Nozzle Length",

@@ -81,7 +81,7 @@ function SettingItem({
     defaultValue,
     styleSize = 'large',
     managerType,
-    officalDefinition,
+    officialDefinition,
     showTooltip = false,
     onClick,
     definitionCategory,
@@ -211,7 +211,7 @@ function SettingItem({
                         onChange={(option) => {
                             onChangeDefinition(definitionKey, option.value);
                         }}
-                        disabled={(officalDefinition && managerType === HEAD_CNC && definitionKey === 'tool_type')}
+                        disabled={(officialDefinition && managerType === HEAD_CNC && definitionKey === 'tool_type')}
                     />
                 )}
                 {type === 'enumWithImage' && (
@@ -229,7 +229,7 @@ function SettingItem({
                         onChange={(option) => {
                             onChangeDefinition(definitionKey, option.value);
                         }}
-                        disabled={officalDefinition && managerType === HEAD_CNC && definitionKey === 'tool_type'}
+                        disabled={officialDefinition && managerType === HEAD_CNC && definitionKey === 'tool_type'}
                     />
                 )}
                 {type === undefined && (
@@ -284,7 +284,7 @@ SettingItem.propTypes = {
     defaultValue: PropTypes.object,
     styleSize: PropTypes.string,
     managerType: PropTypes.string,
-    officalDefinition: PropTypes.bool,
+    officialDefinition: PropTypes.bool,
     showTooltip: PropTypes.bool,
     definitionCategory: PropTypes.string,
     onChangeMaterialType: PropTypes.func,

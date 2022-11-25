@@ -1532,7 +1532,7 @@ export const actions = {
                 series,
                 machineNozzleSize: actualExtruderDefinition.settings?.machine_nozzle_size?.default_value,
                 originalConfigId: machineStore.get('defaultConfigId') ? JSON.parse(machineStore.get('defaultConfigId')) : {}
-            }))
+            }));
             dispatch(actions.updateState({ qualityDefinitions: [...qualityDefinitions] }));
         }
         if (shouldUpdateIsOversteped) {
@@ -2171,7 +2171,7 @@ export const actions = {
             materialDefinitions,
             stopArea: { left, front }
         } = getState().printing;
-        modelGroup.updateClippingPlane()
+        modelGroup.updateClippingPlane();
         const {
             size,
             series,
@@ -2186,7 +2186,6 @@ export const actions = {
         const activeQualityDefinition = qualityDefinitions.find(
             (d) => d.definitionId === defaultQualityId
         );
-
         const indexL = materialDefinitions.findIndex(
             (d) => d.definitionId === defaultMaterialId
         );
@@ -2302,13 +2301,13 @@ export const actions = {
         );
         const renderGcodeFileName = `${currentModelName}_${new Date().getTime()}`;
 
-        activeQualityDefinition.settings.machine_heated_bed.default_value = extruderLDefinition.settings.machine_heated_bed.default_value;
         activeQualityDefinition.settings.material_bed_temperature.default_value = extruderLDefinition.settings.material_bed_temperature.default_value;
         activeQualityDefinition.settings.material_bed_temperature_layer_0.default_value = extruderLDefinition.settings.material_bed_temperature_layer_0.default_value;
 
         const activeExtruderDefinition = helpersExtruderConfig.adhesion === '0'
             ? extruderLDefinition
             : extruderRDefinition;
+
         const finalDefinition = definitionManager.finalizeActiveDefinition(
             activeQualityDefinition,
             activeExtruderDefinition,
@@ -2329,7 +2328,7 @@ export const actions = {
         finalDefinition.settings.support_roof_extruder_nr.default_value = supportExtruder;
         finalDefinition.settings.support_bottom_extruder_nr.default_value = supportExtruder;
 
-        const options = {}
+        const options = {};
         if (modelGroup.models.every(model => !model.hasOversteppedHotArea)) {
             options.center = 'Center'
         } else {

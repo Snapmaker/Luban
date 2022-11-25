@@ -198,7 +198,7 @@ function ConfigValueBox({
         isDefaultDefinition,
         onChangeDefinition: _onChangeCustomConfig,
         managerType: _managerType,
-        officalDefinition,
+        officialDefinition,
         categoryKey,
         definitionCategory
         // selectParamsType: _selectParamsType
@@ -219,7 +219,7 @@ function ConfigValueBox({
                                 }}
                                 styleSize="large"
                                 managerType={_managerType}
-                                officalDefinition={officalDefinition}
+                                officialDefinition={officialDefinition}
                                 onClick={handleUpdateProfileKey}
                                 categoryKey={categoryKey}
                                 definitionCategory={definitionCategory}
@@ -231,7 +231,7 @@ function ConfigValueBox({
                                 onChangeDefinition: _onChangeCustomConfig,
                                 managerType: _managerType,
                                 definitionCategory,
-                                officalDefinition,
+                                officialDefinition,
                                 categoryKey
                             })}
                         </div>
@@ -250,7 +250,7 @@ function ConfigValueBox({
                             }}
                             styleSize="large"
                             managerType={_managerType}
-                            officalDefinition={officalDefinition}
+                            officialDefinition={officialDefinition}
                             onClick={handleUpdateProfileKey}
                             categoryKey={categoryKey}
                             definitionCategory={definitionCategory}
@@ -493,7 +493,7 @@ function ConfigValueBox({
                                                                     isDefaultDefinition: definitionForManager?.isRecommended,
                                                                     onChangeDefinition,
                                                                     managerType,
-                                                                    officalDefinition: !!definitionForManager?.isDefault,
+                                                                    officialDefinition: !!definitionForManager?.isDefault,
                                                                     categoryKey: key,
                                                                     definitionCategory: definitionForManager.category
                                                                     // selectParamsType

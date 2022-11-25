@@ -37,6 +37,8 @@ const qualityProfileArr = new Set();
 export class DefinitionLoader {
     printingProfileLevel = {};
 
+    // [category: string]: Array<string>
+    // category -> category keys
     materialProfileLevel = {};
 
     printingProfileLevelForMesh = {};
@@ -220,6 +222,7 @@ export class DefinitionLoader {
                         this.ownKeys.add(key);
                     }
 
+                    // read regular fields and overwrite
                     for (const field of SETTING_FIELDS) {
                         if (setting[field] !== undefined) {
                             this.settings[key][field] = setting[field];

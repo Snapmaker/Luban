@@ -33,13 +33,13 @@ const extruderRelationSettingsKeys = [
     'machine_nozzle_size',
 ];
 
-function resolveMachineDefinition(item, changedArray = [], changedArrayWithoutExtruder = []){
+function resolveMachineDefinition(item, changedArray = [], changedArrayWithoutExtruder = []) {
     if (MATERIAL_REGEX.test(item.definitionId)) {
         resolveDefinition(item, changedArray);
-    }else if (QUALITY_REGEX.test(item.definitionId)) {
+    } else if (QUALITY_REGEX.test(item.definitionId)) {
         if (item.isDefault && item.definitionId !== 'quality.normal_other_quality') {
             resolveDefinition(item, changedArrayWithoutExtruder);
-        }else {
+        } else {
             resolveDefinition(item, changedArray);
         }
     }
@@ -300,34 +300,34 @@ class DefinitionManager {
     }
 
     async updateMachineDefinition({
-        isNozzleSize,
-        machineDefinition,
-        materialDefinitions,
-        qualityDefinitions
-    }) {
+                                      isNozzleSize,
+                                      machineDefinition,
+                                      materialDefinitions,
+                                      qualityDefinitions
+                                  }) {
         this.changedArray = Object.entries(this.machineDefinition.settings).map(([key, setting]) => {
             const value = setting.default_value;
             return [key, value]
-        })
+        });
         this.changedArrayWithoutExtruder = this.changedArray
             .filter(([key]) => {
                 return !(extruderRelationSettingsKeys.includes(key))
-            })
+            });
         await this.updateDefinition(machineDefinition);
         if (isNozzleSize) {
             qualityDefinitions.forEach((item) => {
                 resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder)
-            })
+            });
             return {
                 newQualityDefinitions: qualityDefinitions
             }
-        }else {
+        } else {
             materialDefinitions.forEach((item) => {
                 resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder)
-            })
+            });
             qualityDefinitions.forEach((item) => {
                 resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder)
-            })
+            });
             return {
                 newMaterialDefinitions: materialDefinitions,
                 newQualityDefinitions: qualityDefinitions
@@ -426,7 +426,7 @@ class DefinitionManager {
 
             if (
                 // setting.from !== 'fdmprinter'
-                // &&
+            // &&
                 !['machine_width', 'machine_depth', 'machine_height'].includes(
                     key
                 )
@@ -547,17 +547,17 @@ class DefinitionManager {
     }
 
     finalizeExtruderDefinition({
-        activeQualityDefinition,
-        extruderDefinition,
-        materialDefinition,
-        hasPrimeTower,
-        primeTowerXDefinition,
-        primeTowerYDefinition
-    }) {
+                                   activeQualityDefinition,
+                                   extruderDefinition,
+                                   materialDefinition,
+                                   hasPrimeTower,
+                                   primeTowerXDefinition,
+                                   primeTowerYDefinition
+                               }) {
         const newExtruderDefinition = {
             ...extruderDefinition,
         };
-        const newQualityDefinition = {settings : cloneDeep(activeQualityDefinition.settings)};
+        const newQualityDefinition = { settings: cloneDeep(activeQualityDefinition.settings) };
         this.materialProfileArr.forEach((key) => {
             const setting = materialDefinition.settings[key];
             if (setting) {
@@ -582,12 +582,12 @@ class DefinitionManager {
             MACHINE_EXTRUDER_X.forEach((keyItem) => {
                 newExtruderDefinition.settings[
                     keyItem
-                ].default_value = primeTowerXDefinition;
+                    ].default_value = primeTowerXDefinition;
             });
             MACHINE_EXTRUDER_Y.forEach((keyItem) => {
                 newExtruderDefinition.settings[
                     keyItem
-                ].default_value = primeTowerYDefinition;
+                    ].default_value = primeTowerYDefinition;
             });
         }
         return newExtruderDefinition;

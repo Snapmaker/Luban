@@ -1,6 +1,6 @@
 {
     "name": "FDM Printer Base Description",
-    "version": "4.4.0",
+    "version": "4.5.0",
     "inherits": "fdmprinter",
     "metadata": {
         "type": "machine",
@@ -251,6 +251,36 @@
                             "settable_per_meshgroup": false,
                             "min": 0,
                             "max": 20000
+                        },
+                        "machine_extruders_share_nozzle": {
+                            "label": "Extruders Share Nozzle",
+                            "description": "Whether the extruders share a single nozzle rather than each extruder having its own nozzle. When set to true, it is expected that the printer-start gcode script properly sets up all extruders in an initial retraction state that is known and mutually compatible (either zero or one filament not retracted); in that case the initial retraction status is described, per extruder, by the 'machine_extruders_shared_nozzle_initial_retraction' parameter.",
+                            "type": "bool",
+                            "default_value": false,
+                            "settable_per_mesh": false,
+                            "settable_per_extruder": false,
+                            "settable_per_meshgroup": false
+                        },
+                        "machine_extruders_shared_nozzle_initial_retraction": {
+                            "label": "Shared Nozzle Initial Retraction",
+                            "description": "How much the filament of each extruder is assumed to have been retracted from the shared nozzle tip at the completion of the printer-start gcode script; the value should be equal to or greater than the length of the common part of the nozzle's ducts.",
+                            "unit": "mm",
+                            "default_value": 0,
+                            "minimum_value": "0",
+                            "type": "float",
+                            "enabled": "machine_extruders_share_nozzle",
+                            "settable_per_mesh": false,
+                            "settable_per_extruder": true,
+                            "settable_per_meshgroup": false
+                        },
+                        "machine_scale_fan_speed_zero_to_one": {
+                            "label": "Scale Fan Speed To 0-1",
+                            "description": "Scale the fan speed to be between 0 and 1 instead of between 0 and 256.",
+                            "type": "bool",
+                            "default_value": false,
+                            "settable_per_mesh": false,
+                            "settable_per_extruder": false,
+                            "settable_per_meshgroup": false
                         },
                         "machine_nozzle_tip_outer_diameter": {
                             "label": "Outer Nozzle Diameter",
@@ -1376,6 +1406,7 @@
                                     "calcu_value": "skin_material_flow",
                                     "minimum_value": "5",
                                     "maximum_value": "150",
+                                    "visible":false,
                                     "limit_to_extruder": "roofing_extruder_nr",
                                     "settable_per_mesh": true,
                                     "filter": [
@@ -1496,6 +1527,22 @@
                             ],
                             "min": 0,
                             "max": 20000
+                        },
+                        "speed_equalize_flow_width_factor": {
+                            "label": "Flow Equalization Ratio",
+                            "description": "Extrusion width based correction factor on the speed. At 0% the movement speed is kept constant at the Print Speed. At 100% the movement speed is adjusted so that the flow (in mm³/s) is kept constant, i.e. lines half the normal Line Width are printed twice as fast and lines twice as wide are printed half as fast. A value larger than 100% can help to compensate for the higher pressure required to extrude wide lines.",
+                            "type": "float",
+                            "unit": "%",
+                            "default_value": 100,
+                            "minimum_value": "0.0",
+                            "maximum_value_warning": "200.0",
+                            "settable_per_mesh": false,
+                            "settable_per_extruder": true,
+                            "filter": [
+                                "all"
+                            ],
+                            "min": 0,
+                            "max": 200
                         }
                     }
                 },
@@ -2465,6 +2512,40 @@
                                     "min": 1,
                                     "max": 20000
                                 },
+                                "wall_overhang_speed_factor": {
+                                    "label": "Overhanging Wall Speed",
+                                    "description": "Overhanging walls will be printed at this percentage of their normal print speed.",
+                                    "unit": "%",
+                                    "type": "float",
+                                    "default_value": 100,
+                                    "minimum_value": "0.001",
+                                    "minimum_value_warning": "25",
+                                    "settable_per_mesh": true,
+                                    "min": 0,
+                                    "max": 20000,
+                                    "children":{
+                                        "wall_overhang_angle": {
+                                            "label": "Overhanging Wall Angle",
+                                            "description": "Walls that overhang more than this angle will be printed using overhanging wall settings. When the value is 90, no walls will be treated as overhanging. Overhang that gets supported by support will not be treated as overhang either.",
+                                            "unit": "°",
+                                            "type": "float",
+                                            "minimum_value": "0",
+                                            "minimum_value_warning": "2",
+                                            "maximum_value": "90",
+                                            "default_value": 90,
+                                            "settable_per_mesh": true,
+                                            "min": 0,
+                                            "max": 20000,
+                                            "visible":"wall_overhang_speed_factor < 90",
+                                            "filter": [
+                                                "advanced"
+                                            ]
+                                        }
+                                    },
+                                    "filter": [
+                                        "advanced"
+                                    ]
+                                },
                                 "speed_topbottom": {
                                     "label": "Top/Bottom Speed",
                                     "description": "The speed at which top/bottom layers are printed.",
@@ -2496,7 +2577,7 @@
                                     "calcu_value": "speed_topbottom",
                                     "limit_to_extruder": "roofing_extruder_nr",
                                     "settable_per_mesh": true,
-                                    "visible": true,
+                                    "visible": false,
                                     "filter": [
                                         "advanced"
                                     ],
@@ -2708,7 +2789,7 @@
                                     "maximum_value_warning": "10000",
                                     "default_value": 3000,
                                     "calcu_value": "acceleration_print",
-                                    "visible": "resolveOrValue(acceleration_enabled) && roofing_layer_count > 0 && top_layers > 0",
+                                    "visible": "false",
                                     "limit_to_extruder": "roofing_extruder_nr",
                                     "settable_per_mesh": true,
                                     "min": 1,
@@ -2897,7 +2978,7 @@
                                     "maximum_value_warning": "50",
                                     "default_value": 20,
                                     "calcu_value": "jerk_topbottom",
-                                    "visible": "resolveOrValue(jerk_enabled) && roofing_layer_count > 0 && top_layers > 0",
+                                    "visible": "false",
                                     "limit_to_extruder": "roofing_extruder_nr",
                                     "settable_per_mesh": true,
                                     "min": 1,
@@ -3133,7 +3214,8 @@
                                     "default_value": true,
                                     "enabled": "roofing_layer_count > 0 and top_layers > 0 and roofing_pattern != 'concentric'",
                                     "limit_to_extruder": "roofing_extruder_nr",
-                                    "settable_per_mesh": true
+                                    "settable_per_mesh": true,
+                                    "visible": "false"
                                 }
                             }
                         },
@@ -3318,12 +3400,98 @@
                                 "zigzag": "Zig Zag",
                                 "cross": "Cross",
                                 "cross_3d": "Cross 3D",
-                                "gyroid": "Gyroid"
+                                "gyroid": "Gyroid",
+                                "lightning": "Lightning"
                             },
                             "default_value": "grid",
                             "visible": "infill_sparse_density > 0 && infill_sparse_density !== 100 && model_structure_type === 'normal'",
                             "limit_to_extruder": "infill_extruder_nr",
                             "settable_per_mesh": true,
+                            "children":{
+                                "lightning_infill_support_angle": {
+                                    "label": "Lightning Infill Support Angle",
+                                    "description": "Determines when a lightning infill layer has to support anything above it. Measured in the angle given the thickness of a layer.",
+                                    "unit": "°",
+                                    "type": "float",
+                                    "minimum_value": "0",
+                                    "maximum_value": "90",
+                                    "maximum_value_warning": "75",
+                                    "default_value": 40,
+                                    "limit_to_extruder": "infill_extruder_nr",
+                                    "enabled": "infill_pattern === 'lightning'",
+                                    "settable_per_mesh": false,
+                                    "settable_per_extruder": true,
+                                    "visible":"infill_pattern === 'lightning'",
+                                    "filter": [
+                                        "advanced",
+                                        "strength",
+                                        "efficiency"
+                                    ]
+                                },
+                                "lightning_infill_overhang_angle": {
+                                    "label": "Lightning Infill Overhang Angle",
+                                    "description": "Determines when a lightning infill layer has to support the model above it. Measured in the angle given the thickness.",
+                                    "unit": "°",
+                                    "type": "float",
+                                    "minimum_value": "0",
+                                    "maximum_value": "90",
+                                    "maximum_value_warning": "75",
+                                    "default_value": 40,
+                                    "limit_to_extruder": "infill_extruder_nr",
+                                    "enabled": "infill_pattern === 'lightning'",
+                                    "settable_per_mesh": false,
+                                    "settable_per_extruder": true,
+                                    "value": "lightning_infill_support_angle",
+                                    "visible":"infill_pattern === 'lightning'",
+                                    "filter": [
+                                        "advanced",
+                                        "strength",
+                                        "efficiency"
+                                    ]
+                                },
+                                "lightning_infill_prune_angle": {
+                                    "label": "Lightning Infill Prune Angle",
+                                    "description": "The endpoints of infill lines are shortened to save on material. This setting is the angle of overhang of the endpoints of these lines.",
+                                    "unit": "°",
+                                    "type": "float",
+                                    "minimum_value": "0",
+                                    "maximum_value": "90",
+                                    "maximum_value_warning": "75",
+                                    "default_value": 40,
+                                    "limit_to_extruder": "infill_extruder_nr",
+                                    "enabled": "infill_pattern === 'lightning'",
+                                    "settable_per_mesh": false,
+                                    "settable_per_extruder": true,
+                                    "value": "lightning_infill_support_angle",
+                                    "visible":"infill_pattern === 'lightning'",
+                                    "filter": [
+                                        "advanced",
+                                        "strength",
+                                        "efficiency"
+                                    ]
+                                },
+                                "lightning_infill_straightening_angle": {
+                                    "label": "Lightning Infill Straightening Angle",
+                                    "description": "The infill lines are straightened out to save on printing time. This is the maximum angle of overhang allowed across the length of the infill line.",
+                                    "unit": "°",
+                                    "type": "float",
+                                    "minimum_value": "0",
+                                    "maximum_value": "90",
+                                    "maximum_value_warning": "75",
+                                    "default_value": 40,
+                                    "limit_to_extruder": "infill_extruder_nr",
+                                    "enabled": "infill_pattern === 'lightning'",
+                                    "settable_per_mesh": false,
+                                    "settable_per_extruder": true,
+                                    "value": "lightning_infill_support_angle",
+                                    "visible":"infill_pattern === 'lightning'",
+                                    "filter": [
+                                        "advanced",
+                                        "strength",
+                                        "efficiency"
+                                    ]
+                                }
+                            },
                             "filter": [
                                 "basic",
                                 "advanced",
@@ -5194,6 +5362,21 @@
                                 "surface_quality"
                             ]
                         },
+                        "skin_monotonic": {
+                            "label": "Monotonic Top/Bottom Order",
+                            "description": "Print top/bottom lines in an ordering that causes them to always overlap with adjacent lines in a single direction. This takes slightly more time to print, but makes flat surfaces look more consistent.",
+                            "type": "bool",
+                            "default_value": true,
+                            "enabled": "(top_layers > 0 || bottom_layers > 0) && (top_bottom_pattern !== 'concentric' || top_bottom_pattern_0 !== 'concentric')",
+                            "limit_to_extruder": "top_bottom_extruder_nr",
+                            "settable_per_mesh": true,
+                            "filter": [
+                                "basic",
+                                "advanced",
+                                "accuracy",
+                                "surface_quality"
+                            ]
+                        },
                         "infill_before_walls": {
                             "label": "Infill Before Walls",
                             "description": "Print the infill before printing the walls. Printing the walls first may lead to more accurate walls, but overhangs print worse. Printing the infill first leads to sturdier walls, but the infill pattern might sometimes show through the surface.",
@@ -5218,6 +5401,16 @@
                                 "surface_quality"
                             ],
                             "children": {
+                                "ironing_monotonic": {
+                                    "label": "Monotonic Ironing Order",
+                                    "description": "Print ironing lines in an ordering that causes them to always overlap with adjacent lines in a single direction. This takes slightly more time to print, but makes flat surfaces look more consistent.",
+                                    "type": "bool",
+                                    "default_value": false,
+                                    "enabled": "ironing_enabled && ironing_pattern !== 'concentric'",
+                                    "visible":"ironing_enabled",
+                                    "limit_to_extruder": "top_bottom_extruder_nr",
+                                    "settable_per_mesh": true
+                                },
                                 "ironing_only_highest_layer": {
                                     "label": "Iron Only Highest Layer",
                                     "description": "Only perform ironing on the very last layer of the mesh. This saves time if the lower layers don't need a smooth surface finish.",
@@ -5597,6 +5790,80 @@
                     "description": "Model Structure Optimization",
                     "type": "category",
                     "children": {
+                        "wall_transition_length": {
+                            "label": "Wall Transition Length",
+                            "description": "When transitioning between different numbers of walls as the part becomes thinner, a certain amount of space is allotted to split or join the wall lines.",
+                            "type": "float",
+                            "unit": "mm",
+                            "default_value": 0.4,
+                            "value": "line_width",
+                            "minimum_value": "0.001",
+                            "minimum_value_warning": "0.5 * line_width",
+                            "maximum_value_warning": "2 * line_width",
+                            "maximum_value": "min_bead_width * 3 * math.pi",
+                            "filter": [
+                                "accuracy",
+                                "surface_quality"
+                            ]
+                        },
+                        "wall_distribution_count": {
+                            "label": "Wall Distribution Count",
+                            "description": "The number of walls, counted from the center, over which the variation needs to be spread. Lower values mean that the outer walls don't change in width.",
+                            "type": "int",
+                            "maximum_value": "999999",
+                            "default_value": 1,
+                            "minimum_value": "1",
+                            "filter": [
+                                "accuracy",
+                                "surface_quality"
+                            ]
+                        },
+                        "wall_transition_angle": {
+                            "label": "Wall Transitioning Threshold Angle",
+                            "description": "When to create transitions between even and odd numbers of walls. A wedge shape with an angle greater than this setting will not have transitions and no walls will be printed in the center to fill the remaining space. Reducing this setting reduces the number and length of these center walls, but may leave gaps or overextrude.",
+                            "type": "float",
+                            "unit": "°",
+                            "default_value": 10,
+                            "minimum_value": "1",
+                            "minimum_value_warning": "5",
+                            "maximum_value_warning": "50",
+                            "maximum_value": "59",
+                            "filter": [
+                                "accuracy",
+                                "surface_quality"
+                            ]
+                        },
+                        "wall_transition_filter_distance": {
+                            "label": "Wall Transitioning Filter Distance",
+                            "description": "If it would be transitioning back and forth between different numbers of walls in quick succession, don't transition at all. Remove transitions if they are closer together than this distance.",
+                            "type": "float",
+                            "unit": "mm",
+                            "value": "100",
+                            "enabled": false,
+                            "default_value": 100,
+                            "minimum_value": "wall_transition_length",
+                            "minimum_value_warning": "math.cos(wall_transition_angle / 180 * math.pi) * wall_line_width_x",
+                            "maximum_value": "999999",
+                            "filter": [
+                                "accuracy",
+                                "surface_quality"
+                            ]
+                        },
+                        "wall_transition_filter_deviation": {
+                            "label": "Wall Transitioning Filter Margin",
+                            "description": "Prevent transitioning back and forth between one extra wall and one less. This margin extends the range of line widths which follow to [Minimum Wall Line Width - Margin, 2 * Minimum Wall Line Width + Margin]. Increasing this margin reduces the number of transitions, which reduces the number of extrusion starts/stops and travel time. However, large line width variation can lead to under- or overextrusion problems.",
+                            "type": "float",
+                            "unit": "mm",
+                            "default_value": 0.1,
+                            "value": ".25 * machine_nozzle_size",
+                            "minimum_value": "0",
+                            "minimum_value_warning": ".01",
+                            "maximum_value_warning": "machine_nozzle_size",
+                            "filter": [
+                                "accuracy",
+                                "surface_quality"
+                            ]
+                        },
                         "wall_0_wipe_dist": {
                             "label": "Outer Wall Wipe Distance",
                             "description": "Distance of a travel move inserted after the outer wall, to hide the Z seam better.",
@@ -5615,88 +5882,85 @@
                             "min": 0,
                             "max": 20000
                         },
-                        "travel_compensate_overlapping_walls_enabled": {
-                            "label": "Compensate Wall Overlaps",
-                            "description": "Compensate the flow for parts of a wall being printed where there is already a wall in place.",
-                            "type": "bool",
-                            "default_value": true,
-                            "limit_to_extruder": "wall_x_extruder_nr",
+                        "min_wall_line_width": {
+                            "label": "Minimum Wall Line Width",
+                            "description": "For thin structures around once or twice the nozzle size, the line widths need to be altered to adhere to the thickness of the model. This setting controls the minimum line width allowed for the walls. The minimum line widths inherently also determine the maximum line widths, since we transition from N to N+1 walls at some geometry thickness where the N walls are wide and the N+1 walls are narrow. The widest possible wall line is twice the Minimum Wall Line Width.",
+                            "unit": "mm",
+                            "minimum_value_warning": ".5 * max(wall_line_width_0, wall_line_width_x)",
+                            "maximum_value_warning": "min(wall_line_width_0, wall_line_width_x)",
+                            "default_value": 0.3,
+                            "value": "machine_nozzle_size * .85",
+                            "type": "float",
                             "settable_per_mesh": true,
                             "filter": [
-                                "basic",
-                                "advanced"
-                            ],
-                            "children": {
-                                "travel_compensate_overlapping_walls_0_enabled": {
-                                    "label": "Compensate Outer Wall Overlaps",
-                                    "description": "Compensate the flow for parts of an outer wall being printed where there is already a wall in place.",
-                                    "type": "bool",
-                                    "default_value": true,
-                                    "calcu_value": "travel_compensate_overlapping_walls_enabled",
-                                    "limit_to_extruder": "wall_0_extruder_nr",
-                                    "settable_per_mesh": true
-                                },
-                                "travel_compensate_overlapping_walls_x_enabled": {
-                                    "label": "Compensate Inner Wall Overlaps",
-                                    "description": "Compensate the flow for parts of an inner wall being printed where there is already a wall in place.",
-                                    "type": "bool",
-                                    "default_value": true,
-                                    "calcu_value": "travel_compensate_overlapping_walls_enabled",
-                                    "limit_to_extruder": "wall_x_extruder_nr",
-                                    "settable_per_mesh": true
-                                },
-                                "wall_min_flow": {
-                                    "label": "Minimum Wall Flow",
-                                    "description": "Minimum allowed percentage flow for a wall line. The wall overlap compensation reduces a wall's flow when it lies close to an existing wall. Walls whose flow is less than this value will be replaced with a travel move. When using this setting, you must enable the wall overlap compensation and print the outer wall before inner walls.",
-                                    "unit": "%",
-                                    "minimum_value": "0",
-                                    "maximum_value": "100",
-                                    "default_value": 0,
-                                    "type": "float",
-                                    "visible": "travel_compensate_overlapping_walls_0_enabled || travel_compensate_overlapping_walls_x_enabled",
-                                    "settable_per_mesh": true,
-                                    "min": 0,
-                                    "max": 20000
-                                },
-                                "wall_min_flow_retract": {
-                                    "label": "Prefer Retract",
-                                    "description": "If enabled, retraction is used rather than combing for travel moves that replace walls whose flow is below the minimum flow threshold.",
-                                    "type": "bool",
-                                    "default_value": false,
-                                    "visible": "(travel_compensate_overlapping_walls_0_enabled || travel_compensate_overlapping_walls_x_enabled) && wall_min_flow > 0",
-                                    "settable_per_mesh": true
-                                }
-                            }
+                                "accuracy",
+                                "surface_quality"
+                            ]
                         },
-                        "fill_perimeter_gaps": {
-                            "label": "Fill Gaps Between Walls",
-                            "description": "Fills the gaps between walls where no walls fit.",
-                            "type": "enum",
-                            "options": {
-                                "nowhere": "Nowhere",
-                                "everywhere": "Everywhere"
-                            },
-                            "default_value": "everywhere",
-                            "limit_to_extruder": "wall_0_extruder_nr",
+                        "min_even_wall_line_width": {
+                            "label": "Minimum Even Wall Line Width",
+                            "description": "The minimum line width for normal polygonal walls. This setting determines at which model thickness we switch from printing a single thin wall line, to printing two wall lines. A higher Minimum Even Wall Line Width leads to a higher maximum odd wall line width. The maximum even wall line width is calculated as Outer Wall Line Width + 0.5 * Minimum Odd Wall Line Width.",
+                            "unit": "mm",
+                            "minimum_value_warning": ".5 * max(wall_line_width_0, wall_line_width_x)",
+                            "maximum_value_warning": "min(wall_line_width_0, wall_line_width_x)",
+                            "default_value": 0.3,
+                            "value": "min_wall_line_width",
+                            "type": "float",
                             "settable_per_mesh": true,
                             "filter": [
-                                "advanced",
-                                "strength"
-                            ],
-                            "children": {
-                                "filter_out_tiny_gaps": {
-                                    "label": "Filter Out Tiny Gaps",
-                                    "description": "Filter out tiny gaps to reduce blobs on outside of model.",
-                                    "type": "bool",
-                                    "default_value": true,
-                                    "limit_to_extruder": "wall_0_extruder_nr",
-                                    "settable_per_mesh": true,
-                                    "filter": [
-                                        "advanced",
-                                        "strength"
-                                    ]
-                                }
-                            }
+                                "accuracy",
+                                "surface_quality"
+                            ]
+                        },
+                        "min_odd_wall_line_width": {
+                            "label": "Minimum Odd Wall Line Width",
+                            "description": "The minimum line width for middle line gap filler polyline walls. This setting determines at which model thickness we switch from printing two wall lines, to printing two outer walls and a single central wall in the middle. A higher Minimum Odd Wall Line Width leads to a higher maximum even wall line width. The maximum odd wall line width is calculated as 2 * Minimum Even Wall Line Width.",
+                            "unit": "mm",
+                            "minimum_value_warning": ".5 * max(wall_line_width_0, wall_line_width_x)",
+                            "maximum_value_warning": "min(wall_line_width_0, wall_line_width_x)",
+                            "default_value": 0.3,
+                            "value": "min_wall_line_width",
+                            "type": "float",
+                            "settable_per_mesh": true,
+                            "filter": [
+                                "accuracy",
+                                "surface_quality"
+                            ]
+                        },
+                        "min_feature_size": {
+                            "label": "Minimum Feature Size",
+                            "description": "Minimum thickness of thin features. Model features that are thinner than this value will not be printed, while features thicker than the Minimum Feature Size will be widened to the Minimum Wall Line Width.",
+                            "unit": "mm",
+                            "default_value": 0.1,
+                            "value": "wall_line_width_0 / 4",
+                            "minimum_value": "0",
+                            "maximum_value": "wall_line_width_0",
+                            "type": "float",
+                            "limit_to_extruder": "wall_0_extruder_nr",
+                            "enabled": "fill_outline_gaps",
+                            "settable_per_mesh": true,
+                            "filter": [
+                                "accuracy",
+                                "surface_quality"
+                            ]
+                        },
+                        "min_bead_width": {
+                            "label": "Minimum Thin Wall Line Width",
+                            "description": "Width of the wall that will replace thin features (according to the Minimum Feature Size) of the model. If the Minimum Wall Line Width is thinner than the thickness of the feature, the wall will become as thick as the feature itself.",
+                            "unit": "mm",
+                            "value": "min_wall_line_width",
+                            "default_value": 0.2,
+                            "minimum_value": "0.001",
+                            "minimum_value_warning": "min_feature_size",
+                            "maximum_value_warning": "wall_line_width_0",
+                            "type": "float",
+                            "limit_to_extruder": "wall_0_extruder_nr",
+                            "enabled": "fill_outline_gaps",
+                            "settable_per_mesh": true,
+                            "filter": [
+                                "accuracy",
+                                "surface_quality"
+                            ]
                         },
                         "xy_offset": {
                             "label": "Horizontal Expansion",
@@ -5883,36 +6147,6 @@
                     "description": "Unclassified parameters",
                     "type": "category",
                     "children": {
-                        "machine_extruders_share_nozzle": {
-                            "label": "Extruders Share Nozzle",
-                            "description": "Whether the extruders share a single nozzle rather than each extruder having its own nozzle. When set to true, it is expected that the printer-start gcode script properly sets up all extruders in an initial retraction state that is known and mutually compatible (either zero or one filament not retracted); in that case the initial retraction status is described, per extruder, by the 'machine_extruders_shared_nozzle_initial_retraction' parameter.",
-                            "type": "bool",
-                            "default_value": false,
-                            "settable_per_mesh": false,
-                            "settable_per_extruder": false,
-                            "settable_per_meshgroup": false
-                        },
-                        "machine_extruders_shared_nozzle_initial_retraction": {
-                            "label": "Shared Nozzle Initial Retraction",
-                            "description": "How much the filament of each extruder is assumed to have been retracted from the shared nozzle tip at the completion of the printer-start gcode script; the value should be equal to or greater than the length of the common part of the nozzle's ducts.",
-                            "unit": "mm",
-                            "default_value": 0,
-                            "minimum_value": "0",
-                            "type": "float",
-                            "enabled": "machine_extruders_share_nozzle",
-                            "settable_per_mesh": false,
-                            "settable_per_extruder": true,
-                            "settable_per_meshgroup": false
-                        },
-                        "machine_scale_fan_speed_zero_to_one": {
-                            "label": "Scale Fan Speed To 0-1",
-                            "description": "Scale the fan speed to be between 0 and 1 instead of between 0 and 256.",
-                            "type": "bool",
-                            "default_value": false,
-                            "settable_per_mesh": false,
-                            "settable_per_extruder": false,
-                            "settable_per_meshgroup": false
-                        },
                         "wall_line_width": {
                             "label": "Wall Line Width",
                             "description": "Width of a single wall line.",
@@ -5941,120 +6175,6 @@
                             "settable_per_mesh": false,
                             "settable_per_extruder": true
                         },
-                        "wall_transition_length": {
-                            "label": "Wall Transition Length",
-                            "description": "When transitioning between different numbers of walls as the part becomes thinner, a certain amount of space is allotted to split or join the wall lines.",
-                            "type": "float",
-                            "unit": "mm",
-                            "default_value": 0.4,
-                            "value": "line_width",
-                            "minimum_value": "0.001",
-                            "minimum_value_warning": "0.5 * line_width",
-                            "maximum_value_warning": "2 * line_width",
-                            "maximum_value": "min_bead_width * 3 * math.pi"
-                        },
-                        "wall_distribution_count": {
-                            "label": "Wall Distribution Count",
-                            "description": "The number of walls, counted from the center, over which the variation needs to be spread. Lower values mean that the outer walls don't change in width.",
-                            "type": "int",
-                            "maximum_value": "999999",
-                            "default_value": 1,
-                            "minimum_value": "1"
-                        },
-                        "wall_transition_angle": {
-                            "label": "Wall Transitioning Threshold Angle",
-                            "description": "When to create transitions between even and odd numbers of walls. A wedge shape with an angle greater than this setting will not have transitions and no walls will be printed in the center to fill the remaining space. Reducing this setting reduces the number and length of these center walls, but may leave gaps or overextrude.",
-                            "type": "float",
-                            "unit": "°",
-                            "default_value": 10,
-                            "minimum_value": "1",
-                            "minimum_value_warning": "5",
-                            "maximum_value_warning": "50",
-                            "maximum_value": "59"
-                        },
-                        "wall_transition_filter_distance": {
-                            "label": "Wall Transitioning Filter Distance",
-                            "description": "If it would be transitioning back and forth between different numbers of walls in quick succession, don't transition at all. Remove transitions if they are closer together than this distance.",
-                            "type": "float",
-                            "unit": "mm",
-                            "value": "100",
-                            "enabled": false,
-                            "default_value": 100,
-                            "minimum_value": "wall_transition_length",
-                            "minimum_value_warning": "math.cos(wall_transition_angle / 180 * math.pi) * wall_line_width_x",
-                            "maximum_value": "999999"
-                        },
-                        "wall_transition_filter_deviation": {
-                            "label": "Wall Transitioning Filter Margin",
-                            "description": "Prevent transitioning back and forth between one extra wall and one less. This margin extends the range of line widths which follow to [Minimum Wall Line Width - Margin, 2 * Minimum Wall Line Width + Margin]. Increasing this margin reduces the number of transitions, which reduces the number of extrusion starts/stops and travel time. However, large line width variation can lead to under- or overextrusion problems.",
-                            "type": "float",
-                            "unit": "mm",
-                            "default_value": 0.1,
-                            "value": ".25 * machine_nozzle_size",
-                            "minimum_value": "0",
-                            "minimum_value_warning": ".01",
-                            "maximum_value_warning": "machine_nozzle_size"
-                        },
-                        "min_wall_line_width": {
-                            "label": "Minimum Wall Line Width",
-                            "description": "For thin structures around once or twice the nozzle size, the line widths need to be altered to adhere to the thickness of the model. This setting controls the minimum line width allowed for the walls. The minimum line widths inherently also determine the maximum line widths, since we transition from N to N+1 walls at some geometry thickness where the N walls are wide and the N+1 walls are narrow. The widest possible wall line is twice the Minimum Wall Line Width.",
-                            "unit": "mm",
-                            "minimum_value_warning": ".5 * max(wall_line_width_0, wall_line_width_x)",
-                            "maximum_value_warning": "min(wall_line_width_0, wall_line_width_x)",
-                            "default_value": 0.3,
-                            "value": "machine_nozzle_size * .85",
-                            "type": "float",
-                            "settable_per_mesh": true
-                        },
-                        "min_even_wall_line_width": {
-                            "label": "Minimum Even Wall Line Width",
-                            "description": "The minimum line width for normal polygonal walls. This setting determines at which model thickness we switch from printing a single thin wall line, to printing two wall lines. A higher Minimum Even Wall Line Width leads to a higher maximum odd wall line width. The maximum even wall line width is calculated as Outer Wall Line Width + 0.5 * Minimum Odd Wall Line Width.",
-                            "unit": "mm",
-                            "minimum_value_warning": ".5 * max(wall_line_width_0, wall_line_width_x)",
-                            "maximum_value_warning": "min(wall_line_width_0, wall_line_width_x)",
-                            "default_value": 0.3,
-                            "value": "min_wall_line_width",
-                            "type": "float",
-                            "settable_per_mesh": true
-                        },
-                        "min_odd_wall_line_width": {
-                            "label": "Minimum Odd Wall Line Width",
-                            "description": "The minimum line width for middle line gap filler polyline walls. This setting determines at which model thickness we switch from printing two wall lines, to printing two outer walls and a single central wall in the middle. A higher Minimum Odd Wall Line Width leads to a higher maximum even wall line width. The maximum odd wall line width is calculated as 2 * Minimum Even Wall Line Width.",
-                            "unit": "mm",
-                            "minimum_value_warning": ".5 * max(wall_line_width_0, wall_line_width_x)",
-                            "maximum_value_warning": "min(wall_line_width_0, wall_line_width_x)",
-                            "default_value": 0.3,
-                            "value": "min_wall_line_width",
-                            "type": "float",
-                            "settable_per_mesh": true
-                        },
-                        "min_feature_size": {
-                            "label": "Minimum Feature Size",
-                            "description": "Minimum thickness of thin features. Model features that are thinner than this value will not be printed, while features thicker than the Minimum Feature Size will be widened to the Minimum Wall Line Width.",
-                            "unit": "mm",
-                            "default_value": 0.1,
-                            "value": "wall_line_width_0 / 4",
-                            "minimum_value": "0",
-                            "maximum_value": "wall_line_width_0",
-                            "type": "float",
-                            "limit_to_extruder": "wall_0_extruder_nr",
-                            "enabled": "fill_outline_gaps",
-                            "settable_per_mesh": true
-                        },
-                        "min_bead_width": {
-                            "label": "Minimum Thin Wall Line Width",
-                            "description": "Width of the wall that will replace thin features (according to the Minimum Feature Size) of the model. If the Minimum Wall Line Width is thinner than the thickness of the feature, the wall will become as thick as the feature itself.",
-                            "unit": "mm",
-                            "value": "min_wall_line_width",
-                            "default_value": 0.2,
-                            "minimum_value": "0.001",
-                            "minimum_value_warning": "min_feature_size",
-                            "maximum_value_warning": "wall_line_width_0",
-                            "type": "float",
-                            "limit_to_extruder": "wall_0_extruder_nr",
-                            "enabled": "fill_outline_gaps",
-                            "settable_per_mesh": true
-                        },
                         "top_bottom_thickness": {
                             "label": "Top/Bottom Thickness",
                             "description": "The thickness of the top/bottom layers in the print. This value divided by the layer height defines the number of top/bottom layers.",
@@ -6066,83 +6186,6 @@
                             "type": "float",
                             "limit_to_extruder": "top_bottom_extruder_nr",
                             "settable_per_mesh": true
-                        },
-                        "skin_monotonic": {
-                            "label": "Monotonic Top/Bottom Order",
-                            "description": "Print top/bottom lines in an ordering that causes them to always overlap with adjacent lines in a single direction. This takes slightly more time to print, but makes flat surfaces look more consistent.",
-                            "type": "bool",
-                            "default_value": false,
-                            "enabled": "(top_layers > 0 || bottom_layers > 0) && (top_bottom_pattern !== 'concentric' || top_bottom_pattern_0 !== 'concentric')",
-                            "limit_to_extruder": "top_bottom_extruder_nr",
-                            "settable_per_mesh": true
-                        },
-                        "ironing_monotonic": {
-                            "label": "Monotonic Ironing Order",
-                            "description": "Print ironing lines in an ordering that causes them to always overlap with adjacent lines in a single direction. This takes slightly more time to print, but makes flat surfaces look more consistent.",
-                            "type": "bool",
-                            "default_value": false,
-                            "enabled": "ironing_enabled && ironing_pattern !== 'concentric'",
-                            "limit_to_extruder": "top_bottom_extruder_nr",
-                            "settable_per_mesh": true
-                        },
-                        "lightning_infill_support_angle": {
-                            "label": "Lightning Infill Support Angle",
-                            "description": "Determines when a lightning infill layer has to support anything above it. Measured in the angle given the thickness of a layer.",
-                            "unit": "°",
-                            "type": "float",
-                            "minimum_value": "0",
-                            "maximum_value": "90",
-                            "maximum_value_warning": "75",
-                            "default_value": 40,
-                            "limit_to_extruder": "infill_extruder_nr",
-                            "enabled": "infill_pattern === 'lightning'",
-                            "settable_per_mesh": false,
-                            "settable_per_extruder": true
-                        },
-                        "lightning_infill_overhang_angle": {
-                            "label": "Lightning Infill Overhang Angle",
-                            "description": "Determines when a lightning infill layer has to support the model above it. Measured in the angle given the thickness.",
-                            "unit": "°",
-                            "type": "float",
-                            "minimum_value": "0",
-                            "maximum_value": "90",
-                            "maximum_value_warning": "75",
-                            "default_value": 40,
-                            "limit_to_extruder": "infill_extruder_nr",
-                            "enabled": "infill_pattern === 'lightning'",
-                            "settable_per_mesh": false,
-                            "settable_per_extruder": true,
-                            "value": "lightning_infill_support_angle"
-                        },
-                        "lightning_infill_prune_angle": {
-                            "label": "Lightning Infill Prune Angle",
-                            "description": "The endpoints of infill lines are shortened to save on material. This setting is the angle of overhang of the endpoints of these lines.",
-                            "unit": "°",
-                            "type": "float",
-                            "minimum_value": "0",
-                            "maximum_value": "90",
-                            "maximum_value_warning": "75",
-                            "default_value": 40,
-                            "limit_to_extruder": "infill_extruder_nr",
-                            "enabled": "infill_pattern === 'lightning'",
-                            "settable_per_mesh": false,
-                            "settable_per_extruder": true,
-                            "value": "lightning_infill_support_angle"
-                        },
-                        "lightning_infill_straightening_angle": {
-                            "label": "Lightning Infill Straightening Angle",
-                            "description": "The infill lines are straightened out to save on printing time. This is the maximum angle of overhang allowed across the length of the infill line.",
-                            "unit": "°",
-                            "type": "float",
-                            "minimum_value": "0",
-                            "maximum_value": "90",
-                            "maximum_value_warning": "75",
-                            "default_value": 40,
-                            "limit_to_extruder": "infill_extruder_nr",
-                            "enabled": "infill_pattern === 'lightning'",
-                            "settable_per_mesh": false,
-                            "settable_per_extruder": true,
-                            "value": "lightning_infill_support_angle"
                         },
                         "wall_material_flow": {
                             "label": "Wall Flow",
@@ -6254,17 +6297,6 @@
                             "settable_per_mesh": false,
                             "settable_per_extruder": true
                         },
-                        "speed_equalize_flow_width_factor": {
-                            "label": "Flow Equalization Ratio",
-                            "description": "Extrusion width based correction factor on the speed. At 0% the movement speed is kept constant at the Print Speed. At 100% the movement speed is adjusted so that the flow (in mm³/s) is kept constant, i.e. lines half the normal Line Width are printed twice as fast and lines twice as wide are printed half as fast. A value larger than 100% can help to compensate for the higher pressure required to extrude wide lines.",
-                            "type": "float",
-                            "unit": "%",
-                            "default_value": 100,
-                            "minimum_value": "0.0",
-                            "maximum_value_warning": "200.0",
-                            "settable_per_mesh": false,
-                            "settable_per_extruder": true
-                        },
                         "acceleration_travel_enabled": {
                             "label": "Enable Travel Acceleration",
                             "description": "Use a separate acceleration rate for travel moves. If disabled, travel moves will use the acceleration value of the printed line at their destination.",
@@ -6322,7 +6354,7 @@
                             "label": "Enable Travel Jerk",
                             "description": "Use a separate jerk rate for travel moves. If disabled, travel moves will use the jerk value of the printed line at their destination.",
                             "type": "bool",
-                            "default_value": true,
+                            "default_value": false,
                             "resolve": "any(extruderValues('jerk_travel_enabled'))",
                             "enabled": "jerk_enabled",
                             "settable_per_mesh": false,
@@ -6379,18 +6411,6 @@
                             "maximum_value": "machine_max_feedrate_e if retraction_enable else float('inf')",
                             "maximum_value_warning": "70",
                             "enabled": "retraction_enable and machine_gcode_flavor != \"UltiGCode\"",
-                            "settable_per_mesh": false,
-                            "settable_per_extruder": true
-                        },
-                        "cool_fan_full_at_height": {
-                            "label": "Regular Fan Speed at Height",
-                            "description": "The height at which the fans spin on regular fan speed. At the layers below the fan speed gradually increases from Initial Fan Speed to Regular Fan Speed.",
-                            "unit": "mm",
-                            "type": "float",
-                            "default_value": 0.5,
-                            "value": "0 if resolveOrValue('adhesion_type') == 'raft' else resolveOrValue('layer_height_0')",
-                            "minimum_value": "0",
-                            "maximum_value_warning": "10.0",
                             "settable_per_mesh": false,
                             "settable_per_extruder": true
                         },
@@ -8628,31 +8648,6 @@
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": false,
                                     "settable_per_meshgroup": false,
-                                    "min": 0,
-                                    "max": 20000
-                                },
-                                "wall_overhang_angle": {
-                                    "label": "Overhanging Wall Angle",
-                                    "description": "Walls that overhang more than this angle will be printed using overhanging wall settings. When the value is 90, no walls will be treated as overhanging. Overhang that gets supported by support will not be treated as overhang either.",
-                                    "unit": "°",
-                                    "type": "float",
-                                    "minimum_value": "0",
-                                    "minimum_value_warning": "2",
-                                    "maximum_value": "90",
-                                    "default_value": 90,
-                                    "settable_per_mesh": true,
-                                    "min": 0,
-                                    "max": 20000
-                                },
-                                "wall_overhang_speed_factor": {
-                                    "label": "Overhanging Wall Speed",
-                                    "description": "Overhanging walls will be printed at this percentage of their normal print speed.",
-                                    "unit": "%",
-                                    "type": "float",
-                                    "default_value": 100,
-                                    "minimum_value": "0.001",
-                                    "minimum_value_warning": "25",
-                                    "settable_per_mesh": true,
                                     "min": 0,
                                     "max": 20000
                                 },

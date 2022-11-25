@@ -1,27 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { every, find, includes, isUndefined } from 'lodash';
+import { every, find, includes } from 'lodash';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_PRINTING } from '../../../constants/machines';
 import i18n from '../../../lib/i18n';
-import { machineStore } from '../../../store/local-storage';
 
 import Modal from '../../components/Modal';
-import SvgIcon from '../../components/SvgIcon';
-import { Button } from '../../components/Buttons';
 
 import { getPresetOptions } from '../../utils/profileManager';
 import { actions as projectActions } from '../../../flux/project';
-
 /* eslint-disable import/no-cycle */
 import CategorySelector, { EXTRUDER_TAB } from './CategorySelector';
 /* eslint-disable import/no-cycle */
 import Content from './Content';
 
 function ParameterModifier({ outsideActions }) {
-    const needShowTipModal = machineStore.get('settings.needShowProfileGroupTip');
     const {
         defaultDefinitions,
         qualityDefinitions,
@@ -31,7 +26,6 @@ function ParameterModifier({ outsideActions }) {
         definitionEditorForExtruder,
     } = useSelector(state => state?.printing);
     const { toolHead: { printingToolhead } } = useSelector(state => state?.machine);
-    const [showTip, setShowTip] = useState(isUndefined(needShowTipModal) ? true : needShowTipModal);
     const [selectedTab, setSelectedTab] = useState(EXTRUDER_TAB);
     const [selectedExtruder, setSelectedExtruder] = useState(LEFT_EXTRUDER);
     const [selectedModelId, setSelectedModelId] = useState('');
@@ -39,10 +33,7 @@ function ParameterModifier({ outsideActions }) {
     const [selectedSettingsDefaultValue, setSelectedSettingsDefaultValue] = useState({});
     const [mode, setMode] = useState('show'); // show => show the editor data, update => update the editor data
     const dispatch = useDispatch();
-    const closeTipModal = () => {
-        machineStore.set('settings.needShowProfileGroupTip', false);
-        setShowTip(false);
-    };
+
     const handleUpdateCallback = (type, value) => {
         if (type === EXTRUDER_TAB) {
             setSelectedExtruder(value);
@@ -73,8 +64,6 @@ function ParameterModifier({ outsideActions }) {
         const temp = getPresetOptions(qualityDefinitions);
         const initCategory = 'Default';
 
-        console.log('tool head', printingToolhead, DUAL_EXTRUDER_TOOLHEAD_FOR_SM2);
-
         if (!(every([defaultMaterialId, defaultMaterialIdRight], (item) => {
             const material = item.split('.')[1];
             return material === 'pva' || material === 'support';
@@ -102,8 +91,6 @@ function ParameterModifier({ outsideActions }) {
     useEffect(() => {
         const defaultSettings = find(defaultDefinitions, { definitionId: selectedDefinitionId })?.settings || {};
 
-        console.log('default settings =', defaultSettings);
-
         setSelectedSettingsDefaultValue(defaultSettings);
     }, [selectedDefinitionId]);
 
@@ -117,12 +104,6 @@ function ParameterModifier({ outsideActions }) {
                 <Modal.Header>
                     <div>
                         {i18n._('Print Parameter Modifiers')}
-                        <SvgIcon
-                            name="Information"
-                            onClick={() => setShowTip(true)}
-                            type={['static']}
-                            className="margin-left-8"
-                        />
                     </div>
                 </Modal.Header>
                 <Modal.Body>
@@ -144,34 +125,6 @@ function ParameterModifier({ outsideActions }) {
                         />
                     </div>
                 </Modal.Body>
-            </Modal>
-            <Modal
-                showCloseButton
-                zIndex={1001}
-                onClose={closeTipModal}
-                visible={showTip}
-                width={480}
-            >
-                <Modal.Header>
-                    <div>
-                        {i18n._('key-3DP/ProfileGroupManager-Tips title')}
-                    </div>
-                </Modal.Header>
-                <Modal.Body>
-                    <div>
-                        {i18n._('key-3DP/ProfileGroupManager-Tips content')}
-                    </div>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button
-                        width="120px"
-                        priority="level-two"
-                        type="primary"
-                        onClick={closeTipModal}
-                    >
-                        {i18n._('key-Printing/Modal-Got it')}
-                    </Button>
-                </Modal.Footer>
             </Modal>
         </React.Fragment>
     );

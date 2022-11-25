@@ -256,7 +256,6 @@ function PrintingManager() {
         }
     };
 
-
     if (!showPrintingManager && !showPrintParameterModifierDialog) {
         return null;
     }
