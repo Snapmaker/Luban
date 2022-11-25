@@ -1,25 +1,28 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { includes, throttle } from 'lodash';
 import classNames from 'classnames';
 import i18next from 'i18next';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import ReactMarkdown from 'react-markdown';
-import { actions as printingActions } from '../../../flux/printing';
-// import Menu from '../../components/Menu';
+
+import { PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
 import i18n from '../../../lib/i18n';
-import SettingItem from './SettingItem';
-import CheckboxItem from './CheckboxItem';
+import api from '../../../api';
+
 import Anchor from '../../components/Anchor';
-import styles from './styles.styl';
 import SvgIcon from '../../components/SvgIcon';
-import definitionManager from '../../../flux/manager/DefinitionManager';
 import Select from '../../components/Select';
 import { Button } from '../../components/Buttons';
-import api from '../../../api';
-import { PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
-/* eslint-disable import/no-cycle */
-import { ParamItem } from '../../widgets/PrintingConfigurations/Configurations';
+
+import { actions as printingActions } from '../../../flux/printing';
+import definitionManager from '../../../flux/manager/DefinitionManager';
+
+import CheckboxItem from './CheckboxItem';
+import SettingItem from './SettingItem';
+import ParamItem from '../ParamItem';
+import styles from './styles.styl';
+
 
 const defaultParamsType = ['all', 'advanced'];
 const NO_LIMIT = 'no_limit';
@@ -91,6 +94,7 @@ function ConfigValueBox({
             }
         }
     }, [selectProfile]);
+
     function setActiveCate(cateId) {
         if (scrollDom.current) {
             const container = scrollDom.current.parentElement;
@@ -113,6 +117,7 @@ function ConfigValueBox({
             setActiveCateId(cateId);
         }
     }
+
     const handleUpdateProfileKey = (category, profileKey, e) => {
         const scrollTop = e.target.offsetParent?.scrollTop || 0;
         const offsetTop = e.target.offsetTop;
@@ -455,50 +460,50 @@ function ConfigValueBox({
                             >
                                 <div className="sm-parameter-container" ref={scrollDom}>
                                     {!isCategorySelected
-                                        && Object.keys((selectParamsType === 'custom' && !customMode) ? customConfigs : optionConfigGroup).map((key, index) => {
-                                            return (
-                                                <div key={key}>
-                                                    <>
-                                                        {!hideMiniTitle && key && (tempDoms[index]?.clientHeight > 0) && (
-                                                            <div className="border-bottom-normal padding-bottom-8 margin-vertical-16">
-                                                                <SvgIcon
-                                                                    name="TitleSetting"
-                                                                    type={['static']}
-                                                                />
-                                                                <span className="margin-left-2">
-                                                                    {i18n._(`key-Definition/Catagory-${key}`)}
-                                                                </span>
-                                                            </div>
-                                                        )}
-                                                        {/* eslint no-return-assign: 0*/}
-                                                        <div>
-                                                            <div ref={(el) => (fieldsDom.current[index] = el)}>
-                                                                {customMode && renderCheckboxList({
-                                                                    customConfig: customConfigs,
-                                                                    renderList: optionConfigGroup[key],
-                                                                    calculateTextIndex,
-                                                                    settings: definitionForManager?.settings,
-                                                                    isOfficialDefinitionKey,
-                                                                    onChangeCustomConfig,
-                                                                    categoryKey: key
-                                                                })}
-                                                                {!customMode && renderSettingItemList({
-                                                                    settings: definitionForManager?.settings,
-                                                                    renderList: selectParamsType === 'custom' ? customConfigs[key] : optionConfigGroup[key],
-                                                                    isDefaultDefinition: definitionForManager?.isRecommended,
-                                                                    onChangeDefinition,
-                                                                    managerType,
-                                                                    officalDefinition: !!definitionForManager?.isDefault,
-                                                                    categoryKey: key,
-                                                                    definitionCategory: definitionForManager.category
-                                                                    // selectParamsType
-                                                                })}
-                                                            </div>
+                                    && Object.keys((selectParamsType === 'custom' && !customMode) ? customConfigs : optionConfigGroup).map((key, index) => {
+                                        return (
+                                            <div key={key}>
+                                                <>
+                                                    {!hideMiniTitle && key && (tempDoms[index]?.clientHeight > 0) && (
+                                                        <div className="border-bottom-normal padding-bottom-8 margin-vertical-16">
+                                                            <SvgIcon
+                                                                name="TitleSetting"
+                                                                type={['static']}
+                                                            />
+                                                            <span className="margin-left-2">
+                                                                {i18n._(`key-Definition/Catagory-${key}`)}
+                                                            </span>
                                                         </div>
-                                                    </>
-                                                </div>
-                                            );
-                                        })}
+                                                    )}
+                                                    {/* eslint no-return-assign: 0*/}
+                                                    <div>
+                                                        <div ref={(el) => (fieldsDom.current[index] = el)}>
+                                                            {customMode && renderCheckboxList({
+                                                                customConfig: customConfigs,
+                                                                renderList: optionConfigGroup[key],
+                                                                calculateTextIndex,
+                                                                settings: definitionForManager?.settings,
+                                                                isOfficialDefinitionKey,
+                                                                onChangeCustomConfig,
+                                                                categoryKey: key
+                                                            })}
+                                                            {!customMode && renderSettingItemList({
+                                                                settings: definitionForManager?.settings,
+                                                                renderList: selectParamsType === 'custom' ? customConfigs[key] : optionConfigGroup[key],
+                                                                isDefaultDefinition: definitionForManager?.isRecommended,
+                                                                onChangeDefinition,
+                                                                managerType,
+                                                                officalDefinition: !!definitionForManager?.isDefault,
+                                                                categoryKey: key,
+                                                                definitionCategory: definitionForManager.category
+                                                                // selectParamsType
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                             <div className={classNames(styles['manager-params-docs'], styles[showParamsProfile ? 'open-params-profile' : 'close-params-profile'], 'width-percent-40 background-grey-3 border-radius-16 position-re', showParamsProfile ? '' : 'width-1-important min-width-1 margin-right-16')}>
@@ -510,7 +515,14 @@ function ConfigValueBox({
                                         className={classNames(showParamsProfile ? 'rotate180' : '')}
                                     />
                                 </Anchor>
-                                <div className="position-ab" style={{ left: -12, top: profileDomOffset + 6, visibility: `${(profileDomOffset !== null && profileDomOffset > 0) ? 'visible' : 'hidden'}` }}>
+                                <div
+                                    className="position-ab"
+                                    style={{
+                                        left: -12,
+                                        top: profileDomOffset + 6,
+                                        visibility: `${(profileDomOffset !== null && profileDomOffset > 0) ? 'visible' : 'hidden'}`
+                                    }}
+                                >
                                     <SvgIcon
                                         name="PointingArrow"
                                         size={24}
@@ -561,6 +573,7 @@ function ConfigValueBox({
         </div>
     );
 }
+
 ConfigValueBox.propTypes = {
     definitionForManager: PropTypes.object.isRequired,
     optionConfigGroup: PropTypes.object.isRequired,

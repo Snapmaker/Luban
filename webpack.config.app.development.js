@@ -40,7 +40,6 @@ module.exports = {
     mode: 'development',
     target: 'web',
     devtool: 'source-map',
-    cache: true,
     context: path.resolve(__dirname, 'src/app'),
     resolve: {
         modules: [
@@ -106,6 +105,19 @@ module.exports = {
     module: {
         rules: [
             {
+                enforce: 'pre',
+                test: /\.jsx?$|\.tsx?$/,
+                loader: 'eslint-loader',
+                exclude: /node_modules/,
+                options: {
+                    //cache: true,
+                    fix: true,
+                    emitWarning: false,
+                    quiet: true,
+                    configFile: path.resolve(__dirname, '.eslintrc.js')
+                }
+            },
+            {
                 test: /\.worker\.(j|t)s$/,
                 loader: 'worker-loader',
                 options: {
@@ -127,19 +139,6 @@ module.exports = {
                     path.resolve(__dirname, 'src/app'),
                     path.resolve(__dirname, 'src/shared'),
                 ]
-            },
-            {
-                test: /\.jsx?$|\.tsx?$/,
-                loader: 'eslint-loader',
-                enforce: 'pre',
-                exclude: /node_modules/,
-                options: {
-                    cache: true,
-                    fix: true,
-                    emitWarning: false,
-                    quiet: true,
-                    configFile: path.resolve(__dirname, '.eslintrc.js')
-                }
             },
             {
                 test: /\.js(x)?$/,

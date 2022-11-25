@@ -91,7 +91,7 @@ ModalWrapper.propTypes = {
     visible: PropTypes.bool,
     onClose: PropTypes.func,
     className: PropTypes.string,
-    width: PropTypes.string
+    width: PropTypes.oneOfType(PropTypes.string, PropTypes.number),
 };
 ModalWrapper.Header = Title;
 ModalWrapper.Body = Body;

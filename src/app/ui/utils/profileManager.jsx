@@ -1,6 +1,11 @@
 import React from 'react';
-import { MaterialWithColor } from '../widgets/PrintingMaterial/MaterialWithColor';
+import { indexOf, orderBy } from 'lodash';
+
+import { qualitySettingRank } from '../../constants';
 import i18n from '../../lib/i18n';
+
+import { MaterialWithColor } from '../widgets/PrintingMaterial/MaterialWithColor';
+
 
 function getSelectOptions(printingDefinitions) {
     const toolDefinitionOptionsObj = {};
@@ -49,7 +54,9 @@ function getPresetOptions(definitionModels) {
             checkboxAndSelectGroup.typeOfPrinting = typeOfPrinting;
             checkboxAndSelectGroup.label = `${name}`;
             checkboxAndSelectGroup.value = `${definitionId}-${name}`;
+            checkboxAndSelectGroup.rank = indexOf(qualitySettingRank, definitionId);
             if (presetOptionsObj[category]) {
+                if (!presetOptionsObj[category].options) presetOptionsObj[category].options = [];
                 preset.visible && presetOptionsObj[category].options.push(checkboxAndSelectGroup);
             } else {
                 const i18nCategory = preset.i18nCategory;
@@ -63,6 +70,9 @@ function getPresetOptions(definitionModels) {
                 preset.visible && groupOptions.options.push(checkboxAndSelectGroup);
             }
         }
+        Object.keys(presetOptionsObj).forEach(key => {
+            presetOptionsObj[key].options = orderBy(presetOptionsObj[key].options, ['rank'], ['asc']);
+        });
     });
     return presetOptionsObj;
 }

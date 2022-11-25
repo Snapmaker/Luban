@@ -207,6 +207,9 @@ function registerApis(app) {
     app.post(urljoin(settings.route, 'api/file/packageEnv'), api.file.packageEnv);
     app.post(urljoin(settings.route, 'api/file/recoverProjectFile'), api.file.recoverProjectFile);
 
+    app.post(urljoin(settings.route, 'api/file/saveEditor'), api.file.saveEditor);
+    app.post(urljoin(settings.route, 'api/file/getEditorDefinition'), api.file.getEditorDefinition);
+
 
     app.get(urljoin(settings.route, 'api/profileRawDefinition/:headType/:definitionId'), api.profileDefinitions.getRawDefinition);
 

@@ -33,6 +33,7 @@ function copyFileSync(src, dst) {
         fs.copyFileSync(src, dst);
     }
 }
+
 function traverse(models, callback) {
     models.forEach(model => {
         // callback && callback(model);
@@ -47,14 +48,14 @@ function traverse(models, callback) {
 // Default toolHead for original
 export const INITIAL_TOOL_HEAD_FOR_ORIGINAL = {
     printingToolhead:
-        MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
+    MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
     laserToolhead: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value,
     cncToolhead: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value
 };
 
 export const INITIAL_TOOL_HEAD_FOR_SM2 = {
     printingToolhead:
-        MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value,
+    MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value,
     laserToolhead: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value,
     cncToolhead: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value
 };
@@ -549,3 +550,48 @@ export const recoverProjectFile = async (req, res) => {
         });
     }
 };
+
+/**
+ * save model editor or extruder editor
+ */
+export const saveEditor = async (req, res) => {
+    try {
+        const { content, editorDefinition } = req.body;
+        const envDir = `${DataStorage.envDir}/${HEAD_PRINTING}`;
+        const config = JSON.parse(content);
+        const { modelEditor, extruderEditor } = config;
+        Object.keys({ ...extruderEditor, ...modelEditor }).forEach(key => {
+            const targetFile = `${envDir}/${key}.def.json`;
+            if (fs.existsSync(targetFile)) rmDir(targetFile);
+            const editorContent = JSON.parse(editorDefinition);
+            fs.writeFileSync(targetFile, JSON.stringify(editorContent[key]));
+        });
+    } catch (e) {
+        log.error(`Failed to save editor: ${e}`);
+        res.status(ERR_INTERNAL_SERVER_ERROR).send({
+            msg: `Failed to save editor: ${e}`
+        });
+    }
+};
+
+
+export const getEditorDefinition = async (req, res) => {
+    try {
+        const { key } = req.body;
+        const editorPath = `${DataStorage.tmpDir}/${key}.def.json`;
+        if (fs.existsSync(editorPath)) {
+            const content = fs.readFileSync(editorPath, 'utf-8');
+            res.send({ editorDefinition: JSON.parse(content) });
+            res.end();
+        } else {
+            res.send({ editorDefinition: {} });
+            res.send();
+        }
+    } catch (e) {
+        log.error(`Failed to get editor definintion: ${e}`);
+        res.status(ERR_INTERNAL_SERVER_ERROR).send({
+            msg: `Failed to get editor definition: ${e}`
+        });
+    }
+};
+

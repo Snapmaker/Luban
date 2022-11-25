@@ -297,6 +297,17 @@ function useRenderMainToolBar(setSimplifying, profileInitialized = false) {
                         action: () => {
                             dispatch(printingActions.repairSelectedModels());
                         }
+                    },
+                    {
+                        title: i18n._('Modifiers'),
+                        disabled: !profileInitialized,
+                        type: 'button',
+                        name: 'MainToolbarModifier',
+                        action: () => {
+                            dispatch(printingActions.updateState({
+                                showPrintParameterModifierDialog: true
+                            }));
+                        }
                     }
                 ]
             }

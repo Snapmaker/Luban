@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 import { find, includes, remove } from 'lodash';
 import i18n from '../../../lib/i18n';
 import Anchor from '../../components/Anchor';
-import { HEAD_PRINTING, LEFT, RIGHT } from '../../../constants';
+import { HEAD_PRINTING, LEFT, RIGHT, RIGHT_EXTRUDER } from '../../../constants';
 import {
     getMachineOptions,
     getMachineSupportedToolOptions,
@@ -75,8 +75,9 @@ const MachineSettings = forwardRef(({
     setSeries,
     setToolhead
 }, ref) => {
-    const extruderLDefinition = useSelector((state) => state?.printing?.extruderLDefinition);
-    const extruderRDefinition = useSelector((state) => state?.printing?.extruderRDefinition);
+    // const extruderLDefinition = useSelector((state) => state?.printing?.extruderLDefinition);
+    // const extruderRDefinition = useSelector((state) => state?.printing?.extruderRDefinition);
+    const { extruderLDefinition, extruderRDefinition, definitionEditorForExtruder } = useSelector(state => state?.printing);
     const dispatch = useDispatch();
 
     // head type
@@ -319,6 +320,7 @@ const MachineSettings = forwardRef(({
             _setNozzleDiameterList(LEFT, defaultNozzleDiameterListForDualExtruder, selectedMachineSeries);
             _setNozzleDiameterList(RIGHT, defaultNozzleDiameterListForDualExtruder, selectedMachineSeries);
         } else {
+            definitionEditorForExtruder.delete(RIGHT_EXTRUDER);
             _setNozzleDiameterList(LEFT, defaultNozzleDiameterListForSingleExtruder, selectedMachineSeries);
             setRightNozzleDiameterList([]);
         }

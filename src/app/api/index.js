@@ -80,6 +80,8 @@ const removeEnv = defaultAPIFactory((data) => request.post('/api/file/removeEnv'
 const packageEnv = defaultAPIFactory((data) => request.post('/api/file/packageEnv').send(data));
 const recoverProjectFile = defaultAPIFactory((data) => request.post('/api/file/recoverProjectFile').send(data));
 
+const saveEditor = defaultAPIFactory((data) => request.post('/api/file/saveEditor').send(data));
+const getEditorDefinition = defaultAPIFactory((data) => request.post('/api/file/getEditorDefinition').send(data));
 
 const uploadImage = defaultAPIFactory((formdata) => request.post('/api/image').send(formdata));
 
@@ -340,6 +342,9 @@ export default {
     removeEnv,
     packageEnv,
     recoverProjectFile,
+    saveEditor,
+    getEditorDefinition,
+
     uploadImage,
     stockRemapProcess,
     processImage,

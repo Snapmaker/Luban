@@ -1,15 +1,20 @@
 @import "global.styl"
+
 .sm-flex {
     display: flex;
     overflow: hidden;
-    .sm-flex-auto{
+
+    .sm-flex-auto {
         flex: 0 0 auto;
         order: 1;
     }
-    .sm-flex-width{
+
+    .sm-flex-width {
         flex: 1;
     }
+
     // flex
+
     .sm-flex-direction-c {
         flex-direction: column;
     }
@@ -17,64 +22,80 @@
     .sm-flex-direction-r {
         flex-direction: row;
     }
-    .sm-flex-order-positive{
+
+    .sm-flex-order-positive {
         order: 1;
     }
-    .sm-flex-order-negative{
+
+    .sm-flex-order-negative {
         order: -1;
     }
+
     &__input-unit-8 {
         position: absolute;
         right: 8px;
     }
+
     &__input-unit-24 {
         position: absolute;
         right: 24px;
     }
+
     &__input-unit-in-modal {
         position: absolute;
         right: 32px;
     }
+
     &__input-unit-8 {
         position: absolute;
         right: 8px;
     }
+
     &__input-unit-24 {
         position: absolute;
         right: 24px;
     }
+
     &__input-unit-40 {
         position: absolute;
         right: 40px;
     }
+
     &__input-unit-44 {
         position: absolute;
         right: 44px;
     }
+
     &__input-unit-56 {
         position: absolute;
         right: 56px;
     }
+
     &__input-unit-104 {
         position: absolute;
         right: 104px;
     }
+
     &__input-unit-l-88 {
         position: absolute;
         left: 88px;
     }
+
     &__input-unit-l-128 {
         position: absolute;
         left: 128px;
     }
+
     &__input-unit-l-150 {
         position: absolute;
         left: 150px;
     }
+
     &__input-unit-l-176 {
         position: absolute;
         left: 176px;
     }
+
     &__input-unit-l-184 {
         position: absolute;
         left: 184px;
@@ -84,6 +105,7 @@
 .sm-flex-wrap {
     flex-wrap: wrap;
 }
+
 .sm-flex-nowrap {
     flex-wrap: nowrap;
 }
@@ -91,15 +113,19 @@
 .sm-flex-overflow-visible {
     display: flex;
 }
-.justify-space-around{
+
+.justify-space-around {
     justify-content: space-around;
 }
-.justify-space-between{
+
+.justify-space-between {
     justify-content: space-between;
 }
-.justify-start{
+
+.justify-start {
     justify-content: start;
 }
+
 .justify-center {
     justify-content: center;
 }
@@ -111,6 +137,7 @@
 .justify-flex-end {
     justify-content: flex-end;
 }
+
 .align-center {
     align-items: center;
 }
@@ -138,6 +165,12 @@
     flex-direction: column;
 }
 
+.flex-grow-1 {
+    flex-grow: 1;
+}
+
+// FIXME
 .sm-flex-important {
     display: flex !important
 }
+

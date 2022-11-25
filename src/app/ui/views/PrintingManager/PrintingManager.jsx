@@ -1,19 +1,25 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { includes } from 'lodash';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
-import { actions as printingActions } from '../../../flux/printing';
-import { actions as projectActions } from '../../../flux/project';
-import { actions as machineActions } from '../../../flux/machine';
+
+
 import {
     PRINTING_MANAGER_TYPE_MATERIAL,
     PRINTING_MANAGER_TYPE_QUALITY,
     HEAD_PRINTING,
     LEFT_EXTRUDER
 } from '../../../constants';
-/* eslint-disable import/no-cycle */
-import ProfileManager from '../ProfileManager';
-import i18n from '../../../lib/i18n';
 import { getMachineSeriesWithToolhead } from '../../../constants/machines';
+
+/* eslint-disable import/no-cycle */
+import i18n from '../../../lib/i18n';
+
+import { actions as printingActions } from '../../../flux/printing';
+import { actions as projectActions } from '../../../flux/project';
+import { actions as machineActions } from '../../../flux/machine';
+
+import ProfileManager from '../ProfileManager';
+import ParameterModifier from '../ParameterModifier';
 
 // const materialText = (label, color) => {
 //     return (
@@ -29,9 +35,9 @@ function isOfficialDefinition(definition) {
 }
 
 function PrintingManager() {
-    const showPrintingManager = useSelector(
-        (state) => state?.printing?.showPrintingManager,
-        shallowEqual
+    const showPrintingManager = useSelector((state) => state?.printing?.showPrintingManager);
+    const showPrintParameterModifierDialog = useSelector(
+        (state) => state.printing.showPrintParameterModifierDialog
     );
     const defaultMaterialId = useSelector(
         (state) => state?.printing?.defaultMaterialId,
@@ -87,13 +93,15 @@ function PrintingManager() {
             setAllDefinitions(actualDefinitions);
         }
     }, [managerDisplayType, materialDefinitions, qualityDefinitionsModels, defaultMaterialId]);
-    if (!showPrintingManager) {
-        return null;
-    }
 
     const actions = {
         closeManager: () => {
             dispatch(printingActions.updateShowPrintingManager(false));
+        },
+        closePrintParameterModifier: () => {
+            dispatch(printingActions.updateState({
+                showPrintParameterModifierDialog: false
+            }));
         },
         onChangeFileForManager: (event) => {
             const file = event.target.files[0];
@@ -247,22 +255,41 @@ function PrintingManager() {
             id: defaultQualityId
         }
     };
+
+
+    if (!showPrintingManager && !showPrintParameterModifierDialog) {
+        return null;
+    }
+
     return (
-        <ProfileManager
-            outsideActions={actions}
-            isOfficialDefinition={isOfficialDefinition}
-            customConfig={customConfigs}
-            optionConfigGroup={managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? materialProfileLevel : printingProfileLevel}
-            allDefinitions={allDefinitions}
-            managerTitle={
-                managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL
-                    ? 'key-Printing/PrintingConfigurations-Material Settings'
-                    : 'key-Printing/PrintingConfigurations-Printing Settings'
+        <>
+            {
+                showPrintingManager && (
+                    <ProfileManager
+                        outsideActions={actions}
+                        isOfficialDefinition={isOfficialDefinition}
+                        customConfig={customConfigs}
+                        optionConfigGroup={managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? materialProfileLevel : printingProfileLevel}
+                        allDefinitions={allDefinitions}
+                        managerTitle={
+                            managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL
+                                ? 'key-Printing/PrintingConfigurations-Material Settings'
+                                : 'key-Printing/PrintingConfigurations-Printing Settings'
+                        }
+                        activeDefinitionID={selectedIds[managerDisplayType].id}
+                        managerType={managerDisplayType}
+                        onChangeCustomConfig={onChangeCustomConfig}
+                    />
+                )
             }
-            activeDefinitionID={selectedIds[managerDisplayType].id}
-            managerType={managerDisplayType}
-            onChangeCustomConfig={onChangeCustomConfig}
-        />
+            {
+                showPrintParameterModifierDialog && (
+                    <ParameterModifier
+                        outsideActions={actions}
+                    />
+                )
+            }
+        </>
     );
 }
 

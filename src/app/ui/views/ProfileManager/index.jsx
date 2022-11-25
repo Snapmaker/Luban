@@ -1,29 +1,38 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import classNames from 'classnames';
 import { useDispatch, useSelector } from 'react-redux';
-import { Tooltip, Menu } from 'antd';
+import { Menu, Tooltip } from 'antd';
 import PropTypes from 'prop-types';
 // import { useSelector, shallowEqual } from 'react-redux';
-import { isUndefined, cloneDeep, uniqWith, findIndex, orderBy } from 'lodash';
+import { cloneDeep, findIndex, isUndefined, orderBy, uniqWith } from 'lodash';
+
 import {
-    HEAD_CNC, HEAD_LASER,
-    PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY, MATERIAL_TYPE_OPTIONS
+    HEAD_CNC,
+    HEAD_LASER,
+    MATERIAL_TYPE_OPTIONS,
+    PRINTING_MANAGER_TYPE_MATERIAL,
+    PRINTING_MANAGER_TYPE_QUALITY
 } from '../../../constants';
 import modal from '../../../lib/modal';
-import DefinitionCreator from '../DefinitionCreator';
+import useSetState from '../../../lib/hooks/set-state';
 import Anchor from '../../components/Anchor';
 import i18n from '../../../lib/i18n';
+
 import SvgIcon from '../../components/SvgIcon';
 import Notifications from '../../components/Notifications';
 import Modal from '../../components/Modal';
 import { Button } from '../../components/Buttons';
-/* eslint-disable import/no-cycle */
+
+import DefinitionCreator from '../DefinitionCreator';
 import ConfigValueBox from './ConfigValueBox';
 import styles from './styles.styl';
-import { actions as printingActions } from '../../../flux/printing';
+
 import { MaterialWithColor } from '../../widgets/PrintingMaterial/MaterialWithColor';
-import useSetState from '../../../lib/hooks/set-state';
+
 import AddMaterialModel from '../../pages/MachineMaterialSettings/addMaterialModel';
+
+
+import { actions as printingActions } from '../../../flux/printing';
 import Dropdown from '../../components/Dropdown';
 
 /**
@@ -53,6 +62,7 @@ export const materialCategoryRank = [
     'Nylon',
     'Other'
 ];
+
 function creatCateArray(optionList, managerType) {
     let cates = [];
     optionList.forEach(option => {
@@ -593,7 +603,9 @@ function ProfileManager({
                                                                     'padding-horizontal-4',
                                                                     configExpanded[cate.category] ? 'rotate270' : ''
                                                                 )}
-                                                                onClick={() => { actions.foldCategory(cate.category); }}
+                                                                onClick={() => {
+                                                                    actions.foldCategory(cate.category);
+                                                                }}
                                                                 type={['static']}
                                                             />
                                                             {(definitionState?.isCategorySelected && isCategorySelected && definitionState?.renamingStatus) ? (
@@ -614,7 +626,8 @@ function ProfileManager({
                                                                         actions.updateCategoryName();
                                                                     }}
                                                                 />
-                                                            ) : <span className="text-overflow-ellipsis">{cate.category}</span>}
+                                                            )
+                                                                : <span className="text-overflow-ellipsis">{cate.category}</span>}
                                                         </div>
                                                         {!isOfficialDefinition(definitionState.definitionForManager) && managerType !== PRINTING_MANAGER_TYPE_MATERIAL && (
                                                             <div className={classNames(styles['manager-action'])}>
@@ -623,7 +636,10 @@ function ProfileManager({
                                                                     overlay={(
                                                                         <Menu>
                                                                             <Menu.Item>
-                                                                                <Anchor onClick={() => { actions.setRenamingStatus(true); }}>
+                                                                                <Anchor onClick={() => {
+                                                                                    actions.setRenamingStatus(true);
+                                                                                }}
+                                                                                >
                                                                                     <div className="width-120 text-overflow-ellipsis">{i18n._('key-App/Menu-Rename')}</div>
                                                                                 </Anchor>
                                                                             </Menu.Item>
@@ -714,13 +730,19 @@ function ProfileManager({
                                                                                                     <Menu>
                                                                                                         {!isOfficialDefinition(definitionState.definitionForManager) && (
                                                                                                             <Menu.Item>
-                                                                                                                <Anchor onClick={() => { actions.setRenamingStatus(true); }}>
+                                                                                                                <Anchor onClick={() => {
+                                                                                                                    actions.setRenamingStatus(true);
+                                                                                                                }}
+                                                                                                                >
                                                                                                                     <div className="width-120 text-overflow-ellipsis">{i18n._('key-App/Menu-Rename')}</div>
                                                                                                                 </Anchor>
                                                                                                             </Menu.Item>
                                                                                                         )}
                                                                                                         <Menu.Item>
-                                                                                                            <Anchor onClick={() => { actions.showDuplicateModal(); }}>
+                                                                                                            <Anchor onClick={() => {
+                                                                                                                actions.showDuplicateModal();
+                                                                                                            }}
+                                                                                                            >
                                                                                                                 <div className="width-120 text-overflow-ellipsis">{i18n._('key-App/Menu-Copy')}</div>
                                                                                                             </Anchor>
                                                                                                         </Menu.Item>
@@ -870,6 +892,7 @@ function ProfileManager({
         </React.Fragment>
     );
 }
+
 ProfileManager.propTypes = {
     outsideActions: PropTypes.object.isRequired,
     activeDefinitionID: PropTypes.string.isRequired,

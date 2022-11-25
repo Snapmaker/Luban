@@ -1373,3 +1373,13 @@ export const AUTO_MDOE = Symbol('auto mode');
 export const SEMI_AUTO_MODE = Symbol('semi_auto_mode by MaterialThickness');
 export const MANUAL_MODE = Symbol('manual mode');
 export const AUTO_STRING = 'auto';
+
+
+export const qualitySettingRank = [
+    'quality.normal_quality',
+    'quality.normal_other_quality',
+    'quality.normal_tpu_quality',
+    'quality.fast_print',
+    'quality.high_quality',
+    'quality.engineering_print'
+];

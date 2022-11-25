@@ -1,6 +1,6 @@
 /* eslint-disable import/no-cycle */
 import cloneDeep from 'lodash/cloneDeep';
-import { find, keys, some } from 'lodash';
+import { find, keys, some, isEmpty } from 'lodash';
 import pkg from '../../../package.json';
 import {
     COORDINATE_MODE_BOTTOM_CENTER,
@@ -89,12 +89,14 @@ export const actions = {
         startService(HEAD_PRINTING);
     },
 
-    autoSaveEnvironment: (headType) => async (dispatch, getState) => {
+    autoSaveEnvironment: (headType, isSaveEditor = false) => async (dispatch, getState) => {
         const editorState = getState()[headType];
         const { initState } = getState().project[headType];
         const { modelGroup } = editorState;
         const models = modelGroup.getModels();
-        if (!models.length && initState) return;
+
+        if (!models.length && initState && !isSaveEditor) return;
+
         const machineState = getState().machine;
         const { size, series, toolHead } = machineState;
         const machineInfo = {};
@@ -110,11 +112,28 @@ export const actions = {
             envObj.coordinateMode = coordinateMode;
             envObj.coordinateSize = coordinateSize;
         } else if (headType === HEAD_PRINTING) {
-            const { defaultMaterialId, defaultMaterialIdRight, defaultQualityId, helpersExtruderConfig } = editorState;
+            const {
+                defaultMaterialId,
+                defaultMaterialIdRight,
+                defaultQualityId,
+                helpersExtruderConfig,
+                definitionEditorForExtruder,
+                definitionEditorForModel,
+            } = editorState;
             envObj.defaultMaterialId = defaultMaterialId;
             envObj.defaultMaterialIdRight = defaultMaterialIdRight;
             envObj.defaultQualityId = defaultQualityId;
             envObj.helpersExtruderConfig = helpersExtruderConfig;
+            envObj.extruderEditor = {};
+            envObj.modelEditor = {};
+
+            definitionEditorForExtruder.forEach((value, key) => {
+                envObj.extruderEditor[key] = { ...value };
+            });
+            definitionEditorForModel.forEach((value, key) => {
+                envObj.modelEditor[key] = { ...value };
+            });
+
             envObj.models.push(modelGroup.primeTower.getSerializableConfig());
         }
         for (let key = 0; key < models.length; key++) {
@@ -128,6 +147,15 @@ export const actions = {
         const content = JSON.stringify(envObj);
         dispatch(actions.updateState(headType, { content, unSaved: true, initState: false }));
         await api.saveEnv({ content });
+
+        if (headType === HEAD_PRINTING) {
+            const { editorDefinition } = editorState;
+            const editorObj = {};
+            editorDefinition.forEach((value, key) => {
+                editorObj[key] = { ...value };
+            });
+            await api.saveEditor({ content, editorDefinition: JSON.stringify(editorObj) });
+        }
     },
 
     getLastEnvironment: (headType) => async (dispatch) => {
@@ -435,8 +463,10 @@ export const actions = {
 
     },
 
-    openProject: (file, history, unReload = false, isGuideTours = false) => async (dispatch) => {
+    openProject: (file, history, unReload = false, isGuideTours = false) => async (dispatch, getState) => {
         if (checkIsSnapmakerProjectFile(file.name)) {
+            const { definitionEditorForExtruder, definitionEditorForModel, editorDefinition } = getState().printing;
+
             const formData = new FormData();
             let shouldSetFileName = true;
             if (!(file instanceof File)) {
@@ -468,6 +498,32 @@ export const actions = {
             } else {
                 // old verison of project file
                 headType = envObj.headType;
+            }
+            if (headType === HEAD_PRINTING) {
+                const savedExtruderEditor = envObj.extruderEditor;
+                const savedModelEditor = envObj.modelEditor;
+                if (!isEmpty(savedExtruderEditor)) {
+                    Object.keys(savedExtruderEditor).forEach(async (key) => {
+                        const checkedParams = savedExtruderEditor[key];
+                        // checkedParams && (checkedParams = JSON.parse(checkedParams));
+                        definitionEditorForExtruder.set(key, checkedParams);
+                        const { body: { editorDefinition: _editorDefinition } } = await api.getEditorDefinition({ key });
+                        const newMap = new Map([...editorDefinition.entries()]);
+                        newMap.set(key, _editorDefinition);
+                        dispatch(printingActions.updateState({
+                            editorDefinition: newMap
+                        }));
+                    });
+                }
+                if (!isEmpty(savedModelEditor)) {
+                    Object.keys(savedModelEditor).forEach(async (modelId) => {
+                        const checkedParams = savedModelEditor[modelId];
+                        // checkedParams && (checkedParams = JSON.parse(checkedParams));
+                        definitionEditorForModel.set(modelId, checkedParams);
+                        const { body: { editorDefinition: _editorDefinition } } = await api.getEditorDefinition({ key: modelId });
+                        editorDefinition.set(modelId, _editorDefinition);
+                    });
+                }
             }
             UniformToolpathConfig(envObj);
 
