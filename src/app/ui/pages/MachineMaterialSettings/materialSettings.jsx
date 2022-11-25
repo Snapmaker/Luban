@@ -397,7 +397,7 @@ const MaterialSettings = ({ toolMap, loading }) => {
                                         return (
                                             <Anchor
                                                 className={classNames(`height-40 padding-horizontal-16 sm-flex align-center border-default-grey-1 ${selectedDefinitionId === definition.definitionId ? 'border-blod-blue-2' : ''}`, styles['material-item'])}
-                                                style={{ 'border-radius': '100px' }}
+                                                style={{ borderRadius: '100px' }}
                                                 onClick={(e) => handleUpdateDefinition(e, definition.definitionId)}
                                                 onDoubleClick={onShowPrintingManager}
                                                 key={definition.definitionId}

@@ -538,6 +538,9 @@ function Configurations() {
                                 {Object.keys(printingCustomConfigsWithCategory).map((category) => (
                                     <div key={category}>
                                         {printingCustomConfigsWithCategory[category].map(key => {
+                                            if (key === 'machine_heated_bed') {
+                                                console.log('bed', selectedSettingDefaultValue[key].default_value);
+                                            }
                                             return (
                                                 <SettingItem
                                                     styleSize="middle"
