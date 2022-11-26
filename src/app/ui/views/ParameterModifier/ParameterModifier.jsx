@@ -4,19 +4,26 @@ import { every, find, includes } from 'lodash';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
-import { isDualExtruder, HEAD_PRINTING } from '../../../constants/machines';
+import { HEAD_PRINTING, isDualExtruder } from '../../../constants/machines';
 import i18n from '../../../lib/i18n';
 
 import Modal from '../../components/Modal';
 
 import { getPresetOptions } from '../../utils/profileManager';
 import { actions as projectActions } from '../../../flux/project';
-/* eslint-disable import/no-cycle */
-import CategorySelector, { EXTRUDER_TAB } from './CategorySelector';
-/* eslint-disable import/no-cycle */
+import StackPresetSelector from './StackPresetSelector';
 import Content from './Content';
 
+/**
+ * Print parameter modifier dialog.
+ *
+ * @param outsideActions
+ * @returns {*}
+ * @constructor
+ */
 function ParameterModifier({ outsideActions }) {
+    const dispatch = useDispatch();
+
     const {
         defaultDefinitions,
         qualityDefinitions,
@@ -25,25 +32,23 @@ function ParameterModifier({ outsideActions }) {
         defaultMaterialIdRight,
         definitionEditorForExtruder,
     } = useSelector(state => state?.printing);
-
     const { toolHead: { printingToolhead } } = useSelector(state => state?.machine);
-    const [selectedTab, setSelectedTab] = useState(EXTRUDER_TAB);
+
     const [selectedExtruder, setSelectedExtruder] = useState(LEFT_EXTRUDER);
-    const [selectedModelId, setSelectedModelId] = useState('');
+
     const [selectedDefinitionId, setSelectedDefinitionId] = useState('');
     const [selectedSettingsDefaultValue, setSelectedSettingsDefaultValue] = useState({});
-    const [mode, setMode] = useState('show'); // show => show the editor data, update => update the editor data
-    const dispatch = useDispatch();
 
-    const handleUpdateCallback = (type, value) => {
-        if (type === EXTRUDER_TAB) {
-            setSelectedExtruder(value);
-        } else {
-            setSelectedModelId(value);
+    const [mode, setMode] = useState('show'); // show => show the editor data, update => update the editor data
+
+    // const handleUpdateCallback = (type, value) => {
+    //     setSelectedExtruder(value);
+    // };
+    const onSelectStack = (stackId) => {
+        // These are the only values supported, add a global machine stack later
+        if (includes([LEFT_EXTRUDER, RIGHT_EXTRUDER], stackId)) {
+            setSelectedExtruder(stackId);
         }
-    };
-    const handleTabSelectedCallback = (type) => {
-        setSelectedTab(type);
     };
 
     const getKeys = (parentKeys, definition) => {
@@ -96,38 +101,32 @@ function ParameterModifier({ outsideActions }) {
     }, [selectedDefinitionId]);
 
     return (
-        <React.Fragment>
-            <Modal
-                size="lg-profile-manager"
-                style={{ minWidth: 700 }}
-                onClose={outsideActions.closePrintParameterModifier}
-            >
-                <Modal.Header>
-                    <div>
-                        {i18n._('Print Parameter Modifiers')}
-                    </div>
-                </Modal.Header>
-                <Modal.Body>
-                    <div className="background-grey-3 height-all-minus-132 sm-flex">
-                        <CategorySelector
-                            handleUpdateCallback={handleUpdateCallback}
-                            handleTabSelectedCallback={handleTabSelectedCallback}
-                            mode={mode}
-                            handleUpdateDefinitionId={setSelectedDefinitionId}
-                        />
-                        <Content
-                            selectedExtruder={selectedExtruder}
-                            selectedModelId={selectedModelId}
-                            editorType={selectedTab}
-                            mode={mode}
-                            setMode={setMode}
-                            printingDefinitionId={selectedDefinitionId}
-                            selectedSettingsDefaultValue={selectedSettingsDefaultValue}
-                        />
-                    </div>
-                </Modal.Body>
-            </Modal>
-        </React.Fragment>
+        <Modal
+            size="lg-profile-manager"
+            style={{ minWidth: 700 }}
+            onClose={outsideActions.closePrintParameterModifier}
+        >
+            <Modal.Header>
+                <div>
+                    {i18n._('Print Parameter Modifiers')}
+                </div>
+            </Modal.Header>
+            <Modal.Body>
+                <div className="background-grey-3 height-all-minus-132 sm-flex">
+                    <StackPresetSelector
+                        onSelectStack={onSelectStack}
+                        handleUpdateDefinitionId={setSelectedDefinitionId}
+                    />
+                    <Content
+                        selectedExtruder={selectedExtruder}
+                        mode={mode}
+                        setMode={setMode}
+                        printingDefinitionId={selectedDefinitionId}
+                        selectedSettingsDefaultValue={selectedSettingsDefaultValue}
+                    />
+                </div>
+            </Modal.Body>
+        </Modal>
     );
 }
 

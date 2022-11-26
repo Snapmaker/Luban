@@ -9,6 +9,6 @@ export const ToastWapper = (text1, svgName, color) => (
             color={color}
             className="margin-right-4"
         />
-        <span className="line-heigh-24">{text1}</span>
+        <span className="line-height-24">{text1}</span>
     </div>
 );

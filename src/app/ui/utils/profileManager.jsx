@@ -1,7 +1,7 @@
 import React from 'react';
 import { indexOf, orderBy } from 'lodash';
 
-import { qualitySettingRank } from '../../constants';
+import { DEFAULT_PRESET_IDS } from '../../constants/preset';
 import i18n from '../../lib/i18n';
 
 import { MaterialWithColor } from '../widgets/PrintingMaterial/MaterialWithColor';
@@ -39,6 +39,29 @@ function getSelectOptions(printingDefinitions) {
     return toolDefinitionOptions;
 }
 
+/**
+ * Get preset Options from definitions.
+ *
+ * @param definitionModels
+ *
+ * @return
+ *
+ * {
+ *      [category: string]: {
+ *          label,
+ *          category,
+ *          i18nCategoory,
+ *          options: [{
+ *              name,
+ *              definitionId,
+ *              typeOfPrinting,
+ *              label,
+ *              value,
+ *              rank,
+ *          }]
+ *      },
+ * }
+ */
 function getPresetOptions(definitionModels) {
     const presetOptionsObj = {};
     definitionModels.forEach(preset => {
@@ -54,7 +77,7 @@ function getPresetOptions(definitionModels) {
             checkboxAndSelectGroup.typeOfPrinting = typeOfPrinting;
             checkboxAndSelectGroup.label = `${name}`;
             checkboxAndSelectGroup.value = `${definitionId}-${name}`;
-            checkboxAndSelectGroup.rank = indexOf(qualitySettingRank, definitionId);
+            checkboxAndSelectGroup.rank = indexOf(DEFAULT_PRESET_IDS, definitionId);
             if (presetOptionsObj[category]) {
                 if (!presetOptionsObj[category].options) presetOptionsObj[category].options = [];
                 preset.visible && presetOptionsObj[category].options.push(checkboxAndSelectGroup);

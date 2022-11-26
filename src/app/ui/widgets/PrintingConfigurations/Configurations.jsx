@@ -1,35 +1,33 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import classNames from 'classnames';
-import { cloneDeep, isNil, uniqWith, find as lodashFind } from 'lodash';
 import { Menu, Spin } from 'antd';
-import Tooltip from '../../components/Tooltip';
-import modal from '../../../lib/modal';
-import DefinitionCreator from '../../views/DefinitionCreator';
-import Select from '../../components/Select';
-import SvgIcon from '../../components/SvgIcon';
-import Anchor from '../../components/Anchor';
-import { Button } from '../../components/Buttons';
-import { printingStore } from '../../../store/local-storage';
+import classNames from 'classnames';
+import { cloneDeep, find, isNil, uniqWith } from 'lodash';
+import React, { useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
-import i18n from '../../../lib/i18n';
+import { KEY_DEFAULT_CATEGORY_CUSTOM, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
+import { HEAD_PRINTING } from '../../../constants/machines';
+import { PRESET_CATEGORY_DEFAULT, DEFAULT_PRESET_IDS } from '../../../constants/preset';
+
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
-
-import {
-    HEAD_PRINTING,
-    KEY_DEFAULT_CATEGORY_CUSTOM,
-    PRINTING_MANAGER_TYPE_QUALITY,
-    qualitySettingRank,
-} from '../../../constants';
+import i18n from '../../../lib/i18n';
+import modal from '../../../lib/modal';
+import { printingStore } from '../../../store/local-storage';
+import Anchor from '../../components/Anchor';
+import { Button } from '../../components/Buttons';
+import Dropdown from '../../components/Dropdown';
+import Select from '../../components/Select';
+import SvgIcon from '../../components/SvgIcon';
+import Tooltip from '../../components/Tooltip';
+import { getPresetOptions } from '../../utils/profileManager';
+import DefinitionCreator from '../../views/DefinitionCreator';
+import ParamItem from '../../views/ParamItem';
+import PrintingManager from '../../views/PrintingManager';
 /* eslint-disable import/no-cycle */
 import SettingItem from '../../views/ProfileManager/SettingItem';
-/* eslint-disable import/no-cycle */
+
 import styles from './styles.styl';
-import ParamItem from '../../views/ParamItem';
-import { getPresetOptions } from '../../utils/profileManager';
-import PrintingManager from '../../views/PrintingManager';
-import Dropdown from '../../components/Dropdown';
+
 
 const DEFAULT_DISPLAY_TYPE = 'key-default_category-Default';
 const CONFIG_DISPLAY_TYPES = ['Recommended', 'Customized'];
@@ -38,28 +36,43 @@ const CONFIG_DISPLAY_TYPES_OPTIONS = CONFIG_DISPLAY_TYPES.map((item) => {
 });
 
 
+function checkIsAllDefault(definitionModelSettings, selectedModelDefaultSetting) {
+    return Object.keys(definitionModelSettings).every((key) => {
+        if (definitionModelSettings[key] && definitionModelSettings[key]?.enabled && selectedModelDefaultSetting[key]) {
+            return definitionModelSettings[key].default_value === selectedModelDefaultSetting[key].default_value;
+        } else {
+            return true;
+        }
+    });
+}
+
+
 // {i18n._(`key-Printing/PrintingConfigurations-${optionItem.typeOfPrinting}`)}
 function Configurations() {
-    const [selectedDefinition, setSelectedDefinition] = useState(null);
-    const [initialized, setInitialized] = useState(false);
-    const [minimized, setMinimized] = useState(printingStore.get('printingSettingMinimized') || false);
-    const [presetDisplayType, setPresetDisplayType] = useState();
-    const [configDisplayType, setConfigDisplayType] = useState(printingStore.get('printingSettingDisplayType') || CONFIG_DISPLAY_TYPES[0]);
     const defaultQualityId = useSelector((state) => state?.printing?.defaultQualityId);
     const qualityDefinitionModels = useSelector((state) => state?.printing?.qualityDefinitions);
     const printingCustomConfigsWithCategory = useSelector((state) => state?.machine?.printingCustomConfigsWithCategory);
-    const [
-        selectedSettingDefaultValue,
-        setSelectedSettingDefaultValue
-    ] = useState(null);
     const refCreateModal = useRef(null);
     const dispatch = useDispatch();
 
+    const [presetCategory, setPresetCategory] = useState(PRESET_CATEGORY_DEFAULT);
+    const [selectedDefinition, setSelectedDefinition] = useState(null);
+    const [initialized, setInitialized] = useState(false);
+    const [configDisplayType, setConfigDisplayType] = useState(printingStore.get('printingSettingDisplayType') || CONFIG_DISPLAY_TYPES[0]);
+
+    const [selectedSettingDefaultValue, setSelectedSettingDefaultValue] = useState(null);
+
     const presetOptionsObj = getPresetOptions(qualityDefinitionModels);
 
-    const presetDisplayTypeOptions = Object.entries(presetOptionsObj).map(([key, item]) => {
-        return { value: key, label: key, category: item.category, i18nCategory: item.i18nCategory };
+    const presetCategoryOptions = Object.entries(presetOptionsObj).map(([key, item]) => {
+        return {
+            value: key,
+            label: key,
+            category: item.category,
+            i18nCategory: item.i18nCategory
+        };
     });
+
     const i18nContent = {
         'quality.fast_print': i18n._('key-Luban/Preset/Prints in a fast mode. The printing time is short, but the outcome might be rough.'),
         'quality.normal_quality': i18n._('key-Luban/Preset/Prints with general settings. The printing outcome has a standard quality.'),
@@ -68,7 +81,8 @@ function Configurations() {
         'quality.high_quality': i18n._('key-Luban/Preset/Prints the surface of the model more meticulously. It takes longer  time but produces higher-quality surface for the print.'),
         'quality.engineering_print': i18n._('key-Luban/Preset/Enhances dimensional accuracy and overall strength of the model. It takes longer time, but produces robust prints with precise dimensions. This mode is suitable for printing precision machined parts.'),
     };
-    const getPresetContent = (definitionId, name) => {
+
+    const getPresetToolTip = (definitionId, name) => {
         return (
             <div className="padding-vertical-16 padding-horizontal-16">
                 <div className="font-weight-bold padding-bottom-16 border-bottom-white">
@@ -83,17 +97,6 @@ function Configurations() {
 
 
     const actions = {
-        checkIsAllDefault: (definitionModelSettings, selectedModelDefaultSetting) => {
-            let result = true;
-            result = Object.keys(definitionModelSettings).every((key) => {
-                if (definitionModelSettings[key] && definitionModelSettings[key]?.enabled && selectedModelDefaultSetting[key]) {
-                    return definitionModelSettings[key].default_value === selectedModelDefaultSetting[key].default_value;
-                } else {
-                    return true;
-                }
-            });
-            return result;
-        },
         getDefaultDefinition: (definitionId) => {
             return dispatch(printingActions.getDefaultDefinition(definitionId));
         },
@@ -101,13 +104,8 @@ function Configurations() {
             setConfigDisplayType(newDisplayType);
             printingStore.set('printingSettingDisplayType', newDisplayType);
         },
-        toggleMinimized: () => {
-            const newMinimized = !minimized;
-            setMinimized(newMinimized);
-            printingStore.set('printingSettingMinimized', newMinimized);
-        },
         onChangePresetDisplayType: (options) => {
-            setPresetDisplayType(options.value);
+            setPresetCategory(options.value);
             const firstDefinitionId = presetOptionsObj[options.value]?.options[0]?.definitionId;
             firstDefinitionId && actions.onSelectCustomDefinitionById(firstDefinitionId);
         },
@@ -128,7 +126,7 @@ function Configurations() {
             const copyCategoryI18n = newSelectedDefinition.i18nCategory;
             const copyItemName = newSelectedDefinition.name;
             const isCreate = false;
-            let materialOptions = presetDisplayTypeOptions
+            let materialOptions = presetCategoryOptions
                 .filter((option) => {
                     return option.category !== i18n._(DEFAULT_DISPLAY_TYPE);
                 })
@@ -284,22 +282,23 @@ function Configurations() {
         },
     };
 
-    const renderProfileMenu = () => {
-        const hasResetButton = selectedDefinition.isRecommended;
+    /**
+     * Preset operation menu.
+     */
+    const renderPresetMenu = () => {
+        const isRecommended = selectedDefinition.isRecommended;
         let isAllValueDefault = true;
-        if (hasResetButton) {
+        if (isRecommended) {
             const selectedDefaultSetting = actions.getDefaultDefinition(selectedDefinition.definitionId);
             if (selectedDefaultSetting) {
-                isAllValueDefault = actions.checkIsAllDefault(selectedDefinition.settings, selectedDefaultSetting);
+                isAllValueDefault = checkIsAllDefault(selectedDefinition.settings, selectedDefaultSetting);
             }
         }
         return (
             <Menu>
-                {hasResetButton && !isAllValueDefault && (
+                {isRecommended && !isAllValueDefault && (
                     <Menu.Item>
-                        <Anchor
-                            onClick={actions.resetPreset}
-                        >
+                        <Anchor onClick={actions.resetPreset}>
                             <div className="width-120 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Reset')}</div>
                         </Anchor>
                     </Menu.Item>
@@ -312,20 +311,23 @@ function Configurations() {
             </Menu>
         );
     };
+
     useEffect(() => {
         // re-select definition based on new properties
         if (qualityDefinitionModels.length > 0) {
-            setInitialized(true);
+            if (!initialized) {
+                setInitialized(true);
+            }
             const definition = qualityDefinitionModels.find(
                 (d) => d.definitionId === defaultQualityId
             );
             if (!definition) {
                 // definition no found, select first official definition
                 actions.onSelectOfficialDefinition(qualityDefinitionModels[0], false);
-                setPresetDisplayType(qualityDefinitionModels[0].category);
+                setPresetCategory(qualityDefinitionModels[0].category);
             } else {
                 actions.onSelectOfficialDefinition(definition, false);
-                setPresetDisplayType(definition.category);
+                setPresetCategory(definition.category);
             }
         }
     }, [defaultQualityId, qualityDefinitionModels]);
@@ -340,190 +342,172 @@ function Configurations() {
             </div>
         );
     }
+
     return (
         <div>
-            <div
-                className={classNames(
-                    'margin-top-16'
-                )}
-            >
+            <div className="margin-top-16">
                 <Select
                     clearable={false}
                     size="328px"
-                    options={presetDisplayTypeOptions}
-                    value={presetDisplayType}
+                    options={presetCategoryOptions}
+                    value={presetCategory}
                     onChange={actions.onChangePresetDisplayType}
                 />
-                {presetDisplayType === i18n._(DEFAULT_DISPLAY_TYPE) && (
-                    <div className={classNames(styles['preset-recommended'], 'sm-flex', 'margin-vertical-16', 'align-c', 'justify-space-between')}>
-                        {qualitySettingRank.map((qualityId) => {
-                            const optionItem = lodashFind(presetOptionsObj[presetDisplayType].options, { definitionId: qualityId });
-                            if (optionItem) {
-                                return (
-                                    <div
-                                        key={optionItem.typeOfPrinting}
-                                        className={classNames(
-                                            selectedDefinition.typeOfPrinting === optionItem.typeOfPrinting ? styles.selected : styles.unselected,
-                                        )}
-                                    >
-                                        <Tooltip
-                                            title={getPresetContent(optionItem?.definitionId, optionItem.name)}
-                                            zIndex={10}
-                                            placement="left"
+                {
+                    presetCategory === PRESET_CATEGORY_DEFAULT && (
+                        <div className={classNames(styles['preset-recommended'], 'sm-flex', 'margin-vertical-16', 'align-c', 'justify-space-between')}>
+                            {
+                                DEFAULT_PRESET_IDS.map((presetId) => {
+                                    const optionItem = find(presetOptionsObj[presetCategory].options, { definitionId: presetId });
+                                    if (optionItem) {
+                                        return (
+                                            <div
+                                                key={optionItem.typeOfPrinting}
+                                                className={classNames(
+                                                    selectedDefinition.typeOfPrinting === optionItem.typeOfPrinting ? styles.selected : styles.unselected,
+                                                )}
+                                            >
+                                                <Tooltip
+                                                    title={getPresetToolTip(optionItem?.definitionId, optionItem.name)}
+                                                    zIndex={10}
+                                                    placement="left"
+                                                >
+                                                    <Anchor onClick={() => actions.onSelectCustomDefinitionById(optionItem.definitionId)}>
+                                                        <div
+                                                            className={classNames(
+                                                                styles['preset-recommended__icon'],
+                                                                styles[`preset-recommended__icon-${optionItem.typeOfPrinting}`],
+                                                            )}
+                                                        >
+                                                            <Dropdown
+                                                                placement="bottomRight"
+                                                                style={{ maxWidth: '160px' }}
+                                                                overlay={renderPresetMenu(presetCategory)}
+                                                                trigger={['click']}
+                                                            >
+                                                                <SvgIcon
+                                                                    className={classNames(
+                                                                        styles['preset-hover'],
+                                                                    )}
+                                                                    type={['static']}
+                                                                    size={24}
+                                                                    name="More"
+                                                                />
+                                                            </Dropdown>
+                                                        </div>
+                                                    </Anchor>
+                                                </Tooltip>
+                                                <span className="max-width-76 text-overflow-ellipsis-line-2 height-32-half-line margin-top-4 margin-bottom-8">
+                                                    {optionItem.name}
+                                                </span>
+                                            </div>
+                                        );
+                                    } else {
+                                        return null;
+                                    }
+                                })
+                            }
+                        </div>
+                    )
+                }
+                {
+                    presetCategory !== PRESET_CATEGORY_DEFAULT && (
+                        <div className={classNames(styles['preset-customized'], 'margin-top-8')}>
+                            {
+                                presetOptionsObj[presetCategory] && presetOptionsObj[presetCategory].options.map((optionItem, index) => {
+                                    return (
+                                        <div
+                                            key={(optionItem.i18nName + index) || (optionItem.name + index)}
+                                            className={classNames(
+                                                optionItem.definitionId === selectedDefinition.definitionId ? styles.selected : null,
+                                                'border-radius-4',
+                                            )}
                                         >
                                             <Anchor
+                                                className={classNames(
+                                                    styles['preset-item'],
+                                                    'height-32',
+                                                    'display-block',
+                                                    'padding-left-8',
+                                                    'border-radius-4',
+                                                )}
                                                 onClick={() => actions.onSelectCustomDefinitionById(optionItem.definitionId)}
                                             >
-                                                <div className={classNames(
-                                                    styles[`preset-recommended__icon-${optionItem.typeOfPrinting}`],
-                                                    styles['preset-recommended__icon']
-                                                )}
+                                                <span>
+                                                    {i18n._(optionItem.i18nName || optionItem.name)}
+                                                </span>
+                                                <Dropdown
+                                                    placement="left"
+                                                    className="display-inline float-right"
+                                                    overlay={renderPresetMenu(presetCategory)}
+                                                    trigger={['click']}
                                                 >
-                                                    <Dropdown
-                                                        placement="bottomRight"
-                                                        style={{ maxWidth: '160px' }}
-                                                        overlay={renderProfileMenu(presetDisplayType)}
-                                                        trigger={['click']}
-                                                    >
-                                                        <SvgIcon
-                                                            className={classNames(
-                                                                styles['preset-hover'],
-                                                            )}
-                                                            type={['static']}
-                                                            size={24}
-                                                            name="More"
-                                                        />
-                                                    </Dropdown>
-                                                </div>
+                                                    <SvgIcon
+                                                        className={classNames(
+                                                            styles['preset-hover'],
+                                                        )}
+                                                        type={['static']}
+                                                        size={24}
+                                                        name="More"
+                                                    />
+                                                </Dropdown>
                                             </Anchor>
-                                        </Tooltip>
-                                        <span className="max-width-76 text-overflow-ellipsis-line-2 height-32-half-line margin-top-4 margin-bottom-8">
-                                            {optionItem.name}
-                                        </span>
-                                    </div>
-                                );
-                            } else {
-                                return null;
-                            }
-                        })}
-                    </div>
-                )}
-                {presetDisplayType !== i18n._(DEFAULT_DISPLAY_TYPE) && (
-                    <div className={classNames(styles['preset-customized'], 'margin-top-8')}>
-                        {presetOptionsObj[presetDisplayType] && presetOptionsObj[presetDisplayType].options.map((optionItem, index) => {
-                            return (
-                                <div
-                                    key={(optionItem.i18nName + index) || (optionItem.name + index)}
-                                    className={classNames(
-                                        optionItem.definitionId === selectedDefinition.definitionId ? styles.selected : null,
-                                        'border-radius-4',
-                                    )}
-                                >
-                                    <Anchor
-                                        className={classNames(
-                                            styles['preset-item'],
-                                            'height-32',
-                                            'display-block',
-                                            'padding-left-8',
-                                            'border-radius-4',
-                                        )}
-                                        onClick={() => actions.onSelectCustomDefinitionById(optionItem.definitionId)}
-                                    >
-                                        <span>
-                                            {i18n._(optionItem.i18nName || optionItem.name)}
-                                        </span>
-                                        <Dropdown
-                                            placement="left"
-                                            className="display-inline float-right"
-                                            overlay={renderProfileMenu(presetDisplayType)}
-                                            trigger={['click']}
-                                        >
-                                            <SvgIcon
-                                                className={classNames(
-                                                    styles['preset-hover'],
-                                                )}
-                                                type={['static']}
-                                                size={24}
-                                                name="More"
-                                            />
-                                        </Dropdown>
-                                    </Anchor>
 
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
+                                        </div>
+                                    );
+                                })
+                            }
+                        </div>
+                    )
+                }
             </div>
-            <div className={classNames(
-                styles['divided-line'],
-                'background-grey-1',
-                minimized ? styles['opacity-1'] : styles['opacity-0']
-            )}
-            />
             <div className={classNames(styles['printing-settings-wrapper'], 'background-grey-1', 'margin-bottom-16')}>
                 <div className={classNames(styles['printing-settings'], 'height-32', 'background-color-white', 'padding-horizontal-16')}>
                     <span className={classNames(styles['printing-settings-text'], 'align-c', 'white-space-nowrap')}>
                         {i18n._('key-Printing/PrintingConfigurations-Printing Settings')}
                     </span>
-                    <SvgIcon
-                        title={minimized ? i18n._('key-Widget/CommonDropdownButton-Expand') : i18n._('key-Widget/CommonDropdownButton-Collapse')}
-                        onClick={() => actions.toggleMinimized()}
-                        name="DropdownLine"
-                        size={24}
-                        type={['static']}
-                        className={classNames(
-                            !minimized ? '' : 'rotate180'
-                        )}
-                    />
                 </div>
             </div>
-            {!minimized && (
+            <div className="margin-bottom-16 margin-top-16">
                 <div
                     className={classNames(
-                        'sm-flex',
-                        'margin-bottom-16',
-                        'margin-top-negative-16'
+                        'border-default-grey-1',
+                        'border-radius-8',
+                        'padding-top-24',
+                        'padding-bottom-24',
+                        'width-328',
+                        'padding-horizontal-16',
+                        // 'clearfix'
                     )}
                 >
-                    <div
-                        className={classNames(
-                            'border-default-grey-1',
-                            'border-radius-8',
-                            'padding-bottom-16',
-                            'padding-top-24',
-                            'width-328',
-                            'padding-horizontal-16',
-                            // 'clearfix'
-                        )}
-                    >
-                        <div className="margin-bottom-16 height-32 sm-flex justify-space-between">
-                            <div className="display-inline-block">
-                                <span className="color-black-5 margin-right-8">
-                                    {i18n._(
-                                        'key-Printing/PrintingConfigurations-Parameter Display :'
-                                    )}
-                                </span>
-                                <Select
-                                    clearable={false}
-                                    style={{ border: 'none', width: '100px' }}
-                                    bordered={false}
-                                    options={CONFIG_DISPLAY_TYPES_OPTIONS}
-                                    value={configDisplayType}
-                                    onChange={(options) => {
-                                        actions.onChangeConfigDisplayType(options.value);
-                                    }}
-                                />
-                            </div>
-                            {configDisplayType === CONFIG_DISPLAY_TYPES[1] && (
+                    <div className="margin-bottom-16 height-32 sm-flex justify-space-between">
+                        <div className="display-inline-block">
+                            <span className="color-black-5 margin-right-8">
+                                {i18n._('key-Printing/PrintingConfigurations-Parameter Display :')}
+                            </span>
+                            <Select
+                                clearable={false}
+                                style={{ border: 'none', width: '100px' }}
+                                bordered={false}
+                                options={CONFIG_DISPLAY_TYPES_OPTIONS}
+                                value={configDisplayType}
+                                onChange={(options) => {
+                                    actions.onChangeConfigDisplayType(options.value);
+                                }}
+                            />
+                        </div>
+                        {
+                            configDisplayType === CONFIG_DISPLAY_TYPES[1] && (
                                 <SvgIcon
                                     name="Manage"
                                     size={24}
                                     onClick={actions.toggleShowCustomConfigPannel}
                                 />
-                            )}
-                        </div>
-                        {configDisplayType === CONFIG_DISPLAY_TYPES[0] && (
+                            )
+                        }
+                    </div>
+                    {
+                        configDisplayType === CONFIG_DISPLAY_TYPES[0] && (
                             <div>
                                 <ParamItem
                                     selectedDefinitionModel={selectedDefinition}
@@ -531,8 +515,10 @@ function Configurations() {
                                     setSelectedDefinition={setSelectedDefinition}
                                 />
                             </div>
-                        )}
-                        {configDisplayType === CONFIG_DISPLAY_TYPES[1] && (
+                        )
+                    }
+                    {
+                        configDisplayType === CONFIG_DISPLAY_TYPES[1] && (
                             <div className="overflow-y-auto height-max-400 margin-bottom-8">
                                 {Object.keys(printingCustomConfigsWithCategory).map((category) => (
                                     <div key={category}>
@@ -561,21 +547,16 @@ function Configurations() {
                                 ))}
                                 <PrintingManager />
                             </div>
-                        )}
-                        <Anchor
-                            className={classNames(
-                                'link-text',
-                                'float-r'
-                            )}
-                            onClick={actions.onShowMaterialManager}
-                        >
-                            {i18n._('key-Printing/PrintingConfigurations-More Parameters >')}
-                        </Anchor>
-                        {/* <img src="/resources/images/3dp/arrow.png" alt="arrow" className="display-block margin-vertical-8 width-288 height-12" /> */}
-                    </div>
-
+                        )
+                    }
+                    <Anchor
+                        className={classNames('link-text', 'float-r')}
+                        onClick={actions.onShowMaterialManager}
+                    >
+                        {i18n._('key-Printing/PrintingConfigurations-More Parameters >')}
+                    </Anchor>
                 </div>
-            )}
+            </div>
         </div>
     );
 }

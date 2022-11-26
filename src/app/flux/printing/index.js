@@ -1,6 +1,6 @@
 /* eslint-disable */
 import path from 'path';
-import { cloneDeep, every, filter, find as lodashFind, findIndex, includes, isNil } from 'lodash';
+import { cloneDeep, every, filter, find, findIndex, includes, isNil } from 'lodash';
 import * as THREE from 'three';
 import { Vector3 } from 'three';
 import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
@@ -170,7 +170,7 @@ const INITIAL_STATE = {
     qualityDefinitions: [],
     qualityDefinitionsRight: [],
 
-    isRecommended: true, // Using recommended settings
+    isRecommended: true, // Using recommended settings, TODO: check to remove this
     defaultMaterialId: 'material.pla', // TODO: selectedMaterialId
     defaultMaterialIdRight: 'material.pla', // for dual extruder --- right extruder
     defaultQualityId: 'quality.fast_print', // TODO: selectedQualityId
@@ -436,7 +436,7 @@ export const actions = {
             actions.updateState({
                 materialDefinitions: materialParamModels,
                 qualityDefinitions: qualityParamModels,
-                qualityDefinitionsRight: qualityDefinitionsRight,
+                qualityDefinitionsRight: qualityParamModelsRight,
                 extruderLDefinition,
                 extruderRDefinition,
             })
@@ -590,7 +590,7 @@ export const actions = {
         } = getState().printing;
         const extruderLDefinitionSettings = extruderLDefinition.settings;
         const extruderRDefinitionSettings = extruderRDefinition.settings;
-        const activeQualityDefinition = lodashFind(qualityDefinitions, {
+        const activeQualityDefinition = find(qualityDefinitions, {
             definitionId: defaultQualityId
         });
         const {
@@ -720,11 +720,7 @@ export const actions = {
         dispatch(actions.updateState(modelState));
     },
 
-    updateDefaultConfigId: (type,
-                            defaultId, direction = LEFT_EXTRUDER) => (
-        dispatch,
-        getState
-    ) => {
+    updateDefaultConfigId: (type, defaultId, direction = LEFT_EXTRUDER) => (dispatch, getState) => {
         let { series } = getState().machine;
         series = getRealSeries(series);
         const printingState = getState().printing;
@@ -778,11 +774,9 @@ export const actions = {
             type,
             series,
             originalConfigId
-        }))
+        }));
 
         machineStore.set('defaultConfigId', JSON.stringify(originalConfigId));
-
-
     },
 
     // when switch 'materialType' or 'nozzleSize', has to check defintion visible
@@ -1021,7 +1015,7 @@ export const actions = {
             });
         }
 
-        const activeQualityDefinition = lodashFind(qualityDefinitions, {
+        const activeQualityDefinition = find(qualityDefinitions, {
             definitionId: defaultQualityId
         });
 
@@ -1053,7 +1047,7 @@ export const actions = {
             series
         } = getState().machine;
         modelGroup.setSeries(series);
-        const activeQualityDefinition = lodashFind(qualityDefinitions, {
+        const activeQualityDefinition = find(qualityDefinitions, {
             definitionId: defaultQualityId
         });
         modelGroup.removeAllModels();
@@ -1141,7 +1135,7 @@ export const actions = {
             ? '0'
             : '2';
 
-        const activeActiveQualityDefinition = lodashFind(qualityDefinitions, {
+        const activeActiveQualityDefinition = find(qualityDefinitions, {
             definitionId: defaultQualityId
         });
         const defaultQualityDefinition = defaultDefinitions.find(d => d.definitionId === defaultQualityId);
@@ -1347,7 +1341,7 @@ export const actions = {
         }
     },
 
-    getDefaultDefinition: id => (dispatch, getState) => {
+    getDefaultDefinition: (id) => (dispatch, getState) => {
         const { defaultDefinitions } = getState().printing;
         const def = defaultDefinitions.find((d) => d.definitionId === id);
         return def?.settings;
@@ -1953,9 +1947,6 @@ export const actions = {
         );
     },
 
-    updateIsRecommended: isRecommended => dispatch => {
-        dispatch(actions.updateState({ isRecommended }));
-    },
     updateDefaultIdByType: (type, newDefinitionId, direction = LEFT_EXTRUDER) => dispatch => {
         let defaultId;
         if (type === PRINTING_MANAGER_TYPE_MATERIAL) {
@@ -2136,7 +2127,7 @@ export const actions = {
             return modelItem.visible;
         });
         models.forEach((model) => {
-            let meshObject = lodashFind(modelGroup.object.children, {
+            let meshObject = find(modelGroup.object.children, {
                 uuid: model.meshObject.uuid
             });
             meshObject = meshObject.clone();
@@ -2397,7 +2388,7 @@ export const actions = {
                 extruderLDefinition,
                 extruderRDefinition
             } = getState().printing;
-            const activeQualityDefinition = lodashFind(qualityDefinitions, {
+            const activeQualityDefinition = find(qualityDefinitions, {
                 definitionId: defaultQualityId
             });
             // Use setTimeout to force export executes in next tick, preventing block of updateState()
@@ -4693,7 +4684,7 @@ export const actions = {
 
     applyProfileToAllModels: () => (dispatch, getState) => {
         const { qualityDefinitions, defaultQualityId, modelGroup } = getState().printing;
-        const activeQualityDefinition = lodashFind(qualityDefinitions, {
+        const activeQualityDefinition = find(qualityDefinitions, {
             definitionId: defaultQualityId
         });
         if (!activeQualityDefinition) {
@@ -4796,7 +4787,7 @@ export const actions = {
 
     uploadModelsForSupport: (models, angle) => (dispatch, getState) => {
         const { qualityDefinitions, defaultQualityId } = getState().printing;
-        const activeQualityDefinition = lodashFind(qualityDefinitions, {
+        const activeQualityDefinition = find(qualityDefinitions, {
             definitionId: defaultQualityId
         });
         return new Promise((resolve) => {
@@ -5117,7 +5108,7 @@ export const actions = {
             simplifyType,
             simplifyPercent
         }));
-        const layerHeight = lodashFind(qualityDefinitions, { definitionId: defaultQualityId })?.settings?.layer_height?.default_value;
+        const layerHeight = find(qualityDefinitions, { definitionId: defaultQualityId })?.settings?.layer_height?.default_value;
         let transformation = {};
         const simplifyModel = modelGroup.selectedModelArray[0];
         let uploadResult = null;

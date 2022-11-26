@@ -158,14 +158,17 @@ export const actions = {
 
     getLastEnvironment: (headType) => async (dispatch) => {
         const { body: { content } } = await api.getEnv({ headType });
-        try {
-            const envObj = JSON.parse(content);
-            if (!envObj.models.length) return;
-        } catch (e) {
-            console.info('Error content JSON');
-        }
 
-        content && dispatch(actions.updateState(headType, { findLastEnvironment: true, content }));
+        if (content) {
+            try {
+                const envObj = JSON.parse(content);
+                if (!envObj.models.length) return;
+            } catch (e) {
+                console.info(`Unable to parse environment JSON for ${headType}`);
+            }
+
+            dispatch(actions.updateState(headType, { findLastEnvironment: true, content }));
+        }
     },
 
     clearSavedEnvironment: (headType) => async (dispatch) => {

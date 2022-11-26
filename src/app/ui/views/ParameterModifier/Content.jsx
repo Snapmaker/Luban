@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
+import { cloneDeep, find, includes, remove } from 'lodash';
 import classNames from 'classnames';
 import { useDispatch, useSelector } from 'react-redux';
 import i18next from 'i18next';
-/* eslint-disable import/no-cycle */
-import { cloneDeep, find, includes, remove } from 'lodash';
 import ReactMarkdown from 'react-markdown';
+
 import { actions as printingActions } from '../../../flux/printing';
 import i18n from '../../../lib/i18n';
 import { Button } from '../../components/Buttons';
@@ -17,14 +17,11 @@ import api from '../../../api';
 import SettingItem from '../ProfileManager/SettingItem';
 import { LEFT_EXTRUDER } from '../../../constants';
 import { resolveDefinition } from '../../../../shared/lib/definitionResolver';
-import { EXTRUDER_TAB, MODEL_TAB } from './CategorySelector';
 
 
 /**
  *
- * @param editorType
  * @param selectedExtruder
- * @param selectedModelId
  * @param mode "show" or "update"
  * @param setMode
  * @param printingDefinitionId
@@ -32,25 +29,20 @@ import { EXTRUDER_TAB, MODEL_TAB } from './CategorySelector';
  * @returns {*}
  */
 const Content = ({
-    editorType = EXTRUDER_TAB,
     selectedExtruder,
-    selectedModelId,
     mode,
     setMode,
     printingDefinitionId,
     selectedSettingsDefaultValue
 }) => {
     const {
-        modelGroup,
         definitionEditorForExtruder,
-        definitionEditorForModel,
         qualityDefinitions,
         qualityDefinitionsRight,
         editorDefinition
     } = useSelector(state => state?.printing);
 
     const [extruderEditor, setExtruderEditor] = useState(definitionEditorForExtruder.get(selectedExtruder));
-    const [modelEditor, setModelEditor] = useState(definitionEditorForModel.get(selectedModelId));
     const [definitionManager, setDefinitionManager] = useState(null);
     const [categoryGroup, setCategoryGroup] = useState(null);
     const [checkedParams, setCheckedParams] = useState({});
@@ -59,35 +51,19 @@ const Content = ({
     const dispatch = useDispatch();
     const lang = i18next.language;
 
-    const canUpdateEditor = ((editorType === EXTRUDER_TAB && extruderEditor) || (editorType === MODEL_TAB && modelEditor)) && mode === 'show';
+    const canUpdateEditor = mode === 'show' && extruderEditor;
 
     useEffect(() => {
         const editor = definitionEditorForExtruder.get(selectedExtruder);
         setExtruderEditor(editor);
         setCheckedParams(editor ? { ...editor } : {});
 
-        if (editorType === EXTRUDER_TAB) {
-            editorDefinition.get(selectedExtruder) && setDefinitionManager(editorDefinition.get(selectedExtruder));
-        }
-    }, [selectedExtruder, editorType, definitionEditorForExtruder.size, editorDefinition]);
-
-    useEffect(() => {
-        const editor = definitionEditorForModel.get(selectedModelId);
-        setCheckedParams(editor ? { ...editor } : {});
-        setModelEditor(editor);
-
-        if (editorType === MODEL_TAB) {
-            editorDefinition.get(selectedModelId) && setDefinitionManager(editorDefinition.get(selectedModelId));
-        }
-    }, [selectedModelId, editorType, definitionEditorForModel.size, editorDefinition]);
+        editorDefinition.get(selectedExtruder) && setDefinitionManager(editorDefinition.get(selectedExtruder));
+    }, [selectedExtruder, definitionEditorForExtruder.size, editorDefinition]);
 
     useEffect(() => {
         if (mode === 'show') {
-            if (editorType === EXTRUDER_TAB) {
-                setExtruderEditor(definitionEditorForExtruder.get(selectedExtruder));
-            } else {
-                setModelEditor(definitionEditorForModel.get(selectedModelId));
-            }
+            setExtruderEditor(definitionEditorForExtruder.get(selectedExtruder));
         }
         setMdContent(null);
     }, [mode]);
@@ -97,7 +73,7 @@ const Content = ({
             selectedExtruder === LEFT_EXTRUDER ? qualityDefinitions : qualityDefinitionsRight, { definitionId: printingDefinitionId }
         );
         setDefinitionManager(temp);
-        setCategoryGroup(editorType === EXTRUDER_TAB ? temp?.printingProfileLevelForExtruder : temp?.printingProfileLevelForMesh);
+        setCategoryGroup(temp?.printingProfileLevelForExtruder);
     }, [printingDefinitionId, qualityDefinitions, qualityDefinitionsRight, selectedExtruder, editorDefinition]);
 
     const handleUpdateSelectedParams = (key, value, category) => {
@@ -129,29 +105,19 @@ const Content = ({
     };
 
     const handleConfirm = () => {
-        if (editorType === EXTRUDER_TAB) {
-            definitionEditorForExtruder.set(selectedExtruder, checkedParams);
-            editorDefinition.set(selectedExtruder, { ...definitionManager });
-        } else {
-            definitionEditorForModel.set(selectedModelId, checkedParams);
-            editorDefinition.set(selectedModelId, { ...definitionManager });
-        }
+        definitionEditorForExtruder.set(selectedExtruder, checkedParams);
+        editorDefinition.set(selectedExtruder, { ...definitionManager });
         setMode('show');
     };
 
     const handleClearEditor = () => {
-        if (editorType === EXTRUDER_TAB) {
-            definitionEditorForExtruder.delete(selectedExtruder);
-            setExtruderEditor(null);
-        } else {
-            definitionEditorForModel.delete(selectedModelId);
-            setModelEditor(null);
-        }
+        definitionEditorForExtruder.delete(selectedExtruder);
+        setExtruderEditor(null);
         setCheckedParams({});
     };
 
     const handleUpdateDefinition = (key, value) => {
-        const selected = editorType === EXTRUDER_TAB ? selectedExtruder : selectedModelId;
+        const selected = selectedExtruder;
         const newDefinition = cloneDeep(editorDefinition.get(selected));
         resolveDefinition(newDefinition, [[key, value]]);
         const newMap = new Map([...editorDefinition.entries()]);
@@ -206,7 +172,7 @@ const Content = ({
         });
     };
 
-    const currentEditor = editorType === EXTRUDER_TAB ? extruderEditor : modelEditor;
+    const currentEditor = extruderEditor;
 
     return (
         <div className="margin-horizontal-16 margin-vertical-16 height-all-minus-164 border-radius-16 flex-grow-1 width-all-minus-296">
@@ -243,16 +209,7 @@ const Content = ({
                     mode === 'show' && (
                         <div className="position-relative background-color-white border-radius-bottom-16 height-percent-100 height-100-percent-minus-56">
                             {
-                                (editorType === MODEL_TAB && !modelGroup.models?.length) && (
-                                    <EmptyBox
-                                        tipContent={i18n._('No model(s). Please add a model first.')}
-                                        addButton={false}
-                                        setMode={setMode}
-                                    />
-                                )
-                            }
-                            {
-                                ((editorType === MODEL_TAB && !modelEditor && modelGroup.models.length) || (editorType === EXTRUDER_TAB && !extruderEditor)) && (
+                                (!extruderEditor) && (
                                     <EmptyBox
                                         tipContent={i18n._('No modifier(s).')}
                                         addButton
@@ -410,8 +367,6 @@ const Content = ({
 
 Content.propTypes = {
     selectedExtruder: PropTypes.string.isRequired,
-    selectedModelId: PropTypes.string.isRequired,
-    editorType: PropTypes.string.isRequired,
     mode: PropTypes.string.isRequired,
     setMode: PropTypes.func.isRequired,
     printingDefinitionId: PropTypes.string.isRequired,

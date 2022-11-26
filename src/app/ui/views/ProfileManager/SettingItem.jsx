@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
-import PropTypes from 'prop-types';
+import { Switch, Tooltip } from 'antd';
 import classNames from 'classnames';
 import { isNil, noop } from 'lodash';
-import { Switch, Tooltip } from 'antd';
+import PropTypes from 'prop-types';
+import React, { useState } from 'react';
+import { HEAD_CNC, PRINTING_MATERIAL_CONFIG_COLORS } from '../../../constants';
 import i18n from '../../../lib/i18n';
-import Select from '../../components/Select';
-import { NumberInput as Input } from '../../components/Input';
 import Anchor from '../../components/Anchor';
 import ColorSelector from '../../components/ColorSelector';
-import { HEAD_CNC, PRINTING_MATERIAL_CONFIG_COLORS } from '../../../constants';
-import SvgIcon from '../../components/SvgIcon';
+import { NumberInput as Input } from '../../components/Input';
 import Popover from '../../components/Popover';
+import Select from '../../components/Select';
+import SvgIcon from '../../components/SvgIcon';
 import styles from './styles.styl';
 
 function dropdownRender(opts, key, onChangeDefinition, currentValue) {
@@ -21,7 +21,7 @@ function dropdownRender(opts, key, onChangeDefinition, currentValue) {
                 'padding-vertical-16',
                 'padding-horizontal-16',
                 styles['settings-select-wrapper'],
-                opts.length > 8 ? styles['settings-select-wrapper_scroll'] : ''
+                opts.length > 8 ? styles['settings-select-wrapper_scroll'] : '',
             )}
         >
             {opts.map((settingItem) => {
@@ -32,14 +32,14 @@ function dropdownRender(opts, key, onChangeDefinition, currentValue) {
                         key={label}
                         className={classNames(
                             styles['settings-item'],
-                            currentValue === value ? styles['settings-item_selected'] : ''
+                            currentValue === value ? styles['settings-item_selected'] : '',
                         )}
                     >
                         <Anchor
                             onClick={() => onChangeDefinition(key, value)}
                         >
                             <div className={classNames(
-                                styles['settings-select']
+                                styles['settings-select'],
                             )}
                             >
                                 <div className={classNames(
@@ -73,21 +73,23 @@ const colorSelectorContent = (settingDefaultValue, definitionKey, setShowColor, 
     </div>
 );
 
-function SettingItem({
-    definitionKey,
-    settings,
-    isDefaultDefinition = false,
-    onChangeDefinition,
-    defaultValue,
-    styleSize = 'large',
-    managerType,
-    officialDefinition,
-    showTooltip = false,
-    onClick,
-    definitionCategory,
-    onChangeMaterialType = noop,
-    categoryKey
-}) {
+function SettingItem(
+    {
+        definitionKey,
+        settings,
+        isDefaultDefinition = false,
+        onChangeDefinition,
+        defaultValue,
+        styleSize = 'large',
+        managerType,
+        officialDefinition,
+        showTooltip = false,
+        onClick,
+        definitionCategory,
+        onChangeMaterialType = noop,
+        categoryKey,
+    }
+) {
     const [showColor, setShowColor] = useState(false);
 
     const setting = settings[definitionKey];
@@ -107,7 +109,7 @@ function SettingItem({
         Object.keys(options).forEach((k) => {
             opts.push({
                 value: k.toLocaleLowerCase(),
-                label: i18n._(options[k])
+                label: i18n._(options[k]),
             });
         });
     }
@@ -220,7 +222,7 @@ function SettingItem({
                         className="sm-flex-width align-r"
                         dropdownRender={dropdownRender(opts, definitionKey, onChangeDefinition, settingDefaultValue)}
                         dropdownStyle={{
-                            maxWidth: '500px'
+                            maxWidth: '500px',
                         }}
                         size={styleSize}
                         name={definitionKey}
@@ -261,7 +263,7 @@ function SettingItem({
                             className="sm-flex-width align-r height-percent-100 width-96 display-inline border-radius-8 border-default-black-5"
                             style={{
                                 background: settingDefaultValue,
-                                height: 32
+                                height: 32,
                             }}
                             role="button"
                             tabIndex="-1"
@@ -289,7 +291,7 @@ SettingItem.propTypes = {
     definitionCategory: PropTypes.string,
     onChangeMaterialType: PropTypes.func,
     onClick: PropTypes.func,
-    categoryKey: PropTypes.string
+    categoryKey: PropTypes.string,
 };
 
 export default React.memo(SettingItem);
