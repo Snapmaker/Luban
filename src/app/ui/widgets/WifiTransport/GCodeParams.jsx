@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import i18n from '../../../lib/i18n';
 import { humanReadableTime } from '../../../lib/time-utils';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_UNKNOWN, MACHINE_HEAD_TYPE } from '../../../constants';
-import { MACHINE_TOOL_HEADS } from '../../../constants/machines';
+import { HEAD_UNKNOWN, MACHINE_HEAD_TYPE } from '../../../constants';
+import { isDualExtruder } from '../../../constants/machines';
 
 const GCodeParams = (props) => {
     const [gcodeFile, setGcodeFile] = useState({});
@@ -11,7 +11,7 @@ const GCodeParams = (props) => {
 
     useEffect(() => {
         const toolHead = props.gcodeFile.tool_head;
-        const isDualExture = toolHead === MACHINE_TOOL_HEADS[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2].value;
+        const isDualExture = isDualExtruder(toolHead);
         let tmpGcodeFile;
         const defaultGcodeFile = {
             type: { key: i18n._('key-Workspace/GCodeParams-GCode Type'), value: (props.gcodeFile?.type) ? i18n._(MACHINE_HEAD_TYPE[props.gcodeFile.type.toUpperCase()].label) : '' },

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import classNames from 'classnames';
-import { map, isObject } from 'lodash';
+import { isObject, map } from 'lodash';
 import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
 import { Button } from '../../components/Buttons';
@@ -10,13 +10,14 @@ import { ModuleStatus } from './WifiConnection';
 import log from '../../../lib/log';
 import i18n from '../../../lib/i18n';
 import { controller } from '../../../lib/controller';
+import { WORKFLOW_STATE_IDLE, WORKFLOW_STATE_PAUSED, WORKFLOW_STATE_RUNNING } from '../../../constants';
 import {
-    WORKFLOW_STATE_IDLE,
-    WORKFLOW_STATE_PAUSED,
-    WORKFLOW_STATE_RUNNING, LEVEL_TWO_POWER_LASER_FOR_SM2,
-    HEAD_LASER, HEAD_CNC, HEAD_PRINTING, DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2
-} from '../../../constants';
-import {
+    HEAD_CNC,
+    HEAD_LASER,
+    HEAD_PRINTING,
+    isDualExtruder,
+    LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
+    LEVEL_TWO_POWER_LASER_FOR_SM2,
     MACHINE_SERIES,
 } from '../../../constants/machines';
 import { actions as machineActions } from '../../../flux/machine';
@@ -24,6 +25,7 @@ import styles from './index.styl';
 import MismatchModal from './MismatchModal';
 
 let loadingTimer = null;
+
 function SerialConnection() {
     const {
         isOpen, enclosureOnline, isConnected, server, servers,
@@ -48,6 +50,7 @@ function SerialConnection() {
     useEffect(() => {
         setConnectLoading(connectLoading);
     }, [connectLoading]);
+
     function onPortReady(data) {
         const { err: _err } = data;
         if (_err) {
@@ -158,7 +161,7 @@ function SerialConnection() {
                     status: true
                 });
             } else if (headType === HEAD_PRINTING) {
-                if (toolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+                if (isDualExtruder(toolHead)) {
                     newModuleStatusList.push({
                         key: 'headtype',
                         moduleName: i18n._('key-App/Settings/MachineSettings-Dual Extruder Toolhead'),

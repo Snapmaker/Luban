@@ -28,10 +28,12 @@ function dropdownRender(opts, key, onChangeDefinition, currentValue) {
                 const value = settingItem.value;
                 const label = settingItem.label;
                 return (
-                    <span className={classNames(
-                        styles['settings-item'],
-                        currentValue === value ? styles['settings-item_selected'] : ''
-                    )}
+                    <span
+                        key={label}
+                        className={classNames(
+                            styles['settings-item'],
+                            currentValue === value ? styles['settings-item_selected'] : ''
+                        )}
                     >
                         <Anchor
                             onClick={() => onChangeDefinition(key, value)}
@@ -70,6 +72,7 @@ const colorSelectorContent = (settingDefaultValue, definitionKey, setShowColor, 
         />
     </div>
 );
+
 function SettingItem({
     definitionKey,
     settings,
@@ -78,7 +81,7 @@ function SettingItem({
     defaultValue,
     styleSize = 'large',
     managerType,
-    officalDefinition,
+    officialDefinition,
     showTooltip = false,
     onClick,
     definitionCategory,
@@ -208,7 +211,7 @@ function SettingItem({
                         onChange={(option) => {
                             onChangeDefinition(definitionKey, option.value);
                         }}
-                        disabled={(officalDefinition && managerType === HEAD_CNC && definitionKey === 'tool_type')}
+                        disabled={(officialDefinition && managerType === HEAD_CNC && definitionKey === 'tool_type')}
                     />
                 )}
                 {type === 'enumWithImage' && (
@@ -226,7 +229,7 @@ function SettingItem({
                         onChange={(option) => {
                             onChangeDefinition(definitionKey, option.value);
                         }}
-                        disabled={officalDefinition && managerType === HEAD_CNC && definitionKey === 'tool_type'}
+                        disabled={officialDefinition && managerType === HEAD_CNC && definitionKey === 'tool_type'}
                     />
                 )}
                 {type === undefined && (
@@ -262,7 +265,8 @@ function SettingItem({
                             }}
                             role="button"
                             tabIndex="-1"
-                            onKeyPress={() => { }}
+                            onKeyPress={() => {
+                            }}
                             onClick={() => setShowColor(!showColor)}
                         />
                     </Popover>
@@ -271,6 +275,7 @@ function SettingItem({
         </Anchor>
     );
 }
+
 SettingItem.propTypes = {
     settings: PropTypes.object.isRequired,
     definitionKey: PropTypes.string.isRequired,
@@ -279,7 +284,7 @@ SettingItem.propTypes = {
     defaultValue: PropTypes.object,
     styleSize: PropTypes.string,
     managerType: PropTypes.string,
-    officalDefinition: PropTypes.bool,
+    officialDefinition: PropTypes.bool,
     showTooltip: PropTypes.bool,
     definitionCategory: PropTypes.string,
     onChangeMaterialType: PropTypes.func,

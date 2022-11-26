@@ -16,7 +16,7 @@ class SocketSerial {
 
     private dataSource = '';
 
-    private machineSubscriber = []
+    private machineSubscriber = [];
 
     public onDisconnection = (socket: SocketServer) => {
         this.onDisSubscribe(socket);
@@ -41,7 +41,7 @@ class SocketSerial {
                 this.serialportList();
             }, 1000);
         }
-    }
+    };
 
     public onDisSubscribe = (socket: SocketServer) => {
         this.machineSubscriber = this.machineSubscriber.filter(e => e !== socket);
@@ -49,7 +49,7 @@ class SocketSerial {
             clearInterval(intervalHandle);
             intervalHandle = null;
         }
-    }
+    };
 
     public serialportList = () => {
         if (this.machineSubscriber.length === 0) {

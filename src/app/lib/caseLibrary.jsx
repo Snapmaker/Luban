@@ -1,24 +1,33 @@
 import {
-    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+    isDualExtruder,
     LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
-    LEVEL_TWO_POWER_LASER_FOR_ORIGINAL, LEVEL_ONE_POWER_LASER_FOR_SM2,
-    LEVEL_TWO_POWER_LASER_FOR_SM2
-} from '../constants';
-import {
-    MACHINE_SERIES,
+    LEVEL_ONE_POWER_LASER_FOR_SM2,
+    LEVEL_TWO_POWER_LASER_FOR_ORIGINAL,
+    LEVEL_TWO_POWER_LASER_FOR_SM2,
+    MACHINE_SERIES
 } from '../constants/machines';
 
 import {
-    CaseConfigOriginalPrintingSingle, CaseConfigOriginalLaserPowerOne,
-    CaseConfigOriginalLaserPowerTwo, CaseConfigOriginalCncStandard,
-    CaseConfigA150PrintingSingle, CaseConfigA150LaserPowerOne,
-    CaseConfigA150LaserPowerTwo, CaseConfigA150CncStandard,
-    CaseConfigA250PrintingSingle, CaseConfigA250LaserPowerOne,
-    CaseConfigA250LaserPowerTwo, CaseConfigA250CncStandard,
-    CaseConfigA350PrintingSingle, CaseConfigA350LaserPowerOne,
-    CaseConfigA350LaserPowerTwo, CaseConfigA350CncStandard,
-    CaseConfigA250CncFourAxis, CaseConfigA250LaserFourAxis,
-    CaseConfigA350CncFourAxis, CaseConfigA350LaserFourAxis
+    CaseConfigA150CncStandard,
+    CaseConfigA150LaserPowerOne,
+    CaseConfigA150LaserPowerTwo,
+    CaseConfigA150PrintingSingle,
+    CaseConfigA250CncFourAxis,
+    CaseConfigA250CncStandard,
+    CaseConfigA250LaserFourAxis,
+    CaseConfigA250LaserPowerOne,
+    CaseConfigA250LaserPowerTwo,
+    CaseConfigA250PrintingSingle,
+    CaseConfigA350CncFourAxis,
+    CaseConfigA350CncStandard,
+    CaseConfigA350LaserFourAxis,
+    CaseConfigA350LaserPowerOne,
+    CaseConfigA350LaserPowerTwo,
+    CaseConfigA350PrintingSingle,
+    CaseConfigOriginalCncStandard,
+    CaseConfigOriginalLaserPowerOne,
+    CaseConfigOriginalLaserPowerTwo,
+    CaseConfigOriginalPrintingSingle
 } from '../ui/pages/HomePage/CaseConfig';
 
 export const getCaseList = (series, toolHead) => {
@@ -39,7 +48,7 @@ export const getCaseList = (series, toolHead) => {
             caseList = caseList.concat(CaseConfigOriginalCncStandard);
             break;
         case MACHINE_SERIES.A150.value:
-            if (printingToolhead === SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2) {
+            if (!isDualExtruder(printingToolhead)) {
                 caseList = caseList.concat(CaseConfigA150PrintingSingle);
             }
             if (laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
@@ -51,7 +60,7 @@ export const getCaseList = (series, toolHead) => {
             caseList = caseList.concat(CaseConfigA150CncStandard);
             break;
         case MACHINE_SERIES.A250.value:
-            if (printingToolhead === SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2) {
+            if (!isDualExtruder(printingToolhead)) {
                 caseList = caseList.concat(CaseConfigA250PrintingSingle);
             }
             if (laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
@@ -65,7 +74,7 @@ export const getCaseList = (series, toolHead) => {
             caseListFourAxis = caseListFourAxis.concat(CaseConfigA250LaserFourAxis);
             break;
         case MACHINE_SERIES.A350.value:
-            if (printingToolhead === SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2) {
+            if (!isDualExtruder(printingToolhead)) {
                 caseList = caseList.concat(CaseConfigA350PrintingSingle);
             }
             if (laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {

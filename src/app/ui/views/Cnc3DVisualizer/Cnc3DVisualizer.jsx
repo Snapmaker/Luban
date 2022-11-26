@@ -172,7 +172,7 @@ class Cnc3DVisualizer extends Component {
     state = {
         environment: null,
         cameraInitialPosition: null
-    }
+    };
 
     actions = {
         hideCnc3DVisualizer: () => {

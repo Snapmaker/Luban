@@ -3,19 +3,11 @@ import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 // import isEqual from 'lodash/isEqual';
-import { isEqual, find, some } from 'lodash';
-import { Vector3, Box3, Math as ThreeMath, Quaternion } from 'three';
-// , MeshPhongMaterial, DoubleSide, Mesh, CylinderBufferGeometry
-
-import { shortcutActions, priorities, ShortcutManager } from '../../../lib/shortcut';
-import {
-    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
-    EPSILON,
-    HEAD_PRINTING,
-    ROTATE_MODE,
-    SCALE_MODE,
-    TRANSLATE_MODE
-} from '../../../constants';
+import { find, isEqual, some } from 'lodash';
+import { Box3, Math as ThreeMath, Quaternion, Vector3 } from 'three';
+import { priorities, shortcutActions, ShortcutManager } from '../../../lib/shortcut';
+import { EPSILON, HEAD_PRINTING, ROTATE_MODE, SCALE_MODE, TRANSLATE_MODE } from '../../../constants';
+import { isDualExtruder } from '../../../constants/machines';
 import i18n from '../../../lib/i18n';
 import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';
@@ -29,7 +21,13 @@ import VisualizerBottomLeft from './VisualizerBottomLeft';
 import VisualizerInfo from './VisualizerInfo';
 import PrintableCube from './PrintableCube';
 import styles from './styles.styl';
-import { loadModelFailPopup, scaletoFitPopup, sliceFailPopup, repairModelFailPopup, repairModelPopup } from './VisualizerPopup';
+import {
+    loadModelFailPopup,
+    repairModelFailPopup,
+    repairModelPopup,
+    scaletoFitPopup,
+    sliceFailPopup
+} from './VisualizerPopup';
 
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 import { emitUpdateControlInputEvent } from '../../components/SMCanvas/TransformControls';
@@ -37,6 +35,7 @@ import ModeToggleBtn from './ModeToggleBtn';
 import { logModelViewOperation } from '../../../lib/gaEvent';
 import VisualizerClippingControl from './VisualizerClippingControl';
 import { ModelEvents } from '../../../models/events';
+// , MeshPhongMaterial, DoubleSide, Mesh, CylinderBufferGeometry
 
 const initQuaternion = new Quaternion();
 
@@ -328,11 +327,15 @@ class Visualizer extends PureComponent {
             // optimize: accelerate when continuous click
             'SHOWGCODELAYERS_ADD': {
                 keys: ['alt+up'],
-                callback: () => { this.props.offsetGcodeLayers(1); }
+                callback: () => {
+                    this.props.offsetGcodeLayers(1);
+                }
             },
             'SHOWGCODELAYERS_MINUS': {
                 keys: ['alt+down'],
-                callback: () => { this.props.offsetGcodeLayers(-1); }
+                callback: () => {
+                    this.props.offsetGcodeLayers(-1);
+                }
             }
         }
     };
@@ -375,7 +378,10 @@ class Visualizer extends PureComponent {
     }
 
     componentDidUpdate(prevProps) {
-        const { size, stopArea, transformMode, selectedModelArray, renderingTimestamp, modelGroup, stage, primeTowerHeight, enablePrimeTower, printingToolhead, promptTasks } = this.props;
+        const {
+            size, stopArea, transformMode, selectedModelArray, renderingTimestamp, modelGroup, stage,
+            primeTowerHeight, enablePrimeTower, printingToolhead, promptTasks
+        } = this.props;
         if (transformMode !== prevProps.transformMode) {
             this.canvas.current.setTransformMode(transformMode);
             if (transformMode === 'rotate-placement') {
@@ -471,7 +477,7 @@ class Visualizer extends PureComponent {
             }
         }
 
-        if (enablePrimeTower !== prevProps.enablePrimeTower && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+        if (enablePrimeTower !== prevProps.enablePrimeTower && isDualExtruder(printingToolhead)) {
             modelGroup.primeTower.visible = enablePrimeTower;
         }
         if (!Number.isNaN(primeTowerHeight) && !Number.isNaN(this.props.primeTowerHeight) && primeTowerHeight !== prevProps.primeTowerHeight) {
@@ -500,28 +506,28 @@ class Visualizer extends PureComponent {
 
     showContextMenu = (event) => {
         !this.props.leftBarOverlayVisible && this.contextMenuRef.current.show(event);
-    }
+    };
 
     handleCancelSimplify = () => {
         const { selectedModelArray, simplifyOriginModelInfo: { sourceSimplifyName } } = this.props;
         this.props.loadSimplifyModel(selectedModelArray[0].modelID, sourceSimplifyName, true);
         this.props.resetSimplifyOriginModelInfo();
         this.props.setSimplifying(false);
-    }
+    };
 
     handleApplySimplify = () => {
         this.props.recordSimplifyModel();
         this.props.resetSimplifyOriginModelInfo();
         this.props.setSimplifying(false);
-    }
+    };
 
     handleUpdateSimplifyConfig = (type, percent) => {
         this.props.modelSimplify(type, percent);
-    }
+    };
 
     checkoutModelsLocatin = () => {
         this.canvas.current.checkoutModelsLocatin();
-    }
+    };
 
     render() {
         const { size, selectedModelArray, modelGroup, gcodeLineGroup, inProgress, hasModel, displayedType, transformMode } = this.props; // transformMode
@@ -786,7 +792,11 @@ const mapDispatchToProps = (dispatch) => ({
     applySupportBrush: (raycastResult) => dispatch(printingActions.applySupportBrush(raycastResult)),
     setRotationPlacementFace: (userData) => dispatch(printingActions.setRotationPlacementFace(userData)),
     displayModel: () => dispatch(printingActions.displayModel()),
-    loadSimplifyModel: (modelID, modelOutputName, isCancelSimplify) => dispatch(printingActions.loadSimplifyModel({ modelID, modelOutputName, isCancelSimplify })),
+    loadSimplifyModel: (modelID, modelOutputName, isCancelSimplify) => dispatch(printingActions.loadSimplifyModel({
+        modelID,
+        modelOutputName,
+        isCancelSimplify
+    })),
     modelSimplify: (type, percent) => dispatch(printingActions.modelSimplify(type, percent)),
     resetSimplifyOriginModelInfo: () => dispatch(printingActions.resetSimplifyOriginModelInfo()),
     recordSimplifyModel: () => dispatch(printingActions.recordSimplifyModel()),

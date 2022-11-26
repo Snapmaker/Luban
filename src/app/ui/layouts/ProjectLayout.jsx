@@ -40,7 +40,7 @@ class ProjectLayout extends PureComponent {
         if (centerView) {
             centerView.style.width = `calc(100vw - ${rightView.clientWidth}px - ${subToolBar.clientWidth}px)`;
         }
-    }
+    };
 
     render() {
         const { renderRightView, children, renderMainToolBar, renderSubToolBar, renderModalView } = this.props;

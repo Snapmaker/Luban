@@ -1,6 +1,30 @@
 import {
-    Sphere, SphereBufferGeometry, MeshStandardMaterial, Vector3, Group, Matrix4, BufferGeometry, Mesh, Float32BufferAttribute, MeshBasicMaterial, Plane, Box3, Object3D,
-    Intersection, BufferAttribute, DynamicDrawUsage, LineSegments, LineBasicMaterial, PlaneGeometry, NotEqualStencilFunc, ReplaceStencilOp, MeshPhongMaterial, Vector2, Shape, ShapeGeometry, FrontSide
+    Sphere,
+    SphereBufferGeometry,
+    MeshStandardMaterial,
+    Vector3,
+    Group,
+    Matrix4,
+    BufferGeometry,
+    Mesh,
+    Float32BufferAttribute,
+    MeshBasicMaterial,
+    Plane,
+    Box3,
+    Object3D,
+    Intersection,
+    BufferAttribute,
+    DynamicDrawUsage,
+    LineSegments,
+    LineBasicMaterial,
+    PlaneGeometry,
+    NotEqualStencilFunc,
+    ReplaceStencilOp,
+    MeshPhongMaterial,
+    Vector2,
+    Shape,
+    ShapeGeometry,
+    FrontSide
 } from 'three';
 import EventEmitter from 'events';
 import { CONTAINED, INTERSECTED, NOT_INTERSECTED } from 'three-mesh-bvh';
@@ -1391,7 +1415,7 @@ class ModelGroup extends EventEmitter {
         isAllRotate = false
     ) {
         const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, uniformScalingState } = transformation;
-        const shouldUniformScale = newUniformScalingState ?? this.selectedGroup.uniformScalingState;
+        const shouldUniformScale = newUniformScalingState || this.selectedGroup.uniformScalingState;
         if (positionX !== undefined) {
             this.selectedGroup.position.setX(positionX);
         }
@@ -2084,27 +2108,26 @@ class ModelGroup extends EventEmitter {
     }
 
     public async analyzeSelectedModelRotationAsync() {
-        return new Promise(async (resolve, reject) => {
-            if (this.selectedModelArray.length === 1) {
-                const model = this.selectedModelArray[0] as Model3D;
-                if (model instanceof ThreeGroup) {
-                    const result = await this.analyzeSelectedModelRotation();
-                    resolve(result);
-                } else {
-                    if (!model.convexGeometry) {
-                        this.once(ModelEvents.SetConvex, async () => {
-                            const result = await this.analyzeSelectedModelRotation();
-                            resolve(result);
-                        });
-                    } else {
-                        const result = await this.analyzeSelectedModelRotation();
-                        resolve(result);
-                    }
-                }
+        if (this.selectedModelArray.length === 1) {
+            const model = this.selectedModelArray[0] as Model3D;
+            if (model instanceof ThreeGroup) {
+                const result = await this.analyzeSelectedModelRotation();
+                return result;
             } else {
-                reject();
+                if (!model.convexGeometry) {
+                    this.once(ModelEvents.SetConvex, async () => {
+                        const result = await this.analyzeSelectedModelRotation();
+                        return result;
+                    });
+                } else {
+                    const result = await this.analyzeSelectedModelRotation();
+                    return result;
+                }
             }
-        });
+        } else {
+            throw new Error();
+        }
+        return null;
     }
 
     public async analyzeSelectedModelRotation() {
@@ -2414,10 +2437,17 @@ class ModelGroup extends EventEmitter {
             }
             model.supportFaceMarks.forEach((mark) => {
                 switch (mark) {
-                    case NONE: colors.push(...SUPPORT_UNAVAIL_AREA_COLOR, ...SUPPORT_UNAVAIL_AREA_COLOR, ...SUPPORT_UNAVAIL_AREA_COLOR); break;
-                    case FACE: colors.push(...SUPPORT_ADD_AREA_COLOR, ...SUPPORT_ADD_AREA_COLOR, ...SUPPORT_ADD_AREA_COLOR); break;
-                    case AVAIL: colors.push(...SUPPORT_AVAIL_AREA_COLOR, ...SUPPORT_AVAIL_AREA_COLOR, ...SUPPORT_AVAIL_AREA_COLOR); break;
-                    default: break;
+                    case NONE:
+                        colors.push(...SUPPORT_UNAVAIL_AREA_COLOR, ...SUPPORT_UNAVAIL_AREA_COLOR, ...SUPPORT_UNAVAIL_AREA_COLOR);
+                        break;
+                    case FACE:
+                        colors.push(...SUPPORT_ADD_AREA_COLOR, ...SUPPORT_ADD_AREA_COLOR, ...SUPPORT_ADD_AREA_COLOR);
+                        break;
+                    case AVAIL:
+                        colors.push(...SUPPORT_AVAIL_AREA_COLOR, ...SUPPORT_AVAIL_AREA_COLOR, ...SUPPORT_AVAIL_AREA_COLOR);
+                        break;
+                    default:
+                        break;
                 }
             });
             model.meshObject.geometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
@@ -2640,7 +2670,8 @@ class ModelGroup extends EventEmitter {
         return models;
     }
 
-    private updatePlateAdhesion = debounce(this._updatePlateAdhesion, 300)
+    private updatePlateAdhesion = debounce(this._updatePlateAdhesion, 300);
+
     public _updatePlateAdhesion(config?: TAdhesionConfig) {
         if (config) {
             // init

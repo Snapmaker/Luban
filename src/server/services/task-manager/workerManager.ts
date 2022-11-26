@@ -25,7 +25,7 @@ export type IWorkerManager = {
 }
 
 class WorkerManager {
-    private pool: WorkerPool
+    private pool: WorkerPool;
 
     public getPool() {
         if (!this.pool) {

@@ -38,12 +38,12 @@ class SvgIcon extends PureComponent {
     static defaultProps = {
         isHorizontal: true,
         type: ['pressNormal', 'hoverNormal']
-    }
+    };
 
     state = {
         isHovered: false,
         isPressed: false
-    }
+    };
 
     actions = {
         handleMouseOver: () => {

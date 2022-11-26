@@ -1,9 +1,9 @@
 class Coordinate {
-    x='x';
+    x = 'x';
 
-    y='y';
+    y = 'y';
 
-    z='z';
+    z = 'z';
 
     constructor(options = {}) {
         const { x = 'x', y = 'y', z = 'z' } = options;

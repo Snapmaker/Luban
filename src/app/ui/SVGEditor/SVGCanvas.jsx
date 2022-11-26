@@ -1328,7 +1328,7 @@ class SVGCanvas extends PureComponent {
             default:
                 break;
         }
-    }
+    };
 
     onDblClick = (evt) => {
         const matrix = this.svgContentGroup.getScreenCTM().inverse();

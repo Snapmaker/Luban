@@ -2,24 +2,24 @@ import { Vector3 } from 'three';
 import { GRAY_MODE_COLOR, TYPE_SETTINGS } from './constants';
 
 export class LinePoint {
-    public readonly point: Vector3
+    public readonly point: Vector3;
 
-    public readonly radius: number
+    public readonly radius: number;
 
-    public readonly color: number[]
+    public readonly color: number[];
 
-    public readonly color1: number[]
+    public readonly color1: number[];
 
-    public readonly extruder: number
+    public readonly extruder: number;
 
-    public readonly lineType: number
+    public readonly lineType: number;
 
-    public readonly layer: number
+    public readonly layer: number;
 
-    public readonly type: string
+    public readonly type: string;
 
-    constructor(point: Vector3, radius: number, extruder: number = 0, type: string = 'TRAVEL',
-        isGrayMode: boolean = false, extruderColors: { toolColor0: string, toolColor1: string } = { toolColor0: '#FFFFFF', toolColor1: '#000000' }, layer: number = 0) {
+    public constructor(point: Vector3, radius: number, extruder = 0, type = 'TRAVEL',
+        isGrayMode = false, extruderColors: { toolColor0: string, toolColor1: string } = { toolColor0: '#FFFFFF', toolColor1: '#000000' }, layer = 0) {
         this.point = point;
         this.radius = radius;
         this.layer = layer;

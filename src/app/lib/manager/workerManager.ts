@@ -18,7 +18,7 @@ export const WorkerEvents = {
 class WorkerManager extends EventEmitter {
     private pool: Pool<Thread>;
     private clipperWorker: Worker;
-    private listenerMap = new Map<string, TListener>()
+    private listenerMap = new Map<string, TListener>();
 
     public clipperWorkerEnable = false;
 

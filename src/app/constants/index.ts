@@ -1030,19 +1030,19 @@ export const SELECTEVENT = {
 
 
 
-export const SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL = 'singleExtruderToolheadForOriginal';
-export const SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 = 'singleExtruderToolheadForSM2';
-export const DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 = 'dualExtruderToolheadForSM2';
-export const LEVEL_ONE_POWER_LASER_FOR_ORIGINAL = 'levelOneLaserToolheadForOriginal';
-export const LEVEL_TWO_POWER_LASER_FOR_ORIGINAL = 'levelTwoLaserToolheadForOriginal';
-export const LEVEL_ONE_POWER_LASER_FOR_SM2 = 'levelOneLaserToolheadForSM2';
-export const LEVEL_TWO_POWER_LASER_FOR_SM2 = 'levelTwoLaserToolheadForSM2';
-export const STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL = 'standardCNCToolheadForOriginal';
-export const STANDARD_CNC_TOOLHEAD_FOR_SM2 = 'standardCNCToolheadForSM2';
-export const LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2 = 'levelTwoCNCToolheadForSM2';
-export const ENCLOSURE_FOR_SM2 = 'enclosureForSM2';
-export const ENCLOSURE_FOR_ARTISAN = 'enclosureForArtisan';
-export const AIR_PURIFIER = 'airPurifier';
+// export const SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL = 'singleExtruderToolheadForOriginal';
+// export const SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 = 'singleExtruderToolheadForSM2';
+// export const DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 = 'dualExtruderToolheadForSM2';
+// export const LEVEL_ONE_POWER_LASER_FOR_ORIGINAL = 'levelOneLaserToolheadForOriginal';
+// export const LEVEL_TWO_POWER_LASER_FOR_ORIGINAL = 'levelTwoLaserToolheadForOriginal';
+// export const LEVEL_ONE_POWER_LASER_FOR_SM2 = 'levelOneLaserToolheadForSM2';
+// export const LEVEL_TWO_POWER_LASER_FOR_SM2 = 'levelTwoLaserToolheadForSM2';
+// export const STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL = 'standardCNCToolheadForOriginal';
+// export const STANDARD_CNC_TOOLHEAD_FOR_SM2 = 'standardCNCToolheadForSM2';
+// export const LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2 = 'levelTwoCNCToolheadForSM2';
+// export const ENCLOSURE_FOR_SM2 = 'enclosureForSM2';
+// export const ENCLOSURE_FOR_ARTISAN = 'enclosureForArtisan';
+// export const AIR_PURIFIER = 'airPurifier';
 
 export const DUAL_EXTRUDER_LIMIT_WIDTH_L = 0;
 export const DUAL_EXTRUDER_LIMIT_WIDTH_R = 0;
@@ -1315,33 +1315,7 @@ export const AIR_PURIFIER_MODULES = [7];
 export const HEADT_BED_FOR_SM2 = 'heatBedForSM2';
 export const A400_HEADT_BED_FOR_SM2 = 'a400HeatBedForSM2';
 
-export const MODULEID_TOOLHEAD_MAP = {
-    '0': SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
-    '1': STANDARD_CNC_TOOLHEAD_FOR_SM2,
-    '2': LEVEL_ONE_POWER_LASER_FOR_SM2,
-    '13': DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
-    '14': LEVEL_TWO_POWER_LASER_FOR_SM2,
-    '15': LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2
-};
 
-export const PRINTING_SINGLE_EXTRUDER_HEADTOOL = [
-    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
-    SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL
-];
-
-export const MODULEID_MAP = {
-    '0': SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
-    '1': STANDARD_CNC_TOOLHEAD_FOR_SM2,
-    '2': LEVEL_ONE_POWER_LASER_FOR_SM2,
-    '13': DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
-    '14': LEVEL_TWO_POWER_LASER_FOR_SM2,
-    '15': LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
-    '512': HEADT_BED_FOR_SM2,
-    '515': A400_HEADT_BED_FOR_SM2,
-    '5': ENCLOSURE_FOR_SM2,
-    '16': ENCLOSURE_FOR_ARTISAN,
-    '7': AIR_PURIFIER
-};
 export const MATERIAL_TYPE_OPTIONS = [
     {
         value: 'PLA',
@@ -1399,3 +1373,13 @@ export const AUTO_MDOE = Symbol('auto mode');
 export const SEMI_AUTO_MODE = Symbol('semi_auto_mode by MaterialThickness');
 export const MANUAL_MODE = Symbol('manual mode');
 export const AUTO_STRING = 'auto';
+
+
+export const qualitySettingRank = [
+    'quality.normal_quality',
+    'quality.normal_other_quality',
+    'quality.normal_tpu_quality',
+    'quality.fast_print',
+    'quality.high_quality',
+    'quality.engineering_print'
+];

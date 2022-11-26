@@ -2,14 +2,14 @@ import fs from 'fs';
 import path from 'path';
 import EventEmitter from 'events';
 import childProcess from 'child_process';
-import {getPath} from '@snapmaker/snapmaker-lunar';
+import { getPath } from '@snapmaker/snapmaker-lunar';
 
-import {HEAD_PRINTING, PRINTING_CONFIG_SUBCATEGORY} from '../constants';
+import { HEAD_PRINTING, PRINTING_CONFIG_SUBCATEGORY } from '../constants';
 import DataStorage from '../DataStorage';
 import logger from '../lib/logger';
-import {generateRandomPathName} from '../../shared/lib/random-utils';
-import {Metadata, SliceResult} from './slicer-definitions';
-import {processGcodeHeaderAfterCuraEngine, postProcessorV1} from './post-processor';
+import { generateRandomPathName } from '../../shared/lib/random-utils';
+import { Metadata, SliceResult } from './slicer-definitions';
+import { processGcodeHeaderAfterCuraEngine, postProcessorV1 } from './post-processor';
 
 
 const log = logger('service:print3d-slice');
@@ -67,61 +67,61 @@ function callEngine(globalConfig, modelConfigs, outputPath) {
  * - failed
  */
 export default class Slicer extends EventEmitter {
-    version: number = 0;
+    private version = 0;
 
     // file path of global definition
-    globalDefinition: string;
+    // private globalDefinition: string;
 
     // file paths of models
-    models: string[];
+    private models: string[];
 
     // file paths of model definitions
-    modelDefinitions: string[];
+    private modelDefinitions: string[];
 
     // file paths of support models
-    supportModels: string[];
+    private supportModels: string[];
 
     // file path of support models' definition
     // all support models share the same definition
-    supportDefinition: string;
+    // private supportDefinition: string;
 
-    metadata: Metadata;
+    private metadata: Metadata;
 
-    constructor() {
+    public constructor() {
         super();
 
         this.version = 0;
 
-        this.globalDefinition = '';
+        // this.globalDefinition = '';
 
         this.models = [];
         this.modelDefinitions = [];
 
         this.supportModels = [];
-        this.supportDefinition = '';
+        // this.supportDefinition = '';
     }
 
-    setVersion(version = 0) {
+    public setVersion(version = 0) {
         this.version = version;
     }
 
-    setModels(models: string[]) {
+    public setModels(models: string[]) {
         this.models = models;
     }
 
-    setModelDefinitions(definitions: string[]): void {
+    public setModelDefinitions(definitions: string[]): void {
         this.modelDefinitions = definitions;
     }
 
-    setSupportModels(models: string[]): void {
+    public setSupportModels(models: string[]): void {
         this.supportModels = models;
     }
 
-    setMetadata(metadata: Metadata): void {
+    public setMetadata(metadata: Metadata): void {
         this.metadata = metadata;
     }
 
-    validate(): boolean {
+    private validate(): boolean {
         if (this.models.length !== this.modelDefinitions.length) {
             return false;
         }
@@ -150,7 +150,7 @@ export default class Slicer extends EventEmitter {
         return true;
     }
 
-    _onSliceProcessData(sliceResult: SliceResult, data): void {
+    private _onSliceProcessData(sliceResult: SliceResult, data): void {
         const array = data.toString()
             .split('\n');
 
@@ -167,7 +167,7 @@ export default class Slicer extends EventEmitter {
                 const start = item.indexOf('0.');
                 const end = item.indexOf('%');
                 const sliceProgress = Number(item.slice(start, end));
-                //onProgress(sliceProgress);
+                // onProgress(sliceProgress);
                 this.emit('progress', sliceProgress);
             } else if (item.indexOf(';Filament used:') === 0) {
                 // single extruder: ';Filament used: 0.139049m'
@@ -189,7 +189,7 @@ export default class Slicer extends EventEmitter {
         });
     }
 
-    _postProcess(sliceResult: SliceResult): void {
+    private _postProcess(sliceResult: SliceResult): void {
         if (this.version === 0) {
             const gcodeFileLength = processGcodeHeaderAfterCuraEngine(sliceResult.gcodeFilePath, this.metadata, sliceResult);
             sliceResult.gcodeFileLength = gcodeFileLength;
@@ -207,25 +207,24 @@ export default class Slicer extends EventEmitter {
         }
     }
 
-    _onSliceProcessClose(sliceResult: SliceResult, code: number): void {
+    private _onSliceProcessClose(sliceResult: SliceResult, code: number): void {
         console.log('sliceResult =', sliceResult);
         if (code === 0) {
             this.emit('progress', 0.95);
 
             // TODO: why so many parameters passed in here?
-            const {renderGcodeFileName: renderName} = this.metadata;
+            const { renderGcodeFileName: renderName } = this.metadata;
             const renderGcodeFileName = `${renderName}.gcode`;
             sliceResult.renderGcodeFileName = renderGcodeFileName;
 
             this._postProcess(sliceResult);
-
         } else {
             this.emit('failed', 'Slicer failed.');
         }
         log.info(`Slicer process exit with code = ${code}`);
     }
 
-    startSlice(): void {
+    public startSlice(): void {
         if (!this.validate()) {
             return;
         }
@@ -247,7 +246,7 @@ export default class Slicer extends EventEmitter {
             modelConfigs.push({
                 modelPath: path.join(DataStorage.tmpDir, this.supportModels[i]),
                 configPath: path.join(DataStorage.configDir, PRINTING_CONFIG_SUBCATEGORY, 'support.def.json'),
-            })
+            });
         }
 
         const outputFilename = this.metadata.originalName

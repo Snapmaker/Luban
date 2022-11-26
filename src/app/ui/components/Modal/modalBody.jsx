@@ -13,7 +13,7 @@ class Body extends PureComponent {
 
     static defaultProps = {
         key: 'modalBody'
-    }
+    };
 
     render() {
         return (

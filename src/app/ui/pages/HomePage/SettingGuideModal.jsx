@@ -7,11 +7,6 @@ import { includes } from 'lodash';
 import Uri from 'jsuri';
 import i18n from '../../../lib/i18n';
 import styles from './styles.styl';
-import {
-    LEVEL_ONE_POWER_LASER_FOR_SM2,
-    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
-    STANDARD_CNC_TOOLHEAD_FOR_SM2
-} from '../../../constants';
 
 import {
     getMachineOptions,
@@ -19,8 +14,11 @@ import {
     HEAD_CNC,
     HEAD_LASER,
     HEAD_PRINTING,
+    LEVEL_ONE_POWER_LASER_FOR_SM2,
     MACHINE_TOOL_HEADS,
-    MACHINE_TYPE_MULTI_FUNCTION_PRINTER
+    MACHINE_TYPE_MULTI_FUNCTION_PRINTER,
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+    STANDARD_CNC_TOOLHEAD_FOR_SM2
 } from '../../../constants/machines';
 import { actions as machineActions } from '../../../flux/machine';
 import { machineStore } from '../../../store/local-storage';

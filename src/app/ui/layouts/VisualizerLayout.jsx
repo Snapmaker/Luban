@@ -22,7 +22,7 @@ class VisualizerLayout extends PureComponent {
         hideBottom: PropTypes.bool,
         hideBottomRight: PropTypes.bool,
         children: PropTypes.object
-    }
+    };
 
     render() {
         const {

@@ -16,47 +16,47 @@ export interface SegmentColorizer {
 }
 
 export class SimpleColorizer implements SegmentColorizer {
-    private readonly color
+    private readonly color;
 
-    constructor(color = new Color('#29BEB0')) {
+    public constructor(color = new Color('#29BEB0')) {
         this.color = color;
     }
 
-    getColor(): Color {
+    public getColor(): Color {
         return this.color;
     }
 }
 
 export abstract class LutColorizer implements SegmentColorizer {
-    protected readonly lut: Lut
+    protected readonly lut: Lut;
 
-    constructor(lut = new Lut('cooltowarm')) {
+    public constructor(lut = new Lut('cooltowarm')) {
         this.lut = lut;
     }
 
-    abstract getColor(meta: SegmentMetadata): Color;
+    public abstract getColor(meta: SegmentMetadata): Color;
 }
 
 export class SpeedColorizer extends LutColorizer {
-    constructor(minSpeed: number, maxSpeed: number) {
+    public constructor(minSpeed: number, maxSpeed: number) {
         super();
         this.lut.setMin(minSpeed);
         this.lut.setMax(maxSpeed);
     }
 
-    getColor(meta: SegmentMetadata): Color {
+    public getColor(meta: SegmentMetadata): Color {
         return this.lut.getColor(meta.speed);
     }
 }
 
 export class TempColorizer extends LutColorizer {
-    constructor(minTemp: number, maxTemp: number) {
+    public constructor(minTemp: number, maxTemp: number) {
         super();
         this.lut.setMin(minTemp);
         this.lut.setMax(maxTemp);
     }
 
-    getColor(meta: SegmentMetadata): Color {
+    public getColor(meta: SegmentMetadata): Color {
         return this.lut.getColor(meta.temp);
     }
 }

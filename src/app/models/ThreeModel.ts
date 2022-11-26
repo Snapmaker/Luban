@@ -38,7 +38,7 @@ class ThreeModel extends BaseModel {
     private _materialNormal: THREE.Color;
     private _materialSelected: THREE.Color;
 
-    public hasOversteppedHotArea: boolean
+    public hasOversteppedHotArea: boolean;
 
     public clipper?: ClipperModel;
     private clippingConfig: TClippingConfig = {
@@ -353,13 +353,13 @@ class ThreeModel extends BaseModel {
                 // TODO: uniform material for setting triangle color and textures
                 this.meshObject.material.color.set(0xffffff);
             } else if (this.overstepped === true) {
-                this.meshObject.material = this.meshObject.material;
+                // this.meshObject.material = this.meshObject.material;
                 this.meshObject.material.color.set(materialOverstepped);
             } else if (this.isSelected === true) {
-                this.meshObject.material = this.meshObject.material;
+                // this.meshObject.material = this.meshObject.material;
                 this.meshObject.material.color.set(this._materialSelected.clone());
             } else {
-                this.meshObject.material = this.meshObject.material;
+                // this.meshObject.material = this.meshObject.material;
                 this.meshObject.material.color.set(this._materialNormal.clone());
             }
         }

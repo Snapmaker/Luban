@@ -196,31 +196,6 @@ class TracePreview extends Component {
         });
     };
 
-    addImage = (filename, index, previewSettings) => {
-        const src = `${DATA_PREFIX}/${filename}`;
-        const btnBG = this.state.selectedIndices.has(index) ? 'lightgray' : 'white';
-        return (
-            <div key={index} className={styles['trace-image-div']}>
-                <button
-                    type="button"
-                    style={{ padding: '0' }}
-                    onClick={() => {
-                        this.onSelectedImage(index);
-                    }}
-                >
-                    <img
-                        style={{ background: btnBG }}
-                        src={src}
-                        alt="trace"
-                        width={previewSettings.previewWidth}
-                        height={previewSettings.previewHeight}
-                        draggable="false"
-                    />
-                </button>
-            </div>
-        );
-    };
-
     render() {
         if (!Detector.isWebGLAvailable()) {
             return null;

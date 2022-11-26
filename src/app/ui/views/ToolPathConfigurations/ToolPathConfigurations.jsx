@@ -1,12 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 // import React, { useState, useEffect, useLayoutEffect } from 'react';
-import { useDispatch, useSelector, shallowEqual } from 'react-redux';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import _ from 'lodash';
 import modal from '../../../lib/modal';
 import styles from './styles.styl';
-import { HEAD_CNC, HEAD_LASER, PROCESS_MODE_VECTOR, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2 } from '../../../constants';
+import { PROCESS_MODE_VECTOR } from '../../../constants';
+import {
+    HEAD_CNC,
+    HEAD_LASER,
+    LEVEL_ONE_POWER_LASER_FOR_SM2,
+    LEVEL_TWO_POWER_LASER_FOR_SM2
+} from '../../../constants/machines';
 import i18n from '../../../lib/i18n';
 import { actions as editorActions } from '../../../flux/editor';
 import Modal from '../../components/Modal';

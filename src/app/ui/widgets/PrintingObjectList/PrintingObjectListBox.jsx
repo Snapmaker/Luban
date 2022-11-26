@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 // import PropTypes from 'prop-types';
-import { useDispatch, useSelector, shallowEqual } from 'react-redux';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { find } from 'lodash';
 import classNames from 'classnames';
 import styles from './styles.styl';
 import ModelItem from '../../views/model-item';
 import { actions as printingActions } from '../../../flux/printing';
 import { machineStore } from '../../../store/local-storage';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
+import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
+import { isDualExtruder } from '../../../constants/machines';
 import { whiteHex } from '../PrintingVisualizer/VisualizerLeftBar';
 
 function PrintingObjectListBox() {
@@ -16,7 +17,7 @@ function PrintingObjectListBox() {
     const inProgress = useSelector(state => state?.printing?.inProgress, shallowEqual);
     const leftBarOverlayVisible = useSelector(state => state?.printing?.leftBarOverlayVisible, shallowEqual);
     const disabled = leftBarOverlayVisible;
-    const isDualExtruder = (machineStore.get('machine.toolHead.printingToolhead') === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2);
+    const isDual = isDualExtruder(machineStore.get('machine.toolHead.printingToolhead'));
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
     const defaultMaterialIdRight = useSelector(state => state?.printing?.defaultMaterialIdRight, shallowEqual);
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions);
@@ -107,7 +108,7 @@ function PrintingObjectListBox() {
                         inProgress={inProgress}
                         placment="right"
                         disabled={disabled}
-                        isDualExtruder={isDualExtruder}
+                        isDualExtruder={isDual}
                         leftMaterialColor={leftMaterialColor}
                         rightMaterialColor={rightMaterialColor}
                         onExpend={actions.onClickChangeExpendArr}

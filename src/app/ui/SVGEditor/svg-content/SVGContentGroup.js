@@ -32,7 +32,7 @@ class SVGContentGroup {
 
     onExitModelEditing = noop;
 
-    preSelectionGroup = null
+    preSelectionGroup = null;
 
     constructor(options) {
         const { svgContent, scale } = options;

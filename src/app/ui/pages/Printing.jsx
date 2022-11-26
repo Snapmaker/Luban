@@ -175,7 +175,19 @@ function useRenderMainToolBar(setSimplifying, profileInitialized = false) {
         });
     }
 
+    /**
+     * Render main tool bar on the top.
+     *
+     * @param activeMachine
+     * @param machineInfo
+     * @param materialInfo
+     * @param isConnected
+     * @returns {*}
+     */
     function renderMainToolBar(activeMachine, machineInfo, materialInfo, isConnected) {
+        //
+        //
+        //
         const leftItems = [
             {
                 title: i18n._('key-Printing/Page-Home'),
@@ -284,6 +296,17 @@ function useRenderMainToolBar(setSimplifying, profileInitialized = false) {
                         name: 'MainToolbarFixModel',
                         action: () => {
                             dispatch(printingActions.repairSelectedModels());
+                        }
+                    },
+                    {
+                        title: i18n._('Modifiers'),
+                        disabled: !profileInitialized,
+                        type: 'button',
+                        name: 'MainToolbarModifier',
+                        action: () => {
+                            dispatch(printingActions.updateState({
+                                showPrintParameterModifierDialog: true
+                            }));
                         }
                     }
                 ]

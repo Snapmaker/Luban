@@ -9,16 +9,13 @@ import i18n from '../../../lib/i18n';
 import SvgIcon from '../../components/SvgIcon';
 import WorkSpeed from './WorkSpeed';
 import {
-    // CONNECTION_TYPE_WIFI,
-    LEVEL_TWO_POWER_LASER_FOR_SM2,
-    WORKFLOW_STATUS_PAUSED,
-    WORKFLOW_STATUS_RUNNING,
-    // WORKFLOW_STATE_PAUSED,
-    // WORKFLOW_STATE_RUNNING, CONNECTION_TYPE_SERIAL,
     CONNECTION_LASER_POWER,
     CONNECTION_SWITCH_LASER_POWER,
+    WORKFLOW_STATUS_PAUSED,
     WORKFLOW_STATUS_PAUSING,
+    WORKFLOW_STATUS_RUNNING,
 } from '../../../constants';
+import { LEVEL_TWO_POWER_LASER_FOR_SM2, } from '../../../constants/machines';
 import { controller } from '../../../lib/controller';
 import ParamsWrapper from './ParamsWrapper';
 

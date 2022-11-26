@@ -93,7 +93,7 @@ class ModalHOC extends PureComponent {
     onChangeInputValue = (event) => {
         this.setState({ inputValue: event.target.value });
         outsideInputValue = event.target.value;
-    }
+    };
 
     handleClose = () => {
         this.setState({ show: false });

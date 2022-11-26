@@ -8,7 +8,7 @@ import {
     HEAD_CNC,
     HEAD_LASER,
     HEAD_PRINTING
-} from '../../../constants';
+} from '../../../constants/machines';
 
 
 function MarlinWidget({ widgetActions }) {

@@ -2,10 +2,10 @@ import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
 
-import {PRINTING_CONFIG_SUBCATEGORY} from '../constants';
-import {generateRandomPathName} from '../../shared/lib/random-utils';
-import {DefinitionLoader} from './definition';
-import {Metadata, SliceResult} from './slicer-definitions';
+import { PRINTING_CONFIG_SUBCATEGORY } from '../constants';
+import { generateRandomPathName } from '../../shared/lib/random-utils';
+import { DefinitionLoader } from './definition';
+import { Metadata, SliceResult } from './slicer-definitions';
 
 /**
  * G-code post-processor (version: 0).
@@ -24,8 +24,8 @@ export function processGcodeHeaderAfterCuraEngine(gcodeFilePath: string, metadat
 
     const date = new Date();
     const splitIndex = readFileSync.indexOf(';Generated');
-    const boundingBoxMax = metadata.boundingBox ? metadata.boundingBox.max : {x: 0, y: 0, z: 0};
-    const boundingBoxMin = metadata.boundingBox ? metadata.boundingBox.min : {x: 0, y: 0, z: 0};
+    const boundingBoxMax = metadata.boundingBox ? metadata.boundingBox.max : { x: 0, y: 0, z: 0 };
+    const boundingBoxMin = metadata.boundingBox ? metadata.boundingBox.min : { x: 0, y: 0, z: 0 };
 
     const header = `${';Header Start\n'
         + '\n'
@@ -103,8 +103,8 @@ export async function postProcessorV1(sliceResult: SliceResult, metadata: Metada
     extruderR.loadDefinition(PRINTING_CONFIG_SUBCATEGORY, 'snapmaker_extruder_1', null);
 
     const date = new Date();
-    const boundingBoxMax = metadata.boundingBox ? metadata.boundingBox.max : {x: 0, y: 0, z: 0};
-    const boundingBoxMin = metadata.boundingBox ? metadata.boundingBox.min : {x: 0, y: 0, z: 0};
+    const boundingBoxMax = metadata.boundingBox ? metadata.boundingBox.max : { x: 0, y: 0, z: 0 };
+    const boundingBoxMin = metadata.boundingBox ? metadata.boundingBox.min : { x: 0, y: 0, z: 0 };
 
     const headerCodes = [
         ';Header Start',
@@ -166,7 +166,7 @@ export async function postProcessorV1(sliceResult: SliceResult, metadata: Metada
                 checkHeaderLines = false;
             }
         } else {
-            outputStream.write(line + '\n');
+            outputStream.write(`${line}\n`);
         }
     }
     outputStream.close();

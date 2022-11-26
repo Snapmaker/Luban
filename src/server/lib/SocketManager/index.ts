@@ -22,7 +22,7 @@ class SocketServer extends EventEmitter {
 
     private sockets: Socket[] = [];
 
-    public id: string = '';
+    public id = '';
 
     private events = [];
 
@@ -124,7 +124,7 @@ class SocketServer extends EventEmitter {
             }
         };
         return invoke(actions, params);
-    }
+    };
 
     public registerChannel(
         topic: string, callback: (subscriber: {

@@ -10,33 +10,33 @@ function getLength(lastPoint: Vector3, newPoint: Vector3) {
     return distant ** 0.5;
 }
 export class GCodeParser {
-    private combinedLines: LineTubeGeometry[] = []
+    private combinedLines: LineTubeGeometry[] = [];
 
-    private gCode: string
+    private gCode: string;
 
-    public startLayer: number | undefined = undefined
+    public startLayer: number | undefined = undefined;
 
-    public endLayer: number | undefined = undefined
+    public endLayer: number | undefined = undefined;
 
-    public min?: Vector3
+    public min?: Vector3;
 
-    public max?: Vector3
+    public max?: Vector3;
 
-    public extruderColors: { toolColor0: string, toolColor1: string } = { toolColor0: '#FFFFFF', toolColor1: '#404040' }
+    public extruderColors: { toolColor0: string, toolColor1: string } = { toolColor0: '#FFFFFF', toolColor1: '#404040' };
 
-    private minTemp: number | undefined = undefined
+    private minTemp: number | undefined = undefined;
 
-    private maxTemp = 0
+    private maxTemp = 0;
 
-    private minSpeed: number | undefined = undefined
+    private minSpeed: number | undefined = undefined;
 
-    private maxSpeed = 0
+    private maxSpeed = 0;
 
-    private layerIndex: { start: number, end: number }[] = []
+    private layerIndex: { start: number, end: number }[] = [];
 
-    private isGrayMode: boolean = false;
+    private isGrayMode = false;
 
-    private isDual: boolean = false;
+    private isDual = false;
 
     // Public configurations:
 
@@ -45,7 +45,7 @@ export class GCodeParser {
      *
      * @type number
      */
-    public travelWidth: number = 0.01
+    public travelWidth = 0.01;
 
     /**
      * Set any colorizer implementation to change the segment color based on the segment
@@ -53,7 +53,7 @@ export class GCodeParser {
      *
      * @type SegmentColorizer
      */
-    public colorizer: SegmentColorizer = new SimpleColorizer()
+    public colorizer: SegmentColorizer = new SimpleColorizer();
 
     /**
      * The number of radial segments per line.
@@ -63,7 +63,7 @@ export class GCodeParser {
      * @default 8
      * @type number
      */
-    public radialSegments: number = 8
+    public radialSegments = 8;
 
     /**
      * Internally the rendered object is split into several. This allows to reduce the
@@ -74,7 +74,7 @@ export class GCodeParser {
      * @default 120000
      * @type number
      */
-    public pointsPerObject: number = 120000
+    public pointsPerObject = 120000;
 
     /**
      * Creates a new GCode renderer for the given gcode.
@@ -86,7 +86,7 @@ export class GCodeParser {
      * @param {number} height
      * @param {Color} background
      */
-    constructor(gCode: string) {
+    public constructor(gCode: string) {
         this.gCode = gCode;
         // Pre-calculate some min max values, needed for colorizing.
         // this.calcMinMaxMetadata();

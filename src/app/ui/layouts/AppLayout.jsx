@@ -101,9 +101,9 @@ class AppLayout extends PureComponent {
         releaseNotes: '',
         prevVersion: '',
         version: ''
-    }
+    };
 
-    activeTab = ''
+    activeTab = '';
 
     downloadingRef = React.createRef(false);
 
@@ -852,7 +852,7 @@ class AppLayout extends PureComponent {
                 }
             });
         }
-    }
+    };
 
     // componentWillMount() {
     // }

@@ -8,12 +8,12 @@ class TileModal extends PureComponent {
     static propTypes = {
         ...Modal.propTypes,
         closable: PropTypes.bool
-    }
+    };
 
     static defaultProps = {
         ...Modal.defaultProps,
         closable: true
-    }
+    };
 
     componentDidMount() {
         UniApi.Event.emit('tile-modal:show', { component: this.props.children });

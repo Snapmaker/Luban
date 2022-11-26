@@ -33,7 +33,7 @@ type TPayload = {
 class TaskManager {
     private workerManager: IWorkerManager = workerManager;
 
-    private tasks: Task[] = []
+    private tasks: Task[] = [];
 
     private exec(runnerName: string, task: Task) {
         const { terminate } = this.workerManager[runnerName]([task.data], (payload) => {

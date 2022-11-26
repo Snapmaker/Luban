@@ -117,7 +117,7 @@ class WifiServerManager extends EventEmitter {
 
     onDisconnection = (socket) => {
         this.onDisSubscribe(socket);
-    }
+    };
 
     onSubscribe = (socket) => {
         this.machineSubscriber.push(socket);
@@ -126,7 +126,7 @@ class WifiServerManager extends EventEmitter {
         if (!intervalHandle) {
             intervalHandle = setInterval(this.refreshDevices, 3000);
         }
-    }
+    };
 
     onDisSubscribe = (socket) => {
         this.machineSubscriber = this.machineSubscriber.filter(e => e !== socket);
@@ -135,7 +135,7 @@ class WifiServerManager extends EventEmitter {
             clearInterval(intervalHandle);
             intervalHandle = null;
         }
-    }
+    };
 }
 
 const wifiServerManager = new WifiServerManager();

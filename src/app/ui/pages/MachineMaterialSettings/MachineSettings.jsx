@@ -5,14 +5,13 @@ import PropTypes from 'prop-types';
 import { find, includes, remove } from 'lodash';
 import i18n from '../../../lib/i18n';
 import Anchor from '../../components/Anchor';
+import { HEAD_PRINTING, LEFT, RIGHT, RIGHT_EXTRUDER } from '../../../constants';
 import {
-    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
-    HEAD_PRINTING,
-    LEFT,
-    PRINTING_SINGLE_EXTRUDER_HEADTOOL,
-    RIGHT,
-} from '../../../constants';
-import { getMachineOptions, getMachineSupportedToolOptions, MACHINE_SERIES } from '../../../constants/machines';
+    getMachineOptions,
+    getMachineSupportedToolOptions,
+    isDualExtruder,
+    MACHINE_SERIES
+} from '../../../constants/machines';
 import SvgIcon from '../../components/SvgIcon';
 import { NumberInput as Input } from '../../components/Input';
 import { Badge } from '../../components/Badge';
@@ -76,8 +75,9 @@ const MachineSettings = forwardRef(({
     setSeries,
     setToolhead
 }, ref) => {
-    const extruderLDefinition = useSelector((state) => state?.printing?.extruderLDefinition);
-    const extruderRDefinition = useSelector((state) => state?.printing?.extruderRDefinition);
+    // const extruderLDefinition = useSelector((state) => state?.printing?.extruderLDefinition);
+    // const extruderRDefinition = useSelector((state) => state?.printing?.extruderRDefinition);
+    const { extruderLDefinition, extruderRDefinition, definitionEditorForExtruder } = useSelector(state => state?.printing);
     const dispatch = useDispatch();
 
     // head type
@@ -118,7 +118,6 @@ const MachineSettings = forwardRef(({
             window.removeEventListener('resize', () => resizeAction());
         };
     }, []);
-
 
 
     // Handles
@@ -317,10 +316,11 @@ const MachineSettings = forwardRef(({
 
         // update nozzle variants
         // TODO: Get available variants from tool head definition.
-        if (selectedToolName === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+        if (isDualExtruder(selectedToolName)) {
             _setNozzleDiameterList(LEFT, defaultNozzleDiameterListForDualExtruder, selectedMachineSeries);
             _setNozzleDiameterList(RIGHT, defaultNozzleDiameterListForDualExtruder, selectedMachineSeries);
-        } else if (includes(PRINTING_SINGLE_EXTRUDER_HEADTOOL, selectedToolName)) {
+        } else {
+            definitionEditorForExtruder.delete(RIGHT_EXTRUDER);
             _setNozzleDiameterList(LEFT, defaultNozzleDiameterListForSingleExtruder, selectedMachineSeries);
             setRightNozzleDiameterList([]);
         }
@@ -441,18 +441,20 @@ const MachineSettings = forwardRef(({
                 {headType === HEAD_PRINTING && (
                     <div className="margin-top-32">
                         <div>{i18n._('key-settings/Nozzle Diameter')} (mm)</div>
-                        {selectedToolName === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
-                            <div className="margin-top-16 width-248 height-32 background-grey-2 padding-2 border-radius-8">
-                                <Anchor className={`padding-left-8 border-radius-8 width-122 display-inline ${activeNozzle === LEFT ? 'background-color-white' : ''}`} onClick={() => setActiveNozzle(LEFT)}>
-                                    <span className="margin-right-8">{i18n._('key-Cnc/StlSection/orientation_Left-Left')}</span>
-                                    <span>{leftNozzleDiameter}</span>
-                                </Anchor>
-                                <Anchor className={`padding-left-8 border-radius-8 width-122 display-inline ${activeNozzle === RIGHT ? 'background-color-white' : ''}`} onClick={() => setActiveNozzle(RIGHT)}>
-                                    <span className="margin-right-8">{i18n._('key-Cnc/StlSection/orientation_Right-Right')}</span>
-                                    <span>{rightNozzleDiameter}</span>
-                                </Anchor>
-                            </div>
-                        )}
+                        {
+                            isDualExtruder(selectedToolName) && (
+                                <div className="margin-top-16 width-248 height-32 background-grey-2 padding-2 border-radius-8">
+                                    <Anchor className={`padding-left-8 border-radius-8 width-122 display-inline ${activeNozzle === LEFT ? 'background-color-white' : ''}`} onClick={() => setActiveNozzle(LEFT)}>
+                                        <span className="margin-right-8">{i18n._('key-Cnc/StlSection/orientation_Left-Left')}</span>
+                                        <span>{leftNozzleDiameter}</span>
+                                    </Anchor>
+                                    <Anchor className={`padding-left-8 border-radius-8 width-122 display-inline ${activeNozzle === RIGHT ? 'background-color-white' : ''}`} onClick={() => setActiveNozzle(RIGHT)}>
+                                        <span className="margin-right-8">{i18n._('key-Cnc/StlSection/orientation_Right-Right')}</span>
+                                        <span>{rightNozzleDiameter}</span>
+                                    </Anchor>
+                                </div>
+                            )
+                        }
                         {activeNozzle === LEFT && (
                             <div className="sm-flex sm-flex-wrap margin-top-16">
                                 {leftNozzleDiameterList.map((nozzle, index) => {

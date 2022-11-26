@@ -12,18 +12,19 @@ import { unzipFile, zipFolder } from '../../lib/archive';
 import { packFirmware } from '../../lib/firmware-build';
 import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../constants';
 import {
-    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
-    SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
+    getMachineSeriesWithToolhead,
+    isDualExtruder,
     LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
-    STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
-    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     LEVEL_ONE_POWER_LASER_FOR_SM2,
-    STANDARD_CNC_TOOLHEAD_FOR_SM2
-} from '../../../app/constants';
+    MACHINE_TOOL_HEADS,
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
+    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+    STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
+    STANDARD_CNC_TOOLHEAD_FOR_SM2,
+} from '../../../app/constants/machines';
 import { removeSpecialChars } from '../../../shared/lib/utils';
 import { generateRandomPathName } from '../../../shared/lib/random-utils';
 import { convertFileToSTL } from '../../lib/model-to-stl';
-import { getMachineSeriesWithToolhead, MACHINE_TOOL_HEADS } from '../../../app/constants/machines';
 
 const log = logger('api:file');
 
@@ -32,6 +33,7 @@ function copyFileSync(src, dst) {
         fs.copyFileSync(src, dst);
     }
 }
+
 function traverse(models, callback) {
     models.forEach(model => {
         // callback && callback(model);
@@ -46,14 +48,14 @@ function traverse(models, callback) {
 // Default toolHead for original
 export const INITIAL_TOOL_HEAD_FOR_ORIGINAL = {
     printingToolhead:
-        MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
+    MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
     laserToolhead: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value,
     cncToolhead: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value
 };
 
 export const INITIAL_TOOL_HEAD_FOR_SM2 = {
     printingToolhead:
-        MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value,
+    MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value,
     laserToolhead: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value,
     cncToolhead: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value
 };
@@ -356,7 +358,8 @@ export const saveEnv = async (req, res) => {
         if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
             copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialId}.def.json`, `${envDir}/${config.defaultMaterialId}.def.json`);
         }
-        if (machineInfo?.toolHead?.printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && config.defaultMaterialIdRight && /^material.([0-9_]+)$/.test(config.defaultMaterialIdRight)) {
+        const isDual = isDualExtruder(machineInfo?.toolHead?.printingToolhead);
+        if (isDual && config.defaultMaterialIdRight && /^material.([0-9_]+)$/.test(config.defaultMaterialIdRight)) {
             copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialIdRight}.def.json`, `${envDir}/${config.defaultMaterialIdRight}.def.json`);
         }
         if (config.defaultQualityId && /^quality.([0-9_]+)$/.test(config.defaultQualityId)) {
@@ -425,7 +428,8 @@ export const recoverEnv = async (req, res) => {
         if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
             copyFileSync(`${envDir}/${config.defaultMaterialId}.def.json`, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialId}.def.json`);
         }
-        if (config.machineInfo?.toolHead?.printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && config.defaultMaterialIdRight && /^material.([0-9_]+)$/.test(config.defaultMaterialIdRight)) {
+        const isDual = isDualExtruder(config.machineInfo?.toolHead?.printingToolhead);
+        if (isDual && config.defaultMaterialIdRight && /^material.([0-9_]+)$/.test(config.defaultMaterialIdRight)) {
             copyFileSync(`${envDir}/${config.defaultMaterialIdRight}.def.json`, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialIdRight}.def.json`);
         }
         if (config.defaultQualityId && /^quality.([0-9_]+)$/.test(config.defaultQualityId)) {
@@ -546,3 +550,48 @@ export const recoverProjectFile = async (req, res) => {
         });
     }
 };
+
+/**
+ * save model editor or extruder editor
+ */
+export const saveModifier = async (req, res) => {
+    try {
+        const { content, editorDefinition } = req.body;
+        const envDir = `${DataStorage.envDir}/${HEAD_PRINTING}`;
+        const config = JSON.parse(content);
+        const { modelEditor, extruderEditor } = config;
+        Object.keys({ ...extruderEditor, ...modelEditor }).forEach(key => {
+            const targetFile = `${envDir}/${key}.def.json`;
+            if (fs.existsSync(targetFile)) rmDir(targetFile);
+            const editorContent = JSON.parse(editorDefinition);
+            fs.writeFileSync(targetFile, JSON.stringify(editorContent[key]));
+        });
+    } catch (e) {
+        log.error(`Failed to save editor: ${e}`);
+        res.status(ERR_INTERNAL_SERVER_ERROR).send({
+            msg: `Failed to save editor: ${e}`
+        });
+    }
+};
+
+
+export const getEditorDefinition = async (req, res) => {
+    try {
+        const { key } = req.body;
+        const editorPath = `${DataStorage.tmpDir}/${key}.def.json`;
+        if (fs.existsSync(editorPath)) {
+            const content = fs.readFileSync(editorPath, 'utf-8');
+            res.send({ editorDefinition: JSON.parse(content) });
+            res.end();
+        } else {
+            res.send({ editorDefinition: {} });
+            res.send();
+        }
+    } catch (e) {
+        log.error(`Failed to get editor definintion: ${e}`);
+        res.status(ERR_INTERNAL_SERVER_ERROR).send({
+            msg: `Failed to get editor definition: ${e}`
+        });
+    }
+};
+

@@ -121,7 +121,7 @@ export default class BaseModel extends EventEmitter {
     public parent: ThreeGroup;
     public overstepped: boolean;
 
-    public estimatedTime = 0
+    public estimatedTime = 0;
 
     public transformation: ModelTransformation;
     public boundingBox: THREE.Box3;

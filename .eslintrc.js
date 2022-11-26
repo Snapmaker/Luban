@@ -6,10 +6,13 @@ module.exports = {
     parserOptions: {
         'requireConfigFile': false,
         'babelOptions': {
-            'presets': ['@babel/preset-react']
+            'presets': [
+                ['@babel/preset-react', {
+                    'runtime': 'automatic'
+                }]
+            ]
         },
         project: ['./tsconfig.json']
-
     },
     env: {
         browser: true,
@@ -29,7 +32,7 @@ module.exports = {
             }
         }
     },
-    'plugins': [
+    plugins: [
         'react-hooks'
     ],
     rules: {
@@ -44,6 +47,13 @@ module.exports = {
                 '.tsx'
             ]
         }],
+
+        // React 17 new transform
+        // react/jsx-uses-react and react/react-in-jsx-scope are no longer necessary
+        // https://reactjs.org/blog/2020/09/22/introducing-the-new-jsx-transform.html
+        // 'react/jsx-uses-react': 'off',
+        // 'react/react-in-jsx-scope': 'off',
+
         'react-hooks/rules-of-hooks': 'error', // Checks rules of Hooks
         'react-hooks/exhaustive-deps': 'warn', // Checks effect dependencies
         'react/jsx-no-bind': [1, {
@@ -104,12 +114,17 @@ module.exports = {
     overrides: [{
         files: ['*.ts', '*.tsx'],
         extends: [
+            'eslint:recommended',
             'plugin:@typescript-eslint/eslint-recommended',
             'plugin:@typescript-eslint/recommended',
         ],
         parser: '@typescript-eslint/parser',
         // plugins: ['react', '@typescript-eslint'],
         rules: {
+            '@typescript-eslint/ban-ts-comment': 'off',
+            // 'react/jsx-uses-react': 'off',
+            // 'react/react-in-jsx-scope': 'off',
+
             '@typescript-eslint/ban-types': 'off',
             'no-use-before-define': 'off',
             '@typescript-eslint/no-use-before-define': ['error'],
@@ -123,7 +138,8 @@ module.exports = {
             'no-unused-vars': 'off',
             '@typescript-eslint/no-unused-vars': ['error'],
             '@typescript-eslint/explicit-member-accessibility': ['error'], // Require explicit accessibility modifiers on class properties and methods
-            '@typescript-eslint/promise-function-async': 'error'
+            '@typescript-eslint/promise-function-async': 'error',
+
         }
     }]
 };

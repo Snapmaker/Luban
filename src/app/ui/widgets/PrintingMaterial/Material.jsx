@@ -1,6 +1,6 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { useSelector, useDispatch, shallowEqual } from 'react-redux';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import classNames from 'classnames';
 import { Divider, Input } from 'antd';
 import Cascader from '../../components/Cascader';
@@ -10,14 +10,14 @@ import i18n from '../../../lib/i18n';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
 import {
-    LEFT_EXTRUDER,
-    PRINTING_MANAGER_TYPE_MATERIAL,
     HEAD_PRINTING,
-    DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
-    RIGHT_EXTRUDER,
+    LEFT_EXTRUDER,
     NOZZLE_SIZE_DEFAULT_OPTIONS,
-    PRINTING_MANAGER_TYPE_EXTRUDER
+    PRINTING_MANAGER_TYPE_EXTRUDER,
+    PRINTING_MANAGER_TYPE_MATERIAL,
+    RIGHT_EXTRUDER
 } from '../../../constants';
+import { isDualExtruder } from '../../../constants/machines';
 import { getMaterialSelectOptions } from '../../utils/profileManager';
 
 const plaMaterialId = 'material.pla';
@@ -99,6 +99,7 @@ function Material({ widgetActions }) {
             dispatch(printingActions.displayModel());
         }
     }
+
     useEffect(() => {
         widgetActions.setTitle(
             i18n._('key-Printing/PrintingConfigurations-Extruder')
@@ -149,7 +150,7 @@ function Material({ widgetActions }) {
             });
         }
         if (
-            printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
+            isDualExtruder(printingToolhead)
             && rightDiameter
             && !diametersOptions.find((d) => d.value === rightDiameter)
         ) {
@@ -211,6 +212,7 @@ function Material({ widgetActions }) {
             </div>
         );
     }
+
     return (
         <React.Fragment>
             <div className={classNames('margin-top-8')}>
@@ -220,14 +222,14 @@ function Material({ widgetActions }) {
                     </span>
                     <div>
                         <div className="display-inline">
-                            {printingToolhead
-                                === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
-                                <span style={{ color: '#86868B' }}>L</span>
-                            )}
+                            {
+                                isDualExtruder(printingToolhead) && (
+                                    <span style={{ color: '#86868B' }}>L</span>
+                                )
+                            }
                             <Cascader
                                 className={
-                                    printingToolhead
-                                    === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
+                                    isDualExtruder(printingToolhead)
                                         ? 'margin-left-4 width-80'
                                         : 'margin-left-4 width-200'
                                 }
@@ -240,29 +242,30 @@ function Material({ widgetActions }) {
                                 }}
                             />
                         </div>
-                        {printingToolhead
-                            === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
-                            <div className="display-inline margin-left-16">
-                                <span style={{ color: '#86868B' }}>R</span>
-                                <Cascader
-                                    className="margin-left-4 width-80"
-                                    dropdownRender={dropdownRender(
-                                        RIGHT_EXTRUDER
-                                    )}
-                                    options={diametersOptions}
-                                    placement="bottomRight"
-                                    value={rightDiameter}
-                                    onChange={(option) => {
-                                        setDiameter(RIGHT_EXTRUDER, option[0]);
-                                    }}
-                                />
-                            </div>
-                        )}
+                        {
+                            isDualExtruder(printingToolhead) && (
+                                <div className="display-inline margin-left-16">
+                                    <span style={{ color: '#86868B' }}>R</span>
+                                    <Cascader
+                                        className="margin-left-4 width-80"
+                                        dropdownRender={dropdownRender(
+                                            RIGHT_EXTRUDER
+                                        )}
+                                        options={diametersOptions}
+                                        placement="bottomRight"
+                                        value={rightDiameter}
+                                        onChange={(option) => {
+                                            setDiameter(RIGHT_EXTRUDER, option[0]);
+                                        }}
+                                    />
+                                </div>
+                            )
+                        }
                     </div>
                 </div>
                 <div className="sm-flex align-center color-black-3 justify-space-between margin-top-8">
                     <span className="display-inline width-88 text-overflow-ellipsis">
-                        {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2
+                        {isDualExtruder(printingToolhead)
                             ? i18n._(
                                 'key-Printing/PrintingConfigurations-Extruder L'
                             )
@@ -289,7 +292,7 @@ function Material({ widgetActions }) {
                         />
                     </div>
                 </div>
-                {printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 && (
+                {isDualExtruder(printingToolhead) && (
                     <div className="sm-flex align-center color-black-3 justify-space-between margin-top-8">
                         <span className="display-inline width-88 text-overflow-ellipsis height-32">
                             {i18n._(
