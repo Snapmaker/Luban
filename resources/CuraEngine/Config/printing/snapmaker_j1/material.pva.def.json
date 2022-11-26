@@ -1,14 +1,14 @@
 {
-    "version": "4.5.0-alpha.0",
-    "name": "PLA-White",
-    "category": "PLA",
-    "i18nName": "key-default_name-PLA_White",
-    "i18nCategory": "key-default_category-PLA",
-    "isRecommended": true,
+    "version": "4.4.0",
+    "name": "PVA",
     "inherits": "snapmaker2",
+    "category": "PVA",
+    "i18nName": "key-default_name-PVA_White",
+    "i18nCategory": "key-default_category-PVA",
+    "isRecommended": true,
     "overrides": {
         "material_type": {
-            "default_value": "pla"
+            "default_value": "pva"
         },
         "extruders_enabled_count": {
             "default_value": 2
@@ -38,7 +38,7 @@
             "default_value": 65
         },
         "material_standby_temperature": {
-            "default_value": 150
+            "default_value": 120
         },
         "cool_fan_speed": {
             "default_value": 100

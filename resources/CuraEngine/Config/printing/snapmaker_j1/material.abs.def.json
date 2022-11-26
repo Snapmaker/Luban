@@ -1,14 +1,14 @@
 {
-    "version": "4.5.0-alpha.0",
-    "name": "PLA-White",
-    "category": "PLA",
-    "i18nName": "key-default_name-PLA_White",
-    "i18nCategory": "key-default_category-PLA",
+    "version": "4.4.0",
+    "name": "ABS-White",
+    "category": "ABS",
+    "i18nName": "key-default_name-ABS_White",
+    "i18nCategory": "key-default_category-ABS",
     "isRecommended": true,
     "inherits": "snapmaker2",
     "overrides": {
         "material_type": {
-            "default_value": "pla"
+            "default_value": "abs"
         },
         "extruders_enabled_count": {
             "default_value": 2
@@ -17,25 +17,25 @@
             "default_value": "#ffffff"
         },
         "material_print_temperature": {
-            "default_value": 215
+            "default_value": 255
         },
         "material_print_temperature_layer_0": {
-            "default_value": 215
+            "default_value": 245
         },
         "material_initial_print_temperature": {
-            "default_value": 215
+            "default_value": 255
         },
         "material_final_print_temperature": {
-            "default_value": 215
+            "default_value": 255
         },
         "material_extrusion_cool_down_speed": {
             "default_value": 0.7
         },
         "material_bed_temperature": {
-            "default_value": 65
+            "default_value": 100
         },
         "material_bed_temperature_layer_0": {
-            "default_value": 65
+            "default_value": 100
         },
         "material_standby_temperature": {
             "default_value": 150

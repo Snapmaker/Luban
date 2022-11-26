@@ -1,32 +1,32 @@
 {
-    "version": "4.5.0-alpha.0",
-    "name": "PLA-White",
-    "category": "PLA",
-    "i18nName": "key-default_name-PLA_White",
-    "i18nCategory": "key-default_category-PLA",
-    "isRecommended": true,
+    "version": "4.4.0",
+    "name": "TPU-Black",
     "inherits": "snapmaker2",
+    "category": "TPU",
+    "i18nName": "key-default_name-TPU_Black",
+    "i18nCategory": "key-default_category-TPU",
+    "isRecommended": true,
     "overrides": {
         "material_type": {
-            "default_value": "pla"
+            "default_value": "tpu"
         },
         "extruders_enabled_count": {
             "default_value": 2
         },
         "color": {
-            "default_value": "#ffffff"
+            "default_value": "#000000"
         },
         "material_print_temperature": {
-            "default_value": 215
+            "default_value": 220
         },
         "material_print_temperature_layer_0": {
-            "default_value": 215
+            "default_value": 220
         },
         "material_initial_print_temperature": {
-            "default_value": 215
+            "default_value": 220
         },
         "material_final_print_temperature": {
-            "default_value": 215
+            "default_value": 220
         },
         "material_extrusion_cool_down_speed": {
             "default_value": 0.7
@@ -59,7 +59,7 @@
             "default_value": true
         },
         "cool_min_layer_time": {
-            "default_value": 5
+            "default_value": 10
         },
         "cool_min_speed": {
             "default_value": 10
@@ -101,13 +101,13 @@
             "default_value": true
         },
         "retraction_amount": {
-            "default_value": 1.5
+            "default_value": 1
         },
         "retraction_retract_speed": {
-            "default_value": 30
+            "default_value": 25
         },
         "retraction_prime_speed": {
-            "default_value": 30
+            "default_value": 25
         },
         "retraction_extra_prime_amount": {
             "default_value": 0
@@ -131,7 +131,7 @@
             "default_value": 1
         },
         "switch_extruder_retraction_amount": {
-            "default_value": 6
+            "default_value": 2
         },
         "switch_extruder_retraction_speeds": {
             "default_value": 20
@@ -143,7 +143,7 @@
             "default_value": 20
         },
         "switch_extruder_extra_prime_amount": {
-            "default_value": 2
+            "default_value": 1
         },
         "cool_fan_speed_0": {
             "default_value": 0
