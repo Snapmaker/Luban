@@ -55,7 +55,6 @@ function Configurations() {
     const refCreateModal = useRef(null);
     const dispatch = useDispatch();
 
-
     const presetOptionsObj = getPresetOptions(qualityDefinitionModels);
 
     const presetDisplayTypeOptions = Object.entries(presetOptionsObj).map(([key, item]) => {

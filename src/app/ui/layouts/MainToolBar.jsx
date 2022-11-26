@@ -1,7 +1,6 @@
 import classNames from 'classnames';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-// import { find } from 'lodash';
 import styles from './styles/maintoolbar.styl';
 import MenuItem from './MenuItem';
 import { Badge } from '../components/Badge';
@@ -9,7 +8,6 @@ import Anchor from '../components/Anchor';
 import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../constants';
 import SvgIcon from '../components/SvgIcon';
 
-// import { timestamp } from '../../../shared/lib/random-utils';
 
 class MainToolBar extends PureComponent {
     static propTypes = {
@@ -55,28 +53,32 @@ class MainToolBar extends PureComponent {
                 )}
             >
                 <div className={classNames(styles.left, styles['bar-items'])}>
-                    {leftItems && (leftItems.filter(item => item).map((menuItem) => {
-                        if (menuItem.children) {
-                            return (
-                                <span
-                                    key={key++}
-                                    className={classNames(
-                                        menuItem.className ? menuItem.className : '',
-                                        'display-inline',
-                                        'white-space-nowrap'
-                                    )}
-                                >
-                                    {menuItem.children.map((childItem) => {
-                                        return (
-                                            <MenuItem key={childItem.name + (key++)} menuItem={childItem} actions={actions} lang={lang} headType={headType} />);
-                                    })}
-                                </span>
-                            );
-                        } else if (menuItem) {
-                            return <MenuItem key={key++} menuItem={menuItem} actions={actions} lang={lang} headType={headType} />;
-                        }
-                        return null;
-                    }))}
+                    {
+                        leftItems && (leftItems.filter(item => item).map((menuItem) => {
+                            if (menuItem.children) {
+                                return (
+                                    <span
+                                        key={key++}
+                                        className={classNames(
+                                            menuItem.className ? menuItem.className : '',
+                                            'display-inline',
+                                            'white-space-nowrap'
+                                        )}
+                                    >
+                                        {
+                                            menuItem.children.map((childItem) => {
+                                                return (
+                                                    <MenuItem key={childItem.name + (key++)} menuItem={childItem} actions={actions} lang={lang} headType={headType} />);
+                                            })
+                                        }
+                                    </span>
+                                );
+                            } else if (menuItem) {
+                                return <MenuItem key={key++} menuItem={menuItem} actions={actions} lang={lang} headType={headType} />;
+                            }
+                            return null;
+                        }))
+                    }
                 </div>
                 <div className={classNames(styles.right, styles['bar-items'])}>
                     {
@@ -133,18 +135,20 @@ class MainToolBar extends PureComponent {
                                             </div>
                                         )
                                     }
-                                    {(headType === HEAD_CNC || headType === HEAD_LASER) && (
-                                        <div className="width-192">
-                                            <div className="sm-flex">
-                                                <SvgIcon
-                                                    name="Extruder"
-                                                    size={24}
-                                                    type={['static']}
-                                                />
-                                                {/* <span>{i18n._(`${MACHINE_TOOL_HEADS[machineInfo?.toolHead].label}`)}</span> */}
+                                    {
+                                        (headType === HEAD_CNC || headType === HEAD_LASER) && (
+                                            <div className="width-192">
+                                                <div className="sm-flex">
+                                                    <SvgIcon
+                                                        name="Extruder"
+                                                        size={24}
+                                                        type={['static']}
+                                                    />
+                                                    {/* <span>{i18n._(`${MACHINE_TOOL_HEADS[machineInfo?.toolHead].label}`)}</span> */}
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        )
+                                    }
                                 </div>
                             </Anchor>
                         )

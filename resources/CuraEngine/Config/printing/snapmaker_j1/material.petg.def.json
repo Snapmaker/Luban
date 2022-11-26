@@ -1,14 +1,14 @@
 {
-    "version": "4.5.0-alpha.0",
-    "name": "PLA-White",
-    "category": "PLA",
-    "i18nName": "key-default_name-PLA_White",
-    "i18nCategory": "key-default_category-PLA",
-    "isRecommended": true,
+    "version": "4.4.0",
+    "name": "PETG-White",
     "inherits": "snapmaker2",
+    "category": "PETG",
+    "i18nName": "key-default_name-PETG_White",
+    "i18nCategory": "key-default_category-PETG",
+    "isRecommended": true,
     "overrides": {
         "material_type": {
-            "default_value": "pla"
+            "default_value": "petg"
         },
         "extruders_enabled_count": {
             "default_value": 2
@@ -17,16 +17,16 @@
             "default_value": "#ffffff"
         },
         "material_print_temperature": {
-            "default_value": 215
+            "default_value": 240
         },
         "material_print_temperature_layer_0": {
-            "default_value": 215
+            "default_value": 240
         },
         "material_initial_print_temperature": {
-            "default_value": 215
+            "default_value": 240
         },
         "material_final_print_temperature": {
-            "default_value": 215
+            "default_value": 240
         },
         "material_extrusion_cool_down_speed": {
             "default_value": 0.7

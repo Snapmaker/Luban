@@ -509,5 +509,6 @@ export function loadAllSeriesDefinitions(isDefault = false, headType, series = '
             }
         }
     }
+
     return definitions;
 }
