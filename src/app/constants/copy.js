@@ -398,7 +398,7 @@ i18n._('key-Printing/LeftBar-No Rotation');
 
 i18n._('key-profileManager/Params-Basic');
 i18n._('key-profileManager/Params-All');
-i18n._('key-profileManager/Params-Recommed');
+i18n._('key-profileManager/Params-Recommend');
 i18n._('key-profileManager/Params-Custom');
 i18n._('key-profileManager/Params-Advanced');
 i18n._('key-profileManager/Params-No Limit');

@@ -56,7 +56,6 @@ const CategorySelector = ({
     useEffect(() => {
         if (mode === 'update') {
             const presetOptions = getPresetOptions(qualityDefinitions);
-            console.log('preset options', presetOptions);
             setPresetOptionsObj(presetOptions);
 
             const initCategory = 'Default';

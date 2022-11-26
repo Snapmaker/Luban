@@ -1,14 +1,11 @@
 /* eslint-disable import/no-cycle */
 import cloneDeep from 'lodash/cloneDeep';
-import { find, keys, some, isEmpty } from 'lodash';
+import { find, isEmpty, keys, some } from 'lodash';
 import pkg from '../../../package.json';
 import {
     COORDINATE_MODE_BOTTOM_CENTER,
     COORDINATE_MODE_CENTER,
     DISPLAYED_TYPE_MODEL,
-    HEAD_CNC,
-    HEAD_LASER,
-    HEAD_PRINTING,
     HEAD_TYPE_ENV_NAME,
     LOAD_MODEL_FROM_OUTER,
     MAX_RECENT_FILES_LENGTH,
@@ -16,7 +13,7 @@ import {
     PROCESS_MODE_MESH,
     SOURCE_TYPE
 } from '../../constants';
-import { SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 } from '../../constants/machines';
+import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 } from '../../constants/machines';
 import api from '../../api';
 import { actions as printingActions } from '../printing';
 import { actions as editorActions } from '../editor';
@@ -148,13 +145,14 @@ export const actions = {
         dispatch(actions.updateState(headType, { content, unSaved: true, initState: false }));
         await api.saveEnv({ content });
 
+        console.log('save env', headType, HEAD_PRINTING);
         if (headType === HEAD_PRINTING) {
             const { editorDefinition } = editorState;
             const editorObj = {};
             editorDefinition.forEach((value, key) => {
                 editorObj[key] = { ...value };
             });
-            await api.saveEditor({ content, editorDefinition: JSON.stringify(editorObj) });
+            await api.saveModifier({ content, editorDefinition: JSON.stringify(editorObj) });
         }
     },
 

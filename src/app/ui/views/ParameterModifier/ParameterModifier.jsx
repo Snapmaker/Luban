@@ -4,7 +4,7 @@ import { every, find, includes } from 'lodash';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, HEAD_PRINTING } from '../../../constants/machines';
+import { isDualExtruder, HEAD_PRINTING } from '../../../constants/machines';
 import i18n from '../../../lib/i18n';
 
 import Modal from '../../components/Modal';
@@ -25,6 +25,7 @@ function ParameterModifier({ outsideActions }) {
         defaultMaterialIdRight,
         definitionEditorForExtruder,
     } = useSelector(state => state?.printing);
+
     const { toolHead: { printingToolhead } } = useSelector(state => state?.machine);
     const [selectedTab, setSelectedTab] = useState(EXTRUDER_TAB);
     const [selectedExtruder, setSelectedExtruder] = useState(LEFT_EXTRUDER);
@@ -46,20 +47,22 @@ function ParameterModifier({ outsideActions }) {
     };
 
     const getKeys = (parentKeys, definition) => {
-        let returnKey = [];
+        let returnKeys = [];
         parentKeys.forEach(key => {
             const setting = definition.settings[key];
-            const childKey = setting.childKey;
             if (setting.settable_per_extruder || setting.settable_per_mesh) {
-                returnKey = returnKey.concat(key);
+                returnKeys = returnKeys.concat(key);
             }
+
+            const childKey = setting.childKey;
             if (childKey.length) {
                 const childKeyReturn = getKeys(childKey, definition);
-                returnKey = returnKey.concat(childKeyReturn);
+                returnKeys = returnKeys.concat(childKeyReturn);
             }
         });
-        return returnKey;
+        return returnKeys;
     };
+
     useEffect(() => {
         const temp = getPresetOptions(qualityDefinitions);
         const initCategory = 'Default';
@@ -70,9 +73,7 @@ function ParameterModifier({ outsideActions }) {
         }) || every([defaultMaterialId, defaultMaterialIdRight], (item) => {
             const material = item.split('.')[1];
             return material !== 'pva' && material !== 'support';
-        })) && printingToolhead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
-            console.log('dual set secondary');
-
+        })) && isDualExtruder(printingToolhead)) {
             const secondaryExtruder = includes(['pva', 'support'], defaultMaterialId.split('.')[1]) ? LEFT_EXTRUDER : RIGHT_EXTRUDER;
             const autoParams = {};
             const definition = find(secondaryExtruder === LEFT_EXTRUDER ? qualityDefinitions : qualityDefinitionsRight, { definitionId: 'quality.normal_other_quality' });

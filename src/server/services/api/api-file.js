@@ -554,7 +554,7 @@ export const recoverProjectFile = async (req, res) => {
 /**
  * save model editor or extruder editor
  */
-export const saveEditor = async (req, res) => {
+export const saveModifier = async (req, res) => {
     try {
         const { content, editorDefinition } = req.body;
         const envDir = `${DataStorage.envDir}/${HEAD_PRINTING}`;

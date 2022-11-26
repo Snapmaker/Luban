@@ -1030,7 +1030,7 @@
                             "label": "Color",
                             "description": "The Color of Material.",
                             "default_value": "#ffffff",
-                            "type": "string",
+                            "type": "color",
                             "filter": [
                                 "basic",
                                 "all"

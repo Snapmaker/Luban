@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import i18next from 'i18next';
 /* eslint-disable import/no-cycle */
 import { cloneDeep, find, includes, remove } from 'lodash';
@@ -41,8 +41,11 @@ const Content = ({
     selectedSettingsDefaultValue
 }) => {
     const {
-        definitionEditorForExtruder, definitionEditorForModel,
-        modelGroup, qualityDefinitions, qualityDefinitionsRight,
+        modelGroup,
+        definitionEditorForExtruder,
+        definitionEditorForModel,
+        qualityDefinitions,
+        qualityDefinitionsRight,
         editorDefinition
     } = useSelector(state => state?.printing);
 
@@ -62,14 +65,20 @@ const Content = ({
         const editor = definitionEditorForExtruder.get(selectedExtruder);
         setExtruderEditor(editor);
         setCheckedParams(editor ? { ...editor } : {});
-        editorDefinition.get(selectedExtruder) && editorType === EXTRUDER_TAB && setDefinitionManager(editorDefinition.get(selectedExtruder));
+
+        if (editorType === EXTRUDER_TAB) {
+            editorDefinition.get(selectedExtruder) && setDefinitionManager(editorDefinition.get(selectedExtruder));
+        }
     }, [selectedExtruder, editorType, definitionEditorForExtruder.size, editorDefinition]);
 
     useEffect(() => {
         const editor = definitionEditorForModel.get(selectedModelId);
         setCheckedParams(editor ? { ...editor } : {});
         setModelEditor(editor);
-        editorDefinition.get(selectedModelId) && editorType === MODEL_TAB && setDefinitionManager(editorDefinition.get(selectedModelId));
+
+        if (editorType === MODEL_TAB) {
+            editorDefinition.get(selectedModelId) && setDefinitionManager(editorDefinition.get(selectedModelId));
+        }
     }, [selectedModelId, editorType, definitionEditorForModel.size, editorDefinition]);
 
     useEffect(() => {
@@ -263,24 +272,23 @@ const Content = ({
                                             {
                                                 Object.keys(currentEditor).map(objectKey => {
                                                     return (
-                                                        <div className="margin-bottom-16">
+                                                        <div key={objectKey} className="margin-bottom-16">
                                                             <div className="font-size-middle font-weight-bold height-32">
                                                                 {i18n._(`key-Definition/Catagory-${objectKey}`)}
                                                             </div>
                                                             {currentEditor[objectKey].map(profileKey => {
                                                                 return (
-                                                                    <Anchor onClick={() => getMarkdown(profileKey, objectKey)}>
-                                                                        <SettingItem
-                                                                            settings={definitionManager?.settings}
-                                                                            definitionKey={profileKey}
-                                                                            key={profileKey}
-                                                                            isDefaultDefinition={definitionManager?.isRecommended}
-                                                                            defaultValue={{
-                                                                                value: selectedSettingsDefaultValue[profileKey]?.default_value
-                                                                            }}
-                                                                            onChangeDefinition={handleUpdateDefinition}
-                                                                        />
-                                                                    </Anchor>
+                                                                    <SettingItem
+                                                                        settings={definitionManager?.settings}
+                                                                        definitionKey={profileKey}
+                                                                        key={profileKey}
+                                                                        isDefaultDefinition={definitionManager?.isRecommended}
+                                                                        defaultValue={{
+                                                                            value: selectedSettingsDefaultValue[profileKey]?.default_value
+                                                                        }}
+                                                                        onChangeDefinition={handleUpdateDefinition}
+                                                                        onClick={() => getMarkdown(profileKey, objectKey)}
+                                                                    />
                                                                 );
                                                             })}
                                                         </div>
@@ -317,7 +325,7 @@ const Content = ({
                                     {categoryGroup && Object.keys(categoryGroup).map((key) => {
                                         if (categoryGroup[key].length > 0) {
                                             return (
-                                                <Anchor>
+                                                <Anchor key={key}>
                                                     <div className="width-percent-100 text-overflow-ellipsis height-32">
                                                         {i18n._(`key-Definition/Catagory-${key}`)}
                                                     </div>
@@ -338,7 +346,7 @@ const Content = ({
                                         {categoryGroup && Object.keys(categoryGroup).map(key => {
                                             if (categoryGroup[key].length > 0) {
                                                 return (
-                                                    <div className="margin-bottom-16">
+                                                    <div key={key} className="margin-bottom-16">
                                                         <div className="font-size-middle font-weight-bold">
                                                             {i18n._(`key-Definition/Catagory-${key}`)}
                                                         </div>

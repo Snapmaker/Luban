@@ -51,7 +51,7 @@ function ConfigValueBox({
     const [mdContent, setMdContent] = useState('');
     const [imgPath, setImgPath] = useState('');
     const [selectQualityDetailType, setSelectQualityDetailType] = useState(NO_LIMIT);
-    const [profileDomOffset, setProfileDomOffset] = useState(null);
+    const [profileDomOffset, setProfileDomOffset] = useState(0);
     const scrollDom = useRef(null);
     const fieldsDom = useRef([]);
     const [tempDoms, setTempdoms] = useState([]);
@@ -297,8 +297,8 @@ function ConfigValueBox({
         label: i18n._('key-profileManager/Params-All')
     }];
     const qualityParamsTypeOptions = [{
-        value: 'recommed',
-        label: i18n._('key-profileManager/Params-Recommed')
+        value: 'recommend',
+        label: i18n._('key-profileManager/Params-Recommend')
     }, {
         value: 'custom',
         label: i18n._('key-profileManager/Params-Custom')
@@ -376,7 +376,7 @@ function ConfigValueBox({
                 </div>
             </div>
             <div className="sm-flex width-percent-100 height-100-percent-minus-56">
-                {selectParamsType !== 'recommed' && (
+                {selectParamsType !== 'recommend' && (
                     <>
                         {showMiddle && (
                             <div
@@ -543,7 +543,7 @@ function ConfigValueBox({
                         </div>
                     </>
                 )}
-                {selectParamsType === 'recommed' && (
+                {selectParamsType === 'recommend' && (
                     <div className="width-percent-100 padding-horizontal-16 padding-vertical-16 sm-flex justify-space-between">
                         <div className="width-percent-70 margin-right-46">
                             <ParamItem
