@@ -277,7 +277,7 @@
     "Initial Layer Travel Jerk": "Ривки пересування початкового шару",
     "Initial Layer Travel Speed": "Швидкість переходу до настуної позиції початкового шару",
     "Initial Layer Z Overlap": "Перекриття Z початкового шару",
-    "Initial Printing Temperature": "Температура початкового шару",
+    "Initial Printing Temperature": "Температура початку друку",
     "Inner Wall Acceleration": "Прискорення внутрішніх стінок",
     "Inner Wall Extruder": "Екструдер внутрішніх стінок",
     "Inner Wall Jerk": "Ривки внутрішніх стінок",
