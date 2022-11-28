@@ -1,22 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
-import { cloneDeep, find, includes, remove } from 'lodash';
 import classNames from 'classnames';
-import { useDispatch, useSelector } from 'react-redux';
 import i18next from 'i18next';
+import { cloneDeep, find, includes, remove } from 'lodash';
+import PropTypes from 'prop-types';
+import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { useDispatch, useSelector } from 'react-redux';
 
+import { resolveDefinition } from '../../../../shared/lib/definitionResolver';
+import api from '../../../api';
+import { LEFT_EXTRUDER } from '../../../constants';
 import { actions as printingActions } from '../../../flux/printing';
 import i18n from '../../../lib/i18n';
-import { Button } from '../../components/Buttons';
 import Anchor from '../../components/Anchor';
-import EmptyBox from './EmptyBox';
+import { Button } from '../../components/Buttons';
 import CheckboxItem from '../ProfileManager/CheckboxItem';
-import styles from '../ProfileManager/styles.styl';
-import api from '../../../api';
 import SettingItem from '../ProfileManager/SettingItem';
-import { LEFT_EXTRUDER } from '../../../constants';
-import { resolveDefinition } from '../../../../shared/lib/definitionResolver';
+import styles from '../ProfileManager/styles.styl';
 
 
 /**
@@ -208,15 +207,6 @@ const Content = ({
                 {
                     mode === 'show' && (
                         <div className="position-relative background-color-white border-radius-bottom-16 height-percent-100 height-100-percent-minus-56">
-                            {
-                                (!extruderEditor) && (
-                                    <EmptyBox
-                                        tipContent={i18n._('No modifier(s).')}
-                                        addButton
-                                        setMode={setMode}
-                                    />
-                                )
-                            }
                             {/* Display editor */
                                 currentEditor && definitionManager && (
                                     <div className={classNames('sm-flex height-percent-100 overflow-x-auto margin-right-16', styles['manager-params-docs'])}>

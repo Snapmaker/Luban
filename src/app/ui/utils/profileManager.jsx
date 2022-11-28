@@ -1,6 +1,7 @@
 import React from 'react';
 import { indexOf, orderBy } from 'lodash';
 
+import i18n from '../../lib/i18n';
 import { DEFAULT_PRESET_IDS, isQualityPresetVisible } from '../../constants/preset';
 
 import { MaterialWithColor } from '../widgets/PrintingMaterial/MaterialWithColor';
@@ -82,7 +83,7 @@ function getPresetOptions(presetModels, materialPreset) {
             presetOptions[category] = {
                 label: category,
                 category: category,
-                i18nCategory,
+                i18nCategory: i18nCategory || i18n._('key-default_category-Custom'),
                 options: [],
             };
         }

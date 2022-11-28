@@ -52,9 +52,9 @@ function PrintingManager() {
         (state) => state?.printing?.managerDisplayType,
         shallowEqual
     );
-    const materialDefinitions = useSelector(
-        (state) => state?.printing?.materialDefinitions
-    );
+
+    const materialDefinitions = useSelector((state) => state.printing.materialDefinitions);
+
     const materialManagerDirection = useSelector(
         (state) => state?.printing?.materialManagerDirection,
         shallowEqual
@@ -83,11 +83,11 @@ function PrintingManager() {
     }, [customConfigs]);
 
     useEffect(() => {
-        if (defaultMaterialId) {
-            const actualDefinitions = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL
-                ? materialDefinitions
-                : qualityDefinitionsModels.filter(d => d?.visible);
-            setAllDefinitions(actualDefinitions);
+        if (managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL) {
+            setAllDefinitions(materialDefinitions);
+        } else {
+            // showing all quality presets (not only for active material)
+            setAllDefinitions(qualityDefinitionsModels);
         }
     }, [managerDisplayType, materialDefinitions, qualityDefinitionsModels, defaultMaterialId]);
 
@@ -256,6 +256,8 @@ function PrintingManager() {
     if (!showPrintingManager && !showPrintParameterModifierDialog) {
         return null;
     }
+
+    console.log('selectedIds =', selectedIds);
 
     return (
         <>

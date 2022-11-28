@@ -160,6 +160,14 @@ function ProfileManager({
     customConfig,
     onChangeCustomConfig
 }) {
+    const dispatch = useDispatch();
+
+    const customMode = useSelector(state => state?.printing?.customMode);
+    const [definitionState, setDefinitionState] = useGetDefinitions(allDefinitions, activeDefinitionID, outsideActions.getDefaultDefinition, managerType);
+    const [showCreateMaterialModal, setShowCreateMaterialModal] = useState(false);
+    const currentDefinitions = useRef(allDefinitions);
+    currentDefinitions.current = allDefinitions;
+
     const [configExpanded, setConfigExpanded] = useState({});
     const [notificationMessage, setNotificationMessage] = useState('');
     const refs = {
@@ -167,12 +175,7 @@ function ProfileManager({
         renameInput: useRef(null),
         refCreateModal: useRef(null)
     };
-    const customMode = useSelector(state => state?.printing?.customMode);
-    const [definitionState, setDefinitionState] = useGetDefinitions(allDefinitions, activeDefinitionID, outsideActions.getDefaultDefinition, managerType);
-    const [showCreateMaterialModal, setShowCreateMaterialModal] = useState(false);
-    const currentDefinitions = useRef(allDefinitions);
-    const dispatch = useDispatch();
-    currentDefinitions.current = allDefinitions;
+
     const setCustomMode = (value) => {
         dispatch(printingActions.updateCustomMode(value));
     };

@@ -28,9 +28,13 @@ const StackPresetSelector = ({
     handleUpdateDefinitionId
 }) => {
     const { toolHead: { printingToolhead } } = useSelector(state => state?.machine);
+    // quality
     const {
         qualityDefinitions,
         qualityDefinitionsRight,
+        materialDefinitions,
+        defaultMaterialId,
+        defaultMaterialIdRight
     } = useSelector(state => state?.printing);
 
     // selected stack ID (extruder)
@@ -43,7 +47,11 @@ const StackPresetSelector = ({
 
     useEffect(() => {
         const presets = selectedStackId === LEFT_EXTRUDER ? qualityDefinitions : qualityDefinitionsRight;
-        const presetOptions = getPresetOptions(presets);
+
+        const materialPresetId = selectedStackId === LEFT_EXTRUDER ? defaultMaterialId : defaultMaterialIdRight;
+        const materialPreset = materialDefinitions.find(p => p.definitionId === materialPresetId);
+
+        const presetOptions = getPresetOptions(presets, materialPreset);
         setPresetOptionsObj(presetOptions);
 
         // FIXME now

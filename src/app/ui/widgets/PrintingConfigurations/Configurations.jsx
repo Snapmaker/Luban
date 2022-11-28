@@ -56,7 +56,7 @@ function Configurations() {
     const dispatch = useDispatch();
 
     const [selectedPresetCategory, setSelectedPresetCategory] = useState(PRESET_CATEGORY_DEFAULT);
-    const [selectedDefinition, setSelectedDefinition] = useState(null);
+    const [selectedPreset, setSelectedPreset] = useState(null);
     const [initialized, setInitialized] = useState(false);
     const [configDisplayType, setConfigDisplayType] = useState(printingStore.get('printingSettingDisplayType') || CONFIG_DISPLAY_TYPES[0]);
 
@@ -123,12 +123,12 @@ function Configurations() {
             dispatch(
                 printingActions.resetDefinitionById(
                     'quality',
-                    selectedDefinition?.definitionId
+                    selectedPreset?.definitionId
                 )
             );
         },
         showInputModal: () => {
-            const newSelectedDefinition = cloneDeep(selectedDefinition.getSerializableDefinition());
+            const newSelectedDefinition = cloneDeep(selectedPreset.getSerializableDefinition());
             const title = i18n._('key-Printing/ProfileManager-Copy Profile');
             const copyType = 'Item';
 
@@ -229,55 +229,18 @@ function Configurations() {
             dispatch(printingActions.displayModel());
         },
 
-
-        onChangeSelectedDefinition: (definition) => {
-            if (definition) {
-                setSelectedSettingDefaultValue(
-                    dispatch(
-                        printingActions.getDefaultDefinition(
-                            definition.definitionId
-                        )
-                    )
-                );
-                setSelectedDefinition(definition);
-            }
-        },
-
-        /**
-         * Change quality preset settings.
-         *
-         * @param definitionKey
-         * @param value
-         */
-        onChangePresetSettings: async (definitionKey, value) => {
-            if (isNil(value)) {
-                // if 'value' does't exit, then reset this value
-                const defaultPresetSettings = dispatch(printingActions.getDefaultDefinition(selectedDefinition.definitionId));
-                value = defaultPresetSettings[definitionKey].default_value;
-            }
-            selectedDefinition.settings[definitionKey].default_value = value;
-            const shouldUpdateIsOverstepped = definitionKey === 'prime_tower_enable' && value === true;
-
-            await dispatch(
-                printingActions.updateCurrentDefinition({
-                    definitionModel: selectedDefinition,
-                    managerDisplayType: PRINTING_MANAGER_TYPE_QUALITY,
-                    changedSettingArray: [[definitionKey, value]],
-                    shouldUpdateIsOverstepped
-                })
-            );
-
-            // actions.onChangeSelectedDefinition(selectedDefinition); // Is this needed?
-            actions.displayModel();
-        },
-
         /**
          * Change quality preset.
          *
          * @param presetModel
          */
         onChangePreset: (presetModel) => {
-            actions.onChangeSelectedDefinition(presetModel);
+            if (presetModel) {
+                setSelectedPreset(presetModel);
+
+                const defaultSettings = dispatch(printingActions.getDefaultDefinition(presetModel.definitionId));
+                setSelectedSettingDefaultValue(defaultSettings);
+            }
             dispatch(printingActions.updateActiveQualityPresetId(LEFT_EXTRUDER, presetModel.definitionId));
             actions.displayModel();
         },
@@ -291,18 +254,46 @@ function Configurations() {
             const presetModel = qualityDefinitionModels.find(d => d.definitionId === presetId);
             actions.onChangePreset(presetModel);
         },
+
+        /**
+         * Change quality preset settings.
+         *
+         * @param definitionKey
+         * @param value
+         */
+        onChangePresetSettings: async (definitionKey, value) => {
+            if (isNil(value)) {
+                // if 'value' does't exit, then reset this value
+                const defaultPresetSettings = dispatch(printingActions.getDefaultDefinition(selectedPreset.definitionId));
+                value = defaultPresetSettings[definitionKey].default_value;
+            }
+            selectedPreset.settings[definitionKey].default_value = value;
+            const shouldUpdateIsOverstepped = definitionKey === 'prime_tower_enable' && value === true;
+
+            await dispatch(
+                printingActions.updateCurrentDefinition({
+                    definitionModel: selectedPreset,
+                    managerDisplayType: PRINTING_MANAGER_TYPE_QUALITY,
+                    changedSettingArray: [[definitionKey, value]],
+                    shouldUpdateIsOverstepped
+                })
+            );
+
+            // actions.onChangeSelectedDefinition(selectedPreset); // Is this needed?
+            actions.displayModel();
+        },
     };
 
     /**
      * Preset operation menu.
      */
     const renderPresetMenu = () => {
-        const isRecommended = selectedDefinition.isRecommended;
+        const isRecommended = selectedPreset.isRecommended;
         let isAllValueDefault = true;
         if (isRecommended) {
-            const selectedDefaultSetting = actions.getDefaultDefinition(selectedDefinition.definitionId);
+            const selectedDefaultSetting = actions.getDefaultDefinition(selectedPreset.definitionId);
             if (selectedDefaultSetting) {
-                isAllValueDefault = checkIsAllDefault(selectedDefinition.settings, selectedDefaultSetting);
+                isAllValueDefault = checkIsAllDefault(selectedPreset.settings, selectedDefaultSetting);
             }
         }
         return (
@@ -376,7 +367,7 @@ function Configurations() {
                                             <div
                                                 key={optionItem.typeOfPrinting}
                                                 className={classNames(
-                                                    selectedDefinition.typeOfPrinting === optionItem.typeOfPrinting ? styles.selected : styles.unselected,
+                                                    selectedPreset.typeOfPrinting === optionItem.typeOfPrinting ? styles.selected : styles.unselected,
                                                 )}
                                             >
                                                 <Tooltip
@@ -431,7 +422,7 @@ function Configurations() {
                                         <div
                                             key={(optionItem.i18nName + index) || (optionItem.name + index)}
                                             className={classNames(
-                                                optionItem.definitionId === selectedDefinition.definitionId ? styles.selected : null,
+                                                optionItem.definitionId === selectedPreset.definitionId ? styles.selected : null,
                                                 'border-radius-4',
                                             )}
                                         >
@@ -522,9 +513,9 @@ function Configurations() {
                         configDisplayType === CONFIG_DISPLAY_TYPES[0] && (
                             <div>
                                 <ParamItem
-                                    selectedDefinitionModel={selectedDefinition}
+                                    selectedPresetModel={selectedPreset}
                                     onChangePresetSettings={actions.onChangePresetSettings}
-                                    setSelectedDefinition={setSelectedDefinition}
+                                    setSelectedPreset={setSelectedPreset}
                                 />
                             </div>
                         )
@@ -538,14 +529,12 @@ function Configurations() {
                                             return (
                                                 <SettingItem
                                                     styleSize="middle"
-                                                    settings={selectedDefinition?.settings}
+                                                    settings={selectedPreset?.settings}
                                                     definitionKey={key}
                                                     showTooltip
                                                     key={key}
                                                     onChangePresetSettings={actions.onChangePresetSettings}
-                                                    isDefaultDefinition={
-                                                        selectedDefinition.isRecommended
-                                                    }
+                                                    isDefaultDefinition={selectedPreset.isRecommended}
                                                     defaultValue={{
                                                         value:
                                                             selectedSettingDefaultValue
