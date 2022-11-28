@@ -79,6 +79,8 @@ function PrintingManager() {
         } else if (!checked) {
             newCustomConfig[category] = newCustomConfig[category].filter(a => a !== key);
         }
+
+        console.log('category =', category, 'config =', newCustomConfig[category]);
         dispatch(machineActions.updatePrintingCustomConfigsWithCategory(newCustomConfig[category], category));
     }, [customConfigs]);
 
@@ -256,8 +258,6 @@ function PrintingManager() {
     if (!showPrintingManager && !showPrintParameterModifierDialog) {
         return null;
     }
-
-    console.log('selectedIds =', selectedIds);
 
     return (
         <>

@@ -299,6 +299,10 @@ function useRenderMainToolBar(setSimplifying, profileInitialized = false) {
                         }
                     },
                     {
+                        type: 'separator',
+                        name: 'separator'
+                    },
+                    {
                         title: i18n._('Modifiers'),
                         disabled: !profileInitialized,
                         type: 'button',

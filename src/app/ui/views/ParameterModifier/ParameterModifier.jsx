@@ -1,24 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import { includes } from 'lodash';
 import PropTypes from 'prop-types';
-import { every, find, includes } from 'lodash';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
-import { HEAD_PRINTING, isDualExtruder } from '../../../constants/machines';
+import { actions as printingActions } from '../../../flux/printing';
+
 import i18n from '../../../lib/i18n';
 
 import Modal from '../../components/Modal';
-
-import { getPresetOptions } from '../../utils/profileManager';
-import { actions as projectActions } from '../../../flux/project';
+import PresetContent from './PresetContent';
 import StackPresetSelector from './StackPresetSelector';
-import Content from './Content';
 
 /**
  * Print parameter modifier dialog.
  *
  * @param outsideActions
- * @returns {*}
  * @constructor
  */
 function ParameterModifier({ outsideActions }) {
@@ -28,77 +25,68 @@ function ParameterModifier({ outsideActions }) {
         defaultDefinitions,
         qualityDefinitions,
         qualityDefinitionsRight,
-        defaultMaterialId,
-        defaultMaterialIdRight,
-        definitionEditorForExtruder,
+        activePresetIds,
     } = useSelector(state => state?.printing);
-    const { toolHead: { printingToolhead } } = useSelector(state => state?.machine);
+    // const { toolHead: { printingToolhead } } = useSelector(state => state?.machine);
 
-    const [selectedExtruder, setSelectedExtruder] = useState(LEFT_EXTRUDER);
+    // selected stack
+    // Either LEFT_EXTRUDER or RIGHT_EXTRUDER, these are the only values supported,
+    // add a global machine stack later.
+    const [selectedStackId, setSelectedStackId] = useState(LEFT_EXTRUDER);
 
-    const [selectedDefinitionId, setSelectedDefinitionId] = useState('');
-    const [selectedSettingsDefaultValue, setSelectedSettingsDefaultValue] = useState({});
+    // selected preset for selected stack
+    const [selectedPresetId, setSelectedPresetId] = useState('');
 
-    const [mode, setMode] = useState('show'); // show => show the editor data, update => update the editor data
+    const [selectedPresetDefaultValues, setSelectedPresetDefaultValues] = useState({});
 
-    // const handleUpdateCallback = (type, value) => {
-    //     setSelectedExtruder(value);
-    // };
-    const onSelectStack = (stackId) => {
-        // These are the only values supported, add a global machine stack later
+    /**
+     * Select stack by stack id.
+     *
+     * @param stackId
+     */
+    function selectStack(stackId) {
         if (includes([LEFT_EXTRUDER, RIGHT_EXTRUDER], stackId)) {
-            setSelectedExtruder(stackId);
+            setSelectedStackId(stackId);
         }
-    };
+    }
 
-    const getKeys = (parentKeys, definition) => {
-        let returnKeys = [];
-        parentKeys.forEach(key => {
-            const setting = definition.settings[key];
-            if (setting.settable_per_extruder || setting.settable_per_mesh) {
-                returnKeys = returnKeys.concat(key);
-            }
+    /**
+     * Select preset by preset id.
+     *
+     * @param presetId
+     */
+    function selectPreset(presetId) {
+        setSelectedPresetId(presetId);
 
-            const childKey = setting.childKey;
-            if (childKey.length) {
-                const childKeyReturn = getKeys(childKey, definition);
-                returnKeys = returnKeys.concat(childKeyReturn);
-            }
-        });
-        return returnKeys;
-    };
+        const presetModels = selectedStackId === LEFT_EXTRUDER ? qualityDefinitions : qualityDefinitionsRight;
+        const presetModel = presetModels.find(p => p.definitionId === presetId);
+        if (presetModel) {
+            dispatch(printingActions.updateActiveQualityPresetId(selectedStackId, presetId));
+        }
+    }
+
+    /**
+     * Get default values of a preset.
+     *
+     * @param presetId
+     * @return {{}}
+     */
+    function getPresetDefaultValues(presetId) {
+        const defaultPreset = defaultDefinitions.find(p => p.definitionId === presetId);
+
+        return defaultPreset?.settings || {};
+    }
 
     useEffect(() => {
-        const temp = getPresetOptions(qualityDefinitions);
-        const initCategory = 'Default';
+        const presetId = activePresetIds[selectedStackId];
 
-        if (!(every([defaultMaterialId, defaultMaterialIdRight], (item) => {
-            const material = item.split('.')[1];
-            return material === 'pva' || material === 'support';
-        }) || every([defaultMaterialId, defaultMaterialIdRight], (item) => {
-            const material = item.split('.')[1];
-            return material !== 'pva' && material !== 'support';
-        })) && isDualExtruder(printingToolhead)) {
-            const secondaryExtruder = includes(['pva', 'support'], defaultMaterialId.split('.')[1]) ? LEFT_EXTRUDER : RIGHT_EXTRUDER;
-            const autoParams = {};
-            const definition = find(secondaryExtruder === LEFT_EXTRUDER ? qualityDefinitions : qualityDefinitionsRight, { definitionId: 'quality.normal_other_quality' });
-            autoParams.printing_speed = getKeys(definition.printingProfileLevel.printing_speed, definition);
-            autoParams.support = getKeys(definition.printingProfileLevel.support, definition);
-            definitionEditorForExtruder.set(secondaryExtruder, autoParams);
+        if (presetId !== selectedPresetId) {
+            setSelectedPresetId(presetId);
         }
-        setSelectedDefinitionId(temp[initCategory].options[0].definitionId);
-        const defaultSettings = find(defaultDefinitions, { definitionId: temp[initCategory].options[0].definitionId })?.settings || {};
-        setSelectedSettingsDefaultValue(defaultSettings);
-        return () => {
-            dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING, true));
-        };
-    }, []);
 
-    useEffect(() => {
-        const defaultSettings = find(defaultDefinitions, { definitionId: selectedDefinitionId })?.settings || {};
-
-        setSelectedSettingsDefaultValue(defaultSettings);
-    }, [selectedDefinitionId]);
+        const defaultValues = getPresetDefaultValues(presetId);
+        setSelectedPresetDefaultValues(defaultValues);
+    }, [activePresetIds, selectedStackId]);
 
     return (
         <Modal
@@ -114,15 +102,15 @@ function ParameterModifier({ outsideActions }) {
             <Modal.Body>
                 <div className="background-grey-3 height-all-minus-132 sm-flex">
                     <StackPresetSelector
-                        onSelectStack={onSelectStack}
-                        handleUpdateDefinitionId={setSelectedDefinitionId}
+                        selectedStackId={selectedStackId}
+                        selectedPresetId={selectedPresetId}
+                        onSelectStack={selectStack}
+                        onSelectPreset={selectPreset}
                     />
-                    <Content
-                        selectedExtruder={selectedExtruder}
-                        mode={mode}
-                        setMode={setMode}
-                        printingDefinitionId={selectedDefinitionId}
-                        selectedSettingsDefaultValue={selectedSettingsDefaultValue}
+                    <PresetContent
+                        selectedStackId={selectedStackId}
+                        selectedPresetId={selectedPresetId}
+                        selectedPresetDefaultValues={selectedPresetDefaultValues}
                     />
                 </div>
             </Modal.Body>

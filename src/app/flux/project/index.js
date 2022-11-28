@@ -473,7 +473,7 @@ export const actions = {
 
     openProject: (file, history, unReload = false, isGuideTours = false) => async (dispatch, getState) => {
         if (checkIsSnapmakerProjectFile(file.name)) {
-            const { definitionEditorForExtruder, definitionEditorForModel, editorDefinition } = getState().printing;
+            const { definitionEditorForExtruder, editorDefinition } = getState().printing;
 
             const formData = new FormData();
             let shouldSetFileName = true;
@@ -509,7 +509,6 @@ export const actions = {
             }
             if (headType === HEAD_PRINTING) {
                 const savedExtruderEditor = envObj.extruderEditor;
-                const savedModelEditor = envObj.modelEditor;
                 if (!isEmpty(savedExtruderEditor)) {
                     Object.keys(savedExtruderEditor).forEach(async (key) => {
                         const checkedParams = savedExtruderEditor[key];
@@ -521,15 +520,6 @@ export const actions = {
                         dispatch(printingActions.updateState({
                             editorDefinition: newMap
                         }));
-                    });
-                }
-                if (!isEmpty(savedModelEditor)) {
-                    Object.keys(savedModelEditor).forEach(async (modelId) => {
-                        const checkedParams = savedModelEditor[modelId];
-                        // checkedParams && (checkedParams = JSON.parse(checkedParams));
-                        definitionEditorForModel.set(modelId, checkedParams);
-                        const { body: { editorDefinition: _editorDefinition } } = await api.getEditorDefinition({ key: modelId });
-                        editorDefinition.set(modelId, _editorDefinition);
                     });
                 }
             }

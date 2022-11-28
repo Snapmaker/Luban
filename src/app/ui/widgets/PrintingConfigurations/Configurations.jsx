@@ -490,6 +490,7 @@ function Configurations() {
                             </span>
                             <Select
                                 clearable={false}
+                                showSearch={false}
                                 style={{ border: 'none', width: '100px' }}
                                 bordered={false}
                                 options={CONFIG_DISPLAY_TYPES_OPTIONS}

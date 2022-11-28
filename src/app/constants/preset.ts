@@ -30,3 +30,10 @@ export function isQualityPresetVisible(preset, { materialType }) {
 
     return true;
 }
+
+export function getQualityPresetLevelForRightExtruder() {
+    return {
+        quality: ['line_width'],
+        printing_speed: ['speed_print', 'acceleration_enabled'],
+    };
+}

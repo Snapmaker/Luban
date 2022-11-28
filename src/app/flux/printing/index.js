@@ -132,7 +132,7 @@ const definitionKeysWithDirection = {
     },
     right: {
         material: 'materialDefinitions',
-        quality: 'qualityDefinitions',
+        quality: 'qualityDefinitionsRight',
         extruder: 'extruderRDefinition'
     }
 };
@@ -597,14 +597,25 @@ export const actions = {
             );
             return paramModel;
         });
-        const qualityParamModels = allQualityDefinitions.map((eachDefinition) => {
+
+        const qualityPresetModels = [];
+        const qualityPresetModelsRight = [];
+        for (const preset of allQualityDefinitions) {
             const paramModel = new PresetDefinitionModel(
-                eachDefinition,
+                preset,
                 activeMaterialType,
                 definitionManager.extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
             );
-            return paramModel;
-        });
+            qualityPresetModels.push(paramModel);
+
+            const paramModelRight = new PresetDefinitionModel(
+                preset,
+                activeMaterialType,
+                definitionManager.extruderRDefinition?.settings?.machine_nozzle_size?.default_value,
+            );
+            qualityPresetModelsRight.push(paramModelRight);
+        }
+
         const defaultDefinitions = definitionManager?.defaultDefinitions.map((eachDefinition) => {
             const paramModel = new PresetDefinitionModel(
                 eachDefinition,
@@ -617,7 +628,8 @@ export const actions = {
             actions.updateState({
                 defaultDefinitions: defaultDefinitions,
                 materialDefinitions: materialParamModels,
-                qualityDefinitions: qualityParamModels,
+                qualityDefinitions: qualityPresetModels,
+                qualityDefinitionsRight: qualityPresetModelsRight,
                 printingProfileLevel: profileLevel.printingProfileLevel,
                 materialProfileLevel: profileLevel.materialProfileLevel,
             })
@@ -1121,7 +1133,7 @@ export const actions = {
             : '2';
 
         const activeActiveQualityDefinition = find(qualityDefinitions, { definitionId: activePresetIds[LEFT_EXTRUDER] });
-        const defaultQualityDefinition = defaultDefinitions.find(d => d.definitionId === activePresetIds[LEFT_EXTRUDER] );
+        const defaultQualityDefinition = defaultDefinitions.find(d => d.definitionId === activePresetIds[LEFT_EXTRUDER]);
         let defaultMaterialQuality = defaultQualityDefinition?.isDefault ? '0' : '2';
 
         const settings = {
@@ -1394,16 +1406,19 @@ export const actions = {
         dispatch(actions.updateState({ managerDisplayType }));
     },
 
-    updateMachineDefinition: ({
-                                  paramKey,
-                                  paramValue,
-                                  direction,
-                              }) => async (dispatch, getState) => {
+    updateMachineDefinition: (
+        {
+            paramKey,
+            paramValue,
+            direction,
+        }
+    ) => async (dispatch, getState) => {
         if (!isNil(paramValue)) {
             const printingState = getState().printing;
             const machineDefinition = definitionManager.machineDefinition;
             const { materialDefinitions, qualityDefinitions, mainExtruder } = printingState;
-            let updatePresetModel = false;
+
+            let isNozzleSizeChanged = false;
             if (direction) {
                 const definitionsKey = definitionKeysWithDirection[direction][PRINTING_MANAGER_TYPE_EXTRUDER];
                 const definitionModel = printingState[definitionsKey];
@@ -1412,7 +1427,7 @@ export const actions = {
                 }
                 if (direction === mainExtruder) {
                     if (paramKey === 'machine_nozzle_size') {
-                        updatePresetModel = true;
+                        isNozzleSizeChanged = true;
                     }
                 }
                 dispatch(
@@ -1421,14 +1436,20 @@ export const actions = {
                     })
                 );
             }
+
             if (machineDefinition.settings[paramKey]) {
                 machineDefinition.settings[paramKey].default_value = paramValue;
             }
-            const { newMaterialDefinitions, newQualityDefinitions } = await definitionManager.updateMachineDefinition({
-                isNozzleSize: updatePresetModel,
+
+            // TODO: Consider left & right stacks
+            const {
+                newMaterialDefinitions,
+                newQualityDefinitions,
+            } = await definitionManager.updateMachineDefinition({
+                isNozzleSize: isNozzleSizeChanged,
                 machineDefinition,
                 materialDefinitions,
-                qualityDefinitions
+                qualityDefinitions,
             });
             dispatch(actions.updateDefaultDefinition(
                 'quality.normal_other_quality',
@@ -1467,12 +1488,15 @@ export const actions = {
                               }) => (dispatch, getState) => {
         const printingState = getState().printing;
         const { series } = getState().machine;
-        const { qualityDefinitions } = printingState;
+        const { qualityDefinitions, qualityDefinitionsRight, activePresetIds } = printingState;
         const id = definitionModel?.definitionId;
-        const definitionsKey = definitionKeysWithDirection[direction][type];
         let { extruderLDefinition: actualExtruderDefinition } = printingState;
         let updatePresetModel = false;
+
         // TODO: ?
+        const definitionsKey = definitionKeysWithDirection[direction][type];
+
+        // extruder definition
         if (['snapmaker_extruder_0', 'snapmaker_extruder_1'].includes(id)) {
             if (id === 'snapmaker_extruder_0') {
                 actualExtruderDefinition = definitionModel;
@@ -1485,6 +1509,7 @@ export const actions = {
             );
         } else {
             updatePresetModel = true;
+
             resolveDefinition(definitionModel, changedSettingArray);
             const definitions = printingState[definitionsKey];
             const index = definitions.findIndex((d) => d.definitionId === id);
@@ -1494,13 +1519,16 @@ export const actions = {
                     [definitionsKey]: [...definitions]
                 })
             );
+
             dispatch(actions.updateBoundingBox());
         }
         definitionManager.updateDefinition(definitionModel);
+
         if (updatePresetModel) {
             dispatch(actions.validateActiveQualityPreset(direction));
             dispatch(actions.updateState({ qualityDefinitions: [...qualityDefinitions] }));
         }
+
         if (shouldUpdateIsOverstepped) {
             const { modelGroup } = printingState;
             const isAnyModelOverstepped = modelGroup.getOverstepped(
@@ -1508,6 +1536,37 @@ export const actions = {
             );
             dispatch(actions.updateState({ isAnyModelOverstepped }));
         }
+
+        // Check to update global changes to both preset models
+        if (type === PRINTING_MANAGER_TYPE_QUALITY) {
+            if (direction === LEFT_EXTRUDER) {
+                const anotherPresetModel = qualityDefinitionsRight.find(p => p.definitionId === activePresetIds[RIGHT_EXTRUDER]);
+                if (anotherPresetModel) {
+                    const changedSettingArrayGlobal = [];
+                    for (const [key, value] of changedSettingArray) {
+                        const settingItem = definitionModel.settings[key];
+                        if (!settingItem.settable_per_extruder && !settingItem.settable_per_mesh) {
+                            changedSettingArrayGlobal.push([key, value]);
+                        }
+                    }
+
+                    if (changedSettingArrayGlobal.length > 0) {
+                        const newPresetModel = cloneDeep(anotherPresetModel);
+                        for (const [key, value] of changedSettingArrayGlobal) {
+                            newPresetModel.settings[key].default_value = value;
+                        }
+
+                        dispatch(actions.updateCurrentDefinition({
+                            direction: RIGHT_EXTRUDER,
+                            definitionModel: newPresetModel,
+                            changedSettingArray: changedSettingArrayGlobal,
+                            managerDisplayType: type,
+                        }));
+                    }
+                }
+            }
+        }
+
         setTimeout(() => {
             dispatch(actions.applyProfileToAllModels());
         });
@@ -1985,10 +2044,11 @@ export const actions = {
     updateActiveQualityPresetId: (stackId = LEFT_EXTRUDER, presetId) => (dispatch, getState) => {
         const { activePresetIds } = getState().printing;
         dispatch(actions.updateState({
-            activePresetIds: {
-                ...activePresetIds,
-                [stackId]: presetId,
-            }}
+                activePresetIds: {
+                    ...activePresetIds,
+                    [stackId]: presetId,
+                }
+            }
         ));
         dispatch(actions.updateSavedPresetIds(PRINTING_MANAGER_TYPE_QUALITY, presetId, stackId));
         dispatch(actions.validateActiveQualityPreset(stackId));

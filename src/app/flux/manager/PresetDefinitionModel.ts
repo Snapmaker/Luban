@@ -1,7 +1,8 @@
 import { cloneDeep } from 'lodash';
 import {
     HEAD_PRINTING,
-    QUALITY_REGEX
+    QUALITY_REGEX,
+    MATERIAL_REGEX,
 } from '../../constants';
 
 
@@ -634,8 +635,14 @@ class PresetDefinitionModel {
             .forEach((key) => {
                 this[key] = definition[key];
             });
+
         if (QUALITY_REGEX.test(this.definitionId)) {
             this.updateParams(materialType, defaultNozzleSize, true);
+        }
+
+        // Assume that the materialType of material preset will never change
+        if (MATERIAL_REGEX.test(this.definitionId)) {
+            this.materialType = definition.settings.material_type.default_value;
         }
     }
 

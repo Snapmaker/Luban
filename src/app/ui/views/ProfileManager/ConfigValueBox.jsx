@@ -27,22 +27,24 @@ import styles from './styles.styl';
 const defaultParamsType = ['all', 'advanced'];
 const NO_LIMIT = 'no_limit';
 
-function ConfigValueBox({
-    optionConfigGroup,
-    calculateTextIndex,
-    isCategorySelected,
-    onChangePresetSettings,
-    isOfficialDefinitionKey,
-    selectedSettingDefaultValue,
-    definitionForManager,
-    customConfigs,
-    showMiddle = false,
-    hideMiniTitle = false,
-    managerType,
-    customMode,
-    setCustomMode,
-    onChangeCustomConfig
-}) {
+function ConfigValueBox(
+    {
+        optionConfigGroup,
+        calculateTextIndex,
+        isCategorySelected,
+        onChangePresetSettings,
+        isOfficialDefinitionKey,
+        selectedSettingDefaultValue,
+        definitionForManager,
+        customConfigs,
+        showMiddle = false,
+        hideMiniTitle = false,
+        managerType,
+        customMode,
+        setCustomMode,
+        onChangeCustomConfig
+    }
+) {
     const { printingParamsType, materialParamsType, showParamsProfile } = useSelector(state => state?.printing);
     const [activeCateId, setActiveCateId] = useState(2);
     const [selectParamsType, setSelectParamsType] = useState(managerType === PRINTING_MANAGER_TYPE_MATERIAL ? materialParamsType : printingParamsType);
@@ -59,35 +61,10 @@ function ConfigValueBox({
     const lang = i18next.language;
     useEffect(async () => {
         if (selectCategory && selectProfile) {
-            // let urlPre = '';
-            // let langDir = '';
-            // if (lang.toUpperCase() === 'ZH-CN') {
-            //     langDir = 'CN';
-            //     urlPre = 'https://snapmaker.oss-cn-beijing.aliyuncs.com/snapmaker.com';
-            // } else {
-            //     langDir = 'EN';
-            //     urlPre = 'https://s3.us-west-2.amazonaws.com/snapmaker.com';
-            // }
-            // const url = `${urlPre}/${langDir}/${selectCategory}/${selectProfile}.md`;
-
             try {
                 const res = await api.getProfileDocs({ lang, selectCategory, selectProfile });
                 setMdContent(res.body?.content);
                 setImgPath(res.body?.imagePath);
-                // fetch(url, { mode: 'cors',
-                //     method: 'GET',
-                //     headers: {
-                //         'Content-Type': 'text/markdown'
-                //     } })
-                //     .then((response) => {
-                //         response.headers['access-control-allow-origin'] = { value: '*' };
-                //         return response.text();
-                //     })
-                //     .then(result => {
-                //         if (result) {
-                //             setMdContent(result);
-                //         }
-                //     });
             } catch (e) {
                 console.info(e);
                 setMdContent('');
@@ -129,14 +106,16 @@ function ConfigValueBox({
         definitionForManager.i18nCategory = newCategoryName;
         dispatch(printingActions.updateDefinitionCategoryName(managerType, definitionForManager, newCategoryName));
     };
-    const renderCheckboxList = ({
-        renderList,
-        calculateTextIndex: _calculateTextIndex,
-        settings,
-        isOfficialDefinitionKey: _isOfficialDefinitionKey,
-        onChangeCustomConfig: _onChangeCustomConfig,
-        categoryKey
-    }) => {
+    const renderCheckboxList = (
+        {
+            renderList,
+            calculateTextIndex: _calculateTextIndex,
+            settings,
+            isOfficialDefinitionKey: _isOfficialDefinitionKey,
+            onChangeCustomConfig: _onChangeCustomConfig,
+            categoryKey
+        }
+    ) => {
         return renderList && renderList.map(profileKey => {
             if (definitionManager.qualityProfileArr && !(definitionManager.qualityProfileArr.includes(profileKey))) {
                 return null;
@@ -151,9 +130,7 @@ function ConfigValueBox({
                                 customConfigs ? customConfigs[categoryKey] : [],
                                 profileKey
                             )}
-                            definitionKey={
-                                profileKey
-                            }
+                            definitionKey={profileKey}
                             key={profileKey}
                             isOfficialDefinitionKey={_isOfficialDefinitionKey}
                             onChangePresetSettings={_onChangeCustomConfig}
@@ -192,17 +169,19 @@ function ConfigValueBox({
             );
         });
     };
-    const renderSettingItemList = ({
-        settings,
-        renderList,
-        isDefaultDefinition,
-        onChangePresetSettings: _onChangeCustomConfig,
-        managerType: _managerType,
-        officialDefinition,
-        categoryKey,
-        definitionCategory
-        // selectParamsType: _selectParamsType
-    }) => {
+    const renderSettingItemList = (
+        {
+            settings,
+            renderList,
+            isDefaultDefinition,
+            onChangePresetSettings: _onChangeCustomConfig,
+            managerType: _managerType,
+            officialDefinition,
+            categoryKey,
+            definitionCategory
+            // selectParamsType: _selectParamsType
+        }
+    ) => {
         return renderList && renderList.map(profileKey => {
             if (selectParamsType === 'custom' || (includes((settings[profileKey].filter || []).concat('all'), selectParamsType) && (selectQualityDetailType === NO_LIMIT ? true : includes(settings[profileKey].filter || [], selectQualityDetailType)))) {
                 if (settings[profileKey].childKey?.length > 0 && selectParamsType !== 'custom') {
@@ -334,6 +313,9 @@ function ConfigValueBox({
         value: 'success',
         label: i18n._('key-profileManager/Params-Success')
     }];
+
+    console.log('custom configs =', customConfigs);
+    console.log('optionConfigGroup =', optionConfigGroup);
 
     return (
         <div className={classNames(styles['config-value-box-wrapper'], 'margin-vertical-16 margin-horizontal-16 background-color-white border-radius-16')}>

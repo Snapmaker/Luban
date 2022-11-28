@@ -10,7 +10,6 @@ import { PRESET_CATEGORY_DEFAULT } from '../../../constants/preset';
 import i18n from '../../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import SvgIcon from '../../components/SvgIcon';
-/* eslint-disable import/no-cycle */
 import { getPresetOptions } from '../../utils/profileManager';
 
 /**
@@ -18,15 +17,13 @@ import { getPresetOptions } from '../../utils/profileManager';
  *
  * Select a stack, and then select a preset for it.
  *
+ * @param selectedPresetId
  * @param onSelectStack
- * @param handleUpdateDefinitionId
+ * @param onSelectPreset
  * @returns {*}
  * @constructor
  */
-const StackPresetSelector = ({
-    onSelectStack,
-    handleUpdateDefinitionId
-}) => {
+const StackPresetSelector = ({ selectedPresetId, onSelectStack, onSelectPreset }) => {
     const { toolHead: { printingToolhead } } = useSelector(state => state?.machine);
     // quality
     const {
@@ -34,13 +31,12 @@ const StackPresetSelector = ({
         qualityDefinitionsRight,
         materialDefinitions,
         defaultMaterialId,
-        defaultMaterialIdRight
+        defaultMaterialIdRight,
     } = useSelector(state => state?.printing);
 
     // selected stack ID (extruder)
     const [selectedStackId, setSelectedStackId] = useState(LEFT_EXTRUDER);
     const [presetOptionsObj, setPresetOptionsObj] = useState(null);
-    const [selectedDefinitionId, setSelectedDefinitionId] = useState('');
 
     // expanded categories, only for displaying
     const [expandedPresetCategories, setExpandedPresetCategories] = useState([PRESET_CATEGORY_DEFAULT]);
@@ -54,15 +50,9 @@ const StackPresetSelector = ({
         const presetOptions = getPresetOptions(presets, materialPreset);
         setPresetOptionsObj(presetOptions);
 
-        // FIXME now
-        const initCategory = PRESET_CATEGORY_DEFAULT;
-        setExpandedPresetCategories([initCategory]);
-
-        // FIXME now
-        // select first option
-        // setSelectedDefinitionId(presetOptions[initCategory].options[0].definitionId);
-        // handleUpdateDefinitionId(presetOptions[initCategory].options[0].definitionId);
-    }, [selectedStackId]);
+        // set all preset categories expanded
+        setExpandedPresetCategories(Object.keys(presetOptions));
+    }, [selectedStackId, defaultMaterialId, defaultMaterialIdRight]);
 
     // stackId: LEFT_EXTRUDER or RIGHT_EXTRUDER
     // Maybe support a global stack later
@@ -71,6 +61,11 @@ const StackPresetSelector = ({
         onSelectStack(stackId);
     };
 
+    /**
+     * Toggle expansion of a preset category.
+     *
+     * @param presetCategory
+     */
     const togglePresetCategoryExpansion = (presetCategory) => {
         const newCategories = [...expandedPresetCategories];
         if (includes(expandedPresetCategories, presetCategory)) {
@@ -83,10 +78,14 @@ const StackPresetSelector = ({
         setExpandedPresetCategories(newCategories);
     };
 
-    const updateSelectedDefinitionId = (definitionId) => {
-        setSelectedDefinitionId(definitionId);
-        handleUpdateDefinitionId(definitionId);
-    };
+    /**
+     * Select preset for selected stack.
+     *
+     * @param presetId
+     */
+    function selectPresetByPresetId(presetId) {
+        onSelectPreset(presetId);
+    }
 
     return (
         <div
@@ -141,9 +140,9 @@ const StackPresetSelector = ({
                                                     'display-block': expanded,
                                                     'display-none': !expanded,
                                                 })}
-                                                onClick={() => updateSelectedDefinitionId(option.definitionId)}
+                                                onClick={() => selectPresetByPresetId(option.definitionId)}
                                             >
-                                                <div className={`border-radius-4 height-32 padding-horizontal-24 ${selectedDefinitionId === option.definitionId ? 'background-color-blue' : ''}`}>{option.label}</div>
+                                                <div className={`border-radius-4 height-32 padding-horizontal-24 ${selectedPresetId === option.definitionId ? 'background-color-blue' : ''}`}>{option.label}</div>
                                             </Anchor>
                                         );
                                     })
@@ -158,8 +157,9 @@ const StackPresetSelector = ({
 };
 
 StackPresetSelector.propTypes = {
+    selectedPresetId: PropTypes.string.isRequired,
     onSelectStack: PropTypes.func.isRequired,
-    handleUpdateDefinitionId: PropTypes.func.isRequired
+    onSelectPreset: PropTypes.func.isRequired
 };
 
 export default StackPresetSelector;
