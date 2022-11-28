@@ -3,6 +3,7 @@ import { useSelector, shallowEqual, useDispatch } from 'react-redux';
 import { find as lodashFind, throttle } from 'lodash';
 import PropTypes from 'prop-types';
 import { Spin } from 'antd';
+import { LEFT_EXTRUDER } from '../../../constants';
 import Slider from '../../components/Slider';
 import styles from './styles.styl';
 import { actions as printingActions } from '../../../flux/printing';
@@ -16,12 +17,12 @@ function VisualizerClippingControl({ simplifying }) {
     const displayedType = useSelector(state => state?.printing?.displayedType, shallowEqual);
     const primeTowerHeight = useSelector(state => state?.printing?.primeTowerHeight, shallowEqual);
     const qualityDefinitions = useSelector(state => state?.printing?.qualityDefinitions, shallowEqual);
-    const defaultQualityId = useSelector(state => state?.printing?.defaultQualityId, shallowEqual);
+    const activePresetIds = useSelector(state => state?.printing?.activePresetIds, shallowEqual);
 
     const dispatch = useDispatch();
 
     const activeQualityDefinition = lodashFind(qualityDefinitions, {
-        definitionId: defaultQualityId
+        definitionId: activePresetIds[LEFT_EXTRUDER]
     });
     const qualitySetting = activeQualityDefinition?.settings;
 

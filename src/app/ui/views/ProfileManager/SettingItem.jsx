@@ -13,7 +13,7 @@ import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
 import styles from './styles.styl';
 
-function dropdownRender(opts, key, onChangeDefinition, currentValue) {
+function dropdownRender(opts, key, onChangePresetSettings, currentValue) {
     return () => (
         <div
             className={classNames(
@@ -36,7 +36,7 @@ function dropdownRender(opts, key, onChangeDefinition, currentValue) {
                         )}
                     >
                         <Anchor
-                            onClick={() => onChangeDefinition(key, value)}
+                            onClick={() => onChangePresetSettings(key, value)}
                         >
                             <div className={classNames(
                                 styles['settings-select'],
@@ -57,7 +57,7 @@ function dropdownRender(opts, key, onChangeDefinition, currentValue) {
     );
 }
 
-const colorSelectorContent = (settingDefaultValue, definitionKey, setShowColor, onChangeDefinition) => (
+const colorSelectorContent = (settingDefaultValue, definitionKey, setShowColor, onChangePresetSettings) => (
     <div>
         <ColorSelector
             recentColorKey="profile-manager"
@@ -67,7 +67,7 @@ const colorSelectorContent = (settingDefaultValue, definitionKey, setShowColor, 
                 setShowColor(false);
             }}
             onChangeComplete={(color) => {
-                onChangeDefinition(definitionKey, color);
+                onChangePresetSettings(definitionKey, color);
             }}
         />
     </div>
@@ -78,7 +78,7 @@ function SettingItem(
         definitionKey,
         settings,
         isDefaultDefinition = false,
-        onChangeDefinition,
+        onChangePresetSettings,
         defaultValue,
         styleSize = 'large',
         managerType,
@@ -135,7 +135,7 @@ function SettingItem(
                         name="Reset"
                         size={24}
                         onClick={() => {
-                            onChangeDefinition(definitionKey, (defaultValue && defaultValue.value) ?? settingDefaultValue);
+                            onChangePresetSettings(definitionKey, (defaultValue && defaultValue.value) ?? settingDefaultValue);
                         }}
                     />
                 )}
@@ -156,7 +156,7 @@ function SettingItem(
                         max={max}
                         size={styleSize}
                         onChange={(value) => {
-                            onChangeDefinition(definitionKey, value);
+                            onChangePresetSettings(definitionKey, value);
                         }}
                     />
                 )}
@@ -170,7 +170,7 @@ function SettingItem(
                         size={styleSize}
                         // disabled={!isDefinitionEditable()}
                         onChange={(value) => {
-                            onChangeDefinition(definitionKey, value);
+                            onChangePresetSettings(definitionKey, value);
                         }}
                     />
                 )}
@@ -181,7 +181,7 @@ function SettingItem(
                         // disabled={!isDefinitionEditable()}
                         type="checkbox"
                         checked={settingDefaultValue}
-                        onChange={(checked) => onChangeDefinition(definitionKey, checked)}
+                        onChange={(checked) => onChangePresetSettings(definitionKey, checked)}
                     />
                 )}
                 {type === 'enum' && definitionKey === 'material_type' && (
@@ -211,7 +211,7 @@ function SettingItem(
                         options={opts}
                         value={typeof settingDefaultValue === 'string' ? settingDefaultValue.toLowerCase() : settingDefaultValue}
                         onChange={(option) => {
-                            onChangeDefinition(definitionKey, option.value);
+                            onChangePresetSettings(definitionKey, option.value);
                         }}
                         disabled={(officialDefinition && managerType === HEAD_CNC && definitionKey === 'tool_type')}
                     />
@@ -220,7 +220,7 @@ function SettingItem(
                     <Select
                         placement="bottomRight"
                         className="sm-flex-width align-r"
-                        dropdownRender={dropdownRender(opts, definitionKey, onChangeDefinition, settingDefaultValue)}
+                        dropdownRender={dropdownRender(opts, definitionKey, onChangePresetSettings, settingDefaultValue)}
                         dropdownStyle={{
                             maxWidth: '500px',
                         }}
@@ -229,7 +229,7 @@ function SettingItem(
                         options={opts}
                         value={settingDefaultValue}
                         onChange={(option) => {
-                            onChangeDefinition(definitionKey, option.value);
+                            onChangePresetSettings(definitionKey, option.value);
                         }}
                         disabled={officialDefinition && managerType === HEAD_CNC && definitionKey === 'tool_type'}
                     />
@@ -241,7 +241,7 @@ function SettingItem(
                         value={settingDefaultValue}
                         // disabled={!isDefinitionEditable()}
                         onChange={(value) => {
-                            onChangeDefinition(definitionKey, value);
+                            onChangePresetSettings(definitionKey, value);
                         }}
                     />
                 )}
@@ -250,7 +250,7 @@ function SettingItem(
                 )}
                 {type === 'color' && (
                     <Popover
-                        content={colorSelectorContent(settingDefaultValue, definitionKey, setShowColor, onChangeDefinition)}
+                        content={colorSelectorContent(settingDefaultValue, definitionKey, setShowColor, onChangePresetSettings)}
                         visible={showColor}
                         trigger="click"
                         placement="bottomRight"
@@ -282,7 +282,7 @@ SettingItem.propTypes = {
     settings: PropTypes.object.isRequired,
     definitionKey: PropTypes.string.isRequired,
     isDefaultDefinition: PropTypes.bool,
-    onChangeDefinition: PropTypes.func.isRequired,
+    onChangePresetSettings: PropTypes.func.isRequired,
     defaultValue: PropTypes.object,
     styleSize: PropTypes.string,
     managerType: PropTypes.string,

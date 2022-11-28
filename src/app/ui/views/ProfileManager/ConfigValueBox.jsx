@@ -31,7 +31,7 @@ function ConfigValueBox({
     optionConfigGroup,
     calculateTextIndex,
     isCategorySelected,
-    onChangeDefinition,
+    onChangePresetSettings,
     isOfficialDefinitionKey,
     selectedSettingDefaultValue,
     definitionForManager,
@@ -156,7 +156,7 @@ function ConfigValueBox({
                             }
                             key={profileKey}
                             isOfficialDefinitionKey={_isOfficialDefinitionKey}
-                            onChangeDefinition={_onChangeCustomConfig}
+                            onChangePresetSettings={_onChangeCustomConfig}
                             configCategory={categoryKey}
                         />
                         {renderCheckboxList({
@@ -185,7 +185,7 @@ function ConfigValueBox({
                         }
                         key={profileKey}
                         isOfficialDefinitionKey={_isOfficialDefinitionKey}
-                        onChangeDefinition={_onChangeCustomConfig}
+                        onChangePresetSettings={_onChangeCustomConfig}
                         configCategory={categoryKey}
                     />
                 </div>
@@ -196,7 +196,7 @@ function ConfigValueBox({
         settings,
         renderList,
         isDefaultDefinition,
-        onChangeDefinition: _onChangeCustomConfig,
+        onChangePresetSettings: _onChangeCustomConfig,
         managerType: _managerType,
         officialDefinition,
         categoryKey,
@@ -213,7 +213,7 @@ function ConfigValueBox({
                                 definitionKey={profileKey}
                                 key={profileKey}
                                 isDefaultDefinition={isDefaultDefinition}
-                                onChangeDefinition={_onChangeCustomConfig}
+                                onChangePresetSettings={_onChangeCustomConfig}
                                 defaultValue={{
                                     value: selectedSettingDefaultValue && selectedSettingDefaultValue[profileKey].default_value
                                 }}
@@ -228,7 +228,7 @@ function ConfigValueBox({
                                 settings,
                                 renderList: settings[profileKey].childKey,
                                 isDefaultDefinition,
-                                onChangeDefinition: _onChangeCustomConfig,
+                                onChangePresetSettings: _onChangeCustomConfig,
                                 managerType: _managerType,
                                 definitionCategory,
                                 officialDefinition,
@@ -244,7 +244,7 @@ function ConfigValueBox({
                             definitionKey={profileKey}
                             key={profileKey}
                             isDefaultDefinition={isDefaultDefinition}
-                            onChangeDefinition={_onChangeCustomConfig}
+                            onChangePresetSettings={_onChangeCustomConfig}
                             defaultValue={{
                                 value: selectedSettingDefaultValue && selectedSettingDefaultValue[profileKey].default_value
                             }}
@@ -491,7 +491,7 @@ function ConfigValueBox({
                                                                     settings: definitionForManager?.settings,
                                                                     renderList: selectParamsType === 'custom' ? customConfigs[key] : optionConfigGroup[key],
                                                                     isDefaultDefinition: definitionForManager?.isRecommended,
-                                                                    onChangeDefinition,
+                                                                    onChangePresetSettings: onChangePresetSettings,
                                                                     managerType,
                                                                     officialDefinition: !!definitionForManager?.isDefault,
                                                                     categoryKey: key,
@@ -548,7 +548,7 @@ function ConfigValueBox({
                         <div className="width-percent-70 margin-right-46">
                             <ParamItem
                                 selectedDefinitionModel={definitionForManager}
-                                onChangeDefinition={onChangeDefinition}
+                                onChangePresetSettings={onChangePresetSettings}
                             />
                         </div>
                         <div className={classNames(styles['manager-params-docs'], 'width-percent-40 background-grey-3 border-radius-16 position-re', showParamsProfile ? '' : 'width-1-important min-width-1 margin-right-16')}>
@@ -582,7 +582,7 @@ ConfigValueBox.propTypes = {
     customConfigs: PropTypes.object,
     calculateTextIndex: PropTypes.func,
     isOfficialDefinitionKey: PropTypes.func,
-    onChangeDefinition: PropTypes.func.isRequired,
+    onChangePresetSettings: PropTypes.func.isRequired,
     selectedSettingDefaultValue: PropTypes.object,
     showMiddle: PropTypes.bool,
     hideMiniTitle: PropTypes.bool,

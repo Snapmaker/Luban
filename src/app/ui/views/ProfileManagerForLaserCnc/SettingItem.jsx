@@ -11,7 +11,7 @@ import TipTrigger from '../../components/TipTrigger';
 import SvgIcon from '../../components/SvgIcon';
 import Popover from '../../components/Popover';
 
-function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onChangeDefinition, defaultValue, styleSize = 'large', managerType, officialDefinition }) {
+function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onChangePresetSettings, defaultValue, styleSize = 'large', managerType, officialDefinition }) {
     const [showColor, setShowColor] = useState(false);
 
     const setting = settings[definitionKey];
@@ -133,7 +133,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
                     setShowColor(false);
                 }}
                 onChangeComplete={(color) => {
-                    onChangeDefinition(definitionKey, color);
+                    onChangePresetSettings(definitionKey, color);
                 }}
             />
         </div>
@@ -152,7 +152,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
                             size={24}
                             // className={}
                             onClick={() => {
-                                onChangeDefinition(definitionKey, (defaultValue && defaultValue.value) ?? settingDefaultValue);
+                                onChangePresetSettings(definitionKey, (defaultValue && defaultValue.value) ?? settingDefaultValue);
                             }}
                         />
                     )}
@@ -165,7 +165,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
                             max={max}
                             size={styleSize}
                             onChange={(value) => {
-                                onChangeDefinition(definitionKey, value);
+                                onChangePresetSettings(definitionKey, value);
                             }}
                         />
                     )}
@@ -177,7 +177,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
                             size={styleSize}
                             // disabled={!isDefinitionEditable()}
                             onChange={(value) => {
-                                onChangeDefinition(definitionKey, value);
+                                onChangePresetSettings(definitionKey, value);
                             }}
                         />
                     )}
@@ -188,7 +188,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
                             // disabled={!isDefinitionEditable()}
                             type="checkbox"
                             checked={settingDefaultValue}
-                            onChange={(event) => onChangeDefinition(definitionKey, event.target.checked)}
+                            onChange={(event) => onChangePresetSettings(definitionKey, event.target.checked)}
                         />
                     )}
                     {type === 'enum' && (
@@ -203,7 +203,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
                             options={opts}
                             value={settingDefaultValue}
                             onChange={(option) => {
-                                onChangeDefinition(definitionKey, option.value);
+                                onChangePresetSettings(definitionKey, option.value);
                             }}
                             disabled={officialDefinition && managerType === HEAD_CNC && definitionKey === 'tool_type'}
                         />
@@ -215,7 +215,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
                             value={settingDefaultValue}
                             // disabled={!isDefinitionEditable()}
                             onChange={(value) => {
-                                onChangeDefinition(definitionKey, value);
+                                onChangePresetSettings(definitionKey, value);
                             }}
                         />
                     )}
@@ -255,7 +255,7 @@ SettingItem.propTypes = {
     settings: PropTypes.object.isRequired,
     definitionKey: PropTypes.string.isRequired,
     isDefaultDefinition: PropTypes.bool,
-    onChangeDefinition: PropTypes.func.isRequired,
+    onChangePresetSettings: PropTypes.func.isRequired,
     defaultValue: PropTypes.object,
     styleSize: PropTypes.string,
     managerType: PropTypes.string,

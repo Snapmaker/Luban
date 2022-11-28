@@ -812,7 +812,7 @@ class PresetDefinitionModel {
             Object.entries(this.params).forEach(([paramName, paramItem]) => {
                 const actualValue = settings[paramName]?.default_value;
                 const actualOptions: ParamsObjectOption = paramItem.affectByType ? paramItem[this.typeOfPrinting] : paramItem.options;
-                const isDefautValue = Object.entries(actualOptions).some(([optionName, optionItem]) => {
+                const isDefaultValue = Object.entries(actualOptions).some(([optionName, optionItem]) => {
                     if (optionItem.value === actualValue) {
                         paramItem.current_value = optionName;
                         if (shouldUpdateDefault) paramItem.default_value = optionName;
@@ -821,7 +821,7 @@ class PresetDefinitionModel {
                         return false;
                     }
                 });
-                if (!isDefautValue) {
+                if (!isDefaultValue) {
                     paramItem.current_value = actualValue;
                     if (shouldUpdateDefault) paramItem.default_value = actualValue;
                 }

@@ -460,6 +460,7 @@ class DefinitionManager {
         return definition;
     }
 
+    // TODO: Consider right
     finalizeModelDefinition(
         qualityDefinition,
         item,

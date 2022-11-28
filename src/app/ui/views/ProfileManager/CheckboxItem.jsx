@@ -9,7 +9,7 @@ function CheckboxItem({
     settings,
     calculateTextIndex = () => 0,
     width = 'auto',
-    onChangeDefinition,
+    onChangePresetSettings,
     defaultValue,
     configCategory
 }) {
@@ -25,7 +25,7 @@ function CheckboxItem({
                     marginLeft: calculateTextIndex(definitionKey)
                 }}
                 checked={defaultValue}
-                onChange={(e) => onChangeDefinition(definitionKey, e.target.checked, configCategory)}
+                onChange={(e) => onChangePresetSettings(definitionKey, e.target.checked, configCategory)}
             />
             <span className="margin-left-8">{i18n._(label)}</span>
         </div>
@@ -37,7 +37,7 @@ CheckboxItem.propTypes = {
     definitionKey: PropTypes.string.isRequired,
     defaultValue: PropTypes.bool.isRequired,
     width: PropTypes.string,
-    onChangeDefinition: PropTypes.func.isRequired,
+    onChangePresetSettings: PropTypes.func.isRequired,
     configCategory: PropTypes.string
 };
 

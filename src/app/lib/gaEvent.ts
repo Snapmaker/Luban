@@ -157,7 +157,7 @@ export const logSvgSlice = (headType: THeadType, toolpathsCount: number) => {
     });
 };
 
-export const logProfileChange = (headType: THeadType, type: 'material' | 'materialRight' | 'quality') => {
+export const logProfileChange = (headType: THeadType, type: string) => {
     return sendMessage(`${headType}_select_${type}`, `${headType}_flow`);
 };
 

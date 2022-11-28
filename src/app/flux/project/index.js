@@ -94,6 +94,12 @@ export const actions = {
 
         if (!models.length && initState && !isSaveEditor) return;
 
+        const envObj = {
+            machineInfo: null,
+            models: [],
+            toolpaths: []
+        };
+
         const machineState = getState().machine;
         const { size, series, toolHead } = machineState;
         const machineInfo = {};
@@ -101,7 +107,9 @@ export const actions = {
         machineInfo.size = size;
         machineInfo.series = series;
         machineInfo.toolHead = toolHead;
-        const envObj = { machineInfo, models: [], toolpaths: [] };
+
+        envObj.machineInfo = machineInfo;
+
         envObj.version = pkg?.version;
         if (headType === HEAD_CNC || headType === HEAD_LASER) {
             const { materials, coordinateMode, coordinateSize } = editorState;
@@ -110,16 +118,16 @@ export const actions = {
             envObj.coordinateSize = coordinateSize;
         } else if (headType === HEAD_PRINTING) {
             const {
+                activePresetIds,
                 defaultMaterialId,
                 defaultMaterialIdRight,
-                defaultQualityId,
                 helpersExtruderConfig,
                 definitionEditorForExtruder,
                 definitionEditorForModel,
             } = editorState;
             envObj.defaultMaterialId = defaultMaterialId;
             envObj.defaultMaterialIdRight = defaultMaterialIdRight;
-            envObj.defaultQualityId = defaultQualityId;
+            envObj.activePresetIds = activePresetIds;
             envObj.helpersExtruderConfig = helpersExtruderConfig;
             envObj.extruderEditor = {};
             envObj.modelEditor = {};
@@ -145,7 +153,6 @@ export const actions = {
         dispatch(actions.updateState(headType, { content, unSaved: true, initState: false }));
         await api.saveEnv({ content });
 
-        console.log('save env', headType, HEAD_PRINTING);
         if (headType === HEAD_PRINTING) {
             const { editorDefinition } = editorState;
             const editorObj = {};

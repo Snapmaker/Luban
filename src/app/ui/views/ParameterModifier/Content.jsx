@@ -143,7 +143,7 @@ const Content = ({
                                 definitionKey={profileKey}
                                 key={profileKey}
                                 configCategory={mainCategory}
-                                onChangeDefinition={handleUpdateSelectedParams}
+                                onChangePresetSettings={handleUpdateSelectedParams}
                             />
                         </Anchor>
                         {renderCheckboxList({
@@ -163,7 +163,7 @@ const Content = ({
                                 definitionKey={profileKey}
                                 key={profileKey}
                                 configCategory={mainCategory}
-                                onChangeDefinition={handleUpdateSelectedParams}
+                                onChangePresetSettings={handleUpdateSelectedParams}
                             />
                         </Anchor>
                     </div>
@@ -243,7 +243,7 @@ const Content = ({
                                                                         defaultValue={{
                                                                             value: selectedSettingsDefaultValue[profileKey]?.default_value
                                                                         }}
-                                                                        onChangeDefinition={handleUpdateDefinition}
+                                                                        onChangePresetSettings={handleUpdateDefinition}
                                                                         onClick={() => getMarkdown(profileKey, objectKey)}
                                                                     />
                                                                 );

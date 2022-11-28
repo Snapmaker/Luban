@@ -1,3 +1,4 @@
+import { includes } from 'lodash';
 
 export const PRESET_CATEGORY_DEFAULT = 'Default';
 
@@ -11,3 +12,21 @@ export const DEFAULT_PRESET_IDS = [
     'quality.high_quality',
     'quality.engineering_print'
 ];
+
+// TODO: Add to preset model.
+export function isQualityPresetVisible(preset, { materialType }) {
+    const regularMaterialTypes = ['pla', 'abs', 'petg'];
+
+    if (materialType && preset.qualityType) {
+        // check preset's qualityType matches materialType
+        if (materialType === 'tpu') {
+            return preset.qualityType === 'tpu';
+        } else if (includes(regularMaterialTypes, materialType)) {
+            return includes(regularMaterialTypes, preset.qualityType);
+        } else {
+            return preset.qualityType === 'other';
+        }
+    }
+
+    return true;
+}

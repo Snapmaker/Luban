@@ -21,7 +21,7 @@ const ALL_ICON_NAMES = {
 };
 
 
-const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition, setSelectedDefinition }) {
+const ParamItem = function ({ selectedDefinitionModel, onChangePresetSettings, setSelectedDefinition }) {
     const allParams = selectedDefinitionModel.params;
     const selectedDefinitionSettings = selectedDefinitionModel.settings;
     const dispatch = useDispatch();
@@ -279,7 +279,7 @@ const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition, setSe
                                         options={selectOptions}
                                         value={displayValue}
                                         onChange={(item) => {
-                                            onChangeDefinition('model_structure_type', item.value);
+                                            onChangePresetSettings('model_structure_type', item.value);
                                         }}
                                     />
                                 )}
@@ -303,7 +303,7 @@ const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition, setSe
 
 ParamItem.propTypes = {
     selectedDefinitionModel: PropTypes.object,
-    onChangeDefinition: PropTypes.func,
+    onChangePresetSettings: PropTypes.func,
     setSelectedDefinition: PropTypes.func,
 
 };

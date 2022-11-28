@@ -10,7 +10,7 @@ function CheckboxItem({
     calculateTextIndex = () => 0,
     width = 'auto',
     isOfficialDefinitionKey = () => true,
-    onChangeDefinition,
+    onChangePresetSettings,
     defaultValue
 }) {
     const setting = settings[definitionKey];
@@ -33,7 +33,7 @@ function CheckboxItem({
                     }}
                     checked={defaultValue}
                     disabled={isOfficialDefinitionKey(definitionKey)}
-                    onChange={(event) => onChangeDefinition(definitionKey, event.target.checked)}
+                    onChange={(event) => onChangePresetSettings(definitionKey, event.target.checked)}
                 />
                 <span className="margin-left-8">{i18n._(label)}</span>
             </div>
@@ -47,7 +47,7 @@ CheckboxItem.propTypes = {
     defaultValue: PropTypes.bool.isRequired,
     isOfficialDefinitionKey: PropTypes.func,
     width: PropTypes.string,
-    onChangeDefinition: PropTypes.func.isRequired
+    onChangePresetSettings: PropTypes.func.isRequired
 };
 
 export default React.memo(CheckboxItem);

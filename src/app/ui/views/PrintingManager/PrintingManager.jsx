@@ -47,10 +47,7 @@ function PrintingManager() {
         (state) => state?.printing?.defaultMaterialIdRight,
         shallowEqual
     );
-    const defaultQualityId = useSelector(
-        (state) => state?.printing?.defaultQualityId,
-        shallowEqual
-    );
+    const activePresetIds = useSelector((state) => state.printing.activePresetIds);
     const managerDisplayType = useSelector(
         (state) => state?.printing?.managerDisplayType,
         shallowEqual
@@ -252,7 +249,7 @@ function PrintingManager() {
                     : defaultMaterialIdRight
         },
         [PRINTING_MANAGER_TYPE_QUALITY]: {
-            id: defaultQualityId
+            id: activePresetIds[LEFT_EXTRUDER],
         }
     };
 

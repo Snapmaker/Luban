@@ -4,12 +4,10 @@ import { cloneDeep, find, isNil, uniqWith } from 'lodash';
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { KEY_DEFAULT_CATEGORY_CUSTOM, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
-import { HEAD_PRINTING } from '../../../constants/machines';
+import { KEY_DEFAULT_CATEGORY_CUSTOM, LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
 import { PRESET_CATEGORY_DEFAULT, DEFAULT_PRESET_IDS } from '../../../constants/preset';
 
 import { actions as printingActions } from '../../../flux/printing';
-import { actions as projectActions } from '../../../flux/project';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
 import { printingStore } from '../../../store/local-storage';
@@ -23,7 +21,6 @@ import { getPresetOptions } from '../../utils/profileManager';
 import DefinitionCreator from '../../views/DefinitionCreator';
 import ParamItem from '../../views/ParamItem';
 import PrintingManager from '../../views/PrintingManager';
-/* eslint-disable import/no-cycle */
 import SettingItem from '../../views/ProfileManager/SettingItem';
 
 import styles from './styles.styl';
@@ -49,25 +46,29 @@ function checkIsAllDefault(definitionModelSettings, selectedModelDefaultSetting)
 
 // {i18n._(`key-Printing/PrintingConfigurations-${optionItem.typeOfPrinting}`)}
 function Configurations() {
-    const defaultQualityId = useSelector((state) => state?.printing?.defaultQualityId);
     const qualityDefinitionModels = useSelector((state) => state?.printing?.qualityDefinitions);
+
+    const activePresetIds = useSelector((state) => state?.printing?.activePresetIds);
+    const { materialDefinitions, defaultMaterialId } = useSelector(state => state.printing);
+
     const printingCustomConfigsWithCategory = useSelector((state) => state?.machine?.printingCustomConfigsWithCategory);
     const refCreateModal = useRef(null);
     const dispatch = useDispatch();
 
-    const [presetCategory, setPresetCategory] = useState(PRESET_CATEGORY_DEFAULT);
+    const [selectedPresetCategory, setSelectedPresetCategory] = useState(PRESET_CATEGORY_DEFAULT);
     const [selectedDefinition, setSelectedDefinition] = useState(null);
     const [initialized, setInitialized] = useState(false);
     const [configDisplayType, setConfigDisplayType] = useState(printingStore.get('printingSettingDisplayType') || CONFIG_DISPLAY_TYPES[0]);
 
     const [selectedSettingDefaultValue, setSelectedSettingDefaultValue] = useState(null);
 
-    const presetOptionsObj = getPresetOptions(qualityDefinitionModels);
+    const materialPreset = materialDefinitions.find(p => p.definitionId === defaultMaterialId);
+    const presetOptionsObj = getPresetOptions(qualityDefinitionModels, materialPreset);
 
-    const presetCategoryOptions = Object.entries(presetOptionsObj).map(([key, item]) => {
+    const presetCategoryOptions = Object.values(presetOptionsObj).map((item) => {
         return {
-            value: key,
-            label: key,
+            value: item.category,
+            label: item.category,
             category: item.category,
             i18nCategory: item.i18nCategory
         };
@@ -104,10 +105,19 @@ function Configurations() {
             setConfigDisplayType(newDisplayType);
             printingStore.set('printingSettingDisplayType', newDisplayType);
         },
-        onChangePresetDisplayType: (options) => {
-            setPresetCategory(options.value);
-            const firstDefinitionId = presetOptionsObj[options.value]?.options[0]?.definitionId;
-            firstDefinitionId && actions.onSelectCustomDefinitionById(firstDefinitionId);
+
+        /**
+         * Change selected preset category, and then select one of the presets.
+         *
+         * @param option
+         */
+        onChangeSelectedPresetCategory: (option) => {
+            setSelectedPresetCategory(option.value);
+
+            const firstOption = presetOptionsObj[option.value].options[0];
+            if (firstOption) {
+                actions.onChangePresetById(firstOption.definitionId);
+            }
         },
         resetPreset: () => {
             dispatch(
@@ -191,7 +201,7 @@ function Configurations() {
                                     newName
                                 )
                             );
-                            actions.onSelectOfficialDefinition(createdDefinitionModel);
+                            actions.onChangePreset(createdDefinitionModel);
                         }}
                     >
                         {i18n._('key-Printing/ProfileManager-Save')}
@@ -207,6 +217,19 @@ function Configurations() {
             );
             dispatch(printingActions.updateShowPrintingManager(true));
         },
+
+        toggleShowCustomConfigPannel: () => {
+            dispatch(printingActions.updateManagerDisplayType(PRINTING_MANAGER_TYPE_QUALITY));
+            dispatch(printingActions.updateCustomMode(true));
+            dispatch(printingActions.updateProfileParamsType(PRINTING_MANAGER_TYPE_QUALITY, 'custom'));
+            dispatch(printingActions.updateShowPrintingManager(true));
+        },
+        displayModel: () => {
+            dispatch(printingActions.destroyGcodeLine());
+            dispatch(printingActions.displayModel());
+        },
+
+
         onChangeSelectedDefinition: (definition) => {
             if (definition) {
                 setSelectedSettingDefaultValue(
@@ -219,66 +242,54 @@ function Configurations() {
                 setSelectedDefinition(definition);
             }
         },
-        toggleShowCustomConfigPannel: () => {
-            dispatch(printingActions.updateManagerDisplayType(PRINTING_MANAGER_TYPE_QUALITY));
-            dispatch(printingActions.updateCustomMode(true));
-            dispatch(printingActions.updateProfileParamsType(PRINTING_MANAGER_TYPE_QUALITY, 'custom'));
-            dispatch(printingActions.updateShowPrintingManager(true));
-        },
-        displayModel: () => {
-            dispatch(printingActions.destroyGcodeLine());
-            dispatch(printingActions.displayModel());
-        },
 
-        onChangeDefinition: async (definitionKey, value) => {
+        /**
+         * Change quality preset settings.
+         *
+         * @param definitionKey
+         * @param value
+         */
+        onChangePresetSettings: async (definitionKey, value) => {
             if (isNil(value)) {
                 // if 'value' does't exit, then reset this value
-                value = dispatch(
-                    printingActions.getDefaultDefinition(
-                        selectedDefinition.definitionId
-                    )
-                )[definitionKey].default_value;
+                const defaultPresetSettings = dispatch(printingActions.getDefaultDefinition(selectedDefinition.definitionId));
+                value = defaultPresetSettings[definitionKey].default_value;
             }
-            selectedDefinition.settings[
-                definitionKey
-            ].default_value = value;
-            const shouldUpdateIsOversteped = definitionKey === 'prime_tower_enable' && value === true;
+            selectedDefinition.settings[definitionKey].default_value = value;
+            const shouldUpdateIsOverstepped = definitionKey === 'prime_tower_enable' && value === true;
 
             await dispatch(
                 printingActions.updateCurrentDefinition({
                     definitionModel: selectedDefinition,
                     managerDisplayType: PRINTING_MANAGER_TYPE_QUALITY,
                     changedSettingArray: [[definitionKey, value]],
-                    shouldUpdateIsOversteped
+                    shouldUpdateIsOverstepped
                 })
             );
 
-            actions.onChangeSelectedDefinition(selectedDefinition);
+            // actions.onChangeSelectedDefinition(selectedDefinition); // Is this needed?
             actions.displayModel();
         },
-        updateActiveDefinition: (definition, shouldSaveEnv = true) => {
-            dispatch(
-                printingActions.updateCurrentDefinition(
-                    definition,
-                    PRINTING_MANAGER_TYPE_QUALITY
-                )
-            );
-            shouldSaveEnv && dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
-        },
+
         /**
-         * Select `definition`.
+         * Change quality preset.
          *
-         * @param definition
+         * @param presetModel
          */
-        onSelectOfficialDefinition: (definition, shouldSaveEnv = true) => {
-            actions.onChangeSelectedDefinition(definition);
-            dispatch(printingActions.updateDefaultQualityId(definition.definitionId));
-            shouldSaveEnv && dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
-        },
-        onSelectCustomDefinitionById: (definitionId) => {
-            const definition = qualityDefinitionModels.find(d => d.definitionId === definitionId);
-            actions.onSelectOfficialDefinition(definition);
+        onChangePreset: (presetModel) => {
+            actions.onChangeSelectedDefinition(presetModel);
+            dispatch(printingActions.updateActiveQualityPresetId(LEFT_EXTRUDER, presetModel.definitionId));
             actions.displayModel();
+        },
+
+        /**
+         * Change quality preset by preset id.
+         *
+         * @param presetId
+         */
+        onChangePresetById: (presetId) => {
+            const presetModel = qualityDefinitionModels.find(d => d.definitionId === presetId);
+            actions.onChangePreset(presetModel);
         },
     };
 
@@ -318,19 +329,20 @@ function Configurations() {
             if (!initialized) {
                 setInitialized(true);
             }
+
             const definition = qualityDefinitionModels.find(
-                (d) => d.definitionId === defaultQualityId
+                (d) => d.definitionId === activePresetIds[LEFT_EXTRUDER]
             );
             if (!definition) {
                 // definition no found, select first official definition
-                actions.onSelectOfficialDefinition(qualityDefinitionModels[0], false);
-                setPresetCategory(qualityDefinitionModels[0].category);
+                actions.onChangePreset(qualityDefinitionModels[0], false);
+                setSelectedPresetCategory(qualityDefinitionModels[0].category);
             } else {
-                actions.onSelectOfficialDefinition(definition, false);
-                setPresetCategory(definition.category);
+                actions.onChangePreset(definition, false);
+                setSelectedPresetCategory(definition.category);
             }
         }
-    }, [defaultQualityId, qualityDefinitionModels]);
+    }, [activePresetIds, qualityDefinitionModels]);
 
     if (!initialized) {
         return (
@@ -350,15 +362,15 @@ function Configurations() {
                     clearable={false}
                     size="328px"
                     options={presetCategoryOptions}
-                    value={presetCategory}
-                    onChange={actions.onChangePresetDisplayType}
+                    value={selectedPresetCategory}
+                    onChange={actions.onChangeSelectedPresetCategory}
                 />
                 {
-                    presetCategory === PRESET_CATEGORY_DEFAULT && (
+                    selectedPresetCategory === PRESET_CATEGORY_DEFAULT && (
                         <div className={classNames(styles['preset-recommended'], 'sm-flex', 'margin-vertical-16', 'align-c', 'justify-space-between')}>
                             {
                                 DEFAULT_PRESET_IDS.map((presetId) => {
-                                    const optionItem = find(presetOptionsObj[presetCategory].options, { definitionId: presetId });
+                                    const optionItem = find(presetOptionsObj[selectedPresetCategory].options, { definitionId: presetId });
                                     if (optionItem) {
                                         return (
                                             <div
@@ -372,7 +384,7 @@ function Configurations() {
                                                     zIndex={10}
                                                     placement="left"
                                                 >
-                                                    <Anchor onClick={() => actions.onSelectCustomDefinitionById(optionItem.definitionId)}>
+                                                    <Anchor onClick={() => actions.onChangePresetById(optionItem.definitionId)}>
                                                         <div
                                                             className={classNames(
                                                                 styles['preset-recommended__icon'],
@@ -382,7 +394,7 @@ function Configurations() {
                                                             <Dropdown
                                                                 placement="bottomRight"
                                                                 style={{ maxWidth: '160px' }}
-                                                                overlay={renderPresetMenu(presetCategory)}
+                                                                overlay={renderPresetMenu(selectedPresetCategory)}
                                                                 trigger={['click']}
                                                             >
                                                                 <SvgIcon
@@ -411,10 +423,10 @@ function Configurations() {
                     )
                 }
                 {
-                    presetCategory !== PRESET_CATEGORY_DEFAULT && (
+                    selectedPresetCategory !== PRESET_CATEGORY_DEFAULT && (
                         <div className={classNames(styles['preset-customized'], 'margin-top-8')}>
                             {
-                                presetOptionsObj[presetCategory] && presetOptionsObj[presetCategory].options.map((optionItem, index) => {
+                                presetOptionsObj[selectedPresetCategory] && presetOptionsObj[selectedPresetCategory].options.map((optionItem, index) => {
                                     return (
                                         <div
                                             key={(optionItem.i18nName + index) || (optionItem.name + index)}
@@ -431,7 +443,7 @@ function Configurations() {
                                                     'padding-left-8',
                                                     'border-radius-4',
                                                 )}
-                                                onClick={() => actions.onSelectCustomDefinitionById(optionItem.definitionId)}
+                                                onClick={() => actions.onChangePresetById(optionItem.definitionId)}
                                             >
                                                 <span>
                                                     {i18n._(optionItem.i18nName || optionItem.name)}
@@ -439,7 +451,7 @@ function Configurations() {
                                                 <Dropdown
                                                     placement="left"
                                                     className="display-inline float-right"
-                                                    overlay={renderPresetMenu(presetCategory)}
+                                                    overlay={renderPresetMenu(selectedPresetCategory)}
                                                     trigger={['click']}
                                                 >
                                                     <SvgIcon
@@ -511,7 +523,7 @@ function Configurations() {
                             <div>
                                 <ParamItem
                                     selectedDefinitionModel={selectedDefinition}
-                                    onChangeDefinition={actions.onChangeDefinition}
+                                    onChangePresetSettings={actions.onChangePresetSettings}
                                     setSelectedDefinition={setSelectedDefinition}
                                 />
                             </div>
@@ -530,7 +542,7 @@ function Configurations() {
                                                     definitionKey={key}
                                                     showTooltip
                                                     key={key}
-                                                    onChangeDefinition={actions.onChangeDefinition}
+                                                    onChangePresetSettings={actions.onChangePresetSettings}
                                                     isDefaultDefinition={
                                                         selectedDefinition.isRecommended
                                                     }
