@@ -178,7 +178,7 @@
     "Extruders Share Heater": "Спільний розігрів екструдерів",
     "Extruders Share Nozzle": "Спільне сопло екструдерів",
     "Extrusion": "Екструзія",
-    "Extrusion Cool Down Speed Modifier": "Коефіцієнт швидкості охолождення екструзії",
+    "Extrusion Cool Down Speed Modifier": "Коефіцієнт швидкості охолодження екструзії",
     "Failed to import this object. \nPlease select a supported file format.": "Не вдалося імпортувати цей об’єкт. \nБудь ласка, виберіть підтримуваний формат файлу.",
     "Failed to rename. \"{{name}}\" already exists.": "Не вдалося перейменувати. \"{{name}}\" вже існує.",
     "Failed to repair this object. \n": "Не вдалося полагодити цей обʼєкт. \n",
