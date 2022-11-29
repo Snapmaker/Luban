@@ -568,29 +568,6 @@ export const recoverProjectFile = async (req, res) => {
     }
 };
 
-/**
- * save model editor or extruder editor
- */
-export const saveModifier = async (req, res) => {
-    try {
-        const { content, editorDefinition } = req.body;
-        const envDir = `${DataStorage.envDir}/${HEAD_PRINTING}`;
-        const config = JSON.parse(content);
-        const { modelEditor, extruderEditor } = config;
-        Object.keys({ ...extruderEditor, ...modelEditor }).forEach(key => {
-            const targetFile = `${envDir}/${key}.def.json`;
-            if (fs.existsSync(targetFile)) rmDir(targetFile);
-            const editorContent = JSON.parse(editorDefinition);
-            fs.writeFileSync(targetFile, JSON.stringify(editorContent[key]));
-        });
-    } catch (e) {
-        log.error(`Failed to save editor: ${e}`);
-        res.status(ERR_INTERNAL_SERVER_ERROR).send({
-            msg: `Failed to save editor: ${e}`
-        });
-    }
-};
-
 
 export const getEditorDefinition = async (req, res) => {
     try {

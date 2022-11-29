@@ -1,6 +1,7 @@
 /* eslint-disable */
 import path from 'path';
 import { cloneDeep, every, filter, find, findIndex, includes, isNil } from 'lodash';
+import log from '../../lib/log';
 import * as THREE from 'three';
 import { Vector3 } from 'three';
 import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
@@ -1539,6 +1540,7 @@ export const actions = {
 
         // Check to update global changes to both preset models
         if (type === PRINTING_MANAGER_TYPE_QUALITY) {
+            // TODO: Sync from right extruder to left extruder as well
             if (direction === LEFT_EXTRUDER) {
                 const anotherPresetModel = qualityDefinitionsRight.find(p => p.definitionId === activePresetIds[RIGHT_EXTRUDER]);
                 if (anotherPresetModel) {
@@ -2271,6 +2273,7 @@ export const actions = {
             defaultMaterialId,
             defaultMaterialIdRight,
             qualityDefinitions,
+            qualityDefinitionsRight,
             materialDefinitions,
             stopArea: { left, front }
         } = getState().printing;
@@ -2283,12 +2286,17 @@ export const actions = {
         } = getState().machine;
         const models = modelGroup.getVisibleValidModels();
         if (!models || models.length === 0 || !hasModel) {
+            log.warning('No model(s) to be sliced.');
             return;
         }
         // update extruder definitions
-        const activeQualityDefinition = qualityDefinitions.find(
-            (d) => d.definitionId === activePresetIds[LEFT_EXTRUDER]
-        );
+        const qualityPresets = {
+            [LEFT_EXTRUDER]: qualityDefinitions.find(p => p.definitionId === activePresetIds[LEFT_EXTRUDER]),
+            [RIGHT_EXTRUDER]: qualityDefinitionsRight.find(p => p.definitionId === activePresetIds[RIGHT_EXTRUDER]),
+        };
+
+        const globalQualityPreset = qualityPresets[LEFT_EXTRUDER];
+
         const indexL = materialDefinitions.findIndex(
             (d) => d.definitionId === defaultMaterialId
         );
@@ -2296,7 +2304,7 @@ export const actions = {
             (d) => d.definitionId === defaultMaterialIdRight
         );
         const hasPrimeTower = isDualExtruder(printingToolhead)
-            && activeQualityDefinition.settings.prime_tower_enable.default_value;
+            && globalQualityPreset.settings.prime_tower_enable.default_value;
         const adhesionExtruder = helpersExtruderConfig.adhesion;
 
         let primeTowerXDefinition = 0;
@@ -2304,8 +2312,8 @@ export const actions = {
         if (hasPrimeTower) {
             const modelGroupBBox = modelGroup._bbox;
             const primeTowerModel = modelGroup.primeTower;
-            const primeTowerBrimEnable = activeQualityDefinition?.settings?.prime_tower_brim_enable?.default_value;
-            const adhesionType = activeQualityDefinition?.settings?.adhesion_type?.default_value;
+            const primeTowerBrimEnable = globalQualityPreset?.settings?.prime_tower_brim_enable?.default_value;
+            const adhesionType = globalQualityPreset?.settings?.adhesion_type?.default_value;
             const primeTowerWidth = primeTowerModel.boundingBox.max.x
                 - primeTowerModel.boundingBox.min.x;
             const primeTowerPositionX = modelGroupBBox.max.x
@@ -2323,8 +2331,8 @@ export const actions = {
             // const a = size.x * 0.5 + primeTowerModel.transformation.positionX- left;;
             // const b = size.y * 0.5 + primeTowerModel.transformation.positionY - front;
             if (primeTowerBrimEnable && adhesionType !== 'raft') {
-                const initialLayerLineWidthFactor = activeQualityDefinition?.settings?.initial_layer_line_width_factor?.default_value || 0;
-                const brimLineCount = activeQualityDefinition?.settings?.brim_line_count?.default_value || 0;
+                const initialLayerLineWidthFactor = globalQualityPreset?.settings?.initial_layer_line_width_factor?.default_value || 0;
+                const brimLineCount = globalQualityPreset?.settings?.brim_line_count?.default_value || 0;
                 let skirtBrimLineWidth = extruderLDefinition?.settings?.machine_nozzle_size?.default_value;
                 if (adhesionExtruder === '1') {
                     skirtBrimLineWidth = extruderRDefinition?.settings?.machine_nozzle_size?.default_value;
@@ -2333,13 +2341,13 @@ export const actions = {
                 primeTowerXDefinition += diff;
                 primeTowerYDefinition += diff;
             }
-            activeQualityDefinition.settings.prime_tower_position_x.default_value = primeTowerXDefinition;
-            activeQualityDefinition.settings.prime_tower_position_y.default_value = primeTowerYDefinition;
-            activeQualityDefinition.settings.prime_tower_size.default_value = primeTowerWidth;
+            globalQualityPreset.settings.prime_tower_position_x.default_value = primeTowerXDefinition;
+            globalQualityPreset.settings.prime_tower_position_y.default_value = primeTowerYDefinition;
+            globalQualityPreset.settings.prime_tower_size.default_value = primeTowerWidth;
         }
         const newExtruderLDefinition = definitionManager.finalizeExtruderDefinition(
             {
-                activeQualityDefinition,
+                activeQualityDefinition: qualityPresets[LEFT_EXTRUDER],
                 extruderDefinition: extruderLDefinition,
                 materialDefinition: materialDefinitions[indexL],
                 hasPrimeTower,
@@ -2347,9 +2355,10 @@ export const actions = {
                 primeTowerYDefinition
             }
         );
+
         const newExtruderRDefinition = definitionManager.finalizeExtruderDefinition(
             {
-                activeQualityDefinition,
+                activeQualityDefinition: qualityPresets[RIGHT_EXTRUDER],
                 extruderDefinition: extruderRDefinition,
                 materialDefinition: materialDefinitions[indexR],
                 hasPrimeTower,
@@ -2359,7 +2368,7 @@ export const actions = {
         );
 
         definitionManager.calculateDependencies(
-            activeQualityDefinition.settings,
+            globalQualityPreset.settings,
             modelGroup && modelGroup.hasSupportModel()
         );
         definitionManager.updateDefinition({
@@ -2404,15 +2413,16 @@ export const actions = {
         );
         const renderGcodeFileName = `${currentModelName}_${new Date().getTime()}`;
 
-        activeQualityDefinition.settings.material_bed_temperature.default_value = extruderLDefinition.settings.material_bed_temperature.default_value;
-        activeQualityDefinition.settings.material_bed_temperature_layer_0.default_value = extruderLDefinition.settings.material_bed_temperature_layer_0.default_value;
+        // Use left
+        globalQualityPreset.settings.material_bed_temperature.default_value = extruderLDefinition.settings.material_bed_temperature.default_value;
+        globalQualityPreset.settings.material_bed_temperature_layer_0.default_value = extruderLDefinition.settings.material_bed_temperature_layer_0.default_value;
 
         const activeExtruderDefinition = helpersExtruderConfig.adhesion === '0'
             ? extruderLDefinition
             : extruderRDefinition;
 
         const finalDefinition = definitionManager.finalizeActiveDefinition(
-            activeQualityDefinition,
+            globalQualityPreset,
             activeExtruderDefinition,
             size,
             hasPrimeTower
@@ -2523,12 +2533,13 @@ export const actions = {
                     definition: [],
                     originalName: null
                 };
+
                 for (const item of models) {
                     const modelDefinition = definitionManager.finalizeModelDefinition(
                         activeQualityDefinition,
                         item,
                         extruderLDefinition,
-                        extruderRDefinition
+                        extruderRDefinition,
                     );
 
                     const originalName = item.originalName;

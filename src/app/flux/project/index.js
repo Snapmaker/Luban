@@ -152,15 +152,6 @@ export const actions = {
         const content = JSON.stringify(envObj);
         dispatch(actions.updateState(headType, { content, unSaved: true, initState: false }));
         await api.saveEnv({ content });
-
-        if (headType === HEAD_PRINTING) {
-            const { editorDefinition } = editorState;
-            const editorObj = {};
-            editorDefinition.forEach((value, key) => {
-                editorObj[key] = { ...value };
-            });
-            await api.saveModifier({ content, editorDefinition: JSON.stringify(editorObj) });
-        }
     },
 
     getLastEnvironment: (headType) => async (dispatch) => {

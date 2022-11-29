@@ -88,7 +88,6 @@ const recoverProjectFile = defaultAPIFactory((data) => request.post('/api/file/r
 //
 // Modifier, TODO: check usages
 //
-const saveModifier = defaultAPIFactory((data) => request.post('/api/file/saveModifier').send(data));
 const getEditorDefinition = defaultAPIFactory((data) => request.post('/api/file/getEditorDefinition').send(data));
 
 
@@ -349,7 +348,6 @@ export default {
     packageEnv,
     recoverProjectFile,
 
-    saveModifier,
     getEditorDefinition,
 
     uploadImage,

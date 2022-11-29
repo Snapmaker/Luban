@@ -10,7 +10,7 @@ const log = logger('service:definition');
 
 const SETTING_FIELDS = [
     'label', 'description', 'type', 'options', 'unit', 'enabled', 'default_value', 'value', 'visible', 'calcu_value',
-    'min', 'max',
+    'min', 'max', 'limit_to_extruder',
     // Snapmaker extended fields:
     'sm_value'
 ];
@@ -229,7 +229,7 @@ export class DefinitionLoader {
                         }
                     }
                     if (mainCategory === 'quality') {
-                        if (setting.settable_per_extruder) {
+                        if (setting.settable_per_extruder || setting.settable_per_mesh) {
                             extruderProfileArr.add(key);
                         }
                         if (setting.visible !== 'false') {

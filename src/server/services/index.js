@@ -208,7 +208,6 @@ function registerApis(app) {
     app.post(urljoin(settings.route, 'api/file/packageEnv'), api.file.packageEnv);
     app.post(urljoin(settings.route, 'api/file/recoverProjectFile'), api.file.recoverProjectFile);
 
-    app.post(urljoin(settings.route, 'api/file/saveModifier'), api.file.saveModifier);
     app.post(urljoin(settings.route, 'api/file/getEditorDefinition'), api.file.getEditorDefinition);
 
 
