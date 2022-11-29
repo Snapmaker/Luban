@@ -1,8 +1,8 @@
 import React from 'react';
 import { indexOf, orderBy } from 'lodash';
 
-import { qualitySettingRank } from '../../constants';
 import i18n from '../../lib/i18n';
+import { DEFAULT_PRESET_IDS, isQualityPresetVisible } from '../../constants/preset';
 
 import { MaterialWithColor } from '../widgets/PrintingMaterial/MaterialWithColor';
 
@@ -39,42 +39,69 @@ function getSelectOptions(printingDefinitions) {
     return toolDefinitionOptions;
 }
 
-function getPresetOptions(definitionModels) {
-    const presetOptionsObj = {};
-    definitionModels.forEach(preset => {
-        const typeOfPrinting = preset.typeOfPrinting;
-        const category = preset.category && typeOfPrinting ? preset.category : i18n._('key-default_category-Custom');
-        preset.category = category;
-        const definitionId = preset.definitionId;
-        if (Object.keys(preset?.settings).length > 0) {
-            const checkboxAndSelectGroup = {};
-            const name = preset.name;
-            checkboxAndSelectGroup.name = name;
-            checkboxAndSelectGroup.definitionId = definitionId;
-            checkboxAndSelectGroup.typeOfPrinting = typeOfPrinting;
-            checkboxAndSelectGroup.label = `${name}`;
-            checkboxAndSelectGroup.value = `${definitionId}-${name}`;
-            checkboxAndSelectGroup.rank = indexOf(qualitySettingRank, definitionId);
-            if (presetOptionsObj[category]) {
-                if (!presetOptionsObj[category].options) presetOptionsObj[category].options = [];
-                preset.visible && presetOptionsObj[category].options.push(checkboxAndSelectGroup);
-            } else {
-                const i18nCategory = preset.i18nCategory;
-                const groupOptions = {
-                    label: category,
-                    category: category,
-                    i18nCategory: i18nCategory,
-                    options: []
-                };
-                presetOptionsObj[category] = groupOptions;
-                preset.visible && groupOptions.options.push(checkboxAndSelectGroup);
-            }
+/**
+ * Get preset Options from definitions.
+ *
+ * @param presetModels
+ * @param materialPreset
+ *
+ * @return
+ *
+ * {
+ *      [category: string]: {
+ *          label,
+ *          category,
+ *          i18nCategoory,
+ *          options: [{
+ *              name,
+ *              definitionId,
+ *              typeOfPrinting,
+ *              label,
+ *              value,
+ *              rank,
+ *          }]
+ *      },
+ * }
+ */
+function getPresetOptions(presetModels, materialPreset) {
+    const presetOptions = {};
+
+    for (const presetModel of presetModels) {
+        const { definitionId, name, i18nCategory } = presetModel;
+        const typeOfPrinting = presetModel.typeOfPrinting;
+        const category = presetModel.category;
+
+        const checkboxAndSelectGroup = {};
+        checkboxAndSelectGroup.name = name;
+        checkboxAndSelectGroup.definitionId = definitionId;
+        checkboxAndSelectGroup.typeOfPrinting = typeOfPrinting;
+        checkboxAndSelectGroup.label = `${name}`;
+        checkboxAndSelectGroup.value = `${definitionId}-${name}`;
+        checkboxAndSelectGroup.rank = indexOf(DEFAULT_PRESET_IDS, definitionId);
+
+        if (!presetOptions[category]) {
+            presetOptions[category] = {
+                label: category,
+                category: category,
+                i18nCategory: i18nCategory || i18n._('key-default_category-Custom'),
+                options: [],
+            };
         }
-        Object.keys(presetOptionsObj).forEach(key => {
-            presetOptionsObj[key].options = orderBy(presetOptionsObj[key].options, ['rank'], ['asc']);
+
+        const visible = isQualityPresetVisible(presetModel, {
+            materialType: materialPreset?.materialType,
         });
+        if (visible) {
+            presetOptions[category].options.push(checkboxAndSelectGroup);
+        }
+    }
+
+    // sort preset options
+    Object.keys(presetOptions).forEach(category => {
+        presetOptions[category].options = orderBy(presetOptions[category].options, ['rank'], ['asc']);
     });
-    return presetOptionsObj;
+
+    return presetOptions;
 }
 
 function getMaterialSelectOptions(materialDefinitions) {

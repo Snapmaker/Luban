@@ -394,7 +394,7 @@ function ProfileManager({
             ref.current.value = null;
             ref.current.click();
         },
-        onChangeDefinition: (key, value) => {
+        onChangePresetSettings: (key, value) => {
             // now setDefinitionState is synchronize, so remove setTimeout
             const { definitionForManager } = definitionState;
             const newDefinitionForManager = cloneDeep(definitionForManager);
@@ -661,7 +661,7 @@ function ProfileManager({
                                 isCategorySelected={definitionState.isCategorySelected}
                                 optionConfigGroup={optionConfigGroup}
                                 isOfficialDefinition={isOfficialDefinition}
-                                onChangeDefinition={actions.onChangeDefinition}
+                                onChangePresetSettings={actions.onChangePresetSettings}
                                 selectedSettingDefaultValue={definitionState?.selectedSettingDefaultValue}
                                 showMiddle={managerType === PRINTING_MANAGER_TYPE_MATERIAL || managerType === PRINTING_MANAGER_TYPE_QUALITY}
                                 hideMiniTitle={false}

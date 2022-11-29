@@ -65,7 +65,7 @@ const longTermBackupConfig = defaultAPIFactory(() => request.put('/api/user/back
 const checkNewUser = defaultAPIFactory(() => request.get('/api/checkNewUser'));
 
 //
-// Image
+// File
 //
 
 const uploadFile = defaultAPIFactory((formData, headType = '') => request.post('/api/file').query({ headType: headType }).send(formData));
@@ -73,17 +73,22 @@ const uploadCaseFile = defaultAPIFactory((formData) => request.post('/api/file/u
 const uploadGcodeFile = defaultAPIFactory((formData) => request.post('/api/file/uploadGcodeFile').send(formData));
 const uploadUpdateFile = defaultAPIFactory((formData) => request.post('/api/file/uploadUpdateFile').send(formData));
 const buildFirmwareFile = defaultAPIFactory((formData) => request.post('/api/file/buildFirmwareFile').send(formData));
+const uploadImage = defaultAPIFactory((formdata) => request.post('/api/image').send(formdata));
+
+//
+// Env
+//
 const saveEnv = defaultAPIFactory((data) => request.post('/api/file/saveEnv').send(data));
-const getEnv = defaultAPIFactory((data) => request.post('/api/file/getEnv').send(data));
+const getEnv = defaultAPIFactory((data) => request.get('/api/file/getEnv').send(data));
 const recoverEnv = defaultAPIFactory((data) => request.post('/api/file/recoverEnv').send(data));
 const removeEnv = defaultAPIFactory((data) => request.post('/api/file/removeEnv').send(data));
 const packageEnv = defaultAPIFactory((data) => request.post('/api/file/packageEnv').send(data));
 const recoverProjectFile = defaultAPIFactory((data) => request.post('/api/file/recoverProjectFile').send(data));
 
-const saveModifier = defaultAPIFactory((data) => request.post('/api/file/saveModifier').send(data));
+//
+// Modifier, TODO: check usages
+//
 const getEditorDefinition = defaultAPIFactory((data) => request.post('/api/file/getEditorDefinition').send(data));
-
-const uploadImage = defaultAPIFactory((formdata) => request.post('/api/image').send(formdata));
 
 
 // Stock Remap
@@ -343,7 +348,6 @@ export default {
     packageEnv,
     recoverProjectFile,
 
-    saveModifier,
     getEditorDefinition,
 
     uploadImage,

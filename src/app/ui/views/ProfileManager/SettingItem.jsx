@@ -1,19 +1,19 @@
-import React, { useState } from 'react';
-import PropTypes from 'prop-types';
+import { Switch, Tooltip } from 'antd';
 import classNames from 'classnames';
 import { isNil, noop } from 'lodash';
-import { Switch, Tooltip } from 'antd';
+import PropTypes from 'prop-types';
+import React, { useState } from 'react';
+import { HEAD_CNC, PRINTING_MATERIAL_CONFIG_COLORS } from '../../../constants';
 import i18n from '../../../lib/i18n';
-import Select from '../../components/Select';
-import { NumberInput as Input } from '../../components/Input';
 import Anchor from '../../components/Anchor';
 import ColorSelector from '../../components/ColorSelector';
-import { HEAD_CNC, PRINTING_MATERIAL_CONFIG_COLORS } from '../../../constants';
-import SvgIcon from '../../components/SvgIcon';
+import { NumberInput as Input } from '../../components/Input';
 import Popover from '../../components/Popover';
+import Select from '../../components/Select';
+import SvgIcon from '../../components/SvgIcon';
 import styles from './styles.styl';
 
-function dropdownRender(opts, key, onChangeDefinition, currentValue) {
+function dropdownRender(opts, key, onChangePresetSettings, currentValue) {
     return () => (
         <div
             className={classNames(
@@ -21,7 +21,7 @@ function dropdownRender(opts, key, onChangeDefinition, currentValue) {
                 'padding-vertical-16',
                 'padding-horizontal-16',
                 styles['settings-select-wrapper'],
-                opts.length > 8 ? styles['settings-select-wrapper_scroll'] : ''
+                opts.length > 8 ? styles['settings-select-wrapper_scroll'] : '',
             )}
         >
             {opts.map((settingItem) => {
@@ -32,14 +32,14 @@ function dropdownRender(opts, key, onChangeDefinition, currentValue) {
                         key={label}
                         className={classNames(
                             styles['settings-item'],
-                            currentValue === value ? styles['settings-item_selected'] : ''
+                            currentValue === value ? styles['settings-item_selected'] : '',
                         )}
                     >
                         <Anchor
-                            onClick={() => onChangeDefinition(key, value)}
+                            onClick={() => onChangePresetSettings(key, value)}
                         >
                             <div className={classNames(
-                                styles['settings-select']
+                                styles['settings-select'],
                             )}
                             >
                                 <div className={classNames(
@@ -57,7 +57,7 @@ function dropdownRender(opts, key, onChangeDefinition, currentValue) {
     );
 }
 
-const colorSelectorContent = (settingDefaultValue, definitionKey, setShowColor, onChangeDefinition) => (
+const colorSelectorContent = (settingDefaultValue, definitionKey, setShowColor, onChangePresetSettings) => (
     <div>
         <ColorSelector
             recentColorKey="profile-manager"
@@ -67,27 +67,29 @@ const colorSelectorContent = (settingDefaultValue, definitionKey, setShowColor, 
                 setShowColor(false);
             }}
             onChangeComplete={(color) => {
-                onChangeDefinition(definitionKey, color);
+                onChangePresetSettings(definitionKey, color);
             }}
         />
     </div>
 );
 
-function SettingItem({
-    definitionKey,
-    settings,
-    isDefaultDefinition = false,
-    onChangeDefinition,
-    defaultValue,
-    styleSize = 'large',
-    managerType,
-    officialDefinition,
-    showTooltip = false,
-    onClick,
-    definitionCategory,
-    onChangeMaterialType = noop,
-    categoryKey
-}) {
+function SettingItem(
+    {
+        definitionKey,
+        settings,
+        isDefaultDefinition = false,
+        onChangePresetSettings,
+        defaultValue,
+        styleSize = 'large',
+        managerType,
+        officialDefinition,
+        showTooltip = false,
+        onClick,
+        definitionCategory,
+        onChangeMaterialType = noop,
+        categoryKey,
+    }
+) {
     const [showColor, setShowColor] = useState(false);
 
     const setting = settings[definitionKey];
@@ -107,7 +109,7 @@ function SettingItem({
         Object.keys(options).forEach((k) => {
             opts.push({
                 value: k.toLocaleLowerCase(),
-                label: i18n._(options[k])
+                label: i18n._(options[k]),
             });
         });
     }
@@ -133,7 +135,7 @@ function SettingItem({
                         name="Reset"
                         size={24}
                         onClick={() => {
-                            onChangeDefinition(definitionKey, (defaultValue && defaultValue.value) ?? settingDefaultValue);
+                            onChangePresetSettings(definitionKey, (defaultValue && defaultValue.value) ?? settingDefaultValue);
                         }}
                     />
                 )}
@@ -154,7 +156,7 @@ function SettingItem({
                         max={max}
                         size={styleSize}
                         onChange={(value) => {
-                            onChangeDefinition(definitionKey, value);
+                            onChangePresetSettings(definitionKey, value);
                         }}
                     />
                 )}
@@ -168,7 +170,7 @@ function SettingItem({
                         size={styleSize}
                         // disabled={!isDefinitionEditable()}
                         onChange={(value) => {
-                            onChangeDefinition(definitionKey, value);
+                            onChangePresetSettings(definitionKey, value);
                         }}
                     />
                 )}
@@ -179,7 +181,7 @@ function SettingItem({
                         // disabled={!isDefinitionEditable()}
                         type="checkbox"
                         checked={settingDefaultValue}
-                        onChange={(checked) => onChangeDefinition(definitionKey, checked)}
+                        onChange={(checked) => onChangePresetSettings(definitionKey, checked)}
                     />
                 )}
                 {type === 'enum' && definitionKey === 'material_type' && (
@@ -209,7 +211,7 @@ function SettingItem({
                         options={opts}
                         value={typeof settingDefaultValue === 'string' ? settingDefaultValue.toLowerCase() : settingDefaultValue}
                         onChange={(option) => {
-                            onChangeDefinition(definitionKey, option.value);
+                            onChangePresetSettings(definitionKey, option.value);
                         }}
                         disabled={(officialDefinition && managerType === HEAD_CNC && definitionKey === 'tool_type')}
                     />
@@ -218,16 +220,16 @@ function SettingItem({
                     <Select
                         placement="bottomRight"
                         className="sm-flex-width align-r"
-                        dropdownRender={dropdownRender(opts, definitionKey, onChangeDefinition, settingDefaultValue)}
+                        dropdownRender={dropdownRender(opts, definitionKey, onChangePresetSettings, settingDefaultValue)}
                         dropdownStyle={{
-                            maxWidth: '500px'
+                            maxWidth: '500px',
                         }}
                         size={styleSize}
                         name={definitionKey}
                         options={opts}
                         value={settingDefaultValue}
                         onChange={(option) => {
-                            onChangeDefinition(definitionKey, option.value);
+                            onChangePresetSettings(definitionKey, option.value);
                         }}
                         disabled={officialDefinition && managerType === HEAD_CNC && definitionKey === 'tool_type'}
                     />
@@ -239,7 +241,7 @@ function SettingItem({
                         value={settingDefaultValue}
                         // disabled={!isDefinitionEditable()}
                         onChange={(value) => {
-                            onChangeDefinition(definitionKey, value);
+                            onChangePresetSettings(definitionKey, value);
                         }}
                     />
                 )}
@@ -248,7 +250,7 @@ function SettingItem({
                 )}
                 {type === 'color' && (
                     <Popover
-                        content={colorSelectorContent(settingDefaultValue, definitionKey, setShowColor, onChangeDefinition)}
+                        content={colorSelectorContent(settingDefaultValue, definitionKey, setShowColor, onChangePresetSettings)}
                         visible={showColor}
                         trigger="click"
                         placement="bottomRight"
@@ -261,7 +263,7 @@ function SettingItem({
                             className="sm-flex-width align-r height-percent-100 width-96 display-inline border-radius-8 border-default-black-5"
                             style={{
                                 background: settingDefaultValue,
-                                height: 32
+                                height: 32,
                             }}
                             role="button"
                             tabIndex="-1"
@@ -280,7 +282,7 @@ SettingItem.propTypes = {
     settings: PropTypes.object.isRequired,
     definitionKey: PropTypes.string.isRequired,
     isDefaultDefinition: PropTypes.bool,
-    onChangeDefinition: PropTypes.func.isRequired,
+    onChangePresetSettings: PropTypes.func.isRequired,
     defaultValue: PropTypes.object,
     styleSize: PropTypes.string,
     managerType: PropTypes.string,
@@ -289,7 +291,7 @@ SettingItem.propTypes = {
     definitionCategory: PropTypes.string,
     onChangeMaterialType: PropTypes.func,
     onClick: PropTypes.func,
-    categoryKey: PropTypes.string
+    categoryKey: PropTypes.string,
 };
 
 export default React.memo(SettingItem);

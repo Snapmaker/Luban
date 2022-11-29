@@ -47,17 +47,14 @@ function PrintingManager() {
         (state) => state?.printing?.defaultMaterialIdRight,
         shallowEqual
     );
-    const defaultQualityId = useSelector(
-        (state) => state?.printing?.defaultQualityId,
-        shallowEqual
-    );
+    const activePresetIds = useSelector((state) => state.printing.activePresetIds);
     const managerDisplayType = useSelector(
         (state) => state?.printing?.managerDisplayType,
         shallowEqual
     );
-    const materialDefinitions = useSelector(
-        (state) => state?.printing?.materialDefinitions
-    );
+
+    const materialDefinitions = useSelector((state) => state.printing.materialDefinitions);
+
     const materialManagerDirection = useSelector(
         (state) => state?.printing?.materialManagerDirection,
         shallowEqual
@@ -82,15 +79,17 @@ function PrintingManager() {
         } else if (!checked) {
             newCustomConfig[category] = newCustomConfig[category].filter(a => a !== key);
         }
+
+        console.log('category =', category, 'config =', newCustomConfig[category]);
         dispatch(machineActions.updatePrintingCustomConfigsWithCategory(newCustomConfig[category], category));
     }, [customConfigs]);
 
     useEffect(() => {
-        if (defaultMaterialId) {
-            const actualDefinitions = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL
-                ? materialDefinitions
-                : qualityDefinitionsModels.filter(d => d?.visible);
-            setAllDefinitions(actualDefinitions);
+        if (managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL) {
+            setAllDefinitions(materialDefinitions);
+        } else {
+            // showing all quality presets (not only for active material)
+            setAllDefinitions(qualityDefinitionsModels);
         }
     }, [managerDisplayType, materialDefinitions, qualityDefinitionsModels, defaultMaterialId]);
 
@@ -252,7 +251,7 @@ function PrintingManager() {
                     : defaultMaterialIdRight
         },
         [PRINTING_MANAGER_TYPE_QUALITY]: {
-            id: defaultQualityId
+            id: activePresetIds[LEFT_EXTRUDER],
         }
     };
 

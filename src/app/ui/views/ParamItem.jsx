@@ -21,29 +21,27 @@ const ALL_ICON_NAMES = {
 };
 
 
-const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition, setSelectedDefinition }) {
-    const allParams = selectedDefinitionModel.params;
-    const selectedDefinitionSettings = selectedDefinitionModel.settings;
+const ParamItem = function ({ selectedPresetModel, onChangePresetSettings, setSelectedDefinition }) {
+    const allParams = selectedPresetModel.params;
+    const selectedDefinitionSettings = selectedPresetModel.settings;
     const dispatch = useDispatch();
 
     async function onChangeParam(newValue, paramSetting) {
-        const actualOptions = paramSetting.affectByType ? paramSetting[selectedDefinitionModel.typeOfPrinting] : paramSetting.options;
+        const actualOptions = paramSetting.affectByType ? paramSetting[selectedPresetModel.typeOfPrinting] : paramSetting.options;
         const findedAffect = actualOptions[newValue]?.affect;
         const changedSettingArray = [];
         Object.entries(findedAffect).forEach(([affectKey, affectValue]) => {
-            selectedDefinitionModel.settings[
-                affectKey
-            ].default_value = affectValue;
+            selectedPresetModel.settings[affectKey].default_value = affectValue;
             changedSettingArray.push([affectKey, affectValue]);
         });
         await dispatch(
             printingActions.updateCurrentDefinition({
-                definitionModel: selectedDefinitionModel,
+                definitionModel: selectedPresetModel,
                 managerDisplayType: PRINTING_MANAGER_TYPE_QUALITY,
                 changedSettingArray
             })
         );
-        setSelectedDefinition && setSelectedDefinition(selectedDefinitionModel);
+        setSelectedDefinition && setSelectedDefinition(selectedPresetModel);
         dispatch(printingActions.destroyGcodeLine());
         dispatch(printingActions.displayModel());
     }
@@ -51,7 +49,7 @@ const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition, setSe
     return (
         <div>
             {allParams && Object.entries(allParams).map(([paramName, paramSetting]) => {
-                const actualOptions = paramSetting.affectByType ? paramSetting[selectedDefinitionModel.typeOfPrinting] : paramSetting.options;
+                const actualOptions = paramSetting.affectByType ? paramSetting[selectedPresetModel.typeOfPrinting] : paramSetting.options;
                 const allParamsName = [];
                 let SegmentedValue = null;
                 let iconName = '';
@@ -279,7 +277,7 @@ const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition, setSe
                                         options={selectOptions}
                                         value={displayValue}
                                         onChange={(item) => {
-                                            onChangeDefinition('model_structure_type', item.value);
+                                            onChangePresetSettings('model_structure_type', item.value);
                                         }}
                                     />
                                 )}
@@ -302,8 +300,8 @@ const ParamItem = function ({ selectedDefinitionModel, onChangeDefinition, setSe
 };
 
 ParamItem.propTypes = {
-    selectedDefinitionModel: PropTypes.object,
-    onChangeDefinition: PropTypes.func,
+    selectedPresetModel: PropTypes.object,
+    onChangePresetSettings: PropTypes.func,
     setSelectedDefinition: PropTypes.func,
 
 };

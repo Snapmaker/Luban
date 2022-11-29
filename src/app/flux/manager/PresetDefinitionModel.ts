@@ -1,7 +1,8 @@
 import { cloneDeep } from 'lodash';
 import {
     HEAD_PRINTING,
-    QUALITY_REGEX
+    QUALITY_REGEX,
+    MATERIAL_REGEX,
 } from '../../constants';
 
 
@@ -634,8 +635,14 @@ class PresetDefinitionModel {
             .forEach((key) => {
                 this[key] = definition[key];
             });
+
         if (QUALITY_REGEX.test(this.definitionId)) {
             this.updateParams(materialType, defaultNozzleSize, true);
+        }
+
+        // Assume that the materialType of material preset will never change
+        if (MATERIAL_REGEX.test(this.definitionId)) {
+            this.materialType = definition.settings.material_type.default_value;
         }
     }
 
@@ -812,7 +819,7 @@ class PresetDefinitionModel {
             Object.entries(this.params).forEach(([paramName, paramItem]) => {
                 const actualValue = settings[paramName]?.default_value;
                 const actualOptions: ParamsObjectOption = paramItem.affectByType ? paramItem[this.typeOfPrinting] : paramItem.options;
-                const isDefautValue = Object.entries(actualOptions).some(([optionName, optionItem]) => {
+                const isDefaultValue = Object.entries(actualOptions).some(([optionName, optionItem]) => {
                     if (optionItem.value === actualValue) {
                         paramItem.current_value = optionName;
                         if (shouldUpdateDefault) paramItem.default_value = optionName;
@@ -821,7 +828,7 @@ class PresetDefinitionModel {
                         return false;
                     }
                 });
-                if (!isDefautValue) {
+                if (!isDefaultValue) {
                     paramItem.current_value = actualValue;
                     if (shouldUpdateDefault) paramItem.default_value = actualValue;
                 }

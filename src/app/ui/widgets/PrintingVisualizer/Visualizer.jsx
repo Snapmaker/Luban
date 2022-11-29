@@ -1,26 +1,32 @@
+// import isEqual from 'lodash/isEqual';
+import { find, isEqual, some } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
-// import isEqual from 'lodash/isEqual';
-import { find, isEqual, some } from 'lodash';
 import { Box3, Math as ThreeMath, Quaternion, Vector3 } from 'three';
-import { priorities, shortcutActions, ShortcutManager } from '../../../lib/shortcut';
-import { EPSILON, HEAD_PRINTING, ROTATE_MODE, SCALE_MODE, TRANSLATE_MODE } from '../../../constants';
+import { EPSILON, HEAD_PRINTING, LEFT_EXTRUDER, ROTATE_MODE, SCALE_MODE, TRANSLATE_MODE } from '../../../constants';
 import { isDualExtruder } from '../../../constants/machines';
-import i18n from '../../../lib/i18n';
-import ProgressBar from '../../components/ProgressBar';
-import ContextMenu from '../../components/ContextMenu';
-import Canvas from '../../components/SMCanvas';
+import { actions as machineActions } from '../../../flux/machine';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import { actions as printingActions } from '../../../flux/printing';
-import { actions as machineActions } from '../../../flux/machine';
-import VisualizerLeftBar from './VisualizerLeftBar';
-import VisualizerPreviewControl from './VisualizerPreviewControl';
-import VisualizerBottomLeft from './VisualizerBottomLeft';
-import VisualizerInfo from './VisualizerInfo';
+import { logModelViewOperation } from '../../../lib/gaEvent';
+import i18n from '../../../lib/i18n';
+
+import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
+import { priorities, shortcutActions, ShortcutManager } from '../../../lib/shortcut';
+import { ModelEvents } from '../../../models/events';
+import ContextMenu from '../../components/ContextMenu';
+import ProgressBar from '../../components/ProgressBar';
+import Canvas from '../../components/SMCanvas';
+import { emitUpdateControlInputEvent } from '../../components/SMCanvas/TransformControls';
+import ModeToggleBtn from './ModeToggleBtn';
 import PrintableCube from './PrintableCube';
 import styles from './styles.styl';
+import VisualizerBottomLeft from './VisualizerBottomLeft';
+import VisualizerClippingControl from './VisualizerClippingControl';
+import VisualizerInfo from './VisualizerInfo';
+import VisualizerLeftBar from './VisualizerLeftBar';
 import {
     loadModelFailPopup,
     repairModelFailPopup,
@@ -28,13 +34,7 @@ import {
     scaletoFitPopup,
     sliceFailPopup
 } from './VisualizerPopup';
-
-import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
-import { emitUpdateControlInputEvent } from '../../components/SMCanvas/TransformControls';
-import ModeToggleBtn from './ModeToggleBtn';
-import { logModelViewOperation } from '../../../lib/gaEvent';
-import VisualizerClippingControl from './VisualizerClippingControl';
-import { ModelEvents } from '../../../models/events';
+import VisualizerPreviewControl from './VisualizerPreviewControl';
 // , MeshPhongMaterial, DoubleSide, Mesh, CylinderBufferGeometry
 
 const initQuaternion = new Quaternion();
@@ -710,11 +710,11 @@ const mapStateToProps = (state, ownProps) => {
         leftBarOverlayVisible,
         primeTowerHeight,
         qualityDefinitions,
-        defaultQualityId,
+        activePresetIds,
         stopArea,
         simplifyOriginModelInfo
     } = printing;
-    const activeQualityDefinition = find(qualityDefinitions, { definitionId: defaultQualityId });
+    const activeQualityDefinition = find(qualityDefinitions, { definitionId: activePresetIds[LEFT_EXTRUDER] });
     const enablePrimeTower = activeQualityDefinition?.settings?.prime_tower_enable?.default_value;
     let isActive = true;
     if (enableShortcut) {

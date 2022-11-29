@@ -15,7 +15,7 @@ function ConfigValueBox({
     calculateTextIndex,
     isCategorySelected,
     type = 'input',
-    onChangeDefinition,
+    onChangePresetSettings,
     isOfficialDefinitionKey,
     selectedSettingDefaultValue,
     definitionForManager,
@@ -165,8 +165,8 @@ function ConfigValueBox({
                                                                     isDefaultDefinition={
                                                                         definitionForManager?.isRecommended
                                                                     }
-                                                                    onChangeDefinition={
-                                                                        onChangeDefinition
+                                                                    onChangePresetSettings={
+                                                                        onChangePresetSettings
                                                                     }
                                                                     isProfile="true"
                                                                     defaultValue={{
@@ -216,8 +216,8 @@ function ConfigValueBox({
                                                                     isOfficialDefinitionKey={
                                                                         isOfficialDefinitionKey
                                                                     }
-                                                                    onChangeDefinition={
-                                                                        onChangeDefinition
+                                                                    onChangePresetSettings={
+                                                                        onChangePresetSettings
                                                                     }
                                                                 />
                                                             );
@@ -261,7 +261,7 @@ ConfigValueBox.propTypes = {
     type: PropTypes.string,
     calculateTextIndex: PropTypes.func,
     isOfficialDefinitionKey: PropTypes.func,
-    onChangeDefinition: PropTypes.func.isRequired,
+    onChangePresetSettings: PropTypes.func.isRequired,
     selectedSettingDefaultValue: PropTypes.object,
     showMiddle: PropTypes.bool,
     hideMiniTitle: PropTypes.bool,

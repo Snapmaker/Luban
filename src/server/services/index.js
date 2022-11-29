@@ -200,14 +200,14 @@ function registerApis(app) {
     app.post(urljoin(settings.route, 'api/file/uploadGcodeFile'), api.file.uploadGcodeFile);
     app.post(urljoin(settings.route, 'api/file/uploadUpdateFile'), api.file.uploadUpdateFile);
     app.post(urljoin(settings.route, 'api/file/buildFirmwareFile'), api.file.buildFirmwareFile);
+
+    app.get(urljoin(settings.route, 'api/file/getEnv'), api.file.getEnv);
     app.post(urljoin(settings.route, 'api/file/saveEnv'), api.file.saveEnv);
-    app.post(urljoin(settings.route, 'api/file/getEnv'), api.file.getEnv);
     app.post(urljoin(settings.route, 'api/file/recoverEnv'), api.file.recoverEnv);
     app.post(urljoin(settings.route, 'api/file/removeEnv'), api.file.removeEnv);
     app.post(urljoin(settings.route, 'api/file/packageEnv'), api.file.packageEnv);
     app.post(urljoin(settings.route, 'api/file/recoverProjectFile'), api.file.recoverProjectFile);
 
-    app.post(urljoin(settings.route, 'api/file/saveModifier'), api.file.saveModifier);
     app.post(urljoin(settings.route, 'api/file/getEditorDefinition'), api.file.getEditorDefinition);
 
 

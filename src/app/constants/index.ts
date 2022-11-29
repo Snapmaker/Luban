@@ -586,8 +586,8 @@ export const PRINTING_QUALITY_CONFIG_INDEX = {
     brim_line_count: 1,
     raft_margin: 1
 };
-export const PRINTING_MANAGER_TYPE_MATERIAL = 'material';
 export const PRINTING_MANAGER_TYPE_QUALITY = 'quality';
+export const PRINTING_MANAGER_TYPE_MATERIAL = 'material';
 export const PRINTING_MANAGER_TYPE_EXTRUDER = 'extruder';
 
 export const DEFAULT_CNC_CONFIG_IDS = [
@@ -1375,11 +1375,3 @@ export const MANUAL_MODE = Symbol('manual mode');
 export const AUTO_STRING = 'auto';
 
 
-export const qualitySettingRank = [
-    'quality.normal_quality',
-    'quality.normal_other_quality',
-    'quality.normal_tpu_quality',
-    'quality.fast_print',
-    'quality.high_quality',
-    'quality.engineering_print'
-];

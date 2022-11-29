@@ -2,6 +2,7 @@ import path from 'path';
 import mv from 'mv';
 import fs from 'fs';
 import { v4 as uuid } from 'uuid';
+import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../app/constants';
 import { pathWithRandomSuffix } from '../../lib/random-utils';
 import logger from '../../lib/logger';
 import DataStorage, { rmDir } from '../../DataStorage';
@@ -306,16 +307,28 @@ export const uploadUpdateFile = (req, res) => {
 };
 
 /**
- * remove editor saved environment files
+ * get environment data from saved file
  */
-export const removeEnv = async (req, res) => {
+export const getEnv = async (req, res) => {
     const { headType } = req.body;
     const envDir = `${DataStorage.envDir}/${headType}`;
-    rmDir(envDir, false);
-    res.send(true);
-    res.end();
+    const targetPath = `${envDir}/config.json`;
+    try {
+        const exists = fs.existsSync(targetPath);
+        if (exists) {
+            const content = fs.readFileSync(targetPath).toString();
+            res.send({ result: 1, content });
+        } else {
+            res.send({ result: 0 });
+        }
+        res.end();
+    } catch (e) {
+        log.error(`Failed to get environment: ${e}`);
+        res.status(ERR_INTERNAL_SERVER_ERROR).send({
+            msg: `Failed to get environment: ${e}`
+        });
+    }
 };
-
 
 /**
  * save editor environment as files, and copy related resource files
@@ -324,6 +337,7 @@ export const saveEnv = async (req, res) => {
     const { content } = req.body;
     try {
         const config = JSON.parse(content);
+        const { activePresetIds } = config;
         const machineInfo = config?.machineInfo;
         const headType = machineInfo?.headType;
         const envDir = `${DataStorage.envDir}/${headType}`;
@@ -362,8 +376,12 @@ export const saveEnv = async (req, res) => {
         if (isDual && config.defaultMaterialIdRight && /^material.([0-9_]+)$/.test(config.defaultMaterialIdRight)) {
             copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialIdRight}.def.json`, `${envDir}/${config.defaultMaterialIdRight}.def.json`);
         }
-        if (config.defaultQualityId && /^quality.([0-9_]+)$/.test(config.defaultQualityId)) {
-            copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultQualityId}.def.json`, `${envDir}/${config.defaultQualityId}.def.json`);
+
+        for (const stackId of [LEFT_EXTRUDER, RIGHT_EXTRUDER]) {
+            const presetId = activePresetIds[stackId];
+            if (presetId && /^quality.([0-9_]+)$/.test(presetId)) {
+                copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${presetId}.def.json`, `${envDir}/${presetId}.def.json`);
+            }
         }
         if (machineInfo?.headType === HEAD_CNC || machineInfo?.headType === HEAD_LASER) {
             !!config.toolpaths?.length && config.toolpaths.forEach(toolpath => {
@@ -382,36 +400,15 @@ export const saveEnv = async (req, res) => {
     }
 };
 
-/**
- * get environment data from saved file
- */
-export const getEnv = async (req, res) => {
-    const { headType } = req.body;
-    const envDir = `${DataStorage.envDir}/${headType}`;
-    const targetPath = `${envDir}/config.json`;
-    try {
-        const exists = fs.existsSync(targetPath);
-        if (exists) {
-            const content = fs.readFileSync(targetPath).toString();
-            res.send({ result: 1, content });
-        } else {
-            res.send({ result: 0 });
-        }
-        res.end();
-    } catch (e) {
-        log.error(`Failed to get environment: ${e}`);
-        res.status(ERR_INTERNAL_SERVER_ERROR).send({
-            msg: `Failed to get environment: ${e}`
-        });
-    }
-};
+
 /**
  * recover environment saved resource files to tmp dir.
  */
 export const recoverEnv = async (req, res) => {
     try {
         const { content } = req.body;
-        const config = JSON.parse(content);
+        const config = JSON.parse(content); // TODO: envObj
+        const { activePresetIds } = config;
         const headType = config?.machineInfo?.headType;
         const envDir = `${DataStorage.envDir}/${headType}`;
 
@@ -432,9 +429,15 @@ export const recoverEnv = async (req, res) => {
         if (isDual && config.defaultMaterialIdRight && /^material.([0-9_]+)$/.test(config.defaultMaterialIdRight)) {
             copyFileSync(`${envDir}/${config.defaultMaterialIdRight}.def.json`, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialIdRight}.def.json`);
         }
-        if (config.defaultQualityId && /^quality.([0-9_]+)$/.test(config.defaultQualityId)) {
-            copyFileSync(`${envDir}/${config.defaultQualityId}.def.json`, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultQualityId}.def.json`);
+
+        // recover quality presets
+        for (const stackId of [LEFT_EXTRUDER, RIGHT_EXTRUDER]) {
+            const presetId = activePresetIds[stackId];
+            if (presetId && /^quality.([0-9_]+)$/.test(presetId)) {
+                copyFileSync(`${envDir}/${presetId}.def.json`, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${presetId}.def.json`);
+            }
         }
+
         res.send({ result: 1 });
         res.end();
     } catch (e) {
@@ -445,6 +448,16 @@ export const recoverEnv = async (req, res) => {
     }
 };
 
+/**
+ * remove editor saved environment files
+ */
+export const removeEnv = async (req, res) => {
+    const { headType } = req.body;
+    const envDir = `${DataStorage.envDir}/${headType}`;
+    rmDir(envDir, false);
+    res.send(true);
+    res.end();
+};
 
 /**
  * package environment to zip file
@@ -523,10 +536,14 @@ export const recoverProjectFile = async (req, res) => {
                 fs.copyFileSync(fname, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialId}.def.json`);
             }
         }
-        if (config.defaultQualityId && /^quality.([0-9_]+)$/.test(config.defaultQualityId)) {
-            const fname = `${DataStorage.tmpDir}/${config.defaultQualityId}.def.json`;
-            if (fs.existsSync(fname)) {
-                fs.copyFileSync(fname, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultQualityId}.def.json`);
+        const { activePresetIds } = config;
+        for (const stackId of [LEFT_EXTRUDER, RIGHT_EXTRUDER]) {
+            const presetId = activePresetIds[stackId];
+            if (presetId && /^quality.([0-9_]+)$/.test(presetId)) {
+                const filePath = `${DataStorage.tmpDir}/${presetId}.def.json`;
+                if (fs.existsSync(filePath)) {
+                    fs.copyFileSync(filePath, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${presetId}.def.json`);
+                }
             }
         }
         if (headType === HEAD_LASER || headType === HEAD_CNC) {
@@ -547,29 +564,6 @@ export const recoverProjectFile = async (req, res) => {
         log.error(`Failed to recover file: ${e}`);
         res.status(ERR_INTERNAL_SERVER_ERROR).send({
             msg: `Failed to recover file: ${e}`
-        });
-    }
-};
-
-/**
- * save model editor or extruder editor
- */
-export const saveModifier = async (req, res) => {
-    try {
-        const { content, editorDefinition } = req.body;
-        const envDir = `${DataStorage.envDir}/${HEAD_PRINTING}`;
-        const config = JSON.parse(content);
-        const { modelEditor, extruderEditor } = config;
-        Object.keys({ ...extruderEditor, ...modelEditor }).forEach(key => {
-            const targetFile = `${envDir}/${key}.def.json`;
-            if (fs.existsSync(targetFile)) rmDir(targetFile);
-            const editorContent = JSON.parse(editorDefinition);
-            fs.writeFileSync(targetFile, JSON.stringify(editorContent[key]));
-        });
-    } catch (e) {
-        log.error(`Failed to save editor: ${e}`);
-        res.status(ERR_INTERNAL_SERVER_ERROR).send({
-            msg: `Failed to save editor: ${e}`
         });
     }
 };

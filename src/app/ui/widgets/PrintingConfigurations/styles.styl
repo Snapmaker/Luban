@@ -2,10 +2,12 @@
 @import "../../../styles/global-var.styl"
 .manager-body {
     text-align: left;
+
     .manager-type-wrapper {
         padding: 0 20px
         border-bottom: 1px #c8c8c8 solid
         text-align: left
+
         .manager-type {
             display: inline-block
             line-height: 25px
@@ -13,12 +15,14 @@
             height: 36px;
             font-size: 18px;
             font-weight: 500;
+
             &.selected {
                 color: #28A7E1;
                 border-bottom: 2px #28A7E1 solid;
             }
         }
     }
+
     .manager-content {
         height: 530px
         // padding: 20px;
@@ -38,98 +42,118 @@
     background: url("../../../resources/images/18x18/printing-manager_18x18@2x.png") no-repeat center / 18px 18px;
     margin-bottom: 10px;
 }
-.preset-recommended
-    .unselected, .selected
-        > a
+
+.preset-recommended {
+    .unselected, .selected {
+        > a {
             display: block
             width: 76px
             border-radius: $border-radius
             border: 1px solid #B9BCBF;
 
-            > i
+            > i {
                 display: block
                 border-radius: $border-radius
                 width: 74px
                 height: 74px
-    .selected
-        > a
+            }
+        }
+    }
+
+    .selected {
+        > a {
             border: 1px solid #1890FF;
-        > span
+        }
+
+        > span {
             color: #1890FF;
-    &__icon
+        }
+    }
+
+    &__icon {
         height: 76px
         width: 76px
         position: relative
-        .preset-hover{
+
+        .preset-hover {
             position: absolute
             right: -9999px
         }
+
         &:hover {
-            .preset-hover{
+            .preset-hover {
                 right: 0
             }
         }
-    &__icon-engineering
+    }
+
+    &__icon-engineering {
         background: url("./images/preset-engineering.svg") no-repeat 0 0
         background-size: 100%
-    &__icon-fine
+    }
+
+    &__icon-fine {
         background: url("./images/preset-fine.svg") no-repeat 0 0
         background-size: 100%
-    &__icon-quik
+    }
+
+    &__icon-quik {
         background: url("./images/preset-quik.svg") no-repeat 0 0
         background-size: 100%
-    &__icon-universal
+    }
+
+    &__icon-universal {
         background: url("./images/preset-universal.svg") no-repeat 0 0
         background-size: 100%
+    }
+}
+
 .preset-customized {
     min-height: 60px;
     max-height: 154px;
     overflow-y: auto;
     overflow-x: hidden;
+
     .selected {
-       background-color: $blue-6;
+        background-color: $blue-6;
     }
+
     .preset-item:hover {
-        .preset-hover{
+        .preset-hover {
             display: inline-block;
         }
     }
-    .preset-hover{
+
+    .preset-hover {
         display: none;
     }
 }
-.divided-line{
-  height: 1px;
-  margin-left: -16px;
-  margin-right: -16px;
-  &.opacity-0 {
-    opacity: 0;
-  }
-  &.opacity-1 {
-    opacity: 1;
-  }
-}
+
+// little box showing "Print Settings"
 .printing-settings-wrapper {
-  position: relative;
-  .printing-settings {
-    display: flex;
-    align-items: center;
-    text-align: center;
-     margin-bottom: -16px;
-     border-radius: 100px;
-     border: 1px $grey-1 solid;
-     position: absolute;
-     max-width: 200px;
-     top: -16px;
-     left: 50%;
-     transform: translateX(-50%);
-     box-shadow: 0px 2px 4px rgba(44, 38, 37, 0.1);
-     .printing-settings-text {
-         max-width: 150px;
-         text-overflow: ellipsis;
-     }
-  }
+    position: relative;
+
+    .printing-settings {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin-bottom: -16px;
+        border-radius: 100px;
+        border: 1px $grey-1 solid;
+        position: absolute;
+        max-width: 200px;
+        top: -16px;
+        left: 50%;
+        transform: translateX(-50%);
+        box-shadow: 0px 2px 4px rgba(44, 38, 37, 0.1);
+
+        .printing-settings-text {
+            max-width: 150px;
+            text-overflow: ellipsis;
+        }
+    }
 }
+
 .material-select {
     width: 86%;
     display: inline-block;
@@ -152,6 +176,7 @@ table.config-details-table {
             & > td:first-child {
                 width: 200px;
             }
+
             & > td {
                 & > div {
                     width: 14px;
@@ -160,11 +185,12 @@ table.config-details-table {
             }
         }
     }
+
     .checked {
-        background url("../../../resources/images/56x56/btn_checked@56x56.png") no-repeat center/14px 14px
+        background url("../../../resources/images/56x56/btn_checked@56x56.png") no-repeat center / 14px 14px
     }
 
     .unchecked {
-        background url("../../../resources/images/56x56/btn_unchecked@56x56.png") no-repeat center/14px 14px
+        background url("../../../resources/images/56x56/btn_unchecked@56x56.png") no-repeat center / 14px 14px
     }
 }

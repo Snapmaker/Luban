@@ -106,7 +106,7 @@ class PreviewTypeBox extends PureComponent {
                 {showDropdown && (childrenObjects.map((child) => {
                     const { value, onChangeValue, color, content } = child;
                     return (
-                        <div className="sm-flex justify-space-between height-24 margin-vertical-8 margin-left-32 padding-right-16">
+                        <div key={content} className="sm-flex justify-space-between height-24 margin-vertical-8 margin-left-32 padding-right-16">
                             <div>
                                 <Checkbox
                                     checked={value}

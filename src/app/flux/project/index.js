@@ -94,6 +94,12 @@ export const actions = {
 
         if (!models.length && initState && !isSaveEditor) return;
 
+        const envObj = {
+            machineInfo: null,
+            models: [],
+            toolpaths: []
+        };
+
         const machineState = getState().machine;
         const { size, series, toolHead } = machineState;
         const machineInfo = {};
@@ -101,7 +107,9 @@ export const actions = {
         machineInfo.size = size;
         machineInfo.series = series;
         machineInfo.toolHead = toolHead;
-        const envObj = { machineInfo, models: [], toolpaths: [] };
+
+        envObj.machineInfo = machineInfo;
+
         envObj.version = pkg?.version;
         if (headType === HEAD_CNC || headType === HEAD_LASER) {
             const { materials, coordinateMode, coordinateSize } = editorState;
@@ -110,16 +118,16 @@ export const actions = {
             envObj.coordinateSize = coordinateSize;
         } else if (headType === HEAD_PRINTING) {
             const {
+                activePresetIds,
                 defaultMaterialId,
                 defaultMaterialIdRight,
-                defaultQualityId,
                 helpersExtruderConfig,
                 definitionEditorForExtruder,
                 definitionEditorForModel,
             } = editorState;
             envObj.defaultMaterialId = defaultMaterialId;
             envObj.defaultMaterialIdRight = defaultMaterialIdRight;
-            envObj.defaultQualityId = defaultQualityId;
+            envObj.activePresetIds = activePresetIds;
             envObj.helpersExtruderConfig = helpersExtruderConfig;
             envObj.extruderEditor = {};
             envObj.modelEditor = {};
@@ -144,28 +152,21 @@ export const actions = {
         const content = JSON.stringify(envObj);
         dispatch(actions.updateState(headType, { content, unSaved: true, initState: false }));
         await api.saveEnv({ content });
-
-        console.log('save env', headType, HEAD_PRINTING);
-        if (headType === HEAD_PRINTING) {
-            const { editorDefinition } = editorState;
-            const editorObj = {};
-            editorDefinition.forEach((value, key) => {
-                editorObj[key] = { ...value };
-            });
-            await api.saveModifier({ content, editorDefinition: JSON.stringify(editorObj) });
-        }
     },
 
     getLastEnvironment: (headType) => async (dispatch) => {
         const { body: { content } } = await api.getEnv({ headType });
-        try {
-            const envObj = JSON.parse(content);
-            if (!envObj.models.length) return;
-        } catch (e) {
-            console.info('Error content JSON');
-        }
 
-        content && dispatch(actions.updateState(headType, { findLastEnvironment: true, content }));
+        if (content) {
+            try {
+                const envObj = JSON.parse(content);
+                if (!envObj.models.length) return;
+            } catch (e) {
+                console.info(`Unable to parse environment JSON for ${headType}`);
+            }
+
+            dispatch(actions.updateState(headType, { findLastEnvironment: true, content }));
+        }
     },
 
     clearSavedEnvironment: (headType) => async (dispatch) => {
@@ -463,7 +464,7 @@ export const actions = {
 
     openProject: (file, history, unReload = false, isGuideTours = false) => async (dispatch, getState) => {
         if (checkIsSnapmakerProjectFile(file.name)) {
-            const { definitionEditorForExtruder, definitionEditorForModel, editorDefinition } = getState().printing;
+            const { definitionEditorForExtruder, editorDefinition } = getState().printing;
 
             const formData = new FormData();
             let shouldSetFileName = true;
@@ -499,7 +500,6 @@ export const actions = {
             }
             if (headType === HEAD_PRINTING) {
                 const savedExtruderEditor = envObj.extruderEditor;
-                const savedModelEditor = envObj.modelEditor;
                 if (!isEmpty(savedExtruderEditor)) {
                     Object.keys(savedExtruderEditor).forEach(async (key) => {
                         const checkedParams = savedExtruderEditor[key];
@@ -511,15 +511,6 @@ export const actions = {
                         dispatch(printingActions.updateState({
                             editorDefinition: newMap
                         }));
-                    });
-                }
-                if (!isEmpty(savedModelEditor)) {
-                    Object.keys(savedModelEditor).forEach(async (modelId) => {
-                        const checkedParams = savedModelEditor[modelId];
-                        // checkedParams && (checkedParams = JSON.parse(checkedParams));
-                        definitionEditorForModel.set(modelId, checkedParams);
-                        const { body: { editorDefinition: _editorDefinition } } = await api.getEditorDefinition({ key: modelId });
-                        editorDefinition.set(modelId, _editorDefinition);
                     });
                 }
             }
