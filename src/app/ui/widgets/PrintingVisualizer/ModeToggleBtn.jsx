@@ -38,7 +38,7 @@ function ModeToggleBtn() {
             <div
                 style={modalStyle}
                 className={classNames(
-                    'position-ab',
+                    'position-absolute',
                     'width-200',
                     'border-default-grey-1',
                     'border-radius-8',

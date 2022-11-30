@@ -255,7 +255,7 @@ class ModelGroup extends EventEmitter {
     }
 
     /**
-     * Note: get valid area
+     * Get valid area for placing models.
      */
     public getValidArea() {
         return this._bbox;

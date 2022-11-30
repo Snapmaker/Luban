@@ -1044,9 +1044,6 @@ export const SELECTEVENT = {
 // export const ENCLOSURE_FOR_ARTISAN = 'enclosureForArtisan';
 // export const AIR_PURIFIER = 'airPurifier';
 
-export const DUAL_EXTRUDER_LIMIT_WIDTH_L = 0;
-export const DUAL_EXTRUDER_LIMIT_WIDTH_R = 0;
-
 
 
 export const MACHINE_HEAD_TYPE = {

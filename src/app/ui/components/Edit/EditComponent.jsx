@@ -60,7 +60,7 @@ const EditComponent = React.memo(({
                 />
             </div>
             {showOverlay && (
-                <div className="position-ab bottom-0 right-1">
+                <div className="position-absolute bottom-0 right-1">
                     <div className={classNames(styles.wrapper, hasSlider && styles['wrapper-with-slide'], 'border-radius-8 border-default-black-5 padding-horizontal-4 padding-vertical-4 background-color-white')}>
                         {hasSlider && (
                             <div className="height-32 margin-left-12">
@@ -85,7 +85,7 @@ const EditComponent = React.memo(({
                             onPressEnter={() => handleSubmit(inputValue)}
                         />
                     </div>
-                    <div className="button-part position-ab z-index-1 right-1 bottom-minus-34">
+                    <div className="button-part position-absolute z-index-1 right-1 bottom-minus-34">
                         <div className="margin-right-4 width-30 height-30 border-radius-8 border-default-black-5 background-color-white display-inline">
                             <SvgIcon
                                 name="CameraCaptureExtract"

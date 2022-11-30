@@ -80,7 +80,7 @@ const SupportOverlay = ({ editSupport, setTransformMode }) => {
     return (
         <>
             <div
-                className={classNames(styles['support-overlay'], 'position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white')}
+                className={classNames(styles['support-overlay'], 'position-absolute width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white')}
                 style={{
                     marginTop: '268px'
                 }}

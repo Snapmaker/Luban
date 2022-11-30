@@ -199,7 +199,7 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile,
                 name="PreviewGcode"
                 // name="MainToolbarHome"
                 type={['static']}
-                className="height-48 position-ab right-16"
+                className="height-48 position-absolute right-16"
                 size={24}
                 onClick={e => {
                     e.stopPropagation();
@@ -681,7 +681,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                 // <Spin />
                             )}
                             {previewRenderState === 'rendered' && (
-                                <div className={classNames('position-ab', 'left-8', 'bottom-8')}>
+                                <div className={classNames('position-absolute', 'left-8', 'bottom-8')}>
                                     <SecondaryToolbar
                                         zoomIn={() => canvas.current.zoomIn()}
                                         zoomOut={() => canvas.current.zoomOut()}
@@ -690,7 +690,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                                 </div>
                             )}
                             {previewRenderState !== 'rendered' && (
-                                <div className="position-ab position-ab-center">
+                                <div className="position-absolute position-absolute-center">
                                     <Spin />
                                 </div>
                             )}

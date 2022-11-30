@@ -65,7 +65,7 @@ const GCodeParams = (props) => {
     }, [props.gcodeFile]);
 
     return (
-        <div className="position-ab bottom-16 right-16">
+        <div className="position-absolute bottom-16 right-16">
             {Object.keys(gcodeFile).filter(v => v !== 'thumbnail' && !!gcodeFile[v]).map(property => (
                 <div key={property} className="margin-top-8">
                     {gcodeFile[property].key}: {gcodeFile[property].value}

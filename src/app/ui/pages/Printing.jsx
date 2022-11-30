@@ -37,7 +37,6 @@ import LaserSetBackground from '../widgets/LaserSetBackground';
 import LaserTestFocusWidget from '../widgets/LaserTestFocus';
 import CNCPathWidget from '../widgets/CNCPath';
 import CncLaserOutputWidget from '../widgets/CncLaserOutput';
-
 import PrintingMaterialWidget from '../widgets/PrintingMaterial';
 import PrintingConfigurationsWidget from '../widgets/PrintingConfigurations';
 import PrintingOutputWidget from '../widgets/PrintingOutput';
@@ -45,6 +44,7 @@ import WifiTransport from '../widgets/WifiTransport';
 import EnclosureWidget from '../widgets/Enclosure';
 import Thumbnail from '../widgets/PrintingOutput/Thumbnail';
 import JobType from '../widgets/JobType';
+
 import HomePage from './HomePage';
 import Workspace from './Workspace';
 import {
@@ -55,7 +55,7 @@ import {
     printIntroStepOne,
     printIntroStepSeven,
     printIntroStepThree,
-    printIntroStepTwo
+    printIntroStepTwo,
 } from './introContent';
 import '../../styles/introCustom.styl';
 import Steps from '../components/Steps';
@@ -63,6 +63,7 @@ import Modal from '../components/Modal';
 import { Button } from '../components/Buttons';
 import MachineMaterialSettings from './MachineMaterialSettings';
 import { MACHINE_SERIES } from '../../../server/constants';
+import { PageMode } from './PageMode';
 
 export const openFolder = () => {
     if (isElectron()) {
@@ -98,7 +99,8 @@ const allWidgets = {
 
 
 const pageHeadType = HEAD_PRINTING;
-function useRenderMainToolBar(setSimplifying, profileInitialized = false) {
+
+function useRenderMainToolBar(setPageMode, setSimplifying, profileInitialized = false) {
     const unSaved = useSelector(state => state?.project[pageHeadType]?.unSaved, shallowEqual);
     const { inProgress, simplifyType, simplifyPercent } = useSelector(state => state?.printing, shallowEqual);
     const enableShortcut = useSelector(state => state?.printing?.enableShortcut, shallowEqual);
@@ -302,20 +304,30 @@ function useRenderMainToolBar(setSimplifying, profileInitialized = false) {
                         type: 'separator',
                         name: 'separator'
                     },
-                    {
-                        title: i18n._('Modifiers'),
-                        disabled: !profileInitialized,
-                        type: 'button',
-                        name: 'MainToolbarModifier',
-                        action: () => {
-                            dispatch(printingActions.updateState({
-                                showPrintParameterModifierDialog: true
-                            }));
-                        }
-                    }
                 ]
-            }
+            },
+            {
+                title: i18n._('Mode'),
+                disabled: false,
+                type: 'button',
+                name: 'MainToolbarMode',
+                action: () => {
+                    setPageMode(PageMode.ChangePrintMode);
+                },
+            },
+            {
+                title: i18n._('Modifiers'),
+                disabled: !profileInitialized,
+                type: 'button',
+                name: 'MainToolbarModifierSetting',
+                action: () => {
+                    dispatch(printingActions.updateState({
+                        showPrintParameterModifierDialog: true
+                    }));
+                }
+            },
         ];
+
         return (
             <MainToolBar
                 leftItems={leftItems}
@@ -334,6 +346,7 @@ function useRenderMainToolBar(setSimplifying, profileInitialized = false) {
             />
         );
     }
+
     return [renderHomepage, renderMainToolBar, renderWorkspace, renderMachineMaterialSettings];
 }
 
@@ -358,11 +371,13 @@ function Printing({ location }) {
     const [materialInfo, setMaterialInfo] = useState({});
     // for simplify model, if true, visaulizerLeftbar and main tool bar can't be use
     const [simplifying, setSimplifying] = useState(false);
+    const [pageMode, setPageMode] = useState(PageMode.Default);
+
     const dispatch = useDispatch();
     const history = useHistory();
     const [
         renderHomepage, renderMainToolBar, renderWorkspace, renderMachineMaterialSettings
-    ] = useRenderMainToolBar(setSimplifying, !!materialDefinitions.length);
+    ] = useRenderMainToolBar(setPageMode, setSimplifying, !!materialDefinitions.length);
     const modelGroup = useSelector(state => state.printing.modelGroup);
     const isNewUser = useSelector(state => state.printing.isNewUser);
     const thumbnail = useRef();
@@ -450,6 +465,7 @@ function Printing({ location }) {
         //     });
         // }
     }
+
     function onDropRejected() {
         const title = i18n._('key-Printing/Page-Warning');
         const body = i18n._('key-Printing/Page-Only STL/OBJ files are supported.');
@@ -528,6 +544,8 @@ function Printing({ location }) {
             >
                 <PrintingVisualizer
                     widgetId="printingVisualizer"
+                    pageMode={pageMode}
+                    setPageMode={setPageMode}
                     simplifying={simplifying}
                     setSimplifying={setSimplifying}
                 />
@@ -639,7 +657,8 @@ function Printing({ location }) {
                             </span>
                             <p>
                                 <Trans i18nKey="key-Printing/Modal-Backup Tip">
-                                    For your historical data back up in <span role="presentation" onClick={openFolder} className="link-text">here</span>
+                                    For your historical data back up
+                                    in <span role="presentation" onClick={openFolder} className="link-text">here</span>
                                 </Trans>
                             </p>
                         </div>
@@ -659,6 +678,7 @@ function Printing({ location }) {
         </ProjectLayout>
     );
 }
+
 Printing.propTypes = {
     location: PropTypes.object
 };

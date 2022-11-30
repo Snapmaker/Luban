@@ -68,7 +68,8 @@ class MainToolBar extends PureComponent {
                                         {
                                             menuItem.children.map((childItem) => {
                                                 return (
-                                                    <MenuItem key={childItem.name + (key++)} menuItem={childItem} actions={actions} lang={lang} headType={headType} />);
+                                                    <MenuItem key={childItem.name + (key++)} menuItem={childItem} actions={actions} lang={lang} headType={headType} />
+                                                );
                                             })
                                         }
                                     </span>
@@ -111,7 +112,7 @@ class MainToolBar extends PureComponent {
                                                             type={['static']}
                                                         />
                                                         {materialInfo?.rightExtruder && (
-                                                            <div className={classNames(materialInfo?.leftExtruder?.color === '#ffffff' ? 'color-black-3' : 'color-white', 'position-ab left-10 top-2 font-size-small')}>L</div>
+                                                            <div className={classNames(materialInfo?.leftExtruder?.color === '#ffffff' ? 'color-black-3' : 'color-white', 'position-absolute left-10 top-2 font-size-small')}>L</div>
                                                         )}
                                                     </div>
                                                     <span className="max-width-160 display-inline text-overflow-ellipsis">{materialInfo?.leftExtruder?.name}</span>
@@ -126,7 +127,7 @@ class MainToolBar extends PureComponent {
                                                                     color={materialInfo?.rightExtruder?.color}
                                                                     type={['static']}
                                                                 />
-                                                                <div className={classNames(materialInfo?.rightExtruder?.color === '#ffffff' ? 'color-black-3' : 'color-white', 'position-ab left-10 top-2 font-size-small')}>R</div>
+                                                                <div className={classNames(materialInfo?.rightExtruder?.color === '#ffffff' ? 'color-black-3' : 'color-white', 'position-absolute left-10 top-2 font-size-small')}>R</div>
                                                             </div>
                                                             <span className="max-width-160 display-inline text-overflow-ellipsis">{materialInfo?.rightExtruder?.name}</span>
                                                         </div>

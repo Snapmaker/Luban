@@ -5,7 +5,7 @@ export const ToastWapper = (text1, svgName, color) => (
     <div>
         <SvgIcon
             name={svgName}
-            type="static"
+            type={['static']}
             color={color}
             className="margin-right-4"
         />

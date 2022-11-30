@@ -110,7 +110,7 @@ module.exports = {
                 loader: 'eslint-loader',
                 exclude: /node_modules/,
                 options: {
-                    //cache: true,
+                    // cache: true,
                     fix: true,
                     emitWarning: false,
                     quiet: true,

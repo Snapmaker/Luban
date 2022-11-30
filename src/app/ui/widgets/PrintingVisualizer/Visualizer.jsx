@@ -98,7 +98,9 @@ class Visualizer extends PureComponent {
         printingToolhead: PropTypes.string,
         stopArea: PropTypes.object,
         displayModel: PropTypes.func,
-        simplifying: PropTypes.bool,
+        pageMode: PropTypes.string.isRequired,
+        setPageMode: PropTypes.func.isRequired,
+        simplifying: PropTypes.bool.isRequired,
         setSimplifying: PropTypes.func,
         simplifyOriginModelInfo: PropTypes.object,
         loadSimplifyModel: PropTypes.func,
@@ -230,7 +232,7 @@ class Visualizer extends PureComponent {
                 this.props.recordModelAfterTransform('rotate', this.props.modelGroup);
                 this.props.destroyGcodeLine();
                 this.props.displayModel();
-                this.checkoutModelsLocatin();
+                this.checkoutModelsLocation();
             } else {
                 let newTransformation = {};
                 if (mode === TRANSLATE_MODE) {
@@ -243,7 +245,7 @@ class Visualizer extends PureComponent {
                     };
                 }
                 this.props.updateSelectedModelTransformation(newTransformation);
-                this.checkoutModelsLocatin();
+                this.checkoutModelsLocation();
                 emitUpdateControlInputEvent({
                     controlValue: {
                         mode,
@@ -525,8 +527,8 @@ class Visualizer extends PureComponent {
         this.props.modelSimplify(type, percent);
     };
 
-    checkoutModelsLocatin = () => {
-        this.canvas.current.checkoutModelsLocatin();
+    checkoutModelsLocation = () => {
+        this.canvas.current.checkoutModelsLocation();
     };
 
     render() {
@@ -553,11 +555,13 @@ class Visualizer extends PureComponent {
                     autoRotateSelectedModel={this.actions.autoRotateSelectedModel}
                     setHoverFace={this.actions.setHoverFace}
                     arrangeAllModels={this.actions.arrangeAllModels}
+                    pageMode={this.props.pageMode}
+                    setPageMode={this.props.setPageMode}
                     simplifying={this.props.simplifying}
                     handleApplySimplify={this.handleApplySimplify}
                     handleCancelSimplify={this.handleCancelSimplify}
                     handleUpdateSimplifyConfig={this.handleUpdateSimplifyConfig}
-                    handleCheckModelLocation={this.checkoutModelsLocatin}
+                    handleCheckModelLocation={this.checkoutModelsLocation}
                 />
                 <div className={styles['visualizer-bottom-left']}>
                     <VisualizerBottomLeft actions={this.actions} />

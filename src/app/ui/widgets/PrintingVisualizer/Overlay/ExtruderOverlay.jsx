@@ -274,7 +274,7 @@ const ExtruderOverlay = React.memo(({
     }, []);
     return (
         <div
-            className={classNames(styles['extruder-overlay'], 'position-ab width-328 margin-left-72 border-default-grey-1 border-radius-8 background-color-white')}
+            className={classNames(styles['extruder-overlay'], 'position-absolute width-328 margin-left-72 border-default-grey-1 border-radius-8 background-color-white')}
             style={{
                 marginTop: '320px'
             }}

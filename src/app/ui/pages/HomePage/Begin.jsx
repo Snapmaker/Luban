@@ -79,7 +79,7 @@ const Begin = () => {
                     </Anchor>
                     <Button
                         width="11.11vw"
-                        className={classNames('position-ab', 'right-16')}
+                        className={classNames('position-absolute', 'right-16')}
                         type="default"
                         priority="level-three"
                         onClick={onClickToUpload}

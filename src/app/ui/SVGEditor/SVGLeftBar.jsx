@@ -82,7 +82,7 @@ const SVGLeftBar = forwardRef((props, ref) => {
     return (
         <React.Fragment>
             <div className={classNames(styles['svg-left-bar'])}>
-                <div className={classNames('position-ab', 'height-percent-100', 'border-radius-8', styles['center-tool'], 'box-shadow-module')}>
+                <div className={classNames('position-absolute', 'height-percent-100', 'border-radius-8', styles['center-tool'], 'box-shadow-module')}>
                     <input
                         ref={props.fileInput}
                         type="file"
@@ -206,7 +206,7 @@ const SVGLeftBar = forwardRef((props, ref) => {
                 {
                     mode === 'select' && selectEditing && (
                         <div
-                            className="position-ab width-152 margin-left-72 margin-top-64 border-default-grey-1 border-radius-8 background-color-white"
+                            className="position-absolute width-152 margin-left-72 margin-top-64 border-default-grey-1 border-radius-8 background-color-white"
                         >
                             <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
                                 {i18n._('key-Laser/LeftBar-Draw Path')}
@@ -230,7 +230,7 @@ const SVGLeftBar = forwardRef((props, ref) => {
                 {
                     mode === 'draw' && (
                         <div
-                            className="position-ab width-152 margin-left-72 margin-top-112 border-default-grey-1 border-radius-8 background-color-white"
+                            className="position-absolute width-152 margin-left-72 margin-top-112 border-default-grey-1 border-radius-8 background-color-white"
                         >
                             <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
                                 {i18n._('key-Laser/LeftBar-Draw')}
@@ -254,7 +254,7 @@ const SVGLeftBar = forwardRef((props, ref) => {
                 {
                     extShape.showExtShape && mode === 'ext' && (
                         <div
-                            className="position-ab width-272 margin-left-72 margin-top-268 border-default-grey-1 border-radius-8 background-color-white"
+                            className="position-absolute width-272 margin-left-72 margin-top-268 border-default-grey-1 border-radius-8 background-color-white"
                         >
                             <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
                                 {i18n._('key-Laser/LeftBar-Insert Draw')}

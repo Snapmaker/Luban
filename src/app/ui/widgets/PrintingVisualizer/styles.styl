@@ -112,6 +112,7 @@ $bottom-bar-height = 0px
             vertical-align: middle
             background-color: $background-color
             border: 0
+
             &:hover
                 opacity(.5)
 
@@ -128,11 +129,13 @@ $bottom-bar-height = 0px
             background-position: center
             background-image: url("/resources/images/18x18/camera-reset-normal-18x18.png")
             border: 0
+
             &:hover
                 opacity(.5)
 
             &:active
                 opacity(.3)
+
     .view-switch
         &:hover
         &.active {
@@ -203,16 +206,13 @@ $bottom-bar-height = 0px
         right: 40px
 
         .preview-brick {
-           display: inline-block
-           width: 14px
-           height: 14px
-           margin-top: 5px
-           float: right
-       }
+            display: inline-block
+            width: 14px
+            height: 14px
+            margin-top: 5px
+            float: right
+        }
     }
-
-
-
 
 
 .visualizer-model-transformation
@@ -236,6 +236,7 @@ $bottom-bar-height = 0px
     top: 8px;
     bottom: 8px;
     z-index: 501;
+
     .leftbar
         z-index: 99
         position: absolute
@@ -264,9 +265,11 @@ $bottom-bar-height = 0px
             white-space: nowrap
 
             .selected
-                background-color: #E7F3FF!important;
+                background-color: #E7F3FF !important;
+
                 svg
-                  fill #1890FF
+                    fill #1890FF
+
         > li > button
             display: block
             width: 56px
@@ -359,8 +362,10 @@ $bottom-bar-height = 0px
 
         > li > :hover
             background-color: $white
+
             > .icon.icon-invert
                 filter: invert(.5) sepia(1) saturate(3) hue-rotate(175deg)
+
         > li.active
             > a,
             > a:focus,
@@ -465,7 +470,7 @@ $bottom-bar-height = 0px
         .axis-blue
             color: #00b7ee
 
-        .axis-label
+        .axis-label {
             display: inline-block
             width: 30px
             height: 30px
@@ -473,44 +478,53 @@ $bottom-bar-height = 0px
             text-align: center
             font-size: 16px
             float: left
+        }
 
         // move & rotate
         // axis-input-1 for move panel
 
-        .axis-input-1
+        .axis-input-1 {
             display: inline-block
 
-            > input
+            > input {
                 width: 80px
+            }
+        }
 
-        .input-container
+        .input-container {
             display: inline-block
             margin: 0 5px
             width: 60px
 
-            > .suffix
+            > .suffix {
                 display: inline-block
                 margin-left: -15px
+            }
+        }
 
         .axis-unit-1
         .axis-unit-2
-        .axis-unit-3
+        .axis-unit-3 {
             position: absolute
             float: left
             top: 6px
             color: $grey-color
+        }
 
         // mm
 
-        .axis-unit-1
+        .axis-unit-1 {
             left: 117px
+        }
 
         // %
 
-        .axis-unit-2
+        .axis-unit-2 {
             left: 85px
+        }
 
         // °
 
-        .axis-unit-3
+        .axis-unit-3 {
             left: 90px
+        }

@@ -314,9 +314,6 @@ function ConfigValueBox(
         label: i18n._('key-profileManager/Params-Success')
     }];
 
-    console.log('custom configs =', customConfigs);
-    console.log('optionConfigGroup =', optionConfigGroup);
-
     return (
         <div className={classNames(styles['config-value-box-wrapper'], 'margin-vertical-16 margin-horizontal-16 background-color-white border-radius-16')}>
             <div className="height-56 sm-flex border-bottom-normal padding-left-16">
@@ -490,7 +487,7 @@ function ConfigValueBox(
                                 </div>
                             </div>
                             <div className={classNames(styles['manager-params-docs'], styles[showParamsProfile ? 'open-params-profile' : 'close-params-profile'], 'width-percent-40 background-grey-3 border-radius-16 position-re', showParamsProfile ? '' : 'width-1-important min-width-1 margin-right-16')}>
-                                <Anchor onClick={() => dispatch(printingActions.updateParamsProfileShow(!showParamsProfile))} className={classNames(styles['profile-params-show-icon'], 'background-color-white border-default-grey-1 border-radius-12 position-ab left-minus-12 bottom-24')}>
+                                <Anchor onClick={() => dispatch(printingActions.updateParamsProfileShow(!showParamsProfile))} className={classNames(styles['profile-params-show-icon'], 'background-color-white border-default-grey-1 border-radius-12 position-absolute left-minus-12 bottom-24')}>
                                     <SvgIcon
                                         name="MainToolbarBack"
                                         size={24}
@@ -499,7 +496,7 @@ function ConfigValueBox(
                                     />
                                 </Anchor>
                                 <div
-                                    className="position-ab"
+                                    className="position-absolute"
                                     style={{
                                         left: -12,
                                         top: profileDomOffset + 6,
@@ -534,7 +531,7 @@ function ConfigValueBox(
                             />
                         </div>
                         <div className={classNames(styles['manager-params-docs'], 'width-percent-40 background-grey-3 border-radius-16 position-re', showParamsProfile ? '' : 'width-1-important min-width-1 margin-right-16')}>
-                            <Anchor onClick={() => dispatch(printingActions.updateParamsProfileShow(!showParamsProfile))} className="background-color-white border-default-grey-1 border-radius-12 position-ab left-minus-12 bottom-24">
+                            <Anchor onClick={() => dispatch(printingActions.updateParamsProfileShow(!showParamsProfile))} className="background-color-white border-default-grey-1 border-radius-12 position-absolute left-minus-12 bottom-24">
                                 <SvgIcon
                                     name="MainToolbarBack"
                                     size={24}

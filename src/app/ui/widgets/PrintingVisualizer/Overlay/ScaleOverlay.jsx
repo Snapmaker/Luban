@@ -176,7 +176,7 @@ const ScaleOverlay = React.memo(({
 
     return (
         <div
-            className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
+            className="position-absolute width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
             style={{
                 marginTop: '112px'
             }}
@@ -190,7 +190,7 @@ const ScaleOverlay = React.memo(({
             <div className="padding-vertical-16 padding-horizontal-16">
                 <div className="sm-flex height-32 margin-bottom-8">
                     <span className="sm-flex-auto width-16 color-red-1">X</span>
-                    <div className="position-ab sm-flex-auto margin-horizontal-24">
+                    <div className="position-absolute sm-flex-auto margin-horizontal-24">
                         {isPrimeTowerSelected && (
                             <Input
                                 suffix="mm"
@@ -226,7 +226,7 @@ const ScaleOverlay = React.memo(({
                 </div>
                 <div className="sm-flex height-32 margin-bottom-8">
                     <span className="sm-flex-auto width-16 color-green-1">Y</span>
-                    <div className="position-ab sm-flex-auto margin-horizontal-24">
+                    <div className="position-absolute sm-flex-auto margin-horizontal-24">
                         {isPrimeTowerSelected && (
                             <Input
                                 suffix="mm"
@@ -262,7 +262,7 @@ const ScaleOverlay = React.memo(({
                 {!isPrimeTowerSelected && (
                     <div className="sm-flex height-32 margin-bottom-8">
                         <span className="sm-flex-auto width-16 color-blue-2">Z</span>
-                        <div className="position-ab sm-flex-auto margin-horizontal-24">
+                        <div className="position-absolute sm-flex-auto margin-horizontal-24">
                             {/* hidden model size after scale */}
                             {/* <Input
                                 suffix="mm"

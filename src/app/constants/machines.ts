@@ -1,4 +1,5 @@
 import includes from 'lodash/includes';
+import { PrintMode } from './print-base';
 
 export const SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL = 'singleExtruderToolheadForOriginal';
 export const SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 = 'singleExtruderToolheadForSM2';
@@ -250,6 +251,36 @@ export const MACHINE_SERIES = {
         configPath: 'snapmaker_j1',
         metadata: {
             slicerVersion: 1,
+            printModes: [
+                {
+                    mode: PrintMode.Default,
+                    workRange: {
+                        min: [12, 0, 0],
+                        max: [312, 200, 200],
+                    },
+                },
+                {
+                    mode: PrintMode.IDEXDuplication,
+                    workRange: {
+                        min: [0, 0, 0],
+                        max: [160, 200, 200],
+                    },
+                },
+                {
+                    mode: PrintMode.IDEXMirror,
+                    workRange: {
+                        min: [0, 0, 0],
+                        max: [150, 200, 200],
+                    },
+                },
+                {
+                    mode: PrintMode.IDEXBackup,
+                    workRange: {
+                        min: [12, 0, 0],
+                        max: [312, 200, 200],
+                    },
+                },
+            ],
         },
     }
 };

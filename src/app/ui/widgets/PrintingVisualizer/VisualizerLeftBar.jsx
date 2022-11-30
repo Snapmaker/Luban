@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import i18n from '../../../lib/i18n';
 import UniApi from '../../../lib/uni-api';
+import { PageMode } from '../../pages/PageMode';
 import styles from './styles.styl';
 import objectListStyles from '../PrintingObjectList/styles.styl';
 import { actions as printingActions } from '../../../flux/printing';
@@ -27,6 +28,7 @@ import RotateOverlay from './Overlay/RotateOverlay';
 import ExtruderOverlay from './Overlay/ExtruderOverlay';
 /* eslint-disable-next-line import/no-cycle */
 import MirrorOverlay from './Overlay/MirrorOverlay';
+import ChangePrintModeOverlay from './Overlay/ChangePrintModeOverlay';
 import SimplifyModelOverlay from './Overlay/SimplifyOverlay';
 import { logTransformOperation } from '../../../lib/gaEvent';
 import { isDualExtruder } from '../../../constants/machines';
@@ -42,10 +44,10 @@ export const renderExtruderIcon = (leftExtruderColor, rightExtruderColor) => (
                         size={24}
                         name="ExtruderLeft"
                         type={['static']}
-                        className="position-ab"
+                        className="position-absolute"
                     />
                 ) : (
-                    <img className="position-ab" src="/resources/images/24x24/icon_extruder_white_left_24x24.svg" alt="" />
+                    <img className="position-absolute" src="/resources/images/24x24/icon_extruder_white_left_24x24.svg" alt="" />
                 )}
                 {rightExtruderColor !== whiteHex ? (
                     <SvgIcon
@@ -53,10 +55,10 @@ export const renderExtruderIcon = (leftExtruderColor, rightExtruderColor) => (
                         size={24}
                         name="ExtruderRight"
                         type={['static']}
-                        className="position-ab right-1"
+                        className="position-absolute right-1"
                     />
                 ) : (
-                    <img src="/resources/images/24x24/icon_extruder_white_right_24x24.svg" alt="" className="position-ab" />
+                    <img src="/resources/images/24x24/icon_extruder_white_right_24x24.svg" alt="" className="position-absolute" />
                 )}
             </div>
         </div>
@@ -82,9 +84,16 @@ export const CancelButton = ({ onClick }) => {
 CancelButton.propTypes = {
     onClick: PropTypes.func.isRequired,
 };
-function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox,
-    autoRotateSelectedModel, arrangeAllModels, setHoverFace, fitViewIn, simplifying, handleApplySimplify,
-    handleCancelSimplify, handleUpdateSimplifyConfig, handleCheckModelLocation }) {
+
+function VisualizerLeftBar(
+    {
+        pageMode, setPageMode,
+        simplifying,
+        setTransformMode, supportActions, updateBoundingBox,
+        autoRotateSelectedModel, arrangeAllModels, setHoverFace, fitViewIn, handleApplySimplify,
+        handleCancelSimplify, handleUpdateSimplifyConfig, handleCheckModelLocation
+    }
+) {
     const size = useSelector(state => state?.machine?.size, shallowEqual);
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
     const modelGroup = useSelector(state => state?.printing?.modelGroup);
@@ -210,7 +219,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                     multiple
                     onChange={actions.onChangeFile}
                 />
-                <div className="position-ab height-percent-100 border-radius-8 background-color-white width-56 box-shadow-module">
+                <div className="position-absolute height-percent-100 border-radius-8 background-color-white width-56 box-shadow-module">
                     <nav className={styles.navbar}>
                         <ul className={classNames(styles.nav, 'border-bottom-normal')}>
                             <li
@@ -364,7 +373,12 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                         size={size}
                     />
                 )}
-                {showRotationAnalyzeModal && <RotationAnalysisOverlay onClose={() => { setShowRotationAnalyzeModal(false); }} />}
+                {showRotationAnalyzeModal && (
+                    <RotationAnalysisOverlay onClose={() => {
+                        setShowRotationAnalyzeModal(false);
+                    }}
+                    />
+                )}
                 {!rotateDisabled && transformMode === 'rotate' && (
                     <RotateOverlay
                         setTransformMode={setTransformMode}
@@ -385,10 +399,34 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
                     />
                 )}
 
-                {showEditSupportModal && <EditSupportOverlay onClose={() => { setShowEditSupportModal(false); }} />}
+                {showEditSupportModal && (
+                    <EditSupportOverlay onClose={() => {
+                        setShowEditSupportModal(false);
+                    }}
+                    />
+                )}
 
-                {simplifying && <SimplifyModelOverlay handleApplySimplify={handleApplySimplify} handleCancelSimplify={handleCancelSimplify} handleUpdateSimplifyConfig={handleUpdateSimplifyConfig} />}
-                {!supportDisabled && transformMode === 'support' && <SupportOverlay setTransformMode={setTransformMode} editSupport={() => { actions.editSupport(); }} />}
+                {simplifying
+                && <SimplifyModelOverlay handleApplySimplify={handleApplySimplify} handleCancelSimplify={handleCancelSimplify} handleUpdateSimplifyConfig={handleUpdateSimplifyConfig} />}
+
+                {/* Change Print Mode */
+                    pageMode === PageMode.ChangePrintMode && (
+                        <ChangePrintModeOverlay
+                            onApply={() => setPageMode(PageMode.Default)}
+                            onCancel={() => setPageMode(PageMode.Default)}
+                        />
+                    )
+                }
+
+                {!supportDisabled && transformMode === 'support'
+                && (
+                    <SupportOverlay
+                        setTransformMode={setTransformMode}
+                        editSupport={() => {
+                            actions.editSupport();
+                        }}
+                    />
+                )}
 
                 {!extruderDisabled && transformMode === 'extruder' && isDual && (
                     <ExtruderOverlay setTransformMode={setTransformMode} />
@@ -397,6 +435,7 @@ function VisualizerLeftBar({ setTransformMode, supportActions, updateBoundingBox
         </React.Fragment>
     );
 }
+
 VisualizerLeftBar.propTypes = {
     supportActions: PropTypes.object,
     autoRotateSelectedModel: PropTypes.func.isRequired,
@@ -405,6 +444,8 @@ VisualizerLeftBar.propTypes = {
     arrangeAllModels: PropTypes.func.isRequired,
     setHoverFace: PropTypes.func.isRequired,
     fitViewIn: PropTypes.func.isRequired,
+    pageMode: PropTypes.string.isRequired,
+    setPageMode: PropTypes.func.isRequired,
     simplifying: PropTypes.bool,
     handleApplySimplify: PropTypes.func,
     handleCancelSimplify: PropTypes.func,
