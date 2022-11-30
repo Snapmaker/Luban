@@ -51,7 +51,7 @@ const MirrorOverlay = React.memo(({
     };
     return (
         <div
-            className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
+            className="position-absolute width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
             style={{
                 marginTop: '216px'
             }}

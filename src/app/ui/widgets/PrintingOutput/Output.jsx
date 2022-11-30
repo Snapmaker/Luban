@@ -186,7 +186,7 @@ function Output() {
                                 type="primary"
                                 priority="level-one"
                                 className={classNames(
-                                    'position-ab',
+                                    'position-absolute',
                                     displayedType === gcodeLine ? 'display-block' : 'display-none'
                                 )}
                                 suffixIcon={<SvgIcon name="DropdownOpen" type={['static']} color="#D5D6D9" />}

@@ -304,7 +304,7 @@ const MaterialSettings = ({ toolMap, loading }) => {
     };
     if (loading) {
         return (
-            <div className="position-ab position-ab-center">
+            <div className="position-absolute position-absolute-center">
                 <Spin />
             </div>
         );

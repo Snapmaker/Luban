@@ -142,7 +142,7 @@ const TranslateOverlay = React.memo(({
 
     return (
         <div
-            className="position-ab width-328 margin-left-72 padding-bottom-16 border-default-grey-1 border-radius-8 background-color-white"
+            className="position-absolute width-328 margin-left-72 padding-bottom-16 border-default-grey-1 border-radius-8 background-color-white"
             style={{
                 marginTop: '60px'
             }}

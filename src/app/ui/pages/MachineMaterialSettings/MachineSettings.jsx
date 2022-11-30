@@ -362,7 +362,7 @@ const MachineSettings = forwardRef(({
                                             className="width-percent-100 border-radius-16 height-percent-100 display-block margin-auto"
                                         />
                                         {(isConnected && includes(connectSerial, item.value)) && (
-                                            <div className="position-ab bottom-2 right-1 background-grey-3 border-radius-8 font-size-small padding-vertical-4 padding-horizontal-8 line-height-14">
+                                            <div className="position-absolute bottom-2 right-1 background-grey-3 border-radius-8 font-size-small padding-vertical-4 padding-horizontal-8 line-height-14">
                                                 <Badge status="success" />
                                                 <span>online</span>
                                                 <span className="max-width-106 text-overflow-ellpsis">{connectMachineName ? ` | ${connectMachineName}` : ''}</span>

@@ -224,7 +224,7 @@ const Output = ({ headType }) => {
                                 priority="level-one"
                                 disabled={shouldRenderToolPaths || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
                                 className={classNames(
-                                    'position-ab',
+                                    'position-absolute',
                                     // 'bottom-ne-8',
                                     // 'margin-top-10',
                                     displayedType === DISPLAYED_TYPE_TOOLPATH ? 'display-block' : 'display-none'

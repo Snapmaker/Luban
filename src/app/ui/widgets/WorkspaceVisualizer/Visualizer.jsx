@@ -775,7 +775,7 @@ class Visualizer extends PureComponent {
                         />
                     )}
                 </div>
-                <div className="position-ab left-16 bottom-16">
+                <div className="position-absolute left-16 bottom-16">
                     <SecondaryToolbar
                         zoomIn={this.actions.zoomIn}
                         zoomOut={this.actions.zoomOut}

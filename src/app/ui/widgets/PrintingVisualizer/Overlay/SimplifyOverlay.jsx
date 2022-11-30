@@ -29,12 +29,11 @@ const SimplifyModelOverlay = ({ handleApplySimplify, handleCancelSimplify, handl
         handleUpdateSimplifyConfig(type);
     };
     return (
-        <div className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white">
+        <div className="position-absolute width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white">
             <div className={classNames(styles['overlay-title-font'], 'border-bottom-normal padding-vertical-12 padding-horizontal-16')}>
                 {i18n._('key-3DP/MainToolBar-Model Simplify')}
             </div>
             <div className="sm-flex justify-space-between padding-top-8 padding-horizontal-16 padding-bottom-24">
-
                 <TipTrigger
                     overlayClassName="simplify-overlay-tip"
                     title={i18n._('key-Printing/LeftBar-Simplify by Custom Rate')}
@@ -78,7 +77,18 @@ const SimplifyModelOverlay = ({ handleApplySimplify, handleCancelSimplify, handl
                 <div className="padding-horizontal-16">
                     <div>{i18n._('key-Printing/LeftBar-Simplification Rate')}</div>
                     <div className="sm-flex justify-space-between padding-top-8 padding-bottom-20">
-                        <Slider min={1} max={100} value={sliderValue} onChange={(value) => setSliderValue(value)} onAfterChange={handleSimplifyPercentUpdate} style={{ width: 120, marginLeft: 0, marginRight: 0 }} />
+                        <Slider
+                            min={1}
+                            max={100}
+                            value={sliderValue}
+                            onChange={(value) => setSliderValue(value)}
+                            onAfterChange={handleSimplifyPercentUpdate}
+                            style={{
+                                width: 120,
+                                marginLeft: 0,
+                                marginRight: 0
+                            }}
+                        />
                         <Input
                             suffix="%"
                             value={sliderValue}

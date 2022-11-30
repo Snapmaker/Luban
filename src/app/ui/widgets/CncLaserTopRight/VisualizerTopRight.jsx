@@ -57,7 +57,7 @@ const VisualizerTopRight = ({ headType }) => {
                     <div
                         className={classNames(
                             styles['visualizer-top-right'],
-                            'position-ab',
+                            'position-absolute',
                             'right-8',
                             'width-200',
                             'border-default-grey-1',

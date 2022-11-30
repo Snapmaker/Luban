@@ -42,7 +42,7 @@ const ControlsInput = (props) => {
     return (
         <React.Fragment>
             {!(controlMode === TRANSLATE_MODE && controlAxis[0] === 'z') && (
-                <div className={`canvas-input position-ab border-${controlAxis[0]} translate-animation-3`} id="control-input" style={{ display: 'none' }}>
+                <div className={`canvas-input position-absolute border-${controlAxis[0]} translate-animation-3`} id="control-input" style={{ display: 'none' }}>
                     <Input
                         size="small"
                         placeholder="0"
@@ -61,7 +61,7 @@ const ControlsInput = (props) => {
                 </div>
             )}
             {controlAxis[1] && (
-                <div className={`canvas-input position-ab border-${controlAxis[1]} translate-animation-3`} id="control-input-2">
+                <div className={`canvas-input position-absolute border-${controlAxis[1]} translate-animation-3`} id="control-input-2">
                     <Input
                         size="small"
                         placeholder="0"

@@ -299,7 +299,7 @@ class AppLayout extends PureComponent {
             if (this.props.savedModalType === 'web') {
                 return (
                     <div
-                        className={classNames('border-default-black-5', 'border-radius-4', 'box-shadow-module', 'position-ab',
+                        className={classNames('border-default-black-5', 'border-radius-4', 'box-shadow-module', 'position-absolute',
                             'background-color-white', 'padding-horizontal-10', 'padding-vertical-10', 'bottom-0', 'margin-bottom-16')}
                         style={{
                             zIndex: this.props.savedModalZIndex,
@@ -340,7 +340,7 @@ class AppLayout extends PureComponent {
                 };
                 return (
                     <div
-                        className={classNames('border-default-black-5', 'border-radius-4', 'box-shadow-module', 'position-ab',
+                        className={classNames('border-default-black-5', 'border-radius-4', 'box-shadow-module', 'position-absolute',
                             'background-color-white', 'padding-horizontal-16', 'padding-vertical-16', 'bottom-0', 'margin-bottom-16',
                             'left-50-percent', 'max-width-360')}
                         style={{
@@ -400,7 +400,7 @@ class AppLayout extends PureComponent {
             };
             return (
                 <div
-                    className={classNames('border-default-black-5', 'border-radius-4', 'box-shadow-module', 'position-ab',
+                    className={classNames('border-default-black-5', 'border-radius-4', 'box-shadow-module', 'position-absolute',
                         'background-color-white', 'padding-horizontal-16', 'padding-vertical-16', 'bottom-0', 'margin-bottom-16',
                         'left-50-percent', 'max-width-360')}
                     style={{

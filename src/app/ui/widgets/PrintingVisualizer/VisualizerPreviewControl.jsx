@@ -302,7 +302,7 @@ function VisualizerPreviewControl() {
                             <div
                                 className={classNames(
                                     styles['preview-panel'],
-                                    'position-ab',
+                                    'position-absolute',
                                     'width-200',
                                     'border-default-grey-1',
                                     'border-radius-8',
