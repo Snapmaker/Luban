@@ -1,5 +1,4 @@
 import i18next from 'i18next';
-// import sha1 from 'sha1';
 
 const t = (...args) => {
     const key = args[0];

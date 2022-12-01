@@ -1283,13 +1283,6 @@ export const longLangWithType = {
     ru: [HEAD_PRINTING, HEAD_LASER, HEAD_CNC]
 };
 
-export const SERIAL_MAP_SACP = {
-    '0': 'A150',
-    '1': 'A250',
-    '2': 'A350',
-    '3': 'A400'
-};
-
 export const START_JOB_MISMATCH_HEAD_INFO = {
     [HEAD_PRINTING]: 'key-App/Settings/MachineSettings-3D Print Toolhead',
     [HEAD_LASER]: 'key-App/Settings/MachineSettings-3D Print Toolhead',

@@ -9,7 +9,7 @@ import i18n from '../../../lib/i18n';
 import usePrevious from '../../../lib/hooks/previous';
 import {
     MACHINE_TOOL_HEADS,
-    MACHINE_SERIES
+    findMachineByName,
 } from '../../../constants/machines';
 
 function MismatchModal() {
@@ -41,6 +41,10 @@ function MismatchModal() {
         }
     }, [prevIsConnected, isConnected, toolHead, headType, series, machineSeries, machineToolHead]);
 
+    const machine = machineSeries && findMachineByName(machineSeries) || {};
+    const toolHeadInfo = MACHINE_TOOL_HEADS[machineToolHead[`${headType}Toolhead`]];
+
+    const connectedMachine = series && findMachineByName(series) || {};
 
     return (
         <>
@@ -64,8 +68,8 @@ function MismatchModal() {
                         <div>
                             {i18n._('key-Workspace/Mismatch-The configured Machine Model ({{machineInfo}}) does not match with the connected machine ({{connectedMachineInfo}}). To change the settings, you can go to',
                                 {
-                                    machineInfo: `${MACHINE_SERIES[machineSeries.toUpperCase()]?.seriesLabelWithoutI18n} ${i18n._(MACHINE_TOOL_HEADS[machineToolHead[`${headType}Toolhead`]]?.label)}`,
-                                    connectedMachineInfo: `${MACHINE_SERIES[series.toUpperCase()]?.seriesLabelWithoutI18n} ${i18n._(MACHINE_TOOL_HEADS[toolHead]?.label)}`,
+                                    machineInfo: `${machine?.seriesLabelWithoutI18n} ${i18n._(toolHeadInfo?.label)}`,
+                                    connectedMachineInfo: `${connectedMachine?.seriesLabelWithoutI18n} ${i18n._(MACHINE_TOOL_HEADS[toolHead]?.label)}`,
                                 })}
                             <Anchor
                                 onClick={onShowMachinwSettings}

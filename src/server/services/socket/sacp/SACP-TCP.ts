@@ -21,11 +21,10 @@ import {
     EMERGENCY_STOP_BUTTON,
     LASER_MODULE,
     PRINTING_MODULE,
-    ROTARY_MODULES,
-    SERIAL_MAP_SACP
+    ROTARY_MODULES
 } from '../../../../app/constants';
-import { MODULEID_TOOLHEAD_MAP } from '../../../../app/constants/machines';
-import type SocketServer from '../../../lib/SocketManager';
+import { MODULEID_TOOLHEAD_MAP, SACP_TYPE_SERIES_MAP } from '../../../../app/constants/machines';
+import SocketServer from '../../../lib/SocketManager';
 
 const log = logger('lib:SocketTCP');
 
@@ -107,7 +106,7 @@ class SocketTCP extends SocketBASE {
                     await this.sacpClient.getMachineInfo().then(({ data: machineInfos }) => {
                         state = {
                             ...state,
-                            series: SERIAL_MAP_SACP[machineInfos.type]
+                            series: SACP_TYPE_SERIES_MAP[machineInfos.type]
                         };
                         // log.debug(`serial, ${SERIAL_MAP_SACP[machineInfos.type]}`);
                     });
@@ -127,6 +126,8 @@ class SocketTCP extends SocketBASE {
                             } else if (includes(CNC_MODULE, module.moduleId)) {
                                 state.headType = HEAD_CNC;
                                 state.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
+                            } else {
+                                log.debug(`ModuleInfo: Unknown module ${module.moduleId}`);
                             }
                             if (includes(ROTARY_MODULES, module.moduleId)) {
                                 moduleListStatus.rotaryModule = true;
