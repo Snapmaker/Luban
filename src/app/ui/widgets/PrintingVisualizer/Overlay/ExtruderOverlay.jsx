@@ -20,11 +20,13 @@ const extruderLabelMap = {
     '1': 'Extruder R',
     '2': 'Extruder Both'
 };
+
 const originalModelsExtruder = {
     multiple: LEFT_EXTRUDER_MAP_NUMBER,
     infill: LEFT_EXTRUDER_MAP_NUMBER,
     shell: LEFT_EXTRUDER_MAP_NUMBER
 };
+
 const originalHelpersExtruder = {
     multiple: LEFT_EXTRUDER_MAP_NUMBER,
     support: LEFT_EXTRUDER_MAP_NUMBER,
@@ -77,25 +79,29 @@ export const extruderOverlayMenu = ({ type, colorL, colorR, onChange, selectExtr
     );
 };
 
-const ExtruderOverlay = React.memo(({
-    setTransformMode
-}) => {
+const ExtruderOverlay = React.memo((
+    {
+        setTransformMode
+    }
+) => {
+    const dispatch = useDispatch();
+
     const {
         isOpenSelectModals, isOpenHelpers: _isOpenHelpers, modelExtruderInfoShow, helpersExtruderInfoShow, helpersExtruderConfig
     } = useSelector(state => state?.printing);
+
     const [modelsExtruder, setModelsExtruder] = useState(originalModelsExtruder);
     const [helpersExtrurder, setHelpersExtruder] = useState(helpersExtruderConfig || originalHelpersExtruder);
     const [isOpenModels, setIsOpenModels] = useState(isOpenSelectModals);
     const [isOpenHelpers, setIsOpenHelpers] = useState(_isOpenHelpers);
     const [colorL, setColorL] = useState(whiteHex);
     const [colorR, setColorR] = useState(whiteHex);
+
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions, shallowEqual);
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
     const defaultMaterialIdRight = useSelector(state => state?.printing?.defaultMaterialIdRight, shallowEqual);
     const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
     const isSelectedModelAllVisible = useSelector(state => state?.printing?.modelGroup?.isSelectedModelAllVisible(), shallowEqual);
-
-    const dispatch = useDispatch();
 
     const handleOpen = (type) => {
         let temp = null;
@@ -125,14 +131,20 @@ const ExtruderOverlay = React.memo(({
                         newModelsExtruder[key] = direction;
                     });
                     setModelsExtruder(newModelsExtruder);
-                    dispatch(printingActions.updateSelectedModelsExtruder({ infill: direction, shell: direction }));
+                    dispatch(printingActions.updateSelectedModelsExtruder({
+                        infill: direction,
+                        shell: direction,
+                    }));
                 } else {
                     const newHelpersExtruder = cloneDeep(helpersExtrurder);
                     Object.keys(newHelpersExtruder).forEach(key => {
                         newHelpersExtruder[key] = direction;
                     });
                     setHelpersExtruder(newHelpersExtruder);
-                    dispatch(printingActions.updateHelpersExtruder({ support: direction, adhesion: direction }));
+                    dispatch(printingActions.updateHelpersExtruder({
+                        support: direction,
+                        adhesion: direction,
+                    }));
                 }
                 break;
             case 'infill':
@@ -141,7 +153,10 @@ const ExtruderOverlay = React.memo(({
                     infill: direction,
                     multiple: modelsExtruder.shell === direction ? direction : BOTH_EXTRUDER_MAP_NUMBER
                 });
-                dispatch(printingActions.updateSelectedModelsExtruder({ infill: direction, shell: modelsExtruder.shell }));
+                dispatch(printingActions.updateSelectedModelsExtruder({
+                    infill: direction,
+                    shell: modelsExtruder.shell
+                }));
                 break;
             case 'shell':
                 setModelsExtruder({
@@ -149,7 +164,10 @@ const ExtruderOverlay = React.memo(({
                     shell: direction,
                     multiple: modelsExtruder.infill === direction ? direction : BOTH_EXTRUDER_MAP_NUMBER
                 });
-                dispatch(printingActions.updateSelectedModelsExtruder({ shell: direction, infill: modelsExtruder.infill }));
+                dispatch(printingActions.updateSelectedModelsExtruder({
+                    shell: direction,
+                    infill: modelsExtruder.infill
+                }));
                 break;
             case 'adhesion':
                 setHelpersExtruder({
@@ -157,7 +175,10 @@ const ExtruderOverlay = React.memo(({
                     adhesion: direction,
                     multiple: helpersExtrurder.support === direction ? direction : BOTH_EXTRUDER_MAP_NUMBER
                 });
-                dispatch(printingActions.updateHelpersExtruder({ support: helpersExtrurder.support, adhesion: direction }));
+                dispatch(printingActions.updateHelpersExtruder({
+                    support: helpersExtrurder.support,
+                    adhesion: direction
+                }));
                 break;
             case 'support':
                 setHelpersExtruder({
@@ -165,7 +186,10 @@ const ExtruderOverlay = React.memo(({
                     support: direction,
                     multiple: helpersExtrurder.adhesion === direction ? direction : BOTH_EXTRUDER_MAP_NUMBER
                 });
-                dispatch(printingActions.updateHelpersExtruder({ adhesion: helpersExtrurder.adhesion, support: direction }));
+                dispatch(printingActions.updateHelpersExtruder({
+                    adhesion: helpersExtrurder.adhesion,
+                    support: direction
+                }));
                 break;
             default:
                 break;
