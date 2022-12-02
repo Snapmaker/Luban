@@ -3105,7 +3105,7 @@
                             "maximum_value_warning": "10 * line_width",
                             "type": "float",
                             "limit_to_extruder": "wall_x_extruder_nr",
-                            "settable_per_mesh": true,
+                            "settable_per_mesh": false,
                             "visible": "model_structure_type === 'normal'",
                             "children": {
                                 "wall_line_count": {
@@ -3118,7 +3118,7 @@
                                     "maximum_value_warning": "10",
                                     "type": "int",
                                     "limit_to_extruder": "wall_x_extruder_nr",
-                                    "settable_per_mesh": true,
+                                    "settable_per_mesh": false,
                                     "visible": "model_structure_type === 'normal'",
                                     "filter": [
                                         "advanced",
@@ -3153,7 +3153,7 @@
                                 "top_layers": "infill_sparse_density === 100 ? 0 : top_thickness !== 0 ? Math.ceil(Math.round(top_thickness / ('layer_height')) : 0 "
                             },
                             "limit_to_extruder": "top_bottom_extruder_nr",
-                            "settable_per_mesh": true,
+                            "settable_per_mesh": false,
                             "visible": "model_structure_type === 'normal'",
                             "filter": [
                                 "basic",
@@ -3175,7 +3175,7 @@
                                     "maximum_value_warning": "100",
                                     "minimum_value_warning": "2",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
-                                    "settable_per_mesh": true,
+                                    "settable_per_mesh": false,
                                     "visible": "model_structure_type === 'normal'",
                                     "filter": [
                                         "advanced",
@@ -3195,7 +3195,7 @@
                                     "maximum_value_warning": "top_layers - 1",
                                     "calcu_value": "0",
                                     "limit_to_extruder": "roofing_extruder_nr",
-                                    "settable_per_mesh": true,
+                                    "settable_per_mesh": false,
                                     "visible": "false",
                                     "filter": [
                                         "advanced",
@@ -3214,7 +3214,7 @@
                                     "default_value": true,
                                     "enabled": "roofing_layer_count > 0 and top_layers > 0 and roofing_pattern != 'concentric'",
                                     "limit_to_extruder": "roofing_extruder_nr",
-                                    "settable_per_mesh": true,
+                                    "settable_per_mesh": false,
                                     "visible": "false"
                                 }
                             }
@@ -3232,7 +3232,7 @@
                             },
                             "maximum_value": "machine_height",
                             "limit_to_extruder": "top_bottom_extruder_nr",
-                            "settable_per_mesh": true,
+                            "settable_per_mesh": false,
                             "visible": true,
                             "filter": [
                                 "basic",
@@ -3251,7 +3251,7 @@
                                     "minimum_value_warning": "2",
                                     "default_value": 6,
                                     "limit_to_extruder": "top_bottom_extruder_nr",
-                                    "settable_per_mesh": true,
+                                    "settable_per_mesh": false,
                                     "visible": "model_structure_type === 'normal'",
                                     "filter": [
                                         "advanced",
@@ -3271,7 +3271,7 @@
                                     "default_value": 6,
                                     "calcu_value": "bottom_layers",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
-                                    "settable_per_mesh": true,
+                                    "settable_per_mesh": false,
                                     "visible": true,
                                     "filter": [
                                         "advanced",
@@ -3298,7 +3298,7 @@
                             "default_value": "lines",
                             "visible": "top_layers > 0 || bottom_layers > 0",
                             "limit_to_extruder": "top_bottom_extruder_nr",
-                            "settable_per_mesh": true,
+                            "settable_per_mesh": false,
                             "children": {
                                 "top_bottom_pattern_0": {
                                     "label": "Bottom Pattern Initial Layer",
@@ -3313,7 +3313,7 @@
                                     "visible": "top_layers > 0 || bottom_layers > 0",
                                     "calcu_value": "top_bottom_pattern",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
-                                    "settable_per_mesh": true
+                                    "settable_per_mesh": false
                                 }
                             },
                             "filter": [
@@ -3327,7 +3327,7 @@
                             "default_value": "[ ]",
                             "visible": "false",
                             "limit_to_extruder": "top_bottom_extruder_nr",
-                            "settable_per_mesh": true
+                            "settable_per_mesh": false
                         },
                         "infill_sparse_density": {
                             "label": "Infill Density",
@@ -3339,7 +3339,7 @@
                             "maximum_value_warning": "100",
                             "calcu_value": "model_structure_type === 'normal' ? 15 : 0",
                             "limit_to_extruder": "infill_extruder_nr",
-                            "settable_per_mesh": true,
+                            "settable_per_mesh": false,
                             "visible": "model_structure_type === 'normal'",
                             "filter": [
                                 "basic",
@@ -3359,7 +3359,7 @@
                                     "minimum_value_warning": "infill_line_width",
                                     "calcu_value": "infill_sparse_density === 0 ? 0 : infill_line_width * 100 / infill_sparse_density * (infill_pattern === 'grid' ? 2 : infill_pattern === 'triangles' || infill_pattern === 'trihexagon' || infill_pattern === 'cubic' || infill_pattern === 'cubicsubdiv' ? 3 : infill_pattern === 'tetrahedral' || infill_pattern === 'quarter_cubic' ? 2 : infill_pattern === 'cross' || infill_pattern === 'cross_3d' ? 1 : 1)",
                                     "limit_to_extruder": "infill_extruder_nr",
-                                    "settable_per_mesh": true,
+                                    "settable_per_mesh": false,
                                     "visible": "infill_sparse_density !== 100 && model_structure_type === 'normal'",
                                     "filter": [
                                         "advanced"
@@ -3374,7 +3374,7 @@
                                     "default_value": "[ ]",
                                     "visible": "false",
                                     "limit_to_extruder": "infill_extruder_nr",
-                                    "settable_per_mesh": true,
+                                    "settable_per_mesh": false,
                                     "filter": [
                                         "advanced"
                                     ]
@@ -3406,7 +3406,7 @@
                             "default_value": "grid",
                             "visible": "infill_sparse_density > 0 && infill_sparse_density !== 100 && model_structure_type === 'normal'",
                             "limit_to_extruder": "infill_extruder_nr",
-                            "settable_per_mesh": true,
+                            "settable_per_mesh": false,
                             "children":{
                                 "lightning_infill_support_angle": {
                                     "label": "Lightning Infill Support Angle",
@@ -3420,7 +3420,7 @@
                                     "limit_to_extruder": "infill_extruder_nr",
                                     "enabled": "infill_pattern === 'lightning'",
                                     "settable_per_mesh": false,
-                                    "settable_per_extruder": true,
+                                    "settable_per_extruder": false,
                                     "visible":"infill_pattern === 'lightning'",
                                     "filter": [
                                         "advanced",
@@ -3440,7 +3440,7 @@
                                     "limit_to_extruder": "infill_extruder_nr",
                                     "enabled": "infill_pattern === 'lightning'",
                                     "settable_per_mesh": false,
-                                    "settable_per_extruder": true,
+                                    "settable_per_extruder": false,
                                     "value": "lightning_infill_support_angle",
                                     "visible":"infill_pattern === 'lightning'",
                                     "filter": [
@@ -3461,7 +3461,7 @@
                                     "limit_to_extruder": "infill_extruder_nr",
                                     "enabled": "infill_pattern === 'lightning'",
                                     "settable_per_mesh": false,
-                                    "settable_per_extruder": true,
+                                    "settable_per_extruder": false,
                                     "value": "lightning_infill_support_angle",
                                     "visible":"infill_pattern === 'lightning'",
                                     "filter": [
@@ -3482,7 +3482,7 @@
                                     "limit_to_extruder": "infill_extruder_nr",
                                     "enabled": "infill_pattern === 'lightning'",
                                     "settable_per_mesh": false,
-                                    "settable_per_extruder": true,
+                                    "settable_per_extruder": false,
                                     "value": "lightning_infill_support_angle",
                                     "visible":"infill_pattern === 'lightning'",
                                     "filter": [
@@ -3505,7 +3505,7 @@
                             "type": "bool",
                             "default_value": true,
                             "limit_to_extruder": "wall_0_extruder_nr",
-                            "settable_per_mesh": true,
+                            "settable_per_mesh": false,
                             "visible": "model_structure_type === 'normal'",
                             "filter": [
                                 "basic",
@@ -3521,7 +3521,7 @@
                             "minimum_value": "1",
                             "maximum_value_warning": "infill_line_distance / infill_line_width",
                             "limit_to_extruder": "infill_extruder_nr",
-                            "settable_per_mesh": true,
+                            "settable_per_mesh": false,
                             "visible": "false",
                             "filter": [
                                 "advanced",

@@ -31,6 +31,8 @@ export function isQualityPresetVisible(preset, { materialType }) {
     return true;
 }
 
+// These are options that can be set on right extruder
+// TODO: Make it configurable
 export function getQualityPresetLevelForRightExtruder() {
     return {
         quality: ['line_width'],

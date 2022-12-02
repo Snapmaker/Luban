@@ -1518,6 +1518,8 @@ export const actions = {
                     const changedSettingArrayGlobal = [];
                     for (const [key, value] of changedSettingArray) {
                         const settingItem = definitionModel.settings[key];
+
+                        // global settings
                         if (!settingItem.settable_per_extruder && !settingItem.settable_per_mesh) {
                             changedSettingArrayGlobal.push([key, value]);
                         }
