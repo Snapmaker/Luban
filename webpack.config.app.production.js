@@ -57,8 +57,8 @@ module.exports = {
         publicPath: publicPath
     },
     optimization: {
-        // see notes on webpack.config.server.production.js
-        minimizer: [new TerserPlugin()]
+        minimize: true,
+        minimizer: [new TerserPlugin()],
     },
     plugins: [
         new stylusLoader.OptionsPlugin({
