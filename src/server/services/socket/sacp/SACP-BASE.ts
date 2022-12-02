@@ -155,15 +155,20 @@ class SocketBASE {
         });
         this.subscribeHeartCallback = async (data) => {
             statusKey = readUint8(data.response.data, 0);
-            // stateData.airPurifier = false;
-            if (this.heartbeatTimer) clearTimeout(this.heartbeatTimer);
+
+            if (this.heartbeatTimer) {
+                clearTimeout(this.heartbeatTimer);
+                this.heartbeatTimer = null;
+            }
+
             this.heartbeatTimer = setTimeout(() => {
                 client && client.destroy();
                 log.info('TCP close');
                 this.socket && this.socket.emit('connection:close');
             }, 10000);
+
             this.machineStatus = WORKFLOW_STATUS_MAP[statusKey];
-            // stateData.status = WORKFLOW_STATUS_MAP[statusKey];
+
             this.socket && this.socket.emit('Marlin:state', {
                 state: {
                     ...stateData,
@@ -721,7 +726,12 @@ class SocketBASE {
         }
         const { laserToolHeadInfo } = await this.sacpClient.getLaserToolHeadInfo(headModule.key);
         log.debug(`laserFocalLength:${laserToolHeadInfo.laserFocalLength}, materialThickness: ${materialThickness}, platformHeight:${laserToolHeadInfo.platformHeight}`);
-        await this.setAbsoluteWorkOrigin({ x: 0, y: 0, z: laserToolHeadInfo.laserFocalLength + laserToolHeadInfo.platformHeight + materialThickness, isRotate });
+        await this.setAbsoluteWorkOrigin({
+            x: 0,
+            y: 0,
+            z: laserToolHeadInfo.laserFocalLength + laserToolHeadInfo.platformHeight + materialThickness,
+            isRotate
+        });
     }
 
     // set enclosure light status

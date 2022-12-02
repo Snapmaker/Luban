@@ -18,6 +18,9 @@ export const AIR_PURIFIER = 'airPurifier';
 export const HEADT_BED_FOR_SM2 = 'heatBedForSM2';
 export const A400_HEADT_BED_FOR_SM2 = 'a400HeatBedForSM2';
 
+export const SNAPMAKER_J1_HEATED_BED = 'SnapmakerJ1:HeatedBed';
+export const SNAPMAKER_J1_LINEAR_MODULE = 'SnapmakerJ1:LinearModule';
+
 // Machine Types
 export const MACHINE_TYPE_3D_PRINTER = '3D Printer';
 export const MACHINE_TYPE_MULTI_FUNCTION_PRINTER = 'Multi-function 3D Printer';
@@ -512,6 +515,8 @@ export const MODULEID_MAP = {
     '14': LEVEL_TWO_POWER_LASER_FOR_SM2,
     '15': LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
     '512': HEADT_BED_FOR_SM2,
+    '513': SNAPMAKER_J1_HEATED_BED,
+    '514': SNAPMAKER_J1_LINEAR_MODULE,
     '515': A400_HEADT_BED_FOR_SM2,
     '5': ENCLOSURE_FOR_SM2,
     '16': ENCLOSURE_FOR_ARTISAN,
@@ -656,5 +661,13 @@ export function getMachineSeriesWithToolhead(series: string, toolhead: string) {
         workSize
     };
 }
+
+export const SACP_TYPE_SERIES_MAP = {
+    '0': 'A150',
+    '1': 'A250',
+    '2': 'A350',
+    '3': 'A400',
+    '4': MACHINE_SERIES.J1.value,
+};
 
 export default {};

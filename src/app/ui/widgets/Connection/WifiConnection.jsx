@@ -32,10 +32,10 @@ import {
     WORKFLOW_STATUS_UNKNOWN,
 } from '../../../constants';
 import {
+    findMachineByName,
     isDualExtruder,
     LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
-    MACHINE_SERIES,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
 } from '../../../constants/machines';
 import styles from './index.styl';
@@ -532,6 +532,7 @@ function WifiConnection() {
         }
     }, [isConnected, updateModuleStatusList]);
 
+    const machine = series && findMachineByName(series) || {};
 
     return (
         <div>
@@ -587,7 +588,7 @@ function WifiConnection() {
                         className={classNames(styles['connection-state'], 'padding-bottom-8', 'border-bottom-dashed-default')}
                     >
                         <span className="main-text-normal max-width-304 text-overflow-ellipsis display-inline">
-                            {`${serverState?.name} (${i18n._(MACHINE_SERIES[series.toUpperCase()].label)})`}
+                            {`${serverState?.name} (${machine.fullName})`}
                         </span>
                         <span className={styles['connection-state-icon']}>
                             {workflowStatus === WORKFLOW_STATUS_UNKNOWN

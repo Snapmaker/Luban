@@ -406,74 +406,82 @@ export const actions = {
                 // Note: serialPort & Wifi -> for heartBeat
                 const { state } = options;
                 const { headType, pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
+
                 const machineState = getState().machine;
                 if ((machineState.isRotate !== pos?.isFourAxis) && (headType === HEAD_LASER || headType === HEAD_CNC)) {
                     dispatch(workspaceActions.updateMachineState({
                         isRotate: pos.isFourAxis
                     }));
                 }
-                if (pos.isFourAxis) {
-                    if (
-                        Number(machineState.workPosition.x) !== Number(pos.x)
-                        || Number(machineState.workPosition.y) !== Number(pos.y)
-                        || Number(machineState.workPosition.z) !== Number(pos.z)
-                        || Number(machineState.workPosition.b) !== Number(pos.b)
-                        || machineState.workPosition.isFourAxis !== pos.isFourAxis
-                    ) {
-                        dispatch(
-                            baseActions.updateState({
-                                workPosition: {
-                                    x: `${Number(pos.x).toFixed(3)}`,
-                                    y: `${Number(pos.y).toFixed(3)}`,
-                                    z: `${Number(pos.z).toFixed(3)}`,
-                                    b: `${Number(pos.b).toFixed(3)}`,
-                                    isFourAxis: true,
-                                    a: '0.000'
-                                }
-                            })
-                        );
+
+                if (pos) {
+                    if (pos.isFourAxis) {
+                        if (
+                            Number(machineState.workPosition.x) !== Number(pos.x)
+                            || Number(machineState.workPosition.y) !== Number(pos.y)
+                            || Number(machineState.workPosition.z) !== Number(pos.z)
+                            || Number(machineState.workPosition.b) !== Number(pos.b)
+                            || machineState.workPosition.isFourAxis !== pos.isFourAxis
+                        ) {
+                            dispatch(
+                                baseActions.updateState({
+                                    workPosition: {
+                                        x: `${Number(pos.x).toFixed(3)}`,
+                                        y: `${Number(pos.y).toFixed(3)}`,
+                                        z: `${Number(pos.z).toFixed(3)}`,
+                                        b: `${Number(pos.b).toFixed(3)}`,
+                                        isFourAxis: true,
+                                        a: '0.000'
+                                    }
+                                })
+                            );
+                        }
+                    } else {
+                        if (
+                            Number(machineState.workPosition.x) !== Number(pos.x)
+                            || Number(machineState.workPosition.y) !== Number(pos.y)
+                            || Number(machineState.workPosition.z) !== Number(pos.z)
+                            || machineState.workPosition.isFourAxis !== pos.isFourAxis
+                        ) {
+                            dispatch(
+                                baseActions.updateState({
+                                    workPosition: {
+                                        x: `${Number(pos.x).toFixed(3)}`,
+                                        y: `${Number(pos.y).toFixed(3)}`,
+                                        z: `${Number(pos.z).toFixed(3)}`,
+                                        isFourAxis: false,
+                                        a: '0.000'
+                                    }
+                                })
+                            );
+                        }
                     }
-                } else {
+                }
+
+                if (originOffset) {
                     if (
-                        Number(machineState.workPosition.x) !== Number(pos.x)
-                        || Number(machineState.workPosition.y) !== Number(pos.y)
-                        || Number(machineState.workPosition.z) !== Number(pos.z)
-                        || machineState.workPosition.isFourAxis !== pos.isFourAxis
+                        Number(machineState.originOffset.x)
+                        !== Number(originOffset.x)
+                        || Number(machineState.originOffset.y)
+                        !== Number(originOffset.y)
+                        || Number(machineState.originOffset.z)
+                        !== Number(originOffset.z)
+                        || Number(machineState.originOffset.b) !== Number(originOffset.b)
                     ) {
                         dispatch(
                             baseActions.updateState({
-                                workPosition: {
-                                    x: `${Number(pos.x).toFixed(3)}`,
-                                    y: `${Number(pos.y).toFixed(3)}`,
-                                    z: `${Number(pos.z).toFixed(3)}`,
-                                    isFourAxis: false,
+                                originOffset: {
+                                    x: `${Number(originOffset.x).toFixed(3)}`,
+                                    y: `${Number(originOffset.y).toFixed(3)}`,
+                                    z: `${Number(originOffset.z).toFixed(3)}`,
+                                    b: `${Number(originOffset.b).toFixed(3)}`,
                                     a: '0.000'
                                 }
                             })
                         );
                     }
                 }
-                if (
-                    Number(machineState.originOffset.x)
-                    !== Number(originOffset.x)
-                    || Number(machineState.originOffset.y)
-                    !== Number(originOffset.y)
-                    || Number(machineState.originOffset.z)
-                    !== Number(originOffset.z)
-                    || Number(machineState.originOffset.b) !== Number(originOffset.b)
-                ) {
-                    dispatch(
-                        baseActions.updateState({
-                            originOffset: {
-                                x: `${Number(originOffset.x).toFixed(3)}`,
-                                y: `${Number(originOffset.y).toFixed(3)}`,
-                                z: `${Number(originOffset.z).toFixed(3)}`,
-                                b: `${Number(originOffset.b).toFixed(3)}`,
-                                a: '0.000'
-                            }
-                        })
-                    );
-                }
+
                 const {
                     status,
                     laserFocalLength,

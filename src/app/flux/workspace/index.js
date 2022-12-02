@@ -15,6 +15,7 @@ import {
 } from '../../constants';
 import {
     MACHINE_SERIES,
+    findMachineByName,
 } from '../../constants/machines';
 import { logGcodeExport } from '../../lib/gaEvent';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
@@ -508,7 +509,10 @@ export const actions = {
     updateMachineState: (options) => (dispatch) => {
         // { headType, toolHead, series, size, isRotate }
         if (options.series) {
-            options.size = MACHINE_SERIES[options.series.toUpperCase()].setting.size;
+            const machine = findMachineByName(options.series);
+            if (machine) {
+                options.size = machine.size;
+            }
         }
         dispatch(actions.updateState(options));
     },
