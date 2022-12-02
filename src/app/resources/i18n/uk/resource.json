@@ -269,7 +269,7 @@
     "Initial Layer Print Jerk": "Ривки друку початкового шару",
     "Initial Layer Print Speed": "Швидкість друку початкового шару",
     "Initial Layer Speed": "Швидкість на початковому шарі",
-    "Initial Layer Support Line Distance": "Відстань для лінійних опор початкового шару",
+    "Initial Layer Support Line Distance": "Відстань між лініями опор для початкового шару",
     "Initial Layer Travel Acceleration": "Прискорення пересування початкового шару",
     "Initial Layer Travel Jerk": "Ривки пересування початкового шару",
     "Initial Layer Travel Speed": "Швидкість переходу до настуної позиції початкового шару",
