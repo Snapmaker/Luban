@@ -701,6 +701,7 @@ export const actions = {
 
         const printModes = activeMachine.metadata?.printModes || [];
 
+        // Get work range for print mode
         const maxWorkRange = new Box3(
             new Vector3(0, 0, 0),
             new Vector3(size.x, size.y, size.z),
@@ -733,7 +734,6 @@ export const actions = {
                     supportLineWidth = extruderRDefinitionSettings.machine_nozzle_size.default_value;
                 }
                 border = 7 + (skirtLineCount - 1) * supportLineWidth;
-
                 break;
             }
             case 'brim': {
@@ -2232,6 +2232,7 @@ export const actions = {
         workerManager.setClipperWorkerEnable(false);
 
         const {
+            printMode,
             hasModel,
             modelGroup,
             progressStatesManager,
@@ -2388,29 +2389,20 @@ export const actions = {
         globalQualityPreset.settings.material_bed_temperature.default_value = extruderLDefinition.settings.material_bed_temperature.default_value;
         globalQualityPreset.settings.material_bed_temperature_layer_0.default_value = extruderLDefinition.settings.material_bed_temperature_layer_0.default_value;
 
-        const activeExtruderDefinition = helpersExtruderConfig.adhesion === '0'
-            ? extruderLDefinition
-            : extruderRDefinition;
-
-        const finalDefinition = definitionManager.finalizeActiveDefinition(
-            globalQualityPreset,
-            activeExtruderDefinition,
-            size,
-            hasPrimeTower
-        );
-
-        // FIXME
         const isDual = isDualExtruder(printingToolhead);
-        const onlySupportInterface = helpersExtruderConfig.onlySupportInterface;
-
-        const supportExtruder = helpersExtruderConfig.support;
-        finalDefinition.settings.adhesion_extruder_nr.default_value = adhesionExtruder;
-        finalDefinition.settings.support_extruder_nr.default_value = supportExtruder;
-        finalDefinition.settings.support_infill_extruder_nr.default_value = (isDual && onlySupportInterface) ? Math.abs(Number(supportExtruder) - 1).toString() : supportExtruder;
-        finalDefinition.settings.support_extruder_nr_layer_0.default_value = isDual ? Math.abs(Number(supportExtruder) - 1).toString() : supportExtruder;
-        finalDefinition.settings.support_interface_extruder_nr.default_value = supportExtruder;
-        finalDefinition.settings.support_roof_extruder_nr.default_value = supportExtruder;
-        finalDefinition.settings.support_bottom_extruder_nr.default_value = supportExtruder;
+        const finalDefinition = definitionManager.finalizeActiveDefinition(
+            printMode,
+            globalQualityPreset,
+            extruderLDefinition,
+            extruderRDefinition,
+            size,
+            isDual,
+            {
+                adhesion: helpersExtruderConfig.adhesion,
+                support: helpersExtruderConfig.support,
+                onlySupportInterface: helpersExtruderConfig.onlySupportInterface,
+            },
+        );
 
         const options = {};
         if (modelGroup.models.every(m => !m.hasOversteppedHotArea)) {

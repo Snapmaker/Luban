@@ -12,10 +12,9 @@ import {
     EMERGENCY_STOP_BUTTON,
     LASER_MODULE,
     PRINTING_MODULE,
-    ROTARY_MODULES,
-    SERIAL_MAP_SACP
+    ROTARY_MODULES
 } from '../../../../app/constants';
-import { MODULEID_TOOLHEAD_MAP } from '../../../../app/constants/machines';
+import { MODULEID_TOOLHEAD_MAP, SACP_TYPE_SERIES_MAP } from '../../../../app/constants/machines';
 import { ConnectedData, EventOptions } from '../types';
 import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
 import DataStorage from '../../../DataStorage';
@@ -41,7 +40,7 @@ class SocketSerialNew extends SocketBASE {
         if (this.availPorts.length > 0) {
             this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
             this.serialport = new SerialPort({
-                path: options.port ?? this.availPorts[0].path,
+                path: options.port ? options.port : this.availPorts[0].path,
                 baudRate: 115200,
                 autoOpen: false,
             });
@@ -59,7 +58,7 @@ class SocketSerialNew extends SocketBASE {
                 this.socket.emit('connection:close');
             });
             this.serialport.once('open', () => {
-                log.debug(`${options.port ?? this.availPorts[0].path} opened`);
+                log.debug(`${options.port || this.availPorts[0].path} opened`);
                 // this.serialport.write('M1006\n');
                 this.serialport.write('M2000 S5 P1\r\n');
                 setTimeout(async () => {
@@ -101,9 +100,9 @@ class SocketSerialNew extends SocketBASE {
                     await this.sacpClient.getMachineInfo().then(({ data: machineInfos }) => {
                         state = {
                             ...state,
-                            series: SERIAL_MAP_SACP[machineInfos.type]
+                            series: SACP_TYPE_SERIES_MAP[machineInfos.type]
                         };
-                        log.debug(`serial, ${SERIAL_MAP_SACP[machineInfos.type]}`);
+                        log.debug(`serial, ${SACP_TYPE_SERIES_MAP[machineInfos.type]}`);
                     });
                     this.socket && this.socket.emit('connection:connected', { state: state, err: '' });
                     this.startHeartbeatBase(this.sacpClient);

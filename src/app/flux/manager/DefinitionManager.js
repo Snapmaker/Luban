@@ -1,6 +1,7 @@
 /* eslint-disable */
 import { includes, cloneDeep } from 'lodash';
 import api from '../../api';
+import { PrintMode } from '../../constants/print-base';
 import i18n from '../../lib/i18n';
 import {
     HEAD_CNC,
@@ -392,11 +393,42 @@ class DefinitionManager {
         }
     }
 
+    _applyGlobalExtruderParameters(definition, qualityDefinition, extruderDefinition, limitToExtruderKeys) {
+        for (const key of Object.keys(extruderDefinition.settings)) {
+            const settingItem = qualityDefinition.settings[key];
+
+            if (settingItem && settingItem.settable_per_extruder && includes(limitToExtruderKeys, settingItem.limit_to_extruder)) {
+                if (!definition.settings[key]) {
+                    definition.settings[key] = {};
+                    definition.ownKeys.push(key);
+                }
+                definition.settings[key].default_value = extruderDefinition.settings[key].default_value;
+            }
+        }
+    }
+
+    _applyModelExtruderParameters(definition, qualityDefinition, extruderDefinition, limitToExtruderKeys) {
+        for (const key of Object.keys(extruderDefinition.settings)) {
+            const settingItem = qualityDefinition.settings[key];
+
+            if (settingItem && settingItem.settable_per_mesh && includes(limitToExtruderKeys, settingItem.limit_to_extruder)) {
+                if (!definition.settings[key]) {
+                    definition.settings[key] = {};
+                    definition.ownKeys.push(key);
+                }
+                definition.settings[key].default_value = extruderDefinition.settings[key].default_value;
+            }
+        }
+    }
+
     finalizeActiveDefinition(
+        printMode,
         activeDefinition,
-        extruderDefinition,
+        extruderLDefinition,
+        extruderRDefinition,
         size,
-        hasPrimeTower = false
+        isDual,
+        extruderConfig,
     ) {
         // Prepare definition file
         const definition = {
@@ -409,30 +441,14 @@ class DefinitionManager {
                     1: 'snapmaker_extruder_1',
                 },
             },
-            settings: {
-                machine_width: {
-                    default_value: size.x
-                },
-                machine_depth: {
-                    default_value: size.y
-                },
-                machine_height: {
-                    default_value: size.z
-                }
-            },
-            ownKeys: ['machine_width', 'machine_depth', 'machine_height']
+            settings: {},
+            ownKeys: [],
         };
 
         Object.keys(activeDefinition.settings).forEach((key) => {
             const setting = activeDefinition.settings[key];
 
-            if (
-                // setting.from !== 'fdmprinter'
-            // &&
-                !['machine_width', 'machine_depth', 'machine_height'].includes(
-                    key
-                )
-            ) {
+            if (!['machine_width', 'machine_depth', 'machine_height'].includes(key)) {
                 definition.settings[key] = {
                     label: setting.label,
                     default_value: setting.default_value
@@ -440,24 +456,120 @@ class DefinitionManager {
                 definition.ownKeys.push(key);
             }
         });
+
+        // Add machine size
+        definition.ownKeys.push('machine_width', 'machine_depth', 'machine_height');
+        definition.settings.machine_width = { default_value: size.x };
+        definition.settings.machine_depth = { default_value: size.y };
+        definition.settings.machine_height = { default_value: size.z };
+
+        // Add Start/End G-code
         definition.ownKeys.push('machine_start_gcode');
         definition.ownKeys.push('machine_end_gcode');
 
+        const firstLayerDefinition = extruderConfig.adhesion === '0' ? extruderLDefinition : extruderRDefinition;
         // TODO: Refactor this hard-code
-
         const isJ1 = activeDefinition.settings['machine_name'].default_value === 'Snapmaker J1';
-
         if (isJ1) {
-            this.addMachineStartGcodeJ1(definition, extruderDefinition);
+            this.addMachineStartGcodeJ1(printMode, definition, firstLayerDefinition);
         } else {
-            this.addMachineStartGcode(definition, extruderDefinition);
+            this.addMachineStartGcode(definition, firstLayerDefinition);
         }
 
         if (isJ1) {
-            this.addMachineEndGcodeJ1(definition);
+            this.addMachineEndGcodeJ1(printMode, definition);
         } else {
             this.addMachineEndGcode(definition);
         }
+
+        // apply adhesion parameters
+        definition.ownKeys.push(
+            // adhesion
+            'adhesion_extruder_nr',
+            'skirt_brim_extruder_nr',
+            'raft_base_extruder_nr',
+            'raft_interface_extruder_nr',
+            'raft_surface_extruder_nr',
+
+            // support
+            'support_extruder_nr',
+            'support_interface_extruder_nr',
+            'support_roof_extruder_nr',
+            'support_bottom_extruder_nr',
+            'support_infill_extruder_nr',
+            'support_extruder_nr_layer_0',
+        );
+        definition.settings.adhesion_extruder_nr.default_value = extruderConfig.adhesion;
+        definition.settings.skirt_brim_extruder_nr.default_value = extruderConfig.adhesion;
+        definition.settings.raft_base_extruder_nr.default_value = extruderConfig.adhesion;
+        definition.settings.raft_interface_extruder_nr.default_value = extruderConfig.adhesion;
+        definition.settings.raft_surface_extruder_nr.default_value = extruderConfig.adhesion;
+
+        this._applyGlobalExtruderParameters(
+            definition,
+            activeDefinition,
+            extruderConfig.adhesion === '0' ? extruderLDefinition : extruderRDefinition,
+            [
+                'adhesion_extruder_nr',
+                'skirt_brim_extruder_nr',
+                'raft_base_extruder_nr',
+                'raft_interface_extruder_nr',
+                'raft_surface_extruder_nr',
+            ],
+        );
+
+        // apply support parameters
+        const anotherExtruderNumber = (1 ^ Number(extruderConfig.support)).toString();
+
+        definition.settings.support_extruder_nr.default_value = extruderConfig.support;
+        definition.settings.support_interface_extruder_nr.default_value = extruderConfig.support;
+        definition.settings.support_roof_extruder_nr.default_value = extruderConfig.support;
+        definition.settings.support_bottom_extruder_nr.default_value = extruderConfig.support;
+
+        // support extruder not apply to support fill
+        if (isDual && extruderConfig.onlySupportInterface) {
+            definition.settings.support_infill_extruder_nr.default_value = anotherExtruderNumber;
+        } else {
+            definition.settings.support_infill_extruder_nr.default_value = extruderConfig.support;
+        }
+
+        // Use another extruder for support's initial layer
+        if (isDual) {
+            definition.settings.support_extruder_nr_layer_0.default_value = anotherExtruderNumber;
+        } else {
+            definition.settings.support_extruder_nr_layer_0.default_value = extruderConfig.support;
+        }
+        this._applyGlobalExtruderParameters(
+            definition,
+            activeDefinition,
+            extruderConfig.support === '0' ? extruderLDefinition : extruderRDefinition,
+            [
+                'adhesion_extruder_nr',
+                'support_interface_extruder_nr',
+                'support_roof_extruder_nr',
+                'support_bottom_extruder_nr',
+            ],
+        );
+        this._applyGlobalExtruderParameters(
+            definition,
+            activeDefinition,
+            definition.settings.support_infill_extruder_nr.default_value === '0'
+                ? extruderLDefinition
+                : extruderRDefinition,
+            [
+                'support_infill_extruder_nr',
+            ],
+        );
+        this._applyGlobalExtruderParameters(
+            definition,
+            activeDefinition,
+            definition.settings.support_extruder_nr_layer_0.default_value === '0'
+                ? extruderLDefinition
+                : extruderRDefinition,
+            [
+                'support_extruder_nr_layer_0',
+            ],
+        );
 
         return definition;
     }
@@ -497,52 +609,19 @@ class DefinitionManager {
         // TODO: ?
         // definition.settings.material_flow_layer_0.default_value = qualityDefinition.settings.material_flow_layer_0.default_value;
 
-        function applyExtruderParameters(extruderDefinition, limitToExtruderKeys) {
-            for (const key of Object.keys(extruderDefinition.settings)) {
-                const settingItem = qualityDefinition.settings[key];
-
-                if (settingItem && settingItem.settable_per_mesh && includes(limitToExtruderKeys, settingItem.limit_to_extruder)) {
-                    if (!definition.settings[key]) {
-                        definition.settings[key] = {};
-                        definition.ownKeys.push(key);
-                    }
-                    definition.settings[key].default_value = extruderDefinition.settings[key].default_value;
-                }
-            }
-        }
-
-        applyExtruderParameters(
+        this._applyModelExtruderParameters(
+            definition,
+            qualityDefinition,
             item.extruderConfig.infill === '0' ? extruderLDefinition : extruderRDefinition,
             ['infill_extruder_nr']
         );
 
-        applyExtruderParameters(
+        this._applyModelExtruderParameters(
+            definition,
+            qualityDefinition,
             item.extruderConfig.shell === '0' ? extruderLDefinition : extruderRDefinition,
             ['wall_extruder_nr', 'wall_0_extruder_nr', 'wall_x_extruder_nr', 'roofing_extruder_nr', 'top_bottom_extruder_nr'],
         );
-
-        /*
-        if (item.extruderConfig.shell === '0') {
-            // definition.settings.wall_line_count.default_value = extruderLDefinition.settings.wall_line_count.default_value;
-            definition.settings.wall_line_width.default_value = extruderLDefinition.settings.wall_line_width.default_value;
-            definition.settings.wall_line_width_0.default_value = extruderLDefinition.settings.wall_line_width_0.default_value;
-            definition.settings.wall_line_width_x.default_value = extruderLDefinition.settings.wall_line_width_x.default_value;
-            definition.settings.skin_line_width.default_value = extruderLDefinition.settings.skin_line_width.default_value;
-            definition.settings.wall_x_material_flow.default_value = extruderLDefinition.settings.material_flow.default_value;
-            definition.settings.wall_0_material_flow.default_value = extruderLDefinition.settings.material_flow.default_value;
-            definition.settings.skin_material_flow.default_value = extruderLDefinition.settings.material_flow.default_value;
-            definition.settings.roofing_material_flow.default_value = extruderLDefinition.settings.material_flow.default_value;
-        } else {
-            // definition.settings.wall_line_count.default_value = extruderRDefinition.settings.wall_line_count.default_value;
-            definition.settings.wall_line_width.default_value = extruderRDefinition.settings.wall_line_width.default_value;
-            definition.settings.wall_line_width_0.default_value = extruderRDefinition.settings.wall_line_width_0.default_value;
-            definition.settings.wall_line_width_x.default_value = extruderRDefinition.settings.wall_line_width_x.default_value;
-            definition.settings.skin_line_width.default_value = extruderRDefinition.settings.skin_line_width.default_value;
-            definition.settings.wall_x_material_flow.default_value = extruderRDefinition.settings.material_flow.default_value;
-            definition.settings.wall_0_material_flow.default_value = extruderRDefinition.settings.material_flow.default_value;
-            definition.settings.skin_material_flow.default_value = extruderRDefinition.settings.material_flow.default_value;
-            definition.settings.roofing_material_flow.default_value = extruderRDefinition.settings.material_flow.default_value;
-        }*/
 
         return definition;
     }
@@ -642,13 +721,29 @@ class DefinitionManager {
         };
     }
 
-    addMachineStartGcodeJ1(definition, extruderDefinition) {
+    addMachineStartGcodeJ1(printMode, definition, extruderDefinition) {
         const settings = extruderDefinition.settings;
 
         const printTemp = settings.material_print_temperature.default_value;
         const printTempLayer0 = settings.material_print_temperature_layer_0.default_value
             || printTemp;
         const bedTempLayer0 = settings.material_bed_temperature_layer_0.default_value;
+
+        let printModeCode = '';
+        switch (printMode) {
+            case PrintMode.Default:
+                printModeCode = 'M605 S0';
+                break;
+            case PrintMode.IDEXDuplication:
+                printModeCode = 'M605 S2 X162 R0';
+                break;
+            case PrintMode.IDEXMirror:
+                printModeCode = 'M605 S3';
+                break;
+            case PrintMode.IDEXBackup:
+                printModeCode = 'M605 S4';
+                break;
+        }
 
         // ;--- Start G-code Begin ---
         // M104 S{material_print_temperature_layer_0} ;Set Hotend Temperature
@@ -666,6 +761,7 @@ class DefinitionManager {
         // ;--- Start G-code End ---
         const gcode = [
             ';--- Start G-code Begin ---',
+            printModeCode,
             `M104 S${printTempLayer0} ;Set Hotend Temperature`,
             `M140 S${bedTempLayer0} ;Set Bed Temperature`,
             'G28 ;home',
@@ -710,7 +806,7 @@ class DefinitionManager {
         };
     }
 
-    addMachineEndGcodeJ1(definition) {
+    addMachineEndGcodeJ1(printMode, definition) {
         // ;--- End G-code Begin ---
         // M104 S0
         // M140 S0

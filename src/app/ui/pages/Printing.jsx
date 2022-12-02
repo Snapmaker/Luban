@@ -308,7 +308,7 @@ function useRenderMainToolBar(setPageMode, setSimplifying, profileInitialized = 
             },
             {
                 title: i18n._('Mode'),
-                disabled: false,
+                disabled: !profileInitialized,
                 type: 'button',
                 name: 'MainToolbarMode',
                 action: () => {
