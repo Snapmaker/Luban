@@ -37,5 +37,6 @@ export function getQualityPresetLevelForRightExtruder() {
     return {
         quality: ['line_width'],
         printing_speed: ['speed_print', 'acceleration_enabled'],
+        platform_adhesion: ['speed_layer_0', 'acceleration_layer_0'],
     };
 }
