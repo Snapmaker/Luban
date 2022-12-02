@@ -27,7 +27,7 @@ const Dialog = {
         }
 
         if (isElectron()) {
-            const { remote } = window.require('electron');
+            const remote = window.require('electron/remote');
             const currentWindow = remote.getCurrentWindow();
             const defaultProperties = ['createDirectory', 'openFile'];
             const openDialogReturnValue = await remote.dialog.showOpenDialog(
