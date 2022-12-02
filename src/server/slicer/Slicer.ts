@@ -9,7 +9,7 @@ import DataStorage from '../DataStorage';
 import logger from '../lib/logger';
 import { generateRandomPathName } from '../../shared/lib/random-utils';
 import { Metadata, SliceResult } from './slicer-definitions';
-import { processGcodeHeaderAfterCuraEngine, postProcessorV1 } from './post-processor';
+import { postProcessorV1, processGcodeHeaderAfterCuraEngine } from './post-processor';
 
 
 const log = logger('service:print3d-slice');
@@ -154,6 +154,8 @@ export default class Slicer extends EventEmitter {
         const array = data.toString()
             .split('\n');
 
+        const timeRegex = /^\[.*\] \[info\] Print time \(s\): ([\d]+)$/;
+
         array.forEach((item) => {
             if (item.length < 10) {
                 return;
@@ -182,9 +184,12 @@ export default class Slicer extends EventEmitter {
 
                 sliceResult.filamentLength = filamentLength;
                 sliceResult.filamentWeight = filamentWeight;
-            } else if (item.indexOf(';TIME:') === 0) {
+            } else if (timeRegex.test(item)) {
+                const reResult = item.match(timeRegex);
+                const time = reResult ? reResult[1] : 0;
+
                 // Times empirical parameter: 1.07
-                sliceResult.printTime = Number(item.replace(';TIME:', '')) * 1.07;
+                sliceResult.printTime = Math.round(Number(time) * 1.07);
             }
         });
     }

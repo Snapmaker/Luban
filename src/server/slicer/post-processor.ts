@@ -113,7 +113,7 @@ export async function postProcessorV1(sliceResult: SliceResult, metadata: Metada
         `;Printer:${metadata.series}`,
         `;Estimated Print Time:${sliceResult.printTime}`,
         `;Lines:${totalLineCount}`, // not including headers
-        ';Extruder Mode:Unknown',
+        `;Extruder Mode:${metadata.printMode}`,
     ];
 
     if (extruderL) {

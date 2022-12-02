@@ -1,4 +1,5 @@
 export type Metadata = {
+    printMode: string,
     originalName?: string;
     thumbnail?: string;
     series: string;
