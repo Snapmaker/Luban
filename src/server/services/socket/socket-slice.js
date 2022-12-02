@@ -50,6 +50,7 @@ const handleSlice = (socket, params) => {
         boundingBox = null,
         layerCount = 0,
         renderGcodeFileName = 'model',
+        metadata = {},
     } = params;
 
     const slicer = new Slicer();
@@ -67,6 +68,7 @@ const handleSlice = (socket, params) => {
         boundingBox,
         layerCount,
         renderGcodeFileName,
+        ...metadata,
     });
 
     slicer.on('started', () => {

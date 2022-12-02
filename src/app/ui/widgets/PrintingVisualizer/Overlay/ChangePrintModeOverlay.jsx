@@ -5,36 +5,65 @@ import { useDispatch, useSelector } from 'react-redux';
 import { PrintMode } from '../../../../constants/print-base';
 import { actions as printingActions } from '../../../../flux/printing';
 import i18n from '../../../../lib/i18n';
+import log from '../../../../lib/log';
 import Anchor from '../../../components/Anchor';
 import { Button } from '../../../components/Buttons';
 import SvgIcon from '../../../components/SvgIcon';
 import styles from './styles.styl';
 
 
-// TODO: Add supported print mode configuration on machine definition.
-function getPrintModeOptions() {
-    return [
-        {
+/**
+ * Get available print mode options of active machine.
+ *
+ * @param activeMachine
+ * @return {Array}
+ */
+function getPrintModeOptions(activeMachine) {
+    const supportedPrintModes = [];
+    if (activeMachine && activeMachine.metadata?.printModes) {
+        for (const options of activeMachine.metadata.printModes) {
+            supportedPrintModes.push(options.mode);
+        }
+    }
+
+    // Make sure at least default mode is available for all machines
+    if (supportedPrintModes.length === 0) {
+        supportedPrintModes.push(PrintMode.Default);
+    }
+
+    const printModeResourcesMap = {
+        [PrintMode.Default]: {
             label: i18n._('key-PrintMode/Normal'),
             value: PrintMode.Default,
             iconName: 'MainToolbarPrintModeNormal',
         },
-        {
+        [PrintMode.IDEXBackup]: {
             label: i18n._('key-PrintMode/Backup'),
             value: PrintMode.IDEXBackup,
             iconName: 'MainToolbarPrintModeBackup',
         },
-        {
+        [PrintMode.IDEXDuplication]: {
             label: i18n._('key-PrintMode/Duplication'),
             value: PrintMode.IDEXDuplication,
             iconName: 'MainToolbarPrintModeDuplication',
         },
-        {
+        [PrintMode.IDEXMirror]: {
             label: i18n._('key-PrintMode/Mirror'),
             value: PrintMode.IDEXMirror,
             iconName: 'MainToolbarPrintModeMirror',
         },
-    ];
+    };
+
+    const options = [];
+    for (const printMode of supportedPrintModes) {
+        if (printModeResourcesMap[printMode]) {
+            options.push(printModeResourcesMap[printMode]);
+        } else {
+            log.warning(`Unsupported print mode: ${printMode}`);
+        }
+    }
+
+    return options;
 }
 
 
@@ -47,9 +76,10 @@ function getPrintModeOptions() {
 const ChangePrintModeOverlay = (props) => {
     const dispatch = useDispatch();
 
+    const activeMachine = useSelector(state => state.machine.activeMachine);
     const printMode = useSelector(state => state.printing.printMode);
 
-    const printModeOptions = getPrintModeOptions();
+    const printModeOptions = getPrintModeOptions(activeMachine);
     const [selectedPrintMode, setSelectedPrintMode] = useState(printModeOptions[0].value);
 
     // Select initial print mode

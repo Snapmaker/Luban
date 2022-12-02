@@ -31,9 +31,12 @@ export function isQualityPresetVisible(preset, { materialType }) {
     return true;
 }
 
+// These are options that can be set on right extruder
+// TODO: Make it configurable
 export function getQualityPresetLevelForRightExtruder() {
     return {
         quality: ['line_width'],
         printing_speed: ['speed_print', 'acceleration_enabled'],
+        platform_adhesion: ['speed_layer_0', 'acceleration_layer_0'],
     };
 }

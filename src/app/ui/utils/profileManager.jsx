@@ -64,6 +64,10 @@ function getSelectOptions(printingDefinitions) {
  * }
  */
 function getPresetOptions(presetModels, materialPreset) {
+    if (!materialPreset) {
+        return {};
+    }
+
     const presetOptions = {};
 
     for (const presetModel of presetModels) {
