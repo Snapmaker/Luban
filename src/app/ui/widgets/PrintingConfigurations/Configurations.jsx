@@ -265,7 +265,7 @@ function Configurations() {
          */
         onChangePresetById: (presetId) => {
             const presetModel = qualityDefinitionModels.find(d => d.definitionId === presetId);
-            actions.onChangePreset(presetModel);
+            actions.onChangePreset(LEFT_EXTRUDER, presetModel);
         },
 
         /**
@@ -275,6 +275,7 @@ function Configurations() {
          * @param value
          */
         onChangePresetSettings: async (definitionKey, value) => {
+            console.log('change settings', definitionKey, value);
             if (isNil(value)) {
                 // if 'value' does't exit, then reset this value
                 const defaultPresetSettings = dispatch(printingActions.getDefaultDefinition(selectedPreset.definitionId));
@@ -537,8 +538,8 @@ function Configurations() {
                             <div>
                                 <ParamItem
                                     selectedPresetModel={selectedPreset}
+                                    setSelectedPresetModel={setSelectedPreset}
                                     onChangePresetSettings={actions.onChangePresetSettings}
-                                    setSelectedPreset={setSelectedPreset}
                                 />
                             </div>
                         )
