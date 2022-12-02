@@ -488,7 +488,7 @@ export const MACHINE_TOOL_HEADS = {
         headType: HEAD_PRINTING,
         value: 'Snapmaker J1 IDEX Tool Head',
         label: 'IDEX',
-        image: '/resources/images/machine/coming_soon.png',
+        image: '/resources/images/machine/snapmaker_j1_dual_extruders.png',
         platform: [
             MACHINE_SERIES.J1.value,
         ],
