@@ -1518,6 +1518,8 @@ export const actions = {
                     const changedSettingArrayGlobal = [];
                     for (const [key, value] of changedSettingArray) {
                         const settingItem = definitionModel.settings[key];
+
+                        // global settings
                         if (!settingItem.settable_per_extruder && !settingItem.settable_per_mesh) {
                             changedSettingArrayGlobal.push([key, value]);
                         }
@@ -2446,6 +2448,13 @@ export const actions = {
 
         const version = activeMachine.metadata?.slicerVersion || 0;
 
+        const printModesMap = {
+            [PrintMode.Default]: 'Default',
+            [PrintMode.IDEXBackup]: 'IDEX Backup',
+            [PrintMode.IDEXDuplication]: 'IDEX Duplication',
+            [PrintMode.IDEXMirror]: 'IDEX Mirror',
+        };
+
         const params = {
             version,
             definition,
@@ -2460,6 +2469,9 @@ export const actions = {
             material1: isDual ? materialDefinitions[indexR]?.name : '',
             layerCount,
             renderGcodeFileName,
+            metadata: {
+                printMode: printModesMap[printMode] || 'Default',
+            },
         };
         controller.slice(params);
     },

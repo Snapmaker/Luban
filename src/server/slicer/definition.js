@@ -192,7 +192,7 @@ export class DefinitionLoader {
                     this.settings[key].filter = this.settings[key].filter ? this.settings[key].filter : (setting.filter || ['all']);
 
                     const isMesh = setting.settable_per_mesh || false;
-                    const isExtruder = setting.settable_per_extruder || false;
+                    const isExtruder = setting.settable_per_extruder || isMesh; // settable per mesh is regarded as settable per extruder
                     this.settings[key].settable_per_extruder = this.settings[key].settable_per_extruder ? this.settings[key].settable_per_extruder : isExtruder;
                     this.settings[key].settable_per_mesh = this.settings[key].settable_per_mesh ? this.settings[key].settable_per_mesh : isMesh;
 
