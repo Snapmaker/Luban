@@ -2110,6 +2110,8 @@
     "key-setting/Right-Nozzle": "Правий екструдер",
     "key-settings/Add Material": "Додати матеріал",
     "key-settings/Nozzle Diameter": "Діаметр сопла",
+    "key-settings/Nozzle Diameter Left": "Ліве",
+    "key-settings/Nozzle Diameter Right": "Праве",
     "key-settings/Profile Manager": "Параметри матеріалу",
     "key-settings/Z-axis Extension": "Подовжений модуль вісі Z",
     "key-settings/Z-axis Module": "Модуль вісі Z",
