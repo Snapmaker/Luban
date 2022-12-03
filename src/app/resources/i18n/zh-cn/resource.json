@@ -2110,6 +2110,8 @@
     "key-setting/Right-Nozzle": "右挤出机",
     "key-settings/Add Material": "新增材料",
     "key-settings/Nozzle Diameter": "喷嘴直径",
+    "key-settings/Nozzle Diameter Left": "",
+    "key-settings/Nozzle Diameter Right": "",
     "key-settings/Profile Manager": "材料设置",
     "key-settings/Z-axis Extension": "加长",
     "key-settings/Z-axis Module": "Z 轴直线模组",

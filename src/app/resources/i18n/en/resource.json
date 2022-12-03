@@ -2124,6 +2124,8 @@
     "key-setting/Right-Nozzle": "Right Extruder",
     "key-settings/Add Material": "Add Material",
     "key-settings/Nozzle Diameter": "Nozzle Diameter",
+    "key-settings/Nozzle Diameter Left": "Left",
+    "key-settings/Nozzle Diameter Right": "Right",
     "key-settings/Profile Manager": "Material Settings",
     "key-settings/Z-axis Extension": "Extension",
     "key-settings/Z-axis Module": "Z-axis Linear Module",

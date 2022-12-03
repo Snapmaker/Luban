@@ -445,11 +445,11 @@ const MachineSettings = forwardRef(({
                             isDualExtruder(selectedToolName) && (
                                 <div className="margin-top-16 width-248 height-32 background-grey-2 padding-2 border-radius-8">
                                     <Anchor className={`padding-left-8 border-radius-8 width-122 display-inline ${activeNozzle === LEFT ? 'background-color-white' : ''}`} onClick={() => setActiveNozzle(LEFT)}>
-                                        <span className="margin-right-8">{i18n._('key-Cnc/StlSection/orientation_Left-Left')}</span>
+                                        <span className="margin-right-8">{i18n._('key-settings/Nozzle Diameter Left')}</span>
                                         <span>{leftNozzleDiameter}</span>
                                     </Anchor>
                                     <Anchor className={`padding-left-8 border-radius-8 width-122 display-inline ${activeNozzle === RIGHT ? 'background-color-white' : ''}`} onClick={() => setActiveNozzle(RIGHT)}>
-                                        <span className="margin-right-8">{i18n._('key-Cnc/StlSection/orientation_Right-Right')}</span>
+                                        <span className="margin-right-8">{i18n._('key-settings/Nozzle Diameter Right')}</span>
                                         <span>{rightNozzleDiameter}</span>
                                     </Anchor>
                                 </div>
