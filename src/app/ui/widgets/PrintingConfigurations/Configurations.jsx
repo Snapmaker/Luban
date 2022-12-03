@@ -4,7 +4,12 @@ import { cloneDeep, find, isNil, uniqWith } from 'lodash';
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { KEY_DEFAULT_CATEGORY_CUSTOM, LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
+import {
+    KEY_DEFAULT_CATEGORY_CUSTOM,
+    LEFT_EXTRUDER,
+    PRINTING_MANAGER_TYPE_QUALITY,
+    RIGHT_EXTRUDER
+} from '../../../constants';
 import { PRESET_CATEGORY_DEFAULT, DEFAULT_PRESET_IDS } from '../../../constants/preset';
 
 import { actions as printingActions } from '../../../flux/printing';
@@ -47,6 +52,7 @@ function checkIsAllDefault(definitionModelSettings, selectedModelDefaultSetting)
 // {i18n._(`key-Printing/PrintingConfigurations-${optionItem.typeOfPrinting}`)}
 function Configurations() {
     const qualityDefinitionModels = useSelector((state) => state?.printing?.qualityDefinitions);
+    const qualityDefinitionModelsRight = useSelector((state) => state?.printing?.qualityDefinitionsRight);
 
     const activePresetIds = useSelector((state) => state?.printing?.activePresetIds);
     const { materialDefinitions, defaultMaterialId } = useSelector(state => state.printing);
@@ -201,7 +207,7 @@ function Configurations() {
                                     newName
                                 )
                             );
-                            actions.onChangePreset(createdDefinitionModel);
+                            actions.onChangePreset(LEFT_EXTRUDER, createdDefinitionModel);
                         }}
                     >
                         {i18n._('key-Printing/ProfileManager-Save')}
@@ -232,16 +238,23 @@ function Configurations() {
         /**
          * Change quality preset.
          *
+         * @param stackId
          * @param presetModel
          */
-        onChangePreset: (presetModel) => {
-            if (presetModel) {
-                setSelectedPreset(presetModel);
+        onChangePreset: (stackId, presetModel) => {
+            // we only display left extruder preset here
+            if (stackId === LEFT_EXTRUDER) {
+                if (presetModel) {
+                    setSelectedPreset(presetModel);
 
-                const defaultSettings = dispatch(printingActions.getDefaultDefinition(presetModel.definitionId));
-                setSelectedSettingDefaultValue(defaultSettings);
+                    const defaultSettings = dispatch(printingActions.getDefaultDefinition(presetModel.definitionId));
+                    setSelectedSettingDefaultValue(defaultSettings);
+                }
             }
-            dispatch(printingActions.updateActiveQualityPresetId(LEFT_EXTRUDER, presetModel.definitionId));
+
+            if (presetModel) {
+                dispatch(printingActions.updateActiveQualityPresetId(stackId, presetModel.definitionId));
+            }
             actions.displayModel();
         },
 
@@ -252,7 +265,7 @@ function Configurations() {
          */
         onChangePresetById: (presetId) => {
             const presetModel = qualityDefinitionModels.find(d => d.definitionId === presetId);
-            actions.onChangePreset(presetModel);
+            actions.onChangePreset(LEFT_EXTRUDER, presetModel);
         },
 
         /**
@@ -262,6 +275,7 @@ function Configurations() {
          * @param value
          */
         onChangePresetSettings: async (definitionKey, value) => {
+            console.log('change settings', definitionKey, value);
             if (isNil(value)) {
                 // if 'value' does't exit, then reset this value
                 const defaultPresetSettings = dispatch(printingActions.getDefaultDefinition(selectedPreset.definitionId));
@@ -316,24 +330,33 @@ function Configurations() {
 
     useEffect(() => {
         // re-select definition based on new properties
-        if (qualityDefinitionModels.length > 0) {
+        if (qualityDefinitionModels.length > 0 || qualityDefinitionModelsRight.length > 0) {
             if (!initialized) {
                 setInitialized(true);
             }
-
-            const definition = qualityDefinitionModels.find(
-                (d) => d.definitionId === activePresetIds[LEFT_EXTRUDER]
-            );
-            if (!definition) {
-                // definition no found, select first official definition
-                actions.onChangePreset(qualityDefinitionModels[0], false);
-                setSelectedPresetCategory(qualityDefinitionModels[0].category);
-            } else {
-                actions.onChangePreset(definition, false);
-                setSelectedPresetCategory(definition.category);
-            }
         }
-    }, [activePresetIds, qualityDefinitionModels]);
+
+        // left extruder stack
+        let presetModel = qualityDefinitionModels.find(p => p.definitionId === activePresetIds[LEFT_EXTRUDER]);
+        if (!presetModel) {
+            // definition no found, select first official definition
+            presetModel = qualityDefinitionModels[0];
+        }
+
+        if (presetModel) {
+            actions.onChangePreset(LEFT_EXTRUDER, presetModel);
+            setSelectedPresetCategory(presetModel.category);
+        }
+
+        // TODO: Maybe not initialize
+        presetModel = qualityDefinitionModelsRight.find(p => p.definitionId === activePresetIds[RIGHT_EXTRUDER]);
+        if (!presetModel) {
+            presetModel = qualityDefinitionModelsRight[0];
+        }
+        if (presetModel) {
+            actions.onChangePreset(RIGHT_EXTRUDER, presetModel);
+        }
+    }, [activePresetIds, qualityDefinitionModels, qualityDefinitionModelsRight]);
 
     if (!initialized) {
         return (
@@ -515,8 +538,8 @@ function Configurations() {
                             <div>
                                 <ParamItem
                                     selectedPresetModel={selectedPreset}
+                                    setSelectedPresetModel={setSelectedPreset}
                                     onChangePresetSettings={actions.onChangePresetSettings}
-                                    setSelectedPreset={setSelectedPreset}
                                 />
                             </div>
                         )
