@@ -499,7 +499,7 @@ function ConfigValueBox(
                                     className="position-absolute"
                                     style={{
                                         left: -12,
-                                        top: profileDomOffset + 6,
+                                        top: (profileDomOffset || 0) + 6,
                                         visibility: `${(profileDomOffset !== null && profileDomOffset > 0) ? 'visible' : 'hidden'}`
                                     }}
                                 >

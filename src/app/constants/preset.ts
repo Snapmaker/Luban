@@ -14,10 +14,9 @@ export const DEFAULT_PRESET_IDS = [
 ];
 
 // TODO: Add to preset model.
-export function isQualityPresetVisible(preset, { materialType }) {
+export function isQualityPresetVisible(preset, { materialType = 'pla' }) {
     const regularMaterialTypes = ['pla', 'abs', 'petg'];
-
-    if (materialType && preset.qualityType) {
+    if (preset.qualityType) {
         // check preset's qualityType matches materialType
         if (materialType === 'tpu') {
             return preset.qualityType === 'tpu';

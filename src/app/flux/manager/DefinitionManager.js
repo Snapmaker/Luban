@@ -1,6 +1,7 @@
 /* eslint-disable */
 import { includes, cloneDeep } from 'lodash';
 import api from '../../api';
+import { PRESET_CATEGORY_DEFAULT } from '../../constants/preset';
 import { PrintMode } from '../../constants/print-base';
 import i18n from '../../lib/i18n';
 import {
@@ -103,11 +104,11 @@ class DefinitionManager {
 
         this.defaultDefinitions = res.body.definitions.map((item) => {
             item.isDefault = true;
-            if (item.i18nCategory) {
-                item.category = i18n._(item.i18nCategory);
-            }
             if (item.i18nName) {
                 item.name = i18n._(item.i18nName);
+            }
+            if (item.i18nCategory) {
+                item.i18nCategory = i18n._(item.i18nCategory);
             }
             resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder);
             return item;
@@ -182,7 +183,7 @@ class DefinitionManager {
             resolveMachineDefinition(definition, this.changedArray, this.changedArrayWithoutExtruder);
         }
         if (definition.i18nCategory) {
-            definition.category = i18n._(definition.i18nCategory);
+            definition.i18nCategory = i18n._(definition.i18nCategory);
         }
         if (definition.i18nName) {
             definition.name = i18n._(definition.i18nName);
@@ -194,21 +195,8 @@ class DefinitionManager {
     }
 
     fillCustomCategory(definition) {
-        const isCustom = ({ metadata }) => {
-            if (metadata?.readonly) {
-                return false;
-            }
-            return true;
-        };
-        const category = definition.category || i18n._(KEY_DEFAULT_CATEGORY_CUSTOM);
-        const categoryApplyI18n = definition.i18nCategory
-            ? i18n._(definition.i18nCategory)
-            : category;
-
-        definition.category = isCustom(definition)
-            ? category
-            : categoryApplyI18n;
-        definition.i18nCategory = definition.i18nCategory || '';
+        definition.category = definition.category || PRESET_CATEGORY_DEFAULT;
+        definition.i18nCategory = i18n._(definition.i18nCategory || '');
         return definition;
     }
 
@@ -363,9 +351,7 @@ class DefinitionManager {
             if (defaultDefinitionMap[item.definitionId]) {
                 item.isDefault = true;
                 item.name = item.i18nName ? i18n._(item.i18nName) : item.name;
-                item.category = item.i18nCategory
-                    ? i18n._(item.i18nCategory)
-                    : item.category;
+                item.i18nCategory = i18n._(item.i18nCategory || item.category);
             }
         });
         return remoteDefinitions;
