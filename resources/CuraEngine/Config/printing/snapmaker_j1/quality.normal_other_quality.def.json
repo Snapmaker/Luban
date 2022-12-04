@@ -741,7 +741,7 @@
             "default_value": 40
         },
         "acceleration_travel_enabled": {
-            "default_value": false
+            "default_value": true
         },
         "acceleration_wall": {
             "default_value": 3000

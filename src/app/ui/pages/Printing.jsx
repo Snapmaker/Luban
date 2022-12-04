@@ -315,6 +315,7 @@ function useRenderMainToolBar(setPageMode, setSimplifying, profileInitialized = 
                     setPageMode(PageMode.ChangePrintMode);
                 },
             },
+            /*
             {
                 title: i18n._('Modifiers'),
                 disabled: !profileInitialized,
@@ -326,6 +327,7 @@ function useRenderMainToolBar(setPageMode, setSimplifying, profileInitialized = 
                     }));
                 }
             },
+            */
         ];
 
         return (

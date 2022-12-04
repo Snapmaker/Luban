@@ -126,6 +126,7 @@ export function useGetDefinitions(allDefinitions, activeDefinitionID, getDefault
                 category: actualCategory
             };
         });
+
         setDefinitionState((prev) => {
             let definitionForManager;
             let selectedSettingDefaultValue;
@@ -136,6 +137,7 @@ export function useGetDefinitions(allDefinitions, activeDefinitionID, getDefault
                 definitionForManager = allDefinitions.find(d => d.definitionId === (definitionState.definitionForManager?.definitionId || activeDefinitionID)) || allDefinitions[0];
                 selectedSettingDefaultValue = getDefaultDefinition(definitionForManager?.definitionId);
             }
+
             return {
                 definitionOptions,
                 cates: creatCateArray(definitionOptions, managerType),
