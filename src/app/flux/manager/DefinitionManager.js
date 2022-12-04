@@ -659,15 +659,12 @@ class DefinitionManager {
         });
 
         if (hasPrimeTower) {
+            newExtruderDefinition.settings.machine_extruder_start_pos_abs.default_value = true;
             MACHINE_EXTRUDER_X.forEach((keyItem) => {
-                newExtruderDefinition.settings[
-                    keyItem
-                    ].default_value = primeTowerXDefinition;
+                newExtruderDefinition.settings[keyItem].default_value = primeTowerXDefinition;
             });
             MACHINE_EXTRUDER_Y.forEach((keyItem) => {
-                newExtruderDefinition.settings[
-                    keyItem
-                    ].default_value = primeTowerYDefinition;
+                newExtruderDefinition.settings[keyItem].default_value = primeTowerYDefinition;
             });
         }
 
