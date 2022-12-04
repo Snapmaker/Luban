@@ -1497,6 +1497,7 @@ export const actions = {
 
             dispatch(actions.updateBoundingBox());
         }
+
         definitionManager.updateDefinition(definitionModel);
 
         if (updatePresetModel) {

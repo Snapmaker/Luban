@@ -280,6 +280,7 @@ class DefinitionManager {
         if (definition instanceof PresetDefinitionModel) {
             actualDefinition = definition.getSerializableDefinition();
         }
+
         await api.profileDefinitions.updateDefinition(
             this.headType,
             definition.definitionId,
@@ -511,6 +512,7 @@ class DefinitionManager {
         definition.settings.support_interface_extruder_nr.default_value = extruderConfig.support;
         definition.settings.support_roof_extruder_nr.default_value = extruderConfig.support;
         definition.settings.support_bottom_extruder_nr.default_value = extruderConfig.support;
+        definition.settings.support_extruder_nr_layer_0.default_value = extruderConfig.support;
 
         // support extruder not apply to support fill
         if (isDual && extruderConfig.onlySupportInterface) {
@@ -520,11 +522,6 @@ class DefinitionManager {
         }
 
         // Use another extruder for support's initial layer
-        if (isDual) {
-            definition.settings.support_extruder_nr_layer_0.default_value = anotherExtruderNumber;
-        } else {
-            definition.settings.support_extruder_nr_layer_0.default_value = extruderConfig.support;
-        }
         this._applyGlobalExtruderParameters(
             definition,
             activeDefinition,
@@ -534,6 +531,7 @@ class DefinitionManager {
                 'support_interface_extruder_nr',
                 'support_roof_extruder_nr',
                 'support_bottom_extruder_nr',
+                'support_extruder_nr_layer_0',
             ],
         );
         this._applyGlobalExtruderParameters(
@@ -544,16 +542,6 @@ class DefinitionManager {
                 : extruderRDefinition,
             [
                 'support_infill_extruder_nr',
-            ],
-        );
-        this._applyGlobalExtruderParameters(
-            definition,
-            activeDefinition,
-            definition.settings.support_extruder_nr_layer_0.default_value === '0'
-                ? extruderLDefinition
-                : extruderRDefinition,
-            [
-                'support_extruder_nr_layer_0',
             ],
         );
 

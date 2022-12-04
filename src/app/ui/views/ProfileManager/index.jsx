@@ -382,6 +382,7 @@ function ProfileManager({
                             } else {
                                 newDefinitionForManager = cloneDeep(definitionState.definitionForManager);
                             }
+
                             let newName = '';
                             popupActions.close();
                             if (!isCreate) {

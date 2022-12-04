@@ -183,7 +183,11 @@ function ConfigValueBox(
         }
     ) => {
         return renderList && renderList.map(profileKey => {
-            if (selectParamsType === 'custom' || (includes((settings[profileKey].filter || []).concat('all'), selectParamsType) && (selectQualityDetailType === NO_LIMIT ? true : includes(settings[profileKey].filter || [], selectQualityDetailType)))) {
+            const isCustom = selectParamsType === 'custom';
+            const parameterVisibleTypeIncluded = includes((settings[profileKey].filter || []).concat('all'), selectParamsType);
+            const parameterDetailVisibleTypeIncluded = (managerType !== PRINTING_MANAGER_TYPE_QUALITY || selectQualityDetailType === NO_LIMIT || includes(settings[profileKey].filter || [], selectQualityDetailType));
+
+            if (isCustom || parameterVisibleTypeIncluded && parameterDetailVisibleTypeIncluded) {
                 if (settings[profileKey].childKey?.length > 0 && selectParamsType !== 'custom') {
                     return (
                         <div key={profileKey} className={`margin-left-${(settings[profileKey].zIndex - 1) * 16}`}>
