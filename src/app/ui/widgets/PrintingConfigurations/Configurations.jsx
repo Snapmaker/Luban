@@ -10,6 +10,7 @@ import {
     PRINTING_MANAGER_TYPE_QUALITY,
     RIGHT_EXTRUDER
 } from '../../../constants';
+import { isDualExtruder } from '../../../constants/machines';
 import { PRESET_CATEGORY_DEFAULT, DEFAULT_PRESET_IDS } from '../../../constants/preset';
 
 import { actions as printingActions } from '../../../flux/printing';
@@ -51,6 +52,7 @@ function checkIsAllDefault(definitionModelSettings, selectedModelDefaultSetting)
 
 // {i18n._(`key-Printing/PrintingConfigurations-${optionItem.typeOfPrinting}`)}
 function Configurations() {
+    const { toolHead: { printingToolhead } } = useSelector(state => state?.machine);
     const qualityDefinitionModels = useSelector((state) => state?.printing?.qualityDefinitions);
     const qualityDefinitionModelsRight = useSelector((state) => state?.printing?.qualityDefinitionsRight);
 
@@ -67,6 +69,7 @@ function Configurations() {
     const [configDisplayType, setConfigDisplayType] = useState(printingStore.get('printingSettingDisplayType') || CONFIG_DISPLAY_TYPES[0]);
 
     const [selectedSettingDefaultValue, setSelectedSettingDefaultValue] = useState(null);
+    const isDual = isDualExtruder(printingToolhead);
 
     const materialPreset = materialDefinitions.find(p => p.definitionId === defaultMaterialId);
     const presetOptionsObj = getPresetOptions(qualityDefinitionModels, materialPreset);
@@ -574,12 +577,46 @@ function Configurations() {
                             </div>
                         )
                     }
-                    <Anchor
-                        className={classNames('link-text', 'float-r')}
-                        onClick={actions.onShowMaterialManager}
-                    >
-                        {i18n._('key-Printing/PrintingConfigurations-More Parameters >')}
-                    </Anchor>
+                    {
+                        !isDual && (
+                            <div className="sm-flex justify-flex-end">
+                                <Anchor
+                                    className={classNames('link-text', 'float-r')}
+                                    onClick={actions.onShowMaterialManager}
+                                >
+                                    {i18n._('key-Printing/PrintingConfigurations-More Settings')} {'>'}
+                                </Anchor>
+                            </div>
+                        )
+                    }
+                    {
+                        isDual && (
+                            <div className="sm-flex justify-flex-end">
+                                <Anchor
+                                    className={classNames('link-text', 'float-r')}
+                                    onClick={actions.onShowMaterialManager}
+                                >
+                                    {i18n._('key-Printing/PrintingConfigurations-Left Extruder Settings')} {'>'}
+                                </Anchor>
+                            </div>
+                        )
+                    }
+                    {
+                        isDual && (
+                            <div className="sm-flex justify-flex-end margin-top-8" style={{ marginBottom: '-8px' }}>
+                                <Anchor
+                                    className={classNames('link-text', 'float-r')}
+                                    onClick={() => {
+                                        dispatch(printingActions.updateState({
+                                            showPrintParameterModifierDialog: true
+                                        }));
+                                    }}
+                                >
+                                    {i18n._('key-Printing/PrintingConfigurations-Right Extruder Settings')} {'>'}
+                                </Anchor>
+                            </div>
+                        )
+                    }
                 </div>
             </div>
         </div>

@@ -1,9 +1,9 @@
 {
     "version": "4.5.0-beta.0",
-    "name": "Support-White",
-    "category": "Support",
-    "i18nName": "key-default_name-Support_White",
-    "i18nCategory": "Support",
+    "name": "PLA-Orange",
+    "category": "PLA",
+    "i18nName": "key-default_name-PLA_Orange",
+    "i18nCategory": "PLA",
     "isRecommended": true,
     "inherits": "snapmaker2",
     "metadata": {
@@ -22,10 +22,10 @@
             "default_value": 2
         },
         "material_type": {
-            "default_value": "support"
+            "default_value": "pla"
         },
         "color": {
-            "default_value": "#ffffff"
+            "default_value": "#ff8b00"
         },
         "material_print_temperature": {
             "default_value": 215
@@ -115,13 +115,13 @@
             "default_value": true
         },
         "retraction_amount": {
-            "default_value": 1
+            "default_value": 1.5
         },
         "retraction_retract_speed": {
-            "default_value": 20
+            "default_value": 30
         },
         "retraction_prime_speed": {
-            "default_value": 20
+            "default_value": 30
         },
         "retraction_extra_prime_amount": {
             "default_value": 0
@@ -145,16 +145,16 @@
             "default_value": 1
         },
         "switch_extruder_retraction_amount": {
-            "default_value": 15
+            "default_value": 6
         },
         "switch_extruder_retraction_speeds": {
-            "default_value": 25
+            "default_value": 20
         },
         "switch_extruder_retraction_speed": {
-            "default_value": 25
+            "default_value": 20
         },
         "switch_extruder_prime_speed": {
-            "default_value": 25
+            "default_value": 20
         },
         "switch_extruder_extra_prime_amount": {
             "default_value": 2

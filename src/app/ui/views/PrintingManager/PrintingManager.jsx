@@ -80,7 +80,6 @@ function PrintingManager() {
             newCustomConfig[category] = newCustomConfig[category].filter(a => a !== key);
         }
 
-        console.log('category =', category, 'config =', newCustomConfig[category]);
         dispatch(machineActions.updatePrintingCustomConfigsWithCategory(newCustomConfig[category], category));
     }, [customConfigs]);
 

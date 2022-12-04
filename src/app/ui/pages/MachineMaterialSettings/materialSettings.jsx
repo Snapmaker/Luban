@@ -29,6 +29,7 @@ import Dropdown from '../../components/Dropdown';
 import { isDualExtruder } from '../../../constants/machines';
 
 const MATERIAL_TYPE_ARRAY = MATERIAL_TYPE_OPTIONS.map(d => d.category);
+
 const MaterialSettings = ({ toolMap, loading }) => {
     const materialActiveCategory = machineStore.get('settings.materialActiveCategory');
     const { defaultMaterialId, defaultMaterialIdRight, materialDefinitions, materialManagerDirection } = useSelector(state => state.printing);
@@ -396,11 +397,11 @@ const MaterialSettings = ({ toolMap, loading }) => {
                                         const selectedDefinitionId = activeNozzle === LEFT ? leftMaterialDefinitionId : rightMaterialDefinitionId;
                                         return (
                                             <Anchor
+                                                key={definition.definitionId}
                                                 className={classNames(`height-40 padding-horizontal-16 sm-flex align-center border-default-grey-1 ${selectedDefinitionId === definition.definitionId ? 'border-blod-blue-2' : ''}`, styles['material-item'])}
                                                 style={{ borderRadius: '100px' }}
                                                 onClick={(e) => handleUpdateDefinition(e, definition.definitionId)}
                                                 onDoubleClick={onShowPrintingManager}
-                                                key={definition.definitionId}
                                             >
                                                 <div className="sm-flex align-center width-percent-100">
                                                     <div className="width-16 height-16 border-default-grey-1 margin-right-8 border-radius-4" style={{ background: `${definition?.settings?.color?.default_value}` }} />
