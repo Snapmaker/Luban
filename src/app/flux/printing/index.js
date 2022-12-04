@@ -1063,6 +1063,9 @@ export const actions = {
         dispatch(actions.updateState({ printMode }));
 
         dispatch(actions.updateBoundingBox());
+
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
     },
 
     loadSimplifyModel: ({ modelID, modelOutputName, isCancelSimplify = false }) => async (dispatch, getState) => {

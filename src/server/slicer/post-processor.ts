@@ -89,6 +89,11 @@ export async function postProcessorV1(sliceResult: SliceResult, metadata: Metada
             if (line.startsWith(';Generated with')) {
                 checkHeaderLines = false;
             }
+
+            if (!sliceResult.printTime && line.startsWith(';TIME:')) {
+                const eta = Number(line.replace(';TIME:', ''));
+                sliceResult.printTime = Math.round(eta);
+            }
         } else {
             totalLineCount++;
         }
@@ -131,7 +136,9 @@ export async function postProcessorV1(sliceResult: SliceResult, metadata: Metada
     headerCodes.push(`;Bed Temperature:${activeFinal.settings.material_bed_temperature_layer_0.default_value}`);
 
     const isDual = activeFinal.settings.extruders_enabled_count.default_value;
-    headerCodes.push(`;Extruder(s) Used:${isDual ? 2 : 1}`);
+    const isDefaultPrintMode = metadata.printMode === 'Default';
+
+    headerCodes.push(`;Extruder(s) Used:${isDual && isDefaultPrintMode ? 2 : 1}`);
 
     headerCodes.push(`;Work Range - Min X:${boundingBoxMin.x}`);
     headerCodes.push(`;Work Range - Min Y:${boundingBoxMin.y}`);
