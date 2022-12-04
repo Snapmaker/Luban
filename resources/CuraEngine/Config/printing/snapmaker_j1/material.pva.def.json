@@ -1,32 +1,43 @@
 {
-    "version": "4.4.0",
-    "name": "PVA",
-    "inherits": "snapmaker2",
+    "version": "4.5.0-beta.0",
+    "name": "PVA-White",
     "category": "PVA",
     "i18nName": "key-default_name-PVA_White",
-    "i18nCategory": "key-default_category-PVA",
+    "i18nCategory": "PVA",
     "isRecommended": true,
+    "inherits": "snapmaker2",
+    "metadata": {
+        "visible": true,
+        "readonly": true,
+        "author": "walker",
+        "manufacturer": "Snapmaker",
+        "file_formats": "text/x-gcode",
+        "machine_extruder_trains": {
+            "0": "snapmaker_extruder_0",
+            "1": "snapmaker_extruder_1"
+        }
+    },
     "overrides": {
-        "material_type": {
-            "default_value": "pva"
-        },
         "extruders_enabled_count": {
             "default_value": 2
+        },
+        "material_type": {
+            "default_value": "pva"
         },
         "color": {
             "default_value": "#ffffff"
         },
         "material_print_temperature": {
-            "default_value": 215
+            "default_value": 205
         },
         "material_print_temperature_layer_0": {
             "default_value": 215
         },
         "material_initial_print_temperature": {
-            "default_value": 215
+            "default_value": 205
         },
         "material_final_print_temperature": {
-            "default_value": 215
+            "default_value": 205
         },
         "material_extrusion_cool_down_speed": {
             "default_value": 0.7
@@ -62,7 +73,7 @@
             "default_value": 5
         },
         "cool_min_speed": {
-            "default_value": 10
+            "default_value": 5
         },
         "material_flow": {
             "default_value": 100
@@ -97,6 +108,9 @@
         "prime_tower_flow": {
             "default_value": 100
         },
+        "speed_equalize_flow_width_factor": {
+            "default_value": 100
+        },
         "retraction_enable": {
             "default_value": true
         },
@@ -119,7 +133,7 @@
             "default_value": 10
         },
         "retraction_hop_only_when_collides": {
-            "default_value": false
+            "default_value": true
         },
         "retraction_hop": {
             "default_value": 1
@@ -131,7 +145,7 @@
             "default_value": 1
         },
         "switch_extruder_retraction_amount": {
-            "default_value": 6
+            "default_value": 2
         },
         "switch_extruder_retraction_speeds": {
             "default_value": 20
@@ -150,72 +164,6 @@
         },
         "material_flow_layer_0": {
             "default_value": 100
-        },
-        "build_volume_temperature": {
-            "default_value": 50
-        },
-        "default_material_print_temperature": {
-            "default_value": 210
-        },
-        "default_material_bed_temperature": {
-            "default_value": 65
-        },
-        "cool_fan_enabled": {
-            "default_value": true
-        },
-        "material_adhesion_tendency": {
-            "default_value": 10
-        },
-        "material_surface_energy": {
-            "default_value": 100
-        },
-        "material_shrinkage_percentage": {
-            "default_value": 100
-        },
-        "material_crystallinity": {
-            "default_value": false
-        },
-        "material_anti_ooze_retracted_position": {
-            "default_value": -4
-        },
-        "material_anti_ooze_retraction_speed": {
-            "default_value": 5
-        },
-        "material_break_preparation_retracted_position": {
-            "default_value": -16
-        },
-        "material_break_preparation_speed": {
-            "default_value": 2
-        },
-        "material_break_preparation_temperature": {
-            "default_value": 50
-        },
-        "material_break_retracted_position": {
-            "default_value": -50
-        },
-        "material_break_speed": {
-            "default_value": 25
-        },
-        "material_break_temperature": {
-            "default_value": 50
-        },
-        "material_flush_purge_speed": {
-            "default_value": 0.5
-        },
-        "material_flush_purge_length": {
-            "default_value": 60
-        },
-        "material_end_of_filament_purge_speed": {
-            "default_value": 0.5
-        },
-        "material_end_of_filament_purge_length": {
-            "default_value": 20
-        },
-        "material_maximum_park_duration": {
-            "default_value": 300
-        },
-        "material_no_load_move_factor": {
-            "default_value": 0.940860215
         }
     }
 }
