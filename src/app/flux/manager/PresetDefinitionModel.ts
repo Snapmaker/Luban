@@ -923,7 +923,7 @@ class PresetDefinitionModel {
     public typeOfPrinting = 'universal';
     public nozzleSize: number;
     public params: ParamsModelType;
-    public materialType: string;
+    public materialType = 'pla';
     public qualityType: string;
     public visible = false;
     public definitionId = '';

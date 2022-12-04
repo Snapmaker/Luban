@@ -1734,7 +1734,6 @@
                             "unit": "mm",
                             "visible": "retraction_enable && extruders_enabled_count > 1",
                             "default_value": 20,
-                            "calcu_value": "machine_heat_zone_length",
                             "minimum_value_warning": "0",
                             "maximum_value_warning": "100",
                             "settable_per_mesh": false,

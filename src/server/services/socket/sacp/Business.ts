@@ -684,7 +684,7 @@ export default class Business extends Dispatcher {
             // console.log('>>', md5HexStr, nextOffset);
             const index = readUint16(data.param, nextOffset);
             // console.log('>>', index);
-            this.log.info(`receive file chunk request: md5: ${md5HexStr}, index: ${index}`);
+            // this.log.info(`receive file chunk request: md5: ${md5HexStr}, index: ${index}`);
 
             const inputStream = fs.createReadStream(filePath, {
                 start: index * sizePerChunk, end: (index + 1) * sizePerChunk - 1, highWaterMark: sizePerChunk

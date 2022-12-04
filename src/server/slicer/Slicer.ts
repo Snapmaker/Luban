@@ -151,10 +151,9 @@ export default class Slicer extends EventEmitter {
     }
 
     private _onSliceProcessData(sliceResult: SliceResult, data): void {
-        const array = data.toString()
-            .split('\n');
+        const array = data.toString().split('\n');
 
-        const timeRegex = /^\[.*\] \[info\] Print time \(s\): ([\d]+)$/;
+        const timeRegex = /^\[.*] \[info] Print time \(s\): ([\d]+)$/;
 
         array.forEach((item) => {
             if (item.length < 10) {
@@ -184,6 +183,8 @@ export default class Slicer extends EventEmitter {
 
                 sliceResult.filamentLength = filamentLength;
                 sliceResult.filamentWeight = filamentWeight;
+            } else if (item.indexOf(';TIME:') === 0) {
+                sliceResult.printTime = Number(item.replace(';TIME:', '')) * 1.07;
             } else if (timeRegex.test(item)) {
                 const reResult = item.match(timeRegex);
                 const time = reResult ? reResult[1] : 0;

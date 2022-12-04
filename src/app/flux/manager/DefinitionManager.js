@@ -1,6 +1,7 @@
 /* eslint-disable */
 import { includes, cloneDeep } from 'lodash';
 import api from '../../api';
+import { PRESET_CATEGORY_DEFAULT } from '../../constants/preset';
 import { PrintMode } from '../../constants/print-base';
 import i18n from '../../lib/i18n';
 import {
@@ -103,11 +104,11 @@ class DefinitionManager {
 
         this.defaultDefinitions = res.body.definitions.map((item) => {
             item.isDefault = true;
-            if (item.i18nCategory) {
-                item.category = i18n._(item.i18nCategory);
-            }
             if (item.i18nName) {
                 item.name = i18n._(item.i18nName);
+            }
+            if (item.i18nCategory) {
+                item.i18nCategory = i18n._(item.i18nCategory);
             }
             resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder);
             return item;
@@ -182,7 +183,7 @@ class DefinitionManager {
             resolveMachineDefinition(definition, this.changedArray, this.changedArrayWithoutExtruder);
         }
         if (definition.i18nCategory) {
-            definition.category = i18n._(definition.i18nCategory);
+            definition.i18nCategory = i18n._(definition.i18nCategory);
         }
         if (definition.i18nName) {
             definition.name = i18n._(definition.i18nName);
@@ -194,21 +195,8 @@ class DefinitionManager {
     }
 
     fillCustomCategory(definition) {
-        const isCustom = ({ metadata }) => {
-            if (metadata?.readonly) {
-                return false;
-            }
-            return true;
-        };
-        const category = definition.category || i18n._(KEY_DEFAULT_CATEGORY_CUSTOM);
-        const categoryApplyI18n = definition.i18nCategory
-            ? i18n._(definition.i18nCategory)
-            : category;
-
-        definition.category = isCustom(definition)
-            ? category
-            : categoryApplyI18n;
-        definition.i18nCategory = definition.i18nCategory || '';
+        definition.category = definition.category || PRESET_CATEGORY_DEFAULT;
+        definition.i18nCategory = i18n._(definition.i18nCategory || '');
         return definition;
     }
 
@@ -292,6 +280,7 @@ class DefinitionManager {
         if (definition instanceof PresetDefinitionModel) {
             actualDefinition = definition.getSerializableDefinition();
         }
+
         await api.profileDefinitions.updateDefinition(
             this.headType,
             definition.definitionId,
@@ -363,9 +352,7 @@ class DefinitionManager {
             if (defaultDefinitionMap[item.definitionId]) {
                 item.isDefault = true;
                 item.name = item.i18nName ? i18n._(item.i18nName) : item.name;
-                item.category = item.i18nCategory
-                    ? i18n._(item.i18nCategory)
-                    : item.category;
+                item.i18nCategory = i18n._(item.i18nCategory || item.category);
             }
         });
         return remoteDefinitions;
@@ -525,6 +512,7 @@ class DefinitionManager {
         definition.settings.support_interface_extruder_nr.default_value = extruderConfig.support;
         definition.settings.support_roof_extruder_nr.default_value = extruderConfig.support;
         definition.settings.support_bottom_extruder_nr.default_value = extruderConfig.support;
+        definition.settings.support_extruder_nr_layer_0.default_value = extruderConfig.support;
 
         // support extruder not apply to support fill
         if (isDual && extruderConfig.onlySupportInterface) {
@@ -534,11 +522,6 @@ class DefinitionManager {
         }
 
         // Use another extruder for support's initial layer
-        if (isDual) {
-            definition.settings.support_extruder_nr_layer_0.default_value = anotherExtruderNumber;
-        } else {
-            definition.settings.support_extruder_nr_layer_0.default_value = extruderConfig.support;
-        }
         this._applyGlobalExtruderParameters(
             definition,
             activeDefinition,
@@ -548,6 +531,7 @@ class DefinitionManager {
                 'support_interface_extruder_nr',
                 'support_roof_extruder_nr',
                 'support_bottom_extruder_nr',
+                'support_extruder_nr_layer_0',
             ],
         );
         this._applyGlobalExtruderParameters(
@@ -558,16 +542,6 @@ class DefinitionManager {
                 : extruderRDefinition,
             [
                 'support_infill_extruder_nr',
-            ],
-        );
-        this._applyGlobalExtruderParameters(
-            definition,
-            activeDefinition,
-            definition.settings.support_extruder_nr_layer_0.default_value === '0'
-                ? extruderLDefinition
-                : extruderRDefinition,
-            [
-                'support_extruder_nr_layer_0',
             ],
         );
 
@@ -659,15 +633,12 @@ class DefinitionManager {
         });
 
         if (hasPrimeTower) {
+            newExtruderDefinition.settings.machine_extruder_start_pos_abs.default_value = true;
             MACHINE_EXTRUDER_X.forEach((keyItem) => {
-                newExtruderDefinition.settings[
-                    keyItem
-                    ].default_value = primeTowerXDefinition;
+                newExtruderDefinition.settings[keyItem].default_value = primeTowerXDefinition;
             });
             MACHINE_EXTRUDER_Y.forEach((keyItem) => {
-                newExtruderDefinition.settings[
-                    keyItem
-                    ].default_value = primeTowerYDefinition;
+                newExtruderDefinition.settings[keyItem].default_value = primeTowerYDefinition;
             });
         }
 
