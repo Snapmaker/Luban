@@ -2450,6 +2450,14 @@ export const actions = {
 
         const boundingBox = modelGroup.getBoundingBox();
 
+        const originOffsetX = activeMachine.size.x / 2;
+        const originOffsetY = activeMachine.size.y / 2;
+
+        const gcodeBoundingBox = new Box3(
+            new Vector3(boundingBox.min.x + originOffsetX, boundingBox.min.y + originOffsetY, boundingBox.min.z),
+            new Vector3(boundingBox.max.x + originOffsetX, boundingBox.max.y + originOffsetY, boundingBox.max.z),
+        );
+
         const version = activeMachine.metadata?.slicerVersion || 0;
 
         const printModesMap = {
@@ -2465,7 +2473,7 @@ export const actions = {
             model,
             support,
             originalName,
-            boundingBox,
+            boundingBox: gcodeBoundingBox,
             thumbnail: thumbnail,
             series,
             printingToolhead,
