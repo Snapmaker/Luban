@@ -32,7 +32,7 @@ function ParameterModifier({ outsideActions }) {
     // selected stack
     // Either LEFT_EXTRUDER or RIGHT_EXTRUDER, these are the only values supported,
     // add a global machine stack later.
-    const [selectedStackId, setSelectedStackId] = useState(LEFT_EXTRUDER);
+    const [selectedStackId, setSelectedStackId] = useState(RIGHT_EXTRUDER);
 
     // selected preset for selected stack
     const [selectedPresetId, setSelectedPresetId] = useState('');

@@ -1,4 +1,5 @@
 import fs from 'fs';
+import events from 'events';
 import path from 'path';
 import readline from 'readline';
 
@@ -167,7 +168,8 @@ export async function postProcessorV1(sliceResult: SliceResult, metadata: Metada
         crlfDelay: Infinity,
     });
     checkHeaderLines = true;
-    for await (const line of rl2) {
+
+    rl2.on('line', (line) => {
         if (checkHeaderLines) {
             if (line.startsWith(';Generated with')) {
                 checkHeaderLines = false;
@@ -175,6 +177,11 @@ export async function postProcessorV1(sliceResult: SliceResult, metadata: Metada
         } else {
             outputStream.write(`${line}\n`);
         }
-    }
-    outputStream.close();
+    });
+
+    await events.once(rl2, 'close');
+
+    await new Promise<void>((resolve) => {
+        outputStream.close(() => resolve());
+    });
 }
