@@ -115,17 +115,19 @@ class SocketTCP extends SocketBASE {
                             emergencyStopButton: false,
                             rotaryModule: false
                         };
+
+                        const toolHeadModules = [];
                         moduleInfos.forEach(module => {
                             // let ariPurifier = false;
                             if (includes(PRINTING_MODULE, module.moduleId)) {
                                 state.headType = HEAD_PRINTING;
-                                state.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
+                                toolHeadModules.push(module);
                             } else if (includes(LASER_MODULE, module.moduleId)) {
                                 state.headType = HEAD_LASER;
-                                state.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
+                                toolHeadModules.push(module);
                             } else if (includes(CNC_MODULE, module.moduleId)) {
                                 state.headType = HEAD_CNC;
-                                state.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
+                                toolHeadModules.push(module);
                             } else {
                                 log.debug(`ModuleInfo: Unknown module ${module.moduleId}`);
                             }
@@ -135,6 +137,8 @@ class SocketTCP extends SocketBASE {
                             if (includes(EMERGENCY_STOP_BUTTON, module.moduleId)) {
                                 moduleListStatus.emergencyStopButton = true;
                             }
+
+                            // TODO: Hard-coded 10W laser head,
                             if (module.moduleId === 14) {
                                 this.sacpClient.getLaserToolHeadInfo(module.key).then(({ laserToolHeadInfo }) => {
                                     this.laserFocalLength = laserToolHeadInfo.laserFocalLength;
@@ -166,6 +170,17 @@ class SocketTCP extends SocketBASE {
                                 });
                             }
                         });
+
+                        if (toolHeadModules.length === 0) {
+                            state.toolHead = MODULEID_TOOLHEAD_MAP['0']; // default extruder
+                        } else if (toolHeadModules.length === 1) {
+                            const module = toolHeadModules[0];
+                            state.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
+                        } else if (toolHeadModules.length === 2) {
+                            // hard-coded IDEX head for J1, refactor this later.
+                            state.toolHead = MODULEID_TOOLHEAD_MAP['00'];
+                        }
+
                         state.moduleStatusList = moduleListStatus;
                     });
                     this.socket && this.socket.emit('connection:connected', {
@@ -401,8 +416,14 @@ class SocketTCP extends SocketBASE {
             if (includes(data, ';file_total_lines')) {
                 this.totalLine = parseFloat(data.slice(18));
             }
+            if (includes(data, ';Lines')) {
+                this.totalLine = parseFloat(data.slice(7));
+            }
             if (includes(data, ';estimated_time(s)')) {
                 this.estimatedTime = parseFloat(data.slice(19));
+            }
+            if (includes(data, ';Estimated Print Time')) {
+                this.estimatedTime = parseFloat(data.slice(22));
             }
             if (includes(data, ';Header End')) {
                 rl.close();

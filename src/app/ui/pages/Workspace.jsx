@@ -6,6 +6,7 @@ import includes from 'lodash/includes';
 import { useHistory } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
+import { MACHINE_SERIES } from '../../constants/machines';
 import { Button } from '../components/Buttons';
 import Modal from '../components/Modal';
 import Dropzone from '../components/Dropzone';
@@ -80,12 +81,15 @@ const reloadPage = (forcedReload = true) => {
 };
 
 let workspaceVisualizerRef = null;
+
 function Workspace({ isPopup, onClose, style, className }) {
     const history = useHistory();
     const dispatch = useDispatch();
     const primaryWidgets = useSelector(state => state.widget.workspace.left.widgets);
     const secondaryWidgets = useSelector(state => state.widget.workspace.right.widgets);
     const defaultWidgets = useSelector(state => state.widget.workspace.default.widgets);
+    const { activeMachine } = useSelector(state => state.machine);
+
     const [previewModalShow, setPreviewModalShow] = useState(false);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [connected, setConnected] = useState(controller.connected);
@@ -257,13 +261,32 @@ function Workspace({ isPopup, onClose, style, className }) {
         );
     };
 
-    const widgetProps = { };
+    const widgetProps = {};
+
+    // TODO: Workspace widgets can only support G-code based machine, add configuration
+    //  to machine indicating if it supports plain G-code.
+    const unsupported = activeMachine && activeMachine.value === MACHINE_SERIES.J1.value ? ['console', 'marlin', 'control', 'macro'] : [];
+    const leftWidgetNames = primaryWidgets.filter((widgetName) => {
+        if (includes(unsupported, widgetName)) {
+            return (activeMachine.value !== MACHINE_SERIES.J1.value);
+        } else {
+            return true;
+        }
+    });
+    const rightWidgetNames = secondaryWidgets.filter((widgetName) => {
+        if (includes(unsupported, widgetName)) {
+            return (activeMachine.value !== MACHINE_SERIES.J1.value);
+        } else {
+            return true;
+        }
+    });
+
     return (
         <div style={style} className={classNames(className)}>
             <WorkspaceLayout
                 renderMainToolBar={renderMainToolBar}
-                renderLeftView={() => renderWidgetList('workspace', 'left', primaryWidgets, allWidgets, listActions, widgetProps)}
-                renderRightView={() => renderWidgetList('workspace', 'right', secondaryWidgets, allWidgets, listActions, widgetProps, controlActions)}
+                renderLeftView={() => renderWidgetList('workspace', 'left', leftWidgetNames, allWidgets, listActions, widgetProps)}
+                renderRightView={() => renderWidgetList('workspace', 'right', rightWidgetNames, allWidgets, listActions, widgetProps, controlActions)}
                 updateTabContainer={actions.updateTabContainer}
             >
                 <Dropzone

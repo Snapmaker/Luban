@@ -1,7 +1,8 @@
-import React from 'react';
 import classNames from 'classnames';
-import WidgetList from '../views/widget-list';
+import React from 'react';
+
 import Widget from '../layouts/Widget';
+import WidgetList from '../views/widget-list';
 
 const getWidgetByName = (name, allWidgets) => {
     const foundWidget = allWidgets[name];
@@ -14,7 +15,12 @@ const getWidgetByName = (name, allWidgets) => {
 
 export default function renderWidgetList(tab, container, widgetIds, Widgets, listActions, widgetProps, controlActions = null) {
     return (
-        <div className={classNames(`scroll-bar-none ${widgetProps.headType === '3dp' ? 'threedp' : widgetProps.headType}-widget-list-intro`, 'overflow-y-auto')} style={{ height: `${widgetProps.headType === '3dp' ? 'calc(100vh - 185px)' : `${widgetProps.headType === 'cnc' || widgetProps.headType === 'laser' ? 'calc(100vh - 230px)' : 'auto'}`}` }}>
+        <div
+            className={classNames(`scroll-bar-none ${widgetProps.headType === '3dp' ? 'threedp' : widgetProps.headType}-widget-list-intro`, 'overflow-y-auto')}
+            style={{
+                height: `${widgetProps.headType === '3dp' ? 'calc(100vh - 185px)' : `${widgetProps.headType === 'cnc' || widgetProps.headType === 'laser' ? 'calc(100vh - 230px)' : 'auto'}`}`
+            }}
+        >
             <WidgetList
                 tab={tab}
                 container={container}
@@ -34,7 +40,7 @@ export default function renderWidgetList(tab, container, widgetIds, Widgets, lis
                         widgetProps={widgetProps}
                         controlActions={controlActions}
                     />
-                )) }
+                ))}
             </WidgetList>
         </div>
     );

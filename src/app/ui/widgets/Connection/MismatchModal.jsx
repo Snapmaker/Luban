@@ -35,9 +35,12 @@ function MismatchModal() {
         }
     }
     useEffect(() => {
-        if ((!prevIsConnected && isConnected) && ((series && series !== machineSeries)
-           || (toolHead && machineToolHead[`${headType}Toolhead`] !== toolHead))) {
-            setShowMismatchModal(true);
+        if (!prevIsConnected && isConnected) {
+            if (series && series !== machineSeries) {
+                setShowMismatchModal(true);
+            } else if (toolHead && machineToolHead[`${headType}Toolhead`] !== toolHead) {
+                setShowMismatchModal(true);
+            }
         }
     }, [prevIsConnected, isConnected, toolHead, headType, series, machineSeries, machineToolHead]);
 
