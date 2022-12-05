@@ -217,13 +217,18 @@ class DefinitionManager {
             prefix,
             this.configPathname
         );
+
         const definitions = await this.markDefaultDefinitions(
             res.body.definitions
         );
+
+        /*
         const result = definitions.map((item) => {
             resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder);
             return item;
         }).map(this.fillCustomCategory);
+        */
+        const result = definitions.map(this.fillCustomCategory);
 
         return result;
     }
