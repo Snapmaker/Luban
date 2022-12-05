@@ -23,7 +23,7 @@ function flatAffectedValue(insideAffectKey, affectSet, originalAffectSet, isDeep
 
 const allContext = {};
 
-function resolveDefinition(definition, modifiedParams) {
+function resolveDefinition(definition, modifiedParams, skipValues = false) {
     // make context
     let shouldReCalcu = true;
     let context = {};
@@ -202,7 +202,9 @@ function resolveDefinition(definition, modifiedParams) {
                 }else {
                     defaultValue = calcValue;
                 }
-                definition.settings[key].default_value = defaultValue;
+                if (!skipValues) {
+                    definition.settings[key].default_value = defaultValue;
+                }
             }
             if (typeof calcEnabled !== 'undefined') {
                 definition.settings[key].visible = calcEnabled;
@@ -212,18 +214,24 @@ function resolveDefinition(definition, modifiedParams) {
             if (modifiedParamItem) {
                 defaultValue = modifiedParamItem[1];
                 context[key] = defaultValue;
-                definition.settings[key].default_value = defaultValue;
+                if (!skipValues) {
+                    definition.settings[key].default_value = defaultValue;
+                }
             }
 
             if (typeof calcMaxValue !== 'undefined' && defaultValue > calcMaxValue) {
                 defaultValue = calcMaxValue;
                 context[key] = defaultValue;
-                definition.settings[key].default_value = defaultValue;
+                if (!skipValues) {
+                    definition.settings[key].default_value = defaultValue;
+                }
             }
             if (typeof calcMinValue !== 'undefined' && defaultValue < calcMinValue) {
                 defaultValue = calcMinValue;
                 context[key] = defaultValue;
-                definition.settings[key].default_value = defaultValue;
+                if (!skipValues) {
+                    definition.settings[key].default_value = defaultValue;
+                }
             }
             if (value.type === 'float' || value.type === 'int') {
                 if (Math.abs(calcValue - defaultValue) > 1e-6 && !_.isUndefined(calcValue)) {
