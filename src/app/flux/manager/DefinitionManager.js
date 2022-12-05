@@ -35,14 +35,14 @@ const extruderRelationSettingsKeys = [
     'machine_nozzle_size',
 ];
 
-function resolveMachineDefinition(item, changedArray = [], changedArrayWithoutExtruder = []) {
+function resolveMachineDefinition(item, changedArray = [], changedArrayWithoutExtruder = [], skipValues = false) {
     if (MATERIAL_REGEX.test(item.definitionId)) {
-        resolveDefinition(item, changedArray);
+        resolveDefinition(item, changedArray, skipValues);
     } else if (QUALITY_REGEX.test(item.definitionId)) {
         if (item.isDefault && item.definitionId !== 'quality.normal_other_quality') {
-            resolveDefinition(item, changedArrayWithoutExtruder);
+            resolveDefinition(item, changedArrayWithoutExtruder, skipValues);
         } else {
-            resolveDefinition(item, changedArray);
+            resolveDefinition(item, changedArray, skipValues);
         }
     }
 }
@@ -222,13 +222,10 @@ class DefinitionManager {
             res.body.definitions
         );
 
-        /*
         const result = definitions.map((item) => {
-            resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder);
+            resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder, true);
             return item;
         }).map(this.fillCustomCategory);
-        */
-        const result = definitions.map(this.fillCustomCategory);
 
         return result;
     }
