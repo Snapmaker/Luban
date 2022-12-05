@@ -25,7 +25,7 @@
             "default_value": "pla"
         },
         "color": {
-            "default_value": "#ff8b00"
+            "default_value": "#ffffff"
         },
         "material_print_temperature": {
             "default_value": 215
