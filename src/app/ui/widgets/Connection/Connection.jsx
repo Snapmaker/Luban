@@ -80,6 +80,7 @@ function Connection({ widgetId, widgetActions }) {
     }, [isConnected]);
 
     const isOriginal = series === MACHINE_SERIES.ORIGINAL.value;
+
     return (
         <div>
             {alertMessage && (

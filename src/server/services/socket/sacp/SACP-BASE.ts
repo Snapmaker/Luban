@@ -184,6 +184,9 @@ class SocketBASE {
         await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
             // log.info(`revice moduleInfo: ${data.response}`);
             stateData.airPurifier = false;
+
+            const toolHeadModules = [];
+
             moduleInfos.forEach(module => {
                 if (includes(EMERGENCY_STOP_BUTTON, module.moduleId)) {
                     moduleStatusList.emergencyStopButton = true;
@@ -201,26 +204,36 @@ class SocketBASE {
                 if (includes(PRINTING_MODULE, module.moduleId)) {
                     stateData.headType = HEAD_PRINTING;
                     this.headType = HEAD_PRINTING;
-                    stateData.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
+                    toolHeadModules.push(module);
                 } else if (includes(LASER_MODULE, module.moduleId)) {
                     stateData.headType = HEAD_LASER;
                     this.headType = HEAD_LASER;
-                    stateData.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
+                    toolHeadModules.push(module);
                 } else if (includes(CNC_MODULE, module.moduleId)) {
                     stateData.headType = HEAD_CNC;
                     this.headType = HEAD_CNC;
-                    stateData.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
+                    toolHeadModules.push(module);
                 }
-
 
                 const keys = Object.keys(MODULEID_MAP);
                 if (includes(keys, String(module.moduleId))) {
                     if (!this.moduleInfos) {
                         this.moduleInfos = {};
                     }
+                    // TODO: Consider more than one tool head modules
                     this.moduleInfos[MODULEID_MAP[module.moduleId]] = module;
                 }
             });
+
+            if (toolHeadModules.length === 0) {
+                stateData.toolHead = MODULEID_TOOLHEAD_MAP['0']; // default extruder
+            } else if (toolHeadModules.length === 1) {
+                const module = toolHeadModules[0];
+                stateData.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
+            } else if (toolHeadModules.length === 2) {
+                // hard-coded IDEX head for J1, refactor this later.
+                stateData.toolHead = MODULEID_TOOLHEAD_MAP['00'];
+            }
         });
         this.subscribeHotBedCallback = (data) => {
             const hotBedInfo = new GetHotBed().fromBuffer(data.response.data);

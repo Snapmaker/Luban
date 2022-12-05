@@ -1,37 +1,35 @@
-import map from 'lodash/map';
-import includes from 'lodash/includes';
-import React, { useEffect, useRef, useState } from 'react';
-import PropTypes from 'prop-types';
-import { useDispatch, useSelector } from 'react-redux';
 import { isNil } from 'lodash';
-// import Switch from '../../components/Switch';
-import Select from '../../components/Select';
-import { Button } from '../../components/Buttons';
-import i18n from '../../../lib/i18n';
-import { controller } from '../../../lib/controller';
-// import { preventDefault } from '../../../lib/dom-events';
-import { in2mm, mm2in } from '../../../lib/units';
-import usePrevious from '../../../lib/hooks/previous';
-import DisplayPanel from './DisplayPanel';
-import ControlPanel from './ControlPanel';
-// import KeypadOverlay from './KeypadOverlay';
-import { actions as machineActions } from '../../../flux/machine';
-import { actions as widgetActions } from '../../../flux/widget';
+import includes from 'lodash/includes';
+import map from 'lodash/map';
+import PropTypes from 'prop-types';
+import React, { useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+
 import {
     HEAD_CNC,
     HEAD_PRINTING,
-    // Units
     IMPERIAL_UNITS,
-    METRIC_UNITS, WORKFLOW_STATUS_IDLE,
-    WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_UNKNOWN, WORKFLOW_STATUS_STOPPED
+    METRIC_UNITS,
+    WORKFLOW_STATE_IDLE,
+    WORKFLOW_STATUS_IDLE,
+    WORKFLOW_STATUS_STOPPED,
+    WORKFLOW_STATUS_UNKNOWN
 } from '../../../constants';
-import {
-    DISTANCE_MIN,
-    DISTANCE_MAX,
-    DISTANCE_STEP,
-    DEFAULT_AXES
-} from './constants';
+// import KeypadOverlay from './KeypadOverlay';
+import { actions as machineActions } from '../../../flux/machine';
+import { actions as widgetActions } from '../../../flux/widget';
+import { controller } from '../../../lib/controller';
+import usePrevious from '../../../lib/hooks/previous';
+import i18n from '../../../lib/i18n';
+// import { preventDefault } from '../../../lib/dom-events';
+import { in2mm, mm2in } from '../../../lib/units';
+import { Button } from '../../components/Buttons';
 import ModalSmall from '../../components/Modal/ModalSmall';
+// import Switch from '../../components/Switch';
+import Select from '../../components/Select';
+import { DEFAULT_AXES, DISTANCE_MAX, DISTANCE_MIN, DISTANCE_STEP } from './constants';
+import ControlPanel from './ControlPanel';
+import DisplayPanel from './DisplayPanel';
 
 const DEFAULT_SPEED_OPTIONS = [
     {
@@ -91,6 +89,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
     }, [server]);
 
     const dispatch = useDispatch();
+
     function getInitialState() {
         const jogSpeed = speed;
         let _workPosition = {
@@ -544,6 +543,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
         </div>
     );
 }
+
 Control.propTypes = {
     widgetId: PropTypes.string.isRequired,
     widgetActions: PropTypes.object.isRequired
