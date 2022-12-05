@@ -35,7 +35,7 @@ const StackPresetSelector = ({ selectedPresetId, onSelectStack, onSelectPreset }
     } = useSelector(state => state?.printing);
 
     // selected stack ID (extruder)
-    const [selectedStackId, setSelectedStackId] = useState(RIGHT_EXTRUDER);
+    const [selectedStackId, setSelectedStackId] = useState(selectedPresetId);
     const [presetOptionsObj, setPresetOptionsObj] = useState(null);
 
     // expanded categories, only for displaying

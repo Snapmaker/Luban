@@ -264,6 +264,7 @@ i18n._('key-default_name-PLA_Red');
 i18n._('key-default_name-PLA_Wood');
 i18n._('key-default_name-PLA_Glow');
 i18n._('key-default_name-PLA_Yellow');
+i18n._('key-default_name-PLA_Orange');
 i18n._('key-default_name-PETG_Black');
 i18n._('key-default_name-PETG_White');
 i18n._('key-default_name-PETG_Blue');
