@@ -17,13 +17,14 @@ import { getPresetOptions } from '../../utils/profileManager';
  *
  * Select a stack, and then select a preset for it.
  *
+ * @param selectedStackId
  * @param selectedPresetId
  * @param onSelectStack
  * @param onSelectPreset
  * @returns {*}
  * @constructor
  */
-const StackPresetSelector = ({ selectedPresetId, onSelectStack, onSelectPreset }) => {
+const StackPresetSelector = ({ selectedStackId, selectedPresetId, onSelectStack, onSelectPreset }) => {
     const { toolHead: { printingToolhead } } = useSelector(state => state?.machine);
     // quality
     const {
@@ -34,8 +35,6 @@ const StackPresetSelector = ({ selectedPresetId, onSelectStack, onSelectPreset }
         defaultMaterialIdRight,
     } = useSelector(state => state?.printing);
 
-    // selected stack ID (extruder)
-    const [selectedStackId, setSelectedStackId] = useState(selectedPresetId);
     const [presetOptionsObj, setPresetOptionsObj] = useState(null);
 
     // expanded categories, only for displaying
@@ -56,10 +55,9 @@ const StackPresetSelector = ({ selectedPresetId, onSelectStack, onSelectPreset }
 
     // stackId: LEFT_EXTRUDER or RIGHT_EXTRUDER
     // Maybe support a global stack later
-    const handleStackSelected = (stackId) => {
-        setSelectedStackId(stackId);
+    function selectStack(stackId) {
         onSelectStack(stackId);
-    };
+    }
 
     /**
      * Toggle expansion of a preset category.
@@ -98,7 +96,7 @@ const StackPresetSelector = ({ selectedPresetId, onSelectStack, onSelectPreset }
                 <div className="sm-flex justify-space-between height-percent-100 unit-text padding-horizontal-16">
                     <Anchor
                         className={classNames('padding-horizontal-3', `${selectedStackId === LEFT_EXTRUDER ? 'border-bottom-black-3' : ''}`)}
-                        onClick={() => handleStackSelected(LEFT_EXTRUDER)}
+                        onClick={() => selectStack(LEFT_EXTRUDER)}
                     >
                         <span className={classNames('font-size-middle line-height-32 display-inline', `${selectedStackId === LEFT_EXTRUDER ? 'font-weight-bold color-black-2' : 'font-weight-normal color-black-4'}`)}>
                             {i18n._('Left Extruder')}
@@ -106,7 +104,7 @@ const StackPresetSelector = ({ selectedPresetId, onSelectStack, onSelectPreset }
                     </Anchor>
                     <Anchor
                         className={classNames('padding-horizontal-3', `${selectedStackId === RIGHT_EXTRUDER ? 'border-bottom-black-3' : ''}`)}
-                        onClick={() => handleStackSelected(RIGHT_EXTRUDER)}
+                        onClick={() => selectStack(RIGHT_EXTRUDER)}
                         disabled={!isDualExtruder(printingToolhead)}
                     >
                         <span className={classNames('font-size-middle line-height-32 display-inline', `${selectedStackId === RIGHT_EXTRUDER ? 'font-weight-bold color-black-2' : 'font-weight-normal color-black-4'}`)}>
@@ -157,6 +155,7 @@ const StackPresetSelector = ({ selectedPresetId, onSelectStack, onSelectPreset }
 };
 
 StackPresetSelector.propTypes = {
+    selectedStackId: PropTypes.string.isRequired,
     selectedPresetId: PropTypes.string.isRequired,
     onSelectStack: PropTypes.func.isRequired,
     onSelectPreset: PropTypes.func.isRequired

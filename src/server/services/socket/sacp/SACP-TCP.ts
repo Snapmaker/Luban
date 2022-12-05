@@ -416,8 +416,14 @@ class SocketTCP extends SocketBASE {
             if (includes(data, ';file_total_lines')) {
                 this.totalLine = parseFloat(data.slice(18));
             }
+            if (includes(data, ';Lines')) {
+                this.totalLine = parseFloat(data.slice(7));
+            }
             if (includes(data, ';estimated_time(s)')) {
                 this.estimatedTime = parseFloat(data.slice(19));
+            }
+            if (includes(data, ';Estimated Print Time')) {
+                this.estimatedTime = parseFloat(data.slice(22));
             }
             if (includes(data, ';Header End')) {
                 rl.close();
