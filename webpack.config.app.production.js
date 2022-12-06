@@ -89,6 +89,19 @@ module.exports = {
     module: {
         rules: [
             {
+                enforce: 'pre',
+                test: /\.jsx?$|\.tsx?$/,
+                loader: 'eslint-loader',
+                exclude: /node_modules/,
+                options: {
+                    cache: false,
+                    fix: true,
+                    emitWarning: false,
+                    quiet: true,
+                    configFile: path.resolve(__dirname, '.eslintrc.js'),
+                },
+            },
+            {
                 test: /\.worker\.(j|t)s$/,
                 loader: 'worker-loader',
                 options: {
@@ -117,19 +130,6 @@ module.exports = {
                         }
                     },
                 ]
-            },
-            {
-                test: /\.jsx?$|\.tsx?$/,
-                loader: 'eslint-loader',
-                enforce: 'pre',
-                exclude: /node_modules/,
-                options: {
-                    cache: true,
-                    fix: true,
-                    emitWarning: false,
-                    quiet: true,
-                    configFile: path.resolve(__dirname, '.eslintrc.js')
-                }
             },
             {
                 test: /\.jsx?$/,

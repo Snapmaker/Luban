@@ -154,8 +154,8 @@ jobs:
     build-macos:
         name: Build macOS Packages
 
-        # macos-10.15
-        runs-on: macos-latest
+        # macos-11.7
+        runs-on: macos-11
 
         steps:
             - name: Checkout Code
