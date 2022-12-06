@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { includes, cloneDeep } from 'lodash';
 import api from '../../api';
-import { PRESET_CATEGORY_DEFAULT } from '../../constants/preset';
+import { PRESET_CATEGORY_DEFAULT, PRESET_CATEGORY_CUSTOM } from '../../constants/preset';
 import { PrintMode } from '../../constants/print-base';
 import i18n from '../../lib/i18n';
 import {
@@ -195,7 +195,7 @@ class DefinitionManager {
     }
 
     fillCustomCategory(definition) {
-        definition.category = definition.category || PRESET_CATEGORY_DEFAULT;
+        definition.category = definition.category || PRESET_CATEGORY_CUSTOM;
         definition.i18nCategory = i18n._(definition.i18nCategory || '');
         return definition;
     }

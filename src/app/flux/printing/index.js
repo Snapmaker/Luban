@@ -1726,6 +1726,7 @@ export const actions = {
                 }
             }
         );
+
         // make sure name is not repeated
         while (
             definitionsWithSameCategory.find(
@@ -1744,6 +1745,7 @@ export const actions = {
         let createdDefinitionModel = await definitionManager.createDefinition(newDefinition);
         const { extruderLDefinition } = state;
         const activeMaterialType = dispatch(actions.getActiveMaterialType());
+
         createdDefinitionModel = new PresetDefinitionModel(
             createdDefinitionModel,
             activeMaterialType,

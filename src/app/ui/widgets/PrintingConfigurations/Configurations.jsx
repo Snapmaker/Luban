@@ -143,7 +143,6 @@ function Configurations() {
             const copyType = 'Item';
 
             const copyCategoryName = (newSelectedDefinition.category !== i18n._(DEFAULT_DISPLAY_TYPE)) ? newSelectedDefinition.category : '';
-            const copyCategoryI18n = newSelectedDefinition.i18nCategory;
             const copyItemName = newSelectedDefinition.name;
             const isCreate = false;
             let materialOptions = presetCategoryOptions
@@ -179,7 +178,6 @@ function Configurations() {
                             materialOptions={materialOptions}
                             copyType={copyType}
                             copyCategoryName={copyCategoryName}
-                            copyCategoryI18n={copyCategoryI18n}
                             copyItemName={copyItemName}
                         />
                     </React.Fragment>
@@ -193,14 +191,9 @@ function Configurations() {
                             const data = refCreateModal.current.getData();
                             const newName = data.itemName;
                             popupActions.close();
-                            if (data.categoryName === i18n._(KEY_DEFAULT_CATEGORY_CUSTOM)) {
-                                newSelectedDefinition.category = '';
-                                newSelectedDefinition.i18nCategory = '';
-                            } else {
-                                newSelectedDefinition.category = data.categoryName;
-                                newSelectedDefinition.i18nCategory = data.categoryI18n;
-                            }
+
                             newSelectedDefinition.name = newName;
+                            newSelectedDefinition.category = data.categoryName;
 
                             // TODO: need update
                             const createdDefinitionModel = await dispatch(

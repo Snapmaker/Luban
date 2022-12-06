@@ -77,7 +77,7 @@ const describeCreator = (managerType) => {
 };
 
 const DefinitionCreator = forwardRef(({
-    showRadio = true, managerType, isCreate, copyType, copyCategoryName, copyCategoryI18n, copyItemName, materialOptions: _materialOptions
+    showRadio = true, managerType, isCreate, copyType, copyCategoryName, copyItemName, materialOptions: _materialOptions
 }, ref) => {
     const [displayDescribe] = useState(describeCreator(managerType));
     const [newOptionValue, setNewOptionsValue] = useState('');
@@ -85,7 +85,6 @@ const DefinitionCreator = forwardRef(({
     const [state, setState] = useState({
         createType: copyType || 'Category',
         categoryName: '',
-        categoryI18n: '',
         itemName: '',
     });
     useEffect(() => {
@@ -98,10 +97,9 @@ const DefinitionCreator = forwardRef(({
                 ...pre,
                 itemName: copyItemName || displayDescribe.itemName,
                 categoryName: copyCategoryName || displayDescribe.categoryName,
-                categoryI18n: copyCategoryI18n
             };
         });
-    }, [_materialOptions, managerType, copyItemName, copyCategoryName, displayDescribe.categoryName, displayDescribe.itemName, copyCategoryI18n]);
+    }, [_materialOptions, managerType, copyItemName, copyCategoryName, displayDescribe.categoryName, displayDescribe.itemName]);
 
     useEffect(() => {
         setMaterialOptions(_materialOptions);
@@ -158,7 +156,6 @@ const DefinitionCreator = forwardRef(({
                                 setState({
                                     ...state,
                                     categoryName: option.label,
-                                    categoryI18n: option.i18n
                                 });
                             }}
                             dropdownRender={menu => (
@@ -193,7 +190,6 @@ const DefinitionCreator = forwardRef(({
                                                         setState({
                                                             ...state,
                                                             categoryName: newOptionValue,
-                                                            categoryI18n: newOptionValue
                                                         });
                                                     }}
                                                 />
@@ -254,7 +250,6 @@ DefinitionCreator.propTypes = {
     isCreate: PropTypes.bool,
     copyType: PropTypes.string,
     copyCategoryName: PropTypes.string,
-    copyCategoryI18n: PropTypes.string,
     copyItemName: PropTypes.string,
     materialOptions: PropTypes.array
 };

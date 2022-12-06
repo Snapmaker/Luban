@@ -1,8 +1,6 @@
-import React from 'react';
 import { indexOf, orderBy } from 'lodash';
-
-import i18n from '../../lib/i18n';
-import { DEFAULT_PRESET_IDS, isQualityPresetVisible } from '../../constants/preset';
+import React from 'react';
+import { DEFAULT_PRESET_IDS, isQualityPresetVisible, PRESET_CATEGORY_CUSTOM } from '../../constants/preset';
 
 import { MaterialWithColor } from '../widgets/PrintingMaterial/MaterialWithColor';
 
@@ -98,9 +96,11 @@ function getPresetOptions(presetModels, materialPreset) {
     const presetOptions = {};
 
     for (const presetModel of availablePresetModels) {
-        const { definitionId, name, i18nCategory } = presetModel;
-        const typeOfPrinting = presetModel.typeOfPrinting;
-        const category = presetModel.category;
+        const {
+            definitionId, name,
+            category = PRESET_CATEGORY_CUSTOM,
+            typeOfPrinting,
+        } = presetModel;
 
         const checkboxAndSelectGroup = {};
         checkboxAndSelectGroup.name = name;
@@ -113,8 +113,7 @@ function getPresetOptions(presetModels, materialPreset) {
         if (!presetOptions[category]) {
             presetOptions[category] = {
                 label: category,
-                category: category,
-                i18nCategory: i18nCategory || i18n._('key-default_category-Custom'),
+                category,
                 options: [],
             };
         }

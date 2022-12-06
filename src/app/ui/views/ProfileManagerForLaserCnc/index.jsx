@@ -264,13 +264,12 @@ function ProfileManager({
             const definitionForManager = definitionState?.definitionForManager;
             const isCategorySelected = definitionState?.isCategorySelected;
             let title = i18n._('key-Printing/ProfileManager-Create Profile');
-            let copyType = '', copyCategoryName = '', copyItemName = '', copyCategoryI18n = '';
+            let copyType = '', copyCategoryName = '', copyItemName = '';
 
             if (!isCreate) {
                 title = i18n._('key-Printing/ProfileManager-Copy Profile');
                 copyType = isCategorySelected ? 'Category' : 'Item';
                 copyCategoryName = definitionForManager.category;
-                copyCategoryI18n = definitionForManager.i18nCategory;
                 if (!isCategorySelected) {
                     copyItemName = definitionForManager.name;
                 }
@@ -279,7 +278,6 @@ function ProfileManager({
                 copyType = 'Item';
                 copyItemName = i18n._('key-default_category-New Profile');
                 copyCategoryName = definitionForManager.category;
-                copyCategoryI18n = definitionForManager.i18nCategory;
             }
 
             let materialOptions = definitionState?.definitionOptions.map(option => {
@@ -304,7 +302,6 @@ function ProfileManager({
                             materialOptions={materialOptions}
                             copyType={copyType}
                             copyCategoryName={copyCategoryName}
-                            copyCategoryI18n={copyCategoryI18n}
                             copyItemName={copyItemName}
                         />
                     </React.Fragment>

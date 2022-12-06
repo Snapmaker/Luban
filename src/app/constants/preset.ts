@@ -1,6 +1,7 @@
 import { includes } from 'lodash';
 
 export const PRESET_CATEGORY_DEFAULT = 'Default';
+export const PRESET_CATEGORY_CUSTOM = 'Custom';
 
 // Preset Ids
 // Preset Category = PRESET_CATEGORY_DEFAULT
