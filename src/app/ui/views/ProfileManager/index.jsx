@@ -314,7 +314,7 @@ function ProfileManager({
             const definitionForManager = definitionState?.definitionForManager;
             const isCategorySelected = definitionState?.isCategorySelected;
             let title = i18n._('key-Printing/ProfileManager-Create Profile');
-            let copyType = '', copyCategoryName = '', copyItemName = '', copyCategoryI18n = '';
+            let copyType = '', copyCategoryName = '', copyItemName = '';
 
             if (!isCreate) {
                 title = i18n._('key-Printing/ProfileManager-Copy Profile');
@@ -328,7 +328,6 @@ function ProfileManager({
                 copyItemName = i18n._('key-default_category-New Profile');
             }
             copyCategoryName = definitionForManager.category;
-            copyCategoryI18n = definitionForManager.i18nCategory;
 
             let materialOptions = definitionState?.definitionOptions.map(option => {
                 return {
@@ -366,7 +365,6 @@ function ProfileManager({
                             materialOptions={materialOptions}
                             copyType={copyType}
                             copyCategoryName={copyCategoryName}
-                            copyCategoryI18n={copyCategoryI18n}
                             copyItemName={copyItemName}
                         />
                     </React.Fragment>
@@ -393,13 +391,7 @@ function ProfileManager({
                                     const newDefinition = await outsideActions.onCreateManagerDefinition(newDefinitionForManager, newName, isCategorySelected);
                                     actions.onSelectCategory(newDefinition.category);
                                 } else {
-                                    if (data.categoryName === i18n._('key-default_category-Custom')) {
-                                        newDefinitionForManager.category = '';
-                                        newDefinitionForManager.i18nCategory = '';
-                                    } else {
-                                        newDefinitionForManager.category = data.categoryName;
-                                        newDefinitionForManager.i18nCategory = data.categoryI18n;
-                                    }
+                                    newDefinitionForManager.category = data.categoryName;
                                     newName = data.itemName;
                                     const newDefinition = await outsideActions.onCreateManagerDefinition(newDefinitionForManager, newName, isCategorySelected);
                                     setTimeout(() => {
@@ -409,19 +401,12 @@ function ProfileManager({
                             } else {
                                 if (data.createType === 'Category') {
                                     newDefinitionForManager.category = data.categoryName;
-                                    newDefinitionForManager.i18nCategory = data.categoryI18n;
                                     newName = data.categoryName;
                                     newDefinitionForManager.settings = {};
                                     const newDefinition = await outsideActions.onCreateManagerDefinition(newDefinitionForManager, newName, data.createType === 'Category', isCreate);
                                     actions.onSelectCategory(newDefinition.category);
                                 } else {
-                                    if (data.categoryName === i18n._('key-default_category-Custom')) {
-                                        newDefinitionForManager.category = '';
-                                        newDefinitionForManager.i18nCategory = '';
-                                    } else {
-                                        newDefinitionForManager.category = data.categoryName;
-                                        newDefinitionForManager.i18nCategory = data.categoryI18n;
-                                    }
+                                    newDefinitionForManager.category = data.categoryName;
                                     newName = data.itemName;
                                     if (Object.keys(newDefinitionForManager.settings).length === 0) {
                                         newDefinitionForManager.settings = cloneDeep(allDefinitions[0].settings);

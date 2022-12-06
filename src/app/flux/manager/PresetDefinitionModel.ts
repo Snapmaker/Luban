@@ -918,6 +918,7 @@ type ParamsModelType = {
     'adhesion_type': ParamsObjectType;
 }
 
+// TODO: material category & quality category is not the same, distinguish them by subclasses
 class PresetDefinitionModel {
     public headType = HEAD_PRINTING;
     public typeOfPrinting = 'universal';
@@ -1010,8 +1011,14 @@ class PresetDefinitionModel {
     // public
     public getSerializableDefinition() {
         const {
-            definitionId, name, category,
-            i18nCategory, inherits, typeOfPrinting, ownKeys, settings
+            definitionId,
+            name,
+            category,
+            i18nCategory,
+            inherits,
+            typeOfPrinting,
+            ownKeys,
+            settings,
         } = this;
         return {
             definitionId,
