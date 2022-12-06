@@ -1,22 +1,19 @@
 /* eslint-disable */
-import { includes, cloneDeep } from 'lodash';
+import { cloneDeep, includes } from 'lodash';
+import { resolveDefinition } from '../../../shared/lib/definitionResolver';
 import api from '../../api';
-import { PRESET_CATEGORY_DEFAULT, PRESET_CATEGORY_CUSTOM } from '../../constants/preset';
-import { PrintMode } from '../../constants/print-base';
-import i18n from '../../lib/i18n';
 import {
     HEAD_CNC,
     HEAD_PRINTING,
-    RIGHT_EXTRUDER_MAP_NUMBER,
-    PRINTING_MATERIAL_CONFIG_KEYS_SINGLE,
     MACHINE_EXTRUDER_X,
     MACHINE_EXTRUDER_Y,
     MATERIAL_REGEX,
-    QUALITY_REGEX,
-    KEY_DEFAULT_CATEGORY_CUSTOM
+    QUALITY_REGEX
 } from '../../constants';
+import { PRESET_CATEGORY_CUSTOM } from '../../constants/preset';
+import { PrintMode } from '../../constants/print-base';
+import i18n from '../../lib/i18n';
 import PresetDefinitionModel from './PresetDefinitionModel';
-import { resolveDefinition } from '../../../shared/lib/definitionResolver';
 
 const nozzleSizeRelationSettingsKeys = [
     'wall_line_width_0',
@@ -459,14 +456,20 @@ class DefinitionManager {
         const firstLayerDefinition = extruderConfig.adhesion === '0' ? extruderLDefinition : extruderRDefinition;
         // TODO: Refactor this hard-code
         const isJ1 = activeDefinition.settings['machine_name'].default_value === 'Snapmaker J1';
+        const isArtisan = activeDefinition.settings['machine_name'].default_value === 'Snapmaker Artisan';
+
         if (isJ1) {
             this.addMachineStartGcodeJ1(printMode, definition, firstLayerDefinition);
+        } else if (isArtisan) {
+            this.addMachineStartGcodeArtisan(printMode, definition, firstLayerDefinition);
         } else {
             this.addMachineStartGcode(definition, firstLayerDefinition);
         }
 
         if (isJ1) {
             this.addMachineEndGcodeJ1(printMode, definition);
+        } else if (isArtisan) {
+            this.addMachineEndGcodeArtisan(printMode, definition);
         } else {
             this.addMachineEndGcode(definition);
         }
@@ -694,6 +697,30 @@ class DefinitionManager {
         };
     }
 
+    addMachineEndGcode(definition) {
+        // TODO: use relative to set targetZ(use: current z + 10).
+        // It is ok even if targetZ is bigger than 125 because firmware has set limitation
+        const y = definition.settings.machine_depth.default_value;
+        const z = definition.settings.machine_height.default_value;
+
+        const gcode = [
+            ';End GCode begin',
+            'M104 S0 ;extruder heater off',
+            'M140 S0 ;heated bed heater off (if you have it)',
+            'G90 ;absolute positioning',
+            'G92 E0',
+            'G1 E-1 F300 ;retract the filament a bit before lifting the nozzle, to release some of the pressure',
+            `G1 Z${z} E-1 F3000 ;move Z up a bit and retract filament even more`,
+            `G1 X${0} F3000 ;move X to min endstops, so the head is out of the way`,
+            `G1 Y${y} F3000 ;so the head is out of the way and Plate is moved forward`,
+            ';End GCode end',
+        ];
+
+        definition.settings.machine_end_gcode = {
+            default_value: gcode.join('\n')
+        };
+    }
+
     addMachineStartGcodeJ1(printMode, definition, extruderDefinition) {
         const settings = extruderDefinition.settings;
 
@@ -755,30 +782,6 @@ class DefinitionManager {
         };
     }
 
-    addMachineEndGcode(definition) {
-        // TODO: use relative to set targetZ(use: current z + 10).
-        // It is ok even if targetZ is bigger than 125 because firmware has set limitation
-        const y = definition.settings.machine_depth.default_value;
-        const z = definition.settings.machine_height.default_value;
-
-        const gcode = [
-            ';End GCode begin',
-            'M104 S0 ;extruder heater off',
-            'M140 S0 ;heated bed heater off (if you have it)',
-            'G90 ;absolute positioning',
-            'G92 E0',
-            'G1 E-1 F300 ;retract the filament a bit before lifting the nozzle, to release some of the pressure',
-            `G1 Z${z} E-1 F3000 ;move Z up a bit and retract filament even more`,
-            `G1 X${0} F3000 ;move X to min endstops, so the head is out of the way`,
-            `G1 Y${y} F3000 ;so the head is out of the way and Plate is moved forward`,
-            ';End GCode end',
-        ];
-
-        definition.settings.machine_end_gcode = {
-            default_value: gcode.join('\n')
-        };
-    }
-
     addMachineEndGcodeJ1(printMode, definition) {
         // ;--- End G-code Begin ---
         // M104 S0
@@ -800,6 +803,86 @@ class DefinitionManager {
             'G28 Z',
             'G28 X0 Y0',
             'M84',
+            ';--- End G-code End ---',
+        ];
+
+        definition.settings.machine_end_gcode = {
+            default_value: gcode.join('\n')
+        };
+    }
+
+    addMachineStartGcodeArtisan(printMode, definition, extruderDefinition) {
+        const settings = extruderDefinition.settings;
+
+        const printTemp = settings.material_print_temperature.default_value;
+        const printTempLayer0 = settings.material_print_temperature_layer_0.default_value
+            || printTemp;
+        const bedTempLayer0 = settings.material_bed_temperature_layer_0.default_value;
+
+        // ;--- Start G-code Begin ---
+        // M205 J0.05
+        // M201 X10000 Y10000 Z100 E10000
+        // M204 P1000 T2000 R10000
+        // M900 T0 K0.035
+        // M900 T1 K0.035
+        // M104 S{material_print_temperature_layer_0} ;Set Hotend Temperature
+        // M140 S{material_bed_temperature_layer_0} ;Set Bed Temperature
+        // M109 T0 S{material_print_temperature_layer_0} ;Wait Hotend Temperature
+        // M190 S{material_bed_temperature_layer_0} ;Set Bed Temperature
+        // M107
+        // M107 P1
+        // G28
+        // G0 Z0.5 X0 Y-0.5 F6000
+        // G92 E0
+        // G0 X150 E30 F1200
+        // G92 E0
+        // G1 Z5 F6000
+        // ;--- Start G-code End ---
+        // TODO: Bed considering inner/outer circuit
+        const gcode = [
+            ';--- Start G-code Begin ---',
+            'M205 J0.05',
+            'M201 X10000 Y10000 Z100 E10000',
+            'M204 P1000 T2000 R10000',
+            'M900 T0 K0.035',
+            'M900 T1 K0.035',
+            `M104 S${printTempLayer0} ;Set Hotend Temperature`,
+            `M140 S${bedTempLayer0} ;Set Bed Temperature`,
+            `M109 S${printTempLayer0} ;Wait Hotend Temperature`,
+            `M190 S${bedTempLayer0} ;Set Bed Temperature`,
+            'M107',
+            'M107 P1',
+            'G28',
+            'G0 Z0.5 X0 Y-0.5 F6000',
+            'G92 E0',
+            'G0 X150 E30 F1200',
+            'G92 E0',
+            'G1 Z5 F6000',
+            ';--- Start G-code End ---',
+        ];
+
+        definition.settings.machine_start_gcode = {
+            default_value: gcode.join('\n')
+        };
+    }
+
+    addMachineEndGcodeArtisan(printMode, definition) {
+        // ;--- End G-code Begin ---
+        // M104 S0
+        // M140 S0
+        // G92 E0
+        // G1 E-2 F3000
+        // G92 E0
+        // G28
+        // ;--- End G-code End ---
+        const gcode = [
+            ';--- End G-code Begin ---',
+            'M104 S0',
+            'M140 S0',
+            'G92 E0',
+            'G1 E-2 F3000',
+            'G92 E0',
+            'G28',
             ';--- End G-code End ---',
         ];
 
