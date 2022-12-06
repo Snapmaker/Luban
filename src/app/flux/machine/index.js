@@ -36,6 +36,7 @@ import {
 import i18n from '../../lib/i18n';
 import { valueOf } from '../../lib/contants-utils';
 import { machineStore, printingStore } from '../../store/local-storage';
+import PresetDefinitionModel from '../manager/PresetDefinitionModel';
 import { actions as printingActions } from '../printing';
 import { actions as editorActions } from '../editor';
 import { actions as widgetActions } from '../widget';
@@ -912,21 +913,25 @@ export const actions = {
 
             const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
             await definitionManager.init(HEAD_PRINTING, currentMachine.configPathname[HEAD_PRINTING]);
-            const allMaterialDefinition = await definitionManager.getDefinitionsByPrefixName(
+
+            const allMaterialDefinitions = await definitionManager.getDefinitionsByPrefixName(
                 'material'
             );
 
-            let defaultMaterialId = getState().printing.defaultMaterialId;
-            let defaultMaterialIdRight = getState().printing.defaultMaterialIdRight;
-            defaultMaterialId = allMaterialDefinition.find((item) => {
+            let { defaultMaterialId, defaultMaterialIdRight } = getState().printing;
+
+            defaultMaterialId = allMaterialDefinitions.find((item) => {
                 return defaultMaterialId === item.definitionId;
-            }) ? defaultMaterialId : allMaterialDefinition[0].definitionId;
-            defaultMaterialIdRight = allMaterialDefinition.find((item) => {
+            }) ? defaultMaterialId : allMaterialDefinitions[0].definitionId;
+
+            defaultMaterialIdRight = allMaterialDefinitions.find((item) => {
                 return defaultMaterialIdRight === item.definitionId;
-            }) ? defaultMaterialIdRight : allMaterialDefinition[0].definitionId;
+            }) ? defaultMaterialIdRight : allMaterialDefinitions[0].definitionId;
+
+            const materialPresetModels = allMaterialDefinitions.map(definition => new PresetDefinitionModel(definition));
 
             dispatch(printingActions.updateState({
-                materialDefinitions: allMaterialDefinition,
+                materialDefinitions: materialPresetModels,
                 defaultMaterialId,
                 defaultMaterialIdRight
             }));

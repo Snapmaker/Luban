@@ -46,11 +46,11 @@ const StackPresetSelector = ({ selectedStackId, selectedPresetId, onSelectStack,
         const materialPresetId = selectedStackId === LEFT_EXTRUDER ? defaultMaterialId : defaultMaterialIdRight;
         const materialPreset = materialDefinitions.find(p => p.definitionId === materialPresetId);
 
-        const presetOptions = getPresetOptions(presets, materialPreset);
-        setPresetOptionsObj(presetOptions);
+        const newPresetOptionsObj = getPresetOptions(presets, materialPreset);
+        setPresetOptionsObj(newPresetOptionsObj);
 
         // set all preset categories expanded
-        setExpandedPresetCategories(Object.keys(presetOptions));
+        setExpandedPresetCategories(Object.keys(newPresetOptionsObj));
     }, [selectedStackId, defaultMaterialId, defaultMaterialIdRight]);
 
     // stackId: LEFT_EXTRUDER or RIGHT_EXTRUDER
@@ -126,7 +126,7 @@ const StackPresetSelector = ({ selectedStackId, selectedPresetId, onSelectStack,
                                             type={['static']}
                                             className={classNames({ 'rotate270': !expanded })}
                                         />
-                                        <span>{i18n._(presetOptionsObj[presetCategory].i18nCategory)}</span>
+                                        <span>{presetOptionsObj[presetCategory].category}</span>
                                     </div>
                                 </Anchor>
                                 {
@@ -134,10 +134,13 @@ const StackPresetSelector = ({ selectedStackId, selectedPresetId, onSelectStack,
                                         return (
                                             <Anchor
                                                 key={option.definitionId}
-                                                className={classNames({
-                                                    'display-block': expanded,
-                                                    'display-none': !expanded,
-                                                })}
+                                                className={classNames(
+                                                    'text-overflow-ellipsis',
+                                                    {
+                                                        'display-block': expanded,
+                                                        'display-none': !expanded,
+                                                    }
+                                                )}
                                                 onClick={() => selectPresetByPresetId(option.definitionId)}
                                             >
                                                 <div className={`border-radius-4 height-32 padding-horizontal-24 ${selectedPresetId === option.definitionId ? 'background-color-blue' : ''}`}>{option.label}</div>

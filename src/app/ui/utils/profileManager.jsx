@@ -1,8 +1,6 @@
-import React from 'react';
 import { indexOf, orderBy } from 'lodash';
-
-import i18n from '../../lib/i18n';
-import { DEFAULT_PRESET_IDS, isQualityPresetVisible } from '../../constants/preset';
+import React from 'react';
+import { DEFAULT_PRESET_IDS, isQualityPresetVisible, PRESET_CATEGORY_CUSTOM } from '../../constants/preset';
 
 import { MaterialWithColor } from '../widgets/PrintingMaterial/MaterialWithColor';
 
@@ -40,6 +38,31 @@ function getSelectOptions(printingDefinitions) {
 }
 
 /**
+ * Pick available presets for material.
+ *
+ * @param presetModels
+ * @param materialPreset
+ */
+export function pickAvailablePresetModels(presetModels, materialPreset) {
+    if (!materialPreset) {
+        return [];
+    }
+
+    const availablePresetModels = [];
+    for (const presetModel of presetModels) {
+        const visible = isQualityPresetVisible(presetModel, {
+            materialType: materialPreset?.materialType,
+        });
+        if (visible) {
+            availablePresetModels.push(presetModel);
+        }
+    }
+
+    return availablePresetModels;
+}
+
+
+/**
  * Get preset Options from definitions.
  *
  * @param presetModels
@@ -68,12 +91,16 @@ function getPresetOptions(presetModels, materialPreset) {
         return {};
     }
 
+    const availablePresetModels = pickAvailablePresetModels(presetModels, materialPreset);
+
     const presetOptions = {};
 
-    for (const presetModel of presetModels) {
-        const { definitionId, name, i18nCategory } = presetModel;
-        const typeOfPrinting = presetModel.typeOfPrinting;
-        const category = presetModel.category;
+    for (const presetModel of availablePresetModels) {
+        const {
+            definitionId, name,
+            category = PRESET_CATEGORY_CUSTOM,
+            typeOfPrinting,
+        } = presetModel;
 
         const checkboxAndSelectGroup = {};
         checkboxAndSelectGroup.name = name;
@@ -86,18 +113,12 @@ function getPresetOptions(presetModels, materialPreset) {
         if (!presetOptions[category]) {
             presetOptions[category] = {
                 label: category,
-                category: category,
-                i18nCategory: i18nCategory || i18n._('key-default_category-Custom'),
+                category,
                 options: [],
             };
         }
 
-        const visible = isQualityPresetVisible(presetModel, {
-            materialType: materialPreset?.materialType,
-        });
-        if (visible) {
-            presetOptions[category].options.push(checkboxAndSelectGroup);
-        }
+        presetOptions[category].options.push(checkboxAndSelectGroup);
     }
 
     // sort preset options

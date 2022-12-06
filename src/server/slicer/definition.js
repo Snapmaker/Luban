@@ -50,11 +50,11 @@ export class DefinitionLoader {
 
     name = '';
     // default name key
-    // i18nName = undefined;
+    i18nName = '';
 
     category = '';
     // default category key
-    // i18nCategory = undefined;
+    i18nCategory = '';
 
     inherits = '';
 
@@ -316,9 +316,9 @@ export class DefinitionLoader {
         return {
             definitionId: this.definitionId,
             name: this.name,
+            i18nName: this.i18nName,
             isRecommended: this.isRecommended,
             category: this.category,
-            i18nName: this.i18nName,
             i18nCategory: this.i18nCategory,
             inherits: this.inherits,
             settings: this.settings,
