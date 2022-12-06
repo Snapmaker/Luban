@@ -469,7 +469,7 @@ export const actions = {
 
         const qualityParamModels = [];
         const qualityParamModelsRight = [];
-        const materialParamModels = [];
+        const materialPresetModels = [];
 
         const activeMaterialType = dispatch(actions.getActiveMaterialType());
         const activeMaterialTypeRight = dispatch(actions.getActiveMaterialType(undefined, RIGHT_EXTRUDER));
@@ -478,10 +478,8 @@ export const actions = {
         const extruderRDefinition = await definitionManager.getDefinition('snapmaker_extruder_1');
 
         allMaterialDefinitions.forEach((eachDefinition) => {
-            const paramModel = new PresetDefinitionModel(
-                eachDefinition
-            );
-            materialParamModels.push(paramModel);
+            const paramModel = new PresetDefinitionModel(eachDefinition);
+            materialPresetModels.push(paramModel);
         });
 
         allQualityDefinitions.forEach((eachDefinition) => {
@@ -502,7 +500,7 @@ export const actions = {
 
         dispatch(
             actions.updateState({
-                materialDefinitions: materialParamModels,
+                materialDefinitions: materialPresetModels,
                 qualityDefinitions: qualityParamModels,
                 qualityDefinitionsRight: qualityParamModelsRight,
                 extruderLDefinition,
@@ -1902,9 +1900,8 @@ export const actions = {
     // removes all non-predefined definitions
     // now only used in reset settings
     removeAllMaterialDefinitions: () => async (dispatch, getState) => {
-        const state = getState().printing;
+        const { materialDefinitions } = getState().printing;
 
-        const newMaterialDefinitions = [];
         const defaultDefinitionIds = [
             'material.pla',
             'material.abs',
@@ -1923,17 +1920,19 @@ export const actions = {
             'material.tpu.black',
             'material.tpu.yellow'
         ];
-        for (const definition of state.materialDefinitions) {
-            if (defaultDefinitionIds.includes(definition.definitionId)) {
-                newMaterialDefinitions.push(definition);
+
+        const newMaterialPresetModels = [];
+        for (const presetModel of materialDefinitions) {
+            if (defaultDefinitionIds.includes(presetModel.definitionId)) {
+                newMaterialPresetModels.push(presetModel);
                 continue;
             }
-            definitionManager.removeDefinition(definition);
+            definitionManager.removeDefinition(presetModel);
         }
 
         dispatch(
             actions.updateState({
-                materialDefinitions: newMaterialDefinitions
+                materialDefinitions: newMaterialPresetModels
             })
         );
     },
@@ -1958,24 +1957,22 @@ export const actions = {
         );
     },
 
-    updateDefaultIdByType: (type, newDefinitionId, direction = LEFT_EXTRUDER) => dispatch => {
+    updateDefaultIdByType: (type, newDefinitionId, stackId = LEFT_EXTRUDER) => dispatch => {
         let defaultKey;
         if (type === PRINTING_MANAGER_TYPE_MATERIAL) {
-            defaultKey = direction === LEFT_EXTRUDER
-                ? 'defaultMaterialId'
-                : 'defaultMaterialIdRight';
+            defaultKey = stackId === LEFT_EXTRUDER ? 'defaultMaterialId' : 'defaultMaterialIdRight';
         } else {
             // FIXME:
             defaultKey = defaultDefinitionKeys[type].id;
             throw Error('Unable to get key for definition');
         }
-        dispatch(actions.updateSavedPresetIds(type, newDefinitionId, direction));
+        dispatch(actions.updateSavedPresetIds(type, newDefinitionId, stackId));
         dispatch(
             actions.updateState({
                 [defaultKey]: newDefinitionId
             })
         );
-        dispatch(actions.validateActiveQualityPreset(type, direction, newDefinitionId));
+        dispatch(actions.validateActiveQualityPreset(stackId));
         dispatch(actions.applyProfileToAllModels());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
@@ -2076,23 +2073,26 @@ export const actions = {
      * @param stackId
      */
     validateActiveQualityPreset: (stackId = LEFT_EXTRUDER) => (dispatch, getState) => {
-        const { qualityDefinitions, activePresetIds } = getState().printing;
+        const { qualityDefinitions, qualityDefinitionsRight, activePresetIds } = getState().printing;
+
+        const presetModels = stackId === LEFT_EXTRUDER ? qualityDefinitions : qualityDefinitionsRight;
 
         const materialType = dispatch(actions.getActiveMaterialType(undefined, stackId));
-        const activePreset = qualityDefinitions.find(p => p.definitionId === activePresetIds[stackId]);
+
+        const presetModel = presetModels.find(p => p.definitionId === activePresetIds[stackId]);
 
         // TODO: Consider nozzle size
         // machineNozzleSize: actualExtruderDefinition.settings?.machine_nozzle_size?.default_value,
-        if (activePreset && isQualityPresetVisible(activePreset, { materialType: materialType })) {
+        if (presetModel && isQualityPresetVisible(presetModel, { materialType: materialType })) {
             // the quality preset looks fine
             return;
         }
 
         // find a new quality preset for active material type
-        for (const preset of qualityDefinitions) {
-            const visible = isQualityPresetVisible(preset, { materialType: materialType });
+        for (const presetModel2 of presetModels) {
+            const visible = isQualityPresetVisible(presetModel2, { materialType: materialType });
             if (visible) {
-                dispatch(actions.updateActiveQualityPresetId(stackId, preset.definitionId));
+                dispatch(actions.updateActiveQualityPresetId(stackId, presetModel2.definitionId));
                 break;
             }
         }

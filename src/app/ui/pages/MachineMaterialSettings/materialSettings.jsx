@@ -1,18 +1,11 @@
+import { CaretRightOutlined } from '@ant-design/icons';
+import { Menu, message, Spin, Tooltip } from 'antd';
+import classNames from 'classnames';
 import { cloneDeep, filter, find, findIndex, includes, orderBy } from 'lodash';
 import PropTypes from 'prop-types';
-import classNames from 'classnames';
-import { CaretRightOutlined } from '@ant-design/icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Menu, message, Spin, Tooltip } from 'antd';
-import { actions as printingActions } from '../../../flux/printing';
-import { actions as projectActions } from '../../../flux/project';
-import { materialCategoryRank, useGetDefinitions } from '../../views/ProfileManager';
-import i18n from '../../../lib/i18n';
-import Anchor from '../../components/Anchor';
 import { LEFT, RIGHT } from '../../../../server/constants';
-import { Button } from '../../components/Buttons';
-import AddMaterialModel from './addMaterialModel';
 import {
     HEAD_PRINTING,
     LEFT_EXTRUDER,
@@ -20,19 +13,31 @@ import {
     PRINTING_MANAGER_TYPE_MATERIAL,
     RIGHT_EXTRUDER
 } from '../../../constants';
-import PrintingManager from '../../views/PrintingManager';
-import { machineStore } from '../../../store/local-storage';
-import SvgIcon from '../../components/SvgIcon';
-import modal from '../../../lib/modal';
-import styles from './styles.styl';
-import Dropdown from '../../components/Dropdown';
 import { isDualExtruder } from '../../../constants/machines';
+import { actions as printingActions } from '../../../flux/printing';
+import { actions as projectActions } from '../../../flux/project';
+import i18n from '../../../lib/i18n';
+import modal from '../../../lib/modal';
+import { machineStore } from '../../../store/local-storage';
+import Anchor from '../../components/Anchor';
+import { Button } from '../../components/Buttons';
+import Dropdown from '../../components/Dropdown';
+import SvgIcon from '../../components/SvgIcon';
+import PrintingManager from '../../views/PrintingManager';
+import { materialCategoryRank, useGetDefinitions } from '../../views/ProfileManager';
+import AddMaterialModel from './addMaterialModel';
+import styles from './styles.styl';
 
 const MATERIAL_TYPE_ARRAY = MATERIAL_TYPE_OPTIONS.map(d => d.category);
 
 const MaterialSettings = ({ toolMap, loading }) => {
     const materialActiveCategory = machineStore.get('settings.materialActiveCategory');
-    const { defaultMaterialId, defaultMaterialIdRight, materialDefinitions, materialManagerDirection } = useSelector(state => state.printing);
+    const {
+        defaultMaterialId,
+        defaultMaterialIdRight,
+        materialDefinitions,
+        materialManagerDirection,
+    } = useSelector(state => state.printing);
 
     const [leftMaterialDefinitionId, setLeftMaterialDefinitionId] = useState(defaultMaterialId);
     const [leftMaterialDefinition, setLeftMaterialDefinition] = useState(find(materialDefinitions, { definitionId: leftMaterialDefinitionId }));
@@ -55,10 +60,12 @@ const MaterialSettings = ({ toolMap, loading }) => {
         getDefaultDefinition,
         PRINTING_MANAGER_TYPE_MATERIAL
     );
+
     useEffect(() => {
         setLeftMaterialDefinition(find(materialDefinitions, { definitionId: leftMaterialDefinitionId }));
         setRightMaterialDefinition(find(materialDefinitions, { definitionId: rightMaterialDefinitionId }));
     }, [materialDefinitions, leftMaterialDefinitionId, rightMaterialDefinitionId]);
+
     useEffect(() => {
         const definition = materialDefinitions.find(
             (d) => d.definitionId === leftMaterialDefinitionId
