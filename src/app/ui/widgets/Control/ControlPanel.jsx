@@ -1,9 +1,9 @@
-import React from 'react';
 import PropTypes from 'prop-types';
-import JogPad from './JogPad';
-import JogDistance from './JogDistance';
-import MotionButtonGroup from './MotionButtonGroup';
+import React from 'react';
 import styles from './index.styl';
+import JogDistance from './JogDistance';
+import JogPad from './JogPad';
+import MotionButtonGroup from './MotionButtonGroup';
 
 
 const ControlPanel = (props) => {

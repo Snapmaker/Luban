@@ -124,7 +124,9 @@ class ConnectionManager {
     };
 
     connectionCloseImproper = () => {
-        this.socket && this.socket.connectionCloseImproper();
+        if (this.protocol === SACP_PROTOCOL) {
+            this.socket && this.socket.connectionCloseImproper();
+        }
     };
 
     inspectProtocol = async (address, connectionType = CONNECTION_TYPE_WIFI, options, callback) => {

@@ -1,9 +1,10 @@
 import classNames from 'classnames';
-import React from 'react';
 import PropTypes from 'prop-types';
+import React from 'react';
+
 import i18n from '../../../lib/i18n';
-import styles from './index.styl';
 import SvgIcon from '../../components/SvgIcon';
+import styles from './index.styl';
 
 const JogPad = React.memo((props) => {
     const { state, actions, workPosition } = props;

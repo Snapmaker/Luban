@@ -1,53 +1,48 @@
-import _ from 'lodash';
 import classNames from 'classnames';
-import React, { useEffect, useRef, useState } from 'react';
 import i18next from 'i18next';
+import _ from 'lodash';
 import includes from 'lodash/includes';
-import { useHistory } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
+import React, { useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useHistory } from 'react-router-dom';
+import { CNC_GCODE_SUFFIX, LASER_GCODE_SUFFIX, PRINTING_GCODE_SUFFIX, WORKFLOW_STATE_IDLE } from '../../constants';
 import { MACHINE_SERIES } from '../../constants/machines';
-import { Button } from '../components/Buttons';
-import Modal from '../components/Modal';
-import Dropzone from '../components/Dropzone';
+import { actions as widgetActions } from '../../flux/widget';
+import { actions as workspaceActions } from '../../flux/workspace';
 
 import { controller } from '../../lib/controller';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
-import {
-    WORKFLOW_STATE_IDLE,
-    LASER_GCODE_SUFFIX,
-    CNC_GCODE_SUFFIX,
-    PRINTING_GCODE_SUFFIX
-} from '../../constants';
-import { actions as workspaceActions } from '../../flux/workspace';
-import { actions as widgetActions } from '../../flux/widget';
-
-import { renderWidgetList, logPageView } from '../utils';
+import { Button } from '../components/Buttons';
+import Dropzone from '../components/Dropzone';
+import Modal from '../components/Modal';
+import MainToolBar from '../layouts/MainToolBar';
 
 import styles from '../layouts/styles/workspace.styl';
 import WorkspaceLayout from '../layouts/WorkspaceLayout';
-import MainToolBar from '../layouts/MainToolBar';
 
-import ControlWidget from '../widgets/Control';
+import { logPageView, renderWidgetList } from '../utils';
+import CNCPathWidget from '../widgets/CNCPath';
 import ConnectionWidget from '../widgets/Connection';
 import ConsoleWidget from '../widgets/Console';
-import MacroWidget from '../widgets/Macro';
-import PurifierWidget from '../widgets/Purifier';
-import MarlinWidget from '../widgets/Marlin';
-import VisualizerWidget from '../widgets/WorkspaceVisualizer';
-import WebcamWidget from '../widgets/Webcam';
+
+import ControlWidget from '../widgets/Control';
+import EnclosureWidget from '../widgets/Enclosure';
+
+import JobType from '../widgets/JobType';
 import LaserParamsWidget from '../widgets/LaserParams';
 import LaserSetBackground from '../widgets/LaserSetBackground';
 import LaserTestFocusWidget from '../widgets/LaserTestFocus';
-import CNCPathWidget from '../widgets/CNCPath';
-import WifiTransport from '../widgets/WifiTransport';
-import EnclosureWidget from '../widgets/Enclosure';
-import WorkingProgress from '../widgets/WorkingProgress';
-
-import JobType from '../widgets/JobType';
-import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import MachineSettingWidget from '../widgets/MachineSetting';
+import MacroWidget from '../widgets/Macro';
+import MarlinWidget from '../widgets/Marlin';
+import PrintingVisualizer from '../widgets/PrintingVisualizer';
+import PurifierWidget from '../widgets/Purifier';
+import WebcamWidget from '../widgets/Webcam';
+import WifiTransport from '../widgets/WifiTransport';
+import WorkingProgress from '../widgets/WorkingProgress';
+import VisualizerWidget from '../widgets/WorkspaceVisualizer';
 
 const allWidgets = {
     'control': ControlWidget,
@@ -81,6 +76,22 @@ const reloadPage = (forcedReload = true) => {
 };
 
 let workspaceVisualizerRef = null;
+
+// TODO: Workspace widgets can only support G-code based machine, add configuration
+//  to machine indicating if it supports plain G-code.
+function getUnsupportedWidgets(machine) {
+    if (!machine) return [];
+
+    if (machine.value === MACHINE_SERIES.J1.value) {
+        return ['console', 'marlin', 'control', 'macro'];
+    }
+
+    if (machine.value === MACHINE_SERIES.A400.value) {
+        return ['console', 'marlin', 'macro'];
+    }
+
+    return [];
+}
 
 function Workspace({ isPopup, onClose, style, className }) {
     const history = useHistory();
@@ -262,22 +273,13 @@ function Workspace({ isPopup, onClose, style, className }) {
 
     const widgetProps = {};
 
-    // TODO: Workspace widgets can only support G-code based machine, add configuration
-    //  to machine indicating if it supports plain G-code.
-    const unsupported = activeMachine && activeMachine.value === MACHINE_SERIES.J1.value ? ['console', 'marlin', 'control', 'macro'] : [];
+    const unsupported = getUnsupportedWidgets(activeMachine);
+
     const leftWidgetNames = primaryWidgets.filter((widgetName) => {
-        if (includes(unsupported, widgetName)) {
-            return (activeMachine.value !== MACHINE_SERIES.J1.value);
-        } else {
-            return true;
-        }
+        return !includes(unsupported, widgetName);
     });
     const rightWidgetNames = secondaryWidgets.filter((widgetName) => {
-        if (includes(unsupported, widgetName)) {
-            return (activeMachine.value !== MACHINE_SERIES.J1.value);
-        } else {
-            return true;
-        }
+        return !includes(unsupported, widgetName);
     });
 
     return (
