@@ -407,6 +407,7 @@ function getSavedMachinePresetIds(series) {
 /**
  * Set saved preset ids.
  *
+ * @param series
  * @param presetIds
  */
 function setMachineSavedPresetIds(series, presetIds) {
@@ -2055,7 +2056,7 @@ export const actions = {
                 logProfileChange(HEAD_PRINTING, presetKey);
             }
         } else if (type === PRINTING_MANAGER_TYPE_MATERIAL) {
-            const presetKey = direction === RIGHT_EXTRUDER ? PRESET_KEY_MATERIAL_LEFT : PRESET_KEY_MATERIAL_RIGHT;
+            const presetKey = direction === LEFT_EXTRUDER ? PRESET_KEY_MATERIAL_LEFT : PRESET_KEY_MATERIAL_RIGHT;
 
             if (presetId !== savedPresetIds[presetKey]) {
                 savedPresetIds[presetKey] = presetId;

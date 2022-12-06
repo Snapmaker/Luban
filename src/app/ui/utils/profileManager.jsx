@@ -40,6 +40,31 @@ function getSelectOptions(printingDefinitions) {
 }
 
 /**
+ * Pick available presets for material.
+ *
+ * @param presetModels
+ * @param materialPreset
+ */
+export function pickAvailablePresetModels(presetModels, materialPreset) {
+    if (!materialPreset) {
+        return [];
+    }
+
+    const availablePresetModels = [];
+    for (const presetModel of presetModels) {
+        const visible = isQualityPresetVisible(presetModel, {
+            materialType: materialPreset?.materialType,
+        });
+        if (visible) {
+            availablePresetModels.push(presetModel);
+        }
+    }
+
+    return availablePresetModels;
+}
+
+
+/**
  * Get preset Options from definitions.
  *
  * @param presetModels
@@ -68,9 +93,11 @@ function getPresetOptions(presetModels, materialPreset) {
         return {};
     }
 
+    const availablePresetModels = pickAvailablePresetModels(presetModels, materialPreset);
+
     const presetOptions = {};
 
-    for (const presetModel of presetModels) {
+    for (const presetModel of availablePresetModels) {
         const { definitionId, name, i18nCategory } = presetModel;
         const typeOfPrinting = presetModel.typeOfPrinting;
         const category = presetModel.category;
@@ -92,12 +119,7 @@ function getPresetOptions(presetModels, materialPreset) {
             };
         }
 
-        const visible = isQualityPresetVisible(presetModel, {
-            materialType: materialPreset?.materialType,
-        });
-        if (visible) {
-            presetOptions[category].options.push(checkboxAndSelectGroup);
-        }
+        presetOptions[category].options.push(checkboxAndSelectGroup);
     }
 
     // sort preset options

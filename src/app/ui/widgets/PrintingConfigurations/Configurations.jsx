@@ -23,7 +23,7 @@ import Dropdown from '../../components/Dropdown';
 import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
 import Tooltip from '../../components/Tooltip';
-import { getPresetOptions } from '../../utils/profileManager';
+import { getPresetOptions, pickAvailablePresetModels } from '../../utils/profileManager';
 import DefinitionCreator from '../../views/DefinitionCreator';
 import ParamItem from '../../views/ParamItem';
 import PrintingManager from '../../views/PrintingManager';
@@ -57,7 +57,7 @@ function Configurations() {
     const qualityDefinitionModelsRight = useSelector((state) => state?.printing?.qualityDefinitionsRight);
 
     const activePresetIds = useSelector((state) => state?.printing?.activePresetIds);
-    const { materialDefinitions, defaultMaterialId } = useSelector(state => state.printing);
+    const { materialDefinitions, defaultMaterialId, defaultMaterialIdRight } = useSelector(state => state.printing);
 
     const printingCustomConfigsWithCategory = useSelector((state) => state?.machine?.printingCustomConfigsWithCategory);
     const refCreateModal = useRef(null);
@@ -72,6 +72,7 @@ function Configurations() {
     const isDual = isDualExtruder(printingToolhead);
 
     const materialPreset = materialDefinitions.find(p => p.definitionId === defaultMaterialId);
+    const materialPresetRight = materialDefinitions.find(p => p.definitionId === defaultMaterialIdRight);
     const presetOptionsObj = getPresetOptions(qualityDefinitionModels, materialPreset);
 
     const presetCategoryOptions = Object.values(presetOptionsObj).map((item) => {
@@ -331,6 +332,7 @@ function Configurations() {
         );
     };
 
+    // TODO: Move this logic to flux?
     useEffect(() => {
         // re-select definition based on new properties
         if (qualityDefinitionModels.length > 0 || qualityDefinitionModelsRight.length > 0) {
@@ -343,7 +345,8 @@ function Configurations() {
         let presetModel = qualityDefinitionModels.find(p => p.definitionId === activePresetIds[LEFT_EXTRUDER]);
         if (!presetModel) {
             // definition no found, select first official definition
-            presetModel = qualityDefinitionModels[0];
+            const availablePresetModels = pickAvailablePresetModels(qualityDefinitionModels, materialPreset);
+            presetModel = availablePresetModels.length > 0 && availablePresetModels[0];
         }
 
         if (presetModel) {
@@ -354,7 +357,8 @@ function Configurations() {
         // TODO: Maybe not initialize
         presetModel = qualityDefinitionModelsRight.find(p => p.definitionId === activePresetIds[RIGHT_EXTRUDER]);
         if (!presetModel) {
-            presetModel = qualityDefinitionModelsRight[0];
+            const availablePresetModels = pickAvailablePresetModels(qualityDefinitionModelsRight, materialPresetRight);
+            presetModel = availablePresetModels.length > 0 && availablePresetModels[0];
         }
         if (presetModel) {
             actions.onChangePreset(RIGHT_EXTRUDER, presetModel);

@@ -27,7 +27,6 @@ function ParameterModifier({ outsideActions }) {
         qualityDefinitionsRight,
         activePresetIds,
     } = useSelector(state => state?.printing);
-    // const { toolHead: { printingToolhead } } = useSelector(state => state?.machine);
 
     // selected stack
     // Either LEFT_EXTRUDER or RIGHT_EXTRUDER, these are the only values supported,

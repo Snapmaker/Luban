@@ -134,10 +134,13 @@ const StackPresetSelector = ({ selectedStackId, selectedPresetId, onSelectStack,
                                         return (
                                             <Anchor
                                                 key={option.definitionId}
-                                                className={classNames({
-                                                    'display-block': expanded,
-                                                    'display-none': !expanded,
-                                                })}
+                                                className={classNames(
+                                                    'text-overflow-ellipsis',
+                                                    {
+                                                        'display-block': expanded,
+                                                        'display-none': !expanded,
+                                                    }
+                                                )}
                                                 onClick={() => selectPresetByPresetId(option.definitionId)}
                                             >
                                                 <div className={`border-radius-4 height-32 padding-horizontal-24 ${selectedPresetId === option.definitionId ? 'background-color-blue' : ''}`}>{option.label}</div>
