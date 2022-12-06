@@ -3,13 +3,7 @@
     "version": "4.2.0",
     "settings": {
         "machine_name": {
-            "label": "Machine Type",
-            "description": "The name of your 3D printer model.",
-            "default_value": "Unknown",
-            "type": "str",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": "Snapmaker Artisan"
         },
         "machine_show_variants": {
             "label": "Show Machine Variants",
@@ -78,23 +72,10 @@
             "settable_per_meshgroup": false
         },
         "material_print_temp_prepend": {
-            "label": "Include Material Temperatures",
-            "description": "Whether to include nozzle temperature commands at the start of the gcode. When the start_gcode already contains nozzle temperature commands Cura frontend will automatically disable this setting.",
-            "default_value": true,
-            "type": "bool",
-            "enabled": "machine_nozzle_temp_enabled",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": false
         },
         "material_bed_temp_prepend": {
-            "label": "Include Build Plate Temperature",
-            "description": "Whether to include build plate temperature commands at the start of the gcode. When the start_gcode already contains build plate temperature commands Cura frontend will automatically disable this setting.",
-            "default_value": true,
-            "type": "bool",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": false
         },
         "machine_width": {
             "label": "Machine Width",
