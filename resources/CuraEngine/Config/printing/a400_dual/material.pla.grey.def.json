@@ -1,9 +1,9 @@
 {
-    "version": "4.5.0-beta.4",
+    "version": "4.5.0-beta.5",
     "name": "PLA-Grey",
     "category": "PLA",
     "i18nName": "key-default_name-PLA_Grey",
-    "i18nCategory": "key-default_category-PLA",
+    "i18nCategory": "PLA",
     "isRecommended": true,
     "inherits": "snapmaker2",
     "metadata": {
@@ -20,25 +20,25 @@
             "default_value": "#7f7f7f"
         },
         "material_print_temperature": {
-            "default_value": 205
+            "default_value": 215
         },
         "material_print_temperature_layer_0": {
-            "default_value": 205
+            "default_value": 215
         },
         "material_initial_print_temperature": {
-            "default_value": 200
+            "default_value": 210
         },
         "material_final_print_temperature": {
-            "default_value": 200
+            "default_value": 210
         },
         "material_extrusion_cool_down_speed": {
             "default_value": 0.7
         },
         "material_bed_temperature": {
-            "default_value": 50
+            "default_value": 65
         },
         "material_bed_temperature_layer_0": {
-            "default_value": 70
+            "default_value": 65
         },
         "material_standby_temperature": {
             "default_value": 150
@@ -125,7 +125,7 @@
             "default_value": 10
         },
         "retraction_hop_only_when_collides": {
-            "default_value": false
+            "default_value": true
         },
         "retraction_hop": {
             "default_value": 1

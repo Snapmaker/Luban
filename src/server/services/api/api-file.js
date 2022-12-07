@@ -536,7 +536,17 @@ export const recoverProjectFile = async (req, res) => {
                 fs.copyFileSync(fname, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialId}.def.json`);
             }
         }
-        const { activePresetIds } = config;
+
+        // Fallback to v4.4 quality preset key
+        let { activePresetIds } = config;
+        if (!activePresetIds) {
+            const { defaultQualityId } = config;
+            activePresetIds = {
+                [LEFT_EXTRUDER]: defaultQualityId,
+                [RIGHT_EXTRUDER]: '',
+            };
+        }
+
         for (const stackId of [LEFT_EXTRUDER, RIGHT_EXTRUDER]) {
             const presetId = activePresetIds[stackId];
             if (presetId && /^quality.([0-9_]+)$/.test(presetId)) {
@@ -556,7 +566,6 @@ export const recoverProjectFile = async (req, res) => {
                 }
             });
         }
-        log.debug(config);
 
         res.send({ content, projectPath: file.path });
         res.end();

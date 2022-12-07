@@ -27,7 +27,7 @@ import {
     CaseConfigOriginalCncStandard,
     CaseConfigOriginalLaserPowerOne,
     CaseConfigOriginalLaserPowerTwo,
-    CaseConfigOriginalPrintingSingle
+    CaseConfigOriginalPrintingSingle,
 } from '../ui/pages/HomePage/CaseConfig';
 
 export const getCaseList = (series, toolHead) => {
@@ -77,6 +77,21 @@ export const getCaseList = (series, toolHead) => {
             if (!isDualExtruder(printingToolhead)) {
                 caseList = caseList.concat(CaseConfigA350PrintingSingle);
             }
+            if (laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
+                caseList = caseList.concat(CaseConfigA350LaserPowerOne);
+            }
+            if (laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                caseList = caseList.concat(CaseConfigA350LaserPowerTwo);
+            }
+            caseList = caseList.concat(CaseConfigA350CncStandard);
+            caseListFourAxis = caseListFourAxis.concat(CaseConfigA350CncFourAxis);
+            caseListFourAxis = caseListFourAxis.concat(CaseConfigA350LaserFourAxis);
+            break;
+        case MACHINE_SERIES.A400.value:
+            if (!isDualExtruder(printingToolhead)) {
+                caseList = caseList.concat(CaseConfigA350PrintingSingle);
+            }
+            // Reuse laser and CNC projects
             if (laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
                 caseList = caseList.concat(CaseConfigA350LaserPowerOne);
             }
