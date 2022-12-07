@@ -356,7 +356,7 @@ class AppLayout extends PureComponent {
                                     color="#4cb518"
                                 />
                                 <span>
-                                    {i18n._('key-app_layout-File Saved')}
+                                    {i18n._('key-app_layout-File Saved')}.&nbsp;
                                 </span>
                                 <Anchor
                                     onClick={openFolder}
@@ -367,7 +367,7 @@ class AppLayout extends PureComponent {
                                             textDecoration: 'underline'
                                         }}
                                     >
-                                        {i18n._('key-app_layout-Open Folder')}
+                                        {i18n._('key-app_layout-Open Folder')}.
                                     </span>
                                 </Anchor>
                             </div>
