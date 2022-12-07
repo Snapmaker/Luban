@@ -1,23 +1,14 @@
 {
-    "version": "4.4.0",
-    "name": "Fast Print",
-    "category": "Default",
-    "i18nName": "key-default_name-Fast Print",
-    "i18nCategory": "key-default_category-Default",
-    "typeOfPrinting": "quik",
+    "version": "4.5.0-beta.4",
+    "name": "Support Custom",
+    "category": "Custom",
+    "i18nName": "",
+    "i18nCategory": "Default",
+    "isRecommended": false,
     "qualityType": "abs",
-    "isRecommended": true,
     "inherits": "snapmaker2",
     "metadata": {
-        "visible": true,
-        "readonly": true,
-        "author": "Snapmaker",
-        "manufacturer": "Snapmaker",
-        "file_formats": "text/x-gcode",
-        "machine_extruder_trains": {
-            "0": "snapmaker_extruder_0",
-            "1": "snapmaker_extruder_1"
-        }
+        "readonly": false
     },
     "overrides": {
         "extruders_enabled_count": {
@@ -66,16 +57,16 @@
             "default_value": 0.4
         },
         "speed_print": {
-            "default_value": 200
+            "default_value": 120
         },
         "speed_infill": {
-            "default_value": 200
+            "default_value": 120
         },
         "speed_wall_0": {
-            "default_value": 100
+            "default_value": 60
         },
         "speed_wall_x": {
-            "default_value": 200
+            "default_value": 120
         },
         "wall_overhang_speed_factor": {
             "default_value": 100
@@ -84,25 +75,25 @@
             "default_value": 90
         },
         "speed_topbottom": {
-            "default_value": 100
+            "default_value": 60
         },
         "speed_roofing": {
-            "default_value": 100
+            "default_value": 60
         },
         "speed_support_infill": {
-            "default_value": 200
+            "default_value": 120
         },
         "speed_support_roof": {
-            "default_value": 200
+            "default_value": 120
         },
         "speed_support_bottom": {
-            "default_value": 200
+            "default_value": 120
         },
         "speed_prime_tower": {
-            "default_value": 200
+            "default_value": 120
         },
         "speed_travel": {
-            "default_value": 200
+            "default_value": 144
         },
         "acceleration_enabled": {
             "default_value": true
@@ -180,7 +171,7 @@
             "default_value": "normal"
         },
         "wall_thickness": {
-            "default_value": 0.8
+            "default_value": 1.2
         },
         "wall_line_count": {
             "default_value": 2
@@ -189,7 +180,7 @@
             "default_value": 1
         },
         "top_layers": {
-            "default_value": 6
+            "default_value": 5
         },
         "roofing_layer_count": {
             "default_value": 0
@@ -201,10 +192,10 @@
             "default_value": 1
         },
         "bottom_layers": {
-            "default_value": 6
+            "default_value": 5
         },
         "initial_bottom_layers": {
-            "default_value": 6
+            "default_value": 5
         },
         "top_bottom_pattern": {
             "default_value": "zigzag"
@@ -216,10 +207,10 @@
             "default_value": "[  ]"
         },
         "infill_sparse_density": {
-            "default_value": 15
+            "default_value": 12
         },
         "infill_line_distance": {
-            "default_value": 8
+            "default_value": 10
         },
         "infill_angles": {
             "default_value": "[  ]"
@@ -249,7 +240,7 @@
             "default_value": false
         },
         "support_generate_type": {
-            "default_value": "none"
+            "default_value": "normal"
         },
         "support_tree_angle": {
             "default_value": 40
@@ -267,7 +258,7 @@
             "default_value": 0.2
         },
         "support_enable": {
-            "default_value": false
+            "default_value": true
         },
         "support_structure": {
             "default_value": "normal"
@@ -297,7 +288,7 @@
             "default_value": "[135]"
         },
         "support_brim_enable": {
-            "default_value": false
+            "default_value": true
         },
         "support_brim_width": {
             "default_value": 8
@@ -309,43 +300,43 @@
             "default_value": 0
         },
         "support_interface_enable": {
-            "default_value": false
+            "default_value": true
         },
         "support_roof_enable": {
-            "default_value": false
+            "default_value": true
         },
         "support_bottom_enable": {
-            "default_value": false
+            "default_value": true
         },
         "support_interface_height": {
             "default_value": 1
         },
         "support_roof_height": {
-            "default_value": 1
+            "default_value": 0.6
         },
         "support_bottom_height": {
-            "default_value": 1
+            "default_value": 0.6
         },
         "support_interface_skip_height": {
             "default_value": 0.3
         },
         "support_interface_density": {
-            "default_value": 100
+            "default_value": 70
         },
         "support_roof_line_distance": {
-            "default_value": 0.4
+            "default_value": 0.571
         },
         "support_bottom_line_distance": {
-            "default_value": 0.4
+            "default_value": 0.571
         },
         "support_interface_pattern": {
-            "default_value": "concentric"
+            "default_value": "zigzag"
         },
         "support_roof_pattern": {
-            "default_value": "concentric"
+            "default_value": "zigzag"
         },
         "support_bottom_pattern": {
-            "default_value": "concentric"
+            "default_value": "zigzag"
         },
         "support_interface_offset": {
             "default_value": 0
@@ -393,13 +384,13 @@
             "default_value": "reliable"
         },
         "support_z_distance": {
-            "default_value": 0.16
+            "default_value": 0
         },
         "support_top_distance": {
-            "default_value": 0.16
+            "default_value": 0
         },
         "support_bottom_distance": {
-            "default_value": 0.16
+            "default_value": 0
         },
         "support_xy_distance": {
             "default_value": 0.7
@@ -423,16 +414,16 @@
             "default_value": 2
         },
         "minimum_support_area": {
-            "default_value": 0
+            "default_value": 20
         },
         "minimum_interface_area": {
-            "default_value": 1
+            "default_value": 20
         },
         "minimum_roof_area": {
-            "default_value": 1
+            "default_value": 20
         },
         "minimum_bottom_area": {
-            "default_value": 1
+            "default_value": 20
         },
         "adhesion_type": {
             "default_value": "skirt"
@@ -456,7 +447,7 @@
             "default_value": true
         },
         "brim_outside_only": {
-            "default_value": true
+            "default_value": false
         },
         "raft_margin": {
             "default_value": 15
@@ -471,7 +462,7 @@
             "default_value": 25
         },
         "speed_travel_layer_0": {
-            "default_value": 25
+            "default_value": 30
         },
         "skirt_brim_speed": {
             "default_value": 25
@@ -504,28 +495,28 @@
             "default_value": 2
         },
         "dual_helper_type": {
-            "default_value": "none"
+            "default_value": "prime_tower"
         },
         "prime_tower_enable": {
-            "default_value": false
+            "default_value": true
         },
         "prime_tower_size": {
-            "default_value": 20
+            "default_value": 35
         },
         "prime_tower_min_volume": {
-            "default_value": 12
+            "default_value": 24
         },
         "prime_tower_position_x": {
-            "default_value": 200
+            "default_value": 196.07585281736436
         },
         "prime_tower_position_y": {
-            "default_value": 200
+            "default_value": 246.24275606283032
         },
         "prime_tower_wipe_enabled": {
-            "default_value": false
+            "default_value": true
         },
         "prime_tower_brim_enable": {
-            "default_value": false
+            "default_value": true
         },
         "ooze_shield_enabled": {
             "default_value": false
@@ -588,7 +579,7 @@
             "default_value": 0.38
         },
         "speed_ironing": {
-            "default_value": 66.667
+            "default_value": 40
         },
         "acceleration_ironing": {
             "default_value": 2000
