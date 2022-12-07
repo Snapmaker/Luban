@@ -438,7 +438,7 @@ function Configurations() {
                 }
                 {
                     selectedPresetCategory !== PRESET_CATEGORY_DEFAULT && (
-                        <div className={classNames(styles['preset-customized'], 'margin-top-8')}>
+                        <div className={classNames(styles['preset-customized'], 'margin-vertical-16')}>
                             {
                                 presetOptionsObj[selectedPresetCategory] && presetOptionsObj[selectedPresetCategory].options.map((optionItem, index) => {
                                     return (
