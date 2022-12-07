@@ -344,6 +344,34 @@ class SocketTCP extends SocketBASE {
     public getLaserMaterialThickness = async (options: EventOptions) => {
         const { x, y, feedRate, eventName, isCameraCapture = false } = options;
         log.debug(`x, y, feedRate, eventName, isCameraCapture, ${x}, ${y}, ${feedRate}, ${isCameraCapture}`);
+        if (isCameraCapture) {
+            try {
+                this.sacpClient.getCurrentCoordinateInfo().then(async ({ coordinateSystemInfo }) => {
+                    const xNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.X1).value;
+                    const yNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.Y1).value;
+                    const zNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.Z1).value;
+
+                    log.debug(`current positions, ${xNow}, ${yNow}, ${zNow}`);
+                    log.debug(`thickness & focal, ${this.thickness}, ${this.laserFocalLength}`);
+
+                    await this.sacpClient.updateCoordinate(CoordinateType.WORKSPACE);
+
+                    if (isCameraCapture) {
+                        const newX = new CoordinateInfo(Direction.X1, xNow);
+                        const newY = new CoordinateInfo(Direction.Y1, yNow);
+                        const newZ = new CoordinateInfo(Direction.Z1, zNow - (this.laserFocalLength + this.thickness));
+                        const newCoord = [newX, newY, newZ];
+
+                        log.debug(`new positions, ${newCoord}`);
+
+                        await this.sacpClient.setWorkOrigin(newCoord);
+                    }
+                });
+            } catch (e) {
+                log.error(`isCameraCapture getLaserMaterialThickness error: ${e}`);
+            }
+        }
+
         await this.sacpClient.getLaserMaterialThickness({
             token: '',
             x,

@@ -408,6 +408,17 @@ export const actions = {
                 const { state } = options;
                 const { headType, pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
 
+                const compareAndSet = (obj, compareObj, key, value) => {
+                    if (isNil(value)) {
+                        return;
+                    }
+                    if (value !== compareObj[key]) {
+                        obj[key] = value;
+                    }
+                };
+
+                const data = {};
+
                 const machineState = getState().machine;
                 if ((machineState.isRotate !== pos?.isFourAxis) && (headType === HEAD_LASER || headType === HEAD_CNC)) {
                     dispatch(workspaceActions.updateMachineState({
@@ -513,102 +524,146 @@ export const actions = {
                     fanLevel,
                     isDoorEnable
                 } = state;
-                dispatch(baseActions.updateState({
-                    laser10WErrorState,
-                    isEmergencyStopped,
-                    currentWorkNozzle: !currentWorkNozzle ? LEFT_EXTRUDER : RIGHT_EXTRUDER,
-                    cncTargetSpindleSpeed,
-                    cncCurrentSpindleSpeed,
-                    enclosureLight: ledValue,
-                    enclosureFan: fanLevel
-                }));
-                if (!isNil(isDoorEnable)) {
-                    dispatch(baseActions.updateState({
-                        isDoorEnabled: isDoorEnable
-                    }));
-                }
-                if (!isNil(fileName)) {
-                    dispatch(baseActions.updateState({
-                        gcodeFileName: fileName
-                    }));
-                }
-                if (!isNil(status)) {
-                    dispatch(baseActions.updateState({
-                        workflowStatus: status
-                    }));
-                }
-                if (!isNil(gcodePrintingInfo)) {
-                    dispatch(baseActions.updateState({
-                        gcodePrintingInfo
-                    }));
-                }
-                if (!isNil(isHomed)) {
-                    dispatch(baseActions.updateState({
-                        isHomed
-                    }));
-                }
-                if (!isNil(nozzleSizeList)) {
-                    dispatch(baseActions.updateState({
-                        nozzleSizeList
-                    }));
-                }
+
+                compareAndSet(data, machineState, 'laser10WErrorState', laser10WErrorState);
+                compareAndSet(data, machineState, 'isEmergencyStopped', isEmergencyStopped);
+                compareAndSet(data, machineState, 'currentWorkNozzle', !currentWorkNozzle ? LEFT_EXTRUDER : RIGHT_EXTRUDER);
+                compareAndSet(data, machineState, 'cncTargetSpindleSpeed', cncTargetSpindleSpeed);
+                compareAndSet(data, machineState, 'cncCurrentSpindleSpeed', cncCurrentSpindleSpeed);
+                compareAndSet(data, machineState, 'enclosureLight', ledValue);
+                compareAndSet(data, machineState, 'enclosureFan', fanLevel);
+
+
+                compareAndSet(data, machineState, 'isDoorEnabled', isDoorEnable);
+                compareAndSet(data, machineState, 'gcodeFileName', fileName);
+                compareAndSet(data, machineState, 'workflowStatus', status);
+                compareAndSet(data, machineState, 'gcodePrintingInfo', gcodePrintingInfo);
+                compareAndSet(data, machineState, 'isHomed', isHomed);
+                compareAndSet(data, machineState, 'nozzleSizeList', nozzleSizeList);
+
+                // if (!isNil(isDoorEnable)) {
+                //     dispatch(baseActions.updateState({
+                //         isDoorEnabled: isDoorEnable
+                //     }));
+                // }
+                // if (!isNil(fileName)) {
+                //     dispatch(baseActions.updateState({
+                //         gcodeFileName: fileName
+                //     }));
+                // }
+                // if (!isNil(status)) {
+                //     dispatch(baseActions.updateState({
+                //         workflowStatus: status
+                //     }));
+                // }
+                // if (!isNil(gcodePrintingInfo)) {
+                //     dispatch(baseActions.updateState({
+                //         gcodePrintingInfo
+                //     }));
+                // }
+                // if (!isNil(isHomed)) {
+                //     dispatch(baseActions.updateState({
+                //         isHomed
+                //     }));
+                // }
+                // if (!isNil(nozzleSizeList)) {
+                //     dispatch(baseActions.updateState({
+                //         nozzleSizeList
+                //     }));
+                // }
                 if (!isNil(laserFocalLength)) {
-                    dispatch(baseActions.updateState({
-                        laserFocalLength
-                    }));
+                    compareAndSet(data, machineState, 'laserFocalLength', laserFocalLength);
+                    // dispatch(baseActions.updateState({
+                    //     laserFocalLength
+                    // }));
                 } else if (!isNil(zFocus)) {
-                    dispatch(baseActions.updateState({
-                        laserFocalLength: zFocus + LASER_MOCK_PLATE_HEIGHT
-                    }));
+                    compareAndSet(data, machineState, 'laserFocalLength', zFocus + LASER_MOCK_PLATE_HEIGHT);
+                    // dispatch(baseActions.updateState({
+                    //     laserFocalLength: zFocus + LASER_MOCK_PLATE_HEIGHT
+                    // }));
                 }
                 if (!isNil(laserPower)) {
-                    dispatch(baseActions.updateState({
-                        laserPower
-                    }));
+                    // dispatch(baseActions.updateState({
+                    //     laserPower
+                    // }));
+                    compareAndSet(data, machineState, 'laserPower', laserPower);
                 } else if (!isNil(headPower)) {
                     dispatch(baseActions.updateState({
                         laserPower: headPower
                     }));
+                    compareAndSet(data, machineState, 'headPower', headPower);
                 }
                 if (!isNil(temperature)) {
-                    dispatch(baseActions.updateState({
-                        nozzleTemperature: parseFloat(temperature.t),
-                        nozzleTargetTemperature: parseFloat(temperature.tTarget),
-                        heatedBedTemperature: parseFloat(temperature.b),
-                        heatedBedTargetTemperature: parseFloat(temperature.bTarget)
-                        // TO DO: 2.0 Serial connection need to add right extruder temperature info
-                    }));
+                    compareAndSet(data, machineState, 'nozzleTemperature', parseFloat(temperature.t));
+                    compareAndSet(data, machineState, 'nozzleTargetTemperature', parseFloat(temperature.tTarget));
+                    compareAndSet(data, machineState, 'heatedBedTemperature', parseFloat(temperature.b));
+                    compareAndSet(data, machineState, 'heatedBedTargetTemperature', parseFloat(temperature.bTarget));
+                    // dispatch(baseActions.updateState({
+                    //     nozzleTemperature: parseFloat(temperature.t),
+                    //     nozzleTargetTemperature: parseFloat(temperature.tTarget),
+                    //     heatedBedTemperature: parseFloat(temperature.b),
+                    //     heatedBedTargetTemperature: parseFloat(temperature.bTarget)
+                    //     // TO DO: 2.0 Serial connection need to add right extruder temperature info
+                    // }));
                 } else {
-                    dispatch(baseActions.updateState({
-                        nozzleTemperature: nozzleTemperature,
-                        nozzleTargetTemperature: nozzleTargetTemperature,
-                        nozzleRightTemperature: nozzleRightTemperature,
-                        nozzleRightTargetTemperature: nozzleRightTargetTemperature,
-                        heatedBedTemperature: heatedBedTemperature,
-                        heatedBedTargetTemperature: heatedBedTargetTemperature
-                    }));
+                    compareAndSet(data, machineState, 'nozzleTemperature', nozzleTemperature);
+                    compareAndSet(data, machineState, 'nozzleTargetTemperature', nozzleTargetTemperature);
+                    compareAndSet(data, machineState, 'nozzleRightTemperature', nozzleRightTemperature);
+                    compareAndSet(data, machineState, 'nozzleRightTargetTemperature', nozzleRightTargetTemperature);
+                    compareAndSet(data, machineState, 'heatedBedTemperature', heatedBedTemperature);
+                    compareAndSet(data, machineState, 'heatedBedTargetTemperature', heatedBedTargetTemperature);
+
+                    // dispatch(baseActions.updateState({
+                    //     nozzleTemperature: nozzleTemperature,
+                    //     nozzleTargetTemperature: nozzleTargetTemperature,
+                    //     nozzleRightTemperature: nozzleRightTemperature,
+                    //     nozzleRightTargetTemperature: nozzleRightTargetTemperature,
+                    //     heatedBedTemperature: heatedBedTemperature,
+                    //     heatedBedTargetTemperature: heatedBedTargetTemperature
+                    // }));
                 }
+
                 if (!isNil(moduleStatusList)) {
                     const enclosureOnline = moduleStatusList.enclosure;
                     const rotateModuleOnline = moduleStatusList.rotateModuleOnline;
-                    dispatch(baseActions.updateState({ moduleStatusList, enclosureOnline, rotateModuleOnline }));
+
+                    compareAndSet(data, machineState, 'moduleStatusList', moduleStatusList);
+                    compareAndSet(data, machineState, 'enclosureOnline', enclosureOnline);
+                    compareAndSet(data, machineState, 'rotateModuleOnline', rotateModuleOnline);
+                    // dispatch(baseActions.updateState({ moduleStatusList, enclosureOnline, rotateModuleOnline }));
                 }
                 if (!isNil(doorSwitchCount)) {
-                    dispatch(baseActions.updateState({ doorSwitchCount }));
+                    compareAndSet(data, machineState, 'doorSwitchCount', doorSwitchCount);
+                    // dispatch(baseActions.updateState({ doorSwitchCount }));
                 }
-                !isNil(isEnclosureDoorOpen) && dispatch(baseActions.updateState({ isEnclosureDoorOpen }));
-                !isNil(zAxisModule) && dispatch(baseActions.updateState({ zAxisModule }));
-                !isNil(headStatus) && dispatch(baseActions.updateState({ headStatus: !!headStatus }));
-                !isNil(laserCamera) && dispatch(baseActions.updateState({ laserCamera }));
+
+                compareAndSet(data, machineState, 'isEnclosureDoorOpen', isEnclosureDoorOpen);
+                compareAndSet(data, machineState, 'zAxisModule', zAxisModule);
+                compareAndSet(data, machineState, 'headStatus', !!headStatus);
+                compareAndSet(data, machineState, 'laserCamera', laserCamera);
+
+                // !isNil(isEnclosureDoorOpen) && dispatch(baseActions.updateState({ isEnclosureDoorOpen }));
+                // !isNil(zAxisModule) && dispatch(baseActions.updateState({ zAxisModule }));
+                // !isNil(headStatus) && dispatch(baseActions.updateState({ headStatus: !!headStatus }));
+                // !isNil(laserCamera) && dispatch(baseActions.updateState({ laserCamera }));
+
                 if (!isNil(airPurifier)) {
-                    dispatch(baseActions.updateState({
-                        airPurifier: airPurifier,
-                        airPurifierHasPower: airPurifierHasPower,
-                        airPurifierSwitch: airPurifierSwitch,
-                        airPurifierFanSpeed: airPurifierFanSpeed,
-                        airPurifierFilterHealth: airPurifierFilterHealth
-                    }));
+                    compareAndSet(data, machineState, 'airPurifier', airPurifier);
+                    compareAndSet(data, machineState, 'airPurifierHasPower', airPurifierHasPower);
+                    compareAndSet(data, machineState, 'airPurifierSwitch', airPurifierSwitch);
+                    compareAndSet(data, machineState, 'airPurifierFanSpeed', airPurifierFanSpeed);
+                    compareAndSet(data, machineState, 'airPurifierFilterHealth', airPurifierFilterHealth);
+                    // dispatch(baseActions.updateState({
+                    //     airPurifier: airPurifier,
+                    //     airPurifierHasPower: airPurifierHasPower,
+                    //     airPurifierSwitch: airPurifierSwitch,
+                    //     airPurifierFanSpeed: airPurifierFanSpeed,
+                    //     airPurifierFilterHealth: airPurifierFilterHealth
+                    // }));
                 }
+
+                dispatch(baseActions.updateState(data));
+
                 // TODO: wifi emergencyStop goes there
                 if (isEmergencyStopped) {
                     dispatch(
@@ -834,7 +889,8 @@ export const actions = {
                 const { gcodeFile } = getState().workspace;
                 controller.emitEvent(CONNECTION_HEAD_BEGIN_WORK, {
                     headType: options.headType,
-                    uploadName: gcodeFile.uploadName
+                    uploadName: gcodeFile.uploadName,
+                    renderName: gcodeFile?.renderGcodeFileName || gcodeFile.uploadName
                 });
             }
         };
