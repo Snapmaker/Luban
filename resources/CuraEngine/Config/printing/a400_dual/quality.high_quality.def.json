@@ -1,9 +1,9 @@
 {
-    "version": "4.4.0",
+    "version": "4.5.0-beta.5",
     "name": "Smooth Surface",
     "category": "Default",
     "i18nName": "key-default_name-Smooth Surface",
-    "i18nCategory": "key-default_category-Default",
+    "i18nCategory": "Default",
     "typeOfPrinting": "fine",
     "qualityType": "abs",
     "isRecommended": true,
@@ -66,16 +66,16 @@
             "default_value": 0.4
         },
         "speed_print": {
-            "default_value": 40
+            "default_value": 60
         },
         "speed_infill": {
-            "default_value": 40
+            "default_value": 60
         },
         "speed_wall_0": {
-            "default_value": 20
+            "default_value": 30
         },
         "speed_wall_x": {
-            "default_value": 40
+            "default_value": 60
         },
         "wall_overhang_speed_factor": {
             "default_value": 100
@@ -84,25 +84,25 @@
             "default_value": 90
         },
         "speed_topbottom": {
-            "default_value": 20
+            "default_value": 30
         },
         "speed_roofing": {
-            "default_value": 20
+            "default_value": 30
         },
         "speed_support_infill": {
-            "default_value": 40
+            "default_value": 60
         },
         "speed_support_roof": {
-            "default_value": 40
+            "default_value": 60
         },
         "speed_support_bottom": {
-            "default_value": 40
+            "default_value": 60
         },
         "speed_prime_tower": {
-            "default_value": 40
+            "default_value": 60
         },
         "speed_travel": {
-            "default_value": 80
+            "default_value": 72
         },
         "acceleration_enabled": {
             "default_value": true
@@ -471,7 +471,7 @@
             "default_value": 25
         },
         "speed_travel_layer_0": {
-            "default_value": 50
+            "default_value": 60
         },
         "skirt_brim_speed": {
             "default_value": 25
@@ -588,7 +588,7 @@
             "default_value": 0.38
         },
         "speed_ironing": {
-            "default_value": 13.333
+            "default_value": 20
         },
         "acceleration_ironing": {
             "default_value": 2000

@@ -544,7 +544,7 @@ export const recoverProjectFile = async (req, res) => {
             activePresetIds = {
                 [LEFT_EXTRUDER]: defaultQualityId,
                 [RIGHT_EXTRUDER]: '',
-            }
+            };
         }
 
         for (const stackId of [LEFT_EXTRUDER, RIGHT_EXTRUDER]) {

@@ -1,11 +1,11 @@
 {
-    "version": "4.5.0-beta.4",
+    "version": "4.5.0-beta.5",
     "name": "Support Custom",
     "category": "Custom",
     "i18nName": "",
     "i18nCategory": "Default",
-    "isRecommended": false,
     "qualityType": "abs",
+    "isRecommended": false,
     "inherits": "snapmaker2",
     "metadata": {
         "readonly": false
@@ -15,16 +15,16 @@
             "default_value": 2
         },
         "layer_height": {
-            "default_value": 0.2
+            "default_value": 0.16
         },
         "layer_height_0": {
             "default_value": 0.28
         },
         "infill_sparse_thickness": {
-            "default_value": 0.2
+            "default_value": 0.16
         },
         "support_infill_sparse_thickness": {
-            "default_value": 0.2
+            "default_value": 0.16
         },
         "line_width": {
             "default_value": 0.4
@@ -57,16 +57,16 @@
             "default_value": 0.4
         },
         "speed_print": {
-            "default_value": 120
+            "default_value": 100
         },
         "speed_infill": {
-            "default_value": 120
+            "default_value": 100
         },
         "speed_wall_0": {
-            "default_value": 60
+            "default_value": 50
         },
         "speed_wall_x": {
-            "default_value": 120
+            "default_value": 100
         },
         "wall_overhang_speed_factor": {
             "default_value": 100
@@ -75,25 +75,25 @@
             "default_value": 90
         },
         "speed_topbottom": {
-            "default_value": 60
+            "default_value": 50
         },
         "speed_roofing": {
-            "default_value": 60
+            "default_value": 50
         },
         "speed_support_infill": {
-            "default_value": 120
+            "default_value": 100
         },
         "speed_support_roof": {
-            "default_value": 120
+            "default_value": 100
         },
         "speed_support_bottom": {
-            "default_value": 120
+            "default_value": 100
         },
         "speed_prime_tower": {
-            "default_value": 120
+            "default_value": 100
         },
         "speed_travel": {
-            "default_value": 144
+            "default_value": 120
         },
         "acceleration_enabled": {
             "default_value": true
@@ -180,7 +180,7 @@
             "default_value": 1
         },
         "top_layers": {
-            "default_value": 5
+            "default_value": 6
         },
         "roofing_layer_count": {
             "default_value": 0
@@ -192,10 +192,10 @@
             "default_value": 1
         },
         "bottom_layers": {
-            "default_value": 5
+            "default_value": 6
         },
         "initial_bottom_layers": {
-            "default_value": 5
+            "default_value": 6
         },
         "top_bottom_pattern": {
             "default_value": "zigzag"
@@ -267,7 +267,7 @@
             "default_value": "zigzag"
         },
         "support_wall_count": {
-            "default_value": 0
+            "default_value": 1
         },
         "zig_zaggify_support": {
             "default_value": false
@@ -363,7 +363,7 @@
             "default_value": 1
         },
         "support_use_towers": {
-            "default_value": true
+            "default_value": false
         },
         "support_tower_diameter": {
             "default_value": 3
@@ -579,7 +579,7 @@
             "default_value": 0.38
         },
         "speed_ironing": {
-            "default_value": 40
+            "default_value": 33.333
         },
         "acceleration_ironing": {
             "default_value": 2000
@@ -627,7 +627,7 @@
             "default_value": true
         },
         "travel_avoid_supports": {
-            "default_value": false
+            "default_value": true
         },
         "travel_avoid_distance": {
             "default_value": 0.625
