@@ -110,12 +110,12 @@ module.exports = {
                 loader: 'eslint-loader',
                 exclude: /node_modules/,
                 options: {
-                    // cache: true,
+                    cache: false,
                     fix: true,
                     emitWarning: false,
                     quiet: true,
-                    configFile: path.resolve(__dirname, '.eslintrc.js')
-                }
+                    configFile: path.resolve(__dirname, '.eslintrc.js'),
+                },
             },
             {
                 test: /\.worker\.(j|t)s$/,

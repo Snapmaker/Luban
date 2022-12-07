@@ -1,0 +1,94 @@
+appId: com.snapmaker.luban
+productName: Snapmaker Luban
+
+directories:
+    buildResources: build
+    output: output
+    app: dist/Luban
+
+fileAssociations:
+    - name: Project files
+      role: Viewer
+      ext:
+        - snap3dp
+        - snapcnc
+        - snaplzr
+
+#
+# global pack options
+#
+asar: false
+asarUnpack: []
+
+#
+# publish options
+#
+publish:
+    - provider: github
+      repo: https://github.com/Snapmaker/Luban
+
+#
+# platforms and targets
+#
+mac:
+    category: public.app-category.productivity
+    target:
+        - dmg
+        - zip
+    icon: build/electron/snapmaker-luban.icns
+    hardenedRuntime: true
+    gatekeeperAssess: false
+    entitlements: build/entitlements.mac.plist
+    entitlementsInherit: build/entitlements.mac.plist
+
+
+dmg:
+    background: build/electron/background.png
+    icon: build/electron/snapmaker-luban.icns
+    iconSize: 80
+    iconTextSize: 12
+    contents:
+        - type: link
+          path: /Applications
+          x: 448
+          y: 344
+        - type: file
+          x: 192
+          y: 344
+
+win:
+    target:
+        - nsis
+    # override artifact name for Windows
+    artifactName: ${productName} ${version}.${ext}
+    verifyUpdateCodeSignature: false
+    icon: build/electron/snapmaker-luban.ico
+
+nsis:
+    oneClick: false
+    perMachine: true
+    allowElevation: true
+    allowToChangeInstallationDirectory: true
+
+linux:
+    category: Utility
+    maintainer: parachute <ryan@snapmaker.com>
+    target:
+        - deb
+        - rpm
+
+deb:
+    depends:
+        - gconf2
+        - gconf-service
+        - libnotify4
+        - libappindicator1
+        - libxtst6
+        - libnss3
+        - libasound2
+
+
+#
+# Hooks
+#
+afterSign: build/notarize.js
