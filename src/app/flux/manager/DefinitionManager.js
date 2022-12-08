@@ -63,6 +63,10 @@ class DefinitionManager {
 
     extruderProfileArr = [];
 
+    printingProfileLevel = {};
+
+    materialProfileLevel = {};
+
     changedArray = [];
 
     changedArrayWithoutExtruder = [];
@@ -84,6 +88,8 @@ class DefinitionManager {
         this.extruderProfileArr = parameterKeysResult.body.extruderProfileArr;
         this.materialProfileArr = parameterKeysResult.body.materialProfileArr;
         this.qualityProfileArr = parameterKeysResult.body.qualityProfileArr;
+        this.printingProfileLevel = parameterKeysResult.body.printingProfileLevel;
+        this.materialProfileLevel = parameterKeysResult.body.materialProfileLevel;
 
         if (headType === HEAD_PRINTING) {
             res = await this.getDefinition('machine');
@@ -139,11 +145,6 @@ class DefinitionManager {
                 res = await this.getDefinition('snapmaker_extruder_1', false);
             }
             this.extruderRDefinition = res;
-
-            return {
-                printingProfileLevel: definitionRes.printingProfileLevel,
-                materialProfileLevel: definitionRes.materialProfileLevel
-            };
         } else {
             return {};
         }
