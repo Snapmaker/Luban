@@ -17,8 +17,8 @@ import { Button } from '../../components/Buttons';
 import { actions as printingActions } from '../../../flux/printing';
 import definitionManager from '../../../flux/manager/DefinitionManager';
 import ParameterFiltersBar from '../PresetModifier/ParameterFiltersBar';
+import ParameterPicker from '../PresetModifier/ParameterPicker';
 
-import CheckboxItem from './CheckboxItem';
 import SettingItem from './SettingItem';
 import ParamItem from '../ParamItem';
 import styles from './styles.styl';
@@ -108,20 +108,21 @@ function PresetContent(
     {
         optionConfigGroup,
         calculateTextIndex,
-        isCategorySelected,
+        showParameters = true,
         onChangePresetSettings,
-        isOfficialDefinitionKey,
         selectedSettingDefaultValue,
         definitionForManager,
         customConfigs,
         showMiddle = false,
         hideMiniTitle = false,
         managerType,
-        customMode = false,
-        setCustomMode,
         onChangeCustomConfig
     }
 ) {
+    const dispatch = useDispatch();
+
+    const customMode = useSelector(state => state?.printing?.customMode);
+
     const { printingParamsType, materialParamsType, showParamsProfile } = useSelector(state => state?.printing);
     const [activeCateId, setActiveCateId] = useState(2);
     // recommended, basic, advanced, all
@@ -135,7 +136,6 @@ function PresetContent(
     const scrollDom = useRef(null);
     const fieldsDom = useRef([]);
     const [tempDoms, setTempdoms] = useState([]);
-    const dispatch = useDispatch();
     const lang = i18next.language;
     useEffect(async () => {
         if (selectCategory && selectProfile) {
@@ -149,6 +149,10 @@ function PresetContent(
             }
         }
     }, [selectProfile]);
+
+    const setCustomMode = (value) => {
+        dispatch(printingActions.updateCustomMode(value));
+    };
 
     function setActiveCate(cateId) {
         if (scrollDom.current) {
@@ -184,69 +188,7 @@ function PresetContent(
         definitionForManager.i18nCategory = newCategoryName;
         dispatch(printingActions.updateDefinitionCategoryName(managerType, definitionForManager, newCategoryName));
     };
-    const renderCheckboxList = (
-        {
-            renderList,
-            calculateTextIndex: _calculateTextIndex,
-            settings,
-            isOfficialDefinitionKey: _isOfficialDefinitionKey,
-            onChangeCustomConfig: _onChangeCustomConfig,
-            categoryKey
-        }
-    ) => {
-        return renderList && renderList.map(profileKey => {
-            if (definitionManager.qualityProfileArr && !(definitionManager.qualityProfileArr.includes(profileKey))) {
-                return null;
-            }
-            if (settings[profileKey].childKey?.length > 0) {
-                return (
-                    <div key={profileKey} className={`margin-left-${(settings[profileKey].zIndex - 1) * 16}`}>
-                        <CheckboxItem
-                            calculateTextIndex={_calculateTextIndex}
-                            settings={settings}
-                            defaultValue={includes(
-                                customConfigs ? customConfigs[categoryKey] : [],
-                                profileKey
-                            )}
-                            definitionKey={profileKey}
-                            key={profileKey}
-                            isOfficialDefinitionKey={_isOfficialDefinitionKey}
-                            onChangePresetSettings={_onChangeCustomConfig}
-                            configCategory={categoryKey}
-                        />
-                        {renderCheckboxList({
-                            // customConfigs: _customConfigs,
-                            renderList: settings[profileKey].childKey,
-                            calculateTextIndex: _calculateTextIndex,
-                            settings,
-                            isOfficialDefinitionKey: _isOfficialDefinitionKey,
-                            onChangeCustomConfig: _onChangeCustomConfig,
-                            categoryKey
-                        })}
-                    </div>
-                );
-            }
-            return (
-                <div key={profileKey} className={`margin-left-${(settings[profileKey].zIndex < 3 ? settings[profileKey].zIndex - 1 : 1) * 16}`}>
-                    <CheckboxItem
-                        calculateTextIndex={_calculateTextIndex}
-                        settings={settings}
-                        defaultValue={includes(
-                            customConfigs ? customConfigs[categoryKey] : [],
-                            profileKey
-                        )}
-                        definitionKey={
-                            profileKey
-                        }
-                        key={profileKey}
-                        isOfficialDefinitionKey={_isOfficialDefinitionKey}
-                        onChangePresetSettings={_onChangeCustomConfig}
-                        configCategory={categoryKey}
-                    />
-                </div>
-            );
-        });
-    };
+
     const renderSettingItemList = (
         {
             settings,
@@ -299,7 +241,7 @@ function PresetContent(
                     );
                 }
                 return (
-                    <div key={profileKey} className={selectParamsType !== 'custom' && `margin-left-${(settings[profileKey].zIndex - 1) * 16}`}>
+                    <div key={profileKey} className={selectParamsType !== 'custom' ? `margin-left-${(settings[profileKey].zIndex - 1) * 16}` : ''}>
                         <SettingItem
                             settings={settings}
                             definitionKey={profileKey}
@@ -382,8 +324,20 @@ function PresetContent(
                 </div>
             </div>
             <div className="sm-flex width-percent-100 height-100-percent-minus-56">
+                {
+                    showParameters && customMode && (
+                        <ParameterPicker
+                            definitionManager={definitionManager}
+                            optionConfigGroup={optionConfigGroup}
+                            customConfigs={customConfigs}
+                            definitionForManager={definitionForManager}
+                            onChangeCustomConfig={onChangeCustomConfig}
+                            calculateTextIndex={calculateTextIndex}
+                        />
+                    )
+                }
                 {/* Other Basic, All, etc */}
-                {selectParamsType !== 'recommend' && (
+                {selectParamsType !== 'recommend' && !customMode && (
                     <>
                         {showMiddle && (
                             <div
@@ -467,7 +421,7 @@ function PresetContent(
                             >
                                 <div className="sm-parameter-container" ref={scrollDom}>
                                     {
-                                        !isCategorySelected && Object.keys((selectParamsType === 'custom' && !customMode) ? customConfigs : optionConfigGroup).map((key, index) => {
+                                        showParameters && Object.keys((selectParamsType === 'custom' && !customMode) ? customConfigs : optionConfigGroup).map((key, index) => {
                                             return (
                                                 <div key={key}>
                                                     <>
@@ -485,15 +439,6 @@ function PresetContent(
                                                         {/* eslint no-return-assign: 0*/}
                                                         <div>
                                                             <div ref={(el) => (fieldsDom.current[index] = el)}>
-                                                                {customMode && renderCheckboxList({
-                                                                    customConfig: customConfigs,
-                                                                    renderList: optionConfigGroup[key],
-                                                                    calculateTextIndex,
-                                                                    settings: definitionForManager?.settings,
-                                                                    isOfficialDefinitionKey,
-                                                                    onChangeCustomConfig,
-                                                                    categoryKey: key
-                                                                })}
                                                                 {!customMode && renderSettingItemList({
                                                                     settings: definitionForManager?.settings,
                                                                     renderList: selectParamsType === 'custom' ? customConfigs[key] : optionConfigGroup[key],
@@ -555,7 +500,7 @@ function PresetContent(
                     <div className="width-percent-100 padding-horizontal-16 padding-vertical-16 sm-flex justify-space-between">
                         <div className="width-percent-70 margin-right-46">
                             <ParamItem
-                                selectedDefinitionModel={definitionForManager}
+                                selectedDefinitionModel={definitionForManager} // not Preset Model
                                 onChangePresetSettings={onChangePresetSettings}
                             />
                         </div>
@@ -586,18 +531,15 @@ function PresetContent(
 PresetContent.propTypes = {
     definitionForManager: PropTypes.object.isRequired,
     optionConfigGroup: PropTypes.object.isRequired,
-    isCategorySelected: PropTypes.bool,
+    showParameters: PropTypes.bool,
     customConfigs: PropTypes.object,
     calculateTextIndex: PropTypes.func,
-    isOfficialDefinitionKey: PropTypes.func,
     onChangePresetSettings: PropTypes.func.isRequired,
     selectedSettingDefaultValue: PropTypes.object,
     showMiddle: PropTypes.bool,
     hideMiniTitle: PropTypes.bool,
     managerType: PropTypes.string,
     onChangeCustomConfig: PropTypes.func,
-    customMode: PropTypes.bool,
-    setCustomMode: PropTypes.func,
 };
 
 export default React.memo(PresetContent);
