@@ -1,39 +1,36 @@
-import React, { useEffect, useRef, useState } from 'react';
-import classNames from 'classnames';
-import { useDispatch, useSelector } from 'react-redux';
 import { Menu, Tooltip } from 'antd';
-import PropTypes from 'prop-types';
-// import { useSelector, shallowEqual } from 'react-redux';
+import classNames from 'classnames';
 import { cloneDeep, findIndex, isUndefined, orderBy, uniqWith } from 'lodash';
+import PropTypes from 'prop-types';
+import React, { useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
 import {
-    HEAD_CNC,
-    HEAD_LASER,
     MATERIAL_TYPE_OPTIONS,
     PRINTING_MANAGER_TYPE_MATERIAL,
     PRINTING_MANAGER_TYPE_QUALITY
 } from '../../../constants';
-import modal from '../../../lib/modal';
-import useSetState from '../../../lib/hooks/set-state';
-import Anchor from '../../components/Anchor';
-import i18n from '../../../lib/i18n';
-
-import SvgIcon from '../../components/SvgIcon';
-import Notifications from '../../components/Notifications';
-import Modal from '../../components/Modal';
-import { Button } from '../../components/Buttons';
-
-import DefinitionCreator from '../DefinitionCreator';
-import ConfigValueBox from './ConfigValueBox';
-import styles from './styles.styl';
-
-import { MaterialWithColor } from '../../widgets/PrintingMaterial/MaterialWithColor';
-
-import AddMaterialModel from '../../pages/MachineMaterialSettings/addMaterialModel';
 
 
 import { actions as printingActions } from '../../../flux/printing';
+import useSetState from '../../../lib/hooks/set-state';
+import i18n from '../../../lib/i18n';
+import modal from '../../../lib/modal';
+import Anchor from '../../components/Anchor';
+import { Button } from '../../components/Buttons';
 import Dropdown from '../../components/Dropdown';
+import Modal from '../../components/Modal';
+import Notifications from '../../components/Notifications';
+
+import SvgIcon from '../../components/SvgIcon';
+
+import AddMaterialModel from '../../pages/MachineMaterialSettings/addMaterialModel';
+
+import { MaterialWithColor } from '../../widgets/PrintingMaterial/MaterialWithColor';
+
+import DefinitionCreator from '../DefinitionCreator';
+import PresetContent from './PresetContent';
+import styles from './styles.styl';
 
 /**
  * Do category fields in different types of profiles have values, and multilingual support
@@ -467,26 +464,6 @@ function ProfileManager({
             const newDefinitionForManager = cloneDeep(definitionForManager);
             newDefinitionForManager.settings[key].default_value = value;
 
-            if (managerType === HEAD_CNC || managerType === HEAD_LASER) {
-                if (key === 'path_type' && value === 'path') {
-                    newDefinitionForManager.settings.movement_mode.default_value = 'greyscale-line';
-                }
-                if (key === 'tool_type') {
-                    switch (value) {
-                        case 'vbit':
-                            newDefinitionForManager.settings.diameter.default_value = 0.2;
-                            break;
-                        case 'flat':
-                            newDefinitionForManager.settings.diameter.default_value = 1.5;
-                            break;
-                        case 'ball':
-                            newDefinitionForManager.settings.diameter.default_value = 3.175;
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            }
             setDefinitionState({
                 definitionForManager: newDefinitionForManager
             });
@@ -851,7 +828,8 @@ function ProfileManager({
                                     </div>
                                 </ul>
                             </div>
-                            <ConfigValueBox
+                            {/* Preset Content on the right side */}
+                            <PresetContent
                                 definitionForManager={definitionState.definitionForManager}
                                 isCategorySelected={definitionState.isCategorySelected}
                                 optionConfigGroup={optionConfigGroup}

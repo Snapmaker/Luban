@@ -12,11 +12,11 @@ import api from '../../../api';
 
 import Anchor from '../../components/Anchor';
 import SvgIcon from '../../components/SvgIcon';
-import Select from '../../components/Select';
 import { Button } from '../../components/Buttons';
 
 import { actions as printingActions } from '../../../flux/printing';
 import definitionManager from '../../../flux/manager/DefinitionManager';
+import ParameterFiltersBar from '../PresetModifier/ParameterFiltersBar';
 
 import CheckboxItem from './CheckboxItem';
 import SettingItem from './SettingItem';
@@ -27,7 +27,84 @@ import styles from './styles.styl';
 const defaultParamsType = ['all', 'advanced'];
 const NO_LIMIT = 'no_limit';
 
-function ConfigValueBox(
+
+function getFilters(managerType) {
+    const materialParamsTypeOptions = [{
+        value: 'basic',
+        label: i18n._('key-profileManager/Params-Basic')
+    }, {
+        value: 'all',
+        label: i18n._('key-profileManager/Params-All')
+    }];
+    const qualityParamsTypeOptions = [{
+        value: 'recommend',
+        label: i18n._('key-profileManager/Params-Recommend')
+    }, {
+        value: 'custom',
+        label: i18n._('key-profileManager/Params-Custom')
+    }, {
+        value: 'basic',
+        label: i18n._('key-profileManager/Params-Basic')
+    }, {
+        value: 'advanced',
+        label: i18n._('key-profileManager/Params-Advanced')
+    }, {
+        value: 'all',
+        label: i18n._('key-profileManager/Params-All')
+    }];
+    const qualityDetailTypeOptions = [{
+        value: 'no_limit',
+        label: i18n._('key-profileManager/Params-No Limit')
+    }, {
+        value: 'efficiency',
+        label: i18n._('key-profileManager/Params-Efficiency')
+    }, {
+        value: 'strength',
+        label: i18n._('key-profileManager/Params-Strength')
+    }, {
+        value: 'surface_quality',
+        label: i18n._('key-profileManager/Params-Surface_quality')
+    }, {
+        value: 'accuracy',
+        label: i18n._('key-profileManager/Params-Accuracy')
+    }, {
+        value: 'material',
+        label: i18n._('key-profileManager/Params-Material')
+    }, {
+        value: 'success',
+        label: i18n._('key-profileManager/Params-Success')
+    }];
+
+    const firstLevelOptions = managerType === PRINTING_MANAGER_TYPE_MATERIAL ? materialParamsTypeOptions : qualityParamsTypeOptions;
+
+    const filters = [];
+    for (const option of firstLevelOptions) {
+        const filter = {
+            name: option.label,
+            value: option.value,
+        };
+
+        // construct sub filters for [advanced, all] top-level filter
+        if (managerType === PRINTING_MANAGER_TYPE_QUALITY && defaultParamsType.includes(filter.value)) {
+            const subFilters = [];
+            for (const subOption of qualityDetailTypeOptions) {
+                const subFilter = {
+                    name: subOption.label,
+                    value: subOption.value,
+                };
+                subFilters.push(subFilter);
+            }
+
+            filter.filters = subFilters;
+        }
+
+        filters.push(filter);
+    }
+
+    return filters;
+}
+
+function PresetContent(
     {
         optionConfigGroup,
         calculateTextIndex,
@@ -40,13 +117,14 @@ function ConfigValueBox(
         showMiddle = false,
         hideMiniTitle = false,
         managerType,
-        customMode,
+        customMode = false,
         setCustomMode,
         onChangeCustomConfig
     }
 ) {
     const { printingParamsType, materialParamsType, showParamsProfile } = useSelector(state => state?.printing);
     const [activeCateId, setActiveCateId] = useState(2);
+    // recommended, basic, advanced, all
     const [selectParamsType, setSelectParamsType] = useState(managerType === PRINTING_MANAGER_TYPE_MATERIAL ? materialParamsType : printingParamsType);
     const [selectProfile, setSelectProfile] = useState('');
     const [selectCategory, setSelectCategory] = useState('');
@@ -264,101 +342,47 @@ function ConfigValueBox(
         setTempdoms(fieldsDom.current);
     }, [customMode, selectParamsType, selectQualityDetailType]);
 
-    const handleUpdateParamsType = (e) => {
+    const handleUpdateParamsType = (value) => {
         setSelectProfile('');
-        setSelectParamsType(e.value);
-        if (!includes(defaultParamsType, e.value)) {
+        setSelectParamsType(value);
+        if (!includes(defaultParamsType, value)) {
             setSelectQualityDetailType(NO_LIMIT);
         }
-        dispatch(printingActions.updateProfileParamsType(managerType, e.value));
+        dispatch(printingActions.updateProfileParamsType(managerType, value));
     };
-    const materialParamsTypeOptions = [{
-        value: 'basic',
-        label: i18n._('key-profileManager/Params-Basic')
-    }, {
-        value: 'all',
-        label: i18n._('key-profileManager/Params-All')
-    }];
-    const qualityParamsTypeOptions = [{
-        value: 'recommend',
-        label: i18n._('key-profileManager/Params-Recommend')
-    }, {
-        value: 'custom',
-        label: i18n._('key-profileManager/Params-Custom')
-    }, {
-        value: 'basic',
-        label: i18n._('key-profileManager/Params-Basic')
-    }, {
-        value: 'advanced',
-        label: i18n._('key-profileManager/Params-Advanced')
-    }, {
-        value: 'all',
-        label: i18n._('key-profileManager/Params-All')
-    }];
-    const qualityDetailTypeOptions = [{
-        value: 'no_limit',
-        label: i18n._('key-profileManager/Params-No Limit')
-    }, {
-        value: 'efficiency',
-        label: i18n._('key-profileManager/Params-Efficiency')
-    }, {
-        value: 'strength',
-        label: i18n._('key-profileManager/Params-Strength')
-    }, {
-        value: 'surface_quality',
-        label: i18n._('key-profileManager/Params-Surface_quality')
-    }, {
-        value: 'accuracy',
-        label: i18n._('key-profileManager/Params-Accuracy')
-    }, {
-        value: 'material',
-        label: i18n._('key-profileManager/Params-Material')
-    }, {
-        value: 'success',
-        label: i18n._('key-profileManager/Params-Success')
-    }];
+
+    const filters = getFilters(managerType); // Calculate once only when managerType changed
+    const filterValues = [selectParamsType, selectQualityDetailType];
 
     return (
         <div className={classNames(styles['config-value-box-wrapper'], 'margin-vertical-16 margin-horizontal-16 background-color-white border-radius-16')}>
-            <div className="height-56 sm-flex border-bottom-normal padding-left-16">
-                <div className="sm-flex">
-                    <div className="sm-flex align-center margin-right-64">
-                        <span className="margin-right-8">{i18n._('key-profileManager/param type')}</span>
-                        <Select
-                            options={managerType === PRINTING_MANAGER_TYPE_MATERIAL ? materialParamsTypeOptions : qualityParamsTypeOptions}
-                            clearable={false}
-                            size="middle"
-                            showSearch={false}
-                            value={selectParamsType}
-                            onChange={(e) => {
-                                handleUpdateParamsType(e);
-                            }}
-                            bordered={false}
-                            disabled={customMode}
-                        />
-                        {managerType === PRINTING_MANAGER_TYPE_QUALITY && defaultParamsType.includes(selectParamsType) && (
-                            <Select
-                                options={qualityDetailTypeOptions}
-                                clearable={false}
-                                size="large"
-                                showSearch={false}
-                                bordered={false}
-                                value={selectQualityDetailType}
-                                onChange={(e) => {
-                                    setSelectQualityDetailType(e.value);
-                                }}
-                                disabled={customMode}
-                            />
-                        )}
-                    </div>
-                    {selectParamsType === 'custom' && (
-                        <Button width="160px" priority="levle-two" type="default" className="margin-top-4" onClick={() => setCustomMode(!customMode)}>
-                            <span>{customMode ? i18n._('key-profileManager/Finish') : i18n._('key-profileManager/Manager Custom Params')}</span>
-                        </Button>
-                    )}
+            {/* Parameter filters */}
+            <div className="height-56 sm-flex border-bottom-normal">
+                <div className="sm-flex margin-left-16 margin-right-64">
+                    <span className="margin-right-8">{i18n._('key-profileManager/param type')}</span>
+                    <ParameterFiltersBar
+                        disabled={customMode}
+                        filters={filters}
+                        filterValues={filterValues}
+                        onChangeFilterValues={(index, value) => {
+                            if (index === 0) {
+                                handleUpdateParamsType(value);
+                            } else if (index === 1) {
+                                setSelectQualityDetailType(value);
+                            }
+                        }}
+                    />
+                    {
+                        selectParamsType === 'custom' && (
+                            <Button width="160px" priority="level-two" type="default" className="margin-top-4" onClick={() => setCustomMode(!customMode)}>
+                                <span>{customMode ? i18n._('key-profileManager/Finish') : i18n._('key-profileManager/Manager Custom Params')}</span>
+                            </Button>
+                        )
+                    }
                 </div>
             </div>
             <div className="sm-flex width-percent-100 height-100-percent-minus-56">
+                {/* Other Basic, All, etc */}
                 {selectParamsType !== 'recommend' && (
                     <>
                         {showMiddle && (
@@ -526,6 +550,7 @@ function ConfigValueBox(
                         </div>
                     </>
                 )}
+                {/* Recommended */}
                 {selectParamsType === 'recommend' && (
                     <div className="width-percent-100 padding-horizontal-16 padding-vertical-16 sm-flex justify-space-between">
                         <div className="width-percent-70 margin-right-46">
@@ -558,7 +583,7 @@ function ConfigValueBox(
     );
 }
 
-ConfigValueBox.propTypes = {
+PresetContent.propTypes = {
     definitionForManager: PropTypes.object.isRequired,
     optionConfigGroup: PropTypes.object.isRequired,
     isCategorySelected: PropTypes.bool,
@@ -575,4 +600,4 @@ ConfigValueBox.propTypes = {
     setCustomMode: PropTypes.func,
 };
 
-export default React.memo(ConfigValueBox);
+export default React.memo(PresetContent);

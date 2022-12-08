@@ -9,19 +9,20 @@ import { useDispatch, useSelector } from 'react-redux';
 import api from '../../../api';
 import { LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
 import { getQualityPresetLevelForRightExtruder } from '../../../constants/preset';
-import { actions as printingActions } from '../../../flux/printing';
 import i18n from '../../../lib/i18n';
 import SvgIcon from '../../components/SvgIcon';
-import SettingItem from '../ProfileManager/SettingItem';
-import styles from '../ProfileManager/styles.styl';
+
+import { actions as printingActions } from '../../../flux/printing';
+import SettingItem from './SettingItem';
+import styles from './styles.styl';
 
 
 /**
  * Preset parameter modifier content.
  *
- * @param selectedStackId
- * @param selectedPresetId
- * @param selectedPresetDefaultValues
+ * @param selectedStackId stack id
+ * @param selectedPresetId preset id
+ * @param selectedPresetDefaultValues default values for preset, TODO: refactor this
  */
 const PresetContent = (
     {
