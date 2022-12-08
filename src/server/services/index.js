@@ -224,6 +224,9 @@ function registerApis(app) {
     app.put(urljoin(settings.route, 'api/profileDefaultDefinition/:headType/:definitionId'), api.profileDefinitions.updateDefaultDefinition);
     app.post(urljoin(settings.route, 'api/profileDefinition/:headType/upload'), api.profileDefinitions.uploadDefinition);
 
+    // preset
+    app.get(urljoin(settings.route, 'api/preset/parameter_keys'), api.profileDefinitions.getPresetParameterKeys);
+
     app.get(urljoin(settings.route, 'api/profiledocs/:selectCategory/:selectProfile'), api.users.getProfileDocsDir);
 }
 

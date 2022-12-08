@@ -42,10 +42,6 @@ export class DefinitionLoader {
     // category -> category keys
     materialProfileLevel = {};
 
-    printingProfileLevelForMesh = {};
-
-    printingProfileLevelForExtruder = {};
-
     definitionId = '';
 
     name = '';
@@ -204,16 +200,8 @@ export class DefinitionLoader {
                         }
                     } else if (mainCategory === 'quality' && zIndex === 1) {
                         this.printingProfileLevel[smallCategory] = this.printingProfileLevel[smallCategory] || [];
-                        this.printingProfileLevelForExtruder[smallCategory] = this.printingProfileLevelForExtruder[smallCategory] || [];
-                        this.printingProfileLevelForMesh[smallCategory] = this.printingProfileLevelForMesh[smallCategory] || [];
                         if (!includes(this.printingProfileLevel[smallCategory], key)) {
                             this.printingProfileLevel[smallCategory] = this.printingProfileLevel[smallCategory].concat(key);
-                        }
-                        if ((this.settings[key].settable_per_extruder || this.settings[key].settable_per_mesh) && !includes(this.printingProfileLevelForExtruder[smallCategory], key)) {
-                            this.printingProfileLevelForExtruder[smallCategory] = this.printingProfileLevelForExtruder[smallCategory].concat(key);
-                        }
-                        if (this.settings[key].settable_per_mesh && !includes(this.printingProfileLevelForMesh[smallCategory], key)) {
-                            this.printingProfileLevelForMesh[smallCategory] = this.printingProfileLevelForMesh[smallCategory].concat(key);
                         }
                     }
                     if (parentKey && !includes(this.settings[parentKey].childKey, key)) {
@@ -328,11 +316,6 @@ export class DefinitionLoader {
             ownKeys: Array.from(this.ownKeys),
             printingProfileLevel: this.printingProfileLevel,
             materialProfileLevel: this.materialProfileLevel,
-            printingProfileLevelForExtruder: this.printingProfileLevelForExtruder,
-            printingProfileLevelForMesh: this.printingProfileLevelForMesh,
-            qualityProfileArr: Array.from(qualityProfileArr),
-            materialProfileArr: Array.from(materialProfileArr),
-            extruderProfileArr: Array.from(extruderProfileArr)
         };
     }
 
@@ -512,4 +495,12 @@ export function loadAllSeriesDefinitions(isDefault = false, headType, series = '
     }
 
     return definitions;
+}
+
+export function getParameterKeys() {
+    return {
+        qualityProfileArr: Array.from(qualityProfileArr),
+        materialProfileArr: Array.from(materialProfileArr),
+        extruderProfileArr: Array.from(extruderProfileArr),
+    };
 }

@@ -15,7 +15,6 @@ type Props = {
     optionConfigGroup: any;
     definitionForManager: any;
     onChangeCustomConfig: any;
-    calculateTextIndex: any;
 };
 
 /**
@@ -28,7 +27,13 @@ type Props = {
  * @constructor
  */
 const ParameterPicker: React.FC<Props> = (props) => {
-    const { definitionManager, definitionForManager, customConfigs, optionConfigGroup, onChangeCustomConfig, calculateTextIndex } = props;
+    const {
+        definitionManager,
+        definitionForManager,
+        customConfigs,
+        optionConfigGroup,
+        onChangeCustomConfig,
+    } = props;
 
     const [activeCateId, setActiveCateId] = useState(2);
 
@@ -63,10 +68,9 @@ const ParameterPicker: React.FC<Props> = (props) => {
     const renderCheckboxList = (
         {
             renderList,
-            calculateTextIndex: _calculateTextIndex,
             settings,
             onChangeCustomConfig: _onChangeCustomConfig,
-            categoryKey
+            categoryKey,
         }
     ) => {
         return renderList && renderList.map(profileKey => {
@@ -77,7 +81,6 @@ const ParameterPicker: React.FC<Props> = (props) => {
                 return (
                     <div key={profileKey} className={`margin-left-${(settings[profileKey].zIndex - 1) * 16}`}>
                         <CheckboxItem
-                            calculateTextIndex={_calculateTextIndex}
                             settings={settings}
                             defaultValue={includes(
                                 customConfigs ? customConfigs[categoryKey] : [],
@@ -91,7 +94,6 @@ const ParameterPicker: React.FC<Props> = (props) => {
                         {renderCheckboxList({
                             // customConfigs: _customConfigs,
                             renderList: settings[profileKey].childKey,
-                            calculateTextIndex: _calculateTextIndex,
                             settings,
                             onChangeCustomConfig: _onChangeCustomConfig,
                             categoryKey
@@ -102,7 +104,6 @@ const ParameterPicker: React.FC<Props> = (props) => {
             return (
                 <div key={profileKey} className={`margin-left-${(settings[profileKey].zIndex < 3 ? settings[profileKey].zIndex - 1 : 1) * 16}`}>
                     <CheckboxItem
-                        calculateTextIndex={_calculateTextIndex}
                         settings={settings}
                         defaultValue={includes(
                             customConfigs ? customConfigs[categoryKey] : [],
@@ -123,6 +124,8 @@ const ParameterPicker: React.FC<Props> = (props) => {
     useEffect(() => {
         setTempdoms(fieldsDom.current);
     }, []);
+
+    console.log('qualityProfileArr =', definitionManager.qualityProfileArr);
 
     return (
         <div className="sm-flex width-percent-100 height-percent-100">
@@ -197,7 +200,6 @@ const ParameterPicker: React.FC<Props> = (props) => {
                                                 {renderCheckboxList({
                                                     customConfig: customConfigs,
                                                     renderList: optionConfigGroup[key],
-                                                    calculateTextIndex,
                                                     settings: definitionForManager?.settings,
                                                     onChangeCustomConfig,
                                                     categoryKey: key

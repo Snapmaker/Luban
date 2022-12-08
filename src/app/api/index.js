@@ -314,6 +314,11 @@ profileDefinitions.uploadDefinition = defaultAPIFactory((headType, definitionId,
     series
 }));
 
+/**
+ * Get keys of parameters.
+ */
+profileDefinitions.getPresetParameterKeys = defaultAPIFactory(() => request.get('/api/preset/parameter_keys'));
+
 //
 // Macros
 //

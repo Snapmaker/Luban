@@ -534,6 +534,8 @@ export const actions = {
         series = getRealSeries(series);
 
         const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
+
+        // init definition manager
         const profileLevel = await definitionManager.init(
             CONFIG_HEADTYPE,
             currentMachine.configPathname[CONFIG_HEADTYPE]

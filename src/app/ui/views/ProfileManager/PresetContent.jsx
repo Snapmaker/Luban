@@ -123,7 +123,7 @@ function PresetContent(
 
     const customMode = useSelector(state => state?.printing?.customMode);
 
-    const { printingParamsType, materialParamsType, showParamsProfile } = useSelector(state => state?.printing);
+    const { printingParamsType, materialParamsType } = useSelector(state => state?.printing);
     const [activeCateId, setActiveCateId] = useState(2);
     // recommended, basic, advanced, all
     const [selectParamsType, setSelectParamsType] = useState(managerType === PRINTING_MANAGER_TYPE_MATERIAL ? materialParamsType : printingParamsType);
@@ -132,7 +132,6 @@ function PresetContent(
     const [mdContent, setMdContent] = useState('');
     const [imgPath, setImgPath] = useState('');
     const [selectQualityDetailType, setSelectQualityDetailType] = useState(NO_LIMIT);
-    const [profileDomOffset, setProfileDomOffset] = useState(0);
     const scrollDom = useRef(null);
     const fieldsDom = useRef([]);
     const [tempDoms, setTempdoms] = useState([]);
@@ -177,12 +176,9 @@ function PresetContent(
         }
     }
 
-    const handleUpdateProfileKey = (category, profileKey, e) => {
-        const scrollTop = e.target.offsetParent?.scrollTop || 0;
-        const offsetTop = e.target.offsetTop;
+    const handleUpdateProfileKey = (category, profileKey) => {
         setSelectCategory(category);
         setSelectProfile(profileKey);
-        setProfileDomOffset(offsetTop - scrollTop);
     };
     const onChangeMaterialType = (newCategoryName) => {
         definitionForManager.i18nCategory = newCategoryName;
@@ -459,37 +455,12 @@ function PresetContent(
                                     }
                                 </div>
                             </div>
-                            <div className={classNames(styles['manager-params-docs'], styles[showParamsProfile ? 'open-params-profile' : 'close-params-profile'], 'width-percent-40 background-grey-3 border-radius-16 position-re', showParamsProfile ? '' : 'width-1-important min-width-1 margin-right-16')}>
-                                <Anchor onClick={() => dispatch(printingActions.updateParamsProfileShow(!showParamsProfile))} className={classNames(styles['profile-params-show-icon'], 'background-color-white border-default-grey-1 border-radius-12 position-absolute left-minus-12 bottom-24')}>
-                                    <SvgIcon
-                                        name="MainToolbarBack"
-                                        size={24}
-                                        type={['static']}
-                                        className={classNames(showParamsProfile ? 'rotate180' : '')}
-                                    />
-                                </Anchor>
-                                <div
-                                    className="position-absolute"
-                                    style={{
-                                        left: -12,
-                                        top: (profileDomOffset || 0) + 6,
-                                        visibility: `${(profileDomOffset !== null && profileDomOffset > 0) ? 'visible' : 'hidden'}`
-                                    }}
-                                >
-                                    <SvgIcon
-                                        name="PointingArrow"
-                                        size={24}
-                                        type={['static']}
-                                        color="#F5F5F7"
-                                    />
+                            <div className={classNames(styles['manager-params-docs'], styles['open-params-profile'], 'width-percent-40 background-grey-3 border-radius-16 position-re')}>
+                                <div className={classNames(styles['manager-params-docs-content'], 'padding-vertical-16 padding-horizontal-16 overflow-y-auto height-percent-100')}>
+                                    <ReactMarkdown transformImageUri={(input) => (`atom:///${imgPath}/${input.slice(3)}`)}>
+                                        {mdContent}
+                                    </ReactMarkdown>
                                 </div>
-                                {showParamsProfile && (
-                                    <div className={classNames(styles['manager-params-docs-content'], 'padding-vertical-16 padding-horizontal-16 overflow-y-auto height-percent-100')}>
-                                        <ReactMarkdown transformImageUri={(input) => (`atom:///${imgPath}/${input.slice(3)}`)}>
-                                            {mdContent}
-                                        </ReactMarkdown>
-                                    </div>
-                                )}
                                 {/*  transformImageUri={() => (`${imgPath}/test.png`)} */}
                             </div>
                         </div>
@@ -504,22 +475,12 @@ function PresetContent(
                                 onChangePresetSettings={onChangePresetSettings}
                             />
                         </div>
-                        <div className={classNames(styles['manager-params-docs'], 'width-percent-40 background-grey-3 border-radius-16 position-re', showParamsProfile ? '' : 'width-1-important min-width-1 margin-right-16')}>
-                            <Anchor onClick={() => dispatch(printingActions.updateParamsProfileShow(!showParamsProfile))} className="background-color-white border-default-grey-1 border-radius-12 position-absolute left-minus-12 bottom-24">
-                                <SvgIcon
-                                    name="MainToolbarBack"
-                                    size={24}
-                                    type={['static']}
-                                    className={classNames(showParamsProfile ? 'rotate180' : '')}
-                                />
-                            </Anchor>
-                            {showParamsProfile && (
-                                <div className={classNames(styles['manager-params-docs-content'], 'padding-vertical-16 padding-horizontal-16 overflow-y-auto height-percent-100')}>
-                                    <ReactMarkdown transformImageUri={(input) => (`atom:///${imgPath}/${input.slice(3)}`)}>
-                                        {mdContent}
-                                    </ReactMarkdown>
-                                </div>
-                            )}
+                        <div className={classNames(styles['manager-params-docs'], 'width-percent-40 background-grey-3 border-radius-16 position-re')}>
+                            <div className={classNames(styles['manager-params-docs-content'], 'padding-vertical-16 padding-horizontal-16 overflow-y-auto height-percent-100')}>
+                                <ReactMarkdown transformImageUri={(input) => (`atom:///${imgPath}/${input.slice(3)}`)}>
+                                    {mdContent}
+                                </ReactMarkdown>
+                            </div>
                         </div>
                     </div>
                 )}
