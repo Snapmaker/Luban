@@ -1239,7 +1239,8 @@ export const actions = {
             case 'succeed': {
                 const { vertexNumber, gcodeEntityLayers: bufferGeometry, layerCount, bounds } = value;
                 const freeMemory = await controller.getFreeMemory();
-                const outOfMemoryForRenderGcode = (freeMemory - vertexNumber * 0.25) < 0;
+                let outOfMemoryForRenderGcode = (freeMemory - vertexNumber * 0.25) < 0;
+                outOfMemoryForRenderGcode = false;
                 if (!outOfMemoryForRenderGcode) {
                     const object3D = gcodeBufferGeometryToObj3d('3DP', bufferGeometry, null, {
                         ...gcodeEntity,
@@ -2379,7 +2380,7 @@ export const actions = {
                 stage: STEP_STAGE.PRINTING_SLICING,
                 progress: progressStatesManager.updateProgress(
                     STEP_STAGE.PRINTING_SLICING,
-                    0
+                    0.2
                 )
             })
         );
