@@ -353,8 +353,12 @@ function WifiTransport({ widgetActions, controlActions }) {
                 const deltaX = 19;
                 const z0 = 166;
                 const deltaRedLine = 30;
-                const x = (maxX + minX) / 2 - originOffset.x + z0 / Math.sqrt(3) - deltaRedLine + deltaX / 2;
-                const y = (maxY + minY) / 2 - originOffset.y + deltaY / 2;
+                let x = (maxX + minX) / 2 + z0 / Math.sqrt(3) - deltaRedLine + deltaX / 2;
+                let y = (maxY + minY) / 2 + deltaY / 2;
+                if (!isCameraCapture) {
+                    x -= originOffset.x;
+                    y -= originOffset.y;
+                }
                 const args = {
                     x: x,
                     y: y,

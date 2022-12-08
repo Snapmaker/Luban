@@ -346,7 +346,7 @@ class SocketTCP extends SocketBASE {
         log.debug(`x, y, feedRate, eventName, isCameraCapture, ${x}, ${y}, ${feedRate}, ${isCameraCapture}`);
         if (isCameraCapture) {
             try {
-                this.sacpClient.getCurrentCoordinateInfo().then(async ({ coordinateSystemInfo }) => {
+                await this.sacpClient.getCurrentCoordinateInfo().then(async ({ coordinateSystemInfo }) => {
                     const xNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.X1).value;
                     const yNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.Y1).value;
                     const zNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.Z1).value;
