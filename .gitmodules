@@ -1,6 +1,6 @@
 [submodule "resources/luban-case-library"]
 	path = resources/luban-case-library
-	url = https://github.com/jane-rose/luban-case-library
+	url = https://github.com/parachvte/luban-case-library
 [submodule "resources/ProfileDocs"]
 	path = resources/ProfileDocs
-	url = https://github.com/parachvte/ProfileDocs.git
+	url = https://github.com/parachvte/ProfileDocs
