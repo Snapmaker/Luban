@@ -24,16 +24,16 @@
             "default_value": 2
         },
         "layer_height": {
-            "default_value": 0.2
+            "default_value": 0.24
         },
         "layer_height_0": {
             "default_value": 0.28
         },
         "infill_sparse_thickness": {
-            "default_value": 0.2
+            "default_value": 0.24
         },
         "support_infill_sparse_thickness": {
-            "default_value": 0.2
+            "default_value": 0.24
         },
         "line_width": {
             "default_value": 0.4
