@@ -459,3 +459,29 @@ export const CaseConfigA350LaserFourAxis = [
     }
 ];
 
+// Pen Holder for Snapmaker Artisan (2022.12)
+export const CaseConfigPenHolder = {
+    tag: 'printing', // printing、laser、cnc
+    tag_i18n: 'key-HomePage/CaseLibrary_title-3DP',
+    title: 'key-HomePage/CaseLibrary-Pen Holder',
+    imgSrc: '../../resources/images/user-case/printing/3dp_pen_holder_194x194.png',
+    pathConfig: {
+        isDatastoragePath: true,
+        path: './UserCase/printing/PenHolder.snap3dp',
+        name: 'PenHolder.snap3dp',
+    }
+};
+
+// CNC Luban Lock (2022.12)
+export const CaseConfigLubanLock = {
+    tag: 'cnc',
+    tag_i18n: 'key-HomePage/CaseLibrary_title-CNC',
+    title: 'key-HomePage/CaseLibrary-Luban Lock',
+    mode: 'greyscale',
+    imgSrc: '../../resources/images/user-case/cnc/cnc_luban_lock_194x194.png',
+    pathConfig: {
+        isDatastoragePath: true,
+        path: './UserCase/cnc/Luban Lock.snapcnc',
+        name: 'Luban Lock.snapcnc',
+    }
+};
