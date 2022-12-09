@@ -39,7 +39,7 @@ class MainToolBar extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { setShowMachineMaterialSettings, leftItems, mainBarClassName, lang, headType, hasMachineSettings, isConnected, materialInfo } = this.props;
+        const { setShowMachineMaterialSettings, leftItems, mainBarClassName, lang, headType, hasMachineSettings = false, isConnected, materialInfo } = this.props;
 
         const { activeMachine = null } = this.props;
 

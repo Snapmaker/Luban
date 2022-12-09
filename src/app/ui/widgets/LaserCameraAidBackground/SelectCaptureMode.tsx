@@ -13,7 +13,7 @@ type TProps = {
 export const MODE_CONVENTIONAL = 'mode_conventional';
 export const MODE_THICKNESS_COMPENSATION = 'mode_thickness_compensation';
 
-const SelectCaptureMode = (props: TProps) => {
+const SelectCaptureMode: React.FC<TProps> = (props: TProps) => {
     return (
         <div className={classNames(styles['laser-select-capture-mode'])}>
             <Anchor
@@ -33,6 +33,7 @@ const SelectCaptureMode = (props: TProps) => {
             </Anchor>
             <Anchor
                 className={classNames(styles.item)}
+                disabled
                 onClick={() => {
                     props.onSelectMode(MODE_THICKNESS_COMPENSATION);
                 }}
@@ -41,7 +42,7 @@ const SelectCaptureMode = (props: TProps) => {
                     <img src={require('./images/mode_thickness_compensation.svg')} alt="" />
                 </div>
                 <div className={classNames(styles.right)}>
-                    <p className="font-weight-bold font-size-middle">{i18n._('key-Laser/CameraCapture-thickness compensation mode')}</p>
+                    <p className="font-weight-bold font-size-middle">{i18n._('key-Laser/CameraCapture-thickness compensation mode')} (Coming Soon)</p>
                     <p>{i18n._('key-Laser/CameraCapture-thickness compensation mode describe')}
                         <br />
                         {i18n._('key-Laser/CameraCapture-thickness compensation mode describe2')}

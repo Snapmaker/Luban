@@ -1,6 +1,11 @@
 import { indexOf, orderBy } from 'lodash';
 import React from 'react';
-import { DEFAULT_PRESET_IDS, isQualityPresetVisible, PRESET_CATEGORY_CUSTOM } from '../../constants/preset';
+import {
+    DEFAULT_PRESET_IDS,
+    isQualityPresetVisible,
+    PRESET_CATEGORY_CUSTOM,
+    PRESET_CATEGORY_DEFAULT
+} from '../../constants/preset';
 
 import { MaterialWithColor } from '../widgets/PrintingMaterial/MaterialWithColor';
 
@@ -93,7 +98,13 @@ function getPresetOptions(presetModels, materialPreset) {
 
     const availablePresetModels = pickAvailablePresetModels(presetModels, materialPreset);
 
-    const presetOptions = {};
+    const presetOptions = {
+        [PRESET_CATEGORY_DEFAULT]: {
+            label: PRESET_CATEGORY_DEFAULT,
+            category: PRESET_CATEGORY_DEFAULT,
+            options: [],
+        }
+    };
 
     for (const presetModel of availablePresetModels) {
         const {
