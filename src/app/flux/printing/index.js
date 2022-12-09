@@ -534,7 +534,9 @@ export const actions = {
         series = getRealSeries(series);
 
         const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
-        const profileLevel = await definitionManager.init(
+
+        // init definition manager
+        await definitionManager.init(
             CONFIG_HEADTYPE,
             currentMachine.configPathname[CONFIG_HEADTYPE]
         );
@@ -628,8 +630,8 @@ export const actions = {
                 materialDefinitions: materialParamModels,
                 qualityDefinitions: qualityPresetModels,
                 qualityDefinitionsRight: qualityPresetModelsRight,
-                printingProfileLevel: profileLevel.printingProfileLevel,
-                materialProfileLevel: profileLevel.materialProfileLevel,
+                printingProfileLevel: definitionManager.printingProfileLevel,
+                materialProfileLevel: definitionManager.materialProfileLevel,
             })
         );
 

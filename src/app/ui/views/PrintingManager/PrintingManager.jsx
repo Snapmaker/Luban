@@ -19,7 +19,7 @@ import { actions as projectActions } from '../../../flux/project';
 import { actions as machineActions } from '../../../flux/machine';
 
 import ProfileManager from '../ProfileManager';
-import ParameterModifier from '../ParameterModifier';
+import { PresetModifierModal } from '../PresetModifier';
 
 // const materialText = (label, color) => {
 //     return (
@@ -281,7 +281,7 @@ function PrintingManager() {
             }
             {
                 showPrintParameterModifierDialog && (
-                    <ParameterModifier
+                    <PresetModifierModal
                         outsideActions={actions}
                     />
                 )

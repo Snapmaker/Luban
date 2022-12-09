@@ -1,39 +1,32 @@
-import React, { useEffect, useRef, useState } from 'react';
-import classNames from 'classnames';
-import { useDispatch, useSelector } from 'react-redux';
 import { Menu, Tooltip } from 'antd';
-import PropTypes from 'prop-types';
-// import { useSelector, shallowEqual } from 'react-redux';
+import classNames from 'classnames';
 import { cloneDeep, findIndex, isUndefined, orderBy, uniqWith } from 'lodash';
+import PropTypes from 'prop-types';
+import React, { useEffect, useRef, useState } from 'react';
 
 import {
-    HEAD_CNC,
-    HEAD_LASER,
     MATERIAL_TYPE_OPTIONS,
     PRINTING_MANAGER_TYPE_MATERIAL,
     PRINTING_MANAGER_TYPE_QUALITY
 } from '../../../constants';
-import modal from '../../../lib/modal';
 import useSetState from '../../../lib/hooks/set-state';
-import Anchor from '../../components/Anchor';
 import i18n from '../../../lib/i18n';
+import modal from '../../../lib/modal';
+import Anchor from '../../components/Anchor';
+import { Button } from '../../components/Buttons';
+import Dropdown from '../../components/Dropdown';
+import Modal from '../../components/Modal';
+import Notifications from '../../components/Notifications';
 
 import SvgIcon from '../../components/SvgIcon';
-import Notifications from '../../components/Notifications';
-import Modal from '../../components/Modal';
-import { Button } from '../../components/Buttons';
-
-import DefinitionCreator from '../DefinitionCreator';
-import ConfigValueBox from './ConfigValueBox';
-import styles from './styles.styl';
-
-import { MaterialWithColor } from '../../widgets/PrintingMaterial/MaterialWithColor';
 
 import AddMaterialModel from '../../pages/MachineMaterialSettings/addMaterialModel';
 
+import { MaterialWithColor } from '../../widgets/PrintingMaterial/MaterialWithColor';
 
-import { actions as printingActions } from '../../../flux/printing';
-import Dropdown from '../../components/Dropdown';
+import DefinitionCreator from '../DefinitionCreator';
+import PresetContent from './PresetContent';
+import styles from './styles.styl';
 
 /**
  * Do category fields in different types of profiles have values, and multilingual support
@@ -162,9 +155,6 @@ function ProfileManager({
     customConfig,
     onChangeCustomConfig
 }) {
-    const dispatch = useDispatch();
-
-    const customMode = useSelector(state => state?.printing?.customMode);
     const [definitionState, setDefinitionState] = useGetDefinitions(allDefinitions, activeDefinitionID, outsideActions.getDefaultDefinition, managerType);
     const [showCreateMaterialModal, setShowCreateMaterialModal] = useState(false);
     const currentDefinitions = useRef(allDefinitions);
@@ -176,10 +166,6 @@ function ProfileManager({
         fileInput: useRef(null),
         renameInput: useRef(null),
         refCreateModal: useRef(null)
-    };
-
-    const setCustomMode = (value) => {
-        dispatch(printingActions.updateCustomMode(value));
     };
 
     const actions = {
@@ -467,26 +453,6 @@ function ProfileManager({
             const newDefinitionForManager = cloneDeep(definitionForManager);
             newDefinitionForManager.settings[key].default_value = value;
 
-            if (managerType === HEAD_CNC || managerType === HEAD_LASER) {
-                if (key === 'path_type' && value === 'path') {
-                    newDefinitionForManager.settings.movement_mode.default_value = 'greyscale-line';
-                }
-                if (key === 'tool_type') {
-                    switch (value) {
-                        case 'vbit':
-                            newDefinitionForManager.settings.diameter.default_value = 0.2;
-                            break;
-                        case 'flat':
-                            newDefinitionForManager.settings.diameter.default_value = 1.5;
-                            break;
-                        case 'ball':
-                            newDefinitionForManager.settings.diameter.default_value = 3.175;
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            }
             setDefinitionState({
                 definitionForManager: newDefinitionForManager
             });
@@ -576,7 +542,7 @@ function ProfileManager({
                                             definitionState.cates.map((cate) => {
                                                 const isCategorySelected = cate.category === definitionState?.definitionForManager.category;
                                                 return !!cate.items.length && (
-                                                    <li key={`${cate.category}`} className={classNames(customMode ? styles['disable-li'] : '', styles['category-li'])}>
+                                                    <li key={`${cate.category}`} className={classNames(styles['category-li'])}>
                                                         <Anchor
                                                             className={classNames(styles['manager-btn'], { [styles.selected]: actions.isCategorySelectedNow(cate.category) })}
                                                             onClick={() => actions.onSelectCategory(cate.category)}
@@ -677,7 +643,7 @@ function ProfileManager({
                                                                         return null;
                                                                     } else {
                                                                         return (
-                                                                            <li key={`${currentOption.value}${currentOption.label}`} className={classNames(styles['profile-li'], customMode ? styles['disable-li'] : '')}>
+                                                                            <li key={`${currentOption.value}${currentOption.label}`} className={classNames(styles['profile-li'])}>
                                                                                 <div className="sm-flex align-center justify-space-between">
                                                                                     <Anchor
                                                                                         className={classNames(styles['manager-btn'], { [styles.selected]: isSelected })}
@@ -843,7 +809,6 @@ function ProfileManager({
                                                 type="default"
                                                 priority="level-two"
                                                 className="margin-left-16"
-                                                disabled={customMode}
                                             >
                                                 {i18n._('key-ProfileManager/Add Profile')}
                                             </Button>
@@ -851,9 +816,10 @@ function ProfileManager({
                                     </div>
                                 </ul>
                             </div>
-                            <ConfigValueBox
+                            {/* Preset Content on the right side */}
+                            <PresetContent
                                 definitionForManager={definitionState.definitionForManager}
-                                isCategorySelected={definitionState.isCategorySelected}
+                                showParameters={!definitionState.isCategorySelected}
                                 optionConfigGroup={optionConfigGroup}
                                 isOfficialDefinition={isOfficialDefinition}
                                 onChangePresetSettings={actions.onChangePresetSettings}
@@ -863,8 +829,6 @@ function ProfileManager({
                                 managerType={managerType}
                                 customConfigs={customConfig}
                                 onChangeCustomConfig={onChangeCustomConfig}
-                                customMode={customMode}
-                                setCustomMode={setCustomMode}
                             />
                             {showCreateMaterialModal && managerType === PRINTING_MANAGER_TYPE_MATERIAL && (
                                 <AddMaterialModel

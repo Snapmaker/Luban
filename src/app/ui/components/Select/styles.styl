@@ -3,42 +3,53 @@
 
 .override-select {
     display: inline-block;
-    .highest-large{
+
+    .highest-large {
         width: 288px;
     }
+
     .higher-larger {
         width: 258px;
+
         :global(.ant-select-selection-item) {
             max-width: 224px;
         }
     }
-    .super-large{
+
+    .super-large {
         width: 200px;
     }
-    .large{
+
+    .large {
         width: 160px;
     }
-    .middle{
+
+    .middle {
         width: 120px;
     }
-    .small{
+
+    .small {
         width: 64px;
     }
-    :global(.ant-select){
+
+    :global(.ant-select) {
         //width: 100px;
-        border: none!important;
+        border: none !important;
         color: $black-3;
-        border-radius: 8px!important;
+        border-radius: 8px !important;
+
         :global(div.ant-select-selector) {
             padding: 0 8px;
             border: 1px solid #B9BCBF;
-            border-radius: 8px!important;
+            border-radius: 8px !important;
             height: 31px;
+
             :global(span.ant-select-selection-search) {
                 left: 8px !important;
             }
         }
     }
+
     :global(div.ant-select-disabled) {
         :global(div.ant-select-selector) {
             background: $grey-3 !important;
@@ -46,12 +57,13 @@
             border: 1px solid $grey-1;
         }
     }
+
     :global(.ant-select-selection-item) {
         text-align: left;
     }
 }
 
-:global(.ant-select-dropdown){
+:global(.ant-select-dropdown) {
     width: 120%
 }
 
@@ -60,91 +72,108 @@
     max-width: 320px;
     border: 1px solid $black-5;
     border-radius: $px-grade-4;
+
     :global(.ant-select-item) {
         padding: 5px 8px;
         color: $black-3;
     }
+
     :global(.ant-select-item-option-active:not(.ant-select-item-option-disabled)) {
         background: $grey-2;
     }
+
     :global(.ant-select-item-option-selected:not(.ant-select-item-option-disabled)) {
         background: $blue-6;
         color: $black-3;
         font-weight: $font-weight-normal;
     }
+
     :global(.ant-select-item-option-disabled) {
         color: $black-5;
     }
 }
 
 :global(div.ant-tree-select-dropdown) {
-  width auto !important;
-  max-width: 200px;
-  padding: 4px 0 !important;
-  :global(.ant-select-tree-switcher_open)::before, :global(.ant-select-tree-switcher_close)::before {
-    content: '';
-    position: absolute;
-    //right: -310px;
-    top: 0;
-    left: 0;
-    bottom: 0;
-  }
-  :global(.ant-select-tree-switcher_open), :global(.ant-select-tree-switcher_close) {
-      padding-right: 100%
-      z-index: 100
-      :global(.ant-select-tree-switcher-icon) {
-          margin-left: 8px;
-      }
-  }
-  :global(.ant-select-tree-node-content-wrapper-close), :global(.ant-select-tree-node-content-wrapper-open) {
-      margin-left: -100%
-      z-index: 10
-  }
-  :global(.ant-select-tree-list-holder) {
-    :global(.ant-select-tree-switcher-noop) {
-      display: none;
-    }
-    :global(.ant-select-tree-treenode) {
-      height 32px
-      padding 0 !important
-      width 100%
-      &:hover {
-          background: #eeeff0;
-      }
-    }
-    :global(.ant-select-tree-treenode-selected), :global(.ant-select-tree-node-selected) {
-      background: #E7F3FF !important;
-    }
-    :global(.ant-select-tree-node-content-wrapper) {
-      color: $black-3;
-      height 32px;
-      line-height 32px;
-      padding-left: 24px;
-      width 85%
-      :global(.ant-select-tree-title) {
-        max-width 278px;
-        display: inline-block;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        width 100%
-      }
-      &:hover {
-        background: transparent;
-      }
+    width auto !important;
+    max-width: 200px;
+    padding: 4px 0 !important;
+
+    :global(.ant-select-tree-switcher_open)::before, :global(.ant-select-tree-switcher_close)::before {
+        content: '';
+        position: absolute;
+        //right: -310px;
+        top: 0;
+        left: 0;
+        bottom: 0;
     }
 
-    :global(.ant-select-tree-node-content-wrapper-normal) {
-        padding-left 8px;
-        padding-right: 12px;
+    :global(.ant-select-tree-switcher_open), :global(.ant-select-tree-switcher_close) {
+        padding-right: 100%
+        z-index: 100
+
+        :global(.ant-select-tree-switcher-icon) {
+            margin-left: 8px;
+        }
     }
-    :global(.ant-select-tree-treenode-disabled) {
-      :global(.ant-select-tree-node-content-wrapper) {
-        padding-left 12px;
-      }
-      :global(.ant-select-tree-title) {
-        color: $black-5 !important
-      }
+
+    :global(.ant-select-tree-node-content-wrapper-close), :global(.ant-select-tree-node-content-wrapper-open) {
+        margin-left: -100%
+        z-index: 10
     }
-  }
+
+    :global(.ant-select-tree-list-holder) {
+        :global(.ant-select-tree-switcher-noop) {
+            display: none;
+        }
+
+        :global(.ant-select-tree-treenode) {
+            height 32px
+            padding 0 !important
+            width 100%
+
+            &:hover {
+                background: #eeeff0;
+            }
+        }
+
+        :global(.ant-select-tree-treenode-selected), :global(.ant-select-tree-node-selected) {
+            background: #E7F3FF !important;
+        }
+
+        :global(.ant-select-tree-node-content-wrapper) {
+            color: $black-3;
+            height 32px;
+            line-height 32px;
+            padding-left: 24px;
+            width 85%
+
+            :global(.ant-select-tree-title) {
+                max-width 278px;
+                display: inline-block;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                width 100%
+            }
+
+            &:hover {
+                background: transparent;
+            }
+        }
+
+        :global(.ant-select-tree-node-content-wrapper-normal) {
+            padding-left 8px;
+            padding-right: 12px;
+        }
+
+        :global(.ant-select-tree-treenode-disabled) {
+            :global(.ant-select-tree-node-content-wrapper) {
+                padding-left 12px;
+            }
+
+            :global(.ant-select-tree-title) {
+                color: $black-5 !important
+            }
+        }
+    }
 }

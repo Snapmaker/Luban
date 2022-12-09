@@ -1,6 +1,4 @@
 import React, { useEffect } from 'react';
-// import '@trendmicro/react-modal/dist/react-modal.css';
-// import Modal from '@trendmicro/react-modal';
 import PropTypes from 'prop-types';
 
 import './modal.styl';
@@ -15,6 +13,7 @@ import UniApi from '../../../lib/uni-api';
 
 
 const bodyDom = document.querySelector('body');
+
 function blockScrolling() {
     bodyDom.style.overflowY = 'hidden';
 }
@@ -22,18 +21,21 @@ function blockScrolling() {
 function unblockScrolling() {
     bodyDom.style.overflowY = 'auto';
 }
-const ModalWrapper = React.memo(({
-    centered = true,
-    modalWrapperClassName = 'modal-wrapper',
-    tile = false,
-    visible = true,
-    onClose,
-    className = '',
-    children,
-    size,
-    width = 'auto',
-    ...rest
-}) => {
+
+const ModalWrapper = React.memo((
+    {
+        centered = true,
+        modalWrapperClassName = 'modal-wrapper',
+        tile = false,
+        visible = true,
+        onClose,
+        className = '',
+        children,
+        size,
+        width = 'auto',
+        ...rest
+    }
+) => {
     useEffect(() => {
         UniApi.Event.emit('appbar-menu:disable');
         blockScrolling();
@@ -93,8 +95,9 @@ ModalWrapper.propTypes = {
     className: PropTypes.string,
     width: PropTypes.oneOfType(PropTypes.string, PropTypes.number),
 };
+
 ModalWrapper.Header = Title;
 ModalWrapper.Body = Body;
 ModalWrapper.Footer = Footer;
 
-export default (ModalWrapper);
+export default ModalWrapper;

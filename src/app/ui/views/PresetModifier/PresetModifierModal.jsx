@@ -13,12 +13,18 @@ import PresetContent from './PresetContent';
 import StackPresetSelector from './StackPresetSelector';
 
 /**
- * Print parameter modifier dialog.
+ * Preset modifier modal.
  *
+ * @param defaultStackId
  * @param outsideActions
  * @constructor
  */
-function ParameterModifier({ outsideActions }) {
+function PresetModifierModal(
+    {
+        defaultStackId = LEFT_EXTRUDER,
+        outsideActions // TODO: Remove this
+    }
+) {
     const dispatch = useDispatch();
 
     const {
@@ -31,7 +37,7 @@ function ParameterModifier({ outsideActions }) {
     // selected stack
     // Either LEFT_EXTRUDER or RIGHT_EXTRUDER, these are the only values supported,
     // add a global machine stack later.
-    const [selectedStackId, setSelectedStackId] = useState(RIGHT_EXTRUDER);
+    const [selectedStackId, setSelectedStackId] = useState(defaultStackId);
 
     // selected preset for selected stack
     const [selectedPresetId, setSelectedPresetId] = useState('');
@@ -55,12 +61,13 @@ function ParameterModifier({ outsideActions }) {
      * @param presetId
      */
     function selectPreset(presetId) {
-        setSelectedPresetId(presetId);
-
         const presetModels = selectedStackId === LEFT_EXTRUDER ? qualityDefinitions : qualityDefinitionsRight;
         const presetModel = presetModels.find(p => p.definitionId === presetId);
         if (presetModel) {
+            setSelectedPresetId(presetId);
             dispatch(printingActions.updateActiveQualityPresetId(selectedStackId, presetId));
+        } else {
+            // TODO: Popup a notification indicating unacceptable preset id
         }
     }
 
@@ -117,10 +124,11 @@ function ParameterModifier({ outsideActions }) {
     );
 }
 
-ParameterModifier.propTypes = {
+PresetModifierModal.propTypes = {
+    defaultStackId: PropTypes.string,
     outsideActions: PropTypes.shape({
         closePrintParameterModifier: PropTypes.func.isRequired
     }).isRequired
 };
 
-export default ParameterModifier;
+export default PresetModifierModal;

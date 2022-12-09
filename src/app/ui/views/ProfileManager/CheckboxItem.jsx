@@ -7,7 +7,7 @@ import Checkbox from '../../components/Checkbox';
 function CheckboxItem({
     definitionKey,
     settings,
-    calculateTextIndex = () => 0,
+    // calculateTextIndex = () => 0,
     width = 'auto',
     onChangePresetSettings,
     defaultValue,
@@ -22,7 +22,7 @@ function CheckboxItem({
                 className="sm-flex-auto sm-flex-order-negative"
                 style={{
                     width: width,
-                    marginLeft: calculateTextIndex(definitionKey)
+                    // marginLeft: calculateTextIndex(definitionKey)
                 }}
                 checked={defaultValue}
                 onChange={(e) => onChangePresetSettings(definitionKey, e.target.checked, configCategory)}
@@ -33,7 +33,7 @@ function CheckboxItem({
 }
 CheckboxItem.propTypes = {
     settings: PropTypes.object.isRequired,
-    calculateTextIndex: PropTypes.func,
+    // calculateTextIndex: PropTypes.func,
     definitionKey: PropTypes.string.isRequired,
     defaultValue: PropTypes.bool.isRequired,
     width: PropTypes.string,

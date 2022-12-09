@@ -12,6 +12,7 @@ import {
     KEY_DEFAULT_CATEGORY_CUSTOM,
     KEY_DEFAULT_CATEGORY_DEFAULT
 } from '../../constants';
+import { getParameterKeys } from '../../slicer/definition';
 import { DefinitionLoader, loadAllSeriesDefinitions, loadDefinitionsByPrefixName } from '../../slicer';
 import DataStorage from '../../DataStorage';
 import logger from '../../lib/logger';
@@ -356,4 +357,9 @@ export const uploadDefinition = (req, res) => {
     } catch (e) {
         res.status(ERR_INTERNAL_SERVER_ERROR).send({ err: e });
     }
+};
+
+export const getPresetParameterKeys = (req, res) => {
+    const data = getParameterKeys();
+    res.send(data);
 };
