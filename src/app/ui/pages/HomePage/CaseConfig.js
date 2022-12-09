@@ -467,8 +467,8 @@ export const CaseConfigPenHolder = {
     imgSrc: '../../resources/images/user-case/printing/3dp_pen_holder_194x194.png',
     pathConfig: {
         isDatastoragePath: true,
-        path: './UserCase/printing/PenHolder.snap3dp',
-        name: 'PenHolder.snap3dp',
+        path: './UserCase/printing/Case-PenHolder.snap3dp',
+        name: 'Case-PenHolder.snap3dp',
     }
 };
 

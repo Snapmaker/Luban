@@ -18,6 +18,7 @@ const renderParameterValueItemList = (
     {
         settings,
         renderList,
+        enabledKeyFilter,
         selectedKeys,
         isDefaultDefinition,
         onChangePresetSettings: _onChangeCustomConfig,
@@ -35,7 +36,7 @@ const renderParameterValueItemList = (
         // const isCustom = selectParamsType === 'custom';
         // const parameterVisibleTypeIncluded = includes((settings[profileKey].filter || []).concat('all'), selectParamsType);
         // const parameterDetailVisibleTypeIncluded = (managerType !== PRINTING_MANAGER_TYPE_QUALITY || selectQualityDetailType === NO_LIMIT || includes(settings[profileKey].filter || [], selectQualityDetailType));
-        const allowed = selectedKeys.includes(profileKey);
+        const allowed = !enabledKeyFilter || selectedKeys.includes(profileKey);
         if (!allowed) {
             return null;
         }
@@ -78,6 +79,7 @@ const renderParameterValueItemList = (
                     childKey && renderParameterValueItemList({
                         settings,
                         renderList: childKey,
+                        enabledKeyFilter,
                         selectedKeys: selectedKeys,
                         isDefaultDefinition,
                         onChangePresetSettings: _onChangeCustomConfig,
@@ -98,6 +100,7 @@ const renderParameterValueItemList = (
 
 type Props = {
     optionConfigGroup: any;
+    enabledKeyFilter: boolean;
     settings: any;
     definitionForManager: any;
     selectedSettingDefaultValue: any;
@@ -119,6 +122,7 @@ type Props = {
 const ParameterTable: React.FC<Props> = (props) => {
     const {
         optionConfigGroup,
+        enabledKeyFilter = false,
         settings,
         definitionForManager,
         selectedSettingDefaultValue,
@@ -277,6 +281,7 @@ const ParameterTable: React.FC<Props> = (props) => {
                                             {
                                                 renderParameterValueItemList({
                                                     renderList: optionConfigGroup[category],
+                                                    enabledKeyFilter,
                                                     selectedKeys: optionConfigGroup[category],
                                                     settings,
                                                     isDefaultDefinition: definitionForManager?.isRecommended,

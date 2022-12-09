@@ -263,6 +263,12 @@ function Laser({ location }) {
                             name: 'laser_a350_1600mW.snaplzr'
                         };
                         break;
+                    case 'A400':
+                        pathConfig = {
+                            path: './UserCase/laser/a350_10w/wooden_ruler.snaplzr',
+                            name: 'wooden_ruler.snaplzr',
+                        };
+                        break;
                     default:
                         pathConfig = {
                             path: './UserCase/laser/original_200mw/laser_original_200mW.snaplzr',

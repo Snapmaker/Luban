@@ -1,52 +1,53 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { shallowEqual, useDispatch, useSelector } from 'react-redux';
-import PropTypes from 'prop-types';
-import { useHistory, withRouter } from 'react-router-dom';
-import { find, includes } from 'lodash';
-import isElectron from 'is-electron';
 import i18next from 'i18next';
 // import { Steps } from 'intro.js-react';
 import 'intro.js/introjs.css';
-import { Trans } from 'react-i18next';
-import PrintingVisualizer from '../widgets/PrintingVisualizer';
-// import PrintingOutput from '../widgets/PrintingOutput';
-import PrintingManager from '../views/PrintingManager';
-import i18n from '../../lib/i18n';
-import modal from '../../lib/modal';
-import Dropzone from '../components/Dropzone';
+import isElectron from 'is-electron';
+import { find, includes } from 'lodash';
+import PropTypes from 'prop-types';
+import React, { useEffect, useRef, useState } from 'react';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+import { useHistory, withRouter } from 'react-router-dom';
+import { MACHINE_SERIES } from '../../../server/constants';
+import { HEAD_PRINTING, isDualExtruder } from '../../constants/machines';
+import { actions as machineActions } from '../../flux/machine';
 import { actions as printingActions } from '../../flux/printing';
 import { actions as projectActions } from '../../flux/project';
-import { actions as machineActions } from '../../flux/machine';
-import ProjectLayout from '../layouts/ProjectLayout';
-import MainToolBar from '../layouts/MainToolBar';
-import { HEAD_PRINTING, isDualExtruder } from '../../constants/machines';
-import { logPageView, renderPopup, renderWidgetList, useUnsavedTitle } from '../utils';
+import i18n from '../../lib/i18n';
+import modal from '../../lib/modal';
 import { machineStore } from '../../store/local-storage';
-
-import ControlWidget from '../widgets/Control';
+import '../../styles/introCustom.styl';
+import Dropzone from '../components/Dropzone';
+import Steps from '../components/Steps';
+import MainToolBar from '../layouts/MainToolBar';
+import ProjectLayout from '../layouts/ProjectLayout';
+import { logPageView, renderPopup, renderWidgetList, useUnsavedTitle } from '../utils';
+// import PrintingOutput from '../widgets/PrintingOutput';
+import PrintingManager from '../views/PrintingManager';
+import CncLaserOutputWidget from '../widgets/CncLaserOutput';
+import CNCPathWidget from '../widgets/CNCPath';
 import ConnectionWidget from '../widgets/Connection';
 import ConsoleWidget from '../widgets/Console';
+
+import ControlWidget from '../widgets/Control';
+import EnclosureWidget from '../widgets/Enclosure';
 import GCodeWidget from '../widgets/GCode';
-import MacroWidget from '../widgets/Macro';
-import PurifierWidget from '../widgets/Purifier';
-import MarlinWidget from '../widgets/Marlin';
-import VisualizerWidget from '../widgets/WorkspaceVisualizer';
-import WebcamWidget from '../widgets/Webcam';
+import JobType from '../widgets/JobType';
 import LaserParamsWidget from '../widgets/LaserParams';
 import LaserSetBackground from '../widgets/LaserSetBackground';
 import LaserTestFocusWidget from '../widgets/LaserTestFocus';
-import CNCPathWidget from '../widgets/CNCPath';
-import CncLaserOutputWidget from '../widgets/CncLaserOutput';
-import PrintingMaterialWidget from '../widgets/PrintingMaterial';
+import MacroWidget from '../widgets/Macro';
+import MarlinWidget from '../widgets/Marlin';
 import PrintingConfigurationsWidget from '../widgets/PrintingConfigurations';
+import PrintingMaterialWidget from '../widgets/PrintingMaterial';
 import PrintingOutputWidget from '../widgets/PrintingOutput';
-import WifiTransport from '../widgets/WifiTransport';
-import EnclosureWidget from '../widgets/Enclosure';
 import Thumbnail from '../widgets/PrintingOutput/Thumbnail';
-import JobType from '../widgets/JobType';
+import PrintingVisualizer from '../widgets/PrintingVisualizer';
+import PurifierWidget from '../widgets/Purifier';
+import WebcamWidget from '../widgets/Webcam';
+import WifiTransport from '../widgets/WifiTransport';
+import VisualizerWidget from '../widgets/WorkspaceVisualizer';
 
 import HomePage from './HomePage';
-import Workspace from './Workspace';
 import {
     printIntroStepEight,
     printIntroStepFive,
@@ -57,13 +58,9 @@ import {
     printIntroStepThree,
     printIntroStepTwo,
 } from './introContent';
-import '../../styles/introCustom.styl';
-import Steps from '../components/Steps';
-import Modal from '../components/Modal';
-import { Button } from '../components/Buttons';
 import MachineMaterialSettings from './MachineMaterialSettings';
-import { MACHINE_SERIES } from '../../../server/constants';
 import { PageMode } from './PageMode';
+import Workspace from './Workspace';
 
 export const openFolder = () => {
     if (isElectron()) {
@@ -381,11 +378,9 @@ function Printing({ location }) {
         renderHomepage, renderMainToolBar, renderWorkspace, renderMachineMaterialSettings
     ] = useRenderMainToolBar(setPageMode, setSimplifying, !!materialDefinitions.length);
     const modelGroup = useSelector(state => state.printing.modelGroup);
-    const isNewUser = useSelector(state => state.printing.isNewUser);
     const thumbnail = useRef();
     const stepRef = useRef();
     useUnsavedTitle(pageHeadType);
-    const [showTipModal, setShowTipModal] = useState(!isNewUser);
 
     useEffect(() => {
         (async () => {
@@ -402,10 +397,6 @@ function Printing({ location }) {
             pathname: '/printing'
         });
     }, []);
-    useEffect(() => {
-        const readTip = machineStore.get('readTip', false);
-        setShowTipModal(!isNewUser && !readTip);
-    }, [isNewUser]);
 
     useEffect(() => {
         const newMachineInfo = {
@@ -514,7 +505,23 @@ function Printing({ location }) {
                 path: './UserCase/printing/original_single/3dp_original_single.snap3dp',
                 name: '3dp_original_single.snap3dp'
             };
-            dispatch(projectActions.openProject(isOriginal ? pathConfigForOriginal : pathConfigForSM2, history, true, true));
+            const pathConfigForArtisan = {
+                path: './UserCase/printing/Case-PenHolder.snap3dp',
+                name: 'Case-PenHolder.snap3dp'
+            };
+
+            // TODO: Refactor to not hard coding
+            const isArtisan = series === MACHINE_SERIES.A400.value;
+            let pathConfig;
+            if (isOriginal) {
+                pathConfig = pathConfigForOriginal;
+            } else if (isArtisan) {
+                pathConfig = pathConfigForArtisan;
+            } else {
+                pathConfig = pathConfigForSM2;
+            }
+
+            dispatch(projectActions.openProject(pathConfig, history, true, true));
         } else if (nextIndex === 5) {
             const thumbnailRef = thumbnail.current.getThumbnail();
             await dispatch(printingActions.generateGcode(thumbnailRef, true));
@@ -524,10 +531,6 @@ function Printing({ location }) {
     const handleExit = () => {
         // machineStore.set('guideTours.guideTours3dp', true); // mock   ---> true
         setEnabledIntro(false);
-    };
-    const handleCloseTipModal = () => {
-        setShowTipModal(false);
-        machineStore.set('readTip', true);
     };
 
     return (
@@ -642,41 +645,6 @@ function Printing({ location }) {
                 ref={thumbnail}
                 modelGroup={modelGroup}
             />
-            {showTipModal && (
-                <Modal
-                    onClose={handleCloseTipModal}
-                    centered
-                    zIndex={100001000}
-                >
-                    <Modal.Header>
-                        {i18n._('key-Printing/Modal-Profile migrated')}
-                    </Modal.Header>
-                    <Modal.Body>
-                        <div className="width-432">
-                            <span>
-                                {i18n._('key-Printing/Modal-Retraction profile migrated')}
-                                <a href="https://support.snapmaker.com/hc/en-us/articles/4438318910231-Retract-Z-Hop-Migrated-from-Printing-Settings-to-Material-Settings" target="_blank" rel="noreferrer" className="link-text">{i18n._('key-Printing/Modal-Click here to learn more')}</a>
-                            </span>
-                            <p>
-                                <Trans i18nKey="key-Printing/Modal-Backup Tip">
-                                    For your historical data back up
-                                    in <span role="presentation" onClick={openFolder} className="link-text">here</span>
-                                </Trans>
-                            </p>
-                        </div>
-                    </Modal.Body>
-                    <Modal.Footer>
-                        <Button
-                            priority="level-two"
-                            type="primary"
-                            width="96px"
-                            onClick={handleCloseTipModal}
-                        >
-                            {i18n._('key-Printing/Modal-Got it')}
-                        </Button>
-                    </Modal.Footer>
-                </Modal>
-            )}
         </ProjectLayout>
     );
 }

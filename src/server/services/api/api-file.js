@@ -338,6 +338,7 @@ export const saveEnv = async (req, res) => {
     try {
         const config = JSON.parse(content);
         const { activePresetIds } = config;
+
         const machineInfo = config?.machineInfo;
         const headType = machineInfo?.headType;
         const envDir = `${DataStorage.envDir}/${headType}`;
