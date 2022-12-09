@@ -1,0 +1,42 @@
+{
+    "version": "4.5.0-beta.5",
+    "name": "Flat End Mill 3.175",
+    "category": "HDF",
+    "i18nName": "",
+    "i18nCategory": "",
+    "isRecommended": true,
+    "inherits": "snapmaker2",
+    "metadata": {},
+    "overrides": {
+        "tool_type": {
+            "default_value": "flat"
+        },
+        "diameter": {
+            "default_value": 3.175
+        },
+        "angle": {
+            "default_value": 180
+        },
+        "shaft_diameter": {
+            "default_value": 3.175
+        },
+        "jog_speed": {
+            "default_value": 2000
+        },
+        "work_speed": {
+            "default_value": 1700
+        },
+        "plunge_speed": {
+            "default_value": 200
+        },
+        "step_down": {
+            "default_value": 1.5
+        },
+        "step_over": {
+            "default_value": 0.5
+        },
+        "tool_extension_enabled": {
+            "default_value": false
+        }
+    }
+}

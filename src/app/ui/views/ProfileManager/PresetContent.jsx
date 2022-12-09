@@ -199,6 +199,7 @@ function PresetContent(
                     showParameters && !customMode && (
                         <ParameterTable
                             optionConfigGroup={selectParamsType === 'custom' ? customConfigs : optionConfigGroup}
+                            enabledKeyFilter={selectParamsType === 'custom'}
                             settings={definitionForManager.settings}
                             definitionForManager={definitionForManager}
                             selectedSettingDefaultValue={selectedSettingDefaultValue}

@@ -372,7 +372,6 @@ export const MACHINE_TOOL_HEADS = {
             MACHINE_SERIES.A150.value,
             MACHINE_SERIES.A250.value,
             MACHINE_SERIES.A350.value,
-            MACHINE_SERIES.A400.value
         ],
         value: SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
         key: 'singleExtruderToolheadForSM2',
@@ -382,7 +381,7 @@ export const MACHINE_TOOL_HEADS = {
         //
         // E_EXTRUDER_TOOLHEAD,
         label: 'key-App/Settings/MachineSettings-Single Extruder Toolhead',
-        image: '/resources/images/machine/printing_2.png',
+        image: '/resources/images/machine/tool-head-a-extruder.png',
         // mock offset data
         offset: {
             x: 0,
@@ -402,7 +401,7 @@ export const MACHINE_TOOL_HEADS = {
         pathname: 'dual',
         key: 'dualExtruderToolheadForSM2',
         label: 'key-App/Settings/MachineSettings-Dual Extruder Toolhead',
-        image: '/resources/images/machine/coming_soon.png',
+        image: '/resources/images/machine/tool-head-a-dual-extruder.png',
         // mock offset data
         offset: {
             x: 0,
@@ -416,7 +415,6 @@ export const MACHINE_TOOL_HEADS = {
             MACHINE_SERIES.A150.value,
             MACHINE_SERIES.A250.value,
             MACHINE_SERIES.A350.value,
-            MACHINE_SERIES.A400.value
         ],
         value: LEVEL_ONE_POWER_LASER_FOR_SM2,
         pathname: '1600mw',
@@ -456,7 +454,6 @@ export const MACHINE_TOOL_HEADS = {
             MACHINE_SERIES.A150.value,
             MACHINE_SERIES.A250.value,
             MACHINE_SERIES.A350.value,
-            MACHINE_SERIES.A400.value
         ],
         value: STANDARD_CNC_TOOLHEAD_FOR_SM2,
         key: 'standardCNCToolheadForSM2',

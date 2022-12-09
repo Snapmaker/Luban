@@ -11,6 +11,7 @@ import {
     DEFAULE_PARAMS_FOR_TPU,
     DEFAULE_PARAMS_FOR_OTHERS,
     DEFAULT_PARAMS_FAST,
+    DEFAULT_PARAMS_MEDIUM,
     getPresetQuickParamsCalculated
 } from '../../flux/manager/PresetDefinitionModel';
 
@@ -37,6 +38,8 @@ function getPresetQuickParams(machine, presetModel) {
     if (presetModel.qualityType === 'abs') {
         if (machine.value === MACHINE_SERIES.J1.value) {
             return cloneDeep(DEFAULT_PARAMS_FAST);
+        } else if (machine.value === MACHINE_SERIES.A400.value) {
+            return cloneDeep(DEFAULT_PARAMS_MEDIUM);
         } else {
             return cloneDeep(DEFAULE_PARAMS_FOR_OTHERS);
         }

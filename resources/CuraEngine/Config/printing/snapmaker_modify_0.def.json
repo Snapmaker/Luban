@@ -107,6 +107,32 @@
                             "settable_per_extruder": false,
                             "settable_per_meshgroup": false
                         },
+                        "material_print_temp_wait_range": {
+                            "label": "Material Print Temperature Wait Range",
+                            "description": "Allowable deviation of nozzle waiting temperature.",
+                            "unit": "℃",
+                            "type": "float",
+                            "default_value": 5,
+                            "minimum_value": "1",
+                            "minimum_value_warning": "2",
+                            "maximum_value_warning": "8",
+                            "enabled": false,
+                            "settable_per_mesh": false,
+                            "settable_per_extruder": false
+                        },
+                        "material_print_temp_wait_time": {
+                            "label": "Material Print Temperature Wait Time",
+                            "description": "Waiting time for the nozzle to reach the waiting temperature.",
+                            "unit": "s",
+                            "type": "float",
+                            "default_value": 0,
+                            "minimum_value": "0",
+                            "minimum_value_warning": "2",
+                            "maximum_value_warning": "20",
+                            "enabled": false,
+                            "settable_per_mesh": false,
+                            "settable_per_extruder": false
+                        },
                         "material_print_temp_prepend": {
                             "label": "Include Material Temperatures",
                             "description": "Whether to include nozzle temperature commands at the start of the gcode. When the start_gcode already contains nozzle temperature commands Cura frontend will automatically disable this setting.",
@@ -1049,7 +1075,7 @@
                             "description": "The temperature used for printing.",
                             "unit": "°C",
                             "type": "float",
-                            "default_value": 210,
+                            "default_value": 200,
                             "minimum_value": "0",
                             "maximum_value": "machine_maximum_print_temperature",
                             "step": "0.1",
@@ -1068,7 +1094,7 @@
                             "description": "The temperature used for printing the first layer. Set at 0 to disable special handling of the initial layer.",
                             "unit": "°C",
                             "type": "float",
-                            "default_value": 210,
+                            "default_value": 200,
                             "calcu_value": "material_print_temperature",
                             "minimum_value": "0",
                             "minimum_value_warning": "0",
@@ -1089,7 +1115,7 @@
                             "unit": "°C",
                             "type": "float",
                             "default_value": 200,
-                            "calcu_value": "Math.max(-273.15, material_print_temperature - 10)",
+                            "calcu_value": "Math.max(-273.15, material_print_temperature - 5)",
                             "minimum_value": "Math.max(0, material_print_temperature - 10)",
                             "maximum_value": "machine_maximum_print_temperature",
                             "step": "0.1",
@@ -1108,7 +1134,7 @@
                             "unit": "°C",
                             "type": "float",
                             "default_value": 195,
-                            "calcu_value": "Math.max(-273.15, material_print_temperature - 15)",
+                            "calcu_value": "Math.max(-273.15, material_print_temperature - 5)",
                             "minimum_value": "Math.max(0, material_print_temperature - 15)",
                             "maximum_value": "machine_maximum_print_temperature",
                             "step": "0.1",
@@ -1406,7 +1432,7 @@
                                     "calcu_value": "skin_material_flow",
                                     "minimum_value": "5",
                                     "maximum_value": "150",
-                                    "visible":false,
+                                    "visible": false,
                                     "limit_to_extruder": "roofing_extruder_nr",
                                     "settable_per_mesh": true,
                                     "filter": [
@@ -2522,7 +2548,7 @@
                                     "settable_per_mesh": true,
                                     "min": 0,
                                     "max": 20000,
-                                    "children":{
+                                    "children": {
                                         "wall_overhang_angle": {
                                             "label": "Overhanging Wall Angle",
                                             "description": "Walls that overhang more than this angle will be printed using overhanging wall settings. When the value is 90, no walls will be treated as overhanging. Overhang that gets supported by support will not be treated as overhang either.",
@@ -2535,7 +2561,7 @@
                                             "settable_per_mesh": true,
                                             "min": 0,
                                             "max": 20000,
-                                            "visible":"wall_overhang_speed_factor < 90",
+                                            "visible": "wall_overhang_speed_factor < 90",
                                             "filter": [
                                                 "advanced"
                                             ]
@@ -3407,7 +3433,7 @@
                             "visible": "infill_sparse_density > 0 && infill_sparse_density !== 100 && model_structure_type === 'normal'",
                             "limit_to_extruder": "infill_extruder_nr",
                             "settable_per_mesh": false,
-                            "children":{
+                            "children": {
                                 "lightning_infill_support_angle": {
                                     "label": "Lightning Infill Support Angle",
                                     "description": "Determines when a lightning infill layer has to support anything above it. Measured in the angle given the thickness of a layer.",
@@ -3421,7 +3447,7 @@
                                     "enabled": "infill_pattern === 'lightning'",
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": false,
-                                    "visible":"infill_pattern === 'lightning'",
+                                    "visible": "infill_pattern === 'lightning'",
                                     "filter": [
                                         "advanced",
                                         "strength",
@@ -3442,7 +3468,7 @@
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": false,
                                     "value": "lightning_infill_support_angle",
-                                    "visible":"infill_pattern === 'lightning'",
+                                    "visible": "infill_pattern === 'lightning'",
                                     "filter": [
                                         "advanced",
                                         "strength",
@@ -3463,7 +3489,7 @@
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": false,
                                     "value": "lightning_infill_support_angle",
-                                    "visible":"infill_pattern === 'lightning'",
+                                    "visible": "infill_pattern === 'lightning'",
                                     "filter": [
                                         "advanced",
                                         "strength",
@@ -3484,7 +3510,7 @@
                                     "settable_per_mesh": false,
                                     "settable_per_extruder": false,
                                     "value": "lightning_infill_support_angle",
-                                    "visible":"infill_pattern === 'lightning'",
+                                    "visible": "infill_pattern === 'lightning'",
                                     "filter": [
                                         "advanced",
                                         "strength",
@@ -4815,7 +4841,6 @@
                                     "unit": "mm/s",
                                     "type": "float",
                                     "default_value": 60,
-                                    "calcu_value": "speed_layer_0 * speed_travel / speed_print",
                                     "minimum_value": "0.1",
                                     "maximum_value": "Math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
                                     "maximum_value_warning": "300",
@@ -4856,8 +4881,7 @@
                             "description": "The acceleration for the initial layer.",
                             "unit": "mm/s²",
                             "type": "float",
-                            "default_value": 3000,
-                            "calcu_value": "acceleration_print / 2",
+                            "default_value": 1000,
                             "minimum_value": "0.1",
                             "minimum_value_warning": "100",
                             "maximum_value_warning": "10000",
@@ -4873,8 +4897,7 @@
                                     "description": "The acceleration during the printing of the initial layer.",
                                     "unit": "mm/s²",
                                     "type": "float",
-                                    "default_value": 3000,
-                                    "calcu_value": "acceleration_layer_0",
+                                    "default_value": 1000,
                                     "minimum_value": "0.1",
                                     "minimum_value_warning": "100",
                                     "maximum_value_warning": "10000",
@@ -4891,8 +4914,7 @@
                                     "description": "The acceleration for travel moves in the initial layer.",
                                     "unit": "mm/s²",
                                     "type": "float",
-                                    "default_value": 3000,
-                                    "calcu_value": "acceleration_layer_0 * acceleration_travel / acceleration_print",
+                                    "default_value": 1000,
                                     "minimum_value": "0.1",
                                     "minimum_value_warning": "100",
                                     "maximum_value_warning": "10000",
@@ -4910,8 +4932,7 @@
                                     "description": "The acceleration with which the skirt and brim are printed. Normally this is done with the initial layer acceleration, but sometimes you might want to print the skirt or brim at a different acceleration.",
                                     "unit": "mm/s²",
                                     "type": "float",
-                                    "default_value": 3000,
-                                    "calcu_value": "acceleration_layer_0",
+                                    "default_value": 1000,
                                     "minimum_value": "0.1",
                                     "minimum_value_warning": "100",
                                     "maximum_value_warning": "10000",
@@ -5131,7 +5152,7 @@
                             "type": "bool",
                             "visible": "dual_helper_type === 'prime_tower'",
                             "calcu_value": "dual_helper_type === 'prime_tower'",
-                            "default_value": true,
+                            "default_value": false,
                             "settable_per_mesh": false,
                             "settable_per_extruder": false,
                             "filter": [
@@ -5408,7 +5429,7 @@
                                     "type": "bool",
                                     "default_value": false,
                                     "enabled": "ironing_enabled && ironing_pattern !== 'concentric'",
-                                    "visible":"ironing_enabled",
+                                    "visible": "ironing_enabled",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
                                     "settable_per_mesh": false
                                 },

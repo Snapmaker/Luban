@@ -507,7 +507,7 @@
             "default_value": 264.999999
         },
         "prime_tower_wipe_enabled": {
-            "default_value": true
+            "default_value": false
         },
         "prime_tower_brim_enable": {
             "default_value": true

@@ -114,6 +114,34 @@
                     "settable_per_extruder": false,
                     "settable_per_meshgroup": false
                 },
+                "material_print_temp_wait_range":
+                {
+                    "label": "Material Print Temperature Wait Range",
+                    "description": "Allowable deviation of nozzle waiting temperature.",
+                    "unit": "℃",
+                    "type": "float",
+                    "default_value": 5,
+                    "minimum_value": "1",
+                    "minimum_value_warning": "2",
+                    "maximum_value_warning": "8",
+                    "enabled": false,
+                    "settable_per_mesh": false,
+                    "settable_per_extruder": false
+                },
+                "material_print_temp_wait_time":
+                {
+                    "label": "Material Print Temperature Wait Time",
+                    "description": "Waiting time for the nozzle to reach the waiting temperature.",
+                    "unit": "s",
+                    "type": "float",
+                    "default_value": 0,
+                    "minimum_value": "0",
+                    "minimum_value_warning": "2",
+                    "maximum_value_warning": "20",
+                    "enabled": false,
+                    "settable_per_mesh": false,
+                    "settable_per_extruder": false
+                },
                 "material_print_temp_prepend":
                 {
                     "label": "Include Material Temperatures",
@@ -4256,7 +4284,7 @@
                     "settable_per_mesh": false,
                     "settable_per_extruder": true
                 },
-                "retraction_hop_after_extruder_switch_height": 
+                "retraction_hop_after_extruder_switch_height":
                 {
                     "label": "Z Hop After Extruder Switch Height",
                     "description": "The height difference when performing a Z Hop after extruder switch.",
@@ -5006,7 +5034,7 @@
                     "settable_per_mesh": false,
                     "settable_per_extruder": true
                 },
-                "minimum_support_area": 
+                "minimum_support_area":
                 {
                     "label": "Minimum Support Area",
                     "description": "Minimum area size for support polygons. Polygons which have an area smaller than this value will not be generated.",
@@ -5258,7 +5286,7 @@
                         }
                     }
                 },
-                "minimum_interface_area": 
+                "minimum_interface_area":
                 {
                     "label": "Minimum Support Interface Area",
                     "description": "Minimum area size for support interface polygons. Polygons which have an area smaller than this value will be printed as normal support.",
@@ -5271,7 +5299,7 @@
                     "settable_per_mesh": true,
                     "children":
                     {
-                        "minimum_roof_area": 
+                        "minimum_roof_area":
                         {
                             "label": "Minimum Support Roof Area",
                             "description": "Minimum area size for the roofs of the support. Polygons which have an area smaller than this value will be printed as normal support.",
@@ -5284,7 +5312,7 @@
                             "enabled": "support_roof_enable and (support_enable or support_meshes_present)",
                             "settable_per_mesh": true
                         },
-                        "minimum_bottom_area": 
+                        "minimum_bottom_area":
                         {
                             "label": "Minimum Support Floor Area",
                             "description": "Minimum area size for the floors of the support. Polygons which have an area smaller than this value will be printed as normal support.",
@@ -5313,7 +5341,7 @@
                     "settable_per_extruder": true,
                     "children":
                     {
-                        "support_roof_offset": 
+                        "support_roof_offset":
                         {
                             "label": "Support Roof Horizontal Expansion",
                             "description": "Amount of offset applied to the roofs of the support.",
@@ -5327,7 +5355,7 @@
                             "settable_per_mesh": false,
                             "settable_per_extruder": true
                         },
-                        "support_bottom_offset": 
+                        "support_bottom_offset":
                         {
                             "label": "Support Floor Horizontal Expansion",
                             "description": "Amount of offset applied to the floors of the support.",
@@ -6280,7 +6308,7 @@
                     "description": "After printing the prime tower with one nozzle, wipe the oozed material from the other nozzle off on the prime tower.",
                     "type": "bool",
                     "enabled": "resolveOrValue('prime_tower_enable')",
-                    "default_value": true,
+                    "default_value": false,
                     "settable_per_mesh": false,
                     "settable_per_extruder": true
                 },
@@ -6904,7 +6932,7 @@
                     "default_value": 50,
                     "enabled": "conical_overhang_enabled"
                 },
-                "conical_overhang_hole_size": 
+                "conical_overhang_hole_size":
                 {
                    "label": "Maximum Overhang Hole Area",
                    "description": "The maximum area of a hole in the base of the model before it's removed by Make Overhang Printable.  Holes smaller than this will be retained.  A value of 0 mm² will fill all holes in the models base.",

@@ -423,6 +423,7 @@ export const actions = {
                     await dispatch(actions.clearSavedEnvironment(headType));
                     return;
                 } else {
+                    await dispatch(actions.autoSaveEnvironment(headType));
                     await dispatch(actions.saveAsFile(headType));
                     return;
                 }
@@ -437,6 +438,7 @@ export const actions = {
             }
         }
         if (!openedFile) {
+            await dispatch(actions.autoSaveEnvironment(headType));
             await dispatch(actions.saveAsFile(headType));
             return;
         }

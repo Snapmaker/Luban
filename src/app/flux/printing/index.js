@@ -323,7 +323,7 @@ const INITIAL_STATE = {
     materialManagerDirection: LEFT_EXTRUDER,
 
     // UI: print parameter modifier
-    showPrintParameterModifierDialog: false,
+    showPrintParameterModifierDialog: false, // type: false | string indicating stack id
 
     // TODO: refactor this.
     definitionEditorForExtruder: new Map(),

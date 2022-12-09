@@ -147,6 +147,8 @@ i18n._('key-HomePage/CaseLibrary-aluminum fox');
 i18n._('key-HomePage/CaseLibrary-wood Turtle Jigsaw');
 i18n._('key-HomePage/CaseLibrary-wood rhino jigsaw');
 i18n._('key-HomePage/CaseLibrary-acrylic rhino jigsaw');
+i18n._('key-HomePage/CaseLibrary-Pen Holder');
+i18n._('key-HomePage/CaseLibrary-Luban Lock');
 
 // 3dp material default name
 i18n._('key-unused-PLA');

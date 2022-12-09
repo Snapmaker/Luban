@@ -338,6 +338,7 @@ export const saveEnv = async (req, res) => {
     try {
         const config = JSON.parse(content);
         const { activePresetIds } = config;
+
         const machineInfo = config?.machineInfo;
         const headType = machineInfo?.headType;
         const envDir = `${DataStorage.envDir}/${headType}`;
@@ -377,10 +378,12 @@ export const saveEnv = async (req, res) => {
             copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialIdRight}.def.json`, `${envDir}/${config.defaultMaterialIdRight}.def.json`);
         }
 
-        for (const stackId of [LEFT_EXTRUDER, RIGHT_EXTRUDER]) {
-            const presetId = activePresetIds[stackId];
-            if (presetId && /^quality.([0-9_]+)$/.test(presetId)) {
-                copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${presetId}.def.json`, `${envDir}/${presetId}.def.json`);
+        if (activePresetIds) {
+            for (const stackId of [LEFT_EXTRUDER, RIGHT_EXTRUDER]) {
+                const presetId = activePresetIds[stackId];
+                if (presetId && /^quality.([0-9_]+)$/.test(presetId)) {
+                    copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${presetId}.def.json`, `${envDir}/${presetId}.def.json`);
+                }
             }
         }
         if (machineInfo?.headType === HEAD_CNC || machineInfo?.headType === HEAD_LASER) {

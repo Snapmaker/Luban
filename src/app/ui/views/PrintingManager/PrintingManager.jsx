@@ -283,6 +283,7 @@ function PrintingManager() {
                 showPrintParameterModifierDialog && (
                     <PresetModifierModal
                         outsideActions={actions}
+                        defaultStackId={showPrintParameterModifierDialog}
                     />
                 )
             }

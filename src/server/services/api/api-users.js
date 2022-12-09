@@ -74,10 +74,12 @@ export const getProfileDocsDir = (req, res) => {
         log.info(`lang: ${lang}, selectCategory: ${selectCategory}, selectProfile: ${selectProfile}`);
         const langDir = lang.toUpperCase() === 'ZH-CN' ? 'CN' : lang.toUpperCase();
         const urlPath = `${DataStorage.profileDocsDir}/${langDir}/${selectCategory}/${selectProfile}.md`;
-        const content = fs.existsSync(`${urlPath}`) ? fs.readFileSync(`${urlPath}`, 'utf-8')
+        const content = fs.existsSync(`${urlPath}`)
+            ? fs.readFileSync(`${urlPath}`, 'utf-8')
             : fs.readFileSync(`${DataStorage.profileDocsDir}/EN/${selectCategory}/${selectProfile}.md`, 'utf-8');
-        log.info(`\n Requested: "${urlPath}"`,
-            "\nNo documentation was found for the user's language. An English version was shown.");
+
+        log.info(`Requested: "${langDir}/${selectCategory}/${selectProfile}.md"\n`,
+            `No documentation was found for the user's language ${lang}. An English version was given.`);
         res.status(200).send({
             content: content,
             imagePath: `${DataStorage.profileDocsDir}/`

@@ -319,7 +319,7 @@ const StackPresetSelector = ({ selectedStackId, selectedPresetId, onSelectStack,
             }}
         >
             <div className="height-60 border-bottom-normal">
-                <div className="sm-flex height-percent-100 height-percent-100 unit-text padding-horizontal-16">
+                <div className="sm-flex justify-space-between height-percent-100 unit-text padding-horizontal-16">
                     <Anchor
                         className={classNames('padding-horizontal-3', `${selectedStackId === LEFT_EXTRUDER ? 'border-bottom-black-3' : ''}`)}
                         onClick={() => selectStack(LEFT_EXTRUDER)}

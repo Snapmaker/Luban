@@ -575,23 +575,15 @@ function Configurations() {
                         )
                     }
                     {
-                        !isDual && (
-                            <div className="sm-flex justify-flex-end">
-                                <Anchor
-                                    className={classNames('link-text', 'float-r')}
-                                    onClick={actions.onShowMaterialManager}
-                                >
-                                    {i18n._('key-Printing/PrintingConfigurations-More Settings')} {'>'}
-                                </Anchor>
-                            </div>
-                        )
-                    }
-                    {
                         isDual && (
                             <div className="sm-flex justify-flex-end">
                                 <Anchor
                                     className={classNames('link-text', 'float-r')}
-                                    onClick={actions.onShowMaterialManager}
+                                    onClick={() => {
+                                        dispatch(printingActions.updateState({
+                                            showPrintParameterModifierDialog: LEFT_EXTRUDER,
+                                        }));
+                                    }}
                                 >
                                     {i18n._('key-Printing/PrintingConfigurations-Left Extruder Settings')} {'>'}
                                 </Anchor>
@@ -605,7 +597,7 @@ function Configurations() {
                                     className={classNames('link-text', 'float-r')}
                                     onClick={() => {
                                         dispatch(printingActions.updateState({
-                                            showPrintParameterModifierDialog: true
+                                            showPrintParameterModifierDialog: RIGHT_EXTRUDER,
                                         }));
                                     }}
                                 >
@@ -614,6 +606,14 @@ function Configurations() {
                             </div>
                         )
                     }
+                    <div className="sm-flex justify-flex-end margin-top-16" style={{ marginBottom: '-8px' }}>
+                        <Anchor
+                            className={classNames('link-text', 'float-r')}
+                            onClick={actions.onShowMaterialManager}
+                        >
+                            More Settings (Classic)
+                        </Anchor>
+                    </div>
                 </div>
             </div>
         </div>

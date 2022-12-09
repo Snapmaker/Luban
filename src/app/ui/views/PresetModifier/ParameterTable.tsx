@@ -13,10 +13,13 @@ import api from '../../../api';
 
 
 // TODO: Refactor this
-const renderSettingItemList = (
+// FIXME: Refactor ASAP
+const renderParameterValueItemList = (
     {
         settings,
         renderList,
+        enabledKeyFilter,
+        selectedKeys,
         isDefaultDefinition,
         onChangePresetSettings: _onChangeCustomConfig,
         officialDefinition,
@@ -33,6 +36,10 @@ const renderSettingItemList = (
         // const isCustom = selectParamsType === 'custom';
         // const parameterVisibleTypeIncluded = includes((settings[profileKey].filter || []).concat('all'), selectParamsType);
         // const parameterDetailVisibleTypeIncluded = (managerType !== PRINTING_MANAGER_TYPE_QUALITY || selectQualityDetailType === NO_LIMIT || includes(settings[profileKey].filter || [], selectQualityDetailType));
+        const allowed = !enabledKeyFilter || selectedKeys.includes(profileKey);
+        if (!allowed) {
+            return null;
+        }
 
         const setting = settings[profileKey];
         const { childKey, filter } = setting;
@@ -44,58 +51,61 @@ const renderSettingItemList = (
                 break;
             }
         }
-
-        const defaultSetting = selectedSettingDefaultValue && selectedSettingDefaultValue[profileKey];
-        if (passFilter) {
-            return (
-                <div key={profileKey} className={flatten ? '' : `margin-left-${(settings[profileKey].zIndex - 1) * 16}`}>
-                    <ParameterValueItem
-                        settings={settings}
-                        definitionKey={profileKey}
-                        key={profileKey}
-                        isDefaultDefinition={isDefaultDefinition}
-                        onChangePresetSettings={_onChangeCustomConfig}
-                        defaultValue={{
-                            value: defaultSetting && defaultSetting.default_value
-                        }}
-                        styleSize="large"
-                        officialDefinition={officialDefinition}
-                        onClick={handleUpdateProfileKey}
-                        categoryKey={categoryKey}
-                        definitionCategory={definitionCategory}
-                        onChangeMaterialType={onChangeMaterialType}
-                    />
-                    {
-                        childKey && renderSettingItemList({
-                            settings,
-                            renderList: childKey,
-                            isDefaultDefinition,
-                            onChangePresetSettings: _onChangeCustomConfig,
-                            definitionCategory,
-                            officialDefinition,
-                            categoryKey,
-                            selectedSettingDefaultValue,
-                            handleUpdateProfileKey,
-                            onChangeMaterialType,
-                            filters,
-                            flatten,
-                        })
-                    }
-                </div>
-            );
-        } else {
+        if (!passFilter) {
             return null;
         }
+
+        const defaultSetting = selectedSettingDefaultValue && selectedSettingDefaultValue[profileKey];
+
+        return (
+            <div key={profileKey} className={flatten ? '' : `margin-left-${(settings[profileKey].zIndex - 1) * 16}`}>
+                <ParameterValueItem
+                    settings={settings}
+                    definitionKey={profileKey}
+                    key={profileKey}
+                    isDefaultDefinition={isDefaultDefinition}
+                    onChangePresetSettings={_onChangeCustomConfig}
+                    defaultValue={{
+                        value: defaultSetting && defaultSetting.default_value
+                    }}
+                    styleSize="large"
+                    officialDefinition={officialDefinition}
+                    onClick={handleUpdateProfileKey}
+                    categoryKey={categoryKey}
+                    definitionCategory={definitionCategory}
+                    onChangeMaterialType={onChangeMaterialType}
+                />
+                {
+                    childKey && renderParameterValueItemList({
+                        settings,
+                        renderList: childKey,
+                        enabledKeyFilter,
+                        selectedKeys: selectedKeys,
+                        isDefaultDefinition,
+                        onChangePresetSettings: _onChangeCustomConfig,
+                        definitionCategory,
+                        officialDefinition,
+                        categoryKey,
+                        selectedSettingDefaultValue,
+                        handleUpdateProfileKey,
+                        onChangeMaterialType,
+                        filters,
+                        flatten,
+                    })
+                }
+            </div>
+        );
     });
 };
 
 type Props = {
     optionConfigGroup: any;
+    enabledKeyFilter: boolean;
     settings: any;
     definitionForManager: any;
     selectedSettingDefaultValue: any;
     onChangePresetSettings: any;
-    onChangeMaterialType: any;
+    onChangeMaterialType?: any; // TODO: refactor
     filters: string[];
     flatten: boolean;
 };
@@ -103,11 +113,16 @@ type Props = {
 /**
  * A 3-column view showing parameters and parameter description.
  *
- * This component will take 100% width and height of its parent.
+ * *----------------------------------------------------------*
+ * | Categories | Parameter Tree View | Parameter Description |
+ * *----------------------------------------------------------*
+ *
+ * Note: This component will take 100% width and height of its parent.
  */
 const ParameterTable: React.FC<Props> = (props) => {
     const {
         optionConfigGroup,
+        enabledKeyFilter = false,
         settings,
         definitionForManager,
         selectedSettingDefaultValue,
@@ -117,44 +132,11 @@ const ParameterTable: React.FC<Props> = (props) => {
         flatten = false,
     } = props;
 
-
+    // Category anchors
     const [activeCateId, setActiveCateId] = useState(2);
 
     const scrollDom = useRef(null);
     const fieldsDom = useRef([]);
-
-
-    const [selectProfile, setSelectProfile] = useState('');
-    const [selectCategory, setSelectCategory] = useState('');
-    const [mdContent, setMdContent] = useState('');
-    const [imgPath, setImgPath] = useState('');
-
-
-    const handleUpdateProfileKey = (category, profileKey) => {
-        setSelectCategory(category);
-        setSelectProfile(profileKey);
-    };
-
-    useEffect(() => {
-        setSelectCategory('');
-        setSelectProfile('');
-    }, [filters]);
-
-    // Fetch description of parameter
-    // @ts-ignore
-    useEffect(async () => {
-        const lang = i18next.language;
-        if (selectCategory && selectProfile) {
-            try {
-                const res = await api.getProfileDocs({ lang, selectCategory, selectProfile });
-                setMdContent(res.body?.content);
-                setImgPath(res.body?.imagePath);
-            } catch (e) {
-                console.info(e);
-                setMdContent('');
-            }
-        }
-    }, [selectCategory, selectProfile]);
 
     function setActiveCate(cateId?: number) {
         if (scrollDom.current) {
@@ -178,6 +160,42 @@ const ParameterTable: React.FC<Props> = (props) => {
             setActiveCateId(cateId);
         }
     }
+
+    // For displaying parameter description
+    const [selectProfile, setSelectProfile] = useState('');
+    const [selectCategory, setSelectCategory] = useState('');
+    const [mdContent, setMdContent] = useState('');
+    const [imgPath, setImgPath] = useState('');
+
+    const handleUpdateProfileKey = (category, profileKey) => {
+        setSelectCategory(category);
+        setSelectProfile(profileKey);
+    };
+
+    useEffect(() => {
+        setSelectCategory('');
+        setSelectProfile('');
+    }, [filters]);
+
+    // Fetch description of parameter
+    // @ts-ignore
+    useEffect(async () => {
+        const lang = i18next.language;
+        if (selectCategory && selectProfile) {
+            try {
+                const res = await api.getProfileDocs({
+                    lang,
+                    selectCategory,
+                    selectProfile,
+                });
+                setMdContent(res.body?.content);
+                setImgPath(res.body?.imagePath);
+            } catch (e) {
+                console.warn(e);
+                setMdContent('');
+            }
+        }
+    }, [selectCategory, selectProfile]);
 
     return (
         <div className="sm-flex width-percent-100 height-percent-100">
@@ -241,42 +259,43 @@ const ParameterTable: React.FC<Props> = (props) => {
                             Object.keys(optionConfigGroup).map((category, index) => {
                                 return (
                                     <div key={category}>
-                                        {
-                                            fieldsDom.current[index]?.clientHeight > 0 && (
-                                                <div className="border-bottom-normal padding-bottom-8 margin-vertical-16">
-                                                    <SvgIcon
-                                                        name="TitleSetting"
-                                                        type={['static']}
-                                                    />
-                                                    <span className="margin-left-2">
-                                                        {i18n._(`key-Definition/Catagory-${category}`)}
-                                                    </span>
-                                                </div>
-                                            )
-                                        }
-                                        <div>
-                                            <div
-                                                ref={(el) => {
-                                                    fieldsDom.current[index] = el;
-                                                }}
-                                            >
-                                                {
-                                                    renderSettingItemList({
-                                                        renderList: optionConfigGroup[category],
-                                                        settings,
-                                                        isDefaultDefinition: definitionForManager?.isRecommended,
-                                                        onChangePresetSettings: onChangePresetSettings,
-                                                        officialDefinition: !!definitionForManager?.isDefault,
-                                                        categoryKey: category,
-                                                        definitionCategory: definitionForManager.category,
-                                                        selectedSettingDefaultValue,
-                                                        handleUpdateProfileKey,
-                                                        onChangeMaterialType,
-                                                        filters,
-                                                        flatten,
-                                                    })
-                                                }
-                                            </div>
+                                        {/* {*/}
+                                        {/* fieldsDom.current[index]?.clientHeight > 0 && (*/}
+                                        {/* TODO: Pre-check optionConfigGroup before rendering */}
+                                        <div className="border-bottom-normal padding-bottom-8 margin-vertical-16">
+                                            <SvgIcon
+                                                name="TitleSetting"
+                                                type={['static']}
+                                            />
+                                            <span className="margin-left-2">
+                                                {i18n._(`key-Definition/Catagory-${category}`)}
+                                            </span>
+                                        </div>
+                                        {/* )*/}
+                                        {/* }*/}
+                                        <div
+                                            ref={(el) => {
+                                                fieldsDom.current[index] = el;
+                                            }}
+                                        >
+                                            {
+                                                renderParameterValueItemList({
+                                                    renderList: optionConfigGroup[category],
+                                                    enabledKeyFilter,
+                                                    selectedKeys: optionConfigGroup[category],
+                                                    settings,
+                                                    isDefaultDefinition: definitionForManager?.isRecommended,
+                                                    onChangePresetSettings: onChangePresetSettings,
+                                                    officialDefinition: !!definitionForManager?.isDefault,
+                                                    categoryKey: category,
+                                                    definitionCategory: definitionForManager.category,
+                                                    selectedSettingDefaultValue,
+                                                    handleUpdateProfileKey,
+                                                    onChangeMaterialType,
+                                                    filters,
+                                                    flatten,
+                                                })
+                                            }
                                         </div>
                                     </div>
                                 );

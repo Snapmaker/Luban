@@ -429,7 +429,6 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                     leftItems={leftItems}
                     lang={i18next.language}
                     headType={headType}
-                    hasMachineSettings
                     // machineInfo={machineInfo}
                     isConnected={isConnected}
                 />

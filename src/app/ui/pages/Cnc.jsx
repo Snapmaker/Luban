@@ -295,6 +295,12 @@ function Cnc({ location }) {
                             name: 'cnc_a350_standard.snapcnc'
                         };
                         break;
+                    case 'A400':
+                        pathConfig = {
+                            path: './UserCase/cnc/Luban Lock.snapcnc',
+                            name: 'Luban Lock.snapcnc',
+                        };
+                        break;
                     default:
                         break;
                 }
