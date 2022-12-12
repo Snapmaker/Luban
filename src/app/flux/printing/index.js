@@ -1865,12 +1865,15 @@ export const actions = {
                 );
             }
         }
-        !loop
-        && dispatch(
+
+        // FIXME: Consider right extruder
+        !loop && dispatch(
             actions.updateState({
                 [definitionsKey]: defintions
             })
         );
+
+        // TODO: Return success or fail?
     },
 
     removeToolCategoryDefinition: (type, category) => async (

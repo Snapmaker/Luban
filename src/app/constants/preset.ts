@@ -1,5 +1,8 @@
 import { includes } from 'lodash';
 
+// export const STACK_LEFT = 'left';
+// export const STACK_RIGHT = 'right';
+
 export const PRESET_CATEGORY_DEFAULT = 'Default';
 export const PRESET_CATEGORY_CUSTOM = 'Custom';
 

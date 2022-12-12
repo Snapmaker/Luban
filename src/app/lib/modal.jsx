@@ -59,7 +59,7 @@ FooterPrimaryButton.propTypes = {
 };
 
 let outsideInputValue = '';
-class ModalHOC extends PureComponent {
+export class ModalHOC extends PureComponent {
     static propTypes = {
         ...Modal.propTypes,
         removeContainer: PropTypes.func.isRequired,
