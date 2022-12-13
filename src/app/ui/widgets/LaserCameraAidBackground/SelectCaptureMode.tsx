@@ -33,7 +33,6 @@ const SelectCaptureMode: React.FC<TProps> = (props: TProps) => {
             </Anchor>
             <Anchor
                 className={classNames(styles.item)}
-                disabled
                 onClick={() => {
                     props.onSelectMode(MODE_THICKNESS_COMPENSATION);
                 }}
@@ -42,7 +41,7 @@ const SelectCaptureMode: React.FC<TProps> = (props: TProps) => {
                     <img src={require('./images/mode_thickness_compensation.svg')} alt="" />
                 </div>
                 <div className={classNames(styles.right)}>
-                    <p className="font-weight-bold font-size-middle">{i18n._('key-Laser/CameraCapture-thickness compensation mode')} (Coming Soon)</p>
+                    <p className="font-weight-bold font-size-middle">{i18n._('key-Laser/CameraCapture-thickness compensation mode')} (Beta)</p>
                     <p>{i18n._('key-Laser/CameraCapture-thickness compensation mode describe')}
                         <br />
                         {i18n._('key-Laser/CameraCapture-thickness compensation mode describe2')}
