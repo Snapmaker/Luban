@@ -422,7 +422,7 @@ export const actions = {
                 const machineState = getState().machine;
                 if ((machineState.isRotate !== pos?.isFourAxis) && (headType === HEAD_LASER || headType === HEAD_CNC)) {
                     dispatch(workspaceActions.updateMachineState({
-                        isRotate: pos.isFourAxis
+                        isRotate: pos.isFourAxis || false
                     }));
                 }
 
@@ -744,7 +744,7 @@ export const actions = {
                         : null;
                     dispatch(workspaceActions.loadGcode());
                 } else {
-                    const _isRotate = moduleStatusList?.rotaryModule;
+                    const _isRotate = moduleStatusList?.rotaryModule || false;
                     const emergency = moduleStatusList?.emergencyStopButton;
                     if (!isNil(status)) {
                         dispatch(baseActions.updateState({

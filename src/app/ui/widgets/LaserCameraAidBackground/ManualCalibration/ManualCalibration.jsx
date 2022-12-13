@@ -584,6 +584,9 @@ class ManualCalibration extends Component {
         return new Promise((resolve) => {
             const previewCanvas = this.preview.current.canvas();
 
+            const previewCtx = this.preview.current.getContext('2d');
+            this.previewTransformation.current = previewCtx.getTransform();
+
             this.preview.current.applyZoom(1 / this.previewTransformation.current.a);
             setTimeout(() => {
                 this.preview.current.applyTranslation(-this.previewTransformation.current.e, -this.previewTransformation.current.f);
