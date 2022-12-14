@@ -1,24 +1,26 @@
 import React from 'react';
 import { cloneDeep } from 'lodash';
-import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
+import { Segmented } from 'antd';
 
-import i18n from '../../lib/i18n';
-import { actions as printingActions } from '../../flux/printing';
-import { PRINTING_MANAGER_TYPE_QUALITY } from '../../constants';
-import { MACHINE_SERIES } from '../../constants/machines';
-import {
-    DEFAULE_PARAMS_FOR_TPU,
+import i18n from '../../../lib/i18n';
+import { PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
+import { MACHINE_SERIES } from '../../../constants/machines';
+
+import PresetDefinitionModel, {
     DEFAULE_PARAMS_FOR_OTHERS,
+    DEFAULE_PARAMS_FOR_TPU,
     DEFAULT_PARAMS_FAST,
     DEFAULT_PARAMS_MEDIUM,
     getPresetQuickParamsCalculated
-} from '../../flux/manager/PresetDefinitionModel';
+} from '../../../flux/manager/PresetDefinitionModel';
+import { actions as printingActions } from '../../../flux/printing';
 
-import Select from '../components/Select';
-import Tooltip from '../components/Tooltip';
-import SvgIcon from '../components/SvgIcon';
-import Segmented from '../components/Segmented/index';
+import Select from '../../components/Select';
+import Tooltip from '../../components/Tooltip';
+import SvgIcon from '../../components/SvgIcon';
+// import Segmented from '../../components/Segmented';
+import { RootState } from '../../../flux/index.def';
 
 
 const ALL_ICON_NAMES = {
@@ -204,11 +206,16 @@ function getDescription(paramName, displayName) {
 }
 
 
+declare type TProps = {
+    selectedPresetModel: PresetDefinitionModel;
+    onChangePresetSettings: (key, value) => void;
+};
+
 // TODO: This component needs completely refactor ASAP.
-const ParamItem = function ({ selectedPresetModel, onChangePresetSettings, setSelectedPresetModel }) {
+const ParametersQuickSettingsView: React.FC<TProps> = ({ selectedPresetModel, onChangePresetSettings }) => {
     const dispatch = useDispatch();
 
-    const activeMachine = useSelector(state => state.machine.activeMachine);
+    const activeMachine = useSelector((state: RootState) => state.machine.activeMachine);
 
     const allParams = getPresetQuickParams(activeMachine, selectedPresetModel);
     const selectedDefinitionSettings = selectedPresetModel.settings;
@@ -302,9 +309,7 @@ const ParamItem = function ({ selectedPresetModel, onChangePresetSettings, setSe
                 return (
                     <Tooltip
                         title={descriptionDom}
-                        trigger="hover"
                         key={paramName}
-                        overlayInnerStyle={{ width: '350px', marginLeft: '-50%' }}
                         placement="leftBottom"
                     >
                         <div className="margin-vertical-16">
@@ -337,16 +342,22 @@ const ParamItem = function ({ selectedPresetModel, onChangePresetSettings, setSe
                                     />
                                 )}
                             </div>
-                            {segmentedDisplay && (
-                                <Segmented
-                                    options={options}
-                                    value={segmentedValue}
-                                    onChange={(value) => {
-                                        console.log('onChange', value);
-                                        onChangeParam(value, paramSetting);
-                                    }}
-                                />
-                            )}
+                            {
+                                segmentedDisplay && (
+                                    <div>
+                                        <Segmented
+                                            block
+                                            size="middle"
+                                            options={options}
+                                            value={segmentedValue}
+                                            onChange={(value) => {
+                                                console.log('onChange', value);
+                                                onChangeParam(value, paramSetting);
+                                            }}
+                                        />
+                                    </div>
+                                )
+                            }
                         </div>
                     </Tooltip>
                 );
@@ -355,10 +366,5 @@ const ParamItem = function ({ selectedPresetModel, onChangePresetSettings, setSe
     );
 };
 
-ParamItem.propTypes = {
-    selectedPresetModel: PropTypes.object,
-    setSelectedPresetModel: PropTypes.func,
-    onChangePresetSettings: PropTypes.func,
-};
 
-export default ParamItem;
+export default ParametersQuickSettingsView;

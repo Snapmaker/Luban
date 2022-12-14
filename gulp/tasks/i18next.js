@@ -22,7 +22,7 @@ const serverConfig = {
         defaultValue: '__L10N__', // to indicate that a default value has not been defined for the key
         ns: [
             'config',
-            'resource' // default
+            'resource', // default
         ],
         defaultNs: 'resource',
         resource: {
@@ -86,9 +86,8 @@ const appConfig = {
             return ''; // Return empty string for other languages
         },
         ns: [
-            'controller', // Grbl|Smoothie|TinyG
             'gcode', // G-code
-            'resource' // default
+            'resource', // default
         ],
         defaultNs: 'resource',
         resource: {

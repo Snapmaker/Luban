@@ -165,7 +165,7 @@
     "namespace-constants": "0.5.0",
     "node-fetch": "2.6.7",
     "node-schedule": "2.1.0",
-    "normalize.css": "7.0.0",
+    "normalize.css": "8.0.1",
     "opencv-wasm": "^4.3.0-10",
     "opentype.js": "0.9.0",
     "overlap-area": "^1.0.0",

@@ -1,7 +1,7 @@
 import { Menu, Spin } from 'antd';
 import classNames from 'classnames';
 import { cloneDeep, find, isNil, uniqWith } from 'lodash';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import {
@@ -11,8 +11,9 @@ import {
     RIGHT_EXTRUDER
 } from '../../../constants';
 import { isDualExtruder } from '../../../constants/machines';
-import { PRESET_CATEGORY_DEFAULT, DEFAULT_PRESET_IDS } from '../../../constants/preset';
+import { DEFAULT_PRESET_IDS, PRESET_CATEGORY_DEFAULT } from '../../../constants/preset';
 
+import { RootState } from '../../../flux/index.def';
 import { actions as printingActions } from '../../../flux/printing';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
@@ -23,16 +24,15 @@ import Dropdown from '../../components/Dropdown';
 import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
 import Tooltip from '../../components/Tooltip';
-import { getPresetOptions, pickAvailablePresetModels } from '../../utils/profileManager';
+import { getPresetOptions } from '../../utils/profileManager';
 import DefinitionCreator from '../../views/DefinitionCreator';
-import ParamItem from '../../views/ParamItem';
+import ParametersQuickSettingsView from '../../views/PresetModifier/ParametersQuickSettingsView';
 import PrintingManager from '../../views/PrintingManager';
 import SettingItem from '../../views/ProfileManager/SettingItem';
 
 import styles from './styles.styl';
 
 
-const DEFAULT_DISPLAY_TYPE = 'key-default_category-Default';
 const CONFIG_DISPLAY_TYPES = ['Recommended', 'Customized'];
 const CONFIG_DISPLAY_TYPES_OPTIONS = CONFIG_DISPLAY_TYPES.map((item) => {
     return { value: item, label: `key-Printing/PrintingConfigurations-${item}` };
@@ -49,40 +49,173 @@ function checkIsAllDefault(definitionModelSettings, selectedModelDefaultSetting)
     });
 }
 
-
-// {i18n._(`key-Printing/PrintingConfigurations-${optionItem.typeOfPrinting}`)}
-function Configurations() {
-    const { toolHead: { printingToolhead } } = useSelector(state => state?.machine);
-    const qualityDefinitionModels = useSelector((state) => state?.printing?.qualityDefinitions);
-    const qualityDefinitionModelsRight = useSelector((state) => state?.printing?.qualityDefinitionsRight);
-
-    const activePresetIds = useSelector((state) => state?.printing?.activePresetIds);
-    const { materialDefinitions, defaultMaterialId, defaultMaterialIdRight } = useSelector(state => state.printing);
-
-    const printingCustomConfigsWithCategory = useSelector((state) => state?.machine?.printingCustomConfigsWithCategory);
-    const refCreateModal = useRef(null);
+/**
+ * ConfigurationView is a minimized version of PresetModifier.
+ */
+const ConfigurationView: React.FC<{}> = () => {
     const dispatch = useDispatch();
 
+    // machine
+    const { toolHead: { printingToolhead } } = useSelector((state: RootState) => state.machine);
+    const isDual = isDualExtruder(printingToolhead);
+
+    const {
+        // quality
+        qualityDefinitions: qualityDefinitionModels,
+        qualityDefinitionsRight: qualityDefinitionModelsRight,
+        activePresetIds,
+
+        // material
+        materialDefinitions,
+        defaultMaterialId,
+        defaultMaterialIdRight,
+    } = useSelector((state: RootState) => state.printing);
+
+    const printingCustomConfigsWithCategory = useSelector((state: RootState) => state?.machine?.printingCustomConfigsWithCategory);
+
+    const refCreateModal = useRef(null);
+
+    // stack
+    const [selectedStackId, setSelectedStackId] = useState(LEFT_EXTRUDER);
+    // preset model
+    const [selectedPresetModel, setSelectedPresetModel] = useState(null);
+
+    // preset category to display (for selection)
     const [selectedPresetCategory, setSelectedPresetCategory] = useState(PRESET_CATEGORY_DEFAULT);
-    const [selectedPreset, setSelectedPreset] = useState(null);
-    const [initialized, setInitialized] = useState(false);
+    // display
     const [configDisplayType, setConfigDisplayType] = useState(printingStore.get('printingSettingDisplayType') || CONFIG_DISPLAY_TYPES[0]);
 
     const [selectedSettingDefaultValue, setSelectedSettingDefaultValue] = useState(null);
-    const isDual = isDualExtruder(printingToolhead);
+
+    // UI state
+    const [initialized, setInitialized] = useState(false);
 
     const materialPreset = materialDefinitions.find(p => p.definitionId === defaultMaterialId);
     const materialPresetRight = materialDefinitions.find(p => p.definitionId === defaultMaterialIdRight);
-    const presetOptionsObj = getPresetOptions(qualityDefinitionModels, materialPreset);
+
+    let presetOptionsObj;
+    if (selectedStackId === LEFT_EXTRUDER) {
+        presetOptionsObj = getPresetOptions(qualityDefinitionModels, materialPreset);
+    } else {
+        presetOptionsObj = getPresetOptions(qualityDefinitionModelsRight, materialPresetRight);
+    }
 
     const presetCategoryOptions = Object.values(presetOptionsObj).map((item) => {
         return {
+            // @ts-ignore
             value: item.category,
+            // @ts-ignore
             label: item.category,
+            // @ts-ignore
             category: item.category,
+            // @ts-ignore
             i18nCategory: item.i18nCategory
         };
     });
+
+    /**
+     * Select stack for display.
+     *
+     * @param {string} stackId - stack ID
+     */
+    const selectStack = useCallback((stackId: string): void => {
+        if ([LEFT_EXTRUDER, RIGHT_EXTRUDER].includes(stackId)) {
+            setSelectedStackId(stackId);
+        }
+    }, []);
+
+
+    const displayModel = () => {
+        dispatch(printingActions.destroyGcodeLine());
+        dispatch(printingActions.displayModel());
+    };
+
+    /**
+     * Change quality preset.
+     *
+     * @param stackId
+     * @param presetModel
+     */
+    const onChangePreset = (stackId, presetModel) => {
+        // we only display left extruder preset here
+        /*
+        if (stackId === LEFT_EXTRUDER) {
+            if (presetModel) {
+                setSelectedPresetModel(presetModel);
+
+                const defaultSettings = dispatch(printingActions.getDefaultDefinition(presetModel.definitionId));
+                setSelectedSettingDefaultValue(defaultSettings);
+            }
+        }*/
+
+        if (presetModel) {
+            dispatch(printingActions.updateActiveQualityPresetId(stackId, presetModel.definitionId));
+        }
+        displayModel();
+    };
+
+    // TODO: Move this logic to flux?
+    useEffect(() => {
+        // re-select definition based on new properties
+        if (!initialized) {
+            if (qualityDefinitionModels.length > 0) {
+                setInitialized(true);
+            }
+        }
+
+        /*
+        // left extruder stack
+        if (qualityDefinitionModels.length > 0) {
+            let presetModel = qualityDefinitionModels.find(p => p.definitionId === activePresetIds[LEFT_EXTRUDER]);
+            if (!presetModel) {
+                // definition no found, select first official definition
+                const availablePresetModels = pickAvailablePresetModels(qualityDefinitionModels, materialPreset);
+                presetModel = availablePresetModels.length > 0 && availablePresetModels[0];
+            }
+
+            if (presetModel) {
+                onChangePreset(LEFT_EXTRUDER, presetModel);
+                setSelectedPresetCategory(presetModel.category);
+            }
+        }
+
+        // right extruder stack
+        if (qualityDefinitionModelsRight.length > 0) {
+            let presetModel = qualityDefinitionModelsRight.find(p => p.definitionId === activePresetIds[RIGHT_EXTRUDER]);
+            if (!presetModel) {
+                const availablePresetModels = pickAvailablePresetModels(qualityDefinitionModelsRight, materialPresetRight);
+                presetModel = availablePresetModels.length > 0 && availablePresetModels[0];
+            }
+            if (presetModel) {
+                onChangePreset(RIGHT_EXTRUDER, presetModel);
+            }
+        }
+        */
+    }, [qualityDefinitionModels]);
+
+    // Update preset model
+    useEffect(() => {
+        const presetId = activePresetIds[selectedStackId];
+
+        const allModels = selectedStackId === LEFT_EXTRUDER ? qualityDefinitionModels : qualityDefinitionModelsRight;
+        const presetModel = allModels.find(p => p.definitionId === presetId);
+
+        console.log(`all models = ${allModels}, presetModel = ${presetModel}`);
+
+        // Update currently selected preset model
+        if (presetModel) {
+            setSelectedPresetModel(presetModel);
+
+            const defaultSettings = dispatch(printingActions.getDefaultDefinition(presetModel.definitionId));
+            setSelectedSettingDefaultValue(defaultSettings);
+
+            setSelectedPresetCategory(presetModel.category);
+
+            // refresh the scene on preset model changed
+            displayModel();
+        }
+    }, [selectedStackId, activePresetIds, qualityDefinitionModels, qualityDefinitionModelsRight]);
+
 
     const i18nContent = {
         'quality.fast_print': i18n._('key-Luban/Preset/Prints in a fast mode. The printing time is short, but the outcome might be rough.'),
@@ -133,21 +266,21 @@ function Configurations() {
             dispatch(
                 printingActions.resetDefinitionById(
                     'quality',
-                    selectedPreset?.definitionId
+                    selectedPresetModel?.definitionId
                 )
             );
         },
         showInputModal: () => {
-            const newSelectedDefinition = cloneDeep(selectedPreset.getSerializableDefinition());
+            const newSelectedDefinition = cloneDeep(selectedPresetModel.getSerializableDefinition());
             const title = i18n._('key-Printing/ProfileManager-Copy Profile');
             const copyType = 'Item';
 
-            const copyCategoryName = (newSelectedDefinition.category !== i18n._(DEFAULT_DISPLAY_TYPE)) ? newSelectedDefinition.category : '';
+            const copyCategoryName = newSelectedDefinition.category !== PRESET_CATEGORY_DEFAULT ? newSelectedDefinition.category : '';
             const copyItemName = newSelectedDefinition.name;
             const isCreate = false;
             let materialOptions = presetCategoryOptions
                 .filter((option) => {
-                    return option.category !== i18n._(DEFAULT_DISPLAY_TYPE);
+                    return option.category !== PRESET_CATEGORY_DEFAULT;
                 })
                 .map(option => {
                     return {
@@ -204,7 +337,7 @@ function Configurations() {
                                     newName
                                 )
                             );
-                            actions.onChangePreset(LEFT_EXTRUDER, createdDefinitionModel);
+                            onChangePreset(selectedStackId, createdDefinitionModel);
                         }}
                     >
                         {i18n._('key-Printing/ProfileManager-Save')}
@@ -227,33 +360,7 @@ function Configurations() {
             dispatch(printingActions.updateProfileParamsType(PRINTING_MANAGER_TYPE_QUALITY, 'custom'));
             dispatch(printingActions.updateShowPrintingManager(true));
         },
-        displayModel: () => {
-            dispatch(printingActions.destroyGcodeLine());
-            dispatch(printingActions.displayModel());
-        },
 
-        /**
-         * Change quality preset.
-         *
-         * @param stackId
-         * @param presetModel
-         */
-        onChangePreset: (stackId, presetModel) => {
-            // we only display left extruder preset here
-            if (stackId === LEFT_EXTRUDER) {
-                if (presetModel) {
-                    setSelectedPreset(presetModel);
-
-                    const defaultSettings = dispatch(printingActions.getDefaultDefinition(presetModel.definitionId));
-                    setSelectedSettingDefaultValue(defaultSettings);
-                }
-            }
-
-            if (presetModel) {
-                dispatch(printingActions.updateActiveQualityPresetId(stackId, presetModel.definitionId));
-            }
-            actions.displayModel();
-        },
 
         /**
          * Change quality preset by preset id.
@@ -262,7 +369,7 @@ function Configurations() {
          */
         onChangePresetById: (presetId) => {
             const presetModel = qualityDefinitionModels.find(d => d.definitionId === presetId);
-            actions.onChangePreset(LEFT_EXTRUDER, presetModel);
+            onChangePreset(selectedStackId, presetModel);
         },
 
         /**
@@ -275,15 +382,15 @@ function Configurations() {
             console.log('change settings', definitionKey, value);
             if (isNil(value)) {
                 // if 'value' does't exit, then reset this value
-                const defaultPresetSettings = dispatch(printingActions.getDefaultDefinition(selectedPreset.definitionId));
+                const defaultPresetSettings = dispatch(printingActions.getDefaultDefinition(selectedPresetModel.definitionId));
                 value = defaultPresetSettings[definitionKey].default_value;
             }
-            selectedPreset.settings[definitionKey].default_value = value;
+            selectedPresetModel.settings[definitionKey].default_value = value;
             const shouldUpdateIsOverstepped = definitionKey === 'prime_tower_enable' && value === true;
 
             await dispatch(
                 printingActions.updateCurrentDefinition({
-                    definitionModel: selectedPreset,
+                    definitionModel: selectedPresetModel,
                     managerDisplayType: PRINTING_MANAGER_TYPE_QUALITY,
                     changedSettingArray: [[definitionKey, value]],
                     shouldUpdateIsOverstepped
@@ -299,12 +406,12 @@ function Configurations() {
      * Preset operation menu.
      */
     const renderPresetMenu = () => {
-        const isRecommended = selectedPreset.isRecommended;
+        const isRecommended = selectedPresetModel.isRecommended;
         let isAllValueDefault = true;
         if (isRecommended) {
-            const selectedDefaultSetting = actions.getDefaultDefinition(selectedPreset.definitionId);
+            const selectedDefaultSetting = actions.getDefaultDefinition(selectedPresetModel.definitionId);
             if (selectedDefaultSetting) {
-                isAllValueDefault = checkIsAllDefault(selectedPreset.settings, selectedDefaultSetting);
+                isAllValueDefault = checkIsAllDefault(selectedPresetModel.settings, selectedDefaultSetting);
             }
         }
         return (
@@ -325,38 +432,6 @@ function Configurations() {
         );
     };
 
-    // TODO: Move this logic to flux?
-    useEffect(() => {
-        // re-select definition based on new properties
-        if (qualityDefinitionModels.length > 0 || qualityDefinitionModelsRight.length > 0) {
-            if (!initialized) {
-                setInitialized(true);
-            }
-        }
-
-        // left extruder stack
-        let presetModel = qualityDefinitionModels.find(p => p.definitionId === activePresetIds[LEFT_EXTRUDER]);
-        if (!presetModel) {
-            // definition no found, select first official definition
-            const availablePresetModels = pickAvailablePresetModels(qualityDefinitionModels, materialPreset);
-            presetModel = availablePresetModels.length > 0 && availablePresetModels[0];
-        }
-
-        if (presetModel) {
-            actions.onChangePreset(LEFT_EXTRUDER, presetModel);
-            setSelectedPresetCategory(presetModel.category);
-        }
-
-        // TODO: Maybe not initialize
-        presetModel = qualityDefinitionModelsRight.find(p => p.definitionId === activePresetIds[RIGHT_EXTRUDER]);
-        if (!presetModel) {
-            const availablePresetModels = pickAvailablePresetModels(qualityDefinitionModelsRight, materialPresetRight);
-            presetModel = availablePresetModels.length > 0 && availablePresetModels[0];
-        }
-        if (presetModel) {
-            actions.onChangePreset(RIGHT_EXTRUDER, presetModel);
-        }
-    }, [activePresetIds, qualityDefinitionModels, qualityDefinitionModelsRight]);
 
     if (!initialized) {
         return (
@@ -371,6 +446,48 @@ function Configurations() {
 
     return (
         <div>
+            {/* Stack Selection */}
+            {
+                isDual && (
+                    // add negative margin to cancel out padding of widget container
+                    <div
+                        className="height-40 border-bottom-normal"
+                        style={{
+                            marginTop: '-16px',
+                            marginLeft: '-16px',
+                            marginRight: '-16px',
+                        }}
+                    >
+                        <div className="sm-flex justify-space-around padding-horizontal-16">
+                            <Anchor
+                                className={classNames(
+                                    {
+                                        'border-bottom-black-3 font-weight-bold': selectedStackId === LEFT_EXTRUDER,
+                                    }
+                                )}
+                                onClick={() => selectStack(LEFT_EXTRUDER)}
+                            >
+                                <span className={classNames('font-size-middle line-height-32', {})}>
+                                    {i18n._('Left Extruder')}
+                                </span>
+                            </Anchor>
+                            <Anchor
+                                className={classNames(
+                                    {
+                                        'border-bottom-black-3 font-weight-bold': selectedStackId === RIGHT_EXTRUDER,
+                                    }
+                                )}
+                                onClick={() => selectStack(RIGHT_EXTRUDER)}
+                            >
+                                <span className={classNames('font-size-middle line-height-32', {})}>
+                                    {i18n._('Right Extruder')}
+                                </span>
+                            </Anchor>
+                        </div>
+                    </div>
+                )
+            }
+            {/* Preset Selection */}
             <div className="margin-top-16">
                 <Select
                     clearable={false}
@@ -386,12 +503,16 @@ function Configurations() {
                                 DEFAULT_PRESET_IDS.map((presetId) => {
                                     const optionItem = find(presetOptionsObj[selectedPresetCategory].options, { definitionId: presetId });
                                     if (optionItem) {
+                                        const isSelected = selectedPresetModel && selectedPresetModel.definitionId === optionItem.definitionId;
+                                        // selectedPresetModel && selectedPresetModel.typeOfPrinting === optionItem.typeOfPrinting ?
+
                                         return (
                                             <div
                                                 key={optionItem.typeOfPrinting}
-                                                className={classNames(
-                                                    selectedPreset.typeOfPrinting === optionItem.typeOfPrinting ? styles.selected : styles.unselected,
-                                                )}
+                                                className={classNames({
+                                                    [styles.selected]: isSelected,
+                                                    [styles.unselected]: !isSelected,
+                                                })}
                                             >
                                                 <Tooltip
                                                     title={getPresetToolTip(optionItem?.definitionId, optionItem.name)}
@@ -405,21 +526,25 @@ function Configurations() {
                                                                 styles[`preset-recommended__icon-${optionItem.typeOfPrinting}`],
                                                             )}
                                                         >
-                                                            <Dropdown
-                                                                placement="bottomRight"
-                                                                style={{ maxWidth: '160px' }}
-                                                                overlay={renderPresetMenu(selectedPresetCategory)}
-                                                                trigger={['click']}
-                                                            >
-                                                                <SvgIcon
-                                                                    className={classNames(
-                                                                        styles['preset-hover'],
-                                                                    )}
-                                                                    type={['static']}
-                                                                    size={24}
-                                                                    name="More"
-                                                                />
-                                                            </Dropdown>
+                                                            {
+                                                                isSelected && (
+                                                                    <Dropdown
+                                                                        placement="bottomRight"
+                                                                        style={{ maxWidth: '160px' }}
+                                                                        overlay={renderPresetMenu(selectedPresetCategory)}
+                                                                        trigger={['click']}
+                                                                    >
+                                                                        <SvgIcon
+                                                                            className={classNames(
+                                                                                styles['preset-hover'],
+                                                                            )}
+                                                                            type={['static']}
+                                                                            size={24}
+                                                                            name="More"
+                                                                        />
+                                                                    </Dropdown>
+                                                                )
+                                                            }
                                                         </div>
                                                     </Anchor>
                                                 </Tooltip>
@@ -441,12 +566,16 @@ function Configurations() {
                         <div className={classNames(styles['preset-customized'], 'margin-vertical-16')}>
                             {
                                 presetOptionsObj[selectedPresetCategory] && presetOptionsObj[selectedPresetCategory].options.map((optionItem, index) => {
+                                    const isSelected = selectedPresetModel && selectedPresetModel.definitionId === optionItem.definitionId;
+
                                     return (
                                         <div
                                             key={(optionItem.i18nName + index) || (optionItem.name + index)}
                                             className={classNames(
-                                                optionItem.definitionId === selectedPreset.definitionId ? styles.selected : null,
                                                 'border-radius-4',
+                                                {
+                                                    [styles.selected]: isSelected,
+                                                }
                                             )}
                                         >
                                             <Anchor
@@ -462,21 +591,25 @@ function Configurations() {
                                                 <span>
                                                     {i18n._(optionItem.i18nName || optionItem.name)}
                                                 </span>
-                                                <Dropdown
-                                                    placement="left"
-                                                    className="display-inline float-right"
-                                                    overlay={renderPresetMenu(selectedPresetCategory)}
-                                                    trigger={['click']}
-                                                >
-                                                    <SvgIcon
-                                                        className={classNames(
-                                                            styles['preset-hover'],
-                                                        )}
-                                                        type={['static']}
-                                                        size={24}
-                                                        name="More"
-                                                    />
-                                                </Dropdown>
+                                                {// actions for selected preset model
+                                                    isSelected && (
+                                                        <Dropdown
+                                                            placement="left"
+                                                            className="display-inline float-right"
+                                                            overlay={renderPresetMenu()}
+                                                            trigger={['click']}
+                                                        >
+                                                            <SvgIcon
+                                                                className={classNames(
+                                                                    styles['preset-hover'],
+                                                                )}
+                                                                type={['static']}
+                                                                size={24}
+                                                                name="More"
+                                                            />
+                                                        </Dropdown>
+                                                    )
+                                                }
                                             </Anchor>
 
                                         </div>
@@ -487,13 +620,7 @@ function Configurations() {
                     )
                 }
             </div>
-            <div className={classNames(styles['printing-settings-wrapper'], 'background-grey-1', 'margin-bottom-16')}>
-                <div className={classNames(styles['printing-settings'], 'height-32', 'background-color-white', 'padding-horizontal-16')}>
-                    <span className={classNames(styles['printing-settings-text'], 'align-c', 'white-space-nowrap')}>
-                        {i18n._('key-Printing/PrintingConfigurations-Printing Settings')}
-                    </span>
-                </div>
-            </div>
+            {/* Preset Content */}
             <div className="margin-bottom-16 margin-top-16">
                 <div
                     className={classNames(
@@ -534,18 +661,17 @@ function Configurations() {
                         }
                     </div>
                     {
-                        configDisplayType === CONFIG_DISPLAY_TYPES[0] && (
+                        selectedPresetModel && configDisplayType === CONFIG_DISPLAY_TYPES[0] && (
                             <div>
-                                <ParamItem
-                                    selectedPresetModel={selectedPreset}
-                                    setSelectedPresetModel={setSelectedPreset}
+                                <ParametersQuickSettingsView
+                                    selectedPresetModel={selectedPresetModel}
                                     onChangePresetSettings={actions.onChangePresetSettings}
                                 />
                             </div>
                         )
                     }
                     {
-                        configDisplayType === CONFIG_DISPLAY_TYPES[1] && (
+                        selectedPresetModel && configDisplayType === CONFIG_DISPLAY_TYPES[1] && (
                             <div className="overflow-y-auto height-max-400 margin-bottom-8">
                                 {Object.keys(printingCustomConfigsWithCategory).map((category) => (
                                     <div key={category}>
@@ -553,12 +679,12 @@ function Configurations() {
                                             return (
                                                 <SettingItem
                                                     styleSize="middle"
-                                                    settings={selectedPreset?.settings}
+                                                    settings={selectedPresetModel?.settings}
                                                     definitionKey={key}
                                                     showTooltip
                                                     key={key}
                                                     onChangePresetSettings={actions.onChangePresetSettings}
-                                                    isDefaultDefinition={selectedPreset.isRecommended}
+                                                    isDefaultDefinition={selectedPresetModel.isRecommended}
                                                     defaultValue={{
                                                         value:
                                                             selectedSettingDefaultValue
@@ -576,32 +702,16 @@ function Configurations() {
                     }
                     {
                         isDual && (
-                            <div className="sm-flex justify-flex-end">
-                                <Anchor
-                                    className={classNames('link-text', 'float-r')}
-                                    onClick={() => {
-                                        dispatch(printingActions.updateState({
-                                            showPrintParameterModifierDialog: LEFT_EXTRUDER,
-                                        }));
-                                    }}
-                                >
-                                    {i18n._('key-Printing/PrintingConfigurations-Left Extruder Settings')} {'>'}
-                                </Anchor>
-                            </div>
-                        )
-                    }
-                    {
-                        isDual && (
                             <div className="sm-flex justify-flex-end margin-top-8" style={{ marginBottom: '-8px' }}>
                                 <Anchor
                                     className={classNames('link-text', 'float-r')}
                                     onClick={() => {
                                         dispatch(printingActions.updateState({
-                                            showPrintParameterModifierDialog: RIGHT_EXTRUDER,
+                                            showPrintParameterModifierDialog: selectedStackId,
                                         }));
                                     }}
                                 >
-                                    {i18n._('key-Printing/PrintingConfigurations-Right Extruder Settings')} {'>'}
+                                    {i18n._('More Settings')} {'>'}
                                 </Anchor>
                             </div>
                         )
@@ -618,9 +728,6 @@ function Configurations() {
             </div>
         </div>
     );
-}
-
-Configurations.propTypes = {
-    // widgetActions: PropTypes.object
 };
-export default Configurations;
+
+export default ConfigurationView;
