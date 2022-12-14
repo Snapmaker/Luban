@@ -137,21 +137,10 @@ const ConfigurationView: React.FC<{}> = () => {
      * @param presetModel
      */
     const onChangePreset = (stackId, presetModel) => {
-        // we only display left extruder preset here
-        /*
-        if (stackId === LEFT_EXTRUDER) {
-            if (presetModel) {
-                setSelectedPresetModel(presetModel);
-
-                const defaultSettings = dispatch(printingActions.getDefaultDefinition(presetModel.definitionId));
-                setSelectedSettingDefaultValue(defaultSettings);
-            }
-        }*/
-
         if (presetModel) {
             dispatch(printingActions.updateActiveQualityPresetId(stackId, presetModel.definitionId));
+            displayModel();
         }
-        displayModel();
     };
 
     // TODO: Move this logic to flux?
@@ -162,35 +151,6 @@ const ConfigurationView: React.FC<{}> = () => {
                 setInitialized(true);
             }
         }
-
-        /*
-        // left extruder stack
-        if (qualityDefinitionModels.length > 0) {
-            let presetModel = qualityDefinitionModels.find(p => p.definitionId === activePresetIds[LEFT_EXTRUDER]);
-            if (!presetModel) {
-                // definition no found, select first official definition
-                const availablePresetModels = pickAvailablePresetModels(qualityDefinitionModels, materialPreset);
-                presetModel = availablePresetModels.length > 0 && availablePresetModels[0];
-            }
-
-            if (presetModel) {
-                onChangePreset(LEFT_EXTRUDER, presetModel);
-                setSelectedPresetCategory(presetModel.category);
-            }
-        }
-
-        // right extruder stack
-        if (qualityDefinitionModelsRight.length > 0) {
-            let presetModel = qualityDefinitionModelsRight.find(p => p.definitionId === activePresetIds[RIGHT_EXTRUDER]);
-            if (!presetModel) {
-                const availablePresetModels = pickAvailablePresetModels(qualityDefinitionModelsRight, materialPresetRight);
-                presetModel = availablePresetModels.length > 0 && availablePresetModels[0];
-            }
-            if (presetModel) {
-                onChangePreset(RIGHT_EXTRUDER, presetModel);
-            }
-        }
-        */
     }, [qualityDefinitionModels]);
 
     // Update preset model
@@ -375,30 +335,31 @@ const ConfigurationView: React.FC<{}> = () => {
         /**
          * Change quality preset settings.
          *
-         * @param definitionKey
-         * @param value
+         * @param {string} key
+         * @param {any} value
          */
-        onChangePresetSettings: async (definitionKey, value) => {
-            console.log('change settings', definitionKey, value);
+        onChangePresetSettings: async (key: string, value: any) => {
+            console.log('change settings', key, value);
             if (isNil(value)) {
                 // if 'value' does't exit, then reset this value
                 const defaultPresetSettings = dispatch(printingActions.getDefaultDefinition(selectedPresetModel.definitionId));
-                value = defaultPresetSettings[definitionKey].default_value;
+                value = defaultPresetSettings[key].default_value;
             }
-            selectedPresetModel.settings[definitionKey].default_value = value;
-            const shouldUpdateIsOverstepped = definitionKey === 'prime_tower_enable' && value === true;
+            selectedPresetModel.settings[key].default_value = value;
+            const shouldUpdateIsOverstepped = key === 'prime_tower_enable' && value === true;
 
             await dispatch(
                 printingActions.updateCurrentDefinition({
-                    definitionModel: selectedPresetModel,
                     managerDisplayType: PRINTING_MANAGER_TYPE_QUALITY,
-                    changedSettingArray: [[definitionKey, value]],
+                    direction: selectedStackId,
+                    definitionModel: selectedPresetModel,
+                    changedSettingArray: [[key, value]],
                     shouldUpdateIsOverstepped
                 })
             );
 
             // actions.onChangeSelectedDefinition(selectedPreset); // Is this needed?
-            actions.displayModel();
+            displayModel();
         },
     };
 
@@ -664,6 +625,7 @@ const ConfigurationView: React.FC<{}> = () => {
                         selectedPresetModel && configDisplayType === CONFIG_DISPLAY_TYPES[0] && (
                             <div>
                                 <ParametersQuickSettingsView
+                                    selectedStackId={selectedStackId}
                                     selectedPresetModel={selectedPresetModel}
                                     onChangePresetSettings={actions.onChangePresetSettings}
                                 />

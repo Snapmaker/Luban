@@ -12,14 +12,13 @@ import PresetDefinitionModel, {
     DEFAULE_PARAMS_FOR_TPU,
     DEFAULT_PARAMS_FAST,
     DEFAULT_PARAMS_MEDIUM,
-    getPresetQuickParamsCalculated
+    getPresetQuickParamsCalculated,
 } from '../../../flux/manager/PresetDefinitionModel';
 import { actions as printingActions } from '../../../flux/printing';
 
 import Select from '../../components/Select';
 import Tooltip from '../../components/Tooltip';
 import SvgIcon from '../../components/SvgIcon';
-// import Segmented from '../../components/Segmented';
 import { RootState } from '../../../flux/index.def';
 
 
@@ -51,10 +50,9 @@ function getPresetQuickParams(machine, presetModel) {
 }
 
 function getDescription(paramName, displayName) {
-    const allKeys = Object.keys(ALL_ICON_NAMES);
     let descriptionDom = null;
     switch (paramName) {
-        case allKeys[0]:
+        case 'layer_height':
             descriptionDom = (
                 <div className="padding-vertical-16 padding-horizontal-16">
                     <div className="font-weight-bold padding-bottom-16 border-bottom-white">
@@ -72,7 +70,7 @@ function getDescription(paramName, displayName) {
                 </div>
             );
             break;
-        case allKeys[1]:
+        case 'speed_print':
             descriptionDom = (
                 <div className="padding-vertical-16 padding-horizontal-16">
                     <div className="font-weight-bold padding-bottom-16 border-bottom-white">
@@ -133,7 +131,7 @@ function getDescription(paramName, displayName) {
                 </div>
             );
             break;
-        case allKeys[2]:
+        case 'infill_sparse_density':
             descriptionDom = (
                 <div className="padding-vertical-16 padding-horizontal-16">
                     <div className="font-weight-bold padding-bottom-16 border-bottom-white">
@@ -153,7 +151,7 @@ function getDescription(paramName, displayName) {
 
             );
             break;
-        case allKeys[3]:
+        case 'support_generate_type':
             descriptionDom = (
                 <div className="padding-vertical-16 padding-horizontal-16">
                     <div className="font-weight-bold padding-bottom-16 border-bottom-white">
@@ -173,7 +171,7 @@ function getDescription(paramName, displayName) {
 
             );
             break;
-        case allKeys[4]:
+        case 'adhesion_type':
             descriptionDom = (
                 <div className="padding-vertical-16 padding-horizontal-16">
                     <div className="font-weight-bold padding-bottom-16 border-bottom-white">
@@ -207,12 +205,13 @@ function getDescription(paramName, displayName) {
 
 
 declare type TProps = {
+    selectedStackId: string;
     selectedPresetModel: PresetDefinitionModel;
     onChangePresetSettings: (key, value) => void;
 };
 
 // TODO: This component needs completely refactor ASAP.
-const ParametersQuickSettingsView: React.FC<TProps> = ({ selectedPresetModel, onChangePresetSettings }) => {
+const ParametersQuickSettingsView: React.FC<TProps> = ({ selectedStackId, selectedPresetModel, onChangePresetSettings }) => {
     const dispatch = useDispatch();
 
     const activeMachine = useSelector((state: RootState) => state.machine.activeMachine);
@@ -221,7 +220,7 @@ const ParametersQuickSettingsView: React.FC<TProps> = ({ selectedPresetModel, on
     const selectedDefinitionSettings = selectedPresetModel.settings;
 
     async function onChangeParam(newValue, paramSetting) {
-        const actualOptions = paramSetting.affectByType ? paramSetting[selectedPresetModel.typeOfPrinting] : paramSetting.options;
+        const actualOptions = paramSetting.options;
         const findedAffect = actualOptions[newValue]?.affect;
 
         const changedSettingArray = [];
@@ -233,135 +232,142 @@ const ParametersQuickSettingsView: React.FC<TProps> = ({ selectedPresetModel, on
 
         await dispatch(
             printingActions.updateCurrentDefinition({
+                direction: selectedStackId,
                 definitionModel: selectedPresetModel,
                 managerDisplayType: PRINTING_MANAGER_TYPE_QUALITY,
                 changedSettingArray
             })
         );
-        // setSelectedPresetModel && setSelectedPresetModel(selectedPresetModel);
+
         dispatch(printingActions.destroyGcodeLine());
         dispatch(printingActions.displayModel());
     }
 
     return (
         <div>
-            {allParams && Object.entries(allParams).map(([paramName, paramSetting]) => {
-                const actualOptions = paramSetting.affectByType ? paramSetting[selectedPresetModel.typeOfPrinting] : paramSetting.options;
-                const allParamsName = [];
-                let iconName = '';
-                const options = Object.entries(actualOptions).map(([keyName, keyValue]) => {
-                    allParamsName.push(keyName);
-                    return {
-                        label: (
-                            <span>{i18n._(keyValue.label)}</span>
-                        ),
-                        value: keyName
-                    };
-                });
+            {
+                allParams && Object.entries(allParams).map(([paramName, paramSetting]) => {
+                    const actualOptions = paramSetting.options;
+                    const allParamsName = [];
+                    let iconName = '';
+                    const options = Object.entries(actualOptions).map(([keyName, keyValue]) => {
+                        allParamsName.push(keyName);
+                        return {
+                            label: (
+                                <span>{i18n._(keyValue.label)}</span>
+                            ),
+                            value: keyName
+                        };
+                    });
 
-                const eachParamObject = selectedDefinitionSettings[paramName];
-                let displayName = eachParamObject?.label;
-                let displayValue = eachParamObject?.default_value;
+                    const eachParamObject = selectedDefinitionSettings[paramName];
+                    let displayName = eachParamObject?.label;
+                    let displayValue = eachParamObject?.default_value;
 
-                // let segmentedValue = null;
-                if (allParamsName.includes(paramSetting.current_value)) {
-                    const index = allParamsName.findIndex((d) => d === paramSetting.current_value);
-                    iconName = ALL_ICON_NAMES[paramName][index] || 'PrintingSettingNormal';
-                    // segmentedValue = paramSetting.current_value;
-                } else {
-                    iconName = ALL_ICON_NAMES[paramName][1] || 'PrintingSettingNormal';
-                }
-
-                // select current
-                let segmentedValue = null;
-                for (const [optionKey, option] of Object.entries(actualOptions)) {
-                    const optionValue = option.value;
-
-                    if (optionValue === displayValue) {
-                        segmentedValue = optionKey;
-                        paramSetting.current_value = optionKey;
-                        break;
+                    // let segmentedValue = null;
+                    if (allParamsName.includes(paramSetting.current_value)) {
+                        const index = allParamsName.findIndex((d) => d === paramSetting.current_value);
+                        iconName = ALL_ICON_NAMES[paramName][index] || 'PrintingSettingNormal';
+                        // segmentedValue = paramSetting.current_value;
+                    } else {
+                        iconName = ALL_ICON_NAMES[paramName][1] || 'PrintingSettingNormal';
                     }
-                }
 
-                let segmentedDisplay = true;
-                let showSelect = false;
-                const selectOptions = [];
+                    // select current
+                    let segmentedValue = null;
+                    for (const [optionKey, option] of Object.entries(actualOptions)) {
+                        const optionValue = option.value;
 
-                if (paramName === 'infill_sparse_density') {
-                    const modelStructure = selectedDefinitionSettings.model_structure_type;
-                    showSelect = true;
-                    displayName = modelStructure?.label;
-                    displayValue = modelStructure?.default_value;
-                    if (displayValue !== 'normal') {
-                        segmentedDisplay = false;
-                        iconName = ALL_ICON_NAMES[paramName][3];
+                        if (optionValue === displayValue) {
+                            segmentedValue = optionKey;
+                            paramSetting.current_value = optionKey;
+                            break;
+                        }
                     }
-                    if (modelStructure?.options) {
-                        Object.entries(modelStructure.options).forEach(([value, label]) => {
-                            selectOptions.push({ value, label });
-                        });
+
+                    let segmentedDisplay = true;
+                    let showSelect = false;
+                    const selectOptions = [];
+
+                    if (paramName === 'infill_sparse_density') {
+                        const modelStructure = selectedDefinitionSettings.model_structure_type;
+                        showSelect = true;
+                        displayName = modelStructure?.label;
+                        displayValue = modelStructure?.default_value;
+                        if (displayValue !== 'normal') {
+                            segmentedDisplay = false;
+                            iconName = ALL_ICON_NAMES[paramName][3];
+                        }
+                        if (modelStructure?.options) {
+                            Object.entries(modelStructure.options).forEach(([value, label]) => {
+                                selectOptions.push({ value, label });
+                            });
+                        }
                     }
-                }
 
-                const descriptionDom = getDescription(paramName, displayName);
+                    const descriptionDom = getDescription(paramName, displayName);
 
-                return (
-                    <Tooltip
-                        title={descriptionDom}
-                        key={paramName}
-                        placement="leftBottom"
-                    >
-                        <div className="margin-vertical-16">
-                            <div className="height-24 margin-bottom-4 sm-flex justify-space-between">
-                                <div className="display-inline">
-                                    <SvgIcon
-                                        className="margin-right-8"
-                                        name={iconName}
-                                        type={['static']}
-                                        size={24}
-                                    />
-                                    <span className="color-black-3">
-                                        {i18n._(`key-Luban/Preset/${displayName}`)}
-                                    </span>
-                                </div>
-                                {!showSelect && !(['Support Type', 'Build Plate Adhesion Type'].includes(displayName)) && (
-                                    <span className="float-r color-black-3">
-                                        {displayValue} {eachParamObject?.unit}
-                                    </span>
-                                )}
-                                {showSelect && (
-                                    <Select
-                                        size="100px"
-                                        bordered={false}
-                                        options={selectOptions}
-                                        value={displayValue}
-                                        onChange={(item) => {
-                                            onChangePresetSettings('model_structure_type', item.value);
-                                        }}
-                                    />
-                                )}
-                            </div>
-                            {
-                                segmentedDisplay && (
-                                    <div>
-                                        <Segmented
-                                            block
-                                            size="middle"
-                                            options={options}
-                                            value={segmentedValue}
-                                            onChange={(value) => {
-                                                console.log('onChange', value);
-                                                onChangeParam(value, paramSetting);
-                                            }}
+                    return (
+                        <Tooltip
+                            title={descriptionDom}
+                            key={paramName}
+                            placement="leftBottom"
+                        >
+                            <div className="margin-vertical-16">
+                                <div className="height-24 margin-bottom-4 sm-flex justify-space-between">
+                                    <div className="display-inline">
+                                        <SvgIcon
+                                            className="margin-right-8"
+                                            name={iconName}
+                                            type={['static']}
+                                            size={24}
                                         />
+                                        <span className="color-black-3">
+                                            {i18n._(`key-Luban/Preset/${displayName}`)}
+                                        </span>
                                     </div>
-                                )
-                            }
-                        </div>
-                    </Tooltip>
-                );
-            })}
+                                    {
+                                        !showSelect && !(['Support Type', 'Build Plate Adhesion Type'].includes(displayName)) && (
+                                            <span className="float-r color-black-3">
+                                                {displayValue} {eachParamObject?.unit}
+                                            </span>
+                                        )
+                                    }
+                                    {
+                                        showSelect && (
+                                            <Select
+                                                size="100px"
+                                                bordered={false}
+                                                options={selectOptions}
+                                                value={displayValue}
+                                                onChange={(item) => {
+                                                    onChangePresetSettings('model_structure_type', item.value);
+                                                }}
+                                            />
+                                        )
+                                    }
+                                </div>
+                                {
+                                    segmentedDisplay && (
+                                        <div>
+                                            <Segmented
+                                                block
+                                                size="middle"
+                                                options={options}
+                                                value={segmentedValue}
+                                                onChange={(value) => {
+                                                    console.log('onChange', value);
+                                                    onChangeParam(value, paramSetting);
+                                                }}
+                                            />
+                                        </div>
+                                    )
+                                }
+                            </div>
+                        </Tooltip>
+                    );
+                })
+            }
         </div>
     );
 };
