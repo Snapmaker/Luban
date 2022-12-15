@@ -217,9 +217,9 @@ export class DefinitionLoader {
                         if (setting.settable_per_extruder) {
                             extruderProfileArr.add(key);
                         }
-                        if (setting.visible !== 'false') { // ?
-                            qualityProfileArr.add(key);
-                        }
+                        // if (setting.visible !== 'false') { // ?
+                        qualityProfileArr.add(key);
+                        //}
                         allSettingNameWithType[mainCategory].add(key);
                     }
                     if (mainCategory === 'material') {

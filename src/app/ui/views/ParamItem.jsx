@@ -205,7 +205,7 @@ function getDescription(paramName, displayName) {
 
 
 // TODO: This component needs completely refactor ASAP.
-const ParamItem = function ({ selectedPresetModel, onChangePresetSettings, setSelectedPresetModel }) {
+const ParamItem = function ({ selectedPresetModel, onChangePresetSettings }) {
     const dispatch = useDispatch();
 
     const activeMachine = useSelector(state => state.machine.activeMachine);
@@ -357,7 +357,6 @@ const ParamItem = function ({ selectedPresetModel, onChangePresetSettings, setSe
 
 ParamItem.propTypes = {
     selectedPresetModel: PropTypes.object,
-    setSelectedPresetModel: PropTypes.func,
     onChangePresetSettings: PropTypes.func,
 };
 

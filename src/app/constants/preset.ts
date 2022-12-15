@@ -40,7 +40,24 @@ export function getQualityPresetLevelForRightExtruder() {
     return {
         quality: ['line_width'],
         printing_speed: ['speed_print', 'acceleration_enabled'],
-        support: ['support_generate_type', 'support_enable'],
+        support: [
+            'support_generate_type',
+            'support_enable',
+            'support_structure',
+            'support_pattern',
+            'support_infill_rate',
+            'support_infill_angles',
+            'support_brim_enable',
+            'support_offset',
+            'support_interface_enable',
+            'support_fan_enable',
+            'gradual_support_infill_steps',
+            'gradual_support_infill_step_height',
+            'support_use_towers',
+            'support_type',
+            'support_angle',
+            'support_distance',
+        ],
         platform_adhesion: ['speed_layer_0', 'acceleration_layer_0'],
     };
 }

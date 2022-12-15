@@ -2375,8 +2375,10 @@ export const actions = {
         const finalDefinition = definitionManager.finalizeActiveDefinition(
             printMode,
             globalQualityPreset,
-            extruderLDefinition,
-            extruderRDefinition,
+            // extruderLDefinition,
+            // extruderRDefinition,
+            qualityPresets[LEFT_EXTRUDER],
+            qualityPresets[RIGHT_EXTRUDER],
             size,
             isDual,
             {

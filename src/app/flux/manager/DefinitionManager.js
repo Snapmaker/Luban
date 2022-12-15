@@ -386,7 +386,8 @@ class DefinitionManager {
         for (const key of Object.keys(extruderDefinition.settings)) {
             const settingItem = qualityDefinition.settings[key];
 
-            if (settingItem && settingItem.settable_per_extruder && includes(limitToExtruderKeys, settingItem.limit_to_extruder)) {
+            // if (settingItem && settingItem.settable_per_extruder && includes(limitToExtruderKeys, settingItem.limit_to_extruder)) {
+            if (settingItem && includes(limitToExtruderKeys, settingItem.limit_to_extruder)) {
                 if (!definition.settings[key]) {
                     definition.settings[key] = {};
                     definition.ownKeys.push(key);
@@ -535,7 +536,6 @@ class DefinitionManager {
             activeDefinition,
             extruderConfig.support === '0' ? extruderLDefinition : extruderRDefinition,
             [
-                'adhesion_extruder_nr',
                 'support_extruder_nr',
                 'support_interface_extruder_nr',
                 'support_roof_extruder_nr',
