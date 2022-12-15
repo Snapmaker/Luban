@@ -16,7 +16,7 @@ import { Button } from '../../components/Buttons';
 import { actions as printingActions } from '../../../flux/printing';
 import ParameterFiltersBar from './ParameterFiltersBar';
 import ParameterPicker from './ParameterPicker';
-import ParameterTable from './ParameterTable';
+import ParametersTableView from './ParametersTableView';
 import styles from './styles.styl';
 
 
@@ -125,8 +125,8 @@ const PresetContent = (
     // Update preset model and option config group
     useEffect(() => {
         const presetModels = selectedStackId === LEFT_EXTRUDER ? qualityDefinitions : qualityDefinitionsRight;
-        const targetPresetModel = presetModels.find(p => p.definitionId === selectedPresetId);
-        setPresetModel(targetPresetModel);
+        const newPresetModel = presetModels.find(p => p.definitionId === selectedPresetId);
+        setPresetModel(newPresetModel);
 
         if (selectedStackId === LEFT_EXTRUDER) {
             setOptionConfigGroup(printingProfileLevel);
@@ -212,7 +212,7 @@ const PresetContent = (
             <div className="sm-flex width-percent-100 height-100-percent-minus-56">
                 {
                     presetModel && !customMode && (
-                        <ParameterTable
+                        <ParametersTableView
                             optionConfigGroup={selectParamsType === 'custom' ? customConfigs : optionConfigGroup}
                             settings={presetModel.settings}
                             definitionForManager={presetModel}

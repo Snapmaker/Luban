@@ -160,8 +160,6 @@ const ConfigurationView: React.FC<{}> = () => {
         const allModels = selectedStackId === LEFT_EXTRUDER ? qualityDefinitionModels : qualityDefinitionModelsRight;
         const presetModel = allModels.find(p => p.definitionId === presetId);
 
-        console.log(`all models = ${allModels}, presetModel = ${presetModel}`);
-
         // Update currently selected preset model
         if (presetModel) {
             setSelectedPresetModel(presetModel);

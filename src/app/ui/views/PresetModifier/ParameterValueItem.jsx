@@ -73,6 +73,8 @@ const colorSelectorContent = (settingDefaultValue, definitionKey, setShowColor, 
     </div>
 );
 
+// TODO: Refactor this ASAP
+// FIXME: Refactor this ASAP
 function SettingItem(
     {
         definitionKey,

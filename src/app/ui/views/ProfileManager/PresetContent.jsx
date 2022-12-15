@@ -13,7 +13,7 @@ import { actions as printingActions } from '../../../flux/printing';
 import definitionManager from '../../../flux/manager/DefinitionManager';
 import ParameterFiltersBar from '../PresetModifier/ParameterFiltersBar';
 import ParameterPicker from '../PresetModifier/ParameterPicker';
-import ParameterTable from '../PresetModifier/ParameterTable';
+import ParametersTableView from '../PresetModifier/ParametersTableView';
 
 // import ParamItem from '../ParamItem';
 import styles from './styles.styl';
@@ -197,9 +197,8 @@ function PresetContent(
                 }
                 {
                     showParameters && !customMode && (
-                        <ParameterTable
+                        <ParametersTableView
                             optionConfigGroup={selectParamsType === 'custom' ? customConfigs : optionConfigGroup}
-                            enabledKeyFilter={selectParamsType === 'custom'}
                             settings={definitionForManager.settings}
                             definitionForManager={definitionForManager}
                             selectedSettingDefaultValue={selectedSettingDefaultValue}
