@@ -24,9 +24,8 @@ const settings = {
 
         // string or array of namespaces
         ns: [
-            'controller', // Grbl|Marlin|Smoothie|TinyG
             'gcode', // G-code
-            'resource' // default
+            'resource', // default
         ],
         // default namespace used if not passed to translation function
         defaultNS: 'resource',

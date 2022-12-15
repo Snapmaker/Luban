@@ -38,6 +38,7 @@ import LaserTestFocusWidget from '../widgets/LaserTestFocus';
 import MacroWidget from '../widgets/Macro';
 import MarlinWidget from '../widgets/Marlin';
 import PrintingConfigurationsWidget from '../widgets/PrintingConfigurations';
+import PresetInitialization from '../widgets/PrintingConfigurations/PresetInitialization';
 import PrintingMaterialWidget from '../widgets/PrintingMaterial';
 import PrintingOutputWidget from '../widgets/PrintingOutput';
 import Thumbnail from '../widgets/PrintingOutput/Thumbnail';
@@ -645,6 +646,7 @@ function Printing({ location }) {
                 ref={thumbnail}
                 modelGroup={modelGroup}
             />
+            <PresetInitialization />
         </ProjectLayout>
     );
 }

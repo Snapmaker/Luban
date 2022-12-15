@@ -3584,8 +3584,9 @@
                                 "tree": "Tree"
                             },
                             "default_value": "none",
-                            "settable_per_mesh": true,
+                            "settable_per_mesh": false,
                             "settable_per_extruder": false,
+                            "limit_to_extruder": "support_extruder_nr",
                             "filter": [
                                 "basic",
                                 "advanced"
@@ -3678,6 +3679,7 @@
                             "calcu_value": "support_generate_type !== 'none'",
                             "settable_per_mesh": false,
                             "settable_per_extruder": false,
+                            "limit_to_extruder": "support_extruder_nr",
                             "visible": "false"
                         },
                         "support_structure": {
@@ -3690,9 +3692,10 @@
                             },
                             "visible": "false",
                             "default_value": "normal",
-                            "calcu_value": "support_generate_type === 'normal' ? 'normal':support_generate_type === 'tree' ? 'tree' : 'normal'",
+                            "calcu_value": "support_generate_type === 'normal' ? 'normal': support_generate_type === 'tree' ? 'tree' : 'normal'",
                             "settable_per_mesh": false,
                             "settable_per_extruder": false,
+                            "limit_to_extruder": "support_extruder_nr",
                             "filter": [
                                 "basic",
                                 "advanced"

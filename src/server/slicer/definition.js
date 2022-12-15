@@ -185,7 +185,7 @@ export class DefinitionLoader {
                     this.settings[key].filter = this.settings[key].filter ? this.settings[key].filter : (setting.filter || ['all']);
 
                     const isMesh = setting.settable_per_mesh || false;
-                    const isExtruder = setting.settable_per_extruder || isMesh; // settable per mesh is regarded as settable per extruder
+                    const isExtruder = setting.settable_per_extruder || false;
                     this.settings[key].settable_per_extruder = this.settings[key].settable_per_extruder ? this.settings[key].settable_per_extruder : isExtruder;
                     this.settings[key].settable_per_mesh = this.settings[key].settable_per_mesh ? this.settings[key].settable_per_mesh : isMesh;
 
@@ -214,12 +214,12 @@ export class DefinitionLoader {
                         }
                     }
                     if (mainCategory === 'quality') {
-                        if (setting.settable_per_extruder || setting.settable_per_mesh) {
+                        if (setting.settable_per_extruder) {
                             extruderProfileArr.add(key);
                         }
-                        if (setting.visible !== 'false') {
-                            qualityProfileArr.add(key);
-                        }
+                        // if (setting.visible !== 'false') { // ?
+                        qualityProfileArr.add(key);
+                        //}
                         allSettingNameWithType[mainCategory].add(key);
                     }
                     if (mainCategory === 'material') {

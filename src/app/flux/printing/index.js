@@ -1464,10 +1464,10 @@ export const actions = {
         managerDisplayType: type,
         changedSettingArray,
         direction = LEFT_EXTRUDER,
-        shouldUpdateIsOverstepped = false
+        shouldUpdateIsOverstepped = false,
     }) => (dispatch, getState) => {
         const printingState = getState().printing;
-        const { qualityDefinitions, qualityDefinitionsRight, activePresetIds } = printingState;
+        const { qualityDefinitions } = printingState;
         const id = definitionModel?.definitionId;
         let updatePresetModel = false;
 
@@ -1513,39 +1513,6 @@ export const actions = {
                 definitionModel?.settings?.prime_tower_enable?.default_value
             );
             dispatch(actions.updateState({ isAnyModelOverstepped }));
-        }
-
-        // Check to update global changes to both preset models
-        if (type === PRINTING_MANAGER_TYPE_QUALITY) {
-            // TODO: Sync from right extruder to left extruder as well
-            if (direction === LEFT_EXTRUDER) {
-                const anotherPresetModel = qualityDefinitionsRight.find(p => p.definitionId === activePresetIds[RIGHT_EXTRUDER]);
-                if (anotherPresetModel) {
-                    const changedSettingArrayGlobal = [];
-                    for (const [key, value] of changedSettingArray) {
-                        const settingItem = definitionModel.settings[key];
-
-                        // global settings
-                        if (!settingItem.settable_per_extruder && !settingItem.settable_per_mesh) {
-                            changedSettingArrayGlobal.push([key, value]);
-                        }
-                    }
-
-                    if (changedSettingArrayGlobal.length > 0) {
-                        const newPresetModel = cloneDeep(anotherPresetModel);
-                        for (const [key, value] of changedSettingArrayGlobal) {
-                            newPresetModel.settings[key].default_value = value;
-                        }
-
-                        dispatch(actions.updateCurrentDefinition({
-                            direction: RIGHT_EXTRUDER,
-                            definitionModel: newPresetModel,
-                            changedSettingArray: changedSettingArrayGlobal,
-                            managerDisplayType: type,
-                        }));
-                    }
-                }
-            }
         }
 
         setTimeout(() => {
@@ -1865,12 +1832,15 @@ export const actions = {
                 );
             }
         }
-        !loop
-        && dispatch(
+
+        // FIXME: Consider right extruder
+        !loop && dispatch(
             actions.updateState({
                 [definitionsKey]: defintions
             })
         );
+
+        // TODO: Return success or fail?
     },
 
     removeToolCategoryDefinition: (type, category) => async (
@@ -2405,8 +2375,10 @@ export const actions = {
         const finalDefinition = definitionManager.finalizeActiveDefinition(
             printMode,
             globalQualityPreset,
-            extruderLDefinition,
-            extruderRDefinition,
+            // extruderLDefinition,
+            // extruderRDefinition,
+            qualityPresets[LEFT_EXTRUDER],
+            qualityPresets[RIGHT_EXTRUDER],
             size,
             isDual,
             {

@@ -1,3 +1,3 @@
-import Configurations from './Configurations';
+import ConfigurationView from './ConfigurationView';
 
-export default Configurations;
+export default ConfigurationView;

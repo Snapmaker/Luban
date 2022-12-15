@@ -34,8 +34,7 @@ export const DEFAULE_PARAMS_FOR_OTHERS = {
         'default_value': 'rough'
     },
     'speed_print': {
-        'affectByType': true,
-        'universal': {
+        'options': {
             'low': {
                 'affect': {
                     'speed_print': 40,
@@ -67,120 +66,6 @@ export const DEFAULE_PARAMS_FOR_OTHERS = {
                     'speed_wall_x': 25,
                     'speed_topbottom': 30,
                     'speed_infill': 60,
-                    'speed_travel': 80
-                },
-                'value': 60,
-                'label': 'key-Luban/Preset/Print Speed-Fast'
-            },
-        },
-        'quik': {
-            'low': {
-                'affect': {
-                    'speed_print': 40,
-                    'speed_wall_0': 20,
-                    'speed_wall_x': 20,
-                    'speed_topbottom': 20,
-                    'speed_infill': 40,
-                    'speed_travel': 60
-                },
-                'value': 40,
-                'label': 'key-Luban/Preset/Print Speed-Slow'
-            },
-            'middle': {
-                'affect': {
-                    'speed_print': 50,
-                    'speed_wall_0': 25,
-                    'speed_wall_x': 25,
-                    'speed_topbottom': 25,
-                    'speed_infill': 50,
-                    'speed_travel': 70
-                },
-                'value': 50,
-                'label': 'key-Luban/Preset/Print Speed-Medium'
-            },
-            'high': {
-                'affect': {
-                    'speed_print': 60,
-                    'speed_wall_0': 30,
-                    'speed_wall_x': 30,
-                    'speed_topbottom': 30,
-                    'speed_infill': 60,
-                    'speed_travel': 80
-                },
-                'value': 60,
-                'label': 'key-Luban/Preset/Print Speed-Fast'
-            },
-        },
-        'fine': {
-            'low': {
-                'affect': {
-                    'speed_print': 40,
-                    'speed_wall_0': 10,
-                    'speed_wall_x': 10,
-                    'speed_topbottom': 20,
-                    'speed_infill': 40,
-                    'speed_travel': 50
-                },
-                'value': 40,
-                'label': 'key-Luban/Preset/Print Speed-Slow'
-            },
-            'middle': {
-                'affect': {
-                    'speed_print': 50,
-                    'speed_wall_0': 15,
-                    'speed_wall_x': 15,
-                    'speed_topbottom': 25,
-                    'speed_infill': 50,
-                    'speed_travel': 60
-                },
-                'value': 50,
-                'label': 'key-Luban/Preset/Print Speed-Medium'
-            },
-            'high': {
-                'affect': {
-                    'speed_print': 60,
-                    'speed_wall_0': 20,
-                    'speed_wall_x': 20,
-                    'speed_topbottom': 30,
-                    'speed_infill': 50,
-                    'speed_travel': 70
-                },
-                'value': 60,
-                'label': 'key-Luban/Preset/Print Speed-Fast'
-            },
-        },
-        'engineering': {
-            'low': {
-                'affect': {
-                    'speed_print': 40,
-                    'speed_wall_0': 10,
-                    'speed_wall_x': 15,
-                    'speed_topbottom': 20,
-                    'speed_infill': 45,
-                    'speed_travel': 60
-                },
-                'value': 40,
-                'label': 'key-Luban/Preset/Print Speed-Slow'
-            },
-            'middle': {
-                'affect': {
-                    'speed_print': 50,
-                    'speed_wall_0': 15,
-                    'speed_wall_x': 20,
-                    'speed_topbottom': 25,
-                    'speed_infill': 45,
-                    'speed_travel': 70
-                },
-                'value': 50,
-                'label': 'key-Luban/Preset/Print Speed-Medium'
-            },
-            'high': {
-                'affect': {
-                    'speed_print': 60,
-                    'speed_wall_0': 20,
-                    'speed_wall_x': 25,
-                    'speed_topbottom': 30,
-                    'speed_infill': 45,
                     'speed_travel': 80
                 },
                 'value': 60,
@@ -191,8 +76,7 @@ export const DEFAULE_PARAMS_FOR_OTHERS = {
         'default_value': 'high'
     },
     'infill_sparse_density': {
-        'affectByType': true,
-        'universal': {
+        'options': {
             'normal_weak': {
                 'affect': {
                     'model_structure_type': 'normal',
@@ -215,120 +99,6 @@ export const DEFAULE_PARAMS_FOR_OTHERS = {
                     'bottom_thickness': 1
                 },
                 'value': 15,
-                'label': 'key-Luban/Preset/Model Structure-Medium'
-            },
-            'normal_strong': {
-                'affect': {
-                    'model_structure_type': 'normal',
-                    'wall_line_count': 4,
-                    'infill_pattern': 'cubic',
-                    'infill_sparse_density': 25,
-                    'top_thickness': 1.2,
-                    'bottom_thickness': 1.2
-                },
-                'value': 25,
-                'label': 'key-Luban/Preset/Model Structure-Strong'
-            }
-        },
-        'quik': {
-            'normal_weak': {
-                'affect': {
-                    'model_structure_type': 'normal',
-                    'wall_line_count': 3,
-                    'infill_pattern': 'lines',
-                    'infill_sparse_density': 10,
-                    'top_thickness': 1,
-                    'bottom_thickness': 1
-                },
-                'value': 10,
-                'label': 'key-Luban/Preset/Model Structure-Thin'
-            },
-            'normal_normal': {
-                'affect': {
-                    'model_structure_type': 'normal',
-                    'wall_line_count': 3,
-                    'infill_pattern': 'lines',
-                    'infill_sparse_density': 15,
-                    'top_thickness': 1,
-                    'bottom_thickness': 1
-                },
-                'value': 15,
-                'label': 'key-Luban/Preset/Model Structure-Medium'
-            },
-            'normal_strong': {
-                'affect': {
-                    'model_structure_type': 'normal',
-                    'wall_line_count': 4,
-                    'infill_pattern': 'lines',
-                    'infill_sparse_density': 25,
-                    'top_thickness': 1.2,
-                    'bottom_thickness': 1.2
-                },
-                'value': 25,
-                'label': 'key-Luban/Preset/Model Structure-Strong'
-            }
-        },
-        'fine': {
-            'normal_weak': {
-                'affect': {
-                    'model_structure_type': 'normal',
-                    'wall_line_count': 3,
-                    'infill_pattern': 'lines',
-                    'infill_sparse_density': 10,
-                    'top_thickness': 1,
-                    'bottom_thickness': 1
-                },
-                'value': 10,
-                'label': 'key-Luban/Preset/Model Structure-Thin'
-            },
-            'normal_normal': {
-                'affect': {
-                    'model_structure_type': 'normal',
-                    'wall_line_count': 3,
-                    'infill_pattern': 'lines',
-                    'infill_sparse_density': 15,
-                    'top_thickness': 1,
-                    'bottom_thickness': 1
-                },
-                'value': 15,
-                'label': 'key-Luban/Preset/Model Structure-Medium'
-            },
-            'normal_strong': {
-                'affect': {
-                    'model_structure_type': 'normal',
-                    'wall_line_count': 4,
-                    'infill_pattern': 'lines',
-                    'infill_sparse_density': 25,
-                    'top_thickness': 1.2,
-                    'bottom_thickness': 1.2
-                },
-                'value': 25,
-                'label': 'key-Luban/Preset/Model Structure-Strong'
-            }
-        },
-        'engineering': {
-            'normal_weak': {
-                'affect': {
-                    'model_structure_type': 'normal',
-                    'wall_line_count': 3,
-                    'infill_pattern': 'trihexagon',
-                    'infill_sparse_density': 10,
-                    'top_thickness': 1,
-                    'bottom_thickness': 1
-                },
-                'value': 10,
-                'label': 'key-Luban/Preset/Model Structure-Thin'
-            },
-            'normal_normal': {
-                'affect': {
-                    'model_structure_type': 'normal',
-                    'wall_line_count': 3,
-                    'infill_pattern': 'trihexagon',
-                    'infill_sparse_density': 20,
-                    'top_thickness': 1,
-                    'bottom_thickness': 1
-                },
-                'value': 20,
                 'label': 'key-Luban/Preset/Model Structure-Medium'
             },
             'normal_strong': {
@@ -1081,6 +851,7 @@ type ParamsObjectType = {
     'default_value': number | string | boolean;
     affectByType?: boolean;
 }
+
 type ParamsModelType = {
     'layer_height': ParamsObjectType;
     'speed_print': ParamsObjectType;

@@ -455,3 +455,16 @@ div.manager-detail-and-docs {
 .disable-li {
     pointer-events: none;
 }
+
+.preset-item {
+    // preset actions on the right side
+    .preset-actions {
+        visibility: hidden;
+    }
+
+    &.selected:hover {
+        .preset-actions {
+            visibility: visible;
+        }
+    }
+}

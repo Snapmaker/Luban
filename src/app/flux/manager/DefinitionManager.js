@@ -386,7 +386,8 @@ class DefinitionManager {
         for (const key of Object.keys(extruderDefinition.settings)) {
             const settingItem = qualityDefinition.settings[key];
 
-            if (settingItem && settingItem.settable_per_extruder && includes(limitToExtruderKeys, settingItem.limit_to_extruder)) {
+            // if (settingItem && settingItem.settable_per_extruder && includes(limitToExtruderKeys, settingItem.limit_to_extruder)) {
+            if (settingItem && includes(limitToExtruderKeys, settingItem.limit_to_extruder)) {
                 if (!definition.settings[key]) {
                     definition.settings[key] = {};
                     definition.ownKeys.push(key);
@@ -535,7 +536,7 @@ class DefinitionManager {
             activeDefinition,
             extruderConfig.support === '0' ? extruderLDefinition : extruderRDefinition,
             [
-                'adhesion_extruder_nr',
+                'support_extruder_nr',
                 'support_interface_extruder_nr',
                 'support_roof_extruder_nr',
                 'support_bottom_extruder_nr',
@@ -616,10 +617,12 @@ class DefinitionManager {
                                    primeTowerXDefinition,
                                    primeTowerYDefinition
                                }) {
+
         const newExtruderDefinition = {
             ...extruderDefinition,
         };
-        const newQualityDefinition = { settings: cloneDeep(activeQualityDefinition.settings) };
+
+        // Apply material preset
         this.materialProfileArr.forEach((key) => {
             const setting = materialDefinition.settings[key];
             if (setting) {
@@ -628,10 +631,16 @@ class DefinitionManager {
                 };
             }
         });
+
+        // Apply quality preset
+        const newQualityDefinition = {
+            settings: cloneDeep(activeQualityDefinition.settings),
+        };
         const nozzleSize = newExtruderDefinition?.settings?.machine_nozzle_size?.default_value;
         if (nozzleSize && newExtruderDefinition.definitionId === 'snapmaker_extruder_1') {
             resolveDefinition(newQualityDefinition, [['machine_nozzle_size', nozzleSize]]);
         }
+
         this.extruderProfileArr.concat(nozzleSizeRelationSettingsKeys).forEach((item) => {
             if (newQualityDefinition.settings[item]) {
                 newExtruderDefinition.settings[item] = {
@@ -649,6 +658,18 @@ class DefinitionManager {
                 newExtruderDefinition.settings[keyItem].default_value = primeTowerYDefinition;
             });
         }
+
+        // Go through a filter on extruders
+        const extruderKeysAllowed = this.extruderProfileArr;
+        const newSettings = {};
+        for (const key of extruderKeysAllowed) {
+            if (newExtruderDefinition.settings[key]) {
+                newSettings[key] = {
+                    default_value: newExtruderDefinition.settings[key].default_value,
+                };
+            }
+        }
+        newExtruderDefinition.settings = newSettings;
 
         return newExtruderDefinition;
     }
