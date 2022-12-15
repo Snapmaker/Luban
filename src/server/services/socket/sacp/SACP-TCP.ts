@@ -252,7 +252,7 @@ class SocketTCP extends SocketBASE {
                         };
                         socket && socket.emit(options.eventName, result);
                     }
-                }, 3000);
+                }, 500);
             }
         });
     };

@@ -160,8 +160,6 @@ const ConfigurationView: React.FC<{}> = () => {
         const allModels = selectedStackId === LEFT_EXTRUDER ? qualityDefinitionModels : qualityDefinitionModelsRight;
         const presetModel = allModels.find(p => p.definitionId === presetId);
 
-        console.log(`all models = ${allModels}, presetModel = ${presetModel}`);
-
         // Update currently selected preset model
         if (presetModel) {
             setSelectedPresetModel(presetModel);
@@ -422,25 +420,32 @@ const ConfigurationView: React.FC<{}> = () => {
                         <div className="sm-flex justify-space-around padding-horizontal-16">
                             <Anchor
                                 className={classNames(
+                                    'display-block height-40',
                                     {
                                         'border-bottom-black-3 font-weight-bold': selectedStackId === LEFT_EXTRUDER,
                                     }
                                 )}
                                 onClick={() => selectStack(LEFT_EXTRUDER)}
                             >
-                                <span className={classNames('font-size-middle line-height-32', {})}>
+                                <span className="display-block height-40 font-size-middle">
+                                    <SvgIcon
+                                        name="Information"
+                                        size={24}
+                                        type={['static']}
+                                    />
                                     {i18n._('Left Extruder')}
                                 </span>
                             </Anchor>
                             <Anchor
                                 className={classNames(
+                                    'display-block height-40',
                                     {
                                         'border-bottom-black-3 font-weight-bold': selectedStackId === RIGHT_EXTRUDER,
                                     }
                                 )}
                                 onClick={() => selectStack(RIGHT_EXTRUDER)}
                             >
-                                <span className={classNames('font-size-middle line-height-32', {})}>
+                                <span className="display-block height-40 font-size-middle">
                                     {i18n._('Right Extruder')}
                                 </span>
                             </Anchor>

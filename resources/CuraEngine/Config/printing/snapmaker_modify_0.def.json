@@ -4356,6 +4356,7 @@
                             "default_value": "everywhere",
                             "resolve": "'everywhere' if 'everywhere' in 'support_type' else 'buildplate'",
                             "visible": "support_enable",
+                            "limit_to_extruder": "support_extruder_nr",
                             "settable_per_mesh": false,
                             "settable_per_extruder": false,
                             "filter": [

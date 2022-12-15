@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Segmented } from 'antd';
 
 import i18n from '../../../lib/i18n';
-import { PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
+import { LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
 import { MACHINE_SERIES } from '../../../constants/machines';
 
 import PresetDefinitionModel, {
@@ -219,6 +219,8 @@ const ParametersQuickSettingsView: React.FC<TProps> = ({ selectedStackId, select
     const allParams = getPresetQuickParams(activeMachine, selectedPresetModel);
     const selectedDefinitionSettings = selectedPresetModel.settings;
 
+    const helpersExtruderConfig = useSelector((state: RootState) => state.printing.helpersExtruderConfig);
+
     async function onChangeParam(newValue, paramSetting) {
         const actualOptions = paramSetting.options;
         const findedAffect = actualOptions[newValue]?.affect;
@@ -307,6 +309,27 @@ const ParametersQuickSettingsView: React.FC<TProps> = ({ selectedStackId, select
 
                     const descriptionDom = getDescription(paramName, displayName);
 
+                    let disabled = false;
+
+                    const stackExtruderNumber = selectedStackId === LEFT_EXTRUDER ? '0' : '1';
+                    if (paramName === 'layer_height' && stackExtruderNumber === '1') {
+                        disabled = true;
+                    }
+                    if (paramName === 'infill_sparse_density' && stackExtruderNumber === '1') {
+                        disabled = true;
+                    }
+                    // 'speed_print': ['SpeedSlow', 'SpeedMedium', 'SpeedFast'],
+                    //  'infill_sparse_density': ['ModelStructureThin', 'ModelStructureMedium', 'ModelStructureHard', 'ModelStructureVase'],
+                    if (paramName === 'support_generate_type') {
+                        disabled = helpersExtruderConfig.support !== stackExtruderNumber;
+                    }
+                    if (paramName === 'adhesion_type') {
+                        disabled = helpersExtruderConfig.adhesion !== stackExtruderNumber;
+                    }
+                    if (disabled) {
+                        return null;
+                    }
+
                     return (
                         <Tooltip
                             title={descriptionDom}
@@ -359,6 +382,7 @@ const ParametersQuickSettingsView: React.FC<TProps> = ({ selectedStackId, select
                                                     console.log('onChange', value);
                                                     onChangeParam(value, paramSetting);
                                                 }}
+                                                disabled={disabled}
                                             />
                                         </div>
                                     )
