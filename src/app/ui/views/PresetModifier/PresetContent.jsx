@@ -1,23 +1,22 @@
 import classNames from 'classnames';
-import { includes, cloneDeep } from 'lodash';
+import { cloneDeep, includes, isNil } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { useCallback, useEffect, useState } from 'react';
 // import ReactMarkdown from 'react-markdown';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
-import { getQualityPresetLevelForRightExtruder } from '../../../constants/preset';
+import { getQualityPresetLevelForRightExtruder, getUsedExtruderNumber } from '../../../constants/preset';
 import { actions as machineActions } from '../../../flux/machine';
 import definitionManager from '../../../flux/manager/DefinitionManager';
+import { actions as printingActions } from '../../../flux/printing';
 import i18n from '../../../lib/i18n';
 import { Button } from '../../components/Buttons';
-// import SvgIcon from '../../components/SvgIcon';
-
-import { actions as printingActions } from '../../../flux/printing';
 import ParameterFiltersBar from './ParameterFiltersBar';
 import ParameterPicker from './ParameterPicker';
 import ParametersTableView from './ParametersTableView';
 import styles from './styles.styl';
+// import SvgIcon from '../../components/SvgIcon';
 
 
 const defaultParamsType = ['all', 'advanced'];
@@ -108,6 +107,7 @@ const PresetContent = (
 ) => {
     const dispatch = useDispatch();
     const printingProfileLevel = useSelector((state) => state?.printing?.printingProfileLevel);
+    const helpersExtruderConfig = useSelector((state) => state.printing.helpersExtruderConfig);
 
     const {
         qualityDefinitions,
@@ -183,6 +183,43 @@ const PresetContent = (
     const filters = getFilters(); // Calculate once only when managerType changed
     const filterValues = [selectParamsType, selectQualityDetailType];
 
+    function parameterConverter(key) {
+        const settingItem = presetModel.settings[key];
+
+        // check visible
+        if (!isNil(settingItem.visible) && (!settingItem.visible || settingItem.visible === 'false')) {
+            return null;
+        }
+
+        // check filters
+        let bypassFilter = true;
+        const parameterFilters = filterValues.filter(f => f !== 'all');
+        for (const filter of parameterFilters) {
+            if (!settingItem.filter.includes(filter)) {
+                bypassFilter = false;
+                break;
+            }
+        }
+        if (!bypassFilter) {
+            return null;
+        }
+
+        const displayConfig = {
+            key,
+            value: settingItem.default_value,
+            disabled: false,
+        };
+
+        if (settingItem.limit_to_extruder) {
+            const extruderNumber = getUsedExtruderNumber(settingItem.limit_to_extruder, helpersExtruderConfig);
+            const stackExtruderNumber = selectedStackId === LEFT_EXTRUDER ? '0' : '1';
+
+            displayConfig.disabled = (extruderNumber !== '-1' && extruderNumber !== stackExtruderNumber);
+        }
+
+        return displayConfig;
+    }
+
     return (
         <div className={classNames(styles['config-value-box-wrapper'], 'margin-vertical-16 margin-horizontal-16 background-color-white border-radius-16')}>
             <div className="height-56 sm-flex border-bottom-normal">
@@ -220,6 +257,7 @@ const PresetContent = (
                             onChangePresetSettings={onChangePresetValue}
                             filters={selectParamsType === 'custom' ? [] : filterValues.filter(f => f !== 'all')}
                             flatten={selectParamsType === 'custom'}
+                            parameterConverter={parameterConverter}
                         />
                     )
                 }

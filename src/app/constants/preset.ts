@@ -34,6 +34,7 @@ export function isQualityPresetVisible(preset, { materialType = 'pla' }) {
     return true;
 }
 
+
 // These are options that can be set on right extruder
 // TODO: Make it configurable
 export function getQualityPresetLevelForRightExtruder() {
@@ -61,3 +62,32 @@ export function getQualityPresetLevelForRightExtruder() {
         platform_adhesion: ['speed_layer_0', 'acceleration_layer_0'],
     };
 }
+
+interface ExtruderConfig {
+    infill: string;
+    shell: string;
+    adhesion: string;
+    support: string;
+}
+
+export function getUsedExtruderNumber(limitKey: string, extruderConfig: ExtruderConfig): string {
+    switch (limitKey) {
+        case 'adhesion_extruder_nr':
+        case 'skirt_brim_extruder_nr':
+        case 'raft_base_extruder_nr':
+        case 'raft_interface_extruder_nr':
+        case 'raft_surface_extruder_nr':
+            return extruderConfig.adhesion;
+
+        case 'support_extruder_nr':
+        case 'support_interface_extruder_nr':
+        case 'support_roof_extruder_nr':
+        case 'support_bottom_extruder_nr':
+        case 'support_infill_extruder_nr':
+        case 'support_extruder_nr_layer_0':
+            return extruderConfig.support;
+        default:
+            return '-1';
+    }
+}
+

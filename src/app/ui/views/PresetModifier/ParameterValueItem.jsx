@@ -83,12 +83,12 @@ function SettingItem(
         onChangePresetSettings,
         defaultValue,
         styleSize = 'large',
-        officialDefinition,
         showTooltip = false,
         onClick,
         definitionCategory,
         onChangeMaterialType = noop,
         categoryKey,
+        disabled = false,
     }
 ) {
     const [showColor, setShowColor] = useState(false);
@@ -159,6 +159,7 @@ function SettingItem(
                         onChange={(value) => {
                             onChangePresetSettings(definitionKey, value);
                         }}
+                        disabled={disabled}
                     />
                 )}
                 {type === 'int' && (
@@ -173,6 +174,7 @@ function SettingItem(
                         onChange={(value) => {
                             onChangePresetSettings(definitionKey, value);
                         }}
+                        disabled={disabled}
                     />
                 )}
                 {type === 'bool' && (
@@ -183,6 +185,7 @@ function SettingItem(
                         type="checkbox"
                         checked={settingDefaultValue}
                         onChange={(checked) => onChangePresetSettings(definitionKey, checked)}
+                        disabled={disabled}
                     />
                 )}
                 {type === 'enum' && definitionKey === 'material_type' && (
@@ -214,7 +217,7 @@ function SettingItem(
                         onChange={(option) => {
                             onChangePresetSettings(definitionKey, option.value);
                         }}
-                        disabled={(officialDefinition && definitionKey === 'tool_type')}
+                        disabled={disabled}
                     />
                 )}
                 {type === 'enumWithImage' && (
@@ -232,7 +235,7 @@ function SettingItem(
                         onChange={(option) => {
                             onChangePresetSettings(definitionKey, option.value);
                         }}
-                        disabled={officialDefinition && definitionKey === 'tool_type'}
+                        disabled={disabled}
                     />
                 )}
                 {type === undefined && (
@@ -286,12 +289,12 @@ SettingItem.propTypes = {
     onChangePresetSettings: PropTypes.func.isRequired,
     defaultValue: PropTypes.object,
     styleSize: PropTypes.string,
-    officialDefinition: PropTypes.bool,
     showTooltip: PropTypes.bool,
     definitionCategory: PropTypes.string,
     onChangeMaterialType: PropTypes.func,
     onClick: PropTypes.func,
     categoryKey: PropTypes.string,
+    disabled: PropTypes.bool,
 };
 
 export default React.memo(SettingItem);

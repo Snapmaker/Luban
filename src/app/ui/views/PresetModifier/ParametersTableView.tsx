@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import classNames from 'classnames';
-import { isNil, throttle } from 'lodash';
+import { throttle } from 'lodash';
 import i18next from 'i18next';
 import ReactMarkdown from 'react-markdown';
 
@@ -31,6 +31,8 @@ enum ParametersViewType {
  */
 interface DisplayConfig {
     key: string;
+    value: boolean | number | string;
+    disabled: boolean;
     children?: DisplayConfig[];
 }
 
@@ -39,36 +41,20 @@ interface DisplayConfig {
  *
  * @param keys
  * @param settings
- * @param filters
+ * @param parameterConverter
  */
-function calculateDisplayConfigsForKeys(keys: string[], settings: { [key: string]: any }, filters: string[]): DisplayConfig[] {
+function calculateDisplayConfigsForKeys(keys: string[], settings: { [key: string]: any },
+    parameterConverter: (key) => DisplayConfig | null): DisplayConfig[] {
     const displayConfigs = [];
     for (const key of keys) {
+        const displayConfig: DisplayConfig = parameterConverter(key);
+        if (!displayConfig) {
+            continue;
+        }
+
         const settingItem = settings[key];
-
-        // check visible
-        if (!isNil(settingItem.visible) && (!settingItem.visible || settingItem.visible === 'false')) {
-            continue;
-        }
-
-        // check filters
-        let bypassFilter = true;
-        for (const filter of filters) {
-            if (!settingItem.filter.includes(filter)) {
-                bypassFilter = false;
-                break;
-            }
-        }
-        if (!bypassFilter) {
-            continue;
-        }
-
-        const displayConfig: DisplayConfig = {
-            key,
-        };
-
         if (settingItem.childKey) {
-            displayConfig.children = calculateDisplayConfigsForKeys(settingItem.childKey, settings, filters);
+            displayConfig.children = calculateDisplayConfigsForKeys(settingItem.childKey, settings, parameterConverter);
         }
 
         displayConfigs.push(displayConfig);
@@ -81,21 +67,25 @@ function calculateDisplayConfigsGroups(
     viewType = ParametersViewType.ListView,
     optionConfigGroup: { [category: string]: string[] },
     settings: { [key: string]: any },
-    filters: string[] = [],
+    parameterConverter: (key) => DisplayConfig | null,
 ): { [category: string]: DisplayConfig[] } {
     const groups = {};
     if (viewType === ParametersViewType.ListView) {
         for (const category of Object.keys(optionConfigGroup)) {
             const group: DisplayConfig[] = [];
             for (const key of optionConfigGroup[category]) {
-                group.push({ key });
+                const displayConfig: DisplayConfig = parameterConverter(key);
+                if (!displayConfig) {
+                    continue;
+                }
+                group.push(displayConfig);
             }
 
             groups[category] = group;
         }
     } else {
         for (const category of Object.keys(optionConfigGroup)) {
-            groups[category] = calculateDisplayConfigsForKeys(optionConfigGroup[category], settings, filters);
+            groups[category] = calculateDisplayConfigsForKeys(optionConfigGroup[category], settings, parameterConverter);
         }
     }
 
@@ -108,7 +98,6 @@ declare type ParameterItemListProps = {
     isDefaultDefinition: boolean;
     onChangePresetSettings: () => void;
     selectedSettingDefaultValue: { [key: string]: any };
-    officialDefinition: boolean;
     handleUpdateProfileKey: (category: string, key: string) => void;
     categoryKey: string;
     definitionCategory: string;
@@ -123,7 +112,6 @@ const ParameterItemList: React.FC<ParameterItemListProps> = (props) => {
         isDefaultDefinition,
         onChangePresetSettings,
         selectedSettingDefaultValue,
-        officialDefinition,
         handleUpdateProfileKey,
         categoryKey,
         definitionCategory,
@@ -135,8 +123,9 @@ const ParameterItemList: React.FC<ParameterItemListProps> = (props) => {
         <>
             {
                 displayConfigs.map((displayConfig) => {
-                    const { key, children = null } = displayConfig;
+                    const { key, children = null, disabled = false } = displayConfig;
 
+                    // TODO: Note that this is a temporary fix, default value should be missing
                     const defaultSetting = selectedSettingDefaultValue && selectedSettingDefaultValue[key];
 
                     return (
@@ -151,11 +140,11 @@ const ParameterItemList: React.FC<ParameterItemListProps> = (props) => {
                                     value: defaultSetting && defaultSetting.default_value
                                 }}
                                 styleSize="large"
-                                officialDefinition={officialDefinition}
                                 onClick={handleUpdateProfileKey}
                                 categoryKey={categoryKey}
                                 definitionCategory={definitionCategory}
                                 onChangeMaterialType={onChangeMaterialType}
+                                disabled={disabled}
                             />
                             {
                                 children && (
@@ -165,7 +154,6 @@ const ParameterItemList: React.FC<ParameterItemListProps> = (props) => {
                                         isDefaultDefinition={isDefaultDefinition}
                                         onChangePresetSettings={onChangePresetSettings}
                                         selectedSettingDefaultValue={selectedSettingDefaultValue}
-                                        officialDefinition={officialDefinition}
                                         handleUpdateProfileKey={handleUpdateProfileKey}
                                         categoryKey={categoryKey}
                                         definitionCategory={definitionCategory}
@@ -191,6 +179,9 @@ type TProps = {
     onChangeMaterialType?: any; // TODO: refactor
     filters: string[];
     flatten: boolean;
+
+    // convert a parameter to display config, or null indicating not to display
+    parameterConverter: (key: string) => DisplayConfig | null;
 };
 
 /**
@@ -212,6 +203,7 @@ const ParametersTableView: React.FC<TProps> = (props) => {
         onChangeMaterialType,
         filters,
         flatten = false,
+        parameterConverter,
     } = props;
 
     // Category anchors
@@ -279,11 +271,40 @@ const ParametersTableView: React.FC<TProps> = (props) => {
         }
     }, [selectCategory, selectProfile]);
 
+    /*
+    TODO: Move to PresetContent.jsx, remove this function after checking again
+    function parameterConverter(key: string): DisplayConfig | null {
+        const settingItem = settings[key];
+
+        // check visible
+        if (!isNil(settingItem.visible) && (!settingItem.visible || settingItem.visible === 'false')) {
+            return null;
+        }
+
+        // check filters
+        let bypassFilter = true;
+        for (const filter of filters) {
+            if (!settingItem.filter.includes(filter)) {
+                bypassFilter = false;
+                break;
+            }
+        }
+        if (!bypassFilter) {
+            return null;
+        }
+
+        return {
+            key,
+            value: settings[key].default_value,
+        };
+    }
+    */
+
     const displayConfigsGroups = calculateDisplayConfigsGroups(
         flatten ? ParametersViewType.ListView : ParametersViewType.TreeView,
         optionConfigGroup,
         settings,
-        filters,
+        parameterConverter,
     );
 
     return (
@@ -379,7 +400,6 @@ const ParametersTableView: React.FC<TProps> = (props) => {
                                                 isDefaultDefinition={definitionForManager?.isRecommended}
                                                 onChangePresetSettings={onChangePresetSettings}
                                                 selectedSettingDefaultValue={selectedSettingDefaultValue}
-                                                officialDefinition={!!definitionForManager?.isDefault}
                                                 handleUpdateProfileKey={handleUpdateProfileKey}
                                                 categoryKey={category}
                                                 definitionCategory={definitionForManager.category}
