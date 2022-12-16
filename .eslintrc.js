@@ -122,6 +122,7 @@ module.exports = {
         // plugins: ['react', '@typescript-eslint'],
         rules: {
             '@typescript-eslint/ban-ts-comment': 'off',
+            '@typescript-eslint/no-inferrable-types': 'off',
             // 'react/jsx-uses-react': 'off',
             // 'react/react-in-jsx-scope': 'off',
 

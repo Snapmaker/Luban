@@ -186,8 +186,8 @@ export class DefinitionLoader {
 
                     const isMesh = setting.settable_per_mesh || false;
                     const isExtruder = setting.settable_per_extruder || false;
-                    this.settings[key].settable_per_extruder = this.settings[key].settable_per_extruder ? this.settings[key].settable_per_extruder : isExtruder;
-                    this.settings[key].settable_per_mesh = this.settings[key].settable_per_mesh ? this.settings[key].settable_per_mesh : isMesh;
+                    this.settings[key].settable_per_extruder = this.settings[key].settable_per_extruder || isExtruder;
+                    this.settings[key].settable_per_mesh = this.settings[key].settable_per_mesh || isMesh;
 
                     if (mainCategory === 'material' && zIndex === 1) {
                         materialProfileLevel[smallCategory] = materialProfileLevel[smallCategory] || [];
@@ -248,8 +248,8 @@ export class DefinitionLoader {
                     if (definitionId === 'fdmprinter' || definitionId === 'fdmextruder') {
                         const isMesh = setting.settable_per_mesh || false;
                         const isExtruder = setting.settable_per_extruder || false;
-                        this.settings[key].settable_per_extruder = this.settings[key].settable_per_extruder ? this.settings[key].settable_per_extruder : isExtruder;
-                        this.settings[key].settable_per_mesh = this.settings[key].settable_per_mesh ? this.settings[key].settable_per_mesh : isMesh;
+                        this.settings[key].settable_per_extruder = this.settings[key].settable_per_extruder || isExtruder;
+                        this.settings[key].settable_per_mesh = this.settings[key].settable_per_mesh || isMesh;
                     }
 
                     if (definitionId === this.definitionId && !this.ownKeys.has(key)) {
