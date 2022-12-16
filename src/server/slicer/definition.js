@@ -242,6 +242,7 @@ export class DefinitionLoader {
                     this.settings[key] = this.settings[key] || {};
                     this.settings[key].from = definitionId;
                     this.settings[key].isLeave = (setting.children === undefined);
+
                     if (definitionId === 'fdmprinter' || definitionId === 'fdmextruder') {
                         const isMesh = setting.settable_per_mesh || false;
                         const isExtruder = setting.settable_per_extruder || false;
@@ -257,6 +258,10 @@ export class DefinitionLoader {
                         if (setting[field] !== undefined) {
                             this.settings[key][field] = setting[field];
                         }
+                    }
+
+                    if (definitionId === 'fdmextruder') {
+                        extruderProfileArr.add(key);
                     }
                 }
                 if (setting.children) {

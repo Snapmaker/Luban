@@ -84,13 +84,6 @@ class DefinitionManager {
         const definitionRes = await this.getDefinition('active', false);
         this.activeDefinition = definitionRes;
 
-        const parameterKeysResult = await api.profileDefinitions.getPresetParameterKeys();
-        this.extruderProfileArr = parameterKeysResult.body.extruderProfileArr;
-        this.materialProfileArr = parameterKeysResult.body.materialProfileArr;
-        this.qualityProfileArr = parameterKeysResult.body.qualityProfileArr;
-        this.printingProfileLevel = parameterKeysResult.body.printingProfileLevel;
-        this.materialProfileLevel = parameterKeysResult.body.materialProfileLevel;
-
         if (headType === HEAD_PRINTING) {
             res = await this.getDefinition('machine');
             this.machineDefinition = res;
@@ -149,6 +142,12 @@ class DefinitionManager {
             return {};
         }
 
+        const parameterKeysResult = await api.profileDefinitions.getPresetParameterKeys();
+        this.extruderProfileArr = parameterKeysResult.body.extruderProfileArr;
+        this.materialProfileArr = parameterKeysResult.body.materialProfileArr;
+        this.qualityProfileArr = parameterKeysResult.body.qualityProfileArr;
+        this.printingProfileLevel = parameterKeysResult.body.printingProfileLevel;
+        this.materialProfileLevel = parameterKeysResult.body.materialProfileLevel;
     }
 
     /**
@@ -651,6 +650,7 @@ class DefinitionManager {
 
         if (hasPrimeTower) {
             newExtruderDefinition.settings.machine_extruder_start_pos_abs.default_value = true;
+            newExtruderDefinition.settings.machine_extruder_end_pos_abs.default_value = true;
             MACHINE_EXTRUDER_X.forEach((keyItem) => {
                 newExtruderDefinition.settings[keyItem].default_value = primeTowerXDefinition;
             });

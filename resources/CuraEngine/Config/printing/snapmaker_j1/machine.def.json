@@ -139,7 +139,7 @@
         "machine_min_cool_heat_time_window": {
             "label": "Minimal Time Standby Temperature",
             "description": "The minimal time an extruder has to be inactive before the nozzle is cooled. Only when an extruder is not used for longer than this time will it be allowed to cool down to the standby temperature.",
-            "default_value": 50,
+            "default_value": 5,
             "unit": "s",
             "type": "float",
             "enabled": "machine_nozzle_temp_enabled",

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { includes } from 'lodash';
+import { includes, isNil } from 'lodash';
 import classNames from 'classnames';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -156,6 +156,43 @@ function PresetContent(
     const filters = getFilters(managerType); // Calculate once only when managerType changed
     const filterValues = [selectParamsType, selectQualityDetailType];
 
+    function parameterConverter(key) {
+        const settingItem = definitionForManager.settings[key];
+
+        // check visible
+        if (!isNil(settingItem.visible) && (!settingItem.visible || settingItem.visible === 'false')) {
+            return null;
+        }
+
+        // check filters
+        let bypassFilter = true;
+        const parameterFilters = filterValues.filter(f => f !== 'all');
+        for (const filter of parameterFilters) {
+            if (!settingItem.filter.includes(filter)) {
+                bypassFilter = false;
+                break;
+            }
+        }
+        if (!bypassFilter) {
+            return null;
+        }
+
+        const displayConfig = {
+            key,
+            value: settingItem.default_value,
+            disabled: false,
+        };
+
+        // if (settingItem.limit_to_extruder) {
+        //     const extruderNumber = getUsedExtruderNumber(settingItem.limit_to_extruder, helpersExtruderConfig);
+        //     const stackExtruderNumber = selectedStackId === LEFT_EXTRUDER ? '0' : '1';
+        //
+        //     displayConfig.disabled = (extruderNumber !== '-1' && extruderNumber !== stackExtruderNumber);
+        // }
+
+        return displayConfig;
+    }
+
     return (
         <div className={classNames(styles['config-value-box-wrapper'], 'margin-vertical-16 margin-horizontal-16 background-color-white border-radius-16')}>
             {/* Parameter filters */}
@@ -206,6 +243,7 @@ function PresetContent(
                             onChangeMaterialType={onChangeMaterialType}
                             filters={selectParamsType === 'custom' ? [] : filterValues.filter(f => f !== 'all')}
                             flatten={selectParamsType === 'custom'}
+                            parameterConverter={parameterConverter}
                         />
                     )
                 }
