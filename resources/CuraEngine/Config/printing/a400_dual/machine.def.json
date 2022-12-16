@@ -1,75 +1,36 @@
 {
     "name": "Machine",
-    "version": "4.2.0",
+    "version": "4.5.0",
+    "metadata": {
+        "machine_extruder_trains": {
+            "0": "extruder_0",
+            "1": "extruder_1"
+        }
+    },
     "settings": {
         "machine_name": {
             "default_value": "Snapmaker Artisan"
         },
         "machine_show_variants": {
-            "label": "Show Machine Variants",
-            "description": "Whether to show the different variants of this machine, which are described in separate json files.",
-            "default_value": false,
-            "type": "bool",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": false
         },
         "machine_start_gcode": {
-            "label": "Start G-code",
-            "description": "G-code commands to be executed at the very start - separated by \\n.",
-            "default_value": "G28 ;Home\nG1 Z15.0 F6000 ;Move the platform down 15mm\n;Prime the extruder\nG92 E0\nG1 F200 E3\nG92 E0",
-            "type": "str",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": "G28 ;Home\nG1 Z15.0 F6000 ;Move the platform down 15mm\n;Prime the extruder\nG92 E0\nG1 F200 E3\nG92 E0"
         },
         "machine_end_gcode": {
-            "label": "End G-code",
-            "description": "G-code commands to be executed at the very end - separated by \\n.",
-            "default_value": "M104 S0\nM140 S0\n;Retract the filament\nG92 E1\nG1 E-1 F300\nG28 X0 Y0\nM84",
-            "type": "str",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": "M104 S0\nM140 S0\n;Retract the filament\nG92 E1\nG1 E-1 F300\nG28 X0 Y0\nM84"
         },
         "material_guid": {
-            "label": "Material GUID",
-            "description": "GUID of the material. This is set automatically.",
-            "default_value": "",
-            "type": "str",
-            "enabled": false
+            "default_value": ""
         },
         "material_diameter": {
-            "label": "Diameter",
-            "description": "Adjusts the diameter of the filament used. Match this value with the diameter of the used filament.",
-            "unit": "mm",
-            "type": "float",
-            "default_value": 2.85,
-            "minimum_value": "0.0001",
-            "minimum_value_warning": "0.4",
-            "maximum_value_warning": "3.5",
-            "enabled": "machine_gcode_flavor != \"UltiGCode\"",
-            "settable_per_mesh": false,
-            "settable_per_extruder": true
+            "default_value": 1.75
         },
         "material_bed_temp_wait": {
-            "label": "Wait for Build Plate Heatup",
-            "description": "Whether to insert a command to wait until the build plate temperature is reached at the start.",
-            "default_value": true,
-            "type": "bool",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": true
         },
         "material_print_temp_wait": {
-            "label": "Wait for Nozzle Heatup",
-            "description": "Whether to wait until the nozzle temperature is reached at the start.",
-            "default_value": true,
-            "type": "bool",
-            "enabled": "machine_nozzle_temp_enabled",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": true
         },
         "material_print_temp_prepend": {
             "default_value": false
@@ -78,39 +39,13 @@
             "default_value": false
         },
         "machine_width": {
-            "label": "Machine Width",
-            "description": "The width (X-direction) of the printable area.",
-            "default_value": 100,
-            "type": "float",
-            "minimum_value": "0.001",
-            "maximum_value": "2000000",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": 100
         },
         "machine_depth": {
-            "label": "Machine Depth",
-            "description": "The depth (Y-direction) of the printable area.",
-            "default_value": 100,
-            "type": "float",
-            "minimum_value": "0.001",
-            "maximum_value": "2000000",
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": 100
         },
         "machine_shape": {
-            "label": "Build Plate Shape",
-            "description": "The shape of the build plate without taking unprintable areas into account.",
-            "default_value": "rectangular",
-            "type": "enum",
-            "options": {
-                "rectangular": "Rectangular",
-                "elliptic": "Elliptic"
-            },
-            "settable_per_mesh": false,
-            "settable_per_extruder": false,
-            "settable_per_meshgroup": false
+            "default_value": "rectangular"
         },
         "machine_buildplate_type": {
             "label": "Build Plate Material",
