@@ -14,7 +14,7 @@ export type Metadata = {
 export class SliceResult {
     public filamentLength?: number;
     public filamentWeight?: number;
-    public printTime?: number;
+    public printTime: number = 3600;
 
     public gcodeFilename: string;
     public gcodeFileLength: number;

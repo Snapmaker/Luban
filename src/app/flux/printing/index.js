@@ -823,6 +823,8 @@ export const actions = {
                     gcodeHeader,
                 } = args;
                 const { progressStatesManager } = getState().printing;
+
+                // FIXME: why gcodeFile hard-coded?
                 dispatch(
                     actions.updateState({
                         gcodeFile: {
