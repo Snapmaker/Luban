@@ -1694,7 +1694,7 @@
     "key-Progress/3DP-Simplify model...{{prgress}}%": "Simplifying model...{{prgress}}%",
     "key-Progress/3DP-SingleLayer": "Single-layer View",
     "key-Progress/3DP-Slice Failed": "Slice Failed",
-    "key-Progress/3DP-Slice Failed reason": "Slicing failed because the model is too small",
+    "key-Progress/3DP-Slice Failed reason": "Possible reasons: 1. The slicing engine does not support your system, please check that your system is supported; 2. Abnormal parameter settings.",
     "key-Progress/Laser-Failed to load model.": "Failed to load model",
     "key-Progress/Laser-Loaded model successfully.": "Loaded model successfully.",
     "key-Progress/Laser-Loading model...": "Loading model...",
