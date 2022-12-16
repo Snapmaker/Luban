@@ -84,13 +84,6 @@ class DefinitionManager {
         const definitionRes = await this.getDefinition('active', false);
         this.activeDefinition = definitionRes;
 
-        const parameterKeysResult = await api.profileDefinitions.getPresetParameterKeys();
-        this.extruderProfileArr = parameterKeysResult.body.extruderProfileArr;
-        this.materialProfileArr = parameterKeysResult.body.materialProfileArr;
-        this.qualityProfileArr = parameterKeysResult.body.qualityProfileArr;
-        this.printingProfileLevel = parameterKeysResult.body.printingProfileLevel;
-        this.materialProfileLevel = parameterKeysResult.body.materialProfileLevel;
-
         if (headType === HEAD_PRINTING) {
             res = await this.getDefinition('machine');
             this.machineDefinition = res;
@@ -149,6 +142,12 @@ class DefinitionManager {
             return {};
         }
 
+        const parameterKeysResult = await api.profileDefinitions.getPresetParameterKeys();
+        this.extruderProfileArr = parameterKeysResult.body.extruderProfileArr;
+        this.materialProfileArr = parameterKeysResult.body.materialProfileArr;
+        this.qualityProfileArr = parameterKeysResult.body.qualityProfileArr;
+        this.printingProfileLevel = parameterKeysResult.body.printingProfileLevel;
+        this.materialProfileLevel = parameterKeysResult.body.materialProfileLevel;
     }
 
     /**
