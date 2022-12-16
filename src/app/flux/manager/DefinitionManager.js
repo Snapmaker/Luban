@@ -633,16 +633,6 @@ class DefinitionManager {
             ...extruderDefinition,
         };
 
-        // Apply material preset
-        this.materialProfileArr.forEach((key) => {
-            const setting = materialDefinition.settings[key];
-            if (setting) {
-                newExtruderDefinition.settings[key] = {
-                    default_value: setting.default_value,
-                };
-            }
-        });
-
         // Apply quality preset
         const newQualityDefinition = {
             settings: cloneDeep(activeQualityDefinition.settings),
@@ -660,6 +650,17 @@ class DefinitionManager {
             }
         });
 
+        // Apply material preset
+        this.materialProfileArr.forEach((key) => {
+            const setting = materialDefinition.settings[key];
+            if (setting) {
+                newExtruderDefinition.settings[key] = {
+                    default_value: setting.default_value,
+                };
+            }
+        });
+
+        // Re-write prime tower (?)
         if (hasPrimeTower) {
             newExtruderDefinition.settings.machine_extruder_start_pos_abs.default_value = true;
             newExtruderDefinition.settings.machine_extruder_end_pos_abs.default_value = true;

@@ -214,17 +214,19 @@ export class DefinitionLoader {
                         }
                     }
                     if (mainCategory === 'quality') {
-                        if (setting.settable_per_extruder) {
-                            extruderProfileArr.add(key);
-                        }
-                        // if (setting.visible !== 'false') { // ?
+                        // if (setting.settable_per_extruder) {
+                        //     extruderProfileArr.add(key);
+                        // }
                         qualityProfileArr.add(key);
-                        //}
                         allSettingNameWithType[mainCategory].add(key);
                     }
                     if (mainCategory === 'material') {
                         materialProfileArr.add(key);
                         allSettingNameWithType[mainCategory].add(key);
+                    }
+                    // extruder parameters could come from both quality & material main categories
+                    if (setting.settable_per_extruder) {
+                        extruderProfileArr.add(key);
                     }
                     if (isUndefined(this.settings[key].zIndex)) {
                         this.settings[key].zIndex = zIndex;
