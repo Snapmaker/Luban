@@ -54,7 +54,7 @@
             "default_value": 0
         },
         "machine_extruder_cooling_fan_number": {
-            "default_value": 0
+            "default_value": 1
         },
         "extruder_prime_pos_x": {
             "default_value": 0

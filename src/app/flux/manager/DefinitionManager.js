@@ -650,6 +650,7 @@ class DefinitionManager {
 
         if (hasPrimeTower) {
             newExtruderDefinition.settings.machine_extruder_start_pos_abs.default_value = true;
+            newExtruderDefinition.settings.machine_extruder_end_pos_abs.default_value = true;
             MACHINE_EXTRUDER_X.forEach((keyItem) => {
                 newExtruderDefinition.settings[keyItem].default_value = primeTowerXDefinition;
             });
