@@ -1,15 +1,14 @@
 {
-    "version": "4.1.1",
-    "name": "Extruder 1",
-    "category": "",
+    "version": "4.5.0",
+    "name": "Extruder 2",
     "inherits": "fdmextruder",
     "metadata": {
-        "machine": "Snapmaker J1",
-        "position": "0"
+        "machine": "Snapmaker A350",
+        "position": "1"
     },
     "overrides": {
         "extruder_nr": {
-            "default_value": 0
+            "default_value": 1
         },
         "machine_nozzle_size": {
             "default_value": 0.4
@@ -27,7 +26,7 @@
             "default_value": 0
         },
         "machine_extruder_start_code": {
-            "default_value": "M2000 S200 V250 A6000"
+            "default_value": ""
         },
         "machine_extruder_start_pos_abs": {
             "default_value": false
@@ -54,7 +53,7 @@
             "default_value": 0
         },
         "machine_extruder_cooling_fan_number": {
-            "default_value": 0
+            "default_value": 1
         },
         "extruder_prime_pos_x": {
             "default_value": 0

@@ -186,8 +186,8 @@ export class DefinitionLoader {
 
                     const isMesh = setting.settable_per_mesh || false;
                     const isExtruder = setting.settable_per_extruder || false;
-                    this.settings[key].settable_per_extruder = this.settings[key].settable_per_extruder ? this.settings[key].settable_per_extruder : isExtruder;
-                    this.settings[key].settable_per_mesh = this.settings[key].settable_per_mesh ? this.settings[key].settable_per_mesh : isMesh;
+                    this.settings[key].settable_per_extruder = this.settings[key].settable_per_extruder || isExtruder;
+                    this.settings[key].settable_per_mesh = this.settings[key].settable_per_mesh || isMesh;
 
                     if (mainCategory === 'material' && zIndex === 1) {
                         materialProfileLevel[smallCategory] = materialProfileLevel[smallCategory] || [];
@@ -214,17 +214,19 @@ export class DefinitionLoader {
                         }
                     }
                     if (mainCategory === 'quality') {
-                        if (setting.settable_per_extruder) {
-                            extruderProfileArr.add(key);
-                        }
-                        // if (setting.visible !== 'false') { // ?
+                        // if (setting.settable_per_extruder) {
+                        //     extruderProfileArr.add(key);
+                        // }
                         qualityProfileArr.add(key);
-                        //}
                         allSettingNameWithType[mainCategory].add(key);
                     }
                     if (mainCategory === 'material') {
                         materialProfileArr.add(key);
                         allSettingNameWithType[mainCategory].add(key);
+                    }
+                    // extruder parameters could come from both quality & material main categories
+                    if (setting.settable_per_extruder) {
+                        extruderProfileArr.add(key);
                     }
                     if (isUndefined(this.settings[key].zIndex)) {
                         this.settings[key].zIndex = zIndex;
@@ -246,8 +248,8 @@ export class DefinitionLoader {
                     if (definitionId === 'fdmprinter' || definitionId === 'fdmextruder') {
                         const isMesh = setting.settable_per_mesh || false;
                         const isExtruder = setting.settable_per_extruder || false;
-                        this.settings[key].settable_per_extruder = this.settings[key].settable_per_extruder ? this.settings[key].settable_per_extruder : isExtruder;
-                        this.settings[key].settable_per_mesh = this.settings[key].settable_per_mesh ? this.settings[key].settable_per_mesh : isMesh;
+                        this.settings[key].settable_per_extruder = this.settings[key].settable_per_extruder || isExtruder;
+                        this.settings[key].settable_per_mesh = this.settings[key].settable_per_mesh || isMesh;
                     }
 
                     if (definitionId === this.definitionId && !this.ownKeys.has(key)) {

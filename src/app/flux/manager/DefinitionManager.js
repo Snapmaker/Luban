@@ -122,22 +122,34 @@ class DefinitionManager {
                 machineExtruders = this.machineDefinition.metadata.machine_extruder_trains;
             }
 
-            if (machineExtruders) {
-                res = await this.getDefinition(machineExtruders['0'], true);
+            const extruderCount = this.machineDefinition.settings.machine_extruder_count?.default_value || 1;
+
+            if (extruderCount >= 1) {
+                if (machineExtruders) {
+                    res = await this.getDefinition(machineExtruders['0'], true);
+                } else {
+                    res = await this.getDefinition('snapmaker_extruder_0', false);
+                }
+                this.extruderLDefinition = res;
             } else {
-                res = await this.getDefinition('snapmaker_extruder_0', false);
+                this.extruderLDefinition = null;
             }
-            this.extruderLDefinition = res;
+
+            if (extruderCount >= 2) {
+                if (machineExtruders) {
+                    res = await this.getDefinition(machineExtruders['1'], true);
+                } else {
+                    res = await this.getDefinition('snapmaker_extruder_1', false);
+                }
+                this.extruderRDefinition = res;
+            } else {
+                this.extruderRDefinition = null;
+            }
+
+            // TODO: Is this needed?
             if (this.extruderLDefinition.settings.machine_nozzle_size) {
                 this.extruderLDefinition.settings.machine_nozzle_size.default_value = this.machineDefinition.settings.machine_nozzle_size.default_value;
             }
-
-            if (machineExtruders) {
-                res = await this.getDefinition(machineExtruders['1'], true);
-            } else {
-                res = await this.getDefinition('snapmaker_extruder_1', false);
-            }
-            this.extruderRDefinition = res;
         } else {
             return {};
         }
@@ -621,16 +633,6 @@ class DefinitionManager {
             ...extruderDefinition,
         };
 
-        // Apply material preset
-        this.materialProfileArr.forEach((key) => {
-            const setting = materialDefinition.settings[key];
-            if (setting) {
-                newExtruderDefinition.settings[key] = {
-                    default_value: setting.default_value,
-                };
-            }
-        });
-
         // Apply quality preset
         const newQualityDefinition = {
             settings: cloneDeep(activeQualityDefinition.settings),
@@ -648,6 +650,17 @@ class DefinitionManager {
             }
         });
 
+        // Apply material preset
+        this.materialProfileArr.forEach((key) => {
+            const setting = materialDefinition.settings[key];
+            if (setting) {
+                newExtruderDefinition.settings[key] = {
+                    default_value: setting.default_value,
+                };
+            }
+        });
+
+        // Re-write prime tower (?)
         if (hasPrimeTower) {
             newExtruderDefinition.settings.machine_extruder_start_pos_abs.default_value = true;
             newExtruderDefinition.settings.machine_extruder_end_pos_abs.default_value = true;

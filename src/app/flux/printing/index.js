@@ -474,8 +474,10 @@ export const actions = {
         const activeMaterialType = dispatch(actions.getActiveMaterialType());
         const activeMaterialTypeRight = dispatch(actions.getActiveMaterialType(undefined, RIGHT_EXTRUDER));
 
-        const extruderLDefinition = await definitionManager.getDefinition('snapmaker_extruder_0');
-        const extruderRDefinition = await definitionManager.getDefinition('snapmaker_extruder_1');
+        // const extruderLDefinition = await definitionManager.getDefinition('snapmaker_extruder_0');
+        // const extruderRDefinition = await definitionManager.getDefinition('snapmaker_extruder_1');
+        const extruderLDefinition = definitionManager.extruderLDefinition;
+        const extruderRDefinition = definitionManager.extruderRDefinition;
 
         allMaterialDefinitions.forEach((eachDefinition) => {
             const paramModel = new PresetDefinitionModel(eachDefinition);
@@ -691,8 +693,8 @@ export const actions = {
             helpersExtruderConfig,
         } = getState().printing;
 
-        const extruderLDefinitionSettings = extruderLDefinition.settings;
-        const extruderRDefinitionSettings = extruderRDefinition.settings;
+        const extruderLDefinitionSettings = extruderLDefinition?.settings;
+        const extruderRDefinitionSettings = extruderRDefinition?.settings;
 
         const activeQualityDefinition = find(qualityDefinitions, {
             definitionId: activePresetIds[LEFT_EXTRUDER]
@@ -821,6 +823,8 @@ export const actions = {
                     gcodeHeader,
                 } = args;
                 const { progressStatesManager } = getState().printing;
+
+                // FIXME: why gcodeFile hard-coded?
                 dispatch(
                     actions.updateState({
                         gcodeFile: {
@@ -2299,40 +2303,45 @@ export const actions = {
             globalQualityPreset.settings.prime_tower_size.default_value = primeTowerWidth;
         }
 
-        const newExtruderLDefinition = definitionManager.finalizeExtruderDefinition(
-            {
-                activeQualityDefinition: qualityPresets[LEFT_EXTRUDER],
-                extruderDefinition: extruderLDefinition,
-                materialDefinition: materialDefinitions[indexL],
-                hasPrimeTower,
-                primeTowerXDefinition,
-                primeTowerYDefinition
-            }
-        );
+        if (extruderLDefinition) {
+            const newExtruderLDefinition = definitionManager.finalizeExtruderDefinition(
+                {
+                    activeQualityDefinition: qualityPresets[LEFT_EXTRUDER],
+                    extruderDefinition: extruderLDefinition,
+                    materialDefinition: materialDefinitions[indexL],
+                    hasPrimeTower,
+                    primeTowerXDefinition,
+                    primeTowerYDefinition
+                }
+            );
+            console.log('new L extruder =', newExtruderLDefinition);
+            definitionManager.updateDefinition({
+                ...newExtruderLDefinition,
+                definitionId: 'snapmaker_extruder_0'
+            });
+        }
 
-        const newExtruderRDefinition = definitionManager.finalizeExtruderDefinition(
-            {
-                activeQualityDefinition: qualityPresets[RIGHT_EXTRUDER],
-                extruderDefinition: extruderRDefinition,
-                materialDefinition: materialDefinitions[indexR],
-                hasPrimeTower,
-                primeTowerXDefinition,
-                primeTowerYDefinition
-            }
-        );
+        if (extruderRDefinition) {
+            const newExtruderRDefinition = definitionManager.finalizeExtruderDefinition(
+                {
+                    activeQualityDefinition: qualityPresets[RIGHT_EXTRUDER],
+                    extruderDefinition: extruderRDefinition,
+                    materialDefinition: materialDefinitions[indexR],
+                    hasPrimeTower,
+                    primeTowerXDefinition,
+                    primeTowerYDefinition
+                }
+            );
+            definitionManager.updateDefinition({
+                ...newExtruderRDefinition,
+                definitionId: 'snapmaker_extruder_1'
+            });
+        }
 
         definitionManager.calculateDependencies(
             globalQualityPreset.settings,
             modelGroup && modelGroup.hasSupportModel()
         );
-        definitionManager.updateDefinition({
-            ...newExtruderLDefinition,
-            definitionId: 'snapmaker_extruder_0'
-        });
-        definitionManager.updateDefinition({
-            ...newExtruderRDefinition,
-            definitionId: 'snapmaker_extruder_1'
-        });
 
         modelGroup.unselectAllModels();
         if (isGuideTours) {
@@ -2419,8 +2428,8 @@ export const actions = {
             gcodeEntity: {
                 extruderLlineWidth0: extruderLDefinition.settings.wall_line_width_0.default_value,
                 extruderLlineWidth: extruderLDefinition.settings.wall_line_width_x.default_value,
-                extruderRlineWidth0: extruderRDefinition.settings.wall_line_width_0.default_value,
-                extruderRlineWidth: extruderRDefinition.settings.wall_line_width_x.default_value,
+                extruderRlineWidth0: extruderRDefinition?.settings.wall_line_width_0.default_value || 0.4,
+                extruderRlineWidth: extruderRDefinition?.settings.wall_line_width_x.default_value || 0.4,
                 layerHeight0: finalDefinition.settings.layer_height_0.default_value,
                 layerHeight: finalDefinition.settings.layer_height.default_value,
             }

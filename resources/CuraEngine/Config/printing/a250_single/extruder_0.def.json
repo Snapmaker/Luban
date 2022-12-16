@@ -1,10 +1,9 @@
 {
-    "version": "4.1.1",
+    "version": "4.5.0",
     "name": "Extruder 1",
-    "category": "",
     "inherits": "fdmextruder",
     "metadata": {
-        "machine": "Snapmaker J1",
+        "machine": "Snapmaker A250",
         "position": "0"
     },
     "overrides": {
@@ -27,7 +26,7 @@
             "default_value": 0
         },
         "machine_extruder_start_code": {
-            "default_value": "M2000 S200 V250 A6000"
+            "default_value": ""
         },
         "machine_extruder_start_pos_abs": {
             "default_value": false

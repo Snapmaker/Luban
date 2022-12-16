@@ -1680,7 +1680,7 @@
     "key-Progress/3DP-Simplify model...{{prgress}}%": "模型简化中...{{progress}}%",
     "key-Progress/3DP-SingleLayer": "单层视图",
     "key-Progress/3DP-Slice Failed": "切片失败",
-    "key-Progress/3DP-Slice Failed reason": "模型太小, 切片失败",
+    "key-Progress/3DP-Slice Failed reason": "可能原因：1. 切片引擎不支持您的操作系统，请检查软件的推荐系统配置; 2. 异常的打印参数配置，请重置参数",
     "key-Progress/Laser-Failed to load model.": "导入模型失败",
     "key-Progress/Laser-Loaded model successfully.": "加载模型成功",
     "key-Progress/Laser-Loading model...": "加载模型...",

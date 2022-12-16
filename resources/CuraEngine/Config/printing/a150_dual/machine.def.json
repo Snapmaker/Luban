@@ -1,6 +1,12 @@
 {
     "name": "Machine",
-    "version": "4.2.0",
+    "version": "4.5.0",
+    "metadata": {
+        "machine_extruder_trains": {
+            "0": "extruder_0",
+            "1": "extruder_1"
+        }
+    },
     "settings": {
         "machine_name": {
             "label": "Machine Type",
@@ -50,7 +56,7 @@
             "description": "Adjusts the diameter of the filament used. Match this value with the diameter of the used filament.",
             "unit": "mm",
             "type": "float",
-            "default_value": 2.85,
+            "default_value": 1.75,
             "minimum_value": "0.0001",
             "minimum_value_warning": "0.4",
             "maximum_value_warning": "3.5",
