@@ -1,6 +1,6 @@
 {
     "version": "4.5.0-beta.7",
-    "name": "Reliable Support",
+    "name": "0 Gap Support",
     "category": "Custom",
     "i18nName": "",
     "i18nCategory": "",
@@ -90,7 +90,7 @@
             "default_value": 60
         },
         "speed_prime_tower": {
-            "default_value": 60
+            "default_value": 30
         },
         "speed_travel": {
             "default_value": 72
@@ -381,16 +381,16 @@
             "default_value": 45
         },
         "support_distance": {
-            "default_value": "reliable"
+            "default_value": "0gap"
         },
         "support_z_distance": {
-            "default_value": 0.16
+            "default_value": 0
         },
         "support_top_distance": {
-            "default_value": 0.16
+            "default_value": 0
         },
         "support_bottom_distance": {
-            "default_value": 0.16
+            "default_value": 0
         },
         "support_xy_distance": {
             "default_value": 0.7

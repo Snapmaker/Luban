@@ -631,6 +631,7 @@ class DefinitionManager {
 
         const newExtruderDefinition = {
             ...extruderDefinition,
+            settings: cloneDeep(extruderDefinition.settings),
         };
 
         // Apply quality preset

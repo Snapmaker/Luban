@@ -2314,7 +2314,6 @@ export const actions = {
                     primeTowerYDefinition
                 }
             );
-            console.log('new L extruder =', newExtruderLDefinition);
             definitionManager.updateDefinition({
                 ...newExtruderLDefinition,
                 definitionId: 'snapmaker_extruder_0'

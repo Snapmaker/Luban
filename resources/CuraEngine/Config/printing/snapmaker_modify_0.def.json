@@ -2676,7 +2676,7 @@
                                     "unit": "mm/s",
                                     "visible": "prime_tower_enable",
                                     "default_value": 60,
-                                    "calcu_value": "speed_print",
+                                    "calcu_value": "speed_print / 2",
                                     "minimum_value": "0.1",
                                     "maximum_value": "Math.sqrt(Math.pow(machine_max_feedrate_x, 2) + Math.pow(machine_max_feedrate_y, 2))",
                                     "maximum_value_warning": "150",
@@ -2880,7 +2880,7 @@
                                     "minimum_value_warning": "100",
                                     "maximum_value_warning": "10000",
                                     "default_value": 3000,
-                                    "calcu_value": "acceleration_print",
+                                    "calcu_value": "acceleration_print / 2",
                                     "visible": "resolveOrValue(prime_tower_enable) && resolveOrValue(acceleration_enabled)",
                                     "settable_per_mesh": false,
                                     "min": 1,
@@ -4389,7 +4389,8 @@
                             "type": "enum",
                             "options": {
                                 "removable": "Removable",
-                                "reliable": "Reliable"
+                                "reliable": "Reliable",
+                                "0_gap": "0 Gap"
                             },
                             "default_value": "removable",
                             "visible": "support_enable || support_meshes_present",
@@ -4408,7 +4409,7 @@
                                     "default_value": 0.1,
                                     "limit_to_extruder": "support_interface_extruder_nr if support_interface_enable else support_infill_extruder_nr",
                                     "visible": "support_enable || support_meshes_present",
-                                    "calcu_value": "support_distance ==='removable' ? layer_height*2 : support_distance ==='reliable' ? layer_height : layer_height",
+                                    "calcu_value": "support_distance ==='removable' ? layer_height * 2 : support_distance ==='0_gap' ? 0 : layer_height",
                                     "settable_per_mesh": false,
                                     "filter": [
                                         "advanced"
@@ -5155,7 +5156,6 @@
                             "description": "After printing the prime tower with one nozzle, wipe the oozed material from the other nozzle off on the prime tower.",
                             "type": "bool",
                             "visible": "dual_helper_type === 'prime_tower'",
-                            "calcu_value": "dual_helper_type === 'prime_tower'",
                             "default_value": false,
                             "settable_per_mesh": false,
                             "settable_per_extruder": false,
