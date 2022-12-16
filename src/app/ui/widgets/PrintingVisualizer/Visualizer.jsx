@@ -528,7 +528,7 @@ class Visualizer extends PureComponent {
     };
 
     checkoutModelsLocation = () => {
-        this.canvas.current.checkoutModelsLocation();
+        // this.canvas.current.checkoutModelsLocation();
     };
 
     render() {
