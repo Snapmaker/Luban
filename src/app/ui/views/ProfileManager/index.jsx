@@ -9,6 +9,7 @@ import {
     PRINTING_MANAGER_TYPE_MATERIAL,
     PRINTING_MANAGER_TYPE_QUALITY
 } from '../../../constants';
+import log from '../../../lib/log';
 import useSetState from '../../../lib/hooks/set-state';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
@@ -91,7 +92,7 @@ function creatCateArray(optionList, managerType) {
 export function useGetDefinitions(allDefinitions, activeDefinitionID, getDefaultDefinition, managerType) {
     const [definitionState, setDefinitionState] = useSetState({
         activeDefinitionID,
-        definitionForManager: allDefinitions.find(d => d.definitionId === activeDefinitionID) || allDefinitions[0],
+        definitionForManager: allDefinitions.find(d => d.definitionId === activeDefinitionID) || null,
         selectedSettingDefaultValue: getDefaultDefinition(activeDefinitionID),
         definitionOptions: [],
         selectedName: '',
@@ -127,7 +128,12 @@ export function useGetDefinitions(allDefinitions, activeDefinitionID, getDefault
                 definitionForManager = prev.definitionForManager;
                 selectedSettingDefaultValue = prev.selectedSettingDefaultValue;
             } else {
-                definitionForManager = allDefinitions.find(d => d.definitionId === (definitionState.definitionForManager?.definitionId || activeDefinitionID)) || allDefinitions[0];
+                definitionForManager = allDefinitions.find(d => d.definitionId === (definitionState.definitionForManager?.definitionId || activeDefinitionID));
+                if (!definitionForManager) {
+                    definitionForManager = allDefinitions[0];
+                    log.debug('Preset does not exist. Select first preset instead:', definitionForManager.definitionId);
+                    console.log('Preset does not exist. Select first preset instead:', definitionForManager.definitionId);
+                }
                 selectedSettingDefaultValue = getDefaultDefinition(definitionForManager?.definitionId);
             }
 
@@ -139,7 +145,6 @@ export function useGetDefinitions(allDefinitions, activeDefinitionID, getDefault
             };
         });
     }, [allDefinitions, activeDefinitionID]);
-
 
     return [definitionState, setDefinitionState];
 }
