@@ -92,12 +92,6 @@ export function pickAvailablePresetModels(presetModels, materialPreset) {
  * }
  */
 function getPresetOptions(presetModels, materialPreset) {
-    if (!materialPreset) {
-        return {};
-    }
-
-    const availablePresetModels = pickAvailablePresetModels(presetModels, materialPreset);
-
     const presetOptions = {
         [PRESET_CATEGORY_DEFAULT]: {
             label: PRESET_CATEGORY_DEFAULT,
@@ -105,6 +99,12 @@ function getPresetOptions(presetModels, materialPreset) {
             options: [],
         }
     };
+
+    if (!materialPreset) {
+        return presetOptions;
+    }
+
+    const availablePresetModels = pickAvailablePresetModels(presetModels, materialPreset);
 
     for (const presetModel of availablePresetModels) {
         const {

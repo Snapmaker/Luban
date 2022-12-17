@@ -467,61 +467,66 @@ const ConfigurationView: React.FC<{}> = () => {
                         <div className={classNames(styles['preset-recommended'], 'sm-flex', 'margin-vertical-16', 'align-c', 'justify-space-between')}>
                             {
                                 DEFAULT_PRESET_IDS.map((presetId) => {
-                                    const optionItem = find(presetOptionsObj[selectedPresetCategory].options, { definitionId: presetId });
-                                    if (optionItem) {
-                                        const isSelected = selectedPresetModel && selectedPresetModel.definitionId === optionItem.definitionId;
-                                        // selectedPresetModel && selectedPresetModel.typeOfPrinting === optionItem.typeOfPrinting ?
-
-                                        return (
-                                            <div
-                                                key={optionItem.typeOfPrinting}
-                                                className={classNames({
-                                                    [styles.selected]: isSelected,
-                                                    [styles.unselected]: !isSelected,
-                                                })}
-                                            >
-                                                <Tooltip
-                                                    title={getPresetToolTip(optionItem?.definitionId, optionItem.name)}
-                                                    zIndex={10}
-                                                    placement="left"
-                                                >
-                                                    <Anchor onClick={() => actions.onChangePresetById(optionItem.definitionId)}>
-                                                        <div
-                                                            className={classNames(
-                                                                styles['preset-recommended__icon'],
-                                                                styles[`preset-recommended__icon-${optionItem.typeOfPrinting}`],
-                                                            )}
-                                                        >
-                                                            {
-                                                                isSelected && (
-                                                                    <Dropdown
-                                                                        placement="bottomRight"
-                                                                        style={{ maxWidth: '160px' }}
-                                                                        overlay={renderPresetMenu(selectedPresetCategory)}
-                                                                        trigger={['click']}
-                                                                    >
-                                                                        <SvgIcon
-                                                                            className={classNames(
-                                                                                styles['preset-hover'],
-                                                                            )}
-                                                                            type={['static']}
-                                                                            size={24}
-                                                                            name="More"
-                                                                        />
-                                                                    </Dropdown>
-                                                                )
-                                                            }
-                                                        </div>
-                                                    </Anchor>
-                                                </Tooltip>
-                                                <span className="max-width-76 text-overflow-ellipsis-line-2 height-32-half-line margin-top-4 margin-bottom-8">
-                                                    {optionItem.name}
-                                                </span>
-                                            </div>
-                                        );
-                                    } else {
+                                    const options = presetOptionsObj[selectedPresetCategory].options;
+                                    if (!options) {
                                         return null;
                                     }
+
+                                    const optionItem = find(options, { definitionId: presetId });
+                                    if (!optionItem) {
+                                        return null;
+                                    }
+
+                                    const isSelected = selectedPresetModel && selectedPresetModel.definitionId === optionItem.definitionId;
+                                    // selectedPresetModel && selectedPresetModel.typeOfPrinting === optionItem.typeOfPrinting ?
+
+                                    return (
+                                        <div
+                                            key={optionItem.typeOfPrinting}
+                                            className={classNames({
+                                                [styles.selected]: isSelected,
+                                                [styles.unselected]: !isSelected,
+                                            })}
+                                        >
+                                            <Tooltip
+                                                title={getPresetToolTip(optionItem?.definitionId, optionItem.name)}
+                                                zIndex={10}
+                                                placement="left"
+                                            >
+                                                <Anchor onClick={() => actions.onChangePresetById(optionItem.definitionId)}>
+                                                    <div
+                                                        className={classNames(
+                                                            styles['preset-recommended__icon'],
+                                                            styles[`preset-recommended__icon-${optionItem.typeOfPrinting}`],
+                                                        )}
+                                                    >
+                                                        {
+                                                            isSelected && (
+                                                                <Dropdown
+                                                                    placement="bottomRight"
+                                                                    style={{ maxWidth: '160px' }}
+                                                                    overlay={renderPresetMenu(selectedPresetCategory)}
+                                                                    trigger={['click']}
+                                                                >
+                                                                    <SvgIcon
+                                                                        className={classNames(
+                                                                            styles['preset-hover'],
+                                                                        )}
+                                                                        type={['static']}
+                                                                        size={24}
+                                                                        name="More"
+                                                                    />
+                                                                </Dropdown>
+                                                            )
+                                                        }
+                                                    </div>
+                                                </Anchor>
+                                            </Tooltip>
+                                            <span className="max-width-76 text-overflow-ellipsis-line-2 height-32-half-line margin-top-4 margin-bottom-8">
+                                                {optionItem.name}
+                                            </span>
+                                        </div>
+                                    );
                                 })
                             }
                         </div>
