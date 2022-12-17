@@ -214,14 +214,12 @@ export class DefinitionLoader {
                         }
                     }
                     if (mainCategory === 'quality') {
-                        // if (setting.settable_per_extruder) {
-                        //     extruderProfileArr.add(key);
-                        // }
                         qualityProfileArr.add(key);
                         allSettingNameWithType[mainCategory].add(key);
                     }
                     if (mainCategory === 'material') {
                         materialProfileArr.add(key);
+                        extruderProfileArr.add(key);
                         allSettingNameWithType[mainCategory].add(key);
                     }
                     // extruder parameters could come from both quality & material main categories

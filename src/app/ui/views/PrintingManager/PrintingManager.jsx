@@ -148,6 +148,16 @@ function PrintingManager() {
             }
         },
 
+        onUpdatePreset: (presetModel, changedSettingArray) => {
+            return dispatch(
+                printingActions.updateCurrentDefinition({
+                    managerDisplayType,
+                    definitionModel: presetModel,
+                    changedSettingArray,
+                })
+            );
+        },
+
         updateDefinitionName: async (definition, selectedName) => {
             try {
                 await dispatch(

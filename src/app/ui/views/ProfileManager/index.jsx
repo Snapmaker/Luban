@@ -9,6 +9,7 @@ import {
     PRINTING_MANAGER_TYPE_MATERIAL,
     PRINTING_MANAGER_TYPE_QUALITY
 } from '../../../constants';
+import log from '../../../lib/log';
 import useSetState from '../../../lib/hooks/set-state';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
@@ -91,7 +92,7 @@ function creatCateArray(optionList, managerType) {
 export function useGetDefinitions(allDefinitions, activeDefinitionID, getDefaultDefinition, managerType) {
     const [definitionState, setDefinitionState] = useSetState({
         activeDefinitionID,
-        definitionForManager: allDefinitions.find(d => d.definitionId === activeDefinitionID) || allDefinitions[0],
+        definitionForManager: allDefinitions.find(d => d.definitionId === activeDefinitionID) || null,
         selectedSettingDefaultValue: getDefaultDefinition(activeDefinitionID),
         definitionOptions: [],
         selectedName: '',
@@ -127,7 +128,12 @@ export function useGetDefinitions(allDefinitions, activeDefinitionID, getDefault
                 definitionForManager = prev.definitionForManager;
                 selectedSettingDefaultValue = prev.selectedSettingDefaultValue;
             } else {
-                definitionForManager = allDefinitions.find(d => d.definitionId === (definitionState.definitionForManager?.definitionId || activeDefinitionID)) || allDefinitions[0];
+                definitionForManager = allDefinitions.find(d => d.definitionId === (definitionState.definitionForManager?.definitionId || activeDefinitionID));
+                if (!definitionForManager) {
+                    definitionForManager = allDefinitions[0];
+                    log.debug('Preset does not exist. Select first preset instead:', definitionForManager.definitionId);
+                    console.log('Preset does not exist. Select first preset instead:', definitionForManager.definitionId);
+                }
                 selectedSettingDefaultValue = getDefaultDefinition(definitionForManager?.definitionId);
             }
 
@@ -139,7 +145,6 @@ export function useGetDefinitions(allDefinitions, activeDefinitionID, getDefault
             };
         });
     }, [allDefinitions, activeDefinitionID]);
-
 
     return [definitionState, setDefinitionState];
 }
@@ -491,24 +496,17 @@ function ProfileManager({
             if (Object.keys(newDefinitionForManager.settings).length === 0) {
                 newDefinitionForManager.settings = cloneDeep(allDefinitions[0].settings);
             }
-            newDefinitionForManager.settings = {
-                ...newDefinitionForManager.settings,
-                color: {
-                    default_value: data.color
-                },
-                material_print_temperature: {
-                    default_value: data.printingTemperature
-                },
-                cool_fan_speed: {
-                    default_value: data.openFan ? 100 : 0
-                },
-                material_bed_temperature: {
-                    default_value: data.buildPlateTemperature
-                }
-            };
+
             setShowCreateMaterialModal(false);
             const newDefinition = await outsideActions.onCreateManagerDefinition(newDefinitionForManager, data.name, false, true);
             actions.onSelectDefinitionById(newDefinition.definitionId, newDefinition.name);
+
+            outsideActions.onUpdatePreset(newDefinition, [
+                ['color', data.color],
+                ['material_print_temperature', data.printingTemperature],
+                ['material_bed_temperature', data.buildPlateTemperature],
+                ['cool_fan_speed', data.openFan ? 100 : 0],
+            ]);
         }
     };
 

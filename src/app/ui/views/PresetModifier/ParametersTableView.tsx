@@ -10,6 +10,7 @@ import SvgIcon from '../../components/SvgIcon';
 import api from '../../../api';
 import styles from './styles.styl';
 import ParameterValueItem from './ParameterValueItem';
+import log from '../../../lib/log';
 
 
 /**
@@ -47,7 +48,15 @@ function calculateDisplayConfigsForKeys(keys: string[], settings: { [key: string
     parameterConverter: (key) => DisplayConfig | null): DisplayConfig[] {
     const displayConfigs = [];
     for (const key of keys) {
-        const displayConfig: DisplayConfig = parameterConverter(key);
+        let displayConfig: DisplayConfig = null;
+
+        try {
+            // Never trust the converter
+            displayConfig = parameterConverter(key);
+        } catch (e) {
+            log.warn(`Unable to retrieve display config for parameter ${key}: ${e}`);
+        }
+
         if (!displayConfig) {
             continue;
         }

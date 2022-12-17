@@ -4649,6 +4649,7 @@
                             "resolve": "adhesion_type",
                             "settable_per_mesh": false,
                             "settable_per_extruder": false,
+                            "limit_to_extruder": "adhesion_extruder_nr",
                             "filter": [
                                 "basic",
                                 "advanced",

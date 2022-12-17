@@ -233,9 +233,9 @@ class DefinitionManager {
             res.body.definitions
         );
 
-        const result = definitions.map((item) => {
-            resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder, true);
-            return item;
+        const result = definitions.map((definition) => {
+            resolveMachineDefinition(definition, this.changedArray, this.changedArrayWithoutExtruder, true);
+            return definition;
         }).map(this.fillCustomCategory);
 
         return result;
@@ -247,7 +247,10 @@ class DefinitionManager {
             actualDefinition = definition.getSerializableDefinition();
         }
         const res = await api.profileDefinitions.createDefinition(this.headType, actualDefinition, this.configPathname);
-        return res.body.definition;
+
+        const newDefinition = res.body.definition;
+        resolveMachineDefinition(newDefinition, this.changedArray, this.changedArrayWithoutExtruder, true);
+        return newDefinition;
     }
 
     async createTmpDefinition(definition, definitionName) {
@@ -425,6 +428,8 @@ class DefinitionManager {
     finalizeActiveDefinition(
         printMode,
         activeDefinition,
+        leftPreset,
+        rightPreset,
         extruderLDefinition,
         extruderRDefinition,
         size,
@@ -524,6 +529,18 @@ class DefinitionManager {
                 'raft_surface_extruder_nr',
             ],
         );
+        this._applyGlobalExtruderParameters(
+            definition,
+            activeDefinition,
+            extruderConfig.adhesion === '0' ? leftPreset : rightPreset,
+            [
+                'adhesion_extruder_nr',
+                'skirt_brim_extruder_nr',
+                'raft_base_extruder_nr',
+                'raft_interface_extruder_nr',
+                'raft_surface_extruder_nr',
+            ],
+        );
 
         // apply support parameters
         const anotherExtruderNumber = (1 ^ Number(extruderConfig.support)).toString();
@@ -536,12 +553,12 @@ class DefinitionManager {
 
         // support extruder not apply to support fill
         if (isDual && extruderConfig.onlySupportInterface) {
+            // Use another extruder for support's initial layer
             definition.settings.support_infill_extruder_nr.default_value = anotherExtruderNumber;
         } else {
             definition.settings.support_infill_extruder_nr.default_value = extruderConfig.support;
         }
 
-        // Use another extruder for support's initial layer
         this._applyGlobalExtruderParameters(
             definition,
             activeDefinition,
@@ -557,6 +574,19 @@ class DefinitionManager {
         this._applyGlobalExtruderParameters(
             definition,
             activeDefinition,
+            extruderConfig.support === '0' ? leftPreset : rightPreset,
+            [
+                'support_extruder_nr',
+                'support_interface_extruder_nr',
+                'support_roof_extruder_nr',
+                'support_bottom_extruder_nr',
+                'support_extruder_nr_layer_0',
+            ],
+        );
+
+        this._applyGlobalExtruderParameters(
+            definition,
+            activeDefinition,
             definition.settings.support_infill_extruder_nr.default_value === '0'
                 ? extruderLDefinition
                 : extruderRDefinition,
@@ -564,6 +594,31 @@ class DefinitionManager {
                 'support_infill_extruder_nr',
             ],
         );
+
+        this._applyGlobalExtruderParameters(
+            definition,
+            activeDefinition,
+            definition.settings.support_infill_extruder_nr.default_value === '0'
+                ? leftPreset
+                : rightPreset,
+            [
+                'support_infill_extruder_nr',
+            ],
+        );
+
+        // Lift parameters of left extruder to global
+        for (const key of Object.keys(extruderLDefinition.settings)) {
+            const settingItem = activeDefinition.settings[key];
+
+            // It's material parameter, but not extruder parameter
+            if (settingItem && !settingItem.settable_per_extruder && this.materialProfileArr.includes(key)) {
+                if (!definition.settings[key]) {
+                    definition.settings[key] = {};
+                    definition.ownKeys.push(key);
+                }
+                definition.settings[key].default_value = extruderLDefinition.settings[key].default_value;
+            }
+        }
 
         return definition;
     }
