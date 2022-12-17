@@ -26,6 +26,7 @@ import {
     CaseConfigA350LaserPowerTwo,
     CaseConfigA350PrintingSingle,
     CaseConfigLubanLock,
+    CaseConfigGimbal,
     CaseConfigOriginalCncStandard,
     CaseConfigOriginalLaserPowerOne,
     CaseConfigOriginalLaserPowerTwo,
@@ -110,6 +111,10 @@ export const getCaseList = (series, toolHead) => {
             caseList = caseList.concat(CaseConfigA350CncStandard);
             caseListFourAxis = caseListFourAxis.concat(CaseConfigA350CncFourAxis);
             caseListFourAxis = caseListFourAxis.concat(CaseConfigA350LaserFourAxis);
+            break;
+
+        case MACHINE_SERIES.J1.value:
+            caseList.push(CaseConfigGimbal);
             break;
         default:
             break;

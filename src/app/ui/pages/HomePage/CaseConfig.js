@@ -460,6 +460,7 @@ export const CaseConfigA350LaserFourAxis = [
 ];
 
 // Pen Holder for Snapmaker Artisan (2022.12)
+// Note that this can only be used by Artisan
 export const CaseConfigPenHolder = {
     tag: 'printing', // printing、laser、cnc
     tag_i18n: 'key-HomePage/CaseLibrary_title-3DP',
@@ -473,6 +474,7 @@ export const CaseConfigPenHolder = {
 };
 
 // CNC Luban Lock (2022.12)
+// Note that this can only be used by Artisan
 export const CaseConfigLubanLock = {
     tag: 'cnc',
     tag_i18n: 'key-HomePage/CaseLibrary_title-CNC',
@@ -483,5 +485,19 @@ export const CaseConfigLubanLock = {
         isDatastoragePath: true,
         path: './UserCase/cnc/Luban Lock.snapcnc',
         name: 'Luban Lock.snapcnc',
+    }
+};
+
+// 3DP case: Gimbal (dual color) (2022.12)
+// J1 only
+export const CaseConfigGimbal = {
+    tag: 'printing',
+    tag_i18n: 'key-HomePage/CaseLibrary_title-3DP',
+    title: 'Gimbal',
+    imgSrc: '../../resources/images/user-case/printing/3dp_dual_color_gimbal_194x194.png',
+    pathConfig: {
+        isDatastoragePath: true,
+        path: './UserCase/printing/snapmaker_j1/Case-Gimbal-DualColor.snap3dp',
+        name: 'Case-Gimbal-DualColor.snap3dp',
     }
 };
