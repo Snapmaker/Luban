@@ -65,12 +65,14 @@ const configFile = path.join(configDir, 'snapmaker_modify_0.def.json');
 const allMap = readFile(standardConfigFile);
 const ourMap = readFile(configFile);
 
+
+console.log('Scanner keys...');
+
 for (const key of Object.keys(ourMap)) {
     if (!allMap[key]) {
         console.log(`Found not existing key in fdmprinter.def.json: ${key}`);
     }
 }
-
 
 for (const key of Object.keys(allMap)) {
     if (!ourMap[key]) {

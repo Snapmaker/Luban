@@ -2303,8 +2303,9 @@ export const actions = {
             globalQualityPreset.settings.prime_tower_size.default_value = primeTowerWidth;
         }
 
+        let newExtruderLDefinition = extruderLDefinition;
         if (extruderLDefinition) {
-            const newExtruderLDefinition = definitionManager.finalizeExtruderDefinition(
+            newExtruderLDefinition = definitionManager.finalizeExtruderDefinition(
                 {
                     activeQualityDefinition: qualityPresets[LEFT_EXTRUDER],
                     extruderDefinition: extruderLDefinition,
@@ -2320,8 +2321,9 @@ export const actions = {
             });
         }
 
+        let newExtruderRDefinition = extruderRDefinition;
         if (extruderRDefinition) {
-            const newExtruderRDefinition = definitionManager.finalizeExtruderDefinition(
+            newExtruderRDefinition = definitionManager.finalizeExtruderDefinition(
                 {
                     activeQualityDefinition: qualityPresets[RIGHT_EXTRUDER],
                     extruderDefinition: extruderRDefinition,
@@ -2376,17 +2378,17 @@ export const actions = {
         const renderGcodeFileName = `${currentModelName}_${new Date().getTime()}`;
 
         // Use left
-        globalQualityPreset.settings.material_bed_temperature.default_value = extruderLDefinition.settings.material_bed_temperature.default_value;
-        globalQualityPreset.settings.material_bed_temperature_layer_0.default_value = extruderLDefinition.settings.material_bed_temperature_layer_0.default_value;
+        // globalQualityPreset.settings.material_bed_temperature.default_value = newExtruderLDefinition.settings.material_bed_temperature.default_value;
+        // globalQualityPreset.settings.material_bed_temperature_layer_0.default_value = newExtruderLDefinition.settings.material_bed_temperature_layer_0.default_value;
 
         const isDual = isDualExtruder(printingToolhead);
         const finalDefinition = definitionManager.finalizeActiveDefinition(
             printMode,
             globalQualityPreset,
-            // extruderLDefinition,
-            // extruderRDefinition,
             qualityPresets[LEFT_EXTRUDER],
             qualityPresets[RIGHT_EXTRUDER],
+            newExtruderLDefinition,
+            newExtruderRDefinition,
             size,
             isDual,
             {
