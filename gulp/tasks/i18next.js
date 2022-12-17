@@ -119,20 +119,14 @@ function customTransform(file, enc, done) {
     }
 
     // Extract i18n function calls / Trans from ts files
-    const options = {
-        // default value for extensions
-        extensions: [".ts", ".tsx"],
-        // optional ts configuration
-        tsOptions: {
-            target: "es2020",
-        },
-    };
-    if (options.extensions.includes(ext) && !base.includes(".d.ts")) {
-        console.log('ts =', base);
+    const extensions = [".ts", ".tsx"];
+    if (extensions.includes(ext) && !base.includes(".d.ts")) {
         const content = fs.readFileSync(file.path, enc);
 
         const { outputText } = typescript.transpileModule(content, {
-            compilerOptions: options.tsOptions,
+            compilerOptions: {
+                target: 'es2020',
+            },
             fileName: path.basename(file.path),
         });
 
