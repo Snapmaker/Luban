@@ -40,7 +40,7 @@ const serverConfig = {
 
 export function i18nextServer() {
     return gulp.src(serverConfig.src)
-        .pipe(i18nextScanner(serverConfig.options, customTransform))
+        .pipe(i18nextScanner(serverConfig.options))
         .pipe(gulp.dest(serverConfig.dest));
 }
 
@@ -83,12 +83,12 @@ const CURA_CATEGORIES = [
 
 function customTransform(file, enc, done) {
     const parser = this.parser;
-    const content = fs.readFileSync(file.path, enc);
     const basename = path.basename(file.path);
     const { base, ext } = path.parse(file.path);
 
     // Extract copy from definition files
     if (basename.indexOf('.def.json') !== -1) {
+        const content = fs.readFileSync(file.path, enc);
         const curaConfig = JSON.parse(content);
 
         const walk = (name, node) => {
@@ -119,8 +119,8 @@ function customTransform(file, enc, done) {
     }
 
     // Extract i18n function calls / Trans from ts files
-    const extensions = [".ts", ".tsx"];
-    if (extensions.includes(ext) && !base.includes(".d.ts")) {
+    const extensions = ['.ts', '.tsx'];
+    if (extensions.includes(ext) && !base.includes('.d.ts')) {
         const content = fs.readFileSync(file.path, enc);
 
         const { outputText } = typescript.transpileModule(content, {
