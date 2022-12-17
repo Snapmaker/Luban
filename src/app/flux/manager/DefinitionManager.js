@@ -233,9 +233,9 @@ class DefinitionManager {
             res.body.definitions
         );
 
-        const result = definitions.map((item) => {
-            resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder, true);
-            return item;
+        const result = definitions.map((definition) => {
+            resolveMachineDefinition(definition, this.changedArray, this.changedArrayWithoutExtruder, true);
+            return definition;
         }).map(this.fillCustomCategory);
 
         return result;
@@ -247,7 +247,10 @@ class DefinitionManager {
             actualDefinition = definition.getSerializableDefinition();
         }
         const res = await api.profileDefinitions.createDefinition(this.headType, actualDefinition, this.configPathname);
-        return res.body.definition;
+
+        const newDefinition = res.body.definition;
+        resolveMachineDefinition(newDefinition, this.changedArray, this.changedArrayWithoutExtruder, true);
+        return newDefinition;
     }
 
     async createTmpDefinition(definition, definitionName) {

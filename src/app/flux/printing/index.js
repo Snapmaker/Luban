@@ -1524,6 +1524,14 @@ export const actions = {
         });
     },
 
+    updateDefinition: ({ managerDisplayType, definitionModel, changedSettingArray }) => (dispatch) => {
+        dispatch(actions.updateCurrentDefinition({
+            managerDisplayType,
+            definitionModel,
+            changedSettingArray,
+        }));
+    },
+
     onUploadManagerDefinition: (file, type) => (dispatch, getState) => {
         const state = getState().printing;
 

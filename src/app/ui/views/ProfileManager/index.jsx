@@ -496,24 +496,17 @@ function ProfileManager({
             if (Object.keys(newDefinitionForManager.settings).length === 0) {
                 newDefinitionForManager.settings = cloneDeep(allDefinitions[0].settings);
             }
-            newDefinitionForManager.settings = {
-                ...newDefinitionForManager.settings,
-                color: {
-                    default_value: data.color
-                },
-                material_print_temperature: {
-                    default_value: data.printingTemperature
-                },
-                cool_fan_speed: {
-                    default_value: data.openFan ? 100 : 0
-                },
-                material_bed_temperature: {
-                    default_value: data.buildPlateTemperature
-                }
-            };
+
             setShowCreateMaterialModal(false);
             const newDefinition = await outsideActions.onCreateManagerDefinition(newDefinitionForManager, data.name, false, true);
             actions.onSelectDefinitionById(newDefinition.definitionId, newDefinition.name);
+
+            outsideActions.onUpdatePreset(newDefinition, [
+                ['color', data.color],
+                ['material_print_temperature', data.printingTemperature],
+                ['material_bed_temperature', data.buildPlateTemperature],
+                ['cool_fan_speed', data.openFan ? 100 : 0],
+            ]);
         }
     };
 
