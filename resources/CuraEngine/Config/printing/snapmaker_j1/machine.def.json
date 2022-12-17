@@ -119,7 +119,7 @@
         "machine_nozzle_heat_up_speed": {
             "label": "Heat Up Speed",
             "description": "The speed (°C/s) by which the nozzle heats up averaged over the window of normal printing temperatures and the standby temperature.",
-            "default_value": 2,
+            "default_value": 1,
             "unit": "°C/s",
             "type": "float",
             "enabled": "machine_nozzle_temp_enabled",

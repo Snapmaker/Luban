@@ -195,7 +195,7 @@ const PresetContent = (
         let bypassFilter = true;
         const parameterFilters = filterValues.filter(f => f !== 'all');
         for (const filter of parameterFilters) {
-            if (!settingItem.filter.includes(filter)) {
+            if (!settingItem.filter || !settingItem.filter.includes(filter)) {
                 bypassFilter = false;
                 break;
             }

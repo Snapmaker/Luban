@@ -26,6 +26,9 @@
         "machine_nozzle_offset_y": {
             "default_value": 0
         },
+        "machine_nozzle_heat_up_speed": {
+            "default_value": 1
+        },
         "machine_extruder_start_code": {
             "default_value": "M2000 S200 V250 A6000"
         },
