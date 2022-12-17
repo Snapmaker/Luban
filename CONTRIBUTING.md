@@ -36,7 +36,9 @@ You can *request a new feature* by [submitting an issue](https://github.com/Snap
 If you would like to *implement a new feature*, please submit an issue with a proposal for your work first, to be sure that we can use it.
 Small Features can be crafted and directly submitted as a Pull Request.
 
-## <a name="pr"></a> Pull Request
+Our [Development](docs/Development.md) documentation describes how to setup your development environment (macOS/Ubuntu/Windows) and run Snapmaker Luban from source code.
+
+### <a name="pr"></a> Pull Request
 
 Before you submit your Pull Request (PR) consider the following guidelines:
 
@@ -46,7 +48,7 @@ Discussing the design up front helps to ensure that we're ready to accept your w
 3. Fork the `Snapmaker/Luban` repo.
 4. Make your changes in a new git branch
     ```
-    git checkout -b my-fix-branch master
+    git checkout -b my-fix-branch main
     ```
 5. Make changes to the source code follow [our code style guidelines](#code), best to **include appropriate test cases**.
 When you run `git push`, our git hook will call eslint to run a lint over source code automatically.
@@ -78,7 +80,7 @@ We also have a git hook script to check your commit message, for convenience you
    - Rebase your branch and force push to your GitHub repository (this will update your Pull Request):
 
      ```
-     git rebase master -i
+     git rebase main -i
      git push -f
      ```
 
@@ -94,10 +96,10 @@ After your pull request is merged, you can safely delete your branch and pull th
   git push origin --delete my-fix-branch
   ```
 
-- Check out the master branch:
+- Check out the `main` branch:
 
   ```
-  git checkout master -f
+  git checkout main -f
   ```
 
 - Delete the local branch:
@@ -106,13 +108,13 @@ After your pull request is merged, you can safely delete your branch and pull th
   git branch -D my-fix-branch
   ```
 
-- Update your master with the latest upstream version:
+- Update your `main` branch with the latest upstream version:
 
   ```
-  git pull --ff upstream master
+  git pull --ff upstream main
   ```
 
-## <a name="code"></a> Code Style Guidelines
+### <a name="code"></a> Code Style Guidelines
 
 Generally, we follow [Airbnb's JavaScript Style Guide](https://github.com/airbnb/javascript), based
 on that we write a [ESLint config for Snapmaker](https://github.com/Snapmaker/eslint-config-snapmaker)
@@ -126,7 +128,7 @@ A githook is also added to run the check automatically before every git push.
 npm run lint
 ```
 
-## <a name="commit"></a> Commit Message Guidelines
+### <a name="commit"></a> Commit Message Guidelines
 
 We have rules over how git commit message can be formatted. This leads to **more readable message**
 that are easy to follow when looking through the **project history**.
