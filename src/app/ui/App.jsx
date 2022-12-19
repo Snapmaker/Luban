@@ -137,6 +137,7 @@ class App extends PureComponent {
             // You can render any custom fallback UI
             return <h1>Something went wrong. Please reload the app</h1>;
         }
+
         return (
             <HashRouter ref={this.router}>
                 <AppLayout>

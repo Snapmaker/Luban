@@ -4,3 +4,6 @@
 [submodule "resources/ProfileDocs"]
 	path = resources/ProfileDocs
 	url = https://github.com/parachvte/ProfileDocs
+[submodule "packages/snapmaker-luban-print-settings"]
+	path = packages/snapmaker-luban-print-settings
+	url = git@github.com:Snapmaker/snapmaker-luban-print-settings.git
