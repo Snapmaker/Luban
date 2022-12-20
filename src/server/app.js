@@ -1,46 +1,36 @@
 /* eslint callback-return: 0 */
-import _ from 'lodash';
-import fs from 'fs';
-import path from 'path';
-import express from 'express';
-import expressJwt from 'express-jwt';
-import jwt from 'jsonwebtoken';
-import engines from 'consolidate';
-import 'hogan.js'; // required by consolidate
-import errorhandler from 'errorhandler';
-import favicon from 'serve-favicon';
-import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
+import compress from 'compression';
 import multiparty from 'connect-multiparty';
 import connectRestreamer from 'connect-restreamer';
-import methodOverride from 'method-override';
-import morgan from 'morgan';
-import compress from 'compression';
+import engines from 'consolidate';
+import cookieParser from 'cookie-parser';
+import errorhandler from 'errorhandler';
+import express from 'express';
+import expressJwt from 'express-jwt';
 import session from 'express-session';
-import sessionFileStore from 'session-file-store';
+import fs from 'fs';
+import 'hogan.js'; // required by consolidate
 import i18next from 'i18next';
+import { handle as i18nextHandle, LanguageDetector as i18nextLanguageDetector } from 'i18next-express-middleware';
 import i18nextBackend from 'i18next-node-fs-backend';
+import jwt from 'jsonwebtoken';
+import _ from 'lodash';
+import methodOverride from 'method-override';
 import mkdirp from 'mkdirp';
+import morgan from 'morgan';
+import path from 'path';
 import rangeCheck from 'range_check';
-import {
-    LanguageDetector as i18nextLanguageDetector,
-    handle as i18nextHandle
-} from 'i18next-express-middleware';
-import urljoin from './lib/urljoin';
-import logger from './lib/logger';
-import { registerApis } from './services';
+import favicon from 'serve-favicon';
+import sessionFileStore from 'session-file-store';
 import settings from './config/settings';
-// import errclient from './lib/middleware/errclient';
-// import errlog from './lib/middleware/errlog';
-// import errnotfound from './lib/middleware/errnotfound';
-// import errserver from './lib/middleware/errserver';
-import config from './services/configstore';
-import {
-    IP_WHITELIST,
-    ERR_UNAUTHORIZED,
-    ERR_FORBIDDEN
-} from './constants';
+import { ERR_FORBIDDEN, ERR_UNAUTHORIZED, IP_WHITELIST } from './constants';
 import DataStorage from './DataStorage';
+import logger from './lib/logger';
+import urljoin from './lib/urljoin';
+import { registerApis } from './services';
+import config from './services/configstore';
+
 
 const log = logger('app');
 

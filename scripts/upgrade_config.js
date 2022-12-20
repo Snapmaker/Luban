@@ -3,7 +3,7 @@ const path = require('path');
 const includes = require('lodash/includes');
 
 
-const configDir = path.resolve(__dirname, '../packages/snapmaker-luban-print-settings/resources/printing');
+const configDir = path.resolve(__dirname, '../packages/luban-print-settings/resources/printing');
 
 const removedKeys = [
     "travel_compensate_overlapping_walls_enabled",

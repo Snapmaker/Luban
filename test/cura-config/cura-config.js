@@ -4,8 +4,8 @@ import fs from 'fs';
 import { DefinitionLoader } from '../../src/server/slicer/definition';
 import DataStorage from '../../src/server/DataStorage';
 
-DataStorage.configDir = './packages/snapmaker-luban-print-settings/resources/';
-const resourcePath = './packages/snapmaker-luban-print-settings/resources/';
+DataStorage.configDir = './packages/luban-print-settings/resources/';
+const resourcePath = './packages/luban-print-settings/resources/';
 const curaConfigPath = './test/cura-config/';
 
 function readDefinition(definitionId) {

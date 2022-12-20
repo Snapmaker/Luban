@@ -203,7 +203,7 @@ export function i18nextApp() {
         'src/app/**/*.jsx',
         // 'src/app/**/*.ts',
         'src/app/**/*.tsx',
-        'packages/snapmaker-luban-print-settings/resources/*/*.json',
+        'packages/luban-print-settings/resources/*/*.json',
     ];
     return gulp.src(sources)
         .pipe(sort()) // Sort files in stream by path

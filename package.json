@@ -8,10 +8,8 @@
   "bin": {
     "luban": "bin/cli"
   },
-  "files": [
-    "bin",
-    "dist",
-    "static"
+  "workspaces": [
+      "packages/luban-print-settings"
   ],
   "repository": {
     "type": "git",

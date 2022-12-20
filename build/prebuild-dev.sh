@@ -37,9 +37,9 @@ mkdir -p "$RESOURCES_DIR"
 PRINT_SETTING_DIR="$RESOURCES_DIR/print-settings"
 mkdir -p "$PRINT_SETTING_DIR"
 
-cp -r packages/snapmaker-luban-print-settings/resources/cnc "$PRINT_SETTING_DIR"
-cp -r packages/snapmaker-luban-print-settings/resources/laser "$PRINT_SETTING_DIR"
-cp -r packages/snapmaker-luban-print-settings/resources/printing "$PRINT_SETTING_DIR"
+cp -r packages/luban-print-settings/resources/cnc "$PRINT_SETTING_DIR"
+cp -r packages/luban-print-settings/resources/laser "$PRINT_SETTING_DIR"
+cp -r packages/luban-print-settings/resources/printing "$PRINT_SETTING_DIR"
 
 #
 # Copy other resources

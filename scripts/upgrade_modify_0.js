@@ -58,7 +58,7 @@ function readFile(filePath) {
     return map;
 }
 
-const configDir = path.resolve(__dirname, '../packages/snapmaker-luban-print-settings/resources/printing');
+const configDir = path.resolve(__dirname, '../packages/luban-print-settings/resources/printing');
 const standardConfigFile = path.join(configDir, 'fdmprinter.def.json');
 const configFile = path.join(configDir, 'snapmaker_modify_0.def.json');
 
