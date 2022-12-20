@@ -36,7 +36,6 @@
     "electron-updater": "4.3.9",
     "ensure-array": "1.0.0",
     "errorhandler": "1.5.1",
-    "esprima": "4.0.1",
     "express": "4.18.2",
     "express-jwt": "5.3.3",
     "express-session": "1.15.6",

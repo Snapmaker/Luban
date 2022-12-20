@@ -5,6 +5,7 @@ import { includes, isUndefined, gt, isNil } from 'lodash';
 import { v4 as uuid } from 'uuid';
 import isElectron from 'is-electron';
 import semver from 'semver';
+
 import { CNC_CONFIG_SUBCATEGORY, LASER_CONFIG_SUBCATEGORY, PRINTING_CONFIG_SUBCATEGORY, MATERIAL_TYPE_ARRAY } from './constants';
 import { cncUniformProfile } from './lib/profile/cnc-uniform-profile';
 import logger from './lib/logger';
@@ -371,7 +372,10 @@ class DataStorage {
         mkdirp.sync(`${this.configDir}/${LASER_CONFIG_SUBCATEGORY}`);
         mkdirp.sync(`${this.configDir}/${PRINTING_CONFIG_SUBCATEGORY}`);
 
-        const CURA_ENGINE_CONFIG_LOCAL = path.resolve('../../resources/CuraEngine/Config');
+        // TODO: Use print-settings derectly from package
+        // const CURA_ENGINE_CONFIG_LOCAL = path.resolve('../../packages/luban-print-settings/resources');
+        const CURA_ENGINE_CONFIG_LOCAL = path.resolve('../../resources/print-settings');
+
         await this.copyDirForInitSlicer({
             srcDir: CURA_ENGINE_CONFIG_LOCAL,
             dstDir: this.configDir,

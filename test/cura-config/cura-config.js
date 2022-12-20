@@ -4,8 +4,8 @@ import fs from 'fs';
 import { DefinitionLoader } from '../../src/server/slicer/definition';
 import DataStorage from '../../src/server/DataStorage';
 
-DataStorage.configDir = './resources/CuraEngine/Config/';
-const resourcePath = './resources/CuraEngine/Config/';
+DataStorage.configDir = './packages/luban-print-settings/resources/';
+const resourcePath = './packages/luban-print-settings/resources/';
 const curaConfigPath = './test/cura-config/';
 
 function readDefinition(definitionId) {
