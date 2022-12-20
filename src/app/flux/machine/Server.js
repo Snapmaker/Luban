@@ -80,7 +80,9 @@ export class Server extends events.EventEmitter {
                     }
                     dispatch(connectActions.setServerAddress(this.address));
                     dispatch(connectActions.setServerToken(this.token));
-                    controller.emitEvent(CONNECTION_HEARTBEAT);
+                    setTimeout(() => {
+                        controller.emitEvent(CONNECTION_HEARTBEAT);
+                    }, 1000);
                     callback && callback({ msg, text });
                 } else {
                     dispatch(machineActions.resetMachineState(CONNECTION_TYPE_SERIAL));
