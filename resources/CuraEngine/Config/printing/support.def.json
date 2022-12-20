@@ -1,7 +1,0 @@
-{
-    "overrides": {
-        "support_mesh": {
-            "default_value": true
-        }
-    }
-}

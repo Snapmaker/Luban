@@ -371,7 +371,10 @@ class DataStorage {
         mkdirp.sync(`${this.configDir}/${LASER_CONFIG_SUBCATEGORY}`);
         mkdirp.sync(`${this.configDir}/${PRINTING_CONFIG_SUBCATEGORY}`);
 
-        const CURA_ENGINE_CONFIG_LOCAL = path.resolve('../../resources/CuraEngine/Config');
+        // TODO: Use print-settings derectly from package
+        // const CURA_ENGINE_CONFIG_LOCAL = path.resolve('../../packages/snapmaker-luban-print-settings/resources');
+        const CURA_ENGINE_CONFIG_LOCAL = path.resolve('../../resources/print-settings');
+
         await this.copyDirForInitSlicer({
             srcDir: CURA_ENGINE_CONFIG_LOCAL,
             dstDir: this.configDir,

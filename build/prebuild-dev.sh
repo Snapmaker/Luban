@@ -32,22 +32,14 @@ RESOURCES_DIR="$DEST_DIR/resources"
 mkdir -p "$RESOURCES_DIR"
 
 #
-# copy Cura Engine
+# Copy Print Settings
 #
-CURA_DIR="$RESOURCES_DIR/CuraEngine"
-CURA_VERSION="3.6"
+PRINT_SETTING_DIR="$RESOURCES_DIR/print-settings"
+mkdir -p "$PRINT_SETTING_DIR"
 
-mkdir -p "$CURA_DIR"
-mkdir -p "$CURA_DIR/$CURA_VERSION"
-
-if [[ "$PLATFORM" == "darwin" ]]; then
-    cp -r "resources/CuraEngine/$CURA_VERSION/macOS" "$CURA_DIR/$CURA_VERSION"
-elif [[ "$PLATFORM" == "win32" ]]; then
-    cp -r "resources/CuraEngine/$CURA_VERSION/Windows-x64" "$CURA_DIR/$CURA_VERSION"
-elif [[ "$PLATFORM" == "linux" ]]; then
-    cp -r "resources/CuraEngine/$CURA_VERSION/Linux" "$CURA_DIR/$CURA_VERSION"
-fi
-cp -r resources/CuraEngine/Config "$CURA_DIR"
+cp -r packages/snapmaker-luban-print-settings/resources/cnc "$PRINT_SETTING_DIR"
+cp -r packages/snapmaker-luban-print-settings/resources/laser "$PRINT_SETTING_DIR"
+cp -r packages/snapmaker-luban-print-settings/resources/printing "$PRINT_SETTING_DIR"
 
 #
 # Copy other resources
