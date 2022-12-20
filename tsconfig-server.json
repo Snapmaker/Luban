@@ -1,6 +1,6 @@
 {
     "include": [
-        "./src/server/**/*"
+        "./src/server/**/*",
     ],
     "exclude": [
         "./output/",

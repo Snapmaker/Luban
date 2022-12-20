@@ -235,7 +235,7 @@ const checkUpdateServer = () => {
 
 const startToBegin = (data) => {
     serverData = data;
-    const { address, port } = { ...serverData };
+    const { address, port } = data;
     configureWindow(mainWindow);
 
     checkUpdateServer().then((host) => {
@@ -323,8 +323,8 @@ const showMainWindow = async () => {
         Menu.setApplicationMenu(menu);
     }
 
+    // only start server once
     if (!serverData) {
-        // only start server once
         if (process.env.NODE_ENV === 'development') {
             process.chdir(path.resolve(__dirname, 'server'));
             // Use require instead of import to avoid being precompiled in production mode
@@ -342,7 +342,8 @@ const showMainWindow = async () => {
                 {
                     env: {
                         ...process.env,
-                        USER_DATA_DIR: userDataDir
+                        // USER_DATA_DIR: userDataDir,
+                        USER_DATA_DIR: app.getPath('userData')
                     }
                 }
             );
@@ -488,6 +489,7 @@ app.on('window-all-closed', () => {
  */
 app.on('will-quit', () => {
     serverProcess?.kill();
+
     DataStorage.clear();
 });
 

@@ -92,6 +92,7 @@ const createServer = (options, callback) => {
     }
 
     // Data storage initialize
+    log.info('Initializing user data storage...');
     DataStorage.init();
 
     process.env.Tmpdir = DataStorage.tmpDir;

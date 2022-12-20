@@ -50,7 +50,6 @@ export function serverStartDevelopment(cb) {
         watch: [
             'src/server/',
             'src/shared/',
-            'packages/luban-print-settings',
         ],
         env: {
             NODE_ENV: 'development',

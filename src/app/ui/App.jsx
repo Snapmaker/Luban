@@ -2,8 +2,10 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { HashRouter, Route, Switch } from 'react-router-dom';
 import { connect } from 'react-redux';
+
 import { Canvas2dZoom } from '../lib/canvas2d-zoom/index';
 import { shortcutActions, priorities, ShortcutManager } from '../lib/shortcut';
+
 import { ToastContainer } from './components/Toast';
 import { actions as machineActions } from '../flux/machine';
 import { actions as laserActions } from '../flux/laser';

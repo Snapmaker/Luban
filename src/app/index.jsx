@@ -1,41 +1,31 @@
 /* eslint import/no-dynamic-require: 0 */
+import { ConfigProvider } from 'antd';
+import 'antd/dist/antd.css';
 import series from 'async/series';
+import i18next from 'i18next';
+import LanguageDetector from 'i18next-browser-languagedetector';
+import XHR from 'i18next-xhr-backend';
 import moment from 'moment';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { ConfigProvider } from 'antd';
-import { Provider } from 'react-redux';
-import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
-import XHR from 'i18next-xhr-backend';
-import { TRACE, DEBUG, INFO, WARN, ERROR } from 'universal-logger';
+import { Provider } from 'react-redux';
 import settings from './config/settings';
 import { controller } from './lib/controller';
-import log from './lib/log';
-import { toQueryObject } from './lib/query';
-import user from './lib/user';
-import { machineStore } from './store/local-storage';
-import reduxStore from './store';
-import App from './ui/App';
-import './styles/vendor.styl';
-import './styles/app.styl';
-import 'antd/dist/antd.css';
 import { initialize } from './lib/gaEvent';
+import log from './lib/log';
+import user from './lib/user';
+import reduxStore from './store';
+import { machineStore } from './store/local-storage';
+import './styles/app.styl';
+import './styles/vendor.styl';
+import App from './ui/App';
 
 
 series([
     (next) => {
         // Setup log level
-        const queryParams = toQueryObject(window.location.search);
-        const level = {
-            trace: TRACE,
-            debug: DEBUG,
-            info: INFO,
-            warn: WARN,
-            error: ERROR
-        }[queryParams.log_level || settings.log.level];
-        log.setLevel(level);
+        log.setLevel(settings.log.level);
         next();
     },
     (next) => {
@@ -77,7 +67,7 @@ series([
             });
     }
 ], () => {
-    log.info(`${settings.name} ${settings.version}`);
+    log.info(`Launching App ${settings.name}@${settings.version}...`);
 
     // Prevent browser from loading a drag-and-dropped file
     // http://stackoverflow.com/questions/6756583/prevent-browser-from-loading-a-drag-and-dropped-file
