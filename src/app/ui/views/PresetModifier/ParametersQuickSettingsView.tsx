@@ -379,7 +379,6 @@ const ParametersQuickSettingsView: React.FC<TProps> = ({ selectedStackId, select
                                                 options={options}
                                                 value={segmentedValue}
                                                 onChange={(value) => {
-                                                    console.log('onChange', value);
                                                     onChangeParam(value, paramSetting);
                                                 }}
                                                 disabled={disabled}

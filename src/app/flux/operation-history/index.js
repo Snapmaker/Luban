@@ -1,5 +1,5 @@
 import { baseActions as editorBaseActions } from '../editor/actions-base';
-import { baseActions as printingBaseActions } from '../printing/actions-base';
+import printingBaseActions from '../printing/actions-base';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as projectActions } from '../project';
 
