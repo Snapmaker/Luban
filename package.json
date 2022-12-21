@@ -25,7 +25,7 @@
     "linux"
   ],
   "scripts": {
-    "postinstall": "npm run electron-rebuild",
+    "postinstall": "npm run pkgsync && npm run electron-rebuild",
     "commit": "npx git-cz",
     "pkgsync": "node build/pkgsync.js",
     "update-i18n": "gulp i18nextServer i18nextApp",
@@ -116,7 +116,6 @@
     "cookie-parser": "1.4.6",
     "core-js": "3.6.5",
     "debug": "3.1.0",
-    "detect-browser": "3.0.1",
     "earcut": "2.2.3",
     "electron-store": "8.1.0",
     "electron-updater": "4.3.9",
