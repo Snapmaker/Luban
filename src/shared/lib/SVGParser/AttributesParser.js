@@ -1,9 +1,8 @@
-import logger from 'universal-logger';
+import log from 'loglevel';
 import { isUndefined } from 'lodash';
 import { parseFloats, cssColor2Hex, xformMultiply } from './Utils';
 import { SVG_ATTR_ID, XLINK_HREF, SVG_ATTR_HREF, OVERRIDE_STYLE } from './constants';
 
-const log = logger();
 
 function parseDAttribute(value) {
     const items = [];

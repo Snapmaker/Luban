@@ -1,4 +1,4 @@
-import logger from 'universal-logger';
+import log from 'loglevel';
 import DxfArrayScanner from './DxfArrayScanner';
 import AUTO_CAD_COLOR_INDEX from './AutoCadColorIndex';
 
@@ -18,7 +18,6 @@ import Solid from './entities/solid';
 import Spline from './entities/spline';
 import Text from './entities/text';
 
-const log = logger();
 // import Vertex from './entities/';
 
 

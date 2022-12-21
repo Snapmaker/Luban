@@ -71,6 +71,7 @@ import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWith
 import SimplifyModelOperation from '../operation-history/SimplifyModelOperation';
 import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import VisibleOperation3D from '../operation-history/VisibleOperation3D';
+import sceneActions from './actions-scene';
 
 const { Transfer } = require('threads');
 
@@ -450,6 +451,7 @@ export const actions = {
             })
         );
     },
+
     // Use for switch machine size
     switchSize: () => async (dispatch, getState) => {
         // state
@@ -525,7 +527,7 @@ export const actions = {
 
         modelGroup.setDataChangedCallback(
             () => {
-                dispatch(actions.render());
+                dispatch(sceneActions.render());
             },
             height => {
                 dispatch(actions.updateState({ primeTowerHeight: height }));
@@ -647,6 +649,8 @@ export const actions = {
         const { stopArea } = getState().printing;
         modelGroup.primeTower.resetPosition(size, stopArea);
     },
+
+    // scene: sceneActions,
 
     updateProfileParamsType: (managerType, value) => (dispatch) => {
         if (managerType === PRINTING_MANAGER_TYPE_MATERIAL) {
@@ -4771,66 +4775,8 @@ export const actions = {
         logToolBarOperation(HEAD_PRINTING, 'ungroup');
     },
 
-    getModelMaterialSettings: (model) => (dispatch, getState) => {
-        const {
-            materialDefinitions,
-            defaultMaterialId,
-            defaultMaterialIdRight
-        } = getState().printing;
-        const materialID = model.extruderConfig.shell === '0' ? defaultMaterialId : defaultMaterialIdRight;
-        const index = materialDefinitions.findIndex((d) => {
-            return d.definitionId === materialID;
-        });
-        return materialDefinitions[index] ? materialDefinitions[index].settings : materialDefinitions[0].settings;
-    },
-
-    applyProfileToAllModels: () => (dispatch, getState) => {
-        const {
-            qualityDefinitions,
-            activePresetIds,
-            modelGroup,
-        } = getState().printing;
-        const activeQualityDefinition = find(qualityDefinitions, {
-            definitionId: activePresetIds[LEFT_EXTRUDER],
-        });
-        if (!activeQualityDefinition) {
-            return;
-        }
-        const qualitySetting = activeQualityDefinition.settings;
-        modelGroup.updatePlateAdhesion({
-            adhesionType: qualitySetting.adhesion_type.default_value,
-            skirtLineCount: qualitySetting?.skirt_line_count?.default_value,
-            brimLineCount: qualitySetting?.brim_line_count?.default_value,
-            brimWidth: qualitySetting?.brim_width?.default_value,
-            skirtBrimLineWidth: qualitySetting?.skirt_brim_line_width?.default_value,
-            raftMargin: qualitySetting?.raft_margin?.default_value,
-            skirtGap: qualitySetting?.skirt_gap?.default_value,
-            brimGap: qualitySetting?.brim_gap?.default_value
-        });
-        const models = modelGroup.getModels();
-        modelGroup.getThreeModels().forEach((model) => {
-            const materialSettings = dispatch(actions.getModelMaterialSettings(model));
-            model.updateMaterialColor(materialSettings.color.default_value);
-
-            const layerHeight = qualitySetting.layer_height.default_value;
-            const bottomThickness = qualitySetting.bottom_thickness.default_value;
-            const bottomLayers = Math.ceil(Math.round(bottomThickness / layerHeight));
-            const topThickness = qualitySetting.top_thickness.default_value;
-            const topLayers = Math.ceil(Math.round(topThickness / layerHeight));
-            model.updateClipperConfig({
-                lineWidth: materialSettings.machine_nozzle_size.default_value,
-                wallThickness: qualitySetting.wall_thickness.default_value,
-                topLayers,
-                bottomLayers,
-                layerHeight,
-                infillSparseDensity: qualitySetting.infill_sparse_density.default_value,
-                infillPattern: qualitySetting.infill_pattern.default_value,
-                magicSpiralize: qualitySetting.magic_spiralize.default_value,
-            });
-            model.materialPrintTemperature = materialSettings.material_print_temperature.default_value;
-        });
-        modelGroup.models = models.concat();
-        dispatch(actions.render());
+    applyProfileToAllModels: () => (dispatch) => {
+        dispatch(sceneActions.applyPrintSettingsToModels());
     },
 
     checkNewUser: () => dispatch => {
@@ -5023,7 +4969,7 @@ export const actions = {
         Promise.all(promises)
             .then(() => {
                 dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
-                dispatch(actions.render());
+                dispatch(sceneActions.render());
                 dispatch(
                     actions.updateState({
                         tmpSupportFaceMarks: {}
@@ -5038,7 +4984,7 @@ export const actions = {
         modelGroup.startEditSupportArea();
         dispatch(actions.setTransformMode('support-edit'));
         dispatch(actions.destroyGcodeLine());
-        dispatch(actions.render());
+        dispatch(sceneActions.render());
     },
 
     finishEditSupportArea: (shouldApplyChanges = false) => (
@@ -5083,7 +5029,7 @@ export const actions = {
         }
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
-        dispatch(actions.render());
+        dispatch(sceneActions.render());
     },
 
     clearSupportInGroup: (combinedOperations, modelInGroup) => (
@@ -5122,7 +5068,7 @@ export const actions = {
     setSupportBrushRadius: radius => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.setSupportBrushRadius(radius);
-        dispatch(actions.render());
+        dispatch(sceneActions.render());
     },
 
     // status: add | remove
@@ -5147,7 +5093,7 @@ export const actions = {
     clearAllSupport: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.clearAllSupport();
-        dispatch(actions.render());
+        dispatch(sceneActions.render());
     },
 
     computeAutoSupports: angle => (dispatch, getState) => {
@@ -5197,7 +5143,7 @@ export const actions = {
     updateClippingPlane: (height) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.updateClippingPlane(height);
-        dispatch(actions.render());
+        dispatch(sceneActions.render());
     },
 
     modelSimplify: (simplifyType = 0, simplifyPercent = 80, isFirstTime = false) => async (dispatch, getState) => {

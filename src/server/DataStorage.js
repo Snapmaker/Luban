@@ -48,7 +48,7 @@ export const rmDir = (dirPath, removeSelf) => {
 
 
 class DataStorage {
-    userDataDir;
+    userDataDir = null;
 
     sessionDir;
 
@@ -70,10 +70,14 @@ class DataStorage {
 
     constructor() {
         if (isElectron()) {
+            // TODO: Refactor this
             this.userDataDir = global.luban.userDataDir;
+            // this.userDataDir = process.env.USER_DATA_DIR;
         } else {
             this.userDataDir = '.';
         }
+
+        log.info(`Initialize data storage at directory: ${this.userDataDir}`);
         mkdirp.sync(this.userDataDir);
 
         this.sessionDir = `${this.userDataDir}/Sessions`;
@@ -123,8 +127,10 @@ class DataStorage {
         mkdirp.sync(this.userCaseDir);
         mkdirp.sync(this.scenesDir);
         !isReset && mkdirp.sync(this.recoverDir);
-        rmDir(this.tmpDir, false);
-        rmDir(this.sessionDir, false);
+
+        this.clearSession();
+        // rmDir(this.tmpDir, false);
+        // rmDir(this.sessionDir, false);
 
         // prepare directories
         !isReset && await this.checkNewUser();
@@ -537,6 +543,11 @@ class DataStorage {
             return;
         }
         fs.copyFileSync(src, dst);
+    }
+
+    clearSession() {
+        rmDir(this.tmpDir, false);
+        rmDir(this.sessionDir, false);
     }
 
     clearAll() {

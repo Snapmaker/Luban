@@ -5,10 +5,8 @@ import includes from 'lodash/includes';
 import request from 'superagent';
 import * as opentype from 'opentype.js';
 import libFontManager from 'font-scanner';
-import logger from 'universal-logger';
+import log from 'loglevel';
 
-
-const log = logger('lib:FontManager');
 
 /*
 const WEB_SAFE_FONTS = [

@@ -342,7 +342,6 @@ const ParamItem = function ({ selectedPresetModel, onChangePresetSettings }) {
                                     options={options}
                                     value={segmentedValue}
                                     onChange={(value) => {
-                                        console.log('onChange', value);
                                         onChangeParam(value, paramSetting);
                                     }}
                                 />

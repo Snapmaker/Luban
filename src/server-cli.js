@@ -37,6 +37,7 @@ if (normalizedArgv.length > 1) {
 }
 
 const launchServer = () => new Promise((resolve, reject) => {
+    // TODO: Refactor this
     global.luban = {
         userDataDir: process.env.USER_DATA_DIR
     };
