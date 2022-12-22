@@ -1,31 +1,36 @@
 @import "../../../styles/variables.styl"
 .manager-body {
     text-align: left;
+
     .manager-type-wrapper {
         padding: 0 20px
         border-bottom: 1px #c8c8c8 solid
         text-align: left
+
         .manager-type {
             display: inline-block
             line-height: 25px
             padding-bottom: 9px
             height: 36px;
             font-size: 18px;
-            font-family: PingFangSC-Medium, PingFang SC;
             font-weight: 500;
+
             &.selected {
                 color: #28A7E1;
                 border-bottom: 2px #28A7E1 solid;
             }
         }
     }
+
     .manager-content {
         padding: 20px;
+
         .manager-name {
             width: 36%
             margin-right: 10px
             display: inline-block
             vertical-align: top
+
             .manager-name-wrapper {
                 list-style: none
                 background: #FFFFFF;
@@ -35,6 +40,7 @@
                 overflow-y: scroll;
                 border: 1px solid #c8c8c8;
                 border-bottom: 0;
+
                 .manager-btn {
                     display: inline-block
                     height: 32px
@@ -42,19 +48,23 @@
                     padding-left: 10px;
                     width: 100%;
                     text-align: left;
+
                     &.selected {
                         background: #E6F2FD;
                     }
                 }
             }
+
             .manager-file {
                 width: 50%;
                 border-radius: 0;
+
                 &:hover {
                     color: #28A7E1
                 }
             }
         }
+
         .manager-details {
             width: 62%
             height: 393px;
@@ -65,11 +75,14 @@
             text-align: left
         }
     }
+
     .manager-settings {
         padding: 0 20px;
         background: #F6F7F8;
+
         .manager-settings-btn {
             padding: 9px 0;
+
             a {
                 box-sizing: content-box;
                 height: 24px;
@@ -77,9 +90,11 @@
                 padding: 5px 30px
             }
         }
+
         .manager-settings-operate {
             float: left;
         }
+
         .manager-settings-save {
             float: right;
         }

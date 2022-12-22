@@ -98,7 +98,7 @@ const allWidgets = {
 
 const pageHeadType = HEAD_PRINTING;
 
-function useRenderMainToolBar(setPageMode, setSimplifying, profileInitialized = false) {
+function useRenderMainToolBar(pageMode, setPageMode, setSimplifying, profileInitialized = false) {
     const unSaved = useSelector(state => state?.project[pageHeadType]?.unSaved, shallowEqual);
     const { inProgress, simplifyType, simplifyPercent } = useSelector(state => state?.printing, shallowEqual);
     const enableShortcut = useSelector(state => state?.printing?.enableShortcut, shallowEqual);
@@ -310,7 +310,11 @@ function useRenderMainToolBar(setPageMode, setSimplifying, profileInitialized = 
                 type: 'button',
                 name: 'MainToolbarMode',
                 action: () => {
-                    setPageMode(PageMode.ChangePrintMode);
+                    if (pageMode === PageMode.Default) {
+                        setPageMode(PageMode.ChangePrintMode);
+                    } else {
+                        setPageMode(PageMode.Default);
+                    }
                 },
             },
             /*
@@ -370,14 +374,14 @@ function Printing({ location }) {
     const [machineInfo, setMachineInfo] = useState({});
     const [materialInfo, setMaterialInfo] = useState({});
     // for simplify model, if true, visaulizerLeftbar and main tool bar can't be use
-    const [simplifying, setSimplifying] = useState(false);
     const [pageMode, setPageMode] = useState(PageMode.Default);
+    const [simplifying, setSimplifying] = useState(false);
 
     const dispatch = useDispatch();
     const history = useHistory();
     const [
         renderHomepage, renderMainToolBar, renderWorkspace, renderMachineMaterialSettings
-    ] = useRenderMainToolBar(setPageMode, setSimplifying, !!materialDefinitions.length);
+    ] = useRenderMainToolBar(pageMode, setPageMode, setSimplifying, !!materialDefinitions.length);
     const modelGroup = useSelector(state => state.printing.modelGroup);
     const thumbnail = useRef();
     const stepRef = useRef();
@@ -389,11 +393,13 @@ function Printing({ location }) {
                 await dispatch(printingActions.init());
             }
         })();
+
         // Make sure execute 'initSocketEvent' after 'printingActions.init' on openning project
         setTimeout(() => {
             dispatch(printingActions.initSocketEvent());
         }, 50);
         dispatch(printingActions.checkNewUser());
+
         logPageView({
             pathname: '/printing'
         });
@@ -421,7 +427,19 @@ function Printing({ location }) {
         setMachineInfo(newMachineInfo);
         setMaterialInfo(material);
         renderMainToolBar(activeMachine, newMachineInfo, material, isConnected);
-    }, [series, leftMaterial, rightMaterial, printingToolhead]);
+    }, [activeMachine, series, leftMaterial, rightMaterial, printingToolhead]);
+
+    // Determine page mode
+    useEffect(() => {
+        // Switch to ChangePrintMode page mode when first enter the page, if the machine has
+        // more than 1 print mode.
+        if (activeMachine) {
+            const printModes = activeMachine.metadata?.printModes;
+            if (printModes?.length > 1) {
+                setPageMode(PageMode.ChangePrintMode);
+            }
+        }
+    }, [activeMachine]);
 
     useEffect(() => {
         renderMainToolBar(activeMachine, machineInfo, materialInfo, isConnected);

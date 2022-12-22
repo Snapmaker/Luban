@@ -406,8 +406,15 @@ function VisualizerLeftBar(
                     />
                 )}
 
-                {simplifying
-                && <SimplifyModelOverlay handleApplySimplify={handleApplySimplify} handleCancelSimplify={handleCancelSimplify} handleUpdateSimplifyConfig={handleUpdateSimplifyConfig} />}
+                {
+                    simplifying && (
+                        <SimplifyModelOverlay
+                            handleApplySimplify={handleApplySimplify}
+                            handleCancelSimplify={handleCancelSimplify}
+                            handleUpdateSimplifyConfig={handleUpdateSimplifyConfig}
+                        />
+                    )
+                }
 
                 {/* Change Print Mode */
                     pageMode === PageMode.ChangePrintMode && (
