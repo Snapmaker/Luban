@@ -4,5 +4,8 @@ export enum ModelEvents {
     AddModel = 'add-model',
     ClippingHeightReset = 'clipping-height-reset',
     ClippingStart = 'clipping-start',
-    ClippingFinish = 'clipping-finish'
+    ClippingFinish = 'clipping-finish',
+
+    MeshChanged = 'mesh-changed',
+    MeshPositionChanged = 'mesh-position-changed',
 }

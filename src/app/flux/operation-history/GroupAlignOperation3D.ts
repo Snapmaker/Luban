@@ -53,7 +53,7 @@ export default class GroupAlginOperation3D extends Operation<GroupState> {
         target.stickToPlate();
         modelGroup.object.add(target.meshObject);
         modelGroup.models = [...this.state.modelsafterGroup];
-        modelGroup.updatePrimeTowerHeight();
+        modelGroup.childrenChanged();
         target.updateGroupExtruder();
         modelGroup.calaClippingMap();
     }
@@ -89,7 +89,7 @@ export default class GroupAlginOperation3D extends Operation<GroupState> {
             model.onTransform();
         });
         modelGroup.models = [...this.state.modelsbeforeGroup];
-        modelGroup.updatePrimeTowerHeight();
+        modelGroup.childrenChanged();
         modelGroup.calaClippingMap();
     }
 }

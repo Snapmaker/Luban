@@ -86,7 +86,7 @@ export default class MoveOperation3D extends Operation<MoveOperationState> {
         if (!model.parent && model instanceof ThreeModel) {
             modelGroup.stickToPlateAndCheckOverstepped(model);
         }
-        modelGroup.updatePrimeTowerHeight();
+        modelGroup.meshPositionChanged();
         modelGroup.calaClippingMap();
     }
 }

@@ -5,8 +5,6 @@ import api from '../../api';
 import {
     HEAD_CNC,
     HEAD_PRINTING,
-    MACHINE_EXTRUDER_X,
-    MACHINE_EXTRUDER_Y,
     MATERIAL_REGEX,
     QUALITY_REGEX
 } from '../../constants';
@@ -675,15 +673,13 @@ class DefinitionManager {
         return definition;
     }
 
-    finalizeExtruderDefinition({
-                                   activeQualityDefinition,
-                                   extruderDefinition,
-                                   materialDefinition,
-                                   hasPrimeTower,
-                                   primeTowerXDefinition,
-                                   primeTowerYDefinition
-                               }) {
-
+    finalizeExtruderDefinition(
+        {
+            activeQualityDefinition,
+            extruderDefinition,
+            materialDefinition,
+        }
+    ) {
         const newExtruderDefinition = {
             ...extruderDefinition,
             settings: cloneDeep(extruderDefinition.settings),
@@ -715,18 +711,6 @@ class DefinitionManager {
                 };
             }
         });
-
-        // Re-write prime tower (?)
-        if (hasPrimeTower) {
-            newExtruderDefinition.settings.machine_extruder_start_pos_abs.default_value = true;
-            newExtruderDefinition.settings.machine_extruder_end_pos_abs.default_value = true;
-            MACHINE_EXTRUDER_X.forEach((keyItem) => {
-                newExtruderDefinition.settings[keyItem].default_value = primeTowerXDefinition;
-            });
-            MACHINE_EXTRUDER_Y.forEach((keyItem) => {
-                newExtruderDefinition.settings[keyItem].default_value = primeTowerYDefinition;
-            });
-        }
 
         // Go through a filter on extruders
         const extruderKeysAllowed = this.extruderProfileArr;

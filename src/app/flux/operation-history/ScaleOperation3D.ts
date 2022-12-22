@@ -47,7 +47,7 @@ export default class ScaleOperation3D extends Operation<ScaleOperationState> {
 
         model.stickToPlate();
         model.computeBoundingBox();
-        modelGroup.updatePrimeTowerHeight();
+        modelGroup.meshPositionChanged();
         const overstepped = modelGroup._checkOverstepped(model);
         model.setOversteppedAndSelected(overstepped, model.isSelected);
         modelGroup.calaClippingMap();

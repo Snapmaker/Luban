@@ -1,8 +1,9 @@
-import { cloneDeep, every, filter, find, findIndex, includes, isNil } from 'lodash';
+import { cloneDeep, filter, find, isNil } from 'lodash';
 import path from 'path';
 import * as THREE from 'three';
 import { Box3, Vector3 } from 'three';
 import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
+
 import { resolveDefinition } from '../../../shared/lib/definitionResolver';
 import { timestamp } from '../../../shared/lib/random-utils';
 import api from '../../api';
@@ -27,7 +28,7 @@ import {
     PRINTING_QUALITY_CONFIG_GROUP_SINGLE,
     RIGHT_EXTRUDER,
     RIGHT_EXTRUDER_MAP_NUMBER,
-    WHITE_COLOR
+    WHITE_COLOR,
 } from '../../constants';
 import { getMachineSeriesWithToolhead, isDualExtruder, MACHINE_SERIES, } from '../../constants/machines';
 import { isQualityPresetVisible } from '../../constants/preset';
@@ -43,6 +44,7 @@ import ModelGroup from '../../models/ModelGroup';
 import PrimeTowerModel from '../../models/PrimeTowerModel';
 import ThreeGroup from '../../models/ThreeGroup';
 import ThreeModel from '../../models/ThreeModel';
+import scene from '../../scene/Scene';
 import { machineStore } from '../../store/local-storage';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 import ModelExporter from '../../ui/widgets/PrintingVisualizer/ModelExporter';
@@ -325,13 +327,6 @@ const INITIAL_STATE = {
 
     // UI: print parameter modifier
     showPrintParameterModifierDialog: false, // type: false | string indicating stack id
-
-    // TODO: refactor this.
-    definitionEditorForExtruder: new Map(),
-    definitionEditorForModel: new Map(),
-    editorDefinition: new Map(),
-
-    mainExtruder: LEFT_EXTRUDER, // main extruder is always left extruder
 };
 
 const ACTION_UPDATE_STATE = 'printing/ACTION_UPDATE_STATE';
@@ -523,6 +518,8 @@ export const actions = {
         const printingState = getState().printing;
 
         const { modelGroup, gcodeLineGroup } = printingState;
+        scene.setModelGroup(modelGroup);
+
         const { toolHead } = getState().machine;
 
         modelGroup.setDataChangedCallback(
@@ -1009,62 +1006,14 @@ export const actions = {
         await dispatch(actions.initSize());
 
         const printingState = getState().printing;
-        const {
-            modelGroup,
-            qualityDefinitions,
-            activePresetIds,
-            defaultMaterialId,
-            defaultMaterialIdRight
-        } = printingState;
-        // TODO
-        const {
-            toolHead: { printingToolhead },
-            series
-        } = getState().machine;
+        const { modelGroup } = printingState;
+        const { series } = getState().machine;
         modelGroup.setSeries(series);
-        const activeQualityDefinition = find(qualityDefinitions, {
-            definitionId: activePresetIds[LEFT_EXTRUDER],
-        });
-        modelGroup.removeAllModels();
-        const primeTowerModel = modelGroup.primeTower;
-        if (isDualExtruder(printingToolhead)) {
-            const enablePrimeTower = activeQualityDefinition?.settings?.prime_tower_enable
-                ?.default_value;
-            primeTowerModel.visible = enablePrimeTower;
-
-            const leftMaterial = defaultMaterialId.split('.')[1];
-            const rightMaterial = defaultMaterialIdRight.split('.')[1];
-            if (every([leftMaterial, rightMaterial], (item) => {
-                return includes(['pva', 'support'], item);
-            }) || every([leftMaterial, rightMaterial], (item) => {
-                return !includes(['pva', 'support'], item);
-            })) {
-                dispatch(actions.updateState({
-                    mainExtruder: LEFT_EXTRUDER
-                }));
-            } else {
-                const mainExtruderIndex = findIndex([leftMaterial, rightMaterial], (item) => {
-                    return item === 'pva' || item === 'support';
-                });
-                dispatch(actions.updateState({
-                    mainExtruder: mainExtruderIndex === 0 ? RIGHT_EXTRUDER : LEFT_EXTRUDER
-                }));
-            }
-        } else {
-            primeTowerModel.visible = false;
-
-            dispatch(actions.updateState({
-                mainExtruder: LEFT_EXTRUDER
-            }));
-        }
-
-        dispatch(actions.updateState({
-            definitionEditorForExtruder: new Map(),
-            definitionEditorForModel: new Map()
-        }));
 
         modelGroup.removeAllModels();
+
         dispatch(actions.initSocketEvent());
+        dispatch(actions.applyProfileToAllModels());
     },
 
     updatePrintMode: (printMode) => (dispatch) => {
@@ -1404,7 +1353,7 @@ export const actions = {
         if (!isNil(paramValue)) {
             const printingState = getState().printing;
             const machineDefinition = definitionManager.machineDefinition;
-            const { materialDefinitions, qualityDefinitions, mainExtruder } = printingState;
+            const { materialDefinitions, qualityDefinitions } = printingState;
 
             let isNozzleSizeChanged = false;
             if (direction) {
@@ -1413,7 +1362,7 @@ export const actions = {
                 if (definitionModel.settings[paramKey]) {
                     definitionModel.settings[paramKey].default_value = paramValue;
                 }
-                if (direction === mainExtruder) {
+                if (direction === LEFT_EXTRUDER) {
                     if (paramKey === 'machine_nozzle_size') {
                         isNozzleSizeChanged = true;
                     }
@@ -1472,7 +1421,6 @@ export const actions = {
         managerDisplayType: type,
         changedSettingArray,
         direction = LEFT_EXTRUDER,
-        shouldUpdateIsOverstepped = false,
     }) => (dispatch, getState) => {
         const printingState = getState().printing;
         const { qualityDefinitions } = printingState;
@@ -1515,6 +1463,8 @@ export const actions = {
             dispatch(actions.updateState({ qualityDefinitions: [...qualityDefinitions] }));
         }
 
+        /*
+        TODO: Check overstep for auto-generated meshes, including adhesion, prime tower, support.
         if (shouldUpdateIsOverstepped) {
             const { modelGroup } = printingState;
             const isAnyModelOverstepped = modelGroup.getOverstepped(
@@ -1522,7 +1472,9 @@ export const actions = {
             );
             dispatch(actions.updateState({ isAnyModelOverstepped }));
         }
+        */
 
+        // TODO: why use setTimeout here? add comment describe the reason.
         setTimeout(() => {
             dispatch(actions.applyProfileToAllModels());
         });
@@ -1969,35 +1921,12 @@ export const actions = {
         dispatch(actions.displayModel());
     },
 
-    updateDefaultMaterialId: (materialId, stackId = LEFT_EXTRUDER) => (dispatch, getState) => {
+    updateDefaultMaterialId: (materialId, stackId = LEFT_EXTRUDER) => (dispatch) => {
         const updateKey = stackId === LEFT_EXTRUDER ? 'defaultMaterialId' : 'defaultMaterialIdRight';
-
-        const { defaultMaterialId, defaultMaterialIdRight, definitionEditorForExtruder } = getState().printing;
-
-        const otherMaterial = stackId === LEFT_EXTRUDER ? defaultMaterialIdRight : defaultMaterialId;
-
-        let mainExtruder = LEFT_EXTRUDER;
-        if (includes(materialId, 'pva') || includes(materialId, 'support')) {
-            if (!includes(otherMaterial, 'pva') && !includes(otherMaterial, 'support')) mainExtruder = (stackId === LEFT_EXTRUDER ? RIGHT_EXTRUDER : LEFT_EXTRUDER);
-            else {
-                definitionEditorForExtruder.clear();
-            }
-            dispatch(actions.updateState({
-                mainExtruder
-            }));
-        } else {
-            if (includes(otherMaterial, 'pva') || includes(otherMaterial, 'support')) mainExtruder = (stackId === LEFT_EXTRUDER ? RIGHT_EXTRUDER : LEFT_EXTRUDER);
-            else {
-                mainExtruder = LEFT_EXTRUDER;
-            }
-        }
-        definitionEditorForExtruder.delete(stackId);
 
         dispatch(actions.updateSavedPresetIds(PRINTING_MANAGER_TYPE_MATERIAL, materialId, stackId));
         dispatch(actions.updateState({
             [updateKey]: materialId,
-            mainExtruder,
-
         }));
         dispatch(actions.validateActiveQualityPreset(stackId));
         dispatch(actions.applyProfileToAllModels());
@@ -2019,6 +1948,7 @@ export const actions = {
         }));
         dispatch(actions.updateSavedPresetIds(PRINTING_MANAGER_TYPE_QUALITY, presetId, stackId));
         dispatch(actions.validateActiveQualityPreset(stackId));
+        dispatch(actions.applyProfileToAllModels());
     },
 
     /**
@@ -2244,7 +2174,6 @@ export const actions = {
             qualityDefinitions,
             qualityDefinitionsRight,
             materialDefinitions,
-            stopArea: { left, front }
         } = getState().printing;
         modelGroup.updateClippingPlane();
         const {
@@ -2272,49 +2201,15 @@ export const actions = {
         const indexR = materialDefinitions.findIndex(
             (d) => d.definitionId === defaultMaterialIdRight
         );
-        const hasPrimeTower = isDualExtruder(printingToolhead)
-            && globalQualityPreset.settings.prime_tower_enable.default_value;
-        const adhesionExtruder = helpersExtruderConfig.adhesion;
 
-        let primeTowerXDefinition = 0;
-        let primeTowerYDefinition = 0;
-        if (hasPrimeTower) {
-            const modelGroupBBox = modelGroup._bbox;
-            const primeTowerModel = modelGroup.primeTower;
-            const primeTowerBrimEnable = globalQualityPreset?.settings?.prime_tower_brim_enable?.default_value;
-            const adhesionType = globalQualityPreset?.settings?.adhesion_type?.default_value;
-            const primeTowerWidth = primeTowerModel.boundingBox.max.x
-                - primeTowerModel.boundingBox.min.x;
-            const primeTowerPositionX = modelGroupBBox.max.x
-                - (primeTowerModel.boundingBox.max.x
-                    + primeTowerModel.boundingBox.min.x
-                    + primeTowerWidth)
-                / 2;
-            const primeTowerPositionY = modelGroupBBox.max.y
-                - (primeTowerModel.boundingBox.max.y
-                    + primeTowerModel.boundingBox.min.y
-                    - primeTowerWidth)
-                / 2;
-            primeTowerXDefinition = size.x - primeTowerPositionX - left;
-            primeTowerYDefinition = size.y - primeTowerPositionY - front;
-            // const a = size.x * 0.5 + primeTowerModel.transformation.positionX- left;;
-            // const b = size.y * 0.5 + primeTowerModel.transformation.positionY - front;
-            if (primeTowerBrimEnable && adhesionType !== 'raft') {
-                const initialLayerLineWidthFactor = globalQualityPreset?.settings?.initial_layer_line_width_factor?.default_value || 0;
-                const brimLineCount = globalQualityPreset?.settings?.brim_line_count?.default_value || 0;
-                let skirtBrimLineWidth = extruderLDefinition?.settings?.machine_nozzle_size?.default_value;
-                if (adhesionExtruder === '1') {
-                    skirtBrimLineWidth = extruderRDefinition?.settings?.machine_nozzle_size?.default_value;
-                }
-                const diff = brimLineCount * skirtBrimLineWidth * initialLayerLineWidthFactor / 100;
-                primeTowerXDefinition += diff;
-                primeTowerYDefinition += diff;
-            }
-            globalQualityPreset.settings.prime_tower_position_x.default_value = primeTowerXDefinition;
-            globalQualityPreset.settings.prime_tower_position_y.default_value = primeTowerYDefinition;
-            globalQualityPreset.settings.prime_tower_size.default_value = primeTowerWidth;
-        }
+        // Apply scene changes to global preset, and extruders
+        dispatch(sceneActions.finalizeSceneSettings(
+            [extruderLDefinition, extruderRDefinition],
+            globalQualityPreset,
+            // [qualityPresets[LEFT_EXTRUDER], qualityPresets[RIGHT_EXTRUDER]]
+        ));
 
+        // Finalize extruder settings based on (quality preset, extruder settings, material settings)
         let newExtruderLDefinition = extruderLDefinition;
         if (extruderLDefinition) {
             newExtruderLDefinition = definitionManager.finalizeExtruderDefinition(
@@ -2322,9 +2217,6 @@ export const actions = {
                     activeQualityDefinition: qualityPresets[LEFT_EXTRUDER],
                     extruderDefinition: extruderLDefinition,
                     materialDefinition: materialDefinitions[indexL],
-                    hasPrimeTower,
-                    primeTowerXDefinition,
-                    primeTowerYDefinition
                 }
             );
             definitionManager.updateDefinition({
@@ -2340,9 +2232,6 @@ export const actions = {
                     activeQualityDefinition: qualityPresets[RIGHT_EXTRUDER],
                     extruderDefinition: extruderRDefinition,
                     materialDefinition: materialDefinitions[indexR],
-                    hasPrimeTower,
-                    primeTowerXDefinition,
-                    primeTowerYDefinition
                 }
             );
             definitionManager.updateDefinition({
@@ -2388,10 +2277,6 @@ export const actions = {
             path.extname(models[0]?.modelName)
         );
         const renderGcodeFileName = `${currentModelName}_${new Date().getTime()}`;
-
-        // Use left
-        // globalQualityPreset.settings.material_bed_temperature.default_value = newExtruderLDefinition.settings.material_bed_temperature.default_value;
-        // globalQualityPreset.settings.material_bed_temperature_layer_0.default_value = newExtruderLDefinition.settings.material_bed_temperature_layer_0.default_value;
 
         const isDual = isDualExtruder(printingToolhead);
         const finalDefinition = definitionManager.finalizeActiveDefinition(
@@ -3083,12 +2968,11 @@ export const actions = {
         dispatch(actions.render());
     },
     removeSelectedModel: () => (dispatch, getState) => {
-        const { modelGroup, definitionEditorForModel } = getState().printing;
+        const { modelGroup } = getState().printing;
         const operations = new Operations();
         const selectedModelArray = modelGroup.selectedModelArray.concat();
         const { recovery } = modelGroup.unselectAllModels();
         for (const model of selectedModelArray) {
-            definitionEditorForModel.delete(model.modelID);
             const operation = new DeleteOperation3D({
                 target: model,
                 dispatch
@@ -3130,11 +3014,6 @@ export const actions = {
         dispatch(actions.updateState(modelState));
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
-    },
-
-    deleteModelEditor: (modelID) => (dispatch, getState) => {
-        const { definitionEditorForModel } = getState().printing;
-        definitionEditorForModel.delete(modelID);
     },
 
     removeAllModels: () => (dispatch, getState) => {
@@ -4407,7 +4286,7 @@ export const actions = {
             }
             modelGroup.emit(ModelEvents.AddModel, group);
         });
-        modelGroup.updatePrimeTowerHeight();
+        modelGroup.childrenChanged();
 
         newModels.forEach((model) => {
             if (model instanceof ThreeModel) {
@@ -5341,7 +5220,7 @@ export const actions = {
                 promptTasks
             }));
         }
-        modelGroup.updatePrimeTowerHeight();
+        modelGroup.meshChanged();
         dispatch(actions.applyProfileToAllModels());
         dispatch(actions.displayModel());
         dispatch(actions.destroyGcodeLine());

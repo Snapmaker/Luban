@@ -1,18 +1,18 @@
+import settings from '../config/settings';
 import SocketServer from '../lib/SocketManager';
-import TaskManager from './task-manager';
-
-import socketSerial from './socket/socket-serial';
-import socketSlice from './socket/socket-slice';
-import connectionManager from './socket/ConnectionManager';
-import system from './socket/system';
 
 
 import urljoin from '../lib/urljoin';
-import settings from '../config/settings';
 import * as api from './api';
 
 import configstore from './configstore';
 import monitor from './monitor';
+import connectionManager from './socket/ConnectionManager';
+
+import socketSerial from './socket/socket-serial';
+import socketSlice from './socket/socket-slice';
+import system from './socket/system';
+import TaskManager from './task-manager';
 
 export {
     configstore,
@@ -207,8 +207,6 @@ function registerApis(app) {
     app.post(urljoin(settings.route, 'api/file/removeEnv'), api.file.removeEnv);
     app.post(urljoin(settings.route, 'api/file/packageEnv'), api.file.packageEnv);
     app.post(urljoin(settings.route, 'api/file/recoverProjectFile'), api.file.recoverProjectFile);
-
-    app.post(urljoin(settings.route, 'api/file/getEditorDefinition'), api.file.getEditorDefinition);
 
 
     app.get(urljoin(settings.route, 'api/profileRawDefinition/:headType/:definitionId'), api.profileDefinitions.getRawDefinition);
