@@ -6,6 +6,8 @@ import { ModelEvents } from '../models/events';
 export enum SceneEvent {
     MeshChanged = 'mesh-changed',
     MeshPositionChanged = 'mesh-position-changed',
+
+    ModelAttributesChanged = 'model-attributes-changed',
 }
 
 /**
@@ -28,12 +30,14 @@ class Scene extends EventEmitter {
         if (this.modelGroup) {
             this.modelGroup.off(ModelEvents.MeshChanged, this.onMeshChanged);
             this.modelGroup.off(ModelEvents.MeshPositionChanged, this.onMeshPositionChanged);
+            this.modelGroup.off(ModelEvents.ModelAttribtuesChanged, this.onModelAttributesChanged);
         }
 
         this.modelGroup = modelGroup;
 
         this.modelGroup.on(ModelEvents.MeshChanged, this.onMeshChanged);
         this.modelGroup.on(ModelEvents.MeshPositionChanged, this.onMeshPositionChanged);
+        this.modelGroup.on(ModelEvents.ModelAttribtuesChanged, this.onModelAttributesChanged);
     }
 
     private onMeshChanged = (): void => {
@@ -43,6 +47,10 @@ class Scene extends EventEmitter {
     private onMeshPositionChanged = (): void => {
         this.emit(SceneEvent.MeshPositionChanged);
     };
+
+    private onModelAttributesChanged = (attributeName: string): void => {
+        this.emit(SceneEvent.ModelAttributesChanged, attributeName);
+    }
 }
 
 // scene singleton

@@ -8,4 +8,6 @@ export enum ModelEvents {
 
     MeshChanged = 'mesh-changed',
     MeshPositionChanged = 'mesh-position-changed',
+
+    ModelAttribtuesChanged = 'model-attributes-changed',
 }

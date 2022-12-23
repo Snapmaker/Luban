@@ -1999,6 +1999,10 @@ class ModelGroup extends EventEmitter {
         this.emit(ModelEvents.MeshPositionChanged);
     }
 
+    public modelAttributesChanged(attributeName: string): void {
+        this.emit(ModelEvents.ModelAttribtuesChanged, attributeName);
+    }
+
     public getSelectedModelByIntersect(intersect: Intersection) {
         if (intersect) {
             const model = this.models.find((d) => d.meshObject === intersect.object);

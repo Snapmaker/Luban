@@ -3060,8 +3060,9 @@ export const actions = {
         dispatch(actions.render());
     },
 
-    updateSelectedModelsExtruder: extruderConfig => (dispatch, getState) => {
+    updateSelectedModelsExtruder: (extruderConfig) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
+
         const models = Object.assign([], getState().printing.modelGroup.models);
         for (const model of modelGroup.selectedModelArray) {
             let modelItem = null;
@@ -3103,6 +3104,7 @@ export const actions = {
         dispatch(actions.applyProfileToAllModels());
         dispatch(actions.updateBoundingBox());
         modelGroup.models = [...models];
+        modelGroup.modelAttributesChanged('extruderConfig');
         // dispatch(actions.updateState({
         //     modelGroup
         // }));

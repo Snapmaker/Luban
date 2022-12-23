@@ -16,21 +16,39 @@ class SceneLogic {
 
     public constructor() {
         scene.on(SceneEvent.MeshChanged, () => {
-            this._computePrimeTowerHeight();
+            this._processPrimeTower();
         });
         scene.on(SceneEvent.MeshPositionChanged, () => {
             this._computePrimeTowerHeight();
         });
+
+        scene.on(SceneEvent.ModelAttributesChanged, (attributeName) => {
+            if (attributeName === 'extruderConfig') {
+                this._processPrimeTower();
+            }
+        });
     }
 
-    private _recalculatePrimeTower(): void {
+    private _processPrimeTower(): void {
         const modelGroup = scene.getModelGroup();
         const primeTower = modelGroup.getPrimeTower();
+
+        // count extruders actually used
+        const extrudersUsed = new Set();
+        const models = modelGroup.getModels<Model3D>();
+        for (const model of models) {
+            extrudersUsed.add(model.extruderConfig.infill);
+            extrudersUsed.add(model.extruderConfig.shell);
+        }
 
         // calculate the visibility of prime tower
         // 1. Dual extruder
         // 2. At least extruders are actually used
-        primeTower.visible = this.primeTowerEnabled;
+        if (this.primeTowerEnabled && extrudersUsed.size > 1) {
+            primeTower.visible = this.primeTowerEnabled;
+        } else {
+            primeTower.visible = false;
+        }
 
         this._computePrimeTowerHeight();
     }
@@ -43,25 +61,33 @@ class SceneLogic {
             return;
         }
 
-        // min height of max extruder height
-        let maxHeight = 0.1;
-        modelGroup.getModels<Model3D>().forEach((modelItem) => {
-            const modelItemHeight = modelItem.boundingBox?.max.z - modelItem.boundingBox?.min.z;
-            maxHeight = Math.max(maxHeight, modelItemHeight);
-        });
-        const height = maxHeight;
+        // max height of extruders
+        const maxHeights: { [extruderNumber: string]: number } = {};
+        const models = modelGroup.getModels<Model3D>();
 
-        if (height !== primeTowerModel.getHeight()) {
-            primeTowerModel.setHeight(height);
+        for (const model of models) {
+            const h = model.boundingBox.max.z;
+
+            const modelExtruders = new Set([model.extruderConfig.infill, model.extruderConfig.shell]);
+            for (const extruderNumber of modelExtruders) {
+                maxHeights[extruderNumber] = maxHeights[extruderNumber] || 0;
+                maxHeights[extruderNumber] = Math.max(maxHeights[extruderNumber], h);
+            }
+        }
+
+        if (Object.keys(maxHeights).length < 2) {
+            return;
+        }
+
+        const estimatedHeight = Math.min(...Object.values(maxHeights)); // we assume that there are exactly 2 heights
+        if (estimatedHeight !== primeTowerModel.getHeight()) {
+            primeTowerModel.setHeight(estimatedHeight);
 
             primeTowerModel.updateTransformation({
-                scaleZ: height
+                scaleZ: estimatedHeight,
             });
             primeTowerModel.stickToPlate();
         }
-
-        console.log('_computePrimeTowerHeight, height =', maxHeight);
-        // this.primeTowerModel.
     }
 
     /**
@@ -77,7 +103,7 @@ class SceneLogic {
         if (primeTowerEnabled !== this.primeTowerEnabled) {
             this.primeTowerEnabled = primeTowerEnabled;
 
-            this._recalculatePrimeTower();
+            this._processPrimeTower();
         }
     }
 }
