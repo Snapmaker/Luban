@@ -1,17 +1,8 @@
-import path from 'path';
-import mv from 'mv';
 import fs from 'fs';
+import mv from 'mv';
+import path from 'path';
 import { v4 as uuid } from 'uuid';
 import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../app/constants';
-import { pathWithRandomSuffix } from '../../lib/random-utils';
-import logger from '../../lib/logger';
-import DataStorage, { rmDir } from '../../DataStorage';
-import store from '../../store';
-import { PROTOCOL_TEXT } from '../../controllers/constants';
-import { parseLubanGcodeHeader } from '../../lib/parseGcodeHeader';
-import { unzipFile, zipFolder } from '../../lib/archive';
-import { packFirmware } from '../../lib/firmware-build';
-import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../constants';
 import {
     getMachineSeriesWithToolhead,
     isDualExtruder,
@@ -23,9 +14,18 @@ import {
     STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
     STANDARD_CNC_TOOLHEAD_FOR_SM2,
 } from '../../../app/constants/machines';
-import { removeSpecialChars } from '../../../shared/lib/utils';
 import { generateRandomPathName } from '../../../shared/lib/random-utils';
+import { removeSpecialChars } from '../../../shared/lib/utils';
+import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../constants';
+import { PROTOCOL_TEXT } from '../../controllers/constants';
+import DataStorage, { rmDir } from '../../DataStorage';
+import { unzipFile, zipFolder } from '../../lib/archive';
+import { packFirmware } from '../../lib/firmware-build';
+import logger from '../../lib/logger';
 import { convertFileToSTL } from '../../lib/model-to-stl';
+import { parseLubanGcodeHeader } from '../../lib/parseGcodeHeader';
+import { pathWithRandomSuffix } from '../../lib/random-utils';
+import store from '../../store';
 
 const log = logger('api:file');
 
@@ -579,25 +579,3 @@ export const recoverProjectFile = async (req, res) => {
         });
     }
 };
-
-
-export const getEditorDefinition = async (req, res) => {
-    try {
-        const { key } = req.body;
-        const editorPath = `${DataStorage.tmpDir}/${key}.def.json`;
-        if (fs.existsSync(editorPath)) {
-            const content = fs.readFileSync(editorPath, 'utf-8');
-            res.send({ editorDefinition: JSON.parse(content) });
-            res.end();
-        } else {
-            res.send({ editorDefinition: {} });
-            res.send();
-        }
-    } catch (e) {
-        log.error(`Failed to get editor definintion: ${e}`);
-        res.status(ERR_INTERNAL_SERVER_ERROR).send({
-            msg: `Failed to get editor definition: ${e}`
-        });
-    }
-};
-

@@ -1,13 +1,13 @@
 import classNames from 'classnames';
-import PropTypes from 'prop-types';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+
 import { PrintMode } from '../../../../constants/print-base';
+
 import { actions as printingActions } from '../../../../flux/printing';
 import i18n from '../../../../lib/i18n';
 import log from '../../../../lib/log';
 import Anchor from '../../../components/Anchor';
-import { Button } from '../../../components/Buttons';
 import SvgIcon from '../../../components/SvgIcon';
 import styles from './styles.styl';
 
@@ -69,17 +69,17 @@ function getPrintModeOptions(activeMachine) {
 
 /**
  * Overlay that can be used to change print mode.
- *
- * @return {*}
- * @constructor
  */
-const ChangePrintModeOverlay = (props) => {
+const ChangePrintModeOverlay = () => {
     const dispatch = useDispatch();
 
     const activeMachine = useSelector(state => state.machine.activeMachine);
     const printMode = useSelector(state => state.printing.printMode);
 
-    const printModeOptions = getPrintModeOptions(activeMachine);
+    const printModeOptions = useMemo(() => {
+        return getPrintModeOptions(activeMachine);
+    }, [activeMachine]);
+
     const [selectedPrintMode, setSelectedPrintMode] = useState(printModeOptions[0].value);
 
     // Select initial print mode
@@ -93,24 +93,15 @@ const ChangePrintModeOverlay = (props) => {
 
         // select the first mode if not matching any option
         setSelectedPrintMode(printModeOptions[0].value);
-    }, [printMode]);
-
-    function apply() {
-        dispatch(printingActions.updatePrintMode(selectedPrintMode));
-        props.onApply();
-    }
-
-    function cancel() {
-        props.onCancel();
-    }
+    }, [printMode, printModeOptions]);
 
     function changePrintMode(targetPrintMode) {
         if (targetPrintMode !== selectedPrintMode) {
             setSelectedPrintMode(targetPrintMode);
+            dispatch(printingActions.updatePrintMode(targetPrintMode));
         }
     }
 
-    // this.props.setPageMode(PageMode.Default);
     return (
         <div className="position-absolute width-438 margin-left-72 border-default-grey-1 border-radius-8 background-color-white">
             <div className={classNames(styles['overlay-title-font'], 'border-bottom-normal padding-vertical-12 padding-horizontal-16')}>
@@ -151,31 +142,11 @@ const ChangePrintModeOverlay = (props) => {
                     })
                 }
             </div>
-            <div className="background-grey-3 padding-vertical-8 sm-flex padding-horizontal-16 justify-flex-end border-radius-bottom-8">
-                <Button
-                    onClick={cancel}
-                    priority="level-two"
-                    width="96px"
-                    type="default"
-                >
-                    {i18n._('key-Modal/Common-Cancel')}
-                </Button>
-                <Button
-                    priority="level-two"
-                    width="96px"
-                    onClick={apply}
-                    className="margin-left-8"
-                >
-                    {i18n._('key-Laser/CameraCapture-Apply')}
-                </Button>
-            </div>
         </div>
     );
 };
 
 ChangePrintModeOverlay.propTypes = {
-    onApply: PropTypes.func,
-    onCancel: PropTypes.func,
 };
 
 export default ChangePrintModeOverlay;

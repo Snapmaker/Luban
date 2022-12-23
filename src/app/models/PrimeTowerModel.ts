@@ -1,9 +1,11 @@
 import * as THREE from 'three';
 import ThreeModel from './ThreeModel';
-import type ModelGroup from './ModelGroup';
+import ModelGroup from './ModelGroup';
 import { ModelInfo, ModelTransformation, TSize } from './ThreeBaseModel';
 
 class PrimeTowerModel extends ThreeModel {
+    private height: number;
+
     public constructor(initHeight: number, modelGroup: ModelGroup, transformation: ModelTransformation = { positionX: 100, positionY: 100 }) {
         const geometry = new THREE.CylinderBufferGeometry(10, 10, 1, 60);
         const material = new THREE.MeshPhongMaterial({
@@ -52,6 +54,13 @@ class PrimeTowerModel extends ThreeModel {
         this.meshObject.add(stencilGroup);
     }
 
+    public getHeight(): number {
+        return this.height;
+    }
+
+    public setHeight(height: number): void {
+        this.height = height;
+    }
 
     public updateHeight(height: number, transformation: ModelTransformation = this.transformation) {
         const positionX = transformation?.positionX;

@@ -6,18 +6,18 @@ import ThreeUtils from '../../three-extensions/ThreeUtils';
 import Operation from './Operation';
 
 type AddOperationProp = {
-    target: ThreeGroup | ThreeModel,
+    target: ThreeGroup | ThreeModel;
 }
 
 type AddOperationState = {
-    target: ThreeGroup | ThreeModel,
-    modelGroup: ModelGroup
+    target: ThreeGroup | ThreeModel;
+    modelGroup: ModelGroup;
     transform: Map<string, {
         position: THREE.Vector3,
         scale: THREE.Vector3,
         rotation: THREE.Euler
-    }>,
-    childrens?: (ThreeGroup | ThreeModel)[]
+    }>;
+    children?: (ThreeGroup | ThreeModel)[]
 }
 
 export default class AddOperation3D extends Operation<AddOperationState> {
@@ -37,7 +37,7 @@ export default class AddOperation3D extends Operation<AddOperationState> {
         modelGroup.object.add(model.meshObject);
 
         if (model instanceof ThreeGroup) {
-            const children = this.state.childrens;
+            const children = this.state.children;
             model.children = [];
 
             children.forEach((subModel) => {
@@ -60,8 +60,8 @@ export default class AddOperation3D extends Operation<AddOperationState> {
         modelGroup.models = modelGroup.models.concat(model); // trigger <ModelItem> component to show the unselected model
         modelGroup.updateModelNameMap(model.modelName, model.baseName, 'add');
         modelGroup.recoverModelClippingGroup(model);
-        modelGroup.updatePrimeTowerHeight();
         modelGroup.modelChanged();
+        modelGroup.childrenChanged();
     }
 
     public undo() {
@@ -74,9 +74,9 @@ export default class AddOperation3D extends Operation<AddOperationState> {
         }
 
         if (model instanceof ThreeGroup) {
-            this.state.childrens = [];
+            this.state.children = [];
             model.children.forEach((subModel) => {
-                this.state.childrens.push(subModel);
+                this.state.children.push(subModel);
                 this.state.transform.set(subModel.modelID, {
                     position: subModel.meshObject.position.clone(),
                     scale: subModel.meshObject.scale.clone(),
@@ -96,7 +96,6 @@ export default class AddOperation3D extends Operation<AddOperationState> {
             // trigger <VisualizerLeftBar> component hidden
             modelGroup.unselectAllModels();
         }
-        modelGroup.updatePrimeTowerHeight();
         modelGroup.modelChanged();
     }
 }

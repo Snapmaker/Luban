@@ -319,7 +319,6 @@ const ConfigurationView: React.FC<{}> = () => {
             dispatch(printingActions.updateShowPrintingManager(true));
         },
 
-
         /**
          * Change quality preset by preset id.
          *
@@ -344,7 +343,6 @@ const ConfigurationView: React.FC<{}> = () => {
                 value = defaultPresetSettings[key].default_value;
             }
             selectedPresetModel.settings[key].default_value = value;
-            const shouldUpdateIsOverstepped = key === 'prime_tower_enable' && value === true;
 
             await dispatch(
                 printingActions.updateCurrentDefinition({
@@ -352,7 +350,6 @@ const ConfigurationView: React.FC<{}> = () => {
                     direction: selectedStackId,
                     definitionModel: selectedPresetModel,
                     changedSettingArray: [[key, value]],
-                    shouldUpdateIsOverstepped
                 })
             );
 

@@ -1,7 +1,8 @@
 /* eslint-disable import/no-cycle */
+import { find, keys, some } from 'lodash';
 import cloneDeep from 'lodash/cloneDeep';
-import { find, isEmpty, keys, some } from 'lodash';
 import pkg from '../../../package.json';
+import api from '../../api';
 import {
     COORDINATE_MODE_BOTTOM_CENTER,
     COORDINATE_MODE_CENTER,
@@ -14,23 +15,22 @@ import {
     SOURCE_TYPE
 } from '../../constants';
 import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 } from '../../constants/machines';
-import api from '../../api';
-import { actions as printingActions } from '../printing';
-import { actions as editorActions } from '../editor';
-import { actions as workspaceActions } from '../workspace';
-import { actions as appGlobalActions } from '../app-global';
-import { bubbleSortByAttribute } from '../../lib/numeric-utils';
-import { UniformToolpathConfig } from '../../lib/uniform-toolpath-config';
 import { checkIsGCodeFile, checkIsSnapmakerProjectFile } from '../../lib/check-name';
-import { actions as operationHistoryActions } from '../operation-history';
-import { machineStore } from '../../store/local-storage';
+import { logModuleVisit } from '../../lib/gaEvent';
 
 import i18n from '../../lib/i18n';
-import UniApi from '../../lib/uni-api';
-import { logModuleVisit } from '../../lib/gaEvent';
 import { PROCESS_STAGE } from '../../lib/manager/ProgressManager';
 import workerManager from '../../lib/manager/workerManager';
+import { bubbleSortByAttribute } from '../../lib/numeric-utils';
+import UniApi from '../../lib/uni-api';
+import { UniformToolpathConfig } from '../../lib/uniform-toolpath-config';
 import { getCurrentHeadType } from '../../lib/url-utils';
+import { machineStore } from '../../store/local-storage';
+import { actions as appGlobalActions } from '../app-global';
+import { actions as editorActions } from '../editor';
+import { actions as operationHistoryActions } from '../operation-history';
+import { actions as printingActions } from '../printing';
+import { actions as workspaceActions } from '../workspace';
 
 const INITIAL_STATE = {
     [HEAD_PRINTING]: {
@@ -122,22 +122,11 @@ export const actions = {
                 defaultMaterialId,
                 defaultMaterialIdRight,
                 helpersExtruderConfig,
-                definitionEditorForExtruder,
-                definitionEditorForModel,
             } = editorState;
             envObj.defaultMaterialId = defaultMaterialId;
             envObj.defaultMaterialIdRight = defaultMaterialIdRight;
             envObj.activePresetIds = activePresetIds;
             envObj.helpersExtruderConfig = helpersExtruderConfig;
-            envObj.extruderEditor = {};
-            envObj.modelEditor = {};
-
-            definitionEditorForExtruder.forEach((value, key) => {
-                envObj.extruderEditor[key] = { ...value };
-            });
-            definitionEditorForModel.forEach((value, key) => {
-                envObj.modelEditor[key] = { ...value };
-            });
 
             envObj.models.push(modelGroup.primeTower.getSerializableConfig());
         }
@@ -464,10 +453,8 @@ export const actions = {
 
     },
 
-    openProject: (file, history, unReload = false, isGuideTours = false) => async (dispatch, getState) => {
+    openProject: (file, history, unReload = false, isGuideTours = false) => async (dispatch) => {
         if (checkIsSnapmakerProjectFile(file.name)) {
-            const { definitionEditorForExtruder, editorDefinition } = getState().printing;
-
             const formData = new FormData();
             let shouldSetFileName = true;
             if (!(file instanceof File)) {
@@ -499,22 +486,6 @@ export const actions = {
             } else {
                 // old verison of project file
                 headType = envObj.headType;
-            }
-            if (headType === HEAD_PRINTING) {
-                const savedExtruderEditor = envObj.extruderEditor;
-                if (!isEmpty(savedExtruderEditor)) {
-                    Object.keys(savedExtruderEditor).forEach(async (key) => {
-                        const checkedParams = savedExtruderEditor[key];
-                        // checkedParams && (checkedParams = JSON.parse(checkedParams));
-                        definitionEditorForExtruder.set(key, checkedParams);
-                        const { body: { editorDefinition: _editorDefinition } } = await api.getEditorDefinition({ key });
-                        const newMap = new Map([...editorDefinition.entries()]);
-                        newMap.set(key, _editorDefinition);
-                        dispatch(printingActions.updateState({
-                            editorDefinition: newMap
-                        }));
-                    });
-                }
             }
             UniformToolpathConfig(envObj);
 

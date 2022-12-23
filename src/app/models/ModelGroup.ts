@@ -1,30 +1,30 @@
 import {
-    Sphere,
-    SphereBufferGeometry,
-    MeshStandardMaterial,
-    Vector3,
-    Group,
-    Matrix4,
-    BufferGeometry,
-    Mesh,
-    Float32BufferAttribute,
-    MeshBasicMaterial,
-    Plane,
     Box3,
-    Object3D,
-    Intersection,
     BufferAttribute,
+    BufferGeometry,
     DynamicDrawUsage,
-    LineSegments,
+    Float32BufferAttribute,
+    FrontSide,
+    Group,
+    Intersection,
     LineBasicMaterial,
-    PlaneGeometry,
-    NotEqualStencilFunc,
-    ReplaceStencilOp,
+    LineSegments,
+    Matrix4,
+    Mesh,
+    MeshBasicMaterial,
     MeshPhongMaterial,
-    Vector2,
+    MeshStandardMaterial,
+    NotEqualStencilFunc,
+    Object3D,
+    Plane,
+    PlaneGeometry,
+    ReplaceStencilOp,
     Shape,
     ShapeGeometry,
-    FrontSide
+    Sphere,
+    SphereBufferGeometry,
+    Vector2,
+    Vector3
 } from 'three';
 import EventEmitter from 'events';
 import { CONTAINED, INTERSECTED, NOT_INTERSECTED } from 'three-mesh-bvh';
@@ -37,7 +37,7 @@ import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
 import { ModelInfo as SVGModelInfo, TMode, TSize } from './BaseModel';
 import ThreeModel from './ThreeModel';
 import SvgModel from './SvgModel';
-import { EPSILON, SELECTEVENT, HEAD_PRINTING, HEAD_LASER, HEAD_CNC } from '../constants';
+import { EPSILON, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, SELECTEVENT } from '../constants';
 
 import ThreeUtils from '../three-extensions/ThreeUtils';
 import ThreeGroup from './ThreeGroup';
@@ -48,13 +48,12 @@ import { ModelEvents } from './events';
 import { TPolygon } from './ClipperModel';
 import { PolygonsUtils } from '../../shared/lib/math/PolygonsUtils';
 import workerManager, { WorkerEvents } from '../lib/manager/workerManager';
-// import ConvexGeometry from '../three-extensions/ConvexGeometry';
-
 import { IResult as TBrimResult } from '../workers/plateAdhesion/generateBrim';
 import { IResult as TRaftResult } from '../workers/plateAdhesion/generateRaft';
 import { IResult as TSkirtResult } from '../workers/plateAdhesion/generateSkirt';
 import { bufferToPoint } from '../lib/buffer-utils';
 import { emitUpdateScaleEvent } from '../ui/components/SMCanvas/TransformControls';
+// import ConvexGeometry from '../three-extensions/ConvexGeometry';
 
 const CUSTOM_EVENTS = {
     UPDATE: { type: 'update' }
@@ -72,7 +71,7 @@ export const CLIPPING_LINE_COLOR = '#3B83F6';
 
 type TModel = ThreeGroup | ThreeModel | SvgModel
 
-type Model3D = Exclude<TModel, SvgModel>;
+export type Model3D = Exclude<TModel, SvgModel>;
 
 export type TDisplayedType = 'model' | 'gcode'
 
@@ -478,7 +477,7 @@ class ModelGroup extends EventEmitter {
         this.updatePlateAdhesion();
         this.modelChanged();
         this.selectedModelArray = this.selectedModelArray.filter((item) => item !== model);
-        model.sourceType === '3d' && this.updatePrimeTowerHeight();
+        this.childrenChanged();
 
         if (model instanceof ThreeModel) {
             workerManager.stopCalculateSectionPoints(model.modelID);
@@ -557,7 +556,7 @@ class ModelGroup extends EventEmitter {
         this._removeAllModels();
 
         this.modelChanged();
-        this.updatePrimeTowerHeight();
+        this.childrenChanged();
         return this._getEmptyState();
     }
 
@@ -765,6 +764,11 @@ class ModelGroup extends EventEmitter {
         return this.selectedModelArray.every(model => !model.visible);
     }
 
+    public getPrimeTower(): PrimeTowerModel {
+        return this.primeTower;
+    }
+
+    // TODO: Refactor this.
     public setSeries(series: string) {
         this.series = series;
     }
@@ -1191,7 +1195,8 @@ class ModelGroup extends EventEmitter {
                 newModel.stickToPlate();
                 this.addModelToSelectedGroup(newModel);
 
-                this.updatePrimeTowerHeight();
+                this.childrenChanged();
+
                 if (newModel instanceof ThreeModel) {
                     this.initModelClipper(newModel);
                 } else if (newModel instanceof ThreeGroup) {
@@ -1580,8 +1585,9 @@ class ModelGroup extends EventEmitter {
         // after update transformation
         this.selectedGroup.shouldUpdateBoundingbox = true;
 
+        this.meshPositionChanged();
+
         this.prepareSelectedGroup();
-        this.updatePrimeTowerHeight();
         this.calaClippingMap();
         recovery();
 
@@ -1946,7 +1952,7 @@ class ModelGroup extends EventEmitter {
         group.computeBoundingBox();
         group.onTransform();
         this.addModelToSelectedGroup(group);
-        this.updatePrimeTowerHeight();
+        this.meshChanged();
 
         this.emit(ModelEvents.AddModel, group);
     }
@@ -1977,7 +1983,26 @@ class ModelGroup extends EventEmitter {
         }
     }
 
-    // todo
+    /**
+     * Notifying children of root group is changed.
+     */
+    public childrenChanged() {
+        // children of root changed, thus can be regarded as mesh changed
+        this.emit(ModelEvents.MeshChanged);
+    }
+
+    public meshChanged() {
+        this.emit(ModelEvents.MeshChanged);
+    }
+
+    public meshPositionChanged() {
+        this.emit(ModelEvents.MeshPositionChanged);
+    }
+
+    public modelAttributesChanged(attributeName: string): void {
+        this.emit(ModelEvents.ModelAttribtuesChanged, attributeName);
+    }
+
     public getSelectedModelByIntersect(intersect: Intersection) {
         if (intersect) {
             const model = this.models.find((d) => d.meshObject === intersect.object);
@@ -2281,7 +2306,7 @@ class ModelGroup extends EventEmitter {
             group.computeBoundingBox();
             group.onTransform();
             this.addModelToSelectedGroup(group);
-            this.updatePrimeTowerHeight();
+            this.childrenChanged();
         }
         return {
             newGroup: group,
@@ -2329,7 +2354,7 @@ class ModelGroup extends EventEmitter {
                 autoStickToPlate && model.stickToPlate();
             });
         }
-        this.updatePrimeTowerHeight();
+        this.childrenChanged();
         return this.getState();
     }
 
@@ -2360,25 +2385,6 @@ class ModelGroup extends EventEmitter {
         return this.getThreeModels().filter((model) => {
             return model !== this.primeTower && model.visible;
         }).length > 0;
-    }
-
-    // prime tower
-    public initPrimeTower(initHeight = 0.1, transformation: ModelTransformation) {
-        return new PrimeTowerModel(initHeight, this, transformation);
-    }
-
-    public updatePrimeTowerHeight() {
-        let maxHeight = 0.1;
-        const maxBoundingBoxHeight = this._bbox?.max.z;
-        this.getModels<Model3D>().forEach((modelItem) => {
-            if (modelItem.headType === HEAD_PRINTING) {
-                const modelItemHeight = modelItem.boundingBox?.max.z - modelItem.boundingBox?.min.z;
-                maxHeight = Math.max(maxHeight, modelItemHeight);
-            }
-        });
-        if (typeof this.primeTowerHeightCallback === 'function') {
-            this.primeTowerHeightCallback(Math.min(maxHeight, maxBoundingBoxHeight));
-        }
     }
 
     public filterModelsCanAttachSupport(models: TModel[] = this.models) {

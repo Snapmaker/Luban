@@ -85,12 +85,6 @@ const removeEnv = defaultAPIFactory((data) => request.post('/api/file/removeEnv'
 const packageEnv = defaultAPIFactory((data) => request.post('/api/file/packageEnv').send(data));
 const recoverProjectFile = defaultAPIFactory((data) => request.post('/api/file/recoverProjectFile').send(data));
 
-//
-// Modifier, TODO: check usages
-//
-const getEditorDefinition = defaultAPIFactory((data) => request.post('/api/file/getEditorDefinition').send(data));
-
-
 // Stock Remap
 // options
 //  - image
@@ -352,8 +346,6 @@ export default {
     removeEnv,
     packageEnv,
     recoverProjectFile,
-
-    getEditorDefinition,
 
     uploadImage,
     stockRemapProcess,

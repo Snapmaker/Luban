@@ -1,12 +1,11 @@
 // import isEqual from 'lodash/isEqual';
-import { find, isEqual, some } from 'lodash';
+import { isEqual, some } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import { Box3, Math as ThreeMath, Quaternion, Vector3 } from 'three';
-import { EPSILON, HEAD_PRINTING, LEFT_EXTRUDER, ROTATE_MODE, SCALE_MODE, TRANSLATE_MODE } from '../../../constants';
-import { isDualExtruder } from '../../../constants/machines';
+import { EPSILON, HEAD_PRINTING, ROTATE_MODE, SCALE_MODE, TRANSLATE_MODE } from '../../../constants';
 import { actions as machineActions } from '../../../flux/machine';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import { actions as printingActions } from '../../../flux/printing';
@@ -93,9 +92,6 @@ class Visualizer extends PureComponent {
         setRotationPlacementFace: PropTypes.func.isRequired,
         repairSelectedModels: PropTypes.func.isRequired,
         updatePromptDamageModel: PropTypes.func.isRequired,
-        enablePrimeTower: PropTypes.bool,
-        primeTowerHeight: PropTypes.number.isRequired,
-        printingToolhead: PropTypes.string,
         stopArea: PropTypes.object,
         displayModel: PropTypes.func,
         pageMode: PropTypes.string.isRequired,
@@ -382,7 +378,7 @@ class Visualizer extends PureComponent {
     componentDidUpdate(prevProps) {
         const {
             size, stopArea, transformMode, selectedModelArray, renderingTimestamp, modelGroup, stage,
-            primeTowerHeight, enablePrimeTower, printingToolhead, promptTasks
+            promptTasks
         } = this.props;
         if (transformMode !== prevProps.transformMode) {
             this.canvas.current.setTransformMode(transformMode);
@@ -479,19 +475,6 @@ class Visualizer extends PureComponent {
             }
         }
 
-        if (enablePrimeTower !== prevProps.enablePrimeTower && isDualExtruder(printingToolhead)) {
-            modelGroup.primeTower.visible = enablePrimeTower;
-        }
-        if (!Number.isNaN(primeTowerHeight) && !Number.isNaN(this.props.primeTowerHeight) && primeTowerHeight !== prevProps.primeTowerHeight) {
-            const primeTowerModel = modelGroup.primeTower;
-            if (primeTowerModel) {
-                primeTowerModel.updateTransformation({
-                    scaleZ: primeTowerHeight / 1
-                });
-                primeTowerModel.stickToPlate();
-                this.canvas.current.renderScene();
-            }
-        }
         this.canvas.current.renderScene();
     }
 
@@ -695,7 +678,7 @@ const mapStateToProps = (state, ownProps) => {
     const machine = state.machine;
     const { currentModalPath } = state.appbarMenu;
     const printing = state.printing;
-    const { size, series, toolHead: { printingToolhead }, enable3dpLivePreview } = machine;
+    const { size, series, enable3dpLivePreview } = machine;
     const { menuDisabledCount } = state.appbarMenu;
     // TODO: be to organized
     const {
@@ -712,14 +695,10 @@ const mapStateToProps = (state, ownProps) => {
         inProgress,
         enableShortcut,
         leftBarOverlayVisible,
-        primeTowerHeight,
-        qualityDefinitions,
-        activePresetIds,
         stopArea,
         simplifyOriginModelInfo
     } = printing;
-    const activeQualityDefinition = find(qualityDefinitions, { definitionId: activePresetIds[LEFT_EXTRUDER] });
-    const enablePrimeTower = activeQualityDefinition?.settings?.prime_tower_enable?.default_value;
+
     let isActive = true;
     if (enableShortcut) {
         if (!currentModalPath && ownProps.location.pathname.indexOf(HEAD_PRINTING) > 0) {
@@ -751,9 +730,6 @@ const mapStateToProps = (state, ownProps) => {
         renderingTimestamp,
         inProgress,
         progressStatesManager,
-        enablePrimeTower,
-        primeTowerHeight,
-        printingToolhead,
         simplifyOriginModelInfo,
         enable3dpLivePreview
     };
