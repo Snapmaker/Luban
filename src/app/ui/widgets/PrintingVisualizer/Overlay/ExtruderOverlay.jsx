@@ -8,7 +8,6 @@ import { BOTH_EXTRUDER_MAP_NUMBER, HEAD_PRINTING, LEFT_EXTRUDER_MAP_NUMBER } fro
 import { actions as printingActions } from '../../../../flux/printing';
 import { actions as projectActions } from '../../../../flux/project';
 import i18n from '../../../../lib/i18n';
-import Checkbox from '../../../components/Checkbox';
 import Dropdown from '../../../components/Dropdown';
 import Menu from '../../../components/Menu';
 import SvgIcon from '../../../components/SvgIcon';
@@ -89,7 +88,7 @@ const ExtruderOverlay = React.memo((
     const dispatch = useDispatch();
 
     const {
-        isOpenSelectModals, isOpenHelpers: _isOpenHelpers, modelExtruderInfoShow, helpersExtruderInfoShow, helpersExtruderConfig
+        isOpenSelectModals, isOpenHelpers: _isOpenHelpers, modelExtruderInfoShow, helpersExtruderConfig
     } = useSelector(state => state?.printing);
 
     const [modelsExtruder, setModelsExtruder] = useState(originalModelsExtruder);
@@ -379,94 +378,6 @@ const ExtruderOverlay = React.memo((
                         >
                             {renderExtruderStatus(modelsExtruder.infill, !isSelectedModelAllVisible)}
                         </Dropdown>
-                    </div>
-                </div>
-                <div className="padding-right-16 padding-left-4">
-                    <div className={classNames(styles['dashed-line'])} />
-                </div>
-                <div className="select-models-container">
-                    {
-                        helpersExtruderInfoShow && (
-                            <div className="sm-flex align-center justify-space-between margin-right-16">
-                                <div className="sm-flex align-center">
-                                    <SvgIcon
-                                        color="#1890FF"
-                                        size={24}
-                                        type={['static']}
-                                        name="WarningTipsTips"
-                                        className="margin-vertical-8 margin-right-4"
-                                    />
-                                    <span className="display-inline width-200 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Helpers Extruder Info')}</span>
-                                </div>
-                                <SvgIcon
-                                    color="#545659"
-                                    size={24}
-                                    type={['static']}
-                                    name="Cancel"
-                                    className="margin-right-8"
-                                    onClick={() => {
-                                        dispatch(printingActions.updateState({ helpersExtruderInfoShow: false }));
-                                    }}
-                                />
-                            </div>
-                        )
-                    }
-                    <div className="sm-flex align-center padding-top-8">
-                        <SvgIcon
-                            size={24}
-                            hoversize={24}
-                            type={['static']}
-                            name={`${isOpenHelpers ? 'DropdownOpen' : 'DropdownClose'}`}
-                            color="#545659"
-                            onClick={() => handleOpen('helpers')}
-                        />
-                        <div role="presentation" onClick={() => handleOpen('helpers')} className="display-block width-96 text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-All Helpers')}</div>
-                        <Dropdown
-                            placement="bottomRight"
-                            overlay={extruderOverlay('helpers.multiple', helpersExtruder.multiple)}
-                            trigger="click"
-                        >
-                            {renderExtruderStatus(helpersExtruder.multiple)}
-                        </Dropdown>
-                    </div>
-                    <div className={`align-center margin-left-24 margin-top-8 ${isOpenHelpers ? 'sm-flex' : 'display-none'}`}>
-                        <span className="display-block width-96 text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-Adhesion')}</span>
-                        <Dropdown
-                            placement="bottomRight"
-                            overlay={extruderOverlay('helpers.adhesion', helpersExtruder.adhesion)}
-                            trigger="click"
-                        >
-                            {renderExtruderStatus(helpersExtruder.adhesion)}
-                        </Dropdown>
-                    </div>
-                    <div className={`sm-flex align-center margin-left-24 margin-top-8 ${isOpenHelpers ? 'sm-flex' : 'display-none'}`}>
-                        <span className="display-block width-96 text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-Support')}</span>
-                        <Dropdown
-                            placement="bottomRight"
-                            overlay={extruderOverlay('helpers.support', helpersExtruder.support)}
-                            trigger="click"
-                        >
-                            {renderExtruderStatus(helpersExtruder.support)}
-                        </Dropdown>
-                    </div>
-                    <div className={classNames(styles['only-support-interface'], `sm-flex align-center margin-top-8 ${isOpenHelpers ? 'sm-flex' : 'display-none'}`)}>
-                        <Checkbox
-                            className=""
-                            defaultChecked={false}
-                            type="checkbox"
-                            checked={helpersExtruder.onlySupportInterface}
-                            onChange={(event) => {
-                                setHelpersExtruder((obj) => {
-                                    const newhelpersExtruder = {
-                                        ...obj,
-                                        onlySupportInterface: event.target.checked
-                                    };
-                                    dispatch(printingActions.updateHelpersExtruder(newhelpersExtruder));
-                                    return newhelpersExtruder;
-                                });
-                            }}
-                        />
-                        <span className="margin-left-4">{i18n._('key-Printing/LeftBar-Only Support Interface')}</span>
                     </div>
                 </div>
             </div>
