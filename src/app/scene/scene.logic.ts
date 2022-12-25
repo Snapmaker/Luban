@@ -1,6 +1,7 @@
 import PresetDefinitionModel from '../flux/manager/PresetDefinitionModel';
 import scene, { SceneEvent } from './Scene';
 import { Model3D } from '../models/ModelGroup';
+import { Size2D } from '../models/BaseModel';
 
 
 export declare interface PrimeTowerSettings {
@@ -27,6 +28,10 @@ class SceneLogic {
                 this._processPrimeTower();
             }
         });
+
+        scene.on(SceneEvent.BuildVolumeChanged, () => {
+            this._processPrimeTower();
+        });
     }
 
     private _processPrimeTower(): void {
@@ -50,6 +55,7 @@ class SceneLogic {
             primeTower.visible = false;
         }
 
+        this._computePrimeTowerPosition();
         this._computePrimeTowerHeight();
     }
 
@@ -81,13 +87,34 @@ class SceneLogic {
 
         const estimatedHeight = Math.min(...Object.values(maxHeights)); // we assume that there are exactly 2 heights
         if (estimatedHeight !== primeTowerModel.getHeight()) {
+            console.log('h =', estimatedHeight);
             primeTowerModel.setHeight(estimatedHeight);
-
-            primeTowerModel.updateTransformation({
-                scaleZ: estimatedHeight,
-            });
-            primeTowerModel.stickToPlate();
         }
+    }
+
+    private _computePrimeTowerPosition(): void {
+        const modelGroup = scene.getModelGroup();
+        const primeTowerModel = modelGroup.getPrimeTower();
+
+        // Get build volume
+        const buildVolume = scene.getBuildVolume();
+        const size: Size2D = buildVolume.getSize();
+        const stopArea = buildVolume.getStopArea();
+
+        console.log('_computePrimeTowerPosition', size, stopArea);
+
+        // Find a proper position to place it
+        // TODO: refactor this soon
+        primeTowerModel.updateHeight(1, {
+            positionX: size.x / 2 - stopArea.right - 15,
+            positionY: size.y / 2 - stopArea.back - 15,
+            scaleX: 1,
+            scaleY: 1,
+            scaleZ: 1,
+        });
+        primeTowerModel.computeBoundingBox();
+        primeTowerModel.overstepped = false;
+        primeTowerModel.setSelected(false);
     }
 
     /**

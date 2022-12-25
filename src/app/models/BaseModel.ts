@@ -1,9 +1,15 @@
 import * as THREE from 'three';
 import { Box2, Mesh, Object3D } from 'three';
 import { v4 as uuid } from 'uuid';
-import { PROCESS_MODE_BW, PROCESS_MODE_GREYSCALE, PROCESS_MODE_HALFTONE, PROCESS_MODE_MESH, PROCESS_MODE_VECTOR } from '../../server/constants';
+import {
+    PROCESS_MODE_BW,
+    PROCESS_MODE_GREYSCALE,
+    PROCESS_MODE_HALFTONE,
+    PROCESS_MODE_MESH,
+    PROCESS_MODE_VECTOR
+} from '../../server/constants';
 import { HEAD_CNC, HEAD_LASER, SOURCE_TYPE } from '../constants';
-import type ModelGroup from './ModelGroup';
+import ModelGroup from './ModelGroup';
 
 export interface ModelTransformation {
     positionX: number,
@@ -32,6 +38,11 @@ const DEFAULT_TRANSFORMATION: ModelTransformation = {
     scaleZ: 1,
     uniformScalingState: true
 };
+
+export interface Size2D {
+    x: number;
+    y: number;
+}
 
 export type TSize = {
     x: number;
@@ -134,7 +145,7 @@ abstract class BaseModel {
         });
 
         this.modelID = this.modelID || `id${uuid()}`;
-        this.modelName = this.modelName ?? 'unnamed';
+        this.modelName = this.modelName || 'unnamed';
         this.transformation = { ...DEFAULT_TRANSFORMATION, ...this.transformation };
     }
 

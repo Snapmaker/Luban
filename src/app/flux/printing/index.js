@@ -642,9 +642,6 @@ export const actions = {
         // Re-position model group
         const { size } = getState().machine;
         gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
-
-        const { stopArea } = getState().printing;
-        modelGroup.primeTower.resetPosition(size, stopArea);
     },
 
     // scene: sceneActions,
@@ -2206,7 +2203,7 @@ export const actions = {
         dispatch(sceneActions.finalizeSceneSettings(
             [extruderLDefinition, extruderRDefinition],
             globalQualityPreset,
-            // [qualityPresets[LEFT_EXTRUDER], qualityPresets[RIGHT_EXTRUDER]]
+            [qualityPresets[LEFT_EXTRUDER], qualityPresets[RIGHT_EXTRUDER]]
         ));
 
         // Finalize extruder settings based on (quality preset, extruder settings, material settings)

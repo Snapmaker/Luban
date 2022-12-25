@@ -2,24 +2,33 @@ import EventEmitter from 'events';
 import ModelGroup from '../models/ModelGroup';
 import { ModelEvents } from '../models/events';
 
+// TODO: Move this object to app/scene directory
+import PrintableCube from '../ui/widgets/PrintingVisualizer/PrintableCube';
 
 export enum SceneEvent {
+    // model
+    ModelAttributesChanged = 'model-attributes-changed',
+
+    // mesh
     MeshChanged = 'mesh-changed',
     MeshPositionChanged = 'mesh-position-changed',
 
-    ModelAttributesChanged = 'model-attributes-changed',
+    // build volume
+    BuildVolumeChanged = 'build-volume-changed',
 }
 
 /**
  * Scene represents the 3D scene, the entry to access 3D objects.
  */
 class Scene extends EventEmitter {
-    private modelGroup: ModelGroup;
+    private modelGroup?: ModelGroup;
+    private buildVolume?: PrintableCube;
 
     public constructor() {
         super();
 
         this.modelGroup = null;
+        this.buildVolume = null;
     }
 
     public getModelGroup(): ModelGroup {
@@ -50,7 +59,29 @@ class Scene extends EventEmitter {
 
     private onModelAttributesChanged = (attributeName: string): void => {
         this.emit(SceneEvent.ModelAttributesChanged, attributeName);
+    };
+
+    //
+    // build volume
+    //
+
+    public getBuildVolume(): PrintableCube {
+        return this.buildVolume;
     }
+
+    public setBuildVolume(buildVolume: PrintableCube): void {
+        if (this.buildVolume) {
+            this.buildVolume.removeEventListener('update', this.onWorkRangeChanged);
+        }
+
+        this.buildVolume = buildVolume;
+
+        this.buildVolume.addEventListener('update', this.onWorkRangeChanged);
+    }
+
+    private onWorkRangeChanged = (): void => {
+        this.emit(SceneEvent.BuildVolumeChanged);
+    };
 }
 
 // scene singleton

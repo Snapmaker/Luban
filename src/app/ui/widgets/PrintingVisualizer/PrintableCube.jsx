@@ -49,6 +49,14 @@ class PrintableCube extends Object3D {
         this._setupStopArea();
     }
 
+    getSize() {
+        return this.size;
+    }
+
+    getStopArea() {
+        return this.stopArea;
+    }
+
     updateSize(series, size, stopArea) {
         this.series = series;
         this.size = size;
@@ -71,6 +79,7 @@ class PrintableCube extends Object3D {
         this.stopArea.back = stopArea.back ?? this.stopArea.back;
         this.stopArea.front = stopArea.front ?? this.stopArea.front;
         this._setupStopArea();
+        this.update();
     }
 
     update = () => {
