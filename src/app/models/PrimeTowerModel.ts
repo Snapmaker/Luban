@@ -5,6 +5,7 @@ import ModelGroup from './ModelGroup';
 import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
 
 class PrimeTowerModel extends ThreeModel {
+     private size: number;
     private height: number;
 
     public constructor(initHeight: number, modelGroup: ModelGroup, transformation: ModelTransformation = {
@@ -39,6 +40,8 @@ class PrimeTowerModel extends ThreeModel {
 
         super(modelInfo, modelGroup);
 
+        this.size = 20; // 20
+
         const positionX = transformation?.positionX || Math.max(modelGroup._bbox.max.x - 50, modelGroup._bbox.min.x - 50);
         const positionY = transformation?.positionY || Math.max(modelGroup._bbox.max.y - 50, modelGroup._bbox.min.y - 50);
         const scaleX = transformation?.scaleX || 1;
@@ -56,6 +59,10 @@ class PrimeTowerModel extends ThreeModel {
 
         const stencilGroup = this.createPlaneStencilGroup(geometry);
         this.meshObject.add(stencilGroup);
+    }
+
+    public getSize(): number {
+        return this.size;
     }
 
     public getHeight(): number {

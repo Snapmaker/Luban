@@ -50,13 +50,12 @@ class SceneLogic {
         // 1. Dual extruder
         // 2. At least extruders are actually used
         if (this.primeTowerEnabled && extrudersUsed.size > 1) {
-            primeTower.visible = this.primeTowerEnabled;
+            primeTower.visible = true;
+            this._computePrimeTowerPosition();
+            this._computePrimeTowerHeight();
         } else {
             primeTower.visible = false;
         }
-
-        this._computePrimeTowerPosition();
-        this._computePrimeTowerHeight();
     }
 
     private _computePrimeTowerHeight(): void {
@@ -87,27 +86,64 @@ class SceneLogic {
 
         const estimatedHeight = Math.min(...Object.values(maxHeights)); // we assume that there are exactly 2 heights
         if (estimatedHeight !== primeTowerModel.getHeight()) {
-            console.log('h =', estimatedHeight);
             primeTowerModel.setHeight(estimatedHeight);
         }
     }
 
+    /**
+     * Find a proper position to place the prime tower.
+     *
+     * @private
+     */
     private _computePrimeTowerPosition(): void {
         const modelGroup = scene.getModelGroup();
         const primeTowerModel = modelGroup.getPrimeTower();
+
+        if (!primeTowerModel.visible) {
+            return;
+        }
 
         // Get build volume
         const buildVolume = scene.getBuildVolume();
         const size: Size2D = buildVolume.getSize();
         const stopArea = buildVolume.getStopArea();
 
-        console.log('_computePrimeTowerPosition', size, stopArea);
+        let primeTowerX;
+        let primeTowerY;
 
-        // Find a proper position to place it
+        const boundingBox = modelGroup.getBoundingBox();
+        const primeTowerSize = primeTowerModel.getSize();
+
+        let placed = false;
+
+        // Try place the prime tower on the back of models
+        const guessY = boundingBox.max.y + 15 + primeTowerSize / 2;
+        if (guessY + primeTowerSize / 2 + stopArea.back <= size.y / 2) {
+            primeTowerX = (boundingBox.min.x + boundingBox.max.x) / 2;
+            primeTowerY = guessY;
+            placed = true;
+        }
+
+        // Try place the prime tower on the right of models
+        if (!placed) {
+            const guessX = boundingBox.max.x + 15 + primeTowerSize / 2;
+            if (guessX + primeTowerSize / 2 + stopArea.right <= size.x / 2) {
+                primeTowerX = guessX;
+                primeTowerY = (boundingBox.min.y + boundingBox.max.y) / 2;
+                placed = true;
+            }
+        }
+
+        if (!placed) {
+            // fall back to place on top right corner
+            primeTowerX = size.x / 2 - stopArea.right - 15;
+            primeTowerY = size.y / 2 - stopArea.back - 15;
+        }
+
         // TODO: refactor this soon
         primeTowerModel.updateHeight(1, {
-            positionX: size.x / 2 - stopArea.right - 15,
-            positionY: size.y / 2 - stopArea.back - 15,
+            positionX: primeTowerX,
+            positionY: primeTowerY,
             scaleX: 1,
             scaleY: 1,
             scaleZ: 1,

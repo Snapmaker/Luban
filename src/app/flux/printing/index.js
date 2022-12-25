@@ -2190,7 +2190,7 @@ export const actions = {
             [RIGHT_EXTRUDER]: qualityDefinitionsRight.find(p => p.definitionId === activePresetIds[RIGHT_EXTRUDER]),
         };
 
-        const globalQualityPreset = qualityPresets[LEFT_EXTRUDER];
+        const globalQualityPreset = cloneDeep(qualityPresets[LEFT_EXTRUDER]);
 
         const indexL = materialDefinitions.findIndex(
             (d) => d.definitionId === defaultMaterialId
@@ -3102,9 +3102,6 @@ export const actions = {
         dispatch(actions.updateBoundingBox());
         modelGroup.models = [...models];
         modelGroup.modelAttributesChanged('extruderConfig');
-        // dispatch(actions.updateState({
-        //     modelGroup
-        // }));
     },
 
     updateHelpersExtruder: (extruderConfig) => (dispatch) => {
