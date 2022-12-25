@@ -1,18 +1,20 @@
-import React, { useState } from 'react';
-import PropTypes from 'prop-types';
+import { Tooltip } from 'antd';
 import classNames from 'classnames';
 import path from 'path';
-import { Tooltip } from 'antd';
+import PropTypes from 'prop-types';
+import React, { useState } from 'react';
 import { Trans } from 'react-i18next';
-import i18n from '../../lib/i18n';
-import TipTrigger from '../components/TipTrigger';
-import Anchor from '../components/Anchor';
-import SvgIcon from '../components/SvgIcon';
-import { normalizeNameDisplay } from '../../lib/normalize-range';
+
 import { HEAD_PRINTING } from '../../constants';
-import { renderExtruderIcon, whiteHex } from '../widgets/PrintingVisualizer/VisualizerLeftBar';
+import i18n from '../../lib/i18n';
+import { normalizeNameDisplay } from '../../lib/normalize-range';
+import Anchor from '../components/Anchor';
 import Dropdown from '../components/Dropdown';
+import SvgIcon from '../components/SvgIcon';
+import TipTrigger from '../components/TipTrigger';
+
 import { extruderOverlayMenu } from '../widgets/PrintingVisualizer/Overlay/ExtruderOverlay';
+import { renderExtruderIcon, whiteHex } from '../widgets/PrintingVisualizer/VisualizerLeftBar';
 
 let svgName = '';
 let modelName = '';
@@ -89,7 +91,7 @@ ModelIcon.propTypes = {
 
 function ModelItem({
     model, visible, isSelected, styles, onSelect, onToggleVisible,
-    inProgress, placment, disabled = false, isDualExtruder = false,
+    inProgress, placement, disabled = false, isDualExtruder = false,
     leftMaterialColor = whiteHex, rightMaterialColor = whiteHex,
     updateSelectedModelsExtruder
 }) {
@@ -169,7 +171,7 @@ function ModelItem({
                 key={model.modelID}
                 title={i18n._('key-PrintingCncLaser/ObjectList-Object')}
                 content={model.modelName}
-                placement={placment || undefined}
+                placement={placement || undefined}
                 visible={!hasChildren && model.modelID === tipTriggerVisible && tipTriggerVisible}
             >
                 {!isPrinting ? (
@@ -178,8 +180,10 @@ function ModelItem({
                             'padding-vertical-4',
                             'padding-horizontal-8',
                             'sm-flex',
-                            styles.objectListItem,
-                            isSelected ? styles.selected : null,
+                            styles['object-list-item'],
+                            {
+                                [styles.selected]: isSelected,
+                            },
                         )}
                     >
                         <Anchor
@@ -217,23 +221,27 @@ function ModelItem({
                             'padding-vertical-4',
                             'padding-horizontal-8',
                             'sm-flex',
-                            styles.objectListItem,
-                            isSelected ? styles.selected : null,
+                            styles['object-list-item'],
+                            {
+                                [styles.selected]: isSelected,
+                            },
                         )}
                     >
-                        {hasChildren ? (
-                            <SvgIcon
-                                type={['static']}
-                                name={isExpend ? 'DropdownOpen' : 'DropdownClose'}
-                                className="margin-right-4"
-                                disabled={disabled}
-                                onClick={() => setIsExpend((prev) => {
-                                    return !prev;
-                                })}
-                            />
-                        ) : (
-                            <ModelIcon name={svgName} model={model} disabled={disabled} />
-                        )}
+                        {
+                            hasChildren ? (
+                                <SvgIcon
+                                    type={['static']}
+                                    name={isExpend ? 'DropdownOpen' : 'DropdownClose'}
+                                    className="margin-right-4"
+                                    disabled={disabled}
+                                    onClick={() => setIsExpend((prev) => {
+                                        return !prev;
+                                    })}
+                                />
+                            ) : (
+                                <ModelIcon name={svgName} model={model} disabled={disabled} />
+                            )
+                        }
                         <Anchor
                             className={classNames(
                                 'height-24',
@@ -290,7 +298,7 @@ function ModelItem({
                         key={modelItem.modelID}
                         title={i18n._('key-PrintingCncLaser/ObjectList-Object')}
                         content={modelItem.modelName}
-                        placement={placment || undefined}
+                        placement={placement || undefined}
                         visible={modelItem.modelID === tipTriggerVisible}
                     >
                         <div
@@ -355,6 +363,7 @@ function ModelItem({
         </div>
     );
 }
+
 ModelItem.propTypes = {
     model: PropTypes.object.isRequired,
     styles: PropTypes.object.isRequired,
@@ -364,7 +373,7 @@ ModelItem.propTypes = {
     onToggleVisible: PropTypes.func.isRequired,
     inProgress: PropTypes.bool.isRequired,
     disabled: PropTypes.bool,
-    placment: PropTypes.string,
+    placement: PropTypes.string,
     isDualExtruder: PropTypes.bool,
     leftMaterialColor: PropTypes.string,
     rightMaterialColor: PropTypes.string,

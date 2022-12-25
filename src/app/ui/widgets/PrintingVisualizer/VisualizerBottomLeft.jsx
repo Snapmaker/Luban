@@ -1,23 +1,34 @@
-import React from 'react';
+import { Tooltip } from 'antd';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import { Tooltip } from 'antd';
+import React from 'react';
+
+import { HEAD_PRINTING } from '../../../constants';
+import { logModelViewOperation, logObjectListOperation } from '../../../lib/gaEvent';
 import i18n from '../../../lib/i18n';
-import PrintingObjectListBox from '../PrintingObjectList';
 import Card from '../../components/Card';
 import SvgIcon from '../../components/SvgIcon';
-import { HEAD_PRINTING } from '../../../constants';
-import { logObjectListOperation, logModelViewOperation } from '../../../lib/gaEvent';
+
+import PrintingObjectListBox from '../PrintingObjectList';
 import styles from './styles.styl';
 
 function VisualizerBottomLeft({ actions }) {
     return (
         <React.Fragment>
             <Card
-                className={classNames('margin-horizontal-8')}
+                className={classNames(
+                    'margin-horizontal-8',
+                )}
+                style={{
+                    width: '266px',
+                }}
                 title={i18n._('key-Printing/ObjectList-Object List')}
-                onListToogleVisible={(visible) => {
-                    logObjectListOperation(HEAD_PRINTING, visible ? 'expand' : 'pack');
+                onShowContent={(show) => {
+                    if (show) {
+                        logObjectListOperation(HEAD_PRINTING, 'expand');
+                    } else {
+                        logObjectListOperation(HEAD_PRINTING, 'pack');
+                    }
                 }}
             >
                 <PrintingObjectListBox />
@@ -79,6 +90,7 @@ function VisualizerBottomLeft({ actions }) {
         </React.Fragment>
     );
 }
+
 VisualizerBottomLeft.propTypes = {
     actions: PropTypes.shape({
         toLeft: PropTypes.func.isRequired,

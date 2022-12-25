@@ -1,19 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch, shallowEqual } from 'react-redux';
+import classNames from 'classnames';
 import { cloneDeep, find } from 'lodash';
 import PropTypes from 'prop-types';
-import classNames from 'classnames';
-import i18n from '../../../../lib/i18n';
-/* eslint-disable-next-line import/no-cycle */
-import { CancelButton, renderExtruderIcon, whiteHex } from '../VisualizerLeftBar';
-import { LEFT_EXTRUDER_MAP_NUMBER, HEAD_PRINTING, BOTH_EXTRUDER_MAP_NUMBER } from '../../../../constants';
+import React, { useEffect, useState } from 'react';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+
+import { BOTH_EXTRUDER_MAP_NUMBER, HEAD_PRINTING, LEFT_EXTRUDER_MAP_NUMBER } from '../../../../constants';
 import { actions as printingActions } from '../../../../flux/printing';
 import { actions as projectActions } from '../../../../flux/project';
+import i18n from '../../../../lib/i18n';
+import Checkbox from '../../../components/Checkbox';
 import Dropdown from '../../../components/Dropdown';
 import Menu from '../../../components/Menu';
 import SvgIcon from '../../../components/SvgIcon';
+
+/* eslint-disable-next-line import/no-cycle */
+import { CancelButton, renderExtruderIcon, whiteHex } from '../VisualizerLeftBar';
 import styles from './styles.styl';
-import Checkbox from '../../../components/Checkbox';
 
 const extruderLabelMap = {
     '0': 'Extruder L',
@@ -91,7 +93,7 @@ const ExtruderOverlay = React.memo((
     } = useSelector(state => state?.printing);
 
     const [modelsExtruder, setModelsExtruder] = useState(originalModelsExtruder);
-    const [helpersExtrurder, setHelpersExtruder] = useState(helpersExtruderConfig || originalHelpersExtruder);
+    const [helpersExtruder, setHelpersExtruder] = useState(helpersExtruderConfig || originalHelpersExtruder);
     const [isOpenModels, setIsOpenModels] = useState(isOpenSelectModals);
     const [isOpenHelpers, setIsOpenHelpers] = useState(_isOpenHelpers);
     const [colorL, setColorL] = useState(whiteHex);
@@ -136,7 +138,7 @@ const ExtruderOverlay = React.memo((
                         shell: direction,
                     }));
                 } else {
-                    const newHelpersExtruder = cloneDeep(helpersExtrurder);
+                    const newHelpersExtruder = cloneDeep(helpersExtruder);
                     Object.keys(newHelpersExtruder).forEach(key => {
                         newHelpersExtruder[key] = direction;
                     });
@@ -171,23 +173,23 @@ const ExtruderOverlay = React.memo((
                 break;
             case 'adhesion':
                 setHelpersExtruder({
-                    ...helpersExtrurder,
+                    ...helpersExtruder,
                     adhesion: direction,
-                    multiple: helpersExtrurder.support === direction ? direction : BOTH_EXTRUDER_MAP_NUMBER
+                    multiple: helpersExtruder.support === direction ? direction : BOTH_EXTRUDER_MAP_NUMBER
                 });
                 dispatch(printingActions.updateHelpersExtruder({
-                    support: helpersExtrurder.support,
+                    support: helpersExtruder.support,
                     adhesion: direction
                 }));
                 break;
             case 'support':
                 setHelpersExtruder({
-                    ...helpersExtrurder,
+                    ...helpersExtruder,
                     support: direction,
-                    multiple: helpersExtrurder.adhesion === direction ? direction : BOTH_EXTRUDER_MAP_NUMBER
+                    multiple: helpersExtruder.adhesion === direction ? direction : BOTH_EXTRUDER_MAP_NUMBER
                 });
                 dispatch(printingActions.updateHelpersExtruder({
-                    adhesion: helpersExtrurder.adhesion,
+                    adhesion: helpersExtruder.adhesion,
                     support: direction
                 }));
                 break;
@@ -245,7 +247,7 @@ const ExtruderOverlay = React.memo((
     };
 
     useEffect(() => {
-        let newHelpersExtruder = cloneDeep(helpersExtrurder);
+        let newHelpersExtruder = cloneDeep(helpersExtruder);
         newHelpersExtruder = {
             ...newHelpersExtruder,
             multiple: newHelpersExtruder.support === newHelpersExtruder.adhesion ? newHelpersExtruder.support : BOTH_EXTRUDER_MAP_NUMBER
@@ -311,30 +313,32 @@ const ExtruderOverlay = React.memo((
             </div>
             <div className="padding-bottom-16 padding-top-8 padding-left-8">
                 <div className="select-models-container">
-                    {modelExtruderInfoShow && (
-                        <div className="sm-flex align-center justify-space-between margin-right-16">
-                            <div className="sm-flex align-center">
+                    {
+                        modelExtruderInfoShow && (
+                            <div className="sm-flex align-center justify-space-between margin-right-16">
+                                <div className="sm-flex align-center">
+                                    <SvgIcon
+                                        color="#1890FF"
+                                        size={24}
+                                        type={['static']}
+                                        name="WarningTipsTips"
+                                        className="margin-vertical-8 margin-right-4"
+                                    />
+                                    <span className="display-inline width-200 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Selected Models Extruder Info')}</span>
+                                </div>
                                 <SvgIcon
-                                    color="#1890FF"
+                                    color="#545659"
                                     size={24}
                                     type={['static']}
-                                    name="WarningTipsTips"
-                                    className="margin-vertical-8 margin-right-4"
+                                    name="Cancel"
+                                    className="margin-right-8"
+                                    onClick={() => {
+                                        dispatch(printingActions.updateState({ modelExtruderInfoShow: false }));
+                                    }}
                                 />
-                                <span className="display-inline width-200 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Selected Models Extruder Info')}</span>
                             </div>
-                            <SvgIcon
-                                color="#545659"
-                                size={24}
-                                type={['static']}
-                                name="Cancel"
-                                className="margin-right-8"
-                                onClick={() => {
-                                    dispatch(printingActions.updateState({ modelExtruderInfoShow: false }));
-                                }}
-                            />
-                        </div>
-                    )}
+                        )
+                    }
                     <div className="sm-flex align-center margin-top-8">
                         <SvgIcon
                             size={24}
@@ -381,30 +385,32 @@ const ExtruderOverlay = React.memo((
                     <div className={classNames(styles['dashed-line'])} />
                 </div>
                 <div className="select-models-container">
-                    {helpersExtruderInfoShow && (
-                        <div className="sm-flex align-center justify-space-between margin-right-16">
-                            <div className="sm-flex align-center">
+                    {
+                        helpersExtruderInfoShow && (
+                            <div className="sm-flex align-center justify-space-between margin-right-16">
+                                <div className="sm-flex align-center">
+                                    <SvgIcon
+                                        color="#1890FF"
+                                        size={24}
+                                        type={['static']}
+                                        name="WarningTipsTips"
+                                        className="margin-vertical-8 margin-right-4"
+                                    />
+                                    <span className="display-inline width-200 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Helpers Extruder Info')}</span>
+                                </div>
                                 <SvgIcon
-                                    color="#1890FF"
+                                    color="#545659"
                                     size={24}
                                     type={['static']}
-                                    name="WarningTipsTips"
-                                    className="margin-vertical-8 margin-right-4"
+                                    name="Cancel"
+                                    className="margin-right-8"
+                                    onClick={() => {
+                                        dispatch(printingActions.updateState({ helpersExtruderInfoShow: false }));
+                                    }}
                                 />
-                                <span className="display-inline width-200 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Helpers Extruder Info')}</span>
                             </div>
-                            <SvgIcon
-                                color="#545659"
-                                size={24}
-                                type={['static']}
-                                name="Cancel"
-                                className="margin-right-8"
-                                onClick={() => {
-                                    dispatch(printingActions.updateState({ helpersExtruderInfoShow: false }));
-                                }}
-                            />
-                        </div>
-                    )}
+                        )
+                    }
                     <div className="sm-flex align-center padding-top-8">
                         <SvgIcon
                             size={24}
@@ -417,30 +423,30 @@ const ExtruderOverlay = React.memo((
                         <div role="presentation" onClick={() => handleOpen('helpers')} className="display-block width-96 text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-All Helpers')}</div>
                         <Dropdown
                             placement="bottomRight"
-                            overlay={extruderOverlay('helpers.multiple', helpersExtrurder.multiple)}
+                            overlay={extruderOverlay('helpers.multiple', helpersExtruder.multiple)}
                             trigger="click"
                         >
-                            {renderExtruderStatus(helpersExtrurder.multiple)}
+                            {renderExtruderStatus(helpersExtruder.multiple)}
                         </Dropdown>
                     </div>
                     <div className={`align-center margin-left-24 margin-top-8 ${isOpenHelpers ? 'sm-flex' : 'display-none'}`}>
                         <span className="display-block width-96 text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-Adhesion')}</span>
                         <Dropdown
                             placement="bottomRight"
-                            overlay={extruderOverlay('helpers.adhesion', helpersExtrurder.adhesion)}
+                            overlay={extruderOverlay('helpers.adhesion', helpersExtruder.adhesion)}
                             trigger="click"
                         >
-                            {renderExtruderStatus(helpersExtrurder.adhesion)}
+                            {renderExtruderStatus(helpersExtruder.adhesion)}
                         </Dropdown>
                     </div>
                     <div className={`sm-flex align-center margin-left-24 margin-top-8 ${isOpenHelpers ? 'sm-flex' : 'display-none'}`}>
                         <span className="display-block width-96 text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-Support')}</span>
                         <Dropdown
                             placement="bottomRight"
-                            overlay={extruderOverlay('helpers.support', helpersExtrurder.support)}
+                            overlay={extruderOverlay('helpers.support', helpersExtruder.support)}
                             trigger="click"
                         >
-                            {renderExtruderStatus(helpersExtrurder.support)}
+                            {renderExtruderStatus(helpersExtruder.support)}
                         </Dropdown>
                     </div>
                     <div className={classNames(styles['only-support-interface'], `sm-flex align-center margin-top-8 ${isOpenHelpers ? 'sm-flex' : 'display-none'}`)}>
@@ -448,15 +454,15 @@ const ExtruderOverlay = React.memo((
                             className=""
                             defaultChecked={false}
                             type="checkbox"
-                            checked={helpersExtrurder.onlySupportInterface}
+                            checked={helpersExtruder.onlySupportInterface}
                             onChange={(event) => {
                                 setHelpersExtruder((obj) => {
-                                    const newHelpersExtrurder = {
+                                    const newhelpersExtruder = {
                                         ...obj,
                                         onlySupportInterface: event.target.checked
                                     };
-                                    dispatch(printingActions.updateHelpersExtruder(newHelpersExtrurder));
-                                    return newHelpersExtrurder;
+                                    dispatch(printingActions.updateHelpersExtruder(newhelpersExtruder));
+                                    return newhelpersExtruder;
                                 });
                             }}
                         />
@@ -471,4 +477,5 @@ const ExtruderOverlay = React.memo((
 ExtruderOverlay.propTypes = {
     setTransformMode: PropTypes.func.isRequired
 };
+
 export default ExtruderOverlay;

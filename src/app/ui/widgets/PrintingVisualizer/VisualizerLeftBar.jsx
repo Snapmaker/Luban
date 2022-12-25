@@ -357,57 +357,86 @@ function VisualizerLeftBar(
                         </span>
                     </nav>
                 </div>
-                {!moveDisabled && transformMode === 'translate' && (
-                    <TranslateOverlay
-                        setTransformMode={setTransformMode}
-                        onModelAfterTransform={actions.onModelAfterTransform}
-                        arrangeAllModels={arrangeAllModels}
-                        transformDisabled={moveDisabled}
-                        size={size}
-                        hasModels={hasVisableModels}
-                    />
-                )}
-                {!scaleDisabled && transformMode === 'scale' && (
-                    <ScaleOverlay
-                        setTransformMode={setTransformMode}
-                        onModelAfterTransform={actions.onModelAfterTransform}
-                        size={size}
-                    />
-                )}
-                {showRotationAnalyzeModal && (
-                    <RotationAnalysisOverlay onClose={() => {
-                        setShowRotationAnalyzeModal(false);
-                    }}
-                    />
-                )}
-                {!rotateDisabled && transformMode === 'rotate' && (
-                    <RotateOverlay
-                        setTransformMode={setTransformMode}
-                        onModelAfterTransform={actions.onModelAfterTransform}
-                        rotateWithAnalysis={actions.rotateWithAnalysis}
-                        autoRotateSelectedModel={autoRotateSelectedModel}
-                        modelGroup={modelGroup}
-                        hasModels={hasVisableModels}
-                        setHoverFace={setHoverFace}
-                        transformDisabled={rotateDisabled}
-                    />
-                )}
-
-                {!mirrorDisabled && transformMode === 'mirror' && (
-                    <MirrorOverlay
-                        setTransformMode={setTransformMode}
-                        updateBoundingBox={updateBoundingBox}
-                    />
-                )}
-
-                {showEditSupportModal && (
-                    <EditSupportOverlay onClose={() => {
-                        setShowEditSupportModal(false);
-                    }}
-                    />
-                )}
+                {
+                    !moveDisabled && transformMode === 'translate' && (
+                        <TranslateOverlay
+                            setTransformMode={setTransformMode}
+                            onModelAfterTransform={actions.onModelAfterTransform}
+                            arrangeAllModels={arrangeAllModels}
+                            transformDisabled={moveDisabled}
+                            size={size}
+                            hasModels={hasVisableModels}
+                        />
+                    )
+                }
+                {
+                    !scaleDisabled && transformMode === 'scale' && (
+                        <ScaleOverlay
+                            setTransformMode={setTransformMode}
+                            onModelAfterTransform={actions.onModelAfterTransform}
+                            size={size}
+                        />
+                    )
+                }
+                {
+                    showRotationAnalyzeModal && (
+                        <RotationAnalysisOverlay onClose={() => {
+                            setShowRotationAnalyzeModal(false);
+                        }}
+                        />
+                    )
+                }
+                {
+                    !rotateDisabled && transformMode === 'rotate' && (
+                        <RotateOverlay
+                            setTransformMode={setTransformMode}
+                            onModelAfterTransform={actions.onModelAfterTransform}
+                            rotateWithAnalysis={actions.rotateWithAnalysis}
+                            autoRotateSelectedModel={autoRotateSelectedModel}
+                            modelGroup={modelGroup}
+                            hasModels={hasVisableModels}
+                            setHoverFace={setHoverFace}
+                            transformDisabled={rotateDisabled}
+                        />
+                    )
+                }
 
                 {
+                    !mirrorDisabled && transformMode === 'mirror' && (
+                        <MirrorOverlay
+                            setTransformMode={setTransformMode}
+                            updateBoundingBox={updateBoundingBox}
+                        />
+                    )
+                }
+
+                {
+                    showEditSupportModal && (
+                        <EditSupportOverlay onClose={() => {
+                            setShowEditSupportModal(false);
+                        }}
+                        />
+                    )
+                }
+
+                {
+                    !supportDisabled && transformMode === 'support' && (
+                        <SupportOverlay
+                            setTransformMode={setTransformMode}
+                            editSupport={() => {
+                                actions.editSupport();
+                            }}
+                        />
+                    )
+                }
+
+                {/* Extruder Overlay */
+                    !extruderDisabled && transformMode === 'extruder' && isDual && (
+                        <ExtruderOverlay setTransformMode={setTransformMode} />
+                    )
+                }
+
+                {/* Simplify Model */
                     pageMode === PageMode.Simplify && (
                         <SimplifyModelOverlay
                             handleApplySimplify={handleApplySimplify}
@@ -425,20 +454,6 @@ function VisualizerLeftBar(
                         />
                     )
                 }
-
-                {!supportDisabled && transformMode === 'support'
-                && (
-                    <SupportOverlay
-                        setTransformMode={setTransformMode}
-                        editSupport={() => {
-                            actions.editSupport();
-                        }}
-                    />
-                )}
-
-                {!extruderDisabled && transformMode === 'extruder' && isDual && (
-                    <ExtruderOverlay setTransformMode={setTransformMode} />
-                )}
             </div>
         </React.Fragment>
     );

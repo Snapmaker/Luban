@@ -1,40 +1,42 @@
-// import { Checkbox } from 'antd';
-import React, { useState } from 'react';
-import PropTypes from 'prop-types';
-import classNames from 'classnames';
 import { Card } from 'antd';
+import classNames from 'classnames';
 import noop from 'lodash/noop';
-import styles from './styles.styl';
+import PropTypes from 'prop-types';
+import React, { useState } from 'react';
+
 import SvgIcon from '../SvgIcon';
+import styles from './styles.styl';
 // import i18n from '../../../lib/i18n';
 
-const CardWrapper = React.memo(({ className = '', children, hasToggleBotton = true, onListToogleVisible = noop, ...rest }) => {
-    const [showList, setShowList] = useState(true);
-    let extra;
-    if (hasToggleBotton) {
+const CardWrapper = React.memo(({ className = '', children, hasToggleButton = true, onShowContent = noop, ...rest }) => {
+    const [showContent, setShowContent] = useState(true);
+
+    // toggle button on the top left corner
+    let extra = null;
+    if (hasToggleButton) {
         extra = (
             <SvgIcon
                 name="DropdownLine"
                 onClick={() => {
-                    const visible = !showList;
-                    setShowList(visible);
-                    onListToogleVisible(visible);
+                    const visible = !showContent;
+                    setShowContent(visible);
+                    onShowContent(visible);
                 }}
                 className={classNames(
-                    showList ? '' : 'rotate180'
+                    showContent ? '' : 'rotate180'
                 )}
             />
         );
     }
-    return (
 
+    return (
         <div className={classNames(styles.card, className)}>
             <Card
                 {...rest}
                 extra={extra}
             >
                 {
-                    showList && (
+                    showContent && (
                         <div>
                             { children }
                         </div>
@@ -47,9 +49,9 @@ const CardWrapper = React.memo(({ className = '', children, hasToggleBotton = tr
 });
 CardWrapper.propTypes = {
     className: PropTypes.string,
-    hasToggleBotton: PropTypes.bool,
+    hasToggleButton: PropTypes.bool,
     children: PropTypes.object,
-    onListToogleVisible: PropTypes.func
+    onShowContent: PropTypes.func
 };
 
 export default CardWrapper;

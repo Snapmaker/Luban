@@ -1,3 +1,3 @@
 import PrintingObjectList from './PrintingObjectListBox';
 
-export default (PrintingObjectList);
+export default PrintingObjectList;

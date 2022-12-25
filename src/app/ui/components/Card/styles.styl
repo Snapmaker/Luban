@@ -1,21 +1,24 @@
 //@import "../../../styles/variables.styl"
 
 .card {
-    :global(.ant-card.ant-card-bordered){
-        background-color: transparent;
-        border: none;
+    :global(.ant-card.ant-card-bordered) {
+        // background-color: transparent;
+        // border: none;
+
         :global(.ant-card-head) {
             border-bottom: none;
             min-height: auto;
             height: 32px;
             line-height: 32px;
             padding: 0 16px 0 0;
-            :global(.ant-card-head-title){
+
+            :global(.ant-card-head-title) {
                 height: 32px;
                 padding: 0;
                 order: 1;
             }
-            :global(.ant-card-extra){
+
+            :global(.ant-card-extra) {
                 height: 32px;
                 padding: 0;
                 float: none;
@@ -23,12 +26,10 @@
                 margin-right: 8px;
             }
         }
+
         :global(.ant-card-body) {
             padding: 0;
-            margin: 4px 0 8px;
-            //border-radius: 8px;
-            //border: 1px solid #D5D6D9;
-            //background-color: #fff;
+            margin: 0;
         }
     }
 }
