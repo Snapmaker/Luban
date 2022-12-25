@@ -1548,6 +1548,8 @@
     "key-Printing/LeftBar/Support-Overhang Angle": "悬垂角度",
     "key-Printing/LeftBar/Support-Support": "支撑",
     "key-Printing/LeftBar/Support-Yes": "是",
+    "key-Printing/MainToolBar-Materials": "材料配置",
+    "key-Printing/MainToolBar-Print Settings": "打印配置",
     "key-Printing/Modal-Backup Tip": "您的历史数据存储在<1>备份文件夹</1>中。",
     "key-Printing/ObjectList-Object List": "对象列表",
     "key-Printing/Out of memory.Failed to load preview.": "剩余内存不足，加载预览失败。",

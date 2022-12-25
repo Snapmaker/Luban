@@ -8,6 +8,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { useHistory, withRouter } from 'react-router-dom';
 import { MACHINE_SERIES } from '../../../server/constants';
+import { LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_MATERIAL } from '../../constants';
 import { HEAD_PRINTING, isDualExtruder } from '../../constants/machines';
 import { actions as machineActions } from '../../flux/machine';
 import { actions as printingActions } from '../../flux/printing';
@@ -324,19 +325,27 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
                     }
                 },
             },
-            /*
             {
-                title: i18n._('Modifiers'),
+                title: i18n._('key-Printing/MainToolBar-Materials'),
                 disabled: !profileInitialized,
                 type: 'button',
-                name: 'MainToolbarModifierSetting',
+                name: 'MainToolbarMaterialSetting',
+                action: () => {
+                    dispatch(printingActions.updateManagerDisplayType(PRINTING_MANAGER_TYPE_MATERIAL));
+                    dispatch(printingActions.updateShowPrintingManager(true));
+                },
+            },
+            {
+                title: i18n._('key-Printing/MainToolBar-Print Settings'),
+                disabled: !profileInitialized,
+                type: 'button',
+                name: 'MainToolbarPrintingSetting',
                 action: () => {
                     dispatch(printingActions.updateState({
-                        showPrintParameterModifierDialog: true
+                        showPrintParameterModifierDialog: LEFT_EXTRUDER,
                     }));
-                }
+                },
             },
-            */
         ];
 
         return (
