@@ -94,12 +94,11 @@ const applyPrintSettingsToModels = () => (dispatch, getState) => {
 const finalizeSceneSettings = (
     extruderDefinitions: any[],
     globalQualityPreset: PresetDefinitionModel,
-    // extruderPresetModels: PresetDefinitionModel[]
+    extruderPresetModels: PresetDefinitionModel[],
 ) => (dispatch, getState) => {
     const {
         modelGroup,
-        // helpersExtruderConfig,
-        stopArea: { left, front }
+        helpersExtruderConfig,
     } = getState().printing;
 
     const {
@@ -111,50 +110,53 @@ const finalizeSceneSettings = (
         enabled: primeTowerModel.visible,
     };
 
-    // const adhesionExtruder = helpersExtruderConfig.adhesion;
-
-    let primeTowerXDefinition = 0;
-    let primeTowerYDefinition = 0;
     if (primeTowerModel.visible) {
-        const modelGroupBBox = modelGroup.getValidArea();
-        // const primeTowerBrimEnable = presetModel.settings?.prime_tower_brim_enable?.default_value;
-        // const adhesionType = presetModel.settings?.adhesion_type?.default_value;
-        const primeTowerWidth = primeTowerModel.boundingBox.max.x
-            - primeTowerModel.boundingBox.min.x;
-        const primeTowerPositionX = modelGroupBBox.max.x
-            - (primeTowerModel.boundingBox.max.x
-                + primeTowerModel.boundingBox.min.x
-                + primeTowerWidth)
-            / 2;
-        const primeTowerPositionY = modelGroupBBox.max.y
-            - (primeTowerModel.boundingBox.max.y
-                + primeTowerModel.boundingBox.min.y
-                - primeTowerWidth)
-            / 2;
-        primeTowerXDefinition = size.x - primeTowerPositionX - left;
-        primeTowerYDefinition = size.y - primeTowerPositionY - front;
-        // const a = size.x * 0.5 + primeTowerModel.transformation.positionX- left;;
-        // const b = size.y * 0.5 + primeTowerModel.transformation.positionY - front;
+        // In slice engine, prime tower position is defined as bottom right corner of the shape,
+        // yet we define it as center of shape, so add some offset to parameters
+        const primeTowerBox = primeTowerModel.boundingBox;
+        const primeTowerSize = primeTowerBox.max.x - primeTowerBox.min.x;
+        const primeTowerPosition = {
+            x: (primeTowerBox.min.x + primeTowerBox.max.x) / 2,
+            y: (primeTowerBox.min.y + primeTowerBox.max.y) / 2,
+        };
 
-        /*
-        if (primeTowerBrimEnable && adhesionType !== 'raft') {
-            const initialLayerLineWidthFactor = presetModel?.settings?.initial_layer_line_width_factor?.default_value || 0;
-            const brimLineCount = presetModel?.settings?.brim_line_count?.default_value || 0;
-            let skirtBrimLineWidth = extruderLDefinition?.settings?.machine_nozzle_size?.default_value;
-            if (adhesionExtruder === '1') {
-                skirtBrimLineWidth = extruderRDefinition?.settings?.machine_nozzle_size?.default_value;
+        const primeTowerBottomRightX = primeTowerPosition.x + primeTowerSize / 2;
+        const primeTowerBottomRightY = primeTowerPosition.y - primeTowerSize / 2;
+
+        // Very weird offset calculation by the slice engine
+        const adhesionType = globalQualityPreset.settings.adhesion_type?.default_value;
+        const hasPrimeTowerBrim = globalQualityPreset.settings.prime_tower_brim_enable?.default_value;
+
+        let offset = 0;
+        if (hasPrimeTowerBrim && adhesionType !== 'raft') {
+            const initialLayerLineWidthFactor = globalQualityPreset.settings.initial_layer_line_width_factor?.default_value || 0;
+            const brimLineCount = globalQualityPreset?.settings?.brim_line_count?.default_value;
+            const adhesionExtruder = helpersExtruderConfig.adhesion;
+
+            // Note that line width is settable per extruder, we need to use correct extruder preset
+            let skirtBrimLineWidth;
+            if (adhesionExtruder === '0') {
+                skirtBrimLineWidth = extruderPresetModels[0].settings?.skirt_brim_line_width?.default_value;
+            } else if (adhesionExtruder === '1') {
+                skirtBrimLineWidth = extruderPresetModels[1].settings?.skirt_brim_line_width?.default_value;
+            } else {
+                skirtBrimLineWidth = globalQualityPreset.settings?.skirt_brim_line_width?.default_value;
             }
-            const diff = brimLineCount * skirtBrimLineWidth * initialLayerLineWidthFactor / 100;
-            primeTowerXDefinition += diff;
-            primeTowerYDefinition += diff;
-        }*/
+
+            offset = brimLineCount * skirtBrimLineWidth * initialLayerLineWidthFactor / 100;
+        }
+
+        // Convert scene position to work position
+        primeTowerSettings.size = primeTowerSize;
+        primeTowerSettings.positionX = size.x / 2 + primeTowerBottomRightX + offset;
+        primeTowerSettings.positionY = size.y / 2 + primeTowerBottomRightY + offset;
     }
 
     // Rewrite prime tower settings
     globalQualityPreset.settings.prime_tower_enable.default_value = primeTowerSettings.enabled;
     if (primeTowerSettings.enabled) {
-        globalQualityPreset.settings.prime_tower_position_x.default_value = primeTowerXDefinition;
-        globalQualityPreset.settings.prime_tower_position_y.default_value = primeTowerYDefinition;
+        globalQualityPreset.settings.prime_tower_position_x.default_value = primeTowerSettings.positionX;
+        globalQualityPreset.settings.prime_tower_position_y.default_value = primeTowerSettings.positionY;
         globalQualityPreset.settings.prime_tower_size.default_value = primeTowerSettings.size;
     }
 
@@ -165,10 +167,10 @@ const finalizeSceneSettings = (
             extruderDefinition.settings.machine_extruder_end_pos_abs.default_value = true;
 
             MACHINE_EXTRUDER_X.forEach((keyItem) => {
-                extruderDefinition.settings[keyItem].default_value = primeTowerXDefinition;
+                extruderDefinition.settings[keyItem].default_value = primeTowerSettings.positionX;
             });
             MACHINE_EXTRUDER_Y.forEach((keyItem) => {
-                extruderDefinition.settings[keyItem].default_value = primeTowerYDefinition;
+                extruderDefinition.settings[keyItem].default_value = primeTowerSettings.positionY;
             });
         } else {
             extruderDefinition.settings.machine_extruder_start_pos_abs.default_value = false;

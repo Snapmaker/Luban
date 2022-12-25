@@ -12,6 +12,8 @@ import { actions as printingActions } from '../../../flux/printing';
 import { logModelViewOperation } from '../../../lib/gaEvent';
 import i18n from '../../../lib/i18n';
 
+import scene from '../../../scene/Scene';
+
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 import { priorities, shortcutActions, ShortcutManager } from '../../../lib/shortcut';
 import { ModelEvents } from '../../../models/events';
@@ -345,6 +347,9 @@ class Visualizer extends PureComponent {
         const stopArea = props.stopArea;
         const series = props.series;
         this.printableArea = new PrintableCube(series, size, stopArea);
+
+        // TODO: Move the creation of build volume to scene
+        scene.setBuildVolume(this.printableArea);
     }
 
     // hideContextMenu = () => {

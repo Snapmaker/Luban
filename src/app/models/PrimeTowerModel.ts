@@ -1,12 +1,17 @@
 import * as THREE from 'three';
+
 import ThreeModel from './ThreeModel';
 import ModelGroup from './ModelGroup';
-import { ModelInfo, ModelTransformation, TSize } from './ThreeBaseModel';
+import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
 
 class PrimeTowerModel extends ThreeModel {
+     private size: number;
     private height: number;
 
-    public constructor(initHeight: number, modelGroup: ModelGroup, transformation: ModelTransformation = { positionX: 100, positionY: 100 }) {
+    public constructor(initHeight: number, modelGroup: ModelGroup, transformation: ModelTransformation = {
+        positionX: 100,
+        positionY: 100
+    }) {
         const geometry = new THREE.CylinderBufferGeometry(10, 10, 1, 60);
         const material = new THREE.MeshPhongMaterial({
             side: THREE.DoubleSide,
@@ -35,6 +40,8 @@ class PrimeTowerModel extends ThreeModel {
 
         super(modelInfo, modelGroup);
 
+        this.size = 20; // 20
+
         const positionX = transformation?.positionX || Math.max(modelGroup._bbox.max.x - 50, modelGroup._bbox.min.x - 50);
         const positionY = transformation?.positionY || Math.max(modelGroup._bbox.max.y - 50, modelGroup._bbox.min.y - 50);
         const scaleX = transformation?.scaleX || 1;
@@ -54,12 +61,22 @@ class PrimeTowerModel extends ThreeModel {
         this.meshObject.add(stencilGroup);
     }
 
+    public getSize(): number {
+        return this.size;
+    }
+
     public getHeight(): number {
         return this.height;
     }
 
     public setHeight(height: number): void {
         this.height = height;
+
+        this.updateTransformation({
+            scaleZ: height,
+        });
+
+        this.stickToPlate();
     }
 
     public updateHeight(height: number, transformation: ModelTransformation = this.transformation) {
@@ -74,6 +91,7 @@ class PrimeTowerModel extends ThreeModel {
             scaleY,
             scaleZ: height
         });
+        this.stickToPlate();
     }
 
     public updateTowerTransformation(transformation: ModelTransformation) {
@@ -91,19 +109,6 @@ class PrimeTowerModel extends ThreeModel {
             uniformScalingState: false
         });
         this.stickToPlate();
-    }
-
-    public resetPosition(size: TSize, stopArea) {
-        this.updateHeight(0, {
-            positionX: size.x / 2 - stopArea.right - 15,
-            positionY: size.y / 2 - stopArea.back - 15,
-            scaleX: 1,
-            scaleY: 1,
-            scaleZ: 0
-        });
-        this.computeBoundingBox();
-        this.overstepped = false;
-        this.setSelected(false);
     }
 }
 

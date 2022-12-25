@@ -642,9 +642,6 @@ export const actions = {
         // Re-position model group
         const { size } = getState().machine;
         gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
-
-        const { stopArea } = getState().printing;
-        modelGroup.primeTower.resetPosition(size, stopArea);
     },
 
     // scene: sceneActions,
@@ -2193,7 +2190,7 @@ export const actions = {
             [RIGHT_EXTRUDER]: qualityDefinitionsRight.find(p => p.definitionId === activePresetIds[RIGHT_EXTRUDER]),
         };
 
-        const globalQualityPreset = qualityPresets[LEFT_EXTRUDER];
+        const globalQualityPreset = cloneDeep(qualityPresets[LEFT_EXTRUDER]);
 
         const indexL = materialDefinitions.findIndex(
             (d) => d.definitionId === defaultMaterialId
@@ -2206,7 +2203,7 @@ export const actions = {
         dispatch(sceneActions.finalizeSceneSettings(
             [extruderLDefinition, extruderRDefinition],
             globalQualityPreset,
-            // [qualityPresets[LEFT_EXTRUDER], qualityPresets[RIGHT_EXTRUDER]]
+            [qualityPresets[LEFT_EXTRUDER], qualityPresets[RIGHT_EXTRUDER]]
         ));
 
         // Finalize extruder settings based on (quality preset, extruder settings, material settings)
@@ -3105,9 +3102,6 @@ export const actions = {
         dispatch(actions.updateBoundingBox());
         modelGroup.models = [...models];
         modelGroup.modelAttributesChanged('extruderConfig');
-        // dispatch(actions.updateState({
-        //     modelGroup
-        // }));
     },
 
     updateHelpersExtruder: (extruderConfig) => (dispatch) => {
