@@ -65,7 +65,7 @@ const VisualizerTopRight = ({ headType }) => {
                             'background-color-white',
                         )}
                     >
-                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                        <div className="border-bottom-normal padding-vertical-8 padding-horizontal-16 height-40">
                             {i18n._('key-CncLaser/Preview-Preview Type')}
                         </div>
                         <div className="padding-vertical-16 padding-horizontal-16">

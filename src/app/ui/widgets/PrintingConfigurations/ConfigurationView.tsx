@@ -594,8 +594,8 @@ const ConfigurationView: React.FC<{}> = () => {
                     className={classNames(
                         'border-default-grey-1',
                         'border-radius-8',
-                        'padding-top-24',
-                        'padding-bottom-24',
+                        'padding-top-16',
+                        'padding-bottom-16',
                         'width-328',
                         'padding-horizontal-16',
                         // 'clearfix'

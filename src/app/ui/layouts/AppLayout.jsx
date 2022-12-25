@@ -300,7 +300,7 @@ class AppLayout extends PureComponent {
                 return (
                     <div
                         className={classNames('border-default-black-5', 'border-radius-4', 'box-shadow-module', 'position-absolute',
-                            'background-color-white', 'padding-horizontal-10', 'padding-vertical-10', 'bottom-0', 'margin-bottom-16')}
+                            'background-color-white', 'padding-horizontal-10', 'padding-vertical-8', 'bottom-0', 'margin-bottom-16')}
                         style={{
                             zIndex: this.props.savedModalZIndex,
                             left: '50%',
