@@ -88,7 +88,6 @@ CancelButton.propTypes = {
 function VisualizerLeftBar(
     {
         pageMode, setPageMode,
-        simplifying,
         setTransformMode, supportActions, updateBoundingBox,
         autoRotateSelectedModel, arrangeAllModels, setHoverFace, fitViewIn, handleApplySimplify,
         handleCancelSimplify, handleUpdateSimplifyConfig, handleCheckModelLocation
@@ -201,12 +200,14 @@ function VisualizerLeftBar(
     const hasAnyVisableModels = models.some(model => model.visible);
 
     // const hasModels = modelGroup.getModels().some(model => !(model instanceof PrimeTowerModel));
-    const moveDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasAnyVisableModels || simplifying;
-    const scaleDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasAnyVisableModels || simplifying;
-    const rotateDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || simplifying;
-    const mirrorDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || simplifying;
-    const supportDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || simplifying;
-    const extruderDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || simplifying;
+    const isDefaultPageMode = pageMode === PageMode.Default;
+
+    const moveDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasAnyVisableModels || !isDefaultPageMode;
+    const scaleDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasAnyVisableModels || !isDefaultPageMode;
+    const rotateDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || !isDefaultPageMode;
+    const mirrorDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || !isDefaultPageMode;
+    const supportDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || !isDefaultPageMode;
+    const extruderDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || !isDefaultPageMode;
 
     return (
         <React.Fragment>
@@ -407,7 +408,7 @@ function VisualizerLeftBar(
                 )}
 
                 {
-                    simplifying && (
+                    pageMode === PageMode.Simplify && (
                         <SimplifyModelOverlay
                             handleApplySimplify={handleApplySimplify}
                             handleCancelSimplify={handleCancelSimplify}
@@ -453,7 +454,6 @@ VisualizerLeftBar.propTypes = {
     fitViewIn: PropTypes.func.isRequired,
     pageMode: PropTypes.string.isRequired,
     setPageMode: PropTypes.func.isRequired,
-    simplifying: PropTypes.bool,
     handleApplySimplify: PropTypes.func,
     handleCancelSimplify: PropTypes.func,
     handleUpdateSimplifyConfig: PropTypes.func,

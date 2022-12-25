@@ -98,7 +98,7 @@ const allWidgets = {
 
 const pageHeadType = HEAD_PRINTING;
 
-function useRenderMainToolBar(pageMode, setPageMode, setSimplifying, profileInitialized = false) {
+function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false) {
     const unSaved = useSelector(state => state?.project[pageHeadType]?.unSaved, shallowEqual);
     const { inProgress, simplifyType, simplifyPercent } = useSelector(state => state?.printing, shallowEqual);
     const enableShortcut = useSelector(state => state?.printing?.enableShortcut, shallowEqual);
@@ -282,10 +282,17 @@ function useRenderMainToolBar(pageMode, setPageMode, setSimplifying, profileInit
                         type: 'button',
                         name: 'MainToolbarSimplifiedModel',
                         action: async () => {
-                            const repaired = await dispatch(printingActions.isModelsRepaired());
-                            if (repaired) {
-                                setSimplifying(true);
-                                dispatch(printingActions.modelSimplify(simplifyType, simplifyPercent, true));
+                            if (pageMode === PageMode.Simplify) {
+                                // Click again will not exit simplify page mode
+                                // setPageMode(PageMode.Default);
+                            } else {
+                                setPageMode(PageMode.Simplify);
+                                const repaired = await dispatch(printingActions.isModelsRepaired());
+                                if (repaired) {
+                                    dispatch(printingActions.modelSimplify(simplifyType, simplifyPercent, true));
+                                } else {
+                                    // TODO: popup a notification? or just disable the button
+                                }
                             }
                         }
                     },
@@ -310,10 +317,10 @@ function useRenderMainToolBar(pageMode, setPageMode, setSimplifying, profileInit
                 type: 'button',
                 name: 'MainToolbarMode',
                 action: () => {
-                    if (pageMode === PageMode.Default) {
-                        setPageMode(PageMode.ChangePrintMode);
-                    } else {
+                    if (pageMode === PageMode.ChangePrintMode) {
                         setPageMode(PageMode.Default);
+                    } else if (pageMode === PageMode.Default) {
+                        setPageMode(PageMode.ChangePrintMode);
                     }
                 },
             },
@@ -375,13 +382,12 @@ function Printing({ location }) {
     const [materialInfo, setMaterialInfo] = useState({});
     // for simplify model, if true, visaulizerLeftbar and main tool bar can't be use
     const [pageMode, setPageMode] = useState(PageMode.Default);
-    const [simplifying, setSimplifying] = useState(false);
 
     const dispatch = useDispatch();
     const history = useHistory();
     const [
         renderHomepage, renderMainToolBar, renderWorkspace, renderMachineMaterialSettings
-    ] = useRenderMainToolBar(pageMode, setPageMode, setSimplifying, !!materialDefinitions.length);
+    ] = useRenderMainToolBar(pageMode, setPageMode, !!materialDefinitions.length);
     const modelGroup = useSelector(state => state.printing.modelGroup);
     const thumbnail = useRef();
     const stepRef = useRef();
@@ -570,8 +576,6 @@ function Printing({ location }) {
                     widgetId="printingVisualizer"
                     pageMode={pageMode}
                     setPageMode={setPageMode}
-                    simplifying={simplifying}
-                    setSimplifying={setSimplifying}
                 />
                 {renderHomepage()}
                 {renderWorkspace()}

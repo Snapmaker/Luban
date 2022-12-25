@@ -1,17 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useSelector, shallowEqual, useDispatch } from 'react-redux';
-import { find as lodashFind, throttle } from 'lodash';
-import PropTypes from 'prop-types';
 import { Spin } from 'antd';
+import { find as lodashFind, throttle } from 'lodash';
+import React, { useEffect, useRef, useState } from 'react';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { LEFT_EXTRUDER } from '../../../constants';
-import Slider from '../../components/Slider';
-import styles from './styles.styl';
 import { actions as printingActions } from '../../../flux/printing';
+import workerManager, { WorkerEvents } from '../../../lib/manager/workerManager';
 import { ModelEvents } from '../../../models/events';
 import { PLANE_MAX_HEIGHT } from '../../../models/ModelGroup';
-import workerManager, { WorkerEvents } from '../../../lib/manager/workerManager';
+import Slider from '../../components/Slider';
+import styles from './styles.styl';
 
-function VisualizerClippingControl({ simplifying }) {
+function VisualizerClippingControl() {
     const transformMode = useSelector(state => state?.printing?.transformMode, shallowEqual);
     const modelGroup = useSelector(state => state?.printing?.modelGroup);
     const displayedType = useSelector(state => state?.printing?.displayedType, shallowEqual);
@@ -73,43 +72,49 @@ function VisualizerClippingControl({ simplifying }) {
 
     return (
         <React.Fragment>
-            {workerManager.clipperWorkerEnable && !simplifying && displayedType === 'model' && !isSpecialMode && modelGroup.models.length && !(modelGroup.models.length === 1 && modelGroup.models[0].type === 'primeTower') ? (
-                <div className={styles['layer-wrapper']}>
-                    {/* <span className={styles['layer-label']}>{value || ''}</span> */}
-                    <div
-                        style={{
-                            position: 'relative',
-                            marginLeft: '2px'
-                        }}
-                    >
-                        <Slider
-                            tooltipVisible={false}
-                            className={styles['vertical-slider']}
-                            vertical
-                            min={qualitySetting.layer_height.default_value}
-                            max={primeTowerHeight + qualitySetting.layer_height.default_value}
-                            step={qualitySetting.layer_height.default_value}
-                            value={value}
-                            onChange={(v) => {
-                                onChange(Number(v));
+            {
+                workerManager.clipperWorkerEnable
+                && displayedType === 'model'
+                && !isSpecialMode
+                && modelGroup.models.length
+                && !(modelGroup.models.length === 1 && modelGroup.models[0].type === 'primeTower') && (
+                    <div className={styles['layer-wrapper']}>
+                        {/* <span className={styles['layer-label']}>{value || ''}</span> */}
+                        <div
+                            style={{
+                                position: 'relative',
+                                marginLeft: '2px'
                             }}
-                        />
-                        {/* Placeholder by setting the height of the div */}
-                        <div style={{ position: 'relative', left: -3, height: '23.22px' }}>
-                            {
-                                loading
-                                && <Spin />
-                            }
-                        </div>
+                        >
+                            <Slider
+                                tooltipVisible={false}
+                                className={styles['vertical-slider']}
+                                vertical
+                                min={qualitySetting.layer_height.default_value}
+                                max={primeTowerHeight + qualitySetting.layer_height.default_value}
+                                step={qualitySetting.layer_height.default_value}
+                                value={value}
+                                onChange={(v) => {
+                                    onChange(Number(v));
+                                }}
+                            />
+                            {/* Placeholder by setting the height of the div */}
+                            <div style={{ position: 'relative', left: -3, height: '23.22px' }}>
+                                {
+                                    loading
+                                    && <Spin />
+                                }
+                            </div>
 
+                        </div>
                     </div>
-                </div>
-            ) : <></>}
+                )
+            }
         </React.Fragment>
     );
 }
+
 VisualizerClippingControl.propTypes = {
-    simplifying: PropTypes.bool.isRequired,
 };
 
 export default VisualizerClippingControl;
