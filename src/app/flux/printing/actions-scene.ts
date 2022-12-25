@@ -110,8 +110,6 @@ const finalizeSceneSettings = (
         enabled: primeTowerModel.visible,
     };
 
-    const adhesionExtruder = helpersExtruderConfig.adhesion;
-
     if (primeTowerModel.visible) {
         // In slice engine, prime tower position is defined as bottom right corner of the shape,
         // yet we define it as center of shape, so add some offset to parameters
@@ -133,6 +131,7 @@ const finalizeSceneSettings = (
         if (hasPrimeTowerBrim && adhesionType !== 'raft') {
             const initialLayerLineWidthFactor = globalQualityPreset.settings.initial_layer_line_width_factor?.default_value || 0;
             const brimLineCount = globalQualityPreset?.settings?.brim_line_count?.default_value;
+            const adhesionExtruder = helpersExtruderConfig.adhesion;
 
             // Note that line width is settable per extruder, we need to use correct extruder preset
             let skirtBrimLineWidth;
