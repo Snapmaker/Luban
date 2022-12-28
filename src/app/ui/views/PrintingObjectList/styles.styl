@@ -1,0 +1,111 @@
+// @import "../styles.styl"
+
+.object-list-view {
+    max-height: 176px;
+    overflow: auto;
+
+    scrollbar-width: thin;
+    scrollbar-color: #7F7F7F;
+}
+
+.object-list-view {
+    .extruderIcon {
+        justify-content: center;
+        align-items: center;
+        align-content: center;
+        display: flex;
+    }
+
+    .extruderIcon:hover .hoverTip {
+        width: 10px;
+        line-height: 10px;
+    }
+
+    .hoverTip {
+        width: 0;
+        height: 10px;
+        transition: width 0.2s;
+        overflow: hidden;
+        position: relative;
+        left: -2px;
+        display: inline-block;
+    }
+}
+
+// style for object list item
+.object-list-item {
+    .object-list-item-cell {
+        background-color: #FFFFFF;
+        background-size: 24px;
+        position: relative;
+
+        &.selected {
+            background-color: #E7F2FD;
+        }
+
+        &:not(.selected):hover {
+            background-color: #EEEFF0;
+        }
+
+        .bt {
+            &:hover {
+                opacity(1)
+            }
+
+            &:active {
+                opacity(.3)
+            }
+        }
+
+        .name {
+            vertical-align: middle
+            line-height: 38px
+            height: 36px
+            display: inline-block
+            width: calc(100% - 36px)
+            max-width: 270px
+        }
+
+        .prefix-name, .suffix-name {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .prefix-name {
+            max-width: 57%
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .icon {
+            vertical-align: middle
+            box-sizing: content-box;
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            margin-right: 4px;
+
+            &.icon-shape {
+                background: url("images/list_ic_3d_18x18.png") no-repeat center center
+                display: inline-block
+            }
+
+            &.icon-hide-open, &.icon-hide-close {
+                margin-right: 8px
+                border: 0
+                // position: absolute
+                // right: 0
+            }
+
+            &.icon-hide-open {
+                background: url("images/list_ic_open_18x18@2x.png") no-repeat center center
+            }
+
+            &.icon-hide-close {
+                background: url("images/list_ic_close_18x18@2x.png") no-repeat center center
+            }
+        }
+    }
+
+}

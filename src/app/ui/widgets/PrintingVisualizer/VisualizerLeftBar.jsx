@@ -6,7 +6,7 @@ import i18n from '../../../lib/i18n';
 import UniApi from '../../../lib/uni-api';
 import { PageMode } from '../../pages/PageMode';
 import styles from './styles.styl';
-import objectListStyles from '../PrintingObjectList/styles.styl';
+import objectListStyles from '../../views/PrintingObjectList/styles.styl';
 import { actions as printingActions } from '../../../flux/printing';
 import modal from '../../../lib/modal';
 import ThreeGroup from '../../../models/ThreeGroup';

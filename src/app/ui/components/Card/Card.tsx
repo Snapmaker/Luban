@@ -1,17 +1,22 @@
-import { Card } from 'antd';
+import { Card as AntdCard, CardProps as AntdCardProps } from 'antd';
 import classNames from 'classnames';
 import noop from 'lodash/noop';
-import PropTypes from 'prop-types';
 import React, { useState } from 'react';
 
 import SvgIcon from '../SvgIcon';
 import styles from './styles.styl';
-// import i18n from '../../../lib/i18n';
 
-const CardWrapper = React.memo(({ className = '', children, hasToggleButton = true, onShowContent = noop, ...rest }) => {
+
+declare interface CardProps extends AntdCardProps {
+    hasToggleButton?: boolean;
+    onShowContent: (show: boolean) => void;
+}
+
+const Card: React.FC<CardProps> = (props) => {
+    const { className = '', children, hasToggleButton = false, onShowContent = noop, ...rest } = props;
     const [showContent, setShowContent] = useState(true);
 
-    // toggle button on the top left corner
+    // toggle button as extra
     let extra = null;
     if (hasToggleButton) {
         extra = (
@@ -30,28 +35,20 @@ const CardWrapper = React.memo(({ className = '', children, hasToggleButton = tr
     }
 
     return (
-        <div className={classNames(styles.card, className)}>
-            <Card
+        <div className={classNames(styles['custom-card'], className)}>
+            <AntdCard
                 {...rest}
+                size="small"
                 extra={extra}
             >
                 {
-                    showContent && (
-                        <div>
-                            { children }
-                        </div>
-                    )
+                    showContent && children
                 }
-            </Card>
+            </AntdCard>
         </div>
 
     );
-});
-CardWrapper.propTypes = {
-    className: PropTypes.string,
-    hasToggleButton: PropTypes.bool,
-    children: PropTypes.object,
-    onShowContent: PropTypes.func
 };
 
-export default CardWrapper;
+
+export default Card;

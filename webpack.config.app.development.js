@@ -39,6 +39,7 @@ const devServer = {
 module.exports = {
     mode: 'development',
     target: 'web',
+    //devtool: 'eval',
     devtool: 'eval-cheap-source-map',
     context: path.resolve(__dirname, 'src/app'),
     resolve: {
@@ -111,7 +112,7 @@ module.exports = {
                 exclude: /node_modules/,
                 options: {
                     cache: false,
-                    fix: true,
+                    fix: false,
                     emitWarning: false,
                     quiet: true,
                     configFile: path.resolve(__dirname, '.eslintrc.js'),

@@ -1,14 +1,16 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { Dropdown as AntDropdown } from 'antd';
-import '../../../styles/global.styl';
-import './dropdown.styl';
+import { DropdownProps } from 'antd/lib/dropdown';
 
-const Dropdown = React.memo((props) => {
+import '../../../styles/global.styl';
+import './styles.styl';
+
+const Dropdown: React.FC<DropdownProps> = (props) => {
     const { className, placement = 'bottom', overlay = <div />, ...rest } = props;
+
     return (
-        <div className={classNames(className)}>
+        <div className={className}>
             <AntDropdown
                 overlayClassName={classNames('border-radius-8', 'border-default-black-5')}
                 {...rest}
@@ -19,18 +21,6 @@ const Dropdown = React.memo((props) => {
             </AntDropdown>
         </div>
     );
-});
-
-Dropdown.propTypes = {
-    children: PropTypes.oneOfType([
-        PropTypes.number,
-        PropTypes.element,
-        PropTypes.string
-    ]),
-    // PropTypes.string | PropTypes.number | PropTypes.element,
-    className: PropTypes.string,
-    placement: PropTypes.string,
-    overlay: PropTypes.element
 };
 
 export default Dropdown;

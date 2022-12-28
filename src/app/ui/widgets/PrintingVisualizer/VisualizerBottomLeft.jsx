@@ -4,36 +4,22 @@ import PropTypes from 'prop-types';
 import React from 'react';
 
 import { HEAD_PRINTING } from '../../../constants';
-import { logModelViewOperation, logObjectListOperation } from '../../../lib/gaEvent';
+import { logModelViewOperation } from '../../../lib/gaEvent';
 import i18n from '../../../lib/i18n';
-import Card from '../../components/Card';
 import SvgIcon from '../../components/SvgIcon';
 
-import PrintingObjectListBox from '../PrintingObjectList';
+import ObjectListCardView from '../../views/PrintingObjectList/ObjectListCardView';
 import styles from './styles.styl';
+
 
 function VisualizerBottomLeft({ actions }) {
     return (
-        <React.Fragment>
-            <Card
-                className={classNames(
-                    'margin-horizontal-8',
-                )}
-                style={{
-                    width: '266px',
-                }}
-                title={i18n._('key-Printing/ObjectList-Object List')}
-                onShowContent={(show) => {
-                    if (show) {
-                        logObjectListOperation(HEAD_PRINTING, 'expand');
-                    } else {
-                        logObjectListOperation(HEAD_PRINTING, 'pack');
-                    }
-                }}
-            >
-                <PrintingObjectListBox />
-            </Card>
-            <div className={classNames('margin-horizontal-8', 'height-30')}>
+        <div className="margin-horizontal-8">
+            <div className="margin-bottom-8">
+                <ObjectListCardView />
+            </div>
+            {/* Camera control */}
+            <div className="height-30">
                 <Tooltip title={i18n._('key-Printing/View-Isometric')} arrowPointAtCenter>
                     <SvgIcon
                         name="ViewIsometric"
@@ -87,7 +73,7 @@ function VisualizerBottomLeft({ actions }) {
                     />
                 </Tooltip>
             </div>
-        </React.Fragment>
+        </div>
     );
 }
 

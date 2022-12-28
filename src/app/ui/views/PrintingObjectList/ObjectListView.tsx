@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import { find } from 'lodash';
 import React, { useEffect, useState } from 'react';
 // import PropTypes from 'prop-types';
-import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { BOTH_EXTRUDER_MAP_NUMBER, LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
 import { isDualExtruder } from '../../../constants/machines';
@@ -12,10 +12,11 @@ import Dropdown from '../../components/Dropdown';
 import SvgIcon from '../../components/SvgIcon';
 import { actions as printingActions } from '../../../flux/printing';
 import { machineStore } from '../../../store/local-storage';
-import ModelItem from '../../views/model-item';
+import ObjectListItem from './ObjectListItem';
 /* eslint-disable-next-line import/no-cycle */
-import { whiteHex, renderExtruderIcon } from '../PrintingVisualizer/VisualizerLeftBar';
+import { renderExtruderIcon, whiteHex } from '../../widgets/PrintingVisualizer/VisualizerLeftBar';
 import styles from './styles.styl';
+import { RootState } from '../../../flux/index.def';
 
 const extruderLabelMap = {
     '0': 'Extruder L',
@@ -68,25 +69,29 @@ export const extruderOverlayMenu = ({ type, colorL, colorR, onChange, selectExtr
     );
 };
 
-function PrintingObjectListBox() {
-    const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
-    const models = useSelector(state => state?.printing?.modelGroup?.models);
-    const inProgress = useSelector(state => state?.printing?.inProgress, shallowEqual);
-    const leftBarOverlayVisible = useSelector(state => state?.printing?.leftBarOverlayVisible, shallowEqual);
+/**
+ * Object list view for 3D scene.
+ *
+ * Including scene nodes and virtual nodes like prime tower, support, adhesion.
+ *
+ */
+const ObjectListView: React.FC = () => {
+    const selectedModelArray = useSelector((state: RootState) => state.printing?.modelGroup?.selectedModelArray);
+    const models = useSelector((state: RootState) => state.printing.modelGroup.models);
+    const inProgress = useSelector((state: RootState) => state?.printing?.inProgress);
+    const leftBarOverlayVisible = useSelector((state: RootState) => state?.printing?.leftBarOverlayVisible);
     // const thisDisabled = leftBarOverlayVisible;
     const isDual = isDualExtruder(machineStore.get('machine.toolHead.printingToolhead'));
-    const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
-    const defaultMaterialIdRight = useSelector(state => state?.printing?.defaultMaterialIdRight, shallowEqual);
-    const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions);
+    const defaultMaterialId = useSelector((state: RootState) => state?.printing?.defaultMaterialId);
+    const defaultMaterialIdRight = useSelector((state: RootState) => state?.printing?.defaultMaterialIdRight);
+    const materialDefinitions = useSelector((state: RootState) => state?.printing?.materialDefinitions);
     const [leftMaterialColor, setLeftMaterialColor] = useState(whiteHex);
     const [rightMaterialColor, setRightMaterialColor] = useState(whiteHex);
     // const [showList, setShowList] = useState(true);
     const dispatch = useDispatch();
 
 
-    const {
-        helpersExtruderConfig
-    } = useSelector((state) => state.printing);
+    const helpersExtruderConfig = useSelector((state: RootState) => state.printing.helpersExtruderConfig);
 
     const [helpersExtruder, setHelpersExtruder] = useState(helpersExtruderConfig);
 
@@ -196,7 +201,7 @@ function PrintingObjectListBox() {
         });
     };
 
-    const renderExtruderStatus = (status, disabled) => {
+    const renderExtruderStatus = (status, disabled = false) => {
         if (!status && selectedModelArray.length === 0) {
             status = '0';
         }
@@ -227,7 +232,7 @@ function PrintingObjectListBox() {
     return (
         <div
             className={classNames(
-                styles['object-list-box'],
+                styles['object-list-view'],
                 'width-264',
                 'background-color-white',
                 'border-top-normal',
@@ -237,21 +242,18 @@ function PrintingObjectListBox() {
                 {
                     allModels && allModels.length > 0 && allModels.map((model) => {
                         return (
-                            <ModelItem
+                            <ObjectListItem
                                 model={model}
                                 key={model.modelID}
                                 visible={model.visible}
-                                styles={styles}
                                 isSelected={selectedModelArray && selectedModelArray.includes(model)}
                                 onSelect={actions.onClickModelNameBox}
                                 onToggleVisible={actions.onClickModelHideBox}
                                 inProgress={inProgress}
-                                placement="right"
                                 disabled={leftBarOverlayVisible}
                                 isDualExtruder={isDual}
                                 leftMaterialColor={leftMaterialColor}
                                 rightMaterialColor={rightMaterialColor}
-                                onExpend={actions.onClickChangeExpendArr}
                                 updateSelectedModelsExtruder={actions.updateSelectedModelsExtruder}
                             />
                         );
@@ -271,7 +273,7 @@ function PrintingObjectListBox() {
                 isDual && (
                     <div className="border-top-normal">
                         <div className="padding-vertical-4 padding-horizontal-8">
-                            <div className="height-24 font-size-middle font-weight-middle">
+                            <div className="height-24 font-size-base">
                                 {i18n._('Helpers')}
                             </div>
                         </div>
@@ -281,7 +283,7 @@ function PrintingObjectListBox() {
                                 <Dropdown
                                     placement="bottomRight"
                                     overlay={extruderOverlay('helpers.adhesion', helpersExtruder.adhesion)}
-                                    trigger="click"
+                                    trigger={['click']}
                                 >
                                     {renderExtruderStatus(helpersExtruder.adhesion)}
                                 </Dropdown>
@@ -291,7 +293,7 @@ function PrintingObjectListBox() {
                                 <Dropdown
                                     placement="bottomRight"
                                     overlay={extruderOverlay('helpers.support', helpersExtruder.support)}
-                                    trigger="click"
+                                    trigger={['click']}
                                 >
                                     {renderExtruderStatus(helpersExtruder.support)}
                                 </Dropdown>
@@ -302,6 +304,6 @@ function PrintingObjectListBox() {
             }
         </div>
     );
-}
+};
 
-export default PrintingObjectListBox;
+export default ObjectListView;
