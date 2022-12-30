@@ -119,13 +119,26 @@ const ObjectListView: React.FC = () => {
                     break;
             }
         },
-        updateSelectedModelsExtruder(direction) {
-            window.dispatchEvent(
-                new CustomEvent('change-extruder', {
-                    detail: { type: 'models.multiple', direction }
-                })
-            );
-            dispatch(printingActions.updateSelectedModelsExtruder({ infill: direction, shell: direction }));
+        updateSelectedModelsExtruder(type, direction) {
+            //            window.dispatchEvent(
+            //                new CustomEvent('change-extruder', {
+            //                    detail: { type: 'models.multiple', direction }
+            //                })
+            //            );
+            if (type === 'multiple') {
+                dispatch(printingActions.updateSelectedModelsExtruder({
+                    shell: direction,
+                    infill: direction,
+                }));
+            } else if (type === 'shell') {
+                dispatch(printingActions.updateSelectedModelsExtruder({
+                    shell: direction,
+                }));
+            } else if (type === 'infill') {
+                dispatch(printingActions.updateSelectedModelsExtruder({
+                    infill: direction,
+                }));
+            }
         }
     };
 
