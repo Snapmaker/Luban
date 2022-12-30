@@ -9,27 +9,28 @@
 }
 
 .object-list-view {
-    .extruderIcon {
+    .extruder-icon {
         justify-content: center;
         align-items: center;
         align-content: center;
         display: flex;
+
+        .hover-tip {
+            width: 0;
+            height: 10px;
+            transition: width 0.2s;
+            overflow: hidden;
+            position: relative;
+            left: -2px;
+            display: inline-block;
+        }
+
+        &:hover .hover-tip {
+            width: 10px;
+            line-height: 10px;
+        }
     }
 
-    .extruderIcon:hover .hoverTip {
-        width: 10px;
-        line-height: 10px;
-    }
-
-    .hoverTip {
-        width: 0;
-        height: 10px;
-        transition: width 0.2s;
-        overflow: hidden;
-        position: relative;
-        left: -2px;
-        display: inline-block;
-    }
 }
 
 // style for object list item

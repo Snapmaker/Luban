@@ -1,76 +1,37 @@
+import classNames from 'classnames';
+import PropTypes from 'prop-types';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
-import PropTypes from 'prop-types';
-import classNames from 'classnames';
-import i18n from '../../../lib/i18n';
-import UniApi from '../../../lib/uni-api';
-import { PageMode } from '../../pages/PageMode';
-import styles from './styles.styl';
-import objectListStyles from '../../views/PrintingObjectList/styles.styl';
-import { actions as printingActions } from '../../../flux/printing';
-import modal from '../../../lib/modal';
-import ThreeGroup from '../../../models/ThreeGroup';
-import SvgIcon from '../../components/SvgIcon';
-import RotationAnalysisOverlay from './Overlay/RotationAnalysisOverlay';
-import EditSupportOverlay from './Overlay/EditSupportOverlay';
 import { EPSILON, HEAD_PRINTING } from '../../../constants';
-import { machineStore } from '../../../store/local-storage';
+import { isDualExtruder } from '../../../constants/machines';
+import { actions as printingActions } from '../../../flux/printing';
+import { logTransformOperation } from '../../../lib/gaEvent';
+import i18n from '../../../lib/i18n';
+import modal from '../../../lib/modal';
+import UniApi from '../../../lib/uni-api';
 import PrimeTowerModel from '../../../models/PrimeTowerModel';
-/* eslint-disable-next-line import/no-cycle */
-import SupportOverlay from './Overlay/SupportOverlay';
-/* eslint-disable-next-line import/no-cycle */
-import TranslateOverlay from './Overlay/TranslateOverlay';
-/* eslint-disable-next-line import/no-cycle */
-import ScaleOverlay from './Overlay/ScaleOverlay';
-/* eslint-disable-next-line import/no-cycle */
-import RotateOverlay from './Overlay/RotateOverlay';
+import ThreeGroup from '../../../models/ThreeGroup';
+import { machineStore } from '../../../store/local-storage';
+import SvgIcon from '../../components/SvgIcon';
+import { PageMode } from '../../pages/PageMode';
+import ChangePrintModeOverlay from './Overlay/ChangePrintModeOverlay';
+import EditSupportOverlay from './Overlay/EditSupportOverlay';
 /* eslint-disable-next-line import/no-cycle */
 import ExtruderOverlay from './Overlay/ExtruderOverlay';
 /* eslint-disable-next-line import/no-cycle */
 import MirrorOverlay from './Overlay/MirrorOverlay';
-import ChangePrintModeOverlay from './Overlay/ChangePrintModeOverlay';
+/* eslint-disable-next-line import/no-cycle */
+import RotateOverlay from './Overlay/RotateOverlay';
+import RotationAnalysisOverlay from './Overlay/RotationAnalysisOverlay';
+/* eslint-disable-next-line import/no-cycle */
+import ScaleOverlay from './Overlay/ScaleOverlay';
 import SimplifyModelOverlay from './Overlay/SimplifyOverlay';
-import { logTransformOperation } from '../../../lib/gaEvent';
-import { isDualExtruder } from '../../../constants/machines';
+/* eslint-disable-next-line import/no-cycle */
+import SupportOverlay from './Overlay/SupportOverlay';
+/* eslint-disable-next-line import/no-cycle */
+import TranslateOverlay from './Overlay/TranslateOverlay';
+import styles from './styles.styl';
 
-export const whiteHex = '#ffffff';
-export const renderExtruderIcon = (leftExtruderColor, rightExtruderColor) => (
-    <div className={classNames('height-24', objectListStyles.extruderIcon)}>
-        <div className={classNames('width-24 height-24 display-inline')}>
-            <div className="position-re ">
-                {leftExtruderColor !== whiteHex ? (
-                    <SvgIcon
-                        color={leftExtruderColor}
-                        size={24}
-                        name="ExtruderLeft"
-                        type={['static']}
-                        className="position-absolute"
-                    />
-                ) : (
-                    <img className="position-absolute" src="/resources/images/24x24/icon_extruder_white_left_24x24.svg" alt="" />
-                )}
-                {rightExtruderColor !== whiteHex ? (
-                    <SvgIcon
-                        color={rightExtruderColor}
-                        size={24}
-                        name="ExtruderRight"
-                        type={['static']}
-                        className="position-absolute right-1"
-                    />
-                ) : (
-                    <img src="/resources/images/24x24/icon_extruder_white_right_24x24.svg" alt="" className="position-absolute" />
-                )}
-            </div>
-        </div>
-        <div className={classNames('display-none', objectListStyles.hoverTip)}>
-            <SvgIcon
-                name="DropdownLine"
-                size={10}
-                type={['static']}
-            />
-        </div>
-    </div>
-);
 export const CancelButton = ({ onClick }) => {
     return (
         <SvgIcon

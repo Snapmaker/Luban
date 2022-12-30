@@ -12,9 +12,7 @@ import Dropdown from '../../components/Dropdown';
 import SvgIcon from '../../components/SvgIcon';
 import { actions as printingActions } from '../../../flux/printing';
 import { machineStore } from '../../../store/local-storage';
-import ObjectListItem from './ObjectListItem';
-/* eslint-disable-next-line import/no-cycle */
-import { renderExtruderIcon, whiteHex } from '../../widgets/PrintingVisualizer/VisualizerLeftBar';
+import ObjectListItem, { renderExtruderIcon, whiteHex } from './ObjectListItem';
 import styles from './styles.styl';
 import { RootState } from '../../../flux/index.def';
 
@@ -249,8 +247,7 @@ const ObjectListView: React.FC = () => {
                                 isSelected={selectedModelArray && selectedModelArray.includes(model)}
                                 onSelect={actions.onClickModelNameBox}
                                 onToggleVisible={actions.onClickModelHideBox}
-                                inProgress={inProgress}
-                                disabled={leftBarOverlayVisible}
+                                disabled={leftBarOverlayVisible || inProgress}
                                 isDualExtruder={isDual}
                                 leftMaterialColor={leftMaterialColor}
                                 rightMaterialColor={rightMaterialColor}

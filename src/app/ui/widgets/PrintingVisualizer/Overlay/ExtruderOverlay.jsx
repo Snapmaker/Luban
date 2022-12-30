@@ -9,11 +9,11 @@ import { actions as printingActions } from '../../../../flux/printing';
 import { actions as projectActions } from '../../../../flux/project';
 import i18n from '../../../../lib/i18n';
 import Dropdown from '../../../components/Dropdown';
-import Menu from '../../../components/Menu';
 import SvgIcon from '../../../components/SvgIcon';
-
 /* eslint-disable-next-line import/no-cycle */
-import { CancelButton, renderExtruderIcon, whiteHex } from '../VisualizerLeftBar';
+import { extruderOverlayMenu, renderExtruderIcon, whiteHex } from '../../../views/PrintingObjectList/ObjectListItem';
+/* eslint-disable-next-line import/no-cycle */
+import { CancelButton } from '../VisualizerLeftBar';
 import styles from './styles.styl';
 
 const extruderLabelMap = {
@@ -33,51 +33,6 @@ const originalHelpersExtruder = {
     support: LEFT_EXTRUDER_MAP_NUMBER,
     adhesion: LEFT_EXTRUDER_MAP_NUMBER,
     onlySupportInterface: false
-};
-
-export const extruderOverlayMenu = ({ type, colorL, colorR, onChange, selectExtruder = null }) => {
-    return (
-        <Menu
-            selectedKeys={selectExtruder ? [selectExtruder] : []}
-        >
-            <Menu.Item
-                onClick={() => onChange({ type, direction: '0' })}
-                key="L"
-            >
-                <div className="sm-flex justify-space-between">
-                    <span className="display-inline width-96 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Extruder L')}</span>
-                    {colorL !== whiteHex ? (
-                        <SvgIcon
-                            name="Extruder"
-                            size={24}
-                            color={colorL}
-                            type={['static']}
-                        />
-                    ) : (
-                        <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
-                    )}
-                </div>
-            </Menu.Item>
-            <Menu.Item
-                onClick={() => onChange({ type, direction: '1' })}
-                key="R"
-            >
-                <div className="sm-flex justify-space-between">
-                    <span className="display-inline width-96 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Extruder R')}</span>
-                    {colorR !== whiteHex ? (
-                        <SvgIcon
-                            name="Extruder"
-                            size={24}
-                            color={colorR}
-                            type={['static']}
-                        />
-                    ) : (
-                        <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
-                    )}
-                </div>
-            </Menu.Item>
-        </Menu>
-    );
 };
 
 const ExtruderOverlay = React.memo((

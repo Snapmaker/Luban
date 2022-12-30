@@ -8,42 +8,127 @@ import Anchor from '../../components/Anchor';
 import Dropdown from '../../components/Dropdown';
 import SvgIcon from '../../components/SvgIcon';
 import TipTrigger from '../../components/TipTrigger';
-
-import { extruderOverlayMenu } from '../../widgets/PrintingVisualizer/Overlay/ExtruderOverlay';
-import { renderExtruderIcon, whiteHex } from '../../widgets/PrintingVisualizer/VisualizerLeftBar';
+import Menu from '../../components/Menu';
 import ObjectSvgIcon from './ObjectSvgIcon';
 import styles from './styles.styl';
 
-let leftExtruderColor = whiteHex;
-let rightExtruderColor = whiteHex;
-const getExtruderColor = (shell, infill, leftMaterialColor, rightMaterialColor) => {
-    let _leftExtruderColor = whiteHex;
-    let _rightExtruderColor = whiteHex;
-    if (shell === infill) {
-        switch (shell) {
-            case '0':
-                _leftExtruderColor = leftMaterialColor;
-                _rightExtruderColor = leftMaterialColor;
-                break;
-            case '1':
-                _leftExtruderColor = rightMaterialColor;
-                _rightExtruderColor = rightMaterialColor;
-                break;
-            case '2':
-                _leftExtruderColor = leftMaterialColor;
-                _rightExtruderColor = rightMaterialColor;
-                break;
-            default:
-                break;
+export const whiteHex = '#ffffff';
+
+/**
+ * Map extruder numbers to all colors used.
+ *
+ * @param numbers
+ * @param extruderColors
+ */
+function getColorsUsed(numbers, extruderColors) {
+    const n = extruderColors.length;
+
+    let opt = 0;
+    for (const nr of numbers) {
+        if (nr === '0') {
+            opt |= 1;
         }
-    } else {
-        _leftExtruderColor = leftMaterialColor;
-        _rightExtruderColor = rightMaterialColor;
+        if (nr === '1') {
+            opt |= 2;
+        }
+        if (opt === (1 << n) - 1) {
+            break;
+        }
     }
-    return {
-        _leftExtruderColor,
-        _rightExtruderColor
-    };
+
+    const colors = [];
+    for (let i = 0; i < n; i++) {
+        if (opt & (1 << i)) {
+            colors.push(extruderColors[i]);
+        }
+    }
+    return colors;
+}
+
+export const renderExtruderIcon = (leftExtruderColor, rightExtruderColor) => {
+    rightExtruderColor = rightExtruderColor || leftExtruderColor;
+    return (
+        <div className={classNames('height-24', styles['extruder-icon'])}>
+            <div className={classNames('width-24 height-24 display-inline')}>
+                <div className="position-re ">
+                    {leftExtruderColor !== whiteHex ? (
+                        <SvgIcon
+                            color={leftExtruderColor}
+                            size={24}
+                            name="ExtruderLeft"
+                            type={['static']}
+                            className="position-absolute"
+                        />
+                    ) : (
+                        <img className="position-absolute" src="/resources/images/24x24/icon_extruder_white_left_24x24.svg" alt="" />
+                    )}
+                    {rightExtruderColor !== whiteHex ? (
+                        <SvgIcon
+                            color={rightExtruderColor}
+                            size={24}
+                            name="ExtruderRight"
+                            type={['static']}
+                            className="position-absolute right-1"
+                        />
+                    ) : (
+                        <img className="position-absolute" src="/resources/images/24x24/icon_extruder_white_right_24x24.svg" alt="" />
+                    )}
+                </div>
+            </div>
+            <div className={classNames('display-none', styles['hover-tip'])}>
+                <SvgIcon
+                    name="DropdownLine"
+                    size={12}
+                    type={['static']}
+                />
+            </div>
+        </div>
+    );
+};
+
+export const extruderOverlayMenu = ({ type, colorL, colorR, onChange, selectExtruder = null }) => {
+    return (
+        <Menu
+            selectedKeys={selectExtruder ? [selectExtruder] : []}
+        >
+            <Menu.Item
+                onClick={() => onChange({ type, direction: '0' })}
+                key="L"
+            >
+                <div className="sm-flex justify-space-between">
+                    <span className="display-inline width-96 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Extruder L')}</span>
+                    {colorL !== whiteHex ? (
+                        <SvgIcon
+                            name="Extruder"
+                            size={24}
+                            color={colorL}
+                            type={['static']}
+                        />
+                    ) : (
+                        <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
+                    )}
+                </div>
+            </Menu.Item>
+            <Menu.Item
+                onClick={() => onChange({ type, direction: '1' })}
+                key="R"
+            >
+                <div className="sm-flex justify-space-between">
+                    <span className="display-inline width-96 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Extruder R')}</span>
+                    {colorR !== whiteHex ? (
+                        <SvgIcon
+                            name="Extruder"
+                            size={24}
+                            color={colorR}
+                            type={['static']}
+                        />
+                    ) : (
+                        <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
+                    )}
+                </div>
+            </Menu.Item>
+        </Menu>
+    );
 };
 
 function ObjectListItem(
@@ -54,7 +139,6 @@ function ObjectListItem(
         onSelect,
         visible,
         onToggleVisible,
-        inProgress,
         disabled = false,
         isDualExtruder = false,
         leftMaterialColor = whiteHex,
@@ -62,21 +146,11 @@ function ObjectListItem(
         updateSelectedModelsExtruder,
     }
 ) {
-    const [tipVisible, setTipVisible] = useState('');
+    const [tipVisible, setTipVisible] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
 
-    if (isDualExtruder) {
-        const { extruderConfig: { shell, infill } } = model;
-        const { _leftExtruderColor, _rightExtruderColor } = getExtruderColor(shell, infill, leftMaterialColor, rightMaterialColor);
-        leftExtruderColor = _leftExtruderColor;
-        rightExtruderColor = _rightExtruderColor;
-    } else {
-        const { extruderConfig: { shell, infill } } = model;
-        const { _leftExtruderColor } = getExtruderColor(shell, infill, leftMaterialColor, rightMaterialColor);
-        // left = right, when single extruder
-        leftExtruderColor = _leftExtruderColor;
-        rightExtruderColor = _leftExtruderColor;
-    }
+    const colorsUsed = getColorsUsed([model.extruderConfig.shell, model.extruderConfig.infill], [leftMaterialColor, rightMaterialColor]);
+    console.log('colorsUsed =', colorsUsed);
 
     const suffixLength = 7;
     const { prefixName, suffixName } = normalizeNameDisplay(model.modelName, suffixLength);
@@ -181,14 +255,17 @@ function ObjectListItem(
                             overlay={getExtruderOverlayMenu(leftMaterialColor, rightMaterialColor, model.extruderConfig)}
                             trigger={['click']}
                         >
-                            {renderExtruderIcon(leftExtruderColor, rightExtruderColor)}
+                            {renderExtruderIcon(...colorsUsed)}
                         </Dropdown>
+                        <span className="margin-horizontal-4">
+                            L
+                        </span>
                         <SvgIcon
                             name={visible ? 'ShowNormal' : 'HideNormal'}
                             title={visible ? i18n._('key-PrintingCncLaser/ObjectList-Hide') : i18n._('key-PrintingCncLaser/ObjectList-Show')}
                             color={visible ? '#545659' : '#B9BCBF'}
                             onClick={() => onToggleVisible(model)}
-                            disabled={inProgress || disabled}
+                            disabled={disabled}
                             type={['static']}
                         />
                     </div>
@@ -210,7 +287,6 @@ function ObjectListItem(
                                         isSelected={child.isSelected}
                                         onSelect={onSelect}
                                         onToggleVisible={onToggleVisible}
-                                        inProgress={inProgress}
                                         disabled={disabled}
                                         isDualExtruder={isDualExtruder}
                                         leftMaterialColor={leftMaterialColor}
@@ -234,7 +310,6 @@ ObjectListItem.propTypes = {
     isSelected: PropTypes.bool.isRequired,
     onSelect: PropTypes.func.isRequired,
     onToggleVisible: PropTypes.func.isRequired,
-    inProgress: PropTypes.bool.isRequired,
     disabled: PropTypes.bool,
     isDualExtruder: PropTypes.bool,
     leftMaterialColor: PropTypes.string,
