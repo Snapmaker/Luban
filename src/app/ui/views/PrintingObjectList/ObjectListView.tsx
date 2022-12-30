@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 // import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { BOTH_EXTRUDER_MAP_NUMBER, LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
+import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
 import { isDualExtruder } from '../../../constants/machines';
 import i18n from '../../../lib/i18n';
 import Menu from '../../components/Menu';
@@ -15,12 +15,6 @@ import { machineStore } from '../../../store/local-storage';
 import ObjectListItem, { renderExtruderIcon, whiteHex } from './ObjectListItem';
 import styles from './styles.styl';
 import { RootState } from '../../../flux/index.def';
-
-const extruderLabelMap = {
-    '0': 'Extruder L',
-    '1': 'Extruder R',
-    '2': 'Extruder Both'
-};
 
 export const extruderOverlayMenu = ({ type, colorL, colorR, onChange, selectExtruder = null }) => {
     return (
@@ -157,8 +151,7 @@ const ObjectListView: React.FC = () => {
     }, [defaultMaterialIdRight]);
 
 
-    const onChangeExtruder = (event) => {
-        const { type, direction } = event.detail || event;
+    const onChangeExtruder = ({ type, direction }) => {
         console.log('onChangeExtruder', type, direction);
         const typeArr = type.split('.');
         switch (typeArr[1]) {
@@ -166,13 +159,23 @@ const ObjectListView: React.FC = () => {
                 setHelpersExtruder({
                     ...helpersExtruder,
                     adhesion: direction,
-                    multiple: helpersExtruder.support === direction ? direction : BOTH_EXTRUDER_MAP_NUMBER
                 });
                 dispatch(printingActions.updateHelpersExtruder({
                     support: helpersExtruder.support,
                     adhesion: direction,
                 }));
                 break;
+            case 'support':
+                setHelpersExtruder({
+                    ...helpersExtruder,
+                    support: direction,
+                });
+                dispatch(printingActions.updateHelpersExtruder({
+                    adhesion: helpersExtruder.adhesion,
+                    support: direction,
+                }));
+                break;
+
             default:
                 break;
         }
@@ -199,32 +202,13 @@ const ObjectListView: React.FC = () => {
         });
     };
 
-    const renderExtruderStatus = (status, disabled = false) => {
+    const renderExtruderStatus = (status) => {
         if (!status && selectedModelArray.length === 0) {
             status = '0';
         }
         const color1 = status === '1' ? rightMaterialColor : leftMaterialColor;
         const color2 = status === '0' ? leftMaterialColor : rightMaterialColor;
-        return (
-            <div className={classNames(
-                'sm-flex justify-space-between margin-left-16 width-160 border-default-black-5 border-radius-8 padding-vertical-4 padding-left-8',
-                (disabled ? styles['extruder-item-disabled'] : '')
-            )}
-            >
-                <span className="text-overflow-ellipsis">{i18n._(`key-Printing/LeftBar-${extruderLabelMap[status]}`)}</span>
-                <div className="sm-flex">
-                    {renderExtruderIcon(color1, color2)}
-                    <SvgIcon
-                        disabled={disabled}
-                        type={['static']}
-                        size={24}
-                        hoversize={24}
-                        color="#545659"
-                        name="DropdownOpen"
-                    />
-                </div>
-            </div>
-        );
+        return renderExtruderIcon([status], [color1, color2]);
     };
 
     return (
@@ -236,19 +220,25 @@ const ObjectListView: React.FC = () => {
                 'border-top-normal',
             )}
         >
-            <div className="padding-vertical-4">
+            <div
+                className={
+                    classNames(
+                        styles['object-tree'],
+                        'padding-vertical-4',
+                    )
+                }
+            >
                 {
                     allModels && allModels.length > 0 && allModels.map((model) => {
                         return (
                             <ObjectListItem
                                 model={model}
                                 key={model.modelID}
-                                visible={model.visible}
                                 isSelected={selectedModelArray && selectedModelArray.includes(model)}
                                 onSelect={actions.onClickModelNameBox}
                                 onToggleVisible={actions.onClickModelHideBox}
                                 disabled={leftBarOverlayVisible || inProgress}
-                                isDualExtruder={isDual}
+                                extruderCount={isDual ? 2 : 1}
                                 leftMaterialColor={leftMaterialColor}
                                 rightMaterialColor={rightMaterialColor}
                                 updateSelectedModelsExtruder={actions.updateSelectedModelsExtruder}
@@ -268,25 +258,25 @@ const ObjectListView: React.FC = () => {
             </div>
             {
                 isDual && (
-                    <div className="border-top-normal">
+                    <div className="border-top-normal margin-bottom-8">
                         <div className="padding-vertical-4 padding-horizontal-8">
-                            <div className="height-24 font-size-base">
+                            <div className="height-24 font-size-base font-weight-500">
                                 {i18n._('Helpers')}
                             </div>
                         </div>
-                        <div className="padding-vertical-4">
-                            <div className="sm-flex align-center margin-left-8 margin-top-8">
-                                <span className="display-block width-96 text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-Adhesion')}</span>
+                        <div>
+                            <div className="sm-flex align-center margin-top-8 margin-horizontal-8">
+                                <span className="display-block sm-flex-width text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-Adhesion')}</span>
                                 <Dropdown
-                                    placement="bottomRight"
+                                    placement="topRight"
                                     overlay={extruderOverlay('helpers.adhesion', helpersExtruder.adhesion)}
                                     trigger={['click']}
                                 >
                                     {renderExtruderStatus(helpersExtruder.adhesion)}
                                 </Dropdown>
                             </div>
-                            <div className="sm-flex align-center margin-left-8 margin-top-8">
-                                <span className="display-block width-96 text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-Support')}</span>
+                            <div className="sm-flex align-center margin-top-8 margin-horizontal-8">
+                                <span className="display-block sm-flex-width text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-Support')}</span>
                                 <Dropdown
                                     placement="bottomRight"
                                     overlay={extruderOverlay('helpers.support', helpersExtruder.support)}

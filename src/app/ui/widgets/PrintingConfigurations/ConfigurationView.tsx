@@ -592,13 +592,12 @@ const ConfigurationView: React.FC<{}> = () => {
             <div className="margin-bottom-16 margin-top-16">
                 <div
                     className={classNames(
+                        'width-328',
                         'border-default-grey-1',
                         'border-radius-8',
-                        'padding-top-16',
-                        'padding-bottom-16',
-                        'width-328',
+                        'padding-top-8',
+                        'padding-bottom-8',
                         'padding-horizontal-16',
-                        // 'clearfix'
                     )}
                 >
                     <div className="margin-bottom-16 height-32 sm-flex justify-space-between">
@@ -685,7 +684,7 @@ const ConfigurationView: React.FC<{}> = () => {
                             </div>
                         )
                     }
-                    <div className="sm-flex justify-flex-end margin-top-16" style={{ marginBottom: '-8px' }}>
+                    <div className="sm-flex justify-flex-end margin-top-16" style={{ marginBottom: '0' }}>
                         <Anchor
                             className={classNames('link-text', 'float-r')}
                             onClick={actions.onShowMaterialManager}
