@@ -1,19 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch, shallowEqual } from 'react-redux';
+import classNames from 'classnames';
 import { cloneDeep, find } from 'lodash';
 import PropTypes from 'prop-types';
-import classNames from 'classnames';
-import i18n from '../../../../lib/i18n';
-/* eslint-disable-next-line import/no-cycle */
-import { CancelButton, renderExtruderIcon, whiteHex } from '../VisualizerLeftBar';
-import { LEFT_EXTRUDER_MAP_NUMBER, HEAD_PRINTING, BOTH_EXTRUDER_MAP_NUMBER } from '../../../../constants';
+import React, { useEffect, useState } from 'react';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+
+import { BOTH_EXTRUDER_MAP_NUMBER, HEAD_PRINTING, LEFT_EXTRUDER_MAP_NUMBER } from '../../../../constants';
 import { actions as printingActions } from '../../../../flux/printing';
 import { actions as projectActions } from '../../../../flux/project';
+import i18n from '../../../../lib/i18n';
 import Dropdown from '../../../components/Dropdown';
-import Menu from '../../../components/Menu';
 import SvgIcon from '../../../components/SvgIcon';
+/* eslint-disable-next-line import/no-cycle */
+import { extruderOverlayMenu, renderExtruderIcon, whiteHex } from '../../../views/PrintingObjectList/ObjectListItem';
+/* eslint-disable-next-line import/no-cycle */
+import { CancelButton } from '../VisualizerLeftBar';
 import styles from './styles.styl';
-import Checkbox from '../../../components/Checkbox';
 
 const extruderLabelMap = {
     '0': 'Extruder L',
@@ -34,51 +35,6 @@ const originalHelpersExtruder = {
     onlySupportInterface: false
 };
 
-export const extruderOverlayMenu = ({ type, colorL, colorR, onChange, selectExtruder = null }) => {
-    return (
-        <Menu
-            selectedKeys={selectExtruder ? [selectExtruder] : []}
-        >
-            <Menu.Item
-                onClick={() => onChange({ type, direction: '0' })}
-                key="L"
-            >
-                <div className="sm-flex justify-space-between">
-                    <span className="display-inline width-96 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Extruder L')}</span>
-                    {colorL !== whiteHex ? (
-                        <SvgIcon
-                            name="Extruder"
-                            size={24}
-                            color={colorL}
-                            type={['static']}
-                        />
-                    ) : (
-                        <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
-                    )}
-                </div>
-            </Menu.Item>
-            <Menu.Item
-                onClick={() => onChange({ type, direction: '1' })}
-                key="R"
-            >
-                <div className="sm-flex justify-space-between">
-                    <span className="display-inline width-96 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Extruder R')}</span>
-                    {colorR !== whiteHex ? (
-                        <SvgIcon
-                            name="Extruder"
-                            size={24}
-                            color={colorR}
-                            type={['static']}
-                        />
-                    ) : (
-                        <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
-                    )}
-                </div>
-            </Menu.Item>
-        </Menu>
-    );
-};
-
 const ExtruderOverlay = React.memo((
     {
         setTransformMode
@@ -87,11 +43,11 @@ const ExtruderOverlay = React.memo((
     const dispatch = useDispatch();
 
     const {
-        isOpenSelectModals, isOpenHelpers: _isOpenHelpers, modelExtruderInfoShow, helpersExtruderInfoShow, helpersExtruderConfig
+        isOpenSelectModals, isOpenHelpers: _isOpenHelpers, modelExtruderInfoShow, helpersExtruderConfig
     } = useSelector(state => state?.printing);
 
     const [modelsExtruder, setModelsExtruder] = useState(originalModelsExtruder);
-    const [helpersExtrurder, setHelpersExtruder] = useState(helpersExtruderConfig || originalHelpersExtruder);
+    const [helpersExtruder, setHelpersExtruder] = useState(helpersExtruderConfig || originalHelpersExtruder);
     const [isOpenModels, setIsOpenModels] = useState(isOpenSelectModals);
     const [isOpenHelpers, setIsOpenHelpers] = useState(_isOpenHelpers);
     const [colorL, setColorL] = useState(whiteHex);
@@ -136,7 +92,7 @@ const ExtruderOverlay = React.memo((
                         shell: direction,
                     }));
                 } else {
-                    const newHelpersExtruder = cloneDeep(helpersExtrurder);
+                    const newHelpersExtruder = cloneDeep(helpersExtruder);
                     Object.keys(newHelpersExtruder).forEach(key => {
                         newHelpersExtruder[key] = direction;
                     });
@@ -171,23 +127,23 @@ const ExtruderOverlay = React.memo((
                 break;
             case 'adhesion':
                 setHelpersExtruder({
-                    ...helpersExtrurder,
+                    ...helpersExtruder,
                     adhesion: direction,
-                    multiple: helpersExtrurder.support === direction ? direction : BOTH_EXTRUDER_MAP_NUMBER
+                    multiple: helpersExtruder.support === direction ? direction : BOTH_EXTRUDER_MAP_NUMBER
                 });
                 dispatch(printingActions.updateHelpersExtruder({
-                    support: helpersExtrurder.support,
+                    support: helpersExtruder.support,
                     adhesion: direction
                 }));
                 break;
             case 'support':
                 setHelpersExtruder({
-                    ...helpersExtrurder,
+                    ...helpersExtruder,
                     support: direction,
-                    multiple: helpersExtrurder.adhesion === direction ? direction : BOTH_EXTRUDER_MAP_NUMBER
+                    multiple: helpersExtruder.adhesion === direction ? direction : BOTH_EXTRUDER_MAP_NUMBER
                 });
                 dispatch(printingActions.updateHelpersExtruder({
-                    adhesion: helpersExtrurder.adhesion,
+                    adhesion: helpersExtruder.adhesion,
                     support: direction
                 }));
                 break;
@@ -245,7 +201,7 @@ const ExtruderOverlay = React.memo((
     };
 
     useEffect(() => {
-        let newHelpersExtruder = cloneDeep(helpersExtrurder);
+        let newHelpersExtruder = cloneDeep(helpersExtruder);
         newHelpersExtruder = {
             ...newHelpersExtruder,
             multiple: newHelpersExtruder.support === newHelpersExtruder.adhesion ? newHelpersExtruder.support : BOTH_EXTRUDER_MAP_NUMBER
@@ -303,7 +259,7 @@ const ExtruderOverlay = React.memo((
                 marginTop: '320px'
             }}
         >
-            <div className={classNames(styles['overlay-title-font'], 'border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40 sm-flex justify-space-between')}>
+            <div className={classNames(styles['overlay-title-font'], 'border-bottom-normal padding-vertical-8 padding-horizontal-16 height-40 sm-flex justify-space-between')}>
                 {i18n._('key-Printing/LeftBar-Extruder')}
                 <CancelButton
                     onClick={() => setTransformMode('')}
@@ -311,30 +267,32 @@ const ExtruderOverlay = React.memo((
             </div>
             <div className="padding-bottom-16 padding-top-8 padding-left-8">
                 <div className="select-models-container">
-                    {modelExtruderInfoShow && (
-                        <div className="sm-flex align-center justify-space-between margin-right-16">
-                            <div className="sm-flex align-center">
+                    {
+                        modelExtruderInfoShow && (
+                            <div className="sm-flex align-center justify-space-between margin-right-16">
+                                <div className="sm-flex align-center">
+                                    <SvgIcon
+                                        color="#1890FF"
+                                        size={24}
+                                        type={['static']}
+                                        name="WarningTipsTips"
+                                        className="margin-vertical-8 margin-right-4"
+                                    />
+                                    <span className="display-inline width-200 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Selected Models Extruder Info')}</span>
+                                </div>
                                 <SvgIcon
-                                    color="#1890FF"
+                                    color="#545659"
                                     size={24}
                                     type={['static']}
-                                    name="WarningTipsTips"
-                                    className="margin-vertical-8 margin-right-4"
+                                    name="Cancel"
+                                    className="margin-right-8"
+                                    onClick={() => {
+                                        dispatch(printingActions.updateState({ modelExtruderInfoShow: false }));
+                                    }}
                                 />
-                                <span className="display-inline width-200 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Selected Models Extruder Info')}</span>
                             </div>
-                            <SvgIcon
-                                color="#545659"
-                                size={24}
-                                type={['static']}
-                                name="Cancel"
-                                className="margin-right-8"
-                                onClick={() => {
-                                    dispatch(printingActions.updateState({ modelExtruderInfoShow: false }));
-                                }}
-                            />
-                        </div>
-                    )}
+                        )
+                    }
                     <div className="sm-flex align-center margin-top-8">
                         <SvgIcon
                             size={24}
@@ -377,92 +335,6 @@ const ExtruderOverlay = React.memo((
                         </Dropdown>
                     </div>
                 </div>
-                <div className="padding-right-16 padding-left-4">
-                    <div className={classNames(styles['dashed-line'])} />
-                </div>
-                <div className="select-models-container">
-                    {helpersExtruderInfoShow && (
-                        <div className="sm-flex align-center justify-space-between margin-right-16">
-                            <div className="sm-flex align-center">
-                                <SvgIcon
-                                    color="#1890FF"
-                                    size={24}
-                                    type={['static']}
-                                    name="WarningTipsTips"
-                                    className="margin-vertical-8 margin-right-4"
-                                />
-                                <span className="display-inline width-200 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Helpers Extruder Info')}</span>
-                            </div>
-                            <SvgIcon
-                                color="#545659"
-                                size={24}
-                                type={['static']}
-                                name="Cancel"
-                                className="margin-right-8"
-                                onClick={() => {
-                                    dispatch(printingActions.updateState({ helpersExtruderInfoShow: false }));
-                                }}
-                            />
-                        </div>
-                    )}
-                    <div className="sm-flex align-center padding-top-8">
-                        <SvgIcon
-                            size={24}
-                            hoversize={24}
-                            type={['static']}
-                            name={`${isOpenHelpers ? 'DropdownOpen' : 'DropdownClose'}`}
-                            color="#545659"
-                            onClick={() => handleOpen('helpers')}
-                        />
-                        <div role="presentation" onClick={() => handleOpen('helpers')} className="display-block width-96 text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-All Helpers')}</div>
-                        <Dropdown
-                            placement="bottomRight"
-                            overlay={extruderOverlay('helpers.multiple', helpersExtrurder.multiple)}
-                            trigger="click"
-                        >
-                            {renderExtruderStatus(helpersExtrurder.multiple)}
-                        </Dropdown>
-                    </div>
-                    <div className={`align-center margin-left-24 margin-top-8 ${isOpenHelpers ? 'sm-flex' : 'display-none'}`}>
-                        <span className="display-block width-96 text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-Adhesion')}</span>
-                        <Dropdown
-                            placement="bottomRight"
-                            overlay={extruderOverlay('helpers.adhesion', helpersExtrurder.adhesion)}
-                            trigger="click"
-                        >
-                            {renderExtruderStatus(helpersExtrurder.adhesion)}
-                        </Dropdown>
-                    </div>
-                    <div className={`sm-flex align-center margin-left-24 margin-top-8 ${isOpenHelpers ? 'sm-flex' : 'display-none'}`}>
-                        <span className="display-block width-96 text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-Support')}</span>
-                        <Dropdown
-                            placement="bottomRight"
-                            overlay={extruderOverlay('helpers.support', helpersExtrurder.support)}
-                            trigger="click"
-                        >
-                            {renderExtruderStatus(helpersExtrurder.support)}
-                        </Dropdown>
-                    </div>
-                    <div className={classNames(styles['only-support-interface'], `sm-flex align-center margin-top-8 ${isOpenHelpers ? 'sm-flex' : 'display-none'}`)}>
-                        <Checkbox
-                            className=""
-                            defaultChecked={false}
-                            type="checkbox"
-                            checked={helpersExtrurder.onlySupportInterface}
-                            onChange={(event) => {
-                                setHelpersExtruder((obj) => {
-                                    const newHelpersExtrurder = {
-                                        ...obj,
-                                        onlySupportInterface: event.target.checked
-                                    };
-                                    dispatch(printingActions.updateHelpersExtruder(newHelpersExtrurder));
-                                    return newHelpersExtrurder;
-                                });
-                            }}
-                        />
-                        <span className="margin-left-4">{i18n._('key-Printing/LeftBar-Only Support Interface')}</span>
-                    </div>
-                </div>
             </div>
         </div>
     );
@@ -471,4 +343,5 @@ const ExtruderOverlay = React.memo((
 ExtruderOverlay.propTypes = {
     setTransformMode: PropTypes.func.isRequired
 };
+
 export default ExtruderOverlay;

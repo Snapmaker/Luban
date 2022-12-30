@@ -1,34 +1,23 @@
-//@import "../../../styles/variables.styl"
+.custom-card {
+    :global(.ant-card.ant-card-bordered.ant-card-small) {
+        border-radius: 8px;
+        border: 1px solid #D5D6D9; // grey 1
 
-.card {
-    :global(.ant-card.ant-card-bordered){
-        background-color: transparent;
-        border: none;
         :global(.ant-card-head) {
-            border-bottom: none;
-            min-height: auto;
-            height: 32px;
-            line-height: 32px;
-            padding: 0 16px 0 0;
-            :global(.ant-card-head-title){
-                height: 32px;
-                padding: 0;
-                order: 1;
+            padding: 0 8px;
+
+            :global(.ant-card-head-title) {
+                padding-left: 0;
             }
-            :global(.ant-card-extra){
-                height: 32px;
+
+            :global(.ant-card-extra) {
                 padding: 0;
-                float: none;
-                flex: 0 0 auto;
-                margin-right: 8px;
             }
         }
+
         :global(.ant-card-body) {
             padding: 0;
-            margin: 4px 0 8px;
-            //border-radius: 8px;
-            //border: 1px solid #D5D6D9;
-            //background-color: #fff;
+            margin: 0;
         }
     }
 }

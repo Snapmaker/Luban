@@ -12,15 +12,16 @@ import { actions as printingActions } from '../../../flux/printing';
 import { logModelViewOperation } from '../../../lib/gaEvent';
 import i18n from '../../../lib/i18n';
 
-import scene from '../../../scene/Scene';
-
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 import { priorities, shortcutActions, ShortcutManager } from '../../../lib/shortcut';
 import { ModelEvents } from '../../../models/events';
+
+import scene from '../../../scene/Scene';
 import ContextMenu from '../../components/ContextMenu';
 import ProgressBar from '../../components/ProgressBar';
 import Canvas from '../../components/SMCanvas';
 import { emitUpdateControlInputEvent } from '../../components/SMCanvas/TransformControls';
+import { PageMode } from '../../pages/PageMode';
 import ModeToggleBtn from './ModeToggleBtn';
 import PrintableCube from './PrintableCube';
 import styles from './styles.styl';
@@ -98,8 +99,6 @@ class Visualizer extends PureComponent {
         displayModel: PropTypes.func,
         pageMode: PropTypes.string.isRequired,
         setPageMode: PropTypes.func.isRequired,
-        simplifying: PropTypes.bool.isRequired,
-        setSimplifying: PropTypes.func,
         simplifyOriginModelInfo: PropTypes.object,
         loadSimplifyModel: PropTypes.func,
         modelSimplify: PropTypes.func,
@@ -160,7 +159,9 @@ class Visualizer extends PureComponent {
             }
         },
         onSelectModels: (intersect, selectEvent) => {
-            if (this.props.simplifying) return;
+            if (this.props.pageMode !== PageMode.Default) {
+                return;
+            }
             this.props.selectMultiModel(intersect, selectEvent);
         },
         onModelBeforeTransform: () => {
@@ -502,13 +503,13 @@ class Visualizer extends PureComponent {
         const { selectedModelArray, simplifyOriginModelInfo: { sourceSimplifyName } } = this.props;
         this.props.loadSimplifyModel(selectedModelArray[0].modelID, sourceSimplifyName, true);
         this.props.resetSimplifyOriginModelInfo();
-        this.props.setSimplifying(false);
+        this.props.setPageMode(PageMode.Default);
     };
 
     handleApplySimplify = () => {
         this.props.recordSimplifyModel();
         this.props.resetSimplifyOriginModelInfo();
-        this.props.setSimplifying(false);
+        this.props.setPageMode(PageMode.Default);
     };
 
     handleUpdateSimplifyConfig = (type, percent) => {
@@ -545,7 +546,6 @@ class Visualizer extends PureComponent {
                     arrangeAllModels={this.actions.arrangeAllModels}
                     pageMode={this.props.pageMode}
                     setPageMode={this.props.setPageMode}
-                    simplifying={this.props.simplifying}
                     handleApplySimplify={this.handleApplySimplify}
                     handleCancelSimplify={this.handleCancelSimplify}
                     handleUpdateSimplifyConfig={this.handleUpdateSimplifyConfig}
@@ -558,11 +558,8 @@ class Visualizer extends PureComponent {
                 <div className={styles['visualizer-preview-control']}>
                     <VisualizerPreviewControl />
                     {
-                        this.props.enable3dpLivePreview
-                        && (
-                            <VisualizerClippingControl
-                                simplifying={this.props.simplifying}
-                            />
+                        this.props.enable3dpLivePreview && (
+                            <VisualizerClippingControl />
                         )
                     }
                 </div>

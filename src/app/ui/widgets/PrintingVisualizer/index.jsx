@@ -12,8 +12,6 @@ const PrintingVisualizerWidget = (props) => (
             <Visualizer
                 pageMode={props.pageMode}
                 setPageMode={props.setPageMode}
-                simplifying={props.simplifying}
-                setSimplifying={props.setSimplifying}
             />
         </Widget.Content>
     </Widget>
@@ -22,8 +20,6 @@ const PrintingVisualizerWidget = (props) => (
 PrintingVisualizerWidget.propTypes = {
     pageMode: PropTypes.string.isRequired,
     setPageMode: PropTypes.func.isRequired,
-    simplifying: PropTypes.bool,
-    setSimplifying: PropTypes.func
 };
 
 export default PrintingVisualizerWidget;

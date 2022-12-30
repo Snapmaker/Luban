@@ -3070,6 +3070,7 @@ export const actions = {
             });
             if (modelItem) {
                 modelItem.extruderConfig = {
+                    ...modelItem.extruderConfig,
                     ...extruderConfig
                 };
                 modelItem.children

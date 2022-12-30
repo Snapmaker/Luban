@@ -69,7 +69,7 @@ function ObjectListBox({ headType }) {
                         onSelect={actions.onClickModelNameBox}
                         onToggleVisible={actions.onClickModelHideBox}
                         inProgress={inProgress}
-                        placment="right"
+                        placement="right"
                     />
                 );
             })}

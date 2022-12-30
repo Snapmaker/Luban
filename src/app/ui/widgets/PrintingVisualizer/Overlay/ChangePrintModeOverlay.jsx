@@ -104,7 +104,7 @@ const ChangePrintModeOverlay = () => {
 
     return (
         <div className="position-absolute width-438 margin-left-72 border-default-grey-1 border-radius-8 background-color-white">
-            <div className={classNames(styles['overlay-title-font'], 'border-bottom-normal padding-vertical-12 padding-horizontal-16')}>
+            <div className={classNames(styles['overlay-title-font'], 'border-bottom-normal padding-vertical-8 padding-horizontal-16')}>
                 {i18n._('Print Mode')}
             </div>
             <div className="sm-flex justify-space-between padding-vertical-16 padding-horizontal-16">

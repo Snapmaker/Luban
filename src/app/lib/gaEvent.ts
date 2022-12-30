@@ -123,7 +123,7 @@ export const logTransformOperation = <Key extends keyof Transformation>(headType
     });
 };
 
-export const logObjectListOperation = (headType: THeadType, type: 'pack' | 'expand', objectCount: number) => {
+export const logObjectListOperation = (headType: THeadType, type: 'pack' | 'expand', objectCount: number = -1) => {
     return sendMessage(`${headType}_object_list_${type}`, 'object_list', {
         objectCount,
         headType

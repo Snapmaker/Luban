@@ -1,28 +1,25 @@
-import React from 'react';
+import { Tooltip } from 'antd';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import { Tooltip } from 'antd';
-import i18n from '../../../lib/i18n';
-import PrintingObjectListBox from '../PrintingObjectList';
-import Card from '../../components/Card';
-import SvgIcon from '../../components/SvgIcon';
+import React from 'react';
+
 import { HEAD_PRINTING } from '../../../constants';
-import { logObjectListOperation, logModelViewOperation } from '../../../lib/gaEvent';
+import { logModelViewOperation } from '../../../lib/gaEvent';
+import i18n from '../../../lib/i18n';
+import SvgIcon from '../../components/SvgIcon';
+
+import ObjectListCardView from '../../views/PrintingObjectList/ObjectListCardView';
 import styles from './styles.styl';
+
 
 function VisualizerBottomLeft({ actions }) {
     return (
-        <React.Fragment>
-            <Card
-                className={classNames('margin-horizontal-8')}
-                title={i18n._('key-Printing/ObjectList-Object List')}
-                onListToogleVisible={(visible) => {
-                    logObjectListOperation(HEAD_PRINTING, visible ? 'expand' : 'pack');
-                }}
-            >
-                <PrintingObjectListBox />
-            </Card>
-            <div className={classNames('margin-horizontal-8', 'height-30')}>
+        <div className="margin-horizontal-8">
+            <div className="margin-bottom-8">
+                <ObjectListCardView />
+            </div>
+            {/* Camera control */}
+            <div className="height-30">
                 <Tooltip title={i18n._('key-Printing/View-Isometric')} arrowPointAtCenter>
                     <SvgIcon
                         name="ViewIsometric"
@@ -76,9 +73,10 @@ function VisualizerBottomLeft({ actions }) {
                     />
                 </Tooltip>
             </div>
-        </React.Fragment>
+        </div>
     );
 }
+
 VisualizerBottomLeft.propTypes = {
     actions: PropTypes.shape({
         toLeft: PropTypes.func.isRequired,

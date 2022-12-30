@@ -208,7 +208,7 @@ const SVGLeftBar = forwardRef((props, ref) => {
                         <div
                             className="position-absolute width-152 margin-left-72 margin-top-64 border-default-grey-1 border-radius-8 background-color-white"
                         >
-                            <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                            <div className="border-bottom-normal padding-vertical-8 padding-horizontal-16 height-40">
                                 {i18n._('key-Laser/LeftBar-Draw Path')}
                             </div>
                             <div className={classNames(styles['center-pen'], 'width-152')}>
@@ -232,7 +232,7 @@ const SVGLeftBar = forwardRef((props, ref) => {
                         <div
                             className="position-absolute width-152 margin-left-72 margin-top-112 border-default-grey-1 border-radius-8 background-color-white"
                         >
-                            <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                            <div className="border-bottom-normal padding-vertical-8 padding-horizontal-16 height-40">
                                 {i18n._('key-Laser/LeftBar-Draw')}
                             </div>
                             <div className={classNames(styles['center-pen'], 'width-152')}>
@@ -256,7 +256,7 @@ const SVGLeftBar = forwardRef((props, ref) => {
                         <div
                             className="position-absolute width-272 margin-left-72 margin-top-268 border-default-grey-1 border-radius-8 background-color-white"
                         >
-                            <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                            <div className="border-bottom-normal padding-vertical-8 padding-horizontal-16 height-40">
                                 {i18n._('key-Laser/LeftBar-Insert Draw')}
                             </div>
                             <div>

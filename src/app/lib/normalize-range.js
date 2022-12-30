@@ -27,17 +27,24 @@ export const limitStringLength = (string, maxLength) => {
     return string;
 };
 
+/**
+ * Split name into 2 parts: prefix + suffix.
+ *
+ * @param name
+ * @param suffixLength
+ */
 export const normalizeNameDisplay = (name, suffixLength = 7) => {
     if (!name || name.length <= suffixLength) {
         return {
             prefixName: name,
-            suffixName: ''
+            suffixName: '',
         };
     }
     const prefixName = name.slice(0, name.length - suffixLength);
     const suffixName = name.slice(-suffixLength);
     return {
-        prefixName, suffixName
+        prefixName,
+        suffixName,
     };
 };
 
@@ -45,5 +52,5 @@ export default {
     limit,
     test,
     limitStringLength,
-    normalizeNameDisplay
+    normalizeNameDisplay,
 };
