@@ -730,7 +730,7 @@ class DefinitionManager {
     addMachineStartGcode(definition, extruderDefinition) {
         const settings = extruderDefinition.settings;
 
-        const machineHeatedBed = settings.machine_heated_bed.default_value;
+        const machineHeatedBed = definition.settings.machine_heated_bed.default_value;
         const printTemp = settings.material_print_temperature.default_value;
         const printTempLayer0 = settings.material_print_temperature_layer_0.default_value
             || printTemp;

@@ -2179,6 +2179,8 @@ export const actions = {
             toolHead: { printingToolhead },
             activeMachine,
         } = getState().machine;
+        const isDual = isDualExtruder(printingToolhead);
+
         const models = modelGroup.getVisibleValidModels();
         if (!models || models.length === 0 || !hasModel) {
             log.warning('No model(s) to be sliced.');
@@ -2201,7 +2203,7 @@ export const actions = {
 
         // Apply scene changes to global preset, and extruders
         dispatch(sceneActions.finalizeSceneSettings(
-            [extruderLDefinition, extruderRDefinition],
+            isDual ? [extruderLDefinition, extruderRDefinition] : [extruderLDefinition],
             globalQualityPreset,
             [qualityPresets[LEFT_EXTRUDER], qualityPresets[RIGHT_EXTRUDER]]
         ));
@@ -2275,7 +2277,6 @@ export const actions = {
         );
         const renderGcodeFileName = `${currentModelName}_${new Date().getTime()}`;
 
-        const isDual = isDualExtruder(printingToolhead);
         const finalDefinition = definitionManager.finalizeActiveDefinition(
             printMode,
             globalQualityPreset,
@@ -2312,12 +2313,6 @@ export const actions = {
         await definitionManager.createDefinition(finalDefinition);
 
         // slice
-        /*
-        const params = {
-            modelName: name,
-            modelFileName: filename
-        };
-        */
         // save line width and layer height for gcode preview
         dispatch(actions.updateState({
             gcodeEntity: {

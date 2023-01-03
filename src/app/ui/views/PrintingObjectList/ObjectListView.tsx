@@ -229,7 +229,6 @@ const ObjectListView: React.FC = () => {
             className={classNames(
                 styles['object-list-view'],
                 'width-264',
-                'background-color-white',
                 'border-top-normal',
             )}
         >

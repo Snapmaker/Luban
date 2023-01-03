@@ -63,7 +63,7 @@ import {
 import MachineMaterialSettings from './MachineMaterialSettings';
 import { PageMode } from './PageMode';
 import Workspace from './Workspace';
-import { CaseConfigGimbal } from './HomePage/CaseConfig';
+import { CaseConfigGimbal, CaseConfigPenHolder } from './HomePage/CaseConfig';
 
 export const openFolder = () => {
     if (isElectron()) {
@@ -381,17 +381,13 @@ function getStarterProject(series) {
         path: './UserCase/printing/original_single/3dp_original_single.snap3dp',
         name: '3dp_original_single.snap3dp'
     };
-    const pathConfigForArtisan = {
-        path: './UserCase/printing/Case-PenHolder.snap3dp',
-        name: 'Case-PenHolder.snap3dp'
-    };
 
     // TODO: Refactor to not hard coding
     let pathConfig;
     if ([MACHINE_SERIES.ORIGINAL.value, MACHINE_SERIES.ORIGINAL_LZ.value].includes(series)) {
         pathConfig = pathConfigForOriginal;
     } else if (series === MACHINE_SERIES.A400.value) {
-        pathConfig = pathConfigForArtisan;
+        pathConfig = CaseConfigPenHolder.pathConfig;
     } else if (series === MACHINE_SERIES.J1.value) {
         pathConfig = CaseConfigGimbal.pathConfig;
     } else {
