@@ -176,14 +176,14 @@ const extruderOverlayMenu2 = ({ colorL, colorR, shell = '0', infill = '0', onCha
                         <span className="display-inline width-96 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Extruder Both')}</span>
                         <div className="position-re">
                             {colorL !== whiteHex ? (
-                                <SvgIcon className="position-absolute" name="ExtruderLeft" size={24} color={colorL} type={['static']} />
+                                <SvgIcon className="position-absolute right-1" name="ExtruderLeft" size={24} color={colorL} type={['static']} />
                             ) : (
-                                <img src="/resources/images/24x24/icon_extruder_white_left_24x24.svg" alt="" />
+                                <img className="position-absolute right-1" src="/resources/images/24x24/icon_extruder_white_left_24x24.svg" alt="" />
                             )}
                             {colorR !== whiteHex ? (
                                 <SvgIcon className="position-absolute right-1" name="ExtruderRight" size={24} color={colorR} type={['static']} />
                             ) : (
-                                <img src="/resources/images/24x24/icon_extruder_white_right_24x24.svg" alt="" />
+                                <img className="position-absolute right-1" src="/resources/images/24x24/icon_extruder_white_right_24x24.svg" alt="" />
                             )}
                         </div>
                     </div>

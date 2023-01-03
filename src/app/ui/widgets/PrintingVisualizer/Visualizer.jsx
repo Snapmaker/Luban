@@ -104,6 +104,7 @@ class Visualizer extends PureComponent {
         modelSimplify: PropTypes.func,
         resetSimplifyOriginModelInfo: PropTypes.func,
         recordSimplifyModel: PropTypes.func,
+        setSelectedModelsExtruder: PropTypes.func,
         updateState: PropTypes.func
     };
 
@@ -255,7 +256,18 @@ class Visualizer extends PureComponent {
                     }
                 });
             }
-        }
+        },
+        /**
+         * Set selected model(s) extruder to extruderId ('0' or '1').
+         *
+         * @param extruderId
+         */
+        setSelectedModelsExtruder: (extruderId) => {
+            this.props.setSelectedModelsExtruder({
+                shell: extruderId,
+                infill: extruderId,
+            });
+        },
     };
 
     // all support related actions used in VisualizerModelTransformation & canvas.controls & contextmenu
@@ -644,6 +656,21 @@ class Visualizer extends PureComponent {
                             },
                             {
                                 type: 'item',
+                                label: i18n._('key-Printing/ContextMenu-Assign model to left extruder'),
+                                disabled: inProgress || !isModelSelected,
+                                onClick: () => this.actions.setSelectedModelsExtruder('0'),
+                            },
+                            {
+                                type: 'item',
+                                label: i18n._('key-Printing/ContextMenu-Assign model to right extruder'),
+                                disabled: inProgress || !isModelSelected,
+                                onClick: () => this.actions.setSelectedModelsExtruder('1'),
+                            },
+                            {
+                                type: 'separator'
+                            },
+                            {
+                                type: 'item',
                                 label: i18n._('key-Printing/ContextMenu-Reset Model Transformation'),
                                 disabled: inProgress || !isModelSelected,
                                 onClick: this.actions.resetSelectedModelTransformation
@@ -783,6 +810,9 @@ const mapDispatchToProps = (dispatch) => ({
     resetSimplifyOriginModelInfo: () => dispatch(printingActions.resetSimplifyOriginModelInfo()),
     recordSimplifyModel: () => dispatch(printingActions.recordSimplifyModel()),
 
+    setSelectedModelsExtruder: (extruderConfig) => dispatch(printingActions.updateSelectedModelsExtruder(extruderConfig)),
+
+    // TODO: you should not expose updateState to JSX
     updateState: (obj) => dispatch(printingActions.updateState(obj))
 });
 
