@@ -7,9 +7,9 @@ import PropTypes from 'prop-types';
 import React, { useEffect, useRef, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { useHistory, withRouter } from 'react-router-dom';
-import { MACHINE_SERIES } from '../../../server/constants';
+
 import { LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_MATERIAL } from '../../constants';
-import { HEAD_PRINTING, isDualExtruder } from '../../constants/machines';
+import { HEAD_PRINTING, isDualExtruder, MACHINE_SERIES } from '../../constants/machines';
 import { actions as machineActions } from '../../flux/machine';
 import { actions as printingActions } from '../../flux/printing';
 import { actions as projectActions } from '../../flux/project';
@@ -63,6 +63,7 @@ import {
 import MachineMaterialSettings from './MachineMaterialSettings';
 import { PageMode } from './PageMode';
 import Workspace from './Workspace';
+import { CaseConfigGimbal } from './HomePage/CaseConfig';
 
 export const openFolder = () => {
     if (isElectron()) {
@@ -370,6 +371,35 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
     return [renderHomepage, renderMainToolBar, renderWorkspace, renderMachineMaterialSettings];
 }
 
+
+function getStarterProject(series) {
+    const pathConfigForSM2 = {
+        path: './UserCase/printing/a150_single/3dp_a150_single.snap3dp',
+        name: '3dp_a150_single.snap3dp'
+    };
+    const pathConfigForOriginal = {
+        path: './UserCase/printing/original_single/3dp_original_single.snap3dp',
+        name: '3dp_original_single.snap3dp'
+    };
+    const pathConfigForArtisan = {
+        path: './UserCase/printing/Case-PenHolder.snap3dp',
+        name: 'Case-PenHolder.snap3dp'
+    };
+
+    // TODO: Refactor to not hard coding
+    let pathConfig;
+    if ([MACHINE_SERIES.ORIGINAL.value, MACHINE_SERIES.ORIGINAL_LZ.value].includes(series)) {
+        pathConfig = pathConfigForOriginal;
+    } else if (series === MACHINE_SERIES.A400.value) {
+        pathConfig = pathConfigForArtisan;
+    } else if (series === MACHINE_SERIES.J1.value) {
+        pathConfig = CaseConfigGimbal.pathConfig;
+    } else {
+        pathConfig = pathConfigForSM2;
+    }
+    return pathConfig;
+}
+
 function Printing({ location }) {
     const widgets = useSelector(state => state?.widget[pageHeadType].default.widgets, shallowEqual);
     const series = useSelector(state => state?.machine?.series);
@@ -531,31 +561,10 @@ function Printing({ location }) {
     const handleChange = async (nextIndex) => {
         if (nextIndex === 1) {
             setInitIndex(1);
-            const pathConfigForSM2 = {
-                path: './UserCase/printing/a150_single/3dp_a150_single.snap3dp',
-                name: '3dp_a150_single.snap3dp'
-            };
-            const pathConfigForOriginal = {
-                path: './UserCase/printing/original_single/3dp_original_single.snap3dp',
-                name: '3dp_original_single.snap3dp'
-            };
-            const pathConfigForArtisan = {
-                path: './UserCase/printing/Case-PenHolder.snap3dp',
-                name: 'Case-PenHolder.snap3dp'
-            };
 
-            // TODO: Refactor to not hard coding
-            const isArtisan = series === MACHINE_SERIES.A400.value;
-            let pathConfig;
-            if (isOriginal) {
-                pathConfig = pathConfigForOriginal;
-            } else if (isArtisan) {
-                pathConfig = pathConfigForArtisan;
-            } else {
-                pathConfig = pathConfigForSM2;
-            }
+            const projectConfig = getStarterProject(series);
 
-            dispatch(projectActions.openProject(pathConfig, history, true, true));
+            dispatch(projectActions.openProject(projectConfig, history, true, true));
         } else if (nextIndex === 5) {
             const thumbnailRef = thumbnail.current.getThumbnail();
             await dispatch(printingActions.generateGcode(thumbnailRef, true));
