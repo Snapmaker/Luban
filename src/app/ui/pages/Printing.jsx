@@ -7,9 +7,9 @@ import PropTypes from 'prop-types';
 import React, { useEffect, useRef, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { useHistory, withRouter } from 'react-router-dom';
-import { MACHINE_SERIES } from '../../../server/constants';
+
 import { LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_MATERIAL } from '../../constants';
-import { HEAD_PRINTING, isDualExtruder } from '../../constants/machines';
+import { HEAD_PRINTING, isDualExtruder, MACHINE_SERIES } from '../../constants/machines';
 import { actions as machineActions } from '../../flux/machine';
 import { actions as printingActions } from '../../flux/printing';
 import { actions as projectActions } from '../../flux/project';
@@ -21,35 +21,17 @@ import Dropzone from '../components/Dropzone';
 import Steps from '../components/Steps';
 import MainToolBar from '../layouts/MainToolBar';
 import ProjectLayout from '../layouts/ProjectLayout';
-import { logPageView, renderPopup, renderWidgetList, useUnsavedTitle } from '../utils';
+import { logPageView, renderPopup, useUnsavedTitle } from '../utils';
 // import PrintingOutput from '../widgets/PrintingOutput';
 import PrintingManager from '../views/PrintingManager';
-import CncLaserOutputWidget from '../widgets/CncLaserOutput';
-import CNCPathWidget from '../widgets/CNCPath';
-import ConnectionWidget from '../widgets/Connection';
-import ConsoleWidget from '../widgets/Console';
-
-import ControlWidget from '../widgets/Control';
-import EnclosureWidget from '../widgets/Enclosure';
-import GCodeWidget from '../widgets/GCode';
-import JobType from '../widgets/JobType';
-import LaserParamsWidget from '../widgets/LaserParams';
-import LaserSetBackground from '../widgets/LaserSetBackground';
-import LaserTestFocusWidget from '../widgets/LaserTestFocus';
-import MacroWidget from '../widgets/Macro';
-import MarlinWidget from '../widgets/Marlin';
 import PrintingConfigurationsWidget from '../widgets/PrintingConfigurations';
 import PresetInitialization from '../widgets/PrintingConfigurations/PresetInitialization';
-import PrintingMaterialWidget from '../widgets/PrintingMaterial';
 import PrintingOutputWidget from '../widgets/PrintingOutput';
 import Thumbnail from '../widgets/PrintingOutput/Thumbnail';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
-import PurifierWidget from '../widgets/Purifier';
-import WebcamWidget from '../widgets/Webcam';
-import WifiTransport from '../widgets/WifiTransport';
-import VisualizerWidget from '../widgets/WorkspaceVisualizer';
 
 import HomePage from './HomePage';
+import { CaseConfigGimbal, CaseConfigPenHolder } from './HomePage/CaseConfig';
 import {
     printIntroStepEight,
     printIntroStepFive,
@@ -70,32 +52,6 @@ export const openFolder = () => {
         ipc.send('open-recover-folder');
     }
 };
-const allWidgets = {
-    'control': ControlWidget,
-    'connection': ConnectionWidget,
-    'console': ConsoleWidget,
-    'gcode': GCodeWidget,
-    'macro': MacroWidget,
-    'macroPanel': MacroWidget,
-    'purifier': PurifierWidget,
-    'marlin': MarlinWidget,
-    'visualizer': VisualizerWidget,
-    'webcam': WebcamWidget,
-    'printing-visualizer': PrintingVisualizer,
-    'wifi-transport': WifiTransport,
-    'enclosure': EnclosureWidget,
-    '3dp-material': PrintingMaterialWidget,
-    '3dp-configurations': PrintingConfigurationsWidget,
-    // '3dp-output': PrintingOutputWidget,
-    'laser-params': LaserParamsWidget,
-    // 'laser-output': CncLaserOutputWidget,
-    'laser-set-background': LaserSetBackground,
-    'laser-test-focus': LaserTestFocusWidget,
-    'cnc-path': CNCPathWidget,
-    'cnc-output': CncLaserOutputWidget,
-    'job-type': JobType
-};
-
 
 const pageHeadType = HEAD_PRINTING;
 
@@ -370,8 +326,31 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
     return [renderHomepage, renderMainToolBar, renderWorkspace, renderMachineMaterialSettings];
 }
 
+function getStarterProject(series) {
+    const pathConfigForSM2 = {
+        path: './UserCase/printing/a150_single/3dp_a150_single.snap3dp',
+        name: '3dp_a150_single.snap3dp'
+    };
+    const pathConfigForOriginal = {
+        path: './UserCase/printing/original_single/3dp_original_single.snap3dp',
+        name: '3dp_original_single.snap3dp'
+    };
+
+    // TODO: Refactor to not hard coding
+    let pathConfig;
+    if ([MACHINE_SERIES.ORIGINAL.value, MACHINE_SERIES.ORIGINAL_LZ.value].includes(series)) {
+        pathConfig = pathConfigForOriginal;
+    } else if (series === MACHINE_SERIES.A400.value) {
+        pathConfig = CaseConfigPenHolder.pathConfig;
+    } else if (series === MACHINE_SERIES.J1.value) {
+        pathConfig = CaseConfigGimbal.pathConfig;
+    } else {
+        pathConfig = pathConfigForSM2;
+    }
+    return pathConfig;
+}
+
 function Printing({ location }) {
-    const widgets = useSelector(state => state?.widget[pageHeadType].default.widgets, shallowEqual);
     const series = useSelector(state => state?.machine?.series);
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions);
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId);
@@ -384,7 +363,7 @@ function Printing({ location }) {
     const { isConnected, toolHead: { printingToolhead } } = machineState;
     const isOriginal = includes(series, 'Original');
 
-    const [isDraggingWidget, setIsDraggingWidget] = useState(false);
+    // const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [enabledIntro, setEnabledIntro] = useState(null);
     const [initIndex, setInitIndex] = useState(0);
     const [machineInfo, setMachineInfo] = useState({});
@@ -507,22 +486,14 @@ function Printing({ location }) {
         return (<PrintingManager />);
     }
 
-    const listActions = {
-        onDragStart: () => {
-            setIsDraggingWidget(true);
-        },
-        onDragEnd: () => {
-            setIsDraggingWidget(false);
-        }
-    };
     const renderRightView = () => {
-        const widgetProps = { headType: pageHeadType };
         return (
-            <div>
-                {renderWidgetList('cnc', 'default', widgets, allWidgets, listActions, widgetProps)}
+            <div className="sm-flex sm-flex-direction-c height-percent-100">
+                <PrintingConfigurationsWidget
+                    className="margin-bottom-8 sm-flex-width"
+                />
                 <PrintingOutputWidget />
             </div>
-
         );
     };
     // const onClickToUpload = () => {
@@ -531,31 +502,10 @@ function Printing({ location }) {
     const handleChange = async (nextIndex) => {
         if (nextIndex === 1) {
             setInitIndex(1);
-            const pathConfigForSM2 = {
-                path: './UserCase/printing/a150_single/3dp_a150_single.snap3dp',
-                name: '3dp_a150_single.snap3dp'
-            };
-            const pathConfigForOriginal = {
-                path: './UserCase/printing/original_single/3dp_original_single.snap3dp',
-                name: '3dp_original_single.snap3dp'
-            };
-            const pathConfigForArtisan = {
-                path: './UserCase/printing/Case-PenHolder.snap3dp',
-                name: 'Case-PenHolder.snap3dp'
-            };
 
-            // TODO: Refactor to not hard coding
-            const isArtisan = series === MACHINE_SERIES.A400.value;
-            let pathConfig;
-            if (isOriginal) {
-                pathConfig = pathConfigForOriginal;
-            } else if (isArtisan) {
-                pathConfig = pathConfigForArtisan;
-            } else {
-                pathConfig = pathConfigForSM2;
-            }
+            const projectConfig = getStarterProject(series);
 
-            dispatch(projectActions.openProject(pathConfig, history, true, true));
+            dispatch(projectActions.openProject(projectConfig, history, true, true));
         } else if (nextIndex === 5) {
             const thumbnailRef = thumbnail.current.getThumbnail();
             await dispatch(printingActions.generateGcode(thumbnailRef, true));
@@ -575,7 +525,7 @@ function Printing({ location }) {
         >
             <Dropzone
                 multiple
-                disabled={isDraggingWidget}
+                disabled={false}
                 accept=".stl, .obj, .3mf, .amf"
                 dragEnterMsg={i18n._('key-Printing/Page-Drop an STL/OBJ file here.')}
                 onDropAccepted={onDropAccepted}

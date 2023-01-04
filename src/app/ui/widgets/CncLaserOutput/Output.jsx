@@ -161,7 +161,7 @@ const Output = ({ headType }) => {
     );
 
     return (
-        <div className={classNames('position-fixed', 'border-radius-bottom-8', 'bottom-8', 'background-color-white', styles['output-wrapper'], `${headType}-preview-export-intro-part`)}>
+        <div className={classNames('border-radius-8', 'background-color-white', styles['output-wrapper'], `${headType}-preview-export-intro-part`)}>
             <div className={classNames('position-re', 'margin-horizontal-16', 'margin-vertical-16')}>
                 {isEditor && (
                     <Button

@@ -246,12 +246,6 @@ const ExtruderOverlay = React.memo((
         newColorR && setColorR(newColorR);
     }, [materialDefinitions, defaultMaterialIdRight, defaultMaterialId]);
 
-    useEffect(() => {
-        window.addEventListener('change-extruder', onChangeExtruder);
-        return () => {
-            window.removeEventListener('change-extruder', onChangeExtruder);
-        };
-    }, []);
     return (
         <div
             className={classNames(styles['extruder-overlay'], 'position-absolute width-328 margin-left-72 border-default-grey-1 border-radius-8 background-color-white')}

@@ -106,7 +106,7 @@ class ToolPath {
 
         diameter: 0,
 
-        layer: 0
+        layer: 0,
     };
 
     offsetG92 = (pos) => {

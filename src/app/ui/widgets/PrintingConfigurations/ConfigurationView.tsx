@@ -388,10 +388,9 @@ const ConfigurationView: React.FC<{}> = () => {
         );
     };
 
-
     if (!initialized) {
         return (
-            <div className="height-528">
+            <div className="height-528 position-re">
                 <div className="text-align-center absolute-center">
                     <Spin />
                     <div>{i18n._('key-Workspace/Page-Loading...')}</div>
@@ -409,7 +408,6 @@ const ConfigurationView: React.FC<{}> = () => {
                     <div
                         className="height-40 border-bottom-normal"
                         style={{
-                            marginTop: '-16px',
                             marginLeft: '-16px',
                             marginRight: '-16px',
                         }}

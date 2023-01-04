@@ -1,6 +1,7 @@
 import { find } from 'lodash';
 
-import { LEFT_EXTRUDER, MACHINE_EXTRUDER_X, MACHINE_EXTRUDER_Y, } from '../../constants';
+import { LEFT_EXTRUDER, MACHINE_EXTRUDER_X, MACHINE_EXTRUDER_Y, RIGHT_EXTRUDER, } from '../../constants';
+import log from '../../lib/log';
 import baseActions from './actions-base';
 import sceneLogic, { PrimeTowerSettings } from '../../scene/scene.logic';
 import PresetDefinitionModel from '../manager/PresetDefinitionModel';
@@ -29,60 +30,68 @@ const getModelMaterialSettings = (model) => (dispatch, getState) => {
 };
 
 const applyPrintSettingsToModels = () => (dispatch, getState) => {
+    log.info('actions scene. applyPrintSettingsToModels');
+
     const {
         qualityDefinitions,
+        qualityDefinitionsRight,
         activePresetIds,
         modelGroup,
     } = getState().printing;
 
     // TODO: Not only pick the left extruder
-    const activeQualityDefinition = find(qualityDefinitions, {
+    const leftPresetModel = find(qualityDefinitions, {
         definitionId: activePresetIds[LEFT_EXTRUDER],
     });
-    if (!activeQualityDefinition) {
-        return;
-    }
-
-    console.log('actions scene. applyPrintSettingsToModels');
-
-    // update global settings
-    const qualitySetting = activeQualityDefinition.settings;
-    modelGroup.updatePlateAdhesion({
-        adhesionType: qualitySetting.adhesion_type.default_value,
-        skirtLineCount: qualitySetting?.skirt_line_count?.default_value,
-        brimLineCount: qualitySetting?.brim_line_count?.default_value,
-        brimWidth: qualitySetting?.brim_width?.default_value,
-        skirtBrimLineWidth: qualitySetting?.skirt_brim_line_width?.default_value,
-        raftMargin: qualitySetting?.raft_margin?.default_value,
-        skirtGap: qualitySetting?.skirt_gap?.default_value,
-        brimGap: qualitySetting?.brim_gap?.default_value
+    const rightPresetModel = find(qualityDefinitionsRight, {
+        definitionId: activePresetIds[RIGHT_EXTRUDER],
     });
 
+    const helperExtruderConfig = modelGroup.getHelpersExtruderConfig();
+
+    // update global settings
+    const adhesionPresetModel = helperExtruderConfig.adhesion === '0' ? leftPresetModel : rightPresetModel;
+    if (adhesionPresetModel) {
+        const qualitySetting = adhesionPresetModel.settings;
+        modelGroup.updatePlateAdhesion({
+            adhesionType: qualitySetting.adhesion_type.default_value,
+            skirtLineCount: qualitySetting?.skirt_line_count?.default_value,
+            brimLineCount: qualitySetting?.brim_line_count?.default_value,
+            brimWidth: qualitySetting?.brim_width?.default_value,
+            skirtBrimLineWidth: qualitySetting?.skirt_brim_line_width?.default_value,
+            raftMargin: qualitySetting?.raft_margin?.default_value,
+            skirtGap: qualitySetting?.skirt_gap?.default_value,
+            brimGap: qualitySetting?.brim_gap?.default_value
+        });
+    }
+
     // update parameters for each model
+    const globalSettings = leftPresetModel.settings;
     modelGroup.getThreeModels().forEach((model) => {
         const materialSettings = dispatch(getModelMaterialSettings(model));
         model.updateMaterialColor(materialSettings.color.default_value);
 
-        const layerHeight = qualitySetting.layer_height.default_value;
-        const bottomThickness = qualitySetting.bottom_thickness.default_value;
+        const layerHeight = globalSettings.layer_height.default_value;
+        const bottomThickness = globalSettings.bottom_thickness.default_value;
         const bottomLayers = Math.ceil(Math.round(bottomThickness / layerHeight));
-        const topThickness = qualitySetting.top_thickness.default_value;
+        const topThickness = globalSettings.top_thickness.default_value;
         const topLayers = Math.ceil(Math.round(topThickness / layerHeight));
 
         model.updateClipperConfig({
             lineWidth: materialSettings.machine_nozzle_size.default_value,
-            wallThickness: qualitySetting.wall_thickness.default_value,
+            wallThickness: globalSettings.wall_thickness.default_value,
             topLayers,
             bottomLayers,
             layerHeight,
-            infillSparseDensity: qualitySetting.infill_sparse_density.default_value,
-            infillPattern: qualitySetting.infill_pattern.default_value,
-            magicSpiralize: qualitySetting.magic_spiralize.default_value,
+            infillSparseDensity: globalSettings.infill_sparse_density.default_value,
+            infillPattern: globalSettings.infill_pattern.default_value,
+            magicSpiralize: globalSettings.magic_spiralize.default_value,
         });
         model.materialPrintTemperature = materialSettings.material_print_temperature.default_value;
     });
 
-    sceneLogic.onPresetParameterChanged(activeQualityDefinition);
+    sceneLogic.onPresetParameterChanged(LEFT_EXTRUDER, leftPresetModel);
+    sceneLogic.onPresetParameterChanged(RIGHT_EXTRUDER, rightPresetModel);
 
     // TODO:
     const models = modelGroup.getModels();

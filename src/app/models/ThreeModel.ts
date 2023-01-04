@@ -2,9 +2,11 @@ import { v4 as uuid } from 'uuid';
 import * as THREE from 'three';
 import noop from 'lodash/noop';
 import { DoubleSide, Geometry, Mesh, MeshBasicMaterial, MeshLambertMaterial, Object3D, ObjectLoader, Plane } from 'three';
+
 import {
     LOAD_MODEL_FROM_INNER
 } from '../constants';
+import log from '../lib/log';
 import ThreeUtils from '../three-extensions/ThreeUtils';
 import ThreeGroup from './ThreeGroup';
 import BaseModel, { ModelInfo, TSize } from './ThreeBaseModel';
@@ -95,7 +97,7 @@ class ThreeModel extends BaseModel {
             //     polygonOffsetUnits: -5
             // });
         } catch (e) {
-            console.warn('error', e);
+            log.warn('error', e);
         }
         if (modelInfo.geometry) {
             const clonedGeometry = modelInfo.geometry.clone();

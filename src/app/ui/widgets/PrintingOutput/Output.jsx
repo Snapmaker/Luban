@@ -1,34 +1,34 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useDispatch, useSelector, shallowEqual } from 'react-redux';
-import path from 'path';
 import classNames from 'classnames';
 import { noop } from 'lodash';
-// import PropTypes from 'prop-types';
-import Menu from '../../components/Menu';
+import path from 'path';
+import React, { useEffect, useRef, useState } from 'react';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+import { HEAD_PRINTING } from '../../../constants';
+import { actions as printingActions } from '../../../flux/printing';
+import { actions as projectActions } from '../../../flux/project';
+import { actions as workspaceActions } from '../../../flux/workspace';
+import { logGcodeExport } from '../../../lib/gaEvent';
+// import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
+import i18n from '../../../lib/i18n';
+import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
+import modal from '../../../lib/modal';
+import UniApi from '../../../lib/uni-api';
 import { Button } from '../../components/Buttons';
 import Dropdown from '../../components/Dropdown';
+// import PropTypes from 'prop-types';
+import Menu from '../../components/Menu';
+import SvgIcon from '../../components/SvgIcon';
 import { toast } from '../../components/Toast';
 import { ToastWapper } from '../../components/Toast/toastContainer';
 
-// import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
-import i18n from '../../../lib/i18n';
-import modal from '../../../lib/modal';
-import UniApi from '../../../lib/uni-api';
-import { actions as printingActions } from '../../../flux/printing';
-import { actions as workspaceActions } from '../../../flux/workspace';
-import { actions as projectActions } from '../../../flux/project';
+import Workspace from '../../pages/Workspace';
+import { renderPopup } from '../../utils';
 // import { actions as menuActions } from '../../../flux/appbar-menu';
 import Thumbnail from './Thumbnail';
-import { renderPopup } from '../../utils';
-
-import Workspace from '../../pages/Workspace';
-import SvgIcon from '../../components/SvgIcon';
-import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
-import { HEAD_PRINTING } from '../../../constants';
-import { logGcodeExport } from '../../../lib/gaEvent';
 
 function useRenderWorkspace() {
     const [showWorkspace, setShowWorkspace] = useState(false);
+
     function renderWorkspace() {
         const onClose = () => setShowWorkspace(false);
         return showWorkspace && renderPopup({
@@ -36,6 +36,7 @@ function useRenderWorkspace() {
             component: Workspace
         });
     }
+
     return {
         renderWorkspace,
         setShowWorkspace
@@ -149,53 +150,59 @@ function Output() {
     );
 
     return (
-        <div className={classNames('position-fixed', 'border-radius-bottom-8', 'bottom-8', 'background-color-white', 'width-360', 'module-default-shadow', 'print-output-intro')}>
+        <div className={classNames('border-radius-8', 'bottom-8', 'background-color-white', 'width-360', 'module-default-shadow', 'print-output-intro')}>
             <div className={classNames('position-re', 'margin-horizontal-16', 'margin-vertical-16')}>
-                {!gcodeFile && (
-                    <Button
-                        type="primary"
-                        priority="level-one"
-                        onClick={actions.onClickGenerateGcode}
-                        disabled={!hasAnyModelVisible || isSlicing || isAnyModelOverstepped || leftBarOverlayVisible}
-                    >
-                        {i18n._('key-Printing/G-codeAction-Generate G-code')}
-                    </Button>
-                )}
-                {gcodeFile && !outOfMemoryForRenderGcode && (
-                    <Button
-                        type="default"
-                        priority="level-one"
-                        onClick={actions.onToggleDisplayGcode}
-                        className={classNames('position-re', 'bottom-0', 'left-0')}
-                    >
-                        {displayedType === 'gcode' ? i18n._('key-Printing/G-codeAction-Close Preview') : i18n._('key-Printing/G-codeAction-Preview')}
-                    </Button>
-                )}
-                {gcodeFile && (
-                    <div
-                        onKeyDown={noop}
-                        role="button"
-                        className={classNames('position-re', 'height-40', 'margin-top-10')}
-                        tabIndex={0}
-                    >
-                        <Dropdown
-                            overlay={menu}
-                            trigger="click"
+                {
+                    !gcodeFile && (
+                        <Button
+                            type="primary"
+                            priority="level-one"
+                            onClick={actions.onClickGenerateGcode}
+                            disabled={!hasAnyModelVisible || isSlicing || isAnyModelOverstepped || leftBarOverlayVisible}
                         >
-                            <Button
-                                type="primary"
-                                priority="level-one"
-                                className={classNames(
-                                    'position-absolute',
-                                    displayedType === gcodeLine ? 'display-block' : 'display-none'
-                                )}
-                                suffixIcon={<SvgIcon name="DropdownOpen" type={['static']} color="#D5D6D9" />}
+                            {i18n._('key-Printing/G-codeAction-Generate G-code')}
+                        </Button>
+                    )
+                }
+                {
+                    gcodeFile && !outOfMemoryForRenderGcode && (
+                        <Button
+                            type="default"
+                            priority="level-one"
+                            onClick={actions.onToggleDisplayGcode}
+                            className={classNames('position-re', 'bottom-0', 'left-0')}
+                        >
+                            {displayedType === 'gcode' ? i18n._('key-Printing/G-codeAction-Close Preview') : i18n._('key-Printing/G-codeAction-Preview')}
+                        </Button>
+                    )
+                }
+                {
+                    gcodeFile && (
+                        <div
+                            onKeyDown={noop}
+                            role="button"
+                            className={classNames('position-re', 'height-40', 'margin-top-10')}
+                            tabIndex={0}
+                        >
+                            <Dropdown
+                                overlay={menu}
+                                trigger="click"
                             >
-                                {i18n._('key-Printing/G-codeAction-Export')}
-                            </Button>
-                        </Dropdown>
-                    </div>
-                )}
+                                <Button
+                                    type="primary"
+                                    priority="level-one"
+                                    className={classNames(
+                                        'position-absolute',
+                                        displayedType === gcodeLine ? 'display-block' : 'display-none'
+                                    )}
+                                    suffixIcon={<SvgIcon name="DropdownOpen" type={['static']} color="#D5D6D9" />}
+                                >
+                                    {i18n._('key-Printing/G-codeAction-Export')}
+                                </Button>
+                            </Dropdown>
+                        </div>
+                    )
+                }
             </div>
             <Thumbnail
                 ref={thumbnail}

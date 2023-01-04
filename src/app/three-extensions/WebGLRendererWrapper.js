@@ -1,5 +1,7 @@
 import { Color, WebGLRenderer } from 'three';
 
+import log from '../lib/log';
+
 import Detector from './Detector';
 
 /**
@@ -58,7 +60,7 @@ class WebGLRendererWrapper {
             this.renderer.dispose();
             this.renderer = null;
         } catch (e) {
-            console.warn(e);
+            log.warn(e);
         }
     }
 }

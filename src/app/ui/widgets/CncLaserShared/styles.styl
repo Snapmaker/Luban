@@ -19,6 +19,7 @@
 
     .text-align-button
         border-radius: 0 !important
+
         &:first-child
             border-right: 0 !important
             border-top-left-radius: 8px !important
@@ -28,14 +29,19 @@
             border-top-right-radius: 8px !important
             border-bottom-right-radius: 8px !important
             border-left: 0 !important
+
         &:hover
             background-color: #EEEFF0
+
         &:pressed
             background-color: #2A2C2E
+
     .active
         background-color: #D5D6D9 !important;
+
         &:hover
             background-color: #D5D6D9 !important;
+
             svg {
                 background-color: #D5D6D9 !important;
             }
@@ -102,9 +108,11 @@
                 border-radius: $border-radius
                 width: 74px
                 height: 74px
+
     .selected
         > a
             border: 1px solid #1890FF;
+
         > span
             color: #1890FF;
 
@@ -135,45 +143,56 @@
         text-align: center
         vertical-align: top
 
-.cnc-mode
-    .unselected, .selected
-        > a
+.cnc-mode {
+    .unselected, .selected {
+        > a {
             display: block
             width: 76px
             border-radius: $border-radius
             border: 1px solid #B9BCBF;
 
-            > i
+            > i {
                 display: block
                 border-radius: $border-radius
                 width: 74px
                 height: 74px
-    .selected
-        > a
-            border: 1px solid #1890FF;
-        > span
-            color: #1890FF;
+            }
+        }
+    }
 
-    &__icon-greyscale
+    .selected {
+        > a {
+            border: 1px solid #1890FF;
+        }
+
+        > span {
+            color: #1890FF;
+        }
+    }
+
+    &__icon-greyscale {
         background: url("../../../resources/images/cnc-laser/laser-mode-greyscale-88x88.png") no-repeat 0 0
         background-size: 100%
+    }
 
-    &__icon-vector
+    &__icon-vector {
         background: url("../../../resources/images/cnc-laser/laser-mode-vector-88x88.png") no-repeat 0 0
         background-size: 100%
+    }
 
-    &__icon-text
+    &__icon-text {
         background: url("../../../resources/images/cnc-laser/laser-mode-text-88x88.png") no-repeat 0 0
         background-size: 100%
+    }
 
-    &__text
+    &__text {
         margin-top: 8px
         float: left
         width: 100%
         text-align: center
         vertical-align: top
-
-
+    }
+}
 
 .icon_size_lock {
     background: url("../../../resources/images/cnc-laser/property-lock-checked-88x88.png") no-repeat 0 0
@@ -186,7 +205,7 @@
     &:hover {
         background-color: #e4e4e4
         opacity(1)
-        cursor pointer
+        cursor: pointer;
     }
 }
 
@@ -201,7 +220,7 @@
     &:hover {
         background-color: #e4e4e4
         opacity(1)
-        cursor pointer
+        cursor: pointer;
     }
 }
 
@@ -248,19 +267,22 @@
         text-align: center
 
 
-.zoom-button
-        display: inline-block
-        width: 28px
-        height: 28px
-        line-height: 28px
-        text-align: center
-        vertical-align: middle
-        background-repeat: no-repeat
-        background-position: center
-        border: 0
+.zoom-button {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    vertical-align: middle;
+    background-repeat: no-repeat;
+    background-position: center;
+    border: 0;
 
-        &:hover
-            opacity(.5)
+    &:hover {
+        opacity(.5)
+    }
 
-        &:active
-            opacity(.3)
+    &:active {
+        opacity(.3)
+    }
+}

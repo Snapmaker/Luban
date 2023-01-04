@@ -214,7 +214,7 @@ export default class Slicer extends EventEmitter {
     }
 
     private _onSliceProcessClose(sliceResult: SliceResult, code: number): void {
-        console.log('sliceResult =', sliceResult);
+        log.info(`sliceResult = ${sliceResult}`);
         if (code === 0) {
             this.emit('progress', 0.95);
 

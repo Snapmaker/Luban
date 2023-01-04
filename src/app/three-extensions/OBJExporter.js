@@ -2,6 +2,7 @@
 
 import * as THREE from "three";
 
+import log from '../lib/log';
 /**
  * @author mrdoob / http://mrdoob.com/
  *
@@ -164,7 +165,7 @@ OBJExporter.prototype = {
 
 			} else {
 
-				console.warn( 'THREE.OBJExporter.parseMesh(): geometry type unsupported', geometry );
+				log.warn( 'THREE.OBJExporter.parseMesh(): geometry type unsupported', geometry );
 
 			}
 
@@ -240,7 +241,7 @@ OBJExporter.prototype = {
 
 			} else {
 
-				console.warn( 'THREE.OBJExporter.parseLine(): geometry type unsupported', geometry );
+				log.warn( 'THREE.OBJExporter.parseLine(): geometry type unsupported', geometry );
 
 			}
 

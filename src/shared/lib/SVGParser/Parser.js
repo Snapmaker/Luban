@@ -1,22 +1,20 @@
 import fs from 'fs';
+import { cloneDeep, isNil } from 'lodash';
 import path from 'path';
 import xml2js from 'xml2js';
-import { cloneDeep, isNil } from 'lodash';
+import log from 'loglevel';
 import AttributesParser from './AttributesParser';
-import SVGTagParser from './SVGTagParser';
 // import DefsTagParser from './DefsTagParser';
 import CircleTagParser from './CircleTagParser';
+import { SVG_ATTR_HREF, SVG_ATTR_ID, SVG_ATTR_TRANSFORM, SVG_TAG_SVG, SVG_TAG_USE, XLINK_HREF } from './constants';
 import EllipseTagParser from './EllipseTagParser';
 import LineTagParser from './LineTagParser';
 import PathTagParser from './PathTagParser';
 import PolygonTagParser from './PolygonTagParser';
 import PolylineTagParser from './PolylineTagParser';
 import RectTagParser from './RectTagParser';
+import SVGTagParser from './SVGTagParser';
 import TextParser from './TextParser';
-import {
-    SVG_ATTR_ID, XLINK_HREF, SVG_ATTR_HREF,
-    SVG_ATTR_TRANSFORM, SVG_TAG_USE, SVG_TAG_SVG
-} from './constants';
 // const DEFAULT_DPI = 72;
 const DEFAULT_MILLIMETER_PER_PIXEL = 25.4 / 72;
 // TODO: General tolerance does not work well if original drawing is small,
@@ -249,7 +247,7 @@ class SVGParser {
                             parent[shadowTag] = [shadowNode];
                         }
                     } else {
-                        console.log(`def which id is ${url} doesn't exist`);
+                        log.warn(`def which id is ${url} doesn't exist`);
                     }
                 }
             }

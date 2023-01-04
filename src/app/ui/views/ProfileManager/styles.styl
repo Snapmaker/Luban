@@ -42,7 +42,7 @@
                         vertical-align: middle;
 
                         .manager-btn-unfold-bg {
-                            outline: none;
+                            outline: 0;
                             background: url("../../../resources/images/cnc-laser/ic_right arrow_18x18.png") no-repeat center / 18px 18px
                             height: 18px;
                             margin: 7px;
@@ -50,7 +50,7 @@
                             display: inline-block;
 
                             &.unfold {
-                                outline: none;
+                                outline: 0;
                                 background-image: url("../../../resources/images/cnc-laser/ic_drop arrow_18x18.png")
                             }
                         }
@@ -58,8 +58,8 @@
 
                     input {
                         float: none;
-                        outline: none;
-                        border: none;
+                        outline: 0;
+                        border: 0;
                         width: 215px;
                         height: 24px;
                         background: #FFFFFF;
@@ -125,13 +125,13 @@
     // margin-right: 16px;
     // padding: 1px;
     text-align: left;
-    box-sizing content-box;
+    box-sizing: content-box;
 
     .item {
         display: block;
         width: 100%;
         line-height: 32px;
-        padding: 0px 10px;
+        padding: 0 10px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -147,7 +147,7 @@ div.manager-detail-and-docs {
     max-width: calc(100% - 208px);
     width: calc(100% - 224px);
     overflow-x: auto;
-    padding: 16px 0px 16px 16px;
+    padding: 16px 0 16px 16px;
 }
 
 .manager-details {
@@ -411,19 +411,19 @@ div.manager-detail-and-docs {
 
 .open-params-profile {
     .profile-params-show-icon {
-        visibility hidden
+        visibility: hidden;
     }
 
     &:hover {
         .profile-params-show-icon {
-            visibility visible
+            visibility: visible;
         }
     }
 }
 
 .close-params-profile {
     .profile-params-show-icon {
-        visibility visible
+        visibility: visible;
     }
 }
 

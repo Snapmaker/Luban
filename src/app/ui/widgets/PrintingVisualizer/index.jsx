@@ -8,7 +8,13 @@ import Visualizer from './Visualizer';
 
 const PrintingVisualizerWidget = (props) => (
     <Widget borderless className={styles.visualizer}>
-        <Widget.Content className={styles['visualizer-content-wrapper']}>
+        <Widget.Content
+            className={styles['visualizer-content-wrapper']}
+            style={{
+                padding: 0,
+                position: 'relative',
+            }}
+        >
             <Visualizer
                 pageMode={props.pageMode}
                 setPageMode={props.setPageMode}

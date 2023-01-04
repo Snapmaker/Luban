@@ -137,7 +137,7 @@ export function simplifyModel(params, onProgress, onSucceed, onError) {
 
     fs.writeFile(simplifyConfigPath, JSON.stringify(config), 'utf8', (err) => {
         if (err) {
-            console.log({ err });
+            log.error({ err });
             onError();
         } else {
             const simplifyConfig = {

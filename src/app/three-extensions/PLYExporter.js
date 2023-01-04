@@ -4,6 +4,8 @@ import {
     Color
 } from 'three';
 
+import log from '../lib/log';
+
 /**
  * https://github.com/gkjohnson/ply-exporter-js
  *
@@ -20,7 +22,7 @@ import {
 class PLYExporter {
     parse(object, onDone, options) {
         if (onDone && typeof onDone === 'object') {
-            console.warn('THREE.PLYExporter: The options parameter is now the third argument to the "parse" function. See the documentation for the new API.');
+            log.warn('THREE.PLYExporter: The options parameter is now the third argument to the "parse" function. See the documentation for the new API.');
             options = onDone;
             onDone = undefined;
         }

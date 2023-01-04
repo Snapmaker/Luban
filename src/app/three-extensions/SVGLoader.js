@@ -19,6 +19,8 @@ import {
 	Vector3
 } from 'three';
 
+import log from '../lib/log';
+
 class SVGLoader extends Loader {
 	constructor(manager) {
 		super(manager);
@@ -124,7 +126,7 @@ class SVGLoader extends Loader {
 					if (usedNode) {
 						parseNode(usedNode, style);
 					} else {
-						console.warn(`SVGLoader: 'use node' references non-existent node id: ${usedNodeId}`);
+						log.warn(`SVGLoader: 'use node' references non-existent node id: ${usedNodeId}`);
 					}
 
 					break;
@@ -555,7 +557,7 @@ class SVGLoader extends Loader {
 						break;
 
 					default:
-						console.warn(command);
+						log.warn(command);
 				}
 
 				// console.log( type, parseFloats( data ), parseFloats( data ).length  )
@@ -856,7 +858,7 @@ class SVGLoader extends Loader {
 			function addStyle(svgName, jsName, adjustFunction) {
 				if (adjustFunction === undefined) {
 					adjustFunction = function copy(v) {
-						if (v.startsWith('url')) console.warn('SVGLoader: url access in attributes is not implemented.');
+						if (v.startsWith('url')) log.warn('SVGLoader: url access in attributes is not implemented.');
 
 						return v;
 					};
@@ -1347,7 +1349,7 @@ class SVGLoader extends Loader {
 						transfVec2(curve.v2);
 					} else if (curve.isEllipseCurve) {
 						if (isRotated) {
-							console.warn('SVGLoader: Elliptic arc or ellipse rotation or skewing is not implemented.');
+							log.warn('SVGLoader: Elliptic arc or ellipse rotation or skewing is not implemented.');
 						}
 
 						tempV2.set(curve.aX, curve.aY);
@@ -1657,7 +1659,7 @@ class SVGLoader extends Loader {
 
 				return { identifier: simplePath.identifier, isHole: isHole, for: isHoleFor };
 			} else {
-				console.warn(`fill-rule: "${_fillRule}" is currently not implemented.`);
+				log.warn(`fill-rule: "${_fillRule}" is currently not implemented.`);
 			}
 		}
 

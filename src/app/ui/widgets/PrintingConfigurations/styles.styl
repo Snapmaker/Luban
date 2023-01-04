@@ -1,5 +1,15 @@
 @import "../../../styles/variables.styl"
 @import "../../../styles/global-var.styl"
+
+.widget-container {
+    width: 360px; // fixed widget width
+    background-color: $white-color;
+    padding: 0 16px;
+    border-radius: 8px; // $border-radius;
+    box-shadow: 0 0 12px -8px #2a2c2e;
+    overflow-x: hidden;
+}
+
 .manager-body {
     text-align: left;
 
@@ -162,10 +172,10 @@ table.config-details-table {
     }
 
     .checked {
-        background url("../../../resources/images/56x56/btn_checked@56x56.png") no-repeat center / 14px 14px
+        background: url("../../../resources/images/56x56/btn_checked@56x56.png") no-repeat center / 14px 14px;
     }
 
     .unchecked {
-        background url("../../../resources/images/56x56/btn_unchecked@56x56.png") no-repeat center / 14px 14px
+        background: url("../../../resources/images/56x56/btn_unchecked@56x56.png") no-repeat center / 14px 14px;
     }
 }

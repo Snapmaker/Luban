@@ -1,3 +1,5 @@
+import { throttle } from 'lodash';
+import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../constants';
 import PresetDefinitionModel from '../flux/manager/PresetDefinitionModel';
 import scene, { SceneEvent } from './Scene';
 import { Model3D } from '../models/ModelGroup';
@@ -15,9 +17,11 @@ export declare interface PrimeTowerSettings {
 class SceneLogic {
     private primeTowerEnabled: boolean = false;
 
+    private supportEnabled: boolean = false;
+
     public constructor() {
         scene.on(SceneEvent.MeshChanged, () => {
-            this._processPrimeTower();
+            this.processPrimeTowerAsync();
         });
         scene.on(SceneEvent.MeshPositionChanged, () => {
             this._computePrimeTowerHeight();
@@ -25,12 +29,12 @@ class SceneLogic {
 
         scene.on(SceneEvent.ModelAttributesChanged, (attributeName) => {
             if (attributeName === 'extruderConfig') {
-                this._processPrimeTower();
+                this.processPrimeTowerAsync();
             }
         });
 
         scene.on(SceneEvent.BuildVolumeChanged, () => {
-            this._processPrimeTower();
+            this.processPrimeTowerAsync();
         });
     }
 
@@ -46,6 +50,11 @@ class SceneLogic {
             extrudersUsed.add(model.extruderConfig.shell);
         }
 
+        const helpersExtruderConfig = modelGroup.getHelpersExtruderConfig();
+        if (this.supportEnabled) {
+            extrudersUsed.add(helpersExtruderConfig.support);
+        }
+
         // calculate the visibility of prime tower
         // 1. Dual extruder
         // 2. At least extruders are actually used
@@ -57,6 +66,8 @@ class SceneLogic {
             primeTower.visible = false;
         }
     }
+
+    private processPrimeTowerAsync = throttle(() => this._processPrimeTower(), 10, { trailing: true });
 
     private _computePrimeTowerHeight(): void {
         const modelGroup = scene.getModelGroup();
@@ -78,6 +89,14 @@ class SceneLogic {
                 maxHeights[extruderNumber] = maxHeights[extruderNumber] || 0;
                 maxHeights[extruderNumber] = Math.max(maxHeights[extruderNumber], h);
             }
+        }
+
+        const helpersExtruderConfig = modelGroup.getHelpersExtruderConfig();
+        if (this.supportEnabled) {
+            // max possible height: max model height
+            const extruderNumber = helpersExtruderConfig.support;
+            maxHeights[extruderNumber] = maxHeights[extruderNumber] || 0;
+            maxHeights[extruderNumber] = Math.max(maxHeights[extruderNumber], ...Object.values(maxHeights));
         }
 
         if (Object.keys(maxHeights).length < 2) {
@@ -156,17 +175,32 @@ class SceneLogic {
     /**
      * Preset changed, or parameter changed.
      *
+     * @param stackId - left / right extruder
      * @param preset - the global / left extruder preset.
      */
-    public onPresetParameterChanged(preset: PresetDefinitionModel) {
-        const settings = preset.settings;
-
+    public onPresetParameterChanged(stackId: string, preset: PresetDefinitionModel) {
         // prime tower logic
-        const primeTowerEnabled = settings.prime_tower_enable?.default_value || false;
-        if (primeTowerEnabled !== this.primeTowerEnabled) {
-            this.primeTowerEnabled = primeTowerEnabled;
+        if (stackId === LEFT_EXTRUDER) {
+            const primeTowerEnabled = preset.settings.prime_tower_enable?.default_value || false;
+            if (primeTowerEnabled !== this.primeTowerEnabled) {
+                this.primeTowerEnabled = primeTowerEnabled;
 
-            this._processPrimeTower();
+                this.processPrimeTowerAsync();
+            }
+        }
+
+        const modelGroup = scene.getModelGroup();
+        const helpersExtruderConfig = modelGroup.getHelpersExtruderConfig();
+
+        // support
+        if (stackId === LEFT_EXTRUDER && helpersExtruderConfig.support === '0'
+            || stackId === RIGHT_EXTRUDER && helpersExtruderConfig.support === '1') {
+            const supportEnabled = preset.settings.support_enable?.default_value || false;
+
+            if (supportEnabled !== this.supportEnabled) {
+                this.supportEnabled = supportEnabled;
+                this.processPrimeTowerAsync();
+            }
         }
     }
 }

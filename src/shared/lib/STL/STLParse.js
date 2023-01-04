@@ -1,5 +1,6 @@
-import * as THREE from 'three';
 import noop from 'lodash/noop';
+import log from 'loglevel';
+import * as THREE from 'three';
 
 export class STLParse {
     isBinary(data) {
@@ -169,12 +170,12 @@ export class STLParse {
 
             // every face have to own ONE valid normal
             if (normalCountPerFace !== 1) {
-                console.error(`THREE.STLLoader: Something isn't right with the normal of face number ${faceCounter}`);
+                log.error(`THREE.STLLoader: Something isn't right with the normal of face number ${faceCounter}`);
             }
 
             // each face have to own THREE valid vertices
             if (vertexCountPerFace !== 3) {
-                console.error(`THREE.STLLoader: Something isn't right with the vertices of face number ${faceCounter}`);
+                log.error(`THREE.STLLoader: Something isn't right with the vertices of face number ${faceCounter}`);
             }
 
             faceCounter++;

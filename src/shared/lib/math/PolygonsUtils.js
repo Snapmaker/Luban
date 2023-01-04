@@ -1,5 +1,6 @@
-import { Vector2 } from './Vector2';
+import log from 'loglevel';
 import { Line, TYPE_SEGMENT } from './Line';
+import { Vector2 } from './Vector2';
 
 export class PolygonUtils {
     static rotate(polygon, angle, center = { x: 0, y: 0 }) {
@@ -117,7 +118,7 @@ export class PolygonUtils {
         }
         s += ']';
 
-        console.log(s);
+        log.info(s);
     }
 
     static printTraceRings(traceRings) {
@@ -144,7 +145,7 @@ export class PolygonUtils {
         }
         s += ']';
 
-        console.log(s);
+        log.info(s);
     }
 
     // algorithm: douglasPeucker

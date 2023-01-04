@@ -1453,6 +1453,8 @@
     "key-Printing/3DP-Scale to fit successfully.": "自适应缩放成功",
     "key-Printing/3DP-scale to fit failed.": "自适应缩放失败",
     "key-Printing/Common-Failed to rename. Please enter a new name.": "重命名失败，请输入新名字。",
+    "key-Printing/ContextMenu-Assign model to left extruder": "",
+    "key-Printing/ContextMenu-Assign model to right extruder": "",
     "key-Printing/ContextMenu-Auto Arrange": "自动排列",
     "key-Printing/ContextMenu-Auto Rotate": "自动旋转",
     "key-Printing/ContextMenu-BeforSimplify Model need to repair damage model": "",

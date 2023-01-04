@@ -16,7 +16,11 @@ const getWidgetByName = (name, allWidgets) => {
 export default function renderWidgetList(tab, container, widgetIds, Widgets, listActions, widgetProps, controlActions = null) {
     return (
         <div
-            className={classNames(`scroll-bar-none ${widgetProps.headType === '3dp' ? 'threedp' : widgetProps.headType}-widget-list-intro`, 'overflow-y-auto')}
+            className={classNames(
+                'scroll-bar-none',
+                `${widgetProps.headType === '3dp' ? 'threedp' : widgetProps.headType}-widget-list-intro`,
+                'overflow-y-auto',
+            )}
             style={{
                 height: `${widgetProps.headType === '3dp' ? 'calc(100vh - 185px)' : `${widgetProps.headType === 'cnc' || widgetProps.headType === 'laser' ? 'calc(100vh - 230px)' : 'auto'}`}`
             }}
@@ -24,7 +28,7 @@ export default function renderWidgetList(tab, container, widgetIds, Widgets, lis
             <WidgetList
                 tab={tab}
                 container={container}
-                className="padding-bottom-176 widget-list-intro"
+                className="widget-list-intro"
                 {...listActions}
                 // widgets={Widgets}
                 // toggleToDefault={this.actions.toggleToDefault}
@@ -32,15 +36,17 @@ export default function renderWidgetList(tab, container, widgetIds, Widgets, lis
                 // onDragEnd={this.widgetEventHandler.onDragEnd}
                 // updateTabContainer={this.props.updateTabContainer}
             >
-                {widgetIds.map(widgetId => (
-                    <Widget
-                        widgetId={widgetId}
-                        key={widgetId}
-                        component={getWidgetByName(widgetId, Widgets)}
-                        widgetProps={widgetProps}
-                        controlActions={controlActions}
-                    />
-                ))}
+                {
+                    widgetIds.map(widgetId => (
+                        <Widget
+                            widgetId={widgetId}
+                            key={widgetId}
+                            component={getWidgetByName(widgetId, Widgets)}
+                            widgetProps={widgetProps}
+                            controlActions={controlActions}
+                        />
+                    ))
+                }
             </WidgetList>
         </div>
     );
