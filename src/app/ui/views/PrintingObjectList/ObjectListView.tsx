@@ -1,20 +1,19 @@
 import classNames from 'classnames';
 import { find } from 'lodash';
 import React, { useEffect, useState } from 'react';
-// import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
 import { isDualExtruder } from '../../../constants/machines';
-import i18n from '../../../lib/i18n';
-import Menu from '../../components/Menu';
-import Dropdown from '../../components/Dropdown';
-import SvgIcon from '../../components/SvgIcon';
+import { RootState } from '../../../flux/index.def';
 import { actions as printingActions } from '../../../flux/printing';
+import i18n from '../../../lib/i18n';
 import { machineStore } from '../../../store/local-storage';
+import Dropdown from '../../components/Dropdown';
+import Menu from '../../components/Menu';
+import SvgIcon from '../../components/SvgIcon';
 import ObjectListItem, { renderExtruderIcon, whiteHex } from './ObjectListItem';
 import styles from './styles.styl';
-import { RootState } from '../../../flux/index.def';
 
 export const extruderOverlayMenu = ({ type, colorL, colorR, onChange, selectExtruder = null }) => {
     return (
@@ -120,11 +119,6 @@ const ObjectListView: React.FC = () => {
             }
         },
         updateSelectedModelsExtruder(type, direction) {
-            //            window.dispatchEvent(
-            //                new CustomEvent('change-extruder', {
-            //                    detail: { type: 'models.multiple', direction }
-            //                })
-            //            );
             if (type === 'multiple') {
                 dispatch(printingActions.updateSelectedModelsExtruder({
                     shell: direction,

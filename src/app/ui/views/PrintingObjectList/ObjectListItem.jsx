@@ -257,7 +257,6 @@ function ObjectListItem(
             shell: model.extruderConfig.shell,
             infill: model.extruderConfig.infill,
             onChange: ({ type, direction }) => {
-                console.log('onChange', type, direction);
                 updateSelectedModelsExtruder(type, direction);
             },
         });
@@ -330,9 +329,6 @@ function ObjectListItem(
                     <div className="sm-flex">
                         <Dropdown
                             placement="right"
-                            onVisibleChange={() => {
-                                onSelect(model);
-                            }}
                             overlay={getModelExtruderOverlayMenu()}
                             trigger={['click']}
                             disabled={extruderCount === 1}
