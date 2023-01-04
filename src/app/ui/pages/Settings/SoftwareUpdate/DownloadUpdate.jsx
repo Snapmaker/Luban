@@ -26,13 +26,12 @@ function DownloadUpdate({ releaseNotes, releaseChangeLog, prevVersion, version }
                             {`Snapmaker Luban ${version} ${i18n._('key-App/Update-Update')}. ${i18n._('key-App/Update-Current version')} : ${prevVersion}`}
                         </div>
                         <div
-                            className={classNames(styles['about-product-description'],
-                                'color-black-4')}
+                            className={classNames(styles['about-product-description'], 'color-black-4')}
                             ref={notesRef}
                         >
                             {
                                 releaseChangeLog && (
-                                    <ReactMarkdown>
+                                    <ReactMarkdown linkTarget="_blank">
                                         {releaseChangeLog}
                                     </ReactMarkdown>
                                 )
@@ -43,7 +42,7 @@ function DownloadUpdate({ releaseNotes, releaseChangeLog, prevVersion, version }
                             <a
                                 href="https://github.com/Snapmaker/Luban/releases"
                                 target="_blank"
-                                className="link-text"
+                                className="link-text margin-left-4"
                                 rel="noreferrer"
                             >
                                 https://github.com/Snapmaker/Luban/releases
