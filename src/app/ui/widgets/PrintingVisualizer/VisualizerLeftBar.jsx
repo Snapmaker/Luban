@@ -176,7 +176,7 @@ function VisualizerLeftBar(
                 <input
                     ref={fileInput}
                     type="file"
-                    // accept=".stl, .obj, .3mf, .amf"
+                    accept=".stl, .obj, .3mf, .amf"
                     className="display-none"
                     multiple
                     onChange={actions.onChangeFile}
