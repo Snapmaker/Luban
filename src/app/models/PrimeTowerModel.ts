@@ -84,12 +84,15 @@ class PrimeTowerModel extends ThreeModel {
         const positionY = transformation?.positionY;
         const scaleX = transformation?.scaleX;
         const scaleY = transformation?.scaleY;
+
+        this.height = height;
+
         this.updateTransformation({
             positionX,
             positionY,
             scaleX,
             scaleY,
-            scaleZ: height
+            scaleZ: height,
         });
         this.stickToPlate();
     }
@@ -100,6 +103,9 @@ class PrimeTowerModel extends ThreeModel {
         const scaleX = transformation?.scaleX || 1;
         const scaleY = transformation?.scaleY || 1;
         const initHeight = transformation?.scaleZ || 0.1;
+
+        this.height = initHeight;
+
         this.updateTransformation({
             positionX,
             positionY,

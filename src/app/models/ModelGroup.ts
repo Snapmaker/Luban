@@ -108,6 +108,11 @@ type TAdhesionConfig = {
     raftMargin: number;
 }
 
+interface THelperExtruderConfig {
+    adhesion: string;
+    support: string;
+}
+
 class ModelGroup extends EventEmitter {
     public namesMap: Map<string, { number: number, count: number }> = new Map();
     public object: Group;
@@ -145,6 +150,8 @@ class ModelGroup extends EventEmitter {
     private adhesionConfig: TAdhesionConfig;
     private clipperEnable = true;
 
+    private helpersExtruderConfig: THelperExtruderConfig;
+
     public constructor(headType: THeadType) {
         super();
 
@@ -169,6 +176,11 @@ class ModelGroup extends EventEmitter {
         this.selectedModelConvexMeshGroup = new Group();
         // The selectedToolPathModelIDs is used to generate the toolpath
         this.selectedToolPathModelIDs = [];
+
+        this.helpersExtruderConfig = {
+            adhesion: '0',
+            support: '0',
+        };
 
         this.setWorkerLis();
     }
@@ -1975,6 +1987,19 @@ class ModelGroup extends EventEmitter {
 
     public isPrimeTowerSelected() {
         return this.selectedModelArray.length === 1 && this.selectedModelArray[0] instanceof PrimeTowerModel;
+    }
+
+    public getHelpersExtruderConfig(): THelperExtruderConfig {
+        return this.helpersExtruderConfig;
+    }
+
+    public setHelpersExtruderConfig(helpersExtruderConfig: THelperExtruderConfig) {
+        this.helpersExtruderConfig = {
+            ...this.helpersExtruderConfig,
+            ...helpersExtruderConfig,
+        };
+
+        this.modelAttributesChanged('extruderConfig');
     }
 
     public modelChanged() {

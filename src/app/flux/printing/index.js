@@ -3100,10 +3100,15 @@ export const actions = {
         modelGroup.modelAttributesChanged('extruderConfig');
     },
 
-    updateHelpersExtruder: (extruderConfig) => (dispatch) => {
+    updateHelpersExtruder: (extruderConfig) => (dispatch, getState) => {
         dispatch(
             actions.updateState({ helpersExtruderConfig: extruderConfig })
         );
+        const { modelGroup } = getState().printing;
+        modelGroup.setHelpersExtruderConfig(extruderConfig);
+
+        dispatch(actions.applyProfileToAllModels());
+
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
         dispatch(actions.updateBoundingBox());
