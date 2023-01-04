@@ -179,11 +179,9 @@ class SceneLogic {
      * @param preset - the global / left extruder preset.
      */
     public onPresetParameterChanged(stackId: string, preset: PresetDefinitionModel) {
-        const settings = preset.settings;
-
         // prime tower logic
         if (stackId === LEFT_EXTRUDER) {
-            const primeTowerEnabled = settings.prime_tower_enable?.default_value || false;
+            const primeTowerEnabled = preset.settings.prime_tower_enable?.default_value || false;
             if (primeTowerEnabled !== this.primeTowerEnabled) {
                 this.primeTowerEnabled = primeTowerEnabled;
 
@@ -197,7 +195,7 @@ class SceneLogic {
         // support
         if (stackId === LEFT_EXTRUDER && helpersExtruderConfig.support === '0'
             || stackId === RIGHT_EXTRUDER && helpersExtruderConfig.support === '1') {
-            const supportEnabled = settings.support_enable?.default_value || false;
+            const supportEnabled = preset.settings.support_enable?.default_value || false;
 
             if (supportEnabled !== this.supportEnabled) {
                 this.supportEnabled = supportEnabled;
