@@ -6,14 +6,18 @@ $left-bar-width = 58px
 $bottom-bar-height = 0px
 
 // separator without margin on top and bottom
-.visualizer
+.visualizer {
     position: relative;
     margin-bottom: 0;
-.visualizer-content-wrapper
-    position: relative!important;
-    padding: 0!important;
-    background-color: #f5f5f7
-.separator
+}
+
+.visualizer-content-wrapper {
+    position: relative !important;
+    padding: 0 !important;
+    background-color: #f5f5f7;
+}
+
+.separator {
     display: block
     margin: 10px 0
     padding: 0
@@ -21,23 +25,28 @@ $bottom-bar-height = 0px
     border: 0;
     border-top: 1px solid $border-color
 
-    &.separator-underline
-        margin: 0 0 10px
+    &.separator-underline {
+        margin: 0 0 10px;
+    }
+}
 
 
-.fa-btn
+.fa-btn {
     width: 20px
     height: 20px
     line-height: 20px
     text-align: center
 
-    &:hover
+    &:hover {
         opacity(.5)
+    }
 
-    &:active
+    &:active {
         opacity(.3)
+    }
+}
 
-.input
+.input {
     height: 34px
     padding: 6px 12px
     font-size: 13px
@@ -48,45 +57,59 @@ $bottom-bar-height = 0px
     border-radius: $border-radius
     border-color: $grey-color2
 
-    &.input-narrow
+    &.input-narrow {
         padding: 6px
+    }
+}
 
-.description-text
+.description-text {
     color: $grey-color
     font-size: 14px
+}
 
 // widget
 // TODO: remove
-.widget-content
+.widget-content {
     position: relative
     padding: 18px 12px
 
-    &.hidden
+    &.hidden {
         display: none
+    }
+}
 
 // parameter widgets
-.parameter-table
+.parameter-table {
     width: 100%
 
-    :global
-        tbody
-            & > tr
-                & > td
+    :global {
+        tbody {
+            & > tr {
+                & > td {
                     position: relative
                     padding: 0 4px 6px
+                }
+            }
 
-            & > tr:last-of-type
-                & > td
-                    padding: 0 4px
+            & > tr:last-of-type {
+                & > td {
+                    padding: 0 4px;
+                }
+            }
+        }
 
-        td:first-child
-            width: 100px
+        td:first-child {
+            width: 100px;
+        }
+    }
 
-    .unit
+    .unit {
         position: absolute
         right: 10px
         top: 8px
         color: $grey-color
+    }
+}
 
 
 .visualizer-content {
@@ -105,12 +128,15 @@ $bottom-bar-height = 0px
     bottom: 32px;
     left: 0;
 }
+
 .canvas-wrapper {
     height: calc(100vh - 66px);
+
     .m-3 {
         padding: 1rem;
     }
 }
+
 [class~='appbar'] {
     .canvas-wrapper {
         height: calc(100vh - 90px);
@@ -127,16 +153,18 @@ $bottom-bar-height = 0px
     right: 0;
 }
 
-.visualizer-info
+.visualizer-info {
     z-index: $z-index-float
     position: absolute
     right: 12px
     bottom: 16px
 
-    p
+    p {
         text-align: right
         margin: 0 0 4px
         max-width 280px
         white-space nowrap
         overflow hidden
         text-overflow ellipsis
+    }
+}

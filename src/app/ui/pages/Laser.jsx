@@ -1,37 +1,41 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { shallowEqual, useSelector, useDispatch } from 'react-redux';
+import { message } from 'antd';
+import 'intro.js/introjs.css';
 import path from 'path';
 import PropTypes from 'prop-types';
+import React, { useEffect, useRef, useState } from 'react';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { useHistory, withRouter } from 'react-router-dom';
-import 'intro.js/introjs.css';
-import { message } from 'antd';
-import i18n from '../../lib/i18n';
-import useSetState from '../../lib/hooks/set-state';
-import modal from '../../lib/modal';
-import LaserVisualizer from '../widgets/LaserVisualizer';
 
-import { renderPopup, logPageView, useUnsavedTitle, renderModal } from '../utils';
-import Dropzone from '../components/Dropzone';
+import { HEAD_LASER, PAGE_PROCESS, PROCESS_MODE_GREYSCALE, PROCESS_MODE_VECTOR } from '../../constants';
 import { actions as editorActions } from '../../flux/editor';
 import { actions as laserActions } from '../../flux/laser';
 import { actions as projectActions } from '../../flux/project';
-import ProjectLayout from '../layouts/ProjectLayout';
+import useSetState from '../../lib/hooks/set-state';
+import i18n from '../../lib/i18n';
+import modal from '../../lib/modal';
 import { machineStore } from '../../store/local-storage';
+import Dropzone from '../components/Dropzone';
+import Steps from '../components/Steps';
+import ProjectLayout from '../layouts/ProjectLayout';
+
+import { logPageView, renderModal, renderPopup, useUnsavedTitle } from '../utils';
+import Thumbnail from '../widgets/CncLaserShared/Thumbnail';
+import StackedModel from '../widgets/LaserStackedModel';
+import LaserVisualizer from '../widgets/LaserVisualizer';
+import renderJobTypeModal from './CncLaserShared/JobTypeModal';
 import useRenderMainToolBar from './CncLaserShared/MainToolBar';
 import useRenderRemoveModelsWarning from './CncLaserShared/RemoveAllModelsWarning';
-import renderJobTypeModal from './CncLaserShared/JobTypeModal';
 import renderRightView from './CncLaserShared/RightView';
 
-import { HEAD_LASER, PAGE_PROCESS, PROCESS_MODE_GREYSCALE, PROCESS_MODE_VECTOR } from '../../constants';
-
 import HomePage from './HomePage';
+import {
+    laser4AxisStepOne,
+    laserCncIntroStepFive,
+    laserCncIntroStepOne,
+    laserCncIntroStepSix,
+    laserCncIntroStepTwo
+} from './introContent';
 import Workspace from './Workspace';
-import Thumbnail from '../widgets/CncLaserShared/Thumbnail';
-import { laserCncIntroStepOne, laserCncIntroStepTwo, laserCncIntroStepFive, laserCncIntroStepSix, laser4AxisStepOne } from './introContent';
-import Steps from '../components/Steps';
-import StackedModel from '../widgets/LaserStackedModel';
-import Modal from '../components/Modal';
-import { Button } from '../components/Buttons';
 
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 const pageHeadType = HEAD_LASER;
@@ -105,8 +109,10 @@ function Laser({ location }) {
         }
     }, [enabledIntro]);
 
-    const { setBackgroundModal,
-        renderMainToolBar } = useRenderMainToolBar({
+    const {
+        setBackgroundModal,
+        renderMainToolBar
+    } = useRenderMainToolBar({
         headType: HEAD_LASER,
         setShowHomePage,
         setShowJobType,
@@ -182,6 +188,7 @@ function Laser({ location }) {
             component: Workspace
         });
     }
+
     function renderStackedModelModal() {
         const onClose = () => {
             dispatch(editorActions.updateState(pageHeadType, {
@@ -280,6 +287,7 @@ function Laser({ location }) {
             dispatch(projectActions.openProject(pathConfig, history, true, true));
         }
     }
+
     async function handleBeforeChange(nextIndex) {
         if (nextIndex === 4) {
             dispatch(editorActions.switchToPage(HEAD_LASER, PAGE_PROCESS));
@@ -290,6 +298,7 @@ function Laser({ location }) {
             await dispatch(editorActions.commitGenerateGcode(HEAD_LASER, thumbnailRef));
         }
     }
+
     const renderStep = () => {
         const stepArr = [{
             intro: isRotate ? laser4AxisStepOne(
@@ -317,7 +326,7 @@ function Laser({ location }) {
             tooltipClass: 'laser-draw-intro',
             position: 'right'
         }, {
-        // element: '.laser-intro-edit-panel',
+            // element: '.laser-intro-edit-panel',
             element: '.widget-list-intro',
             title: `${i18n._('key-Laser/Page-Edit Panel')} (4/8)`,
             intro: laserCncIntroStepTwo(i18n._('key-Laser/Page-The Edit panel shows the property related to object. When an object is selected, Luban displays this panel where you can transform the object, switch the Processing Mode, or enter the Process Panel.')),
@@ -383,38 +392,42 @@ function Laser({ location }) {
                     <LaserVisualizer
                         widgetId="laserVisualizer"
                     />
-                    {enabledIntro && (
-                        <Steps
-                            enabled={enabledIntro}
-                            initialStep={initIndex}
-                            onChange={handleChange}
-                            onBeforeChange={handleBeforeChange}
-                            options={{
-                                showBullets: false,
-                                hidePrev: false,
-                                exitOnEsc: false,
-                                exitOnOverlayClick: false
-                            }}
-                            steps={renderStep()}
-                            onExit={handleExit}
-                        />
-                    )}
+                    {
+                        enabledIntro && (
+                            <Steps
+                                enabled={enabledIntro}
+                                initialStep={initIndex}
+                                onChange={handleChange}
+                                onBeforeChange={handleBeforeChange}
+                                options={{
+                                    showBullets: false,
+                                    hidePrev: false,
+                                    exitOnEsc: false,
+                                    exitOnOverlayClick: false
+                                }}
+                                steps={renderStep()}
+                                onExit={handleExit}
+                            />
+                        )
+                    }
                 </Dropzone>
                 <Thumbnail
                     ref={thumbnail}
                     toolPathGroup={toolPathGroup}
                 />
             </ProjectLayout>
-            {projectFileOversize && message.info({
-                content: <span>{i18n._('key-Laser/Page-Project file oversize')}</span>,
-                duration: 5,
-                onClose: () => (
-                    dispatch(editorActions.updateState(pageHeadType, {
-                        projectFileOversize: false
-                    }))
-                ),
-                key: pageHeadType
-            })}
+            {
+                projectFileOversize && message.info({
+                    content: <span>{i18n._('key-Laser/Page-Project file oversize')}</span>,
+                    duration: 5,
+                    onClose: () => (
+                        dispatch(editorActions.updateState(pageHeadType, {
+                            projectFileOversize: false
+                        }))
+                    ),
+                    key: pageHeadType
+                })
+            }
             {warningRemovingModels}
             {jobTypeModal}
             {setBackgroundModal}
@@ -424,67 +437,10 @@ function Laser({ location }) {
         </div>
     );
 }
+
 Laser.propTypes = {
     // history: PropTypes.object
     location: PropTypes.object
 };
 
-function Guard({ location }) {
-    const series = useSelector(state => state.machine.series, shallowEqual);
-
-    const [hiddenMachineUpdate, setHiddenMachineUpdate] = useState((() => {
-        if ((series === 'A150' || series === 'A250' || series === 'A350') && !machineStore.get('hiddenMachineUpdate')) {
-            return false;
-        } else {
-            return true;
-        }
-    })());
-
-    const onClose = () => {
-        machineStore.set('hiddenMachineUpdate', true);
-
-        setHiddenMachineUpdate(true);
-    };
-
-    return (
-        <>
-            {
-                !hiddenMachineUpdate && (
-                    <Modal
-                        // 1000 larger than the Steps zindex
-                        zIndex={100001000}
-                        centered
-                        onClose={onClose}
-                    >
-                        <Modal.Header>
-                            <div className="width-432 text-overflow-ellipsis">{i18n._('key-Laser_firmware_update_title-Please Update Machine Firmware')}</div>
-                        </Modal.Header>
-                        <Modal.Body>
-                            <div className="width-432">
-                                {i18n._('key-Laser_firmware_update_content-Luban updated the parameters on the laser. This change requires the machine to be updated to version 1.13.4 or higher to adapt.')}
-                            </div>
-                        </Modal.Body>
-                        <Modal.Footer>
-                            <Button
-                                priority="level-two"
-                                className="align-r"
-                                width="96px"
-                                type="primary"
-                                onClick={onClose}
-                            >
-                                { i18n._('key-Laser_firmware_ok-OK')}
-                            </Button>
-                        </Modal.Footer>
-                    </Modal>
-                )
-            }
-            <Laser location={location} />
-        </>
-    );
-}
-Guard.propTypes = {
-    // history: PropTypes.object
-    location: PropTypes.object
-};
-
-export default withRouter(Guard);
+export default withRouter(Laser);

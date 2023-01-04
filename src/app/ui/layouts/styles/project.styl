@@ -7,33 +7,37 @@
         height: calc(100vh - 90px);
     }
 }
-.content-flex
-    display: flex;
-    height: calc(100vh - 70px);
-    overflow: hidden;
-    background-color: #F5F5F7;
-    .visualizer
-        flex: 1;
-        order: 0;
-        overflow: hidden
-.long-lang-content-height
-    height: calc(100vh - 74px);
-.main-bar
-    width: 100%;
-    border-top: 1px solid #f2f2f5;
-    border-bottom: 1px solid #f2f2f5;
-    background-color: #FFFFFF;
-.controls
-    flex: 0 0 auto;
-    overflow: auto;
-    //height: 100%;
-.sub-bar
-    flex: 0 0 auto;
-    order: -1;
-    background-color: $sidebar-background-color
-    border-right: 1px solid $border-color
-    box-shadow: 1px 0 3px $shadow-color
-.controls-right
-    margin: 8px 8px 8px 1px;
-    background-color: #FFFFFF;
-    order: 1;
+
+.project-layout {
+    .main-toolbar {
+        width: 100%;
+        border-top: 1px solid #f2f2f5;
+        border-bottom: 1px solid #f2f2f5;
+        background-color: #FFFFFF;
+    }
+
+    .content-flex {
+        display: flex;
+        height: calc(100vh - 70px);
+        overflow: hidden;
+        background-color: #F5F5F7; // use the same color as scene background
+
+        .visualizer {
+            flex: 1;
+            order: 0;
+            overflow: hidden;
+        }
+    }
+
+    .long-lang-content-height {
+        height: calc(100vh - 74px);
+    }
+
+    .configuration-panel {
+        flex: 0 0 auto;
+        overflow: auto;
+        margin: 8px 8px 8px 0;
+        // background-color: #FFFFFF;
+        order: 1;
+    }
+}

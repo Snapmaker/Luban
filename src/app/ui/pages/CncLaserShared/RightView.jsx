@@ -1,31 +1,33 @@
-import React from 'react';
 import PropTypes from 'prop-types';
-import Tabs from '../../components/Tabs';
-import i18n from '../../../lib/i18n';
+import React from 'react';
+import classNames from 'classnames';
+
 import { PAGE_EDITOR, PAGE_PROCESS } from '../../../constants';
 import { actions as editorActions } from '../../../flux/editor';
+import i18n from '../../../lib/i18n';
+import Tabs from '../../components/Tabs';
 import { renderWidgetList } from '../../utils';
-
-import ControlWidget from '../../widgets/Control';
+import ToolPathListBox from '../../widgets/CncLaserList/ToolPathList';
+import CncLaserOutputWidget from '../../widgets/CncLaserOutput';
+import CNCPathWidget from '../../widgets/CNCPath';
 import ConnectionWidget from '../../widgets/Connection';
 import ConsoleWidget from '../../widgets/Console';
+
+import ControlWidget from '../../widgets/Control';
+import EnclosureWidget from '../../widgets/Enclosure';
 import GCodeWidget from '../../widgets/GCode';
-import MacroWidget from '../../widgets/Macro';
-import PurifierWidget from '../../widgets/Purifier';
-import MarlinWidget from '../../widgets/Marlin';
-import VisualizerWidget from '../../widgets/WorkspaceVisualizer';
-import WebcamWidget from '../../widgets/Webcam';
 import LaserParamsWidget from '../../widgets/LaserParams';
 import LaserTestFocusWidget from '../../widgets/LaserTestFocus';
-import CNCPathWidget from '../../widgets/CNCPath';
-import CncLaserOutputWidget from '../../widgets/CncLaserOutput';
-import PrintingMaterialWidget from '../../widgets/PrintingMaterial';
+import MacroWidget from '../../widgets/Macro';
+import MarlinWidget from '../../widgets/Marlin';
 import PrintingConfigurationsWidget from '../../widgets/PrintingConfigurations';
+import PrintingMaterialWidget from '../../widgets/PrintingMaterial';
 import PrintingOutputWidget from '../../widgets/PrintingOutput';
-import WifiTransport from '../../widgets/WifiTransport';
-import EnclosureWidget from '../../widgets/Enclosure';
 import PrintingVisualizer from '../../widgets/PrintingVisualizer';
-import ToolPathListBox from '../../widgets/CncLaserList/ToolPathList';
+import PurifierWidget from '../../widgets/Purifier';
+import WebcamWidget from '../../widgets/Webcam';
+import WifiTransport from '../../widgets/WifiTransport';
+import VisualizerWidget from '../../widgets/WorkspaceVisualizer';
 
 const allWidgets = {
     'control': ControlWidget,
@@ -54,33 +56,41 @@ const allWidgets = {
 function renderRightView({ headType, dispatch, page, widgets, listActions }) {
     const widgetProps = { headType };
     return (
-        <div className="laser-intro-edit-panel">
-            <Tabs
-                options={[
-                    {
-                        tab: i18n._('key-CncLaser/RightSidebar-Edit'),
-                        key: PAGE_EDITOR
-                    },
-                    {
-                        tab: i18n._('key-CncLaser/RightSidebar-Process'),
-                        key: PAGE_PROCESS
-                    }
-                ]}
-                activeKey={page}
-                onChange={(key) => {
-                    dispatch(editorActions.switchToPage(headType, key));
-                    if (key === 'editor') {
-                        dispatch(editorActions.showModelGroupObject(headType));
-                    }
-                }}
-            />
-            {renderWidgetList(headType, 'default', widgets, allWidgets, listActions, widgetProps)}
+        <div
+            className={classNames(
+                'sm-flex sm-flex-direction-c height-percent-100',
+                'laser-intro-edit-panel',
+            )}
+        >
+            <div className="background-color-white border-radius-8 margin-bottom-8 sm-flex-width">
+                <Tabs
+                    options={[
+                        {
+                            tab: i18n._('key-CncLaser/RightSidebar-Edit'),
+                            key: PAGE_EDITOR
+                        },
+                        {
+                            tab: i18n._('key-CncLaser/RightSidebar-Process'),
+                            key: PAGE_PROCESS
+                        }
+                    ]}
+                    activeKey={page}
+                    onChange={(key) => {
+                        dispatch(editorActions.switchToPage(headType, key));
+                        if (key === 'editor') {
+                            dispatch(editorActions.showModelGroupObject(headType));
+                        }
+                    }}
+                />
+                {renderWidgetList(headType, 'default', widgets, allWidgets, listActions, widgetProps)}
+            </div>
             <CncLaserOutputWidget
                 headType={headType}
             />
         </div>
     );
 }
+
 renderRightView.propTypes = {
     headType: PropTypes.string.isRequired,
     dispatch: PropTypes.func.isRequired,

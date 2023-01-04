@@ -21,35 +21,17 @@ import Dropzone from '../components/Dropzone';
 import Steps from '../components/Steps';
 import MainToolBar from '../layouts/MainToolBar';
 import ProjectLayout from '../layouts/ProjectLayout';
-import { logPageView, renderPopup, renderWidgetList, useUnsavedTitle } from '../utils';
+import { logPageView, renderPopup, useUnsavedTitle } from '../utils';
 // import PrintingOutput from '../widgets/PrintingOutput';
 import PrintingManager from '../views/PrintingManager';
-import CncLaserOutputWidget from '../widgets/CncLaserOutput';
-import CNCPathWidget from '../widgets/CNCPath';
-import ConnectionWidget from '../widgets/Connection';
-import ConsoleWidget from '../widgets/Console';
-
-import ControlWidget from '../widgets/Control';
-import EnclosureWidget from '../widgets/Enclosure';
-import GCodeWidget from '../widgets/GCode';
-import JobType from '../widgets/JobType';
-import LaserParamsWidget from '../widgets/LaserParams';
-import LaserSetBackground from '../widgets/LaserSetBackground';
-import LaserTestFocusWidget from '../widgets/LaserTestFocus';
-import MacroWidget from '../widgets/Macro';
-import MarlinWidget from '../widgets/Marlin';
 import PrintingConfigurationsWidget from '../widgets/PrintingConfigurations';
 import PresetInitialization from '../widgets/PrintingConfigurations/PresetInitialization';
-import PrintingMaterialWidget from '../widgets/PrintingMaterial';
 import PrintingOutputWidget from '../widgets/PrintingOutput';
 import Thumbnail from '../widgets/PrintingOutput/Thumbnail';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
-import PurifierWidget from '../widgets/Purifier';
-import WebcamWidget from '../widgets/Webcam';
-import WifiTransport from '../widgets/WifiTransport';
-import VisualizerWidget from '../widgets/WorkspaceVisualizer';
 
 import HomePage from './HomePage';
+import { CaseConfigGimbal, CaseConfigPenHolder } from './HomePage/CaseConfig';
 import {
     printIntroStepEight,
     printIntroStepFive,
@@ -63,7 +45,6 @@ import {
 import MachineMaterialSettings from './MachineMaterialSettings';
 import { PageMode } from './PageMode';
 import Workspace from './Workspace';
-import { CaseConfigGimbal, CaseConfigPenHolder } from './HomePage/CaseConfig';
 
 export const openFolder = () => {
     if (isElectron()) {
@@ -71,32 +52,6 @@ export const openFolder = () => {
         ipc.send('open-recover-folder');
     }
 };
-const allWidgets = {
-    'control': ControlWidget,
-    'connection': ConnectionWidget,
-    'console': ConsoleWidget,
-    'gcode': GCodeWidget,
-    'macro': MacroWidget,
-    'macroPanel': MacroWidget,
-    'purifier': PurifierWidget,
-    'marlin': MarlinWidget,
-    'visualizer': VisualizerWidget,
-    'webcam': WebcamWidget,
-    'printing-visualizer': PrintingVisualizer,
-    'wifi-transport': WifiTransport,
-    'enclosure': EnclosureWidget,
-    '3dp-material': PrintingMaterialWidget,
-    '3dp-configurations': PrintingConfigurationsWidget,
-    // '3dp-output': PrintingOutputWidget,
-    'laser-params': LaserParamsWidget,
-    // 'laser-output': CncLaserOutputWidget,
-    'laser-set-background': LaserSetBackground,
-    'laser-test-focus': LaserTestFocusWidget,
-    'cnc-path': CNCPathWidget,
-    'cnc-output': CncLaserOutputWidget,
-    'job-type': JobType
-};
-
 
 const pageHeadType = HEAD_PRINTING;
 
@@ -371,7 +326,6 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
     return [renderHomepage, renderMainToolBar, renderWorkspace, renderMachineMaterialSettings];
 }
 
-
 function getStarterProject(series) {
     const pathConfigForSM2 = {
         path: './UserCase/printing/a150_single/3dp_a150_single.snap3dp',
@@ -397,7 +351,6 @@ function getStarterProject(series) {
 }
 
 function Printing({ location }) {
-    const widgets = useSelector(state => state?.widget[pageHeadType].default.widgets, shallowEqual);
     const series = useSelector(state => state?.machine?.series);
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions);
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId);
@@ -410,7 +363,7 @@ function Printing({ location }) {
     const { isConnected, toolHead: { printingToolhead } } = machineState;
     const isOriginal = includes(series, 'Original');
 
-    const [isDraggingWidget, setIsDraggingWidget] = useState(false);
+    // const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [enabledIntro, setEnabledIntro] = useState(null);
     const [initIndex, setInitIndex] = useState(0);
     const [machineInfo, setMachineInfo] = useState({});
@@ -533,22 +486,14 @@ function Printing({ location }) {
         return (<PrintingManager />);
     }
 
-    const listActions = {
-        onDragStart: () => {
-            setIsDraggingWidget(true);
-        },
-        onDragEnd: () => {
-            setIsDraggingWidget(false);
-        }
-    };
     const renderRightView = () => {
-        const widgetProps = { headType: pageHeadType };
         return (
-            <div>
-                {renderWidgetList('cnc', 'default', widgets, allWidgets, listActions, widgetProps)}
+            <div className="sm-flex sm-flex-direction-c height-percent-100">
+                <PrintingConfigurationsWidget
+                    className="margin-bottom-8 sm-flex-width"
+                />
                 <PrintingOutputWidget />
             </div>
-
         );
     };
     // const onClickToUpload = () => {
@@ -580,7 +525,7 @@ function Printing({ location }) {
         >
             <Dropzone
                 multiple
-                disabled={isDraggingWidget}
+                disabled={false}
                 accept=".stl, .obj, .3mf, .amf"
                 dragEnterMsg={i18n._('key-Printing/Page-Drop an STL/OBJ file here.')}
                 onDropAccepted={onDropAccepted}

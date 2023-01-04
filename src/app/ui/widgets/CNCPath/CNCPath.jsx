@@ -63,7 +63,7 @@ const CNCPath = ({ widgetActions }) => {
                 />
             )}
             {selectedModelArray.length === 1 && (
-                <div className="sm-parameter-container">
+                <div>
                     {isEditor && showImageProcessMode && (selectedModelArray.length === 1) && (
                         <ImageProcessMode
                             disabled={!selectedNotHide}
