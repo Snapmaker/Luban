@@ -32,6 +32,7 @@ function flatGroup(object) {
         }
     }
 }
+
 class ModelLoader {
     load(modelPath, onLoad, onProgress, onError) {
         // to fix bug: get firstly uploaded model when load different files with the same filename
@@ -42,11 +43,20 @@ class ModelLoader {
             return;
         }
         switch (format) {
-            case '.stl': this.parseAsStl(modelPath, onLoad, onProgress, onError); break;
-            case '.obj': this.parseAsObj(modelPath, onLoad, onProgress, onError); break;
-            case '.3mf': this.parseAs3mf(modelPath, onLoad, onProgress, onError); break;
-            case '.amf': this.parseAsAmf(modelPath, onLoad, onProgress, onError); break;
-            default: break;
+            case '.stl':
+                this.parseAsStl(modelPath, onLoad, onProgress, onError);
+                break;
+            case '.obj':
+                this.parseAsObj(modelPath, onLoad, onProgress, onError);
+                break;
+            case '.3mf':
+                this.parseAs3mf(modelPath, onLoad, onProgress, onError);
+                break;
+            case '.amf':
+                this.parseAsAmf(modelPath, onLoad, onProgress, onError);
+                break;
+            default:
+                break;
         }
     }
 

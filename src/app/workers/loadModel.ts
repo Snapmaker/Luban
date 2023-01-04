@@ -1,8 +1,9 @@
-import { BufferGeometry, Group, Vector3 } from 'three';
 import { Observable } from 'rxjs';
-import ModelLoader from '../ui/widgets/PrintingVisualizer/ModelLoader';
+import { BufferGeometry, Group, Vector3 } from 'three';
+
 import ConvexGeometry from '../three-extensions/ConvexGeometry';
 import ThreeUtils from '../three-extensions/ThreeUtils';
+import ModelLoader from '../ui/widgets/PrintingVisualizer/ModelLoader';
 
 const loadModel = (uploadPath: string) => {
     return new Observable((observer) => {
