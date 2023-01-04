@@ -4450,7 +4450,7 @@ export const actions = {
                     dispatch(actions.displayModel());
                 })
                 .catch((err) => {
-                    console.log('err', err);
+                    log.warn('err =', err);
                 });
         }
     },
@@ -4661,7 +4661,7 @@ export const actions = {
                 );
             })
             .catch(err => {
-                console.error({ err });
+                log.error('error =', err);
                 dispatch(
                     actions.updateState({
                         isNewUser: true

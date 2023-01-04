@@ -1,5 +1,6 @@
 import includes from 'lodash/includes';
 import { PrintMode } from './print-base';
+import log from '../lib/log';
 
 export const SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL = 'singleExtruderToolheadForOriginal';
 export const SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 = 'singleExtruderToolheadForSM2';
@@ -575,7 +576,7 @@ export function getMachineSupportedTools(machineSeries, headType = undefined) {
         const toolHead = MACHINE_TOOL_HEADS[key];
 
         if (toolHead.headType === undefined) {
-            console.warn(`Unknown head type ${toolHead}`);
+            log.warn(`Unknown head type ${toolHead}`);
             continue;
         }
 

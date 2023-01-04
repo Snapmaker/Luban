@@ -1,4 +1,5 @@
 import Mousetrap from 'mousetrap';
+import log from '../log';
 
 
 import { actionKeys, priorities } from './constants';
@@ -38,11 +39,11 @@ class CShortcutManger {
         }
 
         if (!(handler.priority in Object.values(priorities))) {
-            console.warn(`ShortcutManger: handler(${handler.title || 'unNamed'}).priority not set!`);
+            log.warn(`ShortcutManger: handler(${handler.title || 'unNamed'}).priority not set!`);
             handler.priority = -1;
         }
         if (typeof handler.isActive !== 'function') {
-            console.warn(`ShortcutManger: handler(${handler.title || 'unNamed'}).isActive not set!`);
+            log.warn(`ShortcutManger: handler(${handler.title || 'unNamed'}).isActive not set!`);
         }
         this._handlers.push(handler);
 
@@ -107,7 +108,7 @@ class CShortcutManger {
             }
             const mapItem = this._comboKeyCallbackMap[comboKey];
             if (mapItem.length && mapItem.find((item) => item.handler.priority !== handler.priority)) {
-                console.warn('ShortcutManger: same combokey exists in handlers of different priority', actionName);
+                log.warn('ShortcutManger: same combokey exists in handlers of different priority', actionName);
             }
 
             mapItem.push({ handler, actionName });
@@ -121,14 +122,14 @@ class CShortcutManger {
                     }
                     if (prev.handler.priority <= current.handler.priority) {
                         if (prev.handler.priority === current.handler.priority) {
-                            console.warn(`comboKey [${comboKey}] has multiple active handler with same priority`);
+                            log.warn(`comboKey [${comboKey}] has multiple active handler with same priority`);
                         }
                         return current;
                     }
                     return prev;
                 }, null);
                 if (!matched) {
-                    // console.warn(`actionName [${actionName}] ignored, no matched active responser`);
+                    // log.warn(`actionName [${actionName}] ignored, no matched active responser`);
                     return true;
                 }
                 const matchedHandler = matched.handler;
@@ -148,7 +149,7 @@ class CShortcutManger {
                     callback();
                     return false; // prevent default
                 }
-                console.warn(`actionName [${matched.actionName}] has no callback!`);
+                log.warn(`actionName [${matched.actionName}] has no callback!`);
                 return true;
             };
             Mousetrap.bind(comboKey, mousetrapCallback); // default bind keydown

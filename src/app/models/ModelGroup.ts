@@ -32,6 +32,7 @@ import { v4 as uuid } from 'uuid';
 import _, { debounce, filter, includes, replace } from 'lodash';
 import { Transfer } from 'threads';
 import i18n from '../lib/i18n';
+import log from '../lib/log';
 import { checkVector3NaN } from '../lib/numeric-utils';
 import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
 import { ModelInfo as SVGModelInfo, TMode, TSize } from './BaseModel';
@@ -817,7 +818,6 @@ class ModelGroup extends EventEmitter {
         for (const model of modelArray) {
             if (!this.selectedModelArray.includes(model)) {
                 if (!model) {
-                    console.trace('modelGroup, addSelectedModels', model);
                     window.alert('blank');
                 }
                 model && this.selectedModelArray.push(model);
@@ -1343,7 +1343,7 @@ class ModelGroup extends EventEmitter {
                 }
             });
         } catch (error) {
-            console.trace('onModelTransform error', error);
+            log.error('onModelTransform error:', error);
         }
     }
 

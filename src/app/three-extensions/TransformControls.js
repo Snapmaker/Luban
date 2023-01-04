@@ -8,6 +8,8 @@
 
 import * as THREE from 'three';
 
+import log from '../lib/log';
+
 const TransformControls = function (camera, domElement, boundingBox) {
     THREE.Object3D.call(this);
 
@@ -583,7 +585,7 @@ const TransformControls = function (camera, domElement, boundingBox) {
     };
 
     this.update = function () {
-        console.warn('THREE.TransformControls: update function has been depricated.');
+        log.warn('THREE.TransformControls: update function has been depricated.');
     };
 };
 

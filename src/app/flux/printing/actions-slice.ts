@@ -5,4 +5,4 @@ const prepareToSlice = () => () => {
 
 export default {
     prepareToSlice,
-}
+};

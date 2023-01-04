@@ -274,7 +274,7 @@ const ParametersTableView: React.FC<TProps> = (props) => {
                 setMdContent(res.body?.content);
                 setImgPath(res.body?.imagePath);
             } catch (e) {
-                console.warn(e);
+                log.warn(e);
                 setMdContent('');
             }
         }

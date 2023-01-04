@@ -6,6 +6,8 @@ import {
 	ShapePath
 } from 'three';
 
+import log from '../lib/log';
+
 class FontLoader extends Loader {
 
 	constructor(manager) {
@@ -32,7 +34,7 @@ class FontLoader extends Loader {
 
 			} catch (e) {
 
-				console.warn('THREE.FontLoader: typeface.js support is being deprecated. Use typeface.json instead.');
+				log.warn('THREE.FontLoader: typeface.js support is being deprecated. Use typeface.json instead.');
 				json = JSON.parse(text.substring(65, text.length - 2));
 
 			}

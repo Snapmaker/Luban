@@ -1,6 +1,7 @@
 import { v4 as uuid } from 'uuid';
 import { includes } from 'lodash';
 import * as THREE from 'three';
+
 import {
     FAILED,
     getToolPathType,
@@ -9,6 +10,7 @@ import {
     SUCCESS,
     WARNING,
 } from './utils';
+import log from '../lib/log';
 import {
     MATERIAL_SELECTED,
     MATERIAL_UNSELECTED,
@@ -339,7 +341,7 @@ class ToolPath {
             }
         }
         if (reObjs.length > 0) {
-            console.warn('Toolpath has abnormal threejs object');
+            log.warn('Toolpath has abnormal threejs object');
         }
         for (const reObj of reObjs) {
             this.object.remove(reObj);
