@@ -410,8 +410,7 @@ function VisualizerLeftBar(
                 {/* Change Print Mode */
                     pageMode === PageMode.ChangePrintMode && (
                         <ChangePrintModeOverlay
-                            onApply={() => setPageMode(PageMode.Default)}
-                            onCancel={() => setPageMode(PageMode.Default)}
+                            onClose={() => setPageMode(PageMode.Default)}
                         />
                     )
                 }

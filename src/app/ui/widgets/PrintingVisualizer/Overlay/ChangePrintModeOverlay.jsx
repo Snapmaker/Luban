@@ -1,4 +1,5 @@
 import classNames from 'classnames';
+import PropTypes from 'prop-types';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -9,6 +10,7 @@ import i18n from '../../../../lib/i18n';
 import log from '../../../../lib/log';
 import Anchor from '../../../components/Anchor';
 import SvgIcon from '../../../components/SvgIcon';
+import { Button } from '../../../components/Buttons';
 import styles from './styles.styl';
 
 
@@ -70,7 +72,7 @@ function getPrintModeOptions(activeMachine) {
 /**
  * Overlay that can be used to change print mode.
  */
-const ChangePrintModeOverlay = () => {
+const ChangePrintModeOverlay = (props) => {
     const dispatch = useDispatch();
 
     const activeMachine = useSelector(state => state.machine.activeMachine);
@@ -100,6 +102,9 @@ const ChangePrintModeOverlay = () => {
             setSelectedPrintMode(targetPrintMode);
             dispatch(printingActions.updatePrintMode(targetPrintMode));
         }
+    }
+    function onClose() {
+        props.onClose && props.onClose();
     }
 
     return (
@@ -142,11 +147,28 @@ const ChangePrintModeOverlay = () => {
                     })
                 }
             </div>
+            <div
+                className={classNames(
+                    'padding-horizontal-16 padding-vertical-8 border-radius-bottom-8',
+                    'sm-flex justify-flex-end',
+                    'background-grey-3',
+                )}
+            >
+                <Button
+                    onClick={onClose}
+                    priority="level-two"
+                    width="96px"
+                    type="default"
+                >
+                    {i18n._('key-Printing/ProfileManager-Close')}
+                </Button>
+            </div>
         </div>
     );
 };
 
 ChangePrintModeOverlay.propTypes = {
+    onClose: PropTypes.func,
 };
 
 export default ChangePrintModeOverlay;
