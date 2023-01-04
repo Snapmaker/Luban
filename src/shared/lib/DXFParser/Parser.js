@@ -1,6 +1,7 @@
 import fs from 'fs';
 import * as THREE from 'three';
 import { isUndefined } from 'lodash';
+import log from 'loglevel';
 import DxfParser from './DxfParser';
 import { svgInverse, svgToString } from '../SVGParser/SvgToString';
 import bSpline from './bSpline';
@@ -83,7 +84,7 @@ function readFile(originalPath) {
             resolve(fileText);
         });
     }).catch((err) => {
-        console.log(err);
+        log.error(err);
     });
 }
 function addInsertContent(entities, dxf, position = { x: 0, y: 0 }) {

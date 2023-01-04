@@ -96,6 +96,7 @@ $visualizer-padding = 10px
     bottom: 32px;
     left: 64px;
 }
+
 .bottom-left
     z-index: $z-index-float
     position: absolute
@@ -143,6 +144,7 @@ $visualizer-padding = 10px
             height: 100%
             background: url("../../../resources/images/cnc-laser/text-45x30.jpg") no-repeat 0 0
             background-size: 100%
+
         .btn-undo
         .btn-redo
         .btn-reset
@@ -151,32 +153,46 @@ $visualizer-padding = 10px
             height: 100%
             background-repeat: no-repeat
             background-position: center
+
         .btn-undo
             background-image: url("/resources/images/14x14/undo-normal-14x14.png")
+
         .btn-redo
             background-image: url("/resources/images/14x14/redo-normal-14x14.png")
+
         .btn-reset
             background-image: url("/resources/images/14x14/reset-normal-14x14.png")
+
         .btn-remove
             background-image: url("/resources/images/14x14/delete-normal-14x14.png")
+
         &:hover
             background-color: $btn-default-background-color-hover
+
             .btn-undo
                 background-image: url("/resources/images/14x14/undo-hover-14x14.png")
+
             .btn-redo
                 background-image: url("/resources/images/14x14/redo-hover-14x14.png")
+
             .btn-reset
                 background-image: url("/resources/images/14x14/reset-hover-14x14.png")
+
             .btn-remove
                 background-image: url("/resources/images/14x14/delete-hover-14x14.png")
+
         &:disabled
             opacity(.5)
+
             .btn-undo
                 background-image: url("/resources/images/14x14/undo-disabled-14x14.png")
+
             .btn-redo
                 background-image: url("/resources/images/14x14/redo-disabled-14x14.png")
+
             .btn-reset
                 background-image: url("/resources/images/14x14/reset-disabled-14x14.png")
+
             .btn-remove
                 background-image: url("/resources/images/14x14/delete-disabled-14x14.png")
 
@@ -201,5 +217,6 @@ $visualizer-padding = 10px
             background: url("../../../resources/images/cnc-laser/text-224x224.png") no-repeat 0 0
             background-size: 100%
 
-.width-480
-    width 480px
+.width-480 {
+    width: 480px;
+}

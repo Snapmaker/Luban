@@ -26,6 +26,7 @@
     border-style: solid
     border-color: $grey-color2
     outline: 0
+
     &:active
         border-color: $dark-blue-color
 
@@ -42,6 +43,7 @@
     margin-bottom: 0
     margin-top: 0
     color: $grey-color2
+
     &:active
         color: $dark-blue-color
 
@@ -59,50 +61,60 @@
     text-align: left
 
 
-.extract-background
+.extract-background {
     display: block
     height: 74px
     width: 400px
     margin: 20px auto
     border: 1px solid $grey-color2
     padding: 0 74px;
-    display flex
-    justify-content space-between
-    align-items center
-    border-radius 8px
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 8px;
 
-    .extract-actions
+    .extract-actions {
         // display: inline-block
-        display flex
-        flex-direction column
-        align-items center
-        justify-content center
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
         // width: 33.333333%
         height: 100%
         border: 1px solid transparent
-        cursor pointer
+        cursor: pointer;
 
-        &__btn
+        &__btn {
             display: block
 
-            > i
+            > i {
                 display: block
                 margin-top: 8px
                 width: 100%
                 height: 40px
+            }
+        }
 
-        &__icon-conform
+        &__icon-conform {
             background: url("images/conform.png") no-repeat center
-        &__icon-reset
-            background: url("images/reset.png") no-repeat center
-        &__icon-upload
-            background: url("images/upload.png") no-repeat center
+        }
 
-        &__text
+        &__icon-reset {
+            background: url("images/reset.png") no-repeat center
+        }
+
+        &__icon-upload {
+            background: url("images/upload.png") no-repeat center
+        }
+
+        &__text {
             display: block
             width: 100%
             text-align: center
             color: $grey-color
+        }
+    }
+}
 
-        // &:hover
-        //     border: 1px solid $dark-blue-color
+// &:hover
+//     border: 1px solid $dark-blue-color

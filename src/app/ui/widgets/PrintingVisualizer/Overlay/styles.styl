@@ -2,16 +2,18 @@
 
 .rotation-analysis {
     background: $white;
-    box-shadow: rgb(134 134 139) 0px 0px 20px -10px;
+    box-shadow: rgb(134 134 139) 0 0 20px -10px;
     border-radius: 8px;
     position: absolute;
     left: 72px;
     overflow: hidden;
     color: $black-3;
+
     & header {
         padding: 10px 16px;
         border-bottom: 1px solid $grey-1;
     }
+
     & section {
         height: 216px;
         margin: 15px 16px 24px;
@@ -19,25 +21,32 @@
         border-radius: 8px;
         overflow: hidden;
     }
+
     & table {
         & thead {
             border-bottom: 1px solid $grey-1;
+
             & > tr > th {
                 cursor: default;
+
                 &:first-child {
                     padding-left: 16px;
                 }
+
                 &:last-child {
                     padding-right: 16px;
                 }
+
                 & .th-title {
                     display: inline-block;
                     vertical-align: middle;
                 }
+
                 & .scrollbar {
-                    width : 17px;
+                    width: 17px;
                     padding: 0;
                 }
+
                 & .sort {
                     width: 10px;
                     height: 20px;
@@ -46,10 +55,12 @@
                     position: relative;
                     overflow: hidden;
                     margin-left: 8px;
+
                     &.asc::before,
                     &.desc::after {
                         border-color: $blue-2;
                     }
+
                     &::before {
                         content: '';
                         display: inline-block;
@@ -61,6 +72,7 @@
                         left: 0;
                         position: absolute;
                     }
+
                     &::after {
                         content: '';
                         display: inline-block;
@@ -75,35 +87,42 @@
                 }
             }
         }
+
         & thead > tr > th,
         & tbody > tr > td {
             padding: 6px 8px;
             white-space: nowrap;
         }
+
         & tbody > tr {
             & > td {
                 &:first-child {
                     padding-left: 16px;
                 }
+
                 &:last-child {
                     padding-right: 16px;
                 }
             }
             cursor: pointer;
-            transition: background 0.3s;
+            transition: background .3s;
+
             &:hover {
                 background: $grey-2;
             }
+
             &.selected {
                 background: $blue-6;
             }
         }
     }
+
     & footer {
         background-color: rgb(245, 245, 247);
         padding: 8px 24px;
         text-align: right;
     }
+
     & .scroll {
         height: 178px;
         overflow-y: auto;
@@ -127,19 +146,21 @@
         background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%23D5D6D9' stroke-width='4' stroke-dasharray='1%2c12' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
     }
 }
-.extruder-overlay .dashed-line{
+
+.extruder-overlay .dashed-line {
     width: calc(100% - 5px)
 }
 
 .edit-support {
     width: 280px;
     background: $white;
-    box-shadow: rgb(134 134 139) 0px 0px 20px -10px;
+    box-shadow: rgb(134 134 139) 0 0 20px -10px;
     border-radius: 8px;
     position: absolute;
     left: 72px;
     overflow: hidden;
     color: $black-3;
+
     & header {
         padding: 10px 16px;
         border-bottom: 1px solid $grey-1;
@@ -148,17 +169,21 @@
         color: #545659;
         margin: 0;
     }
+
     & section {
         margin: 15px 16px 24px;
     }
+
     & footer {
         background-color: rgb(245, 245, 247);
         padding: 8px 16px;
         text-align: right;
     }
+
     & .overflow-visible {
         overflow: visible;
     }
+
     & .support-btn-switchs {
         & .support-btn-switch {
             width: 50%;
@@ -166,19 +191,23 @@
             background-color: white;
             padding: 2px 4px;
             border: 1px solid #B9BCBF;
+
             &:first-child {
-                border-radius: 8px 0px 0px 8px;
+                border-radius: 8px 0 0 8px;
                 border-right: 0;
             }
+
             &:last-child {
-                border-radius: 0px 8px 8px 0px;
+                border-radius: 0 8px 8px 0;
             }
+
             &:hover
             &.active {
                 color: #2A2C2E;
                 background #eeeff0 !important;
             }
-            & .action-title{
+
+            & .action-title {
                 vertical-align: middle;
                 display: inline-block;
                 line-height: 16px;
@@ -191,7 +220,7 @@
 .extruder-item-disabled {
     background: #f5f5f5;
     cursor: not-allowed;
-    color: rgba(0, 0, 0, 0.25)
+    color: rgba(0, 0, 0, .25);
 }
 
 
@@ -202,18 +231,19 @@
     line-height: 24px
 }
 
-.overlay-title-font 
+.overlay-title-font
     font-weight: 700
 
-.overlay-sub-title-font 
+.overlay-sub-title-font
     font-weight: 500
 
 
-.rotate-svg 
+.rotate-svg
     height: 30px
     width: 30px
     text-align: center;
     line-height: 30px;
+
     &:hover
         background-color: #D5D6D9
         border-radius: 3.75px;

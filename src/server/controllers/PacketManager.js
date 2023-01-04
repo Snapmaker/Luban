@@ -680,7 +680,10 @@ class PacketManager {
         const sizeBuffer = Buffer.from(sizeArray, 'utf-8');
         const offsetBuffer = Buffer.from(offsetArray, 'utf-8');
         const directionBuffer = Buffer.from(directionArray, 'utf-8');
-        const contentBuffer = Buffer.concat([operationBuffer, sizeBuffer, directionBuffer, offsetBuffer], operationBuffer.length + sizeBuffer.length + offsetBuffer.length + directionBuffer.length);
+        const contentBuffer = Buffer.concat(
+            [operationBuffer, sizeBuffer, directionBuffer, offsetBuffer],
+            operationBuffer.length + sizeBuffer.length + offsetBuffer.length + directionBuffer.length
+        );
         return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from(contentBuffer));
     }
 

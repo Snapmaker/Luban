@@ -3,18 +3,17 @@
 $z-index-float = 500
 $visualizer-padding = 10px
 $left-bar-width = 58px
-$bottom-bar-height = 0px
+$bottom-bar-height = 0
 
 // separator without margin on top and bottom
 .visualizer {
     position: relative;
     margin-bottom: 0;
-}
 
-.visualizer-content-wrapper {
-    position: relative !important;
-    padding: 0 !important;
-    background-color: #f5f5f7;
+    .visualizer-content-wrapper {
+        //position: relative !important;
+        background-color: #f5f5f7;
+    }
 }
 
 .separator {
@@ -162,9 +161,9 @@ $bottom-bar-height = 0px
     p {
         text-align: right
         margin: 0 0 4px
-        max-width 280px
-        white-space nowrap
-        overflow hidden
-        text-overflow ellipsis
+        max-width: 280px
+        white-space: nowrap
+        overflow: hidden
+        text-overflow: ellipsis
     }
 }

@@ -1,12 +1,7 @@
 /* eslint no-continue: 0 */
 import _ from 'lodash';
-import {
-    parseStream,
-    parseFile,
-    parseFileSync,
-    parseString,
-    parseLine
-} from './gcodeParser';
+import log from 'loglevel';
+import { parseFile, parseFileSync, parseLine, parseStream, parseString } from './gcodeParser';
 
 const noop = () => {};
 
@@ -49,7 +44,7 @@ const trimArgs = (args) => {
         }
         return args;
     } catch (e) {
-        console.error(e);
+        log.error(e);
         return null;
     }
 };

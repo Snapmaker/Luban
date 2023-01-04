@@ -65,7 +65,9 @@ export class Polygon {
 
     clone() {
         const polygon = new Polygon();
-        polygon.path = this.path.map(v => { return { x: v.x, y: v.y }; });
+        polygon.path = this.path.map(v => {
+            return { x: v.x, y: v.y };
+        });
         return polygon;
     }
 
@@ -119,7 +121,8 @@ export class Polygon {
             }
 
             const height2 = (4 * areaRemovedSoFar * areaRemovedSoFar) / baseLength2;
-            if (length2 < smallestLineSegmentSquared && height2 <= allowedErrorDistanceSquared) { // Line is small and removing it doesn't introduce too much error.
+            if (length2 < smallestLineSegmentSquared && height2 <= allowedErrorDistanceSquared) {
+                // Line is small and removing it doesn't introduce too much error.
                 continue; // Remove the vertex.
             } else if (length2 >= smallestLineSegmentSquared && newPath.length > 2
                 && (Vector2.length2(Vector2.sub(newPath[newPath.length - 2], newPath[newPath.length - 1])) === 0
@@ -137,7 +140,8 @@ export class Polygon {
             && Vector2.length2(Vector2.sub(newPath[0] - this.path[0])) >= smallestLineSegmentSquared) {
             newPath.push(this.path[0]);
         }
-        if (newPath.length > 2 && (Vector2.length2(Vector2.sub(newPath[newPath.length - 1], newPath[0])) < smallestLineSegmentSquared || Vector2.length2(Vector2.sub(newPath[newPath.length - 1], newPath[newPath.length - 2])) < smallestLineSegmentSquared)) {
+        if (newPath.length > 2 && (Vector2.length2(Vector2.sub(newPath[newPath.length - 1], newPath[0])) < smallestLineSegmentSquared
+            || Vector2.length2(Vector2.sub(newPath[newPath.length - 1], newPath[newPath.length - 2])) < smallestLineSegmentSquared)) {
             if (getDist2FromLine(newPath[newPath.length - 1], newPath[newPath.length - 2], newPath[0]) < allowedErrorDistanceSquared) {
                 newPath.pop();
             }
@@ -286,7 +290,7 @@ export class Polygons {
         for (let polyIdx = 0; polyIdx < this.data.length; polyIdx++) {
             const polygon = this.data[polyIdx];
             const result = new Polygon();
-            const isDegenerate = function (last, now, next) {
+            const isDegenerate = (last, now, next) => {
                 const lastLine = Vector2.sub(now, last);
                 const nextLine = Vector2.sub(next, now);
                 return isEqual(Vector2.dot(lastLine, nextLine), -1 * Vector2._length(lastLine) * Vector2._length(nextLine));
@@ -482,7 +486,9 @@ export class Polygons {
 
     getUnDirectionPolygonssTree() {
         const polygonAreasIndex = this.data
-            .map((polygon, index) => { return { area: polygon.area(), index: index, inner: 0 }; })
+            .map((polygon, index) => {
+                return { area: polygon.area(), index: index, inner: 0 };
+            })
             .sort((o1, o2) => (Math.abs(o1.area) > Math.abs(o2.area) ? -1 : 1));
         for (let i = 0; i < polygonAreasIndex.length; i++) {
             const areaIndex1 = polygonAreasIndex[i];
@@ -520,7 +526,9 @@ export class Polygons {
         const polygonss = [];
         // Only large area polygons can contain small ones
         const polygonAreasIndex = this.data
-            .map((polygon, index) => { return { area: polygon.area(), index: index }; })
+            .map((polygon, index) => {
+                return { area: polygon.area(), index: index };
+            })
             .sort((o1, o2) => (Math.abs(o1.area) > Math.abs(o2.area) ? -1 : 1));
 
         while (polygonAreasIndex.length > 0) {

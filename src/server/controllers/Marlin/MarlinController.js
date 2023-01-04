@@ -154,7 +154,9 @@ class MarlinController {
 
     queryState = (() => {
         let index = 0;
-        const typeOf3dp = [QUERY_TYPE_POSITION, QUERY_TYPE_TEMPERATURE, QUERY_TYPE_ENCLOSURE, QUERY_TYPE_PURIFIER, QUERY_TYPE_EMERGEMCY_STOP, QUERY_TYPE_ORIGIN_OFFSET];
+        const typeOf3dp = [
+            QUERY_TYPE_POSITION, QUERY_TYPE_TEMPERATURE, QUERY_TYPE_ENCLOSURE, QUERY_TYPE_PURIFIER, QUERY_TYPE_EMERGEMCY_STOP, QUERY_TYPE_ORIGIN_OFFSET
+        ];
         const type = [QUERY_TYPE_POSITION, QUERY_TYPE_ORIGIN_OFFSET, QUERY_TYPE_ENCLOSURE, QUERY_TYPE_EMERGEMCY_STOP, QUERY_TYPE_PURIFIER];
 
         return () => {
@@ -411,7 +413,12 @@ class MarlinController {
         this.controller.on('temperature', (res) => {
             if (!this.ready) {
                 this.ready = true;
-                this.emitAll('connection:connected', { state: this.controller.state, dataSource, type: 'serial', connectionType: 'serial' });
+                this.emitAll('connection:connected', {
+                    state: this.controller.state,
+                    dataSource,
+                    type: 'serial',
+                    connectionType: 'serial'
+                });
             }
             log.silly(`controller.on('temperature'): source=${this.history.writeSource},
                 line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
@@ -917,11 +924,13 @@ class MarlinController {
         //
         const { dataSource } = this.options;
         if (!isEmpty(this.state)) {
-            socket.emit('Marlin:state', { state: {
-                ...this.state,
-                status: this.workflow.state
-            },
-            dataSource });
+            socket.emit('Marlin:state', {
+                state: {
+                    ...this.state,
+                    status: this.workflow.state
+                },
+                dataSource
+            });
         }
         if (!isEmpty(this.settings)) {
             socket.emit('Marlin:settings', { settings: this.settings, dataSource });

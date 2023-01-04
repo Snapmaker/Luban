@@ -3,7 +3,7 @@
 $z-index-float = 500
 $visualizer-padding = 10px
 $left-bar-width = 58px
-$bottom-bar-height = 0px
+$bottom-bar-height = 0
 
 .visualizer-top-left {
     position: absolute
@@ -153,17 +153,18 @@ $bottom-bar-height = 0px
 
     .vertical-slider
         // position: absolute
-        margin-top 15px
-        margin-bottom 10px
-        top: 55px
-        height: 380px
-        left: 1px
+        margin-top: 15px;
+        margin-bottom: 10px;
+        top: 55px;
+        height: 380px;
+        left: 1px;
 
-    .layer-wrapper
-        display flex
-        flex-direction column
+    .layer-wrapper {
+        display: flex;
+        flex-direction: column;
+    }
 
-    .vertical-handle
+    .vertical-handle {
         position: absolute
         width: 20px
         height: 20px
@@ -174,8 +175,10 @@ $bottom-bar-height = 0px
         color: white
         background-color: $dark-color
 
-        &:hover
+        &:hover {
             opacity(.5)
+        }
+    }
 
     .toggle-btn
         display: block
@@ -264,11 +267,13 @@ $bottom-bar-height = 0px
             text-decoration: none
             white-space: nowrap
 
-            .selected
+            .selected {
                 background-color: #E7F3FF !important;
 
-                svg
-                    fill #1890FF
+                svg {
+                    fill: #1890FF;
+                }
+            }
 
         > li > button
             display: block

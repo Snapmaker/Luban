@@ -6,7 +6,13 @@ import styles from '../styles.styl';
 
 const CNCVisualizerWidget = () => (
     <Widget borderless>
-        <Widget.Content className={styles['visualizer-content-wrapper']}>
+        <Widget.Content
+            className={styles['visualizer-content-wrapper']}
+            style={{
+                padding: 0,
+                position: 'relative',
+            }}
+        >
             <Visualizer />
         </Widget.Content>
     </Widget>
