@@ -77,7 +77,6 @@ export const renderExtruderIcon = (extrudersUsed, colorsUsed) => {
                     )}
                 </div>
             </div>
-
             <span className="margin-right-4">
                 {useLeftExtruderOnly && 'L'}
                 {useRightExtruderOnly && 'R'}
@@ -329,6 +328,12 @@ function ObjectListItem(
                     <div className="sm-flex">
                         <Dropdown
                             placement="right"
+                            onVisibleChange={() => {
+                                if (!isSelected) {
+                                    // if we select a unselected model, then cancel current selection and select it
+                                    onSelect(model);
+                                }
+                            }}
                             overlay={getModelExtruderOverlayMenu()}
                             trigger={['click']}
                             disabled={extruderCount === 1}

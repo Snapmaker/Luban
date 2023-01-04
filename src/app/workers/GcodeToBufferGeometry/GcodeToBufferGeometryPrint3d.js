@@ -123,37 +123,14 @@ class GcodeToBufferGeometryPrint3d {
                 if (lastLayerIndex === null) {
                     lastLayerIndex = layerIndex;
                 }
-                if (lastTypeCode !== typeCode) {
+
+                if (lastTypeCode !== typeCode || lastLayerIndex !== layerIndex) {
                     this.setGcodeLayerInfoBreak(lastLayerIndex, lastTypeCode, lastToolCode);
+
                     lastTypeCode = typeCode;
                     lastLayerIndex = layerIndex;
                     lastToolCode = toolCode;
 
-                    // use: last position + current color + current layer index + current type code
-                    // const lastZ = positions[positions.length - 1];
-                    // const lastY = positions[positions.length - 2];
-                    // const lastX = positions[positions.length - 3];
-                    // positions.push(lastX);
-                    // positions.push(lastY);
-                    // positions.push(lastZ);
-
-                    // colors.push(rgb[0]);
-                    // colors.push(rgb[1]);
-                    // colors.push(rgb[2]);
-
-                    // layerIndices.push(layerIndex);
-                    // typeCodes.push(typeCode);
-                    // toolCodes.push(toolCode);
-
-                    // if (toolCode === 0) {
-                    //     colors1.push(toolColorRGB0[0]);
-                    //     colors1.push(toolColorRGB0[1]);
-                    //     colors1.push(toolColorRGB0[2]);
-                    // } else {
-                    //     colors1.push(toolColorRGB1[0]);
-                    //     colors1.push(toolColorRGB1[1]);
-                    //     colors1.push(toolColorRGB1[2]);
-                    // }
                     this.addGcodeLayerInfo(layerIndex, typeCode, toolCode, lastPosition);
                 }
 
