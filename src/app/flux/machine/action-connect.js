@@ -97,6 +97,12 @@ const setServerAddress = (serverAddress) => (dispatch) => {
     machineStore.set('server.isAuto', isAuto);
 };
 
+const setServerName = (name) => (dispatch) => {
+    dispatch(baseActions.updateState({ savedServerName: name }));
+
+    machineStore.set('server.name', name);
+};
+
 const setServerToken = (token) => (dispatch) => {
     dispatch(baseActions.updateState({ savedServerToken: token }));
 
@@ -130,6 +136,7 @@ export default {
 
     // TODO: refactor methods below
     setServerAddress,
+    setServerName,
     setServerToken,
     setManualIP
 };

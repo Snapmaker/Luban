@@ -164,6 +164,7 @@ function WifiConnection() {
         connectionAuto,
         server,
         savedServerAddress,
+        savedServerName,
         savedServerAddressIsAuto,
         savedServerToken,
         manualIp,
@@ -175,6 +176,7 @@ function WifiConnection() {
         heatedBedTemperature,
         laserCamera
     } = useSelector(state => state.machine, shallowEqual);
+
     const {
         toolHead, headType, series
     } = useSelector(state => state?.workspace);
@@ -221,9 +223,14 @@ function WifiConnection() {
         },
         openServer: () => {
             dispatch(machineActions.connect.setSelectedServer(serverState));
+
             if (serverState.address === savedServerAddress) {
                 serverState.setToken(savedServerToken);
+            } else if (serverState.name === savedServerName) {
+                // In case server address is re-allocated, check for saved server name
+                serverState.setToken(savedServerToken);
             }
+
             serverState.openServer(({ msg, text, code }) => {
                 if (msg) {
                     actions.showWifiError(msg, text, code);

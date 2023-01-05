@@ -79,6 +79,7 @@ export class Server extends events.EventEmitter {
                         this.token = data?.token;
                     }
                     dispatch(connectActions.setServerAddress(this.address));
+                    dispatch(connectActions.setServerName(this.name));
                     dispatch(connectActions.setServerToken(this.token));
                     setTimeout(() => {
                         controller.emitEvent(CONNECTION_HEARTBEAT);
