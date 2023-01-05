@@ -1,10 +1,10 @@
+import { resolveParameterValues } from '@snapmaker/luban-platform';
 import { cloneDeep, filter, find, isNil } from 'lodash';
 import path from 'path';
 import * as THREE from 'three';
 import { Box3, Vector3 } from 'three';
 import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
-
-import { resolveDefinition } from '../../../shared/lib/definitionResolver';
+// import { resolveDefinition } from '../../../shared/lib/definition-resolver';
 import { timestamp } from '../../../shared/lib/random-utils';
 import api from '../../api';
 import {
@@ -1282,7 +1282,7 @@ export const actions = {
             (d) => d.definitionId === id
         );
         const newDefModel = defaultDefinitions[index];
-        resolveDefinition(newDefModel, [[paramKey, paramValue]]);
+        resolveParameterValues(newDefModel, [[paramKey, paramValue]]);
         definitionManager.updateDefaultDefinition(newDefModel);
         defaultDefinitions[index] = newDefModel;
 
@@ -1439,7 +1439,7 @@ export const actions = {
             );
         } else if (type === PRINTING_MANAGER_TYPE_EXTRUDER) {
             updatePresetModel = true;
-            resolveDefinition(definitionModel, changedSettingArray);
+            resolveParameterValues(definitionModel, changedSettingArray);
 
             dispatch(
                 actions.updateState({
@@ -1449,7 +1449,8 @@ export const actions = {
         } else {
             updatePresetModel = true;
 
-            resolveDefinition(definitionModel, changedSettingArray);
+            resolveParameterValues(definitionModel, changedSettingArray);
+
             const definitions = printingState[definitionsKey];
             const index = definitions.findIndex((d) => d.definitionId === id);
             definitions[index] = definitionModel;

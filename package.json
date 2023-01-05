@@ -3,13 +3,14 @@
   "version": "4.5.0-beta.8",
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
   "homepage": "https://github.com/Snapmaker/Luban",
-  "author": "Snapmaker Dev Team <whimsycwd@snapmaker.com>",
+  "author": "Snapmaker Software Team",
   "main": "./dist/Luban/src/server-cli.js",
   "bin": {
     "luban": "bin/cli"
   },
   "workspaces": [
-    "packages/luban-print-settings"
+    "packages/luban-print-settings",
+    "packages/luban-platform"
   ],
   "repository": {
     "type": "git",

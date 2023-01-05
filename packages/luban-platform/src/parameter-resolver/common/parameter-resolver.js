@@ -1,12 +1,12 @@
 /* eslint-disable */
 const _ = require('lodash');
+import { sum, isUndefined, isNil, cloneDeep } from 'lodash';
 
-const asistantMap = new Map();
-let asistantMapInitialized = false;
-const allValues = {
-};
-let affectKey = '';
-let hasValue = false;
+// We put with statement
+import SettingResolverContext from './parameter-context.es5';
+
+const assistantMap = new Map();
+const allValues = {};
 
 function flatAffectedValue(insideAffectKey, affectSet, originalAffectSet, isDeep) {
     affectSet.forEach((item) => {
@@ -23,111 +23,118 @@ function flatAffectedValue(insideAffectKey, affectSet, originalAffectSet, isDeep
 
 const allContext = {};
 
-function resolveDefinition(definition, modifiedParams, skipValues = false) {
-    // make context
-    let shouldReCalcu = true;
-    let context = {};
+function getContext(definition) {
+
+}
+
+function addAffect(affectKey, key) {
+    if (!(allValues[affectKey] instanceof Set)) {
+        allValues[affectKey] = new Set();
+    }
+    allValues[affectKey].add(key);
+}
+
+/**
+ *
+ * @param definition
+ * @param modifiedParams
+ * @param skipValues - Not overwrite value to calculated value
+ */
+export function resolveParameterValues(definition, modifiedParams, skipValues = false) {
+    let context;
+    let affectKey = '';
     if (!allContext[definition.definitionId]) {
-        context = {
-            sum: _.sum,
-            map: function (fn, arr) {
-                return _.map(arr, fn);
-            },
+        // Create a new context
+        const ctx = {
+            sum: sum,
             math: {
                 radians: function (degree) {
                     return degree / 180 * Math.PI;
                 }
             },
-            resolveOrValue: input => (_.isUndefined(context[input]) ? input : context[input]),
+            resolveOrValue: input => (isUndefined(context[input]) ? input : context[input]),
             extruderValue: (ignore, input) => context[input],
             extruderValues: input => [context[input]],
             defaultExtruderPosition: () => 0
         };
+
+        const newContext = new SettingResolverContext();
+        newContext.setContext(ctx);
+
+        const obj = definition.settings;
+        for (const key of Object.keys(obj)) {
+            const value = obj[key];
+            if (value.type && (value.type !== 'category' && value.type !== 'mainCategory')) {
+                if (!assistantMap.get(key)) {
+                    const cloneValue = cloneDeep(value);
+                    assistantMap.set(key, cloneValue);
+                }
+
+                newContext.defineProperty(
+                    key,
+                    () => {
+                        return value.default_value;
+                    },
+                    (v) => {
+                        value.default_value = v;
+                    }
+                );
+
+                ctx[key] = value.default_value;
+            }
+        }
+
+        allContext[definition.definitionId] = newContext;
+        context = newContext;
     } else {
-        shouldReCalcu = false;
         context = allContext[definition.definitionId];
     }
 
     const obj = definition.settings;
-
-    if (shouldReCalcu) {
-        for (const key of Object.keys(obj)) {
-            const value = obj[key];
-            if (value.type && (value.type !== 'category' && value.type !== 'mainCategory')) {
-                if (!asistantMapInitialized) {
-                    const cloneValue = _.cloneDeep(value);
-                    asistantMap.set(key, cloneValue);
-                }
-                Object.defineProperties(context, {
-                    [key]: {
-                        get() {
-                            if (hasValue) {
-                                if (!(allValues[affectKey] instanceof Set)) {
-                                    allValues[affectKey] = new Set();
-                                }
-                                allValues[affectKey].add(key);
-                            }
-                            return value.default_value;
-                        },
-                        set(newValue) {
-                            value.default_value = newValue;
-                        }
-                    }
-                });
-                context[key] = value.default_value;
-            }
-        }
-    }
-    for (const [key, insideValue] of asistantMap) {
+    for (const [key, insideValue] of assistantMap) {
         affectKey = key;
         try {
             const defaultValue = obj[key].default_value;
-            const calcValue = insideValue.calcu_value && eval(`(function calcValue() {
-                    hasValue = true;
-                    with (context) {
-                        return ${insideValue.calcu_value};
-                    }
-                })()`);
-            if (_.isUndefined(calcValue)) {
-                hasValue = false;
+
+            const calcValue = insideValue.calcu_value && context.executeExpression(insideValue.calcu_value);
+
+            for (const property of context.getUsedProperties()) {
+                addAffect(key, property);
             }
-            const calcMinValue = insideValue.min && eval(`(function calcMinMax() {
-                hasValue = true;
-                with (context) {
-                    return ${insideValue.min};
-                }
-            })()`);
-            const calcMaxValue = insideValue.max && eval(`(function calcMinMax() {
-                hasValue = true;
-                with (context) {
-                    return ${insideValue.max};
-                }
-            })()`);
-            const calcEnabled = insideValue.visible && eval(`(function calcEnable() {
-                hasValue = true;
-                with (context) {
-                    return ${insideValue.visible};
-                }
-            })()`);
+
+            const calcMinValue = insideValue.min && context.executeExpression(insideValue.min);
+            for (const property of context.getUsedProperties()) {
+                addAffect(key, property);
+            }
+
+            const calcMaxValue = insideValue.max && context.executeExpression(insideValue.max);
+            for (const property of context.getUsedProperties()) {
+                addAffect(key, property);
+            }
+
+            const calcEnabled = insideValue.visible && context.executeExpression(insideValue.visible);
+            for (const property of context.getUsedProperties()) {
+                addAffect(key, property);
+            }
 
             if (typeof calcEnabled !== 'undefined') {
                 definition.settings[key].visible = calcEnabled;
             }
 
             if (insideValue.type === 'float' || insideValue.type === 'int') {
-                if (!_.isNil(calcMinValue)) {
+                if (!isNil(calcMinValue)) {
                     definition.settings[key].min = calcMinValue;
                 }
-                if (!_.isNil(calcMaxValue)) {
+                if (!isNil(calcMaxValue)) {
                     definition.settings[key].max = calcMaxValue;
                 }
-                if (Math.abs(calcValue - defaultValue) > 1e-6 && !_.isUndefined(calcValue)) {
+                if (Math.abs(calcValue - defaultValue) > 1e-6 && !isUndefined(calcValue)) {
                     definition.settings[key].mismatch = true;
                 } else {
                     definition.settings[key].mismatch = false;
                 }
             } else {
-                if (calcValue !== defaultValue && !_.isUndefined(calcValue)) {
+                if (calcValue !== defaultValue && !isUndefined(calcValue)) {
                     definition.settings[key].mismatch = true;
                 } else {
                     definition.settings[key].mismatch = false;
@@ -137,7 +144,11 @@ function resolveDefinition(definition, modifiedParams, skipValues = false) {
             console.error(e, insideValue.visible);
         }
     }
-    asistantMapInitialized = true;
+
+    console.log('log allValues', definition.definitionId);
+    console.log('  keys =', Object.keys(allValues).length);
+    const depCount = sum(Object.values(allValues).map(s => s.size));
+    console.log('  depCount =', depCount);
 
     Object.entries(allValues).forEach(([key, affectSet]) => {
         flatAffectedValue(key, new Set(affectSet), affectSet);
@@ -167,39 +178,24 @@ function resolveDefinition(definition, modifiedParams, skipValues = false) {
                 return a.index - b.index;
             })
             .map(d => d.param);
-        // console.log('allAsistantArray', modifiedParams, allAsistantArray);
     }
 
     // calc value & default_value
     for (const key of allAsistantArray) {
-        const value = _.cloneDeep(asistantMap.get(key));
+        const value = cloneDeep(assistantMap.get(key));
+
         try {
             let defaultValue;
-            const calcValue = value.calcu_value && eval(`(function calcValue() {
-                with (context) {
-                    return ${value.calcu_value};
-                }
-            })()`);
-            const calcMinValue = value.min && eval(`(function calcMinMax() {
-                with (context) {
-                    return ${value.min};
-                }
-            })()`);
-            const calcMaxValue = value.max && eval(`(function calcMinMax() {
-                with (context) {
-                    return ${value.max};
-                }
-            })()`);
-            const calcEnabled = value.visible && eval(`(function calcEnable() {
-                with (context) {
-                    return ${value.visible};
-                }
-            })()`);
+            const calcValue = value.calcu_value && context.executeExpression(value.calcu_value);
+
+            const calcMinValue = value.min && context.executeExpression(value.min);
+            const calcMaxValue = value.max && context.executeExpression(value.max);
+            const calcEnabled = value.visible && context.executeExpression(value.visible);
 
             if (typeof calcValue !== 'undefined') {
                 if (value.type === 'float' || value.type === 'int') {
                     defaultValue = Number((calcValue).toFixed(3));
-                }else {
+                } else {
                     defaultValue = calcValue;
                 }
                 if (!skipValues) {
@@ -213,7 +209,7 @@ function resolveDefinition(definition, modifiedParams, skipValues = false) {
             const modifiedParamItem = modifiedParams && modifiedParams.find(item => item[0] === key);
             if (modifiedParamItem) {
                 defaultValue = modifiedParamItem[1];
-                context[key] = defaultValue;
+                context.context[key] = defaultValue;
                 if (!skipValues) {
                     definition.settings[key].default_value = defaultValue;
                 }
@@ -221,26 +217,26 @@ function resolveDefinition(definition, modifiedParams, skipValues = false) {
 
             if (typeof calcMaxValue !== 'undefined' && defaultValue > calcMaxValue) {
                 defaultValue = calcMaxValue;
-                context[key] = defaultValue;
+                context.context[key] = defaultValue;
                 if (!skipValues) {
                     definition.settings[key].default_value = defaultValue;
                 }
             }
             if (typeof calcMinValue !== 'undefined' && defaultValue < calcMinValue) {
                 defaultValue = calcMinValue;
-                context[key] = defaultValue;
+                context.context[key] = defaultValue;
                 if (!skipValues) {
                     definition.settings[key].default_value = defaultValue;
                 }
             }
             if (value.type === 'float' || value.type === 'int') {
-                if (Math.abs(calcValue - defaultValue) > 1e-6 && !_.isUndefined(calcValue)) {
+                if (Math.abs(calcValue - defaultValue) > 1e-6 && !isUndefined(calcValue)) {
                     definition.settings[key].mismatch = true;
                 } else {
                     definition.settings[key].mismatch = false;
                 }
             } else {
-                if (calcValue !== defaultValue && !_.isUndefined(calcValue)) {
+                if (calcValue !== defaultValue && !isUndefined(calcValue)) {
                     definition.settings[key].mismatch = true;
                 } else {
                     definition.settings[key].mismatch = false;
@@ -252,7 +248,3 @@ function resolveDefinition(definition, modifiedParams, skipValues = false) {
     }
 }
 
-
-module.exports = {
-    resolveDefinition
-};

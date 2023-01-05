@@ -44,9 +44,10 @@ module.exports = {
     context: path.resolve(__dirname, 'src/app'),
     resolve: {
         modules: [
+            path.resolve(__dirname, 'packages/*'),
             path.resolve(__dirname, 'src/shared'),
             path.resolve(__dirname, 'src/app'),
-            'node_modules'
+            'node_modules',
         ],
         extensions: ['.js', '.json', '.jsx', '.styl', '.ts', '.tsx']
     },
@@ -137,6 +138,7 @@ module.exports = {
                     transpileOnly: true,
                 },
                 include: [
+                    path.resolve(__dirname, 'packages/*'),
                     path.resolve(__dirname, 'src/app'),
                     path.resolve(__dirname, 'src/shared'),
                 ]
@@ -150,6 +152,7 @@ module.exports = {
                     cacheDirectory: true
                 },
                 include: [
+                    path.resolve(__dirname, 'packages/*'),
                     path.resolve(__dirname, 'src/app'),
                     path.resolve(__dirname, 'src/shared'),
                 ]
