@@ -1437,6 +1437,15 @@ export const actions = {
                     [definitionsKey]: definitionModel
                 })
             );
+        } else if (type === PRINTING_MANAGER_TYPE_EXTRUDER) {
+            updatePresetModel = true;
+            resolveDefinition(definitionModel, changedSettingArray);
+
+            dispatch(
+                actions.updateState({
+                    [definitionsKey]: definitionModel
+                })
+            );
         } else {
             updatePresetModel = true;
 
