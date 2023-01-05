@@ -8,7 +8,7 @@ import { HEAD_PRINTING, PRINTING_CONFIG_SUBCATEGORY } from '../constants';
 import DataStorage from '../DataStorage';
 import logger from '../lib/logger';
 import { generateRandomPathName } from '../../shared/lib/random-utils';
-import { Metadata, SliceResult } from './slicer-definitions';
+import { Metadata, SliceProgress, SliceResult } from './slicer-definitions';
 import { postProcessorV1, processGcodeHeaderAfterCuraEngine } from './post-processor';
 
 
@@ -150,7 +150,7 @@ export default class Slicer extends EventEmitter {
         return true;
     }
 
-    private _onSliceProcessData(sliceResult: SliceResult, data): void {
+    private _onSliceProcessData(sliceResult: SliceResult, data, progress: SliceProgress): void {
         const array = data.toString().split('\n');
 
         const timeRegex = /^\[.*] \[info] Print time \(s\): ([\d]+)$/;
@@ -159,17 +159,40 @@ export default class Slicer extends EventEmitter {
             if (item.length < 10) {
                 return;
             }
-            if (item.indexOf('[debug]') !== -1) {
-                return;
-            }
+            // if (item.indexOf('[debug]') !== -1) {
+            //     return;
+            // }
 
-            // progress
-            if (item.indexOf('Progress:inset+skin:') === 0 || item.indexOf('Progress:export:') === 0) {
-                const start = item.indexOf('0.');
-                const end = item.indexOf('%');
-                const sliceProgress = Number(item.slice(start, end));
-                // onProgress(sliceProgress);
-                this.emit('progress', sliceProgress);
+            if (item.indexOf('Processing insets') !== -1) {
+                if (progress.progressStatus >= 2) {
+                    return;
+                } else if (progress.progressStatus !== 1) {
+                    progress.progressStatus = 1;
+                    progress.layers = parseFloat(item.slice(item.lastIndexOf('of') + 3));
+                    progress.layer = 0;
+                }
+                progress.layer++;
+                this.emit('progress', (progress.layer / progress.layers) * 0.3 + (progress.progressStatus - 1) * 0.3);
+            } else if (item.indexOf('Processing skins and infill') !== -1) {
+                if (progress.progressStatus >= 3) {
+                    return;
+                } else if (progress.progressStatus !== 2) {
+                    progress.progressStatus = 2;
+                    progress.layers = parseFloat(item.slice(item.lastIndexOf('of') + 3));
+                    progress.layer = 0;
+                }
+                progress.layer++;
+                this.emit('progress', (progress.layer / progress.layers) * 0.3 + (progress.progressStatus - 1) * 0.3);
+            } else if (item.indexOf('GcodeWriter processing') !== -1) {
+                if (progress.progressStatus >= 4) {
+                    return;
+                } else if (progress.progressStatus !== 3) {
+                    progress.progressStatus = 3;
+                    progress.layers = parseFloat(item.slice(item.lastIndexOf('of') + 3));
+                    progress.layer = 0;
+                }
+                progress.layer++;
+                this.emit('progress', (progress.layer / progress.layers) * 0.3 + (progress.progressStatus - 1) * 0.3);
             } else if (item.indexOf(';Filament used:') === 0) {
                 // single extruder: ';Filament used: 0.139049m'
                 // dual extruders: ';Filament used: 0.139049m, 0m'
@@ -264,7 +287,8 @@ export default class Slicer extends EventEmitter {
         sliceResult.gcodeFilePath = outputFilePath;
 
         const process = callEngine(globalConfig, modelConfigs, outputFilePath);
-        process.stdout.on('data', (data) => this._onSliceProcessData(sliceResult, data));
+        const sliceProgress = new SliceProgress();
+        process.stdout.on('data', (data) => this._onSliceProcessData(sliceResult, data, sliceProgress));
         process.on('close', (code) => this._onSliceProcessClose(sliceResult, code));
     }
 }
