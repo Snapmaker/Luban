@@ -79,6 +79,7 @@ const INITIAL_STATE = {
 
     server: ABSENT_OBJECT,
     savedServerAddress: '',
+    savedServerName: '',
     savedServerToken: '',
     manualIp: '',
     isOpen: false,
@@ -342,6 +343,7 @@ export const actions = {
     __initConnection: (dispatch) => {
         // Wi-Fi server
         const serverAddress = machineStore.get('server.address') || '';
+        const serverName = machineStore.get('server.name') || '';
         const serverToken = machineStore.get('server.token') || '';
         const manualIp = machineStore.get('manualIp') || '';
 
@@ -352,6 +354,7 @@ export const actions = {
             baseActions.updateState({
                 savedServerAddress: serverAddress,
                 savedServerToken: serverToken,
+                savedServerName: serverName,
                 port: machinePort,
                 manualIp: manualIp
             })
