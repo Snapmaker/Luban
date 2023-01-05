@@ -21,3 +21,10 @@ export class SliceResult {
     public gcodeFilePath: string;
     public renderGcodeFileName: string;
 }
+
+export class SliceProgress {
+    public progressStatus: number = 0;
+    public progress: number = 0;
+    public layers: number = 0;
+    public layer: number = 0;
+}
