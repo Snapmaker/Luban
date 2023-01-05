@@ -120,7 +120,7 @@ class ConnectionManager {
     };
 
     connectionClose = (socket, options) => {
-        this.protocol === SACP_PROTOCOL && this.socket && this.socket.connectionClose(socket, options);
+        this.socket && this.socket.connectionClose(socket, options);
     };
 
     connectionCloseImproper = () => {

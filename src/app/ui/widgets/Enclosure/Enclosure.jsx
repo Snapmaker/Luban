@@ -14,7 +14,7 @@ import {
 } from '../../../constants';
 
 function Enclosure() {
-    const { isConnected, headType, connectionType, enclosureLight, enclosureFan, isDoorEnabled: doorEnabled } = useSelector(state => state.machine, shallowEqual);
+    const { isConnected, headType, connectionType, enclosureLight, enclosureFan, isDoorEnabled: doorEnabled, series } = useSelector(state => state.machine, shallowEqual);
     const [isLedReady, setIsLedReady] = useState(true);
     const [isFanReady, setIsFanReady] = useState(true);
     const [isDoorEnabledReady, setIsDoorEnabledReady] = useState(true);
@@ -83,7 +83,7 @@ function Enclosure() {
                         disabled={(!isFanReady) || !isConnected}
                     />
                 </div>
-                { (isConnected && connectionType === 'wifi' && headType !== '3dp') && (
+                { (isConnected && connectionType === 'wifi' && headType !== '3dp' && series !== 'A400') && (
                     <TipTrigger
                         title={i18n._('key-Workspace/Enclosure-Door Detection')}
                         content={(

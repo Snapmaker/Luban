@@ -87,7 +87,7 @@ function getUnsupportedWidgets(machine) {
     }
 
     if (machine.value === MACHINE_SERIES.A400.value) {
-        return ['console', 'marlin', 'macro'];
+        return ['console', 'macro'];
     }
 
     return [];
