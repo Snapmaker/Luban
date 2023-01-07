@@ -161,14 +161,14 @@ function VisualizerLeftBar(
     const hasAnyVisableModels = models.some(model => model.visible);
 
     // const hasModels = modelGroup.getModels().some(model => !(model instanceof PrimeTowerModel));
-    const isDefaultPageMode = pageMode === PageMode.Default;
+    const pageModeDisabled = [PageMode.Simplify].includes(pageMode);
 
-    const moveDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasAnyVisableModels || !isDefaultPageMode;
-    const scaleDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasAnyVisableModels || !isDefaultPageMode;
-    const rotateDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || !isDefaultPageMode;
-    const mirrorDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || !isDefaultPageMode;
-    const supportDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || !isDefaultPageMode;
-    const extruderDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || !isDefaultPageMode;
+    const moveDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasAnyVisableModels || pageModeDisabled;
+    const scaleDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasAnyVisableModels || pageModeDisabled;
+    const rotateDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || pageModeDisabled;
+    const mirrorDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || pageModeDisabled;
+    const supportDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || pageModeDisabled;
+    const extruderDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || pageModeDisabled;
 
     return (
         <React.Fragment>

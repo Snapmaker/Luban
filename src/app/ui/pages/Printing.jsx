@@ -24,11 +24,12 @@ import ProjectLayout from '../layouts/ProjectLayout';
 import { logPageView, renderPopup, useUnsavedTitle } from '../utils';
 // import PrintingOutput from '../widgets/PrintingOutput';
 import PrintingManager from '../views/PrintingManager';
-import PrintingConfigurationsWidget from '../widgets/PrintingConfigurations';
-import PresetInitialization from '../widgets/PrintingConfigurations/PresetInitialization';
+import PrintingConfigurationsWidget, { PresetInitialization } from '../widgets/PrintingConfigurationWidget';
 import PrintingOutputWidget from '../widgets/PrintingOutput';
 import Thumbnail from '../widgets/PrintingOutput/Thumbnail';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
+
+import PrintingObjectListStyles from '../views/PrintingObjectList/styles.styl';
 
 import HomePage from './HomePage';
 import { CaseConfigGimbal, CaseConfigPenHolder } from './HomePage/CaseConfig';
@@ -40,7 +41,7 @@ import {
     printIntroStepOne,
     printIntroStepSeven,
     printIntroStepThree,
-    printIntroStepTwo,
+    getStepIntroFromText,
 } from './introContent';
 import MachineMaterialSettings from './MachineMaterialSettings';
 import { PageMode } from './PageMode';
@@ -499,16 +500,13 @@ function Printing({ location }) {
     // const onClickToUpload = () => {
     //     UniApi.Event.emit('appbar-menu:open-file-in-browser');
     // };
-    const handleChange = async (nextIndex) => {
+    const handleGuideStepChange = async (nextIndex) => {
         if (nextIndex === 1) {
             setInitIndex(1);
 
             const projectConfig = getStarterProject(series);
 
             dispatch(projectActions.openProject(projectConfig, history, true, true));
-        } else if (nextIndex === 5) {
-            const thumbnailRef = thumbnail.current.getThumbnail();
-            await dispatch(printingActions.generateGcode(thumbnailRef, true));
         }
     };
 
@@ -543,82 +541,93 @@ function Printing({ location }) {
                     <Steps
                         enabled={enabledIntro}
                         initialStep={initIndex}
-                        onChange={handleChange}
+                        onChange={handleGuideStepChange}
                         ref={stepRef}
                         options={{
                             showBullets: false,
                             keyboardNavigation: false,
                             exitOnOverlayClick: false
                         }}
-                        steps={[{
-                            element: '.print-tool-bar-open',
-                            intro: printIntroStepOne(i18n._('key-Printing/Page-Import an object, or drag an object to Luban.')),
-                            position: 'right',
-                            title: `${i18n._('key-Printing/Page-Import Object')} (1/8)`,
-                            disableInteraction: true,
-                            tooltipClass: 'printing-import-intro'
-                        }, {
-                            element: '.print-intro-three',
-                            intro: printIntroStepTwo(i18n._('key-Printing/Page-Place or transform the object using icons, including Move, Scale, Rotate, Mirror, and Manual Support.')),
-                            position: 'right',
-                            title: `${i18n._('key-Printing/Page-Placement')} (2/8)`,
-                            disableInteraction: true,
-                            tooltipClass: 'printing-placement-intro'
-                        }, {
-                            element: '.print-edit-model-intro',
-                            intro: printIntroStepThree(
-                                i18n._('key-Printing/Page-Arrange and edit objects to achieve the intended 3D printing effect.')
-                            ),
-                            position: 'bottom',
-                            title: `${i18n._('key-Printing/Page-Edit Objects')} (3/8)`,
-                            disableInteraction: true,
-                            tooltipClass: 'printing-edit-model-intro'
-                        }, {
-                            element: '.print-machine-material-intro',
-                            intro: printIntroStepFour(
-                                i18n._('key-Printing/Page-Select the machine model and the materials you use.')
-                            ),
-                            position: 'left',
-                            title: `${i18n._('key-Printing/Page-Select Machine and Materials')} (4/8)`,
-                            disableInteraction: true,
-                            tooltipClass: 'printing-machine-material-intro'
-                        }, {
-                            element: '.widget-list-intro',
-                            intro: printIntroStepFive(
-                                i18n._('key-Printing/Page-Select a printing mode.'),
-                                i18n._('key-Printing/Page-Unfold Printing Settings to adjust printing parameters.')
-                            ),
-                            position: 'left',
-                            title: `${i18n._('key-Printing/Page-Configure Parameters')} (5/8)`,
-                            disableInteraction: true,
-                            tooltipClass: 'printing-configure-parameters-intro'
-                        }, {
-                            element: '.print-output-intro',
-                            intro: printIntroStepSeven(
-                                i18n._('key-Printing/Page-Slice and preview the object.'),
-                                i18n._('key-Printing/Page-In Preview, you can see printing paths using features, including Line Type and Layer View.'),
-                                isOriginal
-                            ),
-                            position: 'top',
-                            title: `${i18n._('key-Printing/Page-Generate G-code and Preview')} (6/8)`,
-                            disableInteraction: true,
-                            tooltipClass: 'printing-preview-intro'
-                        }, {
-                            element: '.print-output-intro',
-                            intro: printIntroStepEight(i18n._('key-Printing/Page-Export the G-code file to a local device or load it to Workspace. Use Touchscreen or Luban to start printing.')),
-                            position: 'top',
-                            title: `${i18n._('key-Printing/Page-Export and Print')} (7/8)`,
-                            disableInteraction: true,
-                            highlightClass: 'printing-export-highlight-part',
-                            tooltipClass: 'printing-export-intro'
-                        }, {
-                            element: '.printing-save-icon',
-                            intro: printIntroStepNine(i18n._('key-Printing/Page-Save the project to a local device for reuse.')),
-                            position: 'bottom',
-                            title: `${i18n._('key-Printing/Page-Save Project')} (8/8)`,
-                            disableInteraction: true,
-                            tooltipClass: 'printing-save-intro'
-                        }]}
+                        steps={[
+                            {
+                                element: '.print-tool-bar-open',
+                                intro: printIntroStepOne(i18n._('key-Printing/Page-Import an object, or drag an object to Luban.')),
+                                position: 'right',
+                                title: `${i18n._('key-Printing/Page-Import Object')} (1/9)`,
+                                disableInteraction: true,
+                                tooltipClass: 'printing-import-intro'
+                            },
+                            {
+                                element: `.${PrintingObjectListStyles['object-list-view']}`,
+                                intro: getStepIntroFromText(i18n._('key-Printing/Beginner Guide-Object List Introduction')),
+                                position: 'right',
+                                title: `${i18n._('key-Printing/ObjectList-Object List')} (2/9)`,
+                                disableInteraction: true,
+                                tooltipClass: 'printing-placement-intro'
+                            },
+                            {
+                                element: '.print-intro-three',
+                                intro: getStepIntroFromText(i18n._('key-Printing/Page-Place or transform the object using icons, including Move, Scale, Rotate, Mirror, and Manual Support.')),
+                                position: 'right',
+                                title: `${i18n._('key-Printing/Page-Placement')} (3/9)`,
+                                disableInteraction: true,
+                                tooltipClass: 'printing-placement-intro'
+                            }, {
+                                element: '.print-edit-model-intro',
+                                intro: printIntroStepThree(
+                                    i18n._('key-Printing/Page-Arrange and edit objects to achieve the intended 3D printing effect.')
+                                ),
+                                position: 'bottom',
+                                title: `${i18n._('key-Printing/Page-Edit Objects')} (4/9)`,
+                                disableInteraction: true,
+                                tooltipClass: 'printing-edit-model-intro'
+                            }, {
+                                element: '.print-machine-material-intro',
+                                intro: printIntroStepFour(
+                                    i18n._('key-Printing/Page-Select the machine model and the materials you use.')
+                                ),
+                                position: 'left',
+                                title: `${i18n._('key-Printing/Page-Select Machine and Materials')} (5/9)`,
+                                disableInteraction: true,
+                                tooltipClass: 'printing-machine-material-intro'
+                            }, {
+                                element: '.configuration-view',
+                                intro: printIntroStepFive(
+                                    i18n._('key-Printing/Page-Select a printing mode.'),
+                                    i18n._('key-Printing/Page-Unfold Printing Settings to adjust printing parameters.')
+                                ),
+                                position: 'left',
+                                title: `${i18n._('key-Printing/Page-Configure Parameters')} (6/9)`,
+                                disableInteraction: true,
+                                tooltipClass: 'printing-configure-parameters-intro'
+                            }, {
+                                element: '.print-output-intro',
+                                intro: printIntroStepSeven(
+                                    i18n._('key-Printing/Page-Slice and preview the object.'),
+                                    i18n._('key-Printing/Page-In Preview, you can see printing paths using features, including Line Type and Layer View.'),
+                                    isOriginal
+                                ),
+                                position: 'top',
+                                title: `${i18n._('key-Printing/Page-Generate G-code and Preview')} (7/9)`,
+                                disableInteraction: true,
+                                tooltipClass: 'printing-preview-intro'
+                            }, {
+                                element: '.print-output-intro',
+                                intro: printIntroStepEight(i18n._('key-Printing/Page-Export the G-code file to a local device or load it to Workspace. Use Touchscreen or Luban to start printing.')),
+                                position: 'top',
+                                title: `${i18n._('key-Printing/Page-Export and Print')} (8/9)`,
+                                disableInteraction: true,
+                                highlightClass: 'printing-export-highlight-part',
+                                tooltipClass: 'printing-export-intro'
+                            }, {
+                                element: '.printing-save-icon',
+                                intro: printIntroStepNine(i18n._('key-Printing/Page-Save the project to a local device for reuse.')),
+                                position: 'bottom',
+                                title: `${i18n._('key-Printing/Page-Save Project')} (9/9)`,
+                                disableInteraction: true,
+                                tooltipClass: 'printing-save-intro'
+                            }
+                        ]}
                         onExit={handleExit}
                     />
                 )}

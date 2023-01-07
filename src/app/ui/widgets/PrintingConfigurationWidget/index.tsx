@@ -1,12 +1,20 @@
-import React from 'react';
 import classNames from 'classnames';
-import PropTypes from 'prop-types';
+import React from 'react';
 
 import ConfigurationView from './ConfigurationView';
 import styles from './styles.styl';
 
+import PresetInitialization from './PresetInitialization';
 
-const ConfigurationWidget = ({ className = null }) => {
+export {
+    PresetInitialization,
+};
+
+declare interface ConfigurationWidgetProps {
+    className?: string;
+}
+
+const ConfigurationWidget: React.FC<ConfigurationWidgetProps> = ({ className = null }) => {
     return (
         <div
             className={classNames(
@@ -17,10 +25,6 @@ const ConfigurationWidget = ({ className = null }) => {
             <ConfigurationView />
         </div>
     );
-};
-
-ConfigurationWidget.propTypes = {
-    className: PropTypes.string,
 };
 
 export default ConfigurationWidget;
