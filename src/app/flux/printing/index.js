@@ -9,7 +9,7 @@ import { timestamp } from '../../../shared/lib/random-utils';
 import api from '../../api';
 import {
     ABSENT_OBJECT,
-    BLACK_COLOR,
+    BLACK_COLOR, BOTH_EXTRUDER_MAP_NUMBER,
     DATA_PREFIX,
     EPSILON,
     GCODE_VISIBILITY_TYPE,
@@ -1413,12 +1413,14 @@ export const actions = {
         }
     },
 
-    updateCurrentDefinition: ({
-        definitionModel,
-        managerDisplayType: type,
-        changedSettingArray,
-        direction = LEFT_EXTRUDER,
-    }) => (dispatch, getState) => {
+    updateCurrentDefinition: (
+        {
+            definitionModel,
+            managerDisplayType: type,
+            changedSettingArray,
+            direction = LEFT_EXTRUDER,
+        }
+    ) => (dispatch, getState) => {
         const printingState = getState().printing;
         const { qualityDefinitions } = printingState;
         const id = definitionModel?.definitionId;
@@ -1673,11 +1675,7 @@ export const actions = {
         );
 
         // make sure name is not repeated
-        while (
-            definitionsWithSameCategory.find(
-                (d) => d.name === newDefinition.name
-            )
-        ) {
+        while (definitionsWithSameCategory.find((d) => d.name === newDefinition.name)) {
             newDefinition.name = `#${newDefinition.name}`;
         }
 
@@ -2193,7 +2191,7 @@ export const actions = {
 
         const models = modelGroup.getVisibleValidModels();
         if (!models || models.length === 0 || !hasModel) {
-            log.warning('No model(s) to be sliced.');
+            log.warn('No model(s) to be sliced.');
             return;
         }
         // update extruder definitions
@@ -3066,6 +3064,7 @@ export const actions = {
         const { modelGroup } = getState().printing;
 
         const models = Object.assign([], getState().printing.modelGroup.models);
+
         for (const model of modelGroup.selectedModelArray) {
             let modelItem = null;
             modelGroup.traverseModels(models, item => {
@@ -3073,27 +3072,29 @@ export const actions = {
                     modelItem = item;
                 }
             });
+
             if (modelItem) {
                 modelItem.extruderConfig = {
                     ...modelItem.extruderConfig,
-                    ...extruderConfig
+                    ...extruderConfig,
                 };
-                modelItem.children
-                && modelItem.children.length
-                && modelItem.children.forEach((item) => {
-                    if (extruderConfig.infill !== '2') {
-                        item.extruderConfig = {
-                            ...item.extruderConfig,
-                            infill: extruderConfig.infill
-                        };
-                    }
-                    if (extruderConfig.shell !== '2') {
-                        item.extruderConfig = {
-                            ...item.extruderConfig,
-                            shell: extruderConfig.shell
-                        };
-                    }
-                });
+
+                if (modelItem.children) {
+                    modelItem.children.forEach((item) => {
+                        if (extruderConfig.shell && extruderConfig.shell !== BOTH_EXTRUDER_MAP_NUMBER) {
+                            item.extruderConfig = {
+                                ...item.extruderConfig,
+                                shell: extruderConfig.shell,
+                            };
+                        }
+                        if (extruderConfig.infill && extruderConfig.infill !== BOTH_EXTRUDER_MAP_NUMBER) {
+                            item.extruderConfig = {
+                                ...item.extruderConfig,
+                                infill: extruderConfig.infill,
+                            };
+                        }
+                    });
+                }
                 if (
                     modelItem.parent
                     && modelItem.parent instanceof ThreeGroup

@@ -1,9 +1,15 @@
 import { throttle } from 'lodash';
-import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../constants';
+import {
+    BOTH_EXTRUDER_MAP_NUMBER,
+    LEFT_EXTRUDER,
+    LEFT_EXTRUDER_MAP_NUMBER,
+    RIGHT_EXTRUDER,
+    RIGHT_EXTRUDER_MAP_NUMBER
+} from '../constants';
 import PresetDefinitionModel from '../flux/manager/PresetDefinitionModel';
-import scene, { SceneEvent } from './Scene';
-import { Model3D } from '../models/ModelGroup';
 import { Size2D } from '../models/BaseModel';
+import { Model3D } from '../models/ModelGroup';
+import scene, { SceneEvent } from './Scene';
 
 
 export declare interface PrimeTowerSettings {
@@ -55,6 +61,12 @@ class SceneLogic {
             extrudersUsed.add(helpersExtruderConfig.support);
         }
 
+        if (extrudersUsed.has(BOTH_EXTRUDER_MAP_NUMBER)) {
+            extrudersUsed.delete(BOTH_EXTRUDER_MAP_NUMBER);
+            extrudersUsed.add(LEFT_EXTRUDER_MAP_NUMBER);
+            extrudersUsed.add(RIGHT_EXTRUDER_MAP_NUMBER);
+        }
+
         // calculate the visibility of prime tower
         // 1. Dual extruder
         // 2. At least extruders are actually used
@@ -85,6 +97,12 @@ class SceneLogic {
             const h = model.boundingBox.max.z;
 
             const modelExtruders = new Set([model.extruderConfig.infill, model.extruderConfig.shell]);
+            if (modelExtruders.has(BOTH_EXTRUDER_MAP_NUMBER)) {
+                modelExtruders.delete(BOTH_EXTRUDER_MAP_NUMBER);
+                modelExtruders.add(LEFT_EXTRUDER_MAP_NUMBER);
+                modelExtruders.add(RIGHT_EXTRUDER_MAP_NUMBER);
+            }
+
             for (const extruderNumber of modelExtruders) {
                 maxHeights[extruderNumber] = maxHeights[extruderNumber] || 0;
                 maxHeights[extruderNumber] = Math.max(maxHeights[extruderNumber], h);

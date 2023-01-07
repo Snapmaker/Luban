@@ -127,7 +127,7 @@ export const LEFT_EXTRUDER = 'left';
 export const RIGHT_EXTRUDER = 'right';
 export const LEFT_EXTRUDER_MAP_NUMBER = '0';
 export const RIGHT_EXTRUDER_MAP_NUMBER = '1';
-export const BOTH_EXTRUDER_MAP_NUMBER = '2';
+export const BOTH_EXTRUDER_MAP_NUMBER = 'mixed';
 
 // for transformControl mode
 export const ROTATE_MODE = 'rotate';

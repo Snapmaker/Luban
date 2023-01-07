@@ -373,7 +373,8 @@ export function resolveParameterValues(definition, modifiedParameterItems: Modif
                 }
             }
         } catch (e) {
-            console.error(e, key);
+            console.error(e);
+            console.error(`key = ${key}`);
         }
     }
 
