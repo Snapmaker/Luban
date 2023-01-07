@@ -1,6 +1,7 @@
 /* eslint-disable */
 import { cloneDeep, includes } from 'lodash';
-import { resolveDefinition } from '../../../shared/lib/definitionResolver';
+// import { resolveDefinition } from '../../../shared/lib/definition-resolver';
+import { resolveParameterValues } from '@snapmaker/luban-platform';
 import api from '../../api';
 import {
     HEAD_CNC,
@@ -32,12 +33,12 @@ const extruderRelationSettingsKeys = [
 
 function resolveMachineDefinition(item, changedArray = [], changedArrayWithoutExtruder = [], skipValues = false) {
     if (MATERIAL_REGEX.test(item.definitionId)) {
-        resolveDefinition(item, changedArray, skipValues);
+        resolveParameterValues(item, changedArray, skipValues);
     } else if (QUALITY_REGEX.test(item.definitionId)) {
         if (item.isDefault && item.definitionId !== 'quality.normal_other_quality') {
-            resolveDefinition(item, changedArrayWithoutExtruder, skipValues);
+            resolveParameterValues(item, changedArrayWithoutExtruder, skipValues);
         } else {
-            resolveDefinition(item, changedArray, skipValues);
+            resolveParameterValues(item, changedArray, skipValues);
         }
     }
 }
@@ -691,7 +692,7 @@ class DefinitionManager {
         };
         const nozzleSize = newExtruderDefinition?.settings?.machine_nozzle_size?.default_value;
         if (nozzleSize && newExtruderDefinition.definitionId === 'snapmaker_extruder_1') {
-            resolveDefinition(newQualityDefinition, [['machine_nozzle_size', nozzleSize]]);
+            resolveParameterValues(newQualityDefinition, [['machine_nozzle_size', nozzleSize]]);
         }
 
         this.extruderProfileArr.concat(nozzleSizeRelationSettingsKeys).forEach((item) => {

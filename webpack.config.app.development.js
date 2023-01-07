@@ -44,11 +44,12 @@ module.exports = {
     context: path.resolve(__dirname, 'src/app'),
     resolve: {
         modules: [
+            path.resolve(__dirname, 'packages/*'),
             path.resolve(__dirname, 'src/shared'),
             path.resolve(__dirname, 'src/app'),
-            'node_modules'
+            'node_modules',
         ],
-        extensions: ['.js', '.json', '.jsx', '.styl', '.ts', '.tsx']
+        extensions: ['.js', '.json', '.jsx', '.styl', '.ts', '.tsx'],
     },
     entry: {
         app: path.resolve(__dirname, 'src/app/index.jsx'),
@@ -107,7 +108,7 @@ module.exports = {
         rules: [
             {
                 enforce: 'pre',
-                test: /\.jsx?$|\.tsx?$/,
+                test: /(\.jsx?|\.tsx?)$/,
                 loader: 'eslint-loader',
                 exclude: /node_modules/,
                 options: {
@@ -136,10 +137,6 @@ module.exports = {
                 options: {
                     transpileOnly: true,
                 },
-                include: [
-                    path.resolve(__dirname, 'src/app'),
-                    path.resolve(__dirname, 'src/shared'),
-                ]
             },
             {
                 test: /\.js(x)?$/,
@@ -150,6 +147,7 @@ module.exports = {
                     cacheDirectory: true
                 },
                 include: [
+                    path.resolve(__dirname, 'packages/*'),
                     path.resolve(__dirname, 'src/app'),
                     path.resolve(__dirname, 'src/shared'),
                 ]

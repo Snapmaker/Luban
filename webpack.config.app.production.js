@@ -34,6 +34,7 @@ module.exports = {
     context: path.resolve(__dirname, 'src/app'),
     resolve: {
         modules: [
+            path.resolve(__dirname, 'packages/*'),
             path.resolve(__dirname, 'src/shared'),
             path.resolve(__dirname, 'src/app'),
             'node_modules'

@@ -3,13 +3,14 @@
   "version": "4.5.0-beta.8",
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
   "homepage": "https://github.com/Snapmaker/Luban",
-  "author": "Snapmaker Dev Team <whimsycwd@snapmaker.com>",
+  "author": "Snapmaker Software Team",
   "main": "./dist/Luban/src/server-cli.js",
   "bin": {
     "luban": "bin/cli"
   },
   "workspaces": [
-    "packages/luban-print-settings"
+    "packages/luban-print-settings",
+    "packages/luban-platform"
   ],
   "repository": {
     "type": "git",
@@ -51,8 +52,8 @@
     "dev": "npm run build-dev && npm run start-dev",
     "prod": "npm run build-prod && npm run start-prod",
     "lint": "npm run eslint && npm run stylint",
-    "eslint": "eslint --ext .js --ext .ts --ext .jsx --ext .tsx src gulp *.js",
-    "eslint:debug": "echo \"Checking code style...\"; DEBUG=eslint:cli-engine eslint --ext .js --ext .ts --ext .jsx --ext .tsx src gulp *.js",
+    "eslint": "eslint --ext .js --ext .ts --ext .jsx --ext .tsx src packages gulp *.js",
+    "eslint:debug": "echo \"Checking code style...\"; DEBUG=eslint:cli-engine eslint --ext .js --ext .ts --ext .jsx --ext .tsx src packages gulp *.js",
     "stylint": "stylint src/app",
     "test": "tape -r @babel/register test/*.js --no-timeout --node-arg=--require --node-arg=babel-register --node-arg=--require --node-arg=babel-polyfill",
     "coveralls": "tape -r @@babel/register test/*.js --coverage --coverage-report=text-lcov --nyc-arg=--require --nyc-arg=babel-register --nyc-arg=--require --nyc-arg=babel-polyfill | coveralls",

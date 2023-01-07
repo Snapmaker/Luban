@@ -24,7 +24,8 @@ module.exports = {
                 config: {
                     resolve: {
                         modules: [
-                            path.resolve(__dirname, 'src')
+                            path.resolve(__dirname, 'src'),
+                            path.resolve(__dirname, 'packages'),
                         ],
                         extensions: ['.js', '.jsx', '.ts', '.tsx']
                     }
@@ -33,7 +34,7 @@ module.exports = {
         }
     },
     plugins: [
-        'react-hooks'
+        'react-hooks',
     ],
     rules: {
         'no-use-before-define': 'off',
