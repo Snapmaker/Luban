@@ -24,35 +24,35 @@ function dropdownRender(opts, key, onChangePresetSettings, currentValue) {
                 opts.length > 8 ? styles['settings-select-wrapper_scroll'] : '',
             )}
         >
-            {opts.map((settingItem) => {
-                const value = settingItem.value;
-                const label = settingItem.label;
-                return (
-                    <span
-                        key={label}
-                        className={classNames(
-                            styles['settings-item'],
-                            currentValue === value ? styles['settings-item_selected'] : '',
-                        )}
-                    >
-                        <Anchor
-                            onClick={() => onChangePresetSettings(key, value)}
-                        >
-                            <div className={classNames(
-                                styles['settings-select'],
+            {
+                opts.map((settingItem) => {
+                    const value = settingItem.value;
+                    const label = settingItem.label;
+                    return (
+                        <span
+                            key={label}
+                            className={classNames(
+                                styles['settings-item'],
+                                {
+                                    [styles['settings-item_selected']]: currentValue === value,
+                                },
                             )}
-                            >
-                                <div className={classNames(
-                                    styles.img,
-                                    styles[`img_${key}_${value}`],
-                                )}
-                                />
-                            </div>
-                        </Anchor>
-                        <span className="align-c max-width-76 text-overflow-ellipsis-line-2 height-32-half-line margin-top-4 margin-bottom-8">{label}</span>
-                    </span>
-                );
-            })}
+                        >
+                            <Anchor onClick={() => onChangePresetSettings(key, value)}>
+                                <div className={classNames(styles['settings-select'])}>
+                                    <div
+                                        className={classNames(
+                                            styles.img,
+                                            styles[`img_${key}_${value}`],
+                                        )}
+                                    />
+                                </div>
+                            </Anchor>
+                            <span className="align-c max-width-76 text-overflow-ellipsis-line-2 height-32-half-line margin-top-4 margin-bottom-8">{label}</span>
+                        </span>
+                    );
+                })
+            }
         </div>
     );
 }

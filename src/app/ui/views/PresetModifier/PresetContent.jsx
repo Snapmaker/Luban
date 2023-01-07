@@ -2,7 +2,6 @@ import classNames from 'classnames';
 import { cloneDeep, includes, isNil } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { useCallback, useEffect, useState } from 'react';
-// import ReactMarkdown from 'react-markdown';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
@@ -16,6 +15,7 @@ import ParameterFiltersBar from './ParameterFiltersBar';
 import ParameterPicker from './ParameterPicker';
 import ParametersTableView from './ParametersTableView';
 import styles from './styles.styl';
+import { printingStore } from '../../../store/local-storage';
 // import SvgIcon from '../../components/SvgIcon';
 
 
@@ -112,7 +112,7 @@ const PresetContent = (
     const {
         qualityDefinitions,
         qualityDefinitionsRight,
-        printingParamsType,
+        // printingParamsType,
         customMode,
     } = useSelector(state => state?.printing);
 
@@ -137,11 +137,13 @@ const PresetContent = (
     }, [selectedStackId, selectedPresetId]);
 
     // Filters
-    const [selectParamsType, setSelectParamsType] = useState(printingParamsType);
+    const [selectParamsType, setSelectParamsType] = useState(printingStore.get('preset-filter:grade', 'basic'));
     const [selectQualityDetailType, setSelectQualityDetailType] = useState('all');
 
     const handleUpdateParamsType = (value) => {
         setSelectParamsType(value);
+        printingStore.set('preset-filter:grade', value);
+
         if (!includes(defaultParamsType, value)) {
             setSelectQualityDetailType('all');
         }
