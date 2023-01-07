@@ -98,7 +98,7 @@ class Thumbnail extends PureComponent {
             bbbx.max.z - bbbx.min.z
         );
 
-        const p = rz / 2 / Math.tan(22.5 / 180 * Math.PI) + 5;
+        const p = (rz * 1.4) / 2 / Math.tan(22.5 / 180 * Math.PI);
 
         this.camera.position.copy(new Vector3(0, 0, p));
 

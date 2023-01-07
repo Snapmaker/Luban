@@ -92,10 +92,12 @@ class MainToolBar extends PureComponent {
                                 <div className="print-machine-material-intro width-360 background-grey-3 height-50 float-r border-radius-8 sm-flex justify-space-between padding-vertical-4 padding-horizontal-8">
                                     <div className="width-144">
                                         <div className="width-144 sm-flex">
-                                            <Badge status={isConnected ? 'success' : 'default'} />
-                                            <span className="width-130 text-overflow-ellipsis display-inline">{activeMachine?.fullName}</span>
+                                            <span className="width-8">
+                                                <Badge status={isConnected ? 'success' : 'default'} />
+                                            </span>
+                                            <span className="width-130 margin-left-4 text-overflow-ellipsis">{activeMachine?.fullName}</span>
                                         </div>
-                                        <div className="margin-left-14 opacity-precent-50">
+                                        <div className="margin-left-12 opacity-precent-50">
                                             {activeMachine?.series}
                                         </div>
                                     </div>

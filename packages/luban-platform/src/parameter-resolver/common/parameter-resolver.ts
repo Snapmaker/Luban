@@ -231,7 +231,7 @@ function getContext(definition) {
             .map(key => valueGraph.getDependencies(key))
             .reduce((s, deps) => (s + deps.length), 0);
 
-        console.log(`  [value] ${keysHasDependencies.length} parameters that have deps, ${depCount} in total.`);
+        console.log(`  [value] ${keysHasDependencies.length} parameters have deps, ${depCount} in total.`);
 
 
         const keysHasDependencies2 = calculatedValueGraph.getKeys()
@@ -242,7 +242,7 @@ function getContext(definition) {
             .map(key => calculatedValueGraph.getDependencies(key))
             .reduce((s, deps) => (s + deps.length), 0);
 
-        console.log(`  [visible] ${keysHasDependencies2.length} parameters that have deps, ${depCount2} in total.`);
+        console.log(`  [visible] ${keysHasDependencies2.length} parameters have deps, ${depCount2} in total.`);
     }
 
     allContext[definition.definitionId] = newContext;

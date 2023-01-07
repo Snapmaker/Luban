@@ -1,18 +1,22 @@
-.object-list-box{
+.object-list-box {
     max-height: 176px;
     overflow-y: auto;
     //margin: 4px 0;
     //padding-top: 4px;
 }
+
 .object-list-item {
     padding: 4px 0;
+
     &.selected {
         background-color: #E7F3FF;
     }
+
     &:not(.selected):hover {
         background-color: #EEEFF0;
     }
-    .process{
+
+    .process {
         padding: 0 12px;
     }
 
@@ -31,13 +35,14 @@
     }
 
     .icon {
-       box-sizing: content-box;
-       display: inline-block;
-       width: 24px;
-       height: 24px;
-       vertical-align: middle;
-       margin: 0 4px;
+        box-sizing: content-box;
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        vertical-align: middle;
+        margin: 0 4px;
     }
+
     .icon-shape {
         background: url("images/list_ic_shape_18x18@2x.png") no-repeat center center
         display: inline-block

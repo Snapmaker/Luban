@@ -12,50 +12,52 @@ import Anchor from '../../components/Anchor';
 
 const VisualizerBottomLeft = ({ headType, toFront, zoomOut, zoomIn, scale, minScale, maxScale, updateScale }) => {
     return (
-        <React.Fragment>
-            <Anchor
-                onClick={(event) => {
-                    event.nativeEvent.stopImmediatePropagation();
-                }}
+        <Anchor
+            onClick={(event) => {
+                event.nativeEvent.stopImmediatePropagation();
+            }}
+            style={{
+                textDecoration: 'none',
+                cursor: 'auto',
+            }}
+        >
+            <Card
+                className={classNames('margin-horizontal-8')}
+                title={i18n._('key-CncLaser/ObjectList_Title-Object List')}
             >
-                <Card
-                    className={classNames('margin-horizontal-8')}
-                    title={i18n._('key-CncLaser/ObjectList_Title-Object List')}
-                >
-                    <CncLaserObjectList
-                        headType={headType}
-                    />
-                </Card>
-                <div className={classNames('margin-horizontal-8', 'height-24')}>
-                    <SvgIcon
-                        name="ViewFix"
-                        onClick={toFront}
-                    />
-                    <SvgIcon
-                        className="margin-horizontal-8"
-                        name="ViewReduce"
-                        onClick={zoomOut}
-                    />
-                    <Slider
-                        value={scale}
-                        min={minScale ?? MIN_LASER_CNC_CANVAS_SCALE}
-                        max={maxScale ?? MAX_LASER_CNC_CANVAS_SCALE}
-                        step={0.1}
-                        isBlack
-                        onChange={(value) => {
-                            updateScale(value);
-                        }}
-                        onAfterChange={() => {
-                        }}
-                    />
-                    <SvgIcon
-                        name="ViewEnlarge"
-                        className="margin-left-8"
-                        onClick={zoomIn}
-                    />
-                </div>
-            </Anchor>
-        </React.Fragment>
+                <CncLaserObjectList
+                    headType={headType}
+                />
+            </Card>
+            <div className={classNames('margin-horizontal-8', 'height-24')}>
+                <SvgIcon
+                    name="ViewFix"
+                    onClick={toFront}
+                />
+                <SvgIcon
+                    className="margin-horizontal-8"
+                    name="ViewReduce"
+                    onClick={zoomOut}
+                />
+                <Slider
+                    value={scale}
+                    min={minScale ?? MIN_LASER_CNC_CANVAS_SCALE}
+                    max={maxScale ?? MAX_LASER_CNC_CANVAS_SCALE}
+                    step={0.1}
+                    isBlack
+                    onChange={(value) => {
+                        updateScale(value);
+                    }}
+                    onAfterChange={() => {
+                    }}
+                />
+                <SvgIcon
+                    name="ViewEnlarge"
+                    className="margin-left-8"
+                    onClick={zoomIn}
+                />
+            </div>
+        </Anchor>
     );
 };
 

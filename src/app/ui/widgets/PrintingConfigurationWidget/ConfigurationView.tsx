@@ -400,7 +400,7 @@ const ConfigurationView: React.FC<{}> = () => {
     }
 
     return (
-        <div>
+        <div className="configuration-view">
             {/* Stack Selection */}
             {
                 isDual && (
