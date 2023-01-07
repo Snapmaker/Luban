@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { EPSILON, HEAD_PRINTING } from '../../../constants';
-import { isDualExtruder } from '../../../constants/machines';
 import { actions as printingActions } from '../../../flux/printing';
 import { logTransformOperation } from '../../../lib/gaEvent';
 import i18n from '../../../lib/i18n';
@@ -11,13 +10,10 @@ import modal from '../../../lib/modal';
 import UniApi from '../../../lib/uni-api';
 import PrimeTowerModel from '../../../models/PrimeTowerModel';
 import ThreeGroup from '../../../models/ThreeGroup';
-import { machineStore } from '../../../store/local-storage';
 import SvgIcon from '../../components/SvgIcon';
 import { PageMode } from '../../pages/PageMode';
 import ChangePrintModeOverlay from './Overlay/ChangePrintModeOverlay';
 import EditSupportOverlay from './Overlay/EditSupportOverlay';
-/* eslint-disable-next-line import/no-cycle */
-import ExtruderOverlay from './Overlay/ExtruderOverlay';
 /* eslint-disable-next-line import/no-cycle */
 import MirrorOverlay from './Overlay/MirrorOverlay';
 /* eslint-disable-next-line import/no-cycle */
@@ -64,8 +60,6 @@ function VisualizerLeftBar(
 
     const [showRotationAnalyzeModal, setShowRotationAnalyzeModal] = useState(false);
     const [showEditSupportModal, setShowEditSupportModal] = useState(false);
-
-    const isDual = isDualExtruder(machineStore.get('machine.toolHead.printingToolhead'));
 
     const dispatch = useDispatch();
     const fileInput = useRef(null);
@@ -161,14 +155,13 @@ function VisualizerLeftBar(
     const hasAnyVisableModels = models.some(model => model.visible);
 
     // const hasModels = modelGroup.getModels().some(model => !(model instanceof PrimeTowerModel));
-    const isDefaultPageMode = pageMode === PageMode.Default;
+    const pageModeDisabled = [PageMode.Simplify].includes(pageMode);
 
-    const moveDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasAnyVisableModels || !isDefaultPageMode;
-    const scaleDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasAnyVisableModels || !isDefaultPageMode;
-    const rotateDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || !isDefaultPageMode;
-    const mirrorDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || !isDefaultPageMode;
-    const supportDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || !isDefaultPageMode;
-    const extruderDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || !isDefaultPageMode;
+    const moveDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasAnyVisableModels || pageModeDisabled;
+    const scaleDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasAnyVisableModels || pageModeDisabled;
+    const rotateDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || pageModeDisabled;
+    const mirrorDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || pageModeDisabled;
+    const supportDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || pageModeDisabled;
 
     return (
         <React.Fragment>
@@ -295,25 +288,6 @@ function VisualizerLeftBar(
                                         disabled={supportDisabled}
                                     />
                                 </li>
-                                {isDual && (
-                                    <li className="margin-vertical-4">
-                                        <SvgIcon
-                                            color="#545659"
-                                            className={classNames(
-                                                { [styles.selected]: (!extruderDisabled && transformMode === 'extruder') },
-                                                'padding-horizontal-4'
-                                            )}
-                                            type={[`${!extruderDisabled && transformMode === 'extruder' ? 'hoverNoBackground' : 'hoverSpecial'}`, 'pressSpecial']}
-                                            name="ToolbarExtruder"
-                                            size={48}
-                                            onClick={() => {
-                                                setTransformMode('extruder');
-                                                !selectedModelArray.length && dispatch(printingActions.selectAllModels());
-                                            }}
-                                            disabled={!!extruderDisabled}
-                                        />
-                                    </li>
-                                )}
                             </ul>
                         </span>
                     </nav>
@@ -388,12 +362,6 @@ function VisualizerLeftBar(
                                 actions.editSupport();
                             }}
                         />
-                    )
-                }
-
-                {/* Extruder Overlay */
-                    !extruderDisabled && transformMode === 'extruder' && isDual && (
-                        <ExtruderOverlay setTransformMode={setTransformMode} />
                     )
                 }
 

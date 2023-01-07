@@ -9,7 +9,7 @@ import { timestamp } from '../../../shared/lib/random-utils';
 import api from '../../api';
 import {
     ABSENT_OBJECT,
-    BLACK_COLOR,
+    BLACK_COLOR, BOTH_EXTRUDER_MAP_NUMBER,
     DATA_PREFIX,
     EPSILON,
     GCODE_VISIBILITY_TYPE,
@@ -1200,7 +1200,7 @@ export const actions = {
                 if (!outOfMemoryForRenderGcode) {
                     const object3D = gcodeBufferGeometryToObj3d('3DP', bufferGeometry, null, {
                         ...gcodeEntity,
-                        extruderColors
+                        extruderColors,
                     });
                     gcodeLineGroup.add(object3D);
 
@@ -1413,12 +1413,14 @@ export const actions = {
         }
     },
 
-    updateCurrentDefinition: ({
-        definitionModel,
-        managerDisplayType: type,
-        changedSettingArray,
-        direction = LEFT_EXTRUDER,
-    }) => (dispatch, getState) => {
+    updateCurrentDefinition: (
+        {
+            definitionModel,
+            managerDisplayType: type,
+            changedSettingArray,
+            direction = LEFT_EXTRUDER,
+        }
+    ) => (dispatch, getState) => {
         const printingState = getState().printing;
         const { qualityDefinitions } = printingState;
         const id = definitionModel?.definitionId;
@@ -1673,11 +1675,7 @@ export const actions = {
         );
 
         // make sure name is not repeated
-        while (
-            definitionsWithSameCategory.find(
-                (d) => d.name === newDefinition.name
-            )
-        ) {
+        while (definitionsWithSameCategory.find((d) => d.name === newDefinition.name)) {
             newDefinition.name = `#${newDefinition.name}`;
         }
 
@@ -2149,17 +2147,20 @@ export const actions = {
             let meshObject = find(modelGroup.object.children, {
                 uuid: model.meshObject.uuid
             });
-            meshObject = meshObject.clone();
-            meshObject.material = materialNormal;
-            if (model instanceof ThreeGroup) {
-                meshObject.children.forEach((mesh) => {
-                    mesh.material = materialNormal;
-                    mesh.clear(); // clear support mesh
-                });
-            } else {
-                meshObject.clear(); // clear support mesh
+
+            if (meshObject) {
+                meshObject = meshObject.clone();
+                meshObject.material = materialNormal;
+                if (model instanceof ThreeGroup) {
+                    meshObject.children.forEach((mesh) => {
+                        mesh.material = materialNormal;
+                        mesh.clear(); // clear support mesh
+                    });
+                } else {
+                    meshObject.clear(); // clear support mesh
+                }
+                modelGroup.grayModeObject.add(meshObject);
             }
-            modelGroup.grayModeObject.add(meshObject);
         });
     },
 
@@ -2193,7 +2194,7 @@ export const actions = {
 
         const models = modelGroup.getVisibleValidModels();
         if (!models || models.length === 0 || !hasModel) {
-            log.warning('No model(s) to be sliced.');
+            log.warn('No model(s) to be sliced.');
             return;
         }
         // update extruder definitions
@@ -2232,6 +2233,10 @@ export const actions = {
                 ...newExtruderLDefinition,
                 definitionId: 'snapmaker_extruder_0'
             });
+
+            dispatch(actions.updateState({
+                extruderLDefinition: newExtruderLDefinition,
+            }));
         }
 
         let newExtruderRDefinition = extruderRDefinition;
@@ -2247,6 +2252,10 @@ export const actions = {
                 ...newExtruderRDefinition,
                 definitionId: 'snapmaker_extruder_1'
             });
+
+            dispatch(actions.updateState({
+                extruderRDefinition: newExtruderRDefinition,
+            }));
         }
 
         definitionManager.calculateDependencies(
@@ -2326,10 +2335,10 @@ export const actions = {
         // save line width and layer height for gcode preview
         dispatch(actions.updateState({
             gcodeEntity: {
-                extruderLlineWidth0: extruderLDefinition.settings.wall_line_width_0.default_value,
-                extruderLlineWidth: extruderLDefinition.settings.wall_line_width_x.default_value,
-                extruderRlineWidth0: extruderRDefinition?.settings.wall_line_width_0.default_value || 0.4,
-                extruderRlineWidth: extruderRDefinition?.settings.wall_line_width_x.default_value || 0.4,
+                extruderLlineWidth0: qualityPresets[LEFT_EXTRUDER].settings.wall_line_width_0.default_value,
+                extruderLlineWidth: qualityPresets[LEFT_EXTRUDER].settings.wall_line_width_x.default_value,
+                extruderRlineWidth0: qualityPresets[RIGHT_EXTRUDER]?.settings.wall_line_width_0.default_value || 0.4,
+                extruderRlineWidth: qualityPresets[RIGHT_EXTRUDER]?.settings.wall_line_width_x.default_value || 0.4,
                 layerHeight0: finalDefinition.settings.layer_height_0.default_value,
                 layerHeight: finalDefinition.settings.layer_height.default_value,
             }
@@ -3066,6 +3075,7 @@ export const actions = {
         const { modelGroup } = getState().printing;
 
         const models = Object.assign([], getState().printing.modelGroup.models);
+
         for (const model of modelGroup.selectedModelArray) {
             let modelItem = null;
             modelGroup.traverseModels(models, item => {
@@ -3073,27 +3083,29 @@ export const actions = {
                     modelItem = item;
                 }
             });
+
             if (modelItem) {
                 modelItem.extruderConfig = {
                     ...modelItem.extruderConfig,
-                    ...extruderConfig
+                    ...extruderConfig,
                 };
-                modelItem.children
-                && modelItem.children.length
-                && modelItem.children.forEach((item) => {
-                    if (extruderConfig.infill !== '2') {
-                        item.extruderConfig = {
-                            ...item.extruderConfig,
-                            infill: extruderConfig.infill
-                        };
-                    }
-                    if (extruderConfig.shell !== '2') {
-                        item.extruderConfig = {
-                            ...item.extruderConfig,
-                            shell: extruderConfig.shell
-                        };
-                    }
-                });
+
+                if (modelItem.children) {
+                    modelItem.children.forEach((item) => {
+                        if (extruderConfig.shell && extruderConfig.shell !== BOTH_EXTRUDER_MAP_NUMBER) {
+                            item.extruderConfig = {
+                                ...item.extruderConfig,
+                                shell: extruderConfig.shell,
+                            };
+                        }
+                        if (extruderConfig.infill && extruderConfig.infill !== BOTH_EXTRUDER_MAP_NUMBER) {
+                            item.extruderConfig = {
+                                ...item.extruderConfig,
+                                infill: extruderConfig.infill,
+                            };
+                        }
+                    });
+                }
                 if (
                     modelItem.parent
                     && modelItem.parent instanceof ThreeGroup

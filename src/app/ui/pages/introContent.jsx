@@ -1,16 +1,22 @@
 import React from 'react';
 
+/**
+ * Get step intro node from text.
+ *
+ * @param text - text to be displayed.
+ */
+const getStepIntroFromText = (text) => (
+    <div>
+        {text}
+    </div>
+);
+
 const printIntroStepOne = (text) => (
     <div>
         {text}
     </div>
 );
 
-const printIntroStepTwo = (text) => (
-    <div>
-        {text}
-    </div>
-);
 const printIntroStepThree = (text1) => (
     <div>
         {text1}
@@ -155,7 +161,7 @@ const cnc4AxisStepOne = (text1, text2, text3) => {
 
 export {
     printIntroStepOne,
-    printIntroStepTwo,
+    getStepIntroFromText,
     printIntroStepThree,
     printIntroStepFour,
     printIntroStepFive,

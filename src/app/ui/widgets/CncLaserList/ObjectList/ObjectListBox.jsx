@@ -51,31 +51,34 @@ function ObjectListBox({ headType }) {
     const allModels = (models) && models.filter(model => !model.supportTag);
 
     return (
-        <div className={classNames(
-            'width-264',
-            'background-color-white',
-            styles['object-list-box'],
-            allModels.length > 0 ? 'border-radius-8 border-default-grey-1 padding-vertical-4' : '',
-        )}
+        <div
+            className={classNames(
+                'width-264',
+                'background-color-white',
+                styles['object-list-box'],
+            )}
         >
-            {allModels && allModels.map((model) => {
-                return (
-                    <ModelItem
-                        model={model}
-                        key={model.modelID}
-                        visible={model.visible}
-                        styles={styles}
-                        isSelected={selectedModelArray && selectedModelArray.includes(model)}
-                        onSelect={actions.onClickModelNameBox}
-                        onToggleVisible={actions.onClickModelHideBox}
-                        inProgress={inProgress}
-                        placement="right"
-                    />
-                );
-            })}
+            {
+                allModels && allModels.map((model) => {
+                    return (
+                        <ModelItem
+                            model={model}
+                            key={model.modelID}
+                            visible={model.visible}
+                            styles={styles}
+                            isSelected={selectedModelArray && selectedModelArray.includes(model)}
+                            onSelect={actions.onClickModelNameBox}
+                            onToggleVisible={actions.onClickModelHideBox}
+                            inProgress={inProgress}
+                            placement="right"
+                        />
+                    );
+                })
+            }
         </div>
     );
 }
+
 ObjectListBox.propTypes = {
     headType: PropTypes.string
 };

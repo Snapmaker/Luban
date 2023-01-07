@@ -183,8 +183,8 @@ function getContext(definition) {
     // Create a new context
     const ctx = {
         resolveOrValue: (input) => (input),
-        extruderValue: (ignore, input) => input,
-        extruderValues: (input) => [input],
+        // extruderValue: (ignore, input) => input,
+        // extruderValues: (input) => [input],
         defaultExtruderPosition: () => 0,
     };
 
@@ -231,7 +231,7 @@ function getContext(definition) {
             .map(key => valueGraph.getDependencies(key))
             .reduce((s, deps) => (s + deps.length), 0);
 
-        console.log(`  [value] ${keysHasDependencies.length} parameters that have deps, ${depCount} in total.`);
+        console.log(`  [value] ${keysHasDependencies.length} parameters have deps, ${depCount} in total.`);
 
 
         const keysHasDependencies2 = calculatedValueGraph.getKeys()
@@ -242,7 +242,7 @@ function getContext(definition) {
             .map(key => calculatedValueGraph.getDependencies(key))
             .reduce((s, deps) => (s + deps.length), 0);
 
-        console.log(`  [visible] ${keysHasDependencies2.length} parameters that have deps, ${depCount2} in total.`);
+        console.log(`  [visible] ${keysHasDependencies2.length} parameters have deps, ${depCount2} in total.`);
     }
 
     allContext[definition.definitionId] = newContext;
@@ -323,16 +323,25 @@ export function resolveParameterValues(definition, modifiedParameterItems: Modif
 
     const affectedParameters = getAffectedParameters(valueGraph, modifiedParameterItems.map(item => item[0]));
 
+    console.log(`modified = ${modifiedParameterItems}`);
+    console.log(`affected = ${affectedParameters}`);
+
     // calc value & default_value
     for (const key of affectedParameters) {
         const parameterItem = parameterMap.get(key);
 
         try {
-            let defaultValue;
+            let defaultValue = definition.settings[key].default_value;
+
             const calcValue = parameterItem.calcu_value && context.executeExpression(parameterItem.calcu_value);
             if (!isUndefined(calcValue)) {
                 if (parameterItem.type === 'float' || parameterItem.type === 'int') {
-                    defaultValue = Number((calcValue).toFixed(3));
+                    try {
+                        defaultValue = Number((calcValue).toFixed(3));
+                    } catch (e) {
+                        // invalid calculation value
+                        console.error(`Invalid calculation value for ${key}, error = ${e}`);
+                    }
                 } else {
                     defaultValue = calcValue;
                 }
@@ -373,7 +382,8 @@ export function resolveParameterValues(definition, modifiedParameterItems: Modif
                 }
             }
         } catch (e) {
-            console.error(e, key);
+            console.error(e);
+            console.error(`key = ${key}`);
         }
     }
 

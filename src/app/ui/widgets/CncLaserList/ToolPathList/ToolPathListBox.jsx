@@ -63,7 +63,6 @@ const ToolpathItem = ({
             <div
                 className={classNames(
                     styles['object-list-item'],
-                    'padding-horizontal-16',
                     'sm-flex',
                     'justify-space-between',
                     selectedToolPathIDArray.includes(toolPath.id) ? styles.selected : null
@@ -88,7 +87,8 @@ const ToolpathItem = ({
                         'align-l',
                         'sm-flex',
                         'sm-flex-width',
-                        'margin-right-16'
+                        'margin-left-16',
+                        'margin-right-16',
                     )}
                     onDoubleClick={handleOnDoubleClick}
                     onClick={handleOnClick}
@@ -100,7 +100,7 @@ const ToolpathItem = ({
                         {suffixName}
                     </span>
                 </Anchor>
-                <div className={classNames('sm-flex', 'height-24')}>
+                <div className={classNames('sm-flex', 'height-24', 'margin-right-16')}>
                     <i
                         className={classNames(
                             // ...getIconStatus(toolPath.status)

@@ -494,23 +494,14 @@ export default class ThreeGroup extends BaseModel {
     }
 
     public updateGroupExtruder() {
-        this.extruderConfig.shell = null;
-        for (const subModel of this.children) {
-            /**
-             * extruderConfig.shell and extruderConfig.infill corresponding nozzle number
-             * 0 which means the left nozzle is used
-             * 1 which means the right nozzle is used
-             * 2 which means that both the left nozzle and the right nozzle are used
-             */
-            // First cycle assignment
-            if (!this.extruderConfig.shell) {
-                this.extruderConfig.shell = subModel.extruderConfig.shell;
-                this.extruderConfig.infill = subModel.extruderConfig.infill;
-            }
-            if (this.extruderConfig.shell !== subModel.extruderConfig.shell) {
+        this.extruderConfig.shell = this.children[0].extruderConfig.shell;
+        this.extruderConfig.infill = this.children[0].extruderConfig.infill;
+
+        for (const childModel of this.children) {
+            if (this.extruderConfig.shell !== childModel.extruderConfig.shell) {
                 this.extruderConfig.shell = BOTH_EXTRUDER_MAP_NUMBER;
             }
-            if (this.extruderConfig.infill !== subModel.extruderConfig.infill) {
+            if (this.extruderConfig.infill !== childModel.extruderConfig.infill) {
                 this.extruderConfig.infill = BOTH_EXTRUDER_MAP_NUMBER;
             }
         }

@@ -312,7 +312,7 @@ class AppLayout extends PureComponent {
                             <div className="sm-flex-auto font-roboto font-weight-normal font-size-middle">
                                 <SvgIcon
                                     name="WarningTipsSuccess"
-                                    size="24"
+                                    size={24}
                                     type={['static']}
                                     color="#4cb518"
                                 />
@@ -324,7 +324,7 @@ class AppLayout extends PureComponent {
                                 <SvgIcon
                                     name="Cancel"
                                     type={['static']}
-                                    size="24"
+                                    size={24}
                                     onClick={onClose}
                                 />
                             </div>

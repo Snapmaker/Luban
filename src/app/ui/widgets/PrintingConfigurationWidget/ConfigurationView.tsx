@@ -390,7 +390,7 @@ const ConfigurationView: React.FC<{}> = () => {
 
     if (!initialized) {
         return (
-            <div className="height-528 position-re">
+            <div className="configuration-view height-528 position-re">
                 <div className="text-align-center absolute-center">
                     <Spin />
                     <div>{i18n._('key-Workspace/Page-Loading...')}</div>
@@ -400,7 +400,7 @@ const ConfigurationView: React.FC<{}> = () => {
     }
 
     return (
-        <div>
+        <div className="configuration-view">
             {/* Stack Selection */}
             {
                 isDual && (

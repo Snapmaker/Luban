@@ -33,8 +33,8 @@ export type TSize = {
 }
 
 export type ExtruderConfig = {
-    infill: '0' | '1' | '2',
-    shell: '0' | '1' | '2',
+    infill: '0' | '1' | 'mixed',
+    shell: '0' | '1' | 'mixed',
 };
 
 export type ModelLoadedInGroup = {

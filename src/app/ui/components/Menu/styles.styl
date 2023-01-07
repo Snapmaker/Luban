@@ -2,7 +2,7 @@
 
 :global(ul.ant-dropdown-menu) {
     border-radius: 8px;
-    box-shadow 0 2px 8px 0 #86868B42;
+    box-shadow: 0 2px 8px 0 #86868B42;
 }
 
 :global(li.ant-dropdown-menu-item):hover {
@@ -20,4 +20,11 @@
 :global(li.ant-dropdown-menu-item-disabled):hover {
     background-color: $white;
     color: $black-5;
+}
+
+// item group
+:global(li.ant-dropdown-menu-item-group) {
+    :global(.ant-dropdown-menu-item-group-title) {
+        color: $black-1;
+    }
 }

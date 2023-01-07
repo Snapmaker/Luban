@@ -280,35 +280,6 @@ const ParametersTableView: React.FC<TProps> = (props) => {
         }
     }, [selectCategory, selectProfile]);
 
-    /*
-    TODO: Move to PresetContent.jsx, remove this function after checking again
-    function parameterConverter(key: string): DisplayConfig | null {
-        const settingItem = settings[key];
-
-        // check visible
-        if (!isNil(settingItem.visible) && (!settingItem.visible || settingItem.visible === 'false')) {
-            return null;
-        }
-
-        // check filters
-        let bypassFilter = true;
-        for (const filter of filters) {
-            if (!settingItem.filter.includes(filter)) {
-                bypassFilter = false;
-                break;
-            }
-        }
-        if (!bypassFilter) {
-            return null;
-        }
-
-        return {
-            key,
-            value: settings[key].default_value,
-        };
-    }
-    */
-
     const displayConfigsGroups = calculateDisplayConfigsGroups(
         flatten ? ParametersViewType.ListView : ParametersViewType.TreeView,
         optionConfigGroup,

@@ -7,7 +7,11 @@ import { pickAvailablePresetModels } from '../../utils/profileManager';
 import { RootState } from '../../../flux/index.def';
 import { actions as printingActions } from '../../../flux/printing';
 
-
+/**
+ * Initialize preset selections.
+ *
+ * TODO: Refactor this to flux.
+ */
 const PresetInitialization: React.FC = () => {
     const dispatch = useDispatch();
 
