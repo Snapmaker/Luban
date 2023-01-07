@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React, { useState, useMemo } from 'react';
+import { BOTH_EXTRUDER_MAP_NUMBER } from '../../../constants';
 
 import i18n from '../../../lib/i18n';
 import { normalizeNameDisplay } from '../../../lib/normalize-range';
@@ -16,8 +17,8 @@ export const whiteHex = '#ffffff';
 
 function getExtrudersUsed(numbers) {
     const s = new Set(numbers);
-    if (s.has('2')) {
-        s.delete('2');
+    if (s.has(BOTH_EXTRUDER_MAP_NUMBER)) {
+        s.delete(BOTH_EXTRUDER_MAP_NUMBER);
         s.add('0');
         s.add('1');
     }
@@ -93,46 +94,10 @@ export const renderExtruderIcon = (extrudersUsed, colorsUsed) => {
     );
 };
 
-export const extruderOverlayMenu = ({ type, colorL, colorR, onChange, selectExtruder = null }) => {
-    return (
-        <Menu selectedKeys={selectExtruder ? [selectExtruder] : []}>
-            <Menu.Item
-                key="L"
-                onClick={() => onChange({ type, direction: '0' })}
-            >
-                <div className="sm-flex justify-space-between">
-                    <span className="display-inline width-96 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Extruder L')}</span>
-                    {colorL !== whiteHex ? (
-                        <SvgIcon name="Extruder" size={24} color={colorL} type={['static']} />
-                    ) : (
-                        <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
-                    )}
-                </div>
-            </Menu.Item>
-            <Menu.Item
-                key="R"
-                onClick={() => onChange({ type, direction: '1' })}
-            >
-                <div className="sm-flex justify-space-between">
-                    <span className="display-inline width-96 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Extruder R')}</span>
-                    {colorR !== whiteHex ? (
-                        <SvgIcon name="Extruder" size={24} color={colorR} type={['static']} />
-                    ) : (
-                        <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
-                    )}
-                </div>
-            </Menu.Item>
-        </Menu>
-    );
-};
-
 const extruderOverlayMenu2 = ({ colorL, colorR, shell = '0', infill = '0', onChange }) => {
     const selectedKeys = [];
 
-    const multiple = shell === infill ? shell : 'mixed';
-
-    shell = shell !== '2' ? shell : 'mixed';
-    infill = infill !== '2' ? infill : 'mixed';
+    const multiple = shell === infill ? shell : BOTH_EXTRUDER_MAP_NUMBER;
 
     selectedKeys.push(`multiple-${multiple}`);
     selectedKeys.push(`shell-${shell}`);
@@ -192,7 +157,7 @@ const extruderOverlayMenu2 = ({ colorL, colorR, shell = '0', infill = '0', onCha
     }
 
     return (
-        <Menu selectedKeys={selectedKeys}>
+        <Menu className={styles['dropdown-menu-horizontal']} selectedKeys={selectedKeys}>
             {
                 generateGroup({
                     title: i18n._('key-Printing/LeftBar-Selected Models'),
