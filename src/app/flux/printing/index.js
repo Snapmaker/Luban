@@ -1200,7 +1200,7 @@ export const actions = {
                 if (!outOfMemoryForRenderGcode) {
                     const object3D = gcodeBufferGeometryToObj3d('3DP', bufferGeometry, null, {
                         ...gcodeEntity,
-                        extruderColors
+                        extruderColors,
                     });
                     gcodeLineGroup.add(object3D);
 
@@ -2230,6 +2230,10 @@ export const actions = {
                 ...newExtruderLDefinition,
                 definitionId: 'snapmaker_extruder_0'
             });
+
+            dispatch(actions.updateState({
+                extruderLDefinition: newExtruderLDefinition,
+            }));
         }
 
         let newExtruderRDefinition = extruderRDefinition;
@@ -2245,6 +2249,10 @@ export const actions = {
                 ...newExtruderRDefinition,
                 definitionId: 'snapmaker_extruder_1'
             });
+
+            dispatch(actions.updateState({
+                extruderRDefinition: newExtruderRDefinition,
+            }));
         }
 
         definitionManager.calculateDependencies(
@@ -2324,10 +2332,10 @@ export const actions = {
         // save line width and layer height for gcode preview
         dispatch(actions.updateState({
             gcodeEntity: {
-                extruderLlineWidth0: extruderLDefinition.settings.wall_line_width_0.default_value,
-                extruderLlineWidth: extruderLDefinition.settings.wall_line_width_x.default_value,
-                extruderRlineWidth0: extruderRDefinition?.settings.wall_line_width_0.default_value || 0.4,
-                extruderRlineWidth: extruderRDefinition?.settings.wall_line_width_x.default_value || 0.4,
+                extruderLlineWidth0: qualityPresets[LEFT_EXTRUDER].settings.wall_line_width_0.default_value,
+                extruderLlineWidth: qualityPresets[LEFT_EXTRUDER].settings.wall_line_width_x.default_value,
+                extruderRlineWidth0: qualityPresets[RIGHT_EXTRUDER]?.settings.wall_line_width_0.default_value || 0.4,
+                extruderRlineWidth: qualityPresets[RIGHT_EXTRUDER]?.settings.wall_line_width_x.default_value || 0.4,
                 layerHeight0: finalDefinition.settings.layer_height_0.default_value,
                 layerHeight: finalDefinition.settings.layer_height.default_value,
             }
