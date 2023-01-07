@@ -1,6 +1,6 @@
+import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React from 'react';
-import classNames from 'classnames';
 
 import { PAGE_EDITOR, PAGE_PROCESS } from '../../../constants';
 import { actions as editorActions } from '../../../flux/editor';
@@ -20,7 +20,6 @@ import LaserParamsWidget from '../../widgets/LaserParams';
 import LaserTestFocusWidget from '../../widgets/LaserTestFocus';
 import MacroWidget from '../../widgets/Macro';
 import MarlinWidget from '../../widgets/Marlin';
-import PrintingConfigurationsWidget from '../../widgets/PrintingConfigurations';
 import PrintingMaterialWidget from '../../widgets/PrintingMaterial';
 import PrintingOutputWidget from '../../widgets/PrintingOutput';
 import PrintingVisualizer from '../../widgets/PrintingVisualizer';
@@ -44,7 +43,6 @@ const allWidgets = {
     'wifi-transport': WifiTransport,
     'enclosure': EnclosureWidget,
     '3dp-material': PrintingMaterialWidget,
-    '3dp-configurations': PrintingConfigurationsWidget,
     '3dp-output': PrintingOutputWidget,
     'laser-params': LaserParamsWidget,
     'laser-test-focus': LaserTestFocusWidget,
