@@ -2147,17 +2147,20 @@ export const actions = {
             let meshObject = find(modelGroup.object.children, {
                 uuid: model.meshObject.uuid
             });
-            meshObject = meshObject.clone();
-            meshObject.material = materialNormal;
-            if (model instanceof ThreeGroup) {
-                meshObject.children.forEach((mesh) => {
-                    mesh.material = materialNormal;
-                    mesh.clear(); // clear support mesh
-                });
-            } else {
-                meshObject.clear(); // clear support mesh
+
+            if (meshObject) {
+                meshObject = meshObject.clone();
+                meshObject.material = materialNormal;
+                if (model instanceof ThreeGroup) {
+                    meshObject.children.forEach((mesh) => {
+                        mesh.material = materialNormal;
+                        mesh.clear(); // clear support mesh
+                    });
+                } else {
+                    meshObject.clear(); // clear support mesh
+                }
+                modelGroup.grayModeObject.add(meshObject);
             }
-            modelGroup.grayModeObject.add(meshObject);
         });
     },
 
