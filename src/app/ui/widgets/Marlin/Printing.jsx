@@ -1,13 +1,7 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
 import { capitalize } from 'lodash';
-import Anchor from '../../components/Anchor';
-import { Button } from '../../components/Buttons';
-import i18n from '../../../lib/i18n';
-import { actions as machineActions } from '../../../flux/machine';
-import JogDistance from './JogDistance';
-import WorkSpeed from './WorkSpeed';
+import PropTypes from 'prop-types';
+import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
 import {
     CONNECTION_BED_TEMPERATURE,
     CONNECTION_LOAD_FILAMENT,
@@ -23,8 +17,14 @@ import {
     WORKFLOW_STATUS_RUNNING,
 } from '../../../constants';
 import { isDualExtruder } from '../../../constants/machines';
+import { actions as machineActions } from '../../../flux/machine';
 import { controller } from '../../../lib/controller';
+import i18n from '../../../lib/i18n';
+import Anchor from '../../components/Anchor';
+import { Button } from '../../components/Buttons';
+import JogDistance from './JogDistance';
 import ParamsWrapper from './ParamsWrapper';
+import WorkSpeed from './WorkSpeed';
 
 class Printing extends PureComponent {
     static propTypes = {
@@ -193,7 +193,7 @@ class Printing extends PureComponent {
             <div>
                 {isDualExtruder(printingToolhead) && (
                     <div>
-                        <div>
+                        <div className="sm-flex justify-space-between">
                             <span>{i18n._('key-unused-Current Work Nozzle')}</span>
                             <span>{i18n._(`key-setting/${capitalize(currentWorkNozzle)}-Nozzle`)}</span>
                         </div>
@@ -205,7 +205,9 @@ class Printing extends PureComponent {
                 )}
 
                 <ParamsWrapper
-                    handleSubmit={(value) => { this.actions.updateNozzleTemp(LEFT_EXTRUDER_MAP_NUMBER, value); }}
+                    handleSubmit={(value) => {
+                        this.actions.updateNozzleTemp(LEFT_EXTRUDER_MAP_NUMBER, value);
+                    }}
                     initValue={nozzleTargetTemperature}
                     title={nozzleTempratureTitle}
                     suffix="°C"
@@ -249,7 +251,9 @@ class Printing extends PureComponent {
 
                 {isDualExtruder(printingToolhead) && (
                     <ParamsWrapper
-                        handleSubmit={(value) => { this.actions.updateNozzleTemp(RIGHT_EXTRUDER_MAP_NUMBER, value); }}
+                        handleSubmit={(value) => {
+                            this.actions.updateNozzleTemp(RIGHT_EXTRUDER_MAP_NUMBER, value);
+                        }}
                         initValue={this.props.nozzleRightTargetTemperature}
                         title={nozzleRightTempratureTitle}
                         suffix="°C"
@@ -294,7 +298,9 @@ class Printing extends PureComponent {
 
 
                 <ParamsWrapper
-                    handleSubmit={(value) => { this.actions.updateHeatedBedTemp(value); }}
+                    handleSubmit={(value) => {
+                        this.actions.updateHeatedBedTemp(value);
+                    }}
                     initValue={heatedBedTargetTemperature}
                     title={i18n._('key-Workspace/Marlin-Heated Bed Temp')}
                     suffix="°C"
@@ -376,7 +382,8 @@ class Printing extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
     const workspace = state.workspace;
-    const { isConnected,
+    const {
+        isConnected,
         connectionType,
         nozzleTemperature,
         nozzleTargetTemperature,
