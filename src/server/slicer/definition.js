@@ -92,6 +92,7 @@ export class DefinitionLoader {
             return true;
         } catch (e) {
             log.error(`Failed to read JSON file: ${filePath}`);
+            log.error(e);
             return false;
         }
     }
