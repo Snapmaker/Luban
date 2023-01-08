@@ -13,6 +13,7 @@ import { PRESET_CATEGORY_CUSTOM } from '../../constants/preset';
 import { PrintMode } from '../../constants/print-base';
 import i18n from '../../lib/i18n';
 import PresetDefinitionModel from './PresetDefinitionModel';
+import scene from '../../scene/Scene';
 
 const nozzleSizeRelationSettingsKeys = [
     'wall_line_width_0',
@@ -31,14 +32,14 @@ const extruderRelationSettingsKeys = [
     'machine_nozzle_size',
 ];
 
-function resolveMachineDefinition(item, changedArray = [], changedArrayWithoutExtruder = [], skipValues = false) {
+function resolveMachineDefinition(item, changedArray = [], changedArrayWithoutExtruder = []) {
     if (MATERIAL_REGEX.test(item.definitionId)) {
-        resolveParameterValues(item, changedArray, skipValues);
+        resolveParameterValues(item, changedArray);
     } else if (QUALITY_REGEX.test(item.definitionId)) {
         if (item.isDefault && item.definitionId !== 'quality.normal_other_quality') {
-            resolveParameterValues(item, changedArrayWithoutExtruder, skipValues);
+            resolveParameterValues(item, changedArrayWithoutExtruder);
         } else {
-            resolveParameterValues(item, changedArray, skipValues);
+            resolveParameterValues(item, changedArray);
         }
     }
 }
@@ -233,7 +234,7 @@ class DefinitionManager {
         );
 
         const result = definitions.map((definition) => {
-            resolveMachineDefinition(definition, this.changedArray, this.changedArrayWithoutExtruder, true);
+            resolveMachineDefinition(definition, this.changedArray, this.changedArrayWithoutExtruder);
             return definition;
         }).map(this.fillCustomCategory);
 
@@ -248,7 +249,7 @@ class DefinitionManager {
         const res = await api.profileDefinitions.createDefinition(this.headType, actualDefinition, this.configPathname);
 
         const newDefinition = res.body.definition;
-        resolveMachineDefinition(newDefinition, this.changedArray, this.changedArrayWithoutExtruder, true);
+        resolveMachineDefinition(newDefinition, this.changedArray, this.changedArrayWithoutExtruder);
         return newDefinition;
     }
 
@@ -897,6 +898,16 @@ class DefinitionManager {
             || printTemp;
         const bedTempLayer0 = settings.material_bed_temperature_layer_0.default_value;
 
+        // Check if we are using inner circuit bed heating or full area bed heating
+        // M140 M0: inner circuit
+        // M140 M1: full area circuit
+        // M140: using the last setting
+        const modelGroup = scene.getModelGroup();
+        let hasOversteppedHotArea = false;
+        for (const model of modelGroup.getModels()) {
+            hasOversteppedHotArea |= !!model.hasOversteppedHotArea;
+        }
+
         // ;--- Start G-code Begin ---
         // M205 J0.05
         // M201 X10000 Y10000 Z100 E10000
@@ -916,7 +927,8 @@ class DefinitionManager {
         // G92 E0
         // G1 Z5 F6000
         // ;--- Start G-code End ---
-        // TODO: Bed considering inner/outer circuit
+        const m140Command = hasOversteppedHotArea ? 'M140 M1' : 'M140 M0';
+        const m190Command = hasOversteppedHotArea ? 'M190 M1' : 'M190 M0';
         const gcode = [
             ';--- Start G-code Begin ---',
             'M205 J0.05',
@@ -925,9 +937,9 @@ class DefinitionManager {
             'M900 T0 K0.035',
             'M900 T1 K0.035',
             `M104 S${printTempLayer0} ;Set Hotend Temperature`,
-            `M140 S${bedTempLayer0} ;Set Bed Temperature`,
+            `${m140Command} S${bedTempLayer0} ;Set Bed Temperature`,
             `M109 S${printTempLayer0} ;Wait Hotend Temperature`,
-            `M190 S${bedTempLayer0} ;Set Bed Temperature`,
+            `${m190Command} S${bedTempLayer0} ;Set Bed Temperature`,
             'M107',
             'M107 P1',
             'G28',
