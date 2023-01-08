@@ -31,14 +31,14 @@ const extruderRelationSettingsKeys = [
     'machine_nozzle_size',
 ];
 
-function resolveMachineDefinition(item, changedArray = [], changedArrayWithoutExtruder = [], skipValues = false) {
+function resolveMachineDefinition(item, changedArray = [], changedArrayWithoutExtruder = []) {
     if (MATERIAL_REGEX.test(item.definitionId)) {
-        resolveParameterValues(item, changedArray, skipValues);
+        resolveParameterValues(item, changedArray);
     } else if (QUALITY_REGEX.test(item.definitionId)) {
         if (item.isDefault && item.definitionId !== 'quality.normal_other_quality') {
-            resolveParameterValues(item, changedArrayWithoutExtruder, skipValues);
+            resolveParameterValues(item, changedArrayWithoutExtruder);
         } else {
-            resolveParameterValues(item, changedArray, skipValues);
+            resolveParameterValues(item, changedArray);
         }
     }
 }
@@ -233,7 +233,7 @@ class DefinitionManager {
         );
 
         const result = definitions.map((definition) => {
-            resolveMachineDefinition(definition, this.changedArray, this.changedArrayWithoutExtruder, true);
+            resolveMachineDefinition(definition, this.changedArray, this.changedArrayWithoutExtruder);
             return definition;
         }).map(this.fillCustomCategory);
 
@@ -248,7 +248,7 @@ class DefinitionManager {
         const res = await api.profileDefinitions.createDefinition(this.headType, actualDefinition, this.configPathname);
 
         const newDefinition = res.body.definition;
-        resolveMachineDefinition(newDefinition, this.changedArray, this.changedArrayWithoutExtruder, true);
+        resolveMachineDefinition(newDefinition, this.changedArray, this.changedArrayWithoutExtruder);
         return newDefinition;
     }
 
