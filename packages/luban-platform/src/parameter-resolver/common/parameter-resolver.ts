@@ -323,8 +323,8 @@ export function resolveParameterValues(definition, modifiedParameterItems: Modif
 
     const affectedParameters = getAffectedParameters(valueGraph, modifiedParameterItems.map(item => item[0]));
 
-    console.log(`modified = ${modifiedParameterItems}`);
-    console.log(`affected = ${affectedParameters}`);
+    // console.log('modified =', modifiedParameterItems);
+    // console.log('affected =', affectedParameters);
 
     // calc value & default_value
     for (const key of affectedParameters) {
