@@ -13,6 +13,7 @@ import { PRESET_CATEGORY_CUSTOM } from '../../constants/preset';
 import { PrintMode } from '../../constants/print-base';
 import i18n from '../../lib/i18n';
 import PresetDefinitionModel from './PresetDefinitionModel';
+import scene from '../../scene/Scene';
 
 const nozzleSizeRelationSettingsKeys = [
     'wall_line_width_0',
@@ -897,6 +898,16 @@ class DefinitionManager {
             || printTemp;
         const bedTempLayer0 = settings.material_bed_temperature_layer_0.default_value;
 
+        // Check if we are using inner circuit bed heating or full area bed heating
+        // M140 M0: inner circuit
+        // M140 M1: full area circuit
+        // M140: using the last setting
+        const modelGroup = scene.getModelGroup();
+        let hasOversteppedHotArea = false;
+        for (const model of modelGroup.getModels()) {
+            hasOversteppedHotArea |= !!model.hasOversteppedHotArea;
+        }
+
         // ;--- Start G-code Begin ---
         // M205 J0.05
         // M201 X10000 Y10000 Z100 E10000
@@ -916,7 +927,8 @@ class DefinitionManager {
         // G92 E0
         // G1 Z5 F6000
         // ;--- Start G-code End ---
-        // TODO: Bed considering inner/outer circuit
+        const m140Command = hasOversteppedHotArea ? 'M140 M1' : 'M140 M0';
+        const m190Command = hasOversteppedHotArea ? 'M190 M1' : 'M190 M0';
         const gcode = [
             ';--- Start G-code Begin ---',
             'M205 J0.05',
@@ -925,9 +937,9 @@ class DefinitionManager {
             'M900 T0 K0.035',
             'M900 T1 K0.035',
             `M104 S${printTempLayer0} ;Set Hotend Temperature`,
-            `M140 S${bedTempLayer0} ;Set Bed Temperature`,
+            `${m140Command} S${bedTempLayer0} ;Set Bed Temperature`,
             `M109 S${printTempLayer0} ;Wait Hotend Temperature`,
-            `M190 S${bedTempLayer0} ;Set Bed Temperature`,
+            `${m190Command} S${bedTempLayer0} ;Set Bed Temperature`,
             'M107',
             'M107 P1',
             'G28',
