@@ -965,6 +965,15 @@ export const actions = {
         machineStore.set('machine.series', series);
         machineStore.set('machine.toolHead', toolHead);
 
+        function chooseMaterial(materialDefinitions, materialId) {
+            const material = materialDefinitions.find((item) => materialId === item.definitionId);
+            if (material) {
+                return materialId;
+            }
+
+            return materialDefinitions[0].definitionId;
+        }
+
         const oldToolHead = getState().machine.toolHead;
         const oldSeries = getState().machine.series;
         if (oldSeries !== series || !_.isEqual(oldToolHead, toolHead)) {
@@ -979,13 +988,8 @@ export const actions = {
 
             let { defaultMaterialId, defaultMaterialIdRight } = getState().printing;
 
-            defaultMaterialId = allMaterialDefinitions.find((item) => {
-                return defaultMaterialId === item.definitionId;
-            }) ? defaultMaterialId : allMaterialDefinitions[0].definitionId;
-
-            defaultMaterialIdRight = allMaterialDefinitions.find((item) => {
-                return defaultMaterialIdRight === item.definitionId;
-            }) ? defaultMaterialIdRight : allMaterialDefinitions[0].definitionId;
+            defaultMaterialId = chooseMaterial(allMaterialDefinitions, defaultMaterialId);
+            defaultMaterialIdRight = chooseMaterial(allMaterialDefinitions, defaultMaterialIdRight);
 
             const materialPresetModels = allMaterialDefinitions.map(definition => new PresetDefinitionModel(definition));
 

@@ -1927,12 +1927,17 @@ export const actions = {
     },
 
     updateDefaultMaterialId: (materialId, stackId = LEFT_EXTRUDER) => (dispatch) => {
-        const updateKey = stackId === LEFT_EXTRUDER ? 'defaultMaterialId' : 'defaultMaterialIdRight';
-
         dispatch(actions.updateSavedPresetIds(PRINTING_MANAGER_TYPE_MATERIAL, materialId, stackId));
-        dispatch(actions.updateState({
-            [updateKey]: materialId,
-        }));
+
+        if (stackId === LEFT_EXTRUDER) {
+            dispatch(actions.updateState({
+                defaultMaterialId: materialId,
+            }));
+        } else {
+            dispatch(actions.updateState({
+                defaultMaterialIdRight: materialId,
+            }));
+        }
         dispatch(actions.validateActiveQualityPreset(stackId));
         dispatch(actions.applyProfileToAllModels());
     },
