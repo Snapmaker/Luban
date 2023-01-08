@@ -521,7 +521,7 @@ function ProfileManager({
                 >
                     <Modal.Header>
                         <div className={classNames('heading-3')}>
-                            {i18n._(managerTitle)}
+                            {managerTitle}
                         </div>
                     </Modal.Header>
                     <Modal.Body>

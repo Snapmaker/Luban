@@ -139,7 +139,7 @@ const ParameterPicker: React.FC<Props> = (props) => {
                                         setActiveCate(index);
                                     }}
                                 >
-                                    <span className="sm-parameter-header__title">{i18n._(`key-Definition/Catagory-${category}`)}</span>
+                                    <span className="sm-parameter-header__title">{i18n._(`key-Definition/Category-${category}`)}</span>
                                 </Anchor>
                             </div>
                         );
@@ -186,7 +186,7 @@ const ParameterPicker: React.FC<Props> = (props) => {
                                                         type={['static']}
                                                     />
                                                     <span className="margin-left-2">
-                                                        {i18n._(`key-Definition/Catagory-${category}`)}
+                                                        {i18n._(`key-Definition/Category-${category}`)}
                                                     </span>
                                                 </div>
                                             )

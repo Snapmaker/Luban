@@ -418,21 +418,23 @@ i18n._('key-Modal/Common-Ignore');
 i18n._('key-Modal/Common-Do not ask me again');
 i18n._('key-Printing/Repair');
 
-// Definition Catagory
-i18n._('key-Definition/Catagory-material_info');
-i18n._('key-Definition/Catagory-heating_and_cooling');
-i18n._('key-Definition/Catagory-flow');
-i18n._('key-Definition/Catagory-Retraction');
-i18n._('key-Definition/Catagory-first_layer_optimization');
-i18n._('key-Definition/Catagory-quality');
-i18n._('key-Definition/Catagory-printing_speed');
-i18n._('key-Definition/Catagory-model_structure');
-i18n._('key-Definition/Catagory-support');
-i18n._('key-Definition/Catagory-platform_adhesion');
-i18n._('key-Definition/Catagory-dual');
-i18n._('key-Definition/Catagory-path_optimization');
-i18n._('key-Definition/Catagory-model_structure_optimization');
-i18n._('key-Definition/Catagory-unclassified');
+// Definition Category
+i18n._('key-Definition/Category-material_info');
+i18n._('key-Definition/Category-heating_and_cooling');
+i18n._('key-Definition/Category-flow');
+i18n._('key-Definition/Category-Retraction');
+i18n._('key-Definition/Category-first_layer_optimization');
+i18n._('key-Definition/Category-quality');
+i18n._('key-Definition/Category-printing_speed');
+i18n._('key-Definition/Category-model_structure');
+i18n._('key-Definition/Category-support');
+i18n._('key-Definition/Category-support_adv');
+i18n._('key-Definition/Category-platform_adhesion');
+i18n._('key-Definition/Category-dual');
+i18n._('key-Definition/Category-path_optimization');
+i18n._('key-Definition/Category-model_structure_optimization');
+i18n._('key-Definition/Category-unclassified');
+
 i18n._('key-2D/Model_basename-Text');
 i18n._('key-2D/Model_basename-Shape');
 i18n._('key-Workspace/LaserStartJob-manual_mode_description');
