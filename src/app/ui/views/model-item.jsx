@@ -14,7 +14,7 @@ const objectListPicture = 'ObjectListPicture';
 
 const ModelIcon = (props) => {
     const { model, disabled, name } = props;
-    const Icon = (
+    return (
         <SvgIcon
             type={['static']}
             color={model.needRepair ? '#FFA940' : ''}
@@ -23,9 +23,8 @@ const ModelIcon = (props) => {
             disabled={disabled}
         />
     );
-
-    return Icon;
 };
+
 ModelIcon.propTypes = {
     model: PropTypes.object.isRequired,
     disabled: PropTypes.bool.isRequired,
