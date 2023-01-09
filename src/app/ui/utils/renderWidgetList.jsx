@@ -18,11 +18,11 @@ export default function renderWidgetList(tab, container, widgetIds, Widgets, lis
         <div
             className={classNames(
                 'scroll-bar-none',
-                `${widgetProps.headType === '3dp' ? 'threedp' : widgetProps.headType}-widget-list-intro`,
                 'overflow-y-auto',
+                `${widgetProps.headType}-widget-list-intro`,
             )}
             style={{
-                height: `${widgetProps.headType === '3dp' ? 'calc(100vh - 185px)' : `${widgetProps.headType === 'cnc' || widgetProps.headType === 'laser' ? 'calc(100vh - 230px)' : 'auto'}`}`
+                height: 'auto'
             }}
         >
             <WidgetList

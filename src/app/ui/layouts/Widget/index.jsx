@@ -84,7 +84,10 @@ class WidgetContainer extends PureComponent {
         return (
             <Widget
                 className={classNames(
-                    widgetId !== '3dp-configurations' ? 'border-bottom-normal padding-bottom-16' : 'padding-bottom-16',
+                    'padding-bottom-16',
+                    {
+                        'border-bottom-normal': !['toolpath-list', 'laser-params'].includes(widgetId),
+                    }
                 )}
                 style={{
                     display: this.state.display ? 'block' : 'none',
