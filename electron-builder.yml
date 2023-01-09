@@ -31,7 +31,6 @@ publish:
 # platforms and targets
 #
 mac:
-    artifactName: ${productName}-${version}-${arch}.${ext}
     category: public.app-category.productivity
     target:
         - dmg

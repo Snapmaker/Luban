@@ -189,12 +189,12 @@ jobs:
                   APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
 
             - name: Release on Github
-                  uses: softprops/action-gh-release@v1
-                  with:
-                      files: |
-                          ./output/*.zip
-                          ./output/*.dmg
-                          ./output/latest-mac.yml
+              uses: softprops/action-gh-release@v1
+              with:
+                  files: |
+                      ./output/*.zip
+                      ./output/*.dmg
+                      ./output/latest-mac.yml
 
             - name: Init OSS
               if: github.repository == 'Snapmaker/Luban'
