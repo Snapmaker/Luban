@@ -74,6 +74,7 @@ class WidgetContainer extends PureComponent {
     render() {
         // const { component: Component, minimized, fullscreen } = this.props;
         const { widgetId, component: Component, minimized, fullscreen, widgetProps, controlActions } = this.props;
+
         const state = {
             title: this.state.title,
             minimized: minimized,

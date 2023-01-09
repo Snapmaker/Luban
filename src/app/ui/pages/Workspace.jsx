@@ -271,8 +271,6 @@ function Workspace({ isPopup, onClose, style, className }) {
         );
     };
 
-    const widgetProps = {};
-
     const unsupported = getUnsupportedWidgets(activeMachine);
 
     const leftWidgetNames = primaryWidgets.filter((widgetName) => {
@@ -286,8 +284,8 @@ function Workspace({ isPopup, onClose, style, className }) {
         <div style={style} className={classNames(className)}>
             <WorkspaceLayout
                 renderMainToolBar={renderMainToolBar}
-                renderLeftView={() => renderWidgetList('workspace', 'left', leftWidgetNames, allWidgets, listActions, widgetProps)}
-                renderRightView={() => renderWidgetList('workspace', 'right', rightWidgetNames, allWidgets, listActions, widgetProps, controlActions)}
+                renderLeftView={() => renderWidgetList('workspace', 'left', leftWidgetNames, allWidgets, listActions, {})}
+                renderRightView={() => renderWidgetList('workspace', 'right', rightWidgetNames, allWidgets, listActions, {}, controlActions)}
                 updateTabContainer={actions.updateTabContainer}
             >
                 <Dropzone

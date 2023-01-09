@@ -189,8 +189,12 @@ class SocketHttp {
                             headType = HEAD_LASER;
                             toolHead = LEVEL_TWO_POWER_LASER_FOR_SM2;
                             break;
+                        case 5:
+                            headType = HEAD_PRINTING;
+                            toolHead = SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2;
+                            break;
                         default:
-                            headType = data.headType;
+                            headType = HEAD_PRINTING;
                             toolHead = undefined;
                     }
                     this.state.headType = headType;
@@ -399,6 +403,7 @@ class SocketHttp {
             };
             if (waitConfirm) {
                 waitConfirm = false;
+
                 this.socket && this.socket.emit('connection:connected', {
                     state,
                     err: state?.err,
