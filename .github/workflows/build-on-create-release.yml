@@ -177,6 +177,25 @@ jobs:
 
             - run: npm run build
 
+            # ----------------------------------------------------------------
+            # Build macOS x64 & arm64
+            # ----------------------------------------------------------------
+            - name: Build macOS Binaries
+              run: npm run build:mac
+              env:
+                  CSC_LINK: ${{ secrets.CSC_LINK_MACOS }}
+                  CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD_MACOS }}
+                  APPLEID: ${{ secrets.APPLEID }}
+                  APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
+
+            - name: Release on Github
+                  uses: softprops/action-gh-release@v1
+                  with:
+                      files: |
+                          ./output/*.zip
+                          ./output/*.dmg
+                          ./output/latest-mac.yml
+
             - name: Init OSS
               if: github.repository == 'Snapmaker/Luban'
               uses: yizhoumo/setup-ossutil@v1
@@ -185,69 +204,6 @@ jobs:
                   endpoint: ${{ secrets.OSS_ENDPOINT }}
                   access-key-id: ${{ secrets.OSS_ACCESS_KEY_ID }}
                   access-key-secret: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
-
-            # ----------------------------------------------------------------
-            # Build macOS x64
-            # ----------------------------------------------------------------
-            - name: Build macOS Binaries
-              run: npm run build:mac-x64
-              env:
-                  CSC_LINK: ${{ secrets.CSC_LINK_MACOS }}
-                  CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD_MACOS }}
-                  APPLEID: ${{ secrets.APPLEID }}
-                  APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
-
-            # https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
-            - name: Setting Environment Variables
-              run: |
-                  PRODUCT_NAME="Snapmaker Luban"
-                  PACKAGE_NAME="Snapmaker-Luban"
-                  PACKAGE_VERSION=`node -e "console.log(require('./src/package.json').version)"`
-                  RELEASE=${PACKAGE_NAME}-${PACKAGE_VERSION}
-
-                  INSTALLER_ASSET_PATH="./output/${PRODUCT_NAME}-${PACKAGE_VERSION}-x64.dmg"
-                  INSTALLER_ASSET_NAME="${RELEASE}-mac-x64.dmg"
-
-                  ZIP_ASSET_PATH="./output/${PRODUCT_NAME}-${PACKAGE_VERSION}-x64.zip"
-                  ZIP_ASSET_NAME="${RELEASE}-x64.zip"
-
-                  echo "INSTALLER_ASSET_PATH=$INSTALLER_ASSET_PATH" >> $GITHUB_ENV
-                  echo "INSTALLER_ASSET_NAME=$INSTALLER_ASSET_NAME" >> $GITHUB_ENV
-                  echo "ZIP_ASSET_PATH=$ZIP_ASSET_PATH" >> $GITHUB_ENV
-                  echo "ZIP_ASSET_NAME=$ZIP_ASSET_NAME" >> $GITHUB_ENV
-
-            - name: Upload Release Asset - macOS DMG Installer
-              id: upload-release-asset-dmg
-              uses: actions/upload-release-asset@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                  upload_url: ${{ github.event.release.upload_url }}
-                  asset_path: ${{ env.INSTALLER_ASSET_PATH }}
-                  asset_name: ${{ env.INSTALLER_ASSET_NAME }}
-                  asset_content_type: application/octet-stream
-
-            - name: Upload Release Asset - YAML (Auto Updates)
-              id: upload-release-asset-yaml
-              uses: actions/upload-release-asset@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                  upload_url: ${{ github.event.release.upload_url }}
-                  asset_path: ./output/latest-mac.yml
-                  asset_name: latest-mac.yml
-                  asset_content_type: text/plain
-
-            - name: Upload Release Asset - macOS ZIP (Auto Updates)
-              id: upload-release-asset-zip
-              uses: actions/upload-release-asset@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                  upload_url: ${{ github.event.release.upload_url }}
-                  asset_path: ${{ env.ZIP_ASSET_PATH }}
-                  asset_name: ${{ env.ZIP_ASSET_NAME }}
-                  asset_content_type: application/octet-stream
 
             - name: Upload Release macOS Installer OSS
               if: github.repository == 'Snapmaker/Luban'
