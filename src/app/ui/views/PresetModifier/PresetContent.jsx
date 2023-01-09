@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { cloneDeep, includes, isNil } from 'lodash';
+import { includes, isUndefined } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -168,14 +168,10 @@ const PresetContent = (
 
 
     function onChangePresetValue(key, value) {
-        const newPresetModel = cloneDeep(presetModel);
-        newPresetModel.settings[key].default_value = value;
-        setPresetModel(newPresetModel);
-
         dispatch(
             printingActions.updateCurrentDefinition({
                 direction: selectedStackId,
-                definitionModel: newPresetModel,
+                definitionModel: presetModel,
                 changedSettingArray: [[key, value]],
                 managerDisplayType: PRINTING_MANAGER_TYPE_QUALITY,
             })
@@ -189,7 +185,7 @@ const PresetContent = (
         const settingItem = presetModel.settings[key];
 
         // check visible
-        if (!isNil(settingItem.visible) && (!settingItem.visible || settingItem.visible === 'false')) {
+        if (!isUndefined(settingItem.visible) && !settingItem.visible) {
             return null;
         }
 

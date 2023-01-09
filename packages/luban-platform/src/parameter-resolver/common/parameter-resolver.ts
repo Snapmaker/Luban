@@ -290,6 +290,11 @@ function getAffectedParameters(dependencyGraph: DependencyGraph, modifiedParamet
 export function resolveParameterValues(definition, modifiedParameterItems: ModifyParameterItem[], skipValues = false) {
     const context = getContext(definition);
 
+    // update context before calculating
+    for (const key of parameterMap.keys()) {
+        context.context[key] = definition.settings[key].default_value;
+    }
+
     // Resolve min, max, visible, mismatch
     for (const [key, parameterItem] of parameterMap) {
         try {
@@ -319,7 +324,6 @@ export function resolveParameterValues(definition, modifiedParameterItems: Modif
             console.error(e, parameterItem.visible);
         }
     }
-
 
     const affectedParameters = getAffectedParameters(valueGraph, modifiedParameterItems.map(item => item[0]));
 
