@@ -1,15 +1,14 @@
-import React, { useEffect } from 'react';
-import PropTypes from 'prop-types';
-
-import './modal.styl';
-import { filter } from 'lodash';
 import { Modal } from 'antd';
 import classNames from 'classnames';
-import Title from './modalTitle';
-import styles from './styles.styl';
+import { filter } from 'lodash';
+import PropTypes from 'prop-types';
+import React, { useEffect } from 'react';
+
+import './modal.styl';
 import Body from './modalBody';
 import Footer from './modalFooter';
-import UniApi from '../../../lib/uni-api';
+import Title from './modalTitle';
+import styles from './styles.styl';
 
 
 const bodyDom = document.querySelector('body');
@@ -37,10 +36,8 @@ const ModalWrapper = React.memo((
     }
 ) => {
     useEffect(() => {
-        UniApi.Event.emit('appbar-menu:disable');
         blockScrolling();
         return () => {
-            UniApi.Event.emit('appbar-menu:enable');
             unblockScrolling();
         };
     }, []);
