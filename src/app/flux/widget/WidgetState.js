@@ -26,7 +26,7 @@ const DEFAULT_STATE = {
     },
     printing: {
         default: {
-            widgets: ['3dp-configurations']
+            widgets: [],
         }
     },
     laser: {

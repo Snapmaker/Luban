@@ -60,7 +60,7 @@ function renderRightView({ headType, dispatch, page, widgets, listActions }) {
                 'laser-intro-edit-panel',
             )}
         >
-            <div className="background-color-white border-radius-8 margin-bottom-8 sm-flex-width">
+            <div className="background-color-white border-radius-8 margin-bottom-8 sm-flex-width overflow-y-auto">
                 <Tabs
                     options={[
                         {
