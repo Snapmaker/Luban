@@ -205,11 +205,11 @@ jobs:
                   PACKAGE_VERSION=`node -e "console.log(require('./src/package.json').version)"`
                   RELEASE=${PACKAGE_NAME}-${PACKAGE_VERSION}
 
-                  INSTALLER_ASSET_PATH="./output/${PRODUCT_NAME}-${PACKAGE_VERSION}.dmg"
+                  INSTALLER_ASSET_PATH="./output/${PRODUCT_NAME}-${PACKAGE_VERSION}-x64.dmg"
                   INSTALLER_ASSET_NAME="${RELEASE}-mac-x64.dmg"
 
-                  ZIP_ASSET_PATH="./output/${PRODUCT_NAME}-${PACKAGE_VERSION}-mac.zip"
-                  ZIP_ASSET_NAME="${RELEASE}-mac.zip"
+                  ZIP_ASSET_PATH="./output/${PRODUCT_NAME}-${PACKAGE_VERSION}-x64.zip"
+                  ZIP_ASSET_NAME="${RELEASE}-x64.zip"
 
                   echo "INSTALLER_ASSET_PATH=$INSTALLER_ASSET_PATH" >> $GITHUB_ENV
                   echo "INSTALLER_ASSET_NAME=$INSTALLER_ASSET_NAME" >> $GITHUB_ENV
