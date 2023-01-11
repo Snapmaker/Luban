@@ -166,6 +166,11 @@ class SocketHttp {
                     intervalHandle = setInterval(this.getEnclosureStatus, 1000);
                 }
                 const result = _getResult(err, res);
+                if (err) {
+                    this.socket && this.socket.emit('connection:open', result);
+                    return;
+                }
+
                 const { data } = result;
                 if (data) {
                     const { series } = data;
@@ -204,7 +209,7 @@ class SocketHttp {
                     if (!(this.state.series && headType && headType !== 'UNKNOWN')) {
                         this.socket && this.socket.emit('connection:open', {
                             msg: 'key-Workspace/Connection-The machine or toolhead cannot be correctly recognized. Make sure the firmware is up to date and the machine is wired correctly.',
-                            code: 500
+                            code: 500,
                         });
                     } else {
                         this.socket && this.socket.emit('connection:open', result);

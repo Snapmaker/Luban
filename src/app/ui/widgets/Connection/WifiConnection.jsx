@@ -1,15 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { map } from 'lodash';
-import { Button } from '../../components/Buttons';
-import Checkbox from '../../components/Checkbox';
-import Select from '../../components/Select';
-import SvgIcon from '../../components/SvgIcon';
-import i18n from '../../../lib/i18n';
-import usePrevious from '../../../lib/hooks/previous';
-import { actions as machineActions } from '../../../flux/machine';
+import PropTypes from 'prop-types';
+import React, { useEffect, useMemo, useState } from 'react';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import {
     ABSENT_OBJECT,
     CONNECTION_STATUS_CONNECTED,
@@ -38,13 +31,20 @@ import {
     LEVEL_TWO_POWER_LASER_FOR_SM2,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
 } from '../../../constants/machines';
-import styles from './index.styl';
-import ModalSmall from '../../components/Modal/ModalSmall';
-import Modal from '../../components/Modal';
-import ModalSmallInput from '../../components/Modal/ModalSmallInput';
-import MismatchModal from './MismatchModal';
+import { actions as machineActions } from '../../../flux/machine';
 import { Server } from '../../../flux/machine/Server';
 import { actions as printingActions } from '../../../flux/printing';
+import usePrevious from '../../../lib/hooks/previous';
+import i18n from '../../../lib/i18n';
+import { Button } from '../../components/Buttons';
+import Checkbox from '../../components/Checkbox';
+import Modal from '../../components/Modal';
+import ModalSmall from '../../components/Modal/ModalSmall';
+import ModalSmallInput from '../../components/Modal/ModalSmallInput';
+import Select from '../../components/Select';
+import SvgIcon from '../../components/SvgIcon';
+import styles from './index.styl';
+import MismatchModal from './MismatchModal';
 
 export const ModuleStatus = ({ moduleName, status }) => {
     return (
@@ -156,6 +156,8 @@ function CheckingNozzleSize() {
 }
 
 function WifiConnection() {
+    const dispatch = useDispatch();
+
     const {
         servers,
         serverDiscovering,
@@ -180,8 +182,11 @@ function WifiConnection() {
     const {
         toolHead, headType, series
     } = useSelector(state => state?.workspace);
+
     const [savedServerAddressState, setSavedServerAddressState] = useState(savedServerAddress);
     const { emergencyStopButton: emergencyStopButtonStatus, airPurifier: airPurifierStatus, rotaryModule: rotaryModuleStatus, enclosure: enclosureStatus } = moduleStatusList;
+
+    // Show connection modal
     const [showConnectionMessage, setShowConnectionMessage] = useState(false);
     const [connectionMessage, setConnectionMessage] = useState({
         text: '',
@@ -191,7 +196,10 @@ function WifiConnection() {
         onCancel: null,
         onConfirm: null
     });
+
+    // Show manual connection modal, user can input IP address of printer
     const [showManualWiFiModal, setShowManualWiFiModal] = useState(false);
+
     // const [showMismatchModal, setShowMismatchModal] = useState(false);
     const [manualWiFi, setManualWiFi] = useState({
         text: '',
@@ -203,9 +211,8 @@ function WifiConnection() {
         onConfirm: null
     });
     const [serverState, setServerState] = useState(null);
-    const [serverOpenState, setserverOpenState] = useState(null);
+    const [serverOpenState, setServerOpenState] = useState(null);
     const [currentModuleStatusList, setCurrentModuleStatusList] = useState(null);
-    const dispatch = useDispatch();
     const prevProps = usePrevious({
         connectionStatus
     });
@@ -215,7 +222,7 @@ function WifiConnection() {
             dispatch(machineActions.discover.discoverSnapmakerServers());
         },
         onChangeServerOption: (option) => {
-            const serverFound = servers.find(v => v.name === option.value && v.address === option.address);
+            const serverFound = servers.find(v => v.name === option.name && v.address === option.address);
             if (serverFound) {
                 dispatch(machineActions.connect.setSelectedServer(serverFound));
                 setServerState(serverFound);
@@ -233,10 +240,13 @@ function WifiConnection() {
 
             serverState.openServer(({ msg, text, code }) => {
                 if (msg) {
+                    // connection failed, clear saved state.
                     actions.showWifiError(msg, text, code);
                     setSavedServerAddressState('');
                 }
-                setserverOpenState(null);
+
+                // Clear open state
+                setServerOpenState(null);
             });
         },
         closeServer: () => {
@@ -246,6 +256,8 @@ function WifiConnection() {
         closeServerImproper: () => {
             server.closeServerImproper();
             setSavedServerAddressState('');
+
+            setServerOpenState(null);
         },
         hideWifiConnectionMessage: () => {
             setShowConnectionMessage(false);
@@ -327,7 +339,10 @@ function WifiConnection() {
         },
         onCloseWifiConnectionMessage: () => {
             actions.hideWifiConnectionMessage();
-            if (connectionStatus === CONNECTION_STATUS_CONNECTING) actions.closeServerImproper();
+
+            if (connectionStatus === CONNECTION_STATUS_CONNECTING) {
+                actions.closeServerImproper();
+            }
         },
 
         /**
@@ -347,15 +362,15 @@ function WifiConnection() {
                     const newServer = new Server({
                         name: CUSTOM_SERVER_NAME,
                         address: text,
-                        addByUser: true
+                        addByUser: true,
                     });
 
                     // Try add new server
-                    const _server = dispatch(machineActions.connect.addServer(newServer));
+                    const verifiedServer = dispatch(machineActions.connect.addServer(newServer));
 
                     // set state server and then open it
-                    setServerState(_server);
-                    setserverOpenState(_server);
+                    setServerState(verifiedServer);
+                    setServerOpenState(verifiedServer);
                     actions.onCloseManualWiFi();
                 }
             });
@@ -384,16 +399,23 @@ function WifiConnection() {
         let find;
         if (selectedServer !== ABSENT_OBJECT) {
             find = _servers.find(v => v.name === selectedServer.name && v.address === selectedServer.address);
-        } else {
+        }
+
+        if (!find) {
             find = _servers.find(v => v.address === savedServerAddress);
+        }
+
+        if (!find) {
+            find = _servers.find(v => v.name === savedServerName);
+        }
+
+        if (!find) {
+            // Default select first server
+            find = _servers[0];
         }
 
         if (find) {
             setServerState(find);
-        } else if (_servers.length > 0) {
-            // Default select first server
-            const firstServer = _servers[0];
-            setServerState(firstServer);
         }
     }
 
@@ -556,12 +578,13 @@ function WifiConnection() {
                         onChange={actions.onChangeServerOption}
                         disabled={isOpen}
                         options={map(servers, (s) => ({
-                            value: s.name,
+                            value: `${s.name}@${s.address}`,
+                            name: s.name,
                             address: s.address,
                             label: `${s.name} (${s.address})`
                         }))}
                         placeholder={i18n._('key-Workspace/Connection-Choose a machine')}
-                        value={serverState ? serverState?.name : ''}
+                        value={`${serverState?.name}@${serverState?.address}`}
                     />
                     <div className="sm-flex-auto ">
                         <SvgIcon

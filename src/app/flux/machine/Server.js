@@ -56,15 +56,16 @@ export class Server extends events.EventEmitter {
     }
 
     openServer(callback) {
-        controller.emitEvent(CONNECTION_OPEN, {
-            host: this.host,
-            token: this.token,
-            connectionType: this.isWifi ? CONNECTION_TYPE_WIFI : CONNECTION_TYPE_SERIAL,
-            port: this.port,
-            sacp: this.sacp,
-            addByUser: this.addByUser,
-            address: this.address
-        })
+        controller
+            .emitEvent(CONNECTION_OPEN, {
+                host: this.host,
+                token: this.token,
+                connectionType: this.isWifi ? CONNECTION_TYPE_WIFI : CONNECTION_TYPE_SERIAL,
+                port: this.port,
+                sacp: this.sacp,
+                addByUser: this.addByUser,
+                address: this.address
+            })
             .once(CONNECTION_OPEN, ({ msg, data, text, code }) => {
                 if (msg) {
                     callback && callback({ msg, data, text, code });
@@ -104,13 +105,21 @@ export class Server extends events.EventEmitter {
     }
 
     closeServerImproper() {
-        controller.emitEvent(CONNECTION_CLOSE_IMPROPER).once(CONNECTION_CLOSE_IMPROPER, () => {
-            dispatch(machineActions.resetMachineState());
-            dispatch(workspaceActions.updateMachineState({
-                headType: '',
-                toolHead: ''
-            }));
-        });
+        controller.emitEvent(CONNECTION_CLOSE_IMPROPER)
+            .once(CONNECTION_CLOSE_IMPROPER, () => {
+                dispatch(machineActions.resetMachineState());
+                dispatch(workspaceActions.updateMachineState({
+                    headType: '',
+                    toolHead: ''
+                }));
+            });
+
+        // No matter success or not, clear state
+        dispatch(machineActions.resetMachineState());
+        dispatch(workspaceActions.updateMachineState({
+            headType: '',
+            toolHead: ''
+        }));
     }
 
     coordinateMove(moveOrders, gcode, jogSpeed, headType, homingModel) {
