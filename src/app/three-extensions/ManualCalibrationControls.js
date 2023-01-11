@@ -141,6 +141,11 @@ function ManualCalibrationControls(camera, domElement, scale, remapBox2, cornerP
     }
 
     function updateRectangleSize(pointArray, width, height) {
+        for (const point of pointArray) {
+            point.x = Math.max(0, Math.min(point.x, width));
+            point.y = Math.max(0, Math.min(point.y, height));
+        }
+
         remapBox2 = new THREE.Box2(
             new THREE.Vector2(-width / 2, -height / 2),
             new THREE.Vector2(width / 2, height / 2)
