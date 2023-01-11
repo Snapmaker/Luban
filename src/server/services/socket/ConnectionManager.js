@@ -227,102 +227,103 @@ class ConnectionManager {
             const { uploadName, series, background, size, workPosition, originOffset } = options;
             const gcodeFilePath = `${DataStorage.tmpDir}/${uploadName}`;
             const promises = [];
-            if (this.protocol === SACP_PROTOCOL && headType === HEAD_LASER) {
-                this.socket.uploadGcodeFile(gcodeFilePath, headType, renderName, () => {
-                });
-                if (laserFocalLength && toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isRotate && isLaserPrintAutoMode && materialThickness !== 0 && materialThicknessSource === AUTO_STRING) {
-                    await this.socket.laseAutoSetMaterialHeight({ toolHead });
-                }
-                if (((toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isLaserPrintAutoMode) || (toolHead === LEVEL_ONE_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode)) && ((materialThickness !== 0 && materialThickness !== -1) || isRotate)) {
-                    await this.socket.laserSetWorkHeight({ toolHead, materialThickness, isRotate });
-                }
-                const { gcode, jogSpeed = 1500 } = options;
-                const moveOrders = [
-                    { axis: 'X', distance: 0 },
-                    { axis: 'Y', distance: 0 },
-                    { axis: 'Z', distance: 0 }
-                ];
-                await this.socket.coordinateMove({ moveOrders, gcode, jogSpeed, headType, beforeGcodeStart: true });
-            } else if (series !== MACHINE_SERIES.ORIGINAL.value && series !== MACHINE_SERIES.CUSTOM.value && headType === HEAD_LASER) {
-                if (!isRotate) {
-                    if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
-                        const promise = new Promise((resolve) => {
-                            if (materialThickness === -1) {
-                                this.socket.executeGcode({ gcode: 'G0 X0 Y0 F1500;\nG0 Z0 F1500;' }, () => {
-                                    resolve();
-                                });
-                            } else {
-                                this.socket.executeGcode({ gcode: `G0 X0 Y0 F1500;\nG53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;` }, () => {
-                                    resolve();
-                                });
-                            }
-                        });
-                        promises.push(promise);
-                    } else {
-                        const promise = new Promise((resolve) => {
-                            if (isLaserPrintAutoMode) {
-                                this.socket.executeGcode({ gcode: `G0 X0 Y0 F1500;\nG53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;` }, () => {
-                                    resolve();
-                                });
-                            } else {
-                                this.socket.executeGcode({ gcode: 'G0 X0 Y0 F1500;\nG0 Z0 F1500;' }, () => {
-                                    resolve();
-                                });
-                            }
-                        });
-                        promises.push(promise);
+
+            if (headType === HEAD_LASER) {
+                if (this.protocol === SACP_PROTOCOL) {
+                    // Snapmaker Artisan (SACP)
+                    // this.socket.uploadGcodeFile(gcodeFilePath, headType, renderName, () => {
+                    // });
+                    if (laserFocalLength && toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isRotate && isLaserPrintAutoMode && materialThickness !== 0 && materialThicknessSource === AUTO_STRING) {
+                        await this.socket.laseAutoSetMaterialHeight({ toolHead });
                     }
-                    // Camera Aid Background mode, force machine to work on machine coordinates (Origin = 0,0)
-                    if (background.enabled) {
-                        let x = parseFloat(workPosition.x) - parseFloat(originOffset.x);
-                        let y = parseFloat(workPosition.y) - parseFloat(originOffset.y);
+                    if (((toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isLaserPrintAutoMode) || (toolHead === LEVEL_ONE_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode)) && ((materialThickness !== 0 && materialThickness !== -1) || isRotate)) {
+                        await this.socket.laserSetWorkHeight({ toolHead, materialThickness, isRotate });
+                    }
 
-                        // Fix bug for x or y out of range
-                        x = Math.max(0, Math.min(x, size.x - 20));
-                        y = Math.max(0, Math.min(y, size.y - 20));
+                    const { jogSpeed = 1500 } = options;
+                    // Since G-code does not contains Z moves, it's our responsibility to move it to Zero
+                    const moveOrders = [
+                        // { axis: 'X', distance: 0 },
+                        // { axis: 'Y', distance: 0 },
+                        { axis: 'Z', distance: 0 },
+                    ];
+                    await this.socket.coordinateMove({ moveOrders, jogSpeed, headType, beforeGcodeStart: true });
+                } else if (series !== MACHINE_SERIES.ORIGINAL.value) {
+                    // SM 2.0
+                    if (!isRotate) {
+                        if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                            const promise = new Promise((resolve) => {
+                                if (materialThickness === -1) {
+                                    this.socket.executeGcode({ gcode: 'G0 X0 Y0 F1500;\nG0 Z0 F1500;' }, () => {
+                                        resolve();
+                                    });
+                                } else {
+                                    this.socket.executeGcode({ gcode: `G0 X0 Y0 F1500;\nG53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;` }, () => {
+                                        resolve();
+                                    });
+                                }
+                            });
+                            promises.push(promise);
+                        } else {
+                            const promise = new Promise((resolve) => {
+                                if (isLaserPrintAutoMode) {
+                                    this.socket.executeGcode({ gcode: `G0 X0 Y0 F1500;\nG53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;` }, () => {
+                                        resolve();
+                                    });
+                                } else {
+                                    this.socket.executeGcode({ gcode: 'G0 X0 Y0 F1500;\nG0 Z0 F1500;' }, () => {
+                                        resolve();
+                                    });
+                                }
+                            });
+                            promises.push(promise);
+                        }
+                        // Camera Aid Background mode, force machine to work on machine coordinates (Origin = 0,0)
+                        if (background.enabled) {
+                            let x = parseFloat(workPosition.x) - parseFloat(originOffset.x);
+                            let y = parseFloat(workPosition.y) - parseFloat(originOffset.y);
 
+                            // Fix bug for x or y out of range
+                            x = Math.max(0, Math.min(x, size.x - 20));
+                            y = Math.max(0, Math.min(y, size.y - 20));
+
+                            const promise = new Promise((resolve) => {
+                                this.socket.executeGcode({ gcode: `G53;\nG0 X${x} Y${y};\nG54;\nG92 X${x} Y${y};` }, () => {
+                                    resolve();
+                                });
+                            });
+                            promises.push(promise);
+                        }
+                    } else {
+                        // Rotary Module origin
                         const promise = new Promise((resolve) => {
-                            this.socket.executeGcode({ gcode: `G53;\nG0 X${x} Y${y};\nG54;\nG92 X${x} Y${y};` }, () => {
+                            this.executeGcode(this.socket, { gcode: 'G0 X0 Y0 B0 F1500;\nG0 Z0 F1500;' }, () => {
                                 resolve();
                             });
                         });
                         promises.push(promise);
                     }
-                } else {
+
+                    // Laser works on G54
                     const promise = new Promise((resolve) => {
-                        this.executeGcode(this.socket, { gcode: 'G0 X0 Y0 B0 F1500;\nG0 Z0 F1500;' }, () => {
+                        this.executeGcode(this.socket, { gcode: 'G54;' }, () => {
                             resolve();
                         });
                     });
                     promises.push(promise);
                 }
-                const promise = new Promise((resolve) => {
-                    this.executeGcode(this.socket, { gcode: 'G54;' }, () => {
-                        resolve();
+            }
+
+            Promise.all(promises)
+                .then(() => {
+                    this.socket.uploadGcodeFile(gcodeFilePath, headType, renderName, (msg) => {
+                        if (msg) {
+                            // FIXME: Add abort message
+                            return;
+                        }
+                        this.socket.startGcode(options);
                     });
                 });
-                promises.push(promise);
-                Promise.all(promises)
-                    .then(() => {
-                        this.socket.uploadGcodeFile(gcodeFilePath, headType, renderName, (msg) => {
-                            if (msg) {
-                                return;
-                            }
-                            this.socket.startGcode(options);
-                        });
-                    });
-            } else {
-                Promise.all(promises)
-                    .then(() => {
-                        this.socket.uploadGcodeFile(gcodeFilePath, headType, renderName, (msg) => {
-                            if (msg) {
-                                // FIXME: Add abort message
-                                return;
-                            }
-                            this.socket.startGcode(options);
-                        });
-                    });
-            }
         } else {
             const { workflowState } = options;
             if (this.protocol === SACP_PROTOCOL) {
