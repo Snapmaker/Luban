@@ -36,7 +36,7 @@ export function serverStartDevelopment(cb) {
         // script: './bin/cli',
         args: args,
         ignore: ['.git', 'node_modules/**/node_modules'],
-        delay: 20000,
+        delay: 8000,
         verbose: true,
         exec: 'electron --inspect --trace-warnings',
         // exec: 'electron --inspect-brk',

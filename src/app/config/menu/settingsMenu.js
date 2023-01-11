@@ -65,6 +65,19 @@ export default {
                     UniApi.Event.emit('appbar-menu:longterm-backup-config');
                 }
             }
-        }
+        },
+        { type: 'separator' },
+        {
+            id: 'open-config-folder',
+            label: 'Open Config Folder',
+            enabled: true,
+            click: (menuItem, browserWindow) => {
+                if (isElectron()) {
+                    browserWindow.webContents.send('open-config-folder');
+                } else {
+                    UniApi.Event.emit('appbar-menu:open-config-folder');
+                }
+            },
+        },
     ]
 };
