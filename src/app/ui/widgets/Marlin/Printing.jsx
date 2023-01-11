@@ -186,8 +186,8 @@ class Printing extends PureComponent {
         const { zOffsetMarks, leftZOffsetValue } = this.state;
         const actions = this.actions;
 
-        const nozzleTempratureTitle = i18n._(`${isDualExtruder(printingToolhead) ? 'key-Workspace/Marlin-Left Nozzle Temp' : 'key-Workspace/Connection-Nozzle Temp.'}`);
-        const nozzleRightTempratureTitle = i18n._('key-Workspace/Marlin-Right Nozzle Temp');
+        const nozzleTemperatureTitle = isDualExtruder(printingToolhead) ? i18n._('key-Workspace/Marlin-Left Nozzle Temp') : i18n._('key-Workspace/Connection-Nozzle Temp.');
+        const nozzleRightTemperatureTitle = i18n._('key-Workspace/Marlin-Right Nozzle Temp');
 
         return (
             <div>
@@ -209,7 +209,7 @@ class Printing extends PureComponent {
                         this.actions.updateNozzleTemp(LEFT_EXTRUDER_MAP_NUMBER, value);
                     }}
                     initValue={nozzleTargetTemperature}
-                    title={nozzleTempratureTitle}
+                    title={nozzleTemperatureTitle}
                     suffix="°C"
                 >
                     <div className="width-44 sm-flex sm-flex-direction-c">
@@ -255,7 +255,7 @@ class Printing extends PureComponent {
                             this.actions.updateNozzleTemp(RIGHT_EXTRUDER_MAP_NUMBER, value);
                         }}
                         initValue={this.props.nozzleRightTargetTemperature}
-                        title={nozzleRightTempratureTitle}
+                        title={nozzleRightTemperatureTitle}
                         suffix="°C"
                     >
                         <div className="width-44 sm-flex sm-flex-direction-c">

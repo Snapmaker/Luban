@@ -501,12 +501,19 @@ export const actions = {
                     status,
                     laserFocalLength,
                     laserPower,
+
+                    // extruder nozzle temp
                     nozzleTemperature,
                     nozzleTargetTemperature,
+                    nozzleRightTemperature,
+                    nozzleRightTargetTemperature,
+
+                    // bed temp
                     heatedBedTemperature,
+                    heatedBedTargetTemperature,
+
                     doorSwitchCount,
                     isEnclosureDoorOpen,
-                    heatedBedTargetTemperature,
                     airPurifier,
                     airPurifierSwitch,
                     airPurifierFanSpeed,
@@ -516,8 +523,6 @@ export const actions = {
                     moduleList: moduleStatusList,
                     nozzleSizeList,
                     laserCamera,
-                    nozzleRightTargetTemperature,
-                    nozzleRightTemperature,
                     gcodePrintingInfo,
                     currentWorkNozzle,
                     cncTargetSpindleSpeed,
