@@ -1,9 +1,7 @@
 // import store from '../../store';
-import request from 'superagent';
 import { isEqual, isNil } from 'lodash';
-import logger from '../../lib/logger';
-import workerManager from '../task-manager/workerManager';
-import DataStorage from '../../DataStorage';
+import request from 'superagent';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, } from '../../../app/constants/machines';
 import {
     CONNECTION_TYPE_WIFI,
     HEAD_CNC,
@@ -15,10 +13,13 @@ import {
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     STANDARD_CNC_TOOLHEAD_FOR_SM2
 } from '../../constants';
+import DataStorage from '../../DataStorage';
 import { valueOf } from '../../lib/contants-utils';
-import wifiServerManager from './WifiServerManager';
+import logger from '../../lib/logger';
+import SocketServer from '../../lib/SocketManager';
+import workerManager from '../task-manager/workerManager';
 import { EventOptions } from './types';
-import type SocketServer from '../../lib/SocketManager';
+import wifiServerManager from './WifiServerManager';
 
 
 let waitConfirm: boolean;
@@ -95,6 +96,7 @@ export type GcodeResult = {
     msg?: string,
     code?: number
 };
+
 /**
  * A singleton to manage devices connection.
  */
@@ -164,6 +166,11 @@ class SocketHttp {
                     intervalHandle = setInterval(this.getEnclosureStatus, 1000);
                 }
                 const result = _getResult(err, res);
+                if (err) {
+                    this.socket && this.socket.emit('connection:open', result);
+                    return;
+                }
+
                 const { data } = result;
                 if (data) {
                     const { series } = data;
@@ -191,7 +198,7 @@ class SocketHttp {
                             break;
                         case 5:
                             headType = HEAD_PRINTING;
-                            toolHead = SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2;
+                            toolHead = DUAL_EXTRUDER_TOOLHEAD_FOR_SM2;
                             break;
                         default:
                             headType = HEAD_PRINTING;
@@ -202,7 +209,7 @@ class SocketHttp {
                     if (!(this.state.series && headType && headType !== 'UNKNOWN')) {
                         this.socket && this.socket.emit('connection:open', {
                             msg: 'key-Workspace/Connection-The machine or toolhead cannot be correctly recognized. Make sure the firmware is up to date and the machine is wired correctly.',
-                            code: 500
+                            code: 500,
                         });
                     } else {
                         this.socket && this.socket.emit('connection:open', result);
@@ -237,6 +244,7 @@ class SocketHttp {
     };
 
     public startGcode = (options: EventOptions) => {
+        log.info('Starting print...');
         const { eventName } = options;
         const api = `${this.host}/api/v1/start_print`;
         request
@@ -244,7 +252,9 @@ class SocketHttp {
             .timeout(120000)
             .send(`token=${this.token}`)
             .end((err, res) => {
-                this.socket && this.socket.emit(eventName, _getResult(err, res) || {});
+                const result = _getResult(err, res) || {};
+                log.info('Print job started.');
+                this.socket && this.socket.emit(eventName, result);
             });
     };
 
@@ -422,6 +432,8 @@ class SocketHttp {
     };
 
     public uploadGcodeFile = (gcodeFilePath: string, type: string, renderName: string, callback) => {
+        log.info('Preparing for a print job...');
+
         const api = `${this.host}/api/v1/prepare_print`;
         if (type === HEAD_PRINTING) {
             type = '3DP';
@@ -430,13 +442,16 @@ class SocketHttp {
         } else if (type === HEAD_CNC) {
             type = 'CNC';
         }
+
         request
             .post(api)
             .field('token', this.token)
             .field('type', type)
             .attach('file', gcodeFilePath, { filename: renderName })
             .end((err, res) => {
-                const { msg, data } = _getResult(err, res);
+                const { msg, data, text } = _getResult(err, res);
+
+                log.info(`File upload: ${text}.`);
                 if (callback) {
                     callback(msg, data);
                 }

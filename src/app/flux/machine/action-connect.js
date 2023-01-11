@@ -83,7 +83,7 @@ const addServer = (server) => (dispatch, getState) => {
         newServers.push(server);
 
         dispatch(baseActions.updateState({
-            servers: newServers
+            servers: newServers,
         }));
 
         return server;

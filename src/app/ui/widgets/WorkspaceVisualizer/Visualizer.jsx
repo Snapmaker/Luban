@@ -1,49 +1,48 @@
+import TWEEN from '@tweenjs/tween.js';
+import colornames from 'colornames';
 import isEqual from 'lodash/isEqual';
-import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import pubsub from 'pubsub-js';
+import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import * as THREE from 'three';
-import TWEEN from '@tweenjs/tween.js';
-import pubsub from 'pubsub-js';
-import colornames from 'colornames';
-
-// import { Button } from '@trendmicro/react-buttons';
-import Canvas from '../../components/SMCanvas';
-import styles from './index.styl';
-import { controller } from '../../../lib/controller';
 import {
     CONNECTION_TYPE_SERIAL,
+    HEAD_CNC,
+    HEAD_LASER,
+    HEAD_PRINTING,
+    IMAGE_WIFI_ERROR,
+    IMAGE_WIFI_WARNING,
     MARLIN,
     PROTOCOL_TEXT,
-    WORKFLOW_STATUS_IDLE,
-    WORKFLOW_STATUS_PAUSED,
-    WORKFLOW_STATUS_RUNNING,
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATE_PAUSED,
     WORKFLOW_STATE_RUNNING,
-    WORKFLOW_STATUS_UNKNOWN,
-    IMAGE_WIFI_ERROR,
-    IMAGE_WIFI_WARNING,
-    HEAD_CNC,
-    HEAD_PRINTING,
-    HEAD_LASER
+    WORKFLOW_STATUS_IDLE,
+    WORKFLOW_STATUS_PAUSED,
+    WORKFLOW_STATUS_RUNNING,
+    WORKFLOW_STATUS_UNKNOWN
 } from '../../../constants';
-import TargetPoint from '../../../three-extensions/TargetPoint';
 import { actions as machineActions } from '../../../flux/machine';
 import { actions as workspaceActions, WORKSPACE_STAGE } from '../../../flux/workspace';
-import PrintablePlate from './PrintablePlate';
-
-import { loadTexture } from './helpers';
-import Loading from './Loading';
-import Rendering from './Rendering';
-import ToolHead from './ToolHead';
-// import WorkflowControl from './WorkflowControl';
-import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
-import ModalSmall from '../../components/Modal/ModalSmall';
+import { controller } from '../../../lib/controller';
 
 import i18n from '../../../lib/i18n';
+import TargetPoint from '../../../three-extensions/TargetPoint';
 import modalSmallHOC from '../../components/Modal/modal-small';
+import ModalSmall from '../../components/Modal/ModalSmall';
 import ProgressBar from '../../components/ProgressBar';
+// import { Button } from '@trendmicro/react-buttons';
+import Canvas from '../../components/SMCanvas';
+// import WorkflowControl from './WorkflowControl';
+import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
+
+import { loadTexture } from './helpers';
+import styles from './index.styl';
+import Loading from './Loading';
+import PrintablePlate from './PrintablePlate';
+import Rendering from './Rendering';
+import ToolHead from './ToolHead';
 
 // import modal from '../../lib/modal';
 
@@ -267,7 +266,8 @@ class Visualizer extends PureComponent {
             return (this.props.headType === HEAD_LASER);
         },
         handleRun: () => {
-            const { server,
+            const {
+                server,
                 workflowStatus,
                 headType, isLaserPrintAutoMode,
                 materialThickness,
@@ -280,10 +280,9 @@ class Visualizer extends PureComponent {
                 background,
                 size,
                 workPosition,
-                originOffset } = this.props;
-            // const { workflowState } = this.state;
-            // if ((connectionType === CONNECTION_TYPE_WIFI && workflowStatus === WORKFLOW_STATUS_IDLE)
-            //     || (connectionType === CONNECTION_TYPE_SERIAL && workflowState === WORKFLOW_STATE_IDLE)) {
+                originOffset,
+            } = this.props;
+
             if (workflowStatus === WORKFLOW_STATUS_IDLE) {
                 server.startServerGcode({
                     headType,

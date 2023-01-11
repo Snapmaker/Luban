@@ -183,11 +183,11 @@ class Printing extends PureComponent {
             printingToolhead,
             workflowStatus
         } = this.props;
-        const { zOffsetMarks, leftZOffsetValue, rightZOffsetValue } = this.state;
+        const { zOffsetMarks, leftZOffsetValue } = this.state;
         const actions = this.actions;
 
-        const nozzleTempratureTitle = i18n._(`${isDualExtruder(printingToolhead) ? 'key-Workspace/Marlin-Left Nozzle Temp' : 'key-Workspace/Connection-Nozzle Temp.'}`);
-        const nozzleRightTempratureTitle = i18n._('key-Workspace/Marlin-Right Nozzle Temp');
+        const nozzleTemperatureTitle = isDualExtruder(printingToolhead) ? i18n._('key-Workspace/Marlin-Left Nozzle Temp') : i18n._('key-Workspace/Connection-Nozzle Temp.');
+        const nozzleRightTemperatureTitle = i18n._('key-Workspace/Marlin-Right Nozzle Temp');
 
         return (
             <div>
@@ -209,7 +209,7 @@ class Printing extends PureComponent {
                         this.actions.updateNozzleTemp(LEFT_EXTRUDER_MAP_NUMBER, value);
                     }}
                     initValue={nozzleTargetTemperature}
-                    title={nozzleTempratureTitle}
+                    title={nozzleTemperatureTitle}
                     suffix="°C"
                 >
                     <div className="width-44 sm-flex sm-flex-direction-c">
@@ -255,7 +255,7 @@ class Printing extends PureComponent {
                             this.actions.updateNozzleTemp(RIGHT_EXTRUDER_MAP_NUMBER, value);
                         }}
                         initValue={this.props.nozzleRightTargetTemperature}
-                        title={nozzleRightTempratureTitle}
+                        title={nozzleRightTemperatureTitle}
                         suffix="°C"
                     >
                         <div className="width-44 sm-flex sm-flex-direction-c">
@@ -318,7 +318,9 @@ class Printing extends PureComponent {
                 </ParamsWrapper>
 
                 {workflowStatus === 'running' && <WorkSpeed />}
-                {isConnected && this.isPrinting() && (
+
+                {/* Adjust left extruder Z offset, note that z offset for dual extruders are not supported */}
+                {isConnected && this.isPrinting() && !isDualExtruder(printingToolhead) && (
                     <div className="sm-parameter-row">
                         <span className="sm-parameter-row__label">{i18n._('key-unused-Left Z Offset')}</span>
                         <Anchor
@@ -346,6 +348,7 @@ class Printing extends PureComponent {
                         />
                     </div>
                 )}
+                {/*
                 {isConnected && this.isPrinting() && isDualExtruder(printingToolhead) && (
                     <div className="sm-parameter-row">
                         <span className="sm-parameter-row__label">{i18n._('key-unused-Right Z Offset')}</span>
@@ -374,6 +377,7 @@ class Printing extends PureComponent {
                         />
                     </div>
                 )}
+                */}
             </div>
         );
     }
