@@ -53,16 +53,19 @@ function ManualCalibrationControls(camera, domElement, scale, remapBox2, cornerP
     const scope = this;
     const raycaster = new THREE.Raycaster();
 
+    const SelectDashLineColor = 0x40FF66;
+    const SelectCircleColor = 0x40FF66;
+
     function generateGizmo() {
         const gizmo = new THREE.Mesh(
             new THREE.PlaneGeometry(30, 30),
-            new THREE.MeshBasicMaterial({ color: 0x000000, visible: false, side: THREE.DoubleSide, transparent: true, opacity: 0.5 })
+            new THREE.MeshBasicMaterial({ color: 0, visible: false, side: THREE.DoubleSide, transparent: true, opacity: 0.5 })
         );
 
         // TODO: make the circle transparent so we can see beneath engrave trace
         {
-            const geometry = new THREE.RingGeometry(5, 6, 30, 1);
-            const material = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.5 });
+            const geometry = new THREE.RingGeometry(10, 20, 30, 1);
+            const material = new THREE.MeshBasicMaterial({ color: SelectCircleColor, transparent: true, opacity: 0.5 });
             const circle = new THREE.Mesh(geometry, material);
             gizmo.add(circle);
         }
@@ -121,11 +124,11 @@ function ManualCalibrationControls(camera, domElement, scale, remapBox2, cornerP
 
         const geometry = new THREE.Geometry();
         dashedLine = new THREE.Line(geometry, new THREE.LineDashedMaterial({
-            color: 0x123ABC,
-            linewidth: 2,
-            scale: 5,
-            dashSize: 2,
-            gapSize: 5
+            color: SelectDashLineColor,
+            linewidth: 5,
+            scale: 1,
+            dashSize: 16,
+            gapSize: 16,
         }));
         scope.add(dashedLine);
         updateDashedLine();
@@ -168,7 +171,6 @@ function ManualCalibrationControls(camera, domElement, scale, remapBox2, cornerP
         // };
     }
 
-
     function onMouseDown(event) {
         this.moving = true;
         if (!scope.enabled || !scope.visible) {
@@ -181,16 +183,16 @@ function ManualCalibrationControls(camera, domElement, scale, remapBox2, cornerP
             const intersects = raycaster.intersectObjects(gizmoArr);
             if (intersects.length > 0) {
                 if (selectedGizmo !== intersects[0].object) {
-                    selectedGizmo?.children[0].material.color.set(0x000000);
+                    selectedGizmo?.children[0].material.color.set(SelectCircleColor);
                     selectedGizmo = intersects[0].object;
                     selectedGizmo?.children[0].material.color.set('red');
                 }
             } else {
-                selectedGizmo?.children[0].material.color.set(0x000000);
+                selectedGizmo?.children[0].material.color.set(SelectCircleColor);
                 selectedGizmo = null;
             }
         } else {
-            selectedGizmo?.children[0].material.color.set(0x000000);
+            selectedGizmo?.children[0].material.color.set(SelectCircleColor);
             selectedGizmo = null;
         }
     }
