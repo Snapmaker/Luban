@@ -1,26 +1,24 @@
+import isElectron from 'is-electron';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import isElectron from 'is-electron';
-import Modal from '../../components/Modal';
+import { findMachineByName, MACHINE_TOOL_HEADS, } from '../../../constants/machines';
+import usePrevious from '../../../lib/hooks/previous';
+import i18n from '../../../lib/i18n';
+import UniApi from '../../../lib/uni-api';
 import Anchor from '../../components/Anchor';
 import { Button } from '../../components/Buttons';
-import UniApi from '../../../lib/uni-api';
-import i18n from '../../../lib/i18n';
-import usePrevious from '../../../lib/hooks/previous';
-import {
-    MACHINE_TOOL_HEADS,
-    findMachineByName,
-} from '../../../constants/machines';
+import Modal from '../../components/Modal';
 
 function MismatchModal() {
-    const {
-        toolHead, headType, series
-    } = useSelector(state => state?.workspace);
+    const toolHead = useSelector(state => state?.workspace.toolHead);
+    const headType = useSelector(state => state?.workspace.headType);
+    const series = useSelector(state => state?.workspace.series);
     const isConnected = useSelector(state => state?.machine?.isConnected);
     const machineSeries = useSelector(state => state?.machine?.series);
     const machineToolHead = useSelector(state => state?.machine?.toolHead);
     const [showMismatchModal, setShowMismatchModal] = useState(false);
     const prevIsConnected = usePrevious(isConnected);
+
     function onShowMachinwSettings() {
         const { BrowserWindow } = window.require('@electron/remote');
         const browserWindow = BrowserWindow.getFocusedWindow();
@@ -34,6 +32,7 @@ function MismatchModal() {
             });
         }
     }
+
     useEffect(() => {
         if (!prevIsConnected && isConnected) {
             if (series && series !== machineSeries) {
@@ -54,15 +53,15 @@ function MismatchModal() {
             {showMismatchModal && (
                 <Modal
                     showCloseButton
-                    onClose={() => { setShowMismatchModal(false); }}
+                    onClose={() => {
+                        setShowMismatchModal(false);
+                    }}
                     style={{
                         borderRadius: '8px'
                     }}
                 >
                     <Modal.Header>
-                        {i18n._(
-                            'key-Workspace/Mismatch-Inconsistent_Machine_Model'
-                        )}
+                        {i18n._('key-Workspace/Mismatch-Inconsistent_Machine_Model')}
                     </Modal.Header>
                     <Modal.Body style={{
                         maxWidth: '432px'
@@ -89,7 +88,9 @@ function MismatchModal() {
                             priority="level-two"
                             className="margin-left-8"
                             width="96px"
-                            onClick={() => { setShowMismatchModal(false); }}
+                            onClick={() => {
+                                setShowMismatchModal(false);
+                            }}
                         >
                             {i18n._('key-Modal/Common-Confirm')}
                         </Button>
@@ -99,4 +100,5 @@ function MismatchModal() {
         </>
     );
 }
+
 export default MismatchModal;

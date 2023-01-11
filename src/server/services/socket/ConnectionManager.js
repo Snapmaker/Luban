@@ -316,6 +316,7 @@ class ConnectionManager {
                     .then(() => {
                         this.socket.uploadGcodeFile(gcodeFilePath, headType, renderName, (msg) => {
                             if (msg) {
+                                // FIXME: Add abort message
                                 return;
                             }
                             this.socket.startGcode(options);

@@ -1,20 +1,15 @@
-import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import PropTypes from 'prop-types';
-// import { Trans } from 'react-i18next';
-import noop from 'lodash/noop';
-import * as THREE from 'three';
 import { Spin } from 'antd';
 
 import classNames from 'classnames';
-import { useDispatch, useSelector } from 'react-redux';
 import _ from 'lodash';
+// import { Trans } from 'react-i18next';
+import noop from 'lodash/noop';
 import path from 'path';
-import { controller } from '../../../lib/controller';
+import PropTypes from 'prop-types';
+import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import * as THREE from 'three';
 import { pathWithRandomSuffix } from '../../../../shared/lib/random-utils';
-import i18n from '../../../lib/i18n';
-import UniApi from '../../../lib/uni-api';
-import { normalizeNameDisplay } from '../../../lib/normalize-range';
-import styles from './index.styl';
 import {
     AUTO_MDOE,
     CONNECTION_MATERIALTHICKNESS,
@@ -31,25 +26,29 @@ import {
     WORKFLOW_STATUS_IDLE
 } from '../../../constants';
 import { LEVEL_TWO_POWER_LASER_FOR_SM2, } from '../../../constants/machines';
-import { actions as workspaceActions, WORKSPACE_STAGE } from '../../../flux/workspace';
-import { actions as projectActions } from '../../../flux/project';
-
-import modalSmallHOC from '../../components/Modal/modal-small';
-import SvgIcon from '../../components/SvgIcon';
-import { Button } from '../../components/Buttons';
-import Menu from '../../components/Menu';
-import Dropdown from '../../components/Dropdown';
-import Modal from '../../components/Modal';
-import Canvas from '../../components/SMCanvas';
-import PrintablePlate from '../WorkspaceVisualizer/PrintablePlate';
-import usePrevious from '../../../lib/hooks/previous';
 import { actions as machineActions } from '../../../flux/machine';
-// import Checkbox from '../../components/Checkbox';
-// import { NumberInput as Input } from '../../components/Input';
+import { actions as projectActions } from '../../../flux/project';
+import { actions as workspaceActions, WORKSPACE_STAGE } from '../../../flux/workspace';
+import { controller } from '../../../lib/controller';
+import usePrevious from '../../../lib/hooks/previous';
+import i18n from '../../../lib/i18n';
+import { normalizeNameDisplay } from '../../../lib/normalize-range';
+import UniApi from '../../../lib/uni-api';
+
+import { Button } from '../../components/Buttons';
+import Dropdown from '../../components/Dropdown';
+import Menu from '../../components/Menu';
+import Modal from '../../components/Modal';
+import modalSmallHOC from '../../components/Modal/modal-small';
+import Canvas from '../../components/SMCanvas';
+import SvgIcon from '../../components/SvgIcon';
+
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
+import PrintablePlate from '../WorkspaceVisualizer/PrintablePlate';
 import GCodeParams from './GCodeParams';
-import PreviewToRunJobModal from './PreviewToRunJobModal';
+import styles from './index.styl';
 import LaserStartModal from './LaserStartModal';
+import PreviewToRunJobModal from './PreviewToRunJobModal';
 
 const changeNameInput = [];
 const suffixLength = 7;

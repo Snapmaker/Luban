@@ -1,9 +1,7 @@
 // import store from '../../store';
-import request from 'superagent';
 import { isEqual, isNil } from 'lodash';
-import logger from '../../lib/logger';
-import workerManager from '../task-manager/workerManager';
-import DataStorage from '../../DataStorage';
+import request from 'superagent';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, } from '../../../app/constants/machines';
 import {
     CONNECTION_TYPE_WIFI,
     HEAD_CNC,
@@ -15,10 +13,13 @@ import {
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     STANDARD_CNC_TOOLHEAD_FOR_SM2
 } from '../../constants';
+import DataStorage from '../../DataStorage';
 import { valueOf } from '../../lib/contants-utils';
-import wifiServerManager from './WifiServerManager';
+import logger from '../../lib/logger';
+import SocketServer from '../../lib/SocketManager';
+import workerManager from '../task-manager/workerManager';
 import { EventOptions } from './types';
-import type SocketServer from '../../lib/SocketManager';
+import wifiServerManager from './WifiServerManager';
 
 
 let waitConfirm: boolean;
@@ -95,6 +96,7 @@ export type GcodeResult = {
     msg?: string,
     code?: number
 };
+
 /**
  * A singleton to manage devices connection.
  */
@@ -191,7 +193,7 @@ class SocketHttp {
                             break;
                         case 5:
                             headType = HEAD_PRINTING;
-                            toolHead = SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2;
+                            toolHead = DUAL_EXTRUDER_TOOLHEAD_FOR_SM2;
                             break;
                         default:
                             headType = HEAD_PRINTING;
@@ -430,15 +432,16 @@ class SocketHttp {
         } else if (type === HEAD_CNC) {
             type = 'CNC';
         }
+
         request
             .post(api)
             .field('token', this.token)
             .field('type', type)
             .attach('file', gcodeFilePath, { filename: renderName })
             .end((err, res) => {
-                const { msg, data } = _getResult(err, res);
+                const { msg, data, text } = _getResult(err, res);
                 if (callback) {
-                    callback(msg, data);
+                    callback(msg || text, data);
                 }
             });
     };

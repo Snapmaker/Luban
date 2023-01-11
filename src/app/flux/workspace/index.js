@@ -485,6 +485,7 @@ export const actions = {
         ) {
             return;
         }
+
         dispatch(actions.updateState({ uploadState: 'uploading' }));
         try {
             await api.loadGCode({

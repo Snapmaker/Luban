@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import { CNC_GCODE_SUFFIX, LASER_GCODE_SUFFIX, PRINTING_GCODE_SUFFIX, WORKFLOW_STATE_IDLE } from '../../constants';
-import { MACHINE_SERIES } from '../../constants/machines';
+import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, MACHINE_SERIES } from '../../constants/machines';
 import { actions as widgetActions } from '../../flux/widget';
 import { actions as workspaceActions } from '../../flux/workspace';
 
@@ -79,8 +79,15 @@ let workspaceVisualizerRef = null;
 
 // TODO: Workspace widgets can only support G-code based machine, add configuration
 //  to machine indicating if it supports plain G-code.
-function getUnsupportedWidgets(machine) {
+function getUnsupportedWidgets(machine, toolHead) {
     if (!machine) return [];
+
+    if ([MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value].includes(machine.value)) {
+        if (toolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
+            // return ['marlin'];
+            return [];
+        }
+    }
 
     if (machine.value === MACHINE_SERIES.J1.value) {
         return ['console', 'marlin', 'control', 'macro'];
@@ -96,10 +103,13 @@ function getUnsupportedWidgets(machine) {
 function Workspace({ isPopup, onClose, style, className }) {
     const history = useHistory();
     const dispatch = useDispatch();
+
     const primaryWidgets = useSelector(state => state.widget.workspace.left.widgets);
     const secondaryWidgets = useSelector(state => state.widget.workspace.right.widgets);
     const defaultWidgets = useSelector(state => state.widget.workspace.default.widgets);
-    const { activeMachine } = useSelector(state => state.machine);
+
+    const activeMachine = useSelector(state => state.machine.activeMachine);
+    const toolHead = useSelector(state => state.workspace.toolHead);
 
     const [previewModalShow, setPreviewModalShow] = useState(false);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
@@ -271,7 +281,7 @@ function Workspace({ isPopup, onClose, style, className }) {
         );
     };
 
-    const unsupported = getUnsupportedWidgets(activeMachine);
+    const unsupported = getUnsupportedWidgets(activeMachine, toolHead);
 
     const leftWidgetNames = primaryWidgets.filter((widgetName) => {
         return !includes(unsupported, widgetName);
