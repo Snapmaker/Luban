@@ -239,6 +239,7 @@ class SocketHttp {
     };
 
     public startGcode = (options: EventOptions) => {
+        log.info('Starting print...');
         const { eventName } = options;
         const api = `${this.host}/api/v1/start_print`;
         request
@@ -246,7 +247,9 @@ class SocketHttp {
             .timeout(120000)
             .send(`token=${this.token}`)
             .end((err, res) => {
-                this.socket && this.socket.emit(eventName, _getResult(err, res) || {});
+                const result = _getResult(err, res) || {};
+                log.info('Print job started.');
+                this.socket && this.socket.emit(eventName, result);
             });
     };
 
@@ -424,6 +427,8 @@ class SocketHttp {
     };
 
     public uploadGcodeFile = (gcodeFilePath: string, type: string, renderName: string, callback) => {
+        log.info('Preparing for a print job...');
+
         const api = `${this.host}/api/v1/prepare_print`;
         if (type === HEAD_PRINTING) {
             type = '3DP';
@@ -440,8 +445,10 @@ class SocketHttp {
             .attach('file', gcodeFilePath, { filename: renderName })
             .end((err, res) => {
                 const { msg, data, text } = _getResult(err, res);
+
+                log.info(`File upload: ${text}.`);
                 if (callback) {
-                    callback(msg || text, data);
+                    callback(msg, data);
                 }
             });
     };
