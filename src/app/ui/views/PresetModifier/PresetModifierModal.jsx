@@ -103,7 +103,7 @@ function PresetModifierModal(
         >
             <Modal.Header>
                 <div>
-                    {i18n._('Print Parameter Modifiers')}
+                    {i18n._('Print Settings')}
                 </div>
             </Modal.Header>
             <Modal.Body>

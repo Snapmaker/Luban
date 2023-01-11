@@ -306,6 +306,8 @@ export const actions = {
             dispatch(modActions.updateState({
                 ...restState
             }));
+            const { helpersExtruderConfig } = restState;
+            dispatch(modActions.updateHelpersExtruder(helpersExtruderConfig));
         } else {
             dispatch(modActions.updateState(envHeadType, restState));
         }

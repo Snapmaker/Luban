@@ -321,10 +321,10 @@ const ParametersQuickSettingsView: React.FC<TProps> = ({ selectedStackId, select
                     // 'speed_print': ['SpeedSlow', 'SpeedMedium', 'SpeedFast'],
                     //  'infill_sparse_density': ['ModelStructureThin', 'ModelStructureMedium', 'ModelStructureHard', 'ModelStructureVase'],
                     if (paramName === 'support_generate_type') {
-                        disabled = helpersExtruderConfig.support !== stackExtruderNumber;
+                        disabled = helpersExtruderConfig && helpersExtruderConfig.support !== stackExtruderNumber;
                     }
                     if (paramName === 'adhesion_type') {
-                        disabled = helpersExtruderConfig.adhesion !== stackExtruderNumber;
+                        disabled = helpersExtruderConfig && helpersExtruderConfig.adhesion !== stackExtruderNumber;
                     }
                     if (disabled) {
                         return null;
