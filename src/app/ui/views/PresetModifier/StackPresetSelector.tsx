@@ -147,6 +147,8 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
     const { series, toolHead, toolHead: { printingToolhead } } = useSelector((state: RootState) => state.machine);
     const presetActions = usePresetActions();
 
+    const isDual = isDualExtruder(printingToolhead);
+
     // quality
     const {
         qualityDefinitions,
@@ -270,27 +272,31 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
                 minWidth: '264px'
             }}
         >
-            <div className="height-60 border-bottom-normal">
-                <div className="sm-flex justify-space-between height-percent-100 unit-text padding-horizontal-16">
-                    <Anchor
-                        className={classNames('padding-horizontal-3', `${selectedStackId === LEFT_EXTRUDER ? 'border-bottom-black-3' : ''}`)}
-                        onClick={() => selectStack(LEFT_EXTRUDER)}
-                    >
-                        <span className={classNames('font-size-middle line-height-32 display-inline', `${selectedStackId === LEFT_EXTRUDER ? 'font-weight-bold color-black-2' : 'font-weight-normal color-black-4'}`)}>
-                            {i18n._('Left Extruder')}
-                        </span>
-                    </Anchor>
-                    <Anchor
-                        className={classNames('padding-horizontal-3', `${selectedStackId === RIGHT_EXTRUDER ? 'border-bottom-black-3' : ''}`)}
-                        onClick={() => selectStack(RIGHT_EXTRUDER)}
-                        disabled={!isDualExtruder(printingToolhead)}
-                    >
-                        <span className={classNames('font-size-middle line-height-32 display-inline', `${selectedStackId === RIGHT_EXTRUDER ? 'font-weight-bold color-black-2' : 'font-weight-normal color-black-4'}`)}>
-                            {i18n._('Right Extruder')}
-                        </span>
-                    </Anchor>
-                </div>
-            </div>
+            {
+                isDual && (
+                    <div className="height-60 border-bottom-normal">
+                        <div className="sm-flex justify-space-between height-percent-100 unit-text padding-horizontal-16">
+                            <Anchor
+                                className={classNames('padding-horizontal-3', `${selectedStackId === LEFT_EXTRUDER ? 'border-bottom-black-3' : ''}`)}
+                                onClick={() => selectStack(LEFT_EXTRUDER)}
+                            >
+                                <span className={classNames('font-size-middle line-height-32 display-inline', `${selectedStackId === LEFT_EXTRUDER ? 'font-weight-bold color-black-2' : 'font-weight-normal color-black-4'}`)}>
+                                    {i18n._('Left Extruder')}
+                                </span>
+                            </Anchor>
+                            <Anchor
+                                className={classNames('padding-horizontal-3', `${selectedStackId === RIGHT_EXTRUDER ? 'border-bottom-black-3' : ''}`)}
+                                onClick={() => selectStack(RIGHT_EXTRUDER)}
+                                disabled={!isDual}
+                            >
+                                <span className={classNames('font-size-middle line-height-32 display-inline', `${selectedStackId === RIGHT_EXTRUDER ? 'font-weight-bold color-black-2' : 'font-weight-normal color-black-4'}`)}>
+                                    {i18n._('Right Extruder')}
+                                </span>
+                            </Anchor>
+                        </div>
+                    </div>
+                )
+            }
             <div className="flex-grow-1">
                 {
                     presetModel && presetOptionsObj && Object.keys(presetOptionsObj).map((presetCategory) => {
@@ -302,7 +308,7 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
                         return (
                             <li key={presetCategory}>
                                 <Anchor onClick={() => togglePresetCategoryExpansion(presetCategory)}>
-                                    <div className={classNames('width-percent-100')}>
+                                    <div className={classNames('width-percent-100', 'height-32')}>
                                         <SvgIcon
                                             name="DropdownOpen"
                                             type={['static']}
