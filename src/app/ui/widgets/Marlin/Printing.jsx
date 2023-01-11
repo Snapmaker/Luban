@@ -30,10 +30,18 @@ class Printing extends PureComponent {
     static propTypes = {
         isConnected: PropTypes.bool,
         // connectionType: PropTypes.string,
-        nozzleTemperature: PropTypes.number.isRequired,
-        nozzleTargetTemperature: PropTypes.number.isRequired,
+        nozzleTemperature: PropTypes.number,
+        nozzleTargetTemperature: PropTypes.number,
+
+        nozzleTemperature1: PropTypes.number.isRequired,
+        nozzleTargetTemperature1: PropTypes.number.isRequired,
+
+        nozzleTemperature2: PropTypes.number.isRequired,
+        nozzleTargetTemperature2: PropTypes.number.isRequired,
+
         nozzleRightTemperature: PropTypes.number,
         nozzleRightTargetTemperature: PropTypes.number,
+
         heatedBedTargetTemperature: PropTypes.number.isRequired,
         workflowStatus: PropTypes.string.isRequired,
         addConsoleLogs: PropTypes.func.isRequired,
@@ -179,30 +187,61 @@ class Printing extends PureComponent {
 
     render() {
         const {
-            isConnected, heatedBedTemperature, heatedBedTargetTemperature, nozzleTemperature, nozzleTargetTemperature, currentWorkNozzle,
+            isConnected,
+
+            heatedBedTemperature,
+            heatedBedTargetTemperature,
+
+            nozzleTemperature,
+            nozzleTargetTemperature,
+
+            nozzleTemperature1,
+            nozzleTemperature2,
+
+            nozzleTargetTemperature1,
+            nozzleTargetTemperature2,
+
+            nozzleRightTemperature,
+            nozzleRightTargetTemperature,
+
+            currentWorkNozzle,
             printingToolhead,
             workflowStatus
         } = this.props;
+
+        const leftNozzleTemperature = nozzleTemperature || nozzleTemperature1;
+        const leftNozzleTargetTemperature = nozzleTargetTemperature || nozzleTargetTemperature1;
+
+        const rightNozzleTemperature = nozzleRightTemperature || nozzleTemperature2;
+        const rightNozzleTargetTemperature = nozzleRightTargetTemperature || nozzleTargetTemperature2;
+
+        const leftNozzleReady = leftNozzleTargetTemperature && (leftNozzleTemperature - leftNozzleTargetTemperature >= -5);
+        const rightNozzleReady = rightNozzleTargetTemperature && (rightNozzleTemperature - rightNozzleTargetTemperature >= -5);
+
         const { zOffsetMarks, leftZOffsetValue } = this.state;
         const actions = this.actions;
 
-        const nozzleTemperatureTitle = isDualExtruder(printingToolhead) ? i18n._('key-Workspace/Marlin-Left Nozzle Temp') : i18n._('key-Workspace/Connection-Nozzle Temp.');
+        const isDual = isDualExtruder(printingToolhead);
+
+        const nozzleTemperatureTitle = isDual ? i18n._('key-Workspace/Marlin-Left Nozzle Temp') : i18n._('key-Workspace/Connection-Nozzle Temp.');
         const nozzleRightTemperatureTitle = i18n._('key-Workspace/Marlin-Right Nozzle Temp');
 
         return (
             <div>
-                {isDualExtruder(printingToolhead) && (
-                    <div>
-                        <div className="sm-flex justify-space-between">
-                            <span>{i18n._('key-unused-Current Work Nozzle')}</span>
-                            <span>{i18n._(`key-setting/${capitalize(currentWorkNozzle)}-Nozzle`)}</span>
+                {
+                    isDual && (
+                        <div>
+                            <div className="sm-flex justify-space-between">
+                                <span>{i18n._('key-unused-Current Work Nozzle')}</span>
+                                <span>{i18n._(`key-setting/${capitalize(currentWorkNozzle)}-Nozzle`)}</span>
+                            </div>
+                            <Button disabled={this.state.squeezing || workflowStatus === WORKFLOW_STATUS_RUNNING} onClick={() => this.actions.siwtchWorkNozzle(currentWorkNozzle === LEFT_EXTRUDER ? RIGHT_EXTRUDER_MAP_NUMBER : LEFT_EXTRUDER_MAP_NUMBER)}>
+                                {i18n._('key-Workspace/Marlin-Switch working nozzle')}
+                            </Button>
+                            <div className="dashed-border-use-background" />
                         </div>
-                        <Button disabled={this.state.squeezing || workflowStatus === WORKFLOW_STATUS_RUNNING} onClick={() => this.actions.siwtchWorkNozzle(currentWorkNozzle === LEFT_EXTRUDER ? RIGHT_EXTRUDER_MAP_NUMBER : LEFT_EXTRUDER_MAP_NUMBER)}>
-                            {i18n._('key-Workspace/Marlin-Switch working nozzle')}
-                        </Button>
-                        <div className="dashed-border-use-background" />
-                    </div>
-                )}
+                    )
+                }
 
                 <ParamsWrapper
                     handleSubmit={(value) => {
@@ -215,86 +254,89 @@ class Printing extends PureComponent {
                     <div className="width-44 sm-flex sm-flex-direction-c">
                         {/* <span>{i18n._('key-unused-{i18n._('key-Workspace/Marlin-Actual Data Title')}')}</span> */}
                         <span>{i18n._('key-Workspace/Marlin-Actual Data Title')}</span>
-                        <span>{Math.floor(nozzleTemperature)}°C</span>
+                        <span>{Math.floor(leftNozzleTemperature)}°C</span>
                     </div>
                     <div className="width-44 sm-flex sm-flex-direction-c margin-left-16">
                         {/* <span>{i18n._('key-unused-{i18n._('key-Workspace/Marlin-Target Data Title')}')}</span> */}
                         <span>{i18n._('key-Workspace/Marlin-Target Data Title')}</span>
-                        <span>{Math.floor(nozzleTargetTemperature)}°C</span>
+                        <span>{Math.floor(leftNozzleTargetTemperature)}°C</span>
                     </div>
                 </ParamsWrapper>
 
-                {!this.isPausingOrPrinting() && (
-                    <div className="sm-flex justify-flex-end margin-vertical-8">
-                        <div>
-                            <Button
-                                priority="level-three"
-                                width="96px"
-                                className="display-inline"
-                                disabled={this.state.squeezing || !(nozzleTargetTemperature && (nozzleTemperature - nozzleTargetTemperature >= -5))}
-                                onClick={() => actions.onClickUnload(LEFT_EXTRUDER_MAP_NUMBER)}
-                            >
-                                {i18n._('key-unused-Unload')}
-                            </Button>
-                            <Button
-                                className="margin-left-4 display-inline"
-                                priority="level-three"
-                                width="96px"
-                                disabled={this.state.squeezing || !(nozzleTargetTemperature && (nozzleTemperature - nozzleTargetTemperature >= -5))}
-                                onClick={() => actions.onClickLoad(LEFT_EXTRUDER_MAP_NUMBER)}
-                            >
-                                {i18n._('key-unused-Load')}
-                            </Button>
+                {
+                    !this.isPausingOrPrinting() && (
+                        <div className="sm-flex justify-flex-end margin-vertical-8">
+                            <div>
+                                <Button
+                                    priority="level-three"
+                                    width="96px"
+                                    className="display-inline"
+                                    disabled={this.state.squeezing || !leftNozzleReady}
+                                    onClick={() => actions.onClickUnload(LEFT_EXTRUDER_MAP_NUMBER)}
+                                >
+                                    {i18n._('key-unused-Unload')}
+                                </Button>
+                                <Button
+                                    className="margin-left-4 display-inline"
+                                    priority="level-three"
+                                    width="96px"
+                                    disabled={this.state.squeezing || !leftNozzleReady}
+                                    onClick={() => actions.onClickLoad(LEFT_EXTRUDER_MAP_NUMBER)}
+                                >
+                                    {i18n._('key-unused-Load')}
+                                </Button>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )
+                }
 
-                {isDualExtruder(printingToolhead) && (
-                    <ParamsWrapper
-                        handleSubmit={(value) => {
-                            this.actions.updateNozzleTemp(RIGHT_EXTRUDER_MAP_NUMBER, value);
-                        }}
-                        initValue={this.props.nozzleRightTargetTemperature}
-                        title={nozzleRightTemperatureTitle}
-                        suffix="°C"
-                    >
-                        <div className="width-44 sm-flex sm-flex-direction-c">
-                            {/* <span>{i18n._('key-unused-{i18n._('key-Workspace/Marlin-Actual Data Title')}')}</span> */}
-                            <span>{i18n._('key-Workspace/Marlin-Actual Data Title')}</span>
-                            <span>{Math.floor(this.props.nozzleRightTemperature)}°C</span>
+                {
+                    isDualExtruder(printingToolhead) && (
+                        <ParamsWrapper
+                            handleSubmit={(value) => {
+                                this.actions.updateNozzleTemp(RIGHT_EXTRUDER_MAP_NUMBER, value);
+                            }}
+                            initValue={rightNozzleTemperature}
+                            title={nozzleRightTemperatureTitle}
+                            suffix="°C"
+                        >
+                            <div className="width-44 sm-flex sm-flex-direction-c">
+                                <span>{i18n._('key-Workspace/Marlin-Actual Data Title')}</span>
+                                <span>{Math.floor(rightNozzleTemperature)}°C</span>
+                            </div>
+                            <div className="width-44 sm-flex sm-flex-direction-c margin-left-16">
+                                <span>{i18n._('key-Workspace/Marlin-Target Data Title')}</span>
+                                <span>{Math.floor(rightNozzleTargetTemperature)}°C</span>
+                            </div>
+                        </ParamsWrapper>
+                    )
+                }
+                {
+                    isDualExtruder(printingToolhead) && !this.isPausingOrPrinting() && (
+                        <div className="sm-flex justify-flex-end margin-vertical-8">
+                            <div>
+                                <Button
+                                    priority="level-three"
+                                    width="96px"
+                                    className="display-inline"
+                                    disabled={this.state.squeezing || !rightNozzleReady}
+                                    onClick={() => actions.onClickUnload(RIGHT_EXTRUDER_MAP_NUMBER)}
+                                >
+                                    {i18n._('key-unused-Unload')}
+                                </Button>
+                                <Button
+                                    className="margin-left-4 display-inline"
+                                    priority="level-three"
+                                    width="96px"
+                                    disabled={this.state.squeezing || !rightNozzleReady}
+                                    onClick={() => actions.onClickLoad(RIGHT_EXTRUDER_MAP_NUMBER)}
+                                >
+                                    {i18n._('key-unused-Load')}
+                                </Button>
+                            </div>
                         </div>
-                        <div className="width-44 sm-flex sm-flex-direction-c margin-left-16">
-                            {/* <span>{i18n._('key-unused-{i18n._('key-Workspace/Marlin-Target Data Title')}')}</span> */}
-                            <span>{i18n._('key-Workspace/Marlin-Target Data Title')}</span>
-                            <span>{Math.floor(this.props.nozzleRightTargetTemperature)}°C</span>
-                        </div>
-                    </ParamsWrapper>
-
-                )}
-                {isDualExtruder(printingToolhead) && !this.isPausingOrPrinting() && (
-                    <div className="sm-flex justify-flex-end margin-vertical-8">
-                        <div>
-                            <Button
-                                priority="level-three"
-                                width="96px"
-                                className="display-inline"
-                                disabled={this.state.squeezing || !(this.props.nozzleRightTargetTemperature && (this.props.nozzleRightTemperature - this.props.nozzleRightTargetTemperature >= -5))}
-                                onClick={() => actions.onClickUnload(RIGHT_EXTRUDER_MAP_NUMBER)}
-                            >
-                                {i18n._('key-unused-Unload')}
-                            </Button>
-                            <Button
-                                className="margin-left-4 display-inline"
-                                priority="level-three"
-                                width="96px"
-                                disabled={this.state.squeezing || !(this.props.nozzleRightTargetTemperature && (this.props.nozzleRightTemperature - this.props.nozzleRightTargetTemperature >= -5))}
-                                onClick={() => actions.onClickLoad(RIGHT_EXTRUDER_MAP_NUMBER)}
-                            >
-                                {i18n._('key-unused-Load')}
-                            </Button>
-                        </div>
-                    </div>
-                )}
+                    )
+                }
 
 
                 <ParamsWrapper
@@ -391,11 +433,19 @@ const mapStateToProps = (state) => {
         connectionType,
         nozzleTemperature,
         nozzleTargetTemperature,
+
+        nozzleTemperature1,
+        nozzleTemperature2,
+
+        nozzleTargetTemperature1,
+        nozzleTargetTemperature2,
+
+        nozzleRightTemperature,
+        nozzleRightTargetTemperature,
+
         heatedBedTemperature,
         heatedBedTargetTemperature,
         workflowStatus,
-        nozzleRightTemperature,
-        nozzleRightTargetTemperature,
         currentWorkNozzle
     } = machine;
     const { toolHead: printingToolhead } = workspace;
@@ -404,6 +454,13 @@ const mapStateToProps = (state) => {
         connectionType,
         nozzleTemperature,
         nozzleTargetTemperature,
+
+        nozzleTemperature1,
+        nozzleTemperature2,
+
+        nozzleTargetTemperature1,
+        nozzleTargetTemperature2,
+
         nozzleRightTemperature,
         nozzleRightTargetTemperature,
         heatedBedTemperature,

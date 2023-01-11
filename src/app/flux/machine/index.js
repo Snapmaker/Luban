@@ -155,6 +155,13 @@ const INITIAL_STATE = {
     // for dual extruder -> right extruder
     nozzleRightTemperature: 0,
     nozzleRightTargetTemperature: 0,
+
+    nozzleTemperature1: 0,
+    nozzleTemperature2: 0,
+
+    nozzleTargetTemperature1: 0,
+    nozzleTargetTemperature2: 0,
+
     heatedBedTemperature: 0,
     heatedBedTargetTemperature: 0,
     laserCamera: false,
@@ -504,9 +511,16 @@ export const actions = {
 
                     // extruder nozzle temp
                     nozzleTemperature,
-                    nozzleTargetTemperature,
                     nozzleRightTemperature,
+
+                    nozzleTargetTemperature,
                     nozzleRightTargetTemperature,
+
+                    nozzleTemperature1,
+                    nozzleTemperature2,
+
+                    nozzleTargetTemperature1,
+                    nozzleTargetTemperature2,
 
                     // bed temp
                     heatedBedTemperature,
@@ -616,8 +630,16 @@ export const actions = {
                 } else {
                     compareAndSet(data, machineState, 'nozzleTemperature', nozzleTemperature);
                     compareAndSet(data, machineState, 'nozzleTargetTemperature', nozzleTargetTemperature);
+
+                    compareAndSet(data, machineState, 'nozzleTemperature1', nozzleTemperature1);
+                    compareAndSet(data, machineState, 'nozzleTemperature2', nozzleTemperature2);
+
+                    compareAndSet(data, machineState, 'nozzleTargetTemperature1', nozzleTargetTemperature1);
+                    compareAndSet(data, machineState, 'nozzleTargetTemperature2', nozzleTargetTemperature2);
+
                     compareAndSet(data, machineState, 'nozzleRightTemperature', nozzleRightTemperature);
                     compareAndSet(data, machineState, 'nozzleRightTargetTemperature', nozzleRightTargetTemperature);
+
                     compareAndSet(data, machineState, 'heatedBedTemperature', heatedBedTemperature);
                     compareAndSet(data, machineState, 'heatedBedTargetTemperature', heatedBedTargetTemperature);
 
