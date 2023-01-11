@@ -11,6 +11,7 @@ import { PRESET_CATEGORY_DEFAULT } from '../../../constants/preset';
 import i18n from '../../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import SvgIcon from '../../components/SvgIcon';
+import { Button } from '../../components/Buttons';
 
 import { RootState } from '../../../flux/index.def';
 import { actions as projectActions } from '../../../flux/project';
@@ -65,6 +66,55 @@ const getPresetItemDropdownMenuProps = ({ presetModel, onCopyPreset, onExportPre
                 onDeletePreset();
                 break;
             }
+            default:
+                break;
+        }
+    }
+
+    return {
+        items,
+        onClick,
+    };
+};
+
+const getAddPresetMenuProps = ({ onCreatePreset }): MenuProps => {
+    const items = [];
+
+    items.push({
+        key: 'menu:create',
+        label: (
+            <div className="width-112 height-88 sm-flex sm-flex-direction-c align-center margin-right-8">
+                <SvgIcon
+                    name="PresetQuickCreate"
+                    className="margin-bottom-8"
+                    size={48}
+                />
+                <span className="width-percent-100 text-overflow-ellipsis align-c">{i18n._('key-Printing/ProfileManager-Quick Create')}</span>
+            </div>
+        ),
+    });
+
+    items.push({
+        key: 'menu:create-import',
+        label: (
+            <div className="width-112 height-88 sm-flex sm-flex-direction-c align-center">
+                <SvgIcon
+                    name="PresetLocal"
+                    className="margin-bottom-8"
+                    size={48}
+                />
+                <span className="width-percent-100 text-overflow-ellipsis align-c">{i18n._('key-Printing/ProfileManager-Local Import')}</span>
+            </div>
+        ),
+    });
+
+    function onClick({ key }) {
+        switch (key) {
+            case 'menu:create':
+                onCreatePreset();
+                break;
+            case 'menu:create-import':
+                break;
             default:
                 break;
         }
@@ -167,6 +217,7 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
     }
 
     const [showCreatePresetModal, setShowCreatePresetModal] = useState(false);
+    const [showCopyPresetModal, setShowCopyPresetModal] = useState(false);
     const [showDeletePresetModal, setShowDeletePresetModal] = useState(false);
 
     const actions = {
@@ -276,7 +327,7 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
                                                                         overlayClassName={classNames('border-radius-8', 'border-default-black-5')}
                                                                         menu={getPresetItemDropdownMenuProps({
                                                                             presetModel,
-                                                                            onCopyPreset: () => setShowCreatePresetModal(true),
+                                                                            onCopyPreset: () => setShowCopyPresetModal(true),
                                                                             onExportPreset: () => actions.exportConfigFile(presetModel.definitionId),
                                                                             onDeletePreset: () => setShowDeletePresetModal(true),
                                                                         })}
@@ -302,16 +353,46 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
                     })
                 }
             </div>
+            <div className="margin-bottom-16">
+                <Dropdown
+                    placement="top"
+                    overlayClassName={classNames('horizontal-menu')}
+                    trigger={['click']}
+                    menu={getAddPresetMenuProps({
+                        onCreatePreset: () => setShowCreatePresetModal(true),
+                    })}
+                >
+                    <Button
+                        type="default"
+                        priority="level-two"
+                        className="padding-horizontal-16"
+                    >
+                        {i18n._('key-ProfileManager/Add Profile')}
+                    </Button>
+                </Dropdown>
+            </div>
             <div className="margin-bottom-16" />
             {/* Create Preset Modal */}
             {
                 showCreatePresetModal && (
                     <CreatePresetModal
-                        createOrCopy="copy"
+                        createOrCopy="create"
                         presetModel={presetModel}
                         categories={categories}
                         presetActions={presetActions}
                         onClose={() => setShowCreatePresetModal(false)}
+                    />
+                )
+            }
+            {/* Copy Preset Modal */}
+            {
+                showCopyPresetModal && (
+                    <CreatePresetModal
+                        createOrCopy="copy"
+                        presetModel={presetModel}
+                        categories={categories}
+                        presetActions={presetActions}
+                        onClose={() => setShowCopyPresetModal(false)}
                     />
                 )
             }
