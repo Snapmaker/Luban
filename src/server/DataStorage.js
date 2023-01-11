@@ -103,7 +103,7 @@ class DataStorage {
     }
 
     async init(isReset = false) {
-        const definitionUpdated = config.get('DefinitionUpdated') && {};
+        const definitionUpdated = config.get('DefinitionUpdated');
 
         const gaUserId = config.get('gaUserId');
         if (isNil(gaUserId)) {
