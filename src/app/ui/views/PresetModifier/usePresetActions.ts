@@ -6,12 +6,18 @@ import PresetDefinitionModel from '../../../flux/manager/PresetDefinitionModel';
 import { actions as printingActions } from '../../../flux/printing';
 
 
+interface Definition {
+    definitionId: string;
+}
+
 export declare type PresetActionsType = {
     onSelectDefinitionById?: (definitionId) => void;
 
     onCreateManagerDefinition: (definition) => Promise<PresetDefinitionModel>;
 
     onDeletePresetModel: (preset) => Promise<void>;
+
+    createPreset: (file) => Promise<Definition>;
 };
 
 /**
@@ -37,6 +43,11 @@ const usePresetActions = (): PresetActionsType => {
         ));
     };
 
+    // Create
+    const createPreset = (file) => {
+        return dispatch(printingActions.onUploadManagerDefinition(file, PRINTING_MANAGER_TYPE_QUALITY));
+    };
+
     return {
         onSelectDefinitionById,
 
@@ -45,6 +56,9 @@ const usePresetActions = (): PresetActionsType => {
 
         // @ts-ignore
         onDeletePresetModel,
+
+        // @ts-ignore
+        createPreset,
     };
 };
 

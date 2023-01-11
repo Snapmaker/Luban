@@ -1,24 +1,25 @@
-import classNames from 'classnames';
-import { includes, remove } from 'lodash';
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { Dropdown } from 'antd';
 import { MenuProps } from 'antd/lib/menu';
+import classNames from 'classnames';
+import { includes, remove } from 'lodash';
+import React, { useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { HEAD_PRINTING, LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
 import { getMachineSeriesWithToolhead, isDualExtruder } from '../../../constants/machines';
 import { PRESET_CATEGORY_DEFAULT } from '../../../constants/preset';
-import i18n from '../../../lib/i18n';
-import Anchor from '../../components/Anchor';
-import SvgIcon from '../../components/SvgIcon';
-import { Button } from '../../components/Buttons';
+import log from '../../../lib/log';
 
 import { RootState } from '../../../flux/index.def';
 import { actions as projectActions } from '../../../flux/project';
+import i18n from '../../../lib/i18n';
+import Anchor from '../../components/Anchor';
+import { Button } from '../../components/Buttons';
+import SvgIcon from '../../components/SvgIcon';
 import { getPresetOptions } from '../../utils/profileManager';
-import styles from './styles.styl';
 import CreatePresetModal from './CreatePresetModal';
 import DeletePresetModal from './DeletePresetModal';
+import styles from './styles.styl';
 import usePresetActions from './usePresetActions';
 
 
@@ -77,7 +78,7 @@ const getPresetItemDropdownMenuProps = ({ presetModel, onCopyPreset, onExportPre
     };
 };
 
-const getAddPresetMenuProps = ({ onCreatePreset }): MenuProps => {
+const getAddPresetMenuProps = ({ onCreatePreset, onImportPreset }): MenuProps => {
     const items = [];
 
     items.push({
@@ -114,6 +115,7 @@ const getAddPresetMenuProps = ({ onCreatePreset }): MenuProps => {
                 onCreatePreset();
                 break;
             case 'menu:create-import':
+                onImportPreset();
                 break;
             default:
                 break;
@@ -219,6 +221,7 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
     const [showCreatePresetModal, setShowCreatePresetModal] = useState(false);
     const [showCopyPresetModal, setShowCopyPresetModal] = useState(false);
     const [showDeletePresetModal, setShowDeletePresetModal] = useState(false);
+    const importPresetFileInput = useRef(null);
 
     const actions = {
         // Export preset as file
@@ -240,7 +243,24 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
                     `${presetModel.name}.def.json`
                 )
             );
-        }
+        },
+        importPresetStep1: () => {
+            importPresetFileInput.current.value = null;
+            importPresetFileInput.current.click();
+        },
+        importPresetStep2: async (event) => {
+            // const definition = await outsideActions.onChangeFileForManager(e);
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            const definition = await presetActions.createPreset(file);
+            log.info(`Created preset ${definition.definitionId} from file "${file.name}".`);
+
+            // select the new preset after definitions refreshed
+            selectPresetByPresetId(definition.definitionId);
+        },
     };
 
     return (
@@ -354,12 +374,21 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
                 }
             </div>
             <div className="margin-bottom-16">
+                <input
+                    ref={importPresetFileInput}
+                    type="file"
+                    accept=".json"
+                    style={{ display: 'none' }}
+                    multiple={false}
+                    onChange={actions.importPresetStep2}
+                />
                 <Dropdown
                     placement="top"
                     overlayClassName={classNames('horizontal-menu')}
                     trigger={['click']}
                     menu={getAddPresetMenuProps({
                         onCreatePreset: () => setShowCreatePresetModal(true),
+                        onImportPreset: () => actions.importPresetStep1(),
                     })}
                 >
                     <Button
@@ -371,7 +400,6 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
                     </Button>
                 </Dropdown>
             </div>
-            <div className="margin-bottom-16" />
             {/* Create Preset Modal */}
             {
                 showCreatePresetModal && (

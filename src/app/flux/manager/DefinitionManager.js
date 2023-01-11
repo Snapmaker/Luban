@@ -280,12 +280,14 @@ class DefinitionManager {
             uploadName,
             this.configPathname
         );
-        const { err, definition } = res.body;
+        const { err } = res.body;
         if (err) {
             console.error(err);
             return null;
         } else {
-            return this.fillCustomCategory(definition);
+            const newDefinition = res.body.definition;
+            resolveMachineDefinition(newDefinition, this.changedArray, this.changedArrayWithoutExtruder);
+            return this.fillCustomCategory(newDefinition);
         }
     }
 
