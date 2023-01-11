@@ -901,8 +901,13 @@ const mapStateToProps = (state) => {
     const { currentModalPath } = state.appbarMenu;
     const { shouldCheckForUpdate } = machineInfo;
     const { modelGroup } = state.printing;
-    const { showSavedModal, savedModalType, savedModalFilePath, savedModalZIndex,
-        showArrangeModelsError, arrangeModelZIndex
+    const {
+        showSavedModal,
+        savedModalType,
+        savedModalFilePath = '',
+        savedModalZIndex,
+        showArrangeModelsError,
+        arrangeModelZIndex
     } = state.appGlobal;
     // const projectState = state.project;
     return {

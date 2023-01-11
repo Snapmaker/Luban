@@ -247,26 +247,6 @@ function PresetContent(
                         />
                     )
                 }
-                {/* Recommended */}
-                {/*
-                    selectParamsType === 'recommend' && (
-                        <div className="width-percent-100 padding-horizontal-16 padding-vertical-16 sm-flex justify-space-between">
-                            <div className="width-percent-70 margin-right-46">
-                                <ParamItem
-                                    selectedDefinitionModel={definitionForManager} // not Preset Model
-                                    onChangePresetSettings={onChangePresetSettings}
-                                />
-                            </div>
-                            <div className={classNames(styles['manager-params-docs'], 'width-percent-40 background-grey-3 border-radius-16 position-re')}>
-                                <div className={classNames(styles['manager-params-docs-content'], 'padding-vertical-16 padding-horizontal-16 overflow-y-auto height-percent-100')}>
-                                    <ReactMarkdown transformImageUri={(input) => (`atom:///${imgPath}/${input.slice(3)}`)}>
-                                        {mdContent}
-                                    </ReactMarkdown>
-                                </div>
-                            </div>
-                        </div>
-                    )
-                */}
             </div>
         </div>
     );

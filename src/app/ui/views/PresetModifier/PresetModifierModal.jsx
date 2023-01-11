@@ -68,6 +68,7 @@ function PresetModifierModal(
             dispatch(printingActions.updateActiveQualityPresetId(selectedStackId, presetId));
         } else {
             // TODO: Popup a notification indicating unacceptable preset id
+            dispatch(printingActions.updateActiveQualityPresetId(selectedStackId, presetId));
         }
     }
 

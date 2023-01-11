@@ -149,17 +149,19 @@ export function useGetDefinitions(allDefinitions, activeDefinitionID, getDefault
     return [definitionState, setDefinitionState];
 }
 
-function ProfileManager({
-    optionConfigGroup,
-    managerTitle,
-    activeDefinitionID,
-    allDefinitions,
-    outsideActions,
-    isOfficialDefinition,
-    managerType,
-    customConfig,
-    onChangeCustomConfig
-}) {
+function ProfileManager(
+    {
+        optionConfigGroup,
+        managerTitle,
+        activeDefinitionID,
+        allDefinitions,
+        outsideActions,
+        isOfficialDefinition,
+        managerType,
+        customConfig,
+        onChangeCustomConfig
+    }
+) {
     const [definitionState, setDefinitionState] = useGetDefinitions(allDefinitions, activeDefinitionID, outsideActions.getDefaultDefinition, managerType);
     const [showCreateMaterialModal, setShowCreateMaterialModal] = useState(false);
     const currentDefinitions = useRef(allDefinitions);
@@ -559,25 +561,26 @@ function ProfileManager({
                                                                     }}
                                                                     type={['static']}
                                                                 />
-                                                                {(definitionState?.isCategorySelected && isCategorySelected && definitionState?.renamingStatus) ? (
-                                                                    <input
-                                                                        ref={refs.renameInput}
-                                                                        className="sm-parameter-row__input"
-                                                                        value={definitionState?.selectedName}
-                                                                        onChange={actions.onChangeSelectedName}
-                                                                        onKeyPress={(e) => {
-                                                                            if (e.key === 'Enter') {
-                                                                                e.preventDefault();
+                                                                {(definitionState?.isCategorySelected && isCategorySelected && definitionState?.renamingStatus)
+                                                                    ? (
+                                                                        <input
+                                                                            ref={refs.renameInput}
+                                                                            className="sm-parameter-row__input"
+                                                                            value={definitionState?.selectedName}
+                                                                            onChange={actions.onChangeSelectedName}
+                                                                            onKeyPress={(e) => {
+                                                                                if (e.key === 'Enter') {
+                                                                                    e.preventDefault();
+                                                                                    actions.setRenamingStatus(false);
+                                                                                    actions.updateCategoryName();
+                                                                                }
+                                                                            }}
+                                                                            onBlur={() => {
                                                                                 actions.setRenamingStatus(false);
                                                                                 actions.updateCategoryName();
-                                                                            }
-                                                                        }}
-                                                                        onBlur={() => {
-                                                                            actions.setRenamingStatus(false);
-                                                                            actions.updateCategoryName();
-                                                                        }}
-                                                                    />
-                                                                )
+                                                                            }}
+                                                                        />
+                                                                    )
                                                                     : <span className="text-overflow-ellipsis">{cate.category}</span>}
                                                             </div>
                                                             {!isOfficialDefinition(definitionState.definitionForManager) && managerType !== PRINTING_MANAGER_TYPE_MATERIAL && (
@@ -627,14 +630,6 @@ function ProfileManager({
                                                                     let isAllValueDefault = true;
                                                                     if (isSelected && currentOption.isDefault && definitionState?.selectedSettingDefaultValue) {
                                                                         const selectedSettingDefaultValue = definitionState?.selectedSettingDefaultValue;
-                                                                        // isAllValueDefault = optionConfigGroup.every((item) => {
-                                                                        //     return item.fields.every((key) => {
-                                                                        //         return (
-                                                                        //             definitionForManager.settings[key].default_value
-                                                                        //             === selectedSettingDefaultValue[key].default_value
-                                                                        //         );
-                                                                        //     });
-                                                                        // });
                                                                         isAllValueDefault = actions.checkIsAllDefault(optionConfigGroup, definitionForManager, selectedSettingDefaultValue);
                                                                     }
                                                                     if (isUndefined(currentOption.label) || currentOption.isHidden) {
@@ -653,25 +648,26 @@ function ProfileManager({
                                                                                         )}
                                                                                         onDoubleClick={() => actions.setRenamingStatus(true)}
                                                                                     >
-                                                                                        {(isSelected && definitionState.renamingStatus) ? (
-                                                                                            <input
-                                                                                                ref={refs.renameInput}
-                                                                                                className="sm-parameter-row__input"
-                                                                                                value={definitionState.selectedName}
-                                                                                                onChange={actions.onChangeSelectedName}
-                                                                                                onKeyPress={(e) => {
-                                                                                                    if (e.key === 'Enter') {
-                                                                                                        e.preventDefault();
+                                                                                        {(isSelected && definitionState.renamingStatus)
+                                                                                            ? (
+                                                                                                <input
+                                                                                                    ref={refs.renameInput}
+                                                                                                    className="sm-parameter-row__input"
+                                                                                                    value={definitionState.selectedName}
+                                                                                                    onChange={actions.onChangeSelectedName}
+                                                                                                    onKeyPress={(e) => {
+                                                                                                        if (e.key === 'Enter') {
+                                                                                                            e.preventDefault();
+                                                                                                            actions.setRenamingStatus(false);
+                                                                                                            actions.updateDefinitionName();
+                                                                                                        }
+                                                                                                    }}
+                                                                                                    onBlur={() => {
                                                                                                         actions.setRenamingStatus(false);
                                                                                                         actions.updateDefinitionName();
-                                                                                                    }
-                                                                                                }}
-                                                                                                onBlur={() => {
-                                                                                                    actions.setRenamingStatus(false);
-                                                                                                    actions.updateDefinitionName();
-                                                                                                }}
-                                                                                            />
-                                                                                        )
+                                                                                                    }}
+                                                                                                />
+                                                                                            )
                                                                                             : <span className="text-overflow-ellipsis">{displayName}</span>}
                                                                                         {!(isSelected && definitionState.renamingStatus) && (
                                                                                             <div className={classNames(styles['manager-action'])}>
@@ -828,12 +824,14 @@ function ProfileManager({
                                 customConfigs={customConfig}
                                 onChangeCustomConfig={onChangeCustomConfig}
                             />
-                            {showCreateMaterialModal && managerType === PRINTING_MANAGER_TYPE_MATERIAL && (
-                                <AddMaterialModel
-                                    setShowCreateMaterialModal={setShowCreateMaterialModal}
-                                    onSubmit={(data) => actions.handleAddMaterial(data)}
-                                />
-                            )}
+                            {
+                                managerType === PRINTING_MANAGER_TYPE_MATERIAL && showCreateMaterialModal && (
+                                    <AddMaterialModel
+                                        setShowCreateMaterialModal={setShowCreateMaterialModal}
+                                        onSubmit={(data) => actions.handleAddMaterial(data)}
+                                    />
+                                )
+                            }
                         </div>
 
                     </Modal.Body>

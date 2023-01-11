@@ -1,23 +1,25 @@
-import classNames from 'classnames';
-import { includes, remove } from 'lodash';
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { Dropdown } from 'antd';
 import { MenuProps } from 'antd/lib/menu';
+import classNames from 'classnames';
+import { includes, remove } from 'lodash';
+import React, { useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { HEAD_PRINTING, LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
 import { getMachineSeriesWithToolhead, isDualExtruder } from '../../../constants/machines';
 import { PRESET_CATEGORY_DEFAULT } from '../../../constants/preset';
-import i18n from '../../../lib/i18n';
-import Anchor from '../../components/Anchor';
-import SvgIcon from '../../components/SvgIcon';
+import log from '../../../lib/log';
 
 import { RootState } from '../../../flux/index.def';
 import { actions as projectActions } from '../../../flux/project';
+import i18n from '../../../lib/i18n';
+import Anchor from '../../components/Anchor';
+import { Button } from '../../components/Buttons';
+import SvgIcon from '../../components/SvgIcon';
 import { getPresetOptions } from '../../utils/profileManager';
-import styles from './styles.styl';
 import CreatePresetModal from './CreatePresetModal';
 import DeletePresetModal from './DeletePresetModal';
+import styles from './styles.styl';
 import usePresetActions from './usePresetActions';
 
 
@@ -76,6 +78,56 @@ const getPresetItemDropdownMenuProps = ({ presetModel, onCopyPreset, onExportPre
     };
 };
 
+const getAddPresetMenuProps = ({ onCreatePreset, onImportPreset }): MenuProps => {
+    const items = [];
+
+    items.push({
+        key: 'menu:create',
+        label: (
+            <div className="width-112 height-88 sm-flex sm-flex-direction-c align-center margin-right-8">
+                <SvgIcon
+                    name="PresetQuickCreate"
+                    className="margin-bottom-8"
+                    size={48}
+                />
+                <span className="width-percent-100 text-overflow-ellipsis align-c">{i18n._('key-Printing/ProfileManager-Quick Create')}</span>
+            </div>
+        ),
+    });
+
+    items.push({
+        key: 'menu:create-import',
+        label: (
+            <div className="width-112 height-88 sm-flex sm-flex-direction-c align-center">
+                <SvgIcon
+                    name="PresetLocal"
+                    className="margin-bottom-8"
+                    size={48}
+                />
+                <span className="width-percent-100 text-overflow-ellipsis align-c">{i18n._('key-Printing/ProfileManager-Local Import')}</span>
+            </div>
+        ),
+    });
+
+    function onClick({ key }) {
+        switch (key) {
+            case 'menu:create':
+                onCreatePreset();
+                break;
+            case 'menu:create-import':
+                onImportPreset();
+                break;
+            default:
+                break;
+        }
+    }
+
+    return {
+        items,
+        onClick,
+    };
+};
+
 /**
  * Stack and preset selector.
  *
@@ -94,6 +146,8 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
 
     const { series, toolHead, toolHead: { printingToolhead } } = useSelector((state: RootState) => state.machine);
     const presetActions = usePresetActions();
+
+    const isDual = isDualExtruder(printingToolhead);
 
     // quality
     const {
@@ -167,7 +221,9 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
     }
 
     const [showCreatePresetModal, setShowCreatePresetModal] = useState(false);
+    const [showCopyPresetModal, setShowCopyPresetModal] = useState(false);
     const [showDeletePresetModal, setShowDeletePresetModal] = useState(false);
+    const importPresetFileInput = useRef(null);
 
     const actions = {
         // Export preset as file
@@ -189,7 +245,24 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
                     `${presetModel.name}.def.json`
                 )
             );
-        }
+        },
+        importPresetStep1: () => {
+            importPresetFileInput.current.value = null;
+            importPresetFileInput.current.click();
+        },
+        importPresetStep2: async (event) => {
+            // const definition = await outsideActions.onChangeFileForManager(e);
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            const definition = await presetActions.createPreset(file);
+            log.info(`Created preset ${definition.definitionId} from file "${file.name}".`);
+
+            // select the new preset after definitions refreshed
+            selectPresetByPresetId(definition.definitionId);
+        },
     };
 
     return (
@@ -199,27 +272,31 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
                 minWidth: '264px'
             }}
         >
-            <div className="height-60 border-bottom-normal">
-                <div className="sm-flex justify-space-between height-percent-100 unit-text padding-horizontal-16">
-                    <Anchor
-                        className={classNames('padding-horizontal-3', `${selectedStackId === LEFT_EXTRUDER ? 'border-bottom-black-3' : ''}`)}
-                        onClick={() => selectStack(LEFT_EXTRUDER)}
-                    >
-                        <span className={classNames('font-size-middle line-height-32 display-inline', `${selectedStackId === LEFT_EXTRUDER ? 'font-weight-bold color-black-2' : 'font-weight-normal color-black-4'}`)}>
-                            {i18n._('Left Extruder')}
-                        </span>
-                    </Anchor>
-                    <Anchor
-                        className={classNames('padding-horizontal-3', `${selectedStackId === RIGHT_EXTRUDER ? 'border-bottom-black-3' : ''}`)}
-                        onClick={() => selectStack(RIGHT_EXTRUDER)}
-                        disabled={!isDualExtruder(printingToolhead)}
-                    >
-                        <span className={classNames('font-size-middle line-height-32 display-inline', `${selectedStackId === RIGHT_EXTRUDER ? 'font-weight-bold color-black-2' : 'font-weight-normal color-black-4'}`)}>
-                            {i18n._('Right Extruder')}
-                        </span>
-                    </Anchor>
-                </div>
-            </div>
+            {
+                isDual && (
+                    <div className="height-60 border-bottom-normal">
+                        <div className="sm-flex justify-space-between height-percent-100 unit-text padding-horizontal-16">
+                            <Anchor
+                                className={classNames('padding-horizontal-3', `${selectedStackId === LEFT_EXTRUDER ? 'border-bottom-black-3' : ''}`)}
+                                onClick={() => selectStack(LEFT_EXTRUDER)}
+                            >
+                                <span className={classNames('font-size-middle line-height-32 display-inline', `${selectedStackId === LEFT_EXTRUDER ? 'font-weight-bold color-black-2' : 'font-weight-normal color-black-4'}`)}>
+                                    {i18n._('Left Extruder')}
+                                </span>
+                            </Anchor>
+                            <Anchor
+                                className={classNames('padding-horizontal-3', `${selectedStackId === RIGHT_EXTRUDER ? 'border-bottom-black-3' : ''}`)}
+                                onClick={() => selectStack(RIGHT_EXTRUDER)}
+                                disabled={!isDual}
+                            >
+                                <span className={classNames('font-size-middle line-height-32 display-inline', `${selectedStackId === RIGHT_EXTRUDER ? 'font-weight-bold color-black-2' : 'font-weight-normal color-black-4'}`)}>
+                                    {i18n._('Right Extruder')}
+                                </span>
+                            </Anchor>
+                        </div>
+                    </div>
+                )
+            }
             <div className="flex-grow-1">
                 {
                     presetModel && presetOptionsObj && Object.keys(presetOptionsObj).map((presetCategory) => {
@@ -231,7 +308,7 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
                         return (
                             <li key={presetCategory}>
                                 <Anchor onClick={() => togglePresetCategoryExpansion(presetCategory)}>
-                                    <div className={classNames('width-percent-100')}>
+                                    <div className={classNames('width-percent-100', 'height-32')}>
                                         <SvgIcon
                                             name="DropdownOpen"
                                             type={['static']}
@@ -276,7 +353,7 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
                                                                         overlayClassName={classNames('border-radius-8', 'border-default-black-5')}
                                                                         menu={getPresetItemDropdownMenuProps({
                                                                             presetModel,
-                                                                            onCopyPreset: () => setShowCreatePresetModal(true),
+                                                                            onCopyPreset: () => setShowCopyPresetModal(true),
                                                                             onExportPreset: () => actions.exportConfigFile(presetModel.definitionId),
                                                                             onDeletePreset: () => setShowDeletePresetModal(true),
                                                                         })}
@@ -302,16 +379,54 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
                     })
                 }
             </div>
-            <div className="margin-bottom-16" />
+            <div className="margin-bottom-16">
+                <input
+                    ref={importPresetFileInput}
+                    type="file"
+                    accept=".json"
+                    style={{ display: 'none' }}
+                    multiple={false}
+                    onChange={actions.importPresetStep2}
+                />
+                <Dropdown
+                    placement="top"
+                    overlayClassName={classNames('horizontal-menu')}
+                    trigger={['click']}
+                    menu={getAddPresetMenuProps({
+                        onCreatePreset: () => setShowCreatePresetModal(true),
+                        onImportPreset: () => actions.importPresetStep1(),
+                    })}
+                >
+                    <Button
+                        type="default"
+                        priority="level-two"
+                        className="padding-horizontal-16"
+                    >
+                        {i18n._('key-ProfileManager/Add Profile')}
+                    </Button>
+                </Dropdown>
+            </div>
             {/* Create Preset Modal */}
             {
                 showCreatePresetModal && (
+                    <CreatePresetModal
+                        createOrCopy="create"
+                        presetModel={presetModel}
+                        categories={categories}
+                        presetActions={presetActions}
+                        onClose={() => setShowCreatePresetModal(false)}
+                    />
+                )
+            }
+            {/* Copy Preset Modal */}
+            {
+                showCopyPresetModal && (
                     <CreatePresetModal
                         createOrCopy="copy"
                         presetModel={presetModel}
                         categories={categories}
                         presetActions={presetActions}
-                        onClose={() => setShowCreatePresetModal(false)}
+                        onClose={() => setShowCopyPresetModal(false)}
                     />
                 )
             }

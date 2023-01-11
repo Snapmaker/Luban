@@ -666,22 +666,19 @@ const ConfigurationView: React.FC<{}> = () => {
                             </div>
                         )
                     }
-                    {
-                        isDual && (
-                            <div className="sm-flex justify-flex-end margin-top-8" style={{ marginBottom: '-8px' }}>
-                                <Anchor
-                                    className={classNames('link-text', 'float-r')}
-                                    onClick={() => {
-                                        dispatch(printingActions.updateState({
-                                            showPrintParameterModifierDialog: selectedStackId,
-                                        }));
-                                    }}
-                                >
-                                    {i18n._('More Settings')} {'>'}
-                                </Anchor>
-                            </div>
-                        )
-                    }
+                    <div className="sm-flex justify-flex-end margin-top-8">
+                        <Anchor
+                            className={classNames('link-text', 'float-r')}
+                            onClick={() => {
+                                dispatch(printingActions.updateState({
+                                    showPrintParameterModifierDialog: selectedStackId,
+                                }));
+                            }}
+                        >
+                            {i18n._('More Settings')} {'>'}
+                        </Anchor>
+                    </div>
+                    {/*
                     <div className="sm-flex justify-flex-end margin-top-16" style={{ marginBottom: '0' }}>
                         <Anchor
                             className={classNames('link-text', 'float-r')}
@@ -690,6 +687,7 @@ const ConfigurationView: React.FC<{}> = () => {
                             More Settings (Classic)
                         </Anchor>
                     </div>
+                    */}
                 </div>
             </div>
         </div>
