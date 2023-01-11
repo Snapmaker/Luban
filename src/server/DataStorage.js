@@ -103,7 +103,8 @@ class DataStorage {
     }
 
     async init(isReset = false) {
-        const definitionUpdated = config.get('DefinitionUpdated');
+        const definitionUpdated = config.get('DefinitionUpdated') && {};
+
         const gaUserId = config.get('gaUserId');
         if (isNil(gaUserId)) {
             config.set('gaUserId', uuid());
@@ -111,10 +112,6 @@ class DataStorage {
         let overwriteProfiles = false;
         if (semver.gte(settings.version, '4.1.0') && (!definitionUpdated || !definitionUpdated[settings.version])) {
             overwriteProfiles = true;
-            config.set('DefinitionUpdated', {
-                ...definitionUpdated,
-                [settings.version]: true
-            });
         }
 
         mkdirp.sync(this.envDir);
@@ -165,14 +162,24 @@ class DataStorage {
             'https://snapmaker-luban.s3.us-west-1.amazonaws.com/camera-capture/mapy_350.txt',
             join(this.configDir, 'mapy_A350.txt')
         );
+
+        // Add current version to updated
+        if (overwriteProfiles) {
+            config.set('DefinitionUpdated', {
+                ...definitionUpdated,
+                [settings.version]: true,
+            });
+        }
     }
 
     async copyDirForInitSlicer({
         srcDir, dstDir,
-        overwriteTag = false, inherit = false
+        overwriteTag = false, inherit = false,
     }) {
         if (dstDir && srcDir) {
+            log.info(`Copy files from ${srcDir} to ${dstDir}`);
             mkdirp.sync(dstDir);
+
             if (fs.existsSync(srcDir)) {
                 const files = fs.readdirSync(srcDir);
                 for (const file of files) {
@@ -188,7 +195,7 @@ class DataStorage {
                             srcDir: src,
                             dstDir: dst,
                             overwriteTag: inherit ? overwriteTag : false,
-                            inherit
+                            inherit,
                         });
                     }
                 }
@@ -388,29 +395,33 @@ class DataStorage {
         mkdirp.sync(`${this.configDir}/${LASER_CONFIG_SUBCATEGORY}`);
         mkdirp.sync(`${this.configDir}/${PRINTING_CONFIG_SUBCATEGORY}`);
 
-        // TODO: Use print-settings derectly from package
+        // TODO: Use print-settings directly from package
         // const CURA_ENGINE_CONFIG_LOCAL = path.resolve('../../packages/luban-print-settings/resources');
         const CURA_ENGINE_CONFIG_LOCAL = path.resolve('../../resources/print-settings');
 
-        await this.copyDirForInitSlicer({
-            srcDir: CURA_ENGINE_CONFIG_LOCAL,
-            dstDir: this.configDir,
-            overwriteTag: true,
-            inherit: overwriteProfiles
-        });
-        this.upgradeConfigFile(this.configDir);
+        // default config
         await this.copyDirForInitSlicer({
             srcDir: CURA_ENGINE_CONFIG_LOCAL,
             dstDir: this.defaultConfigDir,
             overwriteTag: true,
-            inherit: true
+            inherit: true,
         });
+
+        // config
+        await this.copyDirForInitSlicer({
+            srcDir: CURA_ENGINE_CONFIG_LOCAL,
+            dstDir: this.configDir,
+            overwriteTag: true,
+            inherit: overwriteProfiles,
+        });
+        this.upgradeConfigFile(this.configDir);
+
         const isNewUser = config.get('isNewUser');
         isNewUser && !isReset && await this.copyDirForInitSlicer({
             srcDir: this.configDir,
             dstDir: this.longTermConfigDir,
             overwriteTag: true,
-            inherit: true
+            inherit: true,
         });
     }
 
@@ -433,7 +444,7 @@ class DataStorage {
                 srcDir,
                 dstDir: this.longTermConfigDir,
                 overwriteTag: true,
-                inherit: true
+                inherit: true,
             });
         } else {
             return;

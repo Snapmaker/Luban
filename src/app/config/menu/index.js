@@ -10,7 +10,7 @@ const menuItems = [
     editMenu,
     windowMenu,
     settingsMenu,
-    helpMenu
+    helpMenu,
 ];
 
 function onClickPreferences(menuItem, browserWindow) {

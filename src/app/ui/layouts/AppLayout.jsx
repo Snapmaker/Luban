@@ -658,6 +658,9 @@ class AppLayout extends PureComponent {
             UniApi.Event.on('longterm-backup-config', (event, ...args) => {
                 UniApi.Event.emit('appbar-menu:longterm-backup-config', ...args);
             });
+            UniApi.Event.on('open-config-folder', (event, ...args) => {
+                UniApi.Event.emit('appbar-menu:open-config-folder', ...args);
+            });
 
             UniApi.Event.on('appbar-menu:open-file', (file, arr) => {
                 this.actions.openProject(file);
@@ -850,6 +853,16 @@ class AppLayout extends PureComponent {
                 if (!(pathname === '/workspace' || pathname === '/' || pathname === 'undefined')) {
                     this.props.restartGuideTours(pathname, this.props.history);
                 }
+            });
+
+            UniApi.Event.on('appbar-menu:open-config-folder', () => {
+                const path = window.require('path');
+                const ipc = window.require('electron').ipcRenderer;
+
+                const { app } = window.require('@electron/remote');
+                const configDir = path.join(app.getPath('userData'), 'Config');
+
+                ipc.send('open-saved-path', configDir);
             });
         }
     };
