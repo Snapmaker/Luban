@@ -71,6 +71,7 @@ const ObjectListView: React.FC = () => {
     const models = useSelector((state: RootState) => state.printing.modelGroup.models);
     const inProgress = useSelector((state: RootState) => state?.printing?.inProgress);
     const leftBarOverlayVisible = useSelector((state: RootState) => state?.printing?.leftBarOverlayVisible);
+
     // const thisDisabled = leftBarOverlayVisible;
     const isDual = isDualExtruder(machineStore.get('machine.toolHead.printingToolhead'));
     const defaultMaterialId = useSelector((state: RootState) => state?.printing?.defaultMaterialId);
@@ -81,10 +82,13 @@ const ObjectListView: React.FC = () => {
     // const [showList, setShowList] = useState(true);
     const dispatch = useDispatch();
 
-
     const helpersExtruderConfig = useSelector((state: RootState) => state.printing.helpersExtruderConfig);
 
     const [helpersExtruder, setHelpersExtruder] = useState(helpersExtruderConfig);
+
+    useEffect(() => {
+        setHelpersExtruder(helpersExtruderConfig);
+    }, [helpersExtruderConfig]);
 
     const actions = {
         onClickModelNameBox(targetModel, event) {
