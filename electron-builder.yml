@@ -1,5 +1,6 @@
 appId: com.snapmaker.luban
 productName: Snapmaker Luban
+executableName: Snapmaker-Luban
 
 directories:
     buildResources: build
@@ -31,6 +32,7 @@ publish:
 # platforms and targets
 #
 mac:
+    artifactName: Snapmaker-Luban-${version}-mac-${arch}.${ext}
     category: public.app-category.productivity
     target:
         - dmg

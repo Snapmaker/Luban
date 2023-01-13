@@ -39,6 +39,7 @@
     "build-prod": "gulp production",
     "electron-builder": "electron-builder --publish never",
     "electron-rebuild": "electron-rebuild",
+    "build:mac": "bash -c 'build/electron-builder.sh --mac --x64 --arm64'",
     "build:mac-x64": "bash -c 'build/electron-builder.sh --mac --x64'",
     "build:mac-arm64": "bash -c 'build/electron-builder.sh --mac --arm64'",
     "build:linux-ia32": "bash -c 'build/electron-builder.sh --linux --ia32'",
