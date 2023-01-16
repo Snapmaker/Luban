@@ -3128,11 +3128,17 @@ export const actions = {
     },
 
     updateHelpersExtruder: (extruderConfig) => (dispatch, getState) => {
-        dispatch(
-            actions.updateState({ helpersExtruderConfig: extruderConfig })
-        );
+        const helpersExtruderConfig = getState().printing.helpersExtruderConfig;
+
+        const newHelpersExtruderConfig = {
+            ...helpersExtruderConfig,
+            ...extruderConfig,
+        };
+
+        dispatch(actions.updateState({ helpersExtruderConfig: newHelpersExtruderConfig }));
+
         const { modelGroup } = getState().printing;
-        modelGroup.setHelpersExtruderConfig(extruderConfig);
+        modelGroup.setHelpersExtruderConfig(newHelpersExtruderConfig);
 
         dispatch(actions.applyProfileToAllModels());
 
