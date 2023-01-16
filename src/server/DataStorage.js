@@ -177,7 +177,9 @@ class DataStorage {
         overwriteTag = false, inherit = false,
     }) {
         if (dstDir && srcDir) {
-            log.info(`Copy files from ${srcDir} to ${dstDir}`);
+            if (overwriteTag) {
+                log.info(`Copy files from ${srcDir} to ${dstDir}`);
+            }
             mkdirp.sync(dstDir);
 
             if (fs.existsSync(srcDir)) {
@@ -520,7 +522,8 @@ class DataStorage {
 
     async initProfileDocs() {
         mkdirp.sync(this.profileDocsDir);
-        const PROFILE_DOCS_LOCAL = path.resolve('../../resources/ProfileDocs/');
+        const PROFILE_DOCS_LOCAL = path.resolve('../../resources/print-settings-docs/');
+
         if (fs.existsSync(PROFILE_DOCS_LOCAL)) {
             const files = fs.readdirSync(PROFILE_DOCS_LOCAL);
             for (const file of files) {
