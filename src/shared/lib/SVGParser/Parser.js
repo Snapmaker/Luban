@@ -1,8 +1,8 @@
 import fs from 'fs';
 import { cloneDeep, isNil } from 'lodash';
+import log from 'loglevel';
 import path from 'path';
 import xml2js from 'xml2js';
-import log from 'loglevel';
 import AttributesParser from './AttributesParser';
 // import DefsTagParser from './DefsTagParser';
 import CircleTagParser from './CircleTagParser';
@@ -192,19 +192,24 @@ class SVGParser {
             }
         }
 
-        const width = boundingBox.maxX - boundingBox.minX;
-        const height = boundingBox.maxY - boundingBox.minY;
-        const viewBox = [boundingBox.minX, boundingBox.minY, width, height];
-
-        newSvg.$.viewBox = viewBox.join(' ');
+        // Use actual bounding box
+        // FIXME: Revert to use original attributes, cuz image size should be change on frontend too
+        // const width = boundingBox.maxX - boundingBox.minX;
+        // const height = boundingBox.maxY - boundingBox.minY;
+        // const viewBox = [boundingBox.minX, boundingBox.minY, width, height];
+        // const widthRatio = root.attributes.viewBox[2] / root.attributes.width;
+        // const heightRatio = root.attributes.viewBox[3] / root.attributes.height;
 
         return {
             shapes: root.shapes,
             boundingBox: boundingBox,
             parsedNode: parsedNode,
-            viewBox,
-            width,
-            height
+            viewBox: root.attributes.viewBox,
+            width: root.attributes.width,
+            height: root.attributes.height,
+            // viewBox,
+            // width: width / widthRatio,
+            // height: height / heightRatio, // root.attributes.height,
         };
     }
 
