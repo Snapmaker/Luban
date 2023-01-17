@@ -3538,19 +3538,20 @@ export const actions = {
         for (const model of modelGroup.getSelectedModelArray()) {
             const operation = new AddOperation3D({
                 target: model,
-                parent: null
+                parent: null,
             });
             operations.push(operation);
         }
         operations.registCallbackAfterAll(() => {
             dispatch(actions.updateState(modelGroup.getState()));
+            dispatch(actions.applyProfileToAllModels());
             dispatch(actions.destroyGcodeLine());
             dispatch(actions.displayModel());
         });
         dispatch(
             operationHistoryActions.setOperations(
                 INITIAL_STATE.name,
-                operations
+                operations,
             )
         );
 
@@ -3910,10 +3911,12 @@ export const actions = {
     undo: () => (dispatch, getState) => {
         const { history, displayedType } = getState().printing;
         const { canUndo } = history;
+
         if (displayedType !== 'model') {
             dispatch(actions.destroyGcodeLine());
             dispatch(actions.displayModel());
         }
+
         if (canUndo) {
             logToolBarOperation(HEAD_PRINTING, 'undo');
             dispatch(operationHistoryActions.undo(INITIAL_STATE.name));
