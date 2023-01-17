@@ -29,8 +29,7 @@ function PresetModifierModal(
 
     const {
         defaultDefinitions,
-        qualityDefinitions,
-        qualityDefinitionsRight,
+        qualityDefinitions: qualityPresetModels,
         activePresetIds,
     } = useSelector(state => state?.printing);
 
@@ -61,8 +60,7 @@ function PresetModifierModal(
      * @param presetId
      */
     function selectPreset(presetId) {
-        const presetModels = selectedStackId === LEFT_EXTRUDER ? qualityDefinitions : qualityDefinitionsRight;
-        const presetModel = presetModels.find(p => p.definitionId === presetId);
+        const presetModel = qualityPresetModels.find(p => p.definitionId === presetId);
         if (presetModel) {
             setSelectedPresetId(presetId);
             dispatch(printingActions.updateActiveQualityPresetId(selectedStackId, presetId));

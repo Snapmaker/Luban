@@ -110,8 +110,7 @@ const PresetContent = (
     const helpersExtruderConfig = useSelector((state) => state.printing.helpersExtruderConfig);
 
     const {
-        qualityDefinitions,
-        qualityDefinitionsRight,
+        qualityDefinitions: qualityPresetModels,
         // printingParamsType,
         customMode,
     } = useSelector(state => state?.printing);
@@ -124,8 +123,7 @@ const PresetContent = (
 
     // Update preset model and option config group
     useEffect(() => {
-        const presetModels = selectedStackId === LEFT_EXTRUDER ? qualityDefinitions : qualityDefinitionsRight;
-        const newPresetModel = presetModels.find(p => p.definitionId === selectedPresetId);
+        const newPresetModel = qualityPresetModels.find(p => p.definitionId === selectedPresetId);
         setPresetModel(newPresetModel);
 
         if (selectedStackId === LEFT_EXTRUDER) {

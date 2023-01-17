@@ -44,8 +44,11 @@ interface DisplayConfig {
  * @param settings
  * @param parameterConverter
  */
-function calculateDisplayConfigsForKeys(keys: string[], settings: { [key: string]: any },
-    parameterConverter: (key) => DisplayConfig | null): DisplayConfig[] {
+function calculateDisplayConfigsForKeys(
+    keys: string[],
+    settings: { [key: string]: any },
+    parameterConverter: (key) => DisplayConfig | null,
+): DisplayConfig[] {
     const displayConfigs = [];
     for (const key of keys) {
         let displayConfig: DisplayConfig = null;
@@ -216,7 +219,7 @@ const ParametersTableView: React.FC<TProps> = (props) => {
     } = props;
 
     // Category anchors
-    const [activeCateId, setActiveCateId] = useState(2);
+    const [activeCateId, setActiveCateId] = useState(0);
 
     const scrollDom = useRef(null);
     const fieldsDom = useRef([]);
@@ -297,28 +300,28 @@ const ParametersTableView: React.FC<TProps> = (props) => {
                 )}
             >
                 {
-                    Object.keys(optionConfigGroup).map((category, index) => {
-                        const keys = optionConfigGroup[category];
+                    Object.keys(displayConfigsGroups).map((category, index) => {
+                        const displayConfigs = displayConfigsGroups[category];
 
-                        if (keys.length) {
-                            return (
-                                <div key={category} className="margin-vertical-4">
-                                    <Anchor
-                                        className={classNames(styles.item, {
-                                            [styles.selected]:
-                                            index === activeCateId
-                                        })}
-                                        onClick={() => {
-                                            setActiveCate(index);
-                                        }}
-                                    >
-                                        <span className="sm-parameter-header__title">{i18n._(`key-Definition/Category-${category}`)}</span>
-                                    </Anchor>
-                                </div>
-                            );
-                        } else {
+                        if (!displayConfigs.length) {
                             return null;
                         }
+
+                        return (
+                            <div key={category} className="margin-vertical-4">
+                                <Anchor
+                                    className={classNames(styles.item, {
+                                        [styles.selected]:
+                                        index === activeCateId
+                                    })}
+                                    onClick={() => {
+                                        setActiveCate(index);
+                                    }}
+                                >
+                                    <span className="sm-parameter-header__title">{i18n._(`key-Definition/Category-${category}`)}</span>
+                                </Anchor>
+                            </div>
+                        );
                     })
                 }
             </div>
@@ -350,7 +353,10 @@ const ParametersTableView: React.FC<TProps> = (props) => {
                                 const displayConfigs = displayConfigsGroups[category];
 
                                 if (!displayConfigs.length) {
-                                    return null;
+                                    // leave a empty <div> so anchors won't break
+                                    return (
+                                        <div key={category} />
+                                    );
                                 }
 
                                 return (

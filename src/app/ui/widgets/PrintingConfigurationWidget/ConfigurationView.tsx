@@ -62,7 +62,6 @@ const ConfigurationView: React.FC<{}> = () => {
     const {
         // quality
         qualityDefinitions: qualityDefinitionModels,
-        qualityDefinitionsRight: qualityDefinitionModelsRight,
         activePresetIds,
 
         // material
@@ -97,7 +96,7 @@ const ConfigurationView: React.FC<{}> = () => {
     if (selectedStackId === LEFT_EXTRUDER) {
         presetOptionsObj = getPresetOptions(qualityDefinitionModels, materialPreset);
     } else {
-        presetOptionsObj = getPresetOptions(qualityDefinitionModelsRight, materialPresetRight);
+        presetOptionsObj = getPresetOptions(qualityDefinitionModels, materialPresetRight);
     }
 
     const presetCategoryOptions = Object.values(presetOptionsObj).map((item) => {
@@ -156,9 +155,7 @@ const ConfigurationView: React.FC<{}> = () => {
     // Update preset model
     useEffect(() => {
         const presetId = activePresetIds[selectedStackId];
-
-        const allModels = selectedStackId === LEFT_EXTRUDER ? qualityDefinitionModels : qualityDefinitionModelsRight;
-        const presetModel = allModels.find(p => p.definitionId === presetId);
+        const presetModel = qualityDefinitionModels.find(p => p.definitionId === presetId);
 
         // Update currently selected preset model
         if (presetModel) {
@@ -172,7 +169,7 @@ const ConfigurationView: React.FC<{}> = () => {
             // refresh the scene on preset model changed
             displayModel();
         }
-    }, [selectedStackId, activePresetIds, qualityDefinitionModels, qualityDefinitionModelsRight]);
+    }, [selectedStackId, activePresetIds, qualityDefinitionModels]);
 
 
     const i18nContent = {
@@ -289,7 +286,7 @@ const ConfigurationView: React.FC<{}> = () => {
                             // TODO: need update
                             const createdDefinitionModel = await dispatch(
                                 printingActions.duplicateDefinitionByType(
-                                    'quality',
+                                    PRINTING_MANAGER_TYPE_QUALITY,
                                     newSelectedDefinition,
                                     undefined,
                                     newName

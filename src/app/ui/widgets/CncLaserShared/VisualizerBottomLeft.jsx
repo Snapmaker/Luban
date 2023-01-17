@@ -21,14 +21,18 @@ const VisualizerBottomLeft = ({ headType, toFront, zoomOut, zoomIn, scale, minSc
                 cursor: 'auto',
             }}
         >
-            <Card
-                className={classNames('margin-horizontal-8')}
-                title={i18n._('key-CncLaser/ObjectList_Title-Object List')}
-            >
-                <CncLaserObjectList
-                    headType={headType}
-                />
-            </Card>
+            <div className="margin-horizontal-8">
+                <div className="margin-bottom-8">
+                    <Card
+                        title={i18n._('key-CncLaser/ObjectList_Title-Object List')}
+                        hasToggleButton
+                    >
+                        <CncLaserObjectList
+                            headType={headType}
+                        />
+                    </Card>
+                </div>
+            </div>
             <div className={classNames('margin-horizontal-8', 'height-24')}>
                 <SvgIcon
                     name="ViewFix"

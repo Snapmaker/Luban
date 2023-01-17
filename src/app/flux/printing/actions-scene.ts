@@ -34,16 +34,14 @@ const applyPrintSettingsToModels = () => (dispatch, getState) => {
 
     const {
         qualityDefinitions,
-        qualityDefinitionsRight,
         activePresetIds,
         modelGroup,
     } = getState().printing;
 
-    // TODO: Not only pick the left extruder
     const leftPresetModel = find(qualityDefinitions, {
         definitionId: activePresetIds[LEFT_EXTRUDER],
     });
-    const rightPresetModel = find(qualityDefinitionsRight, {
+    const rightPresetModel = find(qualityDefinitions, {
         definitionId: activePresetIds[RIGHT_EXTRUDER],
     });
 

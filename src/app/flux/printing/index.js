@@ -130,7 +130,7 @@ const definitionKeysWithDirection = {
     },
     right: {
         material: 'materialDefinitions',
-        quality: 'qualityDefinitionsRight',
+        quality: 'qualityDefinitions',
         extruder: 'extruderRDefinition'
     }
 };
@@ -175,7 +175,6 @@ const INITIAL_STATE = {
     defaultDefinitions: [],
     materialDefinitions: [],
     qualityDefinitions: [],
-    qualityDefinitionsRight: [],
 
     // isRecommended: true, // Using recommended settings, TODO: check to remove this
     defaultQualityId: 'quality.fast_print', // TODO: selectedQualityId
@@ -465,14 +464,10 @@ export const actions = {
         );
 
         const qualityParamModels = [];
-        const qualityParamModelsRight = [];
         const materialPresetModels = [];
 
         const activeMaterialType = dispatch(actions.getActiveMaterialType());
-        const activeMaterialTypeRight = dispatch(actions.getActiveMaterialType(undefined, RIGHT_EXTRUDER));
 
-        // const extruderLDefinition = await definitionManager.getDefinition('snapmaker_extruder_0');
-        // const extruderRDefinition = await definitionManager.getDefinition('snapmaker_extruder_1');
         const extruderLDefinition = definitionManager.extruderLDefinition;
         const extruderRDefinition = definitionManager.extruderRDefinition;
 
@@ -488,20 +483,12 @@ export const actions = {
                 extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
             );
             qualityParamModels.push(paramModel);
-
-            const paramModelRight = new PresetDefinitionModel(
-                eachDefinition,
-                activeMaterialTypeRight,
-                extruderRDefinition?.settings?.machine_nozzle_size?.default_value,
-            );
-            qualityParamModelsRight.push(paramModelRight);
         });
 
         dispatch(
             actions.updateState({
                 materialDefinitions: materialPresetModels,
                 qualityDefinitions: qualityParamModels,
-                qualityDefinitionsRight: qualityParamModelsRight,
                 extruderLDefinition,
                 extruderRDefinition,
             })
@@ -600,7 +587,6 @@ export const actions = {
         });
 
         const qualityPresetModels = [];
-        const qualityPresetModelsRight = [];
         for (const preset of allQualityDefinitions) {
             const paramModel = new PresetDefinitionModel(
                 preset,
@@ -608,13 +594,6 @@ export const actions = {
                 definitionManager.extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
             );
             qualityPresetModels.push(paramModel);
-
-            const paramModelRight = new PresetDefinitionModel(
-                preset,
-                activeMaterialType,
-                definitionManager.extruderRDefinition?.settings?.machine_nozzle_size?.default_value,
-            );
-            qualityPresetModelsRight.push(paramModelRight);
         }
 
         const defaultDefinitions = definitionManager?.defaultDefinitions.map((eachDefinition) => {
@@ -630,7 +609,6 @@ export const actions = {
                 defaultDefinitions: defaultDefinitions,
                 materialDefinitions: materialParamModels,
                 qualityDefinitions: qualityPresetModels,
-                qualityDefinitionsRight: qualityPresetModelsRight,
                 printingProfileLevel: definitionManager.printingProfileLevel,
                 materialProfileLevel: definitionManager.materialProfileLevel,
             })
@@ -1626,7 +1604,7 @@ export const actions = {
         type,
         definition,
         newDefinitionId,
-        newDefinitionName
+        newDefinitionName,
     ) => async (dispatch, getState) => {
         const state = getState().printing;
         let name = newDefinitionName || definition.name;
@@ -1695,11 +1673,20 @@ export const actions = {
             extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
         );
 
-        dispatch(
-            actions.updateState({
-                [definitionsKey]: [...state[definitionsKey], createdDefinitionModel]
-            })
-        );
+        // TODO: Refactor this
+        if (type === PRINTING_MANAGER_TYPE_QUALITY) {
+            dispatch(
+                actions.updateState({
+                    [definitionsKey]: [...state[definitionsKey], createdDefinitionModel]
+                })
+            );
+        } else {
+            dispatch(
+                actions.updateState({
+                    [definitionsKey]: [...state[definitionsKey], createdDefinitionModel]
+                })
+            );
+        }
 
         return createdDefinitionModel;
     },
@@ -2004,23 +1991,21 @@ export const actions = {
      * @param stackId
      */
     validateActiveQualityPreset: (stackId = LEFT_EXTRUDER) => (dispatch, getState) => {
-        const { qualityDefinitions, qualityDefinitionsRight, activePresetIds } = getState().printing;
-
-        const presetModels = stackId === LEFT_EXTRUDER ? qualityDefinitions : qualityDefinitionsRight;
+        const { qualityDefinitions, activePresetIds } = getState().printing;
 
         const materialType = dispatch(actions.getActiveMaterialType(undefined, stackId));
 
-        const presetModel = presetModels.find(p => p.definitionId === activePresetIds[stackId]);
+        const presetModel = qualityDefinitions.find(p => p.definitionId === activePresetIds[stackId]);
 
         // TODO: Consider nozzle size
         // machineNozzleSize: actualExtruderDefinition.settings?.machine_nozzle_size?.default_value,
-        if (presetModel && isQualityPresetVisible(presetModel, { materialType: materialType })) {
+        if (presetModel && isQualityPresetVisible(qualityDefinitions, { materialType: materialType })) {
             // the quality preset looks fine
             return;
         }
 
         // find a new quality preset for active material type
-        for (const presetModel2 of presetModels) {
+        for (const presetModel2 of qualityDefinitions) {
             const visible = isQualityPresetVisible(presetModel2, { materialType: materialType });
             if (visible) {
                 dispatch(actions.updateActiveQualityPresetId(stackId, presetModel2.definitionId));
@@ -2185,7 +2170,6 @@ export const actions = {
             defaultMaterialId,
             defaultMaterialIdRight,
             qualityDefinitions,
-            qualityDefinitionsRight,
             materialDefinitions,
         } = getState().printing;
         modelGroup.updateClippingPlane();
@@ -2205,7 +2189,7 @@ export const actions = {
         // update extruder definitions
         const qualityPresets = {
             [LEFT_EXTRUDER]: qualityDefinitions.find(p => p.definitionId === activePresetIds[LEFT_EXTRUDER]),
-            [RIGHT_EXTRUDER]: qualityDefinitionsRight.find(p => p.definitionId === activePresetIds[RIGHT_EXTRUDER]),
+            [RIGHT_EXTRUDER]: qualityDefinitions.find(p => p.definitionId === activePresetIds[RIGHT_EXTRUDER]),
         };
 
         const globalQualityPreset = cloneDeep(qualityPresets[LEFT_EXTRUDER]);
@@ -3554,19 +3538,20 @@ export const actions = {
         for (const model of modelGroup.getSelectedModelArray()) {
             const operation = new AddOperation3D({
                 target: model,
-                parent: null
+                parent: null,
             });
             operations.push(operation);
         }
         operations.registCallbackAfterAll(() => {
             dispatch(actions.updateState(modelGroup.getState()));
+            dispatch(actions.applyProfileToAllModels());
             dispatch(actions.destroyGcodeLine());
             dispatch(actions.displayModel());
         });
         dispatch(
             operationHistoryActions.setOperations(
                 INITIAL_STATE.name,
-                operations
+                operations,
             )
         );
 
@@ -3926,10 +3911,12 @@ export const actions = {
     undo: () => (dispatch, getState) => {
         const { history, displayedType } = getState().printing;
         const { canUndo } = history;
+
         if (displayedType !== 'model') {
             dispatch(actions.destroyGcodeLine());
             dispatch(actions.displayModel());
         }
+
         if (canUndo) {
             logToolBarOperation(HEAD_PRINTING, 'undo');
             dispatch(operationHistoryActions.undo(INITIAL_STATE.name));

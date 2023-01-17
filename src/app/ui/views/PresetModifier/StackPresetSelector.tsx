@@ -151,8 +151,7 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
 
     // quality
     const {
-        qualityDefinitions,
-        qualityDefinitionsRight,
+        qualityDefinitions: qualityPresetModels,
         materialDefinitions,
         defaultMaterialId,
         defaultMaterialIdRight,
@@ -166,12 +165,10 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
     const [expandedPresetCategories, setExpandedPresetCategories] = useState([PRESET_CATEGORY_DEFAULT]);
 
     useEffect(() => {
-        const presetModels = selectedStackId === LEFT_EXTRUDER ? qualityDefinitions : qualityDefinitionsRight;
-
         const materialPresetId = selectedStackId === LEFT_EXTRUDER ? defaultMaterialId : defaultMaterialIdRight;
         const materialPreset = materialDefinitions.find(p => p.definitionId === materialPresetId);
 
-        const newPresetOptionsObj = getPresetOptions(presetModels, materialPreset);
+        const newPresetOptionsObj = getPresetOptions(qualityPresetModels, materialPreset);
         setPresetOptionsObj(newPresetOptionsObj);
 
         const newCategories = Object.keys(newPresetOptionsObj);
@@ -179,12 +176,11 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
 
         // set all preset categories expanded
         setExpandedPresetCategories(Object.keys(newPresetOptionsObj));
-    }, [selectedStackId, defaultMaterialId, defaultMaterialIdRight, qualityDefinitions, qualityDefinitionsRight]);
+    }, [selectedStackId, defaultMaterialId, defaultMaterialIdRight, qualityPresetModels]);
 
     // Get active preset model
     useEffect(() => {
-        const presetModels = selectedStackId === LEFT_EXTRUDER ? qualityDefinitions : qualityDefinitionsRight;
-        const targetPresetModel = presetModels.find(p => p.definitionId === selectedPresetId);
+        const targetPresetModel = qualityPresetModels.find(p => p.definitionId === selectedPresetId);
         setPresetModel(targetPresetModel);
     }, [selectedStackId, selectedPresetId]);
 

@@ -1181,6 +1181,7 @@ class ModelGroup extends EventEmitter {
         // TODO: paste all objects from clipboard without losing their relative positions
         modelsToCopy.forEach((model) => {
             if (model instanceof PrimeTowerModel) return;
+
             const newModel = model.clone(this);
             if (newModel.parent) {
                 ThreeUtils.removeObjectParent(newModel.meshObject);

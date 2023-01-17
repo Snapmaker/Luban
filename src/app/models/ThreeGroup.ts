@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { cloneDeep } from 'lodash';
 import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils';
 import BaseModel, { ModelTransformation, ModelInfo, TSize } from './ThreeBaseModel';
 import type ModelGroup from './ModelGroup';
@@ -344,7 +345,7 @@ export default class ThreeGroup extends BaseModel {
             mode: this.mode,
             transformation: this.transformation,
             processImageName: this.processImageName,
-            extruderConfig: this.extruderConfig
+            extruderConfig: cloneDeep(this.extruderConfig),
         };
         this.children.forEach((model) => {
             clonedSubModels.push(model.clone(modelGroup));
