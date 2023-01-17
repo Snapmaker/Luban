@@ -17,7 +17,6 @@ const PresetInitialization: React.FC = () => {
 
     const {
         qualityDefinitions: qualityDefinitionModels,
-        qualityDefinitionsRight: qualityDefinitionModelsRight,
         activePresetIds,
 
         materialDefinitions,
@@ -50,11 +49,11 @@ const PresetInitialization: React.FC = () => {
     }, [qualityDefinitionModels, activePresetIds, defaultMaterialId]);
 
     useEffect(() => {
-        if (qualityDefinitionModelsRight.length > 0) {
-            let presetModel = qualityDefinitionModelsRight.find(p => p.definitionId === activePresetIds[RIGHT_EXTRUDER]);
+        if (qualityDefinitionModels.length > 0) {
+            let presetModel = qualityDefinitionModels.find(p => p.definitionId === activePresetIds[RIGHT_EXTRUDER]);
             if (!presetModel) {
                 // definition no found, select first official definition
-                const availablePresetModels = pickAvailablePresetModels(qualityDefinitionModelsRight, materialPresetRight);
+                const availablePresetModels = pickAvailablePresetModels(qualityDefinitionModels, materialPresetRight);
                 presetModel = availablePresetModels.length > 0 && availablePresetModels[0];
 
                 if (presetModel) {
@@ -64,7 +63,7 @@ const PresetInitialization: React.FC = () => {
                 }
             }
         }
-    }, [qualityDefinitionModelsRight, activePresetIds, defaultMaterialIdRight]);
+    }, [qualityDefinitionModels, activePresetIds, defaultMaterialIdRight]);
 
     return (<div className="display-none" />);
 };

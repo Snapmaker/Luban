@@ -130,7 +130,7 @@ const definitionKeysWithDirection = {
     },
     right: {
         material: 'materialDefinitions',
-        quality: 'qualityDefinitionsRight',
+        quality: 'qualityDefinitions',
         extruder: 'extruderRDefinition'
     }
 };
@@ -175,7 +175,6 @@ const INITIAL_STATE = {
     defaultDefinitions: [],
     materialDefinitions: [],
     qualityDefinitions: [],
-    qualityDefinitionsRight: [],
 
     // isRecommended: true, // Using recommended settings, TODO: check to remove this
     defaultQualityId: 'quality.fast_print', // TODO: selectedQualityId
@@ -465,14 +464,10 @@ export const actions = {
         );
 
         const qualityParamModels = [];
-        const qualityParamModelsRight = [];
         const materialPresetModels = [];
 
         const activeMaterialType = dispatch(actions.getActiveMaterialType());
-        const activeMaterialTypeRight = dispatch(actions.getActiveMaterialType(undefined, RIGHT_EXTRUDER));
 
-        // const extruderLDefinition = await definitionManager.getDefinition('snapmaker_extruder_0');
-        // const extruderRDefinition = await definitionManager.getDefinition('snapmaker_extruder_1');
         const extruderLDefinition = definitionManager.extruderLDefinition;
         const extruderRDefinition = definitionManager.extruderRDefinition;
 
@@ -488,20 +483,12 @@ export const actions = {
                 extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
             );
             qualityParamModels.push(paramModel);
-
-            const paramModelRight = new PresetDefinitionModel(
-                eachDefinition,
-                activeMaterialTypeRight,
-                extruderRDefinition?.settings?.machine_nozzle_size?.default_value,
-            );
-            qualityParamModelsRight.push(paramModelRight);
         });
 
         dispatch(
             actions.updateState({
                 materialDefinitions: materialPresetModels,
                 qualityDefinitions: qualityParamModels,
-                qualityDefinitionsRight: qualityParamModelsRight,
                 extruderLDefinition,
                 extruderRDefinition,
             })
@@ -600,7 +587,6 @@ export const actions = {
         });
 
         const qualityPresetModels = [];
-        const qualityPresetModelsRight = [];
         for (const preset of allQualityDefinitions) {
             const paramModel = new PresetDefinitionModel(
                 preset,
@@ -608,13 +594,6 @@ export const actions = {
                 definitionManager.extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
             );
             qualityPresetModels.push(paramModel);
-
-            const paramModelRight = new PresetDefinitionModel(
-                preset,
-                activeMaterialType,
-                definitionManager.extruderRDefinition?.settings?.machine_nozzle_size?.default_value,
-            );
-            qualityPresetModelsRight.push(paramModelRight);
         }
 
         const defaultDefinitions = definitionManager?.defaultDefinitions.map((eachDefinition) => {
@@ -630,7 +609,6 @@ export const actions = {
                 defaultDefinitions: defaultDefinitions,
                 materialDefinitions: materialParamModels,
                 qualityDefinitions: qualityPresetModels,
-                qualityDefinitionsRight: qualityPresetModelsRight,
                 printingProfileLevel: definitionManager.printingProfileLevel,
                 materialProfileLevel: definitionManager.materialProfileLevel,
             })
@@ -1626,7 +1604,7 @@ export const actions = {
         type,
         definition,
         newDefinitionId,
-        newDefinitionName
+        newDefinitionName,
     ) => async (dispatch, getState) => {
         const state = getState().printing;
         let name = newDefinitionName || definition.name;
@@ -1695,11 +1673,20 @@ export const actions = {
             extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
         );
 
-        dispatch(
-            actions.updateState({
-                [definitionsKey]: [...state[definitionsKey], createdDefinitionModel]
-            })
-        );
+        // TODO: Refactor this
+        if (type === PRINTING_MANAGER_TYPE_QUALITY) {
+            dispatch(
+                actions.updateState({
+                    [definitionsKey]: [...state[definitionsKey], createdDefinitionModel]
+                })
+            );
+        } else {
+            dispatch(
+                actions.updateState({
+                    [definitionsKey]: [...state[definitionsKey], createdDefinitionModel]
+                })
+            );
+        }
 
         return createdDefinitionModel;
     },
