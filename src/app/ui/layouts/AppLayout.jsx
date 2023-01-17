@@ -1,24 +1,13 @@
-import React, { PureComponent } from 'react';
-import { Group } from 'three';
-import { withRouter } from 'react-router-dom';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
-import isElectron from 'is-electron';
-import Mousetrap from 'mousetrap';
-import i18next from 'i18next';
 import classNames from 'classnames';
+import i18next from 'i18next';
+import isElectron from 'is-electron';
 import { cloneDeep, throttle } from 'lodash';
-import Checkbox from '../components/Checkbox';
-import { Button } from '../components/Buttons';
-import { renderModal } from '../utils';
-import AppBar from '../views/AppBar';
-import i18n from '../../lib/i18n';
-import UniApi from '../../lib/uni-api';
-import { checkIsGCodeFile, checkIsSnapmakerProjectFile } from '../../lib/check-name';
-import Settings from '../pages/Settings/Settings';
-import FirmwareTool from '../pages/Settings/FirmwareTool';
-import SoftwareUpdate from '../pages/Settings/SoftwareUpdate';
-import DownloadUpdate from '../pages/Settings/SoftwareUpdate/DownloadUpdate';
+import Mousetrap from 'mousetrap';
+import PropTypes from 'prop-types';
+import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
+import { withRouter } from 'react-router-dom';
+import { Group } from 'three';
 
 import {
     COORDINATE_MODE_BOTTOM_CENTER,
@@ -37,21 +26,38 @@ import {
     SUPPORT_ZH_URL,
     TUTORIAL_VIDEO_URL
 } from '../../constants';
-import { actions as menuActions } from '../../flux/appbar-menu';
-import { actions as machineActions } from '../../flux/machine';
-import { actions as editorActions } from '../../flux/editor';
-import { actions as projectActions } from '../../flux/project';
-import { actions as operationHistoryActions } from '../../flux/operation-history';
-import { actions as settingsActions } from '../../flux/setting';
+
 import { actions as appGlobalActions } from '../../flux/app-global';
-import styles from './styles/appbar.styl';
+import { actions as menuActions } from '../../flux/appbar-menu';
+import { actions as editorActions } from '../../flux/editor';
+import { actions as machineActions } from '../../flux/machine';
+import { actions as operationHistoryActions } from '../../flux/operation-history';
+import { actions as projectActions } from '../../flux/project';
+import { actions as settingsActions } from '../../flux/setting';
+
+import { checkIsGCodeFile, checkIsSnapmakerProjectFile } from '../../lib/check-name';
+import { logLubanQuit } from '../../lib/gaEvent';
+import i18n from '../../lib/i18n';
+import UniApi from '../../lib/uni-api';
+import { getCurrentHeadType } from '../../lib/url-utils';
+
+import Anchor from '../components/Anchor';
+import { Button } from '../components/Buttons';
+import Checkbox from '../components/Checkbox';
+import Space from '../components/Space';
+import SvgIcon from '../components/SvgIcon';
+
+import FirmwareTool from '../pages/Settings/FirmwareTool';
+import Settings from '../pages/Settings/Settings';
+import SoftwareUpdate from '../pages/Settings/SoftwareUpdate';
+import DownloadUpdate from '../pages/Settings/SoftwareUpdate/DownloadUpdate';
+
+import { renderModal } from '../utils';
+import AppBar from '../views/AppBar';
 // import HomePage from '../pages/HomePage';
 // import Workspace from '../pages/Workspace';
 import ModelExporter from '../widgets/PrintingVisualizer/ModelExporter';
-import Anchor from '../components/Anchor';
-import SvgIcon from '../components/SvgIcon';
-import { logLubanQuit } from '../../lib/gaEvent';
-import { getCurrentHeadType } from '../../lib/url-utils';
+import styles from './styles/appbar.styl';
 
 class AppLayout extends PureComponent {
     static propTypes = {
@@ -210,7 +216,9 @@ class AppLayout extends PureComponent {
                     return (<SoftwareUpdate />);
                 },
                 shouldRenderFooter: false,
-                renderFooter() { return null; },
+                renderFooter() {
+                    return null;
+                },
                 onClose,
                 actions: []
             });
@@ -241,7 +249,9 @@ class AppLayout extends PureComponent {
                             <div className="display-inline height-32">
                                 <Checkbox
                                     checked={shouldCheckForUpdate}
-                                    onChange={(event) => { this.props.updateShouldCheckForUpdate(event.target.checked); }}
+                                    onChange={(event) => {
+                                        this.props.updateShouldCheckForUpdate(event.target.checked);
+                                    }}
 
                                 />
                                 <span className="margin-left-4">
@@ -355,9 +365,8 @@ class AppLayout extends PureComponent {
                                     type={['static']}
                                     color="#4cb518"
                                 />
-                                <span>
-                                    {i18n._('key-app_layout-File Saved')}.&nbsp;
-                                </span>
+                                <span>{i18n._('key-app_layout-File Saved')}</span>
+                                <Space width={4} />
                                 <Anchor
                                     onClick={openFolder}
                                 >
@@ -367,7 +376,7 @@ class AppLayout extends PureComponent {
                                             textDecoration: 'underline'
                                         }}
                                     >
-                                        {i18n._('key-app_layout-Open Folder')}.
+                                        {i18n._('key-app_layout-Open Folder')}
                                     </span>
                                 </Anchor>
                             </div>
@@ -570,8 +579,11 @@ class AppLayout extends PureComponent {
                 switch (pathname) {
                     case '/printing':
                     case '/laser':
-                    case '/cnc': this.actions.saveAsFile(file); break;
-                    default: break;
+                    case '/cnc':
+                        this.actions.saveAsFile(file);
+                        break;
+                    default:
+                        break;
                 }
             });
             UniApi.Event.on('appbar-menu:save', () => {
@@ -579,8 +591,11 @@ class AppLayout extends PureComponent {
                 switch (pathname) {
                     case '/printing':
                     case '/laser':
-                    case '/cnc': this.actions.save(); break;
-                    default: break;
+                    case '/cnc':
+                        this.actions.save();
+                        break;
+                    default:
+                        break;
                 }
             });
             UniApi.Event.on('save-and-close', async () => {
@@ -670,11 +685,20 @@ class AppLayout extends PureComponent {
             });
             UniApi.Event.on('appbar-menu:window', (type) => {
                 switch (type) {
-                    case 'reload': UniApi.Window.reload(); break;
-                    case 'forceReload': UniApi.Window.forceReload(); break;
-                    case 'viewInBrowser': UniApi.Window.viewInBrowser(); break;
-                    case 'toggleFullscreen': UniApi.Window.toggleFullscreen(); break;
-                    default: break;
+                    case 'reload':
+                        UniApi.Window.reload();
+                        break;
+                    case 'forceReload':
+                        UniApi.Window.forceReload();
+                        break;
+                    case 'viewInBrowser':
+                        UniApi.Window.viewInBrowser();
+                        break;
+                    case 'toggleFullscreen':
+                        UniApi.Window.toggleFullscreen();
+                        break;
+                    default:
+                        break;
                 }
             });
             UniApi.Event.on('appbar-menu:help.link', (type) => {
@@ -712,7 +736,8 @@ class AppLayout extends PureComponent {
                     case 'myminifactory':
                         UniApi.Window.openLink(MYMINIFACTORY_URL);
                         break;
-                    default: break;
+                    default:
+                        break;
                 }
             });
             UniApi.Event.on('appbar-menu:shortcut', (...commands) => {
@@ -777,11 +802,20 @@ class AppLayout extends PureComponent {
                     }
                 }
                 switch (pathname) {
-                    case '/printing': UniApi.Event.emit('appbar-menu:printing.import', fileObj); break;
-                    case '/laser': UniApi.Event.emit('appbar-menu:laser.import', fileObj); break;
-                    case '/cnc': UniApi.Event.emit('appbar-menu:cnc.import', fileObj); break;
-                    case '/workspace': UniApi.Event.emit('appbar-menu:workspace.import', fileObj); break;
-                    default: break;
+                    case '/printing':
+                        UniApi.Event.emit('appbar-menu:printing.import', fileObj);
+                        break;
+                    case '/laser':
+                        UniApi.Event.emit('appbar-menu:laser.import', fileObj);
+                        break;
+                    case '/cnc':
+                        UniApi.Event.emit('appbar-menu:cnc.import', fileObj);
+                        break;
+                    case '/workspace':
+                        UniApi.Event.emit('appbar-menu:workspace.import', fileObj);
+                        break;
+                    default:
+                        break;
                 }
             });
             UniApi.Event.on('appbar-menu:export-model', () => {
@@ -813,11 +847,20 @@ class AppLayout extends PureComponent {
             UniApi.Event.on('appbar-menu:export-gcode', () => {
                 const pathname = this.props.currentModalPath || this.props.history.location.pathname;
                 switch (pathname) {
-                    case '/printing': UniApi.Event.emit('appbar-menu:printing.export-gcode'); break;
-                    case '/laser': UniApi.Event.emit('appbar-menu:cnc-laser.export-gcode'); break;
-                    case '/cnc': UniApi.Event.emit('appbar-menu:cnc-laser.export-gcode'); break;
-                    case '/workspace': UniApi.Event.emit('appbar-menu:workspace.export-gcode'); break;
-                    default: break;
+                    case '/printing':
+                        UniApi.Event.emit('appbar-menu:printing.export-gcode');
+                        break;
+                    case '/laser':
+                        UniApi.Event.emit('appbar-menu:cnc-laser.export-gcode');
+                        break;
+                    case '/cnc':
+                        UniApi.Event.emit('appbar-menu:cnc-laser.export-gcode');
+                        break;
+                    case '/workspace':
+                        UniApi.Event.emit('appbar-menu:workspace.export-gcode');
+                        break;
+                    default:
+                        break;
                 }
             });
 

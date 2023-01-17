@@ -1,3 +1,3 @@
 import CncLaserObjectList from './ObjectListBox';
 
-export default (CncLaserObjectList);
+export default CncLaserObjectList;

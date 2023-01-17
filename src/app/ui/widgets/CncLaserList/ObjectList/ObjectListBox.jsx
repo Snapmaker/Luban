@@ -1,13 +1,13 @@
 // import React, { PureComponent } from 'react';
 import classNames from 'classnames';
-import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { useSelector, useDispatch, shallowEqual } from 'react-redux';
-import styles from '../styles.styl';
+import React, { useEffect } from 'react';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { actions as editorActions } from '../../../../flux/editor';
-import modal from '../../../../lib/modal';
 import i18n from '../../../../lib/i18n';
+import modal from '../../../../lib/modal';
 import ModelItem from '../../../views/model-item';
+import styles from '../styles.styl';
 
 
 function ObjectListBox({ headType }) {
@@ -53,28 +53,38 @@ function ObjectListBox({ headType }) {
     return (
         <div
             className={classNames(
-                'width-264',
-                'background-color-white',
                 styles['object-list-box'],
+                'width-264',
             )}
         >
-            {
-                allModels && allModels.map((model) => {
-                    return (
-                        <ModelItem
-                            model={model}
-                            key={model.modelID}
-                            visible={model.visible}
-                            styles={styles}
-                            isSelected={selectedModelArray && selectedModelArray.includes(model)}
-                            onSelect={actions.onClickModelNameBox}
-                            onToggleVisible={actions.onClickModelHideBox}
-                            inProgress={inProgress}
-                            placement="right"
-                        />
-                    );
-                })
-            }
+            <div className={classNames('padding-vertical-4')}>
+                {
+                    allModels && allModels.map((model) => {
+                        return (
+                            <ModelItem
+                                model={model}
+                                key={model.modelID}
+                                visible={model.visible}
+                                styles={styles}
+                                isSelected={selectedModelArray && selectedModelArray.includes(model)}
+                                onSelect={actions.onClickModelNameBox}
+                                onToggleVisible={actions.onClickModelHideBox}
+                                inProgress={inProgress}
+                                placement="right"
+                            />
+                        );
+                    })
+                }
+                {
+                    allModels && allModels.length === 0 && (
+                        <div className="padding-vertical-4 padding-horizontal-8">
+                            <div className="height-24">
+                                <span>{i18n._('key-Printing/No model(s).')}</span>
+                            </div>
+                        </div>
+                    )
+                }
+            </div>
         </div>
     );
 }
