@@ -1991,23 +1991,21 @@ export const actions = {
      * @param stackId
      */
     validateActiveQualityPreset: (stackId = LEFT_EXTRUDER) => (dispatch, getState) => {
-        const { qualityDefinitions, qualityDefinitionsRight, activePresetIds } = getState().printing;
-
-        const presetModels = stackId === LEFT_EXTRUDER ? qualityDefinitions : qualityDefinitionsRight;
+        const { qualityDefinitions, activePresetIds } = getState().printing;
 
         const materialType = dispatch(actions.getActiveMaterialType(undefined, stackId));
 
-        const presetModel = presetModels.find(p => p.definitionId === activePresetIds[stackId]);
+        const presetModel = qualityDefinitions.find(p => p.definitionId === activePresetIds[stackId]);
 
         // TODO: Consider nozzle size
         // machineNozzleSize: actualExtruderDefinition.settings?.machine_nozzle_size?.default_value,
-        if (presetModel && isQualityPresetVisible(presetModel, { materialType: materialType })) {
+        if (presetModel && isQualityPresetVisible(qualityDefinitions, { materialType: materialType })) {
             // the quality preset looks fine
             return;
         }
 
         // find a new quality preset for active material type
-        for (const presetModel2 of presetModels) {
+        for (const presetModel2 of qualityDefinitions) {
             const visible = isQualityPresetVisible(presetModel2, { materialType: materialType });
             if (visible) {
                 dispatch(actions.updateActiveQualityPresetId(stackId, presetModel2.definitionId));
@@ -2172,7 +2170,6 @@ export const actions = {
             defaultMaterialId,
             defaultMaterialIdRight,
             qualityDefinitions,
-            qualityDefinitionsRight,
             materialDefinitions,
         } = getState().printing;
         modelGroup.updateClippingPlane();
@@ -2192,7 +2189,7 @@ export const actions = {
         // update extruder definitions
         const qualityPresets = {
             [LEFT_EXTRUDER]: qualityDefinitions.find(p => p.definitionId === activePresetIds[LEFT_EXTRUDER]),
-            [RIGHT_EXTRUDER]: qualityDefinitionsRight.find(p => p.definitionId === activePresetIds[RIGHT_EXTRUDER]),
+            [RIGHT_EXTRUDER]: qualityDefinitions.find(p => p.definitionId === activePresetIds[RIGHT_EXTRUDER]),
         };
 
         const globalQualityPreset = cloneDeep(qualityPresets[LEFT_EXTRUDER]);
