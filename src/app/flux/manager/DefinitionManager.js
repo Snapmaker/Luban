@@ -929,8 +929,8 @@ class DefinitionManager {
         // G92 E0
         // G1 Z5 F6000
         // ;--- Start G-code End ---
-        const m140Command = hasOversteppedHotArea ? 'M140 M1' : 'M140 M0';
-        const m190Command = hasOversteppedHotArea ? 'M190 M1' : 'M190 M0';
+        const m140Command = hasOversteppedHotArea ? 'M140 P1' : 'M140 P0';
+        const m190Command = hasOversteppedHotArea ? 'M190 P1' : 'M190 P0';
         const gcode = [
             ';--- Start G-code Begin ---',
             'M205 J0.05',
