@@ -181,8 +181,6 @@ class SceneLogic {
         primeTowerModel.updateHeight(1, {
             positionX: primeTowerX,
             positionY: primeTowerY,
-            scaleX: 1,
-            scaleY: 1,
             scaleZ: 1,
         });
         primeTowerModel.computeBoundingBox();

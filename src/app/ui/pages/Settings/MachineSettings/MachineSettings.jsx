@@ -1,20 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import Select from '../../../components/Select';
-import SvgIcon from '../../../components/SvgIcon';
-import i18n from '../../../../lib/i18n';
+import { getMachineOptions, getMachineSupportedToolOptions, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, } from '../../../../constants/machines';
 import { actions as machineActions } from '../../../../flux/machine';
 import { actions as projectActions } from '../../../../flux/project';
-import styles from '../form.styl';
-import {
-    getMachineOptions,
-    getMachineSupportedToolOptions,
-    HEAD_CNC,
-    HEAD_LASER,
-    HEAD_PRINTING,
-} from '../../../../constants/machines';
+import i18n from '../../../../lib/i18n';
 import UniApi from '../../../../lib/uni-api';
 import { getCurrentHeadType } from '../../../../lib/url-utils';
+import Select from '../../../components/Select';
+import SvgIcon from '../../../components/SvgIcon';
+import styles from '../form.styl';
 
 
 function MachineSettings() {
@@ -56,21 +50,30 @@ function MachineSettings() {
         setPrintingToolHeadOptions(printingOptions);
 
         if (printingOptions.length > 0) {
-            setPrintingToolHeadSelected(printingOptions[0].value);
+            const found = printingOptions.find(option => option.value === printingToolHeadSelected);
+            if (!found) {
+                setPrintingToolHeadSelected(printingOptions[0].value);
+            }
         }
 
         const laserOptions = getMachineSupportedToolOptions(state.series, HEAD_LASER);
         setLaserToolHeadOptions(laserOptions);
 
         if (laserOptions.length > 0) {
-            setLaserToolHeadSelected(laserOptions[0].value);
+            const found = laserOptions.find(option => option.value === laserToolHeadSelected);
+            if (!found) {
+                setLaserToolHeadSelected(laserOptions[0].value);
+            }
         }
 
         const cncOptions = getMachineSupportedToolOptions(state.series, HEAD_CNC);
         setCncToolHeadOptions(cncOptions);
 
         if (cncOptions.length > 0) {
-            setCncToolHeadSelected(cncOptions[0].value);
+            const found = cncOptions.find(option => option.value === cncToolHeadSelected);
+            if (!found) {
+                setCncToolHeadSelected(cncOptions[0].value);
+            }
         }
     }, [state.series]);
 
@@ -133,16 +136,15 @@ function MachineSettings() {
             window.location.href = '/';
         },
         handleToolheadChange: (option, type) => {
-            const nextValue = option.value;
             switch (type) {
                 case 'printing':
-                    setPrintingToolHeadSelected(nextValue);
+                    setPrintingToolHeadSelected(option.value);
                     break;
                 case 'laser':
-                    setLaserToolHeadSelected(nextValue);
+                    setLaserToolHeadSelected(option.value);
                     break;
                 case 'cnc':
-                    setCncToolHeadSelected(nextValue);
+                    setCncToolHeadSelected(option.value);
                     break;
                 default:
                     break;
