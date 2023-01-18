@@ -62,7 +62,8 @@ class PrimeTowerModel extends ThreeModel {
     }
 
     public getSize(): number {
-        return this.size;
+        // note: scale x/y on prime tower are identical, scaleX == scaleY
+        return this.size * this.transformation.scaleX;
     }
 
     public getHeight(): number {
