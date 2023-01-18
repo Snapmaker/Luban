@@ -9,7 +9,7 @@ import {
     CONNECTION_UNLOAD_FILAMENT,
     CONNECTION_WORK_NOZZLE,
     CONNECTION_Z_OFFSET,
-    LEFT_EXTRUDER,
+    // LEFT_EXTRUDER,
     LEFT_EXTRUDER_MAP_NUMBER,
     RIGHT_EXTRUDER_MAP_NUMBER,
     WORKFLOW_STATUS_PAUSED,
@@ -235,9 +235,11 @@ class Printing extends PureComponent {
                                 <span>{i18n._('key-unused-Current Work Nozzle')}</span>
                                 <span>{i18n._(`key-setting/${capitalize(currentWorkNozzle)}-Nozzle`)}</span>
                             </div>
+                            {/*
                             <Button disabled={this.state.squeezing || workflowStatus === WORKFLOW_STATUS_RUNNING} onClick={() => this.actions.siwtchWorkNozzle(currentWorkNozzle === LEFT_EXTRUDER ? RIGHT_EXTRUDER_MAP_NUMBER : LEFT_EXTRUDER_MAP_NUMBER)}>
                                 {i18n._('key-Workspace/Marlin-Switch working nozzle')}
                             </Button>
+                            */}
                             <div className="dashed-border-use-background" />
                         </div>
                     )
@@ -293,6 +295,7 @@ class Printing extends PureComponent {
                 {
                     isDualExtruder(printingToolhead) && (
                         <ParamsWrapper
+                            editable={false}
                             handleSubmit={(value) => {
                                 this.actions.updateNozzleTemp(RIGHT_EXTRUDER_MAP_NUMBER, value);
                             }}

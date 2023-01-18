@@ -15,7 +15,8 @@ const EditComponent = React.memo(({
     sliderMin,
     sliderMarks,
     inputMax,
-    inputMin
+    inputMin,
+    disabled = false,
 }) => {
     const [showOverlay, setShowOverlay] = useState(false);
     const [sliderValue, setSliderValue] = useState(initValue);
@@ -56,6 +57,7 @@ const EditComponent = React.memo(({
                     hoversize={24}
                     name="Edit"
                     type={['hoverNormal', 'pressNormal']}
+                    disabled={disabled}
                     onClick={() => { setShowOverlay(!showOverlay); }}
                 />
             </div>
@@ -123,7 +125,8 @@ EditComponent.propTypes = {
     sliderMin: PropTypes.number,
     sliderMarks: PropTypes.object,
     inputMax: PropTypes.number,
-    inputMin: PropTypes.number
+    inputMin: PropTypes.number,
+    disabled: PropTypes.bool,
 };
 
 export default EditComponent;
