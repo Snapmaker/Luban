@@ -67,35 +67,6 @@ const getSanitizedRecords = () => {
     return records;
 };
 
-export const getProfileDocsDir = (req, res) => {
-    try {
-        const { selectCategory, selectProfile } = req.params;
-        const lang = req.query.lang;
-        log.info(`lang: ${lang}, selectCategory: ${selectCategory}, selectProfile: ${selectProfile}`);
-        const langDir = lang.toUpperCase() === 'ZH-CN' ? 'CN' : lang.toUpperCase();
-        const urlPath = `${DataStorage.profileDocsDir}/${langDir}/${selectCategory}/${selectProfile}.md`;
-
-        let content;
-        if (fs.existsSync(`${urlPath}`)) {
-            content = fs.readFileSync(`${urlPath}`, 'utf-8');
-        } else {
-            log.info(`Requested: "${langDir}/${selectCategory}/${selectProfile}.md"\n`,
-                `No documentation was found for the user's language ${lang}. An English version was given.`);
-            content = fs.readFileSync(`${DataStorage.profileDocsDir}/EN/${selectCategory}/${selectProfile}.md`, 'utf-8');
-        }
-
-        res.status(200).send({
-            content: content,
-            imagePath: `${DataStorage.profileDocsDir}/`
-        });
-    } catch (e) {
-        log.error(e);
-        res.status(500).send({
-            msg: 'No such path'
-        });
-    }
-};
-
 export const signin = (req, res) => {
     // TODO: Skip authentication
     // const { token = '', name = '', password = '' } = { ...req.body };

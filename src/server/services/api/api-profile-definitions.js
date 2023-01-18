@@ -363,3 +363,37 @@ export const getPresetParameterKeys = (req, res) => {
     const data = getParameterKeys();
     res.send(data);
 };
+
+
+export const getParameterDoc = (req, res) => {
+    try {
+        const lang = req.query.lang;
+        const { category, key } = req.params;
+
+        const langDir = lang.toUpperCase() === 'ZH-CN' ? 'CN' : lang.toUpperCase();
+
+        const fileRelativePath = `${langDir}/${category}/${key}.md`;
+        const filePath = `${DataStorage.getParameterDocumentDir()}/${fileRelativePath}`;
+
+        let content;
+        if (fs.existsSync(filePath)) {
+            content = fs.readFileSync(`${filePath}`, 'utf-8');
+        } else {
+            log.info(`Request: "${fileRelativePath}"\nNo documentation was found for the user's language ${lang}. An English version was given.`);
+
+            const filePathEN = `${DataStorage.getParameterDocumentDir()}/EN/${category}/${key}.md`;
+            content = fs.readFileSync(filePathEN, 'utf-8');
+        }
+
+        res.status(200).send({
+            content: content,
+            imagePath: `${DataStorage.getParameterDocumentDir()}/`
+        });
+    } catch (e) {
+        log.error(e);
+
+        res.status(500).send({
+            msg: 'No such path',
+        });
+    }
+};

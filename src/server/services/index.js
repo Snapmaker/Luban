@@ -225,7 +225,8 @@ function registerApis(app) {
     // preset
     app.get(urljoin(settings.route, 'api/preset/parameter_keys'), api.profileDefinitions.getPresetParameterKeys);
 
-    app.get(urljoin(settings.route, 'api/profiledocs/:selectCategory/:selectProfile'), api.users.getProfileDocsDir);
+    // parameter
+    app.get(urljoin(settings.route, 'api/parameter-document/:category/:key'), api.profileDefinitions.getParameterDoc);
 }
 
 export {

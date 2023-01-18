@@ -269,10 +269,10 @@ const ParametersTableView: React.FC<TProps> = (props) => {
         const lang = i18next.language;
         if (selectCategory && selectProfile) {
             try {
-                const res = await api.getProfileDocs({
+                const res = await api.getParameterDocument({
                     lang,
-                    selectCategory,
-                    selectProfile,
+                    category: selectCategory,
+                    key: selectProfile,
                 });
                 setMdContent(res.body?.content);
                 setImgPath(res.body?.imagePath);
