@@ -292,7 +292,12 @@ export function resolveParameterValues(definition, modifiedParameterItems: Modif
 
     // update context before calculating
     for (const key of parameterMap.keys()) {
-        context.context[key] = definition.settings[key].default_value;
+        if (!definition.settings[key]) {
+            const parameterItem = parameterMap.get(key);
+            context.context[key] = parameterItem.default_value;
+        } else {
+            context.context[key] = definition.settings[key].default_value;
+        }
     }
 
     // Resolve min, max, visible, mismatch

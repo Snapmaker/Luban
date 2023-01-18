@@ -116,8 +116,10 @@ export class DefinitionLoader {
             const data = fs.readFileSync(filePath, 'utf8');
             json = JSON.parse(data);
             this.loadJSON(headType, definitionId, json);
+            return true;
         } catch (e) {
             log.error(`Default JSON Syntax error of: ${definitionId}`);
+            return false;
         }
     }
 
@@ -389,9 +391,15 @@ export function loadDefinitionLoaderByFilename(headType, filename, configPath, i
     }
     const definitionLoader = new DefinitionLoader();
     if (isDefault) {
-        definitionLoader.loadDefaultDefinition(headType, definitionId, configPath);
+        const success = definitionLoader.loadDefaultDefinition(headType, definitionId, configPath);
+        if (!success) {
+            return null;
+        }
     } else {
-        definitionLoader.loadDefinition(headType, definitionId, configPath);
+        const success = definitionLoader.loadDefinition(headType, definitionId, configPath);
+        if (!success) {
+            return null;
+        }
     }
 
     return definitionLoader;
@@ -399,6 +407,7 @@ export function loadDefinitionLoaderByFilename(headType, filename, configPath, i
 
 export function loadDefinitionsByRegex(headType, configPath, regex, defaultId) {
     const defaultDefinitionLoader = loadDefinitionLoaderByFilename(headType, defaultId, configPath);
+
     const funcConfigDir = path.join(DataStorage.configDir, headType);
     const configDir = path.join(funcConfigDir, configPath);
 
@@ -415,10 +424,14 @@ export function loadDefinitionsByRegex(headType, configPath, regex, defaultId) {
         }
 
         const definitionLoader = loadDefinitionLoaderByFilename(headType, filename, configPath);
+        if (!definitionLoader) {
+            continue;
+        }
 
         // add own keys
+        // Correct definition
         // TODO: Maybe add this to migration, not here...
-        if (!definitionLoader.isRecommended && defaultDefinitionLoader) {
+        if (defaultDefinitionLoader && !definitionLoader.isRecommended && definitionLoader.name) {
             const ownKeys = Array.from(defaultDefinitionLoader.ownKeys).filter(e => !definitionLoader.ownKeys.has(e));
             if (ownKeys && ownKeys.length > 0) {
                 for (const ownKey of ownKeys) {
@@ -427,6 +440,7 @@ export function loadDefinitionsByRegex(headType, configPath, regex, defaultId) {
                 writeDefinition(headType, filename, configPath, definitionLoader);
             }
         }
+
         definitions.push(definitionLoader.toObject());
     }
 
