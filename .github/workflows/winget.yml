@@ -11,6 +11,6 @@ jobs:
         uses: vedantmgoyal2009/winget-releaser@v1
         with:
           identifier: SnapmakerDevTeam.SnapmakerLuban
-          installers-regex: '(ia32|x64).exe$'
+          installers-regex: 'x64.exe$'
           token: ${{ secrets.WINGET_TOKEN }}
           fork-user: jane-rose
