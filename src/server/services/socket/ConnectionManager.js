@@ -256,6 +256,12 @@ class ConnectionManager {
                     await this.socket.coordinateMove({ moveOrders, jogSpeed, headType, beforeGcodeStart: true });
                 } else if (series !== MACHINE_SERIES.ORIGINAL.value) {
                     // SM 2.0
+
+                    // Both 1.6W & 10W laser can't work without a valid focal length
+                    if (!laserFocalLength) {
+                        return;
+                    }
+
                     if (!isRotate) {
                         if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
                             const promise = new Promise((resolve) => {
