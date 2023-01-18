@@ -112,45 +112,6 @@ jobs:
                   ossutil cp -f ${{secrets.OSS_UPDATE_PATH}}/${{env.INSTALLER_ASSET_NAME}} ${{secrets.OSS_UPDATE_PATH}}/${{env.INSTALLER_ASSET_DEFAULT_NAME}}
                   ossutil cp -f ./output/latest.yml ${{secrets.OSS_UPDATE_PATH}}/latest.yml
 
-
-            # ----------------------------------------------------------------
-            # Build Windows x86
-            # ----------------------------------------------------------------
-            - name: Build Windows x86 Binaries
-              run: npm run build:win-ia32
-              env:
-                  CSC_LINK: ${{ secrets.CSC_LINK_WINDOWS }}
-                  CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD_WINDOWS }}
-
-            # https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
-            - name: Setting Environment Variables
-              run: |
-                  $PRODUCT_NAME="Snapmaker Luban"
-                  $PACKAGE_NAME="Snapmaker-Luban"
-                  $PACKAGE_VERSION=node -e "console.log(require('./src/package.json').version)"
-                  $RELEASE="${PACKAGE_NAME}-${PACKAGE_VERSION}"
-
-                  $INSTALLER_ASSET_PATH="./output/${PRODUCT_NAME} ${PACKAGE_VERSION}.exe"
-                  $INSTALLER_ASSET_NAME="${RELEASE}-win-ia32.exe"
-
-                  echo "INSTALLER_ASSET_PATH=${INSTALLER_ASSET_PATH}" >> ${Env:GITHUB_ENV}
-                  echo "INSTALLER_ASSET_NAME=${INSTALLER_ASSET_NAME}" >> ${Env:GITHUB_ENV}
-
-            - name: Upload Release Asset - Windows x86 Installer
-              id: upload-release-asset-x86
-              uses: actions/upload-release-asset@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                  upload_url: ${{ github.event.release.upload_url }}
-                  asset_path: ${{ env.INSTALLER_ASSET_PATH }}
-                  asset_name: ${{ env.INSTALLER_ASSET_NAME }}
-                  asset_content_type: application/octet-stream
-
-            - name: Upload Release Windows x86 Installer To OSS
-              if: github.repository == 'Snapmaker/Luban'
-              run: ossutil cp -f "${{env.INSTALLER_ASSET_PATH}}" ${{secrets.OSS_UPDATE_PATH}}/${{env.INSTALLER_ASSET_NAME}}
-
     build-macos:
         name: Build macOS Packages
 
