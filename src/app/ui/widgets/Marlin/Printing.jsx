@@ -223,12 +223,19 @@ class Printing extends PureComponent {
 
         const isDual = isDualExtruder(printingToolhead);
 
-        const nozzleTemperatureTitle = isDual ? i18n._('key-Workspace/Marlin-Left Nozzle Temp') : i18n._('key-Workspace/Connection-Nozzle Temp.');
-        const nozzleRightTemperatureTitle = i18n._('key-Workspace/Marlin-Right Nozzle Temp');
+        const uiConfig = {
+            nozzleTempDisplay: !isDual,
+            leftNozzleTempDisplay: isDual,
+            leftNozzleTempEditable: !isDual,
+            rightNozzleTempDisplay: isDual,
+            rightNozzleTempEditable: !isDual,
+            bedTempDisplay: true,
+            bedTempEditable: !isDual,
+        };
 
         return (
             <div>
-                {
+                {/* Nozzle switch */
                     isDual && (
                         <div>
                             <div className="sm-flex justify-space-between">
@@ -244,29 +251,52 @@ class Printing extends PureComponent {
                         </div>
                     )
                 }
-
-                <ParamsWrapper
-                    handleSubmit={(value) => {
-                        this.actions.updateNozzleTemp(LEFT_EXTRUDER_MAP_NUMBER, value);
-                    }}
-                    initValue={nozzleTargetTemperature}
-                    title={nozzleTemperatureTitle}
-                    suffix="°C"
-                >
-                    <div className="width-44 sm-flex sm-flex-direction-c">
-                        {/* <span>{i18n._('key-unused-{i18n._('key-Workspace/Marlin-Actual Data Title')}')}</span> */}
-                        <span>{i18n._('key-Workspace/Marlin-Actual Data Title')}</span>
-                        <span>{Math.floor(leftNozzleTemperature)}°C</span>
-                    </div>
-                    <div className="width-44 sm-flex sm-flex-direction-c margin-left-16">
-                        {/* <span>{i18n._('key-unused-{i18n._('key-Workspace/Marlin-Target Data Title')}')}</span> */}
-                        <span>{i18n._('key-Workspace/Marlin-Target Data Title')}</span>
-                        <span>{Math.floor(leftNozzleTargetTemperature)}°C</span>
-                    </div>
-                </ParamsWrapper>
+                {
+                    uiConfig.nozzleTempDisplay && (
+                        <ParamsWrapper
+                            handleSubmit={(value) => {
+                                this.actions.updateNozzleTemp(LEFT_EXTRUDER_MAP_NUMBER, value);
+                            }}
+                            initValue={nozzleTargetTemperature}
+                            title={i18n._('key-Workspace/Connection-Nozzle Temp.')}
+                            suffix="°C"
+                        >
+                            <div className="width-44 sm-flex sm-flex-direction-c">
+                                <span>{i18n._('key-Workspace/Marlin-Actual Data Title')}</span>
+                                <span>{Math.floor(leftNozzleTemperature)}°C</span>
+                            </div>
+                            <div className="width-44 sm-flex sm-flex-direction-c margin-left-16">
+                                <span>{i18n._('key-Workspace/Marlin-Target Data Title')}</span>
+                                <span>{Math.floor(leftNozzleTargetTemperature)}°C</span>
+                            </div>
+                        </ParamsWrapper>
+                    )
+                }
+                {
+                    uiConfig.leftNozzleTempDisplay && (
+                        <ParamsWrapper
+                            editable={uiConfig.leftNozzleTempEditable}
+                            handleSubmit={(value) => {
+                                this.actions.updateNozzleTemp(LEFT_EXTRUDER_MAP_NUMBER, value);
+                            }}
+                            initValue={nozzleTargetTemperature}
+                            title={i18n._('key-Workspace/Marlin-Left Nozzle Temp')}
+                            suffix="°C"
+                        >
+                            <div className="width-44 sm-flex sm-flex-direction-c">
+                                <span>{i18n._('key-Workspace/Marlin-Actual Data Title')}</span>
+                                <span>{Math.floor(leftNozzleTemperature)}°C</span>
+                            </div>
+                            <div className="width-44 sm-flex sm-flex-direction-c margin-left-16">
+                                <span>{i18n._('key-Workspace/Marlin-Target Data Title')}</span>
+                                <span>{Math.floor(leftNozzleTargetTemperature)}°C</span>
+                            </div>
+                        </ParamsWrapper>
+                    )
+                }
 
                 {
-                    !this.isPausingOrPrinting() && (
+                    uiConfig.leftNozzleTempDisplay && uiConfig.leftNozzleTempEditable && !this.isPausingOrPrinting() && (
                         <div className="sm-flex justify-flex-end margin-vertical-8">
                             <div>
                                 <Button
@@ -293,14 +323,14 @@ class Printing extends PureComponent {
                 }
 
                 {
-                    isDualExtruder(printingToolhead) && (
+                    uiConfig.rightNozzleTempDisplay && (
                         <ParamsWrapper
-                            editable={false}
+                            editable={uiConfig.rightNozzleTempEditable}
                             handleSubmit={(value) => {
                                 this.actions.updateNozzleTemp(RIGHT_EXTRUDER_MAP_NUMBER, value);
                             }}
                             initValue={rightNozzleTemperature}
-                            title={nozzleRightTemperatureTitle}
+                            title={i18n._('key-Workspace/Marlin-Right Nozzle Temp')}
                             suffix="°C"
                         >
                             <div className="width-44 sm-flex sm-flex-direction-c">
@@ -315,7 +345,7 @@ class Printing extends PureComponent {
                     )
                 }
                 {
-                    isDualExtruder(printingToolhead) && !this.isPausingOrPrinting() && (
+                    uiConfig.rightNozzleTempDisplay && uiConfig.rightNozzleTempEditable && !this.isPausingOrPrinting() && (
                         <div className="sm-flex justify-flex-end margin-vertical-8">
                             <div>
                                 <Button
@@ -342,25 +372,28 @@ class Printing extends PureComponent {
                 }
 
 
-                <ParamsWrapper
-                    handleSubmit={(value) => {
-                        this.actions.updateHeatedBedTemp(value);
-                    }}
-                    initValue={heatedBedTargetTemperature}
-                    title={i18n._('key-Workspace/Marlin-Heated Bed Temp')}
-                    suffix="°C"
-                >
-                    <div className="width-44 sm-flex sm-flex-direction-c">
-                        {/* <span>{i18n._('key-unused-{i18n._('key-Workspace/Marlin-Actual Data Title')}')}</span> */}
-                        <span>{i18n._('key-Workspace/Marlin-Actual Data Title')}</span>
-                        <span>{Math.floor(heatedBedTemperature)}°C</span>
-                    </div>
-                    <div className="width-44 sm-flex sm-flex-direction-c margin-left-16">
-                        {/* <span>{i18n._('key-unused-{i18n._('key-Workspace/Marlin-Target Data Title')}')}</span> */}
-                        <span>{i18n._('key-Workspace/Marlin-Target Data Title')}</span>
-                        <span>{Math.floor(heatedBedTargetTemperature)}°C</span>
-                    </div>
-                </ParamsWrapper>
+                {
+                    uiConfig.bedTempDisplay && (
+                        <ParamsWrapper
+                            editable={uiConfig.bedTempEditable}
+                            handleSubmit={(value) => {
+                                this.actions.updateHeatedBedTemp(value);
+                            }}
+                            initValue={heatedBedTargetTemperature}
+                            title={i18n._('key-Workspace/Marlin-Heated Bed Temp')}
+                            suffix="°C"
+                        >
+                            <div className="width-44 sm-flex sm-flex-direction-c">
+                                <span>{i18n._('key-Workspace/Marlin-Actual Data Title')}</span>
+                                <span>{Math.floor(heatedBedTemperature)}°C</span>
+                            </div>
+                            <div className="width-44 sm-flex sm-flex-direction-c margin-left-16">
+                                <span>{i18n._('key-Workspace/Marlin-Target Data Title')}</span>
+                                <span>{Math.floor(heatedBedTargetTemperature)}°C</span>
+                            </div>
+                        </ParamsWrapper>
+                    )
+                }
 
                 {workflowStatus === 'running' && <WorkSpeed />}
 
