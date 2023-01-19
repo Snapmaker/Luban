@@ -20,13 +20,14 @@ const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
     const { series: connectSerial } = workspaceState;
     const [selectTab, setSelectTab] = useState(MATERIAL_TAB);
     const leftDiameter = useSelector(
-        (state) => state?.printing?.extruderLDefinition?.settings?.machine_nozzle_size
+        (state) => state.printing?.extruderLDefinition?.settings?.machine_nozzle_size
             ?.default_value
     );
     const rightDiameter = useSelector(
-        (state) => state?.printing?.extruderRDefinition?.settings?.machine_nozzle_size
+        (state) => state.printing?.extruderRDefinition?.settings?.machine_nozzle_size
             ?.default_value
     );
+
     const [selectedMachineSeries, setSelectedMachineSeries] = useState(series);
     const [selectedToolMap, setSelectedToolMap] = useState(toolHead);
     const dispatch = useDispatch();

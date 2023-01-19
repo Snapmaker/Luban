@@ -127,6 +127,7 @@ const MachineSettings = forwardRef(({
     const getActiveDiameter = (direction, list) => {
         const key = `customNozzleDiameter.${selectedToolName}.${selectedMachineSeries}.${direction}_active`;
         const cacheLabel = machineStore.get(key);
+
         let machineNozzleSize;
         const nozzleDiameterList = list;
         if (direction === LEFT) {
@@ -141,6 +142,9 @@ const MachineSettings = forwardRef(({
             activeDiameter = nozzleDiameterList.find((d) => {
                 return d.value === machineNozzleSize;
             });
+        }
+        if (!activeDiameter) {
+            activeDiameter = nozzleDiameterList.find(d => d.value === 0.4);
         }
         if (!activeDiameter) {
             activeDiameter = nozzleDiameterList[0];
