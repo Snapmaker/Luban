@@ -137,9 +137,10 @@ class ConnectionManager {
 
     inspectProtocol = async (address, connectionType = CONNECTION_TYPE_WIFI, options, callback) => {
         if (connectionType === CONNECTION_TYPE_WIFI) {
+            // Inspect if we can connect to the printer via SACP (8888) or HTTP (8080)
             const [resSACP, resHTTP] = await Promise.allSettled([
                 this.tryConnect(address, PORT_SCREEN_SACP),
-                this.tryConnect(address, PORT_SCREEN_HTTP)
+                this.tryConnect(address, PORT_SCREEN_HTTP),
             ]);
             if (resHTTP.value) {
                 return 'HTTP';
@@ -201,16 +202,16 @@ class ConnectionManager {
             }, () => {
                 tcpSocket.destroy();
                 resolve(true);
-                log.debug(`tryConnect connected ${host}:${port}`);
+                log.debug(`try connect ${host}:${port}, connected.`);
             });
             tcpSocket.once('timeout', () => {
                 tcpSocket.destroy();
-                log.debug(`tryConnect connect ${host}:${port} timeout`);
+                log.debug(`try connect ${host}:${port}, timeout`);
                 resolve(false);
             });
             tcpSocket.once('error', (e) => {
                 tcpSocket.destroy();
-                log.debug(`tryConnect connect ${host}:${port} error: ${e}`);
+                log.debug(`try connect ${host}:${port}, error: ${e}`);
                 resolve(false);
             });
         });

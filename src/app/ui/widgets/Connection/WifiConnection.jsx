@@ -167,7 +167,7 @@ function WifiConnection() {
         server,
         savedServerAddress,
         savedServerName,
-        savedServerAddressIsAuto,
+        // savedServerAddressIsAuto,
         savedServerToken,
         manualIp,
         // machine status headType,
@@ -183,7 +183,7 @@ function WifiConnection() {
         toolHead, headType, series
     } = useSelector(state => state?.workspace);
 
-    const [savedServerAddressState, setSavedServerAddressState] = useState(savedServerAddress);
+    // const [savedServerAddressState, setSavedServerAddressState] = useState(savedServerAddress);
     const { emergencyStopButton: emergencyStopButtonStatus, airPurifier: airPurifierStatus, rotaryModule: rotaryModuleStatus, enclosure: enclosureStatus } = moduleStatusList;
 
     // Show connection modal
@@ -242,7 +242,7 @@ function WifiConnection() {
                 if (msg) {
                     // connection failed, clear saved state.
                     actions.showWifiError(msg, text, code);
-                    setSavedServerAddressState('');
+                    // setSavedServerAddressState('');
                 }
 
                 // Clear open state
@@ -251,11 +251,11 @@ function WifiConnection() {
         },
         closeServer: () => {
             server.closeServer && server.closeServer();
-            setSavedServerAddressState('');
+            // setSavedServerAddressState('');
         },
         closeServerImproper: () => {
             server.closeServerImproper();
-            setSavedServerAddressState('');
+            // setSavedServerAddressState('');
 
             setServerOpenState(null);
         },
@@ -446,16 +446,23 @@ function WifiConnection() {
         autoSetServer(servers, server);
     }, [JSON.stringify(servers), server]);
 
+    /*
+    // Auto connect
     useEffect(() => {
         if (serverState?.address === savedServerAddressState && connectionAuto && !isConnected && savedServerAddressIsAuto) {
+            if (serverOpenState) {
+                return;
+            }
             if (timer) {
                 clearInterval(timer);
                 timer = null;
             }
             actions.openServer();
         }
-    }, [serverState, savedServerAddressState, savedServerAddressIsAuto]);
+    }, [serverState, savedServerAddressState, savedServerAddressIsAuto, serverOpenState]);
+    */
 
+    // connection status changed, display corresponding dialog
     useEffect(() => {
         if (connectionType === CONNECTION_TYPE_WIFI) {
             if (prevProps) {
@@ -653,7 +660,7 @@ function WifiConnection() {
                         {i18n._('key-Workspace/Connection-Connect')}
                     </Button>
                 )}
-                {!isConnected && (
+                {false && !isConnected && (
                     <Checkbox
                         checked={connectionAuto}
                         onChange={e => actions.handleAutoConnection(e?.target?.checked || false)}
