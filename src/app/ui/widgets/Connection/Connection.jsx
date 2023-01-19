@@ -1,26 +1,19 @@
-import React, { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import PropTypes from 'prop-types';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Button } from '../../components/Buttons';
 
-import {
-    CONNECTION_TYPE_SERIAL,
-    CONNECTION_TYPE_WIFI,
-    EXPERIMENTAL_WIFI_CONTROL,
-    PROTOCOL_TEXT
-} from '../../../constants';
-import {
-    MACHINE_SERIES
-} from '../../../constants/machines';
+import { CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI, PROTOCOL_TEXT } from '../../../constants';
+import { MACHINE_SERIES } from '../../../constants/machines';
+import { actions as machineActions } from '../../../flux/machine';
+import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
-import Notifications from '../../components/Notifications';
+import { Button } from '../../components/Buttons';
 import Modal from '../../components/Modal';
+import Notifications from '../../components/Notifications';
 
 import SerialConnection from './SerialConnection';
 import WifiConnection from './WifiConnection';
-import { actions as machineActions } from '../../../flux/machine';
-import { controller } from '../../../lib/controller';
 
 
 function Connection({ widgetId, widgetActions }) {
@@ -83,41 +76,47 @@ function Connection({ widgetId, widgetActions }) {
 
     return (
         <div>
-            {alertMessage && (
-                <Notifications bsStyle="danger" onDismiss={actions.clearAlert}>
-                    {alertMessage}
-                </Notifications>
-            )}
+            {
+                alertMessage && (
+                    <Notifications bsStyle="danger" onDismiss={actions.clearAlert}>
+                        {alertMessage}
+                    </Notifications>
+                )
+            }
+            {
+                !isConnected && (
+                    <div className={classNames('sm-tabs', 'margin-vertical-16')}>
+                        <button
+                            type="button"
+                            className={classNames('sm-tab', { 'sm-selected font-weight-bold': (connectionType === CONNECTION_TYPE_SERIAL) })}
+                            onClick={actions.onSelectTabSerial}
+                            disabled={isConnected}
+                        >
+                            {i18n._('key-Workspace/Connection-Serial Port')}
+                        </button>
+                        <button
+                            type="button"
+                            className={classNames('sm-tab', { 'sm-selected font-weight-bold': (connectionType === CONNECTION_TYPE_WIFI) })}
+                            onClick={actions.onSelectTabWifi}
+                            disabled={isConnected}
+                        >
+                            {i18n._('key-Workspace/Connection-Wi-Fi')}
+                        </button>
+                    </div>
+                )
+            }
+            {
+                connectionType === CONNECTION_TYPE_SERIAL && (
+                    <SerialConnection dataSource={dataSource} />
+                )
+            }
+            {
+                connectionType === CONNECTION_TYPE_WIFI && (
+                    <WifiConnection />
+                )
+            }
 
-            {EXPERIMENTAL_WIFI_CONTROL && !isConnected && (
-                <div className={classNames('sm-tabs', 'margin-vertical-16')}>
-                    <button
-                        type="button"
-                        className={classNames('sm-tab', { 'sm-selected font-weight-bold': (connectionType === CONNECTION_TYPE_SERIAL) })}
-                        onClick={actions.onSelectTabSerial}
-                        disabled={isConnected}
-                    >
-                        {i18n._('key-Workspace/Connection-Serial Port')}
-                    </button>
-                    <button
-                        type="button"
-                        className={classNames('sm-tab', { 'sm-selected font-weight-bold': (connectionType === CONNECTION_TYPE_WIFI) })}
-                        onClick={actions.onSelectTabWifi}
-                        disabled={isConnected}
-                    >
-                        {i18n._('key-Workspace/Connection-Wi-Fi')}
-                    </button>
-                </div>
-            )}
-            {!EXPERIMENTAL_WIFI_CONTROL && (
-                <p>{i18n._('key-Workspace/Connection-Serial Port')}</p>
-            )}
-            {connectionType === CONNECTION_TYPE_SERIAL && (
-                <SerialConnection dataSource={dataSource} />
-            )}
-            {connectionType === CONNECTION_TYPE_WIFI && (
-                <WifiConnection />
-            )}
+            {/* Go Home Dialog */}
             {isConnected && showHomeReminder && !isOriginal && isHomed !== null && !isHomed && (
                 <Modal disableOverlay size="sm" closable={false}>
                     <Modal.Header>
@@ -146,6 +145,7 @@ function Connection({ widgetId, widgetActions }) {
         </div>
     );
 }
+
 Connection.propTypes = {
     widgetId: PropTypes.string.isRequired,
     widgetActions: PropTypes.object.isRequired

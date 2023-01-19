@@ -1,3 +1,3 @@
 import Connection from './Connection';
 
-export default (Connection);
+export default Connection;
