@@ -130,7 +130,6 @@ class WidgetContainer extends PureComponent {
                     </div>
                 )}
                 <Widget.Content style={{ display: state.minimized ? 'none' : 'block', padding: '0', border: 'none' }}>
-
                     <Component
                         isWidget
                         widgetActions={this.actions}

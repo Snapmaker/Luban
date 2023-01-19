@@ -8,10 +8,12 @@ import {
     COORDINATE_MODE_CENTER,
     DISPLAYED_TYPE_MODEL,
     HEAD_TYPE_ENV_NAME,
+    LEFT_EXTRUDER,
     LOAD_MODEL_FROM_OUTER,
     MAX_RECENT_FILES_LENGTH,
     PAGE_EDITOR,
     PROCESS_MODE_MESH,
+    RIGHT_EXTRUDER,
     SOURCE_TYPE
 } from '../../constants';
 import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 } from '../../constants/machines';
@@ -303,9 +305,18 @@ export const actions = {
         }
 
         if (envHeadType === HEAD_PRINTING) {
+            // deal with old project file
+            if (restState.defaultQualityId) {
+                restState.activePresetIds = {
+                    [LEFT_EXTRUDER]: restState.defaultQualityId,
+                    [RIGHT_EXTRUDER]: '',
+                };
+            }
+
             dispatch(modActions.updateState({
                 ...restState
             }));
+
             const { helpersExtruderConfig } = restState;
             dispatch(modActions.updateHelpersExtruder(helpersExtruderConfig));
         } else {

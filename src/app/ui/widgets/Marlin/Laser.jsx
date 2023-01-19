@@ -100,6 +100,9 @@ class Laser extends PureComponent {
         return prevProps;
     }
 
+    componentDidUpdate() {
+    }
+
     componentDidMount() {
         // console.log(this.state.laserPower, this.state.laserPowerOpen);
     }
