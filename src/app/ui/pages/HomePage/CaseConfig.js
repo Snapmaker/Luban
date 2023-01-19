@@ -501,3 +501,15 @@ export const CaseConfigGimbal = {
         name: 'Case-Gimbal-DualColor.snap3dp',
     }
 };
+
+export const CaseConfigSM2Gimbal = {
+    tag: 'printing',
+    tag_i18n: 'key-HomePage/CaseLibrary_title-3DP',
+    title: 'Gimbal',
+    imgSrc: '../../resources/images/user-case/printing/3dp_dual_color_gimbal_194x194.png',
+    pathConfig: {
+        isDatastoragePath: true,
+        path: './UserCase/printing/snapmaker2-dual-extruder/Case-SM2-Gimbal-DualColor.snap3dp',
+        name: 'Case-SM2-Gimbal-DualColor.snap3dp',
+    }
+};
