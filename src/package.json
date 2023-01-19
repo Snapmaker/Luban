@@ -40,6 +40,7 @@
     "express-jwt": "5.3.3",
     "express-session": "1.15.6",
     "font-scanner": "0.2.1",
+    "fs-extra": "11.1.0",
     "hogan.js": "3.0.2",
     "i18next": "19.8.9",
     "i18next-express-middleware": "1.2.1",

@@ -34,17 +34,23 @@ mkdir -p "$RESOURCES_DIR"
 #
 # Copy Print Settings
 #
+echo "Copying print settings..."
 PRINT_SETTING_DIR="$RESOURCES_DIR/print-settings"
 mkdir -p "$PRINT_SETTING_DIR"
 
-cp -r packages/luban-print-settings/resources/cnc "$PRINT_SETTING_DIR"
-cp -r packages/luban-print-settings/resources/laser "$PRINT_SETTING_DIR"
-cp -r packages/luban-print-settings/resources/printing "$PRINT_SETTING_DIR"
+cp -r packages/luban-print-settings/resources/* "$PRINT_SETTING_DIR"
+# cp -r packages/luban-print-settings/resources/laser "$PRINT_SETTING_DIR"
+# cp -r packages/luban-print-settings/resources/printing "$PRINT_SETTING_DIR"
+
+PRINT_SETTING_DOCS_DIR="$RESOURCES_DIR/print-settings-docs"
+mkdir -p "$PRINT_SETTING_DOCS_DIR"
+
+cp -r packages/luban-print-settings-docs/* "$PRINT_SETTING_DOCS_DIR"
 
 #
 # Copy other resources
 #
+echo "Copying other resources..."
 cp -r resources/fonts "$RESOURCES_DIR"
 cp -r resources/luban-case-library "$RESOURCES_DIR"
 cp -r resources/scenes "$RESOURCES_DIR"
-cp -r resources/ProfileDocs "$RESOURCES_DIR"

@@ -1,5 +1,5 @@
 import path, { join } from 'path';
-import fs from 'fs';
+import * as fs from 'fs-extra';
 import mkdirp from 'mkdirp';
 import { includes, isUndefined, gt, isNil } from 'lodash';
 import { v4 as uuid } from 'uuid';
@@ -64,9 +64,9 @@ class DataStorage {
 
     userCaseDir;
 
-    profileDocsDir;
-
     envDir;
+
+    parameterDocumentDir = null;
 
     constructor() {
         if (isElectron()) {
@@ -82,7 +82,6 @@ class DataStorage {
 
         this.sessionDir = `${this.userDataDir}/Sessions`;
         this.userCaseDir = `${this.userDataDir}/UserCase`;
-        this.profileDocsDir = `${this.userDataDir}/ProfileDocs`;
         this.tmpDir = `${this.userDataDir}/Tmp`;
         this.configDir = `${this.userDataDir}/Config`;
         this.defaultConfigDir = `${this.userDataDir}/Default`;
@@ -92,6 +91,9 @@ class DataStorage {
         this.recoverDir = `${this.userDataDir}/snapmaker-recover`;
         this.activeConfigDir = `${this.recoverDir}/Config-active`;
         this.longTermConfigDir = '';
+
+        // parameters
+        this.parameterDocumentDir = `${this.userDataDir}/print-parameter-docs`;
     }
 
     resolveRelativePath(pathString) {
@@ -138,6 +140,8 @@ class DataStorage {
         await this.initFonts();
         await this.initScenes();
         await this.initUserCase();
+
+        await this.initParameterDocumentDir();
         await this.initProfileDocs();
 
         // if alt+shift+r, cannot init recover config
@@ -172,12 +176,18 @@ class DataStorage {
         }
     }
 
+    getParameterDocumentDir() {
+        return this.parameterDocumentDir;
+    }
+
     async copyDirForInitSlicer({
         srcDir, dstDir,
         overwriteTag = false, inherit = false,
     }) {
         if (dstDir && srcDir) {
-            log.info(`Copy files from ${srcDir} to ${dstDir}`);
+            if (overwriteTag) {
+                log.info(`Copy files from ${srcDir} to ${dstDir}`);
+            }
             mkdirp.sync(dstDir);
 
             if (fs.existsSync(srcDir)) {
@@ -518,24 +528,40 @@ class DataStorage {
         }
     }
 
-    async initProfileDocs() {
-        mkdirp.sync(this.profileDocsDir);
-        const PROFILE_DOCS_LOCAL = path.resolve('../../resources/ProfileDocs/');
-        if (fs.existsSync(PROFILE_DOCS_LOCAL)) {
-            const files = fs.readdirSync(PROFILE_DOCS_LOCAL);
+    async initParameterDocumentDir() {
+        log.info(`Initialize parameter document dir...${this.parameterDocumentDir}`);
+        mkdirp.sync(this.parameterDocumentDir);
+
+        const appParameterDocumentDir = path.resolve('../../resources/print-settings-docs');
+
+        if (fs.existsSync(appParameterDocumentDir)) {
+            console.log('x');
+            const files = fs.readdirSync(appParameterDocumentDir);
+
             for (const file of files) {
-                if (file === '.git') continue;
-                const src = path.join(PROFILE_DOCS_LOCAL, file);
-                const dst = path.join(this.profileDocsDir, file);
-                if (fs.statSync(src)
-                    .isFile()) {
+                if (file === '.git') {
+                    continue;
+                }
+
+                const src = path.join(appParameterDocumentDir, file);
+                const dst = path.join(this.parameterDocumentDir, file);
+
+                if (fs.statSync(src).isFile()) {
                     fs.copyFileSync(src, dst);
                 } else {
-                    const srcPath = `${PROFILE_DOCS_LOCAL}/${file}`;
-                    const dstPath = `${this.profileDocsDir}/${file}`;
+                    const srcPath = `${appParameterDocumentDir}/${file}`;
+                    const dstPath = `${this.parameterDocumentDir}/${file}`;
                     await this.copyDir(srcPath, dstPath);
                 }
             }
+        }
+    }
+
+    async initProfileDocs() {
+        // Used in version <= 4.5.0, remove it if we found it
+        const profileDocsDir = `${this.userDataDir}/ProfileDocs`;
+        if (await fs.pathExists(profileDocsDir)) {
+            await fs.remove(profileDocsDir);
         }
     }
 
