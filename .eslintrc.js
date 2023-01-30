@@ -33,6 +33,10 @@ module.exports = {
             }
         }
     },
+    ignorePatterns: [
+        '*.d.ts',
+        '**/*.es5.js', // ignore manually compiled ES5 files
+    ],
     plugins: [
         'react-hooks',
     ],
@@ -111,7 +115,6 @@ module.exports = {
             }
         }]
     },
-    ignorePatterns: ['*.d.ts'],
     overrides: [{
         files: ['*.ts', '*.tsx'],
         extends: [
@@ -121,6 +124,12 @@ module.exports = {
         ],
         parser: '@typescript-eslint/parser',
         // plugins: ['react', '@typescript-eslint'],
+        parserOptions: {
+            project: [
+                './packages/*/tsconfig.json',
+                './tsconfig.json',
+            ]
+        },
         rules: {
             '@typescript-eslint/ban-ts-comment': 'off',
             '@typescript-eslint/no-inferrable-types': 'off',
