@@ -1,5 +1,5 @@
+import { Tooltip } from 'antd';
 import React from 'react';
-import { Tooltip, OverlayTrigger } from 'react-bootstrap';
 import i18n from '../../../lib/i18n';
 
 
@@ -33,7 +33,7 @@ const keypadTooltip = () => {
     };
 
     return (
-        <Tooltip
+        <div
             id="widget-axes-keypad-tooltip"
             style={styles.tooltip}
         >
@@ -110,7 +110,7 @@ const keypadTooltip = () => {
                     </div>
                 </div>
             </div>
-        </Tooltip>
+        </div>
     );
 };
 
@@ -122,12 +122,11 @@ export default (props) => {
     }
 
     return (
-        <OverlayTrigger
-            overlay={keypadTooltip()}
+        <Tooltip
+            title={keypadTooltip()}
             placement="bottom"
-            delayShow={300}
         >
             {children}
-        </OverlayTrigger>
+        </Tooltip>
     );
 };
