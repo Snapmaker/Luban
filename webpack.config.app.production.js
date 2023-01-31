@@ -89,9 +89,10 @@ module.exports = {
     ],
     module: {
         rules: [
+            // ESLint
             {
                 enforce: 'pre',
-                test: /\.jsx?$|\.tsx?$/,
+                test: /\.(jsx?|tsx?)$/,
                 loader: 'eslint-loader',
                 exclude: /node_modules/,
                 options: {
@@ -102,13 +103,15 @@ module.exports = {
                     configFile: path.resolve(__dirname, '.eslintrc.js'),
                 },
             },
+            // workers
             {
-                test: /\.worker\.(j|t)s$/,
+                test: /\.worker\.(js|ts)$/,
                 loader: 'worker-loader',
                 options: {
                     filename: '[name].js',
                 },
             },
+            // TypeScript/TSX
             {
                 test: /\.tsx?$/,
                 use: [
@@ -132,12 +135,32 @@ module.exports = {
                     },
                 ]
             },
+            // JavaScript/JSX
             {
                 test: /\.jsx?$/,
-                exclude: /(node_modules|bower_components)/,
+                exclude: /node_modules/,
                 loader: 'babel-loader',
-                options: babelConfig
+                options: babelConfig,
             },
+            // global styles
+            {
+                test: /\.styl$/,
+                use: [
+                    MiniCssExtractPlugin.loader,
+                    {
+                        loader: 'css-loader',
+                        options: {
+                            importLoaders: 1,
+                            localsConvention: 'camelCase',
+                        }
+                    },
+                    'stylus-loader',
+                ],
+                include: [
+                    path.resolve(__dirname, 'src/app/styles'),
+                ]
+            },
+            // Stylus
             {
                 test: /\.styl$/,
                 use: [
@@ -146,26 +169,19 @@ module.exports = {
                     {
                         loader: 'css-loader',
                         options: {
-                            camelCase: true, // export class names in camelCase
-                            modules: true, // enable CSS module
-                            importLoaders: 1, // loaders applied before css loader
-                            localIdentName: '[path][name]__[local]--[hash:base64:5]' // generated identifier
+                            // camelCase: true, // export class names in camelCase
+                            // modules: true, // enable CSS module
+                            importLoaders: 1,
+                            localsConvention: 'camelCase',
+                            modules: {
+                                mode: 'local',
+                                localIdentName: '[path][name]__[local]--[hash:base64:5]',
+                            },
                         }
                     },
-                    'stylus-loader'
+                    'stylus-loader',
                 ],
                 exclude: [
-                    path.resolve(__dirname, 'src/app/styles')
-                ]
-            },
-            {
-                test: /\.styl$/,
-                use: [
-                    MiniCssExtractPlugin.loader,
-                    'css-loader?camelCase',
-                    'stylus-loader'
-                ],
-                include: [
                     path.resolve(__dirname, 'src/app/styles')
                 ]
             },
@@ -199,6 +215,6 @@ module.exports = {
     node: {
         fs: 'empty',
         net: 'empty',
-        tls: 'empty'
+        tls: 'empty',
     }
 };

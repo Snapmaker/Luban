@@ -1,25 +1,22 @@
 /* eslint-disable */
-import includes from 'lodash/includes';
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import Dropdown from '../../components/Dropdown';
-import { Button } from '../../components/Buttons';
-import SvgIcon from '../../components/SvgIcon'
-import Menu from '../../components/Menu';
+import includes from 'lodash/includes';
+import PropTypes from 'prop-types';
+import React, { PureComponent } from 'react';
+import { HEAD_PRINTING, METRIC_UNITS } from '../../../constants';
 import i18n from '../../../lib/i18n';
-import {
-    HEAD_PRINTING,
-    METRIC_UNITS
-} from '../../../constants';
+import { Button } from '../../components/Buttons';
+import Dropdown from '../../components/Dropdown';
+import Menu from '../../components/Menu';
+import SvgIcon from '../../components/SvgIcon';
 import styles from './index.styl';
 
 const OperationDropdown = ({
-    menus,
-    title,
-    onClick,
-    disabled
-}) => {
+                               menus,
+                               title,
+                               onClick,
+                               disabled
+                           }) => {
     return <Dropdown
         overlay={(
             <Menu>
@@ -33,7 +30,7 @@ const OperationDropdown = ({
                             <div className={classNames('align-c', 'padding-vertical-4')}>
                                 {menu.title}
                             </div>
-                        </Menu.Item>
+                        </Menu.Item>;
                     })
                 }
             </Menu>
@@ -52,8 +49,8 @@ const OperationDropdown = ({
                 />
             </div>
         </Button>
-    </Dropdown>
-}
+    </Dropdown>;
+};
 
 class DisplayPanel extends PureComponent {
     static propTypes = {
@@ -134,8 +131,12 @@ class DisplayPanel extends PureComponent {
                                         title={'X'}
                                         disabled={!canClick}
                                         menus={[
-                                            { key: "G0 X0", title: i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On X Axis (G0 X0)') },
-                                            { key: "G92 X0", title: i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary X Axis (G92 X0)'), isSetOrigin: true }
+                                            { key: 'G0 X0', title: i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On X Axis (G0 X0)') },
+                                            {
+                                                key: 'G92 X0',
+                                                title: i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary X Axis (G92 X0)'),
+                                                isSetOrigin: true
+                                            }
                                         ]} />
                                 </td>
                             </tr>
@@ -163,8 +164,12 @@ class DisplayPanel extends PureComponent {
                                         title={'Y'}
                                         disabled={!canClick}
                                         menus={[
-                                            { key: "G0 Y0", title: i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On Y Axis (G0 Y0)') },
-                                            { key: "G92 Y0", title: i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary Y Axis (G92 Y0)'), isSetOrigin: true }
+                                            { key: 'G0 Y0', title: i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On Y Axis (G0 Y0)') },
+                                            {
+                                                key: 'G92 Y0',
+                                                title: i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary Y Axis (G92 Y0)'),
+                                                isSetOrigin: true
+                                            }
                                         ]} />
                                 </td>
                             </tr>
@@ -192,8 +197,12 @@ class DisplayPanel extends PureComponent {
                                         title={'Z'}
                                         disabled={!canClick}
                                         menus={[
-                                            { key: "G0 Z0", title: i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On Z Axis (G0 Z0)') },
-                                            { key: "G92 Z0", title: i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary Z Axis (G92 Z0)'), isSetOrigin: true }
+                                            { key: 'G0 Z0', title: i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On Z Axis (G0 Z0)') },
+                                            {
+                                                key: 'G92 Z0',
+                                                title: i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary Z Axis (G92 Z0)'),
+                                                isSetOrigin: true
+                                            }
                                         ]} />
                                 </td>
                             </tr>
@@ -209,9 +218,9 @@ class DisplayPanel extends PureComponent {
                                 </td>
                                 <td className={styles['field-position']}>
                                     <div>
-                                        <span className={styles['integer-part']}>{workPosition.b.split('.')[0]}</span>
+                                        <span className={styles['integer-part']}>{(workPosition.b || '').split('.')[0]}</span>
                                         <span className={styles['decimal-point']}>.</span>
-                                        <span className={styles['fractional-part']}>{workPosition.b.split('.')[1]}</span>
+                                        <span className={styles['fractional-part']}>{(workPosition.b || '').split('.')[1]}</span>
                                     </div>
                                     <span className={styles.unit}>°</span>
                                 </td>
@@ -221,8 +230,12 @@ class DisplayPanel extends PureComponent {
                                         title={'B'}
                                         disabled={!canClick}
                                         menus={[
-                                            { key: "G0 B0", title: i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On B Axis (G0 B0)') },
-                                            { key: "G92 B0", title: i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary B Axis (G92 B0)'), isSetOrigin: true }
+                                            { key: 'G0 B0', title: i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On B Axis (G0 B0)') },
+                                            {
+                                                key: 'G92 B0',
+                                                title: i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary B Axis (G92 B0)'),
+                                                isSetOrigin: true
+                                            }
                                         ]} />
                                 </td>
                             </tr>

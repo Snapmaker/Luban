@@ -57,12 +57,14 @@
 // Control Panel
 .control-panel {
     .jog-pad {
-        .column-5{
+        .column-5 {
             flex: 0 0 auto;
         }
-        .column-4{
+
+        .column-4 {
             flex: 0 0 auto;
         }
+
         button[class^="jog-"],
         button[class*=" jog-"] {
             border-radius: 8px;
@@ -113,27 +115,32 @@
 .jog-distance-control {
     :global {
         .input-group {
-            .select-distance{
+            .select-distance {
                 padding: 0
             }
+
             .col-6 .btn {
                 padding: 0;
             }
+
             .btn:first-child {
                 border-top-right-radius: 0
                 border-bottom-right-radius: 0
                 border-top-left-radius: 8px
                 border-bottom-left-radius: 8px
             }
+
             .btn:last-child {
                 border-top-left-radius: 0
                 border-bottom-left-radius: 0
                 border-top-right-radius: 8px
                 border-bottom-right-radius: 8px
             }
+
             .btn:not(:first-child):not(:last-child) {
                 border-radius: 0
             }
+
             .btn:not(:last-child) {
                 border-right: 0
             }

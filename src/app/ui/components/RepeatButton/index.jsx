@@ -1,5 +1,6 @@
-import React, { PureComponent } from 'react';
+import { Button } from 'antd';
 import PropTypes from 'prop-types';
+import React, { PureComponent } from 'react';
 
 class RepeatButton extends PureComponent {
     static propTypes = {
@@ -52,7 +53,7 @@ class RepeatButton extends PureComponent {
         delete props.throttle;
 
         return (
-            <button
+            <Button
                 type="button"
                 {...props}
                 onMouseDown={this.actions.handleHoldDown}
