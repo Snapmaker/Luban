@@ -127,7 +127,7 @@ class JogDistance extends PureComponent {
                 }
                 {
                     needCustom && (
-                        <div className="input-group-btn">
+                        <div>
                             <RepeatButton
                                 className="btn btn-outline-secondary"
                                 onClick={actions.increaseCustomDistance}

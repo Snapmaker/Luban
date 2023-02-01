@@ -574,7 +574,6 @@ function WifiConnection() {
         <div>
             {!isConnected && (
                 <div className="sm-flex justify-space-between margin-bottom-16">
-                    {/** https://react-select.com/upgrade-guide#new-components-api **/}
                     <Select
                         backspaceRemoves={false}
                         className={classNames('sm-flex-width sm-flex-order-negative')}
