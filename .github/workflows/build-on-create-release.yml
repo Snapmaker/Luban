@@ -169,8 +169,8 @@ jobs:
             - name: Upload Release macOS Installer OSS
               if: github.repository == 'Snapmaker/Luban'
               run: |
-                  ossutil cp -f ./output/*.zip ${{secrets.OSS_UPDATE_PATH}}/${{env.INSTALLER_ASSET_NAME}}
-                  ossutil cp -f ./output/*.dmg ${{secrets.OSS_UPDATE_PATH}}/${{env.ZIP_ASSET_NAME}}
+                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.zip"
+                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.dmg"
                   ossutil cp -f ./output/latest-mac.yml ${{secrets.OSS_UPDATE_PATH}}/latest-mac.yml
 
     build-linux:
