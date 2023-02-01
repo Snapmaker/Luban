@@ -36,9 +36,7 @@ const EditMacro = (props) => {
     return (
         <Modal disableOverlay size="md" onClose={closeModal}>
             <Modal.Header>
-                {/* <Modal.Title> */}
                 {i18n._('key-Workspace/Macro-Edit Macro')}
-                {/* </Modal.Title> */}
             </Modal.Header>
             <Modal.Body>
                 <Form
@@ -60,7 +58,6 @@ const EditMacro = (props) => {
                     >
                         <Input.TextArea rows={10} />
                     </Form.Item>
-
                     <Form.Item
                         name="repeat"
                         label={i18n._('key-Workspace/Macro-Repeat')}
@@ -129,14 +126,14 @@ const EditMacro = (props) => {
                     className="margin-left-8"
                     priority="level-two"
                     width="96px"
-                    onClick={() => closeModal()}
+                    onClick={closeModal}
                 >
                     {i18n._('key-Workspace/Macro-Cancel')}
                 </Button>
                 <Button
-                    className="margin-left-8"
                     priority="level-two"
                     width="96px"
+                    className="margin-left-8"
                     onClick={() => {
                         updateMacro(id, {
                             name: form.getFieldValue('name'),
