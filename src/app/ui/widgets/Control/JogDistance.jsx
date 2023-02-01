@@ -30,7 +30,7 @@ const JogDistance = (props) => {
                 <p className="margin-vertical-8">{i18n._('key-Workspace/Control/JogDistance-XYZ Axis Travel Distance')}</p>
                 <Space direction="vertical" size={8}>
                     <Radio.Group
-                        size="medium"
+                        size="small"
                         defaultValue={distance}
                         onChange={(e) => actions.selectDistance(e.target.value)}
                     >
@@ -44,7 +44,7 @@ const JogDistance = (props) => {
                     </Radio.Group>
                     {
                         distance === '' && (
-                            <Input.Group>
+                            <Input.Group compat size="small">
                                 <Space size={4}>
                                     <Input
                                         type="number"
@@ -61,6 +61,7 @@ const JogDistance = (props) => {
                                         disabled={!canClick}
                                     />
                                     <RepeatButton
+                                        size="small"
                                         title={i18n._('key-Workspace/Control/JogDistance-Increase custom distance by one unit')}
                                         onClick={actions.increaseCustomDistance}
                                         disabled={!canClick}
@@ -68,6 +69,7 @@ const JogDistance = (props) => {
                                         <i className="fa fa-plus" />
                                     </RepeatButton>
                                     <RepeatButton
+                                        size="small"
                                         title={i18n._('key-Workspace/Control/JogDistance-Decrease custom distance by one unit')}
                                         onClick={actions.decreaseCustomDistance}
                                         disabled={!canClick}
@@ -85,7 +87,7 @@ const JogDistance = (props) => {
                     <p className="margin-vertical-8">{i18n._('key-Workspace/Control/JogDistance-B Axis Rotation Angle')}</p>
                     <Space direction="vertical" size={8}>
                         <Radio.Group
-                            size="medium"
+                            size="small"
                             defaultValue={angle}
                             onChange={(e) => actions.selectAngle(e.target.value)}
                         >
@@ -97,7 +99,7 @@ const JogDistance = (props) => {
                         </Radio.Group>
                         {
                             angle === '' && (
-                                <Input.Group>
+                                <Input.Group compat size="small">
                                     <Space size={4}>
                                         <Input
                                             type="number"
@@ -116,7 +118,7 @@ const JogDistance = (props) => {
                                             disabled={!canClick}
                                         />
                                         <RepeatButton
-                                            className="btn btn-outline-secondary"
+                                            size="small"
                                             title={i18n._('key-Workspace/Control/JogDistance-Increase custom angle by one unit')}
                                             onClick={actions.increaseCustomAngle}
                                             disabled={!canClick}
@@ -124,7 +126,7 @@ const JogDistance = (props) => {
                                             <i className="fa fa-plus" />
                                         </RepeatButton>
                                         <RepeatButton
-                                            className="btn btn-outline-secondary"
+                                            size="small"
                                             title={i18n._('key-Workspace/Control/JogDistance-Decrease custom distance by one unit')}
                                             onClick={actions.decreaseCustomAngle}
                                             disabled={!canClick}
