@@ -171,7 +171,11 @@ module.exports = {
                                 loader: 'css-loader',
                                 options: {
                                     importLoaders: 1,
-                                    localsConvention: 'camelCase',
+                                    modules: {
+                                        mode: 'global',
+                                        exportLocalsConvention: 'camelCase',
+                                    },
+                                    esModule: false,
                                 }
                             },
                             'stylus-loader',
@@ -187,14 +191,13 @@ module.exports = {
                             {
                                 loader: 'css-loader',
                                 options: {
-                                    // camelCase: true, // export class names in camelCase
-                                    // modules: true, // enable CSS module
                                     importLoaders: 1, // loaders applied before css loader
-                                    localsConvention: 'camelCase',
                                     modules: {
                                         mode: 'local',
+                                        exportLocalsConvention: 'camelCase',
                                         localIdentName: '[path][name]__[local]--[hash:base64:5]',
                                     },
+                                    esModule: false,
                                 }
                             },
                             'stylus-loader',
