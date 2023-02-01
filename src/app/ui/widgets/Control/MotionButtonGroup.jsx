@@ -23,8 +23,7 @@ const MotionButtonGroup = (props) => {
                         <br />
                         <p>
                             <Trans i18nKey="key-unused-Note: If you are using the CNC Carving Module, make sure the carving bit will not run into the fixtures before you use this feature.">
-                                Note: If you are using the CNC Carving Module, make sure the carving bit will not run into the fixtures before you use this
-                                feature.
+                                Note: If you are using the CNC Carving Module, make sure the carving bit will not run into the fixtures before you use this feature.
                             </Trans>
                         </p>
                     </div>

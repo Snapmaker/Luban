@@ -11,18 +11,20 @@ import Menu from '../../components/Menu';
 import SvgIcon from '../../components/SvgIcon';
 import styles from './index.styl';
 
-const OperationDropdown = ({
-                               menus,
-                               title,
-                               onClick,
-                               disabled
-                           }) => {
+const OperationDropdown = (
+    {
+        menus,
+        title,
+        onClick,
+        disabled
+    }
+) => {
     return <Dropdown
         overlay={(
             <Menu>
                 {
-                    menus.map((menu) => {
-                        return <Menu.Item
+                    menus.map((menu) => (
+                        <Menu.Item
                             onClick={e => onClick(e, menu.isSetOrigin)}
                             key={menu.key}
                             disabled={disabled || menu.disabled}
@@ -30,8 +32,8 @@ const OperationDropdown = ({
                             <div className={classNames('align-c', 'padding-vertical-4')}>
                                 {menu.title}
                             </div>
-                        </Menu.Item>;
-                    })
+                        </Menu.Item>
+                    ))
                 }
             </Menu>
         )}
@@ -49,7 +51,7 @@ const OperationDropdown = ({
                 />
             </div>
         </Button>
-    </Dropdown>;
+    </Dropdown>
 };
 
 class DisplayPanel extends PureComponent {
