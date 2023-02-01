@@ -1,11 +1,11 @@
-import React from 'react';
 import PropTypes from 'prop-types';
+import React from 'react';
 import { Trans } from 'react-i18next';
 
 import i18n from '../../../lib/i18n';
+import { Button } from '../../components/Buttons';
 // import controller from '../../lib/controller';
 import TipTrigger from '../../components/TipTrigger';
-import { Button } from '../../components/Buttons';
 // import styles from './index.styl';
 
 
@@ -14,7 +14,7 @@ const MotionButtonGroup = (props) => {
     const { canClick } = state;
 
     return (
-        <div className="sm-flex-overflow-visible " style={{ flexDirection: 'column' }}>
+        <div className="sm-flex-overflow-visible" style={{ flexDirection: 'column' }}>
             <TipTrigger
                 title={i18n._('key-Workspace/Control/MotionButton-Run Boundary')}
                 content={(

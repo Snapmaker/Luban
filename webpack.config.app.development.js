@@ -106,6 +106,7 @@ module.exports = {
     ],
     module: {
         rules: [
+            // ESLint
             {
                 enforce: 'pre',
                 test: /(\.jsx?|\.tsx?)$/,
@@ -119,17 +120,19 @@ module.exports = {
                     configFile: path.resolve(__dirname, '.eslintrc.js'),
                 },
             },
+            // workers
             {
-                test: /\.worker\.(j|t)s$/,
+                test: /\.worker\.(js|ts)$/,
+                include: [
+                    path.resolve(__dirname, 'src/app/lib/manager/'),
+                ],
+                exclude: /node_modules/,
                 loader: 'worker-loader',
                 options: {
                     filename: '[name].js',
                 },
-                include: [
-                    path.resolve(__dirname, 'src/app/lib/manager/'),
-                ],
-                exclude: /node_modules/
             },
+            // TypeScript/TSX
             {
                 test: /\.tsx?$/,
                 loader: 'ts-loader',
@@ -138,82 +141,90 @@ module.exports = {
                     transpileOnly: true,
                 },
             },
+            // JavaScript/JSX
             {
-                test: /\.js(x)?$/,
-                loader: 'babel-loader',
-                exclude: /node_modules/,
-                options: {
-                    ...babelConfig,
-                    cacheDirectory: true
-                },
+                test: /\.jsx?$/,
                 include: [
                     path.resolve(__dirname, 'packages/*'),
                     path.resolve(__dirname, 'src/app'),
                     path.resolve(__dirname, 'src/shared'),
+                ],
+                exclude: /node_modules/,
+                loader: 'babel-loader',
+                options: {
+                    ...babelConfig,
+                    cacheDirectory: true
+                },
+            },
+            // Stylus
+            {
+                test: /\.styl$/,
+                oneOf: [
+                    // global styles
+                    {
+                        include: [
+                            path.resolve(__dirname, 'src/app/styles')
+                        ],
+                        use: [
+                            'style-loader',
+                            {
+                                loader: 'css-loader',
+                                options: {
+                                    importLoaders: 1,
+                                    localsConvention: 'camelCase',
+                                }
+                            },
+                            'stylus-loader',
+                        ],
+                    },
+                    // module
+                    {
+                        exclude: [
+                            path.resolve(__dirname, 'src/app/styles')
+                        ],
+                        use: [
+                            'style-loader',
+                            {
+                                loader: 'css-loader',
+                                options: {
+                                    // camelCase: true, // export class names in camelCase
+                                    // modules: true, // enable CSS module
+                                    importLoaders: 1, // loaders applied before css loader
+                                    localsConvention: 'camelCase',
+                                    modules: {
+                                        mode: 'local',
+                                        localIdentName: '[path][name]__[local]--[hash:base64:5]',
+                                    },
+                                }
+                            },
+                            'stylus-loader',
+                        ]
+                    },
                 ]
             },
             {
-                oneOf: [
-                    {
-                        test: /\.styl$/,
-                        oneOf: [
-                            {
-                                use: [
-                                    'style-loader',
-                                    {
-                                        loader: 'css-loader',
-                                        options: {
-                                            camelCase: true, // export class names in camelCase
-                                            modules: true, // enable CSS module
-                                            importLoaders: 1, // loaders applied before css loader
-                                            localIdentName: '[path][name]__[local]--[hash:base64:5]' // generated identifier
-                                        }
-                                    },
-                                    'stylus-loader'
-                                ],
-                                exclude: [
-                                    path.resolve(__dirname, 'src/app/styles')
-                                ]
-
-                            },
-                            {
-                                test: /\.styl$/,
-                                use: [
-                                    'style-loader',
-                                    'css-loader?camelCase',
-                                    'stylus-loader'
-                                ],
-                                include: [
-                                    path.resolve(__dirname, 'src/app/styles')
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        test: /\.css$/,
-                        use: ['style-loader', 'css-loader']
-                    },
-                    {
-                        test: /\.(png|jpg|svg)$/,
-                        loader: 'url-loader',
-                        options: {
-                            limit: 8192
-                        }
-                    },
-                    {
-                        test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                        loader: 'url-loader',
-                        options: {
-                            limit: 10000,
-                            mimetype: 'application/font-woff'
-                        }
-                    },
-                    {
-                        test: /\.(ttf|eot)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                        loader: 'file-loader'
-                    }
-                ]
-            }
+                test: /\.css$/,
+                use: ['style-loader', 'css-loader']
+            },
+            {
+                test: /\.(png|jpg|svg)$/,
+                loader: 'url-loader',
+                options: {
+                    limit: 8192
+                }
+            },
+            {
+                test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                loader: 'url-loader',
+                options: {
+                    limit: 10000,
+                    mimetype: 'application/font-woff'
+                }
+            },
+            {
+                test: /\.(ttf|eot)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                loader: 'file-loader'
+            },
         ]
     },
     // Some libraries import Node modules but don't use them in the browser.
@@ -221,7 +232,7 @@ module.exports = {
     node: {
         fs: 'empty',
         net: 'empty',
-        tls: 'empty'
+        tls: 'empty',
     },
     devServer: devServer,
 };

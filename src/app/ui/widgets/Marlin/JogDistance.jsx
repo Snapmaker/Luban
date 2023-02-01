@@ -1,15 +1,14 @@
-import React, { PureComponent } from 'react';
-import classNames from 'classnames';
+import { Radio } from 'antd';
 import _ from 'lodash';
 import PropTypes from 'prop-types';
-import styles from './index.styl';
+import React, { PureComponent } from 'react';
 import i18n from '../../../lib/i18n';
 import RepeatButton from '../../components/RepeatButton';
+import styles from './index.styl';
 
 class JogDistance extends PureComponent {
     static propTypes = {
         marks: PropTypes.array.isRequired,
-        units: PropTypes.string,
         needCustom: PropTypes.bool,
         customValue: PropTypes.number,
         defaultValue: PropTypes.number,
@@ -33,13 +32,17 @@ class JogDistance extends PureComponent {
 
     actions = {
         selectDistance: (value) => {
-            this.setState({
-                value: value
-            });
-            this.setState({
-                isCustom: false
-            });
-            this.actions.onChange(value);
+            if (value === 'custom') {
+                this.actions.selectCustom();
+            } else {
+                this.setState({
+                    value: value
+                });
+                this.setState({
+                    isCustom: false
+                });
+                this.actions.onChange(value);
+            }
         },
         selectCustom: () => {
             this.setState({
@@ -77,43 +80,36 @@ class JogDistance extends PureComponent {
 
 
     render() {
-        const { marks, units, needCustom } = this.props;
+        const { marks, needCustom = false } = this.props;
         const actions = this.actions;
         const { value, customValue, isCustom, min, max, step } = this.state;
 
+        const radioValue = isCustom ? 'custom' : value;
+
         return (
             <div className={styles['jog-distance-control']}>
-                <div className="input-group input-group-sm">
-                    <div className="input-group-btn sm-flex-overflow-visible">
-                        {marks.map(v => {
+                <Radio.Group
+                    size="small"
+                    defaultValue={radioValue}
+                    onChange={(e) => actions.selectDistance(e.target.value)}
+                >
+                    {
+                        marks.map(v => {
                             return (
-                                <button
-                                    key={v}
-                                    type="button"
-                                    className={classNames('btn', 'btn-default', {
-                                        'btn-select': !isCustom && v === value
-                                    })}
-                                    title={`${v} ${units}`}
-                                    onClick={() => actions.selectDistance(v)}
-                                >
-                                    {v}
-                                </button>
+                                <Radio.Button value={v}>{v}</Radio.Button>
                             );
-                        })}
-                        {needCustom && (
-                            <button
-                                type="button"
-                                className={classNames('btn', 'btn-default', {
-                                    'btn-select': isCustom
-                                })}
-                                title={i18n._('key-unused-User Defined')}
-                                onClick={() => actions.selectCustom()}
-                            >
+                        })
+                    }
+                    {
+                        needCustom && (
+                            <Radio.Button value="custom">
                                 <i className="fa fa-adjust" />
-                            </button>
-                        )}
-                    </div>
-                    {needCustom && (
+                            </Radio.Button>
+                        )
+                    }
+                </Radio.Group>
+                {
+                    needCustom && (
                         <input
                             type="number"
                             className="form-control"
@@ -127,9 +123,11 @@ class JogDistance extends PureComponent {
                             }}
                             title={i18n._('key-unused-Custom distance for every move')}
                         />
-                    )}
-                    {needCustom && (
-                        <div className="input-group-btn">
+                    )
+                }
+                {
+                    needCustom && (
+                        <div>
                             <RepeatButton
                                 className="btn btn-outline-secondary"
                                 onClick={actions.increaseCustomDistance}
@@ -145,8 +143,8 @@ class JogDistance extends PureComponent {
                                 <i className="fa fa-minus" />
                             </RepeatButton>
                         </div>
-                    )}
-                </div>
+                    )
+                }
             </div>
         );
     }

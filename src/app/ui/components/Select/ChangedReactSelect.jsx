@@ -2,7 +2,6 @@ import PropTypes from 'prop-types';
 import { isNil, difference } from 'lodash';
 import classNames from 'classnames';
 import React, { PureComponent } from 'react';
-// import { components } from 'react-select';
 import { Select, TreeSelect } from 'antd';
 import styles from './styles.styl';
 import i18n from '../../../lib/i18n';

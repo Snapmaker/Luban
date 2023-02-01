@@ -12,10 +12,10 @@ const ControlPanel = (props) => {
         <div className={styles['control-panel']}>
             {isFourAxis && (
                 <div className="sm-flex justify-space-between">
-                    <div className="">
+                    <div>
                         <JogPad {...props} />
                     </div>
-                    <div className="">
+                    <div>
                         <MotionButtonGroup {...props} />
                     </div>
                 </div>

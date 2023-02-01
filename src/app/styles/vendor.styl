@@ -3,20 +3,8 @@
 // Normalize CSS
 @import url("~normalize.css/normalize.css");
 
-// Bootstrap
-// TODO: Remove bootstrap in favor of Ant Design, but some of their styles are incompatible.
-@import url("~bootstrap/dist/css/bootstrap.css");
-
-// Reset bootstrap defaults
-label {
-    margin-bottom: 0;
-}
-
 // rc-slider
 // @import url("~rc-slider/assets/index.css");
-
-// react-select
-// @import url("~react-select/dist/react-select.css");
 
 // react-toastify
 @import url("~react-toastify/dist/ReactToastify.css");
@@ -60,29 +48,6 @@ label {
     width: 0px;
     display: none;
 }
-
-// Rewrite react-select component style
-// since react-select is written in less, we have to rewrite its generated CSS
-.Select-control
-    height: 30px
-
-.Select-placeholder
-.Select--single > .Select-control .Select-value
-    line-height: 28px
-
-.Select-input
-    height: 28px
-.Select-option
-    padding: 2px 10px
-
-// bootstrap x react-select
-.input-group > .Select:not(:last-child) .Select-control
-    border-top-right-radius: 0
-    border-bottom-right-radius: 0
-
-.input-group > .Select:not(:first-child) .Select-control
-    border-top-left-radius: 0
-    border-bottom-left-radius: 0
 
 // react-toggle
 @import url("~react-toggle/style.css");

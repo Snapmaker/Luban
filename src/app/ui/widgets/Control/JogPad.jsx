@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React from 'react';
+import { Row, Col } from 'antd';
 
 import i18n from '../../../lib/i18n';
 import SvgIcon from '../../components/SvgIcon';
@@ -12,12 +13,13 @@ const JogPad = React.memo((props) => {
 
     return (
         <div className={styles['jog-pad']}>
-            <div className="mb-2">
-                <div className="row no-gutters">
-                    <div className={classNames(
-                        { [styles['column-5']]: workPosition.isFourAxis },
-                        { [styles['column-4']]: !workPosition.isFourAxis },
-                    )}
+            <div className="margin-bottom-8">
+                <Row>
+                    <Col
+                        className={classNames(
+                            { [styles['column-5']]: workPosition.isFourAxis },
+                            { [styles['column-4']]: !workPosition.isFourAxis },
+                        )}
                     >
                         <div className="margin-right-4">
                             <button
@@ -36,8 +38,8 @@ const JogPad = React.memo((props) => {
                                 />
                             </button>
                         </div>
-                    </div>
-                    <div
+                    </Col>
+                    <Col
                         className={classNames(
                             { [styles['column-5']]: workPosition.isFourAxis },
                             { [styles['column-4']]: !workPosition.isFourAxis },
@@ -58,11 +60,12 @@ const JogPad = React.memo((props) => {
                                 <span className={styles['jog-text']}>Y+</span>
                             </button>
                         </div>
-                    </div>
-                    <div className={classNames(
-                        { [styles['column-5']]: workPosition.isFourAxis },
-                        { [styles['column-4']]: !workPosition.isFourAxis },
-                    )}
+                    </Col>
+                    <Col
+                        className={classNames(
+                            { [styles['column-5']]: workPosition.isFourAxis },
+                            { [styles['column-4']]: !workPosition.isFourAxis },
+                        )}
                     >
                         <div className="margin-right-4">
                             <button
@@ -81,8 +84,8 @@ const JogPad = React.memo((props) => {
                                 />
                             </button>
                         </div>
-                    </div>
-                    <div
+                    </Col>
+                    <Col
                         className={classNames(
                             { [styles['column-5']]: workPosition.isFourAxis },
                             { [styles['column-4']]: !workPosition.isFourAxis },
@@ -103,9 +106,9 @@ const JogPad = React.memo((props) => {
                                 <span className={styles['jog-text']}>Z+</span>
                             </button>
                         </div>
-                    </div>
+                    </Col>
                     {workPosition.isFourAxis && (
-                        <div
+                        <Col
                             className={classNames(
                                 { [styles['column-5']]: workPosition.isFourAxis },
                                 { [styles['column-4']]: !workPosition.isFourAxis },
@@ -126,12 +129,12 @@ const JogPad = React.memo((props) => {
                                     <span className={styles['jog-text']}>B+</span>
                                 </button>
                             </div>
-                        </div>
+                        </Col>
                     )}
-                </div>
+                </Row>
             </div>
-            <div className="mb-2">
-                <div className="row no-gutters">
+            <div className="margin-bottom-8">
+                <Row>
                     <div
                         className={classNames(
                             { [styles['column-5']]: workPosition.isFourAxis },
@@ -230,14 +233,15 @@ const JogPad = React.memo((props) => {
                             </div>
                         </div>
                     )}
-                </div>
+                </Row>
             </div>
-            <div className="mb-2">
-                <div className="row no-gutters">
-                    <div className={classNames(
-                        { [styles['column-5']]: workPosition.isFourAxis },
-                        { [styles['column-4']]: !workPosition.isFourAxis },
-                    )}
+            <div className="margin-bottom-8">
+                <Row>
+                    <div
+                        className={classNames(
+                            { [styles['column-5']]: workPosition.isFourAxis },
+                            { [styles['column-4']]: !workPosition.isFourAxis },
+                        )}
                     >
                         <div className="margin-right-4">
                             <button
@@ -280,10 +284,11 @@ const JogPad = React.memo((props) => {
                             </button>
                         </div>
                     </div>
-                    <div className={classNames(
-                        { [styles['column-5']]: workPosition.isFourAxis },
-                        { [styles['column-4']]: !workPosition.isFourAxis },
-                    )}
+                    <div
+                        className={classNames(
+                            { [styles['column-5']]: workPosition.isFourAxis },
+                            { [styles['column-4']]: !workPosition.isFourAxis },
+                        )}
                     >
                         <div className="margin-right-4">
                             <button
@@ -349,7 +354,7 @@ const JogPad = React.memo((props) => {
                             </div>
                         </div>
                     )}
-                </div>
+                </Row>
             </div>
         </div>
     );

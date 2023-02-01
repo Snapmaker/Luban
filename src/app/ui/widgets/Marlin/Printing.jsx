@@ -1,3 +1,4 @@
+import { Space } from 'antd';
 import { capitalize } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
@@ -9,7 +10,6 @@ import {
     CONNECTION_UNLOAD_FILAMENT,
     CONNECTION_WORK_NOZZLE,
     CONNECTION_Z_OFFSET,
-    // LEFT_EXTRUDER,
     LEFT_EXTRUDER_MAP_NUMBER,
     RIGHT_EXTRUDER_MAP_NUMBER,
     WORKFLOW_STATUS_PAUSED,
@@ -399,31 +399,27 @@ class Printing extends PureComponent {
 
                 {/* Adjust left extruder Z offset, note that z offset for dual extruders are not supported */}
                 {isConnected && this.isPrinting() && !isDualExtruder(printingToolhead) && (
-                    <div className="sm-parameter-row">
-                        <span className="sm-parameter-row__label">{i18n._('key-unused-Left Z Offset')}</span>
-                        <Anchor
-                            className="sm-parameter-row__input2"
-                            style={{
-                                marginRight: '84px'
-                            }}
-                        >
+                    <div className="sm-flex-overflow-visible margin-vertical-8 justify-space-between">
+                        <span className="display-inline-block height-32 sm-parameter-row__label">{i18n._('key-unused-Left Z Offset')}</span>
+                        <Space size={8}>
+                            <div className="height-32">
+                                <Anchor
+                                    className="fa fa-plus"
+                                    onClick={() => actions.onClickPlusZOffset(LEFT_EXTRUDER_MAP_NUMBER)}
+                                />
+                            </div>
                             <JogDistance
                                 marks={zOffsetMarks}
                                 onChange={actions.onChangeLeftZOffset}
                                 defaultValue={leftZOffsetValue}
                             />
-                        </Anchor>
-                        <Anchor
-                            className="sm-parameter-row__input2-check fa fa-plus"
-                            onClick={() => actions.onClickPlusZOffset(LEFT_EXTRUDER_MAP_NUMBER)}
-                        />
-                        <Anchor
-                            className="sm-parameter-row__input2-check fa fa-minus"
-                            style={{
-                                right: '152px'
-                            }}
-                            onClick={() => actions.onClickMinusZOffset(LEFT_EXTRUDER_MAP_NUMBER)}
-                        />
+                            <div className="height-32">
+                                <Anchor
+                                    className="fa fa-minus"
+                                    onClick={() => actions.onClickMinusZOffset(LEFT_EXTRUDER_MAP_NUMBER)}
+                                />
+                            </div>
+                        </Space>
                     </div>
                 )}
                 {/*
