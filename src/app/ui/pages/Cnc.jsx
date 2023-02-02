@@ -4,7 +4,6 @@ import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import { useHistory, withRouter } from 'react-router-dom';
 import { Trans } from 'react-i18next';
-import 'intro.js/introjs.css';
 import { message } from 'antd';
 import Steps from '../components/Steps';
 import i18n from '../../lib/i18n';

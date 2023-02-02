@@ -1,6 +1,5 @@
 import i18next from 'i18next';
 // import { Steps } from 'intro.js-react';
-import 'intro.js/introjs.css';
 import isElectron from 'is-electron';
 import { find, includes } from 'lodash';
 import PropTypes from 'prop-types';
