@@ -1,24 +1,21 @@
-import React, { PureComponent } from 'react';
-import { connect } from 'react-redux';
+import { InputNumber, Spin } from 'antd';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import { Spin } from 'antd';
-import i18n from '../../../../lib/i18n';
+import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
 import api from '../../../../api';
-import styles from '../styles.styl';
-import ExtractPreview from './ExtractPreview';
-import ManualCalibration from '../ManualCalibration';
-import PickObject from '../ManualCalibration/PickObject';
 import { LASER_10W_TAKE_PHOTO_POSITION } from '../../../../constants';
-import {
-    LEVEL_ONE_POWER_LASER_FOR_SM2,
-    LEVEL_TWO_POWER_LASER_FOR_SM2,
-    MACHINE_SERIES,
-} from '../../../../constants/machines';
+import { LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES, } from '../../../../constants/machines';
 import { actions } from '../../../../flux/machine';
+
+import i18n from '../../../../lib/i18n';
+import { getCurrentHeadType } from '../../../../lib/url-utils';
 import { Button } from '../../../components/Buttons';
 import Modal from '../../../components/Modal';
-import { getCurrentHeadType } from '../../../../lib/url-utils';
+import ManualCalibration from '../ManualCalibration';
+import PickObject from '../ManualCalibration/PickObject';
+import styles from '../styles.styl';
+import ExtractPreview from './ExtractPreview';
 
 const PANEL_EXTRACT_TRACE = 1;
 const PANEL_MANUAL_CALIBRATION = 2;
@@ -67,6 +64,7 @@ class ExtractSquareTrace extends PureComponent {
         outputFilename: '',
         options: {
             picAmount: 1,
+            photoQuality: 31, // 0-255
             currentIndex: 0,
             size: this.props.size,
             series: this.props.series,
@@ -76,7 +74,7 @@ class ExtractSquareTrace extends PureComponent {
             corners: [],
             fileNames: [],
             stitchFileName: '',
-            laserToolhead: this.props.toolHead.laserToolhead
+            laserToolhead: this.props.toolHead.laserToolhead,
         },
         // photoInfo: {
         //     fileName: '',
@@ -127,6 +125,8 @@ class ExtractSquareTrace extends PureComponent {
                     materialThickness: this.props.materialThickness
                 }
             });
+
+            // Initialize camera capture position
             const position = [];
             let centerDis;
             let cameraOffsetX = 20;
@@ -190,15 +190,16 @@ class ExtractSquareTrace extends PureComponent {
                 });
                 length = 1;
             }
-
             this.setState({
                 options: {
                     ...this.state.options,
                     centerDis,
                     currentIndex: 0,
-                    currentArrIndex: 0
+                    currentArrIndex: 0,
                 }
             });
+
+            // Start camera capture
             const takePhotos = this.actions.takePhotos(address, position);
             const getPhototTasks = this.actions.startGetPhotoTasks(length);
             Promise.all([takePhotos, getPhototTasks]).then(() => {
@@ -235,21 +236,19 @@ class ExtractSquareTrace extends PureComponent {
 
         takePhotos: (address, position) => {
             const getPhotoTasks = this.state.getPhotoTasks;
-            let z, photoQuality;
+            let z;
             if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
                 z = 170;
                 if (this.state.options.picAmount === 4) {
                     z = 140;
                 }
-                photoQuality = 31;
-            }
-            if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+            } else if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
                 const defaultPos = LASER_10W_TAKE_PHOTO_POSITION[this.props.series];
                 z = defaultPos.z;
                 position[0].x = defaultPos.x;
                 position[0].y = defaultPos.y;
-                photoQuality = 10;
             }
+
             return new Promise(async (resolve, reject) => {
                 for (let i = 0; i < position.length; i++) {
                     if (this.close) {
@@ -265,7 +264,7 @@ class ExtractSquareTrace extends PureComponent {
                         'z': z + this.props.materialThickness || 0,
                         'feedRate': 3000,
                         'address': address,
-                        'photoQuality': photoQuality
+                        'photoQuality': this.state.options.photoQuality,
                     });
                     getPhotoTasks.push({
                         address: address,
@@ -543,6 +542,14 @@ class ExtractSquareTrace extends PureComponent {
         } else if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
             picAmount = this.props.series === MACHINE_SERIES.A150.value ? 4 : 9;
         }
+        // Set initial photo quality
+        let photoQuality = 255;
+        if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
+            photoQuality = 31;
+        } else if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+            photoQuality = 10;
+        }
+
         this.setState({
             panel: PANEL_EXTRACT_TRACE,
             getPhotoTasks: [],
@@ -557,6 +564,7 @@ class ExtractSquareTrace extends PureComponent {
             outputFilename: '',
             options: {
                 picAmount: picAmount,
+                photoQuality,
                 currentIndex: 0,
                 size: this.props.size,
                 series: this.props.series,
@@ -615,10 +623,30 @@ class ExtractSquareTrace extends PureComponent {
                             <div style={{ margin: '0 0 16px', width: '432px' }}>
                                 {i18n._('key-Laser/CameraCapture-The camera on the Laser Module captures nine images of the Laser Engraving and Cutting Platform, and stitches them as a background.')}
                             </div>
+                            <div style={{ margin: '0 0 16px' }}>
+                                <InputNumber
+                                    addonBefore={i18n._('key-Laser/CameraCapture-Image Quality')}
+                                    precision={0}
+                                    min={0}
+                                    max={255}
+                                    defaultValue={this.state.options.photoQuality}
+                                    onChange={(value) => {
+                                        this.setState({
+                                            options: {
+                                                ...this.state.options,
+                                                photoQuality: value,
+                                            }
+                                        });
+                                    }}
+                                />
+                            </div>
                             <Spin spinning={this.state.loading} className={classNames(styles.spin)} tip={i18n._('key-StackedModel/Import-Loading')}>
                                 <div
                                     className={classNames(styles['photo-display'], 'border-radius-8')}
-                                    style={{ height: this.props.laserSize.y * 0.85 * this.multiple + 2, width: this.props.laserSize.x * 0.85 * this.multiple + 2 }}
+                                    style={{
+                                        height: this.props.laserSize.y * 0.85 * this.multiple + 2,
+                                        width: this.props.laserSize.x * 0.85 * this.multiple + 2
+                                    }}
                                 >
                                     {this.extractingPreview.map((previewId, index) => {
                                         const key = previewId + index;
@@ -690,7 +718,7 @@ class ExtractSquareTrace extends PureComponent {
                         displayExtractTrace={this.actions.displayExtractTrace}
                         updateStitchEach={this.actions.updateStitchEach}
                         calibrationOnOff={this.actions.calibrationOnOff}
-                    // updateCameraPhoto={this.actions.updateCameraPhoto}
+                        // updateCameraPhoto={this.actions.updateCameraPhoto}
                     />
                 )}
                 {this.state.panel === PANEL_PICK_OBJECT && this.state.outputFilename && (
