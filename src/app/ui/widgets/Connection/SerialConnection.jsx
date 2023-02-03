@@ -1,15 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import classNames from 'classnames';
 import { isObject, map } from 'lodash';
-import Select from '../../components/Select';
-import SvgIcon from '../../components/SvgIcon';
-import { Button } from '../../components/Buttons';
-import { ModuleStatus } from './WifiConnection';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
-import log from '../../../lib/log';
-import i18n from '../../../lib/i18n';
-import { controller } from '../../../lib/controller';
 import { WORKFLOW_STATE_IDLE, WORKFLOW_STATE_PAUSED, WORKFLOW_STATE_RUNNING } from '../../../constants';
 import {
     HEAD_CNC,
@@ -21,6 +14,15 @@ import {
     MACHINE_SERIES,
 } from '../../../constants/machines';
 import { actions as machineActions } from '../../../flux/machine';
+import { controller } from '../../../lib/controller';
+import i18n from '../../../lib/i18n';
+import log from '../../../lib/log';
+
+import { Button } from '../../components/Buttons';
+import Select from '../../components/Select';
+import SvgIcon from '../../components/SvgIcon';
+
+import MachineModuleStatusBadge from './components/MachineModuleStatusBadge';
 import styles from './index.styl';
 import MismatchModal from './MismatchModal';
 
@@ -278,10 +280,16 @@ function SerialConnection() {
                         </span>
                     </div>
                     {moduleStatusList && moduleStatusList.length && (
-                        <div className={classNames('sm-flex', 'flex-wrap')}>
-                            {moduleStatusList.map(item => (
-                                <ModuleStatus key={item.moduleName} moduleName={item.moduleName} status={item.status} />
-                            ))}
+                        <div className="sm-flex sm-flex-wrap">
+                            {
+                                moduleStatusList.map(item => (
+                                    <MachineModuleStatusBadge
+                                        key={item.moduleName}
+                                        moduleName={item.moduleName}
+                                        status={item.status}
+                                    />
+                                ))
+                            }
                         </div>
                     )}
                 </div>

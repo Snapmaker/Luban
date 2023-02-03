@@ -1,8 +1,8 @@
 import classNames from 'classnames';
 import { map } from 'lodash';
-import PropTypes from 'prop-types';
 import React, { useEffect, useMemo, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+
 import {
     ABSENT_OBJECT,
     CONNECTION_STATUS_CONNECTED,
@@ -36,6 +36,7 @@ import { Server } from '../../../flux/machine/Server';
 import { actions as printingActions } from '../../../flux/printing';
 import usePrevious from '../../../lib/hooks/previous';
 import i18n from '../../../lib/i18n';
+
 import { Button } from '../../components/Buttons';
 import Checkbox from '../../components/Checkbox';
 import Modal from '../../components/Modal';
@@ -43,24 +44,12 @@ import ModalSmall from '../../components/Modal/ModalSmall';
 import ModalSmallInput from '../../components/Modal/ModalSmallInput';
 import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
+
+import MachineModuleStatusBadge from './components/MachineModuleStatusBadge';
 import styles from './index.styl';
 import MismatchModal from './MismatchModal';
 
-export const ModuleStatus = ({ moduleName, status }) => {
-    return (
-        <div className="sm-flex align-center padding-horizontal-8 background-grey-3 border-radius-12 margin-top-8 margin-right-8">
-            <span className="margin-right-8 tooltip-message height-24">{moduleName}</span>
-            <span style={{
-                display: 'inline-block',
-                backgroundColor: status ? '#4CB518' : '#FFA940',
-                height: 6,
-                width: 6,
-                borderRadius: 3
-            }}
-            />
-        </div>
-    );
-};
+
 let timer = null;
 
 function CheckingNozzleSize() {
@@ -176,7 +165,7 @@ function WifiConnection() {
         airPurifier,
         // airPurifierStatus,
         heatedBedTemperature,
-        laserCamera
+        laserCamera,
     } = useSelector(state => state.machine, shallowEqual);
 
     const {
@@ -212,7 +201,7 @@ function WifiConnection() {
     });
     const [serverState, setServerState] = useState(null);
     const [serverOpenState, setServerOpenState] = useState(null);
-    const [currentModuleStatusList, setCurrentModuleStatusList] = useState(null);
+    const [currentModuleStatusList, setCurrentModuleStatusList] = useState([]);
     const prevProps = usePrevious({
         connectionStatus
     });
@@ -562,7 +551,7 @@ function WifiConnection() {
 
     useEffect(() => {
         if (!isConnected) {
-            setCurrentModuleStatusList(null);
+            setCurrentModuleStatusList([]);
         } else {
             setCurrentModuleStatusList(updateModuleStatusList);
         }
@@ -637,11 +626,18 @@ function WifiConnection() {
                             && <i className="sm-icon-14 sm-icon-running" />}
                         </span>
                     </div>
+                    {/* Render status badge for each machine module */}
                     {!!currentModuleStatusList && !!currentModuleStatusList.length && (
-                        <div className={classNames('sm-flex', 'flex-wrap')}>
-                            {currentModuleStatusList.map(item => (
-                                <ModuleStatus key={item.moduleName} moduleName={item.moduleName} status={item.status} />
-                            ))}
+                        <div className="sm-flex sm-flex-wrap">
+                            {
+                                currentModuleStatusList.map(item => (
+                                    <MachineModuleStatusBadge
+                                        key={item.moduleName}
+                                        moduleName={item.moduleName}
+                                        status={item.status}
+                                    />
+                                ))
+                            }
                         </div>
                     )}
                 </div>
@@ -707,10 +703,5 @@ function WifiConnection() {
 }
 
 WifiConnection.propTypes = {};
-
-ModuleStatus.propTypes = {
-    moduleName: PropTypes.string,
-    status: PropTypes.bool
-};
 
 export default WifiConnection;
