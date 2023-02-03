@@ -35,14 +35,7 @@ jobs:
 
             - run: npm run build
 
-            - name: Init OSS
-              if: github.repository == 'Snapmaker/Luban'
-              uses: yizhoumo/setup-ossutil@v1
-              with:
-                  ossutil-version: '1.7.0'
-                  endpoint: ${{ secrets.OSS_ENDPOINT }}
-                  access-key-id: ${{ secrets.OSS_ACCESS_KEY_ID }}
-                  access-key-secret: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+
 
             # ----------------------------------------------------------------
             # Build Windows x64
@@ -53,18 +46,21 @@ jobs:
                   CSC_LINK: ${{ secrets.CSC_LINK_WINDOWS }}
                   CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD_WINDOWS }}
 
-            - name: Copy executable for auto update
-              run: |
-                  $PACKAGE_VERSION=node -e "console.log(require('./src/package.json').version)"
-
-                  cp "./output/Snapmaker-Luban-${PACKAGE_VERSION}-win-x64.exe" "./output/Snapmaker-Luban-${PACKAGE_VERSION}.exe"
-
             - name: Release on Github
               uses: softprops/action-gh-release@v1
               with:
                   files: |
                       ./output/*.exe
                       ./output/latest.yml
+
+            - name: Init OSS
+              if: github.repository == 'Snapmaker/Luban'
+              uses: yizhoumo/setup-ossutil@v1
+              with:
+                  ossutil-version: '1.7.0'
+                  endpoint: ${{ secrets.OSS_ENDPOINT }}
+                  access-key-id: ${{ secrets.OSS_ACCESS_KEY_ID }}
+                  access-key-secret: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
 
             - name: Upload Release Windows x64 Installer To OSS
               if: github.repository == 'Snapmaker/Luban'
