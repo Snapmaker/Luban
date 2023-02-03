@@ -1,6 +1,6 @@
 {
   "name": "snapmaker-luban",
-  "version": "4.5.1",
+  "version": "4.6.0-alpha.1",
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
   "homepage": "https://github.com/Snapmaker/Luban",
   "author": "Snapmaker Software Team",
@@ -140,7 +140,7 @@
     "i18next-xhr-backend": "1.5.1",
     "immutability-helper": "2.9.1",
     "infinite-tree": "1.16.2",
-    "intro.js": "4.1.0",
+    "intro.js": "5.1.0",
     "is-electron": "2.1.0",
     "is-reachable": "^5.2.1",
     "jimp": "0.16.2",

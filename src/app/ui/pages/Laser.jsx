@@ -1,5 +1,4 @@
 import { message } from 'antd';
-import 'intro.js/introjs.css';
 import path from 'path';
 import PropTypes from 'prop-types';
 import React, { useEffect, useRef, useState } from 'react';
