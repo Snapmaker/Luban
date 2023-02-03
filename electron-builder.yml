@@ -59,10 +59,9 @@ dmg:
           y: 344
 
 win:
+    artifactName: Snapmaker-Luban-${version}-win-${arch}.${ext}
     target:
         - nsis
-    # override artifact name for Windows
-    artifactName: ${productName} ${version}.${ext}
     verifyUpdateCodeSignature: false
     icon: build/electron/snapmaker-luban.ico
 

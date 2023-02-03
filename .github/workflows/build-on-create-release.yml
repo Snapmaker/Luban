@@ -53,63 +53,23 @@ jobs:
                   CSC_LINK: ${{ secrets.CSC_LINK_WINDOWS }}
                   CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD_WINDOWS }}
 
-            # https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
-            - name: Setting Environment Variables
+            - name: Copy executable for auto update
               run: |
-                  $PRODUCT_NAME="Snapmaker Luban"
-                  $PACKAGE_NAME="Snapmaker-Luban"
                   $PACKAGE_VERSION=node -e "console.log(require('./src/package.json').version)"
-                  $RELEASE="${PACKAGE_NAME}-${PACKAGE_VERSION}"
 
-                  $INSTALLER_ASSET_PATH="./output/${PRODUCT_NAME} ${PACKAGE_VERSION}.exe"
-                  $INSTALLER_ASSET_DEFAULT_NAME="${RELEASE}.exe"
-                  $INSTALLER_ASSET_NAME="${RELEASE}-win-x64.exe"
+                  cp "./output/Snapmaker-Luban-${PACKAGE_VERSION}-win-x64.exe" "./output/Snapmaker-Luban-${PACKAGE_VERSION}.exe"
 
-                  $INSTALLER_AU_ASSET_NAME="${PACKAGE_NAME}-${PACKAGE_VERSION}.exe"
-
-                  echo "INSTALLER_ASSET_PATH=${INSTALLER_ASSET_PATH}" >> ${Env:GITHUB_ENV}
-                  echo "INSTALLER_ASSET_NAME=${INSTALLER_ASSET_NAME}" >> ${Env:GITHUB_ENV}
-                  echo "INSTALLER_AU_ASSET_NAME=${INSTALLER_AU_ASSET_NAME}" >> ${Env:GITHUB_ENV}
-                  echo "INSTALLER_ASSET_DEFAULT_NAME=${INSTALLER_ASSET_DEFAULT_NAME}" >> ${Env:GITHUB_ENV}
-
-            - name: Upload Release Asset - Windows x64 Installer
-              id: upload-release-asset-x64
-              uses: actions/upload-release-asset@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Release on Github
+              uses: softprops/action-gh-release@v1
               with:
-                  upload_url: ${{ github.event.release.upload_url }}
-                  asset_path: ${{ env.INSTALLER_ASSET_PATH }}
-                  asset_name: ${{ env.INSTALLER_ASSET_NAME }}
-                  asset_content_type: application/octet-stream
-
-            - name: Upload Release Asset - YAML (Auto Updates)
-              id: upload-release-asset-yaml
-              uses: actions/upload-release-asset@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                  upload_url: ${{ github.event.release.upload_url }}
-                  asset_path: ./output/latest.yml
-                  asset_name: latest.yml
-                  asset_content_type: text/plain
-
-            - name: Upload Release Asset - Windows x64 Installer (Auto Updates)
-              id: upload-release-asset-x64-au
-              uses: actions/upload-release-asset@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                  upload_url: ${{ github.event.release.upload_url }}
-                  asset_path: ${{ env.INSTALLER_ASSET_PATH }}
-                  asset_name: ${{ env.INSTALLER_AU_ASSET_NAME }}
-                  asset_content_type: application/octet-stream
+                  files: |
+                      ./output/*.exe
+                      ./output/latest.yml
 
             - name: Upload Release Windows x64 Installer To OSS
               if: github.repository == 'Snapmaker/Luban'
               run: |
-                  ossutil cp -f "${{env.INSTALLER_ASSET_PATH}}" ${{secrets.OSS_UPDATE_PATH}}/${{env.INSTALLER_ASSET_NAME}}
-                  ossutil cp -f ${{secrets.OSS_UPDATE_PATH}}/${{env.INSTALLER_ASSET_NAME}} ${{secrets.OSS_UPDATE_PATH}}/${{env.INSTALLER_ASSET_DEFAULT_NAME}}
+                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.exe"
                   ossutil cp -f ./output/latest.yml ${{secrets.OSS_UPDATE_PATH}}/latest.yml
 
     build-macos:
@@ -169,8 +129,8 @@ jobs:
             - name: Upload Release macOS Installer OSS
               if: github.repository == 'Snapmaker/Luban'
               run: |
-                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.zip"
                   ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.dmg"
+                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.zip"
                   ossutil cp -f ./output/latest-mac.yml ${{secrets.OSS_UPDATE_PATH}}/latest-mac.yml
 
     build-linux:
