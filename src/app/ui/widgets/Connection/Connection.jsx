@@ -17,13 +17,15 @@ import WifiConnection from './WifiConnection';
 
 
 function Connection({ widgetId, widgetActions }) {
+    const dispatch = useDispatch();
     const { widgets } = useSelector(state => state.widget);
+
     const dataSource = widgets[widgetId].dataSource;
     const { connectionType, isConnected, series, isHomed } = useSelector(state => state.machine);
+
     const [alertMessage, setAlertMessage] = useState('');
     const [showHomeReminder, setShowHomeReminder] = useState(false);
     const [homing, setHoming] = useState(false);
-    const dispatch = useDispatch();
 
     const actions = {
         clearAlert: () => {

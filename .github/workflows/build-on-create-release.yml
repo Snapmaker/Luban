@@ -35,14 +35,7 @@ jobs:
 
             - run: npm run build
 
-            - name: Init OSS
-              if: github.repository == 'Snapmaker/Luban'
-              uses: yizhoumo/setup-ossutil@v1
-              with:
-                  ossutil-version: '1.7.0'
-                  endpoint: ${{ secrets.OSS_ENDPOINT }}
-                  access-key-id: ${{ secrets.OSS_ACCESS_KEY_ID }}
-                  access-key-secret: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+
 
             # ----------------------------------------------------------------
             # Build Windows x64
@@ -53,63 +46,26 @@ jobs:
                   CSC_LINK: ${{ secrets.CSC_LINK_WINDOWS }}
                   CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD_WINDOWS }}
 
-            # https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
-            - name: Setting Environment Variables
-              run: |
-                  $PRODUCT_NAME="Snapmaker Luban"
-                  $PACKAGE_NAME="Snapmaker-Luban"
-                  $PACKAGE_VERSION=node -e "console.log(require('./src/package.json').version)"
-                  $RELEASE="${PACKAGE_NAME}-${PACKAGE_VERSION}"
-
-                  $INSTALLER_ASSET_PATH="./output/${PRODUCT_NAME} ${PACKAGE_VERSION}.exe"
-                  $INSTALLER_ASSET_DEFAULT_NAME="${RELEASE}.exe"
-                  $INSTALLER_ASSET_NAME="${RELEASE}-win-x64.exe"
-
-                  $INSTALLER_AU_ASSET_NAME="${PACKAGE_NAME}-${PACKAGE_VERSION}.exe"
-
-                  echo "INSTALLER_ASSET_PATH=${INSTALLER_ASSET_PATH}" >> ${Env:GITHUB_ENV}
-                  echo "INSTALLER_ASSET_NAME=${INSTALLER_ASSET_NAME}" >> ${Env:GITHUB_ENV}
-                  echo "INSTALLER_AU_ASSET_NAME=${INSTALLER_AU_ASSET_NAME}" >> ${Env:GITHUB_ENV}
-                  echo "INSTALLER_ASSET_DEFAULT_NAME=${INSTALLER_ASSET_DEFAULT_NAME}" >> ${Env:GITHUB_ENV}
-
-            - name: Upload Release Asset - Windows x64 Installer
-              id: upload-release-asset-x64
-              uses: actions/upload-release-asset@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Release on Github
+              uses: softprops/action-gh-release@v1
               with:
-                  upload_url: ${{ github.event.release.upload_url }}
-                  asset_path: ${{ env.INSTALLER_ASSET_PATH }}
-                  asset_name: ${{ env.INSTALLER_ASSET_NAME }}
-                  asset_content_type: application/octet-stream
+                  files: |
+                      ./output/*.exe
+                      ./output/latest.yml
 
-            - name: Upload Release Asset - YAML (Auto Updates)
-              id: upload-release-asset-yaml
-              uses: actions/upload-release-asset@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Init OSS
+              if: github.repository == 'Snapmaker/Luban'
+              uses: yizhoumo/setup-ossutil@v1
               with:
-                  upload_url: ${{ github.event.release.upload_url }}
-                  asset_path: ./output/latest.yml
-                  asset_name: latest.yml
-                  asset_content_type: text/plain
-
-            - name: Upload Release Asset - Windows x64 Installer (Auto Updates)
-              id: upload-release-asset-x64-au
-              uses: actions/upload-release-asset@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                  upload_url: ${{ github.event.release.upload_url }}
-                  asset_path: ${{ env.INSTALLER_ASSET_PATH }}
-                  asset_name: ${{ env.INSTALLER_AU_ASSET_NAME }}
-                  asset_content_type: application/octet-stream
+                  ossutil-version: '1.7.0'
+                  endpoint: ${{ secrets.OSS_ENDPOINT }}
+                  access-key-id: ${{ secrets.OSS_ACCESS_KEY_ID }}
+                  access-key-secret: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
 
             - name: Upload Release Windows x64 Installer To OSS
               if: github.repository == 'Snapmaker/Luban'
               run: |
-                  ossutil cp -f "${{env.INSTALLER_ASSET_PATH}}" ${{secrets.OSS_UPDATE_PATH}}/${{env.INSTALLER_ASSET_NAME}}
-                  ossutil cp -f ${{secrets.OSS_UPDATE_PATH}}/${{env.INSTALLER_ASSET_NAME}} ${{secrets.OSS_UPDATE_PATH}}/${{env.INSTALLER_ASSET_DEFAULT_NAME}}
+                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.exe"
                   ossutil cp -f ./output/latest.yml ${{secrets.OSS_UPDATE_PATH}}/latest.yml
 
     build-macos:
@@ -169,8 +125,8 @@ jobs:
             - name: Upload Release macOS Installer OSS
               if: github.repository == 'Snapmaker/Luban'
               run: |
-                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.zip"
                   ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.dmg"
+                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.zip"
                   ossutil cp -f ./output/latest-mac.yml ${{secrets.OSS_UPDATE_PATH}}/latest-mac.yml
 
     build-linux:
@@ -199,15 +155,6 @@ jobs:
 
             - run: npm run build
 
-            - name: Init OSS
-              if: github.repository == 'Snapmaker/Luban'
-              uses: yizhoumo/setup-ossutil@v1
-              with:
-                  ossutil-version: '1.7.0'
-                  endpoint: ${{ secrets.OSS_ENDPOINT }}
-                  access-key-id: ${{ secrets.OSS_ACCESS_KEY_ID }}
-                  access-key-secret: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
-
             # ----------------------------------------------------------------
             # Build Linux x64
             # ----------------------------------------------------------------
@@ -224,64 +171,26 @@ jobs:
                   tar zcfh "./output/${RELEASE}-linux-x64.tar.gz" "${RELEASE}-linux-x64"
                   rm -f "${RELEASE}-linux-x64"
 
-            - name: Setting Environment Variables
-              run: |
-                  PRODUCT_NAME="Snapmaker Luban"
-                  PACKAGE_NAME="snapmaker-luban"
-                  PACKAGE_VERSION=`node -e "console.log(require('./src/package.json').version)"`
-                  RELEASE=${PACKAGE_NAME}-${PACKAGE_VERSION}
-
-                  DEB_ASSET_PATH="./output/${PACKAGE_NAME}_${PACKAGE_VERSION}_amd64.deb"
-                  DEB_ASSET_NAME="${RELEASE}-linux-amd64.deb"
-
-                  RPM_ASSET_PATH="./output/${PACKAGE_NAME}-${PACKAGE_VERSION}.x86_64.rpm"
-                  RPM_ASSET_NAME="${RELEASE}-linux.x86_64.rpm"
-
-                  TAR_ASSET_PATH="./output/${RELEASE}-linux-x64.tar.gz"
-                  TAR_ASSET_NAME="${RELEASE}-linux-x64.tar.gz"
-
-                  echo "DEB_ASSET_PATH=$DEB_ASSET_PATH" >> $GITHUB_ENV
-                  echo "DEB_ASSET_NAME=$DEB_ASSET_NAME" >> $GITHUB_ENV
-
-                  echo "RPM_ASSET_PATH=$RPM_ASSET_PATH" >> $GITHUB_ENV
-                  echo "RPM_ASSET_NAME=$RPM_ASSET_NAME" >> $GITHUB_ENV
-
-                  echo "TAR_ASSET_PATH=$TAR_ASSET_PATH" >> $GITHUB_ENV
-                  echo "TAR_ASSET_NAME=$TAR_ASSET_NAME" >> $GITHUB_ENV
-
-            - name: Upload Release Asset - Debian
-              uses: actions/upload-release-asset@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Release on Github
+              uses: softprops/action-gh-release@v1
               with:
-                  upload_url: ${{ github.event.release.upload_url }}
-                  asset_path: ${{ env.DEB_ASSET_PATH }}
-                  asset_name: ${{ env.DEB_ASSET_NAME }}
-                  asset_content_type: application/octet-stream
+                  files: |
+                      ./output/*.deb
+                      ./output/*.rpm
+                      ./output/*.tar.gz
 
-            - name: Upload Release Asset - RPM
-              uses: actions/upload-release-asset@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Init OSS
+              if: github.repository == 'Snapmaker/Luban'
+              uses: yizhoumo/setup-ossutil@v1
               with:
-                  upload_url: ${{ github.event.release.upload_url }}
-                  asset_path: ${{ env.RPM_ASSET_PATH }}
-                  asset_name: ${{ env.RPM_ASSET_NAME }}
-                  asset_content_type: application/octet-stream
-
-            - name: Upload Release Asset - TAR
-              uses: actions/upload-release-asset@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                  upload_url: ${{ github.event.release.upload_url }}
-                  asset_path: ${{ env.TAR_ASSET_PATH }}
-                  asset_name: ${{ env.TAR_ASSET_NAME }}
-                  asset_content_type: application/octet-stream
+                  ossutil-version: '1.7.0'
+                  endpoint: ${{ secrets.OSS_ENDPOINT }}
+                  access-key-id: ${{ secrets.OSS_ACCESS_KEY_ID }}
+                  access-key-secret: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
 
             - name: Upload Release linux Installer To OSS
               if: github.repository == 'Snapmaker/Luban'
               run: |
-                  ossutil cp -f ./output/*.deb* ${{secrets.OSS_UPDATE_PATH}}/${{ env.DEB_ASSET_NAME }}
-                  ossutil cp -f ./output/*.rpm* ${{secrets.OSS_UPDATE_PATH}}/${{ env.RPM_ASSET_NAME }}
-                  ossutil cp -f ./output/*.tar* ${{secrets.OSS_UPDATE_PATH}}/${{ env.TAR_ASSET_NAME }}
+                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.deb"
+                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.rpm"
+                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.tar.gz"

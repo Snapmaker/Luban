@@ -59,10 +59,9 @@ dmg:
           y: 344
 
 win:
+    artifactName: Snapmaker-Luban-${version}-win-${arch}.${ext}
     target:
         - nsis
-    # override artifact name for Windows
-    artifactName: ${productName} ${version}.${ext}
     verifyUpdateCodeSignature: false
     icon: build/electron/snapmaker-luban.ico
 
@@ -73,6 +72,7 @@ nsis:
     allowToChangeInstallationDirectory: true
 
 linux:
+    artifactName: snapmaker-luban-${version}-linux-${arch}.${ext}
     category: Utility
     maintainer: parachute <ryan@snapmaker.com>
     target:
@@ -89,6 +89,9 @@ deb:
         - libnss3
         - libasound2
 
+rpm:
+    # snapmaker-luban-X.Y.Z-linux.x86_64.rpm
+    artifactName: snapmaker-luban-${version}-linux.${arch}.${ext}
 
 #
 # Hooks
