@@ -162,6 +162,11 @@ export default class Slicer extends EventEmitter {
             // if (item.indexOf('[debug]') !== -1) {
             //     return;
             // }
+            if (item.indexOf('warn') !== -1) {
+                log.warn(item);
+            } else if (item.indexOf('error') !== -1) {
+                log.error(item);
+            }
 
             if (item.indexOf('Processing insets') !== -1) {
                 if (progress.progressStatus >= 2) {
@@ -289,6 +294,9 @@ export default class Slicer extends EventEmitter {
         const process = callEngine(globalConfig, modelConfigs, outputFilePath);
         const sliceProgress = new SliceProgress();
         process.stdout.on('data', (data) => this._onSliceProcessData(sliceResult, data, sliceProgress));
+        process.stderr.on('data', (err) => {
+            log.error(err.toString());
+        });
         process.on('close', (code) => this._onSliceProcessClose(sliceResult, code));
     }
 }

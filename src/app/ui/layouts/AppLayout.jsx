@@ -655,6 +655,9 @@ class AppLayout extends PureComponent {
             UniApi.Event.on('developer-tools.show', (event, ...args) => {
                 UniApi.Event.emit('appbar-menu:developer-tools.show', ...args);
             });
+            UniApi.Event.on('download-log', (event, ...args) => {
+                UniApi.Event.emit('appbar-menu:download-log', ...args);
+            });
             UniApi.Event.on('check-for-updates.show', (event, ...args) => {
                 UniApi.Event.emit('appbar-menu:check-for-updates.show', ...args);
             });
@@ -906,6 +909,10 @@ class AppLayout extends PureComponent {
                 const configDir = path.join(app.getPath('userData'), 'Config');
 
                 ipc.send('open-saved-path', configDir);
+            });
+
+            UniApi.Event.on('appbar-menu:download-log', () => {
+                UniApi.File.exportAs('/Tmp/server.log', '/Tmp/server.log', 'server.log');
             });
         }
     };
