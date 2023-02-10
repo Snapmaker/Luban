@@ -1,7 +1,6 @@
 import React, { PureComponent } from 'react';
 import { Menu, Submenu, Item, Separator, contextMenu } from 'react-contexify';
 import PropTypes from 'prop-types';
-import 'react-contexify/dist/ReactContexify.min.css';
 import '../../../styles/contextmenu.styl';
 
 
