@@ -786,23 +786,13 @@ class ModelGroup extends EventEmitter {
         this.series = series;
     }
 
-    public isOversteppedHotArea() {
+    public getSelectedModelsForHotZoneCheck() {
+        // TODO: Refactor this
         if (this.series !== 'A400') {
-            return false;
+            return [];
         }
 
-        const useHotMatialModels = [];
-        const selectedModels = this.getSelectedModelArray<Model3D>();
-        this.traverseModels(selectedModels, (model) => {
-            if (model instanceof ThreeModel && model.materialPrintTemperature > 80) {
-                useHotMatialModels.push(model);
-            }
-        });
-        if (!useHotMatialModels.length) {
-            return false;
-        }
-
-        return useHotMatialModels;
+        return this.getSelectedModelArray<Model3D>();
     }
 
     public calculateSelectedGroupPosition() {

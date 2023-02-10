@@ -901,8 +901,8 @@ class DefinitionManager {
         const bedTempLayer0 = settings.material_bed_temperature_layer_0.default_value;
 
         // Check if we are using inner circuit bed heating or full area bed heating
-        // M140 M0: inner circuit
-        // M140 M1: full area circuit
+        // M140 P0: inner circuit
+        // M140 P1: full area circuit
         // M140: using the last setting
         const modelGroup = scene.getModelGroup();
         let hasOversteppedHotArea = false;

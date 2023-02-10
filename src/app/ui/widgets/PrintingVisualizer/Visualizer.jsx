@@ -257,6 +257,15 @@ class Visualizer extends PureComponent {
                 });
             }
         },
+
+        onAddModel: (model) => {
+            this.props.recordAddOperation(model);
+
+            // Call detection once model added
+            // TODO: Refactor this function to printable area logic
+            this.canvas.current.detectionLocation();
+        },
+
         /**
          * Set selected model(s) extruder to extruderId ('0' or '1').
          *
@@ -390,7 +399,7 @@ class Visualizer extends PureComponent {
             this.actions.fitViewIn,
             false
         );
-        this.props.modelGroup.on(ModelEvents.AddModel, this.props.recordAddOperation);
+        this.props.modelGroup.on(ModelEvents.AddModel, this.actions.onAddModel);
     }
 
     componentDidUpdate(prevProps) {
@@ -498,7 +507,7 @@ class Visualizer extends PureComponent {
 
     componentWillUnmount() {
         this.props.clearOperationHistory();
-        this.props.modelGroup.off(ModelEvents.AddModel, this.props.recordAddOperation);
+        this.props.modelGroup.off(ModelEvents.AddModel, this.actions.onAddModel);
         window.removeEventListener('fit-view-in', this.actions.fitViewIn, false);
     }
 

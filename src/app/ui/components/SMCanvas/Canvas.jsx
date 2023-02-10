@@ -391,10 +391,10 @@ class Canvas extends PureComponent {
         if (hasOverstepped) {
             toast(ToastWapper(i18n._('key-Printing/This is the non printable area'), 'WarningTipsWarning', '#FFA940'));
         } else if (this.props.printableArea.isPointInShape) {
-            const useHotMatialModels = this.modelGroup.isOversteppedHotArea();
-            if (useHotMatialModels) {
+            const avaiableModels = this.modelGroup.getSelectedModelsForHotZoneCheck();
+            if (avaiableModels.length > 0) {
                 let hasOversteppedHotArea = false;
-                useHotMatialModels.forEach((model) => {
+                avaiableModels.forEach((model) => {
                     const bbox = model.boundingBox;
                     const points = [
                         bbox.max,
