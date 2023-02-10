@@ -17,6 +17,7 @@ export default {
                 }
             }
         },
+        { type: 'separator' },
         {
             label: 'key-App/Menu-Software Manual',
             id: 'software-manual',
@@ -42,7 +43,7 @@ export default {
             }
         },
         {
-            label: 'key-App/Menu-Snapmaker.com',
+            label: 'key-App/Menu-Visit Official Website',
             id: 'official-website',
             enabled: true,
             click: (menuItem, browserWindow) => {
@@ -50,18 +51,6 @@ export default {
                     browserWindow.webContents.send('help.link', 'officialSite');
                 } else {
                     UniApi.Event.emit('appbar-menu:help.link', 'officialSite');
-                }
-            }
-        },
-        {
-            label: 'key-App/Menu-MyMiniFactory',
-            id: 'my-minifactory',
-            enabled: true,
-            click: (menuItem, browserWindow) => {
-                if (isElectron()) {
-                    browserWindow.webContents.send('help.link', 'myminifactory');
-                } else {
-                    UniApi.Event.emit('appbar-menu:help.link', 'myminifactory');
                 }
             }
         },
@@ -101,6 +90,20 @@ export default {
                 }
             }
         },
+        { type: 'separator' },
+        {
+            label: 'key-App/Menu-MyMiniFactory',
+            id: 'my-minifactory',
+            enabled: true,
+            click: (menuItem, browserWindow) => {
+                if (isElectron()) {
+                    browserWindow.webContents.send('help.link', 'myminifactory');
+                } else {
+                    UniApi.Event.emit('appbar-menu:help.link', 'myminifactory');
+                }
+            }
+        },
+        { type: 'separator' },
         {
             label: 'key-App/Menu-Software Update',
             id: 'software-update',
@@ -110,6 +113,18 @@ export default {
                     browserWindow.webContents.send('check-for-updates.show');
                 } else {
                     UniApi.Event.emit('appbar-menu:check-for-updates.show');
+                }
+            }
+        },
+        {
+            label: 'key-App/Menu-Reset Configurations',
+            id: 'reset-configuration',
+            enabled: true,
+            click: (menuItem, browserWindow) => {
+                if (isElectron()) {
+                    browserWindow.webContents.send('dev-tool.reset-configurations');
+                } else {
+                    UniApi.Event.emit('appbar-menu:dev-tool.reset-configurations');
                 }
             }
         },
@@ -126,7 +141,7 @@ export default {
             }
         },
         {
-            label: 'key-App/Menu-Download Log',
+            label: 'key-App/Menu-Download Logs',
             id: 'download-log',
             enabled: true,
             click: (menuItem, browserWindow) => {
@@ -136,6 +151,6 @@ export default {
                     UniApi.Event.emit('appbar-menu:download-log');
                 }
             }
-        }
+        },
     ]
 };

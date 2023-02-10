@@ -96,7 +96,10 @@ class AppLayout extends PureComponent {
         updateSavedModal: PropTypes.func.isRequired,
         showArrangeModelsError: PropTypes.bool.isRequired,
         arrangeModelZIndex: PropTypes.number.isRequired,
-        updateShowArrangeModelsError: PropTypes.func.isRequired
+        updateShowArrangeModelsError: PropTypes.func.isRequired,
+
+        // dev tools
+        resetUserConfig: PropTypes.func.isRequired,
     };
 
     state = {
@@ -655,12 +658,6 @@ class AppLayout extends PureComponent {
             UniApi.Event.on('developer-tools.show', (event, ...args) => {
                 UniApi.Event.emit('appbar-menu:developer-tools.show', ...args);
             });
-            UniApi.Event.on('download-log', (event, ...args) => {
-                UniApi.Event.emit('appbar-menu:download-log', ...args);
-            });
-            UniApi.Event.on('check-for-updates.show', (event, ...args) => {
-                UniApi.Event.emit('appbar-menu:check-for-updates.show', ...args);
-            });
             UniApi.Event.on('help.link', (event, ...args) => {
                 UniApi.Event.emit('appbar-menu:help.link', ...args);
             });
@@ -680,6 +677,18 @@ class AppLayout extends PureComponent {
                 UniApi.Event.emit('appbar-menu:open-config-folder', ...args);
             });
 
+            // help
+            UniApi.Event.on('check-for-updates.show', (event, ...args) => {
+                UniApi.Event.emit('appbar-menu:check-for-updates.show', ...args);
+            });
+            UniApi.Event.on('dev-tool.reset-configurations', (event, ...args) => {
+                UniApi.Event.emit('appbar-menu:dev-tool.reset-configurations', ...args);
+            });
+            UniApi.Event.on('download-log', (event, ...args) => {
+                UniApi.Event.emit('appbar-menu:download-log', ...args);
+            });
+
+            // Appbar
             UniApi.Event.on('appbar-menu:open-file', (file, arr) => {
                 this.actions.openProject(file);
                 if (arr && arr.length) {
@@ -901,6 +910,7 @@ class AppLayout extends PureComponent {
                 }
             });
 
+            // settings
             UniApi.Event.on('appbar-menu:open-config-folder', () => {
                 const path = window.require('path');
                 const ipc = window.require('electron').ipcRenderer;
@@ -911,6 +921,10 @@ class AppLayout extends PureComponent {
                 ipc.send('open-saved-path', configDir);
             });
 
+            // help
+            UniApi.Event.on('appbar-menu:dev-tool.reset-configurations', () => {
+                this.props.resetUserConfig();
+            });
             UniApi.Event.on('appbar-menu:download-log', () => {
                 UniApi.File.exportAs('/Tmp/server.log', '/Tmp/server.log', 'server.log');
             });
@@ -1013,7 +1027,10 @@ const mapDispatchToProps = (dispatch) => {
         updateMachineToolHead: (toolHead, series, headType) => dispatch(machineActions.updateMachineToolHead(toolHead, series, headType)),
         longTermBackupConfig: () => dispatch(settingsActions.longTermBackupConfig()),
         updateSavedModal: (options) => dispatch(appGlobalActions.updateSavedModal(options)),
-        updateShowArrangeModelsError: (options) => dispatch(appGlobalActions.updateShowArrangeModelsError(options))
+        updateShowArrangeModelsError: (options) => dispatch(appGlobalActions.updateShowArrangeModelsError(options)),
+
+        // reset configurations
+        resetUserConfig: () => dispatch(settingsActions.resetUserConfig()),
     };
 };
 

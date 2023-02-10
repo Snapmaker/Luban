@@ -115,18 +115,21 @@ i18n._('key-App/Menu-Cut Original');
 i18n._('key-App/Menu-Copy Original');
 i18n._('key-App/Menu-Paste Original');
 
+// help menu
 i18n._('key-App/Menu-Help');
 i18n._('key-App/Menu-Software Manual');
 i18n._('key-App/Menu-Video Tutorial');
-i18n._('key-App/Menu-Snapmaker.com');
+i18n._('key-App/Menu-Visit Official Website');
 i18n._('key-App/Menu-MyMiniFactory');
 i18n._('key-App/Menu-Support');
 i18n._('key-App/Menu-Forum');
 i18n._('key-App/Menu-Store');
 i18n._('key-App/Menu-Software Update');
+i18n._('key-App/Menu-Reset Configurations');
 i18n._('key-App/Menu-Firmware Tool');
 i18n._('key-App/Menu-Beginners Guide');
 i18n._('key-App/Menu-Backup config');
+i18n._('key-App/Menu-Download Logs');
 
 // case lib
 i18n._('key-HomePage/CaseLibrary_title-3DP');
