@@ -1423,7 +1423,7 @@ class ModelGroup extends EventEmitter {
         isAllRotate = false
     ) {
         const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, uniformScalingState } = transformation;
-        const shouldUniformScale = newUniformScalingState || this.selectedGroup.uniformScalingState;
+        const shouldUniformScale = newUniformScalingState;
         if (positionX !== undefined) {
             this.selectedGroup.position.setX(positionX);
         }
@@ -1541,6 +1541,7 @@ class ModelGroup extends EventEmitter {
                 }
             }
         }
+
         this.selectedGroup.updateMatrix();
         this.selectedGroup.shouldUpdateBoundingbox = false;
         this.modelChanged();
