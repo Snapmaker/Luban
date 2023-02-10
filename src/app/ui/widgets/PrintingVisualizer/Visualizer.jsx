@@ -258,12 +258,12 @@ class Visualizer extends PureComponent {
             }
         },
 
-        onAddModel: () => {
-            this.props.recordAddOperation();
+        onAddModel: (model) => {
+            this.props.recordAddOperation(model);
 
             // Call detection once model added
             // TODO: Refactor this function to printable area logic
-            // this.canvas.current.detectionLocation();
+            this.canvas.current.detectionLocation();
         },
 
         /**
