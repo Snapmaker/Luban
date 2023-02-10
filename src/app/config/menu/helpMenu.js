@@ -124,6 +124,18 @@ export default {
                     UniApi.Event.emit('appbar-menu:developer-tools.show');
                 }
             }
+        },
+        {
+            label: 'key-App/Menu-Download Log',
+            id: 'download-log',
+            enabled: true,
+            click: (menuItem, browserWindow) => {
+                if (isElectron()) {
+                    browserWindow.webContents.send('download-log');
+                } else {
+                    UniApi.Event.emit('appbar-menu:download-log');
+                }
+            }
         }
     ]
 };
