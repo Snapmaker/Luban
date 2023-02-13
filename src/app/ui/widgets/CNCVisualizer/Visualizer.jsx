@@ -35,7 +35,8 @@ import { actions as operationHistoryActions } from '../../../flux/operation-hist
 import modal from '../../../lib/modal';
 import UniApi from '../../../lib/uni-api';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
-import { repairModelPopup } from '../PrintingVisualizer/VisualizerPopup';
+
+import { repairModelPopup } from '../../views/repair-model/repair-model-popup';
 
 class Visualizer extends Component {
     static propTypes = {
