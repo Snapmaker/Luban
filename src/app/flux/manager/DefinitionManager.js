@@ -12,8 +12,8 @@ import {
 import { PRESET_CATEGORY_CUSTOM } from '../../constants/preset';
 import { PrintMode } from '../../constants/print-base';
 import i18n from '../../lib/i18n';
-import PresetDefinitionModel from './PresetDefinitionModel';
 import scene from '../../scene/Scene';
+import PresetDefinitionModel from './PresetDefinitionModel';
 
 const nozzleSizeRelationSettingsKeys = [
     'wall_line_width_0',
@@ -731,14 +731,45 @@ class DefinitionManager {
         return newExtruderDefinition;
     }
 
+    __getFeatureHeatedBedTimeDelayCode(settings) {
+        const modelGroup = scene.getModelGroup();
+        const boundingBox = modelGroup.getBoundingBox();
+
+        const maxDist = Math.max(
+            Math.abs(boundingBox.min.x), Math.abs(boundingBox.max.x),
+            Math.abs(boundingBox.min.y), Math.abs(boundingBox.max.y),
+        );
+
+        const heatedBedTimeDelay300 = settings.heated_bed_time_delay_300.default_value;
+        const heatedBedTimeDelay250 = settings.heated_bed_time_delay_250.default_value;
+        const heatedBedTimeDelay200 = settings.heated_bed_time_delay_200.default_value;
+        const heatedBedTimeDelay150 = settings.heated_bed_time_delay_150.default_value;
+
+        let timeWait = 0;
+        if (maxDist > 300 / 2) {
+            timeWait = heatedBedTimeDelay300;
+        } else if (maxDist > 250 / 2) {
+            timeWait = heatedBedTimeDelay250;
+        } else if (maxDist > 200 / 2) {
+            timeWait = heatedBedTimeDelay200;
+        } else if (maxDist > 200 / 2) {
+            timeWait = heatedBedTimeDelay150;
+        }
+
+        return timeWait ? `G4 S${timeWait}` : '';
+    }
+
     addMachineStartGcode(definition, extruderDefinition) {
         const settings = extruderDefinition.settings;
 
-        const machineHeatedBed = definition.settings.machine_heated_bed.default_value;
         const printTemp = settings.material_print_temperature.default_value;
         const printTempLayer0 = settings.material_print_temperature_layer_0.default_value
             || printTemp;
         const bedTempLayer0 = settings.material_bed_temperature_layer_0.default_value;
+
+        const machineHeatedBed = definition.settings.machine_heated_bed.default_value;
+        const heatedBedDeformWaitEnabled = definition.settings.heated_bed_deform_wait_enabled.default_value;
+
         /**
          * 1.set bed temperature and not wait to reach the target temperature
          * 2.set hotend temperature and wait to reach the target temperature
@@ -767,6 +798,9 @@ class DefinitionManager {
         gcode.push(`M109 S${printTempLayer0};Wait for Hotend Temperature`);
         if (machineHeatedBed) {
             gcode.push(`M190 S${bedTempLayer0};Wait for Bed Temperature`);
+        }
+        if (heatedBedDeformWaitEnabled) {
+            gcode.push(this.__getFeatureHeatedBedTimeDelayCode(definition.settings));
         }
 
         gcode.push('G92 E0');
@@ -942,6 +976,14 @@ class DefinitionManager {
             `${m140Command} S${bedTempLayer0} ;Set Bed Temperature`,
             `M109 S${printTempLayer0} ;Wait Hotend Temperature`,
             `${m190Command} S${bedTempLayer0} ;Set Bed Temperature`,
+        ];
+
+        const heatedBedDeformWaitEnabled = definition.settings.heated_bed_deform_wait_enabled.default_value;
+        if (heatedBedDeformWaitEnabled) {
+            gcode.push(this.__getFeatureHeatedBedTimeDelayCode(definition.settings));
+        }
+
+        gcode.push(
             'M107',
             'M107 P1',
             'G28',
@@ -951,7 +993,7 @@ class DefinitionManager {
             'G92 E0',
             'G1 Z5 F6000',
             ';--- Start G-code End ---',
-        ];
+        );
 
         definition.settings.machine_start_gcode = {
             default_value: gcode.join('\n')
