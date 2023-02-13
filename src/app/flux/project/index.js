@@ -136,6 +136,7 @@ export const actions = {
             const model = models[key];
             envObj.models.push(model.getSerializableConfig());
         }
+
         if (headType === HEAD_CNC || headType === HEAD_LASER) {
             const toolPaths = editorState.toolPathGroup.getToolPaths();
             envObj.toolpaths = toolPaths;

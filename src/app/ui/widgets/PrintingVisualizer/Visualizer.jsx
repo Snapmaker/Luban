@@ -22,6 +22,8 @@ import ProgressBar from '../../components/ProgressBar';
 import Canvas from '../../components/SMCanvas';
 import { emitUpdateControlInputEvent } from '../../components/SMCanvas/TransformControls';
 import { PageMode } from '../../pages/PageMode';
+import { repairModelPopup } from '../../views/repair-model/repair-model-popup';
+
 import ModeToggleBtn from './ModeToggleBtn';
 import PrintableCube from './PrintableCube';
 import styles from './styles.styl';
@@ -32,7 +34,6 @@ import VisualizerLeftBar from './VisualizerLeftBar';
 import {
     loadModelFailPopup,
     repairModelFailPopup,
-    repairModelPopup,
     scaletoFitPopup,
     sliceFailPopup
 } from './VisualizerPopup';

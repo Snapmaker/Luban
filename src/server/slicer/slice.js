@@ -191,7 +191,11 @@ export function repairModel(actions, params) {
 
     const modeltPath = `${DataStorage.tmpDir}/${uploadName}`;
     const _outputName = outputName || `${modelName}_repaired`;
+
+    // TODO: Update lunar to accept output name with ext
+    const realOutputName = `${_outputName}.stl`;
     const outputPath = `${DataStorage.tmpDir}/${_outputName}`;
+
     if ((outputName !== uploadName) && fs.existsSync(outputPath)) {
         fs.unlinkSync(outputPath);
     }
@@ -228,7 +232,7 @@ export function repairModel(actions, params) {
                         actions.next({
                             type: 'error',
                             modelID,
-                            uploadName: _outputName
+                            uploadName: realOutputName,
                         });
                         actions.error(err);
                     } else {
@@ -237,7 +241,7 @@ export function repairModel(actions, params) {
                             actions.next({
                                 type: 'success',
                                 modelID,
-                                uploadName: _outputName
+                                uploadName: realOutputName,
                             });
                             actions.complete();
                         }
