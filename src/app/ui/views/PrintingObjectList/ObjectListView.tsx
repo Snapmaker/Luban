@@ -1,64 +1,20 @@
 import classNames from 'classnames';
 import { find } from 'lodash';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
 import { isDualExtruder } from '../../../constants/machines';
+import log from '../../../lib/log';
 import { RootState } from '../../../flux/index.def';
 import { actions as printingActions } from '../../../flux/printing';
 import i18n from '../../../lib/i18n';
 import { machineStore } from '../../../store/local-storage';
 import Dropdown from '../../components/Dropdown';
-import Menu from '../../components/Menu';
-import SvgIcon from '../../components/SvgIcon';
 import ObjectListItem, { renderExtruderIcon, whiteHex } from './ObjectListItem';
+import { getExtruderConfigOverlay, getSupportExtruderOverlay } from './model-extruder-overlay';
 import styles from './styles.styl';
 
-export const extruderOverlayMenu = ({ type, colorL, colorR, onChange, selectExtruder = null }) => {
-    return (
-        <Menu
-            selectedKeys={selectExtruder ? [selectExtruder] : []}
-        >
-            <Menu.Item
-                onClick={() => onChange({ type, direction: '0' })}
-                key="L"
-            >
-                <div className="sm-flex justify-space-between">
-                    <span className="display-inline width-96 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Extruder L')}</span>
-                    {colorL !== whiteHex ? (
-                        <SvgIcon
-                            name="Extruder"
-                            size={24}
-                            color={colorL}
-                            type={['static']}
-                        />
-                    ) : (
-                        <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
-                    )}
-                </div>
-            </Menu.Item>
-            <Menu.Item
-                onClick={() => onChange({ type, direction: '1' })}
-                key="R"
-            >
-                <div className="sm-flex justify-space-between">
-                    <span className="display-inline width-96 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Extruder R')}</span>
-                    {colorR !== whiteHex ? (
-                        <SvgIcon
-                            name="Extruder"
-                            size={24}
-                            color={colorR}
-                            type={['static']}
-                        />
-                    ) : (
-                        <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
-                    )}
-                </div>
-            </Menu.Item>
-        </Menu>
-    );
-};
 
 /**
  * Object list view for 3D scene.
@@ -67,28 +23,24 @@ export const extruderOverlayMenu = ({ type, colorL, colorR, onChange, selectExtr
  *
  */
 const ObjectListView: React.FC = () => {
+    const dispatch = useDispatch();
+
     const selectedModelArray = useSelector((state: RootState) => state.printing?.modelGroup?.selectedModelArray);
     const models = useSelector((state: RootState) => state.printing.modelGroup.models);
-    const inProgress = useSelector((state: RootState) => state?.printing?.inProgress);
-    const leftBarOverlayVisible = useSelector((state: RootState) => state?.printing?.leftBarOverlayVisible);
+    const inProgress = useSelector((state: RootState) => state.printing?.inProgress);
+    const leftBarOverlayVisible = useSelector((state: RootState) => state.printing?.leftBarOverlayVisible);
 
     // const thisDisabled = leftBarOverlayVisible;
     const isDual = isDualExtruder(machineStore.get('machine.toolHead.printingToolhead'));
-    const defaultMaterialId = useSelector((state: RootState) => state?.printing?.defaultMaterialId);
-    const defaultMaterialIdRight = useSelector((state: RootState) => state?.printing?.defaultMaterialIdRight);
+    const defaultMaterialId: string = useSelector((state: RootState) => state?.printing?.defaultMaterialId);
+    const defaultMaterialIdRight: string = useSelector((state: RootState) => state?.printing?.defaultMaterialIdRight);
+
     const materialDefinitions = useSelector((state: RootState) => state?.printing?.materialDefinitions);
     const [leftMaterialColor, setLeftMaterialColor] = useState(whiteHex);
     const [rightMaterialColor, setRightMaterialColor] = useState(whiteHex);
     // const [showList, setShowList] = useState(true);
-    const dispatch = useDispatch();
 
     const helpersExtruderConfig = useSelector((state: RootState) => state.printing.helpersExtruderConfig);
-
-    const [helpersExtruder, setHelpersExtruder] = useState(helpersExtruderConfig);
-
-    useEffect(() => {
-        setHelpersExtruder(helpersExtruderConfig);
-    }, [helpersExtruderConfig]);
 
     const actions = {
         onClickModelNameBox(targetModel, event) {
@@ -122,22 +74,6 @@ const ObjectListView: React.FC = () => {
                     break;
             }
         },
-        updateSelectedModelsExtruder(type, direction) {
-            if (type === 'multiple') {
-                dispatch(printingActions.updateSelectedModelsExtruder({
-                    shell: direction,
-                    infill: direction,
-                }));
-            } else if (type === 'shell') {
-                dispatch(printingActions.updateSelectedModelsExtruder({
-                    shell: direction,
-                }));
-            } else if (type === 'infill') {
-                dispatch(printingActions.updateSelectedModelsExtruder({
-                    infill: direction,
-                }));
-            }
-        }
     };
 
     const allModels = (models) && models.filter(model => !model.supportTag);
@@ -161,57 +97,77 @@ const ObjectListView: React.FC = () => {
         actions.updateMaterialColor(rightDefinition, RIGHT_EXTRUDER);
     }, [defaultMaterialIdRight]);
 
+    /**
+     * Update selected models assigned extruder.
+     */
+    const onUpdateSelectedModelsExtruder = useCallback(({ key, direction }) => {
+        log.info('onUpdateSelectedModelsExtruder', key, direction);
+        if (key === 'combined') {
+            dispatch(printingActions.updateSelectedModelsExtruder({
+                shell: direction,
+                infill: direction,
+            }));
+        } else if (key === 'shell') {
+            dispatch(printingActions.updateSelectedModelsExtruder({
+                shell: direction,
+            }));
+        } else if (key === 'infill') {
+            dispatch(printingActions.updateSelectedModelsExtruder({
+                infill: direction,
+            }));
+        }
+    }, [dispatch]);
 
-    const onChangeExtruder = ({ type, direction }) => {
-        console.log('onChangeExtruder', type, direction);
-        const typeArr = type.split('.');
-        switch (typeArr[1]) {
+    /**
+     * Update helper's assigned extruder.
+     */
+    const onUpdateHelpersExtruder = useCallback(({ key, direction }) => {
+        log.info('onChangeExtruder', key, direction);
+        switch (key) {
             case 'adhesion':
-                setHelpersExtruder({
-                    ...helpersExtruder,
-                    adhesion: direction,
-                });
                 dispatch(printingActions.updateHelpersExtruder({
-                    support: helpersExtruder.support,
                     adhesion: direction,
                 }));
                 break;
             case 'support':
-                setHelpersExtruder({
-                    ...helpersExtruder,
-                    support: direction,
-                });
                 dispatch(printingActions.updateHelpersExtruder({
-                    adhesion: helpersExtruder.adhesion,
                     support: direction,
                 }));
                 break;
-
+            case 'support.interface':
+                dispatch(printingActions.updateHelpersExtruder({
+                    support: direction,
+                }));
+                break;
+            case 'support.infill':
+                dispatch(printingActions.updateHelpersExtruder({
+                    support: direction,
+                }));
+                break;
             default:
                 break;
         }
-    };
+    }, [dispatch]);
 
-    const extruderOverlay = (type, _selectExtruder = '') => {
-        const selectExtruder = (() => {
-            switch (_selectExtruder.toString()) {
-                case '0':
-                    return 'L';
-                case '1':
-                    return 'R';
-                default:
-                    return null;
-            }
-        })();
-
-        return extruderOverlayMenu({
-            type,
+    const getExtruderOverlayMenu = (key: string, selectedExtruder: string) => {
+        return getExtruderConfigOverlay({
+            key,
+            selectedExtruder,
             colorL: leftMaterialColor,
             colorR: rightMaterialColor,
-            onChange: onChangeExtruder,
-            selectExtruder
+            onChange: onUpdateHelpersExtruder,
         });
     };
+
+    const getSupportExtruderOverlayMenu = useCallback(() => {
+        return getSupportExtruderOverlay({
+            supportInterfaceExtruder: helpersExtruderConfig.support,
+            supportInfillExtruder: helpersExtruderConfig.support,
+            colorL: leftMaterialColor,
+            colorR: rightMaterialColor,
+            onChange: onUpdateHelpersExtruder,
+        });
+    }, [helpersExtruderConfig, leftMaterialColor, rightMaterialColor, onUpdateHelpersExtruder]);
 
     const renderExtruderStatus = (status) => {
         if (!status && selectedModelArray.length === 0) {
@@ -251,7 +207,7 @@ const ObjectListView: React.FC = () => {
                                 extruderCount={isDual ? 2 : 1}
                                 leftMaterialColor={leftMaterialColor}
                                 rightMaterialColor={rightMaterialColor}
-                                updateSelectedModelsExtruder={actions.updateSelectedModelsExtruder}
+                                updateSelectedModelsExtruder={onUpdateSelectedModelsExtruder}
                             />
                         );
                     })
@@ -279,20 +235,21 @@ const ObjectListView: React.FC = () => {
                                 <span className="display-block sm-flex-width text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-Adhesion')}</span>
                                 <Dropdown
                                     placement="topRight"
-                                    overlay={extruderOverlay('helpers.adhesion', helpersExtruder.adhesion)}
+                                    overlay={getExtruderOverlayMenu('adhesion', helpersExtruderConfig.adhesion)}
                                     trigger={['click']}
                                 >
-                                    {renderExtruderStatus(helpersExtruder.adhesion)}
+                                    {renderExtruderStatus(helpersExtruderConfig.adhesion)}
                                 </Dropdown>
                             </div>
                             <div className="sm-flex align-center margin-top-8 margin-horizontal-8">
                                 <span className="display-block sm-flex-width text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-Support')}</span>
                                 <Dropdown
                                     placement="bottomRight"
-                                    overlay={extruderOverlay('helpers.support', helpersExtruder.support)}
+                                    //overlay={getSupportExtruderOverlayMenu('helpers.support', helpersExtruderConfig.support)}
+                                    overlay={getSupportExtruderOverlayMenu()}
                                     trigger={['click']}
                                 >
-                                    {renderExtruderStatus(helpersExtruder.support)}
+                                    {renderExtruderStatus(helpersExtruderConfig.support)}
                                 </Dropdown>
                             </div>
                         </div>
