@@ -695,6 +695,8 @@ class AppLayout extends PureComponent {
                     this.actions.updateRecentFile(arr, 'update');
                 }
             });
+
+            // app menu
             UniApi.Event.on('appbar-menu:window', (type) => {
                 switch (type) {
                     case 'reload':
