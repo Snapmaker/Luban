@@ -39,13 +39,14 @@ FooterCheckBox.propTypes = {
 
 export const FooterPrimaryButton = ({
     i18nKey = 'key-Modal/Common-Confirm',
-    onClick
+    onClick,
+    width = 96,
 }) => {
     return (
         <Button
             priority="level-two"
             type="primary"
-            width="96px"
+            width={`${width}px`}
             className="margin-left-4"
             onClick={onClick}
         >
@@ -56,6 +57,7 @@ export const FooterPrimaryButton = ({
 FooterPrimaryButton.propTypes = {
     i18nKey: PropTypes.string,
     onClick: PropTypes.func.isRequired,
+    width: PropTypes.number,
 };
 
 let outsideInputValue = '';

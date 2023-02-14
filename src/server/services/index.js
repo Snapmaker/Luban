@@ -101,6 +101,7 @@ function startServices(server) {
 function registerApis(app) {
     app.post(urljoin(settings.route, 'api/signin'), api.users.signin);
     app.delete(urljoin(settings.route, 'api/user/resetConfig'), api.users.resetConfig);
+    app.delete(urljoin(settings.route, 'api/user/resetConfig/printing'), api.users.resetPrintConfig);
 
     // backup by user
     app.put(urljoin(settings.route, 'api/user/backup'), api.users.longTermBackupConfig);

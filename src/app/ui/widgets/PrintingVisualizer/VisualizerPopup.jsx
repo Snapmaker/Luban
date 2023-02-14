@@ -70,14 +70,39 @@ export const scaletoFitPopup = (model) => {
 
 
 export const sliceFailPopup = () => {
-    return modal({
-        cancelTitle: i18n._(''),
-        title: i18n._('key-Progress/3DP-Slice Failed'),
-        body: (
-            <React.Fragment>
-                <p>{i18n._('key-Progress/3DP-Slice Failed reason')}</p>
-            </React.Fragment>
-        )
+    return new Promise((resolve, reject) => {
+        const actions = modal({
+            cancelTitle: i18n._(''),
+            title: i18n._('key-Progress/3DP-Slice Failed'),
+            body: (
+                <React.Fragment>
+                    <p>{i18n._('key-Progress/3DP-Slice Failed reason')}</p>
+                </React.Fragment>
+            ),
+            footer: (
+                <>
+                    <FooterPrimaryButton
+                        i18nKey={i18n._('key-App/Menu-Download Logs')}
+                        width={120}
+                        onClick={() => {
+                            resolve('download-logs');
+                            actions.close();
+                        }}
+                    />
+                    <FooterPrimaryButton
+                        i18nKey={i18n._('key-App/Menu-Reset Configurations')}
+                        width={144}
+                        onClick={() => {
+                            resolve('reset');
+                            actions.close();
+                        }}
+                    />
+                </>
+            ),
+            onClose: () => {
+                reject();
+            }
+        });
     });
 };
 

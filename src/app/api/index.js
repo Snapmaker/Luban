@@ -61,6 +61,10 @@ const resetUserConfig = defaultAPIFactory(() => {
     return request.delete('/api/user/resetConfig');
 });
 
+const resetPrintConfig = defaultAPIFactory(() => {
+    return request.delete('/api/user/resetConfig/printing');
+});
+
 const longTermBackupConfig = defaultAPIFactory(() => request.put('/api/user/backup'));
 const checkNewUser = defaultAPIFactory(() => request.get('/api/checkNewUser'));
 
@@ -383,6 +387,8 @@ export default {
 
     signin,
     resetUserConfig,
+    resetPrintConfig,
+
     longTermBackupConfig,
     checkNewUser,
     controllers, // Controllers
