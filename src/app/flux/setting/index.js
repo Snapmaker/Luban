@@ -1,5 +1,6 @@
 import api from '../../api';
 import { HEAD_PRINTING, HEAD_CNC, HEAD_LASER } from '../../constants';
+import log from '../../lib/log';
 import storeManager from '../../store/local-storage';
 import { actions as printingActions } from '../printing';
 import { actions as projectActions } from '../project';
@@ -42,6 +43,7 @@ export const actions = {
         // reset basic store
         storeManager.clear();
     },
+
     resetUserConfig: () => (dispatch) => {
         api.resetUserConfig().then(() => {
             storeManager.clear();
@@ -49,8 +51,27 @@ export const actions = {
             i18n.clearCookies();
             dispatch(projectActions.cleanAllRecentFiles());
             UniApi.Window.forceReload();
-        }).catch(() => { console.info('reset failed'); });
+        }).catch((e) => {
+            log.info(e);
+        });
     },
+
+    /**
+     * Reset print configurations only.
+     */
+    resetPrintConfigurations: () => async () => {
+        try {
+            await api.resetPrintConfig();
+            UniApi.Window.forceReload();
+        } catch (e) {
+            log.error(e);
+        }
+    },
+
+    downloadLogs: () => async () => {
+        UniApi.Event.emit('appbar-menu:download-log');
+    },
+
     longTermBackupConfig: () => () => {
         api.longTermBackupConfig();
     }

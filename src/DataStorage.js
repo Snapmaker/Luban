@@ -1,33 +1,15 @@
-import fs from 'fs';
-import mkdirp from 'mkdirp';
+import * as fs from 'fs-extra';
 import electron from 'electron';
 
-const rmDir = (dirPath, removeSelf) => {
+const emptyDir = async (dirPath) => {
+    // eslint-disable-next-line no-console
     console.info(`Clearing folder ${dirPath}`);
-    if (removeSelf === undefined) {
-        removeSelf = true;
-    }
 
-    let files;
     try {
-        files = fs.readdirSync(dirPath);
-        console.info(`Removing files: ${files}`);
+        await fs.emptyDir(dirPath);
     } catch (e) {
-        return;
-    }
-
-    if (files.length > 0) {
-        for (let i = 0; i < files.length; i++) {
-            const filePath = `${dirPath}/${files[i]}`;
-            if (fs.statSync(filePath).isFile()) {
-                fs.unlinkSync(filePath);
-            } else {
-                rmDir(filePath);
-            }
-        }
-    }
-    if (removeSelf) {
-        fs.rmdirSync(dirPath);
+        // eslint-disable-next-line no-console
+        console.error(e);
     }
 };
 
@@ -43,21 +25,21 @@ class DataStorage {
     static init() {
         // Create the user data directory if it does not exist
         this.userDataDir = electron.app.getPath('userData');
-        mkdirp.sync(this.userDataDir);
+        fs.ensureDir(this.userDataDir);
 
         this.tmpDir = `${this.userDataDir}/Tmp`;
         this.sessionDir = `${this.userDataDir}/Sessions`;
 
-        mkdirp.sync(this.tmpDir);
-        mkdirp.sync(this.sessionDir);
+        fs.ensureDir(this.tmpDir);
+        fs.ensureDir(this.sessionDir);
 
         this.clear();
     }
 
     static clear() {
         try {
-            rmDir(this.tmpDir, false);
-            rmDir(this.sessionDir, false);
+            emptyDir(this.tmpDir, false);
+            emptyDir(this.sessionDir, false);
         } catch (e) {
             console.error(e);
         }

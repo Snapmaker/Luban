@@ -9,6 +9,7 @@ import { EPSILON, HEAD_PRINTING, ROTATE_MODE, SCALE_MODE, TRANSLATE_MODE } from 
 import { actions as machineActions } from '../../../flux/machine';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import { actions as printingActions } from '../../../flux/printing';
+import { actions as settingsActions } from '../../../flux/setting';
 import { logModelViewOperation } from '../../../lib/gaEvent';
 import i18n from '../../../lib/i18n';
 
@@ -35,7 +36,7 @@ import {
     loadModelFailPopup,
     repairModelFailPopup,
     scaletoFitPopup,
-    sliceFailPopup
+    sliceFailPopup,
 } from './VisualizerPopup';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
 // , MeshPhongMaterial, DoubleSide, Mesh, CylinderBufferGeometry
@@ -106,7 +107,11 @@ class Visualizer extends PureComponent {
         resetSimplifyOriginModelInfo: PropTypes.func,
         recordSimplifyModel: PropTypes.func,
         setSelectedModelsExtruder: PropTypes.func,
-        updateState: PropTypes.func
+        updateState: PropTypes.func,
+
+        // dev tools
+        downloadLogs: PropTypes.func.isRequired,
+        resetPrintConfigurations: PropTypes.func.isRequired,
     };
 
     printableArea = null;
@@ -491,7 +496,14 @@ class Visualizer extends PureComponent {
                         });
                     }
                 } else if (stage === STEP_STAGE.PRINTING_SLICE_FAILED) {
-                    sliceFailPopup();
+                    sliceFailPopup()
+                        .then((res) => {
+                            if (res === 'reset') {
+                                this.props.resetPrintConfigurations();
+                            } else if (res === 'download-logs') {
+                                this.props.downloadLogs();
+                            }
+                        });
                 } else if (stage === STEP_STAGE.PRINTING_REPAIRING_MODEL) {
                     const models = promptTasks.filter(item => item.status === 'repair-model-fail');
                     if (models.length) {
@@ -823,7 +835,10 @@ const mapDispatchToProps = (dispatch) => ({
     setSelectedModelsExtruder: (extruderConfig) => dispatch(printingActions.updateSelectedModelsExtruder(extruderConfig)),
 
     // TODO: you should not expose updateState to JSX
-    updateState: (obj) => dispatch(printingActions.updateState(obj))
+    updateState: (obj) => dispatch(printingActions.updateState(obj)),
+
+    downloadLogs: () => dispatch(settingsActions.downloadLogs()),
+    resetPrintConfigurations: () => dispatch(settingsActions.resetPrintConfigurations()),
 });
 
 export default withRouter(connect(mapStateToProps, mapDispatchToProps)(Visualizer));

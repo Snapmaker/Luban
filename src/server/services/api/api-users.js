@@ -344,6 +344,22 @@ export const resetConfig = async (req, res) => {
     }
 };
 
+export const resetPrintConfig = async (req, res) => {
+    try {
+        // Yes actually we reset all configurations
+        DataStorage.clearAll();
+        await DataStorage.init(true);
+        res.status(200).send({
+            msg: 'Reset user config successfully'
+        });
+    } catch (e) {
+        log.error(e);
+        res.status(500).send({
+            msg: 'Failed to reset user config'
+        });
+    }
+};
+
 export const longTermBackupConfig = async (req, res) => {
     try {
         const version = pkg.version;
