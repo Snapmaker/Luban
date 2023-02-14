@@ -222,7 +222,7 @@ export const getSupportExtruderOverlay = (
             }
             {
                 generateMenuItemGroup({
-                    title: i18n._('key-Printing/LeftBar-Interface'),
+                    title: i18n._('key-Printing/Term-Interface'),
                     key: 'support.interface',
                     colorL,
                     colorR,
@@ -231,7 +231,7 @@ export const getSupportExtruderOverlay = (
             }
             {
                 generateMenuItemGroup({
-                    title: i18n._('key-Printing/LeftBar-Body'),
+                    title: i18n._('key-Printing/Term-Body'),
                     key: 'support.infill',
                     colorL,
                     colorR,
