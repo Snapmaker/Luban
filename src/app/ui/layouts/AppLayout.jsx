@@ -938,7 +938,7 @@ class AppLayout extends PureComponent {
                 const ipc = window.require('electron').ipcRenderer;
 
                 const { app } = window.require('@electron/remote');
-                const p = path.join(app.getAppPath(), '../resources/engine-test');
+                const p = path.join(app.getAppPath(), './resources/engine-test');
 
                 ipc.send('open-engine-test-path', p);
             });
