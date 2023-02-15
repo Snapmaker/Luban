@@ -31,7 +31,7 @@ import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import PrintingObjectListStyles from '../views/PrintingObjectList/styles.styl';
 
 import HomePage from './HomePage';
-import { CaseConfigGimbal, CaseConfigPenHolder } from './HomePage/CaseConfig';
+import { CaseConfigGimbal, CaseConfigPenHolder, CaseConfigSM2Gimbal } from './HomePage/CaseConfig';
 import {
     printIntroStepEight,
     printIntroStepFive,
@@ -326,11 +326,7 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
     return [renderHomepage, renderMainToolBar, renderWorkspace, renderMachineMaterialSettings];
 }
 
-function getStarterProject(series) {
-    const pathConfigForSM2 = {
-        path: './UserCase/printing/a150_single/3dp_a150_single.snap3dp',
-        name: '3dp_a150_single.snap3dp'
-    };
+function getStarterProject(series, isDual) {
     const pathConfigForOriginal = {
         path: './UserCase/printing/original_single/3dp_original_single.snap3dp',
         name: '3dp_original_single.snap3dp'
@@ -345,7 +341,25 @@ function getStarterProject(series) {
     } else if (series === MACHINE_SERIES.J1.value) {
         pathConfig = CaseConfigGimbal.pathConfig;
     } else {
-        pathConfig = pathConfigForSM2;
+        // SM 2.0
+        if (isDual) {
+            pathConfig = CaseConfigSM2Gimbal.pathConfig;
+        } else if (series === MACHINE_SERIES.A150.value) {
+            pathConfig = {
+                path: './UserCase/printing/a150_single/3dp_a150_single.snap3dp',
+                name: '3dp_a150_single.snap3dp'
+            };
+        } else if (series === MACHINE_SERIES.A250.value) {
+            pathConfig = {
+                path: './UserCase/printing/a250_single/3dp_a250_single.snap3dp',
+                name: '3dp_a250_single.snap3dp'
+            };
+        } else if (series === MACHINE_SERIES.A350.value) {
+            pathConfig = {
+                path: './UserCase/printing/a350_single/3dp_a350_single.snap3dp',
+                name: '3dp_a350_single.snap3dp'
+            };
+        }
     }
     return pathConfig;
 }
@@ -362,6 +376,7 @@ function Printing({ location }) {
 
     const { isConnected, toolHead: { printingToolhead } } = machineState;
     const isOriginal = includes(series, 'Original');
+    const isDual = isDualExtruder(printingToolhead);
 
     // const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [enabledIntro, setEnabledIntro] = useState(null);
@@ -503,7 +518,7 @@ function Printing({ location }) {
         if (nextIndex === 1) {
             setInitIndex(1);
 
-            const projectConfig = getStarterProject(series);
+            const projectConfig = getStarterProject(series, isDual);
 
             dispatch(projectActions.openProject(projectConfig, history, true, true));
         }
