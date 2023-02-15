@@ -1,6 +1,10 @@
 {
   "name": "snapmaker-luban",
+<<<<<<< HEAD
   "version": "4.6.0",
+=======
+  "version": "4.6.0-beta.1",
+>>>>>>> 751406209 (Refactor: Update lock file)
   "description": "Snapmaker 3-in-1 Software for 3D Printing, Laser Engraving and CNC Cutting.",
   "homepage": "https://github.com/Snapmaker/Luban",
   "author": "Snapmaker Software Team",
