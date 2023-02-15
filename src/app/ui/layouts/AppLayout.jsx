@@ -687,6 +687,9 @@ class AppLayout extends PureComponent {
             UniApi.Event.on('download-log', (event, ...args) => {
                 UniApi.Event.emit('appbar-menu:download-log', ...args);
             });
+            UniApi.Event.on('open-engine-test', (event, ...args) => {
+                UniApi.Event.emit('appbar-menu:open-engine-test', ...args);
+            });
 
             // Appbar
             UniApi.Event.on('appbar-menu:open-file', (file, arr) => {
@@ -929,6 +932,15 @@ class AppLayout extends PureComponent {
             });
             UniApi.Event.on('appbar-menu:download-log', () => {
                 UniApi.File.exportAs('/Tmp/server.log', '/Tmp/server.log', 'server.log');
+            });
+            UniApi.Event.on('appbar-menu:open-engine-test', () => {
+                const path = window.require('path');
+                const ipc = window.require('electron').ipcRenderer;
+
+                const { app } = window.require('@electron/remote');
+                const p = path.join(app.getAppPath(), '../resources/engine-test');
+
+                ipc.send('open-engine-test-path', p);
             });
         }
     };

@@ -152,5 +152,17 @@ export default {
                 }
             }
         },
+        {
+            label: 'key-App/Menu-Open Engine Test',
+            id: 'open-engine-test',
+            enabled: true,
+            click: (menuItem, browserWindow) => {
+                if (isElectron()) {
+                    browserWindow.webContents.send('open-engine-test');
+                } else {
+                    UniApi.Event.emit('appbar-menu:open-engine-test');
+                }
+            }
+        }
     ]
 };
