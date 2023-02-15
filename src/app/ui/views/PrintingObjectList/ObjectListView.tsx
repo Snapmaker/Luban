@@ -131,8 +131,10 @@ const ObjectListView: React.FC = () => {
                 }));
                 break;
             case 'support':
+                // change both support and interface
                 dispatch(printingActions.updateSupportExtruderConfig({
                     support: direction,
+                    interface: direction,
                 }));
                 break;
             case 'support.interface':
