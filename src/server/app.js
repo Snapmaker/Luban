@@ -9,7 +9,7 @@ import errorhandler from 'errorhandler';
 import express from 'express';
 import expressJwt from 'express-jwt';
 import session from 'express-session';
-import fs from 'fs';
+import * as fs from 'fs-extra';
 import 'hogan.js'; // required by consolidate
 import i18next from 'i18next';
 import { handle as i18nextHandle, LanguageDetector as i18nextLanguageDetector } from 'i18next-express-middleware';
@@ -17,7 +17,6 @@ import i18nextBackend from 'i18next-node-fs-backend';
 import jwt from 'jsonwebtoken';
 import _ from 'lodash';
 import methodOverride from 'method-override';
-import mkdirp from 'mkdirp';
 import morgan from 'morgan';
 import path from 'path';
 import rangeCheck from 'range_check';
@@ -137,7 +136,7 @@ const createApplication = () => {
             }
         }
     }
-    mkdirp.sync(sessionPath);
+    fs.ensureDir(sessionPath);
     const FileStore = sessionFileStore(session);
     app.use(session({
         ...settings.middleware.session,
