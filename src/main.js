@@ -191,6 +191,9 @@ function updateHandle() {
     ipcMain.on('open-saved-path', (event, savedPath) => {
         shell.openPath(savedPath);
     });
+    ipcMain.on('open-engine-test-path', (event, enginePath) => {
+        shell.openPath(enginePath);
+    });
 }
 
 // https://github.com/electron/electron/blob/v8.5.1/docs/api/app.md#apprequestsingleinstancelock
