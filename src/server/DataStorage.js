@@ -175,6 +175,11 @@ class DataStorage {
         if (semver.gte(settings.version, '4.1.0') && (!definitionUpdated || !definitionUpdated[settings.version])) {
             overwriteProfiles = true;
         }
+        if (!overwriteProfiles && !fs.existsSync(this.configDir)) {
+            overwriteProfiles = true;
+        }
+
+        await fs.ensureDir(this.configDir);
 
         await this.initLongTermRecover(isReset);
         await this.initEnv();
@@ -195,9 +200,12 @@ class DataStorage {
         this.upgradeConfigFile(this.configDir);
 
         // if alt+shift+r, cannot init recover config
-        !isReset && await this.initRecoverActive();
+        if (!isReset) {
+            await this.initRecoverActive();
+        }
 
         // Add current version to updated
+
         if (overwriteProfiles) {
             config.set('DefinitionUpdated', {
                 ...definitionUpdated,
@@ -266,6 +274,7 @@ class DataStorage {
     }
 
     async initRecoverActive() {
+        await fs.ensureDir(this.configDir);
         await fs.ensureDir(this.activeConfigDir);
         await copyDir(this.configDir, this.activeConfigDir, { overwrite: true });
     }
@@ -275,6 +284,7 @@ class DataStorage {
         if (isUndefined(backupVersion) || gt(pkgVersion, backupVersion) || isReset) {
             await fs.ensureDir(this.longTermConfigDir);
             const srcDir = isReset ? this.activeConfigDir : this.configDir;
+            await fs.ensureDir(srcDir);
             await copyDir(srcDir, this.longTermConfigDir, { rewrite: true });
         } else {
             return;
