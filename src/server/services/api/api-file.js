@@ -548,6 +548,8 @@ export const recoverProjectFile = async (req, res) => {
                 [LEFT_EXTRUDER]: defaultQualityId,
                 [RIGHT_EXTRUDER]: '',
             };
+
+            config.activePresetIds = activePresetIds;
         }
 
         for (const stackId of [LEFT_EXTRUDER, RIGHT_EXTRUDER]) {
@@ -569,6 +571,9 @@ export const recoverProjectFile = async (req, res) => {
                 }
             });
         }
+
+        // unwrap config
+        content = JSON.stringify(config);
 
         res.send({ content, projectPath: file.path });
         res.end();

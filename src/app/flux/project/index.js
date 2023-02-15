@@ -317,7 +317,7 @@ export const actions = {
             }
 
             // deal with old project without supportExtruderConfig
-            if (!restState.supportExtruderConfig) {
+            if (!restState.supportExtruderConfig && restState.helpersExtruderConfig) {
                 restState.supportExtruderConfig = {
                     support: restState.helpersExtruderConfig.support,
                     interface: restState.helpersExtruderConfig.support,
