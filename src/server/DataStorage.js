@@ -1,20 +1,21 @@
-import path, { join } from 'path';
 import * as fs from 'fs-extra';
-import { includes, isUndefined, gt, isNil } from 'lodash';
-import { v4 as uuid } from 'uuid';
 import isElectron from 'is-electron';
+import { gt, includes, isNil, isUndefined } from 'lodash';
+import path, { join } from 'path';
 import semver from 'semver';
+import { v4 as uuid } from 'uuid';
 
-import { CNC_CONFIG_SUBCATEGORY, LASER_CONFIG_SUBCATEGORY, PRINTING_CONFIG_SUBCATEGORY, MATERIAL_TYPE_ARRAY } from './constants';
-import { cncUniformProfile } from './lib/profile/cnc-uniform-profile';
-import logger from './lib/logger';
+import pkg from '../../package.json';
 import { initFonts } from '../shared/lib/FontManager';
 import settings from './config/settings';
-import config from './services/configstore';
-import pkg from '../../package.json';
+import { CNC_CONFIG_SUBCATEGORY, LASER_CONFIG_SUBCATEGORY, MATERIAL_TYPE_ARRAY, PRINTING_CONFIG_SUBCATEGORY } from './constants';
 import downloadManager from './lib/downloadManager';
+import logger from './lib/logger';
+import { cncUniformProfile } from './lib/profile/cnc-uniform-profile';
+import config from './services/configstore';
 
 const log = logger('server:DataStorage');
+
 export const rmDir = (dirPath, removeSelf) => {
     log.info(`Clearing folder ${dirPath}`);
     if (removeSelf === undefined) {
@@ -165,7 +166,7 @@ class DataStorage {
         await fs.ensureDir(this.scenesDir);
         !isReset && fs.ensureDir(this.recoverDir);
 
-        this.clearSession();
+        await this.clearSession();
 
         // prepare directories
         !isReset && await this.checkNewUser();
@@ -411,21 +412,21 @@ class DataStorage {
         fs.copyFileSync(src, dst);
     }
 
-    clearSession() {
-        rmDir(this.tmpDir, false);
-        rmDir(this.sessionDir, false);
+    async clearSession() {
+        await emptyDir(this.tmpDir);
+        await emptyDir(this.sessionDir);
     }
 
-    clearAll() {
-        emptyDir(this.sessionDir);
-        emptyDir(this.tmpDir);
+    async clearAll() {
+        await emptyDir(this.sessionDir);
+        await emptyDir(this.tmpDir);
 
-        emptyDir(this.defaultConfigDir);
-        emptyDir(this.configDir, true);
-        emptyDir(this.envDir, true);
+        await emptyDir(this.defaultConfigDir);
+        await emptyDir(this.configDir);
+        await emptyDir(this.envDir);
 
-        emptyDir(this.fontDir);
-        emptyDir(this.userCaseDir);
+        await emptyDir(this.fontDir);
+        await emptyDir(this.userCaseDir);
 
         if (!fs.existsSync(settings.rcfile)) {
             log.error(`The path:[${settings.rcfile}] not exists.`);
