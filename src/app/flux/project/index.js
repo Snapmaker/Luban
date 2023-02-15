@@ -124,11 +124,13 @@ export const actions = {
                 defaultMaterialId,
                 defaultMaterialIdRight,
                 helpersExtruderConfig,
+                supportExtruderConfig,
             } = editorState;
             envObj.defaultMaterialId = defaultMaterialId;
             envObj.defaultMaterialIdRight = defaultMaterialIdRight;
             envObj.activePresetIds = activePresetIds;
             envObj.helpersExtruderConfig = helpersExtruderConfig;
+            envObj.supportExtruderConfig = supportExtruderConfig;
 
             envObj.models.push(modelGroup.primeTower.getSerializableConfig());
         }
@@ -311,6 +313,14 @@ export const actions = {
                 restState.activePresetIds = {
                     [LEFT_EXTRUDER]: restState.defaultQualityId,
                     [RIGHT_EXTRUDER]: '',
+                };
+            }
+
+            // deal with old project without supportExtruderConfig
+            if (!restState.supportExtruderConfig) {
+                restState.supportExtruderConfig = {
+                    support: restState.helpersExtruderConfig.support,
+                    interface: restState.helpersExtruderConfig.support,
                 };
             }
 

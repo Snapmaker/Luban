@@ -436,7 +436,8 @@ class DefinitionManager {
         extruderRDefinition,
         size,
         isDual,
-        extruderConfig,
+        helpersExtruderConfig,
+        supportExtruderConfig,
     ) {
         // Prepare definition file
         const definition = {
@@ -475,7 +476,7 @@ class DefinitionManager {
         definition.ownKeys.push('machine_start_gcode');
         definition.ownKeys.push('machine_end_gcode');
 
-        const firstLayerDefinition = extruderConfig.adhesion === '0' ? extruderLDefinition : extruderRDefinition;
+        const firstLayerDefinition = helpersExtruderConfig.adhesion === '0' ? extruderLDefinition : extruderRDefinition;
         // TODO: Refactor this hard-code
         const isJ1 = activeDefinition.settings['machine_name'].default_value === 'Snapmaker J1';
         const isArtisan = activeDefinition.settings['machine_name'].default_value === 'Snapmaker Artisan';
@@ -513,16 +514,16 @@ class DefinitionManager {
             'support_infill_extruder_nr',
             'support_extruder_nr_layer_0',
         );
-        definition.settings.adhesion_extruder_nr.default_value = extruderConfig.adhesion;
-        definition.settings.skirt_brim_extruder_nr.default_value = extruderConfig.adhesion;
-        definition.settings.raft_base_extruder_nr.default_value = extruderConfig.adhesion;
-        definition.settings.raft_interface_extruder_nr.default_value = extruderConfig.adhesion;
-        definition.settings.raft_surface_extruder_nr.default_value = extruderConfig.adhesion;
+        definition.settings.adhesion_extruder_nr.default_value = helpersExtruderConfig.adhesion;
+        definition.settings.skirt_brim_extruder_nr.default_value = helpersExtruderConfig.adhesion;
+        definition.settings.raft_base_extruder_nr.default_value = helpersExtruderConfig.adhesion;
+        definition.settings.raft_interface_extruder_nr.default_value = helpersExtruderConfig.adhesion;
+        definition.settings.raft_surface_extruder_nr.default_value = helpersExtruderConfig.adhesion;
 
         this._applyGlobalExtruderParameters(
             definition,
             activeDefinition,
-            extruderConfig.adhesion === '0' ? extruderLDefinition : extruderRDefinition,
+            helpersExtruderConfig.adhesion === '0' ? extruderLDefinition : extruderRDefinition,
             [
                 'adhesion_extruder_nr',
                 'skirt_brim_extruder_nr',
@@ -534,7 +535,7 @@ class DefinitionManager {
         this._applyGlobalExtruderParameters(
             definition,
             activeDefinition,
-            extruderConfig.adhesion === '0' ? leftPreset : rightPreset,
+            helpersExtruderConfig.adhesion === '0' ? leftPreset : rightPreset,
             [
                 'adhesion_extruder_nr',
                 'skirt_brim_extruder_nr',
@@ -545,54 +546,31 @@ class DefinitionManager {
         );
 
         // apply support parameters
-        const anotherExtruderNumber = (1 ^ Number(extruderConfig.support)).toString();
+        definition.settings.support_extruder_nr.default_value = supportExtruderConfig.support;
+        definition.settings.support_extruder_nr_layer_0.default_value = supportExtruderConfig.support;
+        definition.settings.support_infill_extruder_nr.default_value = supportExtruderConfig.support;
 
-        definition.settings.support_extruder_nr.default_value = extruderConfig.support;
-        definition.settings.support_interface_extruder_nr.default_value = extruderConfig.support;
-        definition.settings.support_roof_extruder_nr.default_value = extruderConfig.support;
-        definition.settings.support_bottom_extruder_nr.default_value = extruderConfig.support;
-        definition.settings.support_extruder_nr_layer_0.default_value = extruderConfig.support;
-
-        // support extruder not apply to support fill
-        if (isDual && extruderConfig.onlySupportInterface) {
-            // Use another extruder for support's initial layer
-            definition.settings.support_infill_extruder_nr.default_value = anotherExtruderNumber;
-        } else {
-            definition.settings.support_infill_extruder_nr.default_value = extruderConfig.support;
-        }
+        definition.settings.support_interface_extruder_nr.default_value = supportExtruderConfig.interface;
+        definition.settings.support_roof_extruder_nr.default_value = supportExtruderConfig.interface;
+        definition.settings.support_bottom_extruder_nr.default_value = supportExtruderConfig.interface;
 
         this._applyGlobalExtruderParameters(
             definition,
             activeDefinition,
-            extruderConfig.support === '0' ? extruderLDefinition : extruderRDefinition,
+            supportExtruderConfig.support === '0' ? extruderLDefinition : extruderRDefinition,
             [
                 'support_extruder_nr',
-                'support_interface_extruder_nr',
-                'support_roof_extruder_nr',
-                'support_bottom_extruder_nr',
                 'support_extruder_nr_layer_0',
+                'support_infill_extruder_nr',
             ],
         );
         this._applyGlobalExtruderParameters(
             definition,
             activeDefinition,
-            extruderConfig.support === '0' ? leftPreset : rightPreset,
+            supportExtruderConfig.support === '0' ? leftPreset : rightPreset,
             [
                 'support_extruder_nr',
-                'support_interface_extruder_nr',
-                'support_roof_extruder_nr',
-                'support_bottom_extruder_nr',
                 'support_extruder_nr_layer_0',
-            ],
-        );
-
-        this._applyGlobalExtruderParameters(
-            definition,
-            activeDefinition,
-            definition.settings.support_infill_extruder_nr.default_value === '0'
-                ? extruderLDefinition
-                : extruderRDefinition,
-            [
                 'support_infill_extruder_nr',
             ],
         );
@@ -600,11 +578,22 @@ class DefinitionManager {
         this._applyGlobalExtruderParameters(
             definition,
             activeDefinition,
-            definition.settings.support_infill_extruder_nr.default_value === '0'
-                ? leftPreset
-                : rightPreset,
+            supportExtruderConfig.interface === '0' ? extruderLDefinition : extruderRDefinition,
             [
-                'support_infill_extruder_nr',
+                'support_interface_extruder_nr',
+                'support_roof_extruder_nr',
+                'support_bottom_extruder_nr',
+            ],
+        );
+
+        this._applyGlobalExtruderParameters(
+            definition,
+            activeDefinition,
+            supportExtruderConfig.interface === '0' ? leftPreset : rightPreset,
+            [
+                'support_interface_extruder_nr',
+                'support_roof_extruder_nr',
+                'support_bottom_extruder_nr',
             ],
         );
 

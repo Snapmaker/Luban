@@ -284,9 +284,16 @@ const INITIAL_STATE = {
     // helpers extruder config
     helpersExtruderConfig: {
         adhesion: LEFT_EXTRUDER_MAP_NUMBER,
-        support: LEFT_EXTRUDER_MAP_NUMBER,
-        onlySupportInterface: false
+        // support: LEFT_EXTRUDER_MAP_NUMBER,
+        onlySupportInterface: false,
     },
+
+    // see preset.ts TSupportExtruderConfig
+    supportExtruderConfig: {
+        support: '0',
+        interface: '0',
+    },
+
     // extruder modal
     isOpenSelectModals: false,
     isOpenHelpers: false,
@@ -2163,6 +2170,7 @@ export const actions = {
             modelGroup,
             progressStatesManager,
             helpersExtruderConfig,
+            supportExtruderConfig,
             layerCount,
             extruderLDefinition,
             extruderRDefinition,
@@ -2294,11 +2302,8 @@ export const actions = {
             newExtruderRDefinition,
             size,
             isDual,
-            {
-                adhesion: helpersExtruderConfig.adhesion,
-                support: helpersExtruderConfig.support,
-                onlySupportInterface: helpersExtruderConfig.onlySupportInterface,
-            },
+            helpersExtruderConfig,
+            supportExtruderConfig,
         );
 
         const options = {};
@@ -3130,6 +3135,27 @@ export const actions = {
         dispatch(actions.displayModel());
         dispatch(actions.updateBoundingBox());
     },
+
+    updateSupportExtruderConfig: (extruderConfig) => (dispatch, getState) => {
+        const supportExtruderConfig = getState().printing.supportExtruderConfig;
+
+        const newSupportExtruderConfig = {
+            ...supportExtruderConfig,
+            ...extruderConfig,
+        };
+
+        dispatch(actions.updateState({ supportExtruderConfig: newSupportExtruderConfig }));
+
+        const { modelGroup } = getState().printing;
+        modelGroup.setSupportExtruderConfig(newSupportExtruderConfig);
+
+        dispatch(actions.applyProfileToAllModels());
+
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
+        dispatch(actions.updateBoundingBox());
+    },
+
     arrangeAllModels: (angle = 45, offset = 1, padding = 0) => (
         dispatch,
         getState

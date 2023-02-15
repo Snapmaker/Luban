@@ -9,13 +9,13 @@ import Anchor from '../../components/Anchor';
 import Dropdown from '../../components/Dropdown';
 import SvgIcon from '../../components/SvgIcon';
 import TipTrigger from '../../components/TipTrigger';
-import Menu from '../../components/Menu';
+import { getModelExtruderOverlay } from './model-extruder-overlay';
 import ObjectSvgIcon from './ObjectSvgIcon';
 import styles from './styles.styl';
 
 export const whiteHex = '#ffffff';
 
-function getExtrudersUsed(numbers) {
+export function getExtrudersUsed(numbers) {
     const s = new Set(numbers);
     if (s.has(BOTH_EXTRUDER_MAP_NUMBER)) {
         s.delete(BOTH_EXTRUDER_MAP_NUMBER);
@@ -31,7 +31,7 @@ function getExtrudersUsed(numbers) {
  * @param numbers
  * @param extruderColors
  */
-function getColorsUsed(numbers, extruderColors) {
+export function getColorsUsed(numbers, extruderColors) {
     const extrudersUsed = getExtrudersUsed(numbers);
 
     const colors = [];
@@ -94,92 +94,6 @@ export const renderExtruderIcon = (extrudersUsed, colorsUsed) => {
     );
 };
 
-const extruderOverlayMenu2 = ({ colorL, colorR, shell = '0', infill = '0', onChange }) => {
-    const selectedKeys = [];
-
-    const multiple = shell === infill ? shell : BOTH_EXTRUDER_MAP_NUMBER;
-
-    selectedKeys.push(`multiple-${multiple}`);
-    selectedKeys.push(`shell-${shell}`);
-    selectedKeys.push(`infill-${infill}`);
-
-    function generateGroup({ title, keyPrefix }) {
-        return (
-            <Menu.ItemGroup title={title}>
-                <Menu.Item
-                    key={`${keyPrefix}-0`}
-                    onClick={() => onChange({ type: keyPrefix, direction: '0' })}
-                >
-                    <div className="sm-flex justify-space-between">
-                        <span className="display-inline width-96 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Extruder L')}</span>
-                        {colorL !== whiteHex ? (
-                            <SvgIcon name="Extruder" size={24} color={colorL} type={['static']} />
-                        ) : (
-                            <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
-                        )}
-                    </div>
-                </Menu.Item>
-                <Menu.Item
-                    key={`${keyPrefix}-1`}
-                    onClick={() => onChange({ type: keyPrefix, direction: '1' })}
-                >
-                    <div className="sm-flex justify-space-between">
-                        <span className="display-inline width-96 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Extruder R')}</span>
-                        {colorR !== whiteHex ? (
-                            <SvgIcon name="Extruder" size={24} color={colorR} type={['static']} />
-                        ) : (
-                            <img src="/resources/images/24x24/icon_extruder_white_24x24.svg" alt="" />
-                        )}
-                    </div>
-                </Menu.Item>
-                <Menu.Item
-                    key={`${keyPrefix}-mixed`}
-                    disabled
-                >
-                    <div className="sm-flex justify-space-between">
-                        <span className="display-inline width-96 text-overflow-ellipsis">{i18n._('key-Printing/LeftBar-Extruder Both')}</span>
-                        <div className="position-re">
-                            {colorL !== whiteHex ? (
-                                <SvgIcon className="position-absolute right-1" name="ExtruderLeft" size={24} color={colorL} type={['static']} />
-                            ) : (
-                                <img className="position-absolute right-1" src="/resources/images/24x24/icon_extruder_white_left_24x24.svg" alt="" />
-                            )}
-                            {colorR !== whiteHex ? (
-                                <SvgIcon className="position-absolute right-1" name="ExtruderRight" size={24} color={colorR} type={['static']} />
-                            ) : (
-                                <img className="position-absolute right-1" src="/resources/images/24x24/icon_extruder_white_right_24x24.svg" alt="" />
-                            )}
-                        </div>
-                    </div>
-                </Menu.Item>
-            </Menu.ItemGroup>
-        );
-    }
-
-    return (
-        <Menu className={styles['dropdown-menu-horizontal']} selectedKeys={selectedKeys}>
-            {
-                generateGroup({
-                    title: i18n._('key-Printing/LeftBar-Selected Models'),
-                    keyPrefix: 'multiple',
-                })
-            }
-            {
-                generateGroup({
-                    title: i18n._('key-Printing/LeftBar-Shells'),
-                    keyPrefix: 'shell',
-                })
-            }
-            {
-                generateGroup({
-                    title: i18n._('key-Printing/LeftBar-Infill'),
-                    keyPrefix: 'infill',
-                })
-            }
-        </Menu>
-    );
-};
-
 function ObjectListItem(
     {
         depth = 1,
@@ -215,13 +129,13 @@ function ObjectListItem(
     const { prefixName, suffixName } = normalizeNameDisplay(model.modelName, suffixLength);
 
     const getModelExtruderOverlayMenu = () => {
-        return extruderOverlayMenu2({
+        return getModelExtruderOverlay({
             colorL: leftMaterialColor,
             colorR: rightMaterialColor,
-            shell: model.extruderConfig.shell,
-            infill: model.extruderConfig.infill,
-            onChange: ({ type, direction }) => {
-                updateSelectedModelsExtruder(type, direction);
+            shellExtruder: model.extruderConfig.shell,
+            infillExtruder: model.extruderConfig.infill,
+            onChange: ({ key, direction }) => {
+                updateSelectedModelsExtruder({ key, direction });
             },
         });
     };

@@ -56,9 +56,9 @@ class SceneLogic {
             extrudersUsed.add(model.extruderConfig.shell);
         }
 
-        const helpersExtruderConfig = modelGroup.getHelpersExtruderConfig();
+        const supportExtruderConfig = modelGroup.getSupportExtruderConfig();
         if (this.supportEnabled) {
-            extrudersUsed.add(helpersExtruderConfig.support);
+            extrudersUsed.add(supportExtruderConfig.support);
         }
 
         if (extrudersUsed.has(BOTH_EXTRUDER_MAP_NUMBER)) {
@@ -206,11 +206,11 @@ class SceneLogic {
         }
 
         const modelGroup = scene.getModelGroup();
-        const helpersExtruderConfig = modelGroup.getHelpersExtruderConfig();
+        const supportExtruderConfig = modelGroup.getSupportExtruderConfig();
 
         // support
-        if (stackId === LEFT_EXTRUDER && helpersExtruderConfig.support === '0'
-            || stackId === RIGHT_EXTRUDER && helpersExtruderConfig.support === '1') {
+        if (stackId === LEFT_EXTRUDER && supportExtruderConfig.support === '0'
+            || stackId === RIGHT_EXTRUDER && supportExtruderConfig.support === '1') {
             const supportEnabled = preset.settings.support_enable?.default_value || false;
 
             if (supportEnabled !== this.supportEnabled) {
