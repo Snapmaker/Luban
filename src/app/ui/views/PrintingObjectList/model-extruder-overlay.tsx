@@ -195,19 +195,16 @@ export const getModelExtruderOverlay = (
  */
 export const getSupportExtruderOverlay = (
     {
+        supportExtruder = '0',
         supportInterfaceExtruder = '0',
-        supportInfillExtruder = '0',
         colorL,
         colorR,
         onChange,
     }
 ) => {
     const selectedKeys = [];
+    selectedKeys.push(`support-${supportExtruder}`);
     selectedKeys.push(`support.interface-${supportInterfaceExtruder}`);
-    selectedKeys.push(`support.infill-${supportInfillExtruder}`);
-
-    const combinedExtruder = supportInterfaceExtruder === supportInfillExtruder ? supportInterfaceExtruder : BOTH_EXTRUDER_MAP_NUMBER;
-    selectedKeys.push(`support-${combinedExtruder}`);
 
     return (
         <Menu className={styles['dropdown-menu-horizontal']} selectedKeys={selectedKeys}>
@@ -218,6 +215,7 @@ export const getSupportExtruderOverlay = (
                     colorL,
                     colorR,
                     onChange,
+                    showMixedOption: false,
                 })
             }
             {
@@ -227,15 +225,7 @@ export const getSupportExtruderOverlay = (
                     colorL,
                     colorR,
                     onChange,
-                })
-            }
-            {
-                generateMenuItemGroup({
-                    title: i18n._('key-Printing/Term-Body'),
-                    key: 'support.infill',
-                    colorL,
-                    colorR,
-                    onChange,
+                    showMixedOption: false,
                 })
             }
         </Menu>

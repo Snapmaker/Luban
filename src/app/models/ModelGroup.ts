@@ -1,3 +1,6 @@
+import EventEmitter from 'events';
+import _, { debounce, filter, includes, replace } from 'lodash';
+import { Transfer } from 'threads';
 import {
     Box3,
     BufferAttribute,
@@ -26,34 +29,32 @@ import {
     Vector2,
     Vector3
 } from 'three';
-import EventEmitter from 'events';
 import { CONTAINED, INTERSECTED, NOT_INTERSECTED } from 'three-mesh-bvh';
 import { v4 as uuid } from 'uuid';
-import _, { debounce, filter, includes, replace } from 'lodash';
-import { Transfer } from 'threads';
+import { EPSILON, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, SELECTEVENT } from '../constants';
 import i18n from '../lib/i18n';
 import log from '../lib/log';
 import { checkVector3NaN } from '../lib/numeric-utils';
-import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
 import { ModelInfo as SVGModelInfo, TMode, TSize } from './BaseModel';
-import ThreeModel from './ThreeModel';
 import SvgModel from './SvgModel';
-import { EPSILON, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, SELECTEVENT } from '../constants';
+import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
+import ThreeModel from './ThreeModel';
 
-import ThreeUtils from '../three-extensions/ThreeUtils';
-import ThreeGroup from './ThreeGroup';
-import PrimeTowerModel from './PrimeTowerModel';
-import { calculateUvVector } from '../lib/threejs/ThreeStlCalculation';
 import { polyUnion } from '../../shared/lib/clipper/cLipper-adapter';
-import { ModelEvents } from './events';
-import { TPolygon } from './ClipperModel';
 import { PolygonsUtils } from '../../shared/lib/math/PolygonsUtils';
+import { THelperExtruderConfig, TSupportExtruderConfig } from '../constants/preset';
+import { bufferToPoint } from '../lib/buffer-utils';
 import workerManager, { WorkerEvents } from '../lib/manager/workerManager';
+import { calculateUvVector } from '../lib/threejs/ThreeStlCalculation';
+import ThreeUtils from '../three-extensions/ThreeUtils';
+import { emitUpdateScaleEvent } from '../ui/components/SMCanvas/TransformControls';
 import { IResult as TBrimResult } from '../workers/plateAdhesion/generateBrim';
 import { IResult as TRaftResult } from '../workers/plateAdhesion/generateRaft';
 import { IResult as TSkirtResult } from '../workers/plateAdhesion/generateSkirt';
-import { bufferToPoint } from '../lib/buffer-utils';
-import { emitUpdateScaleEvent } from '../ui/components/SMCanvas/TransformControls';
+import { TPolygon } from './ClipperModel';
+import { ModelEvents } from './events';
+import PrimeTowerModel from './PrimeTowerModel';
+import ThreeGroup from './ThreeGroup';
 // import ConvexGeometry from '../three-extensions/ConvexGeometry';
 
 const CUSTOM_EVENTS = {
@@ -108,10 +109,6 @@ type TAdhesionConfig = {
     raftMargin: number;
 }
 
-interface THelperExtruderConfig {
-    adhesion: string;
-    support: string;
-}
 
 class ModelGroup extends EventEmitter {
     public namesMap: Map<string, { number: number, count: number }> = new Map();
@@ -151,6 +148,7 @@ class ModelGroup extends EventEmitter {
     private clipperEnable = true;
 
     private helpersExtruderConfig: THelperExtruderConfig;
+    private supportExtruderConfig: TSupportExtruderConfig;
 
     public constructor(headType: THeadType) {
         super();
@@ -179,7 +177,11 @@ class ModelGroup extends EventEmitter {
 
         this.helpersExtruderConfig = {
             adhesion: '0',
+        };
+
+        this.supportExtruderConfig = {
             support: '0',
+            interface: '0',
         };
 
         this.setWorkerLis();
@@ -1985,12 +1987,24 @@ class ModelGroup extends EventEmitter {
         return this.helpersExtruderConfig;
     }
 
-    public setHelpersExtruderConfig(helpersExtruderConfig: THelperExtruderConfig) {
+    public setHelpersExtruderConfig(helpersExtruderConfig: THelperExtruderConfig): void {
         this.helpersExtruderConfig = {
             ...this.helpersExtruderConfig,
             ...helpersExtruderConfig,
         };
 
+        this.modelAttributesChanged('extruderConfig');
+    }
+
+    public getSupportExtruderConfig(): TSupportExtruderConfig {
+        return this.supportExtruderConfig;
+    }
+
+    public setSupportExtruderConfig(extruderConfig: TSupportExtruderConfig): void {
+        this.supportExtruderConfig = {
+            ...this.supportExtruderConfig,
+            ...extruderConfig,
+        };
         this.modelAttributesChanged('extruderConfig');
     }
 

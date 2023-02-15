@@ -1,9 +1,13 @@
 import { noop, throttle } from 'lodash';
 import path from 'path';
+
+import logger from '../../lib/logger';
 import { parseLubanGcodeHeader } from '../../lib/parseGcodeHeader';
 import { generateSupport, simplifyModel, repairModel, checkModel } from '../../slicer/slice';
 
 import { Slicer } from '../../slicer';
+
+const log = logger('socket-slice');
 
 
 const progressHandle = throttle((socket, topic, progress) => {
@@ -39,6 +43,7 @@ const progressHandle = throttle((socket, topic, progress) => {
  * TODO: Refactor params api structure
  */
 const handleSlice = (socket, params) => {
+    log.info('Start slicing...');
     const {
         version = 0,
         thumbnail = '',

@@ -108,6 +108,7 @@ const PresetContent = (
     const dispatch = useDispatch();
     const printingProfileLevel = useSelector((state) => state?.printing?.printingProfileLevel);
     const helpersExtruderConfig = useSelector((state) => state.printing.helpersExtruderConfig);
+    const supportExtruderConfig = useSelector((state) => state.printing.supportExtruderConfig);
 
     const {
         qualityDefinitions: qualityPresetModels,
@@ -207,7 +208,7 @@ const PresetContent = (
         };
 
         if (settingItem.limit_to_extruder) {
-            const extruderNumber = getUsedExtruderNumber(settingItem.limit_to_extruder, helpersExtruderConfig);
+            const extruderNumber = getUsedExtruderNumber(settingItem.limit_to_extruder, helpersExtruderConfig, supportExtruderConfig);
             const stackExtruderNumber = selectedStackId === LEFT_EXTRUDER ? '0' : '1';
 
             displayConfig.disabled = (extruderNumber !== '-1' && extruderNumber !== stackExtruderNumber);

@@ -15,7 +15,7 @@ import styles from './styles.styl';
 
 export const whiteHex = '#ffffff';
 
-function getExtrudersUsed(numbers) {
+export function getExtrudersUsed(numbers) {
     const s = new Set(numbers);
     if (s.has(BOTH_EXTRUDER_MAP_NUMBER)) {
         s.delete(BOTH_EXTRUDER_MAP_NUMBER);
@@ -31,7 +31,7 @@ function getExtrudersUsed(numbers) {
  * @param numbers
  * @param extruderColors
  */
-function getColorsUsed(numbers, extruderColors) {
+export function getColorsUsed(numbers, extruderColors) {
     const extrudersUsed = getExtrudersUsed(numbers);
 
     const colors = [];

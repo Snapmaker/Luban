@@ -65,29 +65,35 @@ export function getQualityPresetLevelForRightExtruder() {
     };
 }
 
-interface ExtruderConfig {
-    infill: string;
-    shell: string;
+export interface THelperExtruderConfig {
     adhesion: string;
-    support: string;
+    support?: string;
 }
 
-export function getUsedExtruderNumber(limitKey: string, extruderConfig: ExtruderConfig): string {
+export interface TSupportExtruderConfig {
+    support: string; // support, including infill/first layer settings
+    interface: string; // interface, including roof/bottom settings
+}
+
+export function getUsedExtruderNumber(limitKey: string, helpersExtruderConfig: THelperExtruderConfig, supportExtruderConfig: TSupportExtruderConfig): string {
     switch (limitKey) {
         case 'adhesion_extruder_nr':
         case 'skirt_brim_extruder_nr':
         case 'raft_base_extruder_nr':
         case 'raft_interface_extruder_nr':
         case 'raft_surface_extruder_nr':
-            return extruderConfig.adhesion;
+            return helpersExtruderConfig.adhesion;
 
         case 'support_extruder_nr':
+        case 'support_infill_extruder_nr':
+        case 'support_extruder_nr_layer_0':
+            return supportExtruderConfig.support;
+
         case 'support_interface_extruder_nr':
         case 'support_roof_extruder_nr':
         case 'support_bottom_extruder_nr':
-        case 'support_infill_extruder_nr':
-        case 'support_extruder_nr_layer_0':
-            return extruderConfig.support;
+            return supportExtruderConfig.interface;
+
         default:
             return '-1';
     }
