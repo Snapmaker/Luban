@@ -330,6 +330,9 @@ export const actions = {
 
             const { helpersExtruderConfig } = restState;
             dispatch(modActions.updateHelpersExtruder(helpersExtruderConfig));
+
+            const { supportExtruderConfig } = restState;
+            dispatch(modActions.updateSupportExtruderConfig(supportExtruderConfig));
         } else {
             dispatch(modActions.updateState(envHeadType, restState));
         }
