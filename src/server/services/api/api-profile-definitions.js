@@ -1,6 +1,5 @@
 import * as fs from 'fs-extra';
 import path from 'path';
-
 import {
     DEFINITION_ACTIVE,
     DEFINITION_ACTIVE_FINAL,
@@ -126,10 +125,10 @@ export const createDefinition = async (req, res) => {
     const data = JSON.stringify(definitionLoader.toJSON(), null, 2);
     if (!fs.existsSync(backupPath)) {
         try {
-            await fs.copy(filePath, backupPath);
+            await fs.copy(DataStorage.configDir, DataStorage.activeConfigDir);
         } catch (e) {
             log.error(e);
-            log.error(`Failed to copy new file to backup path: ${filePath} to ${backupPath}`);
+            log.error(`Failed to backup config files: ${DataStorage.configDir} to ${DataStorage.activeConfigDir}`);
         }
     }
     const callback = () => {
@@ -268,27 +267,32 @@ export const updateDefinition = async (req, res) => {
     }
 
     let filePath = '';
-    let backupPath = '';
+    let activeRecoverPath = '';
     if (isPublicProfile(definitionId)) {
         filePath = path.join(`${DataStorage.configDir}/${headType}`, `${definitionId}.def.json`);
-        backupPath = path.join(`${DataStorage.activeConfigDir}/${headType}`, `${definitionId}.def.json`);
+        activeRecoverPath = path.join(`${DataStorage.activeConfigDir}/${headType}`, `${definitionId}.def.json`);
     } else {
         filePath = path.join(`${DataStorage.configDir}/${headType}/${series}`, `${definitionId}.def.json`);
-        backupPath = path.join(`${DataStorage.activeConfigDir}/${headType}/${series}`, `${definitionId}.def.json`);
+        activeRecoverPath = path.join(`${DataStorage.activeConfigDir}/${headType}/${series}`, `${definitionId}.def.json`);
+    }
+    if (!fs.existsSync(DataStorage.activeConfigDir)) {
+        try {
+            await fs.copy(DataStorage.configDir, DataStorage.activeConfigDir);
+        } catch (e) {
+            log.error(e);
+            log.error(`Failed to backup config files: ${DataStorage.configDir} to ${DataStorage.activeConfigDir}`);
+        }
     }
 
     const data = JSON.stringify(definitionLoader.toJSON(), null, 2);
-    const callback = async () => {
-        if (backupPath && !fs.existsSync(backupPath)) {
-            try {
-                await fs.copy(filePath, backupPath);
-                res.send({ status: 'ok', msg: 'Back up success!' });
-            } catch (e) {
-                log.error(e);
-                log.error(`Failed to copy new file to backup path: ${filePath} to ${backupPath}`);
-                res.send({ status: 'ok', msg: 'Back up failed!' });
+    const callback = () => {
+        fsWriteFile(activeRecoverPath, data, res, (err) => {
+            if (err) {
+                return res.send({ status: 'ok', msg: 'Back up failed!' });
+            } else {
+                return res.send({ status: 'ok', msg: 'Back up success!' });
             }
-        }
+        });
     };
     fsWriteFile(filePath, data, res, callback);
 };
