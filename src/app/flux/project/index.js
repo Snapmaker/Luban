@@ -317,7 +317,7 @@ export const actions = {
             }
 
             // deal with old project without supportExtruderConfig
-            if (!restState.supportExtruderConfig) {
+            if (!restState.supportExtruderConfig && restState.helpersExtruderConfig) {
                 restState.supportExtruderConfig = {
                     support: restState.helpersExtruderConfig.support,
                     interface: restState.helpersExtruderConfig.support,
@@ -330,6 +330,9 @@ export const actions = {
 
             const { helpersExtruderConfig } = restState;
             dispatch(modActions.updateHelpersExtruder(helpersExtruderConfig));
+
+            const { supportExtruderConfig } = restState;
+            dispatch(modActions.updateSupportExtruderConfig(supportExtruderConfig));
         } else {
             dispatch(modActions.updateState(envHeadType, restState));
         }
