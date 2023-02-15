@@ -331,7 +331,7 @@ export const __delete = (req, res) => {
 
 export const resetConfig = async (req, res) => {
     try {
-        DataStorage.clearAll();
+        await DataStorage.clearAll();
         await DataStorage.init(true);
         res.status(200).send({
             msg: 'Reset user config successfully'
@@ -347,7 +347,7 @@ export const resetConfig = async (req, res) => {
 export const resetPrintConfig = async (req, res) => {
     try {
         // Yes actually we reset all configurations
-        DataStorage.clearAll();
+        await DataStorage.clearAll();
         await DataStorage.init(true);
         res.status(200).send({
             msg: 'Reset user config successfully'
