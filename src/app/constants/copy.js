@@ -130,6 +130,7 @@ i18n._('key-App/Menu-Firmware Tool');
 i18n._('key-App/Menu-Beginners Guide');
 i18n._('key-App/Menu-Backup config');
 i18n._('key-App/Menu-Download Logs');
+i18n._('key-App/Menu-Run Engine Test');
 
 // case lib
 i18n._('key-HomePage/CaseLibrary_title-3DP');

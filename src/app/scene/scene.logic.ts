@@ -59,6 +59,7 @@ class SceneLogic {
         const supportExtruderConfig = modelGroup.getSupportExtruderConfig();
         if (this.supportEnabled) {
             extrudersUsed.add(supportExtruderConfig.support);
+            extrudersUsed.add(supportExtruderConfig.interface);
         }
 
         if (extrudersUsed.has(BOTH_EXTRUDER_MAP_NUMBER)) {
@@ -109,12 +110,16 @@ class SceneLogic {
             }
         }
 
-        const helpersExtruderConfig = modelGroup.getHelpersExtruderConfig();
+        const supportExtruderConfig = modelGroup.getSupportExtruderConfig();
         if (this.supportEnabled) {
             // max possible height: max model height
-            const extruderNumber = helpersExtruderConfig.support;
+            const extruderNumber = supportExtruderConfig.support;
             maxHeights[extruderNumber] = maxHeights[extruderNumber] || 0;
             maxHeights[extruderNumber] = Math.max(maxHeights[extruderNumber], ...Object.values(maxHeights));
+
+            const nr2 = supportExtruderConfig.interface;
+            maxHeights[nr2] = maxHeights[nr2] || 0;
+            maxHeights[nr2] = Math.max(maxHeights[nr2], ...Object.values(maxHeights));
         }
 
         if (Object.keys(maxHeights).length < 2) {

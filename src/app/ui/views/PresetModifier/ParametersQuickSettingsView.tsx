@@ -220,6 +220,7 @@ const ParametersQuickSettingsView: React.FC<TProps> = ({ selectedStackId, select
     const selectedDefinitionSettings = selectedPresetModel.settings;
 
     const helpersExtruderConfig = useSelector((state: RootState) => state.printing.helpersExtruderConfig);
+    const supportExtruderConfig = useSelector((state: RootState) => state.printing.supportExtruderConfig);
 
     async function onChangeParam(newValue, paramSetting) {
         const actualOptions = paramSetting.options;
@@ -321,7 +322,7 @@ const ParametersQuickSettingsView: React.FC<TProps> = ({ selectedStackId, select
                     // 'speed_print': ['SpeedSlow', 'SpeedMedium', 'SpeedFast'],
                     //  'infill_sparse_density': ['ModelStructureThin', 'ModelStructureMedium', 'ModelStructureHard', 'ModelStructureVase'],
                     if (paramName === 'support_generate_type') {
-                        disabled = helpersExtruderConfig && helpersExtruderConfig.support !== stackExtruderNumber;
+                        disabled = supportExtruderConfig && supportExtruderConfig.support !== stackExtruderNumber;
                     }
                     if (paramName === 'adhesion_type') {
                         disabled = helpersExtruderConfig && helpersExtruderConfig.adhesion !== stackExtruderNumber;
