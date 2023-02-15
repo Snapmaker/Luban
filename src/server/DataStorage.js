@@ -2,7 +2,6 @@ import * as fs from 'fs-extra';
 import isElectron from 'is-electron';
 import { gt, includes, isNil, isUndefined } from 'lodash';
 import path, { join } from 'path';
-import semver from 'semver';
 import { v4 as uuid } from 'uuid';
 
 import pkg from '../../package.json';
@@ -153,8 +152,6 @@ class DataStorage {
     }
 
     async init(isReset = false) {
-        const definitionUpdated = config.get('DefinitionUpdated');
-
         const gaUserId = config.get('gaUserId');
         if (isNil(gaUserId)) {
             config.set('gaUserId', uuid());
@@ -172,11 +169,20 @@ class DataStorage {
         !isReset && await this.checkNewUser();
 
         let overwriteProfiles = false;
-        if (semver.gte(settings.version, '4.1.0') && (!definitionUpdated || !definitionUpdated[settings.version])) {
+        // upgrade to new version
+        // TODO: remove key 'DefinitionUpdated'
+        const definitionVersion = config.get('definitionVersion');
+        if (definitionVersion !== settings.version) {
             overwriteProfiles = true;
+
+            config.set('definitionVersion', settings.version);
         }
+        // configDir not existing
         if (!overwriteProfiles && !fs.existsSync(this.configDir)) {
             overwriteProfiles = true;
+        }
+        if (config.has('DefinitionUpdated')) {
+            config.unset('DefinitionUpdated');
         }
 
         await fs.ensureDir(this.configDir);
@@ -202,15 +208,6 @@ class DataStorage {
         // if alt+shift+r, cannot init recover config
         if (!isReset) {
             await this.initRecoverActive();
-        }
-
-        // Add current version to updated
-
-        if (overwriteProfiles) {
-            config.set('DefinitionUpdated', {
-                ...definitionUpdated,
-                [settings.version]: true,
-            });
         }
     }
 

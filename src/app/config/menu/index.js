@@ -49,6 +49,9 @@ function getMenuItems() {
                     }
                 ]
             });
+
+            // pop Run Engine Test
+            helpMenu.submenu.pop();
         }
     }
     return menuItems;

@@ -153,7 +153,7 @@ export default {
             }
         },
         {
-            label: 'key-App/Menu-Open Engine Test',
+            label: 'key-App/Menu-Run Engine Test',
             id: 'open-engine-test',
             enabled: true,
             click: (menuItem, browserWindow) => {
