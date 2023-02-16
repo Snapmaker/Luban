@@ -35,8 +35,6 @@ jobs:
 
             - run: npm run build
 
-
-
             # ----------------------------------------------------------------
             # Build Windows x64
             # ----------------------------------------------------------------
@@ -65,7 +63,7 @@ jobs:
             - name: Upload Release Windows x64 Installer To OSS
               if: github.repository == 'Snapmaker/Luban'
               run: |
-                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.exe"
+                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.exe" -r
                   ossutil cp -f ./output/latest.yml ${{secrets.OSS_UPDATE_PATH}}/latest.yml
 
     build-macos:
@@ -125,8 +123,8 @@ jobs:
             - name: Upload Release macOS Installer OSS
               if: github.repository == 'Snapmaker/Luban'
               run: |
-                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.dmg"
-                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.zip"
+                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.dmg" -r
+                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.zip" -r
                   ossutil cp -f ./output/latest-mac.yml ${{secrets.OSS_UPDATE_PATH}}/latest-mac.yml
 
     build-linux:
@@ -191,6 +189,6 @@ jobs:
             - name: Upload Release linux Installer To OSS
               if: github.repository == 'Snapmaker/Luban'
               run: |
-                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.deb"
-                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.rpm"
-                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.tar.gz"
+                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.deb" -r
+                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.rpm" -r
+                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.tar.gz" -r
