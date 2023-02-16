@@ -539,6 +539,12 @@ export const recoverProjectFile = async (req, res) => {
                 fs.copyFileSync(fname, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialId}.def.json`);
             }
         }
+        if (config.defaultMaterialIdRight && /^material.([0-9_]+)$/.test(config.defaultMaterialIdRight)) {
+            const fname = `${DataStorage.tmpDir}/${config.defaultMaterialIdRight}.def.json`;
+            if (fs.existsSync(fname)) {
+                fs.copyFileSync(fname, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialIdRight}.def.json`);
+            }
+        }
 
         // Fallback to v4.4 quality preset key
         let { activePresetIds } = config;

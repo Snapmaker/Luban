@@ -84,6 +84,9 @@ class DataStorage {
 
     private parameterDocumentDir = null;
 
+    // @ts-ignore
+    private initialized = false;
+
     public constructor() {
         if (isElectron()) {
             // TODO: Refactor this
@@ -120,23 +123,33 @@ class DataStorage {
         return pathString;
     }
 
-    public async init(isReset = false) {
+    private async _initBasicStorage(): Promise<void> {
+        await fs.ensureDir(this.tmpDir);
+        await fs.ensureDir(this.sessionDir);
+    }
+
+    /**
+     * Initialize Data Storage.
+     *
+     * Pass reset=true to reset all user configurations.
+     */
+    public async init(reset = false): Promise<void> {
         // TODO: Refactor this
         const gaUserId = config.get('gaUserId');
         if (isNil(gaUserId)) {
             config.set('gaUserId', uuid());
         }
 
-        await fs.ensureDir(this.tmpDir);
-        await fs.ensureDir(this.sessionDir);
+        await this._initBasicStorage();
+
         await fs.ensureDir(this.userCaseDir);
         await fs.ensureDir(this.scenesDir);
-        !isReset && fs.ensureDir(this.recoverDir);
+        !reset && fs.ensureDir(this.recoverDir);
 
         await this.clearSession();
 
         // prepare directories
-        !isReset && await this.checkNewUser();
+        !reset && await this.checkNewUser();
 
         let overwriteProfiles = false;
         // upgrade to new version
@@ -157,13 +170,13 @@ class DataStorage {
 
         await fs.ensureDir(this.configDir);
 
-        await this.initLongTermRecover(isReset);
+        await this.initLongTermRecover(reset);
         await this.initEnv();
 
         await this.initFonts();
         await this.initScenes();
 
-        if (isReset || overwriteProfiles) {
+        if (reset || overwriteProfiles) {
             await this.initParameters();
             await this.initParameterDocumentDir();
             await this.initProfileDocs();
@@ -176,9 +189,11 @@ class DataStorage {
         this.upgradeConfigFile(this.configDir);
 
         // if alt+shift+r, cannot init recover config
-        if (!isReset) {
+        if (!reset) {
             await this.initRecoverActive();
         }
+
+        this.initialized = true;
     }
 
     public getParameterDocumentDir() {
