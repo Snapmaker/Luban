@@ -64,7 +64,6 @@ jobs:
               if: github.repository == 'Snapmaker/Luban'
               run: |
                   ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.exe" -r
-                  ossutil cp -f ./output/latest.yml ${{secrets.OSS_UPDATE_PATH}}/latest.yml
 
     build-macos:
         name: Build macOS Packages
@@ -125,7 +124,6 @@ jobs:
               run: |
                   ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.dmg" -r
                   ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.zip" -r
-                  ossutil cp -f ./output/latest-mac.yml ${{secrets.OSS_UPDATE_PATH}}/latest-mac.yml
 
     build-linux:
         name: Build Linux Packages
