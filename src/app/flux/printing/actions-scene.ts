@@ -64,32 +64,38 @@ const applyPrintSettingsToModels = () => (dispatch, getState) => {
     }
 
     // update parameters for each model
-    const globalSettings = leftPresetModel.settings;
-    modelGroup.getThreeModels().forEach((model) => {
-        const materialSettings = dispatch(getModelMaterialSettings(model));
-        model.updateMaterialColor(materialSettings.color.default_value);
+    if (leftPresetModel) {
+        const globalSettings = leftPresetModel.settings;
+        modelGroup.getThreeModels().forEach((model) => {
+            const materialSettings = dispatch(getModelMaterialSettings(model));
+            model.updateMaterialColor(materialSettings.color.default_value);
 
-        const layerHeight = globalSettings.layer_height.default_value;
-        const bottomThickness = globalSettings.bottom_thickness.default_value;
-        const bottomLayers = Math.ceil(Math.round(bottomThickness / layerHeight));
-        const topThickness = globalSettings.top_thickness.default_value;
-        const topLayers = Math.ceil(Math.round(topThickness / layerHeight));
+            const layerHeight = globalSettings.layer_height.default_value;
+            const bottomThickness = globalSettings.bottom_thickness.default_value;
+            const bottomLayers = Math.ceil(Math.round(bottomThickness / layerHeight));
+            const topThickness = globalSettings.top_thickness.default_value;
+            const topLayers = Math.ceil(Math.round(topThickness / layerHeight));
 
-        model.updateClipperConfig({
-            lineWidth: materialSettings.machine_nozzle_size.default_value,
-            wallThickness: globalSettings.wall_thickness.default_value,
-            topLayers,
-            bottomLayers,
-            layerHeight,
-            infillSparseDensity: globalSettings.infill_sparse_density.default_value,
-            infillPattern: globalSettings.infill_pattern.default_value,
-            magicSpiralize: globalSettings.magic_spiralize.default_value,
+            model.updateClipperConfig({
+                lineWidth: materialSettings.machine_nozzle_size.default_value,
+                wallThickness: globalSettings.wall_thickness.default_value,
+                topLayers,
+                bottomLayers,
+                layerHeight,
+                infillSparseDensity: globalSettings.infill_sparse_density.default_value,
+                infillPattern: globalSettings.infill_pattern.default_value,
+                magicSpiralize: globalSettings.magic_spiralize.default_value,
+            });
+            model.materialPrintTemperature = materialSettings.material_print_temperature.default_value;
         });
-        model.materialPrintTemperature = materialSettings.material_print_temperature.default_value;
-    });
+    }
 
-    sceneLogic.onPresetParameterChanged(LEFT_EXTRUDER, leftPresetModel);
-    sceneLogic.onPresetParameterChanged(RIGHT_EXTRUDER, rightPresetModel);
+    if (leftPresetModel) {
+        sceneLogic.onPresetParameterChanged(LEFT_EXTRUDER, leftPresetModel);
+    }
+    if (rightPresetModel) {
+        sceneLogic.onPresetParameterChanged(RIGHT_EXTRUDER, rightPresetModel);
+    }
 
     // TODO:
     const models = modelGroup.getModels();

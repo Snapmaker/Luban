@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
+import log from '../../../lib/log';
 import { pickAvailablePresetModels } from '../../utils/profileManager';
 import { RootState } from '../../../flux/index.def';
 import { actions as printingActions } from '../../../flux/printing';
@@ -31,6 +32,20 @@ const PresetInitialization: React.FC = () => {
         dispatch(printingActions.updateActiveQualityPresetId(stackId, presetModel.definitionId));
     };
 
+    // If material doesn't exist, we choose default material
+    useEffect(() => {
+        const preset = materialDefinitions.find(p => p.definitionId === defaultMaterialId);
+        if (!preset) {
+            dispatch(printingActions.updateDefaultMaterialId('material.pla', LEFT_EXTRUDER));
+        }
+    }, [dispatch, defaultMaterialId, materialDefinitions]);
+    useEffect(() => {
+        const preset = materialDefinitions.find(p => p.definitionId === defaultMaterialIdRight);
+        if (!preset) {
+            dispatch(printingActions.updateDefaultMaterialId('material.pla', RIGHT_EXTRUDER));
+        }
+    }, [dispatch, defaultMaterialIdRight, materialDefinitions]);
+
     useEffect(() => {
         if (qualityDefinitionModels.length > 0) {
             let presetModel = qualityDefinitionModels.find(p => p.definitionId === activePresetIds[LEFT_EXTRUDER]);
@@ -42,11 +57,11 @@ const PresetInitialization: React.FC = () => {
                 if (presetModel) {
                     setPreset(LEFT_EXTRUDER, presetModel);
 
-                    console.log(`Select Preset ${presetModel.definitionId} for left extruder..`);
+                    log.info(`Select Preset ${presetModel.definitionId} for left extruder..`);
                 }
             }
         }
-    }, [qualityDefinitionModels, activePresetIds, defaultMaterialId]);
+    }, [qualityDefinitionModels, activePresetIds, materialPreset]);
 
     useEffect(() => {
         if (qualityDefinitionModels.length > 0) {
@@ -59,7 +74,7 @@ const PresetInitialization: React.FC = () => {
                 if (presetModel) {
                     setPreset(RIGHT_EXTRUDER, presetModel);
 
-                    console.log(`Select Preset ${presetModel.definitionId} for right extruder..`);
+                    log.info(`Select Preset ${presetModel.definitionId} for right extruder..`);
                 }
             }
         }

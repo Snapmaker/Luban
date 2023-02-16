@@ -237,7 +237,20 @@ const MaterialSettings = ({ toolMap, loading }) => {
             } else {
                 setRightMaterialDefinitionId(selected.definitionId);
             }
+
+            dispatch(printingActions.updateCurrentDefinition({
+                PRINTING_MANAGER_TYPE_MATERIAL,
+                definitionModel: selected,
+                changedSettingArray: [
+                    ['color', data.color],
+                    ['material_print_temperature', data.printingTemperature],
+                    ['material_bed_temperature', data.buildPlateTemperature],
+                    ['cool_fan_speed', data.openFan ? 100 : 0],
+                ],
+            }));
         }
+
+
         message.info({
             content: (
                 <span className="height-30">

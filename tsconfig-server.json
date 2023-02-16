@@ -11,16 +11,17 @@
     ],
     "compilerOptions": {
         "module": "commonjs",
-        "target": "ESNext",
-        "allowJs": true,
+        "rootDir": ".",
+        "baseUrl": ".",
+        "resolveJsonModule": true,
+        "outDir": "./output",
         "sourceMap": false,
         "inlineSourceMap": false,
+        "allowJs": true,
+        "target": "ESNext",
         "noUnusedLocals": true,
         "esModuleInterop": true,
-        "rootDir": "./src/",
-        "outDir": "./output/src",
         "watch": false,
-        "skipLibCheck": true,
-        "baseUrl": "."
+        "skipLibCheck": true
     }
 }
