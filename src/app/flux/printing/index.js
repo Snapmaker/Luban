@@ -2166,7 +2166,6 @@ export const actions = {
 
         const {
             printMode,
-            hasModel,
             modelGroup,
             progressStatesManager,
             helpersExtruderConfig,
@@ -2190,7 +2189,8 @@ export const actions = {
         const isDual = isDualExtruder(printingToolhead);
 
         const models = modelGroup.getVisibleValidModels();
-        if (!models || models.length === 0 || !hasModel) {
+
+        if (!models || models.length === 0) {
             log.warn('No model(s) to be sliced.');
             return;
         }
