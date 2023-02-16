@@ -56,7 +56,6 @@
     "loglevel": "1.8.1",
     "method-override": "3.0.0",
     "minimatch": "3.0.4",
-    "mkdirp": "0.5.5",
     "morgan": "1.9.1",
     "mv": "2.1.1",
     "node-fetch": "2.6.7",
