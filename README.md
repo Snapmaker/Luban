@@ -10,7 +10,7 @@ The software also provides G-code generation support for 3D models, laser engrav
 Our goal is to provide a multi-functional 3D software, while making it as accessible and customizable as possible for new users / beginners.
 
 The software is inspired by [cncjs](https://github.com/cncjs/cncjs) by cheton.
-We use [LuraEngine(https://github.com/Snapmaker/LunarSlicer) for 3D slicing.
+We use [LunarSlicer](https://github.com/Snapmaker/LunarSlicer) for 3D slicing.
 
 ![Software Screenshot](https://user-images.githubusercontent.com/3749551/219274513-0f0d1e56-2e0a-4c9b-ad8b-7b5801a00cde.jpg)
 
