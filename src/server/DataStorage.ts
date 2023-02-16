@@ -6,6 +6,7 @@ import { v4 as uuid } from 'uuid';
 
 import pkg from '../../package.json';
 import { initFonts } from '../shared/lib/FontManager';
+import { copyDir } from './lib/util-fs/node';
 import settings from './config/settings';
 import { CNC_CONFIG_SUBCATEGORY, LASER_CONFIG_SUBCATEGORY, MATERIAL_TYPE_ARRAY, PRINTING_CONFIG_SUBCATEGORY } from './constants';
 import downloadManager from './lib/downloadManager';
@@ -15,13 +16,10 @@ import config from './services/configstore';
 
 const log = logger('server:DataStorage');
 
-export const rmDir = (dirPath, removeSelf) => {
+export const rmDir = (dirPath: string, removeSelf = true) => {
     log.info(`Clearing folder ${dirPath}`);
-    if (removeSelf === undefined) {
-        removeSelf = true;
-    }
 
-    let files;
+    let files: string[];
     try {
         files = fs.readdirSync(dirPath);
     } catch (e) {
@@ -45,29 +43,9 @@ export const rmDir = (dirPath, removeSelf) => {
 };
 
 /**
- * Copy files from srcDir to dstDir.
- *
- * @param {string} srcDir
- * @param {string} dstDir
- * @param {*} options
- * @returns Promise<boolean>
- */
-async function copyDir(srcDir, dstDir, options = {}) {
-    log.info(`Copying folder ${srcDir} to ${dstDir}`);
-
-    options.overwrite = options.overwrite || true;
-
-    try {
-        await fs.copy(srcDir, dstDir, options);
-    } catch (e) {
-        log.error(e);
-    }
-}
-
-/**
  * Ensure directory is empty.
  */
-const emptyDir = async (dirPath) => {
+const emptyDir = async (dirPath: string) => {
     log.info(`Clearing folder ${dirPath}`);
 
     try {
@@ -79,11 +57,8 @@ const emptyDir = async (dirPath) => {
 
 /**
  * Remove a directory.
- *
- * @param {string} dirPath
  */
-/*
-const removeDir = async (dirPath) => {
+const removeDir = async (dirPath: string) => {
     log.info(`Removing folder ${dirPath}`);
 
     try {
@@ -92,36 +67,30 @@ const removeDir = async (dirPath) => {
         log.error(e);
     }
 };
-*/
 
 class DataStorage {
-    userDataDir = null;
+    public userDataDir = null;
+    public sessionDir: string;
+    public tmpDir: string;
+    public configDir: string;
+    public defaultConfigDir: string;
+    public fontDir: string;
+    public scenesDir: string;
+    public userCaseDir: string;
+    public envDir: string;
+    private recoverDir: string;
+    private longTermConfigDir: string;
+    private activeConfigDir: string;
 
-    sessionDir;
+    private parameterDocumentDir = null;
 
-    tmpDir;
-
-    configDir;
-
-    defaultConfigDir;
-
-    fontDir;
-
-    scenesDir;
-
-    userCaseDir;
-
-    envDir;
-
-    parameterDocumentDir = null;
-
-    constructor() {
+    public constructor() {
         if (isElectron()) {
             // TODO: Refactor this
             this.userDataDir = global.luban.userDataDir;
             // this.userDataDir = process.env.USER_DATA_DIR;
         } else {
-            this.userDataDir = '.';
+            this.userDataDir = path.resolve('./');
         }
 
         log.info(`Initialize data storage at directory: ${this.userDataDir}`);
@@ -143,7 +112,7 @@ class DataStorage {
         this.parameterDocumentDir = `${this.userDataDir}/print-parameter-docs`;
     }
 
-    resolveRelativePath(pathString) {
+    public resolveRelativePath(pathString) {
         const regex = new RegExp(/^\.\//);
         if (isElectron() && regex.test(pathString)) {
             pathString = path.resolve(this.userDataDir, pathString);
@@ -151,7 +120,8 @@ class DataStorage {
         return pathString;
     }
 
-    async init(isReset = false) {
+    public async init(isReset = false) {
+        // TODO: Refactor this
         const gaUserId = config.get('gaUserId');
         if (isNil(gaUserId)) {
             config.set('gaUserId', uuid());
@@ -194,7 +164,7 @@ class DataStorage {
         await this.initScenes();
 
         if (isReset || overwriteProfiles) {
-            await this.initParameters(overwriteProfiles, isReset);
+            await this.initParameters();
             await this.initParameterDocumentDir();
             await this.initProfileDocs();
             await this.initUserCase();
@@ -211,16 +181,16 @@ class DataStorage {
         }
     }
 
-    getParameterDocumentDir() {
+    public getParameterDocumentDir() {
         return this.parameterDocumentDir;
     }
 
-    async checkNewUser() {
+    private async checkNewUser() {
         const hasConfigDir = fs.existsSync(this.configDir);
         config.set('isNewUser', !hasConfigDir);
     }
 
-    async initEnv() {
+    private async initEnv() {
         await fs.ensureDir(this.envDir);
         await fs.ensureDir(`${this.envDir}/printing`);
         await fs.ensureDir(`${this.envDir}/laser`);
@@ -245,7 +215,7 @@ class DataStorage {
         }
     }
 
-    async initParameters() {
+    private async initParameters() {
         try {
             await fs.ensureDir(this.configDir);
             await fs.ensureDir(this.defaultConfigDir);
@@ -270,26 +240,26 @@ class DataStorage {
         await copyDir(this.configDir, this.longTermConfigDir, { overwrite: true });
     }
 
-    async initRecoverActive() {
+    private async initRecoverActive() {
         await fs.ensureDir(this.configDir);
         await fs.ensureDir(this.activeConfigDir);
         await copyDir(this.configDir, this.activeConfigDir, { overwrite: true });
     }
 
-    async createLongTermRecover(backupVersion, pkgVersion, isReset) {
+    private async createLongTermRecover(backupVersion, pkgVersion, isReset) {
         this.longTermConfigDir = `${this.recoverDir}/Config-${pkgVersion}`;
         if (isUndefined(backupVersion) || gt(pkgVersion, backupVersion) || isReset) {
             await fs.ensureDir(this.longTermConfigDir);
             const srcDir = isReset ? this.activeConfigDir : this.configDir;
             await fs.ensureDir(srcDir);
-            await copyDir(srcDir, this.longTermConfigDir, { rewrite: true });
+            await copyDir(srcDir, this.longTermConfigDir, { overwrite: true });
         } else {
             return;
         }
         config.set('backupVersion', pkgVersion);
     }
 
-    async initLongTermRecover(isReset) {
+    private async initLongTermRecover(isReset) {
         const pkgVersion = pkg.version;
         const backupVersion = config.get('backupVersion');
         if (isUndefined(backupVersion) || gt(pkgVersion, backupVersion) || isReset) {
@@ -297,7 +267,7 @@ class DataStorage {
         }
     }
 
-    async initFonts() {
+    private async initFonts() {
         await fs.ensureDir(this.fontDir);
 
         const FONTS_LOCAL = path.resolve('../../resources/fonts');
@@ -314,7 +284,7 @@ class DataStorage {
         await initFonts(this.fontDir);
     }
 
-    async initScenes() {
+    private async initScenes() {
         await fs.ensureDir(this.scenesDir);
 
         const SCENES_LOCAL = path.resolve('../../resources/scenes/');
@@ -332,7 +302,7 @@ class DataStorage {
         }
     }
 
-    async initUserCase() {
+    private async initUserCase() {
         await fs.ensureDir(this.userCaseDir);
         const USER_CASE_LOCAL = path.resolve('../../resources/luban-case-library/');
         if (fs.existsSync(USER_CASE_LOCAL)) {
@@ -351,7 +321,7 @@ class DataStorage {
         }
     }
 
-    async initParameterDocumentDir() {
+    private async initParameterDocumentDir() {
         log.info(`Initializing parameter document dir: ${this.parameterDocumentDir}`);
         await fs.ensureDir(this.parameterDocumentDir);
 
@@ -379,7 +349,7 @@ class DataStorage {
         }
     }
 
-    async initProfileDocs() {
+    private async initProfileDocs() {
         // Used in version <= 4.5.0, remove it if we found it
         const profileDocsDir = `${this.userDataDir}/ProfileDocs`;
         if (await fs.pathExists(profileDocsDir)) {
@@ -387,7 +357,7 @@ class DataStorage {
         }
     }
 
-    async initLaserResources() {
+    private async initLaserResources() {
         downloadManager.downlaod(
             'https://snapmaker-luban.s3.us-west-1.amazonaws.com/camera-capture/mapx_350.txt',
             join(this.configDir, 'mapx_350.txt')
@@ -409,22 +379,12 @@ class DataStorage {
         );
     }
 
-    async copyFile(src, dst, isCover = true) {
-        if (!fs.existsSync(src) || !fs.statSync(src).isFile()) {
-            return;
-        }
-        if (!isCover && fs.existsSync(dst)) {
-            return;
-        }
-        fs.copyFileSync(src, dst);
-    }
-
-    async clearSession() {
+    public async clearSession() {
         await emptyDir(this.tmpDir);
         await emptyDir(this.sessionDir);
     }
 
-    async clearAll() {
+    public async clearAll() {
         await emptyDir(this.sessionDir);
         await emptyDir(this.tmpDir);
 
@@ -444,7 +404,7 @@ class DataStorage {
     }
 
     // v4.0.0 to v4.1.0 : upgrade to make all configs move to new config directory
-    upgradeConfigFile(srcDir) {
+    private upgradeConfigFile(srcDir) {
         const printingConfigNames = [];
         const cncConfigPaths = [];
         const officialMachine = ['A150', 'A250', 'A350', 'Original'];
@@ -599,7 +559,7 @@ class DataStorage {
             }
         }
         if (fs.existsSync(`${srcDir}/CncConfig`)) {
-            rmDir(`${srcDir}/CncConfig`);
+            removeDir(`${srcDir}/CncConfig`);
         }
     }
 }
