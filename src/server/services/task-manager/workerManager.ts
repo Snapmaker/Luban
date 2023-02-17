@@ -34,6 +34,7 @@ class WorkerManager {
                 forkOpts: {
                     env: {
                         Tmpdir: DataStorage.tmpDir,
+                        fontDir: DataStorage.fontDir,
                     }
                 }
             };

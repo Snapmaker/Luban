@@ -5,8 +5,8 @@ import path, { join } from 'path';
 import { v4 as uuid } from 'uuid';
 
 import pkg from '../../package.json';
-import { initFonts } from '../shared/lib/FontManager';
 import { copyDir } from './lib/util-fs/node';
+import { DEFAULT_FONT_NAME, initFonts } from '../shared/lib/FontManager';
 import settings from './config/settings';
 import { CNC_CONFIG_SUBCATEGORY, LASER_CONFIG_SUBCATEGORY, MATERIAL_TYPE_ARRAY, PRINTING_CONFIG_SUBCATEGORY } from './constants';
 import downloadManager from './lib/downloadManager';
@@ -296,6 +296,15 @@ class DataStorage {
                 }
             }
         }
+
+        const defaultFont = `${this.fontDir}/${DEFAULT_FONT_NAME}`;
+        if (!fs.existsSync(defaultFont)) {
+            downloadManager.downlaod(
+                'https://snapmaker.oss-cn-beijing.aliyuncs.com/snapmaker.com/download/fonts/NotoSansSC-Regular.otf',
+                join(this.fontDir, DEFAULT_FONT_NAME)
+            );
+        }
+
         await initFonts(this.fontDir);
     }
 

@@ -6,8 +6,6 @@ import request from 'superagent';
 import * as opentype from 'opentype.js';
 import libFontManager from 'font-scanner';
 import log from 'loglevel';
-import { loadSync } from 'opentype.js';
-import Path from 'opentype.js/src/path';
 
 
 /*
@@ -33,7 +31,7 @@ const WEB_SAFE_FONTS = [
 ];
 */
 
-const DEFAULT_FONT_NAME = 'NotoSansSC-Regular.otf';
+export const DEFAULT_FONT_NAME = 'NotoSansSC-Regular.otf';
 
 function patchFont(font, displayName = '') {
     if (!font.names.fontFamily) {
@@ -45,8 +43,9 @@ function patchFont(font, displayName = '') {
 }
 
 class FontManager {
+    fontDir;
+
     constructor() {
-        this.fontDir = './userData/fonts';
         this.fonts = [];
         // preload fonts config
         this.systemFonts = [];
@@ -61,11 +60,20 @@ class FontManager {
             });
     }
 
-    loadDefaultFont() {
+    async loadDefaultFont() {
         if (this.defaultFont) {
             return;
         }
-        const dir = `${this.fontDir}/${DEFAULT_FONT_NAME}`;
+        let fontDir;
+        if (process.env.fontDir) {
+            fontDir = process.env.fontDir;
+        } else if (this.fontDir) {
+            fontDir = this.fontDir;
+        }
+        if (!fontDir) {
+            return;
+        }
+        const dir = `${fontDir}/${DEFAULT_FONT_NAME}`;
         try {
             this.defaultFont = opentype.loadSync(dir);
         } catch (e) {
