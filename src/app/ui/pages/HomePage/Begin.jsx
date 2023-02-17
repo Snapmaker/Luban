@@ -14,6 +14,11 @@ import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING, MAX_RECENT_FILES_LENGTH } from '..
 import { MACHINE_TYPE_MULTI_FUNCTION_PRINTER } from '../../../constants/machines';
 import UniApi from '../../../lib/uni-api';
 
+import print3DEntryIcon from './images/icon_3d_120x120.svg';
+import laserEntryIcon from './images/icon_laser_120x120.svg';
+import cncEntryIcon from './images/icon_cnc_120x120.svg';
+import workspaceEntryIcon from './images/icon_workspace_120x120.svg';
+
 
 const Begin = () => {
     // redux correlation
@@ -94,7 +99,7 @@ const Begin = () => {
                                 <div className={classNames(styles['link-bar-item'], 'margin-horizontal-16')}>
                                     <Anchor onClick={() => handleNewFile(false, HEAD_PRINTING)} title={i18n._('key-HomePage/Begin-3D Printing G-code Generator')}>
                                         <div className={classNames(styles.imgWrapper)}>
-                                            <img src={require('./images/icon_3d_120x120.svg')} alt="" />
+                                            <img src={print3DEntryIcon} alt="" />
                                         </div>
                                         <span className={classNames('heading-2', 'align-c', 'text-overflow-ellipsis-line-2', 'width-one-in-six')}>{i18n._('key-HomePage/Begin-3D Printing')}</span>
                                     </Anchor>
@@ -104,7 +109,7 @@ const Begin = () => {
                                         <div className={classNames(styles['link-bar-item'], styles.laser, 'margin-horizontal-16')}>
                                             <Anchor title={i18n._('key-HomePage/Begin-Laser G-code Generator')}>
                                                 <div className={classNames(styles.imgWrapper)}>
-                                                    <img className={classNames(styles['laser-img'])} src={require('./images/icon_laser_120x120.svg')} alt="" />
+                                                    <img className={classNames(styles['laser-img'])} src={laserEntryIcon} alt="" />
                                                     <div className={styles['laser-axis-select']}>
                                                         <Button
                                                             onClick={() => {
@@ -138,7 +143,7 @@ const Begin = () => {
                                         <div className={classNames(styles['link-bar-item'], styles.cnc, 'margin-horizontal-16')}>
                                             <Anchor title={i18n._('key-HomePage/Begin-CNC G-code Generator')}>
                                                 <div className={classNames(styles.imgWrapper)}>
-                                                    <img className={classNames(styles['cnc-img'])} src={require('./images/icon_cnc_120x120.svg')} alt="" />
+                                                    <img className={classNames(styles['cnc-img'])} src={cncEntryIcon} alt="" />
                                                     <div className={styles['cnc-axis-select']}>
                                                         <Button
                                                             onClick={() => {
@@ -170,7 +175,7 @@ const Begin = () => {
                                 <div className={classNames(styles['link-bar-item'], 'margin-horizontal-16')}>
                                     <Anchor onClick={() => handleSwitchToWorkspace('/workspace')} title={i18n._('key-HomePage/Begin-Workspace')}>
                                         <div className={classNames(styles.imgWrapper)}>
-                                            <img src={require('./images/icon_workspace_120x120.svg')} alt="" />
+                                            <img src={workspaceEntryIcon} alt="" />
                                         </div>
                                         <span className={classNames('heading-2', 'align-c', 'text-overflow-ellipsis-line-2', 'width-one-in-six')}>{i18n._('key-HomePage/Begin-Workspace')}</span>
                                     </Anchor>

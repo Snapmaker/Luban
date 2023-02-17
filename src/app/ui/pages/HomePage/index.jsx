@@ -4,14 +4,15 @@ import i18next from 'i18next';
 import { gte } from 'lodash';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
-import styles from './styles.styl';
+
+import { HEAD_PRINTING, HEAD_CNC, HEAD_LASER } from '../../../constants';
+import { useRenderRecoveryModal, logPageView } from '../../utils';
 import { machineStore } from '../../../store/local-storage';
 import pkg from '../../../../package.json';
 
-import { useRenderRecoveryModal, logPageView } from '../../utils';
-import { HEAD_PRINTING, HEAD_CNC, HEAD_LASER } from '../../../constants';
 
 // component
+import styles from './styles.styl';
 import Begin from './Begin';
 import QuickStart from './QuickStart';
 import MoreInfo from './MoreInfo';
