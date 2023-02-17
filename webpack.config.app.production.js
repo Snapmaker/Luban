@@ -188,6 +188,7 @@ module.exports = {
                     path.resolve(__dirname, 'src/app/styles')
                 ]
             },
+            // CSS files
             {
                 test: /\.css$/,
                 use: ['style-loader', 'css-loader']

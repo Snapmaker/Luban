@@ -4,6 +4,8 @@ import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
 import i18n from '../../../lib/i18n';
 
+import conventionalModeIcon from './images/mode_conventional.svg';
+import thicknessCompensationModeIcon from './images/mode_thickness_compensation.svg';
 
 type TProps = {
     // series: string;
@@ -23,7 +25,7 @@ const SelectCaptureMode: React.FC<TProps> = (props: TProps) => {
                 }}
             >
                 <div className={classNames(styles.left)}>
-                    <img src={require('./images/mode_conventional.svg')} alt="" />
+                    <img src={conventionalModeIcon} alt="" />
                 </div>
                 <div className={classNames(styles.right)}>
                     <p className="font-weight-bold font-size-middle">{i18n._('key-Laser/CameraCapture-conventional mode')}</p>
@@ -38,7 +40,7 @@ const SelectCaptureMode: React.FC<TProps> = (props: TProps) => {
                 }}
             >
                 <div className={classNames(styles.left)}>
-                    <img src={require('./images/mode_thickness_compensation.svg')} alt="" />
+                    <img src={thicknessCompensationModeIcon} alt="" />
                 </div>
                 <div className={classNames(styles.right)}>
                     <p className="font-weight-bold font-size-middle">{i18n._('key-Laser/CameraCapture-thickness compensation mode')} (Beta)</p>
