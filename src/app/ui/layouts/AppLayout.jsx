@@ -931,7 +931,7 @@ class AppLayout extends PureComponent {
                 this.props.resetUserConfig();
             });
             UniApi.Event.on('appbar-menu:download-log', () => {
-                UniApi.File.exportAs('/Tmp/server.log', '/Tmp/server.log', 'server.log');
+                UniApi.File.exportAs('/logs/server.log', '/logs/server.log', 'server.log');
             });
             UniApi.Event.on('appbar-menu:open-engine-test', () => {
                 const path = window.require('path');
