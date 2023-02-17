@@ -385,13 +385,20 @@ class Canvas extends PureComponent {
 
     detectionLocation() {
         toast.dismiss();
-        const hasOverstepped = this.modelGroup.selectedModelArray.some((model) => {
+
+        const avaiableModels = this.modelGroup.getSelectedModelsForHotZoneCheck();
+        const hasOverstepped = avaiableModels.some((model) => {
             return model.overstepped;
         });
+
+        // Check overstep
         if (hasOverstepped) {
             toast(ToastWapper(i18n._('key-Printing/This is the non printable area'), 'WarningTipsWarning', '#FFA940'));
-        } else if (this.props.printableArea.isPointInShape) {
-            const avaiableModels = this.modelGroup.getSelectedModelsForHotZoneCheck();
+            return;
+        }
+
+        // Check hot area
+        if (this.props.printableArea.isPointInShape) {
             if (avaiableModels.length > 0) {
                 let hasOversteppedHotArea = false;
                 avaiableModels.forEach((model) => {
@@ -461,7 +468,7 @@ class Canvas extends PureComponent {
                 this.controls.transformControl.mode,
                 this.controls.transformControl.axis
             );
-            this.detectionLocation();
+            // this.detectionLocation();
         });
         this.controls.on(EVENTS.SELECT_PLACEMENT_FACE, (userData) => {
             this.onRotationPlacementSelect(userData);
