@@ -69,7 +69,7 @@ export default {
         { type: 'separator' },
         {
             id: 'open-config-folder',
-            label: 'Open Config Folder',
+            label: 'key-App/Menu-Open Config Folder',
             enabled: true,
             click: (menuItem, browserWindow) => {
                 if (isElectron()) {
