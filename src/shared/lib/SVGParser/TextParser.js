@@ -179,13 +179,24 @@ class textParser extends BaseTagParser {
             }
             const fullPath = new opentype.Path();
             // Calculate size and render SVG template
-            const p = fontObj.getPath(text, positionX, positionY, Math.floor(size));
-            fullPath.extend(p);
+
+            const fontPath = fontManager.getPathOrDefault(fontObj, text, positionX, positionY, size);
+            // fontPath = fontManager.getPathOrDefault(fontObj, text, positionX - fontPath.width / 2, positionY, size);
+
+            fullPath.extend(fontPath.path);
             fullPath.stroke = 'black';
             const d = fullPath.toPathData();
-            const newPath = svgPath(d)
-                .matrix(attributes.xform)
-                .toString();
+            const newSvgPath = svgPath(d)
+                .matrix(attributes.xform);
+
+            if (this.attributes['text-anchor'] === 'middle') {
+                newSvgPath.translate(-fontPath.width / 2, 0);
+            } else if (this.attributes['text-anchor'] === 'end') {
+                newSvgPath.translate(-fontPath.width, 0);
+            }
+
+            const newPath = newSvgPath.toString();
+
             const gString = _.template(TEMPLATE)({
                 path: `<path d="${newPath}" stroke="black" stroke-width="1"/>`
             });
