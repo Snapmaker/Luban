@@ -272,6 +272,10 @@ class Visualizer extends PureComponent {
             this.canvas.current.detectionLocation();
         },
 
+        onMeshPositionChanged: () => {
+            this.canvas.current.detectionLocation();
+        },
+
         /**
          * Set selected model(s) extruder to extruderId ('0' or '1').
          *
@@ -406,6 +410,7 @@ class Visualizer extends PureComponent {
             false
         );
         this.props.modelGroup.on(ModelEvents.AddModel, this.actions.onAddModel);
+        this.props.modelGroup.on(ModelEvents.MeshPositionChanged, this.actions.onMeshPositionChanged);
     }
 
     componentDidUpdate(prevProps) {
@@ -521,6 +526,7 @@ class Visualizer extends PureComponent {
     componentWillUnmount() {
         this.props.clearOperationHistory();
         this.props.modelGroup.off(ModelEvents.AddModel, this.actions.onAddModel);
+        this.props.modelGroup.off(ModelEvents.MeshPositionChanged, this.actions.onMeshPositionChanged);
         window.removeEventListener('fit-view-in', this.actions.fitViewIn, false);
     }
 
