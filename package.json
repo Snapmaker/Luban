@@ -271,7 +271,7 @@
     "copy-props": "3.0.1",
     "coveralls": "3.0.14",
     "cross-env": "5.2.1",
-    "css-loader": "^4.3.0",
+    "css-loader": "5.2.7",
     "electron": "17.4.11",
     "electron-builder": "23.6.0",
     "electron-notarize": "0.2.1",
