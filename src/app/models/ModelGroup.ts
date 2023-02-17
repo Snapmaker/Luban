@@ -794,7 +794,7 @@ class ModelGroup extends EventEmitter {
             return [];
         }
 
-        return this.getSelectedModelArray<Model3D>();
+        return this.getModels<Model3D>();
     }
 
     public calculateSelectedGroupPosition() {
