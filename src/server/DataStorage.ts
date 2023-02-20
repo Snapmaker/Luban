@@ -247,27 +247,28 @@ class DataStorage {
         const CURA_ENGINE_CONFIG_LOCAL = path.resolve('../../resources/print-settings');
 
         // default config
-        await copyDir(CURA_ENGINE_CONFIG_LOCAL, this.defaultConfigDir, { overwrite: true });
+        await copyDir(CURA_ENGINE_CONFIG_LOCAL, this.defaultConfigDir);
 
         // config
-        await copyDir(CURA_ENGINE_CONFIG_LOCAL, this.configDir, { overwrite: false });
-
-        await copyDir(this.configDir, this.longTermConfigDir, { overwrite: true });
+        await copyDir(CURA_ENGINE_CONFIG_LOCAL, this.configDir);
     }
 
     private async initRecoverActive() {
         await fs.ensureDir(this.configDir);
         await fs.ensureDir(this.activeConfigDir);
-        await copyDir(this.configDir, this.activeConfigDir, { overwrite: true });
+        await copyDir(this.configDir, this.activeConfigDir);
     }
 
     private async createLongTermRecover(backupVersion, pkgVersion, isReset) {
         this.longTermConfigDir = `${this.recoverDir}/Config-${pkgVersion}`;
         if (isUndefined(backupVersion) || gt(pkgVersion, backupVersion) || isReset) {
             await fs.ensureDir(this.longTermConfigDir);
+
+            // Copy from current config to versioned backup
             const srcDir = isReset ? this.activeConfigDir : this.configDir;
             await fs.ensureDir(srcDir);
-            await copyDir(srcDir, this.longTermConfigDir, { overwrite: true });
+
+            await copyDir(srcDir, this.longTermConfigDir);
         } else {
             return;
         }
