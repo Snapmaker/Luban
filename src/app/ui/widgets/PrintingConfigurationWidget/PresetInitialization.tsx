@@ -34,12 +34,16 @@ const PresetInitialization: React.FC = () => {
 
     // If material doesn't exist, we choose default material
     useEffect(() => {
+        if (materialDefinitions.length === 0) return;
+
         const preset = materialDefinitions.find(p => p.definitionId === defaultMaterialId);
         if (!preset) {
             dispatch(printingActions.updateDefaultMaterialId('material.pla', LEFT_EXTRUDER));
         }
     }, [dispatch, defaultMaterialId, materialDefinitions]);
     useEffect(() => {
+        if (materialDefinitions.length === 0) return;
+
         const preset = materialDefinitions.find(p => p.definitionId === defaultMaterialIdRight);
         if (!preset) {
             dispatch(printingActions.updateDefaultMaterialId('material.pla', RIGHT_EXTRUDER));
