@@ -29,7 +29,7 @@ module.exports = {
                 'Perf',
                 'Test',
                 'Build',
-                'Style',
+                'Chore',
                 'Docs'
             ]
         ]

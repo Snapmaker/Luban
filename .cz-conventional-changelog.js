@@ -35,8 +35,8 @@ function createQuestions(config) {
             description: 'Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)'
         },
         {
-            name: 'Style',
-            description: 'Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)'
+            name: 'Chore',
+            description: 'Changes that do not affect the meaning of the code (package.json, white-space, formatting, etc)'
         },
         {
             name: 'Docs',
