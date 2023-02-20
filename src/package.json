@@ -50,7 +50,7 @@
     "jimp": "0.16.2",
     "jpeg-autorotate": "7.1.1",
     "jpeg-js": "0.4.4",
-    "jsonwebtoken": "8.3.0",
+    "jsonwebtoken": "~9.0.0",
     "jszip": "^3.10.0",
     "linebyline": "^1.3.0",
     "lodash": "4.17.21",
