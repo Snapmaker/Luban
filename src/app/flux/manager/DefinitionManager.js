@@ -744,22 +744,27 @@ class DefinitionManager {
          * M190 S60
          */
 
-        const gcode = [';Start GCode begin', `M104 S${printTempLayer0}`];
+        const gcode = [';Start GCode begin'];
         gcode.push('G28 ;home');
+        gcode.push(`M104 S${printTempLayer0}`);
         if (machineHeatedBed) {
             gcode.push(`M140 S${bedTempLayer0}`);
         }
-        gcode.push('G90 ;absolute positioning');
-        gcode.push('G1 X-10 Y-10 F3000');
-        gcode.push('G1 Z0 F1800');
-
-        gcode.push(`M109 S${printTempLayer0};Wait for Hotend Temperature`);
+        gcode.push(`M109 S${printTempLayer0} ;Wait for Hotend Temperature`);
         if (machineHeatedBed) {
-            gcode.push(`M190 S${bedTempLayer0};Wait for Bed Temperature`);
+            gcode.push(`M190 S${bedTempLayer0} ;Wait for Bed Temperature`);
         }
 
+        gcode.push('G90 ;absolute positioning');
+        gcode.push('G0 X-10 Y-10 F3000');
+        gcode.push('G0 Z0 F1800');
+
+        // Pre-extrusion
         gcode.push('G92 E0');
         gcode.push('G1 E20 F200');
+        gcode.push('G0 X0 Y0 F3000 ;Move to origin');
+        gcode.push('G0 Z1 F1800 ;Move up to avoid scraping against heated bed');
+
         gcode.push('G92 E0');
         gcode.push(';Start GCode end');
         definition.settings.machine_start_gcode = {
