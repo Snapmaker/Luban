@@ -1,8 +1,7 @@
 import util from 'util';
 import winston from 'winston';
-import mkdirp from 'mkdirp';
 import isElectron from 'is-electron';
-import fs from 'fs';
+import * as fs from 'fs-extra';
 import settings from '../config/settings';
 
 const FILE_MAX_SIZE = 1024 * 1024 * 10;
@@ -10,13 +9,12 @@ const FILE_MAX_SIZE = 1024 * 1024 * 10;
 const loggers = new Map();
 
 const getLogDir = () => {
-    let logDir;
+    let logDir: string;
     if (global.luban && global.luban.userDataDir) {
         if (isElectron()) {
-            logDir = `${global.luban.userDataDir}/logs`;
-            // this.userDataDir = process.env.USER_DATA_DIR;
+            logDir = `${global.luban.userDataDir}/Logs`;
         } else {
-            logDir = './logs';
+            logDir = './Logs';
         }
     } else if (process && process.env && process.env.logDir) {
         logDir = process.env.logDir;
@@ -25,7 +23,7 @@ const getLogDir = () => {
         return null;
     }
     try {
-        mkdirp.sync(logDir);
+        fs.ensureDirSync(logDir);
     } catch (e) {
         console.log(e);
     }
@@ -59,7 +57,7 @@ const VERBOSITY_MAX = 3; // -vvv
 const { combine, colorize, timestamp, printf } = winston.format;
 
 // https://github.com/winstonjs/winston/blob/master/README.md#creating-your-own-logger
-const createLogger = (filename) => {
+const createLogger = (filename: string) => {
     const logDir = getLogDir();
     if (!logDir) {
         return winston.createLogger({
