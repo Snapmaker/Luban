@@ -76,12 +76,15 @@ function CheckingNozzleSize() {
         const def = direction === LEFT_EXTRUDER
             ? extruderLDefinition
             : extruderRDefinition;
-        def.settings.machine_nozzle_size.default_value = value;
+        // def.settings.machine_nozzle_size.default_value = value;
         dispatch(
             printingActions.updateCurrentDefinition({
                 definitionModel: def,
                 managerDisplayType: PRINTING_MANAGER_TYPE_EXTRUDER,
-                direction
+                direction,
+                changedSettingArray: [
+                    ['machine_nozzle_size', value],
+                ],
             })
         );
     }

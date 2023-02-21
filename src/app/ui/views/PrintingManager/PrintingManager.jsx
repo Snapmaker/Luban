@@ -132,7 +132,7 @@ function PrintingManager() {
         },
         onSaveDefinitionForManager: async (
             newDefinition,
-            changedSettingArray,
+            changedSettingArray = [],
             shouldUpdateActive
         ) => {
             await dispatch(
@@ -148,7 +148,7 @@ function PrintingManager() {
             }
         },
 
-        onUpdatePreset: (presetModel, changedSettingArray) => {
+        onUpdatePreset: (presetModel, changedSettingArray = []) => {
             return dispatch(
                 printingActions.updateCurrentDefinition({
                     managerDisplayType,
