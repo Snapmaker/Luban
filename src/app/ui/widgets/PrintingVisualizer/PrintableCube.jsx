@@ -367,7 +367,13 @@ class PrintableCube extends Object3D {
         return shape;
     }
 
+    // Check if point is in hot area
     isPointInShape(point) {
+        // only Artisan contains hot area
+        if (this.series !== 'A400') {
+            return true;
+        }
+
         const res = this.pointInsideRect(point, -130, -130, 260, 260);
         if (!res) {
             return false;

@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
+import { isQualityPresetVisible } from '../../../constants/preset';
 import log from '../../../lib/log';
 import { pickAvailablePresetModels } from '../../utils/profileManager';
 import { RootState } from '../../../flux/index.def';
@@ -53,6 +54,9 @@ const PresetInitialization: React.FC = () => {
     useEffect(() => {
         if (qualityDefinitionModels.length > 0) {
             let presetModel = qualityDefinitionModels.find(p => p.definitionId === activePresetIds[LEFT_EXTRUDER]);
+            if (!isQualityPresetVisible(presetModel, { materialType: materialPreset?.materialType })) {
+                presetModel = null;
+            }
             if (!presetModel) {
                 // definition no found, select first official definition
                 const availablePresetModels = pickAvailablePresetModels(qualityDefinitionModels, materialPreset);
@@ -70,6 +74,9 @@ const PresetInitialization: React.FC = () => {
     useEffect(() => {
         if (qualityDefinitionModels.length > 0) {
             let presetModel = qualityDefinitionModels.find(p => p.definitionId === activePresetIds[RIGHT_EXTRUDER]);
+            if (!isQualityPresetVisible(presetModel, { materialType: materialPresetRight?.materialType })) {
+                presetModel = null;
+            }
             if (!presetModel) {
                 // definition no found, select first official definition
                 const availablePresetModels = pickAvailablePresetModels(qualityDefinitionModels, materialPresetRight);
