@@ -135,12 +135,13 @@ const getAddPresetMenuProps = ({ onCreatePreset, onImportPreset }): MenuProps =>
  *
  * Currently, we only support LEFT_EXTRUDER and RIGHT_EXTRUDER stack.
  */
-declare type StackPresetSelectorProps = {
+interface StackPresetSelectorProps {
     selectedStackId: string;
     selectedPresetId: string;
-    onSelectStack: (string) => void;
-    onSelectPreset: (string) => void;
-};
+    onSelectStack: (stackId: string) => void;
+    onSelectPreset: (presetId: string) => void;
+}
+
 const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStackId, selectedPresetId, onSelectStack, onSelectPreset }) => {
     const dispatch = useDispatch();
 

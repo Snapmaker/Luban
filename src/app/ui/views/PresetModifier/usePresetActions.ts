@@ -11,11 +11,11 @@ interface Definition {
 }
 
 export declare type PresetActionsType = {
-    onSelectDefinitionById?: (definitionId) => void;
+    onSelectDefinitionById?: (definitionId: string) => void;
 
-    onCreateManagerDefinition: (definition) => Promise<PresetDefinitionModel>;
+    onCreateManagerDefinition: (definition: Definition) => Promise<PresetDefinitionModel>;
 
-    onDeletePresetModel: (preset) => Promise<void>;
+    onDeletePresetModel: (preset: Definition) => Promise<void>;
 
     createPreset: (file) => Promise<Definition>;
 };
@@ -26,7 +26,7 @@ export declare type PresetActionsType = {
 const usePresetActions = (): PresetActionsType => {
     const dispatch = useDispatch();
 
-    const onSelectDefinitionById = (definitionId) => {
+    const onSelectDefinitionById = (definitionId: string) => {
         // TODO:
         console.log('onSelectDefinitionById', definitionId);
     };

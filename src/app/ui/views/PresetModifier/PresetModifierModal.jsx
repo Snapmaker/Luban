@@ -1,6 +1,6 @@
 import { includes } from 'lodash';
 import PropTypes from 'prop-types';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
@@ -48,18 +48,18 @@ function PresetModifierModal(
      *
      * @param stackId
      */
-    function selectStack(stackId) {
+    const selectStack = useCallback((stackId) => {
         if (includes([LEFT_EXTRUDER, RIGHT_EXTRUDER], stackId)) {
             setSelectedStackId(stackId);
         }
-    }
+    }, []);
 
     /**
      * Select preset by preset id.
      *
      * @param presetId
      */
-    function selectPreset(presetId) {
+    const selectPreset = useCallback((presetId) => {
         const presetModel = qualityPresetModels.find(p => p.definitionId === presetId);
         if (presetModel) {
             setSelectedPresetId(presetId);
@@ -68,19 +68,7 @@ function PresetModifierModal(
             // TODO: Popup a notification indicating unacceptable preset id
             dispatch(printingActions.updateActiveQualityPresetId(selectedStackId, presetId));
         }
-    }
-
-    /**
-     * Get default values of a preset.
-     *
-     * @param presetId
-     * @return {{}}
-     */
-    function getPresetDefaultValues(presetId) {
-        const defaultPreset = defaultDefinitions.find(p => p.definitionId === presetId);
-
-        return defaultPreset?.settings || {};
-    }
+    }, [dispatch, selectedStackId, qualityPresetModels]);
 
     useEffect(() => {
         const presetId = activePresetIds[selectedStackId];
@@ -89,9 +77,21 @@ function PresetModifierModal(
             setSelectedPresetId(presetId);
         }
 
+        /**
+         * Get default values of a preset.
+         *
+         * @param presetId
+         * @return {{}}
+         */
+        const getPresetDefaultValues = (presetId_) => {
+            const defaultPreset = defaultDefinitions.find(p => p.definitionId === presetId_);
+
+            return defaultPreset?.settings || {};
+        };
+
         const defaultValues = getPresetDefaultValues(presetId);
         setSelectedPresetDefaultValues(defaultValues);
-    }, [activePresetIds, selectedStackId]);
+    }, [activePresetIds, selectedStackId, selectedPresetId, defaultDefinitions]);
 
     return (
         <Modal
