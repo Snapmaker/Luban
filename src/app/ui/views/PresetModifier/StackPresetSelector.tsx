@@ -19,6 +19,7 @@ import SvgIcon from '../../components/SvgIcon';
 import { getPresetOptions } from '../../utils/profileManager';
 import CreatePresetModal from './CreatePresetModal';
 import DeletePresetModal from './DeletePresetModal';
+import ResetPresetModal from './ResetPresetModal';
 import styles from './styles.styl';
 import usePresetActions from './usePresetActions';
 
@@ -33,7 +34,7 @@ import usePresetActions from './usePresetActions';
  */
 // MenuProps
 // https://4x.ant.design/components/menu/#ItemType
-const getPresetItemDropdownMenuProps = ({ presetModel, onCopyPreset, onExportPreset, onDeletePreset }): MenuProps => {
+const getPresetItemDropdownMenuProps = ({ presetModel, onCopyPreset, onResetPreset, onExportPreset, onDeletePreset }): MenuProps => {
     const items = [];
 
     items.push({
@@ -42,8 +43,8 @@ const getPresetItemDropdownMenuProps = ({ presetModel, onCopyPreset, onExportPre
     });
 
     items.push({
-        key: 'menu:export',
-        label: (<div className="width-120 text-overflow-ellipsis">{i18n._('key-Printing/ProfileManager-Export')}</div>),
+        key: 'menu:reset',
+        label: (<div className="width-120 text-overflow-ellipsis">{i18n._('key-Printing/ProfileManager-Reset')}</div>),
     });
 
     items.push({
@@ -53,10 +54,20 @@ const getPresetItemDropdownMenuProps = ({ presetModel, onCopyPreset, onExportPre
         disabled: presetModel.isRecommended,
     });
 
+    items.push({
+        key: 'menu:export',
+        label: (<div className="width-120 text-overflow-ellipsis">{i18n._('key-Printing/ProfileManager-Export')}</div>),
+    });
+
+
     function onClick({ key }) {
         switch (key) {
             case 'menu:copy': {
                 onCopyPreset();
+                break;
+            }
+            case 'menu:reset': {
+                onResetPreset();
                 break;
             }
             case 'menu:export': {
@@ -177,17 +188,17 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
 
         // set all preset categories expanded
         setExpandedPresetCategories(Object.keys(newPresetOptionsObj));
-    }, [selectedStackId, defaultMaterialId, defaultMaterialIdRight, qualityPresetModels]);
+    }, [selectedStackId, defaultMaterialId, defaultMaterialIdRight, materialDefinitions, qualityPresetModels]);
 
     // Get active preset model
     useEffect(() => {
         const targetPresetModel = qualityPresetModels.find(p => p.definitionId === selectedPresetId);
         setPresetModel(targetPresetModel);
-    }, [selectedStackId, selectedPresetId]);
+    }, [selectedStackId, selectedPresetId, qualityPresetModels]);
 
     // stackId: LEFT_EXTRUDER or RIGHT_EXTRUDER
     // Maybe support a global stack later
-    function selectStack(stackId) {
+    function selectStack(stackId: string) {
         onSelectStack(stackId);
     }
 
@@ -196,7 +207,7 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
      *
      * @param presetCategory
      */
-    const togglePresetCategoryExpansion = (presetCategory) => {
+    const togglePresetCategoryExpansion = (presetCategory: string) => {
         const newCategories = [...expandedPresetCategories];
         if (includes(expandedPresetCategories, presetCategory)) {
             remove(newCategories, (item) => {
@@ -213,12 +224,13 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
      *
      * @param presetId
      */
-    function selectPresetByPresetId(presetId) {
+    function selectPresetByPresetId(presetId: string) {
         onSelectPreset(presetId);
     }
 
     const [showCreatePresetModal, setShowCreatePresetModal] = useState(false);
     const [showCopyPresetModal, setShowCopyPresetModal] = useState(false);
+    const [showResetPresetModal, setShowResetPresetModal] = useState(false);
     const [showDeletePresetModal, setShowDeletePresetModal] = useState(false);
     const importPresetFileInput = useRef(null);
 
@@ -351,6 +363,7 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
                                                                         menu={getPresetItemDropdownMenuProps({
                                                                             presetModel,
                                                                             onCopyPreset: () => setShowCopyPresetModal(true),
+                                                                            onResetPreset: () => setShowResetPresetModal(true),
                                                                             onExportPreset: () => actions.exportConfigFile(presetModel.definitionId),
                                                                             onDeletePreset: () => setShowDeletePresetModal(true),
                                                                         })}
@@ -394,6 +407,7 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
                         onImportPreset: () => actions.importPresetStep1(),
                     })}
                 >
+                    {/* @ts-ignore */}
                     <Button
                         type="default"
                         priority="level-two"
@@ -424,6 +438,16 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
                         categories={categories}
                         presetActions={presetActions}
                         onClose={() => setShowCopyPresetModal(false)}
+                    />
+                )
+            }
+            {/* Reset Preset Modal */}
+            {
+                showResetPresetModal && (
+                    <ResetPresetModal
+                        presetModel={presetModel}
+                        presetActions={presetActions}
+                        onClose={() => setShowResetPresetModal(false)}
                     />
                 )
             }

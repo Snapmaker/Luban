@@ -54,7 +54,7 @@ const PresetInitialization: React.FC = () => {
     useEffect(() => {
         if (qualityDefinitionModels.length > 0) {
             let presetModel = qualityDefinitionModels.find(p => p.definitionId === activePresetIds[LEFT_EXTRUDER]);
-            if (!isQualityPresetVisible(presetModel, { materialType: materialPreset?.materialType })) {
+            if (presetModel && !isQualityPresetVisible(presetModel, { materialType: materialPreset?.materialType })) {
                 presetModel = null;
             }
             if (!presetModel) {
@@ -74,7 +74,7 @@ const PresetInitialization: React.FC = () => {
     useEffect(() => {
         if (qualityDefinitionModels.length > 0) {
             let presetModel = qualityDefinitionModels.find(p => p.definitionId === activePresetIds[RIGHT_EXTRUDER]);
-            if (!isQualityPresetVisible(presetModel, { materialType: materialPresetRight?.materialType })) {
+            if (presetModel && !isQualityPresetVisible(presetModel, { materialType: materialPresetRight?.materialType })) {
                 presetModel = null;
             }
             if (!presetModel) {
