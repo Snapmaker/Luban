@@ -365,6 +365,10 @@ class AttributesParser {
                 attributes[key] = value;
                 break;
             }
+            case 'text-anchor': {
+                attributes[key] = value;
+                break;
+            }
             case SVG_ATTR_ID: {
                 attributes[key] = `#${value}`;
                 break;
