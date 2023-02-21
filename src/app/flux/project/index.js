@@ -12,6 +12,7 @@ import {
     LOAD_MODEL_FROM_OUTER,
     MAX_RECENT_FILES_LENGTH,
     PAGE_EDITOR,
+    PRINTING_MANAGER_TYPE_MATERIAL,
     PROCESS_MODE_MESH,
     RIGHT_EXTRUDER,
     SOURCE_TYPE
@@ -333,6 +334,10 @@ export const actions = {
 
             const { supportExtruderConfig } = restState;
             dispatch(modActions.updateSupportExtruderConfig(supportExtruderConfig));
+
+            const { defaultMaterialId, defaultMaterialIdRight } = envObj;
+            dispatch(modActions.updateSavedPresetIds(PRINTING_MANAGER_TYPE_MATERIAL, defaultMaterialId, LEFT_EXTRUDER));
+            dispatch(modActions.updateSavedPresetIds(PRINTING_MANAGER_TYPE_MATERIAL, defaultMaterialIdRight, RIGHT_EXTRUDER));
         } else {
             dispatch(modActions.updateState(envHeadType, restState));
         }
