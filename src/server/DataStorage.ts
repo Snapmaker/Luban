@@ -1,17 +1,16 @@
 import * as fs from 'fs-extra';
 import isElectron from 'is-electron';
-import { gt, includes, isNil, isUndefined } from 'lodash';
+import { gt, isNil, isUndefined } from 'lodash';
 import path, { join } from 'path';
 import { v4 as uuid } from 'uuid';
 
 import pkg from '../../package.json';
-import { copyDir } from './lib/util-fs/node';
 import { DEFAULT_FONT_NAME, initFonts } from '../shared/lib/FontManager';
 import settings from './config/settings';
-import { CNC_CONFIG_SUBCATEGORY, LASER_CONFIG_SUBCATEGORY, MATERIAL_TYPE_ARRAY, PRINTING_CONFIG_SUBCATEGORY } from './constants';
+import { CNC_CONFIG_SUBCATEGORY, LASER_CONFIG_SUBCATEGORY, PRINTING_CONFIG_SUBCATEGORY } from './constants';
 import downloadManager from './lib/downloadManager';
 import logger from './lib/logger';
-import { cncUniformProfile } from './lib/profile/cnc-uniform-profile';
+import { copyDir } from './lib/util-fs/node';
 import config from './services/configstore';
 
 const log = logger('server:DataStorage');
@@ -58,6 +57,7 @@ const emptyDir = async (dirPath: string) => {
 /**
  * Remove a directory.
  */
+/*
 const removeDir = async (dirPath: string) => {
     log.info(`Removing folder ${dirPath}`);
 
@@ -67,6 +67,7 @@ const removeDir = async (dirPath: string) => {
         log.error(e);
     }
 };
+*/
 
 class DataStorage {
     public userDataDir = null;
@@ -428,164 +429,20 @@ class DataStorage {
         log.info(`rm file:[${settings.rcfile}]`);
     }
 
-    // v4.0.0 to v4.1.0 : upgrade to make all configs move to new config directory
-    private upgradeConfigFile(srcDir) {
-        const printingConfigNames = [];
-        const cncConfigPaths = [];
-        const officialMachine = ['A150', 'A250', 'A350', 'Original'];
-        if (fs.existsSync(srcDir)) {
-            const files = fs.readdirSync(srcDir);
-            const materialRegex = /^material\.([0-9]{8})\.def\.json$/;
-            const qualityRegex = /^quality\.([0-9]{8})\.def\.json$/;
-            for (const file of files) {
-                const src = path.join(srcDir, file);
-                if (fs.statSync(src).isFile()) {
-                    if (materialRegex.test(file) || qualityRegex.test(file) || includes([
-                        'material.abs.def.json',
-                        'material.pla.def.json',
-                        'material.petg.def.json'], file)) {
-                        const data = fs.readFileSync(src, 'utf8');
-                        const json = JSON.parse(data);
-                        if (file === 'material.abs.def.json') {
-                            json.isRecommended = true;
-                            json.category = 'ABS';
-                            json.i18nName = 'key-default_name-ABS_White';
-                            json.overrides.material_type = {
-                                default_value: 'abs'
-                            };
-                        } else if (file === 'material.pla.def.json') {
-                            json.isRecommended = true;
-                            json.i18nName = 'key-default_name-PLA_White';
-                            json.category = 'PLA';
-                            json.overrides.material_type = {
-                                default_value: 'pla'
-                            };
-                        } else if (file === 'material.petg.def.json') {
-                            json.isRecommended = true;
-                            json.i18nName = 'key-default_name-PETG_White';
-                            json.category = 'PETG';
-                            json.overrides.material_type = {
-                                default_value: 'petg'
-                            };
-                        }
-                        fs.writeFileSync(src, JSON.stringify(json));
-                        printingConfigNames.push(file);
-                    }
-                } else {
-                    if (file === 'CncConfig') {
-                        let cncConfigFiles = fs.readdirSync(src);
-                        for (const cncFile of cncConfigFiles) {
-                            cncUniformProfile(cncFile, src);
-                        }
-                        cncConfigFiles = fs.readdirSync(src);
-                        for (const cncFile of cncConfigFiles) {
-                            if (!includes([
-                                'DefaultCVbit.def.json',
-                                'DefaultMBEM.def.json',
-                                'DefaultFEM.def.json',
-                                'DefaultSGVbit.def.json',
-                                'active.def.json',
-                                'Default.def.json',
-                                'active.defv2.json'], cncFile)) {
-                                const cncConfigPath = path.join(src, cncFile);
-                                cncConfigPaths.push(cncConfigPath);
-                            }
-                        }
-                    } else if (file !== 'cnc' && file !== 'laser' && file !== 'printing') {
-                        rmDir(src);
-                    }
-                }
-            }
-        }
-        if (printingConfigNames.length) {
-            const printingDir = `${srcDir}/${PRINTING_CONFIG_SUBCATEGORY}`;
-            const seriesFiles = fs.readdirSync(printingDir);
-            for (const oldFileName of printingConfigNames) {
-                const oldFilePath = `${srcDir}/${oldFileName}`;
-                for (const file of seriesFiles) {
-                    let currentFile = file;
-                    if (includes(officialMachine, file)) {
-                        currentFile = `${file.toLocaleLowerCase()}_single`;
-                    }
-                    const src = path.join(printingDir, currentFile);
-                    if (!fs.statSync(src).isFile()) {
-                        const newFilePath = `${src}/${oldFileName}`;
-                        fs.copyFileSync(oldFilePath, newFilePath);
-                    }
-                }
-                fs.unlinkSync(oldFilePath);
-            }
-        }
-        if (cncConfigPaths.length) {
-            const cncDir = `${srcDir}/${CNC_CONFIG_SUBCATEGORY}`;
-            const seriesFiles = fs.readdirSync(cncDir);
-            for (const oldFilePath of cncConfigPaths) {
-                for (const file of seriesFiles) {
-                    let currentFile = file;
-                    if (includes(officialMachine, file)) {
-                        currentFile = `${file.toLocaleLowerCase()}_standard`;
-                    }
-                    const src = path.join(cncDir, currentFile);
-                    if (!fs.statSync(src).isFile()) {
-                        // fix profile name changing in v4.1.0
-                        let newFileName = path.basename(oldFilePath);
-                        if (newFileName === 'DefaultFEM.defv2.json') {
-                            newFileName = 'tool.default_FEM1.5.def.json';
-                        } else if (/^Default/.test(newFileName)) {
-                            newFileName = `tool.default_${newFileName.slice(7)}`;
-                        } else if (newFileName === 'REpoxySGVbit.defv2.json') {
-                            newFileName = 'tool.rEpoxy_SGVbit.def2.json';
-                        } else if (newFileName === 'RAcrylicFEM.defv2.json') {
-                            newFileName = 'tool.rAcrylic_FEM.def2.json';
-                        } else {
-                            newFileName = `tool.${newFileName}`;
-                        }
-                        if (/([A-Za-z0-9_]+)\.defv2\.json$/.test(newFileName)) {
-                            newFileName = newFileName.replace(/\.defv2\.json$/, '.def.json');
-                        }
-                        const newFilePath = `${src}/${newFileName}`;
-                        fs.copyFileSync(oldFilePath, newFilePath);
-                    }
-                }
-            }
-        }
-        if (fs.existsSync(srcDir)) {
-            const files = fs.readdirSync(srcDir);
-            for (const file of files) {
-                const src = path.join(srcDir, file);
-                if (file === 'printing') {
-                    const printingSeries = fs.readdirSync(src);
-                    for (const series of printingSeries) {
-                        const actualSeriesPath = path.join(src, series);
-                        if (fs.statSync(actualSeriesPath).isDirectory()) {
-                            const profilePaths = fs.readdirSync(actualSeriesPath);
-                            for (const profilePath of profilePaths) {
-                                const materialRegex = /^material.*\.def\.json$/;
-                                if (materialRegex.test(profilePath)) {
-                                    const distProfilePath = path.join(actualSeriesPath, profilePath);
-                                    const data = fs.readFileSync(distProfilePath, 'utf8');
-                                    const json = JSON.parse(data);
-                                    let category = json.category;
-                                    if (!(MATERIAL_TYPE_ARRAY.includes(category))) {
-                                        category = MATERIAL_TYPE_ARRAY[MATERIAL_TYPE_ARRAY.length - 1];
-                                    }
-                                    if (json.overrides && !(json.overrides.material_type)) {
-                                        json.category = category;
-                                        json.overrides.material_type = {
-                                            default_value: category.toLowerCase()
-                                        };
-                                        fs.writeFileSync(distProfilePath, JSON.stringify(json));
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        if (fs.existsSync(`${srcDir}/CncConfig`)) {
-            removeDir(`${srcDir}/CncConfig`);
-        }
+    private upgradeConfigFile(srcDir: string): void {
+        log.info(`upgrade config files in folder ${srcDir}`);
+
+        // v4.0.0 to v4.1.0, 2021.05.11
+        // Upgrade to make all configs move to new config directory
+
+        // v4.6.2, 2023.02.21
+        // Remove migrations of old files, cause old files may not usable in new software version
+
+        // TODO: Remove old config files in v4.0.0 and v3.x.y
+        // 6 folders: A150, A250, A350, Original, CncConfig, Custom
+        // 9 def.json files
+
+        // TODO: format all config files
     }
 }
 
