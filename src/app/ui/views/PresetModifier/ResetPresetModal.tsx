@@ -33,9 +33,8 @@ const ResetPresetModal: React.FC<ResetPresetModalProps> = (props) => {
                     priority="level-two"
                     className="margin-left-8"
                     width="96px"
-                    onClick={() => {
-                        // await presetActions.onDeletePresetModel(presetModel); // assume it success
-                        console.log(presetActions);
+                    onClick={async () => {
+                        await presetActions.onResetPresetModel(presetModel); // assume it success
 
                         onClose();
                     }}

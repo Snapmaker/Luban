@@ -1,6 +1,6 @@
 import { includes } from 'lodash';
 import PropTypes from 'prop-types';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
@@ -9,6 +9,7 @@ import { actions as printingActions } from '../../../flux/printing';
 import i18n from '../../../lib/i18n';
 
 import Modal from '../../components/Modal';
+import definitionManager from '../../../flux/manager/DefinitionManager';
 import PresetContent from './PresetContent';
 import StackPresetSelector from './StackPresetSelector';
 
@@ -40,6 +41,10 @@ function PresetModifierModal(
 
     // selected preset for selected stack
     const [selectedPresetId, setSelectedPresetId] = useState('');
+
+    const selectedPresetModel = useMemo(() => {
+        return qualityPresetModels.find(p => p.definitionId === selectedPresetId);
+    }, [qualityPresetModels, selectedPresetId]);
 
     const [selectedPresetDefaultValues, setSelectedPresetDefaultValues] = useState({});
 
@@ -93,6 +98,28 @@ function PresetModifierModal(
         setSelectedPresetDefaultValues(defaultValues);
     }, [activePresetIds, selectedStackId, selectedPresetId, defaultDefinitions]);
 
+    // Calculate reset state of the preset
+    // TODO: Compare operation on every render is expensive, calculate this on preset parameter change
+    const isValuesAllDefaultValues = (() => {
+        if (selectedPresetModel && selectedPresetModel.isDefault && Object.keys(selectedPresetDefaultValues).length > 0) {
+            let same = true;
+
+            for (const key of definitionManager.qualityProfileArr) {
+                if (!selectedPresetDefaultValues[key]) {
+                    console.warn(`preset ${selectedPresetId}, missing default value for key ${key}.`);
+                    continue;
+                }
+                if (selectedPresetDefaultValues[key].default_value !== selectedPresetModel.settings[key].default_value) {
+                    same = false;
+                    break;
+                }
+            }
+
+            return same;
+        }
+        return true;
+    })();
+
     return (
         <Modal
             size="lg-profile-manager"
@@ -109,6 +136,7 @@ function PresetModifierModal(
                     <StackPresetSelector
                         selectedStackId={selectedStackId}
                         selectedPresetId={selectedPresetId}
+                        isValuesAllDefaultValues={isValuesAllDefaultValues}
                         onSelectStack={selectStack}
                         onSelectPreset={selectPreset}
                     />

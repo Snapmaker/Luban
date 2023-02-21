@@ -34,7 +34,7 @@ import usePresetActions from './usePresetActions';
  */
 // MenuProps
 // https://4x.ant.design/components/menu/#ItemType
-const getPresetItemDropdownMenuProps = ({ presetModel, onCopyPreset, onResetPreset, onExportPreset, onDeletePreset }): MenuProps => {
+const getPresetItemDropdownMenuProps = ({ presetModel, onCopyPreset, onResetPreset, onExportPreset, onDeletePreset, options }): MenuProps => {
     const items = [];
 
     items.push({
@@ -42,10 +42,13 @@ const getPresetItemDropdownMenuProps = ({ presetModel, onCopyPreset, onResetPres
         label: (<div className="width-120 text-overflow-ellipsis">{i18n._('key-App/Menu-Copy')}</div>),
     });
 
-    items.push({
-        key: 'menu:reset',
-        label: (<div className="width-120 text-overflow-ellipsis">{i18n._('key-Printing/ProfileManager-Reset')}</div>),
-    });
+    if (presetModel.isRecommended) {
+        items.push({
+            key: 'menu:reset',
+            label: (<div className="width-120 text-overflow-ellipsis">{i18n._('key-Printing/ProfileManager-Reset')}</div>),
+            disabled: !options.canReset,
+        });
+    }
 
     items.push({
         key: 'menu:delete',
@@ -149,11 +152,14 @@ const getAddPresetMenuProps = ({ onCreatePreset, onImportPreset }): MenuProps =>
 interface StackPresetSelectorProps {
     selectedStackId: string;
     selectedPresetId: string;
+    isValuesAllDefaultValues: boolean;
     onSelectStack: (stackId: string) => void;
     onSelectPreset: (presetId: string) => void;
 }
 
-const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStackId, selectedPresetId, onSelectStack, onSelectPreset }) => {
+const StackPresetSelector: React.FC<StackPresetSelectorProps> = (props) => {
+    const { selectedStackId, selectedPresetId, isValuesAllDefaultValues, onSelectStack, onSelectPreset } = props;
+
     const dispatch = useDispatch();
 
     const { series, toolHead, toolHead: { printingToolhead } } = useSelector((state: RootState) => state.machine);
@@ -366,6 +372,9 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = ({ selectedStack
                                                                             onResetPreset: () => setShowResetPresetModal(true),
                                                                             onExportPreset: () => actions.exportConfigFile(presetModel.definitionId),
                                                                             onDeletePreset: () => setShowDeletePresetModal(true),
+                                                                            options: {
+                                                                                canReset: !isValuesAllDefaultValues,
+                                                                            }
                                                                         })}
                                                                     >
                                                                         <SvgIcon

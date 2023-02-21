@@ -15,6 +15,8 @@ export declare type PresetActionsType = {
 
     onCreateManagerDefinition: (definition: Definition) => Promise<PresetDefinitionModel>;
 
+    onResetPresetModel: (preset: Definition) => Promise<void>;
+
     onDeletePresetModel: (preset: Definition) => Promise<void>;
 
     createPreset: (file) => Promise<Definition>;
@@ -36,6 +38,13 @@ const usePresetActions = (): PresetActionsType => {
         return dispatch(printingActions.duplicateDefinitionByType(PRINTING_MANAGER_TYPE_QUALITY, definition));
     };
 
+    const onResetPresetModel = (presetModel) => {
+        return dispatch(printingActions.resetDefinitionById(
+            PRINTING_MANAGER_TYPE_QUALITY,
+            presetModel.definitionId,
+        ));
+    };
+
     const onDeletePresetModel = (presetModel) => {
         return dispatch(printingActions.removeDefinitionByType(
             PRINTING_MANAGER_TYPE_QUALITY,
@@ -53,6 +62,9 @@ const usePresetActions = (): PresetActionsType => {
 
         // @ts-ignore
         onCreateManagerDefinition,
+
+        // @ts-ignore
+        onResetPresetModel,
 
         // @ts-ignore
         onDeletePresetModel,
