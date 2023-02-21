@@ -163,6 +163,7 @@ class SocketHttp {
                 if (err) {
                     log.debug(`err="${err}"`);
                 } else {
+                    clearInterval(intervalHandle);
                     intervalHandle = setInterval(this.getEnclosureStatus, 1000);
                 }
                 const result = _getResult(err, res);
@@ -383,6 +384,7 @@ class SocketHttp {
         }], (result: any) => {
             if (result.status === 'offline') {
                 log.info(`[wifi connection offline]: msg=${result.msg}`);
+                clearInterval(intervalHandle);
                 this.socket && this.socket.emit('connection:close');
                 return;
             }
