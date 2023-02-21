@@ -1,6 +1,6 @@
 import { includes } from 'lodash';
 import PropTypes from 'prop-types';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
@@ -9,6 +9,7 @@ import { actions as printingActions } from '../../../flux/printing';
 import i18n from '../../../lib/i18n';
 
 import Modal from '../../components/Modal';
+import definitionManager from '../../../flux/manager/DefinitionManager';
 import PresetContent from './PresetContent';
 import StackPresetSelector from './StackPresetSelector';
 
@@ -41,6 +42,10 @@ function PresetModifierModal(
     // selected preset for selected stack
     const [selectedPresetId, setSelectedPresetId] = useState('');
 
+    const selectedPresetModel = useMemo(() => {
+        return qualityPresetModels.find(p => p.definitionId === selectedPresetId);
+    }, [qualityPresetModels, selectedPresetId]);
+
     const [selectedPresetDefaultValues, setSelectedPresetDefaultValues] = useState({});
 
     /**
@@ -48,18 +53,18 @@ function PresetModifierModal(
      *
      * @param stackId
      */
-    function selectStack(stackId) {
+    const selectStack = useCallback((stackId) => {
         if (includes([LEFT_EXTRUDER, RIGHT_EXTRUDER], stackId)) {
             setSelectedStackId(stackId);
         }
-    }
+    }, []);
 
     /**
      * Select preset by preset id.
      *
      * @param presetId
      */
-    function selectPreset(presetId) {
+    const selectPreset = useCallback((presetId) => {
         const presetModel = qualityPresetModels.find(p => p.definitionId === presetId);
         if (presetModel) {
             setSelectedPresetId(presetId);
@@ -68,19 +73,7 @@ function PresetModifierModal(
             // TODO: Popup a notification indicating unacceptable preset id
             dispatch(printingActions.updateActiveQualityPresetId(selectedStackId, presetId));
         }
-    }
-
-    /**
-     * Get default values of a preset.
-     *
-     * @param presetId
-     * @return {{}}
-     */
-    function getPresetDefaultValues(presetId) {
-        const defaultPreset = defaultDefinitions.find(p => p.definitionId === presetId);
-
-        return defaultPreset?.settings || {};
-    }
+    }, [dispatch, selectedStackId, qualityPresetModels]);
 
     useEffect(() => {
         const presetId = activePresetIds[selectedStackId];
@@ -89,9 +82,43 @@ function PresetModifierModal(
             setSelectedPresetId(presetId);
         }
 
+        /**
+         * Get default values of a preset.
+         *
+         * @param presetId
+         * @return {{}}
+         */
+        const getPresetDefaultValues = (presetId_) => {
+            const defaultPreset = defaultDefinitions.find(p => p.definitionId === presetId_);
+
+            return defaultPreset?.settings || {};
+        };
+
         const defaultValues = getPresetDefaultValues(presetId);
         setSelectedPresetDefaultValues(defaultValues);
-    }, [activePresetIds, selectedStackId]);
+    }, [activePresetIds, selectedStackId, selectedPresetId, defaultDefinitions]);
+
+    // Calculate reset state of the preset
+    // TODO: Compare operation on every render is expensive, calculate this on preset parameter change
+    const isValuesAllDefaultValues = (() => {
+        if (selectedPresetModel && selectedPresetModel.isDefault && Object.keys(selectedPresetDefaultValues).length > 0) {
+            let same = true;
+
+            for (const key of definitionManager.qualityProfileArr) {
+                if (!selectedPresetDefaultValues[key]) {
+                    console.warn(`preset ${selectedPresetId}, missing default value for key ${key}.`);
+                    continue;
+                }
+                if (selectedPresetDefaultValues[key].default_value !== selectedPresetModel.settings[key].default_value) {
+                    same = false;
+                    break;
+                }
+            }
+
+            return same;
+        }
+        return true;
+    })();
 
     return (
         <Modal
@@ -109,6 +136,7 @@ function PresetModifierModal(
                     <StackPresetSelector
                         selectedStackId={selectedStackId}
                         selectedPresetId={selectedPresetId}
+                        isValuesAllDefaultValues={isValuesAllDefaultValues}
                         onSelectStack={selectStack}
                         onSelectPreset={selectPreset}
                     />

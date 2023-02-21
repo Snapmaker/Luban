@@ -175,9 +175,11 @@ function calculateParameterTopologicalGraph() {
 
 const allContext = {};
 
-function getContext(definition) {
-    if (allContext[definition.definitionId]) {
-        return allContext[definition.definitionId];
+function getContext(definition, contextKey = '') {
+    contextKey = contextKey || definition.definitionId;
+
+    if (allContext[contextKey]) {
+        return allContext[contextKey];
     }
 
     // Create a new context
@@ -245,7 +247,7 @@ function getContext(definition) {
         console.log(`  [visible] ${keysHasDependencies2.length} parameters have deps, ${depCount2} in total.`);
     }
 
-    allContext[definition.definitionId] = newContext;
+    allContext[contextKey] = newContext;
     return newContext;
 }
 
@@ -281,14 +283,17 @@ function getAffectedParameters(dependencyGraph: DependencyGraph, modifiedParamet
 }
 
 
+interface ParameterResolverOptions {
+    contextKey?: string;
+}
+
 /**
  *
  * @param definition
  * @param modifiedParameterItems
- * @param skipValues - Not overwrite value to calculated value
  */
-export function resolveParameterValues(definition, modifiedParameterItems: ModifyParameterItem[], skipValues = false) {
-    const context = getContext(definition);
+export function resolveParameterValues(definition, modifiedParameterItems: ModifyParameterItem[], options: ParameterResolverOptions = {}) {
+    const context = getContext(definition, options?.contextKey);
 
     // update context before calculating
     for (const key of parameterMap.keys()) {
@@ -372,9 +377,9 @@ export function resolveParameterValues(definition, modifiedParameterItems: Modif
 
             // Update context and settings
             context.context[key] = defaultValue;
-            if (!skipValues) {
-                definition.settings[key].default_value = defaultValue;
-            }
+            // if (!skipValues) {
+            //    definition.settings[key].default_value = defaultValue;
+            // }
 
             // re calculate mismatch
             if (parameterItem.type === 'float' || parameterItem.type === 'int') {

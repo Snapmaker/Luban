@@ -32,14 +32,16 @@ const extruderRelationSettingsKeys = [
     'machine_nozzle_size',
 ];
 
-function resolveMachineDefinition(item, changedArray = [], changedArrayWithoutExtruder = []) {
+function resolveMachineDefinition(item, changedArray = [], changedArrayWithoutExtruder = [], options = {}) {
+    options.contextKey = options.contextKey || '';
+
     if (MATERIAL_REGEX.test(item.definitionId)) {
-        resolveParameterValues(item, changedArray);
+        resolveParameterValues(item, changedArray, options);
     } else if (QUALITY_REGEX.test(item.definitionId)) {
         if (item.isDefault && item.definitionId !== 'quality.normal_other_quality') {
-            resolveParameterValues(item, changedArrayWithoutExtruder);
+            resolveParameterValues(item, changedArrayWithoutExtruder, options);
         } else {
-            resolveParameterValues(item, changedArray);
+            resolveParameterValues(item, changedArray, options);
         }
     }
 }
@@ -111,7 +113,10 @@ class DefinitionManager {
             if (item.i18nCategory) {
                 item.i18nCategory = i18n._(item.i18nCategory);
             }
-            resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder);
+            // Use a special context key, avoid to conflict with the config we are using
+            resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder, {
+                contextKey: `DefaultConfig-${item.definitionId}`,
+            });
             return item;
         });
 

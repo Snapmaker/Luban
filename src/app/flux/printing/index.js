@@ -580,9 +580,19 @@ export const actions = {
 
         // Update machine size after active definition is loaded
         const allQualityDefinitions = await definitionManager.getDefinitionsByPrefixName('quality');
+
         const allMaterialDefinitions = await definitionManager.getDefinitionsByPrefixName('material');
 
         const activeMaterialType = dispatch(actions.getActiveMaterialType()); // TODO: Consider another extruder
+
+        const defaultDefinitions = definitionManager?.defaultDefinitions.map((eachDefinition) => {
+            const paramModel = new PresetDefinitionModel(
+                eachDefinition,
+                activeMaterialType,
+                definitionManager.extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
+            );
+            return paramModel;
+        });
 
         const materialParamModels = allMaterialDefinitions.map((eachDefinition) => {
             const paramModel = new PresetDefinitionModel(
@@ -603,14 +613,6 @@ export const actions = {
             qualityPresetModels.push(paramModel);
         }
 
-        const defaultDefinitions = definitionManager?.defaultDefinitions.map((eachDefinition) => {
-            const paramModel = new PresetDefinitionModel(
-                eachDefinition,
-                activeMaterialType,
-                definitionManager.extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
-            );
-            return paramModel;
-        });
         dispatch(
             actions.updateState({
                 defaultDefinitions: defaultDefinitions,
@@ -1056,23 +1058,23 @@ export const actions = {
 
         const settings = {
             layer_height:
-            activeActiveQualityDefinition.settings?.layer_height
-                ?.default_value,
+                activeActiveQualityDefinition.settings?.layer_height
+                    ?.default_value,
             infill_pattern:
-            activeActiveQualityDefinition.settings?.infill_pattern
-                ?.default_value,
+                activeActiveQualityDefinition.settings?.infill_pattern
+                    ?.default_value,
             auto_support:
-            activeActiveQualityDefinition.settings?.support_enable
-                ?.default_value,
+                activeActiveQualityDefinition.settings?.support_enable
+                    ?.default_value,
             initial_layer_height:
-            activeActiveQualityDefinition.settings?.layer_height_0
-                ?.default_value,
+                activeActiveQualityDefinition.settings?.layer_height_0
+                    ?.default_value,
             build_plate_adhesion_type:
-            activeActiveQualityDefinition.settings?.adhesion_type
-                ?.default_value,
+                activeActiveQualityDefinition.settings?.adhesion_type
+                    ?.default_value,
             initial_layer_line_width_factor:
-            activeActiveQualityDefinition.settings
-                ?.initial_layer_line_width_factor?.default_value
+                activeActiveQualityDefinition.settings
+                    ?.initial_layer_line_width_factor?.default_value
         };
 
         if (!isDualExtruder(toolHead.printingToolhead)) {
@@ -1287,26 +1289,49 @@ export const actions = {
         const defaultDefinitions = state.defaultDefinitions;
         const definitions = state[definitionsKey];
 
-        const newDefModel = cloneDeep(
-            defaultDefinitions.find((d) => d.definitionId === definitionId)
-        );
-        definitionManager.updateDefinition(newDefModel);
-        const index = definitions.findIndex(
-            (d) => d.definitionId === definitionId
-        );
-        definitions[index] = newDefModel;
+        if (type === PRINTING_MANAGER_TYPE_QUALITY) {
+            const presetModel = definitions.find(p => p.definitionId === definitionId);
+            const defaultPresetModel = defaultDefinitions.find((d) => d.definitionId === definitionId);
+            if (!presetModel || !defaultPresetModel) {
+                return null;
+            }
 
-        dispatch(
-            actions.updateState({
-                [definitionsKey]: [...definitions]
-            })
-        );
-        dispatch(actions.updateBoundingBox());
-        if (shouldDestroyGcodeLine) {
-            dispatch(actions.destroyGcodeLine());
-            dispatch(actions.displayModel());
+            const keys = Object.keys(defaultPresetModel.settings);
+            for (const key of keys) {
+                presetModel.settings[key].default_value = defaultPresetModel.settings[key].default_value;
+            }
+
+            dispatch(actions.updateBoundingBox());
+            if (shouldDestroyGcodeLine) {
+                dispatch(actions.destroyGcodeLine());
+                dispatch(actions.displayModel());
+            }
+
+            return null;
+        } else {
+            const newDefModel = cloneDeep(
+                defaultDefinitions.find((d) => d.definitionId === definitionId)
+            );
+            definitionManager.updateDefinition(newDefModel);
+            const index = definitions.findIndex(
+                (d) => d.definitionId === definitionId
+            );
+            definitions[index] = newDefModel;
+
+            dispatch(
+                actions.updateState({
+                    [definitionsKey]: [...definitions]
+                })
+            );
+
+            dispatch(actions.updateBoundingBox());
+            if (shouldDestroyGcodeLine) {
+                dispatch(actions.destroyGcodeLine());
+                dispatch(actions.displayModel());
+            }
+
+            return newDefModel;
         }
-        return newDefModel;
     },
 
     updateShowPrintingManager: (
@@ -4834,8 +4859,8 @@ export const actions = {
                         config: {
                             support_angle: angle,
                             layer_height_0:
-                            activeQualityDefinition.settings.layer_height_0
-                                .default_value,
+                                activeQualityDefinition.settings.layer_height_0
+                                    .default_value,
                             support_mark_area: false // tell engine to use marks in binary STL file
                         }
                     });
