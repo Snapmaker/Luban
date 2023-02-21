@@ -124,12 +124,10 @@ class ConnectionManager {
     };
 
     connectionCloseImproper = () => {
-        console.log('connectionCloseImproper', this.socket);
-
         if (this.protocol === SACP_PROTOCOL) {
             this.socket && this.socket.connectionCloseImproper();
         } else {
-            console.log('connectionCloseImproper', this.socket);
+            console.log('connectionCloseImproper');
             // force close
             // this.socket && this.socket.emit('connection:closeImproper');
         }

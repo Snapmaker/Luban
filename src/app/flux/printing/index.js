@@ -1427,7 +1427,7 @@ export const actions = {
         {
             definitionModel,
             managerDisplayType: type,
-            changedSettingArray,
+            changedSettingArray = [],
             direction = LEFT_EXTRUDER,
         }
     ) => (dispatch, getState) => {

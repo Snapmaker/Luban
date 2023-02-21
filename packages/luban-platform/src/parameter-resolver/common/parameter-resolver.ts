@@ -331,7 +331,8 @@ export function resolveParameterValues(definition, modifiedParameterItems: Modif
                 definition.settings[key].mismatch = !isUndefined(calcValue) && calcValue !== defaultValue;
             }
         } catch (e) {
-            console.error(e, parameterItem.visible);
+            console.warn(`Unable to resolve calculated values for key ${key} (${definition.definitionId})`);
+            console.error(e);
         }
     }
 
