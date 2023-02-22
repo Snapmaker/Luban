@@ -108,7 +108,7 @@ const convertTextToSvg = async (options) => {
     const widths = [];
     let maxWidth = 0;
     for (const line of lines) {
-        const p = fontObj.getPath(line, 0, 0, estimatedFontSize);
+        const { path: p } = fontManager.getPathOrDefault(fontObj, line, 0, 0, estimatedFontSize);
         const bbox = p.getBoundingBox();
         widths.push(bbox.x2 - bbox.x1);
         maxWidth = Math.max(maxWidth, bbox.x2 - bbox.x1);
@@ -128,7 +128,8 @@ const convertTextToSvg = async (options) => {
         } else {
             x = maxWidth - width;
         }
-        const p = fontObj.getPath(line, x, y, estimatedFontSize);
+        const { path: p } = fontManager.getPathOrDefault(fontObj, line, x, y, estimatedFontSize);
+
         y += estimatedFontSize * lineHeight;
         fullPath.extend(p);
     }
@@ -179,7 +180,7 @@ const convertOneLineTextToSvg = async (options) => {
     const uploadName = pathWithRandomSuffix(name);
     const fontObj = await fontManager.getFont(font);
     const fullPath = new opentype.Path();
-    const p = fontObj.getPath(text, x, y, Math.floor(size));
+    const { path: p } = fontManager.getPathOrDefault(fontObj, text, x, y, Math.floor(size));
     fullPath.extend(p);
     fullPath.stroke = 'black';
     const svgString = _.template(TEMPLATE)({
