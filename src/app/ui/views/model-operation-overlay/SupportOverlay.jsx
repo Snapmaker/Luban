@@ -2,16 +2,16 @@ import React, { useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import i18n from '../../../../lib/i18n';
-import { Button } from '../../../components/Buttons';
-import { NumberInput as Input } from '../../../components/Input';
-import { actions as printingActions } from '../../../../flux/printing';
+import i18n from '../../../lib/i18n';
+import { Button } from '../../components/Buttons';
+import { NumberInput as Input } from '../../components/Input';
+import { actions as printingActions } from '../../../flux/printing';
 import styles from './styles.styl';
-import { renderModal } from '../../../utils';
+import { renderModal } from '../../utils';
 /* eslint-disable-next-line import/no-cycle */
-import { CancelButton } from '../VisualizerLeftBar';
-import { HEAD_PRINTING } from '../../../../constants';
-import { logTransformOperation } from '../../../../lib/gaEvent';
+import { CancelButton } from '../../widgets/PrintingVisualizer/VisualizerLeftBar';
+import { HEAD_PRINTING } from '../../../constants';
+import { logTransformOperation } from '../../../lib/gaEvent';
 
 const SupportOverlay = ({ editSupport, setTransformMode }) => {
     const modelGroup = useSelector(state => state?.printing?.modelGroup, shallowEqual);

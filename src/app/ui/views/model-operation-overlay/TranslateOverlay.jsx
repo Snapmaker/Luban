@@ -3,19 +3,19 @@ import classNames from 'classnames';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import { throttle } from 'lodash';
 import PropTypes from 'prop-types';
-import i18n from '../../../../lib/i18n';
-import { Button } from '../../../components/Buttons';
-import { NumberInput as Input } from '../../../components/Input';
-import TipTrigger from '../../../components/TipTrigger';
-import Select from '../../../components/Select';
-import { actions as printingActions } from '../../../../flux/printing';
-import { actions as machineActions } from '../../../../flux/machine';
+import i18n from '../../../lib/i18n';
+import { Button } from '../../components/Buttons';
+import { NumberInput as Input } from '../../components/Input';
+import TipTrigger from '../../components/TipTrigger';
+import Select from '../../components/Select';
+import { actions as printingActions } from '../../../flux/printing';
+import { actions as machineActions } from '../../../flux/machine';
 /* eslint-disable-next-line import/no-cycle */
-import { CancelButton } from '../VisualizerLeftBar';
-import { emitUpdateControlInputEvent } from '../../../components/SMCanvas/TransformControls';
-import { HEAD_PRINTING, TRANSLATE_MODE } from '../../../../constants';
+import { CancelButton } from '../../widgets/PrintingVisualizer/VisualizerLeftBar';
+import { emitUpdateControlInputEvent } from '../../components/SMCanvas/TransformControls';
+import { HEAD_PRINTING, TRANSLATE_MODE } from '../../../constants';
 import styles from './styles.styl';
-import { logTransformOperation } from '../../../../lib/gaEvent';
+import { logTransformOperation } from '../../../lib/gaEvent';
 
 const angleOptions = [
     {

@@ -3,12 +3,12 @@ import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import { shallowEqual, useSelector } from 'react-redux';
 import { Slider } from 'antd';
-import { Button } from '../../../components/Buttons';
-import { NumberInput as Input } from '../../../components/Input';
-import Anchor from '../../../components/Anchor';
-import i18n from '../../../../lib/i18n';
+import { Button } from '../../components/Buttons';
+import { NumberInput as Input } from '../../components/Input';
+import Anchor from '../../components/Anchor';
+import i18n from '../../../lib/i18n';
 import styles from './styles.styl';
-import TipTrigger from '../../../components/TipTrigger';
+import TipTrigger from '../../components/TipTrigger';
 
 // import SliderWrapper from '../../../components/Slider';
 

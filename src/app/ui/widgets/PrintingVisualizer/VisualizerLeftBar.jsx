@@ -12,20 +12,20 @@ import PrimeTowerModel from '../../../models/PrimeTowerModel';
 import ThreeGroup from '../../../models/ThreeGroup';
 import SvgIcon from '../../components/SvgIcon';
 import { PageMode } from '../../pages/PageMode';
-import ChangePrintModeOverlay from './Overlay/ChangePrintModeOverlay';
-import EditSupportOverlay from './Overlay/EditSupportOverlay';
+import ChangePrintModeOverlay from '../../views/model-operation-overlay/ChangePrintModeOverlay';
+import EditSupportOverlay from '../../views/model-operation-overlay/EditSupportOverlay';
 /* eslint-disable-next-line import/no-cycle */
-import MirrorOverlay from './Overlay/MirrorOverlay';
+import MirrorOverlay from '../../views/model-operation-overlay/MirrorOverlay';
 /* eslint-disable-next-line import/no-cycle */
-import RotateOverlay from './Overlay/RotateOverlay';
-import RotationAnalysisOverlay from './Overlay/RotationAnalysisOverlay';
+import RotateOverlay from '../../views/model-operation-overlay/RotateOverlay';
+import RotationAnalysisOverlay from '../../views/model-operation-overlay/RotationAnalysisOverlay';
 /* eslint-disable-next-line import/no-cycle */
-import ScaleOverlay from './Overlay/ScaleOverlay';
-import SimplifyModelOverlay from './Overlay/SimplifyOverlay';
+import ScaleOverlay from '../../views/model-operation-overlay/ScaleOverlay';
+import SimplifyModelOverlay from '../../views/model-operation-overlay/SimplifyOverlay';
 /* eslint-disable-next-line import/no-cycle */
-import SupportOverlay from './Overlay/SupportOverlay';
+import SupportOverlay from '../../views/model-operation-overlay/SupportOverlay';
 /* eslint-disable-next-line import/no-cycle */
-import TranslateOverlay from './Overlay/TranslateOverlay';
+import TranslateOverlay from '../../views/model-operation-overlay/TranslateOverlay';
 import styles from './styles.styl';
 
 export const CancelButton = ({ onClick }) => {

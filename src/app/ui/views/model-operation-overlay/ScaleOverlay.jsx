@@ -5,16 +5,16 @@ import PropTypes from 'prop-types';
 import { throttle, includes } from 'lodash';
 import classNames from 'classnames';
 import styles from './styles.styl';
-import i18n from '../../../../lib/i18n';
-import { actions as printingActions } from '../../../../flux/printing';
+import i18n from '../../../lib/i18n';
+import { actions as printingActions } from '../../../flux/printing';
 /* eslint-disable-next-line import/no-cycle */
-import { CancelButton } from '../VisualizerLeftBar';
-import { NumberInput as Input } from '../../../components/Input';
-import Checkbox from '../../../components/Checkbox';
-import { Button } from '../../../components/Buttons';
-import { emitUpdateControlInputEvent } from '../../../components/SMCanvas/TransformControls';
-import { HEAD_PRINTING, SCALE_MODE } from '../../../../constants';
-import { logTransformOperation } from '../../../../lib/gaEvent';
+import { CancelButton } from '../../widgets/PrintingVisualizer/VisualizerLeftBar';
+import { NumberInput as Input } from '../../components/Input';
+import Checkbox from '../../components/Checkbox';
+import { Button } from '../../components/Buttons';
+import { emitUpdateControlInputEvent } from '../../components/SMCanvas/TransformControls';
+import { HEAD_PRINTING, SCALE_MODE } from '../../../constants';
+import { logTransformOperation } from '../../../lib/gaEvent';
 
 const longLang = ['de', 'it'];
 const ScaleOverlay = React.memo(({

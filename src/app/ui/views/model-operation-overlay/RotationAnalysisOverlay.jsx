@@ -2,14 +2,14 @@ import React, { useEffect, useState, useRef } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import { Button } from '../../../components/Buttons';
-import TipTrigger from '../../../components/TipTrigger';
-import { actions as printingActions } from '../../../../flux/printing';
-import { actions as menuActions } from '../../../../flux/appbar-menu';
-import i18n from '../../../../lib/i18n';
+import { Button } from '../../components/Buttons';
+import TipTrigger from '../../components/TipTrigger';
+import { actions as printingActions } from '../../../flux/printing';
+import { actions as menuActions } from '../../../flux/appbar-menu';
+import i18n from '../../../lib/i18n';
 import styles from './styles.styl';
-import { HEAD_PRINTING } from '../../../../constants';
-import { logTransformOperation } from '../../../../lib/gaEvent';
+import { HEAD_PRINTING } from '../../../constants';
+import { logTransformOperation } from '../../../lib/gaEvent';
 
 function normalizeNum(num) {
     if (typeof num === 'number') {

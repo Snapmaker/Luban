@@ -3,15 +3,15 @@ import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import styles from './styles.styl';
-import i18n from '../../../../lib/i18n';
-import { Button } from '../../../components/Buttons';
-import { NumberInput as Input } from '../../../components/Input';
-import SvgIcon from '../../../components/SvgIcon';
-import Slider from '../../../components/Slider';
-import { actions as printingActions } from '../../../../flux/printing';
-import { actions as menuActions } from '../../../../flux/appbar-menu';
-import { HEAD_PRINTING } from '../../../../constants';
-import { logTransformOperation } from '../../../../lib/gaEvent';
+import i18n from '../../../lib/i18n';
+import { Button } from '../../components/Buttons';
+import { NumberInput as Input } from '../../components/Input';
+import SvgIcon from '../../components/SvgIcon';
+import Slider from '../../components/Slider';
+import { actions as printingActions } from '../../../flux/printing';
+import { actions as menuActions } from '../../../flux/appbar-menu';
+import { HEAD_PRINTING } from '../../../constants';
+import { logTransformOperation } from '../../../lib/gaEvent';
 
 let tmpDiameter;
 const EditSupportOverlay = ({ onClose }) => {
