@@ -111,7 +111,7 @@ export default {
         'pt-br', // Portuguese (Brazil)
         'ru', // Russian
         'uk', // Ukrainian
-        'zh-cn', // Simplified Chinese
+        'zh-CN', // Simplified Chinese
         'zh-tw' // Traditional Chinese
     ],
     siofu: { // SocketIOFileUploader
@@ -148,7 +148,7 @@ export default {
             'pt-br', // Portuguese (Brazil)
             'ru', // Russian
             'uk', // Ukrainian
-            'zh-cn', // Simplified Chinese
+            'zh-CN', // Simplified Chinese
             'zh-tw' // Traditional Chinese
         ],
 

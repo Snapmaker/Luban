@@ -67,7 +67,7 @@ const languageOptions = [
 const SettingGuideModal = (props) => {
     const dispatch = useDispatch();
     // const machine = useSelector(state => state?.machine);
-    const languageArr = ['de', 'en', 'es', 'fr', 'it', 'ru', 'uk', 'ko', 'ja', 'zh-cn'];
+    const languageArr = ['de', 'en', 'es', 'fr', 'it', 'ru', 'uk', 'ko', 'ja', 'zh-CN'];
     const [lang, setLang] = useState(includes(languageArr, i18next.language) ? i18next.language : 'en');
     // const initLang = includes(languageArr, i18next.language) ? i18next.language : 'en';
     const [settingStep, setSettingStep] = useState('lang');

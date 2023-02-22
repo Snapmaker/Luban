@@ -40,7 +40,7 @@ const settings = {
             'ko', // Korean
             'ru', // Russian
             'uk', // Ukrainian
-            'zh-cn' // Simplified Chinese
+            'zh-CN' // Simplified Chinese
         ],
 
         // array of languages to preload
