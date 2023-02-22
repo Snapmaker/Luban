@@ -2838,7 +2838,7 @@ export const actions = {
 
     updateSelectedModelTransformation: (
         transformation,
-        newUniformScalingState,
+        newUniformScalingState = undefined,
         isAllRotate
     ) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
