@@ -1,9 +1,9 @@
+import classNames from 'classnames';
+import { noop } from 'lodash';
+import includes from 'lodash/includes';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import * as Icons from 'snapmaker-react-icon';
-import classNames from 'classnames';
-import includes from 'lodash/includes';
-import { noop } from 'lodash';
 import styles from './styles.styl';
 
 class SvgIcon extends PureComponent {
@@ -142,7 +142,7 @@ class SvgIcon extends PureComponent {
             >
                 {/* , borderRadius: 4, height: hoverSize, width: hoverSize, textAlign: 'center', lineHeight: iconLineHeight */}
                 {/* width: hoverSize, height: hoverSize, textAlign: 'center'  */}
-                { inputInfo !== undefined && (
+                {inputInfo !== undefined && (
                     <input
                         ref={inputInfo.fileInput}
                         type="file"
@@ -181,7 +181,7 @@ class SvgIcon extends PureComponent {
                         </div>
                     )}
                     {children}
-                    { spanText && isHorizontal && (
+                    {spanText && isHorizontal && (
                         <span
                             className={spanClassName}
                             style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px', color: disabled ? '#D5D6D9' : '#545659' }}
@@ -189,7 +189,7 @@ class SvgIcon extends PureComponent {
                             {spanText}
                         </span>
                     )}
-                    { spanText && !isHorizontal && (
+                    {spanText && !isHorizontal && (
                         <div
                             className={spanClassName}
                             style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px', color: disabled ? '#D5D6D9' : '#545659' }}
