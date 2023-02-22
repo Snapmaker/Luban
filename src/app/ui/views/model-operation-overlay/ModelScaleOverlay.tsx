@@ -7,44 +7,54 @@ import classNames from 'classnames';
 import styles from './styles.styl';
 import i18n from '../../../lib/i18n';
 import { actions as printingActions } from '../../../flux/printing';
-/* eslint-disable-next-line import/no-cycle */
-import { CancelButton } from '../../widgets/PrintingVisualizer/VisualizerLeftBar';
 import { NumberInput as Input } from '../../components/Input';
 import Checkbox from '../../components/Checkbox';
 import { Button } from '../../components/Buttons';
 import { emitUpdateControlInputEvent } from '../../components/SMCanvas/TransformControls';
 import { HEAD_PRINTING, SCALE_MODE } from '../../../constants';
 import { logTransformOperation } from '../../../lib/gaEvent';
+import CancelButton from './CancelButton';
+import { RootState } from '../../../flux/index.def';
+
+
+interface ModelScaleOverlayProps {
+    setTransformMode: () => void,
+    onModelAfterTransform: () => void;
+}
 
 const longLang = ['de', 'it'];
-const ScaleOverlay = React.memo(({
-    setTransformMode,
-    onModelAfterTransform
-}) => {
-    const isPrimeTowerSelected = useSelector(state => state?.printing?.modelGroup?.isPrimeTowerSelected());
-    const selectedModelArray = useSelector(state => state?.printing?.modelGroup?.selectedModelArray);
-    const transformation = useSelector(state => state?.printing?.modelGroup?.getSelectedModelTransformationForPrinting(), shallowEqual);
-    const primeTowerHeight = useSelector(state => state?.printing?.primeTowerHeight, shallowEqual);
-    const selectedGroup = useSelector(state => state?.printing?.modelGroup?.selectedGroup, shallowEqual);
-    const isSelectedModelAllVisible = useSelector(state => state?.printing?.modelGroup?.isSelectedModelAllVisible(), shallowEqual);
+
+const ModelScaleOverlay: React.FC<ModelScaleOverlayProps> = React.memo((props) => {
+    const { setTransformMode, onModelAfterTransform } = props;
+
+    const dispatch = useDispatch();
+
+    const isPrimeTowerSelected = useSelector((state: RootState) => state.printing?.modelGroup?.isPrimeTowerSelected());
+    const selectedModelArray = useSelector((state: RootState) => state.printing?.modelGroup?.selectedModelArray);
+    const transformation = useSelector((state: RootState) => state.printing?.modelGroup?.getSelectedModelTransformationForPrinting(), shallowEqual);
+    const primeTowerHeight = useSelector((state: RootState) => state.printing?.primeTowerHeight, shallowEqual);
+    const selectedGroup = useSelector((state: RootState) => state.printing?.modelGroup?.selectedGroup, shallowEqual);
+    const isSelectedModelAllVisible = useSelector((state: RootState) => state.printing?.modelGroup?.isSelectedModelAllVisible(), shallowEqual);
     const [scalePercentObj, setScalePercentObj] = useState({
         x: 100,
         y: 100,
         z: 100
     });
-    const selectedModelBBoxDes = useSelector(state => state?.printing?.modelGroup?.getSelectedModelBBoxWHD(), shallowEqual);
+    const selectedModelBBoxDes = useSelector((state: RootState) => state.printing?.modelGroup?.getSelectedModelBBoxWHD(), shallowEqual);
+
     // hidden model size after scale
     // const [initModelSize, setInitModelSize] = useState({
     //     x: selectedModelBBoxDes.x / selectedGroup.scale.x,
     //     y: selectedModelBBoxDes.y / selectedGroup.scale.y,
     //     z: selectedModelBBoxDes.z / selectedGroup.scale.z,
     // }); // the model size when scale = 1
+
     const [modelX, setModelX] = useState(0);
     const [modelY, setModelY] = useState(0);
     // const [modelZ, setModelZ] = useState(0);
     const [uniformScalingState, setUniformScalingState] = useState(true);
-    const dispatch = useDispatch();
     const [modelSize, setModelSize] = useState({});
+
     const updateScale = throttle((event) => {
         const { detail } = event;
         // When multiple models are selected, delayed updating is required
@@ -59,12 +69,14 @@ const ScaleOverlay = React.memo(({
         // setModelZ(Math.round(detail.scale.z * initModelSize.z) / 100);
         // !detail.isPrimeTower && setModelZ(Math.round(detail.scale.z * initModelSize.z) / 100);
     }, 1000);
+
     useEffect(() => {
         window.addEventListener('update-scale', updateScale);
         return () => {
             window.removeEventListener('update-scale', updateScale);
         };
     }, []);
+
     useEffect(() => {
         // hidden model size after scale
         // const updateInitModelSize = {
@@ -103,6 +115,7 @@ const ScaleOverlay = React.memo(({
             return !_uniformScalingState;
         });
     };
+
     const onModelTransform = (transformations, isReset, _isPrimeTowerSelected = false) => {
         const newTransformation = {};
         let value = null;
@@ -134,6 +147,7 @@ const ScaleOverlay = React.memo(({
                     break;
             }
         });
+
         dispatch(printingActions.updateSelectedModelTransformation(newTransformation, isReset ? _isPrimeTowerSelected : undefined));
         !isReset && logTransformOperation(HEAD_PRINTING, 'scale', 'input_%');
         emitUpdateControlInputEvent({
@@ -339,8 +353,9 @@ const ScaleOverlay = React.memo(({
     );
 });
 
-ScaleOverlay.propTypes = {
+ModelScaleOverlay.propTypes = {
     setTransformMode: PropTypes.func.isRequired,
     onModelAfterTransform: PropTypes.func.isRequired,
 };
-export default ScaleOverlay;
+
+export default ModelScaleOverlay;

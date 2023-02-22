@@ -20,7 +20,7 @@ import MirrorOverlay from '../../views/model-operation-overlay/MirrorOverlay';
 import RotateOverlay from '../../views/model-operation-overlay/RotateOverlay';
 import RotationAnalysisOverlay from '../../views/model-operation-overlay/RotationAnalysisOverlay';
 /* eslint-disable-next-line import/no-cycle */
-import ScaleOverlay from '../../views/model-operation-overlay/ScaleOverlay';
+import ModelScaleOverlay from '../../views/model-operation-overlay/ModelScaleOverlay';
 import SimplifyModelOverlay from '../../views/model-operation-overlay/SimplifyOverlay';
 /* eslint-disable-next-line import/no-cycle */
 import SupportOverlay from '../../views/model-operation-overlay/SupportOverlay';
@@ -306,7 +306,7 @@ function VisualizerLeftBar(
                 }
                 {
                     !scaleDisabled && transformMode === 'scale' && (
-                        <ScaleOverlay
+                        <ModelScaleOverlay
                             setTransformMode={setTransformMode}
                             onModelAfterTransform={actions.onModelAfterTransform}
                             size={size}

@@ -1,13 +1,32 @@
-import React, { useRef } from 'react';
-import PropTypes from 'prop-types';
+import { Button as AntdButton, ButtonProps as AntdButtonProps } from 'antd';
 import classNames from 'classnames';
-import { Button as AntdButton } from 'antd';
-import styles from './styles.styl';
-import '../../../styles/global.styl';
+import React from 'react';
 
-const Button = React.memo((props) => {
+import styles from './styles.styl';
+
+declare type ButtonType = 'default' | 'primary';
+
+
+declare type ButtonProps = {
+    type: ButtonType; // 'default' or 'primary'
+    priority?: 'level-one' | 'level-two' | 'level-three';
+
+    className?: string;
+
+    suffixIcon?: React.ReactNode;
+
+    width?: string;
+
+    minWidth?: string;
+
+    innerClassNames?: string; // class provide to antd
+
+    children?: React.ReactNode;
+
+} & AntdButtonProps;
+
+const Button: React.FC<ButtonProps> = React.memo((props) => {
     const { priority = 'level-three', className, suffixIcon, width = '100%', minWidth, innerClassNames = '', ...rest } = props;
-    const ref = useRef();
     const type = priority === 'level-three' ? 'default' : (props.type || 'primary');
     return (
         <div
@@ -20,7 +39,6 @@ const Button = React.memo((props) => {
             <AntdButton
                 {...rest}
                 block
-                ref={ref}
                 type={type} // default, primary, link, Text
                 className={classNames(
                     styles[priority],
@@ -43,19 +61,4 @@ const Button = React.memo((props) => {
     );
 });
 
-Button.propTypes = {
-    width: PropTypes.string,
-    type: PropTypes.string,
-    priority: PropTypes.string,
-    className: PropTypes.string,
-    suffixIcon: PropTypes.element,
-    innerClassNames: PropTypes.string,
-    minWidth: PropTypes.string,
-    children: PropTypes.oneOfType([
-        PropTypes.number,
-        PropTypes.element,
-        PropTypes.string,
-        PropTypes.node
-    ])
-};
 export default Button;
