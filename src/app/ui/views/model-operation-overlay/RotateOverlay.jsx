@@ -4,18 +4,18 @@ import * as THREE from 'three';
 import PropTypes from 'prop-types';
 import { throttle, filter, isUndefined, isNull } from 'lodash';
 import classNames from 'classnames';
-import i18n from '../../../../lib/i18n';
-import { actions as printingActions } from '../../../../flux/printing';
+import i18n from '../../../lib/i18n';
+import { actions as printingActions } from '../../../flux/printing';
 /* eslint-disable-next-line import/no-cycle */
-import { CancelButton } from '../VisualizerLeftBar';
-import modal from '../../../../lib/modal';
-import ThreeGroup from '../../../../models/ThreeGroup';
-import { NumberInput as Input } from '../../../components/Input';
-import { Button } from '../../../components/Buttons';
-import SvgIcon from '../../../components/SvgIcon';
-import { EPSILON, HEAD_PRINTING } from '../../../../constants';
-import ThreeUtils from '../../../../three-extensions/ThreeUtils';
-import { logTransformOperation } from '../../../../lib/gaEvent';
+import { CancelButton } from '../../widgets/PrintingVisualizer/VisualizerLeftBar';
+import modal from '../../../lib/modal';
+import ThreeGroup from '../../../models/ThreeGroup';
+import { NumberInput as Input } from '../../components/Input';
+import { Button } from '../../components/Buttons';
+import SvgIcon from '../../components/SvgIcon';
+import { EPSILON, HEAD_PRINTING } from '../../../constants';
+import ThreeUtils from '../../../three-extensions/ThreeUtils';
+import { logTransformOperation } from '../../../lib/gaEvent';
 import styles from './styles.styl';
 
 const isNonUniformScaled = (autoRotateModelArray) => {

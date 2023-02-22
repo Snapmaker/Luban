@@ -17,6 +17,7 @@ const CheckboxWrapper = React.memo(({ className = '', hollow = false, ...rest })
 
 CheckboxWrapper.propTypes = {
     className: PropTypes.string,
-    hollow: PropTypes.bool
+    hollow: PropTypes.bool,
+    defaultChecked: PropTypes.bool,
 };
 export default CheckboxWrapper;

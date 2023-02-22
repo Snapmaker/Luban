@@ -3,14 +3,14 @@ import PropTypes from 'prop-types';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { PrintMode } from '../../../../constants/print-base';
+import { PrintMode } from '../../../constants/print-base';
 
-import { actions as printingActions } from '../../../../flux/printing';
-import i18n from '../../../../lib/i18n';
-import log from '../../../../lib/log';
-import Anchor from '../../../components/Anchor';
-import SvgIcon from '../../../components/SvgIcon';
-import { Button } from '../../../components/Buttons';
+import { actions as printingActions } from '../../../flux/printing';
+import i18n from '../../../lib/i18n';
+import log from '../../../lib/log';
+import Anchor from '../../components/Anchor';
+import SvgIcon from '../../components/SvgIcon';
+import { Button } from '../../components/Buttons';
 import styles from './styles.styl';
 
 

@@ -2,13 +2,13 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { useSelector, shallowEqual, useDispatch } from 'react-redux';
 import classNames from 'classnames';
-import i18n from '../../../../lib/i18n';
+import i18n from '../../../lib/i18n';
 /* eslint-disable-next-line import/no-cycle */
-import { CancelButton } from '../VisualizerLeftBar';
-import { actions as printingActions } from '../../../../flux/printing';
-import { Button } from '../../../components/Buttons';
-import { HEAD_PRINTING } from '../../../../constants';
-import { logTransformOperation } from '../../../../lib/gaEvent';
+import { CancelButton } from '../../widgets/PrintingVisualizer/VisualizerLeftBar';
+import { actions as printingActions } from '../../../flux/printing';
+import { Button } from '../../components/Buttons';
+import { HEAD_PRINTING } from '../../../constants';
+import { logTransformOperation } from '../../../lib/gaEvent';
 import styles from './styles.styl';
 
 const MirrorOverlay = React.memo(({
