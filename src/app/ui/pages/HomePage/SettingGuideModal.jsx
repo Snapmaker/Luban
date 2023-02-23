@@ -59,7 +59,7 @@ const languageOptions = [
         value: 'ja',
         label: '日本語'
     }, {
-        value: 'zh-cn',
+        value: 'zh-CN',
         label: '中文 (简体)'
     }
 ];

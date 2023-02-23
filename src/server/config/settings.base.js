@@ -118,7 +118,7 @@ export default {
         dir: './tmp/siofu'
     },
     i18next: {
-        lowerCaseLng: true,
+        lowerCaseLng: false,
 
         // logs out more info (console)
         debug: false,

@@ -3,7 +3,7 @@ const path = require('path');
 const XLSX = require('xlsx');
 
 const I18N_DIR = path.resolve(__dirname, '../src/app/resources/i18n');
-const LANGUAGES = ['de', 'en', 'es', 'fr', 'it', 'ja', 'ko', 'ru', 'uk', 'zh-cn'];
+const LANGUAGES = ['de', 'en', 'es', 'fr', 'it', 'ja', 'ko', 'ru', 'uk', 'zh-CN'];
 const lang = 'en';
 const langDir = `${I18N_DIR}/${lang}`;
 

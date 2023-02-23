@@ -40,7 +40,6 @@ const languageMappings = {
     'it': 'it_IT',
     'ru': 'ru_RU',
     'uk': null,
-    'zh-cn': 'zh_CN',
     'zh-CN': 'zh_CN',
 };
 

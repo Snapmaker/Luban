@@ -14,7 +14,7 @@ const settings = {
         level: 'info' // trace, debug, info, warn, error
     },
     i18next: {
-        lowerCaseLng: true,
+        lowerCaseLng: false,
 
         // logs out more info (console)
         debug: false,
@@ -40,7 +40,7 @@ const settings = {
             'ko', // Korean
             'ru', // Russian
             'uk', // Ukrainian
-            'zh-CN' // Simplified Chinese
+            'zh-CN', // Simplified Chinese
         ],
 
         // array of languages to preload
