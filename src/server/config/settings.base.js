@@ -111,14 +111,14 @@ export default {
         'pt-br', // Portuguese (Brazil)
         'ru', // Russian
         'uk', // Ukrainian
-        'zh-cn', // Simplified Chinese
+        'zh-CN', // Simplified Chinese
         'zh-tw' // Traditional Chinese
     ],
     siofu: { // SocketIOFileUploader
         dir: './tmp/siofu'
     },
     i18next: {
-        lowerCaseLng: true,
+        lowerCaseLng: false,
 
         // logs out more info (console)
         debug: false,
@@ -148,7 +148,7 @@ export default {
             'pt-br', // Portuguese (Brazil)
             'ru', // Russian
             'uk', // Ukrainian
-            'zh-cn', // Simplified Chinese
+            'zh-CN', // Simplified Chinese
             'zh-tw' // Traditional Chinese
         ],
 

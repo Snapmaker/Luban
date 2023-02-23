@@ -69,7 +69,7 @@ function main() {
         H: ['Korean', 'ko'],
         I: ['Russian', 'ru'],
         J: ['Ukrainian', 'uk'],
-        K: ['Chinese', 'zh-cn']
+        K: ['Chinese', 'zh-CN']
     };
 
     Object.keys(col2lang).forEach((col) => {

@@ -5,7 +5,6 @@ import series from 'async/series';
 import i18next from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import XHR from 'i18next-xhr-backend';
-import moment from 'moment';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { initReactI18next } from 'react-i18next';
@@ -37,20 +36,6 @@ series([
             .init(settings.i18next, () => {
                 next();
             });
-    },
-    (next) => {
-        // Setup locale
-        const locale = i18next.language;
-        if (locale === 'en') {
-            next();
-            return;
-        }
-
-        require(`bundle-loader!moment/locale/${locale}`)(() => {
-            log.debug(`moment: locale=${locale}`);
-            moment().locale(locale);
-            next();
-        });
     },
     (next) => {
         const token = machineStore.get('session.token');

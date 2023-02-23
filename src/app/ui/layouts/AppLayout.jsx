@@ -727,7 +727,7 @@ class AppLayout extends PureComponent {
                         UniApi.Window.openLink(FORUM_URL);
                         break;
                     case 'supports':
-                        if (i18next.language === 'zh-cn') {
+                        if (i18next.language === 'zh-CN') {
                             UniApi.Window.openLink(SUPPORT_ZH_URL);
                         } else {
                             UniApi.Window.openLink(SUPPORT_EN_URL);
@@ -737,14 +737,14 @@ class AppLayout extends PureComponent {
                         UniApi.Window.openLink(TUTORIAL_VIDEO_URL);
                         break;
                     case 'officialSite':
-                        if (i18next.language === 'zh-cn') {
+                        if (i18next.language === 'zh-CN') {
                             UniApi.Window.openLink(OFFICIAL_SITE_ZH_URL);
                         } else {
                             UniApi.Window.openLink(OFFICIAL_SITE_EN_URL);
                         }
                         break;
                     case 'market':
-                        if (i18next.language === 'zh-cn') {
+                        if (i18next.language === 'zh-CN') {
                             UniApi.Window.openLink(MARKET_ZH_URL);
                         } else {
                             UniApi.Window.openLink(MARKET_EN_URL);
