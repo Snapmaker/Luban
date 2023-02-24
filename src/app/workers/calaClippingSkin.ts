@@ -35,11 +35,13 @@ const unionPolygons = (polygons: TPoint[][][]): TPoint[][] => {
 };
 
 const calaClippingSkin = ({ innerWall, otherLayers: _otherLayers, lineWidth, innerWallCount }: TMessage) => {
-    const currentInnerWall = (innerWall.send && innerWall.send[innerWallCount - 1]) ? innerWall.send[innerWallCount - 1].map((polygon) => {
-        return polygon.map((item) => {
-            return bufferToPoint(item);
-        });
-    }) : [];
+    const currentInnerWall = (innerWall.send && innerWall.send[innerWallCount - 1])
+        ? innerWall.send[innerWallCount - 1].map((polygon) => {
+            return polygon.map((item) => {
+                return bufferToPoint(item);
+            });
+        })
+        : [];
     const otherLayers = _otherLayers.send.map((polygons) => {
         return polygons.map((polygon) => {
             return polygon.map((item) => {

@@ -177,8 +177,11 @@ const ConfigurationView: React.FC<{}> = () => {
         'quality.fast_print': i18n._('key-Luban/Preset/Prints in a fast mode. The printing time is short, but the outcome might be rough.'),
         'quality.normal_quality': i18n._('key-Luban/Preset/Prints with general settings. The printing outcome has a standard quality.'),
         'quality.normal_tpu_quality': i18n._('key-Luban/Preset/Prints with general settings. The printing outcome has a standard quality.'),
+        // eslint-disable-next-line max-len
         'quality.normal_other_quality': i18n._('key-Luban/Preset/Prints with general settings. The printing outcome has a standard quality.'),
+        // eslint-disable-next-line max-len
         'quality.high_quality': i18n._('key-Luban/Preset/Prints the surface of the model more meticulously. It takes longer  time but produces higher-quality surface for the print.'),
+        // eslint-disable-next-line max-len
         'quality.engineering_print': i18n._('key-Luban/Preset/Enhances dimensional accuracy and overall strength of the model. It takes longer time, but produces robust prints with precise dimensions. This mode is suitable for printing precision machined parts.'),
     };
 
@@ -457,7 +460,11 @@ const ConfigurationView: React.FC<{}> = () => {
                 />
                 {
                     selectedPresetCategory === PRESET_CATEGORY_DEFAULT && (
-                        <div className={classNames(styles['preset-recommended'], 'sm-flex', 'margin-vertical-16', 'align-c', 'justify-space-between')}>
+                        <div
+                            className={classNames(
+                                styles['preset-recommended'], 'sm-flex', 'margin-vertical-16', 'align-c', 'justify-space-between'
+                            )}
+                        >
                             {
                                 DEFAULT_PRESET_IDS.map((presetId) => {
                                     const options = presetOptionsObj[selectedPresetCategory].options;
@@ -515,7 +522,14 @@ const ConfigurationView: React.FC<{}> = () => {
                                                     </div>
                                                 </Anchor>
                                             </Tooltip>
-                                            <span className="max-width-76 text-overflow-ellipsis-line-2 height-32-half-line margin-top-4 margin-bottom-8">
+                                            <span
+                                                className={
+                                                    classNames(
+                                                        'max-width-76 text-overflow-ellipsis-line-2',
+                                                        'height-32-half-line margin-top-4 margin-bottom-8',
+                                                    )
+                                                }
+                                            >
                                                 {optionItem.name}
                                             </span>
                                         </div>
@@ -529,7 +543,8 @@ const ConfigurationView: React.FC<{}> = () => {
                     selectedPresetCategory !== PRESET_CATEGORY_DEFAULT && (
                         <div className={classNames(styles['preset-customized'], 'margin-vertical-16')}>
                             {
-                                presetOptionsObj[selectedPresetCategory] && presetOptionsObj[selectedPresetCategory].options.map((optionItem, index) => {
+                                presetOptionsObj[selectedPresetCategory]
+                                && presetOptionsObj[selectedPresetCategory].options.map((optionItem, index) => {
                                     const isSelected = selectedPresetModel && selectedPresetModel.definitionId === optionItem.definitionId;
 
                                     return (

@@ -2,6 +2,7 @@
 import { cloneDeep, includes } from 'lodash';
 // import { resolveDefinition } from '../../../shared/lib/definition-resolver';
 import { resolveParameterValues, resetPresetsContext } from '@snapmaker/luban-platform';
+import { PrintMode } from '../../machine-definition';
 import api from '../../api';
 import {
     HEAD_CNC,
@@ -10,7 +11,6 @@ import {
     QUALITY_REGEX
 } from '../../constants';
 import { PRESET_CATEGORY_CUSTOM } from '../../constants/preset';
-import { PrintMode } from '../../constants/print-base';
 import i18n from '../../lib/i18n';
 import PresetDefinitionModel from './PresetDefinitionModel';
 import scene from '../../scene/Scene';

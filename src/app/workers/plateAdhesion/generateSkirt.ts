@@ -30,8 +30,12 @@ export type IResult = TransferDescriptor<{
 const generateSkirt = ({ polygons, skirtGap, skirtBrimLineWidth, skirtLineCount }: IMessage) => {
     return new Observable<IResult>((observer) => {
         try {
-            polygons = polyOffset(polygons.send, 100, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon, 0.12, 0.1);
-            polygons = polyOffset(polygons, -100, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon, 0.12, 0.1);
+            polygons = polyOffset(
+                polygons.send, 100, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon, 0.12, 0.1
+            );
+            polygons = polyOffset(
+                polygons, -100, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon, 0.12, 0.1
+            );
 
             const linePosAttr = new BufferAttribute(new Float32Array(300000), 3, false);
             linePosAttr.setUsage(DynamicDrawUsage);

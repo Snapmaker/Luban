@@ -45,6 +45,7 @@ import {
 import MachineMaterialSettings from './MachineMaterialSettings';
 import { PageMode } from './PageMode';
 import Workspace from './Workspace';
+import SceneInitialization from './print-main/SceneInitialization';
 
 export const openFolder = () => {
     if (isElectron()) {
@@ -650,6 +651,9 @@ function Printing({ location }) {
                 ref={thumbnail}
                 modelGroup={modelGroup}
             />
+            {/* initialization of the scene */}
+            <SceneInitialization />
+            {/* initialization of selected presets */}
             <PresetInitialization />
         </ProjectLayout>
     );

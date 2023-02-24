@@ -41,7 +41,12 @@ const generateBrim = ({ polygons, skirtBrimLineWidth, brimLineCount }: IMessage)
                     skirtArea = polygons;
                 } else {
                     skirtArea = polyOffset(
-                        polygons, offset * index, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon, 0.12, 0.1
+                        polygons,
+                        offset * index,
+                        ClipperLib.JoinType.jtRound,
+                        ClipperLib.EndType.etClosedPolygon,
+                        0.12,
+                        0.1
                     );
                 }
                 skirtArea.forEach((vectors) => {

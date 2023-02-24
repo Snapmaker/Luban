@@ -102,7 +102,12 @@ function poolExecute(task) {
 /**
  * The cancel task of threads has poor performance, so the predecessor task queue is set
  */
-const setPoolTask = async (workerName: string, message: unknown, onMessage: ((data) => void), onComplete?: () => void) => {
+const setPoolTask = async (
+    workerName: string,
+    message: unknown,
+    onMessage: ((data) => void),
+    onComplete?: () => void,
+) => {
     // Put into execution queue
     poolExecute({ workerName, message, onMessage, onComplete });
 };
@@ -177,7 +182,15 @@ const checkWhetherJobCancelled = () => {
 };
 
 async function calculateSectionPoints({
-    positionAttribute, modelMatrix, layerHeight, boundingBox, wallCount, clippingConfig, modelBoundingBox, modelID, jobID
+    positionAttribute,
+    modelMatrix,
+    layerHeight,
+    boundingBox,
+    wallCount,
+    clippingConfig,
+    modelBoundingBox,
+    modelID,
+    jobID
 }: TJobMessage) {
     clearTaskTmp();
 
@@ -200,7 +213,8 @@ async function calculateSectionPoints({
     if (hasCancelled()) {
         return;
     }
-    for (let layerTop = layerHeight; layerTop < boundingBox.max.z; layerTop = Number((layerTop + layerHeight).toFixed(2))) {
+    for (let layerTop = layerHeight; layerTop < boundingBox.max.z;
+        layerTop = Number((layerTop + layerHeight).toFixed(2))) {
         if (hasCancelled()) {
             break;
         }
@@ -236,12 +250,15 @@ async function calculateSectionPoints({
 
                 if (count === 3) {
                     if (
-                        (intersectPoints[count - 1].x === intersectPoints[count - 2].x && intersectPoints[count - 1].y === intersectPoints[count - 2].y)
-                        || (intersectPoints[count - 1].x === intersectPoints[count - 3].x && intersectPoints[count - 1].y === intersectPoints[count - 3].y)
+                        (intersectPoints[count - 1].x === intersectPoints[count - 2].x
+                            && intersectPoints[count - 1].y === intersectPoints[count - 2].y)
+                        || (intersectPoints[count - 1].x === intersectPoints[count - 3].x
+                            && intersectPoints[count - 1].y === intersectPoints[count - 3].y)
                     ) {
                         count--;
                         index--;
-                    } else if (intersectPoints[count - 2].x === intersectPoints[count - 3].x && intersectPoints[count - 2].y === intersectPoints[count - 3].y) {
+                    } else if (intersectPoints[count - 2].x === intersectPoints[count - 3].x
+                        && intersectPoints[count - 2].y === intersectPoints[count - 3].y) {
                         positions[index - 2] = intersectPoints[count - 1];
                         count--;
                         index--;
@@ -269,9 +286,14 @@ async function calculateSectionPoints({
         .filter(event => event.type === PoolEventType.taskCompleted)
         .subscribe(() => {
             if (layerCount && layerCount === innerWallMap.size) {
-                mapClippingSkinArea(wallCount, clippingConfig, modelBoundingBox, ({ innerWall, otherLayers, layerTop }) => {
-                    calaClippingSkin(clippingConfig, wallCount, { innerWall, otherLayers, layerTop });
-                });
+                mapClippingSkinArea(
+                    wallCount,
+                    clippingConfig,
+                    modelBoundingBox,
+                    ({ innerWall, otherLayers, layerTop }) => {
+                        calaClippingSkin(clippingConfig, wallCount, { innerWall, otherLayers, layerTop });
+                    }
+                );
                 subscriber1.unsubscribe();
 
                 if (subscriber2) {
@@ -283,7 +305,10 @@ async function calculateSectionPoints({
                         if (layerCount && layerCount === infillMap.size) {
                             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                             // @ts-ignore
-                            postMessage({ type: 'FINISH', modelID, clippingMap, innerWallMap, skinMap, infillMap, jobID }, expandBuffer(transferList));
+                            postMessage(
+                                { type: 'FINISH', modelID, clippingMap, innerWallMap, skinMap, infillMap, jobID },
+                                expandBuffer(transferList)
+                            );
                             // finish execution job, runningJob=${runningJob.jobID}, modelID=${runningJob.modelID}
 
                             runningJob = null;

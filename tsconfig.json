@@ -28,7 +28,8 @@
         ]
     },
     "include": [
-        "./src/**/*"
+        "./src/**/*", 
+        "packages/luban-platform/**/*.ts"
     ],
     "exclude": [
         "./src/server/lib/SACP-SDK/tests/**/*",

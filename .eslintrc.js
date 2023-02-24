@@ -151,6 +151,13 @@ module.exports = {
             '@typescript-eslint/explicit-member-accessibility': ['error'], // Require explicit accessibility modifiers on class properties and methods
             '@typescript-eslint/promise-function-async': 'error',
 
+            // https://eslint.org/docs/latest/rules/max-len
+            'max-len': ['error', {
+                code: 160,
+                ignoreUrls: true,
+                ignoreStrings: true,
+                ignoreTemplateLiterals: true,
+            }],
         }
     }]
 };

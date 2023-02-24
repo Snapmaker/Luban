@@ -1,5 +1,5 @@
 import includes from 'lodash/includes';
-import { PrintMode } from './print-base';
+import { PrintMode } from '../machine-definition';
 import log from '../lib/log';
 
 export const SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL = 'singleExtruderToolheadForOriginal';

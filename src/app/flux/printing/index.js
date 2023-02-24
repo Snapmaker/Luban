@@ -6,6 +6,7 @@ import { Box3, Vector3 } from 'three';
 import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
 // import { resolveDefinition } from '../../../shared/lib/definition-resolver';
 import { timestamp } from '../../../shared/lib/random-utils';
+import { PrintMode } from '../../machine-definition';
 import api from '../../api';
 import {
     ABSENT_OBJECT,
@@ -32,7 +33,6 @@ import {
 } from '../../constants';
 import { getMachineSeriesWithToolhead, isDualExtruder, MACHINE_SERIES, } from '../../constants/machines';
 import { isQualityPresetVisible } from '../../constants/preset';
-import { PrintMode } from '../../constants/print-base';
 import { controller } from '../../lib/controller';
 import { logPritingSlice, logProfileChange, logToolBarOperation, logTransformOperation } from '../../lib/gaEvent';
 import i18n from '../../lib/i18n';

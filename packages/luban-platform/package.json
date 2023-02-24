@@ -2,6 +2,7 @@
   "name": "@snapmaker/luban-platform",
   "version": "1.0.0",
   "description": "Defines basic services and libraries for Luban that are shared across frontend/backend.",
+  "type": "module",
   "main": "index.ts",
   "devDependencies": {},
   "scripts": {
