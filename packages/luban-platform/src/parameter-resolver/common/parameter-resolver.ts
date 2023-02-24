@@ -419,3 +419,9 @@ export function resolveParameterValues(definition, modifiedParameterItems: Modif
     }
 }
 
+
+export function resetPresetsContext(): void {
+    for (const key of Object.keys(allContext)) {
+        delete allContext[key];
+    }
+}
