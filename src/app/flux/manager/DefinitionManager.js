@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { cloneDeep, includes } from 'lodash';
 // import { resolveDefinition } from '../../../shared/lib/definition-resolver';
-import { resolveParameterValues } from '@snapmaker/luban-platform';
+import { resolveParameterValues, resetPresetsContext } from '@snapmaker/luban-platform';
 import api from '../../api';
 import {
     HEAD_CNC,
@@ -81,6 +81,8 @@ class DefinitionManager {
         this.configPathname = configPathname;
         this.headType = headType;
         let res;
+
+        resetPresetsContext();
 
         // active definition
         const definitionRes = await this.getDefinition('active', false);
