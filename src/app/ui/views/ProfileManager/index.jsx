@@ -455,15 +455,13 @@ function ProfileManager(
             ref.current.click();
         },
         onChangePresetSettings: (key, value) => {
-            // now setDefinitionState is synchronize, so remove setTimeout
             const { definitionForManager } = definitionState;
-            const newDefinitionForManager = cloneDeep(definitionForManager);
-            newDefinitionForManager.settings[key].default_value = value;
 
-            setDefinitionState({
-                definitionForManager: newDefinitionForManager
-            });
-            outsideActions.onSaveDefinitionForManager(newDefinitionForManager, [[key, value]], definitionForManager.definitionId === activeDefinitionID);
+            outsideActions.onSaveDefinitionForManager(
+                definitionForManager,
+                [[key, value]],
+                definitionForManager.definitionId === activeDefinitionID,
+            );
         },
         resetDefinition: (definitionId) => {
             const newDefinitionForManager = outsideActions.resetDefinitionById(definitionId, definitionId === activeDefinitionID);
