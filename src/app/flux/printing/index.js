@@ -1300,6 +1300,7 @@ export const actions = {
             for (const key of keys) {
                 presetModel.settings[key].default_value = defaultPresetModel.settings[key].default_value;
             }
+            definitionManager.updateDefinition(presetModel);
 
             dispatch(actions.updateBoundingBox());
             if (shouldDestroyGcodeLine) {
@@ -1308,6 +1309,27 @@ export const actions = {
             }
 
             return null;
+        } else if (type === PRINTING_MANAGER_TYPE_MATERIAL) {
+            // Refactor: Unify this with quality after ProfileManager refactored
+            const presetModel = definitions.find(p => p.definitionId === definitionId);
+            const defaultPresetModel = defaultDefinitions.find((d) => d.definitionId === definitionId);
+            if (!presetModel || !defaultPresetModel) {
+                return null;
+            }
+
+            const keys = Object.keys(defaultPresetModel.settings);
+            for (const key of keys) {
+                presetModel.settings[key].default_value = defaultPresetModel.settings[key].default_value;
+            }
+            definitionManager.updateDefinition(presetModel);
+
+            dispatch(actions.updateBoundingBox());
+            if (shouldDestroyGcodeLine) {
+                dispatch(actions.destroyGcodeLine());
+                dispatch(actions.displayModel());
+            }
+
+            return presetModel;
         } else {
             const newDefModel = cloneDeep(
                 defaultDefinitions.find((d) => d.definitionId === definitionId)
@@ -1464,6 +1486,10 @@ export const actions = {
             resolveParameterValues(definitionModel, changedSettingArray);
 
             const definitions = printingState[definitionsKey];
+            if (!definitions) {
+                log.warn(`definitions for ${definitionsKey} is empty.`);
+                return;
+            }
             const index = definitions.findIndex((d) => d.definitionId === id);
             definitions[index] = definitionModel;
             dispatch(
