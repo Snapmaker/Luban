@@ -370,7 +370,7 @@ export const getParameterDoc = (req, res) => {
         let content;
         if (fs.existsSync(filePath)) {
             content = fs.readFileSync(`${filePath}`, 'utf-8');
-        } else {
+        } else if (lang !== 'en') {
             log.info(`Request: "${fileRelativePath}"\nNo documentation was found for the user's language ${lang}. An English version was given.`);
 
             const filePathEN = `${DataStorage.getParameterDocumentDir()}/EN/${category}/${key}.md`;
