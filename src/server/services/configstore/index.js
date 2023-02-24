@@ -101,6 +101,10 @@ class ConfigStore extends events.EventEmitter {
         } catch (err) {
             log.error(err);
             this.emit('error', err); // emit error event
+
+            this.config = { macros: defaultMacros };
+            const content = JSON.stringify(this.config);
+            fs.writeFileSync(this.file, content, 'utf8');
         }
         return this.config;
     }
@@ -114,7 +118,12 @@ class ConfigStore extends events.EventEmitter {
         } catch (err) {
             err.fileName = this.file;
             log.error(`Unable to load data from ${chalk.yellow(JSON.stringify(this.file))}: err=${err}`);
-            this.emit('error', err); // emit error event
+            // this.emit('error', err); // emit error event
+
+            this.config = { macros: defaultMacros };
+            const content = JSON.stringify(this.config);
+            fs.writeFileSync(this.file, content, 'utf8');
+
             return false;
         }
 
