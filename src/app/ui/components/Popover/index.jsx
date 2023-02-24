@@ -21,6 +21,7 @@ const Popover = React.memo((props) => {
 Popover.propTypes = {
     trigger: PropTypes.string,
     content: PropTypes.oneOfType([
+        PropTypes.func,
         PropTypes.string,
         PropTypes.node
     ]),

@@ -333,7 +333,7 @@ const ConfigurationView: React.FC<{}> = () => {
          * @param {any} value
          */
         onChangePresetSettings: async (key: string, value: any) => {
-            console.log('change settings', key, value);
+            log.info('change settings', key, value);
             if (isNil(value)) {
                 // if 'value' does't exit, then reset this value
                 const defaultPresetSettings = dispatch(printingActions.getDefaultDefinition(selectedPresetModel.definitionId));
