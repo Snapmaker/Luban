@@ -15,6 +15,7 @@ import { DEFAULT_PRESET_IDS, PRESET_CATEGORY_DEFAULT } from '../../../constants/
 
 import { RootState } from '../../../flux/index.def';
 import { actions as printingActions } from '../../../flux/printing';
+import log from '../../../lib/log';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
 import { printingStore } from '../../../store/local-storage';
