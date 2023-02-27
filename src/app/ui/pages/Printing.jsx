@@ -337,9 +337,9 @@ function getStarterProject(series, isDual) {
     let pathConfig;
     if ([MACHINE_SERIES.ORIGINAL.identifier, MACHINE_SERIES.ORIGINAL_LZ.identifier].includes(series)) {
         pathConfig = pathConfigForOriginal;
-    } else if (series === MACHINE_SERIES.A400.value) {
+    } else if (series === MACHINE_SERIES.A400.identifier) {
         pathConfig = CaseConfigPenHolder.pathConfig;
-    } else if (series === MACHINE_SERIES.J1.value) {
+    } else if (series === MACHINE_SERIES.J1.identifier) {
         pathConfig = CaseConfigGimbal.pathConfig;
     } else {
         // SM 2.0

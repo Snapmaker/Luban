@@ -94,7 +94,7 @@ class MachineSelectModal extends PureComponent {
                 img: '/resources/images/machine/size-2.0-A3502.jpg'
             },
             {
-                value: MACHINE_SERIES.A400.value,
+                value: MACHINE_SERIES.A400.identifier,
                 label: i18n._(MACHINE_SERIES.A400.label),
                 img: '/resources/images/machine/size-2.0-A3502.jpg'
             }

@@ -604,7 +604,7 @@ class ExtractSquareTrace extends PureComponent {
     }
 
     render() {
-        if (this.props.series === MACHINE_SERIES.A400.value) {
+        if (this.props.series === MACHINE_SERIES.A400.identifier) {
             this.multiple = 1.25;
         } else if (this.props.series === MACHINE_SERIES.A350.identifier) {
             this.multiple = 1.5;

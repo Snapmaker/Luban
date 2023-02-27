@@ -286,9 +286,6 @@ export const MODULEID_MAP = {
 export function findMachineByName(name) {
     for (const key of Object.keys(MACHINE_SERIES)) {
         const machine = MACHINE_SERIES[key];
-        if (machine.value === name) {
-            return machine;
-        }
         if (machine.identifier === name) {
             return machine;
         }
@@ -324,7 +321,7 @@ export function getMachineOptions() {
     const options = [];
     for (const machine of machines) {
         const option = {
-            value: machine.value || machine.identifier, // unique key
+            value: machine.identifier, // unique key
             label: machine.label, // for i18n name display
             machine: machine, // reference of machine for further data fetch
         };
