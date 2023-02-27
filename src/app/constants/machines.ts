@@ -395,7 +395,7 @@ export function getMachineSeriesWithToolhead(series: string, toolhead: string) {
         return {};
     }
 
-    const size = machine.size;
+    const size = machine.metadata.size;
     const workSize = {};
     const configPathname = {};
 

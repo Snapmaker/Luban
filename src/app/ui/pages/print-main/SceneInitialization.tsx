@@ -22,7 +22,7 @@ const SceneInitialization: React.FC = () => {
         log.info('Active Machine =', activeMachine.fullName);
         log.info('Tool Head =', toolHeadName);
 
-        const size = activeMachine.size;
+        const size = activeMachine.metadata.size;
         log.info('machine size =', size);
 
         // TODO: init buildVolume

@@ -183,7 +183,7 @@ const mapStateToProps = (state) => {
     return {
         series: machine.series,
         server: machine.server,
-        size: machine.size
+        size: machine.metadata.size
     };
 };
 

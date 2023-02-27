@@ -750,7 +750,7 @@ const mapStateToProps = (state) => {
     return {
         series: machine.series,
         headType,
-        size: machine.size,
+        size: machine.metadata.size,
         server: machine.server,
         laserSize: machine.laserSize
     };

@@ -2391,8 +2391,8 @@ export const actions = {
 
         const boundingBox = modelGroup.getBoundingBox();
 
-        const originOffsetX = activeMachine.size.x / 2;
-        const originOffsetY = activeMachine.size.y / 2;
+        const originOffsetX = activeMachine.metadata.size.x / 2;
+        const originOffsetY = activeMachine.metadata.size.y / 2;
 
         const gcodeBoundingBox = new Box3(
             new Vector3(boundingBox.min.x + originOffsetX, boundingBox.min.y + originOffsetY, boundingBox.min.z),

@@ -14,7 +14,7 @@ import { Machine, MachineType } from '../machine-definition';
     },
 */
 
-const machine: Machine = {
+export const machine: Machine = {
     identifier: 'A150',
 
     fullName: 'Snapmaker 2.0 A150',
@@ -23,7 +23,7 @@ const machine: Machine = {
     img: '/resources/images/machine/size-2.0-A150.png',
 
     metadata: {
-        size: [160, 160, 145],
+        size: { x: 160, y: 160, z: 145 },
 
         toolHeads: [],
 
@@ -35,5 +35,3 @@ const machine: Machine = {
     seriesLabelWithoutI18n: 'A150',
     label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A150',
 };
-
-export default machine;

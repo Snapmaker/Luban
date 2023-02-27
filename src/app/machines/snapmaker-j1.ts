@@ -1,7 +1,7 @@
 import type { Machine } from '../machine-definition';
 import { MachineType, PrintMode } from '../machine-definition';
 
-const machine: Machine = {
+export const machine: Machine = {
     identifier: 'J1',
     fullName: 'Snapmaker J1',
     img: '/resources/images/machine/snapmaker_j1.png',
@@ -9,7 +9,7 @@ const machine: Machine = {
     machineType: MachineType.Printer,
 
     metadata: {
-        size: [324, 200, 200],
+        size: { x: 324, y: 200, z: 200 },
         toolHeads: [],
         printModes: [
             {
@@ -50,6 +50,3 @@ const machine: Machine = {
     seriesLabelWithoutI18n: 'Snapmaker J1',
     label: 'Snapmaker J1',
 };
-
-
-export default machine;

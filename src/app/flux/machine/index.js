@@ -389,7 +389,7 @@ export const actions = {
         dispatch(
             baseActions.updateState({
                 series: series,
-                size: machine.size,
+                size: machine.metadata.size,
                 laserSize: machine.setting ? machine.setting.laserSize : laserSize,
                 toolHead: toolHead,
                 activeMachine: machine,
@@ -399,13 +399,13 @@ export const actions = {
         dispatch(
             editorActions.onSizeUpdated(
                 'laser',
-                machine ? machine.size : size
+                machine ? machine.metadata.size : size
             )
         );
         dispatch(
             editorActions.onSizeUpdated(
                 'cnc',
-                machine ? machine.size : size
+                machine ? machine.metadata.size : size
             )
         );
     },

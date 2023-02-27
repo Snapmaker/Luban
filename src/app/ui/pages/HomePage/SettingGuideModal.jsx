@@ -151,8 +151,8 @@ const SettingGuideModal = (props) => {
                 cncToolhead: cncToolHeadSelected
             };
             dispatch(machineActions.updateMachineSeries(machine.identifier));
-            dispatch(machineActions.updateMachineSize(machine.size));
-            dispatch(machineActions.updateMachineToolHead(toolHead, machine.value));
+            dispatch(machineActions.updateMachineSize(machine.metadata.size));
+            dispatch(machineActions.updateMachineToolHead(toolHead, machine.identifier));
             window.location.href = '/';
         });
         props.handleModalShow(false);
@@ -200,9 +200,7 @@ const SettingGuideModal = (props) => {
         }
     };
 
-    console.log('machine =', machine);
-
-    const machineSize = machine ? (machine.size || machine.metadata.size) : null;
+    const machineSize = machine?.metadata.size;
 
     return (
         <div>
@@ -265,7 +263,7 @@ const SettingGuideModal = (props) => {
                                             <div>
                                                 <span className="main-text-normal margin-right-4">{i18n._('key-HomePage/Begin-Work Area')}:</span>
                                                 <span className="main-text-normal">
-                                                    {`${machineSize[0]} mm × ${machineSize[1]} mm × ${machineSize[2]} mm`}
+                                                    {`${machineSize.x} mm × ${machineSize.y} mm × ${machineSize.z} mm`}
                                                 </span>
                                             </div>
                                         </div>

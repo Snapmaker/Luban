@@ -33,7 +33,7 @@ import { Machine, MachineType } from '../machine-definition';
         },
 */
 
-const machine: Machine = {
+export const machine: Machine = {
     identifier: 'Original Long Z-axis',
 
     fullName: 'Snapmaker Original',
@@ -42,7 +42,7 @@ const machine: Machine = {
     img: '/resources/images/machine/size-1.0-original.jpg',
 
     metadata: {
-        size: [125, 125, 221],
+        size: { x: 125, y: 125, z: 221 },
 
         toolHeads: [],
 
@@ -54,5 +54,3 @@ const machine: Machine = {
     seriesLabelWithoutI18n: 'Original with Z-axis Extension Module',
     label: 'key-Luban/Machine/MachineSeries-Snapmaker Original with Z-axis Extension Module',
 };
-
-export default machine;

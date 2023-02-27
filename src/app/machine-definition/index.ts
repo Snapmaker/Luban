@@ -27,7 +27,7 @@ declare type MachineToolHeadOptions = {
 
 export declare type MachineMetadata = {
     // Work range in default print mode
-    size: number[];
+    size: { x: number; y: number; z: number };
 
     toolHeads: MachineToolHeadOptions[];
 

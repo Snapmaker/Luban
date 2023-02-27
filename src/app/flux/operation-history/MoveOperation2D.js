@@ -20,7 +20,7 @@ export default class MoveOperation2D extends Operation {
         const svgActions = this.state.svgActions;
         svgActions.moveElementsImmediately([model.elem], {
             newX: this.state.to.positionX + this.state.machine.size.x,
-            newY: -this.state.to.positionY + this.state.machine.size.y
+            newY: -this.state.to.positionY + this.state.machine.size.y,
         });
         svgActions.clearSelection();
     }
@@ -30,7 +30,7 @@ export default class MoveOperation2D extends Operation {
         const svgActions = this.state.svgActions;
         svgActions.moveElementsImmediately([model.elem], {
             newX: this.state.from.positionX + this.state.machine.size.x,
-            newY: -this.state.from.positionY + this.state.machine.size.y
+            newY: -this.state.from.positionY + this.state.machine.size.y,
         });
         svgActions.clearSelection();
     }

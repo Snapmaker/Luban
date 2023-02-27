@@ -14,16 +14,16 @@ import { Machine, MachineType } from '../machine-definition';
     },
 */
 
-const machine: Machine = {
+export const machine: Machine = {
     identifier: 'A350',
 
     fullName: 'Snapmaker 2.0 A350/A350T/F350',
     machineType: MachineType.MultiFuncionPrinter,
 
-    img: '/resources/images/machine/size-2.0-A350.png',
+    img: '/resources/images/machine/size-2.0-A350.jpg',
 
     metadata: {
-        size: [320, 350, 330],
+        size: { x: 320, y: 350, z: 330 },
 
         toolHeads: [],
 
@@ -35,5 +35,3 @@ const machine: Machine = {
     seriesLabelWithoutI18n: 'A350 A350T F350',
     label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A350',
 };
-
-export default machine;

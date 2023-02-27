@@ -512,7 +512,7 @@ export const actions = {
         if (options.series) {
             const machine = findMachineByName(options.series);
             if (machine) {
-                options.size = machine.size;
+                options.size = machine.metadata.size;
             }
         }
         dispatch(actions.updateState(options));

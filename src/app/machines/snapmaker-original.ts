@@ -34,7 +34,7 @@ import { Machine, MachineType } from '../machine-definition';
     },
 */
 
-const machine: Machine = {
+export const machine: Machine = {
     identifier: 'Original',
 
     fullName: 'Snapmaker Original',
@@ -43,7 +43,7 @@ const machine: Machine = {
     img: '/resources/images/machine/size-1.0-original.jpg',
 
     metadata: {
-        size: [125, 125, 125],
+        size: { x: 125, y: 125, z: 125 },
 
         toolHeads: [],
 
@@ -55,5 +55,3 @@ const machine: Machine = {
     seriesLabelWithoutI18n: 'Original',
     label: 'key-Luban/Machine/MachineSeries-Snapmaker Original',
 };
-
-export default machine;

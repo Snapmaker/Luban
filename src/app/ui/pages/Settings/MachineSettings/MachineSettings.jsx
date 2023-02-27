@@ -202,7 +202,7 @@ function MachineSettings() {
             />
             <div>
                 <span className="unit-text margin-right-12">{i18n._('key-App/Settings/MachineSettings-Dimensions')}:</span>
-                <span className="main-text-normal">{`${state.size[0]} x ${state.size[1]} x ${state.size[2]} mm`}</span>
+                <span className="main-text-normal">{`${state.size.x} x ${state.size.y} x ${state.size.z} mm`}</span>
             </div>
             <div className="border-bottom-normal padding-bottom-4 margin-top-32">
                 <SvgIcon
