@@ -253,7 +253,7 @@ class ConnectionManager {
                         { axis: 'Z', distance: 0 },
                     ];
                     await this.socket.coordinateMove({ moveOrders, jogSpeed, headType, beforeGcodeStart: true });
-                } else if (series !== MACHINE_SERIES.ORIGINAL.value) {
+                } else if (series !== MACHINE_SERIES.ORIGINAL.identifier) {
                     // SM 2.0
 
                     // Both 1.6W & 10W laser can't work without a valid focal length

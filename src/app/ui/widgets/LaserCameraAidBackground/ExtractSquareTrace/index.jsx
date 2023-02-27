@@ -135,7 +135,7 @@ class ExtractSquareTrace extends PureComponent {
             if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
                 cameraOffsetX = 20;
                 cameraOffsetY = -8.5;
-                if (this.props.series === MACHINE_SERIES.A150.value) {
+                if (this.props.series === MACHINE_SERIES.A150.identifier) {
                     centerDis = 80;
                     [1, 2, 4, 3].forEach((item) => {
                         position.push({
@@ -146,9 +146,9 @@ class ExtractSquareTrace extends PureComponent {
                     });
                     length = 4;
                 } else {
-                    if (this.props.series === MACHINE_SERIES.A250.value) {
+                    if (this.props.series === MACHINE_SERIES.A250.identifier) {
                         centerDis = 90;
-                    } else if (this.props.series === MACHINE_SERIES.A350.value) {
+                    } else if (this.props.series === MACHINE_SERIES.A350.identifier) {
                         centerDis = 106;
                     } else {
                         centerDis = 110;
@@ -206,7 +206,7 @@ class ExtractSquareTrace extends PureComponent {
                 this.props.executeGcodeG54(this.props.series, this.props.headType);
 
                 if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
-                    if (this.props.series !== MACHINE_SERIES.A150.value) {
+                    if (this.props.series !== MACHINE_SERIES.A150.identifier) {
                         this.swapItem(this.state.imageNames, 3, 5);
                     } else {
                         this.swapItem(this.state.imageNames, 2, 3);
@@ -308,7 +308,7 @@ class ExtractSquareTrace extends PureComponent {
                         .then((res) => {
                             if (JSON.parse(res.text).fileName || JSON.parse(res.text).status !== 404) {
                                 if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
-                                    if (this.props.series === MACHINE_SERIES.A150.value) {
+                                    if (this.props.series === MACHINE_SERIES.A150.identifier) {
                                         this.state.xSize[task.index] = this.props.laserSize.x / 2;
                                         this.state.ySize[task.index] = this.props.laserSize.y / 2;
                                     } else {
@@ -406,9 +406,9 @@ class ExtractSquareTrace extends PureComponent {
             }));
         },
         updateStitchEach: async () => {
-            if (this.props.series === MACHINE_SERIES.A350.value) {
+            if (this.props.series === MACHINE_SERIES.A350.identifier) {
                 this.multiple = 1.5;
-            } else if (this.props.series === MACHINE_SERIES.A150.value) {
+            } else if (this.props.series === MACHINE_SERIES.A150.identifier) {
                 this.setState({
                     options: {
                         ...this.state.options,
@@ -540,7 +540,7 @@ class ExtractSquareTrace extends PureComponent {
         if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
             picAmount = 1;
         } else if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
-            picAmount = this.props.series === MACHINE_SERIES.A150.value ? 4 : 9;
+            picAmount = this.props.series === MACHINE_SERIES.A150.identifier ? 4 : 9;
         }
         // Set initial photo quality
         let photoQuality = 255;
@@ -606,7 +606,7 @@ class ExtractSquareTrace extends PureComponent {
     render() {
         if (this.props.series === MACHINE_SERIES.A400.value) {
             this.multiple = 1.25;
-        } else if (this.props.series === MACHINE_SERIES.A350.value) {
+        } else if (this.props.series === MACHINE_SERIES.A350.identifier) {
             this.multiple = 1.5;
         } else {
             this.multiple = 2;

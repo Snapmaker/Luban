@@ -150,7 +150,7 @@ const SettingGuideModal = (props) => {
                 laserToolhead: laserToolHeadSelected,
                 cncToolhead: cncToolHeadSelected
             };
-            dispatch(machineActions.updateMachineSeries(machine.value));
+            dispatch(machineActions.updateMachineSeries(machine.identifier));
             dispatch(machineActions.updateMachineSize(machine.size));
             dispatch(machineActions.updateMachineToolHead(toolHead, machine.value));
             window.location.href = '/';
@@ -199,6 +199,10 @@ const SettingGuideModal = (props) => {
                 break;
         }
     };
+
+    console.log('machine =', machine);
+
+    const machineSize = machine ? (machine.size || machine.metadata.size) : null;
 
     return (
         <div>
@@ -255,13 +259,13 @@ const SettingGuideModal = (props) => {
                                             <img
                                                 width="240px"
                                                 src={machine.img}
-                                                alt={machine.value}
+                                                alt={machine.fullName}
                                             />
                                             <div className="heading-3 margin-bottom-8">{i18n._(machine.label)}</div>
                                             <div>
                                                 <span className="main-text-normal margin-right-4">{i18n._('key-HomePage/Begin-Work Area')}:</span>
                                                 <span className="main-text-normal">
-                                                    {`${machine.size.x} mm × ${machine.size.y} mm × ${machine.size.z} mm`}
+                                                    {`${machineSize[0]} mm × ${machineSize[1]} mm × ${machineSize[2]} mm`}
                                                 </span>
                                             </div>
                                         </div>

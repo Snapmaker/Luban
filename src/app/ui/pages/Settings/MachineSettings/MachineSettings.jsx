@@ -22,11 +22,7 @@ function MachineSettings() {
 
     const [state, setState] = useState({
         series: '',
-        size: {
-            x: 0,
-            y: 0,
-            z: 0
-        },
+        size: [0, 0, 0],
         enclosureDoorDetection: false,
         zAxisModule: null,
         connectionTimeout: 3000
@@ -85,7 +81,7 @@ function MachineSettings() {
                 ...state,
                 series: option.value,
                 // size for display, and on save/cancel it is also used for work volume construct
-                size: machine.size,
+                size: machine.metadata.size,
             });
         },
         // Enclosure
@@ -206,7 +202,7 @@ function MachineSettings() {
             />
             <div>
                 <span className="unit-text margin-right-12">{i18n._('key-App/Settings/MachineSettings-Dimensions')}:</span>
-                <span className="main-text-normal">{`${state.size.x} x ${state.size.y} x ${state.size.z} mm`}</span>
+                <span className="main-text-normal">{`${state.size[0]} x ${state.size[1]} x ${state.size[2]} mm`}</span>
             </div>
             <div className="border-bottom-normal padding-bottom-4 margin-top-32">
                 <SvgIcon

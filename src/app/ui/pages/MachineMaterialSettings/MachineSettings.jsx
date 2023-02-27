@@ -94,7 +94,7 @@ const MachineSettings = forwardRef(({
     const [activeNozzle, setActiveNozzle] = useState(LEFT);
 
     // for original long zAxis
-    const [zAxis, setZAxis] = useState(series === MACHINE_SERIES.ORIGINAL_LZ.value);
+    const [zAxis, setZAxis] = useState(series === MACHINE_SERIES.ORIGINAL_LZ.identifier);
     const [leftNozzleDiameterList, setLeftNozzleDiameterList] = useState(defaultNozzleDiameterList);
     const [rightNozzleDiameterList, setRightNozzleDiameterList] = useState(defaultNozzleDiameterList);
     const [addDiameterStatus, setAddDiameterStatus] = useState(false);
@@ -282,7 +282,7 @@ const MachineSettings = forwardRef(({
     const handleMachineUpdate = (value) => {
         setSelectedMachineSeries(value);
         setActiveNozzle(LEFT);
-        // if (value === MACHINE_SERIES.ORIGINAL.value) {
+        // if (value === MACHINE_SERIES.ORIGINAL.identifier) {
         //     setSelectedToolName(SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL);
         //     setZAxis(false);
         // } else {
@@ -383,13 +383,13 @@ const MachineSettings = forwardRef(({
             </div>
             <div className="width-296 background-grey-3 border-radius-24 padding-vertical-32 padding-horizontal-24">
                 {
-                    (selectedMachineSeries === MACHINE_SERIES.ORIGINAL.value || selectedMachineSeries === MACHINE_SERIES.ORIGINAL_LZ.value) && (
+                    (selectedMachineSeries === MACHINE_SERIES.ORIGINAL.identifier || selectedMachineSeries === MACHINE_SERIES.ORIGINAL_LZ.identifier) && (
                         <div>
                             <div className="heading-3 margin-bottom-16">{i18n._('key-settings/Z-axis Module')}</div>
                             <div className="sm-flex justify-space-between">
                                 <Anchor onClick={() => {
                                     setZAxis(false);
-                                    setSelectedMachineSeries(MACHINE_SERIES.ORIGINAL.value);
+                                    setSelectedMachineSeries(MACHINE_SERIES.ORIGINAL.identifier);
                                 }}
                                 >
                                     <div className={`width-116 height-116 border-radius-8 ${zAxis ? 'border-default-grey-1' : 'border-default-grey-1 border-color-blue-2'}`}>
@@ -399,7 +399,7 @@ const MachineSettings = forwardRef(({
                                 </Anchor>
                                 <Anchor onClick={() => {
                                     setZAxis(true);
-                                    setSelectedMachineSeries(MACHINE_SERIES.ORIGINAL_LZ.value);
+                                    setSelectedMachineSeries(MACHINE_SERIES.ORIGINAL_LZ.identifier);
                                 }}
                                 >
                                     <div className={`width-116 height-116 border-radius-8 ${!zAxis ? 'border-default-grey-1' : 'border-default-grey-1 border-color-blue-2'}`}>
@@ -414,7 +414,7 @@ const MachineSettings = forwardRef(({
                 {
                     availableToolOptions.length > 0 && (
                         <div>
-                            <div className={`heading-3 ${(includes([MACHINE_SERIES.ORIGINAL.value, MACHINE_SERIES.ORIGINAL_LZ.value], selectedMachineSeries)) ? 'margin-top-32' : ''} margin-bottom-16`}>
+                            <div className={`heading-3 ${(includes([MACHINE_SERIES.ORIGINAL.identifier, MACHINE_SERIES.ORIGINAL_LZ.identifier], selectedMachineSeries)) ? 'margin-top-32' : ''} margin-bottom-16`}>
                                 {i18n._('key-App/Settings/MachineSettings-3D Print Toolhead')}
                             </div>
                             <div className="sm-flex">

@@ -34,7 +34,7 @@ class ExtractPreview extends Component {
             this.calcuStyle(index, width, height, 1, multiple);
         }
         if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
-            if (this.props.series === MACHINE_SERIES.A150.value) {
+            if (this.props.series === MACHINE_SERIES.A150.identifier) {
                 this.calcuStyle(index, width, height, 2, multiple);
             } else {
                 this.calcuStyle(index, width, height, 3, multiple);

@@ -30,7 +30,7 @@ class MachineSelectModal extends PureComponent {
     };
 
     state = {
-        series: this.props.series || MACHINE_SERIES.ORIGINAL.value,
+        series: this.props.series || MACHINE_SERIES.ORIGINAL.identifier,
         headType: this.props.headType || HEAD_PRINTING,
         toolHead: ''
     };
@@ -74,22 +74,22 @@ class MachineSelectModal extends PureComponent {
 
         const machineSeriesOptions = [
             {
-                value: MACHINE_SERIES.ORIGINAL.value,
+                value: MACHINE_SERIES.ORIGINAL.identifier,
                 label: i18n._(MACHINE_SERIES.ORIGINAL.label),
                 img: '/resources/images/machine/size-1.0-original2.jpg'
             },
             {
-                value: MACHINE_SERIES.A150.value,
+                value: MACHINE_SERIES.A150.identifier,
                 label: i18n._(MACHINE_SERIES.A150.label),
                 img: '/resources/images/machine/size-2.0-A1502.jpg'
             },
             {
-                value: MACHINE_SERIES.A250.value,
+                value: MACHINE_SERIES.A250.identifier,
                 label: i18n._(MACHINE_SERIES.A250.label),
                 img: '/resources/images/machine/size-2.0-A2502.jpg'
             },
             {
-                value: MACHINE_SERIES.A350.value,
+                value: MACHINE_SERIES.A350.identifier,
                 label: i18n._(MACHINE_SERIES.A350.label),
                 img: '/resources/images/machine/size-2.0-A3502.jpg'
             },
@@ -98,11 +98,6 @@ class MachineSelectModal extends PureComponent {
                 label: i18n._(MACHINE_SERIES.A400.label),
                 img: '/resources/images/machine/size-2.0-A3502.jpg'
             }
-            // {
-            //     value: MACHINE_SERIES.CUSTOM.value,
-            //     label: MACHINE_SERIES.CUSTOM.label,
-            //     img: '/resources/images/machine/size-1.0-original-z-extension.jpg'
-            // }
         ];
         const machineHeadTypeOptions = [
             {
@@ -169,7 +164,7 @@ class MachineSelectModal extends PureComponent {
                             <div className={styles['select-tools']}>
                                 { machineHeadTypeOptions.map(v => {
                                     // TODO
-                                    if ((state.series === MACHINE_SERIES.A150.value || state.series === MACHINE_SERIES.ORIGINAL.value || state.series === MACHINE_SERIES.CUSTOM.value)
+                                    if ((state.series === MACHINE_SERIES.A150.identifier || state.series === MACHINE_SERIES.ORIGINAL.identifier)
                                         && v.toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
                                         return null;
                                     }

@@ -1,5 +1,14 @@
 import includes from 'lodash/includes';
-import { PrintMode } from '../machine-definition';
+import {
+    SnapmakerOriginalMachine,
+    SnapmakerOriginalExtendedMachine,
+    SnapmakerA150Machine,
+    SnapmakerA250Machine,
+    SnapmakerA350Machine,
+    SnapmakerArtisanMachine,
+    SnapmakerJ1Machine
+} from '../machines';
+
 import log from '../lib/log';
 
 export const SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL = 'singleExtruderToolheadForOriginal';
@@ -32,261 +41,13 @@ export const DEFAULT_MACHINE_ORIGINAL_LONG_Z_AXIS = 'Original Long Z-axis';
 
 // todo: refactor this data structure
 export const MACHINE_SERIES = {
-    ORIGINAL: {
-        value: DEFAULT_MACHINE_ORIGINAL,
-        fullName: 'Snapmaker Original',
-        brand: 'Snapmaker',
-        series: 'Snapmaker Original',
-        seriesLabel: 'key-Luban/Machine/MachineSeries-Original',
-        seriesLabelWithoutI18n: 'Original',
-        label: 'key-Luban/Machine/MachineSeries-Snapmaker Original',
-        img: '/resources/images/machine/size-1.0-original.jpg',
-        setting: {
-            size: {
-                x: 125,
-                y: 125,
-                z: 125
-            },
-            laserSize: {
-                x: 125,
-                y: 125,
-                z: 125
-            }
-        },
-        machineType: MACHINE_TYPE_MULTI_FUNCTION_PRINTER,
-        size: {
-            x: 125,
-            y: 125,
-            z: 125,
-        },
-        metadata: {
-            slicerVersion: 0,
-        },
-    },
-    ORIGINAL_LZ: {
-        value: DEFAULT_MACHINE_ORIGINAL_LONG_Z_AXIS,
-        fullName: 'Snapmaker Original with Z-axis Extension Module',
-        series: 'Snapmaker Original',
-        seriesLabel: 'key-Workspace/MachineSetting-Z-Axis Extension Module',
-        seriesLabelWithoutI18n: 'Original with Z-axis Extension Module',
-        configPath: 'Original',
-        label:
-            'key-Luban/Machine/MachineSeries-Snapmaker Original with Z-axis Extension Module',
-        setting: {
-            size: {
-                x: 125,
-                y: 125,
-                z: 221
-            },
-            laserSize: {
-                x: 125,
-                y: 125,
-                z: 221
-            }
-        },
-        machineType: MACHINE_TYPE_MULTI_FUNCTION_PRINTER,
-        size: {
-            x: 125,
-            y: 125,
-            z: 221,
-        },
-        img: '/resources/images/machine/size-1.0-original.jpg',
-        metadata: {
-            slicerVersion: 0,
-        },
-    },
-    A150: {
-        seriesLabel: 'key-Luban/Machine/MachineSeries-A150',
-        seriesLabelWithoutI18n: 'A150',
-        value: 'A150',
-        fullName: 'Snapmaker 2.0 A150',
-        series: 'Snapmaker 2.0',
-        label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A150',
-        setting: {
-            size: {
-                x: 160,
-                y: 160,
-                z: 145
-            },
-            laserSize: {
-                x: 167,
-                y: 165,
-                z: 150
-            }
-        },
-        machineType: MACHINE_TYPE_MULTI_FUNCTION_PRINTER,
-        size: {
-            x: 160,
-            y: 160,
-            z: 145,
-        },
-        img: '/resources/images/machine/size-2.0-A150.png',
-        alias: ['SM2-S', 'Snapmaker 2.0 A150'],
-        metadata: {
-            slicerVersion: 0,
-        },
-    },
-    A250: {
-        seriesLabel: 'key-Luban/Machine/MachineSeries-A250',
-        seriesLabelWithoutI18n: 'A250 A250T F250',
-        value: 'A250',
-        fullName: 'Snapmaker 2.0 A250/A250T/F250',
-        series: 'Snapmaker 2.0',
-        label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A250',
-        setting: {
-            size: {
-                x: 230,
-                y: 250,
-                z: 235
-            },
-            laserSize: {
-                x: 252,
-                y: 260,
-                z: 235
-            }
-        },
-        machineType: MACHINE_TYPE_MULTI_FUNCTION_PRINTER,
-        size: {
-            x: 230,
-            y: 250,
-            z: 235,
-        },
-        img: '/resources/images/machine/size-2.0-A250.png',
-        alias: ['SM2-M', 'Snapmaker 2.0 A250'],
-        metadata: {
-            slicerVersion: 0,
-        },
-    },
-    A350: {
-        seriesLabel: 'key-Luban/Machine/MachineSeries-A350',
-        seriesLabelWithoutI18n: 'A350 A350T F350',
-        value: 'A350',
-        fullName: 'Snapmaker 2.0 A350/A350T/F350',
-        series: 'Snapmaker 2.0',
-        label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A350',
-        setting: {
-            size: {
-                x: 320,
-                y: 350,
-                z: 330
-            },
-            laserSize: {
-                x: 345,
-                y: 357,
-                z: 334
-            }
-        },
-        machineType: MACHINE_TYPE_MULTI_FUNCTION_PRINTER,
-        size: {
-            x: 320,
-            y: 350,
-            z: 330
-        },
-        img: '/resources/images/machine/size-2.0-A350.jpg',
-        alias: ['SM2-L', 'Snapmaker 2.0 A350'],
-        metadata: {
-            slicerVersion: 0,
-        },
-    },
-    A400: {
-        value: 'A400',
-        fullName: 'Snapmaker Artisan',
-        series: 'Snapmaker',
-        seriesLabel: 'key-Luban/Machine/MachineSeries-A400',
-        seriesLabelWithoutI18n: 'Artisan',
-        label: 'key-Luban/Machine/MachineSeries-Snapmaker 2.0 A400',
-        setting: {
-            size: {
-                x: 400,
-                y: 400,
-                z: 400
-            },
-            laserSize: {
-                x: 410,
-                y: 410,
-                z: 420
-            }
-        },
-        machineType: MACHINE_TYPE_MULTI_FUNCTION_PRINTER,
-        size: {
-            x: 400,
-            y: 400,
-            z: 400
-        },
-        img: '/resources/images/machine/size-2.0-A400.jpeg',
-        alias: ['SM2-XL', 'Snapmaker 2.0 400'],
-        metadata: {
-            slicerVersion: 0,
-        },
-    },
-    CUSTOM: {
-        value: 'Custom',
-        fullName: 'Custom 3D Printer',
-        seriesLabel: 'Custom',
-        label: 'key-Luban/Machine/MachineSeries-Custom',
-        setting: {
-            size: {
-                x: 125,
-                y: 125,
-                z: 125
-            },
-            laserSize: {
-                x: 125,
-                y: 125,
-                z: 125
-            }
-        },
-        alias: ['Custom']
-    },
-    J1: {
-        value: 'Snapmaker J1',
-        fullName: 'Snapmaker J1',
-        series: 'Snapmaker',
-        seriesLabel: 'key-Luban/Machine/MachineSeries-Original',
-        seriesLabelWithoutI18n: 'Snapmaker J1',
-        label: 'Snapmaker J1',
-        machineType: MACHINE_TYPE_3D_PRINTER,
-        size: {
-            x: 324,
-            y: 200,
-            z: 200
-        },
-        img: '/resources/images/machine/snapmaker_j1.png',
-        configPath: 'snapmaker_j1',
-        metadata: {
-            slicerVersion: 1,
-            printModes: [
-                {
-                    mode: PrintMode.Default,
-                    workRange: {
-                        min: [12, 0, 0],
-                        max: [312, 200, 200],
-                    },
-                },
-                {
-                    mode: PrintMode.IDEXDuplication,
-                    workRange: {
-                        min: [0, 0, 0],
-                        max: [160, 200, 200],
-                    },
-                },
-                {
-                    mode: PrintMode.IDEXMirror,
-                    workRange: {
-                        min: [0, 0, 0],
-                        max: [150, 200, 200],
-                    },
-                },
-                {
-                    mode: PrintMode.IDEXBackup,
-                    workRange: {
-                        min: [12, 0, 0],
-                        max: [312, 200, 200],
-                    },
-                },
-            ],
-        },
-    }
+    ORIGINAL: SnapmakerOriginalMachine,
+    ORIGINAL_LZ: SnapmakerOriginalExtendedMachine,
+    A150: SnapmakerA150Machine,
+    A250: SnapmakerA250Machine,
+    A350: SnapmakerA350Machine,
+    A400: SnapmakerArtisanMachine,
+    J1: SnapmakerJ1Machine,
 };
 
 export const HEAD_PRINTING = 'printing';
@@ -297,8 +58,8 @@ export const MACHINE_TOOL_HEADS = {
     [SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL]: {
         headType: HEAD_PRINTING,
         platform: [
-            MACHINE_SERIES.ORIGINAL.value,
-            MACHINE_SERIES.ORIGINAL_LZ.value
+            MACHINE_SERIES.ORIGINAL.identifier,
+            MACHINE_SERIES.ORIGINAL_LZ.identifier,
         ],
         value: SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
         key: 'singleExtruderToolheadForOriginal',
@@ -316,8 +77,8 @@ export const MACHINE_TOOL_HEADS = {
     [LEVEL_ONE_POWER_LASER_FOR_ORIGINAL]: {
         headType: HEAD_LASER,
         platform: [
-            MACHINE_SERIES.ORIGINAL.value,
-            MACHINE_SERIES.ORIGINAL_LZ.value
+            MACHINE_SERIES.ORIGINAL.identifier,
+            MACHINE_SERIES.ORIGINAL_LZ.identifier,
         ],
         value: LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
         label: 'key-App/Settings/MachineSettings-200mW Laser',
@@ -334,8 +95,8 @@ export const MACHINE_TOOL_HEADS = {
     [LEVEL_TWO_POWER_LASER_FOR_ORIGINAL]: {
         headType: HEAD_LASER,
         platform: [
-            MACHINE_SERIES.ORIGINAL.value,
-            MACHINE_SERIES.ORIGINAL_LZ.value
+            MACHINE_SERIES.ORIGINAL.identifier,
+            MACHINE_SERIES.ORIGINAL_LZ.identifier,
         ],
         value: LEVEL_TWO_POWER_LASER_FOR_ORIGINAL,
         label: 'key-App/Settings/MachineSettings-1600mW Laser',
@@ -352,8 +113,8 @@ export const MACHINE_TOOL_HEADS = {
     [STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL]: {
         headType: HEAD_CNC,
         platform: [
-            MACHINE_SERIES.ORIGINAL.value,
-            MACHINE_SERIES.ORIGINAL_LZ.value
+            MACHINE_SERIES.ORIGINAL.identifier,
+            MACHINE_SERIES.ORIGINAL_LZ.identifier,
         ],
         value: STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
         key: 'standardCNCToolheadForOriginal',
@@ -370,9 +131,9 @@ export const MACHINE_TOOL_HEADS = {
     [SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]: {
         headType: HEAD_PRINTING,
         platform: [
-            MACHINE_SERIES.A150.value,
-            MACHINE_SERIES.A250.value,
-            MACHINE_SERIES.A350.value,
+            MACHINE_SERIES.A150.identifier,
+            MACHINE_SERIES.A250.identifier,
+            MACHINE_SERIES.A350.identifier,
         ],
         value: SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
         key: 'singleExtruderToolheadForSM2',
@@ -393,10 +154,10 @@ export const MACHINE_TOOL_HEADS = {
     [DUAL_EXTRUDER_TOOLHEAD_FOR_SM2]: {
         headType: HEAD_PRINTING,
         platform: [
-            MACHINE_SERIES.A150.value,
-            MACHINE_SERIES.A250.value,
-            MACHINE_SERIES.A350.value,
-            MACHINE_SERIES.A400.value
+            MACHINE_SERIES.A150.identifier,
+            MACHINE_SERIES.A250.identifier,
+            MACHINE_SERIES.A350.identifier,
+            MACHINE_SERIES.A400.identifier,
         ],
         value: DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
         pathname: 'dual',
@@ -413,9 +174,9 @@ export const MACHINE_TOOL_HEADS = {
     [LEVEL_ONE_POWER_LASER_FOR_SM2]: {
         headType: HEAD_LASER,
         platform: [
-            MACHINE_SERIES.A150.value,
-            MACHINE_SERIES.A250.value,
-            MACHINE_SERIES.A350.value,
+            MACHINE_SERIES.A150.identifier,
+            MACHINE_SERIES.A250.identifier,
+            MACHINE_SERIES.A350.identifier,
         ],
         value: LEVEL_ONE_POWER_LASER_FOR_SM2,
         pathname: '1600mw',
@@ -432,10 +193,10 @@ export const MACHINE_TOOL_HEADS = {
     [LEVEL_TWO_POWER_LASER_FOR_SM2]: {
         headType: HEAD_LASER,
         platform: [
-            MACHINE_SERIES.A150.value,
-            MACHINE_SERIES.A250.value,
-            MACHINE_SERIES.A350.value,
-            MACHINE_SERIES.A400.value
+            MACHINE_SERIES.A150.identifier,
+            MACHINE_SERIES.A250.identifier,
+            MACHINE_SERIES.A350.identifier,
+            MACHINE_SERIES.A400.identifier,
         ],
         value: LEVEL_TWO_POWER_LASER_FOR_SM2,
         pathname: '10w',
@@ -452,9 +213,9 @@ export const MACHINE_TOOL_HEADS = {
     [STANDARD_CNC_TOOLHEAD_FOR_SM2]: {
         headType: HEAD_CNC,
         platform: [
-            MACHINE_SERIES.A150.value,
-            MACHINE_SERIES.A250.value,
-            MACHINE_SERIES.A350.value,
+            MACHINE_SERIES.A150.identifier,
+            MACHINE_SERIES.A250.identifier,
+            MACHINE_SERIES.A350.identifier,
         ],
         value: STANDARD_CNC_TOOLHEAD_FOR_SM2,
         key: 'standardCNCToolheadForSM2',
@@ -470,7 +231,7 @@ export const MACHINE_TOOL_HEADS = {
     },
     [LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2]: {
         headType: HEAD_CNC,
-        platform: [MACHINE_SERIES.A400.value],
+        platform: [MACHINE_SERIES.A400.identifier],
         value: LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
         key: 'levelTwoCNCToolheadForSM2',
         pathname: 'standard', // if have high power cnc profiles, should be update
@@ -488,7 +249,7 @@ export const MACHINE_TOOL_HEADS = {
         label: 'IDEX',
         image: '/resources/images/machine/snapmaker_j1_dual_extruders.png',
         platform: [
-            MACHINE_SERIES.J1.value,
+            MACHINE_SERIES.J1.identifier,
         ],
         metadata: {
             numberOfExtruders: 2,
@@ -528,19 +289,22 @@ export function findMachineByName(name) {
         if (machine.value === name) {
             return machine;
         }
+        if (machine.identifier === name) {
+            return machine;
+        }
     }
     return null;
 }
 
 function getMachineList() {
     const machineKeys = [
-        MACHINE_SERIES.ORIGINAL.value,
-        MACHINE_SERIES.ORIGINAL_LZ.value,
-        MACHINE_SERIES.A150.value,
-        MACHINE_SERIES.A250.value,
-        MACHINE_SERIES.A350.value,
-        MACHINE_SERIES.A400.value,
-        MACHINE_SERIES.J1.value,
+        MACHINE_SERIES.ORIGINAL.identifier,
+        MACHINE_SERIES.ORIGINAL_LZ.identifier,
+        MACHINE_SERIES.A150.identifier,
+        MACHINE_SERIES.A250.identifier,
+        MACHINE_SERIES.A350.identifier,
+        MACHINE_SERIES.A400.identifier,
+        MACHINE_SERIES.J1.identifier,
     ];
 
     const machines = [];
@@ -560,7 +324,7 @@ export function getMachineOptions() {
     const options = [];
     for (const machine of machines) {
         const option = {
-            value: machine.value, // unique key
+            value: machine.value || machine.identifier, // unique key
             label: machine.label, // for i18n name display
             machine: machine, // reference of machine for further data fetch
         };
@@ -647,7 +411,7 @@ export function getMachineSeriesWithToolhead(series: string, toolhead: string) {
         if (machine.configPath && machine.configPath) {
             configPathname[type] = machine.configPath;
         } else {
-            configPathname[type] = `${series === MACHINE_SERIES.ORIGINAL_LZ.value
+            configPathname[type] = `${series === MACHINE_SERIES.ORIGINAL_LZ.identifier
                 ? 'original'
                 : series.toLowerCase()
             }_${headToolInfo?.pathname}`;
@@ -666,7 +430,7 @@ export const SACP_TYPE_SERIES_MAP = {
     '1': 'A250',
     '2': 'A350',
     '3': 'A400',
-    '4': MACHINE_SERIES.J1.value,
+    '4': MACHINE_SERIES.J1.identifier,
 };
 
 export default {};

@@ -33,8 +33,8 @@ export const WORKSPACE_STAGE = {
 const INITIAL_STATE = {
     headType: '',
     toolHead: '',
-    series: MACHINE_SERIES.ORIGINAL.value,
-    size: MACHINE_SERIES.ORIGINAL.setting.size,
+    series: MACHINE_SERIES.ORIGINAL.identifier,
+    size: MACHINE_SERIES.ORIGINAL.metadata.size,
     isRotate: false,
     uploadState: 'idle', // uploading, uploaded
     renderState: 'idle',

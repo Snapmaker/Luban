@@ -82,7 +82,7 @@ let workspaceVisualizerRef = null;
 function getUnsupportedWidgets(machine, toolHead) {
     if (!machine) return [];
 
-    if ([MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value].includes(machine.value)) {
+    if ([MACHINE_SERIES.A150.identifier, MACHINE_SERIES.A250.identifier, MACHINE_SERIES.A350.identifier].includes(machine.value)) {
         if (toolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
             // return ['marlin'];
             return [];

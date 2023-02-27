@@ -37,9 +37,9 @@ function getPresetQuickParams(machine, presetModel) {
 
     // ABS, PLA, PETG
     if (presetModel.qualityType === 'abs') {
-        if (machine.value === MACHINE_SERIES.J1.value) {
+        if (machine.identifier === MACHINE_SERIES.J1.identifier) {
             return cloneDeep(DEFAULT_PARAMS_FAST);
-        } else if (machine.value === MACHINE_SERIES.A400.value) {
+        } else if (machine.identifier === MACHINE_SERIES.A400.identifier) {
             return cloneDeep(DEFAULT_PARAMS_MEDIUM);
         } else {
             return cloneDeep(DEFAULE_PARAMS_FOR_OTHERS);

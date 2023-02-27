@@ -95,8 +95,8 @@ const isDefaultQualityDefinition = (definitionId) => {
 };
 
 const getRealSeries = series => {
-    if (series === MACHINE_SERIES.ORIGINAL_LZ.value || series === MACHINE_SERIES.CUSTOM.value) {
-        series = MACHINE_SERIES.ORIGINAL.value;
+    if (series === MACHINE_SERIES.ORIGINAL_LZ.identifier) {
+        series = MACHINE_SERIES.ORIGINAL.identifier;
     }
     return series;
 };
