@@ -89,11 +89,11 @@ function getUnsupportedWidgets(machine, toolHead) {
         }
     }
 
-    if (machine.value === MACHINE_SERIES.J1.identifier) {
+    if (machine.identifier === MACHINE_SERIES.J1.identifier) {
         return ['console', 'marlin', 'control', 'macro'];
     }
 
-    if (machine.value === MACHINE_SERIES.A400.identifier) {
+    if (machine.identifier === MACHINE_SERIES.A400.identifier) {
         return ['console', 'macro'];
     }
 

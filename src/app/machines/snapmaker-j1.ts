@@ -1,5 +1,23 @@
-import type { Machine } from '../machine-definition';
-import { MachineType, PrintMode } from '../machine-definition';
+import type { Machine, ToolHead } from '../machine-definition';
+import { MachineType, ToolHeadType, PrintMode } from '../machine-definition';
+
+/**
+ * J1 specific printing module.
+ */
+export const printToolHead: ToolHead = {
+    identifier: 'Snapmaker J1 IDEX Tool Head',
+
+    label: 'IDEX',
+    image: '/resources/images/machine/snapmaker_j1_dual_extruders.png',
+
+    metadata: {
+        headType: ToolHeadType.Print,
+
+        numberOfExtruders: 2,
+    },
+
+    value: 'Snapmaker J1 IDEX Tool Head',
+};
 
 export const machine: Machine = {
     identifier: 'J1',
@@ -10,7 +28,14 @@ export const machine: Machine = {
 
     metadata: {
         size: { x: 324, y: 200, z: 200 },
-        toolHeads: [],
+
+        toolHeads: [
+            {
+                identifier: printToolHead.identifier,
+                configPath: 'printing/snapmaker_j1',
+            }
+        ],
+
         printModes: [
             {
                 mode: PrintMode.Default,

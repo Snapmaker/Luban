@@ -287,9 +287,9 @@ profileDefinitions.getDefaultDefinitions = defaultAPIFactory((headType, series) 
 profileDefinitions.getConfigDefinitions = defaultAPIFactory((headType, series) => request.get(`/api/profileConfigDefinitions/${headType}/${series}`));
 
 
-profileDefinitions.createDefinition = defaultAPIFactory((headType, definition, series) => request.post(`/api/profileDefinition/${headType}`).send({
+profileDefinitions.createDefinition = defaultAPIFactory((headType, definition, configPath) => request.post(`/api/profileDefinition/${headType}`).send({
     definition,
-    series
+    configPath,
 }));
 
 profileDefinitions.createTmpDefinition = defaultAPIFactory((definition, filename) => request.post('/api/profileTmpDefinition').send({

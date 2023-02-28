@@ -1,4 +1,10 @@
 import { Machine, MachineType } from '../machine-definition';
+import {
+    dualExtrusionPrintToolHead,
+    highPower10WLaserToolHead,
+    highPower200WCNCToolHead,
+} from './snapmaker-2-toolheads';
+
 
 /*
     {
@@ -35,7 +41,20 @@ export const machine: Machine = {
     metadata: {
         size: { x: 400, y: 400, z: 400 },
 
-        toolHeads: [],
+        toolHeads: [
+            {
+                identifier: dualExtrusionPrintToolHead.identifier,
+                configPath: 'printing/a400_dual',
+            },
+            {
+                identifier: highPower10WLaserToolHead.identifier,
+                configPath: 'laser/a400_10w',
+            },
+            {
+                identifier: highPower200WCNCToolHead.identifier,
+                configPath: 'cnc/a400_standard',
+            }
+        ],
 
         slicerVersion: 0,
     },

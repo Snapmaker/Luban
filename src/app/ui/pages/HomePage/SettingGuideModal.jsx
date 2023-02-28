@@ -99,21 +99,21 @@ const SettingGuideModal = (props) => {
             return;
         }
 
-        const printingOptions = getMachineSupportedToolOptions(machine.value, HEAD_PRINTING);
+        const printingOptions = getMachineSupportedToolOptions(machine.identifier, HEAD_PRINTING);
         setPrintingToolHeadOptions(printingOptions);
 
         if (printingOptions.length > 0) {
             setPrintingToolHeadSelected(printingOptions[0].value);
         }
 
-        const laserOptions = getMachineSupportedToolOptions(machine.value, HEAD_LASER);
+        const laserOptions = getMachineSupportedToolOptions(machine.identifier, HEAD_LASER);
         setLaserToolHeadOptions(laserOptions);
 
         if (laserOptions.length > 0) {
             setLaserToolHeadSelected(laserOptions[0].value);
         }
 
-        const cncOptions = getMachineSupportedToolOptions(machine.value, HEAD_CNC);
+        const cncOptions = getMachineSupportedToolOptions(machine.identifier, HEAD_CNC);
         setCncToolHeadOptions(cncOptions);
 
         if (cncOptions.length > 0) {

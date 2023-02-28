@@ -1,5 +1,13 @@
 import { Machine, MachineType } from '../machine-definition';
 
+import {
+    dualExtrusionPrintToolHead,
+    highPower10WLaserToolHead,
+    printToolHead,
+    standardLaserToolHead,
+    standardCNCToolHead,
+} from './snapmaker-2-toolheads';
+
 /*
     {
         value: 'A150',
@@ -25,7 +33,32 @@ export const machine: Machine = {
     metadata: {
         size: { x: 160, y: 160, z: 145 },
 
-        toolHeads: [],
+        toolHeads: [
+            {
+                identifier: printToolHead.identifier,
+                configPath: 'printing/a150_single',
+            },
+            {
+                identifier: dualExtrusionPrintToolHead.identifier,
+                configPath: 'printing/a150_dual',
+                workRange: {
+                    min: [0, 0, 0],
+                    max: [160, 160, 110],
+                },
+            },
+            {
+                identifier: standardLaserToolHead.identifier,
+                configPath: 'laser/a150_1600mw',
+            },
+            {
+                identifier: highPower10WLaserToolHead.identifier,
+                configPath: 'laser/a150_10w',
+            },
+            {
+                identifier: standardCNCToolHead.identifier,
+                configPath: 'cnc/a150_standard',
+            },
+        ],
 
         slicerVersion: 0,
     },

@@ -1,39 +1,17 @@
-import { Machine, MachineType } from '../machine-definition';
+import type { Machine } from '../machine-definition';
+import { MachineType } from '../machine-definition';
+import {
+    laser1600mWToolHeadOriginal,
+    laserToolHeadOriginal,
+    printToolHeadOriginal,
+    cncToolHeadOriginal
+} from './snapmaker-original-toolheads';
 
-/*
-    {
-     value: DEFAULT_MACHINE_ORIGINAL,
-        fullName: 'Snapmaker Original',
-        brand: 'Snapmaker',
-        series: 'Snapmaker Original',
-        seriesLabel: 'key-Luban/Machine/MachineSeries-Original',
-        seriesLabelWithoutI18n: 'Original',
-        label: 'key-Luban/Machine/MachineSeries-Snapmaker Original',
-        img: '/resources/images/machine/size-1.0-original.jpg',
-        setting: {
-            size: {
-                x: 125,
-                y: 125,
-                z: 125
-            },
-            laserSize: {
-                x: 125,
-                y: 125,
-                z: 125
-            }
-        },
-        machineType: MACHINE_TYPE_MULTI_FUNCTION_PRINTER,
-        size: {
-            x: 125,
-            y: 125,
-            z: 125,
-        },
-        metadata: {
-            slicerVersion: 0,
-        },
-    },
-*/
-
+/**
+ * Snapmaker Original
+ *
+ * brand: 'Snapmaker'
+ */
 export const machine: Machine = {
     identifier: 'Original',
 
@@ -45,7 +23,24 @@ export const machine: Machine = {
     metadata: {
         size: { x: 125, y: 125, z: 125 },
 
-        toolHeads: [],
+        toolHeads: [
+            {
+                identifier: printToolHeadOriginal.identifier,
+                configPath: 'printing/original_single',
+            },
+            {
+                identifier: laserToolHeadOriginal.identifier,
+                configPath: 'laser/original_200mw',
+            },
+            {
+                identifier: laser1600mWToolHeadOriginal.identifier,
+                configPath: 'laser/original_1600mw',
+            },
+            {
+                identifier: cncToolHeadOriginal.identifier,
+                configPath: 'cnc/original_standard',
+            }
+        ],
 
         slicerVersion: 0,
     },

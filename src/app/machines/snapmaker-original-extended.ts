@@ -1,42 +1,24 @@
 import { Machine, MachineType } from '../machine-definition';
 
-/*
-    value: DEFAULT_MACHINE_ORIGINAL_LONG_Z_AXIS,
-        fullName: 'Snapmaker Original with Z-axis Extension Module',
-        series: 'Snapmaker Original',
-        seriesLabel: 'key-Workspace/MachineSetting-Z-Axis Extension Module',
-        seriesLabelWithoutI18n: 'Original with Z-axis Extension Module',
-        configPath: 'Original',
-        label:
-            'key-Luban/Machine/MachineSeries-Snapmaker Original with Z-axis Extension Module',
-        setting: {
-            size: {
-                x: 125,
-                y: 125,
-                z: 221
-            },
-            laserSize: {
-                x: 125,
-                y: 125,
-                z: 221
-            }
-        },
-        machineType: MACHINE_TYPE_MULTI_FUNCTION_PRINTER,
-        size: {
-            x: 125,
-            y: 125,
-            z: 221,
-        },
-        img: '/resources/images/machine/size-1.0-original.jpg',
-        metadata: {
-            slicerVersion: 0,
-        },
-*/
+import {
+    laser1600mWToolHeadOriginal,
+    laserToolHeadOriginal,
+    printToolHeadOriginal,
+    cncToolHeadOriginal
+} from './snapmaker-original-toolheads';
 
+
+export const DEFAULT_MACHINE_ORIGINAL_LONG_Z_AXIS = 'Original Long Z-axis';
+/**
+ * Snapmaker Original with Z-axis Extension Module
+ *
+ * series: 'Snapmaker Original',
+ * brand: 'Snapmaker'
+ */
 export const machine: Machine = {
-    identifier: 'Original Long Z-axis',
+    identifier: DEFAULT_MACHINE_ORIGINAL_LONG_Z_AXIS,
 
-    fullName: 'Snapmaker Original',
+    fullName: 'Snapmaker Original with Z-axis Extension Module',
     machineType: MachineType.MultiFuncionPrinter,
 
     img: '/resources/images/machine/size-1.0-original.jpg',
@@ -44,7 +26,24 @@ export const machine: Machine = {
     metadata: {
         size: { x: 125, y: 125, z: 221 },
 
-        toolHeads: [],
+        toolHeads: [
+            {
+                identifier: printToolHeadOriginal.identifier,
+                configPath: 'printing/original_single',
+            },
+            {
+                identifier: laserToolHeadOriginal.identifier,
+                configPath: 'laser/original_200mw',
+            },
+            {
+                identifier: laser1600mWToolHeadOriginal.identifier,
+                configPath: 'laser/original_1600mw',
+            },
+            {
+                identifier: cncToolHeadOriginal.identifier,
+                configPath: 'cnc/original_standard',
+            }
+        ],
 
         slicerVersion: 0,
     },

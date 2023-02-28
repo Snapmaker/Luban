@@ -76,7 +76,7 @@ export class DefinitionLoader {
 
         const suffix = ConfigV1Suffix;
         const filePath = configPath
-            ? path.join(`${DataStorage.configDir}/${headType}/${configPath}`, `${definitionId}${suffix}`)
+            ? path.join(`${DataStorage.configDir}/${configPath}`, `${definitionId}${suffix}`)
             : path.join(`${DataStorage.configDir}/${headType}`, `${definitionId}${suffix}`);
 
         // in case of JSON parse error, set default json inherits from snapmaker2.def.json

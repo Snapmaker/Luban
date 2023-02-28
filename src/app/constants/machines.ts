@@ -1,5 +1,24 @@
 import includes from 'lodash/includes';
 import {
+    printToolHeadOriginal,
+    laserToolHeadOriginal,
+    laser1600mWToolHeadOriginal,
+    cncToolHeadOriginal
+} from '../machines/snapmaker-original-toolheads';
+import {
+    printToolHead as printToolHeadSM2,
+    dualExtrusionPrintToolHead,
+    standardLaserToolHead as standardLaserToolHeadSM2,
+    highPower10WLaserToolHead as laser10WToolHeadSM2,
+    standardCNCToolHead as standardCNCToolHeadSM2,
+    highPower200WCNCToolHead as highPower200WCNCToolHeadSM2,
+} from '../machines/snapmaker-2-toolheads';
+import {
+    printToolHead as printToolHeadJ1,
+} from '../machines/snapmaker-j1';
+import i18n from '../lib/i18n';
+import type { Machine } from '../machine-definition';
+import {
     SnapmakerOriginalMachine,
     SnapmakerOriginalExtendedMachine,
     SnapmakerA150Machine,
@@ -9,7 +28,6 @@ import {
     SnapmakerJ1Machine
 } from '../machines';
 
-import log from '../lib/log';
 
 export const SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL = 'singleExtruderToolheadForOriginal';
 export const SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 = 'singleExtruderToolheadForSM2';
@@ -55,206 +73,17 @@ export const HEAD_LASER = 'laser';
 export const HEAD_CNC = 'cnc';
 
 export const MACHINE_TOOL_HEADS = {
-    [SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL]: {
-        headType: HEAD_PRINTING,
-        platform: [
-            MACHINE_SERIES.ORIGINAL.identifier,
-            MACHINE_SERIES.ORIGINAL_LZ.identifier,
-        ],
-        value: SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
-        key: 'singleExtruderToolheadForOriginal',
-        pathname: 'single',
-        // label: SINGLE_EXTRUDER_TOOLHEAD,
-        label: 'key-App/Settings/MachineSettings-Single Extruder Toolhead',
-        image: '/resources/images/machine/original_3dp.png',
-        // mock offset data
-        offset: {
-            x: 0,
-            y: 0,
-            z: 0
-        }
-    },
-    [LEVEL_ONE_POWER_LASER_FOR_ORIGINAL]: {
-        headType: HEAD_LASER,
-        platform: [
-            MACHINE_SERIES.ORIGINAL.identifier,
-            MACHINE_SERIES.ORIGINAL_LZ.identifier,
-        ],
-        value: LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
-        label: 'key-App/Settings/MachineSettings-200mW Laser',
-        pathname: '200mw',
-        key: 'levelOneLaserToolheadForOriginal',
-        image: '/resources/images/machine/original_laser.png',
-        // mock offset data
-        offset: {
-            x: 0,
-            y: 0,
-            z: 0
-        }
-    },
-    [LEVEL_TWO_POWER_LASER_FOR_ORIGINAL]: {
-        headType: HEAD_LASER,
-        platform: [
-            MACHINE_SERIES.ORIGINAL.identifier,
-            MACHINE_SERIES.ORIGINAL_LZ.identifier,
-        ],
-        value: LEVEL_TWO_POWER_LASER_FOR_ORIGINAL,
-        label: 'key-App/Settings/MachineSettings-1600mW Laser',
-        pathname: '1600mw',
-        key: 'levelTwoLaserToolheadForOriginal',
-        image: '/resources/images/machine/original_laser.png',
-        // mock offset data
-        offset: {
-            x: 0,
-            y: 0,
-            z: 0
-        }
-    },
-    [STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL]: {
-        headType: HEAD_CNC,
-        platform: [
-            MACHINE_SERIES.ORIGINAL.identifier,
-            MACHINE_SERIES.ORIGINAL_LZ.identifier,
-        ],
-        value: STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
-        key: 'standardCNCToolheadForOriginal',
-        label: 'key-App/Settings/MachineSettings-Standard CNC',
-        pathname: 'standard',
-        image: '/resources/images/machine/original_cnc.png',
-        // mock offset data
-        offset: {
-            x: 0,
-            y: 0,
-            z: 0
-        }
-    },
-    [SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]: {
-        headType: HEAD_PRINTING,
-        platform: [
-            MACHINE_SERIES.A150.identifier,
-            MACHINE_SERIES.A250.identifier,
-            MACHINE_SERIES.A350.identifier,
-        ],
-        value: SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
-        key: 'singleExtruderToolheadForSM2',
-        pathname: 'single',
-        // label: SINGL
-        //
-        //
-        // E_EXTRUDER_TOOLHEAD,
-        label: 'key-App/Settings/MachineSettings-Single Extruder Toolhead',
-        image: '/resources/images/machine/tool-head-a-extruder.png',
-        // mock offset data
-        offset: {
-            x: 0,
-            y: 0,
-            z: 0
-        }
-    },
-    [DUAL_EXTRUDER_TOOLHEAD_FOR_SM2]: {
-        headType: HEAD_PRINTING,
-        platform: [
-            MACHINE_SERIES.A150.identifier,
-            MACHINE_SERIES.A250.identifier,
-            MACHINE_SERIES.A350.identifier,
-            MACHINE_SERIES.A400.identifier,
-        ],
-        value: DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
-        pathname: 'dual',
-        key: 'dualExtruderToolheadForSM2',
-        label: 'key-App/Settings/MachineSettings-Dual Extruder Toolhead',
-        image: '/resources/images/machine/tool-head-a-dual-extruder.png',
-        // mock offset data
-        offset: {
-            x: 0,
-            y: 0,
-            z: 0
-        }
-    },
-    [LEVEL_ONE_POWER_LASER_FOR_SM2]: {
-        headType: HEAD_LASER,
-        platform: [
-            MACHINE_SERIES.A150.identifier,
-            MACHINE_SERIES.A250.identifier,
-            MACHINE_SERIES.A350.identifier,
-        ],
-        value: LEVEL_ONE_POWER_LASER_FOR_SM2,
-        pathname: '1600mw',
-        key: 'levelOneLaserToolheadForSM2',
-        label: 'key-App/Settings/MachineSettings-1600mW Laser',
-        image: '/resources/images/machine/1600mw_laser.png',
-        // mock offset data
-        offset: {
-            x: 0,
-            y: 0,
-            z: 0
-        }
-    },
-    [LEVEL_TWO_POWER_LASER_FOR_SM2]: {
-        headType: HEAD_LASER,
-        platform: [
-            MACHINE_SERIES.A150.identifier,
-            MACHINE_SERIES.A250.identifier,
-            MACHINE_SERIES.A350.identifier,
-            MACHINE_SERIES.A400.identifier,
-        ],
-        value: LEVEL_TWO_POWER_LASER_FOR_SM2,
-        pathname: '10w',
-        label: 'key-App/Settings/MachineSettings-10W Laser',
-        key: 'levelTwoLaserToolheadForSM2',
-        image: '/resources/images/machine/10w_laser.png',
-        // mock offset data
-        offset: {
-            x: 0,
-            y: 0,
-            z: 0
-        }
-    },
-    [STANDARD_CNC_TOOLHEAD_FOR_SM2]: {
-        headType: HEAD_CNC,
-        platform: [
-            MACHINE_SERIES.A150.identifier,
-            MACHINE_SERIES.A250.identifier,
-            MACHINE_SERIES.A350.identifier,
-        ],
-        value: STANDARD_CNC_TOOLHEAD_FOR_SM2,
-        key: 'standardCNCToolheadForSM2',
-        pathname: 'standard',
-        label: 'key-App/Settings/MachineSettings-Standard CNC',
-        image: '/resources/images/machine/cnc_2.png',
-        // mock offset data
-        offset: {
-            x: 0,
-            y: 0,
-            z: 0
-        }
-    },
-    [LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2]: {
-        headType: HEAD_CNC,
-        platform: [MACHINE_SERIES.A400.identifier],
-        value: LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
-        key: 'levelTwoCNCToolheadForSM2',
-        pathname: 'standard', // if have high power cnc profiles, should be update
-        label: 'key-App/Settings/MachineSettings-High CNC',
-        image: '/resources/images/machine/coming_soon.png',
-        offset: {
-            x: 0,
-            y: 0,
-            z: 0
-        }
-    },
-    'Snapmaker J1 IDEX Tool Head': {
-        headType: HEAD_PRINTING,
-        value: 'Snapmaker J1 IDEX Tool Head',
-        label: 'IDEX',
-        image: '/resources/images/machine/snapmaker_j1_dual_extruders.png',
-        platform: [
-            MACHINE_SERIES.J1.identifier,
-        ],
-        metadata: {
-            numberOfExtruders: 2,
-        }
-    }
+    [SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL]: printToolHeadOriginal,
+    [LEVEL_ONE_POWER_LASER_FOR_ORIGINAL]: laserToolHeadOriginal,
+    [LEVEL_TWO_POWER_LASER_FOR_ORIGINAL]: laser1600mWToolHeadOriginal,
+    [STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL]: cncToolHeadOriginal,
+    [SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]: printToolHeadSM2,
+    [DUAL_EXTRUDER_TOOLHEAD_FOR_SM2]: dualExtrusionPrintToolHead,
+    [LEVEL_ONE_POWER_LASER_FOR_SM2]: standardLaserToolHeadSM2,
+    [LEVEL_TWO_POWER_LASER_FOR_SM2]: laser10WToolHeadSM2,
+    [STANDARD_CNC_TOOLHEAD_FOR_SM2]: standardCNCToolHeadSM2,
+    [highPower200WCNCToolHeadSM2.identifier]: highPower200WCNCToolHeadSM2,
+    [printToolHeadJ1.identifier]: printToolHeadJ1,
 };
 
 export const MODULEID_TOOLHEAD_MAP = {
@@ -264,7 +93,7 @@ export const MODULEID_TOOLHEAD_MAP = {
     '13': DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
     '14': LEVEL_TWO_POWER_LASER_FOR_SM2,
     '15': LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
-    '00': MACHINE_TOOL_HEADS['Snapmaker J1 IDEX Tool Head'].value,
+    '00': printToolHeadJ1.identifier,
 };
 
 export const MODULEID_MAP = {
@@ -283,7 +112,7 @@ export const MODULEID_MAP = {
     '7': AIR_PURIFIER
 };
 
-export function findMachineByName(name) {
+export function findMachineByName(name: string): Machine | null {
     for (const key of Object.keys(MACHINE_SERIES)) {
         const machine = MACHINE_SERIES[key];
         if (machine.identifier === name) {
@@ -331,26 +160,26 @@ export function getMachineOptions() {
     return options;
 }
 
-export function getMachineSupportedTools(machineSeries, headType = undefined) {
-    const toolHeads = [];
-    for (const key of Object.keys(MACHINE_TOOL_HEADS)) {
-        const toolHead = MACHINE_TOOL_HEADS[key];
-
-        if (toolHead.headType === undefined) {
-            log.warn(`Unknown head type ${toolHead}`);
-            continue;
-        }
-
-        if (headType !== undefined && toolHead.headType !== headType) {
-            continue;
-        }
-
-        if (!includes(toolHead.platform, machineSeries)) {
-            continue;
-        }
-
-        toolHeads.push(toolHead);
+export function getMachineSupportedTools(machineSeries: string, headType = undefined) {
+    const machine: Machine = findMachineByName(machineSeries);
+    if (!machine) {
+        return [];
     }
+
+    const toolHeads = [];
+    for (const toolHeadOptions of machine.metadata.toolHeads) {
+        for (const key of Object.keys(MACHINE_TOOL_HEADS)) {
+            const toolHead = MACHINE_TOOL_HEADS[key];
+            if (headType && toolHead.metadata?.headType !== headType) {
+                continue;
+            }
+            if (toolHead.identifier === toolHeadOptions.identifier) {
+                toolHeads.push(toolHead);
+                break;
+            }
+        }
+    }
+
     return toolHeads;
 }
 
@@ -361,7 +190,7 @@ export function getMachineSupportedToolOptions(machineSeries, headType = undefin
     for (const toolHead of toolHeads) {
         const option = {
             value: toolHead.value,
-            label: toolHead.label,
+            label: i18n._(toolHead.label),
             tool: toolHead,
         };
         options.push(option);
@@ -397,21 +226,33 @@ export function getMachineSeriesWithToolhead(series: string, toolhead: string) {
     const configPathname = {};
 
     Object.keys(toolhead).forEach((key: string) => {
-        const type = key.split('Toolhead')[0];
-        const headToolInfo = MACHINE_TOOL_HEADS[toolhead[key]];
-        workSize[type] = {
-            x: size.x,
-            y: size.y,
-            z: size.z,
-        };
+        const identifier = toolhead[key];
 
-        if (machine.configPath && machine.configPath) {
-            configPathname[type] = machine.configPath;
+        const type = key.split('Toolhead')[0];
+
+        const toolHeadOptions = machine.metadata.toolHeads.find(toolHeadOption => toolHeadOption.identifier === identifier);
+        if (!toolHeadOptions) {
+            return;
+        }
+
+        if (toolHeadOptions.workRange) {
+            workSize[type] = {
+                x: toolHeadOptions.workRange.max[0],
+                y: toolHeadOptions.workRange.max[1],
+                z: toolHeadOptions.workRange.max[2],
+            };
         } else {
-            configPathname[type] = `${series === MACHINE_SERIES.ORIGINAL_LZ.identifier
-                ? 'original'
-                : series.toLowerCase()
-            }_${headToolInfo?.pathname}`;
+            workSize[type] = {
+                x: size.x,
+                y: size.y,
+                z: size.z,
+            };
+        }
+
+        if (toolHeadOptions.configPath) {
+            configPathname[type] = toolHeadOptions.configPath;
+        } else {
+            configPathname[type] = `${series.toLowerCase()}`;
         }
     });
 

@@ -118,10 +118,10 @@ export const createDefinition = async (req, res) => {
     const definitionLoader = new DefinitionLoader();
     delete (definition.typeOfPrinting);
     definitionLoader.fromObject(definition);
-    const series = isPublicProfile(definitionLoader.definitionId) ? '' : (req.body.series ?? '');
+    const configPath = isPublicProfile(definitionLoader.definitionId) ? '' : (req.body.configPath ?? '');
 
-    const filePath = path.join(`${DataStorage.configDir}/${headType}/${series}`, `${definitionLoader.definitionId}.def.json`);
-    const backupPath = path.join(`${DataStorage.activeConfigDir}/${headType}/${series}`, `${definitionLoader.definitionId}.def.json`);
+    const filePath = path.join(`${DataStorage.configDir}/${configPath}`, `${definitionLoader.definitionId}.def.json`);
+    const backupPath = path.join(`${DataStorage.activeConfigDir}/${configPath}`, `${definitionLoader.definitionId}.def.json`);
     const data = JSON.stringify(definitionLoader.toJSON(), null, 2);
     if (!fs.existsSync(backupPath)) {
         try {
@@ -133,7 +133,7 @@ export const createDefinition = async (req, res) => {
     }
     const callback = () => {
         const loader = new DefinitionLoader();
-        loader.loadDefinition(headType, definitionLoader.definitionId, series);
+        loader.loadDefinition(headType, definitionLoader.definitionId, configPath);
         // res.send({ definition: loader.toObject() });
         fsWriteFile(backupPath, data, res, (err) => {
             if (err) {
