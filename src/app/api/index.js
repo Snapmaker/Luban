@@ -275,16 +275,19 @@ profileDefinitions.update = defaultAPIFactory((formdata) => request.put('/api/pr
 
 profileDefinitions.delete = defaultAPIFactory((options) => request.delete('/api/profileDefinition').send(options));
 
-profileDefinitions.getRawDefinition = defaultAPIFactory((headType, definitionId, series) => request.get(`/api/profileRawDefinition/${headType}/${definitionId}`).query({
-    series
+profileDefinitions.getRawDefinition = defaultAPIFactory((headType, definitionId, configPath) => request.get(`/api/profileRawDefinition/${headType}/${definitionId}`).query({
+    configPath,
 }));
-profileDefinitions.getDefinition = defaultAPIFactory((headType, definitionId, series) => request.get(`/api/profileDefinition/${headType}/${definitionId}`).query({
-    series
-}));
+profileDefinitions.getDefinition = defaultAPIFactory(
+    (headType, definitionId, configPath) => request.get(`/api/profileDefinition/${headType}/${definitionId}`).query({ configPath })
+);
 
-profileDefinitions.getDefinitionsByPrefixName = defaultAPIFactory((headType, prefix, series) => request.get(`/api/getDefinitionsByPrefixName/${headType}/${prefix}/${series}`));
-profileDefinitions.getDefaultDefinitions = defaultAPIFactory((headType, series) => request.get(`/api/profileDefaultDefinitions/${headType}/${series}`));
-profileDefinitions.getConfigDefinitions = defaultAPIFactory((headType, series) => request.get(`/api/profileConfigDefinitions/${headType}/${series}`));
+profileDefinitions.getDefinitionsByPrefixName = defaultAPIFactory(
+    (headType, prefix, configPath) => request.get(`/api/getDefinitionsByPrefixName/${headType}/${prefix}`)
+        .query({ configPath })
+);
+profileDefinitions.getDefaultDefinitions = defaultAPIFactory((headType, configPath) => request.get(`/api/profileDefaultDefinitions/${headType}`).query({ configPath }));
+profileDefinitions.getConfigDefinitions = defaultAPIFactory((headType, configPath) => request.get(`/api/profileConfigDefinitions/${headType}`).query({ configPath }));
 
 
 profileDefinitions.createDefinition = defaultAPIFactory((headType, definition, configPath) => request.post(`/api/profileDefinition/${headType}`).send({
@@ -297,20 +300,20 @@ profileDefinitions.createTmpDefinition = defaultAPIFactory((definition, filename
     filename
 }));
 
-profileDefinitions.removeDefinition = defaultAPIFactory((headType, definitionId, series) => request.delete(`/api/profileDefinition/${headType}/${definitionId}`).send({ series }));
+profileDefinitions.removeDefinition = defaultAPIFactory((headType, definitionId, configPath) => request.delete(`/api/profileDefinition/${headType}/${definitionId}`).send({ configPath }));
 
-profileDefinitions.updateDefinition = defaultAPIFactory((headType, definitionId, definition, series) => request.put(`/api/profileDefinition/${headType}/${definitionId}`).send({
+profileDefinitions.updateDefinition = defaultAPIFactory((headType, definitionId, definition, configPath) => request.put(`/api/profileDefinition/${headType}/${definitionId}`).send({
     definition,
-    series
+    configPath
 }));
-profileDefinitions.updateDefaultDefinition = defaultAPIFactory((headType, definitionId, definition, series) => request.put(`/api/profileDefaultDefinition/${headType}/${definitionId}`).send({
+profileDefinitions.updateDefaultDefinition = defaultAPIFactory((headType, definitionId, definition, configPath) => request.put(`/api/profileDefaultDefinition/${headType}/${definitionId}`).send({
     definition,
-    series
+    configPath
 }));
-profileDefinitions.uploadDefinition = defaultAPIFactory((headType, definitionId, uploadName, series) => request.post(`/api/profileDefinition/${headType}/upload`).send({
+profileDefinitions.uploadDefinition = defaultAPIFactory((headType, definitionId, uploadName, configPath) => request.post(`/api/profileDefinition/${headType}/upload`).send({
     definitionId,
     uploadName,
-    series
+    configPath
 }));
 
 /**

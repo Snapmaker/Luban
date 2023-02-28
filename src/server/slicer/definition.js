@@ -102,8 +102,8 @@ export class DefinitionLoader {
             this.definitionId = definitionId;
         }
         const suffix = ConfigV1Suffix;
-        const filePath = configPath ? path.join(`${DataStorage.defaultConfigDir}/${headType}/${configPath}`,
-            `${definitionId}${suffix}`)
+        const filePath = configPath
+            ? path.join(`${DataStorage.defaultConfigDir}/${configPath}`, `${definitionId}${suffix}`)
             : path.join(`${DataStorage.defaultConfigDir}/${headType}`, `${definitionId}${suffix}`);
 
         // in case of JSON parse error, set default json inherits from snapmaker2.def.json
@@ -408,10 +408,9 @@ export function loadDefinitionLoaderByFilename(headType, filename, configPath, i
 export function loadDefinitionsByRegex(headType, configPath, regex, defaultId) {
     const defaultDefinitionLoader = loadDefinitionLoaderByFilename(headType, defaultId, configPath);
 
-    const funcConfigDir = path.join(DataStorage.configDir, headType);
-    const configDir = path.join(funcConfigDir, configPath);
+    const configDir = path.join(DataStorage.configDir, configPath);
 
-    if (!fs.existsSync(funcConfigDir) || !fs.existsSync(configDir)) {
+    if (!fs.existsSync(configDir)) {
         return [];
     }
 
@@ -463,41 +462,43 @@ export function loadDefinitionsByPrefixName(headType, prefix = 'material', confi
     return loadDefinitionsByRegex(headType, configPath, regex, defaultId);
 }
 
-export function loadAllSeriesDefinitions(isDefault = false, headType, series = 'A150') {
+export function loadAllSeriesDefinitions(isDefault = false, headType, configPath = 'A150') {
+    console.log('loadAllSeriesDefinitions', isDefault, headType, configPath);
+
     // TODO: series name?
-    const _headType = (headType === 'laser' && includes(series, '10w')) ? '10w-laser' : headType;
+    const _headType = (headType === 'laser' && includes(configPath, '10w')) ? '10w-laser' : headType;
     const predefined = DEFAULT_PREDEFINED_ID[_headType];
     const definitions = [];
 
-    const configDir = isDefault ? `${DataStorage.defaultConfigDir}/${headType}`
-        : `${DataStorage.configDir}/${headType}`;
+    const configDir = isDefault ? `${DataStorage.defaultConfigDir}/${configPath}` : `${DataStorage.configDir}/${configPath}`;
     let defaultFilenames = [];
     try {
-        defaultFilenames = fs.readdirSync(`${configDir}/${series}`);
+        defaultFilenames = fs.readdirSync(configDir);
     } catch (e) {
+        log.error(`Failed to load files in folder ${configDir}`);
         log.error(e);
     }
 
     if (isDefault) {
         for (const filename of defaultFilenames) {
             if (filename !== 'machine.def.json' && ConfigV1Regex.test(filename)) {
-                const definitionLoader = loadDefinitionLoaderByFilename(headType, filename, series, isDefault);
+                const definitionLoader = loadDefinitionLoaderByFilename(headType, filename, configPath, isDefault);
                 definitions.push(definitionLoader.toObject());
             }
         }
     } else {
-        const defaultDefinitionLoader = loadDefinitionLoaderByFilename(headType, predefined, series);
+        const defaultDefinitionLoader = loadDefinitionLoaderByFilename(headType, predefined, configPath);
         for (const filename of defaultFilenames) {
             if (ConfigV1Regex.test(filename)) {
                 try {
-                    const definitionLoader = loadDefinitionLoaderByFilename(headType, filename, series, isDefault);
+                    const definitionLoader = loadDefinitionLoaderByFilename(headType, filename, configPath, isDefault);
                     if (!definitionLoader.isRecommended && defaultDefinitionLoader) {
                         const ownKeys = Array.from(defaultDefinitionLoader.ownKeys).filter(e => !definitionLoader.ownKeys.has(e));
                         if (ownKeys && ownKeys.length > 0) {
                             for (const ownKey of ownKeys) {
                                 definitionLoader.ownKeys.add(ownKey);
                             }
-                            writeDefinition(headType, filename, series, definitionLoader);
+                            writeDefinition(headType, filename, configPath, definitionLoader);
                         }
                     }
                     definitions.push(definitionLoader.toObject());

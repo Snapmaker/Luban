@@ -78,6 +78,8 @@ class DefinitionManager {
     // series = '';
 
     async init(headType, configPathname) {
+        console.log('DefinitionManager.init', headType, configPathname);
+
         this.configPathname = configPathname;
         this.headType = headType;
         let res;
@@ -102,10 +104,7 @@ class DefinitionManager {
         }
 
         // default profiles
-        res = await api.profileDefinitions.getDefaultDefinitions(
-            this.headType,
-            this.configPathname
-        );
+        res = await api.profileDefinitions.getDefaultDefinitions(this.headType, this.configPathname);
 
         this.defaultDefinitions = res.body.definitions.map((item) => {
             item.isDefault = true;
@@ -219,10 +218,7 @@ class DefinitionManager {
     }
 
     async getConfigDefinitions() {
-        const res = await api.profileDefinitions.getConfigDefinitions(
-            this.headType,
-            this.configPathname
-        );
+        const res = await api.profileDefinitions.getConfigDefinitions(this.headType, this.configPathname);
         const definitions = await this.markDefaultDefinitions(
             res.body.definitions
         );

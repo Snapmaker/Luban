@@ -212,16 +212,20 @@ function registerApis(app) {
 
     app.get(urljoin(settings.route, 'api/profileRawDefinition/:headType/:definitionId'), api.profileDefinitions.getRawDefinition);
 
-    app.get(urljoin(settings.route, 'api/getDefinitionsByPrefixName/:headType/:prefix/:series'), api.profileDefinitions.getDefinitionsByPrefixName);
-    app.get(urljoin(settings.route, 'api/profileDefaultDefinitions/:headType/:series'), api.profileDefinitions.getDefaultDefinitions);
-    app.get(urljoin(settings.route, 'api/profileConfigDefinitions/:headType/:series'), api.profileDefinitions.getConfigDefinitions);
+    app.get(urljoin(settings.route, 'api/getDefinitionsByPrefixName/:headType/:prefix'), api.profileDefinitions.getDefinitionsByPrefixName);
+    app.get(urljoin(settings.route, 'api/profileDefaultDefinitions/:headType'), api.profileDefinitions.getDefaultDefinitions);
+    app.get(urljoin(settings.route, 'api/profileConfigDefinitions/:headType'), api.profileDefinitions.getConfigDefinitions);
+
+    app.put(urljoin(settings.route, 'api/profileDefaultDefinition/:headType/:definitionId'), api.profileDefinitions.updateDefaultDefinition);
+
     app.get(urljoin(settings.route, 'api/profileDefinition/:headType/:definitionId/'), api.profileDefinitions.getDefinition);
     app.post(urljoin(settings.route, 'api/profileDefinition/:headType'), api.profileDefinitions.createDefinition);
-    app.post(urljoin(settings.route, 'api/profileTmpDefinition'), api.profileDefinitions.createTmpDefinition);
+
     app.delete(urljoin(settings.route, 'api/profileDefinition/:headType/:definitionId'), api.profileDefinitions.removeDefinition);
     app.put(urljoin(settings.route, 'api/profileDefinition/:headType/:definitionId'), api.profileDefinitions.updateDefinition);
-    app.put(urljoin(settings.route, 'api/profileDefaultDefinition/:headType/:definitionId'), api.profileDefinitions.updateDefaultDefinition);
     app.post(urljoin(settings.route, 'api/profileDefinition/:headType/upload'), api.profileDefinitions.uploadDefinition);
+
+    app.post(urljoin(settings.route, 'api/profileTmpDefinition'), api.profileDefinitions.createTmpDefinition);
 
     // preset
     app.get(urljoin(settings.route, 'api/preset/parameter_keys'), api.profileDefinitions.getPresetParameterKeys);

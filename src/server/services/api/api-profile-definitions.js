@@ -23,8 +23,8 @@ const log = logger('service:profile-definitions');
  * Get raw definition which is unparsed and override.
  */
 export const getRawDefinition = (req, res) => {
-    const { definitionId, headType } = req.params;
-    const series = req.query.series;
+    const { definitionId } = req.params;
+    const configPath = req.query.configPath;
     if (!definitionId) {
         res.status(ERR_BAD_REQUEST).send({
             err: 'Parameter "definitionId" is required.'
@@ -33,7 +33,7 @@ export const getRawDefinition = (req, res) => {
     }
 
     const filename = `${definitionId}.def.json`;
-    const configDir = `${DataStorage.configDir}/${headType}/${series}/${filename}`;
+    const configDir = `${DataStorage.configDir}/${configPath}/${filename}`;
     try {
         const readFileSync = fs.readFileSync(configDir);
         const parse = JSON.parse(readFileSync);
@@ -55,7 +55,7 @@ const isPublicProfile = (definitionId) => {
 
 export const getDefinition = (req, res) => {
     const { definitionId, headType } = req.params;
-    const series = req.query.series;
+    const configPath = req.query.configPath;
     if (!definitionId) {
         res.status(ERR_BAD_REQUEST).send({
             err: 'Parameter "definitionId" is required.'
@@ -69,7 +69,7 @@ export const getDefinition = (req, res) => {
     if (isPublicProfile(definitionId)) {
         loadSuccess = definitionLoader.loadDefinition(headType, definitionId);
     } else {
-        loadSuccess = definitionLoader.loadDefinition(headType, definitionId, series);
+        loadSuccess = definitionLoader.loadDefinition(headType, definitionId, configPath);
     }
 
     if (loadSuccess) {
@@ -81,23 +81,25 @@ export const getDefinition = (req, res) => {
 
 
 export const getDefinitionsByPrefixName = (req, res) => {
-    // const definitions = loadMaterialDefinitions();
-    const { headType, prefix, series } = req.params;
-    const definitions = loadDefinitionsByPrefixName(headType, prefix, series);
+    const { headType, prefix } = req.params;
+    const { configPath } = req.query;
+    const definitions = loadDefinitionsByPrefixName(headType, prefix, configPath);
     res.send({ definitions });
 };
 
 
 export const getDefaultDefinitions = (req, res) => {
-    const { series, headType } = req.params;
-    const definitions = loadAllSeriesDefinitions(true, headType, series);
+    const { headType } = req.params;
+    const { configPath } = req.query;
+    const definitions = loadAllSeriesDefinitions(true, headType, configPath);
     res.send({ definitions });
 };
 
 
 export const getConfigDefinitions = (req, res) => {
-    const { series, headType } = req.params;
-    const definitions = loadAllSeriesDefinitions(false, headType, series);
+    const { headType } = req.params;
+    const { configPath } = req.query;
+    const definitions = loadAllSeriesDefinitions(false, headType, configPath);
     res.send({ definitions });
 };
 
@@ -149,13 +151,13 @@ export const createDefinition = async (req, res) => {
 
 export const updateDefaultDefinition = (req, res) => {
     const { definitionId, headType } = req.params;
-    const series = req.body.series;
+    const configPath = req.body.configPath;
 
     const definitionLoader = new DefinitionLoader();
     if (isPublicProfile(definitionId)) {
         definitionLoader.loadDefaultDefinition(headType, definitionId);
     } else {
-        definitionLoader.loadDefaultDefinition(headType, definitionId, series);
+        definitionLoader.loadDefaultDefinition(headType, definitionId, configPath);
     }
     const { definition } = req.body;
 
@@ -172,7 +174,7 @@ export const updateDefaultDefinition = (req, res) => {
     if (isPublicProfile(definitionId)) {
         filePath = path.join(`${DataStorage.defaultConfigDir}/${headType}`, `${definitionId}.def.json`);
     } else {
-        filePath = path.join(`${DataStorage.defaultConfigDir}/${headType}/${series}`, `${definitionId}.def.json`);
+        filePath = path.join(`${DataStorage.defaultConfigDir}/${configPath}`, `${definitionId}.def.json`);
     }
     const data = JSON.stringify(definitionLoader.toJSON(), null, 2);
     fs.writeFile(filePath, data, 'utf8', (err) => {
@@ -208,11 +210,11 @@ export const createTmpDefinition = (req, res) => {
 };
 
 export const removeDefinition = (req, res) => {
-    const { definitionId, headType } = req.params;
-    const series = req.body.series;
+    const { definitionId } = req.params;
+    const configPath = req.body.configPath;
 
-    const filePath = path.join(`${DataStorage.configDir}/${headType}/${series}`, `${definitionId}.def.json`);
-    const backupPath = path.join(`${DataStorage.activeConfigDir}/${headType}/${series}`, `${definitionId}.def.json`);
+    const filePath = path.join(`${DataStorage.configDir}/${configPath}`, `${definitionId}.def.json`);
+    const backupPath = path.join(`${DataStorage.activeConfigDir}/${configPath}`, `${definitionId}.def.json`);
     fs.unlink(filePath, (err) => {
         if (err) {
             log.error(err);
@@ -233,13 +235,13 @@ export const removeDefinition = (req, res) => {
 
 export const updateDefinition = async (req, res) => {
     const { definitionId, headType } = req.params;
-    const series = req.body.series;
+    const configPath = req.body.configPath;
 
     const definitionLoader = new DefinitionLoader();
     if (isPublicProfile(definitionId)) {
         definitionLoader.loadDefinition(headType, definitionId);
     } else {
-        definitionLoader.loadDefinition(headType, definitionId, series);
+        definitionLoader.loadDefinition(headType, definitionId, configPath);
     }
 
     const { definition } = req.body;
@@ -272,8 +274,8 @@ export const updateDefinition = async (req, res) => {
         filePath = path.join(`${DataStorage.configDir}/${headType}`, `${definitionId}.def.json`);
         activeRecoverPath = path.join(`${DataStorage.activeConfigDir}/${headType}`, `${definitionId}.def.json`);
     } else {
-        filePath = path.join(`${DataStorage.configDir}/${headType}/${series}`, `${definitionId}.def.json`);
-        activeRecoverPath = path.join(`${DataStorage.activeConfigDir}/${headType}/${series}`, `${definitionId}.def.json`);
+        filePath = path.join(`${DataStorage.configDir}/${configPath}`, `${definitionId}.def.json`);
+        activeRecoverPath = path.join(`${DataStorage.activeConfigDir}/${configPath}`, `${definitionId}.def.json`);
     }
     if (!fs.existsSync(DataStorage.activeConfigDir)) {
         try {
@@ -306,7 +308,7 @@ const isSourceFormDefault = (obj) => {
 
 export const uploadDefinition = (req, res) => {
     const { headType } = req.params;
-    const { definitionId, uploadName, series } = req.body;
+    const { definitionId, uploadName, configPath } = req.body;
     const readFileSync = fs.readFileSync(`${DataStorage.tmpDir}/${uploadName}`, 'utf-8');
     let obj;
     try {
@@ -333,8 +335,8 @@ export const uploadDefinition = (req, res) => {
     const definitionLoader = new DefinitionLoader();
     try {
         definitionLoader.loadJSON(headType, definitionId, obj);
-        const filePath = path.join(`${DataStorage.configDir}/${headType}/${series}`, `${definitionId}.def.json`);
-        const backupPath = path.join(`${DataStorage.activeConfigDir}/${headType}/${series}`, `${definitionId}.def.json`);
+        const filePath = path.join(`${DataStorage.configDir}/${configPath}`, `${definitionId}.def.json`);
+        const backupPath = path.join(`${DataStorage.activeConfigDir}/${configPath}`, `${definitionId}.def.json`);
         const data = JSON.stringify(definitionLoader.toJSON(), null, 2);
         const callback = () => {
             fsWriteFile(backupPath, data, res, (err) => {
