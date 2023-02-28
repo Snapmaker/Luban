@@ -7,6 +7,7 @@ import {
     RIGHT_EXTRUDER_MAP_NUMBER
 } from '../constants';
 import PresetDefinitionModel from '../flux/manager/PresetDefinitionModel';
+import type { Machine, ToolHead } from '../machine-definition';
 import { Size2D } from '../models/BaseModel';
 import { Model3D } from '../models/ModelGroup';
 import scene, { SceneEvent } from './Scene';
@@ -44,8 +45,30 @@ class SceneLogic {
         });
     }
 
+    public onVisualizeInitialized(machine: Machine, toolHead: ToolHead): void {
+        const toolHeadOptions = machine.metadata.toolHeads.find(opts => opts.identifier === toolHead.identifier);
+        if (!toolHeadOptions) {
+            return;
+        }
+
+        const size = machine.metadata.size;
+        if (toolHeadOptions.workRange) {
+            size.z = toolHeadOptions.workRange.max[2];
+        }
+
+        const buildVolume = scene.getBuildVolume();
+        buildVolume.updateSize(
+            machine.identifier,
+            size,
+            {},
+        );
+    }
+
     private _processPrimeTower(): void {
         const modelGroup = scene.getModelGroup();
+        if (!modelGroup) {
+            return;
+        }
         const primeTower = modelGroup.getPrimeTower();
 
         // count extruders actually used

@@ -544,6 +544,8 @@ function Printing({ location }) {
                 onDropAccepted={onDropAccepted}
                 onDropRejected={onDropRejected}
             >
+                {/* initialization of the scene */}
+                <SceneInitialization />
                 <PrintingVisualizer
                     widgetId="printingVisualizer"
                     pageMode={pageMode}
@@ -651,8 +653,6 @@ function Printing({ location }) {
                 ref={thumbnail}
                 modelGroup={modelGroup}
             />
-            {/* initialization of the scene */}
-            <SceneInitialization />
             {/* initialization of selected presets */}
             <PresetInitialization />
         </ProjectLayout>

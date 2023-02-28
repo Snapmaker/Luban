@@ -463,8 +463,6 @@ export function loadDefinitionsByPrefixName(headType, prefix = 'material', confi
 }
 
 export function loadAllSeriesDefinitions(isDefault = false, headType, configPath = 'A150') {
-    console.log('loadAllSeriesDefinitions', isDefault, headType, configPath);
-
     // TODO: series name?
     const _headType = (headType === 'laser' && includes(configPath, '10w')) ? '10w-laser' : headType;
     const predefined = DEFAULT_PREDEFINED_ID[_headType];

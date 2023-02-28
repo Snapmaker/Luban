@@ -2,7 +2,9 @@ import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 
 import log from '../../../lib/log';
+import { MACHINE_TOOL_HEADS } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
+import sceneLogic from '../../../scene/scene.logic';
 
 
 /**
@@ -19,13 +21,16 @@ const SceneInitialization: React.FC = () => {
             return;
         }
 
-        log.info('Active Machine =', activeMachine.fullName);
-        log.info('Tool Head =', toolHeadName);
+        const toolHead = MACHINE_TOOL_HEADS[toolHeadName];
+        if (!toolHead) {
+            return;
+        }
 
-        const size = activeMachine.metadata.size;
-        log.info('machine size =', size);
+        log.info('Active Machine =', activeMachine.fullName);
+        log.info('Tool Head =', toolHead);
 
         // TODO: init buildVolume
+        sceneLogic.onVisualizeInitialized(activeMachine, toolHead);
     }, [activeMachine, toolHeadName]);
 
     return (<div className="display-none" />);

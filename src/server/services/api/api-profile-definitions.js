@@ -120,7 +120,7 @@ export const createDefinition = async (req, res) => {
     const definitionLoader = new DefinitionLoader();
     delete (definition.typeOfPrinting);
     definitionLoader.fromObject(definition);
-    const configPath = isPublicProfile(definitionLoader.definitionId) ? '' : (req.body.configPath ?? '');
+    const configPath = isPublicProfile(definitionLoader.definitionId) ? headType : (req.body.configPath ?? '');
 
     const filePath = path.join(`${DataStorage.configDir}/${configPath}`, `${definitionLoader.definitionId}.def.json`);
     const backupPath = path.join(`${DataStorage.activeConfigDir}/${configPath}`, `${definitionLoader.definitionId}.def.json`);

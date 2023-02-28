@@ -375,12 +375,11 @@ export const actions = {
         // Machine
         const {
             series = INITIAL_STATE.series,
-            size = INITIAL_STATE.size,
             laserSize = INITIAL_STATE.laserSize,
             toolHead = INITIAL_STATE.toolHead
         } = machineStore.get('machine') || {};
 
-        const machine = findMachineByName(series); // valueOf(MACHINE_SERIES, 'value', series);
+        const machine = findMachineByName(series);
         if (!machine) {
             // warning?
             return;
@@ -396,18 +395,8 @@ export const actions = {
             })
         );
 
-        dispatch(
-            editorActions.onSizeUpdated(
-                'laser',
-                machine ? machine.metadata.size : size
-            )
-        );
-        dispatch(
-            editorActions.onSizeUpdated(
-                'cnc',
-                machine ? machine.metadata.size : size
-            )
-        );
+        dispatch(editorActions.onSizeUpdated('laser', machine.metadata.size));
+        dispatch(editorActions.onSizeUpdated('cnc', machine.metadata.size));
     },
 
     __initControllerEvents: (dispatch, getState) => {
