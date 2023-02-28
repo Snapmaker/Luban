@@ -543,7 +543,10 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
     pathType: {
         label: 'Method',
         description:
-            'Set the processing method of the object.\n -On the Path: Carves along the shape of the object. \n -Outline: Carves along the outline of the object.\n -Fill: Carves away the inner area of the object.',
+            'Set the processing method of the object.\n'
+            + '- On the Path: Carves along the shape of the object. \n'
+            + '- Outline: Carves along the outline of the object.\n'
+            + '- Fill: Carves away the inner area of the object.',
         type: 'enum',
         options: {
             path: 'On the Path',
@@ -685,7 +688,9 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
     pathType: {
         default_value: 'path',
         description:
-            'Set the processing method of the object. \n - Fill: Fills the object with lines or dots.\n - On the Path: Engraves along the shape of the object.',
+            'Set the processing method of the object.\n'
+            + '- Fill: Fills the object with lines or dots.\n'
+            + '- On the Path: Engraves along the shape of the object.',
         label: 'Method',
         type: 'enum',
         options: {
@@ -761,7 +766,8 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
     fillDensity: {
         label: 'Fill Density',
         description:
-            'Set the precision at which an area is carved. The highest density is 0.05 mm (20 dot/mm). When it is set to 0, the SVG image will be carved without fill.',
+            'Set the precision at which an area is carved. The highest density is 0.05 mm (20 dot/mm). '
+            + 'When it is set to 0, the SVG image will be carved without fill.',
         type: 'float',
         min: 1,
         max: 10,
@@ -808,7 +814,8 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
     direction: {
         label: 'Line Direction',
         description:
-            'Set the direction of the engraved path. Engraves the path in a horizontal, vertical, or diagonal direction.',
+            'Set the direction of the engraved path. \
+Engraves the path in a horizontal, vertical, or diagonal direction.',
         options: {
             Horizontal: 'Horizontal',
             Vertical: 'Vertical',
@@ -1079,7 +1086,7 @@ export const SUPPORT_EN_URL = 'https://support.snapmaker.com/hc/en-us';
 export const TUTORIAL_VIDEO_URL = 'https://www.youtube.com/playlist?list=PLEn5aHQNSrHWvLWgQwrnLPY6VcaYnTvcQ';
 export const OFFICIAL_SITE_ZH_URL = 'https://snapmaker.cn/';
 export const OFFICIAL_SITE_EN_URL = 'https://snapmaker.com/';
-export const MARKET_ZH_URL = 'https://snapmaker.world.tmall.com/?spm=a1z10.3-b.w5001-21696184167.3.40be7f386PAuCQ&scene=taobao_shop';
+export const MARKET_ZH_URL = 'https://snapmaker.tmall.com/';
 export const MARKET_EN_URL = 'https://shop.snapmaker.com/';
 export const MYMINIFACTORY_URL = 'https://www.myminifactory.com/';
 

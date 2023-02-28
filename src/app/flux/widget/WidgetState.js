@@ -5,7 +5,7 @@ import { MACHINE_SERIES } from '../../constants/machines';
 
 const DEFAULT_STATE = {
     machine: {
-        series: MACHINE_SERIES.ORIGINAL.value
+        series: MACHINE_SERIES.ORIGINAL.identifier
     },
     workspace: {
         default: {

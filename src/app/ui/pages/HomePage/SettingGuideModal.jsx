@@ -99,21 +99,21 @@ const SettingGuideModal = (props) => {
             return;
         }
 
-        const printingOptions = getMachineSupportedToolOptions(machine.value, HEAD_PRINTING);
+        const printingOptions = getMachineSupportedToolOptions(machine.identifier, HEAD_PRINTING);
         setPrintingToolHeadOptions(printingOptions);
 
         if (printingOptions.length > 0) {
             setPrintingToolHeadSelected(printingOptions[0].value);
         }
 
-        const laserOptions = getMachineSupportedToolOptions(machine.value, HEAD_LASER);
+        const laserOptions = getMachineSupportedToolOptions(machine.identifier, HEAD_LASER);
         setLaserToolHeadOptions(laserOptions);
 
         if (laserOptions.length > 0) {
             setLaserToolHeadSelected(laserOptions[0].value);
         }
 
-        const cncOptions = getMachineSupportedToolOptions(machine.value, HEAD_CNC);
+        const cncOptions = getMachineSupportedToolOptions(machine.identifier, HEAD_CNC);
         setCncToolHeadOptions(cncOptions);
 
         if (cncOptions.length > 0) {
@@ -150,9 +150,9 @@ const SettingGuideModal = (props) => {
                 laserToolhead: laserToolHeadSelected,
                 cncToolhead: cncToolHeadSelected
             };
-            dispatch(machineActions.updateMachineSeries(machine.value));
-            dispatch(machineActions.updateMachineSize(machine.size));
-            dispatch(machineActions.updateMachineToolHead(toolHead, machine.value));
+            dispatch(machineActions.updateMachineSeries(machine.identifier));
+            dispatch(machineActions.updateMachineSize(machine.metadata.size));
+            dispatch(machineActions.updateMachineToolHead(toolHead, machine.identifier));
             window.location.href = '/';
         });
         props.handleModalShow(false);
@@ -199,6 +199,8 @@ const SettingGuideModal = (props) => {
                 break;
         }
     };
+
+    const machineSize = machine?.metadata.size;
 
     return (
         <div>
@@ -255,13 +257,13 @@ const SettingGuideModal = (props) => {
                                             <img
                                                 width="240px"
                                                 src={machine.img}
-                                                alt={machine.value}
+                                                alt={machine.fullName}
                                             />
                                             <div className="heading-3 margin-bottom-8">{i18n._(machine.label)}</div>
                                             <div>
                                                 <span className="main-text-normal margin-right-4">{i18n._('key-HomePage/Begin-Work Area')}:</span>
                                                 <span className="main-text-normal">
-                                                    {`${machine.size.x} mm × ${machine.size.y} mm × ${machine.size.z} mm`}
+                                                    {`${machineSize.x} mm × ${machineSize.y} mm × ${machineSize.z} mm`}
                                                 </span>
                                             </div>
                                         </div>

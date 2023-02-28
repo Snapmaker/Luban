@@ -74,7 +74,7 @@ function Connection({ widgetId, widgetActions }) {
         };
     }, [isConnected]);
 
-    const isOriginal = series === MACHINE_SERIES.ORIGINAL.value;
+    const isOriginal = series === MACHINE_SERIES.ORIGINAL.identifier;
 
     return (
         <div>

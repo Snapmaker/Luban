@@ -75,7 +75,9 @@ export interface TSupportExtruderConfig {
     interface: string; // interface, including roof/bottom settings
 }
 
-export function getUsedExtruderNumber(limitKey: string, helpersExtruderConfig: THelperExtruderConfig, supportExtruderConfig: TSupportExtruderConfig): string {
+export function getUsedExtruderNumber(
+    limitKey: string, helpersExtruderConfig: THelperExtruderConfig, supportExtruderConfig: TSupportExtruderConfig
+): string {
     switch (limitKey) {
         case 'adhesion_extruder_nr':
         case 'skirt_brim_extruder_nr':

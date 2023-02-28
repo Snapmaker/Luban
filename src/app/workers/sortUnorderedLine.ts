@@ -119,8 +119,8 @@ const sortUnorderedLine = ({ fragments, innerWallCount, lineWidth, layerHeight }
                 }
 
                 const current = stack.pop();
-
-                if (current.findingIndex !== null && findChain.length > 0 && current.key !== findChain[findChain.length - 1]) {
+                if (current.findingIndex !== null && findChain.length > 0
+                    && current.key !== findChain[findChain.length - 1]) {
                     const ringIndex = rings.length;
                     let ringLength = findChain.length - current.findingIndex;
                     if (ringLength > 2) {

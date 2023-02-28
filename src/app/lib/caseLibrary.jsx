@@ -43,9 +43,8 @@ export const getCaseList = (series, toolHead) => {
     const isDual = isDualExtruder(printingToolhead);
 
     switch (series) {
-        case MACHINE_SERIES.ORIGINAL.value:
-        case MACHINE_SERIES.CUSTOM.value:
-        case MACHINE_SERIES.ORIGINAL_LZ.value:
+        case MACHINE_SERIES.ORIGINAL.identifier:
+        case MACHINE_SERIES.ORIGINAL_LZ.identifier:
             caseList = CaseConfigOriginalPrintingSingle;
             if (laserToolhead === LEVEL_ONE_POWER_LASER_FOR_ORIGINAL) {
                 caseList = caseList.concat(CaseConfigOriginalLaserPowerOne);
@@ -55,7 +54,7 @@ export const getCaseList = (series, toolHead) => {
             }
             caseList = caseList.concat(CaseConfigOriginalCncStandard);
             break;
-        case MACHINE_SERIES.A150.value:
+        case MACHINE_SERIES.A150.identifier:
             if (!isDual) {
                 caseList = caseList.concat(CaseConfigA150PrintingSingle);
             }
@@ -70,7 +69,7 @@ export const getCaseList = (series, toolHead) => {
             }
             caseList = caseList.concat(CaseConfigA150CncStandard);
             break;
-        case MACHINE_SERIES.A250.value:
+        case MACHINE_SERIES.A250.identifier:
             if (!isDual) {
                 caseList = caseList.concat(CaseConfigA250PrintingSingle);
             }
@@ -87,7 +86,7 @@ export const getCaseList = (series, toolHead) => {
             caseListFourAxis = caseListFourAxis.concat(CaseConfigA250CncFourAxis);
             caseListFourAxis = caseListFourAxis.concat(CaseConfigA250LaserFourAxis);
             break;
-        case MACHINE_SERIES.A350.value:
+        case MACHINE_SERIES.A350.identifier:
             if (!isDual) {
                 caseList = caseList.concat(CaseConfigA350PrintingSingle);
             }
@@ -104,7 +103,7 @@ export const getCaseList = (series, toolHead) => {
             caseListFourAxis = caseListFourAxis.concat(CaseConfigA350CncFourAxis);
             caseListFourAxis = caseListFourAxis.concat(CaseConfigA350LaserFourAxis);
             break;
-        case MACHINE_SERIES.A400.value:
+        case MACHINE_SERIES.A400.identifier:
             if (!isDual) {
                 caseList = caseList.concat(CaseConfigA350PrintingSingle);
             }
@@ -126,7 +125,7 @@ export const getCaseList = (series, toolHead) => {
             caseListFourAxis = caseListFourAxis.concat(CaseConfigA350LaserFourAxis);
             break;
 
-        case MACHINE_SERIES.J1.value:
+        case MACHINE_SERIES.J1.identifier:
             caseList.push(CaseConfigGimbal);
             break;
         default:

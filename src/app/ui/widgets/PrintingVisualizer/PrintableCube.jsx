@@ -4,6 +4,7 @@ import {
     Color, ShapeGeometry, Shape, LineBasicMaterial, Line, BufferGeometry, Float32BufferAttribute, LineSegments, MeshPhongMaterial, Group
 } from 'three';
 import { DEFAULT_LUBAN_HOST } from '../../../constants';
+import log from '../../../lib/log';
 import { MACHINE_SERIES } from '../../../constants/machines';
 import Rectangle from '../../../three-extensions/objects/Rectangle';
 import { FontLoader } from '../../../three-extensions/FontLoader';
@@ -58,6 +59,8 @@ class PrintableCube extends Object3D {
     }
 
     updateSize(series, size, stopArea) {
+        log.info('cube.updateSize', size, stopArea);
+
         this.series = series;
         this.size = size;
 

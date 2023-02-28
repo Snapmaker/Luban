@@ -6,6 +6,7 @@ import { Box3, Vector3 } from 'three';
 import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
 // import { resolveDefinition } from '../../../shared/lib/definition-resolver';
 import { timestamp } from '../../../shared/lib/random-utils';
+import { PrintMode } from '../../machine-definition';
 import api from '../../api';
 import {
     ABSENT_OBJECT,
@@ -32,7 +33,6 @@ import {
 } from '../../constants';
 import { getMachineSeriesWithToolhead, isDualExtruder, MACHINE_SERIES, } from '../../constants/machines';
 import { isQualityPresetVisible } from '../../constants/preset';
-import { PrintMode } from '../../constants/print-base';
 import { controller } from '../../lib/controller';
 import { logPritingSlice, logProfileChange, logToolBarOperation, logTransformOperation } from '../../lib/gaEvent';
 import i18n from '../../lib/i18n';
@@ -95,8 +95,8 @@ const isDefaultQualityDefinition = (definitionId) => {
 };
 
 const getRealSeries = series => {
-    if (series === MACHINE_SERIES.ORIGINAL_LZ.value || series === MACHINE_SERIES.CUSTOM.value) {
-        series = MACHINE_SERIES.ORIGINAL.value;
+    if (series === MACHINE_SERIES.ORIGINAL_LZ.identifier) {
+        series = MACHINE_SERIES.ORIGINAL.identifier;
     }
     return series;
 };
@@ -2391,8 +2391,8 @@ export const actions = {
 
         const boundingBox = modelGroup.getBoundingBox();
 
-        const originOffsetX = activeMachine.size.x / 2;
-        const originOffsetY = activeMachine.size.y / 2;
+        const originOffsetX = activeMachine.metadata.size.x / 2;
+        const originOffsetY = activeMachine.metadata.size.y / 2;
 
         const gcodeBoundingBox = new Box3(
             new Vector3(boundingBox.min.x + originOffsetX, boundingBox.min.y + originOffsetY, boundingBox.min.z),

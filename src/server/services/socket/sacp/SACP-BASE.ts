@@ -394,7 +394,9 @@ class SocketBASE {
         });
         this.sacpClient.handlerSwitchNozzleReturn((data) => {
             if (this.filamentAction && data === 0) {
-                const toolHead = this.moduleInfos && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2] || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);// || this.moduleInfos[HEADT_BED_FOR_SM2]); //
+                const toolHead = this.moduleInfos
+                    && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2] || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);
+                    // || this.moduleInfos[HEADT_BED_FOR_SM2]); //
                 if (this.filamentActionType === UNLOAD_FILAMENT) {
                     this.sacpClient.ExtruderMovement(toolHead.key, 0, 6, 200, 60, 150).then(({ response }) => {
                         if (response.result !== 0) {
@@ -546,7 +548,9 @@ class SocketBASE {
     };
 
     public async loadFilament(extruderIndex, eventName) {
-        const toolHead = this.moduleInfos && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2] || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);// || this.moduleInfos[HEADT_BED_FOR_SM2]); //
+        const toolHead = this.moduleInfos
+            && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2] || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);
+            // || this.moduleInfos[HEADT_BED_FOR_SM2]); //
         if (!toolHead) {
             log.error(`non-eixst toolHead, moduleInfos:${this.moduleInfos}`,);
             return;
@@ -610,7 +614,9 @@ class SocketBASE {
     };
 
     public async updateNozzleOffset(extruderIndex, direction, distance) {
-        const toolHead = this.moduleInfos && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2] || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);// || this.moduleInfos[HEADT_BED_FOR_SM2]); //
+        const toolHead = this.moduleInfos
+            && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2] || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);
+            // || this.moduleInfos[HEADT_BED_FOR_SM2]); //
         if (!toolHead) {
             log.error(`non-eixst toolHead 3dp, moduleInfos:${this.moduleInfos}`,);
             return;

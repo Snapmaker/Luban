@@ -49,7 +49,7 @@ function Purifier({ widgetActions }) {
     }, []);
 
     useEffect(() => {
-        if (airPurifier && isConnected && series !== MACHINE_SERIES.ORIGINAL.value && series !== MACHINE_SERIES.ORIGINAL_LZ.value) {
+        if (airPurifier && isConnected && series !== MACHINE_SERIES.ORIGINAL.identifier && series !== MACHINE_SERIES.ORIGINAL_LZ.identifier) {
             widgetActions.setDisplay(true);
         } else {
             widgetActions.setDisplay(false);

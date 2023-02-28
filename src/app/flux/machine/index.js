@@ -98,7 +98,7 @@ const INITIAL_STATE = {
     // region Machine Status
 
     // Machine Info
-    series: MACHINE_SERIES.ORIGINAL.value,
+    series: MACHINE_SERIES.ORIGINAL.identifier,
     toolHead: {
         printingToolhead:
         MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
@@ -114,8 +114,8 @@ const INITIAL_STATE = {
     activeMachine: null,
 
     // currentMachine: INITIAL_MACHINE_SERIES_WITH_HEADTOOL,
-    size: MACHINE_SERIES.ORIGINAL.setting.size,
-    laserSize: MACHINE_SERIES.ORIGINAL.setting.laserSize,
+    size: MACHINE_SERIES.ORIGINAL.metadata.size,
+    laserSize: MACHINE_SERIES.ORIGINAL.metadata.size, // TODO: replace laserSize
     currentWorkNozzle: LEFT_EXTRUDER,
     // endregion
 
@@ -375,12 +375,11 @@ export const actions = {
         // Machine
         const {
             series = INITIAL_STATE.series,
-            size = INITIAL_STATE.size,
             laserSize = INITIAL_STATE.laserSize,
             toolHead = INITIAL_STATE.toolHead
         } = machineStore.get('machine') || {};
 
-        const machine = findMachineByName(series); // valueOf(MACHINE_SERIES, 'value', series);
+        const machine = findMachineByName(series);
         if (!machine) {
             // warning?
             return;
@@ -389,25 +388,15 @@ export const actions = {
         dispatch(
             baseActions.updateState({
                 series: series,
-                size: machine.size,
+                size: machine.metadata.size,
                 laserSize: machine.setting ? machine.setting.laserSize : laserSize,
                 toolHead: toolHead,
                 activeMachine: machine,
             })
         );
 
-        dispatch(
-            editorActions.onSizeUpdated(
-                'laser',
-                machine ? machine.size : size
-            )
-        );
-        dispatch(
-            editorActions.onSizeUpdated(
-                'cnc',
-                machine ? machine.size : size
-            )
-        );
+        dispatch(editorActions.onSizeUpdated('laser', machine.metadata.size));
+        dispatch(editorActions.onSizeUpdated('cnc', machine.metadata.size));
     },
 
     __initControllerEvents: (dispatch, getState) => {
@@ -1055,10 +1044,6 @@ export const actions = {
         // dispatch(baseActions.updateState({ series }));
         const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
 
-        // if (seriesInfo === MACHINE_SERIES.CUSTOM) {
-        //     seriesInfo.setting.size = machineStore.get('machine.size') || seriesInfo.setting.size;
-        //     seriesInfo.setting.laserSize = seriesInfo.setting.size;
-        // }
         //  Do not need to 'initSize' just use 'switchSize' function
         await dispatch(printingActions.switchSize());
         seriesInfo && dispatch(actions.updateMachineSize(seriesInfo.size));
@@ -1067,10 +1052,10 @@ export const actions = {
 
 
         // TODO: machine hard-coded here, refactor later.
-        if (series === MACHINE_SERIES.ORIGINAL.value) {
+        if (series === MACHINE_SERIES.ORIGINAL.identifier) {
             dispatch(actions.setZAxisModuleState(0));
         }
-        if (series === MACHINE_SERIES.ORIGINAL_LZ.value) {
+        if (series === MACHINE_SERIES.ORIGINAL_LZ.identifier) {
             dispatch(actions.setZAxisModuleState(1));
         }
     },
@@ -1095,16 +1080,10 @@ export const actions = {
         }
     },
 
-    updateMachineSize: (size) => (dispatch, getState) => {
-        const { series } = getState().machine;
-
+    updateMachineSize: (size) => (dispatch) => {
         size.x = Math.min(size.x, 1000);
         size.y = Math.min(size.y, 1000);
         size.z = Math.min(size.z, 1000);
-
-        if (series === MACHINE_SERIES.CUSTOM.value) {
-            machineStore.set('machine.size', size);
-        }
 
         dispatch(baseActions.updateState({ size: { ...size } }));
 
@@ -1228,8 +1207,7 @@ export const actions = {
     // Execute G54 based on series and headType
     executeGcodeG54: (series, headType) => (dispatch) => {
         if (
-            series !== MACHINE_SERIES.ORIGINAL.value
-            && series !== MACHINE_SERIES.CUSTOM.value
+            series !== MACHINE_SERIES.ORIGINAL.identifier
             && (headType === HEAD_LASER || headType === HEAD_CNC)
         ) {
             dispatch(actions.executeGcode('G54'));

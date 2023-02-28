@@ -2,6 +2,7 @@
 import { cloneDeep, includes } from 'lodash';
 // import { resolveDefinition } from '../../../shared/lib/definition-resolver';
 import { resolveParameterValues, resetPresetsContext } from '@snapmaker/luban-platform';
+import { PrintMode } from '../../machine-definition';
 import api from '../../api';
 import {
     HEAD_CNC,
@@ -10,7 +11,6 @@ import {
     QUALITY_REGEX
 } from '../../constants';
 import { PRESET_CATEGORY_CUSTOM } from '../../constants/preset';
-import { PrintMode } from '../../constants/print-base';
 import i18n from '../../lib/i18n';
 import PresetDefinitionModel from './PresetDefinitionModel';
 import scene from '../../scene/Scene';
@@ -78,6 +78,8 @@ class DefinitionManager {
     // series = '';
 
     async init(headType, configPathname) {
+        console.log('DefinitionManager.init', headType, configPathname);
+
         this.configPathname = configPathname;
         this.headType = headType;
         let res;
@@ -102,10 +104,7 @@ class DefinitionManager {
         }
 
         // default profiles
-        res = await api.profileDefinitions.getDefaultDefinitions(
-            this.headType,
-            this.configPathname
-        );
+        res = await api.profileDefinitions.getDefaultDefinitions(this.headType, this.configPathname);
 
         this.defaultDefinitions = res.body.definitions.map((item) => {
             item.isDefault = true;
@@ -219,10 +218,7 @@ class DefinitionManager {
     }
 
     async getConfigDefinitions() {
-        const res = await api.profileDefinitions.getConfigDefinitions(
-            this.headType,
-            this.configPathname
-        );
+        const res = await api.profileDefinitions.getConfigDefinitions(this.headType, this.configPathname);
         const definitions = await this.markDefaultDefinitions(
             res.body.definitions
         );

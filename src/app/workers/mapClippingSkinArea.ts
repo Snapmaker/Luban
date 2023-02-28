@@ -22,7 +22,9 @@ export type TResult = {
 }
 
 
-const mapClippingSkinArea = ({ innerWallMap, innerWallCount, lineWidth, bottomLayers, modelBoundingBox, topLayers, layerHeight }: TMessage) => {
+const mapClippingSkinArea = (
+    { innerWallMap, innerWallCount, lineWidth, bottomLayers, modelBoundingBox, topLayers, layerHeight }: TMessage
+) => {
     const bottomHeight = Number((bottomLayers * lineWidth + modelBoundingBox.min.z).toFixed(2));
     const topHeight = modelBoundingBox.max.z - Number((topLayers * lineWidth).toFixed(2));
     let otherLayers: TPolygon[][] = [];

@@ -22,11 +22,7 @@ function MachineSettings() {
 
     const [state, setState] = useState({
         series: '',
-        size: {
-            x: 0,
-            y: 0,
-            z: 0
-        },
+        size: [0, 0, 0],
         enclosureDoorDetection: false,
         zAxisModule: null,
         connectionTimeout: 3000
@@ -47,6 +43,7 @@ function MachineSettings() {
     // change options when new machine series selected
     useEffect(() => {
         const printingOptions = getMachineSupportedToolOptions(state.series, HEAD_PRINTING);
+        console.log('printingOptions =', printingOptions);
         setPrintingToolHeadOptions(printingOptions);
 
         if (printingOptions.length > 0) {
@@ -85,7 +82,7 @@ function MachineSettings() {
                 ...state,
                 series: option.value,
                 // size for display, and on save/cancel it is also used for work volume construct
-                size: machine.size,
+                size: machine.metadata.size,
             });
         },
         // Enclosure
@@ -225,7 +222,7 @@ function MachineSettings() {
                                 options={printingToolHeadOptions.map(item => {
                                     return {
                                         value: item.value,
-                                        label: i18n._(item.label)
+                                        label: item.label,
                                     };
                                 })}
                                 onChange={e => actions.handleToolheadChange(e, 'printing')}

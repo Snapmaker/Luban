@@ -38,7 +38,7 @@ class CNC extends PureComponent {
                 speed: this.props.cncTargetSpindleSpeed,
                 toolHead: this.props.toolHead,
             });
-            if (this.props.series !== MACHINE_SERIES.A400.value) {
+            if (this.props.series !== MACHINE_SERIES.A400.identifier) {
                 this.setState({
                     headStatus: !this.state.headStatus
                 });

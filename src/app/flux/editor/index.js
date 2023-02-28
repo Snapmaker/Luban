@@ -2007,7 +2007,7 @@ export const actions = {
         const { size } = getState().machine;
         coordinateSize = coordinateSize ?? {
             x: size.x,
-            y: size.y
+            y: size.y,
         };
         if (coordinateMode.value !== oldCoordinateMode.value) {
             // move all elements

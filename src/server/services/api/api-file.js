@@ -61,17 +61,18 @@ export const INITIAL_TOOL_HEAD_FOR_SM2 = {
     cncToolhead: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value
 };
 
+function getConfigDir(machineInfo) {
+    let configPath = '';
 
-function getSeriesPathFromMachineInfo(machineInfo) {
-    let currentSeriesPath = '';
     if (machineInfo) {
         const series = machineInfo?.series;
         const headType = machineInfo?.headType;
         const toolHead = machineInfo?.toolHead || (series === 'Original' ? INITIAL_TOOL_HEAD_FOR_ORIGINAL : INITIAL_TOOL_HEAD_FOR_SM2);
         const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
-        currentSeriesPath = currentMachine?.configPathname[headType];
+        configPath = currentMachine?.configPathname[headType];
     }
-    return currentSeriesPath;
+
+    return path.join(DataStorage.configDir, configPath);
 }
 
 const cpFileToTmp = async (file, uploadName) => {
@@ -344,7 +345,9 @@ export const saveEnv = async (req, res) => {
         const envDir = `${DataStorage.envDir}/${headType}`;
         // TODO: not just remove the category but only change the file when model changed
         rmDir(envDir, false);
-        const currentSeriesPath = getSeriesPathFromMachineInfo(machineInfo);
+
+        const configDir = getConfigDir(machineInfo);
+
         const result = await new Promise((resolve, reject) => {
             const targetPath = `${envDir}/config.json`;
             fs.writeFile(targetPath, content, (err) => {
@@ -371,25 +374,25 @@ export const saveEnv = async (req, res) => {
         });
 
         if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
-            copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialId}.def.json`, `${envDir}/${config.defaultMaterialId}.def.json`);
+            copyFileSync(`${configDir}/${config.defaultMaterialId}.def.json`, `${envDir}/${config.defaultMaterialId}.def.json`);
         }
         const isDual = isDualExtruder(machineInfo?.toolHead?.printingToolhead);
         if (isDual && config.defaultMaterialIdRight && /^material.([0-9_]+)$/.test(config.defaultMaterialIdRight)) {
-            copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialIdRight}.def.json`, `${envDir}/${config.defaultMaterialIdRight}.def.json`);
+            copyFileSync(`${configDir}/${config.defaultMaterialIdRight}.def.json`, `${envDir}/${config.defaultMaterialIdRight}.def.json`);
         }
 
         if (activePresetIds) {
             for (const stackId of [LEFT_EXTRUDER, RIGHT_EXTRUDER]) {
                 const presetId = activePresetIds[stackId];
                 if (presetId && /^quality.([0-9_]+)$/.test(presetId)) {
-                    copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${presetId}.def.json`, `${envDir}/${presetId}.def.json`);
+                    copyFileSync(`${configDir}/${presetId}.def.json`, `${envDir}/${presetId}.def.json`);
                 }
             }
         }
         if (machineInfo?.headType === HEAD_CNC || machineInfo?.headType === HEAD_LASER) {
             !!config.toolpaths?.length && config.toolpaths.forEach(toolpath => {
                 if (toolpath.toolParams?.definitionId && /^tool.([0-9_]+)$/.test(toolpath.toolParams.definitionId)) {
-                    copyFileSync(`${DataStorage.configDir}/${headType}/${currentSeriesPath}/${toolpath.toolParams.definitionId}.def.json`, `${envDir}/${toolpath.toolParams.definitionId}.def.json`);
+                    copyFileSync(`${configDir}/${toolpath.toolParams.definitionId}.def.json`, `${envDir}/${toolpath.toolParams.definitionId}.def.json`);
                 }
             });
         }
@@ -415,8 +418,7 @@ export const recoverEnv = async (req, res) => {
         const headType = config?.machineInfo?.headType;
         const envDir = `${DataStorage.envDir}/${headType}`;
 
-        const currentSeriesPath = getSeriesPathFromMachineInfo(config?.machineInfo);
-
+        const configDir = getConfigDir(config?.machineInfo);
 
         traverse(config.models, (model) => {
             const { originalName, uploadName } = model;
@@ -426,18 +428,18 @@ export const recoverEnv = async (req, res) => {
 
 
         if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
-            copyFileSync(`${envDir}/${config.defaultMaterialId}.def.json`, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialId}.def.json`);
+            copyFileSync(`${envDir}/${config.defaultMaterialId}.def.json`, `${configDir}/${config.defaultMaterialId}.def.json`);
         }
         const isDual = isDualExtruder(config.machineInfo?.toolHead?.printingToolhead);
         if (isDual && config.defaultMaterialIdRight && /^material.([0-9_]+)$/.test(config.defaultMaterialIdRight)) {
-            copyFileSync(`${envDir}/${config.defaultMaterialIdRight}.def.json`, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialIdRight}.def.json`);
+            copyFileSync(`${envDir}/${config.defaultMaterialIdRight}.def.json`, `${configDir}/${config.defaultMaterialIdRight}.def.json`);
         }
 
         // recover quality presets
         for (const stackId of [LEFT_EXTRUDER, RIGHT_EXTRUDER]) {
             const presetId = activePresetIds[stackId];
             if (presetId && /^quality.([0-9_]+)$/.test(presetId)) {
-                copyFileSync(`${envDir}/${presetId}.def.json`, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${presetId}.def.json`);
+                copyFileSync(`${envDir}/${presetId}.def.json`, `${configDir}/${presetId}.def.json`);
             }
         }
 
@@ -517,13 +519,14 @@ export const recoverProjectFile = async (req, res) => {
         // const toolHead = JSON.parse(req.body.toolHead);
         file.path = DataStorage.resolveRelativePath(file.path);
         const { uploadName } = await cpFileToTmp(file);
+
         let content;
         await unzipFile(`${uploadName}`, `${DataStorage.tmpDir}`);
         content = fs.readFileSync(`${DataStorage.tmpDir}/config.json`);
 
         content = content.toString();
         const config = JSON.parse(content);
-        // const currentMachine = getMachineSeriesWithToolhead(config?.machineInfo?.series, toolHead);
+
         const machineInfo = config?.machineInfo;
         let headType = machineInfo?.headType;
         // TODO: for project file of "< version 4.1"
@@ -531,18 +534,18 @@ export const recoverProjectFile = async (req, res) => {
             headType = HEAD_PRINTING;
             machineInfo.headType = HEAD_PRINTING;
         }
-        const currentSeriesPath = getSeriesPathFromMachineInfo(machineInfo);
+        const configDir = getConfigDir(machineInfo);
 
         if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
             const fname = `${DataStorage.tmpDir}/${config.defaultMaterialId}.def.json`;
             if (fs.existsSync(fname)) {
-                fs.copyFileSync(fname, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialId}.def.json`);
+                fs.copyFileSync(fname, path.join(configDir, `${config.defaultMaterialId}.def.json`));
             }
         }
         if (config.defaultMaterialIdRight && /^material.([0-9_]+)$/.test(config.defaultMaterialIdRight)) {
             const fname = `${DataStorage.tmpDir}/${config.defaultMaterialIdRight}.def.json`;
             if (fs.existsSync(fname)) {
-                fs.copyFileSync(fname, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${config.defaultMaterialIdRight}.def.json`);
+                fs.copyFileSync(fname, path.join(configDir, `${config.defaultMaterialIdRight}.def.json`));
             }
         }
 
@@ -563,7 +566,7 @@ export const recoverProjectFile = async (req, res) => {
             if (presetId && /^quality.([0-9_]+)$/.test(presetId)) {
                 const filePath = `${DataStorage.tmpDir}/${presetId}.def.json`;
                 if (fs.existsSync(filePath)) {
-                    fs.copyFileSync(filePath, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${presetId}.def.json`);
+                    fs.copyFileSync(filePath, `${configDir}/${presetId}.def.json`);
                 }
             }
         }
@@ -572,7 +575,7 @@ export const recoverProjectFile = async (req, res) => {
                 if (toolpath?.toolParams?.definitionId && /^tool.([0-9_]+)$/.test(toolpath?.toolParams?.definitionId)) {
                     const fname = `${DataStorage.tmpDir}/${toolpath.toolParams.definitionId}.def.json`;
                     if (fs.existsSync(fname)) {
-                        fs.copyFileSync(fname, `${DataStorage.configDir}/${headType}/${currentSeriesPath}/${toolpath.toolParams.definitionId}.def.json`);
+                        fs.copyFileSync(fname, `${configDir}/${toolpath.toolParams.definitionId}.def.json`);
                     }
                 }
             });

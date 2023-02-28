@@ -82,18 +82,18 @@ let workspaceVisualizerRef = null;
 function getUnsupportedWidgets(machine, toolHead) {
     if (!machine) return [];
 
-    if ([MACHINE_SERIES.A150.value, MACHINE_SERIES.A250.value, MACHINE_SERIES.A350.value].includes(machine.value)) {
+    if ([MACHINE_SERIES.A150.identifier, MACHINE_SERIES.A250.identifier, MACHINE_SERIES.A350.identifier].includes(machine.identifier)) {
         if (toolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
             // return ['marlin'];
             return [];
         }
     }
 
-    if (machine.value === MACHINE_SERIES.J1.value) {
+    if (machine.identifier === MACHINE_SERIES.J1.identifier) {
         return ['console', 'marlin', 'control', 'macro'];
     }
 
-    if (machine.value === MACHINE_SERIES.A400.value) {
+    if (machine.identifier === MACHINE_SERIES.A400.identifier) {
         return ['console', 'macro'];
     }
 

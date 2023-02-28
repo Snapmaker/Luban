@@ -45,6 +45,7 @@ import {
 import MachineMaterialSettings from './MachineMaterialSettings';
 import { PageMode } from './PageMode';
 import Workspace from './Workspace';
+import SceneInitialization from './print-main/SceneInitialization';
 
 export const openFolder = () => {
     if (isElectron()) {
@@ -111,7 +112,7 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
             setShowMachineMaterialSettings(false);
             if (currentSeries !== seriesRef.current || currentToolhead !== toolHeadRef.current.printingToolhead) {
                 dispatch(machineActions.updateMachineSeries(currentSeries));
-                dispatch(machineActions.setZAxisModuleState(currentSeries === MACHINE_SERIES.ORIGINAL_LZ.value));
+                dispatch(machineActions.setZAxisModuleState(currentSeries === MACHINE_SERIES.ORIGINAL_LZ.identifier));
                 dispatch(machineActions.updateMachineToolHead({
                     ...toolHead,
                     printingToolhead: currentToolhead
@@ -334,27 +335,27 @@ function getStarterProject(series, isDual) {
 
     // TODO: Refactor to not hard coding
     let pathConfig;
-    if ([MACHINE_SERIES.ORIGINAL.value, MACHINE_SERIES.ORIGINAL_LZ.value].includes(series)) {
+    if ([MACHINE_SERIES.ORIGINAL.identifier, MACHINE_SERIES.ORIGINAL_LZ.identifier].includes(series)) {
         pathConfig = pathConfigForOriginal;
-    } else if (series === MACHINE_SERIES.A400.value) {
+    } else if (series === MACHINE_SERIES.A400.identifier) {
         pathConfig = CaseConfigPenHolder.pathConfig;
-    } else if (series === MACHINE_SERIES.J1.value) {
+    } else if (series === MACHINE_SERIES.J1.identifier) {
         pathConfig = CaseConfigGimbal.pathConfig;
     } else {
         // SM 2.0
         if (isDual) {
             pathConfig = CaseConfigSM2Gimbal.pathConfig;
-        } else if (series === MACHINE_SERIES.A150.value) {
+        } else if (series === MACHINE_SERIES.A150.identifier) {
             pathConfig = {
                 path: './UserCase/printing/a150_single/3dp_a150_single.snap3dp',
                 name: '3dp_a150_single.snap3dp'
             };
-        } else if (series === MACHINE_SERIES.A250.value) {
+        } else if (series === MACHINE_SERIES.A250.identifier) {
             pathConfig = {
                 path: './UserCase/printing/a250_single/3dp_a250_single.snap3dp',
                 name: '3dp_a250_single.snap3dp'
             };
-        } else if (series === MACHINE_SERIES.A350.value) {
+        } else if (series === MACHINE_SERIES.A350.identifier) {
             pathConfig = {
                 path: './UserCase/printing/a350_single/3dp_a350_single.snap3dp',
                 name: '3dp_a350_single.snap3dp'
@@ -543,6 +544,8 @@ function Printing({ location }) {
                 onDropAccepted={onDropAccepted}
                 onDropRejected={onDropRejected}
             >
+                {/* initialization of the scene */}
+                <SceneInitialization />
                 <PrintingVisualizer
                     widgetId="printingVisualizer"
                     pageMode={pageMode}
@@ -650,6 +653,7 @@ function Printing({ location }) {
                 ref={thumbnail}
                 modelGroup={modelGroup}
             />
+            {/* initialization of selected presets */}
             <PresetInitialization />
         </ProjectLayout>
     );
