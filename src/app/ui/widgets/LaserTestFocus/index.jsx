@@ -7,6 +7,7 @@ import {
 } from '../../components/SMWidget';
 import TestFocus from './TestFocus';
 import { HEAD_LASER } from '../../../constants';
+import { MACHINE_SERIES } from '../../../constants/machines';
 
 
 class LaserTestFocusWidget extends PureComponent {
@@ -16,7 +17,7 @@ class LaserTestFocusWidget extends PureComponent {
         isConnected: PropTypes.bool.isRequired,
         workflowState: PropTypes.string,
         connectionType: PropTypes.string,
-        series: PropTypes.string
+        machineIdentifier: PropTypes.string,
     };
 
     state = {
@@ -39,9 +40,22 @@ class LaserTestFocusWidget extends PureComponent {
         props.widgetActions.setTitle(i18n._('key-Workspace/Fine-tuneWorkOrigin-Fine-tune Work Origin'));
     }
 
+    shouldDisplay() {
+        const { isConnected, headType, connectionType, machineIdentifier } = this.props;
+
+        if (headType !== HEAD_LASER) {
+            return false;
+        }
+
+        if (!isConnected || connectionType !== 'serial') {
+            return false;
+        }
+
+        return [MACHINE_SERIES.ORIGINAL.identifier, MACHINE_SERIES.ORIGINAL_LZ.identifier].includes(machineIdentifier);
+    }
+
     componentDidMount() {
-        const { isConnected, headType, connectionType, series } = this.props;
-        if (headType === HEAD_LASER && isConnected && connectionType === 'serial' && (series === 'Original' || series === 'Original Long Z-axis')) {
+        if (this.shouldDisplay()) {
             this.props.widgetActions.setDisplay(true);
         } else {
             this.props.widgetActions.setDisplay(false);
@@ -49,15 +63,15 @@ class LaserTestFocusWidget extends PureComponent {
     }
 
     componentDidUpdate(prevProps) {
-        const { isConnected, headType, workflowState, connectionType, series } = this.props;
+        const { isConnected, headType, workflowState, connectionType, machineIdentifier } = this.props;
         if (
             isConnected !== prevProps.isConnected
             || headType !== prevProps.headType
             || workflowState !== prevProps.workflowState
             || connectionType !== prevProps.connectionType
-            || series !== prevProps.series
+            || machineIdentifier !== prevProps.machineIdentifier
         ) {
-            if (headType === HEAD_LASER && isConnected && connectionType === 'serial' && (series === 'Original' || series === 'Original Long Z-axis')) {
+            if (this.shouldDisplay()) {
                 this.props.widgetActions.setDisplay(true);
             } else {
                 this.props.widgetActions.setDisplay(false);
@@ -85,14 +99,14 @@ class LaserTestFocusWidget extends PureComponent {
 }
 const mapStateToProps = (state) => {
     const { isConnected, workflowState, connectionType } = state.machine;
-    const { headType, series } = state.workspace;
+    const { headType, machineIdentifier } = state.workspace;
 
     return {
         headType: headType,
         isConnected,
         workflowState,
         connectionType,
-        series
+        machineIdentifier,
     };
 };
 export default connect(mapStateToProps)(LaserTestFocusWidget);

@@ -1,21 +1,30 @@
 import isElectron from 'is-electron';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { findMachineByName, MACHINE_TOOL_HEADS, } from '../../../constants/machines';
+
+import { CONNECTION_TYPE_SERIAL } from '../../../constants';
+import { findMachineByName, MACHINE_TOOL_HEADS } from '../../../constants/machines';
+import { RootState } from '../../../flux/index.def';
 import usePrevious from '../../../lib/hooks/previous';
 import i18n from '../../../lib/i18n';
 import UniApi from '../../../lib/uni-api';
+
+import type { Machine, ToolHead } from '../../../machine-definition';
 import Anchor from '../../components/Anchor';
 import { Button } from '../../components/Buttons';
 import Modal from '../../components/Modal';
 
 function MismatchModal() {
-    const toolHead = useSelector(state => state?.workspace.toolHead);
-    const headType = useSelector(state => state?.workspace.headType);
-    const series = useSelector(state => state?.workspace.series);
-    const isConnected = useSelector(state => state?.machine?.isConnected);
-    const machineSeries = useSelector(state => state?.machine?.series);
-    const machineToolHead = useSelector(state => state?.machine?.toolHead);
+    const connectionType = useSelector((state: RootState) => state.machine.connectionType);
+    const isConnected = useSelector((state: RootState) => state.machine?.isConnected);
+
+    const machineSeries = useSelector((state: RootState) => state.machine.series);
+    const machineToolHead = useSelector((state: RootState) => state.machine.toolHead);
+
+    const connectedMachineIdentifier = useSelector((state: RootState) => state.workspace.machineIdentifier);
+    const connectedToolHeadIdentifier = useSelector((state: RootState) => state.workspace.toolHead);
+    const headType = useSelector((state: RootState) => state.workspace.headType);
+
     const [showMismatchModal, setShowMismatchModal] = useState(false);
     const prevIsConnected = usePrevious(isConnected);
 
@@ -35,18 +44,26 @@ function MismatchModal() {
 
     useEffect(() => {
         if (!prevIsConnected && isConnected) {
-            if (series && series !== machineSeries) {
+            if (connectionType === CONNECTION_TYPE_SERIAL) {
+                return;
+            }
+
+            if (connectedMachineIdentifier !== machineSeries) {
                 setShowMismatchModal(true);
-            } else if (toolHead && machineToolHead[`${headType}Toolhead`] !== toolHead) {
+            } else if (connectedToolHeadIdentifier && machineToolHead[`${headType}Toolhead`] !== connectedToolHeadIdentifier) {
                 setShowMismatchModal(true);
             }
         }
-    }, [prevIsConnected, isConnected, toolHead, headType, series, machineSeries, machineToolHead]);
+    }, [
+        prevIsConnected, isConnected, connectedToolHeadIdentifier, headType, machineSeries, machineToolHead,
+        connectedMachineIdentifier,
+    ]);
 
     const machine = machineSeries && findMachineByName(machineSeries) || {};
     const toolHeadInfo = MACHINE_TOOL_HEADS[machineToolHead[`${headType}Toolhead`]];
 
-    const connectedMachine = series && findMachineByName(series) || {};
+    const connectedMachine: Machine | null = findMachineByName(connectedMachineIdentifier);
+    const connectedToolHead: ToolHead | null = MACHINE_TOOL_HEADS[connectedToolHeadIdentifier];
 
     return (
         <>
@@ -68,11 +85,15 @@ function MismatchModal() {
                     }}
                     >
                         <div>
-                            {i18n._('key-Workspace/Mismatch-The configured Machine Model ({{machineInfo}}) does not match with the connected machine ({{connectedMachineInfo}}). To change the settings, you can go to',
-                                {
-                                    machineInfo: `${machine?.seriesLabelWithoutI18n} ${i18n._(toolHeadInfo?.label)}`,
-                                    connectedMachineInfo: `${connectedMachine?.seriesLabelWithoutI18n} ${i18n._(MACHINE_TOOL_HEADS[toolHead]?.label)}`,
-                                })}
+                            {
+                                i18n._(
+                                    'key-Workspace/Mismatch-The configured Machine Model ({{machineInfo}}) does not match with the connected machine ({{connectedMachineInfo}}). To change the settings, you can go to',
+                                    {
+                                        machineInfo: `${machine?.fullName} ${i18n._(toolHeadInfo?.label)}`,
+                                        connectedMachineInfo: `${connectedMachine?.fullName || i18n._('key-Workspace/Connection-Unknown')} ${connectedToolHead?.label || ''}`,
+                                    }
+                                )
+                            }
                             <Anchor
                                 onClick={onShowMachinwSettings}
                                 style={{

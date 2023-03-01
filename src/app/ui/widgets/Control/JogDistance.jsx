@@ -36,11 +36,11 @@ const JogDistance = (props) => {
                     >
                         {
                             distanceOptions.map(option => (
-                                <Radio.Button value={option} disabled={!canClick}>{option}</Radio.Button>
+                                <Radio.Button key={option} value={option} disabled={!canClick}>{option}</Radio.Button>
                             ))
                         }
                         {/* empty value to use custom value */}
-                        <Radio.Button value="" disabled={!canClick}><i className="fa fa-adjust" /></Radio.Button>
+                        <Radio.Button key="custom" value="" disabled={!canClick}><i className="fa fa-adjust" /></Radio.Button>
                     </Radio.Group>
                     {
                         distance === '' && (
@@ -91,11 +91,11 @@ const JogDistance = (props) => {
                             defaultValue={angle}
                             onChange={(e) => actions.selectAngle(e.target.value)}
                         >
-                            <Radio.Button value="5" disabled={!canClick}>5</Radio.Button>
-                            <Radio.Button value="1" disabled={!canClick}>1</Radio.Button>
-                            <Radio.Button value="0.2" disabled={!canClick}>0.2</Radio.Button>
+                            <Radio.Button key="5" value="5" disabled={!canClick}>5</Radio.Button>
+                            <Radio.Button key="1" value="1" disabled={!canClick}>1</Radio.Button>
+                            <Radio.Button key="0.2" value="0.2" disabled={!canClick}>0.2</Radio.Button>
                             {/* empty value for custom */}
-                            <Radio.Button value="" disabled={!canClick}><i className="fa fa-adjust" /></Radio.Button>
+                            <Radio.Button key="custom" value="" disabled={!canClick}><i className="fa fa-adjust" /></Radio.Button>
                         </Radio.Group>
                         {
                             angle === '' && (

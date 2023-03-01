@@ -76,9 +76,7 @@ class Visualizer extends PureComponent {
         isRotate: PropTypes.bool,
         toolHead: PropTypes.string,
         gcodeFile: PropTypes.object,
-        series: PropTypes.string,
         headType: PropTypes.string,
-        size: PropTypes.object.isRequired,
 
         isLaserPrintAutoMode: PropTypes.bool.isRequired,
         materialThickness: PropTypes.number.isRequired,
@@ -95,6 +93,9 @@ class Visualizer extends PureComponent {
         modelGroup: PropTypes.object,
         onRef: PropTypes.func,
         preview: PropTypes.bool,
+
+        machineIdentifier: PropTypes.string.isRequired,
+        machineSize: PropTypes.object.isRequired, // size of connected machine
     };
 
     previewPrintableArea = null;
@@ -275,12 +276,12 @@ class Visualizer extends PureComponent {
                 isRotate,
                 toolHead,
                 gcodeFile,
-                series,
                 laserFocalLength,
                 background,
-                size,
                 workPosition,
                 originOffset,
+                machineIdentifier,
+                machineSize,
             } = this.props;
 
             if (workflowStatus === WORKFLOW_STATUS_IDLE) {
@@ -294,10 +295,10 @@ class Visualizer extends PureComponent {
                     toolHead,
                     // for wifi indiviual
                     uploadName: gcodeFile.uploadName,
-                    series,
                     laserFocalLength,
                     background,
-                    size,
+                    series: machineIdentifier,
+                    size: machineSize,
                     workPosition,
                     originOffset,
                     renderName: gcodeFile?.renderGcodeFileName || gcodeFile.uploadName
@@ -336,7 +337,7 @@ class Visualizer extends PureComponent {
                     pause3dpStatus: this.props.pause3dpStatus,
                     pauseStatus: this.pauseStatus,
                     gcodeFile,
-                    sizeZ: this.props.size.z
+                    sizeZ: this.props.machineSize.z
                 }, ({ msg, code }) => {
                     if (msg) {
                         if (code === 202 || code === 222) {
@@ -396,7 +397,7 @@ class Visualizer extends PureComponent {
                         const pos = pause3dpStatus.pos;
                         // experience params for retraction: F3000, E->(E-5)
                         const targetE = Math.max(pos.e - 5, 0);
-                        const targetZ = Math.min(pos.z + 30, this.props.size.z);
+                        const targetZ = Math.min(pos.z + 30, this.props.machineSize.z);
                         const gcode = [
                             `G1 E${targetE}\n`,
                             `G1 Z${targetZ}\n`,
@@ -497,19 +498,19 @@ class Visualizer extends PureComponent {
     componentDidMount() {
         this.props.onRef && this.props.onRef(this);
         this.setupToolhead().then(() => {
-            const size = this.props.size;
+            const machineSize = this.props.machineSize;
             this.subscribe();
             this.addControllerEvents();
             this.setupTargetPoint();
             this.visualizerGroup.object.add(this.props.modelGroup);
             this.previewPrintableArea = new PrintablePlate({
-                x: size.x * 2,
-                y: size.y * 2
+                x: machineSize.x * 2,
+                y: machineSize.y * 2
             });
             this.setState({
                 printableArea: new PrintablePlate({
-                    x: size.x * 2,
-                    y: size.y * 2
+                    x: machineSize.x * 2,
+                    y: machineSize.y * 2
                 })
             });
         });
@@ -523,20 +524,20 @@ class Visualizer extends PureComponent {
      *  - Upload G-code to controller
      */
     componentWillReceiveProps(nextProps) {
-        if (!isEqual(nextProps.size, this.props.size) || !isEqual(nextProps.preview, this.props.preview)) {
-            const size = nextProps.size;
+        if (!isEqual(nextProps.machineSize, this.props.machineSize) || !isEqual(nextProps.preview, this.props.preview)) {
+            const machineSize = nextProps.machineSize;
             if (nextProps.preview) {
-                this.previewPrintableArea && this.previewPrintableArea.updateSize(this.props.series, {
-                    x: size.x * 2,
-                    y: size.y * 2
+                this.previewPrintableArea && this.previewPrintableArea.updateSize(this.props.machineIdentifier, {
+                    x: machineSize.x * 2,
+                    y: machineSize.y * 2
                 });
             } else {
-                this.state.printableArea && this.state.printableArea.updateSize(this.props.series, {
-                    x: size.x * 2,
-                    y: size.y * 2
+                this.state.printableArea && this.state.printableArea.updateSize(this.props.machineIdentifier, {
+                    x: machineSize.x * 2,
+                    y: machineSize.y * 2
                 });
             }
-            this.canvas.current && this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(size.z * 2, 300)), new THREE.Vector3());
+            this.canvas.current && this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(machineSize.z * 2, 300)), new THREE.Vector3());
         }
 
         if (this.props.workflowStatus !== WORKFLOW_STATUS_IDLE && nextProps.workflowStatus === WORKFLOW_STATUS_IDLE) {
@@ -764,12 +765,12 @@ class Visualizer extends PureComponent {
                             : (this.props.renderState === 'rendering' && <Rendering />)
                     }
                     {state.printableArea && (
+                        // size={this.props.size}
                         <Canvas
                             ref={this.canvas}
-                            size={this.props.size}
                             modelGroup={this.visualizerGroup}
                             printableArea={this.state.printableArea}
-                            cameraInitialPosition={new THREE.Vector3(0, 0, Math.min(this.props.size.z * 2, 300))}
+                            cameraInitialPosition={new THREE.Vector3(0, 0, Math.min(this.props.machineSize.z * 2, 300))}
                             cameraInitialTarget={new THREE.Vector3(0, 0, 0)}
                         />
                     )}
@@ -830,7 +831,6 @@ const mapStateToProps = (state) => {
     const laser = state.laser;
 
     return {
-        size: workspace.size,
         server: machine.server,
         pause3dpStatus: machine.pause3dpStatus,
         doorSwitchCount: machine.doorSwitchCount,
@@ -859,12 +859,15 @@ const mapStateToProps = (state) => {
         originOffset: machine.originOffset,
 
         modelGroup: workspace.modelGroup,
-        series: workspace.series,
         renderState: workspace.renderState,
         boundingBox: workspace.boundingBox,
         renderingTimestamp: workspace.renderingTimestamp,
         stage: workspace.stage,
         progress: workspace.progress,
+
+        // actual machine
+        machineIdentifier: workspace.machineIdentifier,
+        machineSize: workspace.machineSize,
     };
 };
 

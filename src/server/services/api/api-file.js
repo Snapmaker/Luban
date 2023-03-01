@@ -68,9 +68,8 @@ function getConfigDir(machineInfo) {
         const series = machineInfo?.series;
         const headType = machineInfo?.headType;
         const toolHead = machineInfo?.toolHead || (series === 'Original' ? INITIAL_TOOL_HEAD_FOR_ORIGINAL : INITIAL_TOOL_HEAD_FOR_SM2);
-        console.log('series =', series, toolHead);
+
         const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
-        console.log('currentMachine =', currentMachine);
 
         configPath = currentMachine?.configPathname[headType];
     }

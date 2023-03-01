@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { WORKFLOW_STATE_IDLE, WORKFLOW_STATE_PAUSED, WORKFLOW_STATE_RUNNING } from '../../../constants';
 import {
+    findMachineByName,
     HEAD_CNC,
     HEAD_LASER,
     HEAD_PRINTING,
@@ -36,8 +37,7 @@ function SerialConnection() {
         heatedBedTemperature, laserCamera, workflowStatus, emergencyStopOnline, connectLoading
     } = useSelector(state => state.machine);
     const {
-        toolHead, headType, series: seriesInfo,
-        isRotate
+        toolHead, headType, machineIdentifier, isRotate
     } = useSelector(state => state?.workspace);
     // Selected port
     const [portState, setPortState] = useState(server);
@@ -104,8 +104,6 @@ function SerialConnection() {
             listPorts();
         },
         onOpenPort: () => {
-            // setConnectLoading(true);
-            // dispatch(machineActions.updateMachineState)
             openPort();
         },
         onClosePort: () => {
@@ -198,7 +196,7 @@ function SerialConnection() {
             });
         }
 
-        if (seriesInfo !== 'Original' && seriesInfo !== 'Original Long Z-axis') {
+        if (machineIdentifier !== MACHINE_SERIES.ORIGINAL.identifier && machineIdentifier !== MACHINE_SERIES.ORIGINAL_LZ.identifier) {
             airPurifier && newModuleStatusList.push({
                 key: 'airPurifier',
                 moduleName: i18n._('key-Workspace/Connection-airPurifier'),
@@ -223,12 +221,16 @@ function SerialConnection() {
         setModuleStatusList(newModuleStatusList);
     }, [
         headType, airPurifier, airPurifierHasPower, toolHead, isRotate,
-        enclosureOnline, heatedBedTemperature > 0, laserCamera, emergencyStopOnline, seriesInfo
+        enclosureOnline, heatedBedTemperature > 0, laserCamera, emergencyStopOnline, machineIdentifier
     ]);
 
     const canRefresh = !loadingPorts && !isOpen;
     const canChangePort = canRefresh;
     const canOpenPort = portState.port && !portState.address && !isOpen && servers.length;
+
+    const connectedMachine = useMemo(() => {
+        return findMachineByName(machineIdentifier);
+    }, [machineIdentifier]);
 
     return (
         <div>
@@ -262,13 +264,13 @@ function SerialConnection() {
                     />
                 </div>
             )}
-            {isConnected && seriesInfo && (
+            {isConnected && machineIdentifier && (
                 <div className="margin-bottom-16 margin-top-12">
                     <div
                         className={classNames(styles['connection-state'], 'padding-bottom-8', 'border-bottom-dashed-default')}
                     >
                         <span className={styles['connection-state-name']}>
-                            {i18n._(MACHINE_SERIES[seriesInfo.toUpperCase()].label)}
+                            {i18n._(connectedMachine.label)}
                         </span>
                         <span className={styles['connection-state-icon']}>
                             {workflowStatus === WORKFLOW_STATE_IDLE
