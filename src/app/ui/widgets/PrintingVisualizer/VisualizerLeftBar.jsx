@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { EPSILON, HEAD_PRINTING } from '../../../constants';
 import { actions as printingActions } from '../../../flux/printing';
@@ -57,6 +57,11 @@ function VisualizerLeftBar(
     const isPrimeTowerSelected = useSelector(state => state?.printing?.modelGroup?.isPrimeTowerSelected());
     const transformMode = useSelector(state => state?.printing?.transformMode, shallowEqual);
     const enableShortcut = useSelector(state => state?.printing?.enableShortcut, shallowEqual);
+
+    const qualityDefinitions = useSelector(state => state.printing.qualityDefinitions);
+    const canOpenMeshFile = useMemo(() => {
+        return qualityDefinitions.length > 0;
+    }, [qualityDefinitions]);
 
     const [showRotationAnalyzeModal, setShowRotationAnalyzeModal] = useState(false);
     const [showEditSupportModal, setShowEditSupportModal] = useState(false);
@@ -184,7 +189,7 @@ function VisualizerLeftBar(
                                     type={['hoverSpecial', 'pressSpecial']}
                                     name="ToolbarOpen"
                                     className="padding-horizontal-4 print-tool-bar-open"
-                                    disabled={!enableShortcut}
+                                    disabled={!enableShortcut || !canOpenMeshFile}
                                     onClick={() => {
                                         actions.onClickToUpload();
                                     }}

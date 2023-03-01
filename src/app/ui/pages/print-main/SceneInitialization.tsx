@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 
-import log from '../../../lib/log';
 import { MACHINE_TOOL_HEADS } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
+import log from '../../../lib/log';
+import type { Machine } from '../../../machine-definition';
 import sceneLogic from '../../../scene/scene.logic';
 
 
@@ -13,7 +14,7 @@ import sceneLogic from '../../../scene/scene.logic';
  * When component mounted on page, it starts the initialization of the scene.
  */
 const SceneInitialization: React.FC = () => {
-    const activeMachine = useSelector((state: RootState) => state.machine.activeMachine);
+    const activeMachine: Machine | null = useSelector((state: RootState) => state.machine.activeMachine);
     const toolHeadName = useSelector((state: RootState) => state.machine.toolHead.printingToolhead);
 
     useEffect(() => {
@@ -26,8 +27,8 @@ const SceneInitialization: React.FC = () => {
             return;
         }
 
-        log.info('Active Machine =', activeMachine.fullName);
-        log.info('Tool Head =', toolHead);
+        log.info('Active Machine =', activeMachine.identifier, activeMachine.fullName);
+        log.info('Tool Head =', toolHead.identifier);
 
         // TODO: init buildVolume
         sceneLogic.onVisualizeInitialized(activeMachine, toolHead);
