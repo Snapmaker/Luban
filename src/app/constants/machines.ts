@@ -17,7 +17,7 @@ import {
     printToolHead as printToolHeadJ1,
 } from '../machines/snapmaker-j1';
 import i18n from '../lib/i18n';
-import type { Machine } from '../machine-definition';
+import type { Machine, ToolHead } from '../machine-definition';
 import {
     SnapmakerOriginalMachine,
     SnapmakerOriginalExtendedMachine,
@@ -160,8 +160,18 @@ export function getMachineOptions() {
     return options;
 }
 
+export function findToolHead(identifier: string): ToolHead | null {
+    for (const key of Object.keys(MACHINE_TOOL_HEADS)) {
+        const toolHead = MACHINE_TOOL_HEADS[key];
+        if (toolHead.identifier === identifier) {
+            return toolHead;
+        }
+    }
+    return null;
+}
+
 export function getMachineSupportedTools(machineSeries: string, headType = undefined) {
-    const machine: Machine = findMachineByName(machineSeries);
+    const machine: Machine | null = findMachineByName(machineSeries);
     if (!machine) {
         return [];
     }
@@ -208,6 +218,34 @@ export function isDualExtruder(toolhead: string): boolean {
 }
 
 /**
+ * Get work volume.
+ *
+ * Work volume is the visible wire frame.
+ */
+export function getWorkVolumeSize(machineIdentifier: string, toolHeadIdentifier: string): { x: number, y: number, z: number } {
+    const machine = findMachineByName(machineIdentifier);
+    const toolHead = findToolHead(toolHeadIdentifier);
+    if (!machine || !toolHead) {
+        return { x: 0, y: 0, z: 0 };
+    }
+
+    const toolHeadOptions = machine.metadata.toolHeads.find(toolHeadOption => toolHeadOption.identifier === toolHead.identifier);
+    if (!toolHeadOptions) { // tool head not supported
+        return { x: 0, y: 0, z: 0 };
+    }
+
+    if (toolHeadOptions.workRange) {
+        return {
+            x: machine.metadata.size.x,
+            y: machine.metadata.size.y,
+            z: toolHeadOptions.workRange.max[2],
+        };
+    } else {
+        return machine.metadata.size;
+    }
+}
+
+/**
  * Get additional info about pair of <machine series, toolhead>.
  *
  * TODO: refactor this.
@@ -215,8 +253,8 @@ export function isDualExtruder(toolhead: string): boolean {
  * @param series
  * @param toolhead
  */
-export function getMachineSeriesWithToolhead(series: string, toolhead: string) {
-    const machine = findMachineByName(series);
+export function getMachineSeriesWithToolhead(series: string, toolhead: { [key: string]: string }) {
+    const machine: Machine | null = findMachineByName(series);
     if (!machine) {
         return {};
     }
