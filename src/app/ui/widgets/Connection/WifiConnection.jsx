@@ -606,6 +606,7 @@ function WifiConnection() {
                     </div>
                 </div>
             )}
+            {/* Mismatch Modal */}
             <MismatchModal />
             {headType === HEAD_PRINTING && (
                 <CheckingNozzleSize />

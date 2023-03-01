@@ -20,7 +20,7 @@ export const printToolHead: ToolHead = {
 };
 
 export const machine: Machine = {
-    identifier: 'J1',
+    identifier: 'Snapmaker J1',
     fullName: 'Snapmaker J1',
     img: '/resources/images/machine/snapmaker_j1.png',
 

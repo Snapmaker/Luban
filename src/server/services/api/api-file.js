@@ -1,4 +1,4 @@
-import fs from 'fs';
+import * as fs from 'fs-extra';
 import mv from 'mv';
 import path from 'path';
 import { v4 as uuid } from 'uuid';
@@ -68,7 +68,9 @@ function getConfigDir(machineInfo) {
         const series = machineInfo?.series;
         const headType = machineInfo?.headType;
         const toolHead = machineInfo?.toolHead || (series === 'Original' ? INITIAL_TOOL_HEAD_FOR_ORIGINAL : INITIAL_TOOL_HEAD_FOR_SM2);
+
         const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
+
         configPath = currentMachine?.configPathname[headType];
     }
 
@@ -514,17 +516,19 @@ export const uploadFileToTmp = (req, res) => {
 };
 
 export const recoverProjectFile = async (req, res) => {
+    console.log('files =', req.files);
+    console.log('file =', req.body.file);
+
+    const file = req.files.file || JSON.parse(req.body.file);
+
     try {
-        const file = req.files.file || JSON.parse(req.body.file);
-        // const toolHead = JSON.parse(req.body.toolHead);
         file.path = DataStorage.resolveRelativePath(file.path);
         const { uploadName } = await cpFileToTmp(file);
 
-        let content;
         await unzipFile(`${uploadName}`, `${DataStorage.tmpDir}`);
-        content = fs.readFileSync(`${DataStorage.tmpDir}/config.json`);
+        const buffer = fs.readFileSync(`${DataStorage.tmpDir}/config.json`);
 
-        content = content.toString();
+        const content = buffer.toString();
         const config = JSON.parse(content);
 
         const machineInfo = config?.machineInfo;
@@ -581,13 +585,15 @@ export const recoverProjectFile = async (req, res) => {
             });
         }
 
-        // unwrap config
-        content = JSON.stringify(config);
-
-        res.send({ content, projectPath: file.path });
+        res.send({
+            projectPath: file.path,
+            content: JSON.stringify(config), // unwrap config
+        });
         res.end();
     } catch (e) {
-        log.error(`Failed to recover file: ${e}`);
+        log.error(`Failed to recover file: ${file.path}`);
+        log.error(e);
+
         res.status(ERR_INTERNAL_SERVER_ERROR).send({
             msg: `Failed to recover file: ${e}`
         });

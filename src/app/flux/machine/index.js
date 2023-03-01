@@ -34,6 +34,7 @@ import {
 } from '../../constants/machines';
 
 import i18n from '../../lib/i18n';
+import log from '../../lib/log';
 import { valueOf } from '../../lib/contants-utils';
 import { machineStore, printingStore } from '../../store/local-storage';
 import PresetDefinitionModel from '../manager/PresetDefinitionModel';
@@ -739,16 +740,23 @@ export const actions = {
             },
             'connection:connected': ({ state, err: _err, connectionType }) => {
                 if (_err) {
+                    log.warn('connection:connected, failed to connect to networked printer');
+                    log.warn(_err);
                     return;
                 }
+
                 let machineSeries = '';
                 const { toolHead, series, headType, status, isHomed, moduleStatusList, isMoving } = state;
                 const { seriesSize } = state;
+
+                console.log('connection:connected, state =', state);
+
                 dispatch(baseActions.updateState({
                     isHomed: isHomed,
                     isMoving,
                     connectLoading: false
                 }));
+
                 if (!isNil(seriesSize)) {
                     machineSeries = valueOf(
                         MACHINE_SERIES,
@@ -779,10 +787,11 @@ export const actions = {
                     }));
                     machineSeries = series;
                 }
+
                 if (machineSeries && headType && headType !== 'UNKNOWN') {
                     dispatch(
                         workspaceActions.updateMachineState({
-                            series: machineSeries,
+                            machineIdentifier: machineSeries,
                             headType,
                             toolHead
                         })
@@ -827,7 +836,7 @@ export const actions = {
                             onConfirm: (seriesT, headTypeT, toolHeadT) => {
                                 dispatch(
                                     workspaceActions.updateMachineState({
-                                        series: seriesT,
+                                        machineIdentifier: seriesT,
                                         headType: headTypeT,
                                         toolHead: toolHeadT
                                     })
@@ -1038,8 +1047,6 @@ export const actions = {
         dispatch(baseActions.updateState({
             machine: machine
         }));
-
-        dispatch(workspaceActions.updateMachineState({ series }));
 
         // dispatch(baseActions.updateState({ series }));
         const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);

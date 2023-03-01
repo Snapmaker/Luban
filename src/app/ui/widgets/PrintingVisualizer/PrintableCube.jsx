@@ -59,7 +59,7 @@ class PrintableCube extends Object3D {
     }
 
     updateSize(series, size, stopArea) {
-        log.info('cube.updateSize', size, stopArea);
+        log.info('DEBUG:cube.updateSize', size, stopArea);
 
         this.series = series;
         this.size = size;

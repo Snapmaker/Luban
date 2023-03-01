@@ -97,6 +97,11 @@ class MachineSelectModal extends PureComponent {
                 value: MACHINE_SERIES.A400.identifier,
                 label: i18n._(MACHINE_SERIES.A400.label),
                 img: '/resources/images/machine/size-2.0-A3502.jpg'
+            },
+            {
+                value: MACHINE_SERIES.J1.identifier,
+                label: MACHINE_SERIES.J1.fullName,
+                img: MACHINE_SERIES.J1.img,
             }
         ];
         const machineHeadTypeOptions = [

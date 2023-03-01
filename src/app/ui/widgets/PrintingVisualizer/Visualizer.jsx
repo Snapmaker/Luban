@@ -6,6 +6,7 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import { Box3, Math as ThreeMath, Quaternion, Vector3 } from 'three';
 import { EPSILON, HEAD_PRINTING, ROTATE_MODE, SCALE_MODE, TRANSLATE_MODE } from '../../../constants';
+import { isDualExtruder } from '../../../constants/machines';
 import { actions as machineActions } from '../../../flux/machine';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import { actions as printingActions } from '../../../flux/printing';
@@ -47,6 +48,7 @@ class Visualizer extends PureComponent {
     static propTypes = {
         isActive: PropTypes.bool.isRequired,
         series: PropTypes.string.isRequired,
+        toolHead: PropTypes.object.isRequired,
         size: PropTypes.object.isRequired,
         stage: PropTypes.number.isRequired,
         promptTasks: PropTypes.array.isRequired,
@@ -561,8 +563,9 @@ class Visualizer extends PureComponent {
     };
 
     render() {
-        const { size, selectedModelArray, modelGroup, gcodeLineGroup, inProgress, hasModel, displayedType, transformMode } = this.props; // transformMode
+        const { toolHead, size, selectedModelArray, modelGroup, gcodeLineGroup, inProgress, hasModel, displayedType, transformMode } = this.props; // transformMode
 
+        const isDual = isDualExtruder(toolHead.printingToolhead);
         const isModelSelected = (selectedModelArray.length > 0);
         const isModelHide = isModelSelected && !selectedModelArray[0].visible;
         const isMultipleModel = selectedModelArray.length > 1;
@@ -571,6 +574,101 @@ class Visualizer extends PureComponent {
         const progress = this.props.progress;
         const pasteDisabled = (modelGroup.clipboard.length === 0);
         const primeTowerSelected = selectedModelArray.length > 0 && some(selectedModelArray, { type: 'primeTower' });
+
+        const menuItems = [
+            {
+                type: 'item',
+                label: i18n._('key-Printing/ContextMenu-Cut'),
+                disabled: inProgress || !isModelSelected,
+                onClick: this.props.cut
+            },
+            {
+                type: 'item',
+                label: i18n._('key-Printing/ContextMenu-Copy'),
+                disabled: inProgress || !isModelSelected,
+                onClick: this.props.copy
+            },
+            {
+                type: 'item',
+                label: i18n._('key-Printing/ContextMenu-Paste'),
+                disabled: inProgress || pasteDisabled,
+                onClick: this.props.paste
+            },
+            {
+                type: 'item',
+                label: i18n._('key-Printing/ContextMenu-Duplicate'),
+                disabled: inProgress || !isModelSelected,
+                onClick: this.actions.duplicateSelectedModel
+            },
+            {
+                type: 'separator'
+            },
+            {
+                type: 'item',
+                label: i18n._('key-Printing/ContextMenu-FitViewIn'),
+                disabled: inProgress || !hasModel,
+                onClick: this.actions.fitViewIn
+            },
+            {
+                type: 'item',
+                label: i18n._('key-Printing/ContextMenu-Hide'),
+                disabled: inProgress || !isModelSelected,
+                onClick: this.props.hideSelectedModel
+            },
+        ];
+
+        if (isDual) {
+            menuItems.push(...[
+                {
+                    type: 'separator'
+                },
+                {
+                    type: 'item',
+                    label: i18n._('key-Printing/ContextMenu-Assign model to left extruder'),
+                    disabled: inProgress || !isModelSelected,
+                    onClick: () => this.actions.setSelectedModelsExtruder('0'),
+                },
+                {
+                    type: 'item',
+                    label: i18n._('key-Printing/ContextMenu-Assign model to right extruder'),
+                    disabled: inProgress || !isModelSelected,
+                    onClick: () => this.actions.setSelectedModelsExtruder('1'),
+                },
+            ]);
+        }
+
+        menuItems.push(...[
+            {
+                type: 'separator'
+            },
+            {
+                type: 'item',
+                label: i18n._('key-Printing/ContextMenu-Reset Model Transformation'),
+                disabled: inProgress || !isModelSelected,
+                onClick: this.actions.resetSelectedModelTransformation
+            },
+            {
+                type: 'item',
+                label: i18n._('key-Printing/ContextMenu-Center Models'),
+                disabled: inProgress || !isModelSelected,
+                onClick: this.actions.centerSelectedModel
+            },
+            {
+                type: 'item',
+                label: i18n._('key-Printing/ContextMenu-Auto Rotate'),
+                disabled: inProgress || !isModelSelected || isModelHide || isMultipleModel,
+                onClick: this.actions.autoRotateSelectedModel
+            },
+            {
+                type: 'item',
+                label: i18n._('key-Printing/ContextMenu-Auto Arrange'),
+                disabled: inProgress || !hasModel,
+                onClick: () => {
+                    this.actions.arrangeAllModels();
+                }
+            }
+        ]);
+
         return (
             <div
                 className={styles['printing-visualizer']}
@@ -638,93 +736,7 @@ class Visualizer extends PureComponent {
                 <ContextMenu
                     ref={this.contextMenuRef}
                     id="3dp"
-                    menuItems={
-                        [
-                            {
-                                type: 'item',
-                                label: i18n._('key-Printing/ContextMenu-Cut'),
-                                disabled: inProgress || !isModelSelected,
-                                onClick: this.props.cut
-                            },
-                            {
-                                type: 'item',
-                                label: i18n._('key-Printing/ContextMenu-Copy'),
-                                disabled: inProgress || !isModelSelected,
-                                onClick: this.props.copy
-                            },
-                            {
-                                type: 'item',
-                                label: i18n._('key-Printing/ContextMenu-Paste'),
-                                disabled: inProgress || pasteDisabled,
-                                onClick: this.props.paste
-                            },
-                            {
-                                type: 'item',
-                                label: i18n._('key-Printing/ContextMenu-Duplicate'),
-                                disabled: inProgress || !isModelSelected,
-                                onClick: this.actions.duplicateSelectedModel
-                            },
-                            {
-                                type: 'separator'
-                            },
-                            {
-                                type: 'item',
-                                label: i18n._('key-Printing/ContextMenu-FitViewIn'),
-                                disabled: inProgress || !hasModel,
-                                onClick: this.actions.fitViewIn
-                            },
-                            {
-                                type: 'item',
-                                label: i18n._('key-Printing/ContextMenu-Hide'),
-                                disabled: inProgress || !isModelSelected,
-                                onClick: this.props.hideSelectedModel
-                            },
-                            {
-                                type: 'separator'
-                            },
-                            {
-                                type: 'item',
-                                label: i18n._('key-Printing/ContextMenu-Assign model to left extruder'),
-                                disabled: inProgress || !isModelSelected,
-                                onClick: () => this.actions.setSelectedModelsExtruder('0'),
-                            },
-                            {
-                                type: 'item',
-                                label: i18n._('key-Printing/ContextMenu-Assign model to right extruder'),
-                                disabled: inProgress || !isModelSelected,
-                                onClick: () => this.actions.setSelectedModelsExtruder('1'),
-                            },
-                            {
-                                type: 'separator'
-                            },
-                            {
-                                type: 'item',
-                                label: i18n._('key-Printing/ContextMenu-Reset Model Transformation'),
-                                disabled: inProgress || !isModelSelected,
-                                onClick: this.actions.resetSelectedModelTransformation
-                            },
-                            {
-                                type: 'item',
-                                label: i18n._('key-Printing/ContextMenu-Center Models'),
-                                disabled: inProgress || !isModelSelected,
-                                onClick: this.actions.centerSelectedModel
-                            },
-                            {
-                                type: 'item',
-                                label: i18n._('key-Printing/ContextMenu-Auto Rotate'),
-                                disabled: inProgress || !isModelSelected || isModelHide || isMultipleModel,
-                                onClick: this.actions.autoRotateSelectedModel
-                            },
-                            {
-                                type: 'item',
-                                label: i18n._('key-Printing/ContextMenu-Auto Arrange'),
-                                disabled: inProgress || !hasModel,
-                                onClick: () => {
-                                    this.actions.arrangeAllModels();
-                                }
-                            }
-                        ]
-                    }
+                    menuItems={menuItems}
                 />
             </div>
         );
@@ -735,7 +747,7 @@ const mapStateToProps = (state, ownProps) => {
     const machine = state.machine;
     const { currentModalPath } = state.appbarMenu;
     const printing = state.printing;
-    const { size, series, enable3dpLivePreview } = machine;
+    const { size, series, enable3dpLivePreview, toolHead } = machine;
     const { menuDisabledCount } = state.appbarMenu;
     // TODO: be to organized
     const {
@@ -768,6 +780,8 @@ const mapStateToProps = (state, ownProps) => {
     }
 
     return {
+        // machine
+        toolHead,
         stopArea,
         leftBarOverlayVisible,
         isActive,

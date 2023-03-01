@@ -1,24 +1,26 @@
 // Reducer for Workspace
 import * as THREE from 'three';
 import { v4 as uuid } from 'uuid';
+import { generateRandomPathName } from '../../../shared/lib/random-utils';
 import api from '../../api';
 import log from '../../lib/log';
-import { generateRandomPathName } from '../../../shared/lib/random-utils';
 import workerManager from '../../lib/manager/workerManager';
-/* eslint-disable-next-line import/no-cycle */
-import { actions as machineActions } from '../machine';
-import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import {
     CONNECTION_STATUS_CONNECTED,
     EPSILON,
-    PROTOCOL_TEXT,
+    PROTOCOL_TEXT
 } from '../../constants';
 import {
-    MACHINE_SERIES,
-    findMachineByName,
+    findMachineByName
+    // , MACHINE_SERIES
 } from '../../constants/machines';
 import { logGcodeExport } from '../../lib/gaEvent';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
+import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
+/* eslint-disable-next-line import/no-cycle */
+import { actions as machineActions } from '../machine';
+import type { MachineStateUpdateOptions } from './machine-state';
+
 
 // Actions
 const ACTION_SET_STATE = 'WORKSPACE/ACTION_SET_STATE';
@@ -33,8 +35,7 @@ export const WORKSPACE_STAGE = {
 const INITIAL_STATE = {
     headType: '',
     toolHead: '',
-    series: MACHINE_SERIES.ORIGINAL.identifier,
-    size: MACHINE_SERIES.ORIGINAL.metadata.size,
+
     isRotate: false,
     uploadState: 'idle', // uploading, uploaded
     renderState: 'idle',
@@ -50,6 +51,10 @@ const INITIAL_STATE = {
     stage: WORKSPACE_STAGE.EMPTY,
     previewStage: WORKSPACE_STAGE.EMPTY,
     progress: 0,
+
+    // MachineState
+    machineIdentifier: '',
+    machineSize: { x: 100, y: 100, z: 100 },
 };
 
 export const actions = {
@@ -507,12 +512,16 @@ export const actions = {
         dispatch(actions.updateState({ uploadState: 'idle' }));
     },
 
-    updateMachineState: (options) => (dispatch) => {
-        // { headType, toolHead, series, size, isRotate }
-        if (options.series) {
-            const machine = findMachineByName(options.series);
+    updateMachineState: (options: MachineStateUpdateOptions) => (dispatch) => {
+        console.log('updateMachineState', options);
+        if (options.machineIdentifier) {
+            const machine = findMachineByName(options.machineIdentifier);
             if (machine) {
-                options.size = machine.metadata.size;
+                options.machineSize = {
+                    x: machine.metadata.size.x,
+                    y: machine.metadata.size.y,
+                    z: machine.metadata.size.z,
+                };
             }
         }
         dispatch(actions.updateState(options));

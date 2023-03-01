@@ -89,7 +89,7 @@ function process() {
             targetDepth: 2,
             stepDown: 40,
             safetyHeight: 1,
-            stopHeight: 10,
+            stopHeight: 80,
             density: 5,
             jogSpeed: 3000,
             workSpeed: 300,
