@@ -12,6 +12,7 @@ import { actions as laserActions } from '../flux/laser';
 import { actions as editorActions } from '../flux/editor';
 import { actions as cncActions } from '../flux/cnc';
 import { actions as printingActions } from '../flux/printing';
+import { actions as workspaceActions } from '../flux/workspace';
 import { actions as textActions } from '../flux/text';
 import { actions as settingActions } from '../flux/setting';
 import HomePage from './pages/HomePage';
@@ -36,7 +37,9 @@ class App extends PureComponent {
         shouldCheckForUpdate: PropTypes.bool.isRequired,
         enableShortcut: PropTypes.bool.isRequired,
         updateMultipleEngine: PropTypes.func.isRequired,
-        menuDisabledCount: PropTypes.number
+        menuDisabledCount: PropTypes.number,
+
+        workspaceInit: PropTypes.func.isRequired,
     };
 
     state = { hasError: false };
@@ -109,6 +112,7 @@ class App extends PureComponent {
         // init machine module
         // TODO: move init to proper page
         this.props.machineInit();
+        this.props.workspaceInit();
 
         this.props.functionsInit();
         this.props.textInit();
@@ -188,6 +192,7 @@ const mapDispatchToProps = (dispatch) => {
         laserInit: () => dispatch(laserActions.init()),
         cncInit: () => dispatch(cncActions.init()),
         printingInit: () => dispatch(printingActions.init()),
+        workspaceInit: () => dispatch(workspaceActions.init()),
         textInit: () => dispatch(textActions.init()),
         functionsInit: () => {
             dispatch(editorActions.initSelectedModelListener('laser'));

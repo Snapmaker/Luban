@@ -19,6 +19,8 @@ import ThreeUtils from '../../three-extensions/ThreeUtils';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as machineActions } from '../machine';
+import { ACTION_UPDATE_STATE } from './action-base';
+import discoverActions from './action-discover';
 import type { MachineStateUpdateOptions } from './machine-state';
 
 
@@ -52,12 +54,26 @@ const INITIAL_STATE = {
     previewStage: WORKSPACE_STAGE.EMPTY,
     progress: 0,
 
+    // Discover
+    // HTTP connection
+    //  - servers: HTTP servers on Snapmaker 2.0
+    //  - serverDiscovering: discover state
+    serverDiscovering: false,
+    servers: [],
+
     // MachineState
     machineIdentifier: '',
     machineSize: { x: 100, y: 100, z: 100 },
 };
 
 export const actions = {
+    init: () => (dispatch) => {
+        // Discover actions init
+        dispatch(discoverActions.init());
+    },
+
+    discover: discoverActions,
+
     gcodeToArraybufferGeometryCallback: (data) => (dispatch, getState) => {
         const {
             status,
@@ -533,6 +549,9 @@ export default function reducer(state = INITIAL_STATE, action) {
         case ACTION_SET_STATE: {
             return Object.assign({}, state, { ...action.state });
         }
+
+        case ACTION_UPDATE_STATE:
+            return Object.assign({}, state, action.state);
 
         default:
             return state;

@@ -151,8 +151,6 @@ function WifiConnection() {
     const dispatch = useDispatch();
 
     const {
-        servers,
-        serverDiscovering,
         connectionType,
         connectionStatus,
         connectionAuto,
@@ -170,6 +168,11 @@ function WifiConnection() {
         heatedBedTemperature,
         laserCamera,
     } = useSelector(state => state.machine, shallowEqual);
+
+    const {
+        serverDiscovering,
+        servers,
+    } = useSelector(state => state.workspace, shallowEqual);
 
     const {
         toolHead, headType, series

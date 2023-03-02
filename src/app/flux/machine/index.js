@@ -50,19 +50,11 @@ import setting from '../../config/settings';
 
 import baseActions, { ACTION_UPDATE_STATE } from './action-base';
 /* eslint-disable import/no-cycle */
-import discoverActions from './action-discover';
+import discoverActions from '../workspace/action-discover';
 import connectActions from './action-connect';
 import definitionManager from '../manager/DefinitionManager';
 
 const INITIAL_STATE = {
-    // region server disover
-    // HTTP connection
-    //  - servers: HTTP servers on Snapmaker 2.0
-    //  - serverDiscovering: discover state
-    servers: [],
-    serverDiscovering: false,
-    // endregion
-
     // region Connection
     // connection state
     //  - type: serial port or Wi-Fi
@@ -254,9 +246,6 @@ const INITIAL_STATE = {
 export const actions = {
     // Initialize machine, get machine configurations via API
     init: () => (dispatch, getState) => {
-        // Discover actions init
-        dispatch(discoverActions.init());
-
         actions.__initConnection(dispatch);
         dispatch(connectActions.init());
 

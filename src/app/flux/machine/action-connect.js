@@ -6,6 +6,7 @@ import { CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI } from '../../constants';
 import { machineStore } from '../../store/local-storage';
 
 import baseActions from './action-base';
+import workspaceBaseActions from '../workspace/action-base';
 
 const init = () => (dispatch) => {
     // const connectionType = machineStore.get('connection.type') || CONNECTION_TYPE_SERIAL;
@@ -23,7 +24,7 @@ const init = () => (dispatch) => {
 const setConnectionType = (connectionType) => (dispatch) => {
     if (!includes([CONNECTION_TYPE_WIFI, CONNECTION_TYPE_SERIAL], connectionType)) return;
     if (connectionType === CONNECTION_TYPE_WIFI) {
-        dispatch(baseActions.updateState({ servers: [] }));
+        dispatch(workspaceBaseActions.updateState({ servers: [] }));
     }
     dispatch(baseActions.updateState({ connectionType }));
 
@@ -50,7 +51,7 @@ const setConnectionAuto = (isAuto) => (dispatch) => {
  * If 'server' is not found in 'servers' list, add it and update state
  */
 const setSelectedServer = (server) => (dispatch, getState) => {
-    const { servers } = getState().machine;
+    const { servers } = getState().workspace;
     const oldServer = getState().machine.server;
     // We can assume that server must be found on server list
     let find;
@@ -70,9 +71,11 @@ const setSelectedServer = (server) => (dispatch, getState) => {
  *
  * @param server - server to be added.
  * @returns The new added server or an old server if it already exists.
+ *
+ * TODO: Move to workspace
  */
 const addServer = (server) => (dispatch, getState) => {
-    const { servers } = getState().machine;
+    const { servers } = getState().workspace;
 
     const find = servers.find(s => s.address === server.address);
 
@@ -82,7 +85,7 @@ const addServer = (server) => (dispatch, getState) => {
         const newServers = servers.slice(0);
         newServers.push(server);
 
-        dispatch(baseActions.updateState({
+        dispatch(workspaceBaseActions.updateState({
             servers: newServers,
         }));
 
