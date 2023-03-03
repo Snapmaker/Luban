@@ -1922,7 +1922,7 @@
     "key-Workspace/Mismatch-Inconsistent_Machine_Model": "",
     "key-Workspace/Mismatch-Machine Settings": "",
     "key-Workspace/Mismatch-Synchronize_Nozzle_Diameter": "",
-    "key-Workspace/Mismatch-The configured Machine Model ({{machineInfo}}) does not match with the connected machine ({{connectedMachineInfo}}). To change the settings, you can go to": "",
+    "key-Workspace/Mismatch-The configured Machine Model ({{- machineInfo}}) does not match with the connected machine ({{- connectedMachineInfo}}). To change the settings, you can go to": "",
     "key-Workspace/Mismatch-The configured Nozzle Diameter ({{diameterInfo}}) is inconsistent with that of the connected machine ({{connectedDameterInfo}}). Luban has updated the configuration to be consistent with the machine nozzle.": "",
     "key-Workspace/Page-3D rendering...": "3D-рендеринг ...",
     "key-Workspace/Page-A problem caused the server to stop working correctly. Check the server status and try again.": "Проблема привела к тому, что сервер перестал работать правильно. Проверьте статус сервера и повторите попытку.",

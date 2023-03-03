@@ -260,7 +260,7 @@ function Workspace({ isPopup, onClose, style, className }) {
                     </Modal.Body>
                     <Modal.Footer>
                         <Button
-                            btnStyle="primary"
+                            type="primary"
                             onClick={reloadPage}
                         >
                             {i18n._('key-Workspace/Page-Reload')}

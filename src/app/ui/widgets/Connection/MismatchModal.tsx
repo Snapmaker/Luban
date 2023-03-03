@@ -87,7 +87,7 @@ function MismatchModal() {
                         <div>
                             {
                                 i18n._(
-                                    'key-Workspace/Mismatch-The configured Machine Model ({{machineInfo}}) does not match with the connected machine ({{connectedMachineInfo}}). To change the settings, you can go to',
+                                    'key-Workspace/Mismatch-The configured Machine Model ({{- machineInfo}}) does not match with the connected machine ({{- connectedMachineInfo}}). To change the settings, you can go to',
                                     {
                                         machineInfo: `${machine?.fullName} ${i18n._(toolHeadInfo?.label)}`,
                                         connectedMachineInfo: `${connectedMachine?.fullName || i18n._('key-Workspace/Connection-Unknown')} ${connectedToolHead?.label || ''}`,
