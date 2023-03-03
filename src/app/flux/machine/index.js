@@ -50,20 +50,9 @@ import setting from '../../config/settings';
 
 import baseActions, { ACTION_UPDATE_STATE } from './action-base';
 /* eslint-disable import/no-cycle */
-import discoverActions from '../workspace/action-discover';
-import connectActions from './action-connect';
 import definitionManager from '../manager/DefinitionManager';
 
 const INITIAL_STATE = {
-    // region Connection
-    // connection state
-    //  - type: serial port or Wi-Fi
-    //  - status: Idle / Connecting / Connected
-    //  - timeout: connect timeout (for Wi-Fi connection)
-    connectionType: CONNECTION_TYPE_WIFI,
-    connectionStatus: CONNECTION_STATUS_IDLE,
-    connectionTimeout: 3000,
-    connectLoading: false,
     printingArrangeSettings: {
         angle: 30,
         offset: 5,
@@ -86,7 +75,6 @@ const INITIAL_STATE = {
     //  - port: serial port selected
     port: controller.port || '',
     ports: [],
-    // endregion
 
     // region Machine Status
 
@@ -246,9 +234,6 @@ const INITIAL_STATE = {
 export const actions = {
     // Initialize machine, get machine configurations via API
     init: () => (dispatch, getState) => {
-        actions.__initConnection(dispatch);
-        dispatch(connectActions.init());
-
         actions.__initMachineStatus(dispatch);
         actions.__initControllerEvents(dispatch, getState);
 
@@ -332,30 +317,6 @@ export const actions = {
                 })
             );
         }
-    },
-
-    /**
-     * Initialize connection related state.
-     */
-    __initConnection: (dispatch) => {
-        // Wi-Fi server
-        const serverAddress = machineStore.get('server.address') || '';
-        const serverName = machineStore.get('server.name') || '';
-        const serverToken = machineStore.get('server.token') || '';
-        const manualIp = machineStore.get('manualIp') || '';
-
-        // serial port
-        const machinePort = machineStore.get('port') || '';
-
-        dispatch(
-            baseActions.updateState({
-                savedServerAddress: serverAddress,
-                savedServerToken: serverToken,
-                savedServerName: serverName,
-                port: machinePort,
-                manualIp: manualIp
-            })
-        );
     },
 
     /**
@@ -948,12 +909,6 @@ export const actions = {
         );
     },
 
-    // discover actions
-    discover: discoverActions,
-
-    // connect actions
-    connect: connectActions,
-
     updateMachineState: (state) => (dispatch) => {
         const { series, headType } = state;
         headType
@@ -1236,29 +1191,6 @@ export const actions = {
                 }
             }
         );
-    },
-
-
-    executeGcodeAutoHome: (hasHomingModel = false) => (dispatch, getState) => {
-        const { server, homingModal, isConnected } = getState().machine;
-        const { headType } = getState().workspace;
-        if (!isConnected) {
-            if (homingModal) {
-                dispatch(
-                    baseActions.updateState({
-                        homingModal: false
-                    })
-                );
-            }
-            return;
-        }
-        server.goHome({ hasHomingModel, headType }, () => {
-            dispatch(
-                baseActions.updateState({
-                    homingModal: false
-                })
-            );
-        });
     },
 
     // region Enclosure

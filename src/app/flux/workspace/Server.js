@@ -21,9 +21,9 @@ import {
     // WORKFLOW_STATUS_STOPPING
 } from '../../constants';
 import { controller } from '../../lib/controller';
-import { actions as workspaceActions } from '../workspace';
+import { actions as workspaceActions } from '.';
 
-import { actions as machineActions } from '.';
+import { actions as machineActions } from '../machine';
 import connectActions from './action-connect';
 import baseActions from './action-base';
 import { dispatch } from '../../store';

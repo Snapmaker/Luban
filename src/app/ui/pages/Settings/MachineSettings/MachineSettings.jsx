@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getMachineOptions, getMachineSupportedToolOptions, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, } from '../../../../constants/machines';
 import { actions as machineActions } from '../../../../flux/machine';
+import { actions as workspaceActions } from '../../../../flux/workspace';
 import { actions as projectActions } from '../../../../flux/project';
 import i18n from '../../../../lib/i18n';
 import UniApi from '../../../../lib/uni-api';
@@ -116,7 +117,7 @@ function MachineSettings() {
             });
         },
         onSave: async () => {
-            dispatch(machineActions.connect.setConnectionType(state.connectionTimeout));
+            dispatch(workspaceActions.connect.setConnectionType(state.connectionTimeout));
             dispatch(machineActions.updateMachineSeries(state.series));
             dispatch(machineActions.updateMachineSize(state.size));
             dispatch(machineActions.setEnclosureState(state.enclosureDoorDetection));

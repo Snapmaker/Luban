@@ -841,7 +841,7 @@ const mapStateToProps = (state) => {
         toolHead: workspace.toolHead,
         workflowStatus: machine.workflowStatus,
         isConnected: machine.isConnected,
-        connectionType: machine.connectionType,
+        connectionType: workspace.connectionType,
         uploadState: workspace.uploadState,
         gcodeList: workspace.gcodeList,
         gcodeFile: workspace.gcodeFile,

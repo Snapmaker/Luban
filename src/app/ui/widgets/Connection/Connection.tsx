@@ -1,11 +1,11 @@
 import classNames from 'classnames';
-import PropTypes from 'prop-types';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI, PROTOCOL_TEXT } from '../../../constants';
 import { MACHINE_SERIES } from '../../../constants/machines';
-import { actions as machineActions } from '../../../flux/machine';
+import { RootState } from '../../../flux/index.def';
+import { actions as workspaceActions } from '../../../flux/workspace';
 import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import { Button } from '../../components/Buttons';
@@ -15,10 +15,19 @@ import Notifications from '../../components/Notifications';
 import SerialConnection from './SerialConnection';
 import WifiConnection from './WifiConnection';
 
+declare interface WidgetActions {
+    setTitle: (title: string) => void;
+}
 
-function Connection({ widgetId, widgetActions }) {
+export declare interface ConnectionProps {
+    widgetId: string;
+    widgetActions: WidgetActions;
+}
+
+
+const Connection: React.FC<ConnectionProps> = ({ widgetId, widgetActions }) => {
     const dispatch = useDispatch();
-    const { widgets } = useSelector(state => state.widget);
+    const { widgets } = useSelector((state: RootState) => state.widget);
 
     const dataSource = widgets[widgetId].dataSource;
     const { connectionType, isConnected, series, isHomed } = useSelector(state => state.machine);
@@ -31,12 +40,6 @@ function Connection({ widgetId, widgetActions }) {
         clearAlert: () => {
             setAlertMessage('');
         },
-        onSelectTabSerial: () => {
-            dispatch(machineActions.connect.setConnectionType(CONNECTION_TYPE_SERIAL));
-        },
-        onSelectTabWifi: () => {
-            dispatch(machineActions.connect.setConnectionType(CONNECTION_TYPE_WIFI));
-        },
         openHomeModal: () => {
             setShowHomeReminder(true);
         },
@@ -44,15 +47,24 @@ function Connection({ widgetId, widgetActions }) {
             setShowHomeReminder(false);
         },
         clickHomeModalOk: () => {
-            dispatch(machineActions.executeGcodeAutoHome());
+            dispatch(workspaceActions.executeGcodeAutoHome());
             // setShowHomeReminder(false);
             setHoming(true);
         }
     };
 
+    const onSelectTabWifi = useCallback(() => {
+        dispatch(workspaceActions.connect.setConnectionType(CONNECTION_TYPE_WIFI));
+    }, [dispatch]);
+
+
+    const onSelectTabSerial = useCallback(() => {
+        dispatch(workspaceActions.connect.setConnectionType(CONNECTION_TYPE_SERIAL));
+    }, [dispatch]);
+
     useEffect(() => {
         widgetActions.setTitle(i18n._('key-Workspace/Connection-Connection'));
-    }, []);
+    }, [dispatch, widgetActions]);
 
     useEffect(() => {
         if (!isHomed && isConnected) {
@@ -90,19 +102,20 @@ function Connection({ widgetId, widgetActions }) {
                     <div className={classNames('sm-tabs', 'margin-vertical-16')}>
                         <button
                             type="button"
-                            className={classNames('sm-tab', { 'sm-selected font-weight-bold': (connectionType === CONNECTION_TYPE_SERIAL) })}
-                            onClick={actions.onSelectTabSerial}
-                            disabled={isConnected}
-                        >
-                            {i18n._('key-Workspace/Connection-Serial Port')}
-                        </button>
-                        <button
-                            type="button"
                             className={classNames('sm-tab', { 'sm-selected font-weight-bold': (connectionType === CONNECTION_TYPE_WIFI) })}
-                            onClick={actions.onSelectTabWifi}
+                            onClick={onSelectTabWifi}
                             disabled={isConnected}
                         >
                             {i18n._('key-Workspace/Connection-Wi-Fi')}
+                        </button>
+
+                        <button
+                            type="button"
+                            className={classNames('sm-tab', { 'sm-selected font-weight-bold': (connectionType === CONNECTION_TYPE_SERIAL) })}
+                            onClick={onSelectTabSerial}
+                            disabled={isConnected}
+                        >
+                            {i18n._('key-Workspace/Connection-Serial Port')}
                         </button>
                     </div>
                 )
@@ -146,11 +159,8 @@ function Connection({ widgetId, widgetActions }) {
             )}
         </div>
     );
-}
-
-Connection.propTypes = {
-    widgetId: PropTypes.string.isRequired,
-    widgetActions: PropTypes.object.isRequired
 };
+
+console.log('Connection =', Connection);
 
 export default Connection;

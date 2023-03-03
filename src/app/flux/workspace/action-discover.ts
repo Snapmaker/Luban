@@ -1,7 +1,7 @@
 /* eslint-disable import/no-cycle */
 import { isEqualWith, cloneDeep } from 'lodash';
 import { controller } from '../../lib/controller';
-import { Server } from '../machine/Server';
+import { Server } from './Server';
 import { CUSTOM_SERVER_NAME } from '../../constants/index';
 
 import baseActions from './action-base';

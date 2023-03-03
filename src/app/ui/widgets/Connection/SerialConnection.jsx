@@ -14,7 +14,7 @@ import {
     LEVEL_TWO_POWER_LASER_FOR_SM2,
     MACHINE_SERIES,
 } from '../../../constants/machines';
-import { actions as machineActions } from '../../../flux/machine';
+import { actions as workspaceActions } from '../../../flux/workspace';
 import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
@@ -24,7 +24,7 @@ import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
 
 import MachineModuleStatusBadge from './components/MachineModuleStatusBadge';
-import styles from './index.styl';
+import styles from './styles.styl';
 import MismatchModal from './MismatchModal';
 
 let loadingTimer = null;
@@ -96,7 +96,7 @@ function SerialConnection() {
         onChangePortOption: (option) => {
             const serverFound = servers.find(v => v.port === option.value);
             if (serverFound) {
-                dispatch(machineActions.connect.setSelectedServer(serverFound));
+                dispatch(workspaceActions.connect.setSelectedServer(serverFound));
                 setPortState(serverFound);
             }
         },
@@ -274,11 +274,11 @@ function SerialConnection() {
                         </span>
                         <span className={styles['connection-state-icon']}>
                             {workflowStatus === WORKFLOW_STATE_IDLE
-                            && <i className="sm-icon-14 sm-icon-idle" />}
+                                && <i className="sm-icon-14 sm-icon-idle" />}
                             {workflowStatus === WORKFLOW_STATE_PAUSED
-                            && <i className="sm-icon-14 sm-icon-paused" />}
+                                && <i className="sm-icon-14 sm-icon-paused" />}
                             {workflowStatus === WORKFLOW_STATE_RUNNING
-                            && <i className="sm-icon-14 sm-icon-running" />}
+                                && <i className="sm-icon-14 sm-icon-running" />}
                         </span>
                     </div>
                     {moduleStatusList && moduleStatusList.length && (

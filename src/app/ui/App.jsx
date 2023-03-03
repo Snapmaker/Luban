@@ -23,7 +23,7 @@ import Laser from './pages/Laser';
 import Settings from './pages/Settings';
 import UniApi from '../lib/uni-api';
 import AppLayout from './layouts/AppLayout';
-import { Server } from '../flux/machine/Server';
+import { Server } from '../flux/workspace/Server';
 import { logErrorToGA } from '../lib/gaEvent';
 
 Canvas2dZoom.register();

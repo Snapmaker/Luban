@@ -230,7 +230,8 @@ function WifiTransport({ widgetActions, controlActions }) {
     const toolHeadName = useSelector(state => state?.workspace?.toolHead);
     const useBackground = useSelector(state => state?.laser?.useBackground);
     const { previewBoundingBox, headType, gcodeFiles, previewModelGroup, previewRenderState, previewStage, isRotate } = useSelector(state => state.workspace);
-    const { isConnected, connectionType, size, workflowStatus, isSendedOnWifi } = useSelector(state => state.machine);
+    const { isConnected, size, workflowStatus, isSendedOnWifi } = useSelector(state => state.machine);
+    const { connectionType } = useSelector(state => state.workspace);
     const [loadToWorkspaceOnLoad, setLoadToWorkspaceOnLoad] = useState(true);
     const [selectFileName, setSelectFileName] = useState('');
     const [selectFileType, setSelectFileType] = useState('');

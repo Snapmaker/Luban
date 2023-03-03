@@ -21,7 +21,6 @@ class WidgetContainer extends PureComponent {
         // function|object, some component is wraped with connect/withRouter
         component: PropTypes.any.isRequired,
         widgetId: PropTypes.string.isRequired,
-        headType: PropTypes.string,
         widgetProps: PropTypes.object.isRequired,
         onRemove: PropTypes.func,
         onToggle: PropTypes.func,
@@ -144,13 +143,6 @@ class WidgetContainer extends PureComponent {
 
                     />
                 </Widget.Content>
-                {/* {WrappedFooter && (
-                    <Widget.Footer>
-                        <WrappedFooter
-                            headType={headType}
-                        />
-                    </Widget.Footer>
-                )} */}
             </Widget>
         );
     }

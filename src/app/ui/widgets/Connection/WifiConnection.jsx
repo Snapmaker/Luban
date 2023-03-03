@@ -32,7 +32,8 @@ import {
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
 } from '../../../constants/machines';
 import { actions as machineActions } from '../../../flux/machine';
-import { Server } from '../../../flux/machine/Server';
+import { actions as workspaceActions } from '../../../flux/workspace';
+import { Server } from '../../../flux/workspace/Server';
 import { actions as printingActions } from '../../../flux/printing';
 import usePrevious from '../../../lib/hooks/previous';
 import i18n from '../../../lib/i18n';
@@ -46,7 +47,7 @@ import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
 
 import MachineModuleStatusBadge from './components/MachineModuleStatusBadge';
-import styles from './index.styl';
+import styles from './styles.styl';
 import MismatchModal from './MismatchModal';
 
 
@@ -219,12 +220,12 @@ function WifiConnection() {
         onChangeServerOption: (option) => {
             const serverFound = servers.find(v => v.name === option.name && v.address === option.address);
             if (serverFound) {
-                dispatch(machineActions.connect.setSelectedServer(serverFound));
+                dispatch(workspaceActions.connect.setSelectedServer(serverFound));
                 setServerState(serverFound);
             }
         },
         openServer: () => {
-            dispatch(machineActions.connect.setSelectedServer(serverState));
+            dispatch(workspaceActions.connect.setSelectedServer(serverState));
 
             if (serverState.address === savedServerAddress) {
                 serverState.setToken(savedServerToken);
@@ -353,7 +354,7 @@ function WifiConnection() {
                 inputtext: manualIp,
                 onCancel: actions.onCloseManualWiFi,
                 onConfirm: (text) => {
-                    dispatch(machineActions.connect.setManualIP(text));
+                    dispatch(workspaceActions.connect.setManualIP(text));
                     const newServer = new Server({
                         name: CUSTOM_SERVER_NAME,
                         address: text,
@@ -361,7 +362,7 @@ function WifiConnection() {
                     });
 
                     // Try add new server
-                    const verifiedServer = dispatch(machineActions.connect.addServer(newServer));
+                    const verifiedServer = dispatch(workspaceActions.connect.addServer(newServer));
 
                     // set state server and then open it
                     setServerState(verifiedServer);
@@ -378,7 +379,7 @@ function WifiConnection() {
             setShowManualWiFiModal(false);
         },
         handleAutoConnection: (value) => {
-            dispatch(machineActions.connect.setConnectionAuto(value));
+            dispatch(workspaceActions.connect.setConnectionAuto(value));
         }
     };
 

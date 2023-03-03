@@ -5,10 +5,11 @@ import { generateRandomPathName } from '../../../shared/lib/random-utils';
 import api from '../../api';
 import log from '../../lib/log';
 import workerManager from '../../lib/manager/workerManager';
+import { machineStore } from '../../store/local-storage';
 import {
     CONNECTION_STATUS_CONNECTED,
     EPSILON,
-    PROTOCOL_TEXT
+    PROTOCOL_TEXT,
 } from '../../constants';
 import {
     findMachineByName
@@ -19,60 +20,57 @@ import ThreeUtils from '../../three-extensions/ThreeUtils';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as machineActions } from '../machine';
-import { ACTION_UPDATE_STATE } from './action-base';
+import baseActions, { ACTION_UPDATE_STATE } from './action-base';
 import discoverActions from './action-discover';
+import connectActions from './action-connect';
 import type { MachineStateUpdateOptions } from './machine-state';
+import { initialState } from './state';
+
+export { WORKSPACE_STAGE } from './state';
 
 
 // Actions
 const ACTION_SET_STATE = 'WORKSPACE/ACTION_SET_STATE';
 
-export const WORKSPACE_STAGE = {
-    EMPTY: 0,
-    LOADING_GCODE: 1,
-    LOAD_GCODE_SUCCEED: 2,
-    LOAD_GCODE_FAILED: 3,
-};
-
-const INITIAL_STATE = {
-    headType: '',
-    toolHead: '',
-
-    isRotate: false,
-    uploadState: 'idle', // uploading, uploaded
-    renderState: 'idle',
-    previewRenderState: 'idle',
-    gcodeFile: null,
-    activeGcodeFile: null,
-    boundingBox: null,
-    previewBoundingBox: null,
-    gcodeFiles: [],
-    modelGroup: new THREE.Group(),
-    previewModelGroup: new THREE.Group(),
-    renderingTimestamp: 0,
-    stage: WORKSPACE_STAGE.EMPTY,
-    previewStage: WORKSPACE_STAGE.EMPTY,
-    progress: 0,
-
-    // Discover
-    // HTTP connection
-    //  - servers: HTTP servers on Snapmaker 2.0
-    //  - serverDiscovering: discover state
-    serverDiscovering: false,
-    servers: [],
-
-    // MachineState
-    machineIdentifier: '',
-    machineSize: { x: 100, y: 100, z: 100 },
-};
-
 export const actions = {
     init: () => (dispatch) => {
         // Discover actions init
         dispatch(discoverActions.init());
+
+        actions.__initConnection(dispatch);
+        dispatch(connectActions.init());
     },
 
+    // discover actions
     discover: discoverActions,
+
+    connect: connectActions,
+
+    /**
+     * Initialize connection related state.
+     */
+    __initConnection: (dispatch) => {
+        // Wi-Fi server
+        const serverAddress = machineStore.get('server.address') || '';
+        const serverName = machineStore.get('server.name') || '';
+        const serverToken = machineStore.get('server.token') || '';
+        const manualIp = machineStore.get('manualIp') || '';
+
+        // serial port
+        const machinePort = machineStore.get('port') || '';
+
+        dispatch(
+            baseActions.updateState({
+                savedServerAddress: serverAddress,
+                savedServerToken: serverToken,
+                savedServerName: serverName,
+                port: machinePort,
+                manualIp: manualIp
+            })
+        );
+    },
+
+
 
     gcodeToArraybufferGeometryCallback: (data) => (dispatch, getState) => {
         const {
@@ -542,9 +540,31 @@ export const actions = {
         }
         dispatch(actions.updateState(options));
     },
+
+    executeGcodeAutoHome: (hasHomingModel = false) => (dispatch, getState) => {
+        const { server, homingModal, isConnected } = getState().workspace;
+        const { headType } = getState().workspace;
+        if (!isConnected) {
+            if (homingModal) {
+                dispatch(
+                    baseActions.updateState({
+                        homingModal: false
+                    })
+                );
+            }
+            return;
+        }
+        server.goHome({ hasHomingModel, headType }, () => {
+            dispatch(
+                baseActions.updateState({
+                    homingModal: false
+                })
+            );
+        });
+    },
 };
 
-export default function reducer(state = INITIAL_STATE, action) {
+export default function reducer(state = initialState, action) {
     switch (action.type) {
         case ACTION_SET_STATE: {
             return Object.assign({}, state, { ...action.state });

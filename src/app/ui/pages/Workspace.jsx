@@ -44,6 +44,8 @@ import WifiTransport from '../widgets/WifiTransport';
 import WorkingProgress from '../widgets/WorkingProgress';
 import VisualizerWidget from '../widgets/WorkspaceVisualizer';
 
+console.log('c', ConnectionWidget);
+
 const allWidgets = {
     'control': ControlWidget,
     'connection': ConnectionWidget,
