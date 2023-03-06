@@ -15,7 +15,7 @@ import { Button } from '../../components/Buttons';
 import Modal from '../../components/Modal';
 
 function MismatchModal() {
-    const connectionType = useSelector((state: RootState) => state.machine.connectionType);
+    const connectionType = useSelector((state: RootState) => state.workspace.connectionType);
     const isConnected = useSelector((state: RootState) => state.machine?.isConnected);
 
     const machineSeries = useSelector((state: RootState) => state.machine.series);

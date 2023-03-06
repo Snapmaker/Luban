@@ -6,6 +6,7 @@ import { CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI, PROTOCOL_TEXT } from '../
 import { MACHINE_SERIES } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
 import { actions as workspaceActions } from '../../../flux/workspace';
+import { ConnectionType } from '../../../flux/workspace/state';
 import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import { Button } from '../../components/Buttons';
@@ -30,7 +31,10 @@ const Connection: React.FC<ConnectionProps> = ({ widgetId, widgetActions }) => {
     const { widgets } = useSelector((state: RootState) => state.widget);
 
     const dataSource = widgets[widgetId].dataSource;
-    const { connectionType, isConnected, series, isHomed } = useSelector(state => state.machine);
+    const { isConnected, series, isHomed } = useSelector((state: RootState) => state.machine);
+    const {
+        connectionType
+    } = useSelector((state: RootState) => state.workspace);
 
     const [alertMessage, setAlertMessage] = useState('');
     const [showHomeReminder, setShowHomeReminder] = useState(false);
@@ -48,23 +52,24 @@ const Connection: React.FC<ConnectionProps> = ({ widgetId, widgetActions }) => {
         },
         clickHomeModalOk: () => {
             dispatch(workspaceActions.executeGcodeAutoHome());
-            // setShowHomeReminder(false);
             setHoming(true);
         }
     };
 
-    const onSelectTabWifi = useCallback(() => {
-        dispatch(workspaceActions.connect.setConnectionType(CONNECTION_TYPE_WIFI));
-    }, [dispatch]);
-
-
-    const onSelectTabSerial = useCallback(() => {
-        dispatch(workspaceActions.connect.setConnectionType(CONNECTION_TYPE_SERIAL));
-    }, [dispatch]);
-
+    // Set title
     useEffect(() => {
         widgetActions.setTitle(i18n._('key-Workspace/Connection-Connection'));
     }, [dispatch, widgetActions]);
+
+    // Switch to Wi-Fi connect
+    const onSelectTabWifi = useCallback(() => {
+        dispatch(workspaceActions.connect.setConnectionType(ConnectionType.WiFi));
+    }, [dispatch]);
+
+    // Switch to serial port connect
+    const onSelectTabSerial = useCallback(() => {
+        dispatch(workspaceActions.connect.setConnectionType(ConnectionType.Serial));
+    }, [dispatch]);
 
     useEffect(() => {
         if (!isHomed && isConnected) {
@@ -121,46 +126,46 @@ const Connection: React.FC<ConnectionProps> = ({ widgetId, widgetActions }) => {
                 )
             }
             {
-                connectionType === CONNECTION_TYPE_SERIAL && (
-                    <SerialConnection dataSource={dataSource} />
+                connectionType === ConnectionType.WiFi && (
+                    <WifiConnection />
                 )
             }
             {
-                connectionType === CONNECTION_TYPE_WIFI && (
-                    <WifiConnection />
+                connectionType === ConnectionType.Serial && (
+                    <SerialConnection dataSource={dataSource} />
                 )
             }
 
             {/* Go Home Dialog */}
-            {isConnected && showHomeReminder && !isOriginal && isHomed !== null && !isHomed && (
-                <Modal disableOverlay size="sm" closable={false}>
-                    <Modal.Header>
-                        {i18n._('key-Workspace/Connection-Go Home')}
-                    </Modal.Header>
-                    <Modal.Body>
-                        <div>
-                            {i18n._('key-Workspace/Connection-To continue, the machine needs to return to the start position of the X, Y, and Z axes.')}
-                        </div>
-                    </Modal.Body>
-                    <Modal.Footer>
-                        <Button
-                            loading={homing}
-                            priority="level-two"
-                            className="align-r"
-                            width="96px"
-                            onClick={actions.clickHomeModalOk}
-                        >
-                            {!homing && (
-                                <span>{i18n._('key-Workspace/Connection-OK')}</span>
-                            )}
-                        </Button>
-                    </Modal.Footer>
-                </Modal>
-            )}
+            {
+                showHomeReminder && isConnected && !isOriginal && isHomed !== null && !isHomed && (
+                    <Modal disableOverlay size="sm" closable={false}>
+                        <Modal.Header>
+                            {i18n._('key-Workspace/Connection-Go Home')}
+                        </Modal.Header>
+                        <Modal.Body>
+                            <div>
+                                {i18n._('key-Workspace/Connection-To continue, the machine needs to return to the start position of the X, Y, and Z axes.')}
+                            </div>
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Button
+                                loading={homing}
+                                priority="level-two"
+                                className="align-r"
+                                width="96px"
+                                onClick={actions.clickHomeModalOk}
+                            >
+                                {!homing && (
+                                    <span>{i18n._('key-Workspace/Connection-OK')}</span>
+                                )}
+                            </Button>
+                        </Modal.Footer>
+                    </Modal>
+                )
+            }
         </div>
     );
 };
-
-console.log('Connection =', Connection);
 
 export default Connection;

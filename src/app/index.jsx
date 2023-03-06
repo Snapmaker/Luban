@@ -20,7 +20,6 @@ import './styles/app.styl';
 import './styles/vendor.styl';
 import App from './ui/App';
 
-
 series([
     (next) => {
         // Setup log level

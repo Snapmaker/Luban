@@ -98,7 +98,8 @@ class LaserTestFocusWidget extends PureComponent {
     }
 }
 const mapStateToProps = (state) => {
-    const { isConnected, workflowState, connectionType } = state.machine;
+    const { isConnected, workflowState } = state.machine;
+    const { connectionType } = state.workspace;
     const { headType, machineIdentifier } = state.workspace;
 
     return {

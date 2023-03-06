@@ -24,7 +24,7 @@ const init = () => (dispatch, getState) => {
         // Receive when new servers discovered
         'machine:discover': ({ devices, type }) => {
             // Note that we may receive this event many times.
-            const { connectionType } = getState().machine;
+            const { connectionType } = getState().workspace;
             const { servers } = getState().workspace;
             if (connectionType === type) {
                 const resultServers = cloneDeep(servers.filter(v => v.address));
@@ -54,8 +54,7 @@ const init = () => (dispatch, getState) => {
         },
         'machine:serial-discover': ({ devices, type }) => {
             // Note that we may receive this event many times.
-            const { connectionType } = getState().machine;
-            const { servers } = getState().workspace;
+            const { servers, connectionType } = getState().workspace;
             // const { series } = getState().workspace;
             if (connectionType === type) {
                 const resultServers = [];

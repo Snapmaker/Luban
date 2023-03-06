@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import {
-    CONNECTION_TYPE_WIFI,
     CONNECTION_STATUS_IDLE,
 } from '../../constants';
 
@@ -17,6 +16,15 @@ declare interface WorkspaceConnectionState {
 
 declare interface WorkspaceState extends WorkspaceConnectionState {
     headType: string;
+}
+
+
+/**
+ * Connection Type
+ */
+export enum ConnectionType {
+    Serial = 'serial',
+    WiFi = 'wifi',
 }
 
 
@@ -51,7 +59,7 @@ export const initialState: WorkspaceState = {
     //  - type: serial port or Wi-Fi
     //  - status: Idle / Connecting / Connected
     //  - timeout: connect timeout (for Wi-Fi connection)
-    connectionType: CONNECTION_TYPE_WIFI,
+    connectionType: ConnectionType.WiFi,
     connectionStatus: CONNECTION_STATUS_IDLE,
     connectionTimeout: 3000,
     connectLoading: false,

@@ -49,6 +49,7 @@ import SvgIcon from '../../components/SvgIcon';
 import MachineModuleStatusBadge from './components/MachineModuleStatusBadge';
 import styles from './styles.styl';
 import MismatchModal from './MismatchModal';
+import { RootState } from '../../../flux/index.def';
 
 
 let timer = null;
@@ -152,7 +153,6 @@ function WifiConnection() {
     const dispatch = useDispatch();
 
     const {
-        connectionType,
         connectionStatus,
         connectionAuto,
         server,
@@ -170,17 +170,27 @@ function WifiConnection() {
         laserCamera,
     } = useSelector(state => state.machine, shallowEqual);
 
+    // connection
     const {
         serverDiscovering,
         servers,
-    } = useSelector(state => state.workspace, shallowEqual);
+
+        connectionType,
+    } = useSelector((state: RootState) => state.workspace, shallowEqual);
 
     const {
-        toolHead, headType, series
-    } = useSelector(state => state?.workspace);
+        toolHead,
+        headType,
+        series
+    } = useSelector((state: RootState) => state.workspace);
 
     // const [savedServerAddressState, setSavedServerAddressState] = useState(savedServerAddress);
-    const { emergencyStopButton: emergencyStopButtonStatus, airPurifier: airPurifierStatus, rotaryModule: rotaryModuleStatus, enclosure: enclosureStatus } = moduleStatusList;
+    const {
+        emergencyStopButton: emergencyStopButtonStatus,
+        airPurifier: airPurifierStatus,
+        rotaryModule: rotaryModuleStatus,
+        enclosure: enclosureStatus
+    } = moduleStatusList;
 
     // Show connection modal
     const [showConnectionMessage, setShowConnectionMessage] = useState(false);
@@ -625,13 +635,13 @@ function WifiConnection() {
                         </span>
                         <span className={styles['connection-state-icon']}>
                             {workflowStatus === WORKFLOW_STATUS_UNKNOWN
-                            && <i className="sm-icon-14 sm-icon-idle" />}
+                                && <i className="sm-icon-14 sm-icon-idle" />}
                             {workflowStatus === WORKFLOW_STATUS_IDLE
-                            && <i className="sm-icon-14 sm-icon-idle" />}
+                                && <i className="sm-icon-14 sm-icon-idle" />}
                             {workflowStatus === WORKFLOW_STATUS_PAUSED
-                            && <i className="sm-icon-14 sm-icon-paused" />}
+                                && <i className="sm-icon-14 sm-icon-paused" />}
                             {workflowStatus === WORKFLOW_STATUS_RUNNING
-                            && <i className="sm-icon-14 sm-icon-running" />}
+                                && <i className="sm-icon-14 sm-icon-running" />}
                         </span>
                     </div>
                     {/* Render status badge for each machine module */}

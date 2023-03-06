@@ -3,13 +3,8 @@ import _, { cloneDeep, includes, isEmpty, isNil, uniq } from 'lodash';
 import {
     ABSENT_OBJECT,
     CONNECTION_CLOSE,
-    CONNECTION_EXECUTE_GCODE,
-    CONNECTION_GET_GCODEFILE,
     CONNECTION_HEAD_BEGIN_WORK,
-    CONNECTION_STATUS_CONNECTED,
     CONNECTION_STATUS_IDLE,
-    CONNECTION_TYPE_SERIAL,
-    CONNECTION_TYPE_WIFI,
     EMERGENCY_STOP_BUTTON,
     HEAD_CNC,
     HEAD_LASER,
@@ -17,9 +12,6 @@ import {
     LASER_MOCK_PLATE_HEIGHT,
     LEFT_EXTRUDER,
     RIGHT_EXTRUDER,
-    WORKFLOW_STATUS_IDLE,
-    WORKFLOW_STATUS_PAUSED,
-    WORKFLOW_STATUS_RUNNING,
     WORKFLOW_STATUS_UNKNOWN
 } from '../../constants';
 
@@ -34,7 +26,6 @@ import {
 } from '../../constants/machines';
 
 import i18n from '../../lib/i18n';
-import log from '../../lib/log';
 import { valueOf } from '../../lib/contants-utils';
 import { machineStore, printingStore } from '../../store/local-storage';
 import PresetDefinitionModel from '../manager/PresetDefinitionModel';
@@ -45,7 +36,6 @@ import History from './History';
 import FixedArray from './FixedArray';
 import { controller } from '../../lib/controller';
 import { actions as workspaceActions } from '../workspace';
-import MachineSelectModal from '../../ui/modals/modal-machine-select';
 import setting from '../../config/settings';
 
 import baseActions, { ACTION_UPDATE_STATE } from './action-base';
@@ -354,6 +344,7 @@ export const actions = {
         // Register event listeners
         const controllerEvents = {
             'Marlin:state': (options) => {
+                console.log('REFACTOR Marlin:state');
                 // Note: serialPort & Wifi -> for heartBeat
                 const { state } = options;
                 const { headType, pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
@@ -645,6 +636,7 @@ export const actions = {
                 }
             },
             'Marlin:settings': (options) => {
+                console.log('REFACTOR Marlin:settings');
                 const {
                     enclosureDoorDetection,
                     enclosureOnline,
@@ -681,134 +673,6 @@ export const actions = {
                         enclosureLight
                     }));
                 }
-            },
-            'connection:connecting': (options) => {
-                const { isConnecting } = options;
-                dispatch(baseActions.updateState({
-                    connectLoading: isConnecting
-                }));
-            },
-            'connection:connected': ({ state, err: _err, connectionType }) => {
-                if (_err) {
-                    log.warn('connection:connected, failed to connect to networked printer');
-                    log.warn(_err);
-                    return;
-                }
-
-                let machineSeries = '';
-                const { toolHead, series, headType, status, isHomed, moduleStatusList, isMoving } = state;
-                const { seriesSize } = state;
-
-                console.log('connection:connected, state =', state);
-
-                dispatch(baseActions.updateState({
-                    isHomed: isHomed,
-                    isMoving,
-                    connectLoading: false
-                }));
-
-                if (!isNil(seriesSize)) {
-                    machineSeries = valueOf(
-                        MACHINE_SERIES,
-                        'alias',
-                        `${series}-${seriesSize}`
-                    )
-                        ? valueOf(
-                            MACHINE_SERIES,
-                            'alias',
-                            `${series}-${seriesSize}`
-                        ).value
-                        : null;
-                    dispatch(workspaceActions.loadGcode());
-                } else {
-                    const _isRotate = moduleStatusList?.rotaryModule || false;
-                    const emergency = moduleStatusList?.emergencyStopButton;
-                    if (!isNil(status)) {
-                        dispatch(baseActions.updateState({
-                            workflowStatus: status
-                        }));
-                    }
-                    dispatch(baseActions.updateState({
-                        // workflowStatus: status,
-                        emergencyStopOnline: emergency
-                    }));
-                    dispatch(workspaceActions.updateMachineState({
-                        isRotate: _isRotate
-                    }));
-                    machineSeries = series;
-                }
-
-                if (machineSeries && headType && headType !== 'UNKNOWN') {
-                    dispatch(
-                        workspaceActions.updateMachineState({
-                            machineIdentifier: machineSeries,
-                            headType,
-                            toolHead
-                        })
-                    );
-                    dispatch(actions.executeGcodeG54(series, headType));
-                    if (
-                        _.includes(
-                            [WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING],
-                            status
-                        )
-                    ) {
-                        controller
-                            .emitEvent(CONNECTION_GET_GCODEFILE)
-                            .once(CONNECTION_GET_GCODEFILE, (res) => {
-                                const { msg: error, text: gcode } = res;
-                                if (error) {
-                                    return;
-                                }
-                                let suffix = 'gcode';
-                                if (headType === HEAD_LASER) {
-                                    suffix = 'nc';
-                                } else if (headType === HEAD_CNC) {
-                                    suffix = 'cnc';
-                                }
-                                dispatch(workspaceActions.clearGcode());
-                                dispatch(
-                                    workspaceActions.renderGcode(
-                                        `print.${suffix}`,
-                                        gcode,
-                                        true,
-                                        true
-                                    )
-                                );
-                            });
-                    }
-                } else {
-                    if (connectionType === CONNECTION_TYPE_SERIAL) {
-                        MachineSelectModal({
-                            series: machineSeries,
-                            headType: headType,
-                            toolHead: toolHead,
-                            onConfirm: (seriesT, headTypeT, toolHeadT) => {
-                                dispatch(
-                                    workspaceActions.updateMachineState({
-                                        machineIdentifier: seriesT,
-                                        headType: headTypeT,
-                                        toolHead: toolHeadT
-                                    })
-                                );
-                                dispatch(
-                                    actions.executeGcodeG54(seriesT, headTypeT)
-                                );
-                            }
-                        });
-                    }
-                }
-                dispatch(
-                    baseActions.updateState({
-                        isConnected: true,
-                        isOpen: true,
-                        connectionStatus: CONNECTION_STATUS_CONNECTED,
-                        isSendedOnWifi: true
-                    })
-                );
-            },
-            'connection:close': () => {
-                dispatch(actions.resetMachineState());
             },
             // TODO: serialport emergencyStop goes there
             'serialport:emergencyStop': (options) => {
@@ -1125,72 +989,6 @@ export const actions = {
             })
         );
         dispatch(workspaceActions.unloadGcode());
-    },
-
-    resetMachineState: (connectionType = CONNECTION_TYPE_WIFI) => (dispatch) => {
-        dispatch(baseActions.updateState({
-            isOpen: false,
-            isConnected: false,
-            connectionStatus: CONNECTION_STATUS_IDLE,
-            isHomed: null,
-            connectLoading: false,
-            workflowStatus: connectionType === CONNECTION_TYPE_WIFI ? WORKFLOW_STATUS_UNKNOWN : WORKFLOW_STATUS_IDLE,
-            // workflowState: WORKFLOW_STATE_IDLE,
-            laserFocalLength: null,
-            workPosition: { // work position
-                x: '0.000',
-                y: '0.000',
-                z: '0.000',
-                b: '0.000',
-                isFourAxis: false,
-                a: '0.000'
-            },
-
-            originOffset: {
-                x: 0,
-                y: 0,
-                z: 0
-            },
-            savedServerAddressIsAuto: false
-        }));
-    },
-
-    // Execute G54 based on series and headType
-    executeGcodeG54: (series, headType) => (dispatch) => {
-        if (
-            series !== MACHINE_SERIES.ORIGINAL.identifier
-            && (headType === HEAD_LASER || headType === HEAD_CNC)
-        ) {
-            dispatch(actions.executeGcode('G54'));
-        }
-    },
-
-    executeGcode: (gcode, context, cmd) => (dispatch, getState) => {
-        const machine = getState().machine;
-        const { homingModal, isConnected } = machine;
-        if (!isConnected) {
-            if (homingModal) {
-                dispatch(
-                    baseActions.updateState({
-                        homingModal: false
-                    })
-                );
-            }
-            return;
-        }
-        controller.emitEvent(
-            CONNECTION_EXECUTE_GCODE,
-            { gcode, context, cmd },
-            () => {
-                if (homingModal && gcode === 'G28') {
-                    dispatch(
-                        baseActions.updateState({
-                            homingModal: false
-                        })
-                    );
-                }
-            }
-        );
     },
 
     // region Enclosure
