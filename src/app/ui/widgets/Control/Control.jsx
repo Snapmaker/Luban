@@ -75,9 +75,10 @@ const normalizeToRange = (n, min, max) => {
 function Control({ widgetId, widgetActions: _widgetActions }) {
     const machine = useSelector(state => state.machine);
     const { widgets } = useSelector(state => state.widget);
+
     const { boundingBox, headType } = useSelector(state => state.workspace);
-    const workPosition = useSelector(state => state.machine.workPosition);
-    const isHomed = useSelector(state => state.machine.isHomed);
+    const { workPosition, isHomed } = useSelector(state => state.workspace);
+
     const originOffset = useSelector(state => state.machine.originOffset) || {};
     const { jog, axes, dataSource } = widgets[widgetId];
     const { speed = 1500, keypad, selectedDistance, customDistance, selectedAngle, customAngle } = jog;

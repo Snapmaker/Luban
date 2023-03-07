@@ -84,8 +84,11 @@ const Connection: React.FC<ConnectionProps> = ({ widgetId, widgetActions }) => {
         }
     }, [isHomed, isConnected]);
 
+    // Subscribe to discover machines
+    // We disable this function temporarily for refactoring
     useEffect(() => {
         controller.subscribeDiscover(!isConnected);
+
         return () => {
             controller.subscribeDiscover(false);
         };

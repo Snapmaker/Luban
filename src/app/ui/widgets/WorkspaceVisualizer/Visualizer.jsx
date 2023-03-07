@@ -58,7 +58,7 @@ class Visualizer extends PureComponent {
 
         uploadState: PropTypes.string.isRequired,
         boundingBox: PropTypes.object,
-        server: PropTypes.object.isRequired,
+        server: PropTypes.object,
         connectionType: PropTypes.string.isRequired,
         workflowStatus: PropTypes.string,
         renderState: PropTypes.string.isRequired,
@@ -830,24 +830,26 @@ const mapStateToProps = (state) => {
     const workspace = state.workspace;
     const laser = state.laser;
 
+    const {
+        server
+    } = state.workspace;
+
     return {
-        server: machine.server,
         pause3dpStatus: machine.pause3dpStatus,
         doorSwitchCount: machine.doorSwitchCount,
         isEmergencyStopped: machine.isEmergencyStopped,
         isEnclosureDoorOpen: machine.isEnclosureDoorOpen,
         laser10WErrorState: machine.laser10WErrorState,
+
         headType: workspace.headType,
         toolHead: workspace.toolHead,
         workflowStatus: machine.workflowStatus,
-        isConnected: machine.isConnected,
         connectionType: workspace.connectionType,
         uploadState: workspace.uploadState,
         gcodeList: workspace.gcodeList,
         gcodeFile: workspace.gcodeFile,
 
         gcodePrintingInfo: machine.gcodePrintingInfo,
-        workPosition: machine.workPosition,
         isLaserPrintAutoMode: machine.isLaserPrintAutoMode,
         // type
         materialThickness: machine.materialThickness,
@@ -856,7 +858,6 @@ const mapStateToProps = (state) => {
         isRotate: workspace.isRotate,
         // type
         laserFocalLength: machine.laserFocalLength,
-        originOffset: machine.originOffset,
 
         modelGroup: workspace.modelGroup,
         renderState: workspace.renderState,
@@ -865,9 +866,17 @@ const mapStateToProps = (state) => {
         stage: workspace.stage,
         progress: workspace.progress,
 
+        // connection
+        server,
+        isConnected: workspace.isConnected,
+
         // actual machine
         machineIdentifier: workspace.machineIdentifier,
         machineSize: workspace.machineSize,
+
+        // machine state
+        workPosition: workspace.workPosition,
+        originOffset: workspace.originOffset,
     };
 };
 

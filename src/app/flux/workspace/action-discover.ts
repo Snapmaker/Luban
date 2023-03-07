@@ -24,8 +24,7 @@ const init = () => (dispatch, getState) => {
         // Receive when new servers discovered
         'machine:discover': ({ devices, type }) => {
             // Note that we may receive this event many times.
-            const { connectionType } = getState().workspace;
-            const { servers } = getState().workspace;
+            const { connectionType, servers } = getState().workspace;
             if (connectionType === type) {
                 const resultServers = cloneDeep(servers.filter(v => v.address));
                 resultServers.forEach((item, index) => {
