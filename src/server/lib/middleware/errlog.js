@@ -10,10 +10,13 @@
  * @return {Function}
  * @api public
  */
+import logger from '../logger';
+
+const log = logger('errlog');
 
 const errlog = () => {
     return (err, req, res, next) => {
-        console.error(err.stack);
+        log.error(err.stack);
         next(err);
     };
 };

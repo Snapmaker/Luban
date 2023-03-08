@@ -3,7 +3,7 @@ import { Observable, forkJoin } from 'rxjs';
 import ToolpathToBufferGeometry from './GcodeToBufferGeometry/ToolpathToBufferGeometry';
 
 type ToolpathRendererData = {
-    data: any;
+    data: object;
     filenames: string[];
     taskId: string;
     headType: string;

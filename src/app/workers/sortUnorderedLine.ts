@@ -5,6 +5,7 @@ import { polyOffset } from '../../shared/lib/clipper/cLipper-adapter';
 import { Polygon, Polygons } from '../../shared/lib/clipper/Polygons';
 import { PolygonsUtils } from '../../shared/lib/math/PolygonsUtils';
 import { bufferToPoint, expandBuffer, pointToBuffer } from '../lib/buffer-utils';
+import log from '../lib/log';
 
 type TPoint = { x: number, y: number, z?: number }
 export type TPolygon = ArrayBuffer[]
@@ -219,7 +220,7 @@ const sortUnorderedLine = ({ fragments, innerWallCount, lineWidth, layerHeight }
             marged = null;
             innerWall = null;
         } catch (error) {
-            console.error('layerHeight=', layerHeight, 'error=', error);
+            log.error('layerHeight=', layerHeight, 'error=', error);
             observer.complete();
         } finally {
             pointsMap = null;

@@ -241,7 +241,7 @@ export const actions = {
             },
 
             'Marlin:settings': (options) => {
-                console.log('REFACTOR Marlin:settings', options);
+                log.warn('REFACTOR Marlin:settings', options);
                 const {
                     enclosureDoorDetection,
                     enclosureOnline,
@@ -282,12 +282,12 @@ export const actions = {
             },
 
             'Marlin:state': (options) => {
-                console.log('REFACTOR Marlin:state');
+                log.warn('REFACTOR Marlin:state');
                 // Note: serialPort & Wifi -> for heartBeat
                 const { state } = options;
                 const { headType, pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
 
-                const compareAndSet = (obj: object, compareObj: object, key: string, value: any) => {
+                const compareAndSet = (obj: object, compareObj: object, key: string, value: boolean | number | string) => {
                     if (isNil(value)) {
                         return;
                     }
@@ -507,18 +507,18 @@ export const actions = {
 
             // TODO: serialport emergencyStop goes there
             'serialport:emergencyStop': (options) => {
-                console.log('REFACTOR serialport:emergencyStop');
+                log.warn('REFACTOR serialport:emergencyStop');
                 dispatch(actions.close(options, true));
             },
             'workflow:state': (options) => {
-                console.log('REFACTOR workflow:state');
+                log.warn('REFACTOR workflow:state');
                 const { workflowState } = options;
                 dispatch(baseActions.updateState({
                     workflowStatus: workflowState
                 }));
             },
             'sender:status': (options) => {
-                console.log('REFACTOR sender:status');
+                log.warn('REFACTOR sender:status');
                 const { data } = options;
                 const { total, sent, received, startTime, finishTime, elapsedTime, remainingTime, printStatus } = data;
                 dispatch(baseActions.updateState({
@@ -535,7 +535,7 @@ export const actions = {
                 }));
             },
             'move:status': (options) => {
-                console.log('REFACTOR move:status');
+                log.warn('REFACTOR move:status');
                 const { isMoving, isHoming } = options;
                 if (!isNil(isMoving)) {
                     dispatch(baseActions.updateState({
@@ -549,7 +549,7 @@ export const actions = {
                 }
             },
             'manager:error': (options) => {
-                console.log('REFACTOR manager:error');
+                log.warn('REFACTOR manager:error');
                 const { owner, errorCode } = options;
                 if (includes(EMERGENCY_STOP_BUTTON, owner)) {
                     if (errorCode === 1) {
@@ -564,7 +564,7 @@ export const actions = {
                 }
             },
             'connection:headBeginWork': (options) => {
-                console.log('REFACTOR connection:headBeginWork');
+                log.warn('REFACTOR connection:headBeginWork');
                 const { gcodeFile } = getState().workspace;
                 controller.emitEvent(CONNECTION_HEAD_BEGIN_WORK, {
                     headType: options.headType,
@@ -1035,7 +1035,6 @@ export const actions = {
     },
 
     updateMachineState: (options: MachineStateUpdateOptions) => (dispatch) => {
-        console.log('updateMachineState', options);
         if (options.machineIdentifier) {
             const machine = findMachineByName(options.machineIdentifier);
             if (machine) {

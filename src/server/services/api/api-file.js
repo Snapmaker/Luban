@@ -516,9 +516,6 @@ export const uploadFileToTmp = (req, res) => {
 };
 
 export const recoverProjectFile = async (req, res) => {
-    console.log('files =', req.files);
-    console.log('file =', req.body.file);
-
     const file = req.files.file || JSON.parse(req.body.file);
 
     try {

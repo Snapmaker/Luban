@@ -1,13 +1,14 @@
 import ThreeModel from '../../models/ThreeModel';
 import Operation from './Operation';
 /* eslint-disable import/no-cycle */
+import type { DispatchType } from '../index.def';
 import { actions as printingActions } from '../printing';
 
 type StateMap = {
     target: ThreeModel, // model finish simplify
     sourceSimplify: string,
     simplifyResultFimeName: string,
-    dispatch: any,
+    dispatch: DispatchType,
 };
 
 export default class SimplifyModelOperation extends Operation<StateMap> {

@@ -3,6 +3,7 @@ import { Transfer, TransferDescriptor } from 'threads';
 import { BufferAttribute, DynamicDrawUsage } from 'three';
 import * as ClipperLib from '../../../shared/lib/clipper/clipper';
 import { polyOffset } from '../../../shared/lib/clipper/cLipper-adapter';
+import log from '../../lib/log';
 
 type TPoint = {
     x: number,
@@ -73,7 +74,7 @@ const generateSkirt = ({ polygons, skirtGap, skirtBrimLineWidth, skirtLineCount 
 
             observer.next(Transfer(linePosAttr as unknown as ArrayBuffer));
         } catch (error) {
-            console.error('[web worker]: generateSkirt', error);
+            log.error('[web worker]: generateSkirt', error);
         } finally {
             observer.complete();
         }

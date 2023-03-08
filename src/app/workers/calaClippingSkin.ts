@@ -2,6 +2,7 @@ import { Observable } from 'rxjs';
 import { Transfer, TransferDescriptor } from 'threads';
 import { polyDiff, polyIntersection, polyOffset } from '../../shared/lib/clipper/cLipper-adapter';
 import { bufferToPoint, expandBuffer, pointToBuffer } from '../lib/buffer-utils';
+import log from '../lib/log';
 
 type TPoint = { x: number, y: number, z?: number }
 
@@ -91,7 +92,7 @@ const calaClippingSkin = ({ innerWall, otherLayers: _otherLayers, lineWidth, inn
                 innerWall: Transfer(innerWall.send, expandBuffer(innerWall.send))
             });
         } catch (error) {
-            console.error('[web worker]: calaClippingSkin', error);
+            log.error('[web worker]: calaClippingSkin', error);
         } finally {
             observer.complete();
         }
