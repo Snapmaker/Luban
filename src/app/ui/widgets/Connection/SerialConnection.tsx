@@ -59,16 +59,11 @@ const SerialConnection: React.FC = () => {
     } = useSelector((state: RootState) => state.workspace);
 
     // Selected port
-    const [selectedServer, setPortState] = useState(server);
+    const [selectedServer, setSelectedServer] = useState(server);
     // connect status: 'idle', 'connecting', 'connected'
     const [err, setErr] = useState(null);
     // UI state
     const [loadingPorts, setLoadingPorts] = useState(false);
-    const [loading, setConnectLoading] = useState(connectLoading);
-
-    useEffect(() => {
-        setConnectLoading(connectLoading);
-    }, [connectLoading]);
 
     function onPortReady(data) {
         const { err: _err } = data;
@@ -115,7 +110,7 @@ const SerialConnection: React.FC = () => {
             const serverFound = servers.find(v => v.port === option.value);
             if (serverFound) {
                 dispatch(workspaceActions.connect.setSelectedServer(serverFound));
-                setPortState(serverFound);
+                setSelectedServer(serverFound);
             }
         },
         onRefreshPorts: () => {
@@ -340,10 +335,10 @@ const SerialConnection: React.FC = () => {
                             priority="level-two"
                             disabled={!canOpenPort}
                             onClick={actions.onOpenPort}
-                            loading={loading}
+                            loading={connectLoading}
                             innerClassNames="sm-flex-important justify-center"
                         >
-                            {!loading && i18n._('key-Workspace/Connection-Connect')}
+                            {!connectLoading && i18n._('key-Workspace/Connection-Connect')}
                         </Button>
                     )
                 }
@@ -354,9 +349,9 @@ const SerialConnection: React.FC = () => {
                             type="default"
                             priority="level-two"
                             onClick={actions.onClosePort}
-                            loading={loading}
+                            loading={connectLoading}
                         >
-                            {!loading && i18n._('key-Workspace/Connection-Disconnect')}
+                            {!connectLoading && i18n._('key-Workspace/Connection-Disconnect')}
                         </Button>
                     )
                 }

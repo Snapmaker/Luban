@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { map, noop } from 'lodash';
+import { map } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
@@ -44,10 +44,10 @@ import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
 
 import { RootState } from '../../../flux/index.def';
+import { ConnectionType } from '../../../flux/workspace/state';
 import MachineModuleStatusBadge from './components/MachineModuleStatusBadge';
 import MismatchModal from './MismatchModal';
 import styles from './styles.styl';
-import { ConnectionType } from '../../../flux/workspace/state';
 
 
 const CheckingNozzleSize: React.FC = () => {
@@ -329,8 +329,8 @@ const WifiConnection: React.FC = () => {
             title: i18n._('key-Workspace/Connection-Error'),
             img: 'WarningTipsError',
             iconColor: ICON_COLOR_RED,
-            onCancel: noop,
-            onConfirm: noop,
+            onCancel: null,
+            onConfirm: null,
             showCloseButton: true,
             onClose: () => {
                 setShowConnectionMessage(false);
@@ -586,8 +586,6 @@ const WifiConnection: React.FC = () => {
         enclosureStatus,
         laserCamera,
     ]);
-
-    console.log('server =', server);
 
     return (
         <div>
