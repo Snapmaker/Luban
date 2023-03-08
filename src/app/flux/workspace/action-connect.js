@@ -53,8 +53,6 @@ const setSelectedServer = (server) => (dispatch, getState) => {
         find = servers.find(s => s.port === server.port);
     }
 
-    console.log('setSelectedServer, find =', find, server);
-
     if (find && !isEqual(server, oldServer)) {
         dispatch(baseActions.updateState({ server: find }));
     }

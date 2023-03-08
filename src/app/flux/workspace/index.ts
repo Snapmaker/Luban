@@ -298,8 +298,8 @@ export const actions = {
 
                 const data = {};
 
-                const machineState = getState().machine;
-                if ((machineState.isRotate !== pos?.isFourAxis) && (headType === HEAD_LASER || headType === HEAD_CNC)) {
+                const currentState = getState().workspace;
+                if ((currentState.isRotate !== pos?.isFourAxis) && (headType === HEAD_LASER || headType === HEAD_CNC)) {
                     dispatch(actions.updateMachineState({
                         isRotate: pos.isFourAxis || false
                     }));
@@ -308,11 +308,11 @@ export const actions = {
                 if (pos) {
                     if (pos.isFourAxis) {
                         if (
-                            Number(machineState.workPosition.x) !== Number(pos.x)
-                            || Number(machineState.workPosition.y) !== Number(pos.y)
-                            || Number(machineState.workPosition.z) !== Number(pos.z)
-                            || Number(machineState.workPosition.b) !== Number(pos.b)
-                            || machineState.workPosition.isFourAxis !== pos.isFourAxis
+                            Number(currentState.workPosition.x) !== Number(pos.x)
+                            || Number(currentState.workPosition.y) !== Number(pos.y)
+                            || Number(currentState.workPosition.z) !== Number(pos.z)
+                            || Number(currentState.workPosition.b) !== Number(pos.b)
+                            || currentState.workPosition.isFourAxis !== pos.isFourAxis
                         ) {
                             dispatch(
                                 baseActions.updateState({
@@ -329,10 +329,10 @@ export const actions = {
                         }
                     } else {
                         if (
-                            Number(machineState.workPosition.x) !== Number(pos.x)
-                            || Number(machineState.workPosition.y) !== Number(pos.y)
-                            || Number(machineState.workPosition.z) !== Number(pos.z)
-                            || machineState.workPosition.isFourAxis !== pos.isFourAxis
+                            Number(currentState.workPosition.x) !== Number(pos.x)
+                            || Number(currentState.workPosition.y) !== Number(pos.y)
+                            || Number(currentState.workPosition.z) !== Number(pos.z)
+                            || currentState.workPosition.isFourAxis !== pos.isFourAxis
                         ) {
                             dispatch(
                                 baseActions.updateState({
@@ -351,13 +351,13 @@ export const actions = {
 
                 if (originOffset) {
                     if (
-                        Number(machineState.originOffset.x)
+                        Number(currentState.originOffset.x)
                         !== Number(originOffset.x)
-                        || Number(machineState.originOffset.y)
+                        || Number(currentState.originOffset.y)
                         !== Number(originOffset.y)
-                        || Number(machineState.originOffset.z)
+                        || Number(currentState.originOffset.z)
                         !== Number(originOffset.z)
-                        || Number(machineState.originOffset.b) !== Number(originOffset.b)
+                        || Number(currentState.originOffset.b) !== Number(originOffset.b)
                     ) {
                         dispatch(
                             baseActions.updateState({
@@ -416,80 +416,80 @@ export const actions = {
                     isDoorEnable
                 } = state;
 
-                compareAndSet(data, machineState, 'laser10WErrorState', laser10WErrorState);
-                compareAndSet(data, machineState, 'isEmergencyStopped', isEmergencyStopped);
-                compareAndSet(data, machineState, 'currentWorkNozzle', !currentWorkNozzle ? LEFT_EXTRUDER : RIGHT_EXTRUDER);
-                compareAndSet(data, machineState, 'cncTargetSpindleSpeed', cncTargetSpindleSpeed);
-                compareAndSet(data, machineState, 'cncCurrentSpindleSpeed', cncCurrentSpindleSpeed);
-                compareAndSet(data, machineState, 'enclosureLight', ledValue);
-                compareAndSet(data, machineState, 'enclosureFan', fanLevel);
+                compareAndSet(data, currentState, 'laser10WErrorState', laser10WErrorState);
+                compareAndSet(data, currentState, 'isEmergencyStopped', isEmergencyStopped);
+                compareAndSet(data, currentState, 'currentWorkNozzle', !currentWorkNozzle ? LEFT_EXTRUDER : RIGHT_EXTRUDER);
+                compareAndSet(data, currentState, 'cncTargetSpindleSpeed', cncTargetSpindleSpeed);
+                compareAndSet(data, currentState, 'cncCurrentSpindleSpeed', cncCurrentSpindleSpeed);
+                compareAndSet(data, currentState, 'enclosureLight', ledValue);
+                compareAndSet(data, currentState, 'enclosureFan', fanLevel);
 
 
-                compareAndSet(data, machineState, 'isDoorEnabled', isDoorEnable);
-                compareAndSet(data, machineState, 'gcodeFileName', fileName);
-                compareAndSet(data, machineState, 'workflowStatus', status);
-                compareAndSet(data, machineState, 'gcodePrintingInfo', gcodePrintingInfo);
-                compareAndSet(data, machineState, 'isHomed', isHomed);
-                compareAndSet(data, machineState, 'nozzleSizeList', nozzleSizeList);
+                compareAndSet(data, currentState, 'isDoorEnabled', isDoorEnable);
+                compareAndSet(data, currentState, 'gcodeFileName', fileName);
+                compareAndSet(data, currentState, 'workflowStatus', status);
+                compareAndSet(data, currentState, 'gcodePrintingInfo', gcodePrintingInfo);
+                compareAndSet(data, currentState, 'isHomed', isHomed);
+                compareAndSet(data, currentState, 'nozzleSizeList', nozzleSizeList);
 
                 if (!isNil(laserFocalLength)) {
-                    compareAndSet(data, machineState, 'laserFocalLength', laserFocalLength);
+                    compareAndSet(data, currentState, 'laserFocalLength', laserFocalLength);
                 } else if (!isNil(zFocus)) {
-                    compareAndSet(data, machineState, 'laserFocalLength', zFocus + LASER_MOCK_PLATE_HEIGHT);
+                    compareAndSet(data, currentState, 'laserFocalLength', zFocus + LASER_MOCK_PLATE_HEIGHT);
                 }
                 if (!isNil(laserPower)) {
-                    compareAndSet(data, machineState, 'laserPower', laserPower);
+                    compareAndSet(data, currentState, 'laserPower', laserPower);
                 } else if (!isNil(headPower)) {
                     dispatch(baseActions.updateState({
                         laserPower: headPower
                     }));
-                    compareAndSet(data, machineState, 'headPower', headPower);
+                    compareAndSet(data, currentState, 'headPower', headPower);
                 }
                 if (!isNil(temperature)) {
-                    compareAndSet(data, machineState, 'nozzleTemperature', parseFloat(temperature.t));
-                    compareAndSet(data, machineState, 'nozzleTargetTemperature', parseFloat(temperature.tTarget));
-                    compareAndSet(data, machineState, 'heatedBedTemperature', parseFloat(temperature.b));
-                    compareAndSet(data, machineState, 'heatedBedTargetTemperature', parseFloat(temperature.bTarget));
+                    compareAndSet(data, currentState, 'nozzleTemperature', parseFloat(temperature.t));
+                    compareAndSet(data, currentState, 'nozzleTargetTemperature', parseFloat(temperature.tTarget));
+                    compareAndSet(data, currentState, 'heatedBedTemperature', parseFloat(temperature.b));
+                    compareAndSet(data, currentState, 'heatedBedTargetTemperature', parseFloat(temperature.bTarget));
                 } else {
-                    compareAndSet(data, machineState, 'nozzleTemperature', nozzleTemperature);
-                    compareAndSet(data, machineState, 'nozzleTargetTemperature', nozzleTargetTemperature);
+                    compareAndSet(data, currentState, 'nozzleTemperature', nozzleTemperature);
+                    compareAndSet(data, currentState, 'nozzleTargetTemperature', nozzleTargetTemperature);
 
-                    compareAndSet(data, machineState, 'nozzleTemperature1', nozzleTemperature1);
-                    compareAndSet(data, machineState, 'nozzleTemperature2', nozzleTemperature2);
+                    compareAndSet(data, currentState, 'nozzleTemperature1', nozzleTemperature1);
+                    compareAndSet(data, currentState, 'nozzleTemperature2', nozzleTemperature2);
 
-                    compareAndSet(data, machineState, 'nozzleTargetTemperature1', nozzleTargetTemperature1);
-                    compareAndSet(data, machineState, 'nozzleTargetTemperature2', nozzleTargetTemperature2);
+                    compareAndSet(data, currentState, 'nozzleTargetTemperature1', nozzleTargetTemperature1);
+                    compareAndSet(data, currentState, 'nozzleTargetTemperature2', nozzleTargetTemperature2);
 
-                    compareAndSet(data, machineState, 'nozzleRightTemperature', nozzleRightTemperature);
-                    compareAndSet(data, machineState, 'nozzleRightTargetTemperature', nozzleRightTargetTemperature);
+                    compareAndSet(data, currentState, 'nozzleRightTemperature', nozzleRightTemperature);
+                    compareAndSet(data, currentState, 'nozzleRightTargetTemperature', nozzleRightTargetTemperature);
 
-                    compareAndSet(data, machineState, 'heatedBedTemperature', heatedBedTemperature);
-                    compareAndSet(data, machineState, 'heatedBedTargetTemperature', heatedBedTargetTemperature);
+                    compareAndSet(data, currentState, 'heatedBedTemperature', heatedBedTemperature);
+                    compareAndSet(data, currentState, 'heatedBedTargetTemperature', heatedBedTargetTemperature);
                 }
 
                 if (!isNil(moduleStatusList)) {
                     const enclosureOnline = moduleStatusList.enclosure;
                     const rotateModuleOnline = moduleStatusList.rotateModuleOnline;
 
-                    compareAndSet(data, machineState, 'moduleStatusList', moduleStatusList);
-                    compareAndSet(data, machineState, 'enclosureOnline', enclosureOnline);
-                    compareAndSet(data, machineState, 'rotateModuleOnline', rotateModuleOnline);
+                    compareAndSet(data, currentState, 'moduleStatusList', moduleStatusList);
+                    compareAndSet(data, currentState, 'enclosureOnline', enclosureOnline);
+                    compareAndSet(data, currentState, 'rotateModuleOnline', rotateModuleOnline);
                 }
                 if (!isNil(doorSwitchCount)) {
-                    compareAndSet(data, machineState, 'doorSwitchCount', doorSwitchCount);
+                    compareAndSet(data, currentState, 'doorSwitchCount', doorSwitchCount);
                 }
 
-                compareAndSet(data, machineState, 'isEnclosureDoorOpen', isEnclosureDoorOpen);
-                compareAndSet(data, machineState, 'zAxisModule', zAxisModule);
-                compareAndSet(data, machineState, 'headStatus', !!headStatus);
-                compareAndSet(data, machineState, 'laserCamera', laserCamera);
+                compareAndSet(data, currentState, 'isEnclosureDoorOpen', isEnclosureDoorOpen);
+                compareAndSet(data, currentState, 'zAxisModule', zAxisModule);
+                compareAndSet(data, currentState, 'headStatus', !!headStatus);
+                compareAndSet(data, currentState, 'laserCamera', laserCamera);
 
                 if (!isNil(airPurifier)) {
-                    compareAndSet(data, machineState, 'airPurifier', airPurifier);
-                    compareAndSet(data, machineState, 'airPurifierHasPower', airPurifierHasPower);
-                    compareAndSet(data, machineState, 'airPurifierSwitch', airPurifierSwitch);
-                    compareAndSet(data, machineState, 'airPurifierFanSpeed', airPurifierFanSpeed);
-                    compareAndSet(data, machineState, 'airPurifierFilterHealth', airPurifierFilterHealth);
+                    compareAndSet(data, currentState, 'airPurifier', airPurifier);
+                    compareAndSet(data, currentState, 'airPurifierHasPower', airPurifierHasPower);
+                    compareAndSet(data, currentState, 'airPurifierSwitch', airPurifierSwitch);
+                    compareAndSet(data, currentState, 'airPurifierFanSpeed', airPurifierFanSpeed);
+                    compareAndSet(data, currentState, 'airPurifierFilterHealth', airPurifierFilterHealth);
                 }
 
                 dispatch(baseActions.updateState(data));
@@ -501,7 +501,7 @@ export const actions = {
                             isEmergencyStopped
                         })
                     );
-                    machineState.server.closeServer();
+                    currentState.server.closeServer();
                 }
             },
 

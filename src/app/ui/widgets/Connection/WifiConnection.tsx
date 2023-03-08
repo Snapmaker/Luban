@@ -596,7 +596,7 @@ const WifiConnection: React.FC = () => {
                             backspaceRemoves={false}
                             className={classNames('sm-flex-width sm-flex-order-negative')}
                             clearable={false}
-                            size="256px"
+                            size="252px"
                             name="port"
                             noResultsText={i18n._('key-Workspace/Connection-No machines detected.')}
                             onChange={onChangeServerOption}
@@ -610,9 +610,12 @@ const WifiConnection: React.FC = () => {
                             placeholder={i18n._('key-Workspace/Connection-Choose a machine')}
                             value={`${selectedServer?.name}@${selectedServer?.address}`}
                         />
-                        <div className="sm-flex-auto ">
+                        <div className="sm-flex-auto margin-left-4">
                             <SvgIcon
-                                className="border-default-black-5 margin-left-8 border-radius-left-8"
+                                className={classNames(
+                                    'border-default-black-5 border-radius-left-8',
+                                    'margin-right-4'
+                                )}
                                 name={serverDiscovering ? 'Refresh' : 'Reset'}
                                 title={i18n._('key-Workspace/Connection-Refresh')}
                                 onClick={onRefreshServers}
@@ -621,7 +624,10 @@ const WifiConnection: React.FC = () => {
                                 borderRadius={8}
                             />
                             <SvgIcon
-                                className="border-default-black-5 border-radius-right-8"
+                                className={classNames(
+                                    'border-default-black-5 border-radius-left-8',
+                                    //className="border-default-black-5 border-radius-right-8"
+                                )}
                                 name="Add"
                                 title={i18n._('key-Workspace/Connection-Add')}
                                 disabled={isOpen}

@@ -31,9 +31,15 @@ const Connection: React.FC<ConnectionProps> = ({ widgetId, widgetActions }) => {
     const { widgets } = useSelector((state: RootState) => state.widget);
 
     const dataSource = widgets[widgetId].dataSource;
-    const { isConnected, series, isHomed } = useSelector((state: RootState) => state.machine);
     const {
-        connectionType
+        connectionType,
+        isConnected,
+    } = useSelector((state: RootState) => state.workspace);
+
+    const {
+        machineIdentifier,
+
+        isHomed,
     } = useSelector((state: RootState) => state.workspace);
 
     const [alertMessage, setAlertMessage] = useState('');
@@ -43,12 +49,6 @@ const Connection: React.FC<ConnectionProps> = ({ widgetId, widgetActions }) => {
     const actions = {
         clearAlert: () => {
             setAlertMessage('');
-        },
-        openHomeModal: () => {
-            setShowHomeReminder(true);
-        },
-        closeHomeModal: () => {
-            setShowHomeReminder(false);
         },
         clickHomeModalOk: () => {
             dispatch(workspaceActions.executeGcodeAutoHome());
@@ -74,12 +74,12 @@ const Connection: React.FC<ConnectionProps> = ({ widgetId, widgetActions }) => {
     useEffect(() => {
         if (!isHomed && isConnected) {
             if (dataSource === PROTOCOL_TEXT) {
-                actions.openHomeModal();
+                setShowHomeReminder(true);
             }
         } else {
             setHoming(false);
             if (dataSource === PROTOCOL_TEXT) {
-                actions.closeHomeModal();
+                setShowHomeReminder(false);
             }
         }
     }, [isHomed, isConnected]);
@@ -94,7 +94,7 @@ const Connection: React.FC<ConnectionProps> = ({ widgetId, widgetActions }) => {
         };
     }, [isConnected]);
 
-    const isOriginal = series === MACHINE_SERIES.ORIGINAL.identifier;
+    const isOriginal = machineIdentifier === MACHINE_SERIES.ORIGINAL.identifier;
 
     return (
         <div>
