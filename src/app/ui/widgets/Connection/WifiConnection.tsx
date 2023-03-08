@@ -208,6 +208,7 @@ const WifiConnection: React.FC = () => {
     // const [showMismatchModal, setShowMismatchModal] = useState(false);
     const [manualWiFi, setManualWiFi] = useState({
         text: '',
+        inputtext: '',
         title: '',
         label: '',
         img: IMAGE_WIFI_CONNECTED,
@@ -217,7 +218,6 @@ const WifiConnection: React.FC = () => {
     });
     const [selectedServer, setSelectedServer] = useState<Server | null>(null);
     const [serverOpenState, setServerOpenState] = useState(null);
-    const [currentModuleStatusList, setCurrentModuleStatusList] = useState([]);
     const prevProps = usePrevious({
         connectionStatus
     });
@@ -400,6 +400,7 @@ const WifiConnection: React.FC = () => {
             title: i18n._('key-Workspace/Connection-Manual Connection'),
             label: i18n._('key-Workspace/Connection-IP Address') ? `${i18n._('key-Workspace/Connection-IP Address')}:` : '',
             // img: IMAGE_WIFI_WAITING,
+            img: undefined,
             showCloseButton: true,
             inputtext: manualIp,
             onCancel: onCloseManualWiFi,
@@ -488,12 +489,16 @@ const WifiConnection: React.FC = () => {
     }, [connectionType, connectionStatus, showWifiConnecting, showWifiConnected, showWifiDisconnected]);
 
     // Machine
-    const machine = useMemo<Machine | null>(() => {
-        return machineIdentifier && findMachineByName(machineIdentifier) || null;
+    const connectedMachine = useMemo<Machine | null>(() => {
+        return findMachineByName(machineIdentifier);
     }, [machineIdentifier]);
 
     // Module status
-    const updateModuleStatusList = useMemo(() => {
+    const moduleStatusInfoList = useMemo(() => {
+        if (!isConnected) {
+            return [];
+        }
+
         const newModuleStatusList = [];
         if (headType === HEAD_PRINTING) {
             if (isDualExtruder(toolHead)) {
@@ -569,6 +574,7 @@ const WifiConnection: React.FC = () => {
         });
         return newModuleStatusList;
     }, [
+        isConnected,
         moduleStatusList,
         heatedBedTemperature,
         headType,
@@ -580,14 +586,6 @@ const WifiConnection: React.FC = () => {
         enclosureStatus,
         laserCamera,
     ]);
-
-    useEffect(() => {
-        if (!isConnected) {
-            setCurrentModuleStatusList([]);
-        } else {
-            setCurrentModuleStatusList(updateModuleStatusList);
-        }
-    }, [isConnected, updateModuleStatusList]);
 
     console.log('server =', server);
 
@@ -637,21 +635,19 @@ const WifiConnection: React.FC = () => {
                     </div>
                 )
             }
-            {/* Mismatch Modal */}
-            <MismatchModal />
             {
                 headType === HEAD_PRINTING && (
                     <CheckingNozzleSize />
                 )
             }
             {
-                isConnected && server && machine && (
+                isConnected && server && connectedMachine && (
                     <div className="margin-bottom-16 margin-top-12">
                         <div
                             className={classNames(styles['connection-state'], 'padding-bottom-8', 'border-bottom-dashed-default')}
                         >
                             <span className="main-text-normal max-width-304 text-overflow-ellipsis display-inline">
-                                {`${server?.name} (${machine.fullName})`}
+                                {`${server?.name} (${connectedMachine.fullName})`}
                             </span>
                             <span className={styles['connection-state-icon']}>
                                 {workflowStatus === WORKFLOW_STATUS_UNKNOWN
@@ -666,10 +662,10 @@ const WifiConnection: React.FC = () => {
                         </div>
                         {/* Render status badge for each machine module */}
                         {
-                            !!currentModuleStatusList && !!currentModuleStatusList.length && (
+                            moduleStatusInfoList.length > 0 && (
                                 <div className="sm-flex sm-flex-wrap">
                                     {
-                                        currentModuleStatusList.map(item => (
+                                        moduleStatusInfoList.map(item => (
                                             <MachineModuleStatusBadge
                                                 key={item.moduleName}
                                                 moduleName={item.moduleName}
@@ -711,6 +707,8 @@ const WifiConnection: React.FC = () => {
                     )
                 }
             </div>
+            {/* Mismatch Modal */}
+            <MismatchModal />
             {
                 showConnectionMessage && (
                     <ModalSmall

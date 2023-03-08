@@ -22,15 +22,6 @@ export enum ConnectionType {
     WiFi = 'wifi',
 }
 
-declare interface WorkspaceConnectionState {
-    connectionType: string;
-}
-
-declare interface WorkspaceState extends WorkspaceConnectionState {
-    headType: string;
-}
-
-
 export declare interface MachineState {
     machineIdentifier: string;
     machineSize: { x: number; y: number; z: number };
@@ -45,10 +36,28 @@ export declare interface MachineStateUpdateOptions {
 
     isRotate?: boolean;
 }
+declare interface WorkspaceConnectionState {
+    connectionType: string;
+}
 
+// interface to put everything nowhere to put
+declare interface WorkspaceOtherState {
+    uploadState: string;
+    renderState: string;
+    previewRenderState: string;
+
+    gcodeFile: object | null;
+    activeGcodeFile: object | null;
+
+    boundingBox: object;
+    previewBoundingBox: object;
+}
+
+declare interface WorkspaceState extends WorkspaceConnectionState, WorkspaceOtherState, MachineState {
+    headType: string;
+}
 
 export const initialState: WorkspaceState = {
-
     uploadState: 'idle', // uploading, uploaded
     renderState: 'idle',
     previewRenderState: 'idle',
