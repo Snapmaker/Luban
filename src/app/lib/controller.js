@@ -1,6 +1,6 @@
 import noop from 'lodash/noop';
 import isEmpty from 'lodash/isEmpty';
-import { MARLIN, PROTOCOL_SCREEN, PROTOCOL_TEXT, WORKFLOW_STATE_IDLE } from '../constants';
+import { MARLIN, PROTOCOL_TEXT, WORKFLOW_STATE_IDLE } from '../constants';
 import socketController from './socket-controller';
 import log from './log';
 import { machineStore } from '../store/local-storage';
@@ -332,5 +332,4 @@ class SerialPortClient {
 }
 
 export const controller = SerialPortClient.getController(PROTOCOL_TEXT);
-export const screenController = SerialPortClient.getController(PROTOCOL_SCREEN);
 export default SerialPortClient;

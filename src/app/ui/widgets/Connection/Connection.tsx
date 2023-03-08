@@ -2,19 +2,18 @@ import classNames from 'classnames';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI, PROTOCOL_TEXT } from '../../../constants';
-import { MACHINE_SERIES } from '../../../constants/machines';
+import { CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI } from '../../../constants';
 import { RootState } from '../../../flux/index.def';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import { ConnectionType } from '../../../flux/workspace/state';
 import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
-import { Button } from '../../components/Buttons';
-import Modal from '../../components/Modal';
+
 import Notifications from '../../components/Notifications';
 
+import GoHomeModal from './modals/GoHomeModal';
+import NetworkConnection from './NetworkConnection';
 import SerialConnection from './SerialConnection';
-import WifiConnection from './WifiConnection';
 
 declare interface WidgetActions {
     setTitle: (title: string) => void;
@@ -25,35 +24,27 @@ export declare interface ConnectionProps {
     widgetActions: WidgetActions;
 }
 
-
-const Connection: React.FC<ConnectionProps> = ({ widgetId, widgetActions }) => {
+/**
+ * Connection Widget.
+ *
+ * 1. Select either network or serial port to connect to the machine.
+ * 2. Display machine basic status.
+ * 3. Display operation to do when machine connected (e.g. Go Home).
+ */
+const Connection: React.FC<ConnectionProps> = ({ widgetActions }) => {
     const dispatch = useDispatch();
-    const { widgets } = useSelector((state: RootState) => state.widget);
 
-    const dataSource = widgets[widgetId].dataSource;
     const {
         connectionType,
         isConnected,
     } = useSelector((state: RootState) => state.workspace);
 
-    const {
-        machineIdentifier,
-
-        isHomed,
-    } = useSelector((state: RootState) => state.workspace);
-
     const [alertMessage, setAlertMessage] = useState('');
-    const [showHomeReminder, setShowHomeReminder] = useState(false);
-    const [homing, setHoming] = useState(false);
 
     const actions = {
         clearAlert: () => {
             setAlertMessage('');
         },
-        clickHomeModalOk: () => {
-            dispatch(workspaceActions.executeGcodeAutoHome());
-            setHoming(true);
-        }
     };
 
     // Set title
@@ -71,19 +62,6 @@ const Connection: React.FC<ConnectionProps> = ({ widgetId, widgetActions }) => {
         dispatch(workspaceActions.connect.setConnectionType(ConnectionType.Serial));
     }, [dispatch]);
 
-    useEffect(() => {
-        if (!isHomed && isConnected) {
-            if (dataSource === PROTOCOL_TEXT) {
-                setShowHomeReminder(true);
-            }
-        } else {
-            setHoming(false);
-            if (dataSource === PROTOCOL_TEXT) {
-                setShowHomeReminder(false);
-            }
-        }
-    }, [isHomed, isConnected]);
-
     // Subscribe to discover machines
     // We disable this function temporarily for refactoring
     useEffect(() => {
@@ -93,8 +71,6 @@ const Connection: React.FC<ConnectionProps> = ({ widgetId, widgetActions }) => {
             controller.subscribeDiscover(false);
         };
     }, [isConnected]);
-
-    const isOriginal = machineIdentifier === MACHINE_SERIES.ORIGINAL.identifier;
 
     return (
         <div>
@@ -130,43 +106,17 @@ const Connection: React.FC<ConnectionProps> = ({ widgetId, widgetActions }) => {
             }
             {
                 connectionType === ConnectionType.WiFi && (
-                    <WifiConnection />
+                    <NetworkConnection />
                 )
             }
             {
                 connectionType === ConnectionType.Serial && (
-                    <SerialConnection dataSource={dataSource} />
+                    <SerialConnection />
                 )
             }
 
-            {/* Go Home Dialog */}
-            {
-                showHomeReminder && isConnected && !isOriginal && isHomed !== null && !isHomed && (
-                    <Modal disableOverlay size="sm" closable={false}>
-                        <Modal.Header>
-                            {i18n._('key-Workspace/Connection-Go Home')}
-                        </Modal.Header>
-                        <Modal.Body>
-                            <div>
-                                {i18n._('key-Workspace/Connection-To continue, the machine needs to return to the start position of the X, Y, and Z axes.')}
-                            </div>
-                        </Modal.Body>
-                        <Modal.Footer>
-                            <Button
-                                loading={homing}
-                                priority="level-two"
-                                className="align-r"
-                                width="96px"
-                                onClick={actions.clickHomeModalOk}
-                            >
-                                {!homing && (
-                                    <span>{i18n._('key-Workspace/Connection-OK')}</span>
-                                )}
-                            </Button>
-                        </Modal.Footer>
-                    </Modal>
-                )
-            }
+            {/* Go Home Modal */}
+            <GoHomeModal />
         </div>
     );
 };

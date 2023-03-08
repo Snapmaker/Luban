@@ -26,7 +26,7 @@ import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
 
 import MachineModuleStatusBadge from './components/MachineModuleStatusBadge';
-import MismatchModal from './MismatchModal';
+import MismatchModal from './modals/MismatchModal';
 import styles from './styles.styl';
 
 let loadingTimer = null;

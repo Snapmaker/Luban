@@ -46,7 +46,7 @@ import SvgIcon from '../../components/SvgIcon';
 import { RootState } from '../../../flux/index.def';
 import { ConnectionType } from '../../../flux/workspace/state';
 import MachineModuleStatusBadge from './components/MachineModuleStatusBadge';
-import MismatchModal from './MismatchModal';
+import MismatchModal from './modals/MismatchModal';
 import styles from './styles.styl';
 
 
@@ -143,7 +143,7 @@ const CheckingNozzleSize: React.FC = () => {
 const ICON_COLOR_GREEN = '#4CB518';
 const ICON_COLOR_RED = '#FF4D4F';
 
-const WifiConnection: React.FC = () => {
+const NetworkConnection: React.FC = () => {
     const dispatch = useDispatch();
 
     // connection
@@ -745,4 +745,4 @@ const WifiConnection: React.FC = () => {
     );
 };
 
-export default WifiConnection;
+export default NetworkConnection;
