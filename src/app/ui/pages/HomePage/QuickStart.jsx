@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
-import _ from 'lodash';
+// import { throttle } from 'lodash';
 import classNames from 'classnames';
 import i18n from '../../../lib/i18n';
+import log from '../../../lib/log';
 import { getCaseList } from '../../../lib/caseLibrary';
 import { timestamp } from '../../../../shared/lib/random-utils';
 import { actions as projectActions } from '../../../flux/project';
@@ -19,12 +20,17 @@ const QuickStart = (props) => {
     const series = useSelector(state => state?.machine?.series);
     const toolHead = useSelector(state => state?.machine?.toolHead);
     const use4Axis = useSelector(state => state?.machine?.use4Axis);
+    const { opening: openingProject } = useSelector(state => state?.project?.general);
     const dispatch = useDispatch();
 
     //  method
-    const loadCase = _.debounce((caseItem) => {
+    const loadCase = useCallback((caseItem) => {
+        if (openingProject) {
+            return;
+        }
+        log.info('Open project...');
         dispatch(projectActions.openProject(caseItem.pathConfig, history));
-    }, 500);
+    }, [dispatch, openingProject, history]);
 
     //  useEffect
     useEffect(() => {
