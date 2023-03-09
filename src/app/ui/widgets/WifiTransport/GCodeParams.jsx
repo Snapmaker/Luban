@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
+
 import { MACHINE_HEAD_TYPE } from '../../../constants';
 import { HEAD_PRINTING, isDualExtruder } from '../../../constants/machines';
 import i18n from '../../../lib/i18n';
@@ -7,7 +8,6 @@ import { humanReadableTime } from '../../../lib/time-utils';
 
 const GCodeParams = (props) => {
     const [gcodeFile, setGcodeFile] = useState({});
-
 
     useEffect(() => {
         const toolHead = props.gcodeFile.tool_head;

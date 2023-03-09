@@ -1,16 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { isString, isUndefined } from 'lodash';
-import { useDispatch, useSelector } from 'react-redux';
-import PropTypes from 'prop-types';
 import { Tooltip } from 'antd';
+import { isString, isUndefined } from 'lodash';
+import PropTypes from 'prop-types';
+import React, { useEffect, useState } from 'react';
 import { Trans } from 'react-i18next';
-import { AUTO_MDOE, SEMI_AUTO_MODE, MANUAL_MODE } from '../../../constants';
+import { useDispatch, useSelector } from 'react-redux';
+
+import { AUTO_MDOE, MANUAL_MODE, SEMI_AUTO_MODE } from '../../../constants';
+import { actions as workspaceActions } from '../../../flux/workspace';
 import i18n from '../../../lib/i18n';
-import { Radio } from '../../components/Radio';
-import Modal from '../../components/Modal';
 import { Button } from '../../components/Buttons';
 import { NumberInput as Input } from '../../components/Input';
-import { actions as workspaceActions } from '../../../flux/workspace';
+import Modal from '../../components/Modal';
+import { Radio } from '../../components/Radio';
 
 function LaserStartModal({
     showStartModal,

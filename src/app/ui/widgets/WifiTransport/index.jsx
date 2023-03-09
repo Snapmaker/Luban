@@ -1,3 +1,3 @@
 import WifiTransport from './WifiTransport';
 
-export default (WifiTransport);
+export default WifiTransport;

@@ -9,6 +9,7 @@ import PropTypes from 'prop-types';
 import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import * as THREE from 'three';
+
 import { pathWithRandomSuffix } from '../../../../shared/lib/random-utils';
 import {
     AUTO_MDOE,
@@ -25,7 +26,7 @@ import {
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATUS_IDLE
 } from '../../../constants';
-import { LEVEL_TWO_POWER_LASER_FOR_SM2, } from '../../../constants/machines';
+import { LEVEL_TWO_POWER_LASER_FOR_SM2 } from '../../../constants/machines';
 import { actions as machineActions } from '../../../flux/machine';
 import { actions as projectActions } from '../../../flux/project';
 import { actions as workspaceActions, WORKSPACE_STAGE } from '../../../flux/workspace';
@@ -46,9 +47,9 @@ import SvgIcon from '../../components/SvgIcon';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import PrintablePlate from '../WorkspaceVisualizer/PrintablePlate';
 import GCodeParams from './GCodeParams';
-import styles from './index.styl';
 import LaserStartModal from './LaserStartModal';
 import PreviewToRunJobModal from './PreviewToRunJobModal';
+import styles from './styles.styl';
 
 const changeNameInput = [];
 const suffixLength = 7;
@@ -767,6 +768,7 @@ function WifiTransport({ widgetActions, controlActions }) {
         </div>
     );
 }
+
 WifiTransport.propTypes = {
     widgetActions: PropTypes.object.isRequired,
     controlActions: PropTypes.object
