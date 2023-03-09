@@ -1051,7 +1051,7 @@ export const actions = {
     /**
      * Execute G-code.
      */
-    executeGcode: (gcode, context, cmd) => (dispatch, getState) => {
+    executeGcode: (gcode, context = null, cmd = undefined) => (dispatch, getState) => {
         const machine = getState().machine;
         const { homingModal, isConnected } = machine;
         if (!isConnected) {
@@ -1169,6 +1169,17 @@ export const actions = {
         dispatch(actions.unloadGcode());
     },
 
+    // Laser
+    updateIsLaserPrintAutoMode: (isLaserPrintAutoMode: boolean) => (dispatch) => {
+        dispatch(baseActions.updateState({ isLaserPrintAutoMode }));
+    },
+
+    updateMaterialThickness: (materialThickness: number) => (dispatch) => {
+        dispatch(baseActions.updateState({ materialThickness }));
+    },
+    updateMaterialThicknessSource: (source: string) => (dispatch) => {
+        dispatch(baseActions.updateState({ materialThicknessSource: source }));
+    },
 };
 
 export default function reducer(state = initialState, action) {

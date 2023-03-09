@@ -20,7 +20,7 @@ import i18n from '../../../lib/i18n';
 import { in2mm, mm2in } from '../../../lib/units';
 
 import { RootState } from '../../../flux/index.def';
-import { actions as machineActions } from '../../../flux/machine';
+import { actions as workspaceActions } from '../../../flux/workspace';
 import { actions as widgetsActions } from '../../../flux/widget';
 import { Button } from '../../components/Buttons';
 import Select from '../../components/Select';
@@ -51,7 +51,7 @@ const DEFAULT_SPEED_OPTIONS = [
 const toUnits = (units, val) => {
     val = Number(val) || 0;
     if (units === IMPERIAL_UNITS) {
-        val = mm2in(val).toFixed(4) * 1;
+        val = parseFloat(mm2in(val).toFixed(4)) * 1;
     }
     if (units === METRIC_UNITS) {
         val = val.toFixed(3) * 1;
@@ -246,7 +246,7 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, widgetActions }) 
             }
         },
         executeGcode: (gcode) => {
-            dispatch(machineActions.executeGcode(gcode));
+            dispatch(workspaceActions.executeGcode(gcode));
         },
         coordinateMove: (gcode, moveOrders, jogSpeed) => {
             serverRef.current.coordinateMove(moveOrders, gcode, jogSpeed, headType);
@@ -257,7 +257,6 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, widgetActions }) 
             const yPosition = parseFloat(workPosition.y);
             const zPosition = parseFloat(workPosition.z);
             const bPosition = workPosition.isFourAxis ? parseFloat(workPosition.b) : null;
-            // dispatch(machineActions.setWorkOrigin(xPosition, yPosition, zPosition, bPosition));
             serverRef.current.setWorkOrigin(xPosition, yPosition, zPosition, bPosition);
         },
         toggleKeypadJogging: () => {
@@ -510,7 +509,7 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, widgetActions }) 
                     width="96px"
                     disabled={!_canClick}
                     // disabled={false}
-                    onClick={() => dispatch(machineActions.executeGcodeAutoHome(true))}
+                    onClick={() => dispatch(workspaceActions.executeGcodeAutoHome(true))}
                 >
                     {i18n._('key-Workspace/Console-Home')}
                 </Button>

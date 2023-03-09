@@ -168,6 +168,7 @@ export const initialState: WorkspaceState = {
         z: 0
     },
 
+    // 3D printing
     nozzleTemperature: 0,
     nozzleTargetTemperature: 0,
     // for dual extruder -> right extruder
@@ -184,4 +185,9 @@ export const initialState: WorkspaceState = {
     heatedBedTargetTemperature: 0,
 
     currentWorkNozzle: LEFT_EXTRUDER,
+
+    // laser print mode
+    isLaserPrintAutoMode: true,
+    materialThickness: 1.5,
+    materialThicknessSource: 'user',
 };

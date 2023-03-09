@@ -849,13 +849,15 @@ const mapStateToProps = (state) => {
         gcodeList: workspace.gcodeList,
         gcodeFile: workspace.gcodeFile,
 
-        gcodePrintingInfo: machine.gcodePrintingInfo,
-        isLaserPrintAutoMode: machine.isLaserPrintAutoMode,
-        // type
-        materialThickness: machine.materialThickness,
-        materialThicknessSource: machine.materialThicknessSource,
+        gcodePrintingInfo: workspace.gcodePrintingInfo,
+        isLaserPrintAutoMode: workspace.isLaserPrintAutoMode,
+
+        // laser camera capture
+        materialThickness: workspace.materialThickness,
+        materialThicknessSource: workspace.materialThicknessSource,
         background: laser.background,
         isRotate: workspace.isRotate,
+
         // type
         laserFocalLength: machine.laserFocalLength,
 
@@ -885,7 +887,7 @@ const mapDispatchToProps = (dispatch) => ({
     unloadGcode: () => dispatch(workspaceActions.unloadGcode()),
     setGcodePrintingIndex: (index) => dispatch(workspaceActions.setGcodePrintingIndex(index)),
 
-    executeGcode: (gcode, context, cmd) => dispatch(machineActions.executeGcode(gcode, context, cmd)),
+    executeGcode: (gcode, context, cmd) => dispatch(workspaceActions.executeGcode(gcode, context, cmd)),
     updatePause3dpStatus: (pause3dpStatus) => dispatch(machineActions.updatePause3dpStatus(pause3dpStatus))
 });
 

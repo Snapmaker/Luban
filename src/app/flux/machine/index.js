@@ -89,11 +89,6 @@ const INITIAL_STATE = {
     },
     // endregion
 
-    // laser print mode
-    isLaserPrintAutoMode: true,
-    materialThickness: 1.5,
-    materialThicknessSource: 'user',
-
     gcodePrintingInfo: {
         sent: 0,
         received: 0,
@@ -435,16 +430,6 @@ export const actions = {
         dispatch(baseActions.updateState({ laserSize }));
     },
 
-    updateIsLaserPrintAutoMode: (isLaserPrintAutoMode) => (dispatch) => {
-        dispatch(baseActions.updateState({ isLaserPrintAutoMode }));
-    },
-
-    updateMaterialThickness: (materialThickness) => (dispatch) => {
-        dispatch(baseActions.updateState({ materialThickness }));
-    },
-    updateMaterialThicknessSource: (source) => (dispatch) => {
-        dispatch(baseActions.updateState({ materialThicknessSource: source }));
-    },
     updatePause3dpStatus: (pause3dpStatus) => (dispatch) => {
         dispatch(baseActions.updateState({ pause3dpStatus }));
     },

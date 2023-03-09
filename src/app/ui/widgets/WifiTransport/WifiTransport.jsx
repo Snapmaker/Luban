@@ -225,8 +225,8 @@ let printableArea = null;
 function WifiTransport({ widgetActions, controlActions }) {
     const dispatch = useDispatch();
     // const [isLaserAutoFocus, setIsLaserAutoFocus] = useState(true);
-    const isLaserPrintAutoMode = useSelector(state => state?.machine?.isLaserPrintAutoMode);
-    const originOffset = useSelector(state => state?.machine?.originOffset);
+    const isLaserPrintAutoMode = useSelector(state => state?.workspace?.isLaserPrintAutoMode);
+    const originOffset = useSelector(state => state?.workspace?.originOffset);
     const toolHeadName = useSelector(state => state?.workspace?.toolHead);
     const useBackground = useSelector(state => state?.laser?.useBackground);
     const { previewBoundingBox, headType, gcodeFiles, previewModelGroup, previewRenderState, previewStage, isRotate } = useSelector(state => state.workspace);
@@ -549,12 +549,12 @@ function WifiTransport({ widgetActions, controlActions }) {
                 break;
             case SEMI_AUTO_MODE:
                 isLaserAutoFocus = false;
-                await dispatch(machineActions.updateIsLaserPrintAutoMode(toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2));
+                await dispatch(workspaceActions.updateIsLaserPrintAutoMode(toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2));
                 break;
             case MANUAL_MODE:
                 isLaserAutoFocus = false;
-                await dispatch(machineActions.updateIsLaserPrintAutoMode(false));
-                await dispatch(machineActions.updateMaterialThickness(-1));
+                await dispatch(workspaceActions.updateIsLaserPrintAutoMode(false));
+                await dispatch(workspaceActions.updateMaterialThickness(-1));
                 break;
             default:
         }
