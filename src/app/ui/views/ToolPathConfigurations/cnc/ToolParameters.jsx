@@ -12,6 +12,7 @@ import { toHump, toLine } from '../../../../../shared/lib/utils';
 
 function SettingItem(props) {
     const { setting, isSVG, settingName, updateToolConfig, updateGcodeConfig, styleSize = 'large' } = props;
+    console.log('setting', setting);
     if (!setting) {
         return null;
     }

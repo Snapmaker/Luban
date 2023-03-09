@@ -110,9 +110,15 @@ class GcodeGenerator {
     }
 
     processGcodeMultiPass(gcodeLines, gcodeConfig) {
-        const { multiPassEnabled, multiPasses, multiPassDepth } = gcodeConfig;
-        if (multiPassEnabled) {
+        const { pathType, initialHeightOffset, multiPassEnabled, multiPasses, multiPassDepth } = gcodeConfig;
+        console.log('processGcodeMultiPass', pathType, initialHeightOffset);
+        if (multiPassEnabled && multiPasses > 0) {
             let result = [];
+            if (pathType === 'path' && initialHeightOffset) {
+                result.push('G91'); // relative positioning
+                result.push(`G0 Z${initialHeightOffset} F150`);
+                result.push('G90'); // absolute positioning
+            }
             for (let i = 0; i < multiPasses; i++) {
                 result.push(`; Laser multi-pass, pass ${i + 1} with Z = ${-i * multiPassDepth}`);
                 // dropping z
@@ -127,8 +133,17 @@ class GcodeGenerator {
 
             // move back to work origin
             result.push('G91'); // relative
-            result.push(`G0 Z${multiPassDepth * (multiPasses - 1)} F150`);
+            result.push(`G0 Z${multiPassDepth * (multiPasses - 1) - initialHeightOffset} F150`);
             result.push('G90'); // absolute
+            gcodeLines = result;
+        } else {
+            let result = [];
+            if (pathType === 'path' && initialHeightOffset) {
+                result.push('G91'); // relative positioning
+                result.push(`G0 Z${initialHeightOffset} F150`);
+                result.push('G90'); // absolute positioning
+            }
+            result = result.concat(gcodeLines);
             gcodeLines = result;
         }
         return gcodeLines;
