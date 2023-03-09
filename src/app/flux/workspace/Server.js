@@ -121,13 +121,9 @@ export class Server extends events.EventEmitter {
         }));
     }
 
-    coordinateMove(moveOrders, gcode, jogSpeed, headType, homingModel) {
+    coordinateMove(moveOrders, gcode, jogSpeed, headType) {
         controller.emitEvent(CONNECTION_COORDINATE_MOVE, { moveOrders, gcode, jogSpeed, headType }, () => {
-            if (homingModel && gcode === 'G28') {
-                dispatch(baseActions.updateState({
-                    homingModel: false
-                }));
-            }
+            // homed
         });
     }
 

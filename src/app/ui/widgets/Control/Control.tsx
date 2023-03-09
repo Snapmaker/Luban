@@ -1,7 +1,6 @@
 import { isNil } from 'lodash';
 import includes from 'lodash/includes';
 import map from 'lodash/map';
-import PropTypes from 'prop-types';
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -15,18 +14,17 @@ import {
     WORKFLOW_STATUS_STOPPED,
     WORKFLOW_STATUS_UNKNOWN
 } from '../../../constants';
-// import KeypadOverlay from './KeypadOverlay';
-import { actions as machineActions } from '../../../flux/machine';
-import { actions as widgetActions } from '../../../flux/widget';
 import { controller } from '../../../lib/controller';
 import usePrevious from '../../../lib/hooks/previous';
 import i18n from '../../../lib/i18n';
-// import { preventDefault } from '../../../lib/dom-events';
 import { in2mm, mm2in } from '../../../lib/units';
+
+import { RootState } from '../../../flux/index.def';
+import { actions as machineActions } from '../../../flux/machine';
+import { actions as widgetsActions } from '../../../flux/widget';
 import { Button } from '../../components/Buttons';
-import ModalSmall from '../../components/Modal/ModalSmall';
-// import Switch from '../../components/Switch';
 import Select from '../../components/Select';
+
 import { DEFAULT_AXES, DISTANCE_MAX, DISTANCE_MIN, DISTANCE_STEP } from './constants';
 import ControlPanel from './ControlPanel';
 import DisplayPanel from './DisplayPanel';
@@ -72,24 +70,43 @@ const normalizeToRange = (n, min, max) => {
     return n;
 };
 
-function Control({ widgetId, widgetActions: _widgetActions }) {
-    const machine = useSelector(state => state.machine);
-    const { widgets } = useSelector(state => state.widget);
+declare interface WidgetActions {
+    setTitle: (title: string) => void;
+}
 
-    const { boundingBox, headType } = useSelector(state => state.workspace);
-    const { workPosition, isHomed } = useSelector(state => state.workspace);
+export declare interface ConnectionControlProps {
+    widgetId: string;
+    widgetActions: WidgetActions;
+}
 
-    const originOffset = useSelector(state => state.machine.originOffset) || {};
+/**
+ * Connection Control Widget.
+ */
+const Control: React.FC<ConnectionControlProps> = ({ widgetId, widgetActions }) => {
+    const dispatch = useDispatch();
+
+    console.log('Control');
+    const { widgets } = useSelector((state: RootState) => state.widget);
+
+    const { isConnected } = useSelector((state: RootState) => state.workspace);
+    const { headType } = useSelector((state: RootState) => state.workspace);
+    const {
+        server,
+        isMoving,
+        workflowStatus,
+        workPosition,
+        originOffset,
+        boundingBox
+    } = useSelector((state: RootState) => state.workspace);
+
     const { jog, axes, dataSource } = widgets[widgetId];
     const { speed = 1500, keypad, selectedDistance, customDistance, selectedAngle, customAngle } = jog;
-    const { isConnected, workflowStatus, homingModal, isMoving, server, homingModel } = machine;
 
     const serverRef = useRef(server);
     useEffect(() => {
         serverRef.current = server;
     }, [server]);
 
-    const dispatch = useDispatch();
 
     function getInitialState() {
         const jogSpeed = speed;
@@ -154,7 +171,6 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
     }
 
     const [state, setState] = useState(() => getInitialState());
-    const [homingModalShow, setHomingModalShow] = useState(homingModal);
     const prevState = usePrevious({
         customDistance: state.customDistance,
         units: state.units,
@@ -237,7 +253,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
             dispatch(machineActions.executeGcode(gcode));
         },
         coordinateMove: (gcode, moveOrders, jogSpeed) => {
-            serverRef.current.coordinateMove(moveOrders, gcode, jogSpeed, headType, homingModel);
+            serverRef.current.coordinateMove(moveOrders, gcode, jogSpeed, headType);
         },
         setWorkOrigin: () => {
             if (headType === HEAD_PRINTING) return;
@@ -362,7 +378,8 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
     }
 
     useEffect(() => {
-        _widgetActions.setTitle(i18n._('key-Workspace/Console-Control'));
+        widgetActions.setTitle(i18n._('key-Workspace/Console-Control'));
+
         addControllerEvents();
         return () => {
             removeControllerEvents();
@@ -434,7 +451,7 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
             keypadJogging
         } = state;
 
-        dispatch(widgetActions.updateWidgetState(widgetId, '', {
+        dispatch(widgetsActions.updateWidgetState(widgetId, '', {
             axes: state.axes,
             jog: {
                 speed: jogSpeed,
@@ -449,21 +466,13 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
             const distance = (units === IMPERIAL_UNITS) ? in2mm(state.customDistance) : state.customDistance;
             // Save customDistance in mm
             // this.props.config.set('jog.customDistance', Number(distance));
-            dispatch(widgetActions.updateWidgetState(widgetId, '', {
+            dispatch(widgetsActions.updateWidgetState(widgetId, '', {
                 jog: {
                     customDistance: Number(distance)
                 }
             }));
         }
     }, [state]);
-
-    useEffect(() => {
-        if (!isConnected) {
-            setHomingModalShow(false);
-        } else {
-            setHomingModalShow(homingModal);
-        }
-    }, [homingModal, isConnected]);
 
     function canClick() {
         return ((isConnected
@@ -531,23 +540,8 @@ function Control({ widgetId, widgetActions: _widgetActions }) {
                 actions={actions}
                 executeGcode={actions.executeGcode}
             />
-            {homingModalShow && isHomed && (
-                <ModalSmall
-                    closable={false}
-                    isImage={false}
-                    img="WarningTipsWarning"
-                    centered
-                    title="key-Workspace/Connection-Go Home"
-                    iconColor="#FFA940"
-                />
-            )}
         </div>
     );
-}
-
-Control.propTypes = {
-    widgetId: PropTypes.string.isRequired,
-    widgetActions: PropTypes.object.isRequired
 };
 
 export default Control;

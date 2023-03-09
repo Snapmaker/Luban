@@ -9,7 +9,7 @@ import { Button } from '../../components/Buttons';
 import Dropdown from '../../components/Dropdown';
 import Menu from '../../components/Menu';
 import SvgIcon from '../../components/SvgIcon';
-import styles from './index.styl';
+import styles from './styles.styl';
 
 const OperationDropdown = (
     {

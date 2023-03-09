@@ -985,4 +985,7 @@ class DefinitionManager {
 
 const definitionManager = new DefinitionManager();
 
+// For debugging
+window.definitionManager = definitionManager;
+
 export default definitionManager;

@@ -4,9 +4,7 @@ import { Trans } from 'react-i18next';
 
 import i18n from '../../../lib/i18n';
 import { Button } from '../../components/Buttons';
-// import controller from '../../lib/controller';
 import TipTrigger from '../../components/TipTrigger';
-// import styles from './index.styl';
 
 
 const MotionButtonGroup = (props) => {
