@@ -440,15 +440,15 @@ function WifiTransport({ widgetActions, controlActions }) {
                 // safely setting
                 value = 0;
             }
-            dispatch(machineActions.updateMaterialThickness(value));
+            dispatch(workspaceActions.updateMaterialThickness(value));
         },
 
         onChangeMaterialThicknessSource: (value) => {
-            dispatch(machineActions.updateMaterialThicknessSource(value));
+            dispatch(workspaceActions.updateMaterialThicknessSource(value));
         },
 
         onChangeFourAxisMaterialThickness: async (value) => {
-            dispatch(machineActions.updateMaterialThickness(value / 2));
+            dispatch(workspaceActions.updateMaterialThickness(value / 2));
         }
     };
 
@@ -545,7 +545,7 @@ function WifiTransport({ widgetActions, controlActions }) {
             case AUTO_MDOE:
                 isLaserAutoFocus = true;
                 dispatch(machineActions.updateIsLaserPrintAutoMode(true));
-                dispatch(machineActions.updateMaterialThickness(0));
+                dispatch(workspaceActions.updateMaterialThickness(0));
                 break;
             case SEMI_AUTO_MODE:
                 isLaserAutoFocus = false;

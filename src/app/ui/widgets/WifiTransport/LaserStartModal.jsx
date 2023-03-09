@@ -10,7 +10,7 @@ import { Radio } from '../../components/Radio';
 import Modal from '../../components/Modal';
 import { Button } from '../../components/Buttons';
 import { NumberInput as Input } from '../../components/Input';
-import { actions as machineActions } from '../../../flux/machine';
+import { actions as workspaceActions } from '../../../flux/workspace';
 
 function LaserStartModal({
     showStartModal,
@@ -21,7 +21,8 @@ function LaserStartModal({
     onConfirm
 }) {
     const [selectedValue, setSelectedValue] = useState(MANUAL_MODE);
-    const { size, materialThickness } = useSelector(state => state?.machine);
+    const { size } = useSelector(state => state?.machine);
+    const { materialThickness } = useSelector(state => state?.workspace);
     const dispatch = useDispatch();
 
     useEffect(() => {
@@ -39,7 +40,7 @@ function LaserStartModal({
     const onChange = (event) => {
         setSelectedValue(event.target.value);
         if (event.target.value === SEMI_AUTO_MODE) {
-            dispatch(machineActions.updateMaterialThickness(1.5));
+            dispatch(workspaceActions.updateMaterialThickness(1.5));
         }
     };
 
@@ -76,7 +77,7 @@ function LaserStartModal({
     const onChangeMaterialThickness = (value) => {
         // safety setting
         value = value < 0 ? 0 : value;
-        dispatch(machineActions.updateMaterialThickness(value));
+        dispatch(workspaceActions.updateMaterialThickness(value));
     };
     useEffect(() => {
         onChangeMaterialThickness(materialThickness);
