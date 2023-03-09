@@ -79,13 +79,9 @@ export declare interface ConnectionControlProps {
     widgetActions: WidgetActions;
 }
 
-/**
- * Connection Control Widget.
- */
 const Control: React.FC<ConnectionControlProps> = ({ widgetId, widgetActions }) => {
     const dispatch = useDispatch();
 
-    console.log('Control');
     const { widgets } = useSelector((state: RootState) => state.widget);
 
     const { isConnected } = useSelector((state: RootState) => state.workspace);

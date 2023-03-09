@@ -25,9 +25,9 @@ import WorkspaceLayout from '../layouts/WorkspaceLayout';
 import { logPageView, renderWidgetList } from '../utils';
 import CNCPathWidget from '../widgets/CNCPath';
 import ConnectionWidget from '../widgets/Connection';
+import ConnectionControlWidget from '../widgets/ConnectionControl';
 import ConsoleWidget from '../widgets/Console';
 
-import ControlWidget from '../widgets/Control';
 import EnclosureWidget from '../widgets/Enclosure';
 
 import JobType from '../widgets/JobType';
@@ -46,7 +46,7 @@ import VisualizerWidget from '../widgets/WorkspaceVisualizer';
 
 
 const allWidgets = {
-    'control': ControlWidget,
+    'control': ConnectionControlWidget,
     'connection': ConnectionWidget,
     'console': ConsoleWidget,
     // 'gcode': GCodeWidget,
@@ -85,7 +85,6 @@ function getUnsupportedWidgets(machine, toolHead) {
 
     if ([MACHINE_SERIES.A150.identifier, MACHINE_SERIES.A250.identifier, MACHINE_SERIES.A350.identifier].includes(machine.identifier)) {
         if (toolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
-            // return ['marlin'];
             return [];
         }
     }

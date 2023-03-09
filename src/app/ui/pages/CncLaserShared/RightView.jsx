@@ -13,7 +13,6 @@ import CNCPathWidget from '../../widgets/CNCPath';
 import ConnectionWidget from '../../widgets/Connection';
 import ConsoleWidget from '../../widgets/Console';
 
-import ControlWidget from '../../widgets/Control';
 import EnclosureWidget from '../../widgets/Enclosure';
 import GCodeWidget from '../../widgets/GCode';
 import LaserParamsWidget from '../../widgets/LaserParams';
@@ -29,7 +28,6 @@ import WifiTransport from '../../widgets/WifiTransport';
 import VisualizerWidget from '../../widgets/WorkspaceVisualizer';
 
 const allWidgets = {
-    'control': ControlWidget,
     'connection': ConnectionWidget,
     'console': ConsoleWidget,
     'gcode': GCodeWidget,
