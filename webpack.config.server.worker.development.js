@@ -18,6 +18,7 @@ fs.readdirSync(NODE_MODULES)
     .forEach((mod) => {
         externals[mod] = `commonjs ${mod}`;
     });
+externals['@snapmaker/snapmaker-lunar'] = 'commonjs @snapmaker/snapmaker-lunar';
 
 // Use publicPath for production
 const publicPath = (function calculatePublicPath(payload) {

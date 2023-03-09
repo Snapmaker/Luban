@@ -1,6 +1,6 @@
 import fs from 'fs';
 
-import lunar from 'snapmaker-lunar';
+import lunar from '@snapmaker/snapmaker-lunar';
 import logger from '../lib/logger';
 import { pathWithRandomSuffix } from '../../shared/lib/random-utils';
 
