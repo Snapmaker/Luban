@@ -170,6 +170,7 @@ const defaultGcodeConfigs = {
         fixedPower: 60,
         multiPassEnabled: true,
         multiPasses: 1,
+        initialHeightOffset: 0,
         multiPassDepth: 1
     },
     [toKey(HEAD_LASER, PROCESS_MODE_BW, true)]: {
@@ -185,6 +186,7 @@ const defaultGcodeConfigs = {
         fixedPower: 60,
         multiPassEnabled: true,
         multiPasses: 1,
+        initialHeightOffset: 0,
         multiPassDepth: 1
     },
     [toKey(HEAD_LASER, PROCESS_MODE_BW, false)]: {
@@ -200,6 +202,7 @@ const defaultGcodeConfigs = {
         fixedPower: 60,
         multiPassEnabled: true,
         multiPasses: 1,
+        initialHeightOffset: 0,
         multiPassDepth: 1
     },
     [toKey(HEAD_LASER, PROCESS_MODE_HALFTONE, true)]: {
@@ -215,6 +218,7 @@ const defaultGcodeConfigs = {
         fixedPower: 60,
         multiPassEnabled: true,
         multiPasses: 1,
+        initialHeightOffset: 0,
         multiPassDepth: 1
     },
     [toKey(HEAD_LASER, PROCESS_MODE_HALFTONE, false)]: {
@@ -230,6 +234,7 @@ const defaultGcodeConfigs = {
         fixedPower: 60,
         multiPassEnabled: true,
         multiPasses: 1,
+        initialHeightOffset: 0,
         multiPassDepth: 1
     },
     [toKey(HEAD_LASER, PROCESS_MODE_VECTOR)]: {
@@ -245,6 +250,7 @@ const defaultGcodeConfigs = {
         fixedPower: 100,
         multiPassEnabled: true,
         multiPasses: 2,
+        initialHeightOffset: 0,
         multiPassDepth: 0.6
     },
     [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, true)]: {
@@ -260,6 +266,7 @@ const defaultGcodeConfigs = {
         fixedPower: 100,
         multiPassEnabled: true,
         multiPasses: 1,
+        initialHeightOffset: 0,
         multiPassDepth: 1
     },
     [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, SOURCE_TYPE.RASTER)]: {
@@ -275,6 +282,7 @@ const defaultGcodeConfigs = {
         fixedPower: 100,
         multiPassEnabled: true,
         multiPasses: 2,
+        initialHeightOffset: 0,
         multiPassDepth: 0.6
     },
     [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, SOURCE_TYPE.RASTER, true)]: {
@@ -290,6 +298,7 @@ const defaultGcodeConfigs = {
         fixedPower: 100,
         multiPassEnabled: true,
         multiPasses: 1,
+        initialHeightOffset: 0,
         multiPassDepth: 1
     },
 

@@ -493,7 +493,7 @@ export const LASER_PRESENT_CONFIG_GROUP = [
     },
     {
         name: 'key-Laser/ToolpathParameters-Repetition',
-        fields: ['multi_passes', 'multi_pass_depth']
+        fields: ['initial_height_offset', 'multi_passes', 'multi_pass_depth']
     },
     {
         name: 'key-Laser/ToolpathParameters-Power',
@@ -703,6 +703,15 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         step: 1,
         default_value: 'workSpeed',
         unit: 'mm/min'
+    },
+    initialHeightOffset: {
+        label: 'Initial Cutting Height Offset',
+        description: '',
+        type: 'float',
+        min: -10,
+        max: 10,
+        default_value: 0,
+        unit: 'mm'
     },
     multiPasses: {
         label: 'Number of Passes',
