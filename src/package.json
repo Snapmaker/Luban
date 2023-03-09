@@ -73,7 +73,6 @@
     "session-file-store": "1.1.2",
     "shortid": "2.2.16",
     "snapmaker-luban-engine": "^0.9.1",
-    "snapmaker-lunar": "^1.1.1",
     "snapmaker-sacp-sdk": "0.0.11-alpha.0",
     "socket.io": "4.5.3",
     "socketio-jwt": "4.5.1",
