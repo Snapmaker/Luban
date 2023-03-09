@@ -14,7 +14,6 @@ import ConnectionWidget from '../../widgets/Connection';
 import ConsoleWidget from '../../widgets/Console';
 
 import EnclosureWidget from '../../widgets/Enclosure';
-import GCodeWidget from '../../widgets/GCode';
 import LaserParamsWidget from '../../widgets/LaserParams';
 import LaserTestFocusWidget from '../../widgets/LaserTestFocus';
 import MacroWidget from '../../widgets/Macro';
@@ -24,13 +23,11 @@ import PrintingOutputWidget from '../../widgets/PrintingOutput';
 import PrintingVisualizer from '../../widgets/PrintingVisualizer';
 import PurifierWidget from '../../widgets/Purifier';
 import WebcamWidget from '../../widgets/Webcam';
-import WifiTransport from '../../widgets/WifiTransport';
 import VisualizerWidget from '../../widgets/WorkspaceVisualizer';
 
 const allWidgets = {
     'connection': ConnectionWidget,
     'console': ConsoleWidget,
-    'gcode': GCodeWidget,
     'macro': MacroWidget,
     'macroPanel': MacroWidget,
     'purifier': PurifierWidget,
@@ -38,7 +35,6 @@ const allWidgets = {
     'visualizer': VisualizerWidget,
     'webcam': WebcamWidget,
     'printing-visualizer': PrintingVisualizer,
-    'wifi-transport': WifiTransport,
     'enclosure': EnclosureWidget,
     '3dp-material': PrintingMaterialWidget,
     '3dp-output': PrintingOutputWidget,

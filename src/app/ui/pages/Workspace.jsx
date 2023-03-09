@@ -26,6 +26,7 @@ import { logPageView, renderWidgetList } from '../utils';
 import CNCPathWidget from '../widgets/CNCPath';
 import ConnectionWidget from '../widgets/Connection';
 import ConnectionControlWidget from '../widgets/ConnectionControl';
+import ConnectionFileTransferWidget from '../widgets/ConnectionFileTransfer';
 import ConsoleWidget from '../widgets/Console';
 
 import EnclosureWidget from '../widgets/Enclosure';
@@ -40,16 +41,15 @@ import MarlinWidget from '../widgets/Marlin';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import PurifierWidget from '../widgets/Purifier';
 import WebcamWidget from '../widgets/Webcam';
-import WifiTransport from '../widgets/WifiTransport';
 import WorkingProgress from '../widgets/WorkingProgress';
 import VisualizerWidget from '../widgets/WorkspaceVisualizer';
 
 
 const allWidgets = {
-    'control': ConnectionControlWidget,
     'connection': ConnectionWidget,
+    'control': ConnectionControlWidget,
+    'wifi-transport': ConnectionFileTransferWidget,
     'console': ConsoleWidget,
-    // 'gcode': GCodeWidget,
     'macro': MacroWidget,
     'macroPanel': MacroWidget,
     'purifier': PurifierWidget,
@@ -57,7 +57,6 @@ const allWidgets = {
     'visualizer': VisualizerWidget,
     'webcam': WebcamWidget,
     'printing-visualizer': PrintingVisualizer,
-    'wifi-transport': WifiTransport,
     'enclosure': EnclosureWidget,
     'laser-params': LaserParamsWidget,
     'laser-set-background': LaserSetBackground,

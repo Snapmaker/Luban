@@ -475,6 +475,8 @@ const NetworkConnection: React.FC = () => {
             return;
         }
 
+        console.log('connectionStatus =', connectionStatus);
+
         if (prevProps) {
             if (prevProps.connectionStatus !== CONNECTION_STATUS_CONNECTING && connectionStatus === CONNECTION_STATUS_CONNECTING) {
                 showWifiConnecting();
