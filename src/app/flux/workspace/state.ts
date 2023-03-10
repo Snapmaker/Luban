@@ -190,4 +190,15 @@ export const initialState: WorkspaceState = {
     isLaserPrintAutoMode: true,
     materialThickness: 1.5,
     materialThicknessSource: 'user',
+
+    // online print
+    gcodePrintingInfo: {
+        sent: 0,
+        received: 0,
+        total: 0,
+        startTime: 0,
+        finishTime: 0,
+        elapsedTime: 0,
+        remainingTime: 0
+    },
 };

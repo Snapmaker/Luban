@@ -1,7 +1,7 @@
-import { Modal } from 'antd';
+import { Modal as AntdModal, ModalProps as AntdModalProps } from 'antd';
 import classNames from 'classnames';
 import { filter } from 'lodash';
-import PropTypes from 'prop-types';
+// import PropTypes from 'prop-types';
 import React, { useEffect } from 'react';
 
 import './modal.styl';
@@ -11,20 +11,41 @@ import Title from './modalTitle';
 import styles from './styles.styl';
 
 
-const bodyDom = document.querySelector('body');
+let bodyElement: HTMLBodyElement | null = null;
 
-function blockScrolling() {
-    bodyDom.style.overflowY = 'hidden';
-}
+const blockScrolling = () => {
+    console.log('blockScrolling', bodyElement);
 
-function unblockScrolling() {
-    bodyDom.style.overflowY = 'auto';
-}
+    if (!bodyElement) {
+        bodyElement = document.querySelector('body');
+    }
+    if (bodyElement) {
+        bodyElement.style.overflowY = 'hidden';
+    }
+};
 
-const ModalWrapper = React.memo((
-    {
+const unblockScrolling = () => {
+    if (!bodyElement) {
+        bodyElement = document.querySelector('body');
+    }
+    if (bodyElement) {
+        bodyElement.style.overflowY = 'auto';
+    }
+};
+
+
+declare type ModalProps = AntdModalProps & {
+    tile: boolean;
+
+    size: 'sm';
+
+    onClose?: (e: React.MouseEvent<HTMLElement>) => void;
+};
+
+const Modal: React.FC<ModalProps> = React.memo((props) => {
+    const {
         centered = true,
-        modalWrapperClassName = 'modal-wrapper',
+        wrapClassName = 'modal-wrapper',
         tile = false,
         visible = true,
         onClose,
@@ -33,8 +54,8 @@ const ModalWrapper = React.memo((
         size,
         width = 'auto',
         ...rest
-    }
-) => {
+    } = props;
+
     useEffect(() => {
         blockScrolling();
         return () => {
@@ -62,39 +83,50 @@ const ModalWrapper = React.memo((
     };
 
     return (
-        <Modal
+        <AntdModal
             {...rest}
             width={width}
-            visible={visible}
+            open={visible}
             title={renderSection('modalTitle')}
             footer={renderSection('modalFooter')}
             onCancel={onClose}
             maskClosable={false}
             centered={centered}
             mask={!tile}
-            className={classNames(styles.modal, `${renderSection('modalTitle') ? className : `${className} no-header`}`, `model-${size}`)}
-            wrapClassName={tile ? `${modalWrapperClassName} tile-modal` : modalWrapperClassName}
+            className={classNames(
+                styles.modal,
+                `${renderSection('modalTitle') ? className : `${className} no-header`}`,
+                `model-${size}`
+            )}
+            wrapClassName={classNames(
+                wrapClassName,
+                {
+                    'tile-modal': tile
+                }
+            )}
             maskStyle={{
                 background: '#2A2C2E30'
             }}
         >
             {renderSection('modalBody')}
-        </Modal>
+        </AntdModal>
     );
 });
-ModalWrapper.propTypes = {
-    ...Modal.propTypes,
+
+/*
+Modal.propTypes = {
+    ...AntdModal.propTypes,
     modalWrapperClassName: PropTypes.string,
     centered: PropTypes.bool,
     tile: PropTypes.bool,
     visible: PropTypes.bool,
     onClose: PropTypes.func,
     className: PropTypes.string,
-    width: PropTypes.oneOfType(PropTypes.string, PropTypes.number),
 };
+*/
 
-ModalWrapper.Header = Title;
-ModalWrapper.Body = Body;
-ModalWrapper.Footer = Footer;
+Modal.Header = Title;
+Modal.Body = Body;
+Modal.Footer = Footer;
 
-export default ModalWrapper;
+export default Modal;

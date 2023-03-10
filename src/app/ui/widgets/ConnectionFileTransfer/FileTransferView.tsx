@@ -1,12 +1,10 @@
 import { Spin } from 'antd';
-
 import classNames from 'classnames';
 import _ from 'lodash';
 // import { Trans } from 'react-i18next';
 import path from 'path';
-import PropTypes from 'prop-types';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import * as THREE from 'three';
 
 import {
@@ -25,13 +23,14 @@ import {
     WORKFLOW_STATUS_IDLE
 } from '../../../constants';
 import { LEVEL_TWO_POWER_LASER_FOR_SM2 } from '../../../constants/machines';
+import { RootState } from '../../../flux/index.def';
 import { actions as projectActions } from '../../../flux/project';
 import { actions as workspaceActions, WORKSPACE_STAGE } from '../../../flux/workspace';
 import { controller } from '../../../lib/controller';
 import usePrevious from '../../../lib/hooks/previous';
 import i18n from '../../../lib/i18n';
+import log from '../../../lib/log';
 import UniApi from '../../../lib/uni-api';
-
 import { Button } from '../../components/Buttons';
 import Dropdown from '../../components/Dropdown';
 import Menu from '../../components/Menu';
@@ -39,13 +38,13 @@ import Modal from '../../components/Modal';
 import modalSmallHOC from '../../components/Modal/modal-small';
 import Canvas from '../../components/SMCanvas';
 import SvgIcon from '../../components/SvgIcon';
-
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
+
 import PrintablePlate from '../WorkspaceVisualizer/PrintablePlate';
+import GcodePreviewItem from './GCodeListItem';
 import GCodeParams from './GCodeParams';
 import LaserStartModal from './LaserStartModal';
 import PreviewToRunJobModal from './PreviewToRunJobModal';
-import GcodePreviewItem from './GCodeListItem';
 import styles from './styles.styl';
 
 const cancelRequestEvent = new CustomEvent('cancelReq');
@@ -53,17 +52,207 @@ const cancelRequestEvent = new CustomEvent('cancelReq');
 const visualizerGroup = {
     object: new THREE.Group()
 };
-let printableArea = null;
-function WifiTransport({ widgetActions, controlActions }) {
+
+interface PreviewModalProps {
+    gcodeFile: object | null;
+    onStartToSendFile: () => void;
+    onStartToPrint: () => void;
+    canSend: boolean;
+}
+
+const PreviewModal: React.FC<PreviewModalProps> = (props) => {
     const dispatch = useDispatch();
-    // const [isLaserAutoFocus, setIsLaserAutoFocus] = useState(true);
-    const isLaserPrintAutoMode = useSelector(state => state?.workspace?.isLaserPrintAutoMode);
-    const originOffset = useSelector(state => state?.workspace?.originOffset);
-    const toolHeadName = useSelector(state => state?.workspace?.toolHead);
-    const useBackground = useSelector(state => state?.laser?.useBackground);
-    const { previewBoundingBox, headType, gcodeFiles, previewModelGroup, previewRenderState, previewStage, isRotate } = useSelector(state => state.workspace);
-    const { isConnected, size, workflowStatus, isSendedOnWifi } = useSelector(state => state.machine);
-    const { connectionType } = useSelector(state => state.workspace);
+
+    const {
+        gcodeFile,
+        onStartToSendFile,
+        onStartToPrint,
+        canSend,
+    } = props;
+
+    const {
+        connectionType,
+        isConnected,
+    } = useSelector((state: RootState) => state.workspace);
+
+    const {
+        workflowStatus,
+
+        previewModelGroup,
+        previewRenderState,
+    } = useSelector((state: RootState) => state.workspace);
+
+    const { size } = useSelector((state: RootState) => state.machine);
+
+    const closeModal = useCallback(() => {
+        dispatch(workspaceActions.updateState({
+            previewStage: WORKSPACE_STAGE.EMPTY
+        }));
+    }, [dispatch]);
+
+
+    const canvas = useRef<Canvas>();
+    const printableArea = useMemo(() => {
+        return new PrintablePlate({
+            x: size.x * 2,
+            y: size.y * 2
+        });
+    }, [size]);
+
+    return (
+        <Modal
+            centered
+            visible
+            onClose={closeModal}
+        >
+            <Modal.Header>
+                {i18n._('key-Workspace/Transport-Preview')}
+            </Modal.Header>
+            <Modal.Body>
+                <div style={{ width: 944, height: 522 }} className="position-re">
+                    {previewRenderState === 'rendered' && (
+                        <Canvas
+                            ref={canvas}
+                            size={size}
+                            modelGroup={visualizerGroup}
+                            printableArea={printableArea}
+                            cameraInitialPosition={new THREE.Vector3(0, 0, Math.min(size.z * 2, 300))}
+                            cameraInitialTarget={new THREE.Vector3(0, 0, 0)}
+                        />
+                        // <Spin />
+                    )}
+                    {previewRenderState === 'rendered' && (
+                        <div className={classNames('position-absolute', 'left-8', 'bottom-8')}>
+                            <SecondaryToolbar
+                                zoomIn={() => canvas.current.zoomIn()}
+                                zoomOut={() => canvas.current.zoomOut()}
+                                toFront={() => canvas.current.autoFocus(previewModelGroup.children[0], true)}
+                            />
+                        </div>
+                    )}
+                    {previewRenderState !== 'rendered' && (
+                        <div className="position-absolute position-absolute-center">
+                            <Spin />
+                        </div>
+                    )}
+                    <GCodeParams gcodeFile={gcodeFile} />
+                </div>
+            </Modal.Body>
+            <Modal.Footer>
+                <Button
+                    priority="level-two"
+                    type="default"
+                    className="margin-right-8"
+                    width="88px"
+                    onClick={closeModal}
+                >
+                    {i18n._('key-unused-Cancel')}
+                </Button>
+                {
+                    isConnected && (workflowStatus !== WORKFLOW_STATUS_IDLE && connectionType === CONNECTION_TYPE_WIFI) && (
+                        <Button
+                            priority="level-two"
+                            type="primary"
+                            width="200px"
+                            onClick={onStartToSendFile}
+                        >
+                            {i18n._('key-Workspace/WifiTransport-Sending File')}
+                        </Button>
+                    )
+                }
+                {
+                    isConnected && (workflowStatus === WORKFLOW_STATUS_IDLE && connectionType === CONNECTION_TYPE_WIFI) && (
+                        <Dropdown
+                            className="display-inline"
+                            overlay={() => (
+                                <Menu>
+                                    {canSend && (
+                                        <Menu.Item
+                                            onClick={() => {
+                                                onStartToSendFile();
+                                                closeModal();
+                                            }}
+                                        >
+                                            <div className="align-c">{i18n._('key-Workspace/WifiTransport-Sending File')}</div>
+                                        </Menu.Item>
+                                    )}
+                                    <Menu.Item onClick={() => {
+                                        onStartToPrint();
+                                        closeModal();
+                                    }}
+                                    >
+                                        <div className="align-c">{i18n._('key-Workspace/Transport-Luban control print')}</div>
+                                    </Menu.Item>
+                                </Menu>
+                            )}
+                            trigger="click"
+                        >
+                            <Button
+                                suffixIcon={<SvgIcon name="DropdownOpen" type={['static']} color="#d5d6d9" />}
+                                priority="level-two"
+                                type="primary"
+                                width="200px"
+                            >
+                                {i18n._('key-Workspace/LaserStartJob-start_job')}
+                            </Button>
+                        </Dropdown>
+                    )
+                }
+                {
+                    isConnected && (workflowStatus === WORKFLOW_STATE_IDLE && connectionType === CONNECTION_TYPE_SERIAL) && (
+                        <Button
+                            priority="level-two"
+                            type="primary"
+                            width="200px"
+                            onClick={() => {
+                                onStartToPrint();
+                                closeModal();
+                            }}
+                        >
+                            <div className="align-c">{i18n._('key-Workspace/Transport-Luban control print')}</div>
+                        </Button>
+                    )
+                }
+            </Modal.Footer>
+        </Modal>
+    );
+};
+
+declare interface FileTransferViewProps {
+    widgetActions: object;
+    controlActions: object;
+}
+
+const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
+    const { widgetActions, controlActions } = props;
+    const dispatch = useDispatch();
+
+    // connection state
+    const {
+        connectionType,
+        isConnected,
+        isSendedOnWifi,
+    } = useSelector((state: RootState) => state.workspace, shallowEqual);
+
+    const {
+        headType,
+        toolHead: toolHeadName,
+        isRotate,
+    } = useSelector((state: RootState) => state.workspace, shallowEqual);
+
+    const {
+        workflowStatus,
+        originOffset,
+        gcodeFiles,
+        previewBoundingBox,
+        previewModelGroup,
+        previewStage,
+        isLaserPrintAutoMode,
+    } = useSelector((state: RootState) => state.workspace);
+
+    const useBackground = useSelector((state: RootState) => state.laser?.useBackground);
+
+    //
     const [loadToWorkspaceOnLoad, setLoadToWorkspaceOnLoad] = useState(true);
     const [selectFileName, setSelectFileName] = useState('');
     const [selectFileType, setSelectFileType] = useState('');
@@ -71,6 +260,7 @@ function WifiTransport({ widgetActions, controlActions }) {
 
     const [showPreviewToRunJobModal, setShowPreviewToRunJobModal] = useState(false);
 
+    // Control display of preview modal
     const [showPreviewModal, setShowPreviewModal] = useState(false);
     useEffect(() => {
         if (previewStage === WORKSPACE_STAGE.LOADING_GCODE) {
@@ -80,13 +270,15 @@ function WifiTransport({ widgetActions, controlActions }) {
         }
     }, [previewStage]);
 
+    /*
     const closePreviewModal = () => {
         dispatch(workspaceActions.updateState({
             previewStage: WORKSPACE_STAGE.EMPTY
         }));
     };
+    */
+
     const [showStartModal, setShowStartModal] = useState(false);
-    const [currentWorkflowStatus, setCurrentWorkflowStatus] = useState('');
     const fileInput = useRef();
     const gcodeItemRef = useRef();
     const canvas = useRef();
@@ -138,8 +330,10 @@ function WifiTransport({ widgetActions, controlActions }) {
             dispatch(workspaceActions.uploadGcodeFileToList(file));
         },
         onClickToUpload: () => {
-            fileInput.current.value = null;
-            fileInput.current.click();
+            if (fileInput.current) {
+                fileInput.current.value = null;
+                fileInput.current.click();
+            }
         },
         onExport: () => {
             if (!selectFileName) {
@@ -159,17 +353,20 @@ function WifiTransport({ widgetActions, controlActions }) {
                 actions.loadGcodeToWorkspace();
             }
         },
-        matchingGCodeTypeAndHeadType: async () => {
+        onStartToPrint: async () => {
+            console.log('onStartToPrint');
             if (selectFileType !== headType) {
                 setShowPreviewToRunJobModal(true);
                 return;
             }
+            console.log('startPrint');
             await actions.startPrint();
         },
 
         loadGcodeToWorkspace: async (isLaserAutoFocus = false, isCameraCapture = false) => {
             const find = gcodeFiles.find(v => v.uploadName.toLowerCase() === selectFileName.toLowerCase());
             if (!find) {
+                log.warn('File not found');
                 return;
             }
             await dispatch(workspaceActions.renderGcodeFile(find, false, true));
@@ -216,42 +413,11 @@ function WifiTransport({ widgetActions, controlActions }) {
                     });
                 return;
             }
+
+            console.log('onCallBackRun');
             controlActions.onCallBackRun();
         },
 
-        // Wi-Fi transfer file to Snapmaker
-        sendFile: () => {
-            const isSendingFile = modalSmallHOC({
-                title: i18n._('key-Workspace/WifiTransport-Sending File'),
-                text: i18n._('key-Workspace/WifiTransport-Sending file. Please wait…'),
-                iconColor: '#4CB518',
-                img: 'WarningTipsProgress'
-            }).ref;
-            const find = gcodeFiles.find(v => v.uploadName === selectFileName);
-            if (!find) {
-                return;
-            }
-            const gcodePath = `/${find.uploadName}`;
-            controller.emitEvent(CONNECTION_UPLOAD_FILE, { gcodePath: gcodePath, renderGcodeFileName: find.renderGcodeFileName })
-                .once(CONNECTION_UPLOAD_FILE, ({ err, text }) => {
-                    isSendingFile.current && isSendingFile.current.removeContainer();
-                    if (err) {
-                        modalSmallHOC({
-                            title: i18n._('key-Workspace/WifiTransport-Failed to send file.'),
-                            text: text,
-                            iconColor: '#FF4D4F',
-                            img: 'WarningTipsError'
-                        });
-                    } else {
-                        (modalSmallHOC({
-                            title: i18n._('key-Workspace/WifiTransport-File sent successfully.'),
-                            text: i18n._('key-Workspace/WifiTransport-Your file was successfully sent. Receive it on the Touchscreen.'),
-                            iconColor: '#4CB518',
-                            img: 'WarningTipsSuccess'
-                        }));
-                    }
-                });
-        },
         importFile: (fileObj) => {
             if (fileObj) {
                 actions.onChangeFile({
@@ -295,12 +461,6 @@ function WifiTransport({ widgetActions, controlActions }) {
         }
     }, [isRotate, connectionType, toolHeadName]);
 
-    useEffect(() => {
-        printableArea = new PrintablePlate({
-            x: size.x * 2,
-            y: size.y * 2
-        });
-    }, [size]);
 
     useEffect(() => {
         widgetActions.setTitle(i18n._('key-Workspace/WifiTransport-G-code Files'));
@@ -331,11 +491,6 @@ function WifiTransport({ widgetActions, controlActions }) {
     }, [selectFileName]);
 
     useEffect(() => {
-        // const newCurrent = connectionType === 'wifi' ? workflowStatus : workflowState;
-        setCurrentWorkflowStatus(workflowStatus);
-    }, [workflowStatus]);
-
-    useEffect(() => {
         if (prevProps) {
             if (prevProps.previewStage !== previewStage && previewStage === WORKSPACE_STAGE.LOAD_GCODE_SUCCEED) {
                 if (previewBoundingBox !== null) {
@@ -355,16 +510,53 @@ function WifiTransport({ widgetActions, controlActions }) {
         }
     }, [previewStage]);
 
+    // Wi-Fi transfer file to Snapmaker
+    /**
+     * Start to send G-code File.
+     */
+    const onStartToSendFile = useCallback(() => {
+        const isSendingFile = modalSmallHOC({
+            title: i18n._('key-Workspace/WifiTransport-Sending File'),
+            text: i18n._('key-Workspace/WifiTransport-Sending file. Please wait…'),
+            iconColor: '#4CB518',
+            img: 'WarningTipsProgress'
+        }).ref;
+
+        const find = gcodeFiles.find(v => v.uploadName === selectFileName);
+        if (!find) {
+            return;
+        }
+
+        const gcodePath = `/${find.uploadName}`;
+        controller.emitEvent(CONNECTION_UPLOAD_FILE, { gcodePath: gcodePath, renderGcodeFileName: find.renderGcodeFileName })
+            .once(CONNECTION_UPLOAD_FILE, ({ err, text }) => {
+                isSendingFile.current && isSendingFile.current.removeContainer();
+                if (err) {
+                    modalSmallHOC({
+                        title: i18n._('key-Workspace/WifiTransport-Failed to send file.'),
+                        text: text,
+                        iconColor: '#FF4D4F',
+                        img: 'WarningTipsError'
+                    });
+                } else {
+                    modalSmallHOC({
+                        title: i18n._('key-Workspace/WifiTransport-File sent successfully.'),
+                        text: i18n._('key-Workspace/WifiTransport-Your file was successfully sent. Receive it on the Touchscreen.'),
+                        iconColor: '#4CB518',
+                        img: 'WarningTipsSuccess'
+                    });
+                }
+            });
+    }, [gcodeFiles, selectFileName]);
+
     const isHeadType = selectFileType === headType;
     const hasFile = gcodeFiles.length > 0;
     const selectedFile = _.find(gcodeFiles, { uploadName: selectFileName });
     const isWifi = connectionType && connectionType === CONNECTION_TYPE_WIFI;
     // TODO: what is isSendedOnWifi?
     const isSended = isWifi ? isSendedOnWifi : true;
-    const canPlay = selectedFile && hasFile && isConnected && isSended && _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE], currentWorkflowStatus);
+    const canPlay = selectedFile && hasFile && isConnected && isSended && _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE], workflowStatus);
     const canSend = hasFile && isConnected && isHeadType && isWifi && isSendedOnWifi;
-
-
 
     const onConfirm = async (type) => {
         let isLaserAutoFocus = false;
@@ -464,7 +656,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                         priority="level-three"
                         width="144px"
                         disabled={!canSend}
-                        onClick={actions.sendFile}
+                        onClick={onStartToSendFile}
                     >
                         {i18n._('key-Workspace/WifiTransport-Sending File')}
                     </Button>
@@ -473,7 +665,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                         priority="level-two"
                         width="144px"
                         disabled={!canPlay}
-                        onClick={actions.matchingGCodeTypeAndHeadType}
+                        onClick={actions.onStartToPrint}
                     >
                         {i18n._('key-Workspace/Transport-Start Print')}
                     </Button>
@@ -487,117 +679,29 @@ function WifiTransport({ widgetActions, controlActions }) {
                 onClose={() => setShowStartModal(false)}
                 onConfirm={async (type) => onConfirm(type)}
             />
-            {showPreviewModal && (
-                <Modal
-                    centered
-                    visible={showPreviewModal}
-                    onClose={() => {
-                        closePreviewModal();
-                    }}
-                >
-                    <Modal.Header>
-                        {i18n._('key-Workspace/Transport-Preview')}
-                    </Modal.Header>
-                    <Modal.Body>
-                        <div style={{ width: 944, height: 522 }} className="position-re">
-                            {previewRenderState === 'rendered' && (
-                                <Canvas
-                                    ref={canvas}
-                                    size={size}
-                                    modelGroup={visualizerGroup}
-                                    printableArea={printableArea}
-                                    cameraInitialPosition={new THREE.Vector3(0, 0, Math.min(size.z * 2, 300))}
-                                    cameraInitialTarget={new THREE.Vector3(0, 0, 0)}
-                                />
-                                // <Spin />
-                            )}
-                            {previewRenderState === 'rendered' && (
-                                <div className={classNames('position-absolute', 'left-8', 'bottom-8')}>
-                                    <SecondaryToolbar
-                                        zoomIn={() => canvas.current.zoomIn()}
-                                        zoomOut={() => canvas.current.zoomOut()}
-                                        toFront={() => canvas.current.autoFocus(previewModelGroup.children[0], true)}
-                                    />
-                                </div>
-                            )}
-                            {previewRenderState !== 'rendered' && (
-                                <div className="position-absolute position-absolute-center">
-                                    <Spin />
-                                </div>
-                            )}
-                            <GCodeParams gcodeFile={gcodeFiles[selectFileIndex] || {}} />
-                        </div>
-                    </Modal.Body>
-                    <Modal.Footer>
-                        <Button priority="level-two" type="default" width="88px" onClick={() => closePreviewModal()} className="margin-right-8">{i18n._('key-unused-Cancel')}</Button>
-                        {isConnected && (currentWorkflowStatus !== WORKFLOW_STATUS_IDLE && connectionType === CONNECTION_TYPE_WIFI) && <Button priority="level-two" type="primary" width="200px" onClick={actions.sendFile}>{i18n._('key-Workspace/WifiTransport-Sending File')}</Button>}
-                        {isConnected && (currentWorkflowStatus === WORKFLOW_STATUS_IDLE && connectionType === CONNECTION_TYPE_WIFI) && (
-                            <Dropdown
-                                className="display-inline"
-                                overlay={() => (
-                                    <Menu>
-                                        {canSend && (
-                                            <Menu.Item
-                                                onClick={() => {
-                                                    actions.sendFile();
-                                                    closePreviewModal();
-                                                }}
-                                            >
-                                                <div className="align-c">{i18n._('key-Workspace/WifiTransport-Sending File')}</div>
-                                            </Menu.Item>
-                                        )}
-                                        <Menu.Item onClick={() => {
-                                            actions.matchingGCodeTypeAndHeadType();
-                                            closePreviewModal();
-                                        }}
-                                        >
-                                            <div className="align-c">{i18n._('key-Workspace/Transport-Luban control print')}</div>
-                                        </Menu.Item>
-                                    </Menu>
-                                )}
-                                trigger="click"
-                            >
-                                <Button
-                                    suffixIcon={<SvgIcon name="DropdownOpen" type={['static']} color="#d5d6d9" />}
-                                    priority="level-two"
-                                    type="primary"
-                                    width="200px"
-                                >
-                                    {i18n._('key-Workspace/LaserStartJob-start_job')}
-                                </Button>
-                            </Dropdown>
-                        )}
-                        {isConnected && (currentWorkflowStatus === WORKFLOW_STATE_IDLE && connectionType === CONNECTION_TYPE_SERIAL) && (
-                            <Button
-                                priority="level-two"
-                                type="primary"
-                                width="200px"
-                                onClick={() => {
-                                    actions.matchingGCodeTypeAndHeadType();
-                                    closePreviewModal();
-                                }}
-                            >
-                                <div className="align-c">{i18n._('key-Workspace/Transport-Luban control print')}</div>
-                            </Button>
-                        )}
-                    </Modal.Footer>
-                </Modal>
-            )}
-            {showPreviewToRunJobModal && (
-                <PreviewToRunJobModal
-                    selectFileType={selectFileType}
-                    headType={headType}
-                    onClose={() => setShowPreviewToRunJobModal(false)}
-                    onConfirm={actions.startPrint}
-                />
-            )}
+            {/* Modal that displays selected file */}
+            {
+                showPreviewModal && (
+                    <PreviewModal
+                        gcodeFile={gcodeFiles[selectFileIndex]}
+                        onStartToSendFile={onStartToSendFile}
+                        onStartToPrint={actions.onStartToPrint}
+                        canSend={canSend}
+                    />
+                )
+            }
+            {
+                showPreviewToRunJobModal && (
+                    <PreviewToRunJobModal
+                        selectFileType={selectFileType}
+                        headType={headType}
+                        onClose={() => setShowPreviewToRunJobModal(false)}
+                        onConfirm={actions.startPrint}
+                    />
+                )
+            }
         </div>
     );
-}
-
-WifiTransport.propTypes = {
-    widgetActions: PropTypes.object.isRequired,
-    controlActions: PropTypes.object
 };
 
 export default WifiTransport;

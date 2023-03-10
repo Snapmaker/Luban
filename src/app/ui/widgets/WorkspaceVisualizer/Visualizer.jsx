@@ -267,6 +267,8 @@ class Visualizer extends PureComponent {
             return (this.props.headType === HEAD_LASER);
         },
         handleRun: () => {
+            console.log('handleRun');
+
             const {
                 server,
                 workflowStatus,
@@ -843,7 +845,7 @@ const mapStateToProps = (state) => {
 
         headType: workspace.headType,
         toolHead: workspace.toolHead,
-        workflowStatus: machine.workflowStatus,
+        workflowStatus: workspace.workflowStatus,
         connectionType: workspace.connectionType,
         uploadState: workspace.uploadState,
         gcodeList: workspace.gcodeList,
@@ -859,7 +861,7 @@ const mapStateToProps = (state) => {
         isRotate: workspace.isRotate,
 
         // type
-        laserFocalLength: machine.laserFocalLength,
+        laserFocalLength: workspace.laserFocalLength,
 
         modelGroup: workspace.modelGroup,
         renderState: workspace.renderState,
