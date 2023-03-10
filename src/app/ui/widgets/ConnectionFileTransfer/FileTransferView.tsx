@@ -48,7 +48,6 @@ import PreviewToRunJobModal from './PreviewToRunJobModal';
 import GcodePreviewItem from './GCodeListItem';
 import styles from './styles.styl';
 
-const changeNameInput = [];
 const cancelRequestEvent = new CustomEvent('cancelReq');
 
 const visualizerGroup = {
@@ -306,18 +305,12 @@ function WifiTransport({ widgetActions, controlActions }) {
     useEffect(() => {
         widgetActions.setTitle(i18n._('key-Workspace/WifiTransport-G-code Files'));
 
-        for (let i = 0; i < 5; i++) {
-            changeNameInput[i] = React.createRef();
-        }
         if (gcodeFiles.length > 0) {
             onSelectFile(gcodeFiles[0].uploadName);
         }
         visualizerGroup.object.add(previewModelGroup);
         UniApi.Event.on('appbar-menu:workspace.import', actions.importFile);
         return () => {
-            for (let i = 0; i < 5; i++) {
-                changeNameInput[i] = null;
-            }
             UniApi.Event.off('appbar-menu:workspace.import', actions.importFile);
         };
     }, []);

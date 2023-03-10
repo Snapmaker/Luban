@@ -9,6 +9,7 @@ import settings from '../../../config/settings';
 import i18n from '../../../lib/i18n';
 import usePrevious from '../../../lib/hooks/previous';
 import { actions as machineActions } from '../../../flux/machine';
+import { actions as workspaceActions } from '../../../flux/workspace';
 import { controller } from '../../../lib/controller';
 import Terminal from './Terminal';
 import {
@@ -73,7 +74,7 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
             } else if (data === 'clear') {
                 actions.clearAll();
             } else {
-                dispatch(machineActions.executeGcode(data));
+                dispatch(workspaceActions.executeGcode(data));
             }
         },
 

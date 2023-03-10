@@ -117,7 +117,7 @@ function MachineSettings() {
             });
         },
         onSave: async () => {
-            dispatch(workspaceActions.connect.setConnectionType(state.connectionTimeout));
+            dispatch(workspaceActions.connect.setConnectionTimeout(state.connectionTimeout));
             dispatch(machineActions.updateMachineSeries(state.series));
             dispatch(machineActions.updateMachineSize(state.size));
             dispatch(machineActions.setEnclosureState(state.enclosureDoorDetection));

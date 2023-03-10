@@ -1,7 +1,7 @@
 import noop from 'lodash/noop';
+import { replace } from 'lodash';
 import classNames from 'classnames';
-import PropTypes from 'prop-types';
-import React, { useEffect, useImperativeHandle } from 'react';
+import React, { useEffect, useImperativeHandle, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 
 import { pathWithRandomSuffix } from '../../../../shared/lib/random-utils';
@@ -15,8 +15,23 @@ import styles from './styles.styl';
 const suffixLength = 7;
 
 
-const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile, gRef, setSelectFileIndex }) => {
+declare interface GcodePreviewItemProps {
+    gcodeFile: object;
+    index: number;
+    selected: boolean;
+    onSelectFile: () => {};
+    gRef: object;
+    setSelectFileIndex: () => {};
+}
+
+
+const GcodePreviewItem: React.FC<GcodePreviewItemProps> = React.memo((props) => {
     const dispatch = useDispatch();
+
+    const changeNameInput = useRef(null);
+
+    const { gcodeFile, index, selected, onSelectFile, gRef, setSelectFileIndex } = props;
+
     const { prefixName, suffixName } = normalizeNameDisplay(gcodeFile?.renderGcodeFileName || gcodeFile?.name, suffixLength);
 
     let size = '';
@@ -49,8 +64,11 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile,
         }
     };
 
-    const onRenameEnd = (_uploadName, _index) => {
-        let newName = changeNameInput[_index].current.value;
+    const onRenameEnd = (_uploadName: string) => {
+        if (!changeNameInput.current) {
+            return;
+        }
+        let newName = changeNameInput.current.value;
         const m = _uploadName.match(/(\.gcode|\.cnc|\.nc)$/);
         if (m) {
             newName += m[0];
@@ -62,8 +80,8 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile,
         dispatch(workspaceActions.renameGcodeFile(_uploadName, null, true));
         event.stopPropagation();
         setTimeout(() => {
-            changeNameInput[_index].current.value = _.replace(_renderGcodeFileName, /(\.gcode|\.cnc|\.nc)$/, '') || _uploadName;
-            changeNameInput[_index].current.focus();
+            changeNameInput.current.value = replace(_renderGcodeFileName, /(\.gcode|\.cnc|\.nc)$/, '') || _uploadName;
+            changeNameInput.current.focus();
         }, 0);
     };
 
@@ -144,9 +162,9 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile,
                     <input
                         defaultValue={gcodeFile?.renderGcodeFileName?.replace(/(\.gcode|\.cnc|\.nc)$/, '')}
                         className={classNames('input-select')}
-                        onBlur={() => onRenameEnd(uploadName, index)}
+                        onBlur={() => onRenameEnd(uploadName)}
                         onKeyDown={(event) => onKeyDown(event)}
-                        ref={changeNameInput[index]}
+                        ref={changeNameInput}
                     />
                 </div>
                 <div className={styles['gcode-file-text-info']}>
@@ -160,8 +178,7 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile,
                 type={['static']}
                 className="height-48 position-absolute right-16"
                 size={24}
-                onClick={e => {
-                    e.stopPropagation();
+                onClick={() => {
                     onSelectFile(gcodeFile.uploadName, null, null, false);
                     dispatch(workspaceActions.renderPreviewGcodeFile(gcodeFile));
                 }}
@@ -169,14 +186,5 @@ const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile,
         </div>
     );
 });
-GcodePreviewItem.propTypes = {
-    gcodeFile: PropTypes.object.isRequired,
-    index: PropTypes.number.isRequired,
-    selected: PropTypes.bool.isRequired,
-    onSelectFile: PropTypes.func.isRequired,
-    gRef: PropTypes.object.isRequired,
-    setSelectFileIndex: PropTypes.func.isRequired,
-};
-
 
 export default GcodePreviewItem;
