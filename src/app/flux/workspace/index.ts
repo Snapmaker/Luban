@@ -1169,6 +1169,12 @@ export const actions = {
         dispatch(actions.unloadGcode());
     },
 
+    updateStateGcodeFileName: (name: string) => (dispatch) => {
+        dispatch(baseActions.updateState({
+            gcodeFileName: name
+        }));
+    },
+
     // Laser
     updateIsLaserPrintAutoMode: (isLaserPrintAutoMode: boolean) => (dispatch) => {
         dispatch(baseActions.updateState({ isLaserPrintAutoMode }));

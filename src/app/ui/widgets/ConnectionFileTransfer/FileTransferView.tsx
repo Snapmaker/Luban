@@ -3,14 +3,12 @@ import { Spin } from 'antd';
 import classNames from 'classnames';
 import _ from 'lodash';
 // import { Trans } from 'react-i18next';
-import noop from 'lodash/noop';
 import path from 'path';
 import PropTypes from 'prop-types';
-import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import * as THREE from 'three';
 
-import { pathWithRandomSuffix } from '../../../../shared/lib/random-utils';
 import {
     AUTO_MDOE,
     CONNECTION_MATERIALTHICKNESS,
@@ -27,13 +25,11 @@ import {
     WORKFLOW_STATUS_IDLE
 } from '../../../constants';
 import { LEVEL_TWO_POWER_LASER_FOR_SM2 } from '../../../constants/machines';
-import { actions as machineActions } from '../../../flux/machine';
 import { actions as projectActions } from '../../../flux/project';
 import { actions as workspaceActions, WORKSPACE_STAGE } from '../../../flux/workspace';
 import { controller } from '../../../lib/controller';
 import usePrevious from '../../../lib/hooks/previous';
 import i18n from '../../../lib/i18n';
-import { normalizeNameDisplay } from '../../../lib/normalize-range';
 import UniApi from '../../../lib/uni-api';
 
 import { Button } from '../../components/Buttons';
@@ -49,175 +45,11 @@ import PrintablePlate from '../WorkspaceVisualizer/PrintablePlate';
 import GCodeParams from './GCodeParams';
 import LaserStartModal from './LaserStartModal';
 import PreviewToRunJobModal from './PreviewToRunJobModal';
+import GcodePreviewItem from './GCodeListItem';
 import styles from './styles.styl';
 
 const changeNameInput = [];
-const suffixLength = 7;
 const cancelRequestEvent = new CustomEvent('cancelReq');
-const GcodePreviewItem = React.memo(({ gcodeFile, index, selected, onSelectFile, gRef, setSelectFileIndex }) => {
-    const dispatch = useDispatch();
-    const { prefixName, suffixName } = normalizeNameDisplay(gcodeFile?.renderGcodeFileName || gcodeFile?.name, suffixLength);
-
-    let size = '';
-    const { isRenaming, uploadName } = gcodeFile;
-    if (!gcodeFile.size) {
-        size = '';
-    } else if (gcodeFile.size / 1024 / 1024 > 1) {
-        size = `${(gcodeFile.size / 1024 / 1024).toFixed(2)} MB`;
-    } else if (gcodeFile.size / 1024 > 1) {
-        size = `${(gcodeFile.size / 1024).toFixed(2)} KB`;
-    } else {
-        size = `${(gcodeFile.size).toFixed(2)} B`;
-    }
-
-    const lastModified = new Date(gcodeFile.lastModified);
-    let date = `${lastModified.getFullYear()}.${lastModified.getMonth() + 1}.${lastModified.getDate()}   ${lastModified.getHours()}:${lastModified.getMinutes()}`;
-    if (!gcodeFile.lastModified) {
-        date = '';
-    }
-
-    const onKeyDown = (e) => {
-        let keynum;
-        if (window.event) {
-            keynum = e.keyCode;
-        } else if (e.which) {
-            keynum = e.which;
-        }
-        if (keynum === 13) {
-            e.target.blur();
-        }
-    };
-
-    const onRenameEnd = (_uploadName, _index) => {
-        let newName = changeNameInput[_index].current.value;
-        const m = _uploadName.match(/(\.gcode|\.cnc|\.nc)$/);
-        if (m) {
-            newName += m[0];
-        }
-        dispatch(workspaceActions.renameGcodeFile(_uploadName, newName, false));
-    };
-
-    const onRenameStart = (_uploadName, _index, _renderGcodeFileName = '', event) => {
-        dispatch(workspaceActions.renameGcodeFile(_uploadName, null, true));
-        event.stopPropagation();
-        setTimeout(() => {
-            changeNameInput[_index].current.value = _.replace(_renderGcodeFileName, /(\.gcode|\.cnc|\.nc)$/, '') || _uploadName;
-            changeNameInput[_index].current.focus();
-        }, 0);
-    };
-
-    const onRemoveFile = (_gcodeFile) => {
-        dispatch(workspaceActions.removeGcodeFile(_gcodeFile));
-    };
-
-    useImperativeHandle(gRef, () => ({
-        remaneStart: (_uploadName, _index, e) => onRenameStart(_uploadName, _index, e),
-        removeFile: (_gcodeFile) => onRemoveFile(_gcodeFile)
-    }));
-
-    useEffect(() => {
-        if (selected) {
-            setSelectFileIndex(index);
-        }
-    }, [selected]);
-
-    return (
-        <div
-            className={classNames(
-                styles['gcode-file'],
-                { [styles.selected]: selected }
-            )}
-            key={pathWithRandomSuffix(gcodeFile.uploadName)}
-            onClick={
-                (event) => onSelectFile(gcodeFile.uploadName, null, event)
-            }
-            onKeyDown={noop}
-            role="button"
-            tabIndex={0}
-        >
-            {/* <button
-                type="button"
-                className={styles['gcode-file-remove']}
-                onClick={() => {
-                    onRemoveFile(gcodeFile);
-                }}
-            /> */}
-            {/* {selected && <div className={styles['gcode-file-selected-icon']} />} */}
-
-            <div className={styles['gcode-file-img']}>
-                {gcodeFile.thumbnail && (
-                    <img
-                        src={gcodeFile.thumbnail}
-                        draggable="false"
-                        alt=""
-                    />
-                )}
-            </div>
-            <div className={classNames('input-text', styles['gcode-file-text'])}>
-                <div
-                    className={classNames(
-                        styles['gcode-file-text-name'],
-                        { [styles.haveOpacity]: isRenaming === false }
-                    )}
-                    role="button"
-                    onKeyDown={() => {
-                    }}
-                    tabIndex={0}
-                >
-                    <div
-                        className={styles['gcode-file-text-rename']}
-                    >
-                        {/* {name} */}
-                        <span className={classNames(styles['prefix-name'])}>
-                            {prefixName}
-                        </span>
-                        <span className={classNames(styles['suffix-name'])}>
-                            {suffixName}
-                        </span>
-                    </div>
-
-                </div>
-                <div className={classNames(
-                    styles['gcode-file-input-name'],
-                    { [styles.haveOpacity]: isRenaming === true }
-                )}
-                >
-                    <input
-                        defaultValue={gcodeFile?.renderGcodeFileName?.replace(/(\.gcode|\.cnc|\.nc)$/, '')}
-                        className={classNames('input-select')}
-                        onBlur={() => onRenameEnd(uploadName, index)}
-                        onKeyDown={(event) => onKeyDown(event)}
-                        ref={changeNameInput[index]}
-                    />
-                </div>
-                <div className={styles['gcode-file-text-info']}>
-                    <span>{size}</span>
-                    <span>{date}</span>
-                </div>
-            </div>
-            <SvgIcon
-                name="PreviewGcode"
-                // name="MainToolbarHome"
-                type={['static']}
-                className="height-48 position-absolute right-16"
-                size={24}
-                onClick={e => {
-                    e.stopPropagation();
-                    onSelectFile(gcodeFile.uploadName, null, null, false);
-                    dispatch(workspaceActions.renderPreviewGcodeFile(gcodeFile));
-                }}
-            />
-        </div>
-    );
-});
-GcodePreviewItem.propTypes = {
-    gcodeFile: PropTypes.object.isRequired,
-    index: PropTypes.number.isRequired,
-    selected: PropTypes.bool.isRequired,
-    onSelectFile: PropTypes.func.isRequired,
-    gRef: PropTypes.object.isRequired,
-    setSelectFileIndex: PropTypes.func.isRequired,
-};
 
 const visualizerGroup = {
     object: new THREE.Group()
@@ -343,7 +175,7 @@ function WifiTransport({ widgetActions, controlActions }) {
             }
             await dispatch(workspaceActions.renderGcodeFile(find, false, true));
             await dispatch(workspaceActions.updateState({ activeGcodeFile: find }));
-            await dispatch(machineActions.updateStateGcodeFileName(find.renderGcodeFileName || find.name));
+            await dispatch(workspaceActions.updateStateGcodeFileName(find.renderGcodeFileName || find.name));
 
 
             if (toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2 && isLaserAutoFocus && !isRotate) {
@@ -433,7 +265,7 @@ function WifiTransport({ widgetActions, controlActions }) {
             }
         },
         onChangeLaserPrintMode: async () => {
-            dispatch(machineActions.updateIsLaserPrintAutoMode(!isLaserPrintAutoMode));
+            dispatch(workspaceActions.updateIsLaserPrintAutoMode(!isLaserPrintAutoMode));
         },
 
         onChangeMaterialThickness: (value) => {
@@ -460,7 +292,7 @@ function WifiTransport({ widgetActions, controlActions }) {
     }, [isConnected]);
     useEffect(() => {
         if (isRotate) {
-            dispatch(machineActions.updateIsLaserPrintAutoMode(false));
+            dispatch(workspaceActions.updateIsLaserPrintAutoMode(false));
         }
     }, [isRotate, connectionType, toolHeadName]);
 
@@ -492,7 +324,8 @@ function WifiTransport({ widgetActions, controlActions }) {
 
     useEffect(() => {
         if (gcodeFiles.length > 0) {
-            const newUploadName = gcodeFiles[selectFileIndex > -1 ? selectFileIndex : 0] ? gcodeFiles[selectFileIndex > -1 ? selectFileIndex : 0].uploadName : gcodeFiles[0].uploadName;
+            const candidate = gcodeFiles[selectFileIndex > -1 ? selectFileIndex : 0];
+            const newUploadName = candidate ? candidate.uploadName : gcodeFiles[0].uploadName;
             onSelectFile(newUploadName);
         }
     }, [gcodeFiles]);
@@ -545,7 +378,7 @@ function WifiTransport({ widgetActions, controlActions }) {
         switch (type) {
             case AUTO_MDOE:
                 isLaserAutoFocus = true;
-                dispatch(machineActions.updateIsLaserPrintAutoMode(true));
+                dispatch(workspaceActions.updateIsLaserPrintAutoMode(true));
                 dispatch(workspaceActions.updateMaterialThickness(0));
                 break;
             case SEMI_AUTO_MODE:
@@ -659,7 +492,7 @@ function WifiTransport({ widgetActions, controlActions }) {
                 isRotate={isRotate}
                 isSerialConnect={connectionType && connectionType === CONNECTION_TYPE_SERIAL}
                 onClose={() => setShowStartModal(false)}
-                onConfirm={(type) => onConfirm(type)}
+                onConfirm={async (type) => onConfirm(type)}
             />
             {showPreviewModal && (
                 <Modal

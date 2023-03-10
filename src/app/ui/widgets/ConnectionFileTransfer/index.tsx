@@ -1,3 +1,3 @@
-import WifiTransport from './WifiTransport';
+import FileTransferView from './FileTransferView';
 
-export default WifiTransport;
+export default FileTransferView;
