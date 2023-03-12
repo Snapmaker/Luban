@@ -204,10 +204,9 @@ export default class Slicer extends EventEmitter {
                 const filamentLengthArr = item.replace(';Filament used:', '')
                     .split(',');
                 const filamentLength = filamentLengthArr.map(str => Number(str.trim()
-                    .replace('m', '')))
-                    .reduce((a, b) => a + b, 0);
+                    .replace('m', '')));
                 // volume (cm^3) * density (PLA: 1.24 g/cm^3)
-                const filamentWeight = Math.PI * (1.75 / 2) * (1.75 / 2) * filamentLength * 1.24;
+                const filamentWeight = filamentLength.map(v => Math.PI * (1.75 / 2) * (1.75 / 2) * v * 1.24);
 
                 sliceResult.filamentLength = filamentLength;
                 sliceResult.filamentWeight = filamentWeight;
