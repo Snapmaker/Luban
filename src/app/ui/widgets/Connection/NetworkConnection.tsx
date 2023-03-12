@@ -143,6 +143,12 @@ const CheckingNozzleSize: React.FC = () => {
 const ICON_COLOR_GREEN = '#4CB518';
 const ICON_COLOR_RED = '#FF4D4F';
 
+
+interface ModuleBriefStatus {
+    moduleName: string;
+    status: boolean;
+}
+
 const NetworkConnection: React.FC = () => {
     const dispatch = useDispatch();
 
@@ -493,28 +499,25 @@ const NetworkConnection: React.FC = () => {
     }, [machineIdentifier]);
 
     // Module status
-    const moduleStatusInfoList = useMemo(() => {
+    const moduleBriefStatusList = useMemo(() => {
         if (!isConnected) {
             return [];
         }
 
-        const newModuleStatusList = [];
+        const newModuleStatusList: ModuleBriefStatus[] = [];
         if (headType === HEAD_PRINTING) {
             if (isDualExtruder(toolHead)) {
                 newModuleStatusList.push({
-                    key: 'headtype',
                     moduleName: i18n._('key-App/Settings/MachineSettings-Dual Extruder Toolhead'),
                     status: true
                 });
             } else {
                 newModuleStatusList.push({
-                    key: 'headtype',
                     moduleName: i18n._('key-App/Settings/MachineSettings-Single Extruder Toolhead'),
                     status: true
                 });
             }
             newModuleStatusList.push({
-                key: 'heatedBed',
                 moduleName: i18n._('key-Workspace/Connection-Heated bed'),
                 status: heatedBedTemperature > 0
             });
@@ -522,19 +525,16 @@ const NetworkConnection: React.FC = () => {
         if (headType === HEAD_LASER) {
             if (toolHead && toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
                 newModuleStatusList.push({
-                    key: `${headType}-${toolHead}`,
                     status: true,
                     moduleName: i18n._('key-Workspace/Connection-10W Laser')
                 });
             } else {
                 newModuleStatusList.push({
-                    key: `${headType}-${toolHead}`,
                     status: true,
                     moduleName: i18n._('key-Workspace/Connection-laser')
                 });
             }
             newModuleStatusList.push({
-                key: 'laserCamera',
                 moduleName: i18n._('key-Workspace/Connection-Laser camera'),
                 status: laserCamera
             });
@@ -542,13 +542,11 @@ const NetworkConnection: React.FC = () => {
         if (headType === HEAD_CNC) {
             if (toolHead === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2) {
                 newModuleStatusList.push({
-                    key: 'headtype',
                     moduleName: i18n._('key-Workspace/High CNC'),
                     status: true
                 });
             } else {
                 newModuleStatusList.push({
-                    key: 'headtype',
                     moduleName: i18n._('key-Workspace/Connection-CNC'),
                     status: true
                 });
@@ -557,14 +555,13 @@ const NetworkConnection: React.FC = () => {
         Object.keys(moduleStatusList).forEach((key) => {
             if (moduleStatusList[key]) {
                 newModuleStatusList.push({
-                    key,
                     moduleName: i18n._(`key-Workspace/Connection-${key}`),
                     status: moduleStatusList[key]
                 });
             } else {
+                // compatible code
                 if (key === 'airPurifier' && airPurifier) {
                     newModuleStatusList.push({
-                        key,
                         moduleName: i18n._('key-Workspace/Connection-airPurifier'),
                         status: moduleStatusList[key]
                     });
@@ -665,10 +662,10 @@ const NetworkConnection: React.FC = () => {
                         </div>
                         {/* Render status badge for each machine module */}
                         {
-                            moduleStatusInfoList.length > 0 && (
+                            moduleBriefStatusList.length > 0 && (
                                 <div className="sm-flex sm-flex-wrap">
                                     {
-                                        moduleStatusInfoList.map(item => (
+                                        moduleBriefStatusList.map(item => (
                                             <MachineModuleStatusBadge
                                                 key={item.moduleName}
                                                 moduleName={item.moduleName}
