@@ -204,8 +204,8 @@ const INITIAL_STATE = {
     // G-code
     gcodeFile: null,
     printTime: 0,
-    filamentLength: 0,
-    filamentWeight: 0,
+    filamentLength: [],
+    filamentWeight: [],
     gcodeLineGroup: new THREE.Group(),
     // gcodeLineObjects: [],
     // gcodeParser: null,
