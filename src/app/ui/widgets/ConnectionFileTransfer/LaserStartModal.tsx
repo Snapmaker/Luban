@@ -1,16 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { isString, isUndefined } from 'lodash';
-import { useDispatch, useSelector } from 'react-redux';
-import PropTypes from 'prop-types';
 import { Tooltip } from 'antd';
+import { isString, isUndefined } from 'lodash';
+import PropTypes from 'prop-types';
+import React, { useEffect, useState } from 'react';
 import { Trans } from 'react-i18next';
-import { AUTO_MDOE, SEMI_AUTO_MODE, MANUAL_MODE } from '../../../constants';
+import { useDispatch, useSelector } from 'react-redux';
+
+import { AUTO_MDOE, MANUAL_MODE, SEMI_AUTO_MODE } from '../../../constants';
+import { actions as workspaceActions } from '../../../flux/workspace';
 import i18n from '../../../lib/i18n';
-import { Radio } from '../../components/Radio';
-import Modal from '../../components/Modal';
 import { Button } from '../../components/Buttons';
 import { NumberInput as Input } from '../../components/Input';
-import { actions as machineActions } from '../../../flux/machine';
+import Modal from '../../components/Modal';
+import { Radio } from '../../components/Radio';
 
 function LaserStartModal({
     showStartModal,
@@ -21,7 +22,8 @@ function LaserStartModal({
     onConfirm
 }) {
     const [selectedValue, setSelectedValue] = useState(MANUAL_MODE);
-    const { size, materialThickness } = useSelector(state => state?.machine);
+    const { size } = useSelector(state => state?.machine);
+    const { materialThickness } = useSelector(state => state?.workspace);
     const dispatch = useDispatch();
 
     useEffect(() => {
@@ -39,7 +41,7 @@ function LaserStartModal({
     const onChange = (event) => {
         setSelectedValue(event.target.value);
         if (event.target.value === SEMI_AUTO_MODE) {
-            dispatch(machineActions.updateMaterialThickness(1.5));
+            dispatch(workspaceActions.updateMaterialThickness(1.5));
         }
     };
 
@@ -76,7 +78,7 @@ function LaserStartModal({
     const onChangeMaterialThickness = (value) => {
         // safety setting
         value = value < 0 ? 0 : value;
-        dispatch(machineActions.updateMaterialThickness(value));
+        dispatch(workspaceActions.updateMaterialThickness(value));
     };
     useEffect(() => {
         onChangeMaterialThickness(materialThickness);
@@ -133,7 +135,8 @@ function LaserStartModal({
             name: i18n._('key-Workspace/LaserStartJob-manual_mode'),
             description: () => (
                 <Trans i18nKey="key-Workspace/LaserStartJob-manual_mode_description">
-                    In <b>Manually control</b> the movement of the execution head until the laser beam converges into the smallest spot on the surface of the material. Click to <b>start the job</b>, the machine will use the current height as the laser height.
+                    In <b>Manually control</b> the movement of the execution head until the laser beam converges into the smallest spot on the surface of
+                    the material. Click to <b>start the job</b>, the machine will use the current height as the laser height.
                 </Trans>
             ),
             display: {},

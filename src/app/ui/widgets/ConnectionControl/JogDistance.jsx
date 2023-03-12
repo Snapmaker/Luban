@@ -5,7 +5,7 @@ import { includes } from 'lodash';
 import i18n from '../../../lib/i18n';
 import RepeatButton from '../../components/RepeatButton';
 import { DISTANCE_MAX, DISTANCE_MIN, DISTANCE_STEP } from './constants';
-import styles from './index.styl';
+import styles from './styles.styl';
 
 const JogDistance = (props) => {
     const { state, actions, workPosition } = props;

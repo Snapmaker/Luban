@@ -10,18 +10,22 @@ class Logger {
         this._logger = logger;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public debug(...msg: any[]): void {
         this._logger.debug(...msg);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public info(...msg: any[]): void {
         this._logger.info(...msg);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public warn(...msg: any[]): void {
         this._logger.warn(...msg);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public error(...msg: any[]): void {
         this._logger.error(...msg);
     }

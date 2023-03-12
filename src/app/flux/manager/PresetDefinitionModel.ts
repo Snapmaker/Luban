@@ -875,7 +875,7 @@ class PresetDefinitionModel {
     public category = '';
     public i18nName = '';
     public i18nCategory = '';
-    public settings: any;
+    public settings: { [key: string]: object };
     public ownKeys: string[];
 
     // init definitionId and definition

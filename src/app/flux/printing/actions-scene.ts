@@ -105,7 +105,7 @@ const applyPrintSettingsToModels = () => (dispatch, getState) => {
 };
 
 const finalizeSceneSettings = (
-    extruderDefinitions: any[],
+    extruderDefinitions: object[],
     globalQualityPreset: PresetDefinitionModel,
     extruderPresetModels: PresetDefinitionModel[],
 ) => (dispatch, getState) => {

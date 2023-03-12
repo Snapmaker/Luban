@@ -2,8 +2,10 @@
 import { isEqualWith, cloneDeep } from 'lodash';
 import { controller } from '../../lib/controller';
 import { Server } from './Server';
-import baseActions from './action-base';
 import { CUSTOM_SERVER_NAME } from '../../constants/index';
+
+import baseActions from './action-base';
+
 
 const checkIfEqual = (objArray, othArray) => {
     if (objArray.length !== othArray.length) {
@@ -22,7 +24,7 @@ const init = () => (dispatch, getState) => {
         // Receive when new servers discovered
         'machine:discover': ({ devices, type }) => {
             // Note that we may receive this event many times.
-            const { servers, connectionType } = getState().machine;
+            const { connectionType, servers } = getState().workspace;
             if (connectionType === type) {
                 const resultServers = cloneDeep(servers.filter(v => v.address));
                 resultServers.forEach((item, index) => {
@@ -51,7 +53,7 @@ const init = () => (dispatch, getState) => {
         },
         'machine:serial-discover': ({ devices, type }) => {
             // Note that we may receive this event many times.
-            const { servers, connectionType } = getState().machine;
+            const { servers, connectionType } = getState().workspace;
             // const { series } = getState().workspace;
             if (connectionType === type) {
                 const resultServers = [];

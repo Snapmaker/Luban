@@ -1,10 +1,11 @@
-import React from 'react';
-import PropTypes from 'prop-types';
 import { includes } from 'lodash';
-import Modal from '../../components/Modal';
-import { Button } from '../../components/Buttons';
-import i18n from '../../../lib/i18n';
+import PropTypes from 'prop-types';
+import React from 'react';
+
 import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING, START_JOB_MISMATCH_GCODE_INFO, START_JOB_MISMATCH_HEAD_INFO } from '../../../constants';
+import i18n from '../../../lib/i18n';
+import { Button } from '../../components/Buttons';
+import Modal from '../../components/Modal';
 
 const headTypeArr = [HEAD_PRINTING, HEAD_CNC, HEAD_LASER];
 const PreviewToRunJobModal = ({

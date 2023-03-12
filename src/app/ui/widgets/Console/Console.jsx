@@ -8,17 +8,35 @@ import { useHistory, withRouter } from 'react-router-dom';
 import settings from '../../../config/settings';
 import i18n from '../../../lib/i18n';
 import usePrevious from '../../../lib/hooks/previous';
-import { actions as machineActions } from '../../../flux/machine';
+import { actions as workspaceActions } from '../../../flux/workspace';
 import { controller } from '../../../lib/controller';
 import Terminal from './Terminal';
-import { ABSENT_OBJECT, CONNECTION_TYPE_SERIAL,
+import {
+    ABSENT_OBJECT, CONNECTION_TYPE_SERIAL,
     WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_PAUSING
 } from '../../../constants';
 
 let pubsubTokens = [];
 let unlisten = null;
 function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderStamp }) {
-    const { port, server, isConnected, connectionType, terminalHistory, consoleHistory, consoleLogs, workflowStatus, shouldHideConsole } = useSelector(state => state.machine, shallowEqual);
+    const {
+        connectionType,
+        isConnected,
+
+        port, server,
+    } = useSelector(state => state.workspace, shallowEqual);
+
+    const {
+        workflowStatus,
+    } = useSelector(state => state.workspace, shallowEqual);
+
+    const {
+        terminalHistory,
+        consoleHistory,
+        consoleLogs,
+        shouldHideConsole
+    } = useSelector(state => state.workspace, shallowEqual);
+
     const [shouldRenderFitaddon, setShouldRenderFitaddon] = useState(false);
     const history = useHistory();
     const dispatch = useDispatch();
@@ -49,7 +67,7 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
         },
         'connection:executeGcode': (gcodeArray) => {
             if (gcodeArray) {
-                dispatch(machineActions.addConsoleLogs(gcodeArray));
+                dispatch(workspaceActions.addConsoleLogs(gcodeArray));
             }
         }
     };
@@ -69,7 +87,7 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
             } else if (data === 'clear') {
                 actions.clearAll();
             } else {
-                dispatch(machineActions.executeGcode(data));
+                dispatch(workspaceActions.executeGcode(data));
             }
         },
 

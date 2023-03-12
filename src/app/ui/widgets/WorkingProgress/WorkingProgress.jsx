@@ -69,10 +69,11 @@ StopConfirmModal.propTypes = {
 
 const WorkingProgress = ({ widgetActions, controlActions }) => {
     const {
-        isConnected, workflowStatus,
+        isConnected,
+        workflowStatus,
         gcodePrintingInfo: { progress, elapsedTime, estimatedTime, total, sent, printStatus },
         gcodeFileName
-    } = useSelector(state => state.machine);
+    } = useSelector(state => state.workspace);
     const fileName = gcodeFileName;
     const [currentWorkflowStatus, setCurrentWorkflowStatus] = useState(null);
     const [isPausing, setIsPausing] = useState(false);

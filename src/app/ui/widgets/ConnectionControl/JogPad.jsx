@@ -5,7 +5,7 @@ import { Row, Col } from 'antd';
 
 import i18n from '../../../lib/i18n';
 import SvgIcon from '../../components/SvgIcon';
-import styles from './index.styl';
+import styles from './styles.styl';
 
 const JogPad = React.memo((props) => {
     const { state, actions, workPosition } = props;

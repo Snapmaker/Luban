@@ -42,7 +42,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
     });
     // Laser
     const isConnected = useSelector(state => state?.machine?.isConnected, shallowEqual);
-    const connectionType = useSelector(state => state?.machine?.connectionType, shallowEqual);
+    const connectionType = useSelector(state => state?.workspace?.connectionType, shallowEqual);
     const series = useSelector(state => state?.machine?.series, shallowEqual);
     const [cameraCaptureInfo, setCameraCaptureInfo] = useState({
         display: false,

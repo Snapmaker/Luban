@@ -2,20 +2,20 @@ import isElectron from 'is-electron';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import { CONNECTION_TYPE_SERIAL } from '../../../constants';
-import { findMachineByName, MACHINE_TOOL_HEADS } from '../../../constants/machines';
-import { RootState } from '../../../flux/index.def';
-import usePrevious from '../../../lib/hooks/previous';
-import i18n from '../../../lib/i18n';
-import UniApi from '../../../lib/uni-api';
+import { CONNECTION_TYPE_SERIAL } from '../../../../constants';
+import { findMachineByName, MACHINE_TOOL_HEADS } from '../../../../constants/machines';
+import { RootState } from '../../../../flux/index.def';
+import usePrevious from '../../../../lib/hooks/previous';
+import i18n from '../../../../lib/i18n';
+import UniApi from '../../../../lib/uni-api';
 
-import type { Machine, ToolHead } from '../../../machine-definition';
-import Anchor from '../../components/Anchor';
-import { Button } from '../../components/Buttons';
-import Modal from '../../components/Modal';
+import type { Machine, ToolHead } from '../../../../machine-definition';
+import Anchor from '../../../components/Anchor';
+import { Button } from '../../../components/Buttons';
+import Modal from '../../../components/Modal';
 
-function MismatchModal() {
-    const connectionType = useSelector((state: RootState) => state.machine.connectionType);
+const MismatchModal: React.FC = () => {
+    const connectionType = useSelector((state: RootState) => state.workspace.connectionType);
     const isConnected = useSelector((state: RootState) => state.machine?.isConnected);
 
     const machineSeries = useSelector((state: RootState) => state.machine.series);
@@ -87,7 +87,7 @@ function MismatchModal() {
                         <div>
                             {
                                 i18n._(
-                                    'key-Workspace/Mismatch-The configured Machine Model ({{machineInfo}}) does not match with the connected machine ({{connectedMachineInfo}}). To change the settings, you can go to',
+                                    'key-Workspace/Mismatch-The configured Machine Model ({{- machineInfo}}) does not match with the connected machine ({{- connectedMachineInfo}}). To change the settings, you can go to',
                                     {
                                         machineInfo: `${machine?.fullName} ${i18n._(toolHeadInfo?.label)}`,
                                         connectedMachineInfo: `${connectedMachine?.fullName || i18n._('key-Workspace/Connection-Unknown')} ${connectedToolHead?.label || ''}`,
@@ -120,6 +120,6 @@ function MismatchModal() {
             )}
         </>
     );
-}
+};
 
 export default MismatchModal;

@@ -3,6 +3,7 @@ import { Transfer, TransferDescriptor } from 'threads';
 import { BufferAttribute, DynamicDrawUsage } from 'three';
 import * as ClipperLib from '../../../shared/lib/clipper/clipper';
 import { polyOffset } from '../../../shared/lib/clipper/cLipper-adapter';
+import log from '../../lib/log';
 
 type TPoint = {
     x: number,
@@ -66,7 +67,7 @@ const generateBrim = ({ polygons, skirtBrimLineWidth, brimLineCount }: IMessage)
                 length: j
             });
         } catch (error) {
-            console.error('[web worker]: generateBrim', error);
+            log.error('[web worker]: generateBrim', error);
         } finally {
             observer.complete();
         }

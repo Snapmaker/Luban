@@ -25,9 +25,10 @@ import WorkspaceLayout from '../layouts/WorkspaceLayout';
 import { logPageView, renderWidgetList } from '../utils';
 import CNCPathWidget from '../widgets/CNCPath';
 import ConnectionWidget from '../widgets/Connection';
+import ConnectionControlWidget from '../widgets/ConnectionControl';
+import ConnectionFileTransferWidget from '../widgets/ConnectionFileTransfer';
 import ConsoleWidget from '../widgets/Console';
 
-import ControlWidget from '../widgets/Control';
 import EnclosureWidget from '../widgets/Enclosure';
 
 import JobType from '../widgets/JobType';
@@ -40,15 +41,15 @@ import MarlinWidget from '../widgets/Marlin';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import PurifierWidget from '../widgets/Purifier';
 import WebcamWidget from '../widgets/Webcam';
-import WifiTransport from '../widgets/WifiTransport';
 import WorkingProgress from '../widgets/WorkingProgress';
 import VisualizerWidget from '../widgets/WorkspaceVisualizer';
 
+
 const allWidgets = {
-    'control': ControlWidget,
     'connection': ConnectionWidget,
+    'control': ConnectionControlWidget,
+    'wifi-transport': ConnectionFileTransferWidget,
     'console': ConsoleWidget,
-    // 'gcode': GCodeWidget,
     'macro': MacroWidget,
     'macroPanel': MacroWidget,
     'purifier': PurifierWidget,
@@ -56,7 +57,6 @@ const allWidgets = {
     'visualizer': VisualizerWidget,
     'webcam': WebcamWidget,
     'printing-visualizer': PrintingVisualizer,
-    'wifi-transport': WifiTransport,
     'enclosure': EnclosureWidget,
     'laser-params': LaserParamsWidget,
     'laser-set-background': LaserSetBackground,
@@ -79,21 +79,20 @@ let workspaceVisualizerRef = null;
 
 // TODO: Workspace widgets can only support G-code based machine, add configuration
 //  to machine indicating if it supports plain G-code.
-function getUnsupportedWidgets(machine, toolHead) {
-    if (!machine) return [];
+function getUnsupportedWidgets(machineIdentifier, toolHead) {
+    if (!machineIdentifier) return [];
 
-    if ([MACHINE_SERIES.A150.identifier, MACHINE_SERIES.A250.identifier, MACHINE_SERIES.A350.identifier].includes(machine.identifier)) {
+    if ([MACHINE_SERIES.A150.identifier, MACHINE_SERIES.A250.identifier, MACHINE_SERIES.A350.identifier].includes(machineIdentifier)) {
         if (toolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
-            // return ['marlin'];
             return [];
         }
     }
 
-    if (machine.identifier === MACHINE_SERIES.J1.identifier) {
-        return ['console', 'marlin', 'control', 'macro'];
+    if (machineIdentifier === MACHINE_SERIES.J1.identifier) {
+        return ['console', 'marlin', 'control', 'machineIdentifier'];
     }
 
-    if (machine.identifier === MACHINE_SERIES.A400.identifier) {
+    if (machineIdentifier === MACHINE_SERIES.A400.identifier) {
         return ['console', 'macro'];
     }
 
@@ -108,7 +107,7 @@ function Workspace({ isPopup, onClose, style, className }) {
     const secondaryWidgets = useSelector(state => state.widget.workspace.right.widgets);
     const defaultWidgets = useSelector(state => state.widget.workspace.default.widgets);
 
-    const activeMachine = useSelector(state => state.machine.activeMachine);
+    const machineIdentifier = useSelector(state => state.workspace.machineIdentifier);
     const toolHead = useSelector(state => state.workspace.toolHead);
 
     const [previewModalShow, setPreviewModalShow] = useState(false);
@@ -260,7 +259,7 @@ function Workspace({ isPopup, onClose, style, className }) {
                     </Modal.Body>
                     <Modal.Footer>
                         <Button
-                            btnStyle="primary"
+                            type="primary"
                             onClick={reloadPage}
                         >
                             {i18n._('key-Workspace/Page-Reload')}
@@ -281,7 +280,7 @@ function Workspace({ isPopup, onClose, style, className }) {
         );
     };
 
-    const unsupported = getUnsupportedWidgets(activeMachine, toolHead);
+    const unsupported = getUnsupportedWidgets(machineIdentifier, toolHead);
 
     const leftWidgetNames = primaryWidgets.filter((widgetName) => {
         return !includes(unsupported, widgetName);

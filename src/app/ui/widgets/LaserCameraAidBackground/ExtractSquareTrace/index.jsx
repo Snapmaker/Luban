@@ -6,7 +6,7 @@ import { connect } from 'react-redux';
 import api from '../../../../api';
 import { LASER_10W_TAKE_PHOTO_POSITION } from '../../../../constants';
 import { LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES, } from '../../../../constants/machines';
-import { actions } from '../../../../flux/machine';
+import { actions as workspaceActions } from '../../../../flux/workspace';
 
 import i18n from '../../../../lib/i18n';
 import { getCurrentHeadType } from '../../../../lib/url-utils';
@@ -758,7 +758,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        executeGcodeG54: (series, headType) => dispatch(actions.executeGcodeG54(series, headType))
+        executeGcodeG54: (series, headType) => dispatch(workspaceActions.executeGcodeG54(series, headType))
     };
 };
 

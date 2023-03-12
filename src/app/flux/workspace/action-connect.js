@@ -11,12 +11,10 @@ const init = () => (dispatch) => {
     // const connectionType = machineStore.get('connection.type') || CONNECTION_TYPE_SERIAL;
     const connectionType = machineStore.get('connection.type') || CONNECTION_TYPE_WIFI;
     const connectionTimeout = machineStore.get('connection.timeout') || 3000;
-    const connectionAuto = machineStore.get('connection.isAuto') === true;
 
     dispatch(baseActions.updateState({
         connectionType,
         connectionTimeout,
-        connectionAuto
     }));
 };
 
@@ -38,11 +36,6 @@ const setConnectionTimeout = (connectionTimeout) => (dispatch) => {
     machineStore.set('connection.timeout', connectionTimeout);
 };
 
-const setConnectionAuto = (isAuto) => (dispatch) => {
-    dispatch(baseActions.updateState({ connectionAuto: isAuto }));
-    machineStore.set('connection.isAuto', isAuto);
-};
-
 /**
  * Set selected server.
  *
@@ -50,8 +43,8 @@ const setConnectionAuto = (isAuto) => (dispatch) => {
  * If 'server' is not found in 'servers' list, add it and update state
  */
 const setSelectedServer = (server) => (dispatch, getState) => {
-    const { servers } = getState().machine;
-    const oldServer = getState().machine.server;
+    const { servers, server: oldServer } = getState().workspace;
+
     // We can assume that server must be found on server list
     let find;
     if (server.address) {
@@ -59,8 +52,8 @@ const setSelectedServer = (server) => (dispatch, getState) => {
     } else if (server.port) {
         find = servers.find(s => s.port === server.port);
     }
+
     if (find && !isEqual(server, oldServer)) {
-    //     // Update server selected
         dispatch(baseActions.updateState({ server: find }));
     }
 };
@@ -70,9 +63,11 @@ const setSelectedServer = (server) => (dispatch, getState) => {
  *
  * @param server - server to be added.
  * @returns The new added server or an old server if it already exists.
+ *
+ * TODO: Move to workspace
  */
 const addServer = (server) => (dispatch, getState) => {
-    const { servers } = getState().machine;
+    const { servers } = getState().workspace;
 
     const find = servers.find(s => s.address === server.address);
 
@@ -91,10 +86,8 @@ const addServer = (server) => (dispatch, getState) => {
 };
 
 const setServerAddress = (serverAddress) => (dispatch) => {
-    const isAuto = (machineStore.get('connection.isAuto') === true);
-    dispatch(baseActions.updateState({ savedServerAddress: serverAddress, savedServerAddressIsAuto: isAuto }));
+    dispatch(baseActions.updateState({ savedServerAddress: serverAddress }));
     machineStore.set('server.address', serverAddress);
-    machineStore.set('server.isAuto', isAuto);
 };
 
 const setServerName = (name) => (dispatch) => {
@@ -127,7 +120,6 @@ export default {
 
     setConnectionType,
     setConnectionTimeout,
-    setConnectionAuto,
 
     addServer,
     setSelectedServer,

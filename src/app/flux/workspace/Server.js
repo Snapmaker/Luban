@@ -21,9 +21,8 @@ import {
     // WORKFLOW_STATUS_STOPPING
 } from '../../constants';
 import { controller } from '../../lib/controller';
-import { actions as workspaceActions } from '../workspace';
+import { actions as workspaceActions } from '.';
 
-import { actions as machineActions } from '.';
 import connectActions from './action-connect';
 import baseActions from './action-base';
 import { dispatch } from '../../store';
@@ -87,7 +86,7 @@ export class Server extends events.EventEmitter {
                     }, 1000);
                     callback && callback({ msg, text });
                 } else {
-                    dispatch(machineActions.resetMachineState(CONNECTION_TYPE_SERIAL));
+                    dispatch(workspaceActions.resetMachineState(CONNECTION_TYPE_SERIAL));
                     machineStore.set('port', this.port);
                 }
             });
@@ -96,7 +95,7 @@ export class Server extends events.EventEmitter {
     closeServer() {
         controller.emitEvent(CONNECTION_CLOSE)
             .once(CONNECTION_CLOSE, () => {
-                dispatch(machineActions.resetMachineState());
+                dispatch(workspaceActions.resetMachineState());
                 dispatch(workspaceActions.updateMachineState({
                     headType: '',
                     toolHead: ''
@@ -107,7 +106,7 @@ export class Server extends events.EventEmitter {
     closeServerImproper() {
         controller.emitEvent(CONNECTION_CLOSE_IMPROPER)
             .once(CONNECTION_CLOSE_IMPROPER, () => {
-                dispatch(machineActions.resetMachineState());
+                dispatch(workspaceActions.resetMachineState());
                 dispatch(workspaceActions.updateMachineState({
                     headType: '',
                     toolHead: ''
@@ -115,20 +114,16 @@ export class Server extends events.EventEmitter {
             });
 
         // No matter success or not, clear state
-        dispatch(machineActions.resetMachineState());
+        dispatch(workspaceActions.resetMachineState());
         dispatch(workspaceActions.updateMachineState({
             headType: '',
             toolHead: ''
         }));
     }
 
-    coordinateMove(moveOrders, gcode, jogSpeed, headType, homingModel) {
+    coordinateMove(moveOrders, gcode, jogSpeed, headType) {
         controller.emitEvent(CONNECTION_COORDINATE_MOVE, { moveOrders, gcode, jogSpeed, headType }, () => {
-            if (homingModel && gcode === 'G28') {
-                dispatch(baseActions.updateState({
-                    homingModel: false
-                }));
-            }
+            // homed
         });
     }
 
@@ -395,7 +390,7 @@ export class Server extends events.EventEmitter {
     static closeServerAfterWindowReload() {
         controller.emitEvent(CONNECTION_CLOSE)
             .once(CONNECTION_CLOSE, () => {
-                dispatch(machineActions.resetMachineState());
+                dispatch(workspaceActions.resetMachineState());
                 dispatch(workspaceActions.updateMachineState({
                     headType: '',
                     toolHead: ''

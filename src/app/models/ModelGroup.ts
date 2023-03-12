@@ -792,7 +792,7 @@ class ModelGroup extends EventEmitter {
         // TODO: Refactor this
         // if (this.series !== 'A400') {
         //    return [];
-        //}
+        // }
 
         return this.getModels<Model3D>();
     }
@@ -822,7 +822,7 @@ class ModelGroup extends EventEmitter {
         for (const model of modelArray) {
             if (!this.selectedModelArray.includes(model)) {
                 if (!model) {
-                    window.alert('blank');
+                    log.warn('missing model(s)');
                 }
                 model && this.selectedModelArray.push(model);
             }

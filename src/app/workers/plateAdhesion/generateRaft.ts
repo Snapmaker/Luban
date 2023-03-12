@@ -3,6 +3,7 @@ import { Transfer, TransferDescriptor } from 'threads';
 import { Shape, ShapeGeometry, Vector2 } from 'three';
 import * as ClipperLib from '../../../shared/lib/clipper/clipper';
 import { polyOffset } from '../../../shared/lib/clipper/cLipper-adapter';
+import log from '../../lib/log';
 
 type TPoint = {
     x: number,
@@ -40,7 +41,7 @@ const generateRaft = ({ polygons, raftMargin, skirtBrimLineWidth }: IMessage) =>
 
             observer.next(Transfer(_polygons as unknown as ArrayBuffer));
         } catch (error) {
-            console.error('[web worker]: generateRaft', error);
+            log.error('[web worker]: generateRaft', error);
         } finally {
             observer.complete();
         }

@@ -1,6 +1,7 @@
 import { useDispatch } from 'react-redux';
 
 import { PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
+import log from '../../../lib/log';
 import PresetDefinitionModel from '../../../flux/manager/PresetDefinitionModel';
 
 import { actions as printingActions } from '../../../flux/printing';
@@ -30,7 +31,7 @@ const usePresetActions = (): PresetActionsType => {
 
     const onSelectDefinitionById = (definitionId: string) => {
         // TODO:
-        console.log('onSelectDefinitionById', definitionId);
+        log.info('onSelectDefinitionById', definitionId);
     };
 
     // PresetDefinitionModel

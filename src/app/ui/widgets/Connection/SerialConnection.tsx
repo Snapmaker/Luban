@@ -12,46 +12,58 @@ import {
     isDualExtruder,
     LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
-    MACHINE_SERIES,
+    MACHINE_SERIES
 } from '../../../constants/machines';
-import { actions as machineActions } from '../../../flux/machine';
+import { RootState } from '../../../flux/index.def';
+import { actions as workspaceActions } from '../../../flux/workspace';
 import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
+import type { Machine } from '../../../machine-definition';
 
 import { Button } from '../../components/Buttons';
 import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
 
 import MachineModuleStatusBadge from './components/MachineModuleStatusBadge';
-import styles from './index.styl';
-import MismatchModal from './MismatchModal';
+import MismatchModal from './modals/MismatchModal';
+import styles from './styles.styl';
 
 let loadingTimer = null;
 
-function SerialConnection() {
+const SerialConnection: React.FC = () => {
+    const dispatch = useDispatch();
+
     const {
-        isOpen, enclosureOnline, isConnected, server, servers,
-        // connectionTimeout, airPurifier, airPurifierHasPower,
-        airPurifier, airPurifierHasPower,
-        heatedBedTemperature, laserCamera, workflowStatus, emergencyStopOnline, connectLoading
-    } = useSelector(state => state.machine);
+        servers,
+        server,
+
+        connectLoading,
+        // connectionTimeout,
+
+        isOpen,
+        isConnected,
+    } = useSelector((state: RootState) => state.workspace);
+
     const {
         toolHead, headType, machineIdentifier, isRotate
-    } = useSelector(state => state?.workspace);
+    } = useSelector((state: RootState) => state.workspace);
+
+    const {
+        enclosureOnline,
+        airPurifier,
+        airPurifierHasPower,
+        heatedBedTemperature,
+        emergencyStopOnline,
+        workflowStatus,
+    } = useSelector((state: RootState) => state.workspace);
+
     // Selected port
-    const [portState, setPortState] = useState(server);
+    const [selectedServer, setSelectedServer] = useState(server);
     // connect status: 'idle', 'connecting', 'connected'
     const [err, setErr] = useState(null);
     // UI state
     const [loadingPorts, setLoadingPorts] = useState(false);
-    const [moduleStatusList, setModuleStatusList] = useState(null);
-    const [loading, setConnectLoading] = useState(connectLoading);
-    const dispatch = useDispatch();
-
-    useEffect(() => {
-        setConnectLoading(connectLoading);
-    }, [connectLoading]);
 
     function onPortReady(data) {
         const { err: _err } = data;
@@ -62,7 +74,7 @@ function SerialConnection() {
             setErr(null);
         }
 
-        log.debug(`Connected to ${portState}.`);
+        log.debug(`Connected to ${selectedServer}.`);
     }
 
     function listPorts() {
@@ -71,6 +83,7 @@ function SerialConnection() {
         loadingTimer = setTimeout(() => {
             if (loadingTimer) {
                 setLoadingPorts(false);
+                loadingTimer = null;
             }
         }, 500);
 
@@ -96,8 +109,8 @@ function SerialConnection() {
         onChangePortOption: (option) => {
             const serverFound = servers.find(v => v.port === option.value);
             if (serverFound) {
-                dispatch(machineActions.connect.setSelectedServer(serverFound));
-                setPortState(serverFound);
+                dispatch(workspaceActions.connect.setSelectedServer(serverFound));
+                setSelectedServer(serverFound);
             }
         },
         onRefreshPorts: () => {
@@ -107,7 +120,6 @@ function SerialConnection() {
             openPort();
         },
         onClosePort: () => {
-            // setConnectLoading(true);
             closePort();
         }
 
@@ -135,8 +147,10 @@ function SerialConnection() {
         addControllerEvents();
         // refresh ports on mount
         setTimeout(() => listPorts());
+
         return () => {
             removeControllerEvents();
+
             if (loadingTimer) {
                 clearTimeout(loadingTimer);
                 loadingTimer = null;
@@ -144,7 +158,7 @@ function SerialConnection() {
         };
     }, []);
 
-    useMemo(() => {
+    const moduleStatusInfoList = useMemo(() => {
         const newModuleStatusList = [];
         if (headType) {
             // TODO
@@ -196,7 +210,7 @@ function SerialConnection() {
             });
         }
 
-        if (machineIdentifier !== MACHINE_SERIES.ORIGINAL.identifier && machineIdentifier !== MACHINE_SERIES.ORIGINAL_LZ.identifier) {
+        if (![MACHINE_SERIES.ORIGINAL.identifier, MACHINE_SERIES.ORIGINAL_LZ.identifier].includes(machineIdentifier)) {
             airPurifier && newModuleStatusList.push({
                 key: 'airPurifier',
                 moduleName: i18n._('key-Workspace/Connection-airPurifier'),
@@ -218,117 +232,140 @@ function SerialConnection() {
                 status: isRotate
             });
         }
-        setModuleStatusList(newModuleStatusList);
+
+        return newModuleStatusList;
     }, [
-        headType, airPurifier, airPurifierHasPower, toolHead, isRotate,
-        enclosureOnline, heatedBedTemperature > 0, laserCamera, emergencyStopOnline, machineIdentifier
+        machineIdentifier,
+        headType,
+        toolHead,
+        isRotate,
+        airPurifier,
+        airPurifierHasPower,
+        enclosureOnline,
+        heatedBedTemperature,
+        emergencyStopOnline,
     ]);
 
     const canRefresh = !loadingPorts && !isOpen;
     const canChangePort = canRefresh;
-    const canOpenPort = portState.port && !portState.address && !isOpen && servers.length;
+    const canOpenPort = selectedServer && selectedServer.port && !selectedServer.address && !isOpen;
 
-    const connectedMachine = useMemo(() => {
+    const connectedMachine = useMemo<Machine | null>(() => {
         return findMachineByName(machineIdentifier);
     }, [machineIdentifier]);
 
     return (
         <div>
-            {!isConnected && (
-                <div className="sm-flex justify-space-between margin-bottom-16">
-                    <Select
-                        backspaceRemoves={false}
-                        className={classNames('sm-flex-width', 'sm-flex-order-negative')}
-                        clearable={false}
-                        searchable={false}
-                        disabled={!canChangePort}
-                        name="port"
-                        noResultsText={i18n._('key-Workspace/Connection-No ports available.')}
-                        onChange={actions.onChangePortOption}
-                        options={map(servers, (o) => ({
-                            value: o.port,
-                            label: o.port,
-                            manufacturer: o.manufacturer
-                        }))}
-                        placeholder={i18n._('key-Workspace/Connection-Choose a port')}
-                        value={portState.port}
-                    />
-                    <SvgIcon
-                        className="border-default-black-5 margin-left-8 border-radius-8"
-                        size={24}
-                        borderRadius={8}
-                        name={loadingPorts ? 'Refresh' : 'Reset'}
-                        title={i18n._('key-Workspace/Connection-Refresh')}
-                        onClick={actions.onRefreshPorts}
-                        disabled={!canRefresh}
-                    />
-                </div>
-            )}
-            {isConnected && machineIdentifier && (
-                <div className="margin-bottom-16 margin-top-12">
-                    <div
-                        className={classNames(styles['connection-state'], 'padding-bottom-8', 'border-bottom-dashed-default')}
-                    >
-                        <span className={styles['connection-state-name']}>
-                            {i18n._(connectedMachine.label)}
-                        </span>
-                        <span className={styles['connection-state-icon']}>
-                            {workflowStatus === WORKFLOW_STATE_IDLE
-                            && <i className="sm-icon-14 sm-icon-idle" />}
-                            {workflowStatus === WORKFLOW_STATE_PAUSED
-                            && <i className="sm-icon-14 sm-icon-paused" />}
-                            {workflowStatus === WORKFLOW_STATE_RUNNING
-                            && <i className="sm-icon-14 sm-icon-running" />}
-                        </span>
+            {
+                !isConnected && (
+                    <div className="sm-flex justify-space-between margin-bottom-16">
+                        <Select
+                            backspaceRemoves={false}
+                            className={classNames('sm-flex-width', 'sm-flex-order-negative')}
+                            clearable={false}
+                            searchable={false}
+                            disabled={!canChangePort}
+                            name="port"
+                            noResultsText={i18n._('key-Workspace/Connection-No ports available.')}
+                            onChange={actions.onChangePortOption}
+                            options={map(servers, (o) => ({
+                                value: o.port,
+                                label: o.port,
+                                manufacturer: o.manufacturer
+                            }))}
+                            placeholder={i18n._('key-Workspace/Connection-Choose a port')}
+                            value={selectedServer && selectedServer.port || ''}
+                        />
+                        <SvgIcon
+                            className="border-default-black-5 margin-left-8 border-radius-8"
+                            size={24}
+                            borderRadius={8}
+                            name={loadingPorts ? 'Refresh' : 'Reset'}
+                            title={i18n._('key-Workspace/Connection-Refresh')}
+                            onClick={actions.onRefreshPorts}
+                            disabled={!canRefresh}
+                        />
                     </div>
-                    {moduleStatusList && moduleStatusList.length && (
-                        <div className="sm-flex sm-flex-wrap">
-                            {
-                                moduleStatusList.map(item => (
-                                    <MachineModuleStatusBadge
-                                        key={item.moduleName}
-                                        moduleName={item.moduleName}
-                                        status={item.status}
-                                    />
-                                ))
-                            }
+                )
+            }
+            {
+                isConnected && machineIdentifier && (
+                    <div className="margin-bottom-16 margin-top-12">
+                        <div
+                            className={classNames(styles['connection-state'], 'padding-bottom-8', 'border-bottom-dashed-default')}
+                        >
+                            <span className={styles['connection-state-name']}>
+                                {i18n._(connectedMachine.label)}
+                            </span>
+                            <span className={styles['connection-state-icon']}>
+                                {workflowStatus === WORKFLOW_STATE_IDLE
+                                    && <i className="sm-icon-14 sm-icon-idle" />}
+                                {workflowStatus === WORKFLOW_STATE_PAUSED
+                                    && <i className="sm-icon-14 sm-icon-paused" />}
+                                {workflowStatus === WORKFLOW_STATE_RUNNING
+                                    && <i className="sm-icon-14 sm-icon-running" />}
+                            </span>
                         </div>
-                    )}
-                </div>
-            )}
+                        {/* Render status badge for each machine module */}
+                        {
+                            moduleStatusInfoList.length > 0 && (
+                                <div className="sm-flex sm-flex-wrap">
+                                    {
+                                        moduleStatusInfoList.map(item => (
+                                            <MachineModuleStatusBadge
+                                                key={item.moduleName}
+                                                moduleName={item.moduleName}
+                                                status={item.status}
+                                            />
+                                        ))
+                                    }
+                                </div>
+                            )
+                        }
+                    </div>
+                )
+            }
 
             <div>
-                {!isConnected && (
-                    <Button
-                        width="120px"
-                        type="primary"
-                        priority="level-two"
-                        disabled={!canOpenPort}
-                        onClick={actions.onOpenPort}
-                        loading={loading}
-                        innerClassNames="sm-flex-important justify-center"
-                    >
-                        {!loading && i18n._('key-Workspace/Connection-Connect')}
-                    </Button>
-                )}
-                {isConnected && (
-                    <Button
-                        width="120px"
-                        type="default"
-                        priority="level-two"
-                        onClick={actions.onClosePort}
-                        loading={loading}
-                    >
-                        {!loading && i18n._('key-Workspace/Connection-Disconnect')}
-                    </Button>
-                )}
-                {err && (
-                    <span className="margin-horizontal-8">{err}</span>
-                )}
+                {
+                    !isConnected && (
+                        <Button
+                            width="120px"
+                            type="primary"
+                            priority="level-two"
+                            disabled={!canOpenPort}
+                            onClick={actions.onOpenPort}
+                            loading={connectLoading}
+                            innerClassNames="sm-flex-important justify-center"
+                        >
+                            {!connectLoading && i18n._('key-Workspace/Connection-Connect')}
+                        </Button>
+                    )
+                }
+                {
+                    isConnected && (
+                        <Button
+                            width="120px"
+                            type="default"
+                            priority="level-two"
+                            onClick={actions.onClosePort}
+                            loading={connectLoading}
+                        >
+                            {!connectLoading && i18n._('key-Workspace/Connection-Disconnect')}
+                        </Button>
+                    )
+                }
+                {
+                    err && (
+                        <span className="margin-horizontal-8">{err}</span>
+                    )
+                }
             </div>
+
+            {/* Machine Mismatch Modal */}
             <MismatchModal />
         </div>
     );
-}
+};
 
 export default SerialConnection;

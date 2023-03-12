@@ -23,7 +23,6 @@ import {
     WORKFLOW_STATUS_RUNNING,
     WORKFLOW_STATUS_UNKNOWN
 } from '../../../constants';
-import { actions as machineActions } from '../../../flux/machine';
 import { actions as workspaceActions, WORKSPACE_STAGE } from '../../../flux/workspace';
 import { controller } from '../../../lib/controller';
 
@@ -58,7 +57,7 @@ class Visualizer extends PureComponent {
 
         uploadState: PropTypes.string.isRequired,
         boundingBox: PropTypes.object,
-        server: PropTypes.object.isRequired,
+        server: PropTypes.object,
         connectionType: PropTypes.string.isRequired,
         workflowStatus: PropTypes.string,
         renderState: PropTypes.string.isRequired,
@@ -267,6 +266,8 @@ class Visualizer extends PureComponent {
             return (this.props.headType === HEAD_LASER);
         },
         handleRun: () => {
+            console.log('handleRun');
+
             const {
                 server,
                 workflowStatus,
@@ -826,37 +827,46 @@ class Visualizer extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const machine = state.machine;
     const workspace = state.workspace;
     const laser = state.laser;
 
+    // connection
+    const {
+        connectionType
+    } = state.workspace;
+
+    // connected server
+    const {
+        server
+    } = state.workspace;
+
     return {
-        server: machine.server,
-        pause3dpStatus: machine.pause3dpStatus,
-        doorSwitchCount: machine.doorSwitchCount,
-        isEmergencyStopped: machine.isEmergencyStopped,
-        isEnclosureDoorOpen: machine.isEnclosureDoorOpen,
-        laser10WErrorState: machine.laser10WErrorState,
+        connectionType,
+
+        pause3dpStatus: workspace.pause3dpStatus,
+        doorSwitchCount: workspace.doorSwitchCount,
+        isEmergencyStopped: workspace.isEmergencyStopped,
+        isEnclosureDoorOpen: workspace.isEnclosureDoorOpen,
+        laser10WErrorState: workspace.laser10WErrorState,
+
         headType: workspace.headType,
         toolHead: workspace.toolHead,
-        workflowStatus: machine.workflowStatus,
-        isConnected: machine.isConnected,
-        connectionType: machine.connectionType,
+        workflowStatus: workspace.workflowStatus,
         uploadState: workspace.uploadState,
         gcodeList: workspace.gcodeList,
         gcodeFile: workspace.gcodeFile,
 
-        gcodePrintingInfo: machine.gcodePrintingInfo,
-        workPosition: machine.workPosition,
-        isLaserPrintAutoMode: machine.isLaserPrintAutoMode,
-        // type
-        materialThickness: machine.materialThickness,
-        materialThicknessSource: machine.materialThicknessSource,
+        gcodePrintingInfo: workspace.gcodePrintingInfo,
+        isLaserPrintAutoMode: workspace.isLaserPrintAutoMode,
+
+        // laser camera capture
+        materialThickness: workspace.materialThickness,
+        materialThicknessSource: workspace.materialThicknessSource,
         background: laser.background,
         isRotate: workspace.isRotate,
+
         // type
-        laserFocalLength: machine.laserFocalLength,
-        originOffset: machine.originOffset,
+        laserFocalLength: workspace.laserFocalLength,
 
         modelGroup: workspace.modelGroup,
         renderState: workspace.renderState,
@@ -865,9 +875,17 @@ const mapStateToProps = (state) => {
         stage: workspace.stage,
         progress: workspace.progress,
 
+        // connection
+        server,
+        isConnected: workspace.isConnected,
+
         // actual machine
         machineIdentifier: workspace.machineIdentifier,
         machineSize: workspace.machineSize,
+
+        // machine state
+        workPosition: workspace.workPosition,
+        originOffset: workspace.originOffset,
     };
 };
 
@@ -876,8 +894,8 @@ const mapDispatchToProps = (dispatch) => ({
     unloadGcode: () => dispatch(workspaceActions.unloadGcode()),
     setGcodePrintingIndex: (index) => dispatch(workspaceActions.setGcodePrintingIndex(index)),
 
-    executeGcode: (gcode, context, cmd) => dispatch(machineActions.executeGcode(gcode, context, cmd)),
-    updatePause3dpStatus: (pause3dpStatus) => dispatch(machineActions.updatePause3dpStatus(pause3dpStatus))
+    executeGcode: (gcode, context, cmd) => dispatch(workspaceActions.executeGcode(gcode, context, cmd)),
+    updatePause3dpStatus: (pause3dpStatus) => dispatch(workspaceActions.updatePause3dpStatus(pause3dpStatus))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Visualizer);

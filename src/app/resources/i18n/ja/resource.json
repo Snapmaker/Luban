@@ -1922,7 +1922,7 @@
     "key-Workspace/Mismatch-Inconsistent_Machine_Model": "機種が一致しません",
     "key-Workspace/Mismatch-Machine Settings": "プリンター設定",
     "key-Workspace/Mismatch-Synchronize_Nozzle_Diameter": "ノズル径同期",
-    "key-Workspace/Mismatch-The configured Machine Model ({{machineInfo}}) does not match with the connected machine ({{connectedMachineInfo}}). To change the settings, you can go to": "現在の機種設定（{{machineInfo}}）と実際の接続機種（{{connectedMachineInfo}}）が一致していません。変更するには、次のページに進んでください。",
+    "key-Workspace/Mismatch-The configured Machine Model ({{- machineInfo}}) does not match with the connected machine ({{- connectedMachineInfo}}). To change the settings, you can go to": "現在の機種設定（{{- machineInfo}}）と実際の接続機種（{{- connectedMachineInfo}}）が一致していません。変更するには、次のページに進んでください。",
     "key-Workspace/Mismatch-The configured Nozzle Diameter ({{diameterInfo}}) is inconsistent with that of the connected machine ({{connectedDameterInfo}}). Luban has updated the configuration to be consistent with the machine nozzle.": "現在設定されているノズル径({{diameterInfo}})と実際に接続されたノズル径({{connectedDameterInfo}})が一致していないため、自動的にプリンターの実際のノズル径に更新されました。",
     "key-Workspace/Page-3D rendering...": "3Dレンダリング中...",
     "key-Workspace/Page-A problem caused the server to stop working correctly. Check the server status and try again.": "問題によりサーバーが動作を正しく停止しました。サーバーの状態をチェックし、再度お試しください。",

@@ -1922,7 +1922,7 @@
     "key-Workspace/Mismatch-Inconsistent_Machine_Model": "机器型号不符",
     "key-Workspace/Mismatch-Machine Settings": "机器设置。",
     "key-Workspace/Mismatch-Synchronize_Nozzle_Diameter": "喷嘴直径同步",
-    "key-Workspace/Mismatch-The configured Machine Model ({{machineInfo}}) does not match with the connected machine ({{connectedMachineInfo}}). To change the settings, you can go to": "当前设置机型（{{machineInfo}}）与实际连接机型（{{connectedMachineInfo}}）不一致，需修改可前往",
+    "key-Workspace/Mismatch-The configured Machine Model ({{- machineInfo}}) does not match with the connected machine ({{- connectedMachineInfo}}). To change the settings, you can go to": "当前设置机型（{{- machineInfo}}）与实际连接机型（{{- connectedMachineInfo}}）不一致，需修改可前往",
     "key-Workspace/Mismatch-The configured Nozzle Diameter ({{diameterInfo}}) is inconsistent with that of the connected machine ({{connectedDameterInfo}}). Luban has updated the configuration to be consistent with the machine nozzle.": "当前设置的喷嘴直径（{{diameterInfo}}）与实际连接的喷嘴直径（{{connectedDameterInfo}}）不一致，已自动为您将设置更新为机器的实际喷嘴直径。",
     "key-Workspace/Page-3D rendering...": "3D 渲染中……",
     "key-Workspace/Page-A problem caused the server to stop working correctly. Check the server status and try again.": "服务器停止正常工作。检查服务器状态并重试。",
