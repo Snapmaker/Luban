@@ -343,7 +343,6 @@ const NetworkConnection: React.FC = () => {
     // Open server
     //
     const openServer = useCallback(() => {
-        console.log('selectedServer = ', selectedServer);
         if (!selectedServer) {
             return;
         }
@@ -440,7 +439,7 @@ const NetworkConnection: React.FC = () => {
      * `this.state.server` is used to be displayed in in dropdown menu.
      */
     const autoSetServer = useCallback((_servers: Server[], _selectedServer: Server | null) => {
-        let find: Server | null = null;
+        let find: Server | undefined;
         if (_selectedServer) {
             find = _servers.find(_server => _server.name === _selectedServer.name
                 && _server.address === _selectedServer.address);
@@ -474,8 +473,6 @@ const NetworkConnection: React.FC = () => {
         if (connectionType !== ConnectionType.WiFi) {
             return;
         }
-
-        console.log('connectionStatus =', connectionStatus);
 
         if (prevProps) {
             if (prevProps.connectionStatus !== CONNECTION_STATUS_CONNECTING && connectionStatus === CONNECTION_STATUS_CONNECTING) {

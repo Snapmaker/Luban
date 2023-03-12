@@ -79,20 +79,20 @@ let workspaceVisualizerRef = null;
 
 // TODO: Workspace widgets can only support G-code based machine, add configuration
 //  to machine indicating if it supports plain G-code.
-function getUnsupportedWidgets(machine, toolHead) {
-    if (!machine) return [];
+function getUnsupportedWidgets(machineIdentifier, toolHead) {
+    if (!machineIdentifier) return [];
 
-    if ([MACHINE_SERIES.A150.identifier, MACHINE_SERIES.A250.identifier, MACHINE_SERIES.A350.identifier].includes(machine.identifier)) {
+    if ([MACHINE_SERIES.A150.identifier, MACHINE_SERIES.A250.identifier, MACHINE_SERIES.A350.identifier].includes(machineIdentifier)) {
         if (toolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
             return [];
         }
     }
 
-    if (machine.identifier === MACHINE_SERIES.J1.identifier) {
-        return ['console', 'marlin', 'control', 'macro'];
+    if (machineIdentifier === MACHINE_SERIES.J1.identifier) {
+        return ['console', 'marlin', 'control', 'machineIdentifier'];
     }
 
-    if (machine.identifier === MACHINE_SERIES.A400.identifier) {
+    if (machineIdentifier === MACHINE_SERIES.A400.identifier) {
         return ['console', 'macro'];
     }
 
@@ -107,7 +107,7 @@ function Workspace({ isPopup, onClose, style, className }) {
     const secondaryWidgets = useSelector(state => state.widget.workspace.right.widgets);
     const defaultWidgets = useSelector(state => state.widget.workspace.default.widgets);
 
-    const activeMachine = useSelector(state => state.machine.activeMachine);
+    const machineIdentifier = useSelector(state => state.workspace.machineIdentifier);
     const toolHead = useSelector(state => state.workspace.toolHead);
 
     const [previewModalShow, setPreviewModalShow] = useState(false);
@@ -280,7 +280,7 @@ function Workspace({ isPopup, onClose, style, className }) {
         );
     };
 
-    const unsupported = getUnsupportedWidgets(activeMachine, toolHead);
+    const unsupported = getUnsupportedWidgets(machineIdentifier, toolHead);
 
     const leftWidgetNames = primaryWidgets.filter((widgetName) => {
         return !includes(unsupported, widgetName);

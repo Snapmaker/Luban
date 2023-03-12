@@ -133,8 +133,6 @@ export const actions = {
                 } = state;
                 const { seriesSize } = state;
 
-                log.info('connection:connected, state =', state);
-
                 dispatch(baseActions.updateState({
                     isHomed: isHomed,
                     isMoving,
