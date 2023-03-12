@@ -1,5 +1,5 @@
-import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import SetBackground from './SetBackground';
 
@@ -26,7 +26,7 @@ class LaserAidBackgroundWidget extends PureComponent {
     }
 }
 const mapStateToProps = (state) => {
-    const { headType, isConnected } = state.machine;
+    const { headType, isConnected } = state.workspace;
 
     return {
         isConnected,

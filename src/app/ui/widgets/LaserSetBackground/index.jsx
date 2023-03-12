@@ -46,10 +46,10 @@ class LaserSetBackgroundWidget extends PureComponent {
     }
 }
 const mapStateToProps = (state) => {
-    const { isConnected } = state.machine;
+    const { isConnected } = state.workspace;
 
     return {
-        isConnected
+        isConnected,
     };
 };
 

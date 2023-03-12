@@ -20,8 +20,10 @@ import styles from './index.styl';
 const STATUS_IDLE = 'idle';
 
 const Macro = (({ updateModal, openModal, macros }) => {
-    const workflowStatus = useSelector(state => state.machine.workflowStatus);
-    const isConnected = useSelector(state => state.machine.isConnected);
+    const { isConnected } = useSelector(state => state.workspace);
+
+    const { workflowStatus } = useSelector(state => state.workspace);
+
     const [macrosState, setMacrosState] = useState([]);
     const dispatch = useDispatch();
 

@@ -27,12 +27,16 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
     const canUndo = useSelector(state => state[headType]?.history?.canUndo, shallowEqual);
     const isRotate = useSelector(state => state[headType]?.materials?.isRotate, shallowEqual);
     const modelGroup = useSelector(state => state[headType]?.modelGroup, shallowEqual);
+
     const machineSeries = useSelector(state => state?.machine?.series);
     const machineToolHead = useSelector(state => state?.machine?.toolHead);
-    const workspaceSeries = useSelector(state => state?.workspace?.series);
-    const workspaceHeadType = useSelector(state => state?.workspace?.headType);
-    const workspaceToolHead = useSelector(state => state?.workspace?.toolHead);
-    const workspaceIsRotate = useSelector(state => state?.workspace?.isRotate);
+
+    const {
+        machineIdentifier: connectedMachineIdentifier,
+        headType: workspaceHeadType,
+        toolHead: workspaceToolHead,
+        isRotate: workspaceIsRotate,
+    } = useSelector(state => state.workspace);
 
     const dispatch = useDispatch();
 
@@ -40,10 +44,11 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
         series: machineSeries,
         toolHead: machineToolHead[`${headType}Toolhead`]
     });
+
     // Laser
-    const isConnected = useSelector(state => state?.machine?.isConnected, shallowEqual);
-    const connectionType = useSelector(state => state?.workspace?.connectionType, shallowEqual);
+    const { connectionType, isConnected } = useSelector(state => state.workspace, shallowEqual);
     const series = useSelector(state => state?.machine?.series, shallowEqual);
+
     const [cameraCaptureInfo, setCameraCaptureInfo] = useState({
         display: false,
         mode: '',
@@ -327,7 +332,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             actions: []
         };
         const content = (() => {
-            if (!isOriginalSeries && (workspaceSeries !== machineSeries || workspaceHeadType !== HEAD_LASER
+            if (!isOriginalSeries && (connectedMachineIdentifier !== machineSeries || workspaceHeadType !== HEAD_LASER
                 || machineToolHead.laserToolhead !== workspaceToolHead || workspaceIsRotate)) {
                 // todo, ui
                 return (

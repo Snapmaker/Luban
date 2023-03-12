@@ -13,11 +13,10 @@ import MachineSettings from './MachineSettings';
 const MACHINE_TAB = 'machine';
 const MATERIAL_TAB = 'material';
 const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
-    const machineState = useSelector(state => state?.machine);
-    const workspaceState = useSelector(state => state?.workspace);
+    const { series, toolHead, isConnected, server } = useSelector(state => state.workspace);
 
-    const { series, toolHead, isConnected, server } = machineState;
-    const { series: connectSerial } = workspaceState;
+    const { series: connectSerial } = useSelector(state => state.workspace);
+
     const [selectTab, setSelectTab] = useState(MATERIAL_TAB);
     const leftDiameter = useSelector(
         (state) => state.printing?.extruderLDefinition?.settings?.machine_nozzle_size

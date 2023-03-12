@@ -1050,8 +1050,7 @@ export const actions = {
      * Execute G-code.
      */
     executeGcode: (gcode, context = null, cmd = undefined) => (dispatch, getState) => {
-        const machine = getState().machine;
-        const { homingModal, isConnected } = machine;
+        const { homingModal, isConnected } = getState().workspace;
         if (!isConnected) {
             if (homingModal) {
                 dispatch(

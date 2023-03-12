@@ -366,16 +366,20 @@ function getStarterProject(series, isDual) {
 }
 
 function Printing({ location }) {
-    const series = useSelector(state => state?.machine?.series);
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions);
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId);
     const defaultMaterialIdRight = useSelector(state => state?.printing?.defaultMaterialIdRight);
     const leftMaterial = find(materialDefinitions, { definitionId: defaultMaterialId });
     const rightMaterial = find(materialDefinitions, { definitionId: defaultMaterialIdRight });
-    const machineState = useSelector(state => state?.machine);
+
+    const series = useSelector(state => state?.machine?.series);
+    const { toolHead: { printingToolhead } } = useSelector(state => state.machine, shallowEqual);
     const activeMachine = useSelector(state => state.machine.activeMachine);
 
-    const { isConnected, toolHead: { printingToolhead } } = machineState;
+    const {
+        isConnected,
+    } = useSelector(state => state.workspace, shallowEqual);
+
     const isOriginal = includes(series, 'Original');
     const isDual = isDualExtruder(printingToolhead);
 
