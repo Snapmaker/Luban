@@ -14,8 +14,6 @@ import styles from './styles.styl';
 let bodyElement: HTMLBodyElement | null = null;
 
 const blockScrolling = () => {
-    console.log('blockScrolling', bodyElement);
-
     if (!bodyElement) {
         bodyElement = document.querySelector('body');
     }
@@ -42,7 +40,13 @@ declare type ModalProps = AntdModalProps & {
     onClose?: (e: React.MouseEvent<HTMLElement>) => void;
 };
 
-const Modal: React.FC<ModalProps> = React.memo((props) => {
+type ModalType = React.FC<ModalProps> & {
+    Header?: typeof Title;
+    Body?: typeof Body;
+    Footer?: typeof Footer;
+};
+
+const Modal: ModalType = React.memo((props) => {
     const {
         centered = true,
         wrapClassName = 'modal-wrapper',
@@ -112,18 +116,6 @@ const Modal: React.FC<ModalProps> = React.memo((props) => {
         </AntdModal>
     );
 });
-
-/*
-Modal.propTypes = {
-    ...AntdModal.propTypes,
-    modalWrapperClassName: PropTypes.string,
-    centered: PropTypes.bool,
-    tile: PropTypes.bool,
-    visible: PropTypes.bool,
-    onClose: PropTypes.func,
-    className: PropTypes.string,
-};
-*/
 
 Modal.Header = Title;
 Modal.Body = Body;

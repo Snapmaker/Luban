@@ -13,7 +13,7 @@ import api from '../../../api';
 // import { Button } from '../../components/Buttons';
 // import Space from '../../components/Space';
 import i18n from '../../../lib/i18n';
-import { actions as machineActions } from '../../../flux/machine';
+import { actions as workspaceActions } from '../../../flux/workspace';
 
 import styles from './index.styl';
 
@@ -28,7 +28,7 @@ const Macro = (({ updateModal, openModal, macros }) => {
     const actions = {
         executeGcode: (gcode) => {
             gcode = gcode.trim();
-            dispatch(machineActions.executeGcode(gcode));
+            dispatch(workspaceActions.executeGcode(gcode));
         },
         runMacro: (macro) => {
             api.macros.read(macro.id)

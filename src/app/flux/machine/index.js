@@ -24,8 +24,6 @@ import { actions as editorActions } from '../editor';
 import PresetDefinitionModel from '../manager/PresetDefinitionModel';
 import { actions as printingActions } from '../printing';
 import { actions as widgetActions } from '../widget';
-import FixedArray from './FixedArray';
-import History from './History';
 
 import baseActions, { ACTION_UPDATE_STATE } from './action-base';
 /* eslint-disable import/no-cycle */
@@ -59,45 +57,16 @@ const INITIAL_STATE = {
     laserSize: MACHINE_SERIES.ORIGINAL.metadata.size, // TODO: replace laserSize
     // endregion
 
-    // Console
-    terminalHistory: new FixedArray(1000),
-    consoleHistory: new History(1000),
-    consoleLogs: [],
     // Serial port
 
     zAxisModule: null,
 
-    isEnclosureDoorOpen: false,
-    doorSwitchCount: 0,
-
     // region Machine Status 2 TODO
-    laserFocalLength: null,
     laserPower: null,
     headStatus: null,
 
-    laserCamera: false,
-    isFilamentOut: false,
-
-    // 0 byte: state
-    // 1 byte: temperature error
-    // 2 byte: angel error
-    laser10WErrorState: 0,
-
-    pause3dpStatus: {
-        pausing: false,
-        pos: null
-    },
     // endregion
 
-    gcodePrintingInfo: {
-        sent: 0,
-        received: 0,
-        total: 0,
-        startTime: 0,
-        finishTime: 0,
-        elapsedTime: 0,
-        remainingTime: 0
-    },
     printingCustomConfigs: [
         'layer_height',
         'infill_sparse_density',
@@ -424,9 +393,6 @@ export const actions = {
         dispatch(baseActions.updateState({ laserSize }));
     },
 
-    updatePause3dpStatus: (pause3dpStatus) => (dispatch) => {
-        dispatch(baseActions.updateState({ pause3dpStatus }));
-    },
 
     // region Enclosure
     getEnclosureState: () => () => {
@@ -449,16 +415,6 @@ export const actions = {
         controller.writeln(`M1025 M${moduleId}`, { source: 'query' });
     },
     // endregion
-
-    addConsoleLogs: (consoleLogs) => (dispatch) => {
-        if (Array.isArray(consoleLogs)) {
-            dispatch(
-                baseActions.updateState({
-                    consoleLogs: consoleLogs
-                })
-            );
-        }
-    },
 
     setShouldShowCncWarning: (value) => (dispatch) => {
         const version = setting.version;

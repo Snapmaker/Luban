@@ -8,7 +8,6 @@ import { useHistory, withRouter } from 'react-router-dom';
 import settings from '../../../config/settings';
 import i18n from '../../../lib/i18n';
 import usePrevious from '../../../lib/hooks/previous';
-import { actions as machineActions } from '../../../flux/machine';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import { controller } from '../../../lib/controller';
 import Terminal from './Terminal';
@@ -21,9 +20,23 @@ let pubsubTokens = [];
 let unlisten = null;
 function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderStamp }) {
     const {
-        port, server, isConnected, terminalHistory, consoleHistory, consoleLogs, workflowStatus, shouldHideConsole
-    } = useSelector(state => state.machine, shallowEqual);
-    const { connectionType } = useSelector(state => state.workspace, shallowEqual);
+        connectionType,
+        isConnected,
+
+        port, server,
+    } = useSelector(state => state.workspace, shallowEqual);
+
+    const {
+        workflowStatus,
+    } = useSelector(state => state.workspace, shallowEqual);
+
+    const {
+        terminalHistory,
+        consoleHistory,
+        consoleLogs,
+        shouldHideConsole
+    } = useSelector(state => state.workspace, shallowEqual);
+
     const [shouldRenderFitaddon, setShouldRenderFitaddon] = useState(false);
     const history = useHistory();
     const dispatch = useDispatch();
@@ -54,7 +67,7 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
         },
         'connection:executeGcode': (gcodeArray) => {
             if (gcodeArray) {
-                dispatch(machineActions.addConsoleLogs(gcodeArray));
+                dispatch(workspaceActions.addConsoleLogs(gcodeArray));
             }
         }
     };

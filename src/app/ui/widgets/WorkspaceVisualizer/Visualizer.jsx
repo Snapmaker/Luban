@@ -23,7 +23,6 @@ import {
     WORKFLOW_STATUS_RUNNING,
     WORKFLOW_STATUS_UNKNOWN
 } from '../../../constants';
-import { actions as machineActions } from '../../../flux/machine';
 import { actions as workspaceActions, WORKSPACE_STAGE } from '../../../flux/workspace';
 import { controller } from '../../../lib/controller';
 
@@ -828,25 +827,31 @@ class Visualizer extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const machine = state.machine;
     const workspace = state.workspace;
     const laser = state.laser;
 
+    // connection
+    const {
+        connectionType
+    } = state.workspace;
+
+    // connected server
     const {
         server
     } = state.workspace;
 
     return {
-        pause3dpStatus: machine.pause3dpStatus,
-        doorSwitchCount: machine.doorSwitchCount,
-        isEmergencyStopped: machine.isEmergencyStopped,
-        isEnclosureDoorOpen: machine.isEnclosureDoorOpen,
-        laser10WErrorState: machine.laser10WErrorState,
+        connectionType,
+
+        pause3dpStatus: workspace.pause3dpStatus,
+        doorSwitchCount: workspace.doorSwitchCount,
+        isEmergencyStopped: workspace.isEmergencyStopped,
+        isEnclosureDoorOpen: workspace.isEnclosureDoorOpen,
+        laser10WErrorState: workspace.laser10WErrorState,
 
         headType: workspace.headType,
         toolHead: workspace.toolHead,
         workflowStatus: workspace.workflowStatus,
-        connectionType: workspace.connectionType,
         uploadState: workspace.uploadState,
         gcodeList: workspace.gcodeList,
         gcodeFile: workspace.gcodeFile,
@@ -890,7 +895,7 @@ const mapDispatchToProps = (dispatch) => ({
     setGcodePrintingIndex: (index) => dispatch(workspaceActions.setGcodePrintingIndex(index)),
 
     executeGcode: (gcode, context, cmd) => dispatch(workspaceActions.executeGcode(gcode, context, cmd)),
-    updatePause3dpStatus: (pause3dpStatus) => dispatch(machineActions.updatePause3dpStatus(pause3dpStatus))
+    updatePause3dpStatus: (pause3dpStatus) => dispatch(workspaceActions.updatePause3dpStatus(pause3dpStatus))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Visualizer);

@@ -5,6 +5,9 @@ import {
     WORKFLOW_STATUS_UNKNOWN
 } from '../../constants';
 
+import FixedArray from '../machine/FixedArray';
+import History from '../machine/History';
+
 import { controller } from '../../lib/controller';
 
 export const WORKSPACE_STAGE = {
@@ -134,6 +137,9 @@ export const initialState: WorkspaceState = {
     enclosureLight: 0,
     enclosureFan: 0,
     enclosureOnline: false,
+    isEnclosureDoorOpen: false,
+    doorSwitchCount: 0,
+
 
     // Air purifier
     airPurifier: false,
@@ -144,6 +150,19 @@ export const initialState: WorkspaceState = {
 
     // Emergency Stop module
     emergencyStopOnline: false,
+    isEmergencyStopped: false,
+    pause3dpStatus: {
+        pausing: false,
+        pos: null
+    },
+
+    // 0 byte: state
+    // 1 byte: temperature error
+    // 2 byte: angel error
+    laser10WErrorState: 0,
+
+    laserCamera: false,
+    laserFocalLength: null,
 
     // modules status
     moduleStatusList: {},
@@ -201,4 +220,9 @@ export const initialState: WorkspaceState = {
         elapsedTime: 0,
         remainingTime: 0
     },
+
+    // Console
+    terminalHistory: new FixedArray(1000),
+    consoleHistory: new History(1000),
+    consoleLogs: [],
 };

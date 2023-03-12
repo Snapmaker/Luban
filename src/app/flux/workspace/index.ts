@@ -1113,7 +1113,7 @@ export const actions = {
 
     // TODO： change 'port' to 'server'
     close: (options, isEmergencyStopped) => (dispatch, getState) => {
-        const state = getState().machine;
+        const state = getState().workspace;
         const ports = [...state.ports];
         if (!isEmpty(ports)) {
             const { port } = options;
@@ -1175,6 +1175,11 @@ export const actions = {
         }));
     },
 
+    // 3DP
+    updatePause3dpStatus: (pause3dpStatus) => (dispatch) => {
+        dispatch(baseActions.updateState({ pause3dpStatus }));
+    },
+
     // Laser
     updateIsLaserPrintAutoMode: (isLaserPrintAutoMode: boolean) => (dispatch) => {
         dispatch(baseActions.updateState({ isLaserPrintAutoMode }));
@@ -1185,6 +1190,17 @@ export const actions = {
     },
     updateMaterialThicknessSource: (source: string) => (dispatch) => {
         dispatch(baseActions.updateState({ materialThicknessSource: source }));
+    },
+
+    // Console widget
+    addConsoleLogs: (consoleLogs: string[]) => (dispatch) => {
+        if (Array.isArray(consoleLogs)) {
+            dispatch(
+                baseActions.updateState({
+                    consoleLogs: consoleLogs
+                })
+            );
+        }
     },
 };
 
