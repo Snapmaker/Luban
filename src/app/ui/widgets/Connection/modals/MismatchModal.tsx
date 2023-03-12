@@ -1,6 +1,6 @@
 import isElectron from 'is-electron';
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { shallowEqual, useSelector } from 'react-redux';
 
 import { CONNECTION_TYPE_SERIAL } from '../../../../constants';
 import { findMachineByName, MACHINE_TOOL_HEADS } from '../../../../constants/machines';
@@ -15,8 +15,10 @@ import { Button } from '../../../components/Buttons';
 import Modal from '../../../components/Modal';
 
 const MismatchModal: React.FC = () => {
-    const connectionType = useSelector((state: RootState) => state.workspace.connectionType);
-    const isConnected = useSelector((state: RootState) => state.machine?.isConnected);
+    const {
+        connectionType,
+        isConnected,
+    } = useSelector((state: RootState) => state.workspace, shallowEqual);
 
     const machineSeries = useSelector((state: RootState) => state.machine.series);
     const machineToolHead = useSelector((state: RootState) => state.machine.toolHead);
@@ -69,7 +71,6 @@ const MismatchModal: React.FC = () => {
         <>
             {showMismatchModal && (
                 <Modal
-                    showCloseButton
                     onClose={() => {
                         setShowMismatchModal(false);
                     }}
@@ -90,10 +91,11 @@ const MismatchModal: React.FC = () => {
                                     'key-Workspace/Mismatch-The configured Machine Model ({{- machineInfo}}) does not match with the connected machine ({{- connectedMachineInfo}}). To change the settings, you can go to',
                                     {
                                         machineInfo: `${machine?.fullName} ${i18n._(toolHeadInfo?.label)}`,
-                                        connectedMachineInfo: `${connectedMachine?.fullName || i18n._('key-Workspace/Connection-Unknown')} ${connectedToolHead?.label || ''}`,
+                                        connectedMachineInfo: `${connectedMachine?.fullName || i18n._('key-Workspace/Connection-Unknown')} ${i18n._(connectedToolHead?.label) || ''}`,
                                     }
                                 )
                             }
+                            <span className="display-inline-block width-4" />
                             <Anchor
                                 onClick={onShowMachinwSettings}
                                 style={{
