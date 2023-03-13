@@ -1,5 +1,5 @@
 import isElectron from 'is-electron';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { shallowEqual, useSelector } from 'react-redux';
 
 import { CONNECTION_TYPE_SERIAL } from '../../../../constants';
@@ -8,7 +8,6 @@ import { RootState } from '../../../../flux/index.def';
 import usePrevious from '../../../../lib/hooks/previous';
 import i18n from '../../../../lib/i18n';
 import UniApi from '../../../../lib/uni-api';
-
 import type { Machine, ToolHead } from '../../../../machine-definition';
 import Anchor from '../../../components/Anchor';
 import { Button } from '../../../components/Buttons';
@@ -25,12 +24,13 @@ const MismatchModal: React.FC = () => {
 
     const connectedMachineIdentifier = useSelector((state: RootState) => state.workspace.machineIdentifier);
     const connectedToolHeadIdentifier = useSelector((state: RootState) => state.workspace.toolHead);
-    const headType = useSelector((state: RootState) => state.workspace.headType);
+    const connectedMachineHeadType = useSelector((state: RootState) => state.workspace.headType);
 
+    // calculated
     const [showMismatchModal, setShowMismatchModal] = useState(false);
     const prevIsConnected = usePrevious(isConnected);
 
-    function onShowMachinwSettings() {
+    const onShowMachineSettings = useCallback(() => {
         const { BrowserWindow } = window.require('@electron/remote');
         const browserWindow = BrowserWindow.getFocusedWindow();
         if (isElectron()) {
@@ -42,7 +42,7 @@ const MismatchModal: React.FC = () => {
                 activeTab: 'machine'
             });
         }
-    }
+    }, []);
 
     useEffect(() => {
         if (!prevIsConnected && isConnected) {
@@ -50,19 +50,30 @@ const MismatchModal: React.FC = () => {
                 return;
             }
 
+            const toolHeadKey = `${connectedMachineHeadType}Toolhead`;
+            const machineToolHeadIdentifier = machineToolHead[toolHeadKey];
+
             if (connectedMachineIdentifier !== machineSeries) {
                 setShowMismatchModal(true);
-            } else if (connectedToolHeadIdentifier && machineToolHead[`${headType}Toolhead`] !== connectedToolHeadIdentifier) {
+            } else if (connectedToolHeadIdentifier && machineToolHeadIdentifier !== connectedToolHeadIdentifier) {
                 setShowMismatchModal(true);
             }
         }
     }, [
-        prevIsConnected, isConnected, connectedToolHeadIdentifier, headType, machineSeries, machineToolHead,
+        prevIsConnected,
+        connectionType,
+        isConnected,
+
+        machineSeries,
+        machineToolHead,
+
+        connectedToolHeadIdentifier,
+        connectedMachineHeadType,
         connectedMachineIdentifier,
     ]);
 
-    const machine = machineSeries && findMachineByName(machineSeries) || {};
-    const toolHeadInfo = MACHINE_TOOL_HEADS[machineToolHead[`${headType}Toolhead`]];
+    const machine = findMachineByName(machineSeries);
+    const toolHeadInfo = MACHINE_TOOL_HEADS[machineToolHead[`${connectedMachineHeadType}Toolhead`]];
 
     const connectedMachine: Machine | null = findMachineByName(connectedMachineIdentifier);
     const connectedToolHead: ToolHead | null = MACHINE_TOOL_HEADS[connectedToolHeadIdentifier];
@@ -95,19 +106,21 @@ const MismatchModal: React.FC = () => {
                                     }
                                 )
                             }
-                            <span className="display-inline-block width-4" />
+                            <span className="margin-right-4" />
                             <Anchor
-                                onClick={onShowMachinwSettings}
+                                onClick={onShowMachineSettings}
                                 style={{
                                     fontWeight: 'bold'
                                 }}
                             >
                                 {i18n._('key-Workspace/Mismatch-Machine Settings')}
                             </Anchor>
+                            <span>.</span>
                         </div>
                     </Modal.Body>
                     <Modal.Footer>
                         <Button
+                            type="primary"
                             priority="level-two"
                             className="margin-left-8"
                             width="96px"

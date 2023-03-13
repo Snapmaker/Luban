@@ -54,7 +54,7 @@ const GoHomeModal: React.FC = () => {
     }
 
     return (
-        <Modal disableOverlay size="sm" closable={false}>
+        <Modal size="sm" closable={false}>
             <Modal.Header>
                 {i18n._('key-Workspace/Connection-Go Home')}
             </Modal.Header>
@@ -65,6 +65,7 @@ const GoHomeModal: React.FC = () => {
             </Modal.Body>
             <Modal.Footer>
                 <Button
+                    type="primary"
                     loading={homing}
                     priority="level-two"
                     className="align-r"
