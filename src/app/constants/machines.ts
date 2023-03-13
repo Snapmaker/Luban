@@ -193,7 +193,13 @@ export function getMachineSupportedTools(machineSeries: string, headType = undef
     return toolHeads;
 }
 
-export function getMachineSupportedToolOptions(machineSeries, headType = undefined) {
+declare interface ToolOption {
+    value: string;
+    label: string;
+    tool: ToolHead;
+}
+
+export function getMachineSupportedToolOptions(machineSeries, headType = undefined): ToolOption[] {
     const toolHeads = getMachineSupportedTools(machineSeries, headType);
 
     const options = [];

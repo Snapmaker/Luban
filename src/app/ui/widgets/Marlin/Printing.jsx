@@ -479,7 +479,9 @@ const mapStateToProps = (state) => {
         workflowStatus,
         currentWorkNozzle
     } = workspace;
+
     const { toolHead: printingToolhead } = workspace;
+
     return {
         isConnected,
         connectionType,

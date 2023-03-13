@@ -18,6 +18,7 @@ const MismatchModal: React.FC = () => {
         connectionType,
         isConnected,
     } = useSelector((state: RootState) => state.workspace, shallowEqual);
+    const prevIsConnected = usePrevious(isConnected);
 
     const machineSeries = useSelector((state: RootState) => state.machine.series);
     const machineToolHead = useSelector((state: RootState) => state.machine.toolHead);
@@ -28,7 +29,6 @@ const MismatchModal: React.FC = () => {
 
     // calculated
     const [showMismatchModal, setShowMismatchModal] = useState(false);
-    const prevIsConnected = usePrevious(isConnected);
 
     const onShowMachineSettings = useCallback(() => {
         const { BrowserWindow } = window.require('@electron/remote');
@@ -60,9 +60,9 @@ const MismatchModal: React.FC = () => {
             }
         }
     }, [
-        prevIsConnected,
         connectionType,
         isConnected,
+        prevIsConnected,
 
         machineSeries,
         machineToolHead,

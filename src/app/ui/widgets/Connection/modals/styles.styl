@@ -1,0 +1,48 @@
+@import '../../../../styles/variables.styl';
+
+.separator {
+    display: block;
+    margin: 10px 0;
+    padding: 0;
+    height: 1px;
+    border: 0;
+    border-top: 1px solid $border-color;
+
+    &.separator-underline {
+        margin: 0 0 10px;
+    }
+}
+
+.select-tools {
+    // cancel out last right padding
+    margin: 0 -15px 0 0;
+
+    .select-tool {
+        display: inline-block;
+        padding: 0 18px 15px 0;
+        width: 25%;
+
+        .select-tool-btn {
+            display: block;
+            border-radius: $border-radius;
+            border: 1px solid $grey-color2;
+
+            > img {
+                border-radius: $border-radius;
+                width: 100%;
+            }
+
+            &.selected {
+                border: 2px solid $dark-blue-color;
+            }
+        }
+
+        .select-tool-text {
+            margin-top: 8px;
+            float: left;
+            width: 100%;
+            text-align: center;
+            color: $grey-color;
+        }
+    }
+}

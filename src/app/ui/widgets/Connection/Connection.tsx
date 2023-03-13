@@ -12,6 +12,7 @@ import i18n from '../../../lib/i18n';
 import Notifications from '../../components/Notifications';
 
 import GoHomeModal from './modals/GoHomeModal';
+import SelectMachineModal from './modals/SelectMachineModal';
 import NetworkConnection from './NetworkConnection';
 import SerialConnection from './SerialConnection';
 
@@ -114,6 +115,9 @@ const Connection: React.FC<ConnectionProps> = ({ widgetActions }) => {
                     <SerialConnection />
                 )
             }
+
+            {/* Select machine and tool head if not detected */}
+            <SelectMachineModal />
 
             {/* Go Home Modal */}
             <GoHomeModal />

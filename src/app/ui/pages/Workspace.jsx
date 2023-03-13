@@ -4,7 +4,7 @@ import _ from 'lodash';
 import includes from 'lodash/includes';
 import PropTypes from 'prop-types';
 import React, { useEffect, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import { CNC_GCODE_SUFFIX, LASER_GCODE_SUFFIX, PRINTING_GCODE_SUFFIX, WORKFLOW_STATE_IDLE } from '../../constants';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, MACHINE_SERIES } from '../../constants/machines';
@@ -107,8 +107,10 @@ function Workspace({ isPopup, onClose, style, className }) {
     const secondaryWidgets = useSelector(state => state.widget.workspace.right.widgets);
     const defaultWidgets = useSelector(state => state.widget.workspace.default.widgets);
 
-    const machineIdentifier = useSelector(state => state.workspace.machineIdentifier);
-    const toolHead = useSelector(state => state.workspace.toolHead);
+    const {
+        machineIdentifier: connectedMachineIdentifier,
+        toolHead,
+    } = useSelector(state => state.workspace, shallowEqual);
 
     const [previewModalShow, setPreviewModalShow] = useState(false);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
@@ -280,7 +282,7 @@ function Workspace({ isPopup, onClose, style, className }) {
         );
     };
 
-    const unsupported = getUnsupportedWidgets(machineIdentifier, toolHead);
+    const unsupported = getUnsupportedWidgets(connectedMachineIdentifier, toolHead);
 
     const leftWidgetNames = primaryWidgets.filter((widgetName) => {
         return !includes(unsupported, widgetName);

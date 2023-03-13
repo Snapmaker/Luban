@@ -26,7 +26,7 @@ import log from '../../lib/log';
 import workerManager from '../../lib/manager/workerManager';
 import { machineStore } from '../../store/local-storage';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
-import MachineSelectModal from '../../ui/modals/modal-machine-select';
+// import MachineSelectModal from '../../ui/widgets/Connection/modals/SelectMachineModal';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import baseActions, { ACTION_UPDATE_STATE } from './action-base';
 import connectActions from './action-connect';
@@ -206,6 +206,8 @@ export const actions = {
                     }
                 } else {
                     if (connectionType === ConnectionType.Serial) {
+                        // TODO:
+                        /*
                         MachineSelectModal({
                             series: machineSeries,
                             headType: headType,
@@ -223,6 +225,7 @@ export const actions = {
                                 );
                             }
                         });
+                        */
                     }
                 }
                 dispatch(
