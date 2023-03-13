@@ -59,8 +59,7 @@ class WorkSpeed extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const machine = state.machine;
-    const { workflowStatus, connectionType, server } = machine;
+    const { workflowStatus, connectionType, server } = state.workspace;
     const { toolHead } = state.workspace;
 
     return {

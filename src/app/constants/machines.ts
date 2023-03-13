@@ -170,13 +170,13 @@ export function findToolHead(identifier: string): ToolHead | null {
     return null;
 }
 
-export function getMachineSupportedTools(machineSeries: string, headType = undefined) {
+export function getMachineSupportedTools(machineSeries: string, headType = undefined): ToolHead[] {
     const machine: Machine | null = findMachineByName(machineSeries);
     if (!machine) {
         return [];
     }
 
-    const toolHeads = [];
+    const toolHeads: ToolHead[] = [];
     for (const toolHeadOptions of machine.metadata.toolHeads) {
         for (const key of Object.keys(MACHINE_TOOL_HEADS)) {
             const toolHead = MACHINE_TOOL_HEADS[key];

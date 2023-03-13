@@ -112,12 +112,12 @@ class CNC extends PureComponent {
                             />
 
                             {/* //  <div className="sm-flex align-center"> */}
-                            { isLevelTwoCNC && (
+                            {isLevelTwoCNC && (
                                 <div className=" sm-flex sm-flex-direction-c  margin-right-16  margin-left-16">
                                     <span>{this.props.cncTargetSpindleSpeed}rpm</span>
                                 </div>
                             )}
-                            { isLevelTwoCNC && (
+                            {isLevelTwoCNC && (
                                 <EditComponent
                                     handleSubmit={(value) => { this.actions.updateToolHeadSpeed(value); }}
                                     initValue={this.props.cncTargetSpindleSpeed}
@@ -135,11 +135,17 @@ class CNC extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const machine = state.machine;
-    const { headStatus, workflowStatus, workflowState, connectionType,
+    const {
+        connectionType,
+
+        headStatus,
+        workflowStatus,
+        workflowState,
+
         cncCurrentSpindleSpeed,
-        cncTargetSpindleSpeed } = machine;
+        cncTargetSpindleSpeed } = state.workspace;
     const { toolHead, series } = state.workspace;
+
     return {
         headStatus,
         workflowStatus,

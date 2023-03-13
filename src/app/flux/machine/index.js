@@ -1,5 +1,8 @@
 import _, { cloneDeep, uniq } from 'lodash';
+
 import {
+    HEAD_CNC,
+    HEAD_LASER,
     HEAD_PRINTING, LEFT_EXTRUDER,
     RIGHT_EXTRUDER,
 } from '../../constants';
@@ -107,7 +110,7 @@ const INITIAL_STATE = {
 export const actions = {
     // Initialize machine, get machine configurations via API
     init: () => (dispatch, getState) => {
-        actions.__initMachineStatus(dispatch);
+        actions.__initMachine(dispatch);
 
         actions.__initCNCSecurityWarning(dispatch);
 
@@ -194,7 +197,7 @@ export const actions = {
     /**
      * Initialize machine related attributes, series, machine size, etc.
      */
-    __initMachineStatus: (dispatch) => {
+    __initMachine: (dispatch) => {
         // Machine
         const {
             series = INITIAL_STATE.series,
@@ -202,10 +205,25 @@ export const actions = {
             toolHead = INITIAL_STATE.toolHead
         } = machineStore.get('machine') || {};
 
-        const machine = findMachineByName(series);
+        let machine = findMachineByName(series);
         if (!machine) {
             // warning?
-            return;
+            machine = MACHINE_SERIES.A350;
+        }
+
+        for (const headType of [HEAD_PRINTING, HEAD_LASER, HEAD_CNC]) {
+            const headTypeKey = `${headType}Toolhead`; // historical key
+            const identifier = toolHead[headTypeKey];
+
+            let toolHeadOptions = machine.metadata.toolHeads.find(toolHeadOption => toolHeadOption.identifier === identifier);
+            if (!toolHeadOptions) {
+                if (machine.metadata.toolHeads.length) {
+                    toolHeadOptions = machine.metadata.toolHeads[0]; // First choice
+                    log.warn(`Missing toolHead, use default toolhead option: ${toolHeadOptions.identifier}`);
+                }
+            }
+
+            toolHead[headTypeKey] = toolHeadOptions.identifier;
         }
 
         dispatch(
