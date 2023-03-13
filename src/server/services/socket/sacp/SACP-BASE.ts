@@ -169,6 +169,7 @@ class SocketBASE {
 
             this.machineStatus = WORKFLOW_STATUS_MAP[statusKey];
 
+            // TODO: Refactor this
             this.socket && this.socket.emit('Marlin:state', {
                 state: {
                     ...stateData,

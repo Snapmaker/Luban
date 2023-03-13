@@ -746,12 +746,15 @@ class ExtractSquareTrace extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
+    const { activeMachine } = state.machine;
+    const { server } = state.workspace;
     const headType = getCurrentHeadType(window.location.href);
+
     return {
         series: machine.series,
         headType,
-        size: machine.metadata.size,
-        server: machine.server,
+        size: activeMachine.metadata.size,
+        server,
         laserSize: machine.laserSize
     };
 };

@@ -283,7 +283,6 @@ export const actions = {
             },
 
             'Marlin:state': (options) => {
-                log.warn('REFACTOR Marlin:state');
                 // Note: serialPort & Wifi -> for heartBeat
                 const { state } = options;
                 const { headType, pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
@@ -300,7 +299,7 @@ export const actions = {
                 const data = {};
 
                 const currentState = getState().workspace;
-                if ((currentState.isRotate !== pos?.isFourAxis) && (headType === HEAD_LASER || headType === HEAD_CNC)) {
+                if (pos && (currentState.isRotate !== pos.isFourAxis) && (headType === HEAD_LASER || headType === HEAD_CNC)) {
                     dispatch(actions.updateMachineState({
                         isRotate: pos.isFourAxis || false
                     }));
