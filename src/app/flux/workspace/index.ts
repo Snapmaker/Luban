@@ -26,7 +26,7 @@ import log from '../../lib/log';
 import workerManager from '../../lib/manager/workerManager';
 import { machineStore } from '../../store/local-storage';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
-import MachineSelectModal from '../../ui/modals/modal-machine-select';
+// import MachineSelectModal from '../../ui/widgets/Connection/modals/SelectMachineModal';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import baseActions, { ACTION_UPDATE_STATE } from './action-base';
 import connectActions from './action-connect';
@@ -206,6 +206,8 @@ export const actions = {
                     }
                 } else {
                     if (connectionType === ConnectionType.Serial) {
+                        // TODO:
+                        /*
                         MachineSelectModal({
                             series: machineSeries,
                             headType: headType,
@@ -223,6 +225,7 @@ export const actions = {
                                 );
                             }
                         });
+                        */
                     }
                 }
                 dispatch(
@@ -280,7 +283,6 @@ export const actions = {
             },
 
             'Marlin:state': (options) => {
-                log.warn('REFACTOR Marlin:state');
                 // Note: serialPort & Wifi -> for heartBeat
                 const { state } = options;
                 const { headType, pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
@@ -297,7 +299,7 @@ export const actions = {
                 const data = {};
 
                 const currentState = getState().workspace;
-                if ((currentState.isRotate !== pos?.isFourAxis) && (headType === HEAD_LASER || headType === HEAD_CNC)) {
+                if (pos && (currentState.isRotate !== pos.isFourAxis) && (headType === HEAD_LASER || headType === HEAD_CNC)) {
                     dispatch(actions.updateMachineState({
                         isRotate: pos.isFourAxis || false
                     }));
@@ -1050,8 +1052,7 @@ export const actions = {
      * Execute G-code.
      */
     executeGcode: (gcode, context = null, cmd = undefined) => (dispatch, getState) => {
-        const machine = getState().machine;
-        const { homingModal, isConnected } = machine;
+        const { homingModal, isConnected } = getState().workspace;
         if (!isConnected) {
             if (homingModal) {
                 dispatch(

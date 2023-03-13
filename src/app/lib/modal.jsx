@@ -1,5 +1,5 @@
 /* eslint react/no-set-state: 0 */
-import pick from 'lodash/pick';
+// import pick from 'lodash/pick';
 import React, { PureComponent, useState } from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
@@ -110,15 +110,15 @@ export class ModalHOC extends PureComponent {
     }
 
     render() {
-        const { title, body, footer, footerLeft, size, type, cancelTitle, isConfirm } = this.props;
+        const { title, body, footer, footerLeft, size, type, cancelTitle, isConfirm, ...rest } = this.props;
         const { show, inputValue } = this.state;
-        const props = pick(this.props, Object.keys(Modal.propTypes));
+        // const props = pick(this.props, Object.keys(Modal.propTypes));
         const defalutCancelTitle = isConfirm ? i18n._('key-Modal/Common-Confirm') : i18n._('key-Modal/Common-Cancel');
         const newTitle = cancelTitle ? i18n._(cancelTitle) : defalutCancelTitle;
 
         return (
             <Modal
-                {...props}
+                {...rest}
                 width="480px"
                 size={size || 'sm'}
                 show={show}

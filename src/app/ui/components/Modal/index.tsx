@@ -33,9 +33,9 @@ const unblockScrolling = () => {
 
 
 declare type ModalProps = AntdModalProps & {
-    tile: boolean;
+    tile?: boolean;
 
-    size: 'sm';
+    size?: 'sm' | 'md';
 
     onClose?: (e: React.MouseEvent<HTMLElement>) => void;
 };

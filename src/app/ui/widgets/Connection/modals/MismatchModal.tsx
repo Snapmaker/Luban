@@ -1,6 +1,6 @@
 import isElectron from 'is-electron';
-import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useCallback, useEffect, useState } from 'react';
+import { shallowEqual, useSelector } from 'react-redux';
 
 import { CONNECTION_TYPE_SERIAL } from '../../../../constants';
 import { findMachineByName, MACHINE_TOOL_HEADS } from '../../../../constants/machines';
@@ -8,27 +8,29 @@ import { RootState } from '../../../../flux/index.def';
 import usePrevious from '../../../../lib/hooks/previous';
 import i18n from '../../../../lib/i18n';
 import UniApi from '../../../../lib/uni-api';
-
 import type { Machine, ToolHead } from '../../../../machine-definition';
 import Anchor from '../../../components/Anchor';
 import { Button } from '../../../components/Buttons';
 import Modal from '../../../components/Modal';
 
 const MismatchModal: React.FC = () => {
-    const connectionType = useSelector((state: RootState) => state.workspace.connectionType);
-    const isConnected = useSelector((state: RootState) => state.machine?.isConnected);
+    const {
+        connectionType,
+        isConnected,
+    } = useSelector((state: RootState) => state.workspace, shallowEqual);
+    const prevIsConnected = usePrevious(isConnected);
 
     const machineSeries = useSelector((state: RootState) => state.machine.series);
     const machineToolHead = useSelector((state: RootState) => state.machine.toolHead);
 
     const connectedMachineIdentifier = useSelector((state: RootState) => state.workspace.machineIdentifier);
     const connectedToolHeadIdentifier = useSelector((state: RootState) => state.workspace.toolHead);
-    const headType = useSelector((state: RootState) => state.workspace.headType);
+    const connectedMachineHeadType = useSelector((state: RootState) => state.workspace.headType);
 
+    // calculated
     const [showMismatchModal, setShowMismatchModal] = useState(false);
-    const prevIsConnected = usePrevious(isConnected);
 
-    function onShowMachinwSettings() {
+    const onShowMachineSettings = useCallback(() => {
         const { BrowserWindow } = window.require('@electron/remote');
         const browserWindow = BrowserWindow.getFocusedWindow();
         if (isElectron()) {
@@ -40,7 +42,7 @@ const MismatchModal: React.FC = () => {
                 activeTab: 'machine'
             });
         }
-    }
+    }, []);
 
     useEffect(() => {
         if (!prevIsConnected && isConnected) {
@@ -48,19 +50,30 @@ const MismatchModal: React.FC = () => {
                 return;
             }
 
+            const toolHeadKey = `${connectedMachineHeadType}Toolhead`;
+            const machineToolHeadIdentifier = machineToolHead[toolHeadKey];
+
             if (connectedMachineIdentifier !== machineSeries) {
                 setShowMismatchModal(true);
-            } else if (connectedToolHeadIdentifier && machineToolHead[`${headType}Toolhead`] !== connectedToolHeadIdentifier) {
+            } else if (connectedToolHeadIdentifier && machineToolHeadIdentifier !== connectedToolHeadIdentifier) {
                 setShowMismatchModal(true);
             }
         }
     }, [
-        prevIsConnected, isConnected, connectedToolHeadIdentifier, headType, machineSeries, machineToolHead,
+        connectionType,
+        isConnected,
+        prevIsConnected,
+
+        machineSeries,
+        machineToolHead,
+
+        connectedToolHeadIdentifier,
+        connectedMachineHeadType,
         connectedMachineIdentifier,
     ]);
 
-    const machine = machineSeries && findMachineByName(machineSeries) || {};
-    const toolHeadInfo = MACHINE_TOOL_HEADS[machineToolHead[`${headType}Toolhead`]];
+    const machine = findMachineByName(machineSeries);
+    const toolHeadInfo = MACHINE_TOOL_HEADS[machineToolHead[`${connectedMachineHeadType}Toolhead`]];
 
     const connectedMachine: Machine | null = findMachineByName(connectedMachineIdentifier);
     const connectedToolHead: ToolHead | null = MACHINE_TOOL_HEADS[connectedToolHeadIdentifier];
@@ -69,7 +82,6 @@ const MismatchModal: React.FC = () => {
         <>
             {showMismatchModal && (
                 <Modal
-                    showCloseButton
                     onClose={() => {
                         setShowMismatchModal(false);
                     }}
@@ -90,22 +102,25 @@ const MismatchModal: React.FC = () => {
                                     'key-Workspace/Mismatch-The configured Machine Model ({{- machineInfo}}) does not match with the connected machine ({{- connectedMachineInfo}}). To change the settings, you can go to',
                                     {
                                         machineInfo: `${machine?.fullName} ${i18n._(toolHeadInfo?.label)}`,
-                                        connectedMachineInfo: `${connectedMachine?.fullName || i18n._('key-Workspace/Connection-Unknown')} ${connectedToolHead?.label || ''}`,
+                                        connectedMachineInfo: `${connectedMachine?.fullName || i18n._('key-Workspace/Connection-Unknown')} ${i18n._(connectedToolHead?.label) || ''}`,
                                     }
                                 )
                             }
+                            <span className="margin-right-4" />
                             <Anchor
-                                onClick={onShowMachinwSettings}
+                                onClick={onShowMachineSettings}
                                 style={{
                                     fontWeight: 'bold'
                                 }}
                             >
                                 {i18n._('key-Workspace/Mismatch-Machine Settings')}
                             </Anchor>
+                            <span>.</span>
                         </div>
                     </Modal.Body>
                     <Modal.Footer>
                         <Button
+                            type="primary"
                             priority="level-two"
                             className="margin-left-8"
                             width="96px"

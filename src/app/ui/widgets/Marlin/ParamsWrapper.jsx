@@ -28,7 +28,7 @@ const ParamsWrapper = (props) => {
 };
 
 ParamsWrapper.propTypes = {
-    children: PropTypes.array,
+    children: PropTypes.oneOf(PropTypes.array, PropTypes.object),
     title: PropTypes.string,
     editable: PropTypes.bool,
     handleSubmit: PropTypes.func.isRequired,

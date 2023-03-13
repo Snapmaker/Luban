@@ -1,7 +1,7 @@
 import { Button } from 'antd';
 import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
 import { actions as machineActions } from '../../../flux/machine';
 import i18n from '../../../lib/i18n';
@@ -12,7 +12,9 @@ const MachineSetting = (props) => {
     const dispatch = useDispatch();
     const machine = useSelector(state => state?.machine);
     const workspace = useSelector(state => state?.workspace);
-    const { isConnected, connectionType, workflowState } = machine;
+
+    const { connectionType, isConnected, workflowState } = useSelector(state => state.workspace, shallowEqual);
+
     const { headType, series } = workspace;
     const [enclosureDoorDetection, setEnclosureDoorDetection] = useState(machine?.enclosureDoorDetection);
     const [zAxisModule, setZAxisModule] = useState(machine?.zAxisModule);

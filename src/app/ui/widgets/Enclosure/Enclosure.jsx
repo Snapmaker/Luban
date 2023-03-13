@@ -1,20 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 // import PropTypes from 'prop-types';
-import { shallowEqual, useSelector } from 'react-redux';
 import { isUndefined } from 'lodash';
-import TipTrigger from '../../components/TipTrigger';
-import Switch from '../../components/Switch';
+import { shallowEqual, useSelector } from 'react-redux';
+import {
+    CONNECTION_DOOR_DETECTION, CONNECTION_ENCLOSURE_FAN, CONNECTION_ENCLOSURE_LIGHT
+} from '../../../constants';
+import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
-import { controller } from '../../../lib/controller';
-import {
-    CONNECTION_ENCLOSURE_LIGHT,
-    CONNECTION_ENCLOSURE_FAN,
-    CONNECTION_DOOR_DETECTION,
-} from '../../../constants';
+import Switch from '../../components/Switch';
+import TipTrigger from '../../components/TipTrigger';
 
 function Enclosure() {
-    const { isConnected, headType, connectionType, enclosureLight, enclosureFan, isDoorEnabled: doorEnabled, series } = useSelector(state => state.machine, shallowEqual);
+    const {
+        connectionType,
+        isConnected,
+
+        headType,
+        enclosureLight,
+        enclosureFan,
+        isDoorEnabled: doorEnabled,
+        series
+    } = useSelector(state => state.workspace, shallowEqual);
+
     const [isLedReady, setIsLedReady] = useState(true);
     const [isFanReady, setIsFanReady] = useState(true);
     const [isDoorEnabledReady, setIsDoorEnabledReady] = useState(true);
@@ -83,7 +91,7 @@ function Enclosure() {
                         disabled={(!isFanReady) || !isConnected}
                     />
                 </div>
-                { (isConnected && connectionType === 'wifi' && headType !== '3dp' && series !== 'A400') && (
+                {(isConnected && connectionType === 'wifi' && headType !== '3dp' && series !== 'A400') && (
                     <TipTrigger
                         title={i18n._('key-Workspace/Enclosure-Door Detection')}
                         content={(

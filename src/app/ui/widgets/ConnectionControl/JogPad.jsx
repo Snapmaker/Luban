@@ -1,7 +1,7 @@
+import { Col, Row } from 'antd';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React from 'react';
-import { Row, Col } from 'antd';
 
 import i18n from '../../../lib/i18n';
 import SvgIcon from '../../components/SvgIcon';

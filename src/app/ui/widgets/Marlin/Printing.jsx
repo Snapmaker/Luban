@@ -458,7 +458,6 @@ class Printing extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const machine = state.machine;
     const workspace = state.workspace;
     const {
         isConnected,
@@ -479,8 +478,10 @@ const mapStateToProps = (state) => {
         heatedBedTargetTemperature,
         workflowStatus,
         currentWorkNozzle
-    } = machine;
+    } = workspace;
+
     const { toolHead: printingToolhead } = workspace;
+
     return {
         isConnected,
         connectionType,

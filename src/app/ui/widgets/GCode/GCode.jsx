@@ -82,8 +82,13 @@ function getInitialState() {
 }
 
 function GCode({ widgetActions }) {
-    const { boundingBox } = useSelector(state => state.workspace);
-    const { gcodePrintingInfo, isConnected, workflowStatus } = useSelector(state => state.machine);
+    const {
+        isConnected,
+        workflowStatus,
+        gcodePrintingInfo,
+        boundingBox,
+    } = useSelector(state => state.workspace);
+
     const [state, setState] = useState(() => getInitialState());
 
     const controllerEvents = {
@@ -214,9 +219,11 @@ function GCode({ widgetActions }) {
                         <table
                             className="table table-bordered"
                             data-table="dimension"
-                            style={{ borderCollapse: 'separate',
+                            style={{
+                                borderCollapse: 'separate',
                                 borderRadius: '8px',
-                                borderSpacing: 0 }}
+                                borderSpacing: 0
+                            }}
                         >
                             <thead>
                                 <tr>

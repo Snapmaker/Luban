@@ -549,14 +549,13 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
             });
     }, [gcodeFiles, selectFileName]);
 
-    const isHeadType = selectFileType === headType;
     const hasFile = gcodeFiles.length > 0;
     const selectedFile = _.find(gcodeFiles, { uploadName: selectFileName });
     const isWifi = connectionType && connectionType === CONNECTION_TYPE_WIFI;
     // TODO: what is isSendedOnWifi?
     const isSended = isWifi ? isSendedOnWifi : true;
     const canPlay = selectedFile && hasFile && isConnected && isSended && _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE], workflowStatus);
-    const canSend = hasFile && isConnected && isHeadType && isWifi && isSendedOnWifi;
+    const canSend = hasFile && isConnected && isWifi && isSendedOnWifi;
 
     const onConfirm = async (type) => {
         let isLaserAutoFocus = false;

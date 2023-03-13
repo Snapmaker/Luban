@@ -13,11 +13,11 @@ import MachineSettings from './MachineSettings';
 const MACHINE_TAB = 'machine';
 const MATERIAL_TAB = 'material';
 const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
-    const machineState = useSelector(state => state?.machine);
-    const workspaceState = useSelector(state => state?.workspace);
+    const { series, toolHead } = useSelector(state => state.machine);
+    const { isConnected, server } = useSelector(state => state.workspace);
 
-    const { series, toolHead, isConnected, server } = machineState;
-    const { series: connectSerial } = workspaceState;
+    const { series: connectSerial } = useSelector(state => state.workspace);
+
     const [selectTab, setSelectTab] = useState(MATERIAL_TAB);
     const leftDiameter = useSelector(
         (state) => state.printing?.extruderLDefinition?.settings?.machine_nozzle_size
@@ -42,13 +42,14 @@ const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
             laserToolhead: '',
             cncToolhead: '',
         };
+
         for (const headType of [HEAD_PRINTING, HEAD_LASER, HEAD_CNC]) {
             const tools = getMachineSupportedTools(selectedMachineSeries, headType);
 
             const toolName = selectedToolMap[`${headType}Toolhead`];
             let selectedTool = null;
             for (const tool of tools) {
-                if (tool.value === toolName) {
+                if (tool.identifier === toolName) {
                     selectedTool = tool;
                     break;
                 }
@@ -59,7 +60,7 @@ const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
             }
 
             if (selectedTool) {
-                newToolHead[`${headType}Toolhead`] = selectedTool.value;
+                newToolHead[`${headType}Toolhead`] = selectedTool.identifier;
             }
         }
 
@@ -103,15 +104,17 @@ const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
 
     return (
         <div className="padding-top-16 padding-horizontal-40 height-100vh">
-            {isPopup && (
-                <Anchor onClick={() => onCloseHandle()} className="sm-flex justify-flex-end">
-                    <SvgIcon
-                        size={24}
-                        name="Cancel"
-                        type={['static']}
-                    />
-                </Anchor>
-            )}
+            {
+                isPopup && (
+                    <Anchor onClick={() => onCloseHandle()} className="sm-flex justify-flex-end">
+                        <SvgIcon
+                            size={24}
+                            name="Cancel"
+                            type={['static']}
+                        />
+                    </Anchor>
+                )
+            }
             <div className="background-color-white margin-top-16 border-radius-24 height-all-minus-98">
                 <div className="height-56 padding-left-80 border-bottom-normal sm-flex">
 
