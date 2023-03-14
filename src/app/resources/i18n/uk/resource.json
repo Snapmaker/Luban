@@ -1923,7 +1923,7 @@
     "key-Workspace/Mismatch-Machine Settings": "Параметри пристрою",
     "key-Workspace/Mismatch-Synchronize_Nozzle_Diameter": "Синхронізувати діаметри сопе",
     "key-Workspace/Mismatch-The configured Machine Model ({{- machineInfo}}) does not match with the connected machine ({{- connectedMachineInfo}}). To change the settings, you can go to": "Модель пристрою в налаштуваннях ({{- machineInfo}}) не збігається з інформацією з підʼєднаного пристрою ({{- connectedMachineInfo}}). Для зміни налаштувань перейдіть до",
-    "key-Workspace/Mismatch-The configured Nozzle Diameter ({{diameterInfo}}) is inconsistent with that of the connected machine ({{connectedDameterInfo}}). Luban has updated the configuration to be consistent with the machine nozzle.": "Параметр сопла в налаштуваннях ({{diameterInfo}}) не збігається з інформацією з підʼєднаного пристрою ({{- connectedMachineInfo}}). Luban оновив конфігурацію, щоб вона відповідала робочій головці пристрою.",
+    "key-Workspace/Mismatch-The configured Nozzle Diameter ({{diameterInfo}}) is inconsistent with that of the connected machine ({{connectedDameterInfo}}). Luban has updated the configuration to be consistent with the machine nozzle.": "Параметр сопла в налаштуваннях ({{diameterInfo}}) не збігається з інформацією з підʼєднаного пристрою ({{connectedMachineInfo}}). Luban оновив конфігурацію, щоб вона відповідала робочій головці пристрою.",
     "key-Workspace/Page-3D rendering...": "3D рендерінг…",
     "key-Workspace/Page-A problem caused the server to stop working correctly. Check the server status and try again.": "Проблема призвела до того, що сервер перестав працювати належним чином. Перевірте стан сервера і повторіть спробу.",
     "key-Workspace/Page-Back": "Назад",
