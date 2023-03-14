@@ -270,11 +270,11 @@ class ConnectionManager {
                         if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
                             const promise = new Promise((resolve) => {
                                 if (materialThickness === -1) {
-                                    this.socket.executeGcode({ gcode: 'G0 X0 Y0 F1500;\nG0 Z0 F1500;' }, () => {
+                                    this.socket.executeGcode({ gcode: 'G0 Z0 F1500;' }, () => {
                                         resolve();
                                     });
                                 } else {
-                                    this.socket.executeGcode({ gcode: `G0 X0 Y0 F1500;\nG53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;` }, () => {
+                                    this.socket.executeGcode({ gcode: `G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;` }, () => {
                                         resolve();
                                     });
                                 }
@@ -283,11 +283,11 @@ class ConnectionManager {
                         } else {
                             const promise = new Promise((resolve) => {
                                 if (isLaserPrintAutoMode) {
-                                    this.socket.executeGcode({ gcode: `G0 X0 Y0 F1500;\nG53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;` }, () => {
+                                    this.socket.executeGcode({ gcode: `G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;` }, () => {
                                         resolve();
                                     });
                                 } else {
-                                    this.socket.executeGcode({ gcode: 'G0 X0 Y0 F1500;\nG0 Z0 F1500;' }, () => {
+                                    this.socket.executeGcode({ gcode: 'G0 Z0 F1500;' }, () => {
                                         resolve();
                                     });
                                 }
