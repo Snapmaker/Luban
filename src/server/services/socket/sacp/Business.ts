@@ -159,6 +159,25 @@ export default class Business extends Dispatcher {
         });
     }
 
+    public async getPrintingFileInfo() {
+        return this.send(0xac, 0x1a, PeerId.SCREEN, Buffer.alloc(1, 0)).then(({ response, packet }) => {
+            const data = {
+                filename: '',
+                totalLine: 0,
+                estimatedTime: 0
+            };
+            if (response.result === 0) {
+                const { nextOffset, result } = readString(response.data);
+                data.filename = result;
+                const totalLines = readUint32(response.data, nextOffset);
+                const estimatedTime = readUint32(response.data, nextOffset + 4);
+                data.totalLine = totalLines;
+                data.estimatedTime = estimatedTime;
+            }
+            return { response, packet, data };
+        });
+    }
+
     public async subscribeGetPrintCurrentLineNumber({ interval = 1000 }, callback: ResponseCallback) {
         return this.subscribe(0xac, 0xa0, interval, callback).then(({ response, packet }) => {
             return { code: response.result, packet, data: {} };
@@ -173,6 +192,18 @@ export default class Business extends Dispatcher {
 
     public async subscribeGetPrintingTime({ interval = 1000 }, callback: ResponseCallback) {
         return this.subscribe(0xac, 0xa5, interval, callback).then(({ response, packet }) => {
+            return { code: response.result, packet, data: {} };
+        });
+    }
+
+    public async subscribeGetPrintingProgress({ interval = 1000 }, callback: ResponseCallback) {
+        return this.subscribe(0xb0, 0xa0, interval, callback).then(({ response, packet }) => {
+            return { code: response.result, packet, data: {} };
+        });
+    }
+
+    public async subscribeGetPrintingEstimatedTime({ interval = 1000 }, callback: ResponseCallback) {
+        return this.subscribe(0xb0, 0xa1, interval, callback).then(({ response, packet }) => {
             return { code: response.result, packet, data: {} };
         });
     }

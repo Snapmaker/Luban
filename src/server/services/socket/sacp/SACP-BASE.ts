@@ -324,7 +324,19 @@ class SocketBASE {
         this.sacpClient.subscribeLaserPowerState({ interval: 1000 }, this.subscribeLaserPowerCallback).then(res => {
             log.info(`subscribe laser power state success: ${res}`);
         });
-        this.subscribeGetCurrentGcodeLineCallback = ({ response }) => {
+
+        this.subscribeGetCurrentGcodeLineCallback = async ({ response }) => {
+            if (!this.totalLine || !this.estimatedTime) {
+                this.sacpClient.getPrintingFileInfo().then((result) => {
+                    const { totalLine, estimatedTime } = result.data;
+                    if (totalLine) {
+                        this.totalLine = totalLine;
+                    }
+                    if (estimatedTime) {
+                        this.estimatedTime = estimatedTime;
+                    }
+                });
+            }
             const { currentLine } = new GcodeCurrentLine().fromBuffer(response.data);
             const progress = Math.round((currentLine / this.totalLine) * 100) / 100;
             const sliceTime = new Date().getTime() - this.startTime;
@@ -341,6 +353,10 @@ class SocketBASE {
             includes([WORKFLOW_STATE_RUNNING, WORKFLOW_STATE_PAUSED], this.machineStatus) && this.socket && this.socket.emit('sender:status', ({ data }));
         };
         this.sacpClient.subscribeGetPrintCurrentLineNumber({ interval: 1000 }, this.subscribeGetCurrentGcodeLineCallback);
+        this.sacpClient.subscribeGetPrintingTime({ interval: 1000 }, (response) => {
+            const sliceTime = response.response.data.readUInt32LE(0);
+            this.startTime = new Date().getTime() - sliceTime * 1000;
+        });
         this.subscribeEnclosureInfoCallback = (data) => {
             const { ledValue, testStatus, fanlevel } = new EnclosureInfo().fromBuffer(data.response.data);
             let headTypeKey = 0;
