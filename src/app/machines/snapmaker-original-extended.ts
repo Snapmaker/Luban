@@ -34,14 +34,17 @@ export const machine: Machine = {
             {
                 identifier: laserToolHeadOriginal.identifier,
                 configPath: 'laser/original_200mw',
+                goHomeOnConnection: false,
             },
             {
                 identifier: laser1600mWToolHeadOriginal.identifier,
                 configPath: 'laser/original_1600mw',
+                goHomeOnConnection: false,
             },
             {
                 identifier: cncToolHeadOriginal.identifier,
                 configPath: 'cnc/original_standard',
+                goHomeOnConnection: false,
             }
         ],
 
