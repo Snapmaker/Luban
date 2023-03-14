@@ -26,6 +26,7 @@ import { LEVEL_TWO_POWER_LASER_FOR_SM2 } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
 import { actions as projectActions } from '../../../flux/project';
 import { actions as workspaceActions, WORKSPACE_STAGE } from '../../../flux/workspace';
+import { ConnectionType } from '../../../flux/workspace/state';
 import { controller } from '../../../lib/controller';
 import usePrevious from '../../../lib/hooks/previous';
 import i18n from '../../../lib/i18n';
@@ -310,10 +311,10 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
             setSelectFileName(_selectFileName);
         }
         setSelectFileType(type);
-        const gcodeFile = gcodeFiles.find(item => item?.uploadName === _selectFileName);
+        const selectedFile = gcodeFiles.find(item => item?.uploadName === _selectFileName);
         dispatch(workspaceActions.updateState({
-            gcodeFile: gcodeFile,
-            boundingBox: gcodeFile?.boundingBox
+            gcodeFile: selectedFile,
+            boundingBox: selectedFile?.boundingBox
         }));
     }, [selectFileName, gcodeFiles]);
 
@@ -551,11 +552,13 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
 
     const hasFile = gcodeFiles.length > 0;
     const selectedFile = _.find(gcodeFiles, { uploadName: selectFileName });
-    const isWifi = connectionType && connectionType === CONNECTION_TYPE_WIFI;
+    const isWifi = connectionType === ConnectionType.WiFi;
     // TODO: what is isSendedOnWifi?
     const isSended = isWifi ? isSendedOnWifi : true;
     const canPlay = selectedFile && hasFile && isConnected && isSended && _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE], workflowStatus);
     const canSend = hasFile && isConnected && isWifi && isSendedOnWifi;
+
+    const selectedGCodeFile = gcodeFiles[selectFileIndex >= 0 ? selectFileIndex : 0];
 
     const onConfirm = async (type) => {
         let isLaserAutoFocus = false;
@@ -682,7 +685,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
             {
                 showPreviewModal && (
                     <PreviewModal
-                        gcodeFile={gcodeFiles[selectFileIndex]}
+                        gcodeFile={selectedGCodeFile}
                         onStartToSendFile={onStartToSendFile}
                         onStartToPrint={actions.onStartToPrint}
                         canSend={canSend}

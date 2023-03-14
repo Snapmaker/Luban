@@ -18,7 +18,9 @@ function MacroWidget({ widgetId, widgetActions }) {
     const [modalName, setModalName] = useState(MODAL_NONE);
     const [modalParams, setModalParams] = useState({});
     const [macros, setMacros] = useState([]);
-    const { workflowStatus } = useSelector(state => state.machine);
+
+    const { workflowStatus } = useSelector(state => state.workspace);
+
     const actions = {
         openModal: (name = MODAL_NONE, params = {}) => {
             setModalName(name);
@@ -98,34 +100,39 @@ function MacroWidget({ widgetId, widgetActions }) {
         } else {
             widgetActions.setDisplay(true);
         }
-    }, [workflowStatus]);
+    }, [widgetActions, workflowStatus]);
 
     return (
         <div>
-            {modalName === MODAL_ADD_MACRO && (
-                <AddMacro
-                    modalParams={modalParams}
-                    addMacro={actions.addMacro}
-                    closeModal={actions.closeModal}
-                />
-            )}
-            {modalName === MODAL_EDIT_MACRO && (
-                <EditMacro
-                    modalParams={modalParams}
-                    updateMacro={actions.updateMacro}
-                    deleteMacro={actions.deleteMacro}
-                    closeModal={actions.closeModal}
-                />
-            )}
             <Macro
                 widgetId={widgetId}
                 macros={macros}
                 openModal={actions.openModal}
                 updateModal={actions.updateModal}
             />
+            {
+                modalName === MODAL_ADD_MACRO && (
+                    <AddMacro
+                        modalParams={modalParams}
+                        addMacro={actions.addMacro}
+                        closeModal={actions.closeModal}
+                    />
+                )
+            }
+            {
+                modalName === MODAL_EDIT_MACRO && (
+                    <EditMacro
+                        modalParams={modalParams}
+                        updateMacro={actions.updateMacro}
+                        deleteMacro={actions.deleteMacro}
+                        closeModal={actions.closeModal}
+                    />
+                )
+            }
         </div>
     );
 }
+
 MacroWidget.propTypes = {
     widgetId: PropTypes.string.isRequired,
     widgetActions: PropTypes.object.isRequired
