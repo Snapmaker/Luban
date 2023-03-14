@@ -213,6 +213,8 @@ class Canvas extends PureComponent {
         // this.renderScene();
 
         window.addEventListener('resize', this.resizeWindow, false);
+
+        this.renderScene();
     }
 
     // just for laser and cnc, dont set scale prop for 3dp

@@ -745,7 +745,6 @@ class Visualizer extends PureComponent {
         this.canvas.current && this.canvas.current.renderScene();
     }
 
-
     render() {
         const state = this.state;
         const notice = this.notice();
