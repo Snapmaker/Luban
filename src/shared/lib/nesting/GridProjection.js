@@ -188,6 +188,10 @@ class GridProjection {
         const direction = [[0, 1], [-1, 0], [1, 0], [0, -1]];
         const froms = [-1];
         const polygon = [];
+        const polygonSet = new Set();
+        const getKey = (a, b) => {
+            return a * 1000000 + b;
+        };
         let index = 0;
         for (let i = 0; i < this.data.length; i++) {
             for (let j = 0; j < this.data[i].length; j++) {
@@ -225,11 +229,15 @@ class GridProjection {
                 if (!this.data[i1] || !this.data[i1][j1] || this.data[i1][j1] !== 2) {
                     continue;
                 }
+                if (polygonSet.has(getKey(i1, j1))) {
+                    continue;
+                }
                 k = i;
                 break;
             }
             if (k === -1) {
                 this.data[polygon[index - 1].x][polygon[index - 1].y] = 0;
+                polygonSet.delete(getKey(polygon[index - 1].x, polygon[index - 1].y));
                 index--;
             } else {
                 froms[index] = 3 - k;
@@ -237,6 +245,7 @@ class GridProjection {
                     x: i1,
                     y: j1
                 };
+                polygonSet.add(getKey(i1, j1));
                 index++;
 
                 if (polygon[index - 1].x === polygon[0].x && polygon[index - 1].y === polygon[0].y) {
