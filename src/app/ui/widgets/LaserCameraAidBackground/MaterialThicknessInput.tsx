@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
 import classNames from 'classnames';
+import React, { useState } from 'react';
+
+import i18n from '../../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
-import i18n from '../../../lib/i18n';
 
 type TProps = {
     series: string;
@@ -13,10 +14,10 @@ export const MATERIALTHICKNESSMAX = {
     A150: 50,
     A250: 100,
     A350: 150,
-    A400: 200
+    A400: 200,
 };
 
-const MaterialThicknessInput = (props: TProps) => {
+const MaterialThicknessInput: React.FC<TProps> = (props) => {
     const [value, setValue] = useState(0);
     return (
         <div className={classNames(styles['laser-material-thickness-input'])}>

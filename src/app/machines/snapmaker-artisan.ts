@@ -9,18 +9,6 @@ import {
 /*
     {
         value: 'A400',
-        setting: {
-            size: {
-                x: 400,
-                y: 400,
-                z: 400
-            },
-            laserSize: {
-                x: 410,
-                y: 410,
-                z: 420
-            }
-        },
         size: {
             x: 400,
             y: 400,
@@ -49,6 +37,10 @@ export const machine: Machine = {
             {
                 identifier: highPower10WLaserToolHead.identifier,
                 configPath: 'laser/a400_10w',
+                workRange: {
+                    min: [0, 0, 0],
+                    max: [410, 410, 420],
+                }
             },
             {
                 identifier: highPower200WCNCToolHead.identifier,

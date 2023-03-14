@@ -100,14 +100,30 @@ class ManualCalibration extends Component {
     }
 
     getLaserSize() {
+        const toolIdentifier = this.props.toolHead.laserToolhead;
+
         let takePhotoPosition = LASER_10W_TAKE_PHOTO_POSITION[this.props.series].z;
-        if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+        if (toolIdentifier === LEVEL_TWO_POWER_LASER_FOR_SM2) {
             takePhotoPosition = LASER_10W_TAKE_PHOTO_POSITION[this.props.series].z;
         } else {
             takePhotoPosition = LASER_1600MW_CALIBRATION_POSITION[this.props.series].z;
         }
 
-        const laserMaxHeight = MACHINE_SERIES[this.props.series].setting.laserSize.z;
+        const machine = MACHINE_SERIES[this.props.series];
+        let workRange = {
+            min: [0, 0, 0],
+            max: [machine.metadata.size.x, machine.metadata.size.y, machine.metadata.size.z],
+        };
+        for (const toolHeadOption of machine.metadata.toolHeads) {
+            if (toolHeadOption.identifier === toolIdentifier) {
+                if (toolHeadOption.workRange) {
+                    workRange = toolHeadOption.workRange;
+                }
+                break;
+            }
+        }
+
+        const laserMaxHeight = workRange.max[2];
         return {
             takePhotoPosition, laserMaxHeight
         };

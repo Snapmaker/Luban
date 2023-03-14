@@ -10,13 +10,6 @@ import {
 /*
     {
         value: 'A250',
-        setting: {
-            laserSize: {
-                x: 252,
-                y: 260,
-                z: 235
-            }
-        },
         alias: ['SM2-M', 'Snapmaker 2.0 A250'],
     },
 */
@@ -48,10 +41,18 @@ export const machine: Machine = {
             {
                 identifier: standardLaserToolHead.identifier,
                 configPath: 'laser/a250_1600mw',
+                workRange: {
+                    min: [0, 0, 0],
+                    max: [252, 260, 235],
+                },
             },
             {
                 identifier: highPower10WLaserToolHead.identifier,
                 configPath: 'laser/a250_10w',
+                workRange: {
+                    min: [0, 0, 0],
+                    max: [252, 260, 235], // TODO: check data
+                },
             },
             {
                 identifier: standardCNCToolHead.identifier,

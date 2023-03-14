@@ -470,8 +470,7 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, widgetActions }) 
     }, [state]);
 
     function canClick() {
-        return ((isConnected
-            && includes([WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_UNKNOWN], workflowStatus)) && !isMoving) || !isConnected;
+        return isConnected && includes([WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_UNKNOWN], workflowStatus) && !isMoving;
     }
 
     const _canClick = canClick();

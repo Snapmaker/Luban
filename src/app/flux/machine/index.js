@@ -57,7 +57,6 @@ const INITIAL_STATE = {
 
     // currentMachine: INITIAL_MACHINE_SERIES_WITH_HEADTOOL,
     size: MACHINE_SERIES.ORIGINAL.metadata.size,
-    laserSize: MACHINE_SERIES.ORIGINAL.metadata.size, // TODO: replace laserSize
     // endregion
 
     // Serial port
@@ -201,7 +200,6 @@ export const actions = {
         // Machine
         const {
             series = INITIAL_STATE.series,
-            laserSize = INITIAL_STATE.laserSize,
             toolHead = INITIAL_STATE.toolHead
         } = machineStore.get('machine') || {};
 
@@ -230,7 +228,6 @@ export const actions = {
             baseActions.updateState({
                 series: series,
                 size: machine.metadata.size,
-                laserSize: machine.setting ? machine.setting.laserSize : laserSize,
                 toolHead: toolHead,
                 activeMachine: machine,
             })
@@ -354,7 +351,6 @@ export const actions = {
         //  Do not need to 'initSize' just use 'switchSize' function
         await dispatch(printingActions.switchSize());
         seriesInfo && dispatch(actions.updateMachineSize(seriesInfo.size));
-        seriesInfo && dispatch(actions.updateLaserSize(seriesInfo.setting.laserSize));
         dispatch(widgetActions.updateMachineSeries(series));
 
 
@@ -397,20 +393,6 @@ export const actions = {
         dispatch(editorActions.onSizeUpdated('laser', size));
         dispatch(editorActions.onSizeUpdated('cnc', size));
     },
-
-    updateLaserSize: (laserSize) => (dispatch) => {
-        if (!laserSize) {
-            return;
-        }
-        laserSize.x = Math.min(laserSize.x, 1000);
-        laserSize.y = Math.min(laserSize.y, 1000);
-        laserSize.z = Math.min(laserSize.z, 1000);
-
-        machineStore.set('machine.laserSize', laserSize);
-
-        dispatch(baseActions.updateState({ laserSize }));
-    },
-
 
     // region Enclosure
     getEnclosureState: () => () => {

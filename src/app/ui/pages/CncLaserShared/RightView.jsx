@@ -13,7 +13,6 @@ import CNCPathWidget from '../../widgets/CNCPath';
 import ConnectionWidget from '../../widgets/Connection';
 import ConsoleWidget from '../../widgets/Console';
 
-import EnclosureWidget from '../../widgets/Enclosure';
 import LaserParamsWidget from '../../widgets/LaserParams';
 import LaserTestFocusWidget from '../../widgets/LaserTestFocus';
 import MacroWidget from '../../widgets/Macro';
@@ -35,7 +34,6 @@ const allWidgets = {
     'visualizer': VisualizerWidget,
     'webcam': WebcamWidget,
     'printing-visualizer': PrintingVisualizer,
-    'enclosure': EnclosureWidget,
     '3dp-material': PrintingMaterialWidget,
     '3dp-output': PrintingOutputWidget,
     'laser-params': LaserParamsWidget,
