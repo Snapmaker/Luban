@@ -117,6 +117,7 @@ class GcodeParameters extends PureComponent {
         const laserDefinitionRepetitionKeys = [];
         const laserDefinitionRepetition = {};
         if (pathType === 'path') {
+            laserDefinitionRepetitionKeys.push('initialHeightOffset');
             laserDefinitionRepetitionKeys.push('multiPasses');
             if (multiPasses > 1) {
                 laserDefinitionRepetitionKeys.push('multiPassDepth');
