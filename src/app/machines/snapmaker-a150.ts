@@ -11,13 +11,6 @@ import {
 /*
     {
         value: 'A150',
-        setting: {
-            laserSize: {
-                x: 167,
-                y: 165,
-                z: 150
-            }
-        },
         alias: ['SM2-S', 'Snapmaker 2.0 A150'],
     },
 */

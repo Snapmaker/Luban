@@ -27,8 +27,8 @@ class ExtractSquareTrace extends PureComponent {
         // machine
         series: PropTypes.string.isRequired,
         tool: PropTypes.object,
+        workRange: PropTypes.object.isRequired,
 
-        laserSize: PropTypes.object.isRequired,
         size: PropTypes.object.isRequired,
         server: PropTypes.object.isRequired,
         toolHead: PropTypes.object.isRequired,
@@ -135,15 +135,18 @@ class ExtractSquareTrace extends PureComponent {
             let cameraOffsetX = 20;
             let cameraOffsetY = -8.5;
             let length;
+            const workRangeX = this.props.workRange.max[0];
+            const workRangeY = this.props.workRange.max[1];
             if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
                 cameraOffsetX = 20;
                 cameraOffsetY = -8.5;
                 if (this.props.series === MACHINE_SERIES.A150.identifier) {
                     centerDis = 80;
+
                     [1, 2, 4, 3].forEach((item) => {
                         position.push({
-                            'x': this.props.laserSize.x / 2 + cameraOffsetX + centerDis / 2 * (item % 2 === 1 ? -1 : 1),
-                            'y': this.props.laserSize.y / 2 + cameraOffsetY + centerDis / 2 * (Math.ceil(item / 2) === 1 ? 1 : -1),
+                            'x': workRangeX / 2 + cameraOffsetX + centerDis / 2 * (item % 2 === 1 ? -1 : 1),
+                            'y': workRangeY / 2 + cameraOffsetY + centerDis / 2 * (Math.ceil(item / 2) === 1 ? 1 : -1),
                             'index': item - 1
                         });
                     });
@@ -159,14 +162,14 @@ class ExtractSquareTrace extends PureComponent {
                     for (let j = 1; j >= -1; j--) {
                         if (j === 1 || j === -1) {
                             for (let i = -1; i <= 1; i++) {
-                                const x = this.props.laserSize.x / 2 + cameraOffsetX + centerDis * i;
-                                const y = this.props.laserSize.y / 2 + cameraOffsetY + centerDis * j;
+                                const x = workRangeX / 2 + cameraOffsetX + centerDis * i;
+                                const y = workRangeY / 2 + cameraOffsetY + centerDis * j;
                                 position.push({ 'x': x, 'y': y, 'index': position.length });
                             }
                         } else if (j === 0) {
                             for (let i = 1; i >= -1; i--) {
-                                const x = this.props.laserSize.x / 2 + cameraOffsetX + centerDis * i;
-                                const y = this.props.laserSize.y / 2 + cameraOffsetY + centerDis * j;
+                                const x = workRangeX / 2 + cameraOffsetX + centerDis * i;
+                                const y = workRangeY / 2 + cameraOffsetY + centerDis * j;
                                 if (position.length === 3) {
                                     position.push({ 'x': x, 'y': y, 'index': 5 });
                                 } else if (position.length === 5) {
@@ -188,8 +191,8 @@ class ExtractSquareTrace extends PureComponent {
                 cameraOffsetY = 0;
                 position.push({
                     'index': 0,
-                    'x': this.props.laserSize.x / 2 + cameraOffsetX,
-                    'y': this.props.laserSize.y / 2 + cameraOffsetY
+                    'x': workRangeX / 2 + cameraOffsetX,
+                    'y': workRangeY / 2 + cameraOffsetY,
                 });
                 length = 1;
             }
@@ -310,25 +313,27 @@ class ExtractSquareTrace extends PureComponent {
                         .processGetPhoto({ 'index': task.index, 'address': task.address })
                         .then((res) => {
                             if (JSON.parse(res.text).fileName || JSON.parse(res.text).status !== 404) {
+                                const workRangeX = this.props.workRange.max[0];
+                                const workRangeY = this.props.workRange.max[1];
                                 if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
                                     if (this.props.series === MACHINE_SERIES.A150.identifier) {
-                                        this.state.xSize[task.index] = this.props.laserSize.x / 2;
-                                        this.state.ySize[task.index] = this.props.laserSize.y / 2;
+                                        this.state.xSize[task.index] = workRangeX / 2;
+                                        this.state.ySize[task.index] = workRangeY / 2;
                                     } else {
                                         if (parseInt(task.index / 3, 10) === 1) {
                                             this.state.ySize[task.index] = this.state.options.centerDis;
                                         } else {
-                                            this.state.ySize[task.index] = ((this.props.laserSize.y - this.state.options.centerDis) / 2);
+                                            this.state.ySize[task.index] = ((workRangeY - this.state.options.centerDis) / 2);
                                         }
                                         if (task.index % 3 === 1) {
                                             this.state.xSize[task.index] = this.state.options.centerDis;
                                         } else {
-                                            this.state.xSize[task.index] = ((this.props.laserSize.x - this.state.options.centerDis) / 2);
+                                            this.state.xSize[task.index] = ((workRangeX - this.state.options.centerDis) / 2);
                                         }
                                     }
                                 } else if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
-                                    this.state.xSize[task.index] = this.props.laserSize.x;
-                                    this.state.ySize[task.index] = this.props.laserSize.y;
+                                    this.state.xSize[task.index] = workRangeX;
+                                    this.state.ySize[task.index] = workRangeY;
                                 }
                                 this.props.updateEachPicSize('xSize', this.state.xSize);
                                 this.props.updateEachPicSize('ySize', this.state.ySize);
@@ -616,6 +621,9 @@ class ExtractSquareTrace extends PureComponent {
     componentDidUpdate
 
     render() {
+        const workRangeX = this.props.workRange.max[0];
+        const workRangeY = this.props.workRange.max[1];
+
         if (this.props.series === MACHINE_SERIES.A400.identifier) {
             this.multiple = 1.25;
         } else if (this.props.series === MACHINE_SERIES.A350.identifier) {
@@ -623,6 +631,7 @@ class ExtractSquareTrace extends PureComponent {
         } else {
             this.multiple = 2;
         }
+
         return (
             <div>
                 <div className="clearfix" />
@@ -656,15 +665,15 @@ class ExtractSquareTrace extends PureComponent {
                                 <div
                                     className={classNames(styles['photo-display'], 'border-radius-8')}
                                     style={{
-                                        height: this.props.laserSize.y * 0.85 * this.multiple + 2,
-                                        width: this.props.laserSize.x * 0.85 * this.multiple + 2
+                                        height: workRangeY * 0.85 * this.multiple + 2,
+                                        width: workRangeX * 0.85 * this.multiple + 2,
                                     }}
                                 >
                                     {this.extractingPreview.map((previewId, index) => {
                                         const key = previewId + index;
                                         return (
                                             <ExtractPreview
-                                                size={this.props.laserSize}
+                                                size={{ x: workRangeX, y: workRangeY }}
                                                 series={this.props.series}
                                                 toolHead={this.props.toolHead}
                                                 ref={previewId}
@@ -687,7 +696,7 @@ class ExtractSquareTrace extends PureComponent {
                                     </div>
                                 </div>
                             </Spin>
-                            <div style={{ minHeight: 30, width: this.props.laserSize.x * 0.85 * this.multiple + 2 }}>
+                            <div style={{ minHeight: 30, width: workRangeX * 0.85 * this.multiple + 2 }}>
                                 <div className="clearfix" />
                                 <Button
                                     priority="level-two"
@@ -757,7 +766,9 @@ class ExtractSquareTrace extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { series, activeMachine, laserSize } = state.machine;
+    const { series, activeMachine } = state.machine;
+    const size = activeMachine.metadata.size;
+
     const { server } = state.workspace;
     const headType = getCurrentHeadType(window.location.href);
 
@@ -766,13 +777,23 @@ const mapStateToProps = (state) => {
     const toolIdentifier = toolMap[`${headType}Toolhead`];
     const tool = findToolHead(toolIdentifier);
 
+    let workRange = { min: [0, 0, 0], max: [size.x, size.y, size.z] };
+    for (const toolHeadOption of activeMachine.metadata.toolHeads) {
+        if (toolHeadOption.identifier === tool.identifier) {
+            if (toolHeadOption.workRange) {
+                workRange = toolHeadOption.workRange;
+            }
+            break;
+        }
+    }
+
     return {
         series,
         headType,
         tool,
-        size: activeMachine.metadata.size,
+        size,
         server,
-        laserSize,
+        workRange,
     };
 };
 

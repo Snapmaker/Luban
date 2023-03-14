@@ -57,7 +57,6 @@ const INITIAL_STATE = {
 
     // currentMachine: INITIAL_MACHINE_SERIES_WITH_HEADTOOL,
     size: MACHINE_SERIES.ORIGINAL.metadata.size,
-    laserSize: MACHINE_SERIES.ORIGINAL.metadata.size,
     // endregion
 
     // Serial port

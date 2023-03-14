@@ -25,12 +25,12 @@ class LaserAidBackgroundWidget extends PureComponent {
         );
     }
 }
+
 const mapStateToProps = (state) => {
-    const { headType, isConnected } = state.workspace;
+    const { isConnected } = state.workspace;
 
     return {
         isConnected,
-        headType
     };
 };
 
