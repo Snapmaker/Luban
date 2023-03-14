@@ -552,6 +552,7 @@ const NetworkConnection: React.FC = () => {
                 });
             }
         }
+
         Object.keys(moduleStatusList).forEach((key) => {
             if (moduleStatusList[key]) {
                 newModuleStatusList.push({

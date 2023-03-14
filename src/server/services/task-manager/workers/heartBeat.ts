@@ -1,5 +1,9 @@
 import request from 'superagent';
 import sendMessage from '../utils/sendMessage';
+import logger from '../../../lib/logger';
+
+const log = logger('service:heartBeat');
+
 
 type IParam = { token: string, host: string, stop?: boolean }
 
@@ -14,6 +18,8 @@ const stopBeat = (msg?: string, flag?: number) => {
     intervalHandle = null;
     sendMessage({ status: 'offline', msg });
 };
+
+let logCounter = 0;
 
 const heartBeat = async (param: IParam) => {
     return new Promise((resolve) => {
@@ -31,7 +37,7 @@ const heartBeat = async (param: IParam) => {
                 .timeout(3000)
                 .end((err: Error, res) => {
                     if (err) {
-                        console.log(`beat err=${err?.message}`);
+                        log.warn(`beat err=${err?.message}`);
                         if (err.message.includes('Timeout')) {
                             if (!timeoutHandle) {
                                 timeoutHandle = setTimeout(() => {
@@ -45,7 +51,9 @@ const heartBeat = async (param: IParam) => {
                             }
                         }
                     } else {
-                        console.log(`beat status=${res?.status}`);
+                        if (++logCounter % 10 === 0) {
+                            log.info(`beat status=${res?.status}`);
+                        }
                         timeoutHandle = clearTimeout(timeoutHandle);
                         errorCount = 0;
                         sendMessage({
