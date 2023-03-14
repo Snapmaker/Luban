@@ -526,12 +526,12 @@ const NetworkConnection: React.FC = () => {
             if (toolHead && toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
                 newModuleStatusList.push({
                     status: true,
-                    moduleName: i18n._('key-Workspace/Connection-10W Laser')
+                    moduleName: i18n._('key-Workspace/Connection-Laser-10W')
                 });
             } else {
                 newModuleStatusList.push({
                     status: true,
-                    moduleName: i18n._('key-Workspace/Connection-laser')
+                    moduleName: i18n._('key-Workspace/Connection-Laser')
                 });
             }
             newModuleStatusList.push({
