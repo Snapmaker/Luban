@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
 import i18n from '../../../../lib/i18n';
 
 import { RootState } from '../../../../flux/index.def';
 import { actions as workspaceActions } from '../../../../flux/workspace';
 
+import type { MachineToolHeadOptions } from '../../../../machine-definition';
 import { Button } from '../../../components/Buttons';
 import Modal from '../../../components/Modal';
 
@@ -21,16 +22,27 @@ const GoHomeModal: React.FC = () => {
 
     const {
         isConnected,
-
-        isHomed,
     } = useSelector((state: RootState) => state.workspace);
+
+    const {
+        isHomed,
+
+        activeMachine,
+    } = useSelector((state: RootState) => state.workspace);
+
+    const activeMachineToolOptions: MachineToolHeadOptions | null = useSelector((state: RootState) => state.workspace.activeMachineToolOptions, shallowEqual);
 
     const [showModal, setShowModal] = useState(false);
 
     const [homing, setHoming] = useState(false);
 
     useEffect(() => {
-        if (isConnected) {
+        if (isConnected && activeMachine && activeMachineToolOptions) {
+            // You must explicitly declare goHomeOnConnection: false to skip going home
+            if (activeMachineToolOptions.goHomeOnConnection === false) {
+                return;
+            }
+
             if (!isHomed) {
                 setShowModal(true);
             } else {
@@ -40,7 +52,7 @@ const GoHomeModal: React.FC = () => {
                 setHoming(false);
             }
         }
-    }, [isConnected, isHomed]);
+    }, [isConnected, activeMachine, activeMachineToolOptions, isHomed]);
 
     const onClickGoHome = useCallback(() => {
         if (isConnected) {

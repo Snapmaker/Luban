@@ -18,7 +18,7 @@ declare type MachinePrintMode = {
     workRange: WorkRange;
 };
 
-declare type MachineToolHeadOptions = {
+export declare type MachineToolHeadOptions = {
     identifier: string;
 
     // tool head specific config path
@@ -26,6 +26,8 @@ declare type MachineToolHeadOptions = {
 
     // tool head size may affect work range
     workRange?: WorkRange;
+
+    goHomeOnConnection?: boolean;
 };
 
 

@@ -2,13 +2,16 @@ import * as THREE from 'three';
 import {
     CONNECTION_STATUS_IDLE,
     LEFT_EXTRUDER,
+    WORKFLOW_STATE_IDLE,
     WORKFLOW_STATUS_UNKNOWN
 } from '../../constants';
 
+import { controller } from '../../lib/controller';
+import type { Machine, MachineToolHeadOptions, ToolHead } from '../../machine-definition';
 import FixedArray from '../machine/FixedArray';
 import History from '../machine/History';
 
-import { controller } from '../../lib/controller';
+import { Server } from './Server';
 
 export const WORKSPACE_STAGE = {
     EMPTY: 0,
@@ -38,9 +41,30 @@ export declare interface MachineStateUpdateOptions {
     toolHead?: string;
 
     isRotate?: boolean;
+
+    activeMachine?: Machine | null;
+    activeTool?: ToolHead | null;
+    activeMachineToolOptions?: MachineToolHeadOptions | null;
+}
+
+declare interface WorkspaceMachineDiscoverState {
+    serverDiscovering: boolean;
+    servers: Server[];
+
+    port: string;
+    ports: string[];
+
+    manualIp: string;
+
+    savedServerAddress: string;
+    savedServerName: string;
+    savedServerToken: string;
 }
 declare interface WorkspaceConnectionState {
     connectionType: string;
+    connectionStatus: string;
+    connectionTimeout: number;
+    connectLoading: boolean;
 }
 
 // interface to put everything nowhere to put
@@ -54,9 +78,21 @@ declare interface WorkspaceOtherState {
 
     boundingBox: object;
     previewBoundingBox: object;
+
+    gcodeFiles: object[];
+
+    modelGroup: THREE.Group;
+    previewModelGroup: THREE.Group;
+
+    renderingTimestamp: number;
+
+    stage: typeof WORKSPACE_STAGE.EMPTY;
+    previewStage: typeof WORKSPACE_STAGE.EMPTY;
+
+    progress: number;
 }
 
-declare interface WorkspaceState extends WorkspaceConnectionState, WorkspaceOtherState, MachineState {
+declare interface WorkspaceState extends WorkspaceMachineDiscoverState, WorkspaceConnectionState, WorkspaceOtherState, MachineState {
     headType: string;
 }
 
@@ -120,12 +156,16 @@ export const initialState: WorkspaceState = {
     machineSize: { x: 100, y: 100, z: 100 },
     headType: '',
     toolHead: '',
+    // note: activeMachine and activeTool are meaningful only when isConnected=true
+    activeMachine: null,
+    activeTool: null,
+    activeMachineToolOptions: null,
 
     //
     // Machine State
     //
     // from workflowState: idle, running, paused/ for serial connection?
-    // workflowState: WORKFLOW_STATE_IDLE,
+    workflowState: WORKFLOW_STATE_IDLE,
     isHomed: null,
     isMoving: false, // XYZ axes are moving
 

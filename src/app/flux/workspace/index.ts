@@ -1,23 +1,31 @@
-import { isEmpty, isNil, includes } from 'lodash';
+import { includes, isEmpty, isNil, isUndefined } from 'lodash';
 import * as THREE from 'three';
 import { v4 as uuid } from 'uuid';
 
 import { generateRandomPathName } from '../../../shared/lib/random-utils';
 import api from '../../api';
 import {
+    CONNECTION_CLOSE,
     CONNECTION_EXECUTE_GCODE,
     CONNECTION_GET_GCODEFILE,
+    CONNECTION_HEAD_BEGIN_WORK,
     CONNECTION_STATUS_CONNECTED,
     CONNECTION_STATUS_IDLE,
-    EPSILON, HEAD_CNC, HEAD_LASER, LASER_MOCK_PLATE_HEIGHT, PROTOCOL_TEXT, WORKFLOW_STATUS_IDLE,
+    EMERGENCY_STOP_BUTTON, EPSILON,
+    HEAD_CNC,
+    HEAD_LASER,
+    HEAD_PRINTING,
+    LASER_MOCK_PLATE_HEIGHT,
+    LEFT_EXTRUDER,
+    PROTOCOL_TEXT,
+    RIGHT_EXTRUDER,
+    WORKFLOW_STATUS_IDLE,
     WORKFLOW_STATUS_PAUSED,
     WORKFLOW_STATUS_RUNNING,
-    WORKFLOW_STATUS_UNKNOWN,
-    LEFT_EXTRUDER,
-    RIGHT_EXTRUDER,
+    WORKFLOW_STATUS_UNKNOWN
 } from '../../constants';
 import {
-    findMachineByName, MACHINE_SERIES
+    findMachineByName, findToolHead, MACHINE_SERIES
 } from '../../constants/machines';
 import { valueOf } from '../../lib/contants-utils';
 import { controller } from '../../lib/controller';
@@ -26,7 +34,6 @@ import log from '../../lib/log';
 import workerManager from '../../lib/manager/workerManager';
 import { machineStore } from '../../store/local-storage';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
-// import MachineSelectModal from '../../ui/widgets/Connection/modals/SelectMachineModal';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import baseActions, { ACTION_UPDATE_STATE } from './action-base';
 import connectActions from './action-connect';
@@ -125,6 +132,7 @@ export const actions = {
                     log.warn(_err);
                     return;
                 }
+                log.info(`machine connected via ${connectionType}.`);
 
                 let machineSeries = '';
                 const {
@@ -139,17 +147,10 @@ export const actions = {
                     connectLoading: false
                 }));
 
+                log.debug('DEBUG series =', series, 'seriesSize =', seriesSize);
                 if (!isNil(seriesSize)) {
-                    machineSeries = valueOf(
-                        MACHINE_SERIES,
-                        'alias',
-                        `${series}-${seriesSize}`
-                    )
-                        ? valueOf(
-                            MACHINE_SERIES,
-                            'alias',
-                            `${series}-${seriesSize}`
-                        ).value
+                    machineSeries = valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`)
+                        ? valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`).value
                         : null;
                     dispatch(actions.loadGcode());
                 } else {
@@ -175,7 +176,7 @@ export const actions = {
                         actions.updateMachineState({
                             machineIdentifier: machineSeries,
                             headType,
-                            toolHead
+                            toolHead,
                         })
                     );
                     dispatch(actions.executeGcodeG54(series, headType));
@@ -205,28 +206,13 @@ export const actions = {
                             });
                     }
                 } else {
-                    if (connectionType === ConnectionType.Serial) {
-                        // TODO:
-                        /*
-                        MachineSelectModal({
-                            series: machineSeries,
-                            headType: headType,
-                            toolHead: toolHead,
-                            onConfirm: (seriesT, headTypeT, toolHeadT) => {
-                                dispatch(
-                                    actions.updateMachineState({
-                                        machineIdentifier: seriesT,
-                                        headType: headTypeT,
-                                        toolHead: toolHeadT
-                                    })
-                                );
-                                dispatch(
-                                    actions.executeGcodeG54(seriesT, headTypeT)
-                                );
-                            }
-                        });
-                        */
-                    }
+                    dispatch(
+                        actions.updateMachineState({
+                            machineIdentifier: '',
+                            headType: HEAD_PRINTING,
+                            toolHead: '',
+                        })
+                    );
                 }
                 dispatch(
                     baseActions.updateState({
@@ -554,8 +540,8 @@ export const actions = {
                 if (includes(EMERGENCY_STOP_BUTTON, owner)) {
                     if (errorCode === 1) {
                         controller.emitEvent(CONNECTION_CLOSE, () => {
-                            dispatch(baseActions.resetMachineState());
-                            dispatch(baseActions.updateMachineState({
+                            dispatch(actions.resetMachineState());
+                            dispatch(actions.updateMachineState({
                                 headType: '',
                                 toolHead: ''
                             }));
@@ -1035,16 +1021,32 @@ export const actions = {
     },
 
     updateMachineState: (options: MachineStateUpdateOptions) => (dispatch) => {
-        if (options.machineIdentifier) {
-            const machine = findMachineByName(options.machineIdentifier);
-            if (machine) {
+        if (!isUndefined(options.machineIdentifier) && !isUndefined(options.toolHead)) {
+            const activeMachine = findMachineByName(options.machineIdentifier);
+            const activeTool = findToolHead(options.toolHead);
+            let activeMachineToolOptions = null;
+            if (activeMachine && activeTool) {
+                for (const toolOptions of activeMachine.metadata.toolHeads) {
+                    if (toolOptions.identifier === activeTool.identifier) {
+                        activeMachineToolOptions = toolOptions;
+                        break;
+                    }
+                }
+            }
+
+            if (activeMachine) {
                 options.machineSize = {
-                    x: machine.metadata.size.x,
-                    y: machine.metadata.size.y,
-                    z: machine.metadata.size.z,
+                    x: activeMachine.metadata.size.x,
+                    y: activeMachine.metadata.size.y,
+                    z: activeMachine.metadata.size.z,
                 };
             }
+
+            options.activeMachine = activeMachine;
+            options.activeTool = activeTool;
+            options.activeMachineToolOptions = activeMachineToolOptions;
         }
+
         dispatch(actions.updateState(options));
     },
 
