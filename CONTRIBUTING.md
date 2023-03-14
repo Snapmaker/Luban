@@ -3,21 +3,11 @@
 We would love for your to contribute to Snapmaker Luban and help make it better.
 Here are the guidelines we would like you to follow:
 
-- [Code of Conduct](#coc)
 - [Issues and Bugs](#issue)
 - [Feature Request](#feature)
 - [Pull Request](#pr)
 - [Code Style Guidelines](#code)
 - [Commit Message Guidelines](#commit)
-
-
-## <a name="coc"></a> Code of Conduct
-
-As contributors and maintainers of the Snapmaker Luban project, we pledge to respect everyone who contributes by posting issues, updating documentation, submitting pull requests, providing feedback in comments, and any other activities.
-
-Communication through any of Snapmaker Luban's channels (GitHub, Forum, Facebook Group, etc.) must be constructive and never resort to personal attacks, trolling, public or private harassment, insults, or other unprofessional conduct.
-
-If any member of the community violates this code of conduct, the maintainers of the Snapmaker Luban project may take action, removing issues, comments, and PRs or blocking accounts as deemed appropriate.
 
 ## <a name="issue"></a> Found a Bug?
 
@@ -58,11 +48,6 @@ We also have a git hook script to check your commit message, for convenience you
 [Commitizen's CLI tool](https://github.com/commitizen/cz-cli) to help you write commit messages.
 
     ```
-    npm run commit
-    ```
-    Or
-
-    ```
     git commit
     ```
     
@@ -71,12 +56,12 @@ We also have a git hook script to check your commit message, for convenience you
     ```
     git push origin my-fix-branch
     ```
+
 9. In Github, send a pull request to `Snapmaker/Luban`.
 
    If we suggest,
 
    - Make updates on your branch
-   - Re-run all tests
    - Rebase your branch and force push to your GitHub repository (this will update your Pull Request):
 
      ```

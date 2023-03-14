@@ -179,11 +179,15 @@ class ManualCalibration extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const machine = state.machine;
+    const { series, size } = state.machine;
+    const { server } = state.workspace;
     return {
-        series: machine.series,
-        server: machine.server,
-        size: machine.metadata.size
+        // machine
+        series,
+        size,
+
+        // connected machine
+        server,
     };
 };
 

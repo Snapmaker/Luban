@@ -49,11 +49,6 @@ export const MACHINE_SERIES = {
                 y: 125,
                 z: 125
             },
-            laserSize: {
-                x: 125,
-                y: 125,
-                z: 125
-            }
         }
     },
     ORIGINAL_LZ: {
@@ -66,11 +61,6 @@ export const MACHINE_SERIES = {
                 y: 125,
                 z: 221
             },
-            laserSize: {
-                x: 125,
-                y: 125,
-                z: 221
-            }
         }
     },
     A150: {
@@ -82,11 +72,6 @@ export const MACHINE_SERIES = {
                 y: 160,
                 z: 145
             },
-            laserSize: {
-                x: 167,
-                y: 165,
-                z: 150
-            }
         },
         alias: ['SM2-S', 'Snapmaker 2.0 A150']
     },
@@ -99,11 +84,6 @@ export const MACHINE_SERIES = {
                 y: 250,
                 z: 235
             },
-            laserSize: {
-                x: 252,
-                y: 260,
-                z: 235
-            }
         },
         alias: ['SM2-M', 'Snapmaker 2.0 A250']
 
@@ -117,11 +97,6 @@ export const MACHINE_SERIES = {
                 y: 350,
                 z: 330
             },
-            laserSize: {
-                x: 345,
-                y: 357,
-                z: 334
-            }
         },
         alias: ['SM2-L', 'Snapmaker 2.0 A350']
     },
@@ -134,11 +109,6 @@ export const MACHINE_SERIES = {
                 y: 400,
                 z: 400
             },
-            laserSize: {
-                x: 400,
-                y: 400,
-                z: 400
-            }
         },
         alias: ['SM2-L', 'Snapmaker A400']
     },
@@ -151,11 +121,6 @@ export const MACHINE_SERIES = {
                 y: 125,
                 z: 125
             },
-            laserSize: {
-                x: 125,
-                y: 125,
-                z: 125
-            }
         },
         alias: ['Custom']
     }

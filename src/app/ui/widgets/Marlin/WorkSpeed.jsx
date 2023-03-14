@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 import i18n from '../../../lib/i18n';
-import { actions as machineActions } from '../../../flux/machine';
+import { actions as workspaceActions } from '../../../flux/workspace';
 import { CONNECTION_TYPE_WIFI, CONNECTION_WORKSPEED_FACTOR, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING } from '../../../constants';
 import ParamsWrapper from './ParamsWrapper';
 import { controller } from '../../../lib/controller';
@@ -59,8 +59,7 @@ class WorkSpeed extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const machine = state.machine;
-    const { workflowStatus, connectionType, server } = machine;
+    const { workflowStatus, connectionType, server } = state.workspace;
     const { toolHead } = state.workspace;
 
     return {
@@ -74,7 +73,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        executeGcode: (gcode, context) => dispatch(machineActions.executeGcode(gcode, context))
+        executeGcode: (gcode, context) => dispatch(workspaceActions.executeGcode(gcode, context))
     };
 };
 

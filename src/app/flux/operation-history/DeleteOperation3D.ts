@@ -1,9 +1,10 @@
 import ModelGroup from '../../models/ModelGroup';
-import ThreeGroup from '../../models/ThreeGroup';
-import ThreeUtils from '../../three-extensions/ThreeUtils';
-import Operation from './Operation';
-import ThreeModel from '../../models/ThreeModel';
 import { ModelTransformation } from '../../models/ThreeBaseModel';
+import ThreeGroup from '../../models/ThreeGroup';
+import ThreeModel from '../../models/ThreeModel';
+import ThreeUtils from '../../three-extensions/ThreeUtils';
+import type { DispatchType } from '../index.def';
+import Operation from './Operation';
 
 type DeleteOperationProp = {
     target: ThreeGroup | ThreeModel,
@@ -15,7 +16,7 @@ type DeleteOperationState = {
     groupTransformation: ModelTransformation,
     modelTransformation: Map<string, ModelTransformation>,
     childrens?: Array<ThreeGroup | ThreeModel>,
-    dispatch?: any
+    dispatch?: DispatchType;
 };
 
 const getGlobalTransform = (modelGroup, model) => {

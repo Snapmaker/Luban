@@ -17,7 +17,7 @@ import {
     WORKFLOW_STATUS_RUNNING,
 } from '../../../constants';
 import { isDualExtruder } from '../../../constants/machines';
-import { actions as machineActions } from '../../../flux/machine';
+import { actions as workspaceActions } from '../../../flux/workspace';
 import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import Anchor from '../../components/Anchor';
@@ -458,7 +458,6 @@ class Printing extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const machine = state.machine;
     const workspace = state.workspace;
     const {
         isConnected,
@@ -479,8 +478,10 @@ const mapStateToProps = (state) => {
         heatedBedTargetTemperature,
         workflowStatus,
         currentWorkNozzle
-    } = machine;
+    } = workspace;
+
     const { toolHead: printingToolhead } = workspace;
+
     return {
         isConnected,
         connectionType,
@@ -505,8 +506,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        addConsoleLogs: (gcode, context) => dispatch(machineActions.addConsoleLogs(gcode, context)),
-        executeGcode: (gcode, context, cmd) => dispatch(machineActions.executeGcode(gcode, context, cmd))
+        addConsoleLogs: (gcode, context) => dispatch(workspaceActions.addConsoleLogs(gcode, context)),
+        executeGcode: (gcode, context, cmd) => dispatch(workspaceActions.executeGcode(gcode, context, cmd))
     };
 };
 

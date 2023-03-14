@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { BufferGeometry, Group, Vector3 } from 'three';
+import { BufferGeometry, Geometry, Group, Vector3 } from 'three';
 
 import ConvexGeometry from '../three-extensions/ConvexGeometry';
 import ThreeUtils from '../three-extensions/ThreeUtils';
@@ -68,7 +68,7 @@ const loadModel = (uploadPath: string) => {
                             )
                         );
                     }
-                    const convexGeometry = new ConvexGeometry(vertices) as any;
+                    const convexGeometry = new ConvexGeometry(vertices) as Geometry;
                     const convexBufferGeometry = new BufferGeometry().fromGeometry(
                         convexGeometry
                     );

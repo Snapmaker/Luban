@@ -62,8 +62,11 @@ const INITIAL_STATE = {
     },
     general: {
         recentFiles: [],
-        recentFilesLength: -1
-    }
+        recentFilesLength: -1,
+
+        // opening project
+        opening: false,
+    },
 };
 const ACTION_UPDATE_STATE = 'EDITOR_ACTION_UPDATE_STATE';
 
@@ -487,6 +490,8 @@ export const actions = {
 
     openProject: (file, history, unReload = false, isGuideTours = false) => async (dispatch) => {
         if (checkIsSnapmakerProjectFile(file.name)) {
+            dispatch(actions.updateState('general', { opening: true }));
+
             const formData = new FormData();
             let shouldSetFileName = true;
             if (!(file instanceof File)) {
@@ -553,6 +558,8 @@ export const actions = {
             } else {
                 await dispatch(actions.updateState(headType, { unSaved: true, openedFile: null }));
             }
+
+            dispatch(actions.updateState('general', { opening: false }));
         } else if (checkIsGCodeFile(file.name)) {
             dispatch(workspaceActions.uploadGcodeFile(file));
             history.push('/workspace');

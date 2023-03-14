@@ -11,7 +11,7 @@ import { actions as editorActions } from '../../../flux/editor';
 import Dropdown from '../../components/Dropdown';
 import Cnc3DVisualizer from '../../views/Cnc3DVisualizer';
 import MainToolBar from '../../layouts/MainToolBar';
-import { HEAD_CNC, HEAD_LASER, CONNECTION_TYPE_WIFI, longLangWithType } from '../../../constants';
+import { HEAD_CNC, HEAD_LASER, longLangWithType } from '../../../constants';
 import { MACHINE_SERIES } from '../../../constants/machines';
 import { actions as laserActions } from '../../../flux/laser';
 import { renderModal } from '../../utils';
@@ -20,6 +20,7 @@ import LaserCameraAndBackground from '../../widgets/LaserCameraAidBackground';
 import ModalSmall from '../../components/Modal/ModalSmall';
 import SelectCaptureMode, { MODE_THICKNESS_COMPENSATION } from '../../widgets/LaserCameraAidBackground/SelectCaptureMode';
 import MaterialThicknessInput from '../../widgets/LaserCameraAidBackground/MaterialThicknessInput';
+import { ConnectionType } from '../../../flux/workspace/state';
 
 function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setShowWorkspace }) {
     const unSaved = useSelector(state => state?.project[headType]?.unSaved, shallowEqual);
@@ -27,12 +28,16 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
     const canUndo = useSelector(state => state[headType]?.history?.canUndo, shallowEqual);
     const isRotate = useSelector(state => state[headType]?.materials?.isRotate, shallowEqual);
     const modelGroup = useSelector(state => state[headType]?.modelGroup, shallowEqual);
+
     const machineSeries = useSelector(state => state?.machine?.series);
     const machineToolHead = useSelector(state => state?.machine?.toolHead);
-    const workspaceSeries = useSelector(state => state?.workspace?.series);
-    const workspaceHeadType = useSelector(state => state?.workspace?.headType);
-    const workspaceToolHead = useSelector(state => state?.workspace?.toolHead);
-    const workspaceIsRotate = useSelector(state => state?.workspace?.isRotate);
+
+    const {
+        machineIdentifier: connectedMachineIdentifier,
+        headType: workspaceHeadType,
+        toolHead: workspaceToolHead,
+        isRotate: workspaceIsRotate,
+    } = useSelector(state => state.workspace);
 
     const dispatch = useDispatch();
 
@@ -40,10 +45,11 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
         series: machineSeries,
         toolHead: machineToolHead[`${headType}Toolhead`]
     });
+
     // Laser
-    const isConnected = useSelector(state => state?.machine?.isConnected, shallowEqual);
-    const connectionType = useSelector(state => state?.machine?.connectionType, shallowEqual);
+    const { connectionType, isConnected } = useSelector(state => state.workspace, shallowEqual);
     const series = useSelector(state => state?.machine?.series, shallowEqual);
+
     const [cameraCaptureInfo, setCameraCaptureInfo] = useState({
         display: false,
         mode: '',
@@ -121,16 +127,23 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             </Menu>
         );
     } else if (headType === HEAD_LASER) {
+        const cameraCaptureEnabled = (() => {
+            if (isOriginalSeries) {
+                return false;
+            }
+
+            return isConnected && connectionType === ConnectionType.WiFi;
+        })();
         menu = (
             <Menu>
                 <Menu.Item
                     onClick={() => setShowCameraCapture(true)}
-                    disabled={isOriginalSeries ? false : !(isConnected && connectionType === CONNECTION_TYPE_WIFI)}
+                    disabled={!cameraCaptureEnabled}
                 >
                     <div className="align-l width-168">
                         <SvgIcon
                             type={['static']}
-                            disabled={isOriginalSeries ? false : !(isConnected && connectionType === CONNECTION_TYPE_WIFI)}
+                            disabled={!cameraCaptureEnabled}
                             name="MainToolbarAddBackground"
                         />
                         <span
@@ -327,7 +340,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             actions: []
         };
         const content = (() => {
-            if (!isOriginalSeries && (workspaceSeries !== machineSeries || workspaceHeadType !== HEAD_LASER
+            if (!isOriginalSeries && (connectedMachineIdentifier !== machineSeries || workspaceHeadType !== HEAD_LASER
                 || machineToolHead.laserToolhead !== workspaceToolHead || workspaceIsRotate)) {
                 // todo, ui
                 return (
@@ -351,6 +364,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                     </div>
                 );
             }
+
             if (!cameraCaptureInfo.mode) {
                 modalConfig.title = i18n._('key-Laser/CameraCapture-Camera Capture');
                 modalConfig.shouldRenderFooter = false;
@@ -368,6 +382,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                     />
                 );
             }
+
             if (cameraCaptureInfo.mode === MODE_THICKNESS_COMPENSATION && cameraCaptureInfo.materialThickness === null) {
                 modalConfig.title = i18n._('key-Laser/CameraCapture-Camera Capture');
                 modalConfig.actions = [{

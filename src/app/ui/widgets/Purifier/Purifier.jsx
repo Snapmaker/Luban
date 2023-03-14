@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { shallowEqual, useSelector } from 'react-redux';
 import classNames from 'classnames';
 import Switch from '../../components/Switch';
 import styles from './index.styl';
@@ -19,7 +19,17 @@ import i18n from '../../../lib/i18n';
 import { controller } from '../../../lib/controller';
 
 function Purifier({ widgetActions }) {
-    const { isConnected, airPurifier, airPurifierSwitch, airPurifierFanSpeed, airPurifierFilterHealth } = useSelector(state => state.machine);
+    const {
+        isConnected,
+    } = useSelector(state => state.workspace);
+
+    const {
+        airPurifier,
+        airPurifierSwitch,
+        airPurifierFanSpeed,
+        airPurifierFilterHealth,
+    } = useSelector(state => state.workspace, shallowEqual);
+
     const series = useSelector(state => state.machine.series);
     const [isFilterEnable, setIsFilterEnable] = useState(airPurifierSwitch);
     const [workSpeed, setWorkSpeed] = useState(airPurifierFanSpeed || SPEED_HIGH);

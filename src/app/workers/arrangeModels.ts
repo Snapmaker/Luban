@@ -13,7 +13,7 @@ type validAreaData = {
 
 type ModelData = {
     modelID: string;
-    children: any;
+    children: object[];
     isGroup: boolean;
     center: SizeNumber;
 };
@@ -27,7 +27,7 @@ type ArrangeModelsData = {
     memory: number;
 };
 
-const getModelFaces = (model: any) => {
+const getModelFaces = (model: object) => {
     // TODO, move to util
     const min = {
         x: Number.MAX_SAFE_INTEGER,

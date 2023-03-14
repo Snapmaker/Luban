@@ -60,7 +60,6 @@ class WifiServerManager extends EventEmitter {
         });
     };
 
-
     refreshDevices = () => {
         // console.log('refreshDevices');
         // Clear devices and send broadcast only when not refreshing to avoid duplicated refresh
@@ -124,7 +123,7 @@ class WifiServerManager extends EventEmitter {
 
         this.refreshDevices();
         if (!intervalHandle) {
-            intervalHandle = setInterval(this.refreshDevices, 3000);
+            intervalHandle = setInterval(this.refreshDevices, 5000);
         }
     };
 

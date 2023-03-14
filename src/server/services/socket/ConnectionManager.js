@@ -127,7 +127,7 @@ class ConnectionManager {
         if (this.protocol === SACP_PROTOCOL) {
             this.socket && this.socket.connectionCloseImproper();
         } else {
-            console.log('connectionCloseImproper');
+            log.info('connectionCloseImproper');
             // force close
             // this.socket && this.socket.emit('connection:closeImproper');
         }
@@ -227,7 +227,9 @@ class ConnectionManager {
     };
 
     startGcode = async (socket, options) => {
-        const { headType, isRotate, toolHead, isLaserPrintAutoMode, materialThickness, laserFocalLength, renderName, eventName, materialThicknessSource } = options;
+        const {
+            headType, isRotate, toolHead, isLaserPrintAutoMode, materialThickness, laserFocalLength, renderName, eventName, materialThicknessSource
+        } = options;
         if (this.connectionType === CONNECTION_TYPE_WIFI) {
             const { uploadName, series, background, size, workPosition, originOffset } = options;
             const gcodeFilePath = `${DataStorage.tmpDir}/${uploadName}`;
@@ -238,10 +240,13 @@ class ConnectionManager {
                     // Snapmaker Artisan (SACP)
                     // this.socket.uploadGcodeFile(gcodeFilePath, headType, renderName, () => {
                     // });
-                    if (laserFocalLength && toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isRotate && isLaserPrintAutoMode && materialThickness !== 0 && materialThicknessSource === AUTO_STRING) {
+                    if (laserFocalLength && toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2
+                        && !isRotate && isLaserPrintAutoMode && materialThickness !== 0 && materialThicknessSource === AUTO_STRING) {
                         await this.socket.laseAutoSetMaterialHeight({ toolHead });
                     }
-                    if (((toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isLaserPrintAutoMode) || (toolHead === LEVEL_ONE_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode)) && ((materialThickness !== 0 && materialThickness !== -1) || isRotate)) {
+                    if (((toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isLaserPrintAutoMode)
+                        || (toolHead === LEVEL_ONE_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode))
+                        && ((materialThickness !== 0 && materialThickness !== -1) || isRotate)) {
                         await this.socket.laserSetWorkHeight({ toolHead, materialThickness, isRotate });
                     }
 

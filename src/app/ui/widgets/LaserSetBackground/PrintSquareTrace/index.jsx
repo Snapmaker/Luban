@@ -8,7 +8,6 @@ import { Button } from '../../../components/Buttons';
 import Modal from '../../../components/Modal';
 import styles from '../styles.styl';
 import { actions as workspaceActions } from '../../../../flux/workspace';
-import { actions as machineActions } from '../../../../flux/machine';
 import PrintPreview from './PrintPreview';
 
 
@@ -221,13 +220,13 @@ class PrintSquareTrace extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
     return {
-        size: machine.metadata.size
+        size: machine.size
     };
 };
 
 const mapDispatchToProps = (dispatch) => ({
     renderGcode: (gcode) => dispatch(workspaceActions.renderGcode('', gcode, true)),
-    executeGcode: (cmd) => dispatch(machineActions.executeGcode(null, null, cmd)),
+    executeGcode: (cmd) => dispatch(workspaceActions.executeGcode(null, null, cmd)),
     clearGcode: () => dispatch(workspaceActions.clearGcode())
 });
 

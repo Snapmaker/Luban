@@ -16,9 +16,9 @@ type PositionItemData = {
 
 type ScaleToFitData = {
     size: Vector3Number;
-    positionAttribute: any;
-    normalAttribute: any;
-    matrixWorlds: any;
+    positionAttribute: object;
+    normalAttribute: object;
+    matrixWorlds: object;
     left: number;
     right: number;
     front: number;

@@ -28,6 +28,15 @@ export function processGcodeHeaderAfterCuraEngine(gcodeFilePath: string, metadat
     const boundingBoxMax = metadata.boundingBox ? metadata.boundingBox.max : { x: 0, y: 0, z: 0 };
     const boundingBoxMin = metadata.boundingBox ? metadata.boundingBox.min : { x: 0, y: 0, z: 0 };
 
+    let filamentWeight = '';
+    let filamentLength = '';
+    if (sliceResult.filamentWeight) {
+        filamentWeight = `${sliceResult.filamentWeight.reduce((a, b) => a + b, 0)}`;
+    }
+    if (sliceResult.filamentLength) {
+        filamentLength = `${sliceResult.filamentLength.reduce((a, b) => a + b, 0)}`;
+    }
+
     const header = `${';Header Start\n'
         + '\n'
         + `${readFileSync.substring(0, splitIndex)}\n`
@@ -51,8 +60,8 @@ export function processGcodeHeaderAfterCuraEngine(gcodeFilePath: string, metadat
         + `;min_z(mm): ${boundingBoxMin.z}\n`
         + `;layer_number: ${metadata?.layerCount}\n`
         + `;layer_height: ${activeFinal.settings.layer_height.default_value}\n`
-        + `;matierial_weight: ${sliceResult.filamentWeight}\n`
-        + `;matierial_length: ${sliceResult.filamentLength}\n`
+        + `;matierial_weight: ${filamentWeight}\n`
+        + `;matierial_length: ${filamentLength}\n`
         + `;nozzle_0_material: ${metadata?.material0}\n`
         + `;nozzle_1_material: ${metadata?.material1}\n`
         + '\n'
