@@ -1989,7 +1989,7 @@
     "key-Workspace/Workprogress-StopJobConfirmModal Yes": "停止",
     "key-Workspace/Workprogress-StopJobConfirmModal body": "你确定要停止当前的作业吗？",
     "key-Workspace/Workprogress-StopJobConfirmModal title": "停止作业",
-    "key-Workspace/Workprogress-Unknow": "未知模组",
+    "key-Workspace/Workprogress-Unknow": "Unknown",
     "key-Workspace/Workprogress-Working": "作业状态",
     "key-app_layout-File Saved": "文件保存成功。",
     "key-app_layout-Open Folder": "打开文件夹。",
