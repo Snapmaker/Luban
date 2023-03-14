@@ -20,8 +20,14 @@ const GcodeInfo = () => {
         }
         return `${filamentLength[index].toFixed(1)} m / ${filamentWeight[index].toFixed(1)} g`;
     }
-    const filamentLeftDes = getFilamentDes(0);
-    const filamentRightDes = getFilamentDes(1);
+    let filamentLeftDes = getFilamentDes(0);
+    let filamentRightDes = getFilamentDes(1);
+
+    if (filamentRightDes) {
+        filamentLeftDes += ' (L)';
+        filamentRightDes += ' (R)';
+    }
+
     const printTimeDes = humanReadableTime(printTime);
     return (
         <React.Fragment>
@@ -33,13 +39,13 @@ const GcodeInfo = () => {
             <p>
                 <span className="fa fa-bullseye" />
                 <Space width={4} />
-                {filamentLeftDes} (L)
+                {filamentLeftDes}
             </p>
             {filamentRightDes && (
                 <p>
                     <span className="fa fa-bullseye" />
                     <Space width={4} />
-                    {filamentRightDes} (R)
+                    {filamentRightDes}
                 </p>
             )}
         </React.Fragment>
