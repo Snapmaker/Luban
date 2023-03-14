@@ -62,7 +62,7 @@ class MarlinController {
             if (this.controller.state.hexModeEnabled) {
                 this.emitAll('transfer:hex', { data: Buffer.from(data, 'utf-8') });
             }
-            log.silly(`< ${data}`);
+            // log.silly(`< ${data}`);
             this.controller.parse(String(data));
         },
         close: (err) => {
@@ -405,7 +405,8 @@ class MarlinController {
             }
         });
         this.controller.on('pos', (res) => {
-            log.silly(`controller.on('pos'): source=${this.history.writeSource}, line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
+            // log.silly(`controller.on('pos'): source=${this.history.writeSource},
+            // line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', { data: res.raw });
             }
@@ -420,8 +421,8 @@ class MarlinController {
                     connectionType: 'serial'
                 });
             }
-            log.silly(`controller.on('temperature'): source=${this.history.writeSource},
-                line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
+            // log.silly(`controller.on('temperature'): source=${this.history.writeSource},
+            //    line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER, WRITE_SOURCE_SENDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', { data: res.raw });
             }
@@ -465,7 +466,7 @@ class MarlinController {
             this.emergencyStop();
         });
         this.controller.on('ok', (res) => {
-            log.silly(`controller.on('ok'): source=${this.history.writeSource}, line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
+            // log.silly(`controller.on('ok'): source=${this.history.writeSource}, line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             // Display info to console, if this is from user-input
             if (res) {
                 if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
