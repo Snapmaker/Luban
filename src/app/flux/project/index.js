@@ -403,17 +403,22 @@ export const actions = {
             newTargetFile = name;
             tmpFile = `/Tmp/${targetFile}`;
         }
-        UniApi.File.saveAs(newTargetFile, tmpFile, (type, filePath = '', newOpenedFile) => {
-            dispatch(appGlobalActions.updateSavedModal({
-                showSavedModal: true,
-                savedModalType: type,
-                savedModalFilePath: filePath
-            }));
-            dispatch(actions.afterSaved());
-            if (newOpenedFile) {
-                dispatch(actions.setOpenedFileWithType(headType, newOpenedFile));
-            }
-            dispatch(actions.clearSavedEnvironment(headType));
+
+        return new Promise((resolve) => {
+            UniApi.File.saveAs(newTargetFile, tmpFile, (type, filePath = '', newOpenedFile) => {
+                dispatch(appGlobalActions.updateSavedModal({
+                    showSavedModal: true,
+                    savedModalType: type,
+                    savedModalFilePath: filePath
+                }));
+                dispatch(actions.afterSaved());
+                if (newOpenedFile) {
+                    dispatch(actions.setOpenedFileWithType(headType, newOpenedFile));
+                }
+                dispatch(actions.clearSavedEnvironment(headType));
+
+                resolve(); // done
+            });
         });
     },
     save: (headType, dialogOptions = false) => async (dispatch, getState) => {
@@ -461,6 +466,7 @@ export const actions = {
                 }
             }
         }
+
         if (!openedFile) {
             await dispatch(actions.autoSaveEnvironment(headType));
             await dispatch(actions.saveAsFile(headType));
@@ -468,10 +474,13 @@ export const actions = {
         }
 
         const { body: { targetFile } } = await api.packageEnv({ headType });
-        dispatch(actions.updateState(headType, { targetFile }));
+        await dispatch(actions.updateState(headType, { targetFile }));
         const tmpFile = `/Tmp/${targetFile}`;
-        UniApi.File.save(openedFile.path, tmpFile, () => {
-            dispatch(actions.afterSaved());
+        await new Promise((resolve) => {
+            UniApi.File.save(openedFile.path, tmpFile, async () => {
+                await dispatch(actions.afterSaved());
+                resolve();
+            });
         });
         await dispatch(actions.clearSavedEnvironment(headType));
     },
