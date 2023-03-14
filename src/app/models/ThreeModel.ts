@@ -181,12 +181,12 @@ class ThreeModel extends BaseModel {
     }
 
     private applyBufferGeometry(positions) {
-        const bufferGeometry = this.meshObject.geometry;
-        bufferGeometry.setAttribute(
-            'position',
-            new THREE.BufferAttribute(positions, 3)
-        );
+        // Replace with a new buffer geometry
+        const bufferGeometry = new THREE.BufferGeometry();
+        bufferGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         bufferGeometry.computeVertexNormals();
+        this.meshObject.geometry = bufferGeometry;
+
         // Ignore cache, force update boundingBox
         ThreeUtils.computeBoundingBox(this.meshObject, true);
 
