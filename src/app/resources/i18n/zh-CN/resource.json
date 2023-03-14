@@ -1586,6 +1586,7 @@
     "key-Printing/Page-Unfold Printing Settings to adjust printing parameters.": "点击展开打印设置可以调节打印参数。",
     "key-Printing/Page-Warning": "警告",
     "key-Printing/Page-Workspace": "工作区",
+    "key-Printing/Parameter Not Associated with Parent": "参数值已被修改，它的数值不与父参数关联。",
     "key-Printing/Place the model within the High-temperature Zone to get a temperature higher than 80℃.": "此模型设置的打印平台温度超过 80℃，建议放置在高温区域内。",
     "key-Printing/Preview-Color Scheme": "颜色方案",
     "key-Printing/Preview-Fill": "填充",

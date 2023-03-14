@@ -3,6 +3,7 @@ import classNames from 'classnames';
 import { isNil, noop } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { useState } from 'react';
+
 import { PRINTING_MATERIAL_CONFIG_COLORS } from '../../../constants';
 import i18n from '../../../lib/i18n';
 import Anchor from '../../components/Anchor';
@@ -132,7 +133,7 @@ function SettingItem(
             <div className="sm-flex-auto">
                 {isProfile && !isDefault && (
                     <SvgIcon
-                        className="margin-horizontal-4"
+                        className="margin-left-4"
                         name="Reset"
                         size={24}
                         onClick={() => {
@@ -140,14 +141,23 @@ function SettingItem(
                         }}
                     />
                 )}
-                {mismatch && (
-                    <SvgIcon
-                        name="ParameterDisconnect"
-                        size={24}
-                        type={['static']}
-                        color="#FFA940"
-                    />
-                )}
+                {/* Parameter is not associated to parent */}
+                {
+                    mismatch && (
+                        <Tooltip
+                            className="margin-right-4"
+                            title={i18n._('key-Printing/Parameter Not Associated with Parent')}
+                            placement="topLeft"
+                        >
+                            <SvgIcon
+                                name="ParameterDisconnect"
+                                size={24}
+                                type={['static']}
+                                color="#FFA940"
+                            />
+                        </Tooltip>
+                    )
+                }
                 {type === 'float' && (
                     <Input
                         suffix={unit}

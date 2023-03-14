@@ -1586,6 +1586,7 @@
     "key-Printing/Page-Unfold Printing Settings to adjust printing parameters.": "Unfold Printing Settings to adjust printing parameters.",
     "key-Printing/Page-Warning": "Warning",
     "key-Printing/Page-Workspace": "Workspace",
+    "key-Printing/Parameter Not Associated with Parent": "The parameter value has been modified, its value is not associated with the parent parameter.",
     "key-Printing/Place the model within the High-temperature Zone to get a temperature higher than 80℃.": "Place the model within the High-temperature Zone to get a temperature higher than 80℃.",
     "key-Printing/Preview-Color Scheme": "Color Scheme",
     "key-Printing/Preview-Fill": "Fill",
