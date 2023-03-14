@@ -11,7 +11,6 @@ import {
     HEAD_PRINTING,
     isDualExtruder,
     LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
-    LEVEL_TWO_POWER_LASER_FOR_SM2,
     MACHINE_SERIES
 } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
@@ -20,6 +19,8 @@ import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import type { Machine } from '../../../machine-definition';
+import { highPower10WLaserToolHead, standardLaserToolHead } from '../../../machines/snapmaker-2-toolheads';
+import { laser1600mWToolHeadOriginal, laserToolHeadOriginal } from '../../../machines/snapmaker-original-toolheads';
 
 import { Button } from '../../components/Buttons';
 import Select from '../../components/Select';
@@ -125,26 +126,26 @@ const SerialConnection: React.FC = () => {
 
     };
 
-    const controllerEvents = {
-        'connection:connected': (options) => onPortReady(options),
-    };
-
-    function addControllerEvents() {
-        Object.keys(controllerEvents).forEach(eventName => {
-            const callback = controllerEvents[eventName];
-            controller.on(eventName, callback);
-        });
-    }
-
-    function removeControllerEvents() {
-        Object.keys(controllerEvents).forEach(eventName => {
-            const callback = controllerEvents[eventName];
-            controller.off(eventName, callback);
-        });
-    }
-
     useEffect(() => {
+        const controllerEvents = {
+            'connection:connected': (options) => onPortReady(options),
+        };
+
+        const addControllerEvents = () => {
+            Object.keys(controllerEvents).forEach(eventName => {
+                const callback = controllerEvents[eventName];
+                controller.on(eventName, callback);
+            });
+        };
+
+        const removeControllerEvents = () => {
+            Object.keys(controllerEvents).forEach(eventName => {
+                const callback = controllerEvents[eventName];
+                controller.off(eventName, callback);
+            });
+        };
         addControllerEvents();
+
         // refresh ports on mount
         setTimeout(() => listPorts());
 
@@ -162,18 +163,32 @@ const SerialConnection: React.FC = () => {
         const newModuleStatusList = [];
         if (headType) {
             // TODO
-            if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) { // TODO
-                newModuleStatusList.push({
-                    key: 'headtype',
-                    moduleName: i18n._('key-Workspace/Connection-10W Laser'),
-                    status: true
-                });
-            } else if (headType === HEAD_LASER) {
-                newModuleStatusList.push({
-                    key: 'headtype',
-                    moduleName: i18n._('key-Workspace/Connection-laser'),
-                    status: true
-                });
+            if (headType === HEAD_LASER) {
+                if (toolHead === highPower10WLaserToolHead.identifier) { // TODO
+                    newModuleStatusList.push({
+                        key: 'headtype',
+                        moduleName: i18n._('key-Workspace/Connection-Laser-10W'),
+                        status: true
+                    });
+                } else if (toolHead === standardLaserToolHead.identifier) {
+                    newModuleStatusList.push({
+                        key: 'headtype',
+                        moduleName: i18n._('key-Workspace/Connection-Laser'),
+                        status: true
+                    });
+                } else if (toolHead === laserToolHeadOriginal.identifier) {
+                    newModuleStatusList.push({
+                        key: 'headtype',
+                        moduleName: i18n._('key-Workspace/Connection-Laser-200mW'),
+                        status: true
+                    });
+                } else if (toolHead === laser1600mWToolHeadOriginal.identifier) {
+                    newModuleStatusList.push({
+                        key: 'headtype',
+                        moduleName: i18n._('key-Workspace/Connection-Laser-1600mW'),
+                        status: true
+                    });
+                }
             } else if (headType === HEAD_PRINTING) {
                 if (isDualExtruder(toolHead)) {
                     newModuleStatusList.push({
