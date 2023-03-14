@@ -3,7 +3,7 @@ import i18next from 'i18next';
 import isElectron from 'is-electron';
 import { find, includes } from 'lodash';
 import PropTypes from 'prop-types';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { useHistory, withRouter } from 'react-router-dom';
 
@@ -475,24 +475,11 @@ function Printing({ location }) {
         }
     }, [enabledIntro]);
 
-    async function onDropAccepted(files) {
-        // const allFiles = files.map(d => d.name).join();
-        // try {
+    const onDropAccepted = useCallback(async (files) => {
         await dispatch(printingActions.uploadModel(files));
-        // } catch (e) {
-        //     modal({
-        //         title: i18n._('key-Printing/Page-Failed to open model.'),
-        //         body: (
-        //             <React.Fragment>
-        //                 <p>{e.message || e.body.msg}</p>
-        //                 <p>{i18n._('key-Printing/ContextMenu-Model source name')}: {allFiles}</p>
-        //             </React.Fragment>
-        //         )
-        //     });
-        // }
-    }
+    }, [dispatch]);
 
-    function onDropRejected() {
+    const onDropRejected = useCallback(() => {
         const title = i18n._('key-Printing/Page-Warning');
         const body = i18n._('key-Printing/Page-Only STL/OBJ files are supported.');
         modal({
@@ -500,7 +487,7 @@ function Printing({ location }) {
             cancelTitle: i18n._('key-Workspace/WorkflowControl-Close'),
             body: body
         });
-    }
+    }, []);
 
     function renderModalView() {
         return (<PrintingManager />);
@@ -540,6 +527,10 @@ function Printing({ location }) {
             renderRightView={renderRightView}
             renderModalView={renderModalView}
         >
+
+            {/* initialization of the scene */}
+            <SceneInitialization />
+            {/* Visualizer */}
             <Dropzone
                 multiple
                 disabled={false}
@@ -548,16 +539,11 @@ function Printing({ location }) {
                 onDropAccepted={onDropAccepted}
                 onDropRejected={onDropRejected}
             >
-                {/* initialization of the scene */}
-                <SceneInitialization />
                 <PrintingVisualizer
                     widgetId="printingVisualizer"
                     pageMode={pageMode}
                     setPageMode={setPageMode}
                 />
-                {renderHomepage()}
-                {renderWorkspace()}
-                {renderMachineMaterialSettings()}
                 {enabledIntro && (
                     <Steps
                         enabled={enabledIntro}
@@ -653,6 +639,9 @@ function Printing({ location }) {
                     />
                 )}
             </Dropzone>
+            {renderHomepage()}
+            {renderWorkspace()}
+            {renderMachineMaterialSettings()}
             <Thumbnail
                 ref={thumbnail}
                 modelGroup={modelGroup}
