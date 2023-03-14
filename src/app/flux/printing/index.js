@@ -751,8 +751,8 @@ export const actions = {
                 sceneZero.z + workRange.min.z - EPSILON,
             ),
             new Vector3(
-                sceneZero.x + workRange.max[0] - border + EPSILON,
-                sceneZero.y + workRange.max[1] - border + EPSILON,
+                sceneZero.x + workRange.max.x - border + EPSILON,
+                sceneZero.y + workRange.max.y - border + EPSILON,
                 sceneZero.z + workRange.max.z + EPSILON,
             ),
         );
