@@ -8,7 +8,6 @@ import logger from './logger';
 import SVGParser from '../../shared/lib/SVGParser';
 import fontManager from '../../shared/lib/FontManager';
 import { svgToString } from '../../shared/lib/SVGParser/SvgToString';
-import { unionShapes } from '../../shared/lib/union-shapes';
 
 const log = logger('svg-convert');
 
@@ -148,16 +147,18 @@ const convertTextToSvg = async (options) => {
         width: width,
         height: height
     });
-    const svgParser = new SVGParser();
-    // Don't delete, for debugging
-    // const targetPath1 = `${process.env.Tmpdir}/${uploadName}_new.svg`;
-    // fs.writeFileSync(targetPath1, svgString);
-    const result = await svgParser.parse(svgString);
-    unionShapes(result.shapes);
+    // const svgParser = new SVGParser();
+    // // Don't delete, for debugging
+    // // const targetPath1 = `${process.env.Tmpdir}/${uploadName}_new.svg`;
+    // // fs.writeFileSync(targetPath1, svgString);
+    // const result = await svgParser.parse(svgString);
+    // unionShapes(result.shapes);
+
+    // console.log('svgToString(result)', svgToString(result));
 
     return new Promise((resolve, reject) => {
         const targetPath = `${process.env.Tmpdir}/${uploadName}`;
-        fs.writeFile(targetPath, svgToString(result), (err) => {
+        fs.writeFile(targetPath, svgString, (err) => {
             if (err) {
                 log.error(err);
                 reject(err);
