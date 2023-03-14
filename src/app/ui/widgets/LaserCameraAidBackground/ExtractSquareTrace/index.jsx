@@ -5,7 +5,7 @@ import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import api from '../../../../api';
 import { LASER_10W_TAKE_PHOTO_POSITION } from '../../../../constants';
-import { LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES, } from '../../../../constants/machines';
+import { findToolHead, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES, } from '../../../../constants/machines';
 import { actions as workspaceActions } from '../../../../flux/workspace';
 
 import i18n from '../../../../lib/i18n';
@@ -24,10 +24,13 @@ const DefaultBgiName = '../../../../resources/images/camera-aid/Loading.gif';
 
 class ExtractSquareTrace extends PureComponent {
     static propTypes = {
+        // machine
+        series: PropTypes.string.isRequired,
+        tool: PropTypes.object,
+
         laserSize: PropTypes.object.isRequired,
         size: PropTypes.object.isRequired,
         server: PropTypes.object.isRequired,
-        series: PropTypes.string.isRequired,
         toolHead: PropTypes.object.isRequired,
         headType: PropTypes.string,
         canTakePhoto: PropTypes.bool.isRequired,
@@ -532,6 +535,13 @@ class ExtractSquareTrace extends PureComponent {
         // }
     };
 
+    // eslint-disable-next-line
+    UNSAFE_componentWillReceiveProps(nextProps) {
+        if (nextProps.tool !== this.props.tool) {
+            //
+            console.log('nextProp.tool =', nextProps.tool);
+        }
+    }
 
     timer = null;
 
@@ -602,6 +612,8 @@ class ExtractSquareTrace extends PureComponent {
         imagesName[item1] = imagesName[item2];
         imagesName[item2] = swap;
     }
+
+    componentDidUpdate
 
     render() {
         if (this.props.series === MACHINE_SERIES.A400.identifier) {
@@ -718,7 +730,7 @@ class ExtractSquareTrace extends PureComponent {
                         displayExtractTrace={this.actions.displayExtractTrace}
                         updateStitchEach={this.actions.updateStitchEach}
                         calibrationOnOff={this.actions.calibrationOnOff}
-                        // updateCameraPhoto={this.actions.updateCameraPhoto}
+                    // updateCameraPhoto={this.actions.updateCameraPhoto}
                     />
                 )}
                 {this.state.panel === PANEL_PICK_OBJECT && this.state.outputFilename && (
@@ -745,17 +757,22 @@ class ExtractSquareTrace extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const machine = state.machine;
-    const { activeMachine } = state.machine;
+    const { series, activeMachine, laserSize } = state.machine;
     const { server } = state.workspace;
     const headType = getCurrentHeadType(window.location.href);
 
+    const toolMap = state.machine.toolHead;
+
+    const toolIdentifier = toolMap[`${headType}Toolhead`];
+    const tool = findToolHead(toolIdentifier);
+
     return {
-        series: machine.series,
+        series,
         headType,
+        tool,
         size: activeMachine.metadata.size,
         server,
-        laserSize: machine.laserSize
+        laserSize,
     };
 };
 

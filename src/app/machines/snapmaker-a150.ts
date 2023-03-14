@@ -49,10 +49,18 @@ export const machine: Machine = {
             {
                 identifier: standardLaserToolHead.identifier,
                 configPath: 'laser/a150_1600mw',
+                workRange: {
+                    min: [0, 0, 0],
+                    max: [167, 165, 150],
+                }
             },
             {
                 identifier: highPower10WLaserToolHead.identifier,
                 configPath: 'laser/a150_10w',
+                workRange: {
+                    min: [0, 0, 0],
+                    max: [167, 165, 120], // TODO: check data
+                }
             },
             {
                 identifier: standardCNCToolHead.identifier,

@@ -49,11 +49,6 @@ export const MACHINE_SERIES = {
                 y: 125,
                 z: 125
             },
-            laserSize: {
-                x: 125,
-                y: 125,
-                z: 125
-            }
         }
     },
     ORIGINAL_LZ: {
@@ -66,11 +61,6 @@ export const MACHINE_SERIES = {
                 y: 125,
                 z: 221
             },
-            laserSize: {
-                x: 125,
-                y: 125,
-                z: 221
-            }
         }
     },
     A150: {
@@ -82,11 +72,6 @@ export const MACHINE_SERIES = {
                 y: 160,
                 z: 145
             },
-            laserSize: {
-                x: 167,
-                y: 165,
-                z: 150
-            }
         },
         alias: ['SM2-S', 'Snapmaker 2.0 A150']
     },
