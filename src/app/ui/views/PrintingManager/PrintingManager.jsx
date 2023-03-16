@@ -120,7 +120,7 @@ function PrintingManager() {
             dispatch(
                 projectActions.exportConfigFile(
                     targetFile,
-                    `${HEAD_PRINTING}/${currentMachine.configPathname[HEAD_PRINTING]}`,
+                    currentMachine.configPathname[HEAD_PRINTING],
                     `${definitionForManager?.name}.def.json`
                 )
             );

@@ -256,7 +256,7 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = (props) => {
             dispatch(
                 projectActions.exportConfigFile(
                     targetFile,
-                    `${HEAD_PRINTING}/${currentMachine.configPathname[HEAD_PRINTING]}`,
+                    currentMachine.configPathname[HEAD_PRINTING],
                     `${presetModel.name}.def.json`
                 )
             );
