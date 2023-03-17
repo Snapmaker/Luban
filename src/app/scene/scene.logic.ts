@@ -6,7 +6,7 @@ import {
     RIGHT_EXTRUDER,
     RIGHT_EXTRUDER_MAP_NUMBER
 } from '../constants';
-import PresetDefinitionModel from '../flux/manager/PresetDefinitionModel';
+import { PresetModel } from '../preset-model';
 import type { Machine, ToolHead } from '../machine-definition';
 import { Size2D } from '../models/BaseModel';
 import { Model3D } from '../models/ModelGroup';
@@ -222,7 +222,7 @@ class SceneLogic {
      * @param stackId - left / right extruder
      * @param preset - the global / left extruder preset.
      */
-    public onPresetParameterChanged(stackId: string, preset: PresetDefinitionModel) {
+    public onPresetParameterChanged(stackId: string, preset: PresetModel) {
         // prime tower logic
         if (stackId === LEFT_EXTRUDER) {
             const primeTowerEnabled = preset.settings.prime_tower_enable?.default_value || false;

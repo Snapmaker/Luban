@@ -13,7 +13,7 @@ import {
     DEFAULT_PARAMS_FAST,
     DEFAULT_PARAMS_MEDIUM,
     getPresetQuickParamsCalculated
-} from '../../flux/manager/PresetDefinitionModel';
+} from '../../preset-model/common/PresetModel';
 
 import Select from '../components/Select';
 import Tooltip from '../components/Tooltip';

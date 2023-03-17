@@ -53,7 +53,7 @@ import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcod
 // eslint-disable-next-line import/no-cycle
 import { actions as appGlobalActions } from '../app-global';
 import definitionManager from '../manager/DefinitionManager';
-import PresetDefinitionModel from '../manager/PresetDefinitionModel';
+import { PresetModel } from '../../preset-model';
 // eslint-disable-next-line import/no-cycle
 import { actions as operationHistoryActions } from '../operation-history';
 import AddOperation3D from '../operation-history/AddOperation3D';
@@ -479,12 +479,12 @@ export const actions = {
         const extruderRDefinition = definitionManager.extruderRDefinition;
 
         allMaterialDefinitions.forEach((eachDefinition) => {
-            const paramModel = new PresetDefinitionModel(eachDefinition);
+            const paramModel = new PresetModel(eachDefinition);
             materialPresetModels.push(paramModel);
         });
 
         allQualityDefinitions.forEach((eachDefinition) => {
-            const paramModel = new PresetDefinitionModel(
+            const paramModel = new PresetModel(
                 eachDefinition,
                 activeMaterialType,
                 extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
@@ -586,7 +586,7 @@ export const actions = {
         const activeMaterialType = dispatch(actions.getActiveMaterialType()); // TODO: Consider another extruder
 
         const defaultDefinitions = definitionManager?.defaultDefinitions.map((eachDefinition) => {
-            const paramModel = new PresetDefinitionModel(
+            const paramModel = new PresetModel(
                 eachDefinition,
                 activeMaterialType,
                 definitionManager.extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
@@ -595,7 +595,7 @@ export const actions = {
         });
 
         const materialParamModels = allMaterialDefinitions.map((eachDefinition) => {
-            const paramModel = new PresetDefinitionModel(
+            const paramModel = new PresetModel(
                 eachDefinition,
                 activeMaterialType,
                 definitionManager.extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
@@ -605,7 +605,7 @@ export const actions = {
 
         const qualityPresetModels = [];
         for (const preset of allQualityDefinitions) {
-            const paramModel = new PresetDefinitionModel(
+            const paramModel = new PresetModel(
                 preset,
                 activeMaterialType,
                 definitionManager.extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
@@ -1563,7 +1563,7 @@ export const actions = {
                         name = `#${name}`;
                         definition.name = name;
                     }
-                    definition = new PresetDefinitionModel(
+                    definition = new PresetModel(
                         definition,
                         activeMaterialType,
                         extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
@@ -1725,7 +1725,7 @@ export const actions = {
         const { extruderLDefinition } = state;
         const activeMaterialType = dispatch(actions.getActiveMaterialType());
 
-        createdDefinitionModel = new PresetDefinitionModel(
+        createdDefinitionModel = new PresetModel(
             createdDefinitionModel,
             activeMaterialType,
             extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
@@ -1799,7 +1799,7 @@ export const actions = {
             const createdDefinition = await definitionManager.createDefinition(
                 newDefinition
             );
-            const createdDefinitionModel = new PresetDefinitionModel(
+            const createdDefinitionModel = new PresetModel(
                 createdDefinition,
                 activeMaterialType,
                 extruderLDefinition?.settings?.machine_nozzle_size?.default_value,

@@ -10,14 +10,14 @@ import SvgIcon from '../../components/SvgIcon';
 import { Button } from '../../components/Buttons';
 import { ModalHOC } from '../../../lib/modal';
 
-import PresetDefinitionModel from '../../../flux/manager/PresetDefinitionModel';
+import { PresetModel } from '../../../preset-model';
 import { PresetActionsType } from './usePresetActions';
 
 
 declare type CreatePresetModalProps = {
     createOrCopy: 'create' | 'copy';
 
-    presetModel: PresetDefinitionModel;
+    presetModel: PresetModel;
 
     // existing categories
     categories: string[];

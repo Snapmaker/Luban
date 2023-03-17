@@ -2,7 +2,7 @@ import { useDispatch } from 'react-redux';
 
 import { PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
 import log from '../../../lib/log';
-import PresetDefinitionModel from '../../../flux/manager/PresetDefinitionModel';
+import { PresetModel } from '../../../preset-model';
 
 import { actions as printingActions } from '../../../flux/printing';
 
@@ -14,7 +14,7 @@ interface Definition {
 export declare type PresetActionsType = {
     onSelectDefinitionById?: (definitionId: string) => void;
 
-    onCreateManagerDefinition: (definition: Definition) => Promise<PresetDefinitionModel>;
+    onCreateManagerDefinition: (definition: Definition) => Promise<PresetModel>;
 
     onResetPresetModel: (preset: Definition) => Promise<void>;
 
@@ -34,7 +34,7 @@ const usePresetActions = (): PresetActionsType => {
         log.info('onSelectDefinitionById', definitionId);
     };
 
-    // PresetDefinitionModel
+    // PresetModel
     const onCreateManagerDefinition = (definition) => {
         return dispatch(printingActions.duplicateDefinitionByType(PRINTING_MANAGER_TYPE_QUALITY, definition));
     };

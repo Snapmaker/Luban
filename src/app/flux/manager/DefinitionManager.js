@@ -12,7 +12,7 @@ import {
 } from '../../constants';
 import { PRESET_CATEGORY_CUSTOM } from '../../constants/preset';
 import i18n from '../../lib/i18n';
-import PresetDefinitionModel from './PresetDefinitionModel';
+import { PresetModel } from '../../preset-model';
 import scene from '../../scene/Scene';
 
 const nozzleSizeRelationSettingsKeys = [
@@ -246,7 +246,7 @@ class DefinitionManager {
 
     async createDefinition(definition) {
         let actualDefinition = definition;
-        if (definition instanceof PresetDefinitionModel) {
+        if (definition instanceof PresetModel) {
             actualDefinition = definition.getSerializableDefinition();
         }
         const res = await api.profileDefinitions.createDefinition(this.headType, actualDefinition, this.configPathname);
@@ -258,7 +258,7 @@ class DefinitionManager {
 
     async createTmpDefinition(definition, definitionName) {
         let actualDefinition = definition;
-        if (definition instanceof PresetDefinitionModel) {
+        if (definition instanceof PresetModel) {
             actualDefinition = definition.getSerializableDefinition();
         }
         const res = await api.profileDefinitions.createTmpDefinition(
@@ -298,7 +298,7 @@ class DefinitionManager {
     // Only name & settings are configurable
     async updateDefinition(definition) {
         let actualDefinition = definition;
-        if (definition instanceof PresetDefinitionModel) {
+        if (definition instanceof PresetModel) {
             actualDefinition = definition.getSerializableDefinition();
         }
 
@@ -350,7 +350,7 @@ class DefinitionManager {
 
     async updateDefaultDefinition(definition) {
         let actualDefinition = definition;
-        if (definition instanceof PresetDefinitionModel) {
+        if (definition instanceof PresetModel) {
             actualDefinition = definition.getSerializableDefinition();
         }
         await api.profileDefinitions.updateDefaultDefinition(

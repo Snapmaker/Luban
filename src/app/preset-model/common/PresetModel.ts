@@ -861,7 +861,7 @@ type ParamsModelType = {
 }
 
 // TODO: material category & quality category is not the same, distinguish them by subclasses
-class PresetDefinitionModel {
+class PresetModel {
     public headType = HEAD_PRINTING;
     public typeOfPrinting = 'universal';
     public nozzleSize: number;
@@ -975,4 +975,4 @@ class PresetDefinitionModel {
     }
 }
 
-export default PresetDefinitionModel;
+export default PresetModel;

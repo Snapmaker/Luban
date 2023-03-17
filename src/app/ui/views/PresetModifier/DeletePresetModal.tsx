@@ -4,12 +4,12 @@ import i18n from '../../../lib/i18n';
 import { ModalHOC } from '../../../lib/modal';
 import { Button } from '../../components/Buttons';
 
-import PresetDefinitionModel from '../../../flux/manager/PresetDefinitionModel';
+import { PresetModel } from '../../../preset-model';
 import { PresetActionsType } from './usePresetActions';
 
 
 declare type DeletePresetModalProps = {
-    presetModel: PresetDefinitionModel;
+    presetModel: PresetModel;
 
     presetActions: PresetActionsType;
 
