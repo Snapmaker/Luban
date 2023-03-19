@@ -1842,7 +1842,7 @@
     "key-Workspace/Control/MotionButton-Run Boundary": "Перевірити межі",
     "key-Workspace/Control/MotionButton-Set Work Origin": "Точка відліку",
     "key-Workspace/Control/MotionButton-Set the current position of the toolhead as the work origin.": "Встановлює поточне положення робочої головки як точку відліку.",
-    "key-Workspace/Custom Step": "Спеціальний крок",
+    "key-Workspace/Custom Step": "Задана відстань",
     "key-Workspace/Enclosure-Door Detection": "Відкриття дверцят",
     "key-Workspace/Enclosure-Enclosure": "Захисний бокс",
     "key-Workspace/Enclosure-Exhaust Fan": "Витяжний вентилятор",
