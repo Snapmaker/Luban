@@ -214,7 +214,7 @@ const ParamItem = function ({ selectedPresetModel, onChangePresetSettings }) {
     const selectedDefinitionSettings = selectedPresetModel.settings;
 
     async function onChangeParam(newValue, paramSetting) {
-        const actualOptions = paramSetting.affectByType ? paramSetting[selectedPresetModel.typeOfPrinting] : paramSetting.options;
+        const actualOptions = paramSetting.options;
         const findedAffect = actualOptions[newValue]?.affect;
 
         const changedSettingArray = [];
@@ -239,7 +239,7 @@ const ParamItem = function ({ selectedPresetModel, onChangePresetSettings }) {
     return (
         <div>
             {allParams && Object.entries(allParams).map(([paramName, paramSetting]) => {
-                const actualOptions = paramSetting.affectByType ? paramSetting[selectedPresetModel.typeOfPrinting] : paramSetting.options;
+                const actualOptions = paramSetting.options;
                 const allParamsName = [];
                 let iconName = '';
                 const options = Object.entries(actualOptions).map(([keyName, keyValue]) => {

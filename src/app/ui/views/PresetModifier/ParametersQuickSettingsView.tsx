@@ -7,14 +7,14 @@ import { LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants
 import { MACHINE_SERIES } from '../../../constants/machines';
 import i18n from '../../../lib/i18n';
 
-import { PresetModel } from '../../../preset-model';
 import {
+    PresetModel,
     DEFAULE_PARAMS_FOR_OTHERS,
     DEFAULE_PARAMS_FOR_TPU,
     DEFAULT_PARAMS_FAST,
     DEFAULT_PARAMS_MEDIUM,
-    getPresetQuickParamsCalculated
-} from '../../../preset-model/common/PresetModel';
+    getPresetQuickParamsCalculated,
+} from '../../../preset-model';
 
 import { actions as printingActions } from '../../../flux/printing';
 

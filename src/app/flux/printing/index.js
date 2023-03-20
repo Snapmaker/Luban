@@ -4,7 +4,7 @@ import path from 'path';
 import * as THREE from 'three';
 import { Box3, Vector3 } from 'three';
 import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
-// import { resolveDefinition } from '../../../shared/lib/definition-resolver';
+
 import { timestamp } from '../../../shared/lib/random-utils';
 import { PrintMode } from '../../machine-definition';
 import api from '../../api';
@@ -30,6 +30,8 @@ import {
     RIGHT_EXTRUDER,
     RIGHT_EXTRUDER_MAP_NUMBER,
     WHITE_COLOR,
+    MATERIAL_REGEX,
+    QUALITY_REGEX,
 } from '../../constants';
 import { getMachineSeriesWithToolhead, isDualExtruder, MACHINE_SERIES, } from '../../constants/machines';
 import { isQualityPresetVisible } from '../../constants/preset';
@@ -53,7 +55,7 @@ import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcod
 // eslint-disable-next-line import/no-cycle
 import { actions as appGlobalActions } from '../app-global';
 import definitionManager from '../manager/DefinitionManager';
-import { PresetModel } from '../../preset-model';
+import { PresetModel, QualityPresetModel, MaterialPresetModel } from '../../preset-model';
 // eslint-disable-next-line import/no-cycle
 import { actions as operationHistoryActions } from '../operation-history';
 import AddOperation3D from '../operation-history/AddOperation3D';
@@ -479,12 +481,12 @@ export const actions = {
         const extruderRDefinition = definitionManager.extruderRDefinition;
 
         allMaterialDefinitions.forEach((eachDefinition) => {
-            const paramModel = new PresetModel(eachDefinition);
+            const paramModel = new MaterialPresetModel(eachDefinition);
             materialPresetModels.push(paramModel);
         });
 
         allQualityDefinitions.forEach((eachDefinition) => {
-            const paramModel = new PresetModel(
+            const paramModel = new QualityPresetModel(
                 eachDefinition,
                 activeMaterialType,
                 extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
@@ -586,26 +588,28 @@ export const actions = {
         const activeMaterialType = dispatch(actions.getActiveMaterialType()); // TODO: Consider another extruder
 
         const defaultDefinitions = definitionManager?.defaultDefinitions.map((eachDefinition) => {
-            const paramModel = new PresetModel(
-                eachDefinition,
-                activeMaterialType,
-                definitionManager.extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
-            );
-            return paramModel;
+            if (MATERIAL_REGEX.test(eachDefinition.definitionId)) {
+                return new MaterialPresetModel(eachDefinition);
+            } else if (QUALITY_REGEX.test(eachDefinition.definitionId)) {
+                return new QualityPresetModel(
+                    eachDefinition,
+                    activeMaterialType,
+                    definitionManager.extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
+                );
+            } else {
+                log.warn('Unknown definition');
+                return null;
+            }
         });
 
         const materialParamModels = allMaterialDefinitions.map((eachDefinition) => {
-            const paramModel = new PresetModel(
-                eachDefinition,
-                activeMaterialType,
-                definitionManager.extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
-            );
+            const paramModel = new MaterialPresetModel(eachDefinition);
             return paramModel;
         });
 
         const qualityPresetModels = [];
         for (const preset of allQualityDefinitions) {
-            const paramModel = new PresetModel(
+            const paramModel = new QualityPresetModel(
                 preset,
                 activeMaterialType,
                 definitionManager.extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
@@ -1721,32 +1725,34 @@ export const actions = {
                 default_value: definition.settings[key].default_value
             };
         }
-        let createdDefinitionModel = await definitionManager.createDefinition(newDefinition);
-        const { extruderLDefinition } = state;
-        const activeMaterialType = dispatch(actions.getActiveMaterialType());
-
-        createdDefinitionModel = new PresetModel(
-            createdDefinitionModel,
-            activeMaterialType,
-            extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
-        );
+        const createdDefinitionModel = await definitionManager.createDefinition(newDefinition);
 
         // TODO: Refactor this
         if (type === PRINTING_MANAGER_TYPE_QUALITY) {
+            const { extruderLDefinition } = state;
+            const activeMaterialType = dispatch(actions.getActiveMaterialType());
+            const newPresetModel = new QualityPresetModel(
+                createdDefinitionModel,
+                activeMaterialType,
+                extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
+            );
             dispatch(
                 actions.updateState({
-                    [definitionsKey]: [...state[definitionsKey], createdDefinitionModel]
+                    [definitionsKey]: [...state[definitionsKey], newPresetModel]
                 })
             );
         } else {
+            const newPresetModel = new PresetModel(
+                createdDefinitionModel,
+            );
             dispatch(
                 actions.updateState({
-                    [definitionsKey]: [...state[definitionsKey], createdDefinitionModel]
+                    [definitionsKey]: [...state[definitionsKey], newPresetModel]
                 })
             );
         }
 
-        return createdDefinitionModel;
+        return newPresetModel;
     },
 
     getActiveMaterialType: (defaultId, direction = LEFT_EXTRUDER) => (dispatch, getState) => {
@@ -1787,9 +1793,6 @@ export const actions = {
             ]
             : state[definitionsKey].filter((d) => d.category === oldCategory);
 
-        const { extruderLDefinition } = state;
-        const activeMaterialType = dispatch(actions.getActiveMaterialType());
-
         for (let i = 0; i < definitionModelsWithSameCategory.length; i++) {
             const newDefinition = definitionModelsWithSameCategory[i];
             newDefinition.category = newCategoryName;
@@ -1799,11 +1802,7 @@ export const actions = {
             const createdDefinition = await definitionManager.createDefinition(
                 newDefinition
             );
-            const createdDefinitionModel = new PresetModel(
-                createdDefinition,
-                activeMaterialType,
-                extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
-            );
+            const createdDefinitionModel = new MaterialPresetModel(createdDefinition);
             if (createdDefinitionModel) {
                 allDupliateDefinitions.push(createdDefinitionModel);
             }
