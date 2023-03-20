@@ -4,8 +4,9 @@ import PresetModel from './PresetModel';
 
 
 class QualityPresetModel extends PresetModel {
-    public nozzleSize: number;
-    public qualityType: string;
+    public nozzleSize: number = 0.4;
+    public qualityType: string = 'abs'; // abs/tpu/other, TODO: refactor it
+    public typeOfPrinting = 'universal'; // universal/quik//fine/engineering
 
     public constructor(definition: object, materialType, defaultNozzleSize) {
         super(definition);

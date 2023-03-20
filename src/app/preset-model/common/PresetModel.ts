@@ -32,7 +32,6 @@ class PresetModel {
     public definitionId = '';
 
     public headType = HEAD_PRINTING;
-    public typeOfPrinting = 'universal';
     // private params: ParamsModelType;
     public name = '';
     private inherits = '';

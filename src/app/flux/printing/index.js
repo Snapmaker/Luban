@@ -1741,6 +1741,7 @@ export const actions = {
                     [definitionsKey]: [...state[definitionsKey], newPresetModel]
                 })
             );
+            return newPresetModel;
         } else {
             const newPresetModel = new PresetModel(
                 createdDefinitionModel,
@@ -1750,9 +1751,8 @@ export const actions = {
                     [definitionsKey]: [...state[definitionsKey], newPresetModel]
                 })
             );
+            return newPresetModel;
         }
-
-        return newPresetModel;
     },
 
     getActiveMaterialType: (defaultId, direction = LEFT_EXTRUDER) => (dispatch, getState) => {
