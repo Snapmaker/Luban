@@ -9,7 +9,16 @@ import styles from '../styles.styl';
 import CncToolManager from '../../CncToolManager';
 import SvgIcon from '../../../components/SvgIcon';
 
-function ToolSelector({ toolDefinitions, setCurrentToolDefinition, setCurrentValueAsProfile, toolDefinition, isModifiedDefinition = false, shouldSaveToolpath = false, saveToolPath, isModel }) {
+function ToolSelector({
+    toolDefinitions,
+    setCurrentToolDefinition,
+    setCurrentValueAsProfile,
+    toolDefinition,
+    isModifiedDefinition = false,
+    shouldSaveToolpath = false,
+    saveToolPath,
+    isModel,
+}) {
     const [showManager, setShowManager] = useState(false);
     // const dispatch = useDispatch();
 

@@ -733,7 +733,7 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         description:
             'Set the amount at which the Laser Module is lowered with each pass.',
         type: 'float',
-        min: 0.01,
+        min: 0.00,
         max: 10,
         default_value: 'passDepth',
         unit: 'mm'
