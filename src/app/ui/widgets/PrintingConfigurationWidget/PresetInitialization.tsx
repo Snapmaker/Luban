@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect } from 'react';
 
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 
 import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
 import { isQualityPresetVisible } from '../../../constants/preset';
@@ -8,7 +8,7 @@ import log from '../../../lib/log';
 import { pickAvailableQualityPresetModels } from '../../utils/profileManager';
 import { RootState } from '../../../flux/index.def';
 import { actions as printingActions } from '../../../flux/printing';
-import type { PresetModel } from '../../../preset-model';
+import type { MaterialPresetModel, PresetModel } from '../../../preset-model';
 
 /**
  * Initialize preset selections.
@@ -19,78 +19,104 @@ const PresetInitialization: React.FC = () => {
     const dispatch = useDispatch();
 
     const {
-        qualityDefinitions: qualityDefinitionModels,
-        activePresetIds,
+        extruderLDefinition,
+        extruderRDefinition,
 
         materialDefinitions,
         defaultMaterialId,
         defaultMaterialIdRight,
-    } = useSelector((state: RootState) => state.printing);
 
-    const materialPreset = materialDefinitions.find(p => p.definitionId === defaultMaterialId);
-    const materialPresetRight = materialDefinitions.find(p => p.definitionId === defaultMaterialIdRight);
+        qualityDefinitions: qualityDefinitionModels,
+        activePresetIds,
+    } = useSelector((state: RootState) => state.printing, shallowEqual);
 
-    const setPreset = useCallback((stackId: string, presetModel: PresetModel) => {
+    const materialPreset = materialDefinitions.find((p: MaterialPresetModel) => p.definitionId === defaultMaterialId);
+    const materialPresetRight = materialDefinitions.find((p: MaterialPresetModel) => p.definitionId === defaultMaterialIdRight);
+
+    /**
+     * Action to set quality preset.
+     */
+    const setQualityPreset = useCallback((stackId: string, presetModel: PresetModel) => {
         dispatch(printingActions.updateActiveQualityPresetId(stackId, presetModel.definitionId));
     }, [dispatch]);
 
-    // If material doesn't exist, we choose default material
+    // Check if material preset is valid, otherwise choose default material
     useEffect(() => {
         if (materialDefinitions.length === 0) return;
 
-        const preset = materialDefinitions.find(p => p.definitionId === defaultMaterialId);
+        const preset = materialDefinitions.find((p: MaterialPresetModel) => p.definitionId === defaultMaterialId);
         if (!preset) {
             dispatch(printingActions.updateDefaultMaterialId('material.pla', LEFT_EXTRUDER));
         }
     }, [dispatch, defaultMaterialId, materialDefinitions]);
+
     useEffect(() => {
         if (materialDefinitions.length === 0) return;
 
-        const preset = materialDefinitions.find(p => p.definitionId === defaultMaterialIdRight);
+        const preset = materialDefinitions.find((p: MaterialPresetModel) => p.definitionId === defaultMaterialIdRight);
         if (!preset) {
             dispatch(printingActions.updateDefaultMaterialId('material.pla', RIGHT_EXTRUDER));
         }
     }, [dispatch, defaultMaterialIdRight, materialDefinitions]);
 
+    // Check if quality preset is valid, otherwise choose another quality preset
     useEffect(() => {
         if (qualityDefinitionModels.length > 0) {
+            const presetFilters = {
+                materialType: materialPreset?.materialType,
+                nozzleSize: extruderLDefinition?.settings.machine_nozzle_size.default_value,
+            };
+
             let presetModel = qualityDefinitionModels.find(p => p.definitionId === activePresetIds[LEFT_EXTRUDER]);
-            if (presetModel && !isQualityPresetVisible(presetModel, { materialType: materialPreset?.materialType })) {
+            if (presetModel && !isQualityPresetVisible(presetModel, presetFilters)) {
                 presetModel = null;
             }
+
             if (!presetModel) {
                 // definition no found, select first official definition
-                const availablePresetModels = pickAvailableQualityPresetModels(qualityDefinitionModels, materialPreset);
+                const availablePresetModels = pickAvailableQualityPresetModels(qualityDefinitionModels, presetFilters);
                 presetModel = availablePresetModels.length > 0 && availablePresetModels[0];
 
                 if (presetModel) {
-                    setPreset(LEFT_EXTRUDER, presetModel);
+                    setQualityPreset(LEFT_EXTRUDER, presetModel);
 
                     log.info(`Select Preset ${presetModel.definitionId} for left extruder..`);
                 }
             }
         }
-    }, [qualityDefinitionModels, activePresetIds, materialPreset, setPreset]);
+    }, [
+        qualityDefinitionModels, activePresetIds, materialPreset, setQualityPreset,
+        extruderLDefinition?.settings.machine_nozzle_size.default_value,
+    ]);
 
     useEffect(() => {
         if (qualityDefinitionModels.length > 0) {
+            const presetFilters = {
+                materialType: materialPresetRight?.materialType,
+                nozzleSize: extruderRDefinition?.settings.machine_nozzle_size.default_value,
+            };
+
             let presetModel = qualityDefinitionModels.find(p => p.definitionId === activePresetIds[RIGHT_EXTRUDER]);
-            if (presetModel && !isQualityPresetVisible(presetModel, { materialType: materialPresetRight?.materialType })) {
+            if (presetModel && !isQualityPresetVisible(presetModel, presetFilters)) {
                 presetModel = null;
             }
             if (!presetModel) {
                 // definition no found, select first official definition
-                const availablePresetModels = pickAvailableQualityPresetModels(qualityDefinitionModels, materialPresetRight);
+                const availablePresetModels = pickAvailableQualityPresetModels(qualityDefinitionModels, presetFilters);
                 presetModel = availablePresetModels.length > 0 && availablePresetModels[0];
 
                 if (presetModel) {
-                    setPreset(RIGHT_EXTRUDER, presetModel);
+                    setQualityPreset(RIGHT_EXTRUDER, presetModel);
 
                     log.info(`Select Preset ${presetModel.definitionId} for right extruder..`);
                 }
             }
         }
-    }, [qualityDefinitionModels, activePresetIds, defaultMaterialIdRight]);
+    }, [
+        qualityDefinitionModels, activePresetIds, defaultMaterialIdRight,
+
+        extruderRDefinition?.settings.machine_nozzle_size.default_value,
+    ]);
 
     return (<div className="display-none" />);
 };

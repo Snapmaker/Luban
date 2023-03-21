@@ -157,6 +157,10 @@ const MachineSettings = forwardRef(({
 
         machineStore.set(key, label);
     };
+
+    /**
+     * On change nozzle.
+     */
     const onChangeDiameter = (direction, nozzle) => {
         if (!nozzle) {
             return;
@@ -166,17 +170,17 @@ const MachineSettings = forwardRef(({
         } else {
             setRightNozzleDiameter(nozzle.label);
         }
-        const def = direction === LEFT
-            ? extruderLDefinition
-            : extruderRDefinition;
+        const newNozzleSize = Number(nozzle.value);
+
+        const def = direction === LEFT ? extruderLDefinition : extruderRDefinition;
         const oldNozzleSize = def?.settings?.machine_nozzle_size?.default_value;
-        if (oldNozzleSize && oldNozzleSize !== nozzle?.value) {
+        if (oldNozzleSize && oldNozzleSize !== newNozzleSize) {
             saveActiveDiameterToStorage(direction, nozzle.label);
             dispatch(
                 printingActions.updateMachineDefinition({
                     paramKey: 'machine_nozzle_size',
-                    paramValue: Number(nozzle.value),
-                    direction
+                    paramValue: newNozzleSize,
+                    direction,
                 })
             );
             dispatch(printingActions.destroyGcodeLine());
@@ -441,126 +445,155 @@ const MachineSettings = forwardRef(({
                         </div>
                     )
                 }
-                {headType === HEAD_PRINTING && (
-                    <div className="margin-top-32">
-                        <div>{i18n._('key-settings/Nozzle Diameter')} (mm)</div>
-                        {
-                            isDualExtruder(selectedToolName) && (
-                                <div className="margin-top-16 width-248 height-32 background-grey-2 padding-2 border-radius-8">
-                                    <Anchor className={`padding-left-8 border-radius-8 width-122 display-inline ${activeNozzle === LEFT ? 'background-color-white' : ''}`} onClick={() => setActiveNozzle(LEFT)}>
-                                        <span className="margin-right-8">{i18n._('key-settings/Nozzle Diameter Left')}</span>
-                                        <span>{leftNozzleDiameter}</span>
-                                    </Anchor>
-                                    <Anchor className={`padding-left-8 border-radius-8 width-122 display-inline ${activeNozzle === RIGHT ? 'background-color-white' : ''}`} onClick={() => setActiveNozzle(RIGHT)}>
-                                        <span className="margin-right-8">{i18n._('key-settings/Nozzle Diameter Right')}</span>
-                                        <span>{rightNozzleDiameter}</span>
-                                    </Anchor>
-                                </div>
-                            )
-                        }
-                        {activeNozzle === LEFT && (
-                            <div className="sm-flex sm-flex-wrap margin-top-16">
-                                {leftNozzleDiameterList.map((nozzle, index) => {
-                                    return (
-                                        <Anchor
-                                            key={nozzle.label}
-                                            onClick={() => onChangeDiameter(LEFT, nozzle)}
-                                            className={classNames(styles['diameter-item-wrapper'], `margin-bottom-8 width-56 padding-horizontal-8 height-32 border-radius-8 border-default-grey-1
-                                                                  ${(index === 3 || index === 7) ? '' : 'margin-right-8'}
-                                                                  ${`${leftNozzleDiameter}` === nozzle.label ? 'border-color-blue-2' : ''}`)}
-                                        >
-                                            <div className={classNames(styles['diameter-item'], 'sm-flex justify-space-between')}>
-                                                <span>{nozzle.label}</span>
-                                                {!nozzle.isDefault && `${leftNozzleDiameter}` !== nozzle.label && (
-                                                    <Anchor onClick={(e) => handleRemoveDiameter(e, nozzle.label, LEFT)} className={styles['close-icon']}>
-                                                        <SvgIcon name="Cancel" size={8} type={['static']} />
-                                                    </Anchor>
-                                                )}
-                                            </div>
+                {
+                    headType === HEAD_PRINTING && (
+                        <div className="margin-top-32">
+                            <div>{i18n._('key-settings/Nozzle Diameter')} (mm)</div>
+                            {/* Nozzle Diameter */}
+                            {
+                                isDualExtruder(selectedToolName) && (
+                                    <div className="margin-top-16 width-248 height-32 background-grey-2 padding-2 border-radius-8">
+                                        <Anchor className={`padding-left-8 border-radius-8 width-122 display-inline ${activeNozzle === LEFT ? 'background-color-white' : ''}`} onClick={() => setActiveNozzle(LEFT)}>
+                                            <span className="margin-right-8">{i18n._('key-settings/Nozzle Diameter Left')}</span>
+                                            <span>{leftNozzleDiameter}</span>
                                         </Anchor>
-                                    );
-                                })}
-                                {leftNozzleDiameterList.length < 8 && (
-                                    <Anchor
-                                        onClick={() => handleAddDiameter(true)}
-                                        className={(classNames(addDiameterStatus ? 'border-blue-2' : 'padding-left-8 border-dashed-grey-1', 'width-56 height-32 border-radius-8', styles['add-nozzle-diameter-input']))}
-                                    >
-                                        {addDiameterStatus ? (
-                                            <Input
-                                                min={0.1}
-                                                max={1.2}
-                                                decimalPlaces={2}
-                                                bordered={false}
-                                                size="super-small"
-                                                autoFocus
-                                                placeholder="Add"
-                                                onPressEnter={e => AddDiameterToList(e, LEFT)}
-                                                onBlur={e => AddDiameterToList(e, LEFT)}
-                                                formatter={(value) => {
-                                                    const newValue = Math.round(Number(value) * 100) / 100;
-                                                    return newValue;
-                                                }}
-                                            />
-                                        ) : (
-                                            <span>
-                                                + {i18n._('key-Settings/Nozazle-Add')}
-                                            </span>
-                                        )}
-                                    </Anchor>
-                                )}
-                            </div>
-                        )}
-                        {activeNozzle === RIGHT && (
-                            <div className="sm-flex sm-flex-wrap margin-top-16">
-                                {rightNozzleDiameterList.map((nozzle, index) => {
-                                    return (
-                                        <Anchor
-                                            key={nozzle.label}
-                                            onClick={() => onChangeDiameter(RIGHT, nozzle)}
-                                            className={`margin-bottom-8  width-56 padding-horizontal-8 height-32 border-radius-8 border-default-grey-1
-                                                       ${(index === 3 || index === 7) ? '' : 'margin-right-8'}
-                                                       ${`${rightNozzleDiameter}` === nozzle.label ? 'border-color-blue-2' : ''}`}
-                                        >
-                                            <div className="sm-flex justify-space-between ">
-                                                <span>{nozzle.label}</span>
-                                                {!nozzle.isDefault && `${rightNozzleDiameter}` !== nozzle.label && (
-                                                    <Anchor onClick={(e) => handleRemoveDiameter(e, nozzle.label, RIGHT)}>
-                                                        <SvgIcon name="Cancel" size={8} type={['static']} />
-                                                    </Anchor>
-                                                )}
-                                            </div>
+                                        <Anchor className={`padding-left-8 border-radius-8 width-122 display-inline ${activeNozzle === RIGHT ? 'background-color-white' : ''}`} onClick={() => setActiveNozzle(RIGHT)}>
+                                            <span className="margin-right-8">{i18n._('key-settings/Nozzle Diameter Right')}</span>
+                                            <span>{rightNozzleDiameter}</span>
                                         </Anchor>
-                                    );
-                                })}
-                                {rightNozzleDiameterList.length < 8 && (
-                                    <Anchor className={(classNames(addDiameterStatus ? '' : 'padding-left-8', 'width-56 height-32 border-radius-8 border-dashed-grey-1'))} onClick={() => handleAddDiameter(true)}>
-                                        {addDiameterStatus ? (
-                                            <Input
-                                                min={0.1}
-                                                max={1.2}
-                                                decimalPlaces={2}
-                                                bordered={false}
-                                                size="super-small"
-                                                autoFocus
-                                                placeholder="Add"
-                                                onPressEnter={e => AddDiameterToList(e, RIGHT)}
-                                                onBlur={e => AddDiameterToList(e, RIGHT)}
-                                                formatter={(value) => {
-                                                    const newValue = Math.round(Number(value) * 100) / 100;
-                                                    return newValue;
-                                                }}
-                                            />
-                                        ) : (
-                                            <span>
-                                                + {i18n._('key-Settings/Nozazle-Add')}
-                                            </span>
-                                        )}
-                                    </Anchor>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                )}
+                                    </div>
+                                )
+                            }
+                            {
+                                activeNozzle === LEFT && (
+                                    <div className="sm-flex sm-flex-wrap margin-top-16">
+                                        {
+                                            leftNozzleDiameterList.map((nozzle, index) => {
+                                                return (
+                                                    <Anchor
+                                                        key={nozzle.label}
+                                                        onClick={() => onChangeDiameter(LEFT, nozzle)}
+                                                        className={classNames(
+                                                            styles['diameter-item-wrapper'],
+                                                            'margin-bottom-8 width-56 padding-horizontal-8 height-32 border-radius-8 border-default-grey-1',
+                                                            {
+                                                                'border-color-blue-2': leftNozzleDiameter === nozzle.label,
+                                                                'margin-right-8': index % 4 !== 3,
+                                                            }
+                                                        )}
+                                                    >
+                                                        <div className={classNames(styles['diameter-item'], 'sm-flex justify-space-between')}>
+                                                            <span>{nozzle.label}</span>
+                                                            {!nozzle.isDefault && `${leftNozzleDiameter}` !== nozzle.label && (
+                                                                <Anchor onClick={(e) => handleRemoveDiameter(e, nozzle.label, LEFT)} className={styles['close-icon']}>
+                                                                    <SvgIcon name="Cancel" size={8} type={['static']} />
+                                                                </Anchor>
+                                                            )}
+                                                        </div>
+                                                    </Anchor>
+                                                );
+                                            })
+                                        }
+                                        {
+                                            leftNozzleDiameterList.length < 8 && (
+                                                <Anchor
+                                                    onClick={() => handleAddDiameter(true)}
+                                                    className={(classNames(addDiameterStatus ? 'border-blue-2' : 'padding-left-8 border-dashed-grey-1', 'width-56 height-32 border-radius-8', styles['add-nozzle-diameter-input']))}
+                                                >
+                                                    {
+                                                        addDiameterStatus ? (
+                                                            <Input
+                                                                min={0.1}
+                                                                max={1.2}
+                                                                decimalPlaces={2}
+                                                                bordered={false}
+                                                                size="super-small"
+                                                                autoFocus
+                                                                placeholder="Add"
+                                                                onPressEnter={e => AddDiameterToList(e, LEFT)}
+                                                                onBlur={e => AddDiameterToList(e, LEFT)}
+                                                                formatter={(value) => {
+                                                                    const newValue = Math.round(Number(value) * 100) / 100;
+                                                                    return newValue;
+                                                                }}
+                                                            />
+                                                        ) : (
+                                                            <span>
+                                                                + {i18n._('key-Settings/Nozazle-Add')}
+                                                            </span>
+                                                        )
+                                                    }
+                                                </Anchor>
+                                            )
+                                        }
+                                    </div>
+                                )
+                            }
+                            {
+                                activeNozzle === RIGHT && (
+                                    <div className="sm-flex sm-flex-wrap margin-top-16">
+                                        {
+                                            rightNozzleDiameterList.map((nozzle, index) => {
+                                                return (
+                                                    <Anchor
+                                                        key={nozzle.label}
+                                                        onClick={() => onChangeDiameter(RIGHT, nozzle)}
+                                                        className={classNames(
+                                                            styles['diameter-item-wrapper'],
+                                                            'margin-bottom-8 width-56 padding-horizontal-8 height-32 border-radius-8 border-default-grey-1',
+                                                            {
+                                                                'border-color-blue-2': leftNozzleDiameter === nozzle.label,
+                                                                'margin-right-8': index % 4 !== 3,
+                                                            }
+                                                        )}
+                                                    >
+                                                        <div className="sm-flex justify-space-between ">
+                                                            <span>{nozzle.label}</span>
+                                                            {!nozzle.isDefault && `${rightNozzleDiameter} ` !== nozzle.label && (
+                                                                <Anchor onClick={(e) => handleRemoveDiameter(e, nozzle.label, RIGHT)}>
+                                                                    <SvgIcon name="Cancel" size={8} type={['static']} />
+                                                                </Anchor>
+                                                            )}
+                                                        </div>
+                                                    </Anchor>
+                                                );
+                                            })
+                                        }
+                                        {
+                                            rightNozzleDiameterList.length < 8 && (
+                                                <Anchor className={(classNames(addDiameterStatus ? '' : 'padding-left-8', 'width-56 height-32 border-radius-8 border-dashed-grey-1'))} onClick={() => handleAddDiameter(true)}>
+                                                    {
+                                                        addDiameterStatus ? (
+                                                            <Input
+                                                                min={0.1}
+                                                                max={1.2}
+                                                                decimalPlaces={2}
+                                                                bordered={false}
+                                                                size="super-small"
+                                                                autoFocus
+                                                                placeholder="Add"
+                                                                onPressEnter={e => AddDiameterToList(e, RIGHT)}
+                                                                onBlur={e => AddDiameterToList(e, RIGHT)}
+                                                                formatter={(value) => {
+                                                                    const newValue = Math.round(Number(value) * 100) / 100;
+                                                                    return newValue;
+                                                                }}
+                                                            />
+                                                        ) : (
+                                                            <span>
+                                                                + {i18n._('key-Settings/Nozazle-Add')}
+                                                            </span>
+                                                        )
+                                                    }
+                                                </Anchor>
+                                            )
+                                        }
+                                    </div>
+                                )
+                            }
+                        </div>
+                    )
+                }
             </div>
         </div>
     );

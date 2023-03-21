@@ -32,6 +32,10 @@ const extruderRelationSettingsKeys = [
     'machine_nozzle_size',
 ];
 
+const QUALITY_PRESET_FIXED_KEYS = new Set([
+    'machine_nozzle_size',
+]);
+
 function resolveMachineDefinition(item, changedArray = [], changedArrayWithoutExtruder = [], options = {}) {
     options.contextKey = options.contextKey || '';
 
@@ -93,10 +97,14 @@ class DefinitionManager {
         if (headType === HEAD_PRINTING) {
             res = await this.getDefinition('machine');
             this.machineDefinition = res;
-            this.changedArray = Object.entries(this.machineDefinition.settings).map(([key, setting]) => {
-                const value = setting.default_value;
-                return [key, value];
-            });
+
+            this.changedArray = Object.keys(this.machineDefinition.settings)
+                .filter(key => !QUALITY_PRESET_FIXED_KEYS.has(key))
+                .map((key) => {
+                    const settingItem = this.machineDefinition.settings[key];
+                    const value = settingItem.default_value;
+                    return [key, value];
+                });
             this.changedArrayWithoutExtruder = this.changedArray
                 .filter(([key]) => {
                     return !(extruderRelationSettingsKeys.includes(key));
@@ -312,40 +320,36 @@ class DefinitionManager {
 
     async updateMachineDefinition(
         {
-            isNozzleSize,
             machineDefinition,
             materialDefinitions,
             qualityDefinitions
         }
     ) {
-        this.changedArray = Object.entries(this.machineDefinition.settings).map(([key, setting]) => {
-            const value = setting.default_value;
-            return [key, value];
-        });
+        this.changedArray = Object.keys(this.machineDefinition.settings)
+            .filter(key => !QUALITY_PRESET_FIXED_KEYS.has(key))
+            .map((key) => {
+                const settingItem = this.machineDefinition.settings[key];
+                const value = settingItem.default_value;
+                return [key, value];
+            });
+
         this.changedArrayWithoutExtruder = this.changedArray
             .filter(([key]) => {
                 return !(extruderRelationSettingsKeys.includes(key));
             });
+
         await this.updateDefinition(machineDefinition);
-        if (isNozzleSize) {
-            qualityDefinitions.forEach((item) => {
-                resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder);
-            });
-            return {
-                newQualityDefinitions: qualityDefinitions
-            };
-        } else {
-            materialDefinitions.forEach((item) => {
-                resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder);
-            });
-            qualityDefinitions.forEach((item) => {
-                resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder);
-            });
-            return {
-                newMaterialDefinitions: materialDefinitions,
-                newQualityDefinitions: qualityDefinitions
-            };
-        }
+
+        materialDefinitions.forEach((item) => {
+            resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder);
+        });
+        qualityDefinitions.forEach((item) => {
+            resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder);
+        });
+        return {
+            newMaterialDefinitions: materialDefinitions,
+            newQualityDefinitions: qualityDefinitions
+        };
     }
 
     async updateDefaultDefinition(definition) {

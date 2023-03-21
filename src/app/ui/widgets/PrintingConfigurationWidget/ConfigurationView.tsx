@@ -62,6 +62,9 @@ const ConfigurationView: React.FC<{}> = () => {
     const isDual = isDualExtruder(printingToolhead);
 
     const {
+        extruderLDefinition,
+        extruderRDefinition,
+
         // quality
         qualityDefinitions: qualityDefinitionModels,
         activePresetIds,
@@ -102,11 +105,24 @@ const ConfigurationView: React.FC<{}> = () => {
     const presetOptionsObj = useMemo(() => {
         console.log('presetOptionsObj =');
         if (selectedStackId === LEFT_EXTRUDER) {
-            return getPresetOptions(qualityDefinitionModels, materialPreset);
+            const presetFilters = {
+                materialType: materialPreset?.materialType,
+                nozzleSize: extruderLDefinition?.settings.machine_nozzle_size.default_value,
+            };
+            return getPresetOptions(qualityDefinitionModels, presetFilters);
         } else {
-            return getPresetOptions(qualityDefinitionModels, materialPresetRight);
+            const presetFilters = {
+                materialType: materialPresetRight?.materialType,
+                nozzleSize: extruderRDefinition?.settings.machine_nozzle_size.default_value,
+            };
+            return getPresetOptions(qualityDefinitionModels, presetFilters);
         }
-    }, [selectedStackId, qualityDefinitionModels, materialPreset, materialPresetRight]);
+    }, [
+        selectedStackId, qualityDefinitionModels,
+        materialPreset, materialPresetRight,
+        extruderLDefinition?.settings.machine_nozzle_size.default_value,
+        extruderRDefinition?.settings.machine_nozzle_size.default_value,
+    ]);
 
     const presetCategoryOptions = Object.values(presetOptionsObj).map((item) => {
         return {

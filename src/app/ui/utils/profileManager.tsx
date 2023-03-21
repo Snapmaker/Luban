@@ -5,9 +5,10 @@ import {
     DEFAULT_PRESET_IDS,
     isQualityPresetVisible,
     PRESET_CATEGORY_CUSTOM,
-    PRESET_CATEGORY_DEFAULT
+    PRESET_CATEGORY_DEFAULT,
+    QualityPresetFilters,
 } from '../../constants/preset';
-import type { MaterialPresetModel, QualityPresetModel } from '../../preset-model';
+import type { QualityPresetModel } from '../../preset-model';
 
 import { MaterialWithColor } from '../widgets/PrintingMaterial/MaterialWithColor';
 
@@ -50,16 +51,10 @@ function getSelectOptions(printingDefinitions) {
  * @param presetModels
  * @param materialPreset
  */
-export function pickAvailableQualityPresetModels(presetModels: QualityPresetModel[], materialPreset: MaterialPresetModel | null) {
-    if (!materialPreset) {
-        return [];
-    }
-
+export function pickAvailableQualityPresetModels(presetModels: QualityPresetModel[], filters: QualityPresetFilters) {
     const availablePresetModels = [];
     for (const presetModel of presetModels) {
-        const visible = isQualityPresetVisible(presetModel, {
-            materialType: materialPreset?.materialType,
-        });
+        const visible = isQualityPresetVisible(presetModel, filters);
         if (visible) {
             availablePresetModels.push(presetModel);
         }
@@ -105,7 +100,7 @@ export declare interface QualityPresetGroup {
 
 export declare type QualityPresetGroups = { [category: string]: QualityPresetGroup }
 
-function getPresetOptions(presetModels: QualityPresetModel[], materialPreset: MaterialPresetModel | null): QualityPresetGroups {
+function getPresetOptions(presetModels: QualityPresetModel[], presetFilters: QualityPresetFilters): QualityPresetGroups {
     const presetOptions: QualityPresetGroups = {
         [PRESET_CATEGORY_DEFAULT]: {
             label: PRESET_CATEGORY_DEFAULT,
@@ -114,11 +109,7 @@ function getPresetOptions(presetModels: QualityPresetModel[], materialPreset: Ma
         }
     };
 
-    if (!materialPreset) {
-        return presetOptions;
-    }
-
-    const availablePresetModels = pickAvailableQualityPresetModels(presetModels, materialPreset);
+    const availablePresetModels = pickAvailableQualityPresetModels(presetModels, presetFilters);
 
     for (const presetModel of availablePresetModels) {
         const {

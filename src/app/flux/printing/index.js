@@ -9,7 +9,6 @@ import { timestamp } from '../../../shared/lib/random-utils';
 import { PrintMode } from '../../machine-definition';
 import api from '../../api';
 import {
-    ABSENT_OBJECT,
     BLACK_COLOR, BOTH_EXTRUDER_MAP_NUMBER,
     DATA_PREFIX,
     EPSILON,
@@ -192,9 +191,8 @@ const INITIAL_STATE = {
     defaultMaterialId: 'material.pla', // TODO: selectedMaterialId
     defaultMaterialIdRight: 'material.pla', // for dual extruder --- right extruder
 
-    extruderLDefinition: ABSENT_OBJECT,
-    extruderRDefinition: ABSENT_OBJECT,
-
+    extruderLDefinition: null,
+    extruderRDefinition: null,
 
     // Stage reflects current state of visualizer
     stage: STEP_STAGE.EMPTY,
@@ -1376,73 +1374,52 @@ export const actions = {
         {
             paramKey,
             paramValue,
-            direction,
+            direction = LEFT_EXTRUDER,
         }
     ) => async (dispatch, getState) => {
-        if (!isNil(paramValue)) {
-            const printingState = getState().printing;
-            const machineDefinition = definitionManager.machineDefinition;
-            const { materialDefinitions, qualityDefinitions } = printingState;
+        const { materialDefinitions, qualityDefinitions, extruderLDefinition, extruderRDefinition } = getState().printing;
+        const machineDefinition = definitionManager.machineDefinition;
 
-            let isNozzleSizeChanged = false;
-            if (direction) {
-                const definitionsKey = definitionKeysWithDirection[direction][PRINTING_MANAGER_TYPE_EXTRUDER];
-                const definitionModel = printingState[definitionsKey];
-                if (definitionModel.settings[paramKey]) {
-                    definitionModel.settings[paramKey].default_value = paramValue;
-                }
-                if (direction === LEFT_EXTRUDER) {
-                    if (paramKey === 'machine_nozzle_size') {
-                        isNozzleSizeChanged = true;
-                    }
-                }
-                dispatch(
-                    actions.updateState({
-                        [definitionsKey]: definitionModel
-                    })
-                );
-            }
-
-            if (machineDefinition.settings[paramKey]) {
-                machineDefinition.settings[paramKey].default_value = paramValue;
-            }
-
-            // TODO: Consider left & right stacks
-            const {
-                newMaterialDefinitions,
-                newQualityDefinitions,
-            } = await definitionManager.updateMachineDefinition({
-                isNozzleSize: isNozzleSizeChanged,
-                machineDefinition,
-                materialDefinitions,
-                qualityDefinitions,
-            });
-            dispatch(actions.updateDefaultDefinition(
-                'quality.normal_other_quality',
-                paramKey,
-                paramValue
-            ));
-
-            if (newMaterialDefinitions) {
-                dispatch(actions.updateState({
-                    qualityDefinitions: newQualityDefinitions,
-                    materialDefinitions: newMaterialDefinitions,
-                }));
-            } else {
-                dispatch(actions.updateState({
-                    qualityDefinitions: newQualityDefinitions,
-                }));
-            }
-
-            if (isNozzleSizeChanged) {
-                // Nozzle size has changed
-                dispatch(actions.validateActiveQualityPreset(direction));
-            }
-
-            setTimeout(() => {
-                dispatch(actions.applyProfileToAllModels());
-            });
+        // make change on extruder preset
+        const definitionModel = direction === LEFT_EXTRUDER ? extruderLDefinition : extruderRDefinition;
+        if (definitionModel.settings[paramKey]) {
+            definitionModel.settings[paramKey].default_value = paramValue;
         }
+
+        // make change on machine definition
+        if (machineDefinition.settings[paramKey]) {
+            machineDefinition.settings[paramKey].default_value = paramValue;
+        }
+
+        // Resolve all material and quality presets
+        const {
+            newMaterialDefinitions,
+            newQualityDefinitions,
+        } = await definitionManager.updateMachineDefinition({
+            machineDefinition,
+            materialDefinitions,
+            qualityDefinitions,
+        });
+
+        /*
+        dispatch(actions.updateDefaultDefinition(
+            'quality.normal_other_quality',
+            paramKey,
+            paramValue
+        ));
+        */
+
+        dispatch(actions.updateState({
+            qualityDefinitions: newQualityDefinitions,
+            materialDefinitions: newMaterialDefinitions,
+        }));
+
+        // TODO
+        dispatch(actions.validateActiveQualityPreset(direction));
+
+        setTimeout(() => {
+            dispatch(actions.applyProfileToAllModels());
+        });
     },
 
     updateCurrentDefinition: (

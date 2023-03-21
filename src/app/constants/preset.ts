@@ -19,8 +19,15 @@ export const DEFAULT_PRESET_IDS = [
     'quality.engineering_print'
 ];
 
+export declare interface QualityPresetFilters {
+    materialType: string;
+    nozzleSize: number;
+}
+
 // TODO: Add to preset model.
-export function isQualityPresetVisible(presetModel: QualityPresetModel, { materialType = 'pla', nozzleSize = 0.4 }) {
+export function isQualityPresetVisible(presetModel: QualityPresetModel, filters: QualityPresetFilters) {
+    const { materialType = 'pla', nozzleSize = 0.4 } = filters;
+
     const regularMaterialTypes = ['pla', 'abs', 'petg'];
 
     let materialCheck = false;
