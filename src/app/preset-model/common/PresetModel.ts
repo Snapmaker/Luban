@@ -39,7 +39,7 @@ class PresetModel {
     public headType = HEAD_PRINTING;
     // private params: ParamsModelType;
     public name = '';
-    private inherits = '';
+    protected inherits = '';
     public category = '';
     public i18nName = '';
     public i18nCategory = '';
@@ -69,19 +69,18 @@ class PresetModel {
             category,
             i18nCategory,
             inherits,
-            typeOfPrinting,
             ownKeys,
             settings,
         } = this;
+
         return {
             definitionId,
             name,
             category,
             i18nCategory,
             inherits,
-            typeOfPrinting,
             ownKeys,
-            settings
+            settings,
         };
     }
 }

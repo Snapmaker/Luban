@@ -36,19 +36,7 @@ const QUALITY_PRESET_FIXED_KEYS = new Set([
     'machine_nozzle_size',
 ]);
 
-function resolveMachineDefinition(item, changedArray = [], changedArrayWithoutExtruder = [], options = {}) {
-    options.contextKey = options.contextKey || '';
 
-    if (MATERIAL_REGEX.test(item.definitionId)) {
-        resolveParameterValues(item, changedArray, options);
-    } else if (QUALITY_REGEX.test(item.definitionId)) {
-        if (item.isDefault && item.definitionId !== 'quality.normal_other_quality') {
-            resolveParameterValues(item, changedArrayWithoutExtruder, options);
-        } else {
-            resolveParameterValues(item, changedArray, options);
-        }
-    }
-}
 
 class DefinitionManager {
     headType = HEAD_CNC;
@@ -74,8 +62,6 @@ class DefinitionManager {
     materialProfileLevel = {};
 
     changedArray = [];
-
-    changedArrayWithoutExtruder = [];
 
     configPathname = '';
 
@@ -105,10 +91,6 @@ class DefinitionManager {
                     const value = settingItem.default_value;
                     return [key, value];
                 });
-            this.changedArrayWithoutExtruder = this.changedArray
-                .filter(([key]) => {
-                    return !(extruderRelationSettingsKeys.includes(key));
-                });
         }
 
         // default profiles
@@ -123,7 +105,7 @@ class DefinitionManager {
                 item.i18nCategory = i18n._(item.i18nCategory);
             }
             // Use a special context key, avoid to conflict with the config we are using
-            resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder, {
+            this.resolveMachineDefinition(item, {
                 contextKey: `DefaultConfig-${item.definitionId}`,
             });
             return item;
@@ -177,6 +159,24 @@ class DefinitionManager {
     }
 
     /**
+     * Apply parameters from machine to preset.
+     */
+    resolveMachineDefinition(definition, options = {}) {
+        options.contextKey = options.contextKey || '';
+
+        if (MATERIAL_REGEX.test(definition.definitionId)) {
+            resolveParameterValues(definition, this.changedArray, options);
+        } else if (QUALITY_REGEX.test(definition.definitionId)) {
+            // Make sure nozzle size is taken from definition itself
+            const changedArray = [
+                ...this.changedArray,
+                ['machine_nozzle_size', definition.settings.machine_nozzle_size.default_value],
+            ];
+            resolveParameterValues(definition, changedArray, options);
+        }
+    }
+
+    /**
      * Get raw definition file (for download).
      */
     async getRawDefinition(definitionId) {
@@ -205,7 +205,7 @@ class DefinitionManager {
 
         const definition = res.body.definition;
         if (MATERIAL_REGEX.test(definitionId) || QUALITY_REGEX.test(definitionId)) {
-            resolveMachineDefinition(definition, this.changedArray, this.changedArrayWithoutExtruder);
+            this.resolveMachineDefinition(definition);
         }
         if (definition.i18nCategory) {
             definition.i18nCategory = i18n._(definition.i18nCategory);
@@ -244,10 +244,12 @@ class DefinitionManager {
             res.body.definitions
         );
 
-        const result = definitions.map((definition) => {
-            resolveMachineDefinition(definition, this.changedArray, this.changedArrayWithoutExtruder);
-            return definition;
-        }).map(this.fillCustomCategory);
+        const result = definitions
+            .map((definition) => {
+                this.resolveMachineDefinition(definition);
+                return definition;
+            })
+            .map(this.fillCustomCategory);
 
         return result;
     }
@@ -260,7 +262,7 @@ class DefinitionManager {
         const res = await api.profileDefinitions.createDefinition(this.headType, actualDefinition, this.configPathname);
 
         const newDefinition = res.body.definition;
-        resolveMachineDefinition(newDefinition, this.changedArray, this.changedArrayWithoutExtruder);
+        this.resolveMachineDefinition(newDefinition);
         return newDefinition;
     }
 
@@ -297,7 +299,7 @@ class DefinitionManager {
             return null;
         } else {
             const newDefinition = res.body.definition;
-            resolveMachineDefinition(newDefinition, this.changedArray, this.changedArrayWithoutExtruder);
+            this.resolveMachineDefinition(newDefinition);
             return this.fillCustomCategory(newDefinition);
         }
     }
@@ -333,18 +335,13 @@ class DefinitionManager {
                 return [key, value];
             });
 
-        this.changedArrayWithoutExtruder = this.changedArray
-            .filter(([key]) => {
-                return !(extruderRelationSettingsKeys.includes(key));
-            });
-
         await this.updateDefinition(machineDefinition);
 
         materialDefinitions.forEach((item) => {
-            resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder);
+            this.resolveMachineDefinition(item);
         });
         qualityDefinitions.forEach((item) => {
-            resolveMachineDefinition(item, this.changedArray, this.changedArrayWithoutExtruder);
+            this.resolveMachineDefinition(item);
         });
         return {
             newMaterialDefinitions: materialDefinitions,

@@ -1,7 +1,5 @@
 import { isUndefined } from 'lodash';
 
-import { QUALITY_REGEX } from '../../constants';
-
 import PresetModel from './PresetModel';
 
 
@@ -15,14 +13,10 @@ class QualityPresetModel extends PresetModel {
     public qualityType: string = ''; // abs/tpu/other, TODO: refactor it
     public typeOfPrinting = 'universal'; // universal/quik//fine/engineering
 
-    public constructor(definition: object, defaultNozzleSize) {
+    public constructor(definition: object) {
         super(definition);
 
         this.__mirrorKeys(definition);
-
-        if (QUALITY_REGEX.test(this.definitionId)) {
-            this.updateParams(defaultNozzleSize);
-        }
 
         this.nozzleSize = this.settings.machine_nozzle_size?.default_value as number;
     }
@@ -35,28 +29,30 @@ class QualityPresetModel extends PresetModel {
         }
     }
 
-    private updateParams(
-        nozzleSize = this.nozzleSize,
-    ) {
-        console.log('updateParams', nozzleSize);
-        // const settings = this.settings;
-        /*
-        nozzleSize = Number(nozzleSize);
-        if ((materialType && materialType !== this.materialType) || (nozzleSize && nozzleSize !== this.nozzleSize)) {
-            this.materialType = materialType;
-            this.nozzleSize = nozzleSize;
+    public getSerializableDefinition() {
+        const {
+            definitionId,
+            name,
+            category,
+            i18nCategory,
+            inherits,
+            typeOfPrinting,
+            qualityType,
+            ownKeys,
+            settings,
+        } = this;
 
-            // todo change getting 'typeOfPrinting' from setting's param
-            if (materialType === 'tpu' && nozzleSize === 0.4) {
-                this.params = cloneDeep(DEFAULE_PARAMS_FOR_TPU);
-            } else if (OTHER_MATERISL_TYPES.includes(materialType) && nozzleSize === 0.4) {
-                this.params = cloneDeep(DEFAULE_PARAMS_FOR_OTHERS);
-            } else {
-                this.params = getPresetQuickParamsCalculated({ nozzleSize: this.nozzleSize });
-            }
-            console.info('this.params =', this.params);
-        }
-        */
+        return {
+            definitionId,
+            name,
+            category,
+            i18nCategory,
+            inherits,
+            qualityType,
+            typeOfPrinting,
+            ownKeys,
+            settings
+        };
     }
 }
 

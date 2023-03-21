@@ -103,7 +103,6 @@ const ConfigurationView: React.FC<{}> = () => {
     }, [materialDefinitions, defaultMaterialIdRight]);
 
     const presetOptionsObj = useMemo(() => {
-        console.log('presetOptionsObj =');
         if (selectedStackId === LEFT_EXTRUDER) {
             const presetFilters = {
                 materialType: materialPreset?.materialType,

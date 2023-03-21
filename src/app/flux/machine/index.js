@@ -348,8 +348,6 @@ export const actions = {
         // dispatch(baseActions.updateState({ series }));
         const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
 
-        //  Do not need to 'initSize' just use 'switchSize' function
-        await dispatch(printingActions.switchSize());
         seriesInfo && dispatch(actions.updateMachineSize(seriesInfo.size));
         dispatch(widgetActions.updateMachineSeries(series));
 

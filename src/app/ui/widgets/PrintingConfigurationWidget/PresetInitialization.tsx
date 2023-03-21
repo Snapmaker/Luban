@@ -85,7 +85,7 @@ const PresetInitialization: React.FC = () => {
             }
         }
     }, [
-        qualityDefinitionModels, activePresetIds, materialPreset, setQualityPreset,
+        qualityDefinitionModels, activePresetIds[LEFT_EXTRUDER], materialPreset, setQualityPreset,
         extruderLDefinition?.settings.machine_nozzle_size.default_value,
     ]);
 
@@ -113,8 +113,7 @@ const PresetInitialization: React.FC = () => {
             }
         }
     }, [
-        qualityDefinitionModels, activePresetIds, defaultMaterialIdRight,
-
+        qualityDefinitionModels, activePresetIds[RIGHT_EXTRUDER], defaultMaterialIdRight, setQualityPreset,
         extruderRDefinition?.settings.machine_nozzle_size.default_value,
     ]);
 
