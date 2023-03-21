@@ -5,7 +5,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
 import { isQualityPresetVisible } from '../../../constants/preset';
 import log from '../../../lib/log';
-import { pickAvailablePresetModels } from '../../utils/profileManager';
+import { pickAvailableQualityPresetModels } from '../../utils/profileManager';
 import { RootState } from '../../../flux/index.def';
 import { actions as printingActions } from '../../../flux/printing';
 import type { PresetModel } from '../../../preset-model';
@@ -60,7 +60,7 @@ const PresetInitialization: React.FC = () => {
             }
             if (!presetModel) {
                 // definition no found, select first official definition
-                const availablePresetModels = pickAvailablePresetModels(qualityDefinitionModels, materialPreset);
+                const availablePresetModels = pickAvailableQualityPresetModels(qualityDefinitionModels, materialPreset);
                 presetModel = availablePresetModels.length > 0 && availablePresetModels[0];
 
                 if (presetModel) {
@@ -80,7 +80,7 @@ const PresetInitialization: React.FC = () => {
             }
             if (!presetModel) {
                 // definition no found, select first official definition
-                const availablePresetModels = pickAvailablePresetModels(qualityDefinitionModels, materialPresetRight);
+                const availablePresetModels = pickAvailableQualityPresetModels(qualityDefinitionModels, materialPresetRight);
                 presetModel = availablePresetModels.length > 0 && availablePresetModels[0];
 
                 if (presetModel) {

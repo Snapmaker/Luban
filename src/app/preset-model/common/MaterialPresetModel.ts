@@ -4,8 +4,9 @@ import { MATERIAL_REGEX } from '../../constants';
 import PresetModel from './PresetModel';
 
 
+
 class MaterialPresetModel extends PresetModel {
-    public materialType = 'pla';
+    public materialType: string = 'pla';
 
     public constructor(definition: object) {
         super(definition);

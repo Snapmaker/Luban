@@ -1,4 +1,6 @@
 import { includes } from 'lodash';
+import log from '../lib/log';
+import type { QualityPresetModel } from '../preset-model';
 
 // export const STACK_LEFT = 'left';
 // export const STACK_RIGHT = 'right';
@@ -18,20 +20,47 @@ export const DEFAULT_PRESET_IDS = [
 ];
 
 // TODO: Add to preset model.
-export function isQualityPresetVisible(preset, { materialType = 'pla' }) {
+export function isQualityPresetVisible(presetModel: QualityPresetModel, { materialType = 'pla', nozzleSize = 0.4 }) {
     const regularMaterialTypes = ['pla', 'abs', 'petg'];
-    if (preset.qualityType) {
+
+    let materialCheck = false;
+    if (includes(regularMaterialTypes, materialType)) {
+        materialCheck = presetModel.qualityType === 'abs';
+    } else if (materialType === 'tpu') {
+        materialCheck = presetModel.qualityType === 'tpu';
+    } else {
+        materialCheck = presetModel.qualityType === 'other';
+    }
+
+    if (!presetModel.qualityType) {
+        log.warn(`Unknown qualityType for preset ${presetModel.definitionId}`);
+        materialCheck = false;
+    }
+
+    if (!materialCheck) {
+        return false;
+    }
+
+    // Check nozzle size
+    if (presetModel.nozzleSize === nozzleSize) {
+        return true;
+    } else {
+        return false;
+    }
+    /*
+    if (presetModel.qualityType) {
         // check preset's qualityType matches materialType
         if (materialType === 'tpu') {
-            return preset.qualityType === 'tpu';
+            return presetModel.qualityType === 'tpu';
         } else if (includes(regularMaterialTypes, materialType)) {
-            return includes(regularMaterialTypes, preset.qualityType);
+            return includes(regularMaterialTypes, presetModel.qualityType);
         } else {
-            return preset.qualityType === 'other';
+            return presetModel.qualityType === 'other';
         }
     }
 
     return true;
+    */
 }
 
 

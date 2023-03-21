@@ -1,12 +1,19 @@
 import { isUndefined } from 'lodash';
-import { HEAD_PRINTING, MATERIAL_REGEX } from '../../constants';
+import { HEAD_PRINTING } from '../../constants';
 
 // import { DEFAULE_PARAMS_FOR_TPU, DEFAULE_PARAMS_FOR_OTHERS, getPresetQuickParamsCalculated } from './preset-changes';
 // import type { ParamsModelType } from './preset-changes';
 
 // const OTHER_MATERISL_TYPES = ['pla', 'abs', 'petg'];
 
-const DEFINITION_ROOT_KEYS = [
+
+
+declare interface SettingItem {
+    // eslint-disable-next-line camelcase
+    default_value: boolean | number | string;
+}
+
+const PRESET_KEYS = [
     'definitionId',
     'name',
     'i18nName',
@@ -17,17 +24,12 @@ const DEFINITION_ROOT_KEYS = [
     'metadata',
     'settings',
     'overrides',
-    'typeOfPrinting',
-    'qualityType',
+    // 'typeOfPrinting',
+    // 'qualityType',
 
     'i18nCategory',
     'ownKeys',
 ];
-
-declare interface SettingItem {
-    // eslint-disable-next-line camelcase
-    default_value: boolean | number | string;
-}
 
 // TODO: material category & quality category is not the same, distinguish them by subclasses
 class PresetModel {
@@ -46,26 +48,17 @@ class PresetModel {
 
     // init definitionId and definition
     public constructor(definition: object) {
-        Object.keys(definition)
-            .forEach((key) => {
-                if (!isUndefined(definition[key])) {
-                    this[key] = definition[key];
-                }
-                if (!DEFINITION_ROOT_KEYS.includes(key)) {
-                    console.warn('Unknown key', key);
-                }
-            });
-
-        for (const key of DEFINITION_ROOT_KEYS) {
+        // mirror keys
+        for (const key of PRESET_KEYS) {
             if (!isUndefined(definition[key])) {
                 this[key] = definition[key];
             }
         }
 
         // Assume that the materialType of material preset will never change
-        if (MATERIAL_REGEX.test(this.definitionId)) {
-            this.materialType = definition.settings.material_type.default_value;
-        }
+        // if (MATERIAL_REGEX.test(this.definitionId)) {
+        //    this.materialType = definition.settings.material_type.default_value;
+        // }
     }
 
     // public

@@ -476,8 +476,6 @@ export const actions = {
         const qualityParamModels = [];
         const materialPresetModels = [];
 
-        const activeMaterialType = dispatch(actions.getActiveMaterialType());
-
         const extruderLDefinition = definitionManager.extruderLDefinition;
         const extruderRDefinition = definitionManager.extruderRDefinition;
 
@@ -487,12 +485,11 @@ export const actions = {
         });
 
         allQualityDefinitions.forEach((eachDefinition) => {
-            const paramModel = new QualityPresetModel(
+            const presetModel = new QualityPresetModel(
                 eachDefinition,
-                activeMaterialType,
                 extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
             );
-            qualityParamModels.push(paramModel);
+            qualityParamModels.push(presetModel);
         });
 
         dispatch(
@@ -586,15 +583,12 @@ export const actions = {
 
         const allMaterialDefinitions = await definitionManager.getDefinitionsByPrefixName('material');
 
-        const activeMaterialType = dispatch(actions.getActiveMaterialType()); // TODO: Consider another extruder
-
         const defaultDefinitions = definitionManager?.defaultDefinitions.map((eachDefinition) => {
             if (MATERIAL_REGEX.test(eachDefinition.definitionId)) {
                 return new MaterialPresetModel(eachDefinition);
             } else if (QUALITY_REGEX.test(eachDefinition.definitionId)) {
                 return new QualityPresetModel(
                     eachDefinition,
-                    activeMaterialType,
                     definitionManager.extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
                 );
             } else if (EXTRUDER_REGEX.test(eachDefinition.definitionId)) {
@@ -612,12 +606,11 @@ export const actions = {
 
         const qualityPresetModels = [];
         for (const preset of allQualityDefinitions) {
-            const paramModel = new QualityPresetModel(
+            const presetModel = new QualityPresetModel(
                 preset,
-                activeMaterialType,
                 definitionManager.extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
             );
-            qualityPresetModels.push(paramModel);
+            qualityPresetModels.push(presetModel);
         }
 
         dispatch(
@@ -1733,10 +1726,8 @@ export const actions = {
         // TODO: Refactor this
         if (type === PRINTING_MANAGER_TYPE_QUALITY) {
             const { extruderLDefinition } = state;
-            const activeMaterialType = dispatch(actions.getActiveMaterialType());
             const newPresetModel = new QualityPresetModel(
                 createdDefinitionModel,
-                activeMaterialType,
                 extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
             );
             dispatch(
@@ -2059,7 +2050,7 @@ export const actions = {
 
         // TODO: Consider nozzle size
         // machineNozzleSize: actualExtruderDefinition.settings?.machine_nozzle_size?.default_value,
-        if (presetModel && isQualityPresetVisible(qualityDefinitions, { materialType: materialType })) {
+        if (presetModel && isQualityPresetVisible(presetModel, { materialType: materialType })) {
             // the quality preset looks fine
             return;
         }

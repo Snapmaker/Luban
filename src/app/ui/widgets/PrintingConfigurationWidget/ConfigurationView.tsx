@@ -1,7 +1,7 @@
 import { Menu, Spin } from 'antd';
 import classNames from 'classnames';
 import { cloneDeep, find, isNil, uniqWith } from 'lodash';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import {
@@ -15,9 +15,10 @@ import { DEFAULT_PRESET_IDS, PRESET_CATEGORY_DEFAULT } from '../../../constants/
 
 import { RootState } from '../../../flux/index.def';
 import { actions as printingActions } from '../../../flux/printing';
-import log from '../../../lib/log';
 import i18n from '../../../lib/i18n';
+import log from '../../../lib/log';
 import modal from '../../../lib/modal';
+import type { MaterialPresetModel } from '../../../preset-model';
 import { printingStore } from '../../../store/local-storage';
 import Anchor from '../../components/Anchor';
 import { Button } from '../../components/Buttons';
@@ -90,15 +91,22 @@ const ConfigurationView: React.FC<{}> = () => {
     // UI state
     const [initialized, setInitialized] = useState(false);
 
-    const materialPreset = materialDefinitions.find(p => p.definitionId === defaultMaterialId);
-    const materialPresetRight = materialDefinitions.find(p => p.definitionId === defaultMaterialIdRight);
+    const materialPreset: MaterialPresetModel | null = useMemo(() => {
+        return materialDefinitions.find((p: MaterialPresetModel) => p.definitionId === defaultMaterialId);
+    }, [materialDefinitions, defaultMaterialId]);
 
-    let presetOptionsObj;
-    if (selectedStackId === LEFT_EXTRUDER) {
-        presetOptionsObj = getPresetOptions(qualityDefinitionModels, materialPreset);
-    } else {
-        presetOptionsObj = getPresetOptions(qualityDefinitionModels, materialPresetRight);
-    }
+    const materialPresetRight: MaterialPresetModel | null = useMemo(() => {
+        return materialDefinitions.find((p: MaterialPresetModel) => p.definitionId === defaultMaterialIdRight);
+    }, [materialDefinitions, defaultMaterialIdRight]);
+
+    const presetOptionsObj = useMemo(() => {
+        console.log('presetOptionsObj =');
+        if (selectedStackId === LEFT_EXTRUDER) {
+            return getPresetOptions(qualityDefinitionModels, materialPreset);
+        } else {
+            return getPresetOptions(qualityDefinitionModels, materialPresetRight);
+        }
+    }, [selectedStackId, qualityDefinitionModels, materialPreset, materialPresetRight]);
 
     const presetCategoryOptions = Object.values(presetOptionsObj).map((item) => {
         return {
