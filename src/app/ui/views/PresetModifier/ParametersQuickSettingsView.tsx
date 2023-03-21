@@ -1,25 +1,27 @@
-import React from 'react';
-import { cloneDeep } from 'lodash';
-import { useDispatch, useSelector } from 'react-redux';
 import { Segmented } from 'antd';
+import { cloneDeep } from 'lodash';
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
-import i18n from '../../../lib/i18n';
 import { LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
 import { MACHINE_SERIES } from '../../../constants/machines';
+import i18n from '../../../lib/i18n';
 
-import PresetDefinitionModel, {
+import {
+    PresetModel,
     DEFAULE_PARAMS_FOR_OTHERS,
     DEFAULE_PARAMS_FOR_TPU,
     DEFAULT_PARAMS_FAST,
     DEFAULT_PARAMS_MEDIUM,
     getPresetQuickParamsCalculated,
-} from '../../../flux/manager/PresetDefinitionModel';
+} from '../../../preset-model';
+
 import { actions as printingActions } from '../../../flux/printing';
 
-import Select from '../../components/Select';
-import Tooltip from '../../components/Tooltip';
-import SvgIcon from '../../components/SvgIcon';
 import { RootState } from '../../../flux/index.def';
+import Select from '../../components/Select';
+import SvgIcon from '../../components/SvgIcon';
+import Tooltip from '../../components/Tooltip';
 
 
 const ALL_ICON_NAMES = {
@@ -206,7 +208,7 @@ function getDescription(paramName, displayName) {
 
 declare type TProps = {
     selectedStackId: string;
-    selectedPresetModel: PresetDefinitionModel;
+    selectedPresetModel: PresetModel;
     onChangePresetSettings: (key, value) => void;
 };
 

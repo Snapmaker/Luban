@@ -1,7 +1,7 @@
 import { Menu, Spin } from 'antd';
 import classNames from 'classnames';
 import { cloneDeep, find, isNil, uniqWith } from 'lodash';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import {
@@ -15,9 +15,10 @@ import { DEFAULT_PRESET_IDS, PRESET_CATEGORY_DEFAULT } from '../../../constants/
 
 import { RootState } from '../../../flux/index.def';
 import { actions as printingActions } from '../../../flux/printing';
-import log from '../../../lib/log';
 import i18n from '../../../lib/i18n';
+import log from '../../../lib/log';
 import modal from '../../../lib/modal';
+import type { MaterialPresetModel } from '../../../preset-model';
 import { printingStore } from '../../../store/local-storage';
 import Anchor from '../../components/Anchor';
 import { Button } from '../../components/Buttons';
@@ -61,6 +62,9 @@ const ConfigurationView: React.FC<{}> = () => {
     const isDual = isDualExtruder(printingToolhead);
 
     const {
+        extruderLDefinition,
+        extruderRDefinition,
+
         // quality
         qualityDefinitions: qualityDefinitionModels,
         activePresetIds,
@@ -90,15 +94,34 @@ const ConfigurationView: React.FC<{}> = () => {
     // UI state
     const [initialized, setInitialized] = useState(false);
 
-    const materialPreset = materialDefinitions.find(p => p.definitionId === defaultMaterialId);
-    const materialPresetRight = materialDefinitions.find(p => p.definitionId === defaultMaterialIdRight);
+    const materialPreset: MaterialPresetModel | null = useMemo(() => {
+        return materialDefinitions.find((p: MaterialPresetModel) => p.definitionId === defaultMaterialId);
+    }, [materialDefinitions, defaultMaterialId]);
 
-    let presetOptionsObj;
-    if (selectedStackId === LEFT_EXTRUDER) {
-        presetOptionsObj = getPresetOptions(qualityDefinitionModels, materialPreset);
-    } else {
-        presetOptionsObj = getPresetOptions(qualityDefinitionModels, materialPresetRight);
-    }
+    const materialPresetRight: MaterialPresetModel | null = useMemo(() => {
+        return materialDefinitions.find((p: MaterialPresetModel) => p.definitionId === defaultMaterialIdRight);
+    }, [materialDefinitions, defaultMaterialIdRight]);
+
+    const presetOptionsObj = useMemo(() => {
+        if (selectedStackId === LEFT_EXTRUDER) {
+            const presetFilters = {
+                materialType: materialPreset?.materialType,
+                nozzleSize: extruderLDefinition?.settings.machine_nozzle_size.default_value,
+            };
+            return getPresetOptions(qualityDefinitionModels, presetFilters);
+        } else {
+            const presetFilters = {
+                materialType: materialPresetRight?.materialType,
+                nozzleSize: extruderRDefinition?.settings.machine_nozzle_size.default_value,
+            };
+            return getPresetOptions(qualityDefinitionModels, presetFilters);
+        }
+    }, [
+        selectedStackId, qualityDefinitionModels,
+        materialPreset, materialPresetRight,
+        extruderLDefinition?.settings.machine_nozzle_size.default_value,
+        extruderRDefinition?.settings.machine_nozzle_size.default_value,
+    ]);
 
     const presetCategoryOptions = Object.values(presetOptionsObj).map((item) => {
         return {

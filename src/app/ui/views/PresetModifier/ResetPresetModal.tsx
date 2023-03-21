@@ -1,14 +1,14 @@
 import React from 'react';
 
 import i18n from '../../../lib/i18n';
-import PresetDefinitionModel from '../../../flux/manager/PresetDefinitionModel';
+import { PresetModel } from '../../../preset-model';
 import { Button } from '../../components/Buttons';
 import { ModalHOC } from '../../../lib/modal';
 import { PresetActionsType } from './usePresetActions';
 
 
 interface ResetPresetModalProps {
-    presetModel: PresetDefinitionModel;
+    presetModel: PresetModel;
 
     presetActions: PresetActionsType;
 

@@ -1,15 +1,14 @@
 import { resolveParameterValues } from '@snapmaker/luban-platform';
-import { cloneDeep, filter, find, isNil } from 'lodash';
+import { cloneDeep, filter, find, includes, isNil } from 'lodash';
 import path from 'path';
 import * as THREE from 'three';
 import { Box3, Vector3 } from 'three';
 import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
-// import { resolveDefinition } from '../../../shared/lib/definition-resolver';
+
 import { timestamp } from '../../../shared/lib/random-utils';
 import { PrintMode } from '../../machine-definition';
 import api from '../../api';
 import {
-    ABSENT_OBJECT,
     BLACK_COLOR, BOTH_EXTRUDER_MAP_NUMBER,
     DATA_PREFIX,
     EPSILON,
@@ -30,15 +29,20 @@ import {
     RIGHT_EXTRUDER,
     RIGHT_EXTRUDER_MAP_NUMBER,
     WHITE_COLOR,
+    MATERIAL_REGEX,
+    QUALITY_REGEX,
+    EXTRUDER_REGEX,
 } from '../../constants';
 import { getMachineSeriesWithToolhead, isDualExtruder, MACHINE_SERIES, } from '../../constants/machines';
-import { isQualityPresetVisible } from '../../constants/preset';
+import { isQualityPresetVisible, PRESET_CATEGORY_CUSTOM } from '../../constants/preset';
+
 import { controller } from '../../lib/controller';
 import { logPritingSlice, logProfileChange, logToolBarOperation, logTransformOperation } from '../../lib/gaEvent';
 import i18n from '../../lib/i18n';
 import log from '../../lib/log';
 import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 import workerManager from '../../lib/manager/workerManager';
+
 import { ModelEvents } from '../../models/events';
 import ModelGroup from '../../models/ModelGroup';
 import PrimeTowerModel from '../../models/PrimeTowerModel';
@@ -53,7 +57,7 @@ import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcod
 // eslint-disable-next-line import/no-cycle
 import { actions as appGlobalActions } from '../app-global';
 import definitionManager from '../manager/DefinitionManager';
-import PresetDefinitionModel from '../manager/PresetDefinitionModel';
+import { PresetModel, QualityPresetModel, MaterialPresetModel } from '../../preset-model';
 // eslint-disable-next-line import/no-cycle
 import { actions as operationHistoryActions } from '../operation-history';
 import AddOperation3D from '../operation-history/AddOperation3D';
@@ -74,6 +78,7 @@ import SimplifyModelOperation from '../operation-history/SimplifyModelOperation'
 import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import VisibleOperation3D from '../operation-history/VisibleOperation3D';
 import sceneActions from './actions-scene';
+import { pickAvailableQualityPresetModels } from '../../ui/utils/profileManager';
 
 const { Transfer } = require('threads');
 
@@ -189,9 +194,8 @@ const INITIAL_STATE = {
     defaultMaterialId: 'material.pla', // TODO: selectedMaterialId
     defaultMaterialIdRight: 'material.pla', // for dual extruder --- right extruder
 
-    extruderLDefinition: ABSENT_OBJECT,
-    extruderRDefinition: ABSENT_OBJECT,
-
+    extruderLDefinition: null,
+    extruderRDefinition: null,
 
     // Stage reflects current state of visualizer
     stage: STEP_STAGE.EMPTY,
@@ -453,59 +457,6 @@ export const actions = {
         );
     },
 
-    // Use for switch machine size
-    switchSize: () => async (dispatch, getState) => {
-        // state
-        const printingState = getState().printing;
-        const { gcodeLineGroup } = printingState;
-        const { toolHead, series, size } = getState().machine;
-
-        const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
-        await definitionManager.init(CONFIG_HEADTYPE, currentMachine.configPathname[CONFIG_HEADTYPE]);
-
-        const allMaterialDefinitions = await definitionManager.getDefinitionsByPrefixName(
-            'material'
-        );
-        const allQualityDefinitions = await definitionManager.getDefinitionsByPrefixName(
-            'quality'
-        );
-
-        const qualityParamModels = [];
-        const materialPresetModels = [];
-
-        const activeMaterialType = dispatch(actions.getActiveMaterialType());
-
-        const extruderLDefinition = definitionManager.extruderLDefinition;
-        const extruderRDefinition = definitionManager.extruderRDefinition;
-
-        allMaterialDefinitions.forEach((eachDefinition) => {
-            const paramModel = new PresetDefinitionModel(eachDefinition);
-            materialPresetModels.push(paramModel);
-        });
-
-        allQualityDefinitions.forEach((eachDefinition) => {
-            const paramModel = new PresetDefinitionModel(
-                eachDefinition,
-                activeMaterialType,
-                extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
-            );
-            qualityParamModels.push(paramModel);
-        });
-
-        dispatch(
-            actions.updateState({
-                materialDefinitions: materialPresetModels,
-                qualityDefinitions: qualityParamModels,
-                extruderLDefinition,
-                extruderRDefinition,
-            })
-        );
-        // model group
-        dispatch(actions.updateBoundingBox());
-        // Re-position model group
-        gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
-    },
-
     initSize: () => async (dispatch, getState) => {
         // also used in actions.saveAndClose of project/index.js
         // state
@@ -529,6 +480,14 @@ export const actions = {
         series = getRealSeries(series);
 
         const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
+
+        // model group
+        dispatch(actions.updateBoundingBox());
+
+        // Re-position model group
+        const { size } = getState().machine;
+        gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
+
 
         // init definition manager
         await definitionManager.init(
@@ -567,6 +526,7 @@ export const actions = {
             }));
         }
 
+        // Extruder assignment
         dispatch(
             actions.updateState({
                 helpersExtruderConfig: {
@@ -578,57 +538,135 @@ export const actions = {
             })
         );
 
-        // Update machine size after active definition is loaded
-        const allQualityDefinitions = await definitionManager.getDefinitionsByPrefixName('quality');
+        // Material
+        const materialDefinitions = await definitionManager.getDefinitionsByPrefixName('material');
+        const materialPresetModels = materialDefinitions.map((definition) => new MaterialPresetModel(definition));
 
-        const allMaterialDefinitions = await definitionManager.getDefinitionsByPrefixName('material');
+        // Quality
+        const qualityDefinitions = await definitionManager.getDefinitionsByPrefixName('quality');
+        const qualityPresetModels = qualityDefinitions.map((definition) => new QualityPresetModel(definition));
 
-        const activeMaterialType = dispatch(actions.getActiveMaterialType()); // TODO: Consider another extruder
-
-        const defaultDefinitions = definitionManager?.defaultDefinitions.map((eachDefinition) => {
-            const paramModel = new PresetDefinitionModel(
-                eachDefinition,
-                activeMaterialType,
-                definitionManager.extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
-            );
-            return paramModel;
+        // Default Presets
+        const defaultPresetModels = definitionManager?.defaultDefinitions.map((eachDefinition) => {
+            if (MATERIAL_REGEX.test(eachDefinition.definitionId)) {
+                return new MaterialPresetModel(eachDefinition);
+            } else if (QUALITY_REGEX.test(eachDefinition.definitionId)) {
+                return new QualityPresetModel(eachDefinition);
+            } else if (EXTRUDER_REGEX.test(eachDefinition.definitionId)) {
+                return new PresetModel(eachDefinition);
+            } else {
+                log.warn('Unknown definition', eachDefinition.definitionId);
+                return new PresetModel(eachDefinition);
+            }
         });
-
-        const materialParamModels = allMaterialDefinitions.map((eachDefinition) => {
-            const paramModel = new PresetDefinitionModel(
-                eachDefinition,
-                activeMaterialType,
-                definitionManager.extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
-            );
-            return paramModel;
-        });
-
-        const qualityPresetModels = [];
-        for (const preset of allQualityDefinitions) {
-            const paramModel = new PresetDefinitionModel(
-                preset,
-                activeMaterialType,
-                definitionManager.extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
-            );
-            qualityPresetModels.push(paramModel);
-        }
 
         dispatch(
             actions.updateState({
-                defaultDefinitions: defaultDefinitions,
-                materialDefinitions: materialParamModels,
+                defaultDefinitions: defaultPresetModels,
+                materialDefinitions: materialPresetModels,
                 qualityDefinitions: qualityPresetModels,
                 printingProfileLevel: definitionManager.printingProfileLevel,
                 materialProfileLevel: definitionManager.materialProfileLevel,
             })
         );
 
-        // model group
-        dispatch(actions.updateBoundingBox());
+        // Create material on demand
+        dispatch(actions.ensurePresetModels());
+    },
 
-        // Re-position model group
-        const { size } = getState().machine;
-        gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
+    /**
+     * Ensure preset model for active machine and tool configuration.
+     */
+    ensurePresetModels: () => async (dispatch, getState) => {
+        const {
+            extruderLDefinition,
+            extruderRDefinition,
+
+            materialDefinitions,
+            defaultMaterialId,
+            defaultMaterialIdRight,
+
+            qualityDefinitions,
+        } = getState().printing;
+
+        for (const stackId of [LEFT_EXTRUDER, RIGHT_EXTRUDER]) {
+            const materialPresetId = stackId === LEFT_EXTRUDER ? defaultMaterialId : defaultMaterialIdRight;
+            const materialPreset = materialDefinitions.find(p => p.definitionId === materialPresetId);
+
+            if (!materialPreset) {
+                continue;
+            }
+
+            const nozzleSize = stackId === LEFT_EXTRUDER
+                ? extruderLDefinition?.settings.machine_nozzle_size.default_value
+                : extruderRDefinition?.settings.machine_nozzle_size.default_value;
+
+            const presetFilters = {
+                materialType: materialPreset?.materialType,
+                nozzleSize,
+            };
+
+            const availablePresetModels = pickAvailableQualityPresetModels(qualityDefinitions, presetFilters);
+
+            if (availablePresetModels.length === 0) {
+                log.warn(`No available quality preset for extruder ${stackId}`);
+
+                const normalPresetModel = qualityDefinitions.find(p => p.definitionId === 'quality.normal_quality');
+                if (!normalPresetModel) {
+                    continue;
+                }
+
+                const newDefinitionId = `quality.${timestamp()}`;
+
+                const newQualityType = (() => {
+                    if (includes(['pla', 'abs', 'petg'], materialPreset?.materialType)) {
+                        return 'abs';
+                    }
+
+                    if (includes(['tpu'], materialPreset?.materialType)) {
+                        return 'tpu';
+                    }
+
+                    return 'other';
+                })();
+
+                const newDefinition = {
+                    definitionId: newDefinitionId,
+                    name: `${normalPresetModel.name} (${nozzleSize})`,
+                    inherits: normalPresetModel.inherits,
+                    cateogry: normalPresetModel.category || PRESET_CATEGORY_CUSTOM,
+                    ownKeys: [...normalPresetModel.ownKeys],
+                    metadata: {
+                        ...normalPresetModel.metadata,
+                        readonly: false,
+                    },
+                    settings: normalPresetModel.settings,
+                    typeOfPrinting: normalPresetModel.typeOfPrinting,
+                    qualityType: newQualityType,
+                };
+
+                for (const key of normalPresetModel.ownKeys) {
+                    newDefinition.settings[key] = {
+                        default_value: normalPresetModel.settings[key].default_value,
+                    };
+                }
+                newDefinition.ownKeys.push('machine_nozzle_size');
+                newDefinition.settings.machine_nozzle_size = {
+                    default_value: nozzleSize,
+                };
+
+                const createdDefinition = await definitionManager.createDefinition(newDefinition);
+                const newPresetModel = new QualityPresetModel(createdDefinition);
+
+                qualityDefinitions.push(newPresetModel);
+
+                dispatch(
+                    actions.updateState({
+                        qualityDefinitions: [...qualityDefinitions],
+                    })
+                );
+            }
+        }
     },
 
     // scene: sceneActions,
@@ -1376,73 +1414,47 @@ export const actions = {
         {
             paramKey,
             paramValue,
-            direction,
+            direction = LEFT_EXTRUDER,
         }
     ) => async (dispatch, getState) => {
-        if (!isNil(paramValue)) {
-            const printingState = getState().printing;
-            const machineDefinition = definitionManager.machineDefinition;
-            const { materialDefinitions, qualityDefinitions } = printingState;
+        const { materialDefinitions, qualityDefinitions, extruderLDefinition, extruderRDefinition } = getState().printing;
+        const machineDefinition = definitionManager.machineDefinition;
 
-            let isNozzleSizeChanged = false;
-            if (direction) {
-                const definitionsKey = definitionKeysWithDirection[direction][PRINTING_MANAGER_TYPE_EXTRUDER];
-                const definitionModel = printingState[definitionsKey];
-                if (definitionModel.settings[paramKey]) {
-                    definitionModel.settings[paramKey].default_value = paramValue;
-                }
-                if (direction === LEFT_EXTRUDER) {
-                    if (paramKey === 'machine_nozzle_size') {
-                        isNozzleSizeChanged = true;
-                    }
-                }
-                dispatch(
-                    actions.updateState({
-                        [definitionsKey]: definitionModel
-                    })
-                );
-            }
-
-            if (machineDefinition.settings[paramKey]) {
-                machineDefinition.settings[paramKey].default_value = paramValue;
-            }
-
-            // TODO: Consider left & right stacks
-            const {
-                newMaterialDefinitions,
-                newQualityDefinitions,
-            } = await definitionManager.updateMachineDefinition({
-                isNozzleSize: isNozzleSizeChanged,
-                machineDefinition,
-                materialDefinitions,
-                qualityDefinitions,
-            });
-            dispatch(actions.updateDefaultDefinition(
-                'quality.normal_other_quality',
-                paramKey,
-                paramValue
-            ));
-
-            if (newMaterialDefinitions) {
-                dispatch(actions.updateState({
-                    qualityDefinitions: newQualityDefinitions,
-                    materialDefinitions: newMaterialDefinitions,
-                }));
-            } else {
-                dispatch(actions.updateState({
-                    qualityDefinitions: newQualityDefinitions,
-                }));
-            }
-
-            if (isNozzleSizeChanged) {
-                // Nozzle size has changed
-                dispatch(actions.validateActiveQualityPreset(direction));
-            }
-
-            setTimeout(() => {
-                dispatch(actions.applyProfileToAllModels());
-            });
+        // make change on extruder preset
+        const definitionModel = direction === LEFT_EXTRUDER ? extruderLDefinition : extruderRDefinition;
+        if (definitionModel.settings[paramKey]) {
+            definitionModel.settings[paramKey].default_value = paramValue;
         }
+
+        // make change on machine definition
+        if (machineDefinition.settings[paramKey]) {
+            machineDefinition.settings[paramKey].default_value = paramValue;
+        }
+
+        // Resolve all material and quality presets
+        const {
+            newMaterialDefinitions,
+            newQualityDefinitions,
+        } = await definitionManager.updateMachineDefinition({
+            machineDefinition,
+            materialDefinitions,
+            qualityDefinitions,
+        });
+
+        dispatch(actions.updateState({
+            qualityDefinitions: newQualityDefinitions,
+            materialDefinitions: newMaterialDefinitions,
+        }));
+
+        // Create material on demand
+        dispatch(actions.ensurePresetModels());
+
+        // TODO
+        dispatch(actions.validateActiveQualityPreset(direction));
+
+        setTimeout(() => {
+            dispatch(actions.applyProfileToAllModels());
+        });
     },
 
     updateCurrentDefinition: (
@@ -1563,7 +1575,7 @@ export const actions = {
                         name = `#${name}`;
                         definition.name = name;
                     }
-                    definition = new PresetDefinitionModel(
+                    definition = new PresetModel(
                         definition,
                         activeMaterialType,
                         extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
@@ -1721,32 +1733,28 @@ export const actions = {
                 default_value: definition.settings[key].default_value
             };
         }
-        let createdDefinitionModel = await definitionManager.createDefinition(newDefinition);
-        const { extruderLDefinition } = state;
-        const activeMaterialType = dispatch(actions.getActiveMaterialType());
-
-        createdDefinitionModel = new PresetDefinitionModel(
-            createdDefinitionModel,
-            activeMaterialType,
-            extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
-        );
+        const createdDefinitionModel = await definitionManager.createDefinition(newDefinition);
 
         // TODO: Refactor this
         if (type === PRINTING_MANAGER_TYPE_QUALITY) {
+            const newPresetModel = new QualityPresetModel(createdDefinitionModel);
             dispatch(
                 actions.updateState({
-                    [definitionsKey]: [...state[definitionsKey], createdDefinitionModel]
+                    [definitionsKey]: [...state[definitionsKey], newPresetModel]
                 })
             );
+            return newPresetModel;
         } else {
+            const newPresetModel = new PresetModel(
+                createdDefinitionModel,
+            );
             dispatch(
                 actions.updateState({
-                    [definitionsKey]: [...state[definitionsKey], createdDefinitionModel]
+                    [definitionsKey]: [...state[definitionsKey], newPresetModel]
                 })
             );
+            return newPresetModel;
         }
-
-        return createdDefinitionModel;
     },
 
     getActiveMaterialType: (defaultId, direction = LEFT_EXTRUDER) => (dispatch, getState) => {
@@ -1787,9 +1795,6 @@ export const actions = {
             ]
             : state[definitionsKey].filter((d) => d.category === oldCategory);
 
-        const { extruderLDefinition } = state;
-        const activeMaterialType = dispatch(actions.getActiveMaterialType());
-
         for (let i = 0; i < definitionModelsWithSameCategory.length; i++) {
             const newDefinition = definitionModelsWithSameCategory[i];
             newDefinition.category = newCategoryName;
@@ -1799,11 +1804,7 @@ export const actions = {
             const createdDefinition = await definitionManager.createDefinition(
                 newDefinition
             );
-            const createdDefinitionModel = new PresetDefinitionModel(
-                createdDefinition,
-                activeMaterialType,
-                extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
-            );
+            const createdDefinitionModel = new MaterialPresetModel(createdDefinition);
             if (createdDefinitionModel) {
                 allDupliateDefinitions.push(createdDefinitionModel);
             }
@@ -2049,22 +2050,37 @@ export const actions = {
      * @param stackId
      */
     validateActiveQualityPreset: (stackId = LEFT_EXTRUDER) => (dispatch, getState) => {
-        const { qualityDefinitions, activePresetIds } = getState().printing;
+        const {
+            extruderLDefinition,
+            extruderRDefinition,
+
+            qualityDefinitions,
+            activePresetIds,
+        } = getState().printing;
 
         const materialType = dispatch(actions.getActiveMaterialType(undefined, stackId));
 
         const presetModel = qualityDefinitions.find(p => p.definitionId === activePresetIds[stackId]);
 
+        const nozzleSize = stackId === LEFT_EXTRUDER
+            ? extruderLDefinition?.settings.machine_nozzle_size.default_value
+            : extruderRDefinition?.settings.machine_nozzle_size.default_value;
+
+        const presetFilters = {
+            materialType: materialType,
+            nozzleSize,
+        };
+
         // TODO: Consider nozzle size
         // machineNozzleSize: actualExtruderDefinition.settings?.machine_nozzle_size?.default_value,
-        if (presetModel && isQualityPresetVisible(qualityDefinitions, { materialType: materialType })) {
+        if (presetModel && isQualityPresetVisible(presetModel, presetFilters)) {
             // the quality preset looks fine
             return;
         }
 
         // find a new quality preset for active material type
         for (const presetModel2 of qualityDefinitions) {
-            const visible = isQualityPresetVisible(presetModel2, { materialType: materialType });
+            const visible = isQualityPresetVisible(presetModel2, presetFilters);
             if (visible) {
                 dispatch(actions.updateActiveQualityPresetId(stackId, presetModel2.definitionId));
                 break;

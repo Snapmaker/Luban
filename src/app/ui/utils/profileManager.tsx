@@ -1,11 +1,14 @@
 import { indexOf, orderBy } from 'lodash';
+// @ts-ignore
 import React from 'react';
 import {
     DEFAULT_PRESET_IDS,
     isQualityPresetVisible,
     PRESET_CATEGORY_CUSTOM,
-    PRESET_CATEGORY_DEFAULT
+    PRESET_CATEGORY_DEFAULT,
+    QualityPresetFilters,
 } from '../../constants/preset';
+import type { QualityPresetModel } from '../../preset-model';
 
 import { MaterialWithColor } from '../widgets/PrintingMaterial/MaterialWithColor';
 
@@ -48,16 +51,10 @@ function getSelectOptions(printingDefinitions) {
  * @param presetModels
  * @param materialPreset
  */
-export function pickAvailablePresetModels(presetModels, materialPreset) {
-    if (!materialPreset) {
-        return [];
-    }
-
+export function pickAvailableQualityPresetModels(presetModels: QualityPresetModel[], filters: QualityPresetFilters) {
     const availablePresetModels = [];
     for (const presetModel of presetModels) {
-        const visible = isQualityPresetVisible(presetModel, {
-            materialType: materialPreset?.materialType,
-        });
+        const visible = isQualityPresetVisible(presetModel, filters);
         if (visible) {
             availablePresetModels.push(presetModel);
         }
@@ -91,8 +88,20 @@ export function pickAvailablePresetModels(presetModels, materialPreset) {
  *      },
  * }
  */
-function getPresetOptions(presetModels, materialPreset) {
-    const presetOptions = {
+export declare interface QualityPresetOptions {
+    name: string;
+}
+
+export declare interface QualityPresetGroup {
+    label: string;
+    category: string;
+    options: QualityPresetOptions[];
+}
+
+export declare type QualityPresetGroups = { [category: string]: QualityPresetGroup }
+
+function getPresetOptions(presetModels: QualityPresetModel[], presetFilters: QualityPresetFilters): QualityPresetGroups {
+    const presetOptions: QualityPresetGroups = {
         [PRESET_CATEGORY_DEFAULT]: {
             label: PRESET_CATEGORY_DEFAULT,
             category: PRESET_CATEGORY_DEFAULT,
@@ -100,11 +109,7 @@ function getPresetOptions(presetModels, materialPreset) {
         }
     };
 
-    if (!materialPreset) {
-        return presetOptions;
-    }
-
-    const availablePresetModels = pickAvailablePresetModels(presetModels, materialPreset);
+    const availablePresetModels = pickAvailableQualityPresetModels(presetModels, presetFilters);
 
     for (const presetModel of availablePresetModels) {
         const {
@@ -113,13 +118,14 @@ function getPresetOptions(presetModels, materialPreset) {
             typeOfPrinting,
         } = presetModel;
 
-        const checkboxAndSelectGroup = {};
-        checkboxAndSelectGroup.name = name;
-        checkboxAndSelectGroup.definitionId = definitionId;
-        checkboxAndSelectGroup.typeOfPrinting = typeOfPrinting;
-        checkboxAndSelectGroup.label = `${name}`;
-        checkboxAndSelectGroup.value = `${definitionId}-${name}`;
-        checkboxAndSelectGroup.rank = indexOf(DEFAULT_PRESET_IDS, definitionId);
+        const optionItem = {
+            name,
+            definitionId,
+            typeOfPrinting,
+            label: `${name}`,
+            value: `${definitionId}-${name}`,
+            rank: indexOf(DEFAULT_PRESET_IDS, definitionId),
+        };
 
         if (!presetOptions[category]) {
             presetOptions[category] = {
@@ -129,7 +135,7 @@ function getPresetOptions(presetModels, materialPreset) {
             };
         }
 
-        presetOptions[category].options.push(checkboxAndSelectGroup);
+        presetOptions[category].options.push(optionItem);
     }
 
     // sort preset options
@@ -150,7 +156,7 @@ function getMaterialSelectOptions(materialDefinitions) {
             const checkboxAndSelectGroup = {};
             const name = tool.name;
             const color = tool?.settings?.color?.default_value;
-            checkboxAndSelectGroup.name = <MaterialWithColor name={name} color={color} />;
+            checkboxAndSelectGroup.name = (<MaterialWithColor name={name} color={color} />);
             checkboxAndSelectGroup.definitionId = definitionId;
             checkboxAndSelectGroup.value = `${definitionId}-${name}`;
             if (materialDefinitionOptionsObj[category]) {

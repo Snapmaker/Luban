@@ -4,7 +4,7 @@ import { LEFT_EXTRUDER, MACHINE_EXTRUDER_X, MACHINE_EXTRUDER_Y, RIGHT_EXTRUDER, 
 import log from '../../lib/log';
 import baseActions from './actions-base';
 import sceneLogic, { PrimeTowerSettings } from '../../scene/scene.logic';
-import PresetDefinitionModel from '../manager/PresetDefinitionModel';
+import { PresetModel } from '../../preset-model';
 
 
 const render = () => (dispatch) => {
@@ -106,8 +106,8 @@ const applyPrintSettingsToModels = () => (dispatch, getState) => {
 
 const finalizeSceneSettings = (
     extruderDefinitions: object[],
-    globalQualityPreset: PresetDefinitionModel,
-    extruderPresetModels: PresetDefinitionModel[],
+    globalQualityPreset: PresetModel,
+    extruderPresetModels: PresetModel[],
 ) => (dispatch, getState) => {
     const {
         modelGroup,

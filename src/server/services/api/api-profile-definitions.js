@@ -118,7 +118,6 @@ export const createDefinition = async (req, res) => {
     const { definition } = req.body;
 
     const definitionLoader = new DefinitionLoader();
-    delete (definition.typeOfPrinting);
     definitionLoader.fromObject(definition);
     const configPath = isPublicProfile(definitionLoader.definitionId) ? headType : (req.body.configPath ?? '');
 

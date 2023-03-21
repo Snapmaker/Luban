@@ -24,7 +24,7 @@ import { controller } from '../../lib/controller';
 import i18n from '../../lib/i18n';
 import { machineStore, printingStore } from '../../store/local-storage';
 import { actions as editorActions } from '../editor';
-import PresetDefinitionModel from '../manager/PresetDefinitionModel';
+import { PresetModel } from '../../preset-model';
 import { actions as printingActions } from '../printing';
 import { actions as widgetActions } from '../widget';
 
@@ -313,7 +313,7 @@ export const actions = {
             defaultMaterialId = chooseMaterial(allMaterialDefinitions, defaultMaterialId);
             defaultMaterialIdRight = chooseMaterial(allMaterialDefinitions, defaultMaterialIdRight);
 
-            const materialPresetModels = allMaterialDefinitions.map(definition => new PresetDefinitionModel(definition));
+            const materialPresetModels = allMaterialDefinitions.map(definition => new PresetModel(definition));
 
             dispatch(printingActions.updateState({
                 materialDefinitions: materialPresetModels,
@@ -348,8 +348,6 @@ export const actions = {
         // dispatch(baseActions.updateState({ series }));
         const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
 
-        //  Do not need to 'initSize' just use 'switchSize' function
-        await dispatch(printingActions.switchSize());
         seriesInfo && dispatch(actions.updateMachineSize(seriesInfo.size));
         dispatch(widgetActions.updateMachineSeries(series));
 

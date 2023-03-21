@@ -18,8 +18,12 @@ const allSettingNameWithType = {
     'material': new Set(),
     'quality': new Set()
 };
+
+allSettingNameWithType.quality.add('machine_nozzle_size');
+
 allSettingNameWithType.quality.add('extruders_enabled_count');
 allSettingNameWithType.material.add('extruders_enabled_count');
+
 const materialRegex = /^material.*/;
 const qualityRegex = /^quality.*/;
 
