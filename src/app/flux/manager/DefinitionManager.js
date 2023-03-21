@@ -141,11 +141,6 @@ class DefinitionManager {
             } else {
                 this.extruderRDefinition = null;
             }
-
-            // TODO: Is this needed?
-            if (this.extruderLDefinition.settings.machine_nozzle_size) {
-                this.extruderLDefinition.settings.machine_nozzle_size.default_value = this.machineDefinition.settings.machine_nozzle_size.default_value;
-            }
         } else {
             return {};
         }

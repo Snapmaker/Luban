@@ -1425,6 +1425,7 @@ export const actions = {
         if (definitionModel.settings[paramKey]) {
             definitionModel.settings[paramKey].default_value = paramValue;
         }
+        definitionManager.updateDefinition(definitionModel);
 
         // make change on machine definition
         if (machineDefinition.settings[paramKey]) {
@@ -1466,25 +1467,21 @@ export const actions = {
         }
     ) => (dispatch, getState) => {
         const printingState = getState().printing;
-        const { qualityDefinitions } = printingState;
-        const id = definitionModel?.definitionId;
-        let updatePresetModel = false;
+        // const { qualityDefinitions } = printingState;
 
-        // TODO: ?
+        // TODO: Refactor this
         const definitionsKey = definitionKeysWithDirection[direction][type];
 
         // extruder definition
-        if (['snapmaker_extruder_0', 'snapmaker_extruder_1'].includes(id)) {
-            if (id === 'snapmaker_extruder_0') {
-                updatePresetModel = true;
-            }
+        if (type === PRINTING_MANAGER_TYPE_EXTRUDER) {
+            resolveParameterValues(definitionModel, changedSettingArray);
+
             dispatch(
                 actions.updateState({
                     [definitionsKey]: definitionModel
                 })
             );
         } else if (type === PRINTING_MANAGER_TYPE_EXTRUDER) {
-            updatePresetModel = true;
             resolveParameterValues(definitionModel, changedSettingArray);
 
             dispatch(
@@ -1493,8 +1490,6 @@ export const actions = {
                 })
             );
         } else {
-            updatePresetModel = true;
-
             resolveParameterValues(definitionModel, changedSettingArray);
 
             const definitions = printingState[definitionsKey];
@@ -1502,8 +1497,7 @@ export const actions = {
                 log.warn(`definitions for ${definitionsKey} is empty.`);
                 return;
             }
-            const index = definitions.findIndex((d) => d.definitionId === id);
-            definitions[index] = definitionModel;
+
             dispatch(
                 actions.updateState({
                     [definitionsKey]: [...definitions]
@@ -1515,10 +1509,8 @@ export const actions = {
 
         definitionManager.updateDefinition(definitionModel);
 
-        if (updatePresetModel) {
-            dispatch(actions.validateActiveQualityPreset(direction));
-            dispatch(actions.updateState({ qualityDefinitions: [...qualityDefinitions] }));
-        }
+        dispatch(actions.validateActiveQualityPreset(direction));
+        // dispatch(actions.updateState({ qualityDefinitions: [...qualityDefinitions] }));
 
         /*
         TODO: Check overstep for auto-generated meshes, including adhesion, prime tower, support.
