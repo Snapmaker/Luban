@@ -7,6 +7,7 @@ export const METRIC_UNITS = 'mm';
 
 export const MATERIAL_REGEX = /^material(\.).*$/;
 export const QUALITY_REGEX = /^quality(\.).*$/;
+export const EXTRUDER_REGEX = /^extruder_(\d).*$/;
 
 export const CUSTOM_SERVER_NAME = 'Manual';
 export const EPSILON = 1e-6;

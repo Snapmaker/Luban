@@ -32,6 +32,7 @@ import {
     WHITE_COLOR,
     MATERIAL_REGEX,
     QUALITY_REGEX,
+    EXTRUDER_REGEX,
 } from '../../constants';
 import { getMachineSeriesWithToolhead, isDualExtruder, MACHINE_SERIES, } from '../../constants/machines';
 import { isQualityPresetVisible } from '../../constants/preset';
@@ -596,9 +597,11 @@ export const actions = {
                     activeMaterialType,
                     definitionManager.extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
                 );
+            } else if (EXTRUDER_REGEX.test(eachDefinition.definitionId)) {
+                return new MaterialPresetModel(eachDefinition);
             } else {
-                log.warn('Unknown definition');
-                return null;
+                log.warn('Unknown definition', eachDefinition.definitionId);
+                return new MaterialPresetModel(eachDefinition);
             }
         });
 

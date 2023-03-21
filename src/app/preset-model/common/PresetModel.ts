@@ -19,6 +19,9 @@ const DEFINITION_ROOT_KEYS = [
     'overrides',
     'typeOfPrinting',
     'qualityType',
+
+    'i18nCategory',
+    'ownKeys',
 ];
 
 declare interface SettingItem {

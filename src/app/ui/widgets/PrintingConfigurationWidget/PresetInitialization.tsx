@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 
 import { useSelector, useDispatch } from 'react-redux';
 
@@ -8,6 +8,7 @@ import log from '../../../lib/log';
 import { pickAvailablePresetModels } from '../../utils/profileManager';
 import { RootState } from '../../../flux/index.def';
 import { actions as printingActions } from '../../../flux/printing';
+import type { PresetModel } from '../../../preset-model';
 
 /**
  * Initialize preset selections.
@@ -29,9 +30,9 @@ const PresetInitialization: React.FC = () => {
     const materialPreset = materialDefinitions.find(p => p.definitionId === defaultMaterialId);
     const materialPresetRight = materialDefinitions.find(p => p.definitionId === defaultMaterialIdRight);
 
-    const setPreset = (stackId, presetModel) => {
+    const setPreset = useCallback((stackId: string, presetModel: PresetModel) => {
         dispatch(printingActions.updateActiveQualityPresetId(stackId, presetModel.definitionId));
-    };
+    }, [dispatch]);
 
     // If material doesn't exist, we choose default material
     useEffect(() => {
@@ -69,7 +70,7 @@ const PresetInitialization: React.FC = () => {
                 }
             }
         }
-    }, [qualityDefinitionModels, activePresetIds, materialPreset]);
+    }, [qualityDefinitionModels, activePresetIds, materialPreset, setPreset]);
 
     useEffect(() => {
         if (qualityDefinitionModels.length > 0) {

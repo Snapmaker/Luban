@@ -12,7 +12,6 @@ class QualityPresetModel extends PresetModel {
         super(definition);
 
         if (QUALITY_REGEX.test(this.definitionId)) {
-            console.log('quality!');
             this.updateParams(materialType, defaultNozzleSize);
         }
     }
