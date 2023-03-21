@@ -169,6 +169,9 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = (props) => {
 
     // quality
     const {
+        extruderLDefinition,
+        extruderRDefinition,
+
         qualityDefinitions: qualityPresetModels,
         materialDefinitions,
         defaultMaterialId,
@@ -186,7 +189,16 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = (props) => {
         const materialPresetId = selectedStackId === LEFT_EXTRUDER ? defaultMaterialId : defaultMaterialIdRight;
         const materialPreset = materialDefinitions.find(p => p.definitionId === materialPresetId);
 
-        const newPresetOptionsObj = getPresetOptions(qualityPresetModels, materialPreset);
+        const nozzleSize = selectedStackId === LEFT_EXTRUDER
+            ? extruderLDefinition?.settings.machine_nozzle_size.default_value
+            : extruderRDefinition?.settings.machine_nozzle_size.default_value;
+
+        const presetFilters = {
+            materialType: materialPreset?.materialType,
+            nozzleSize,
+        };
+
+        const newPresetOptionsObj = getPresetOptions(qualityPresetModels, presetFilters);
         setPresetOptionsObj(newPresetOptionsObj);
 
         const newCategories = Object.keys(newPresetOptionsObj);
@@ -194,7 +206,11 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = (props) => {
 
         // set all preset categories expanded
         setExpandedPresetCategories(Object.keys(newPresetOptionsObj));
-    }, [selectedStackId, defaultMaterialId, defaultMaterialIdRight, materialDefinitions, qualityPresetModels]);
+    }, [
+        selectedStackId, defaultMaterialId, defaultMaterialIdRight, materialDefinitions, qualityPresetModels,
+        extruderLDefinition?.settings.machine_nozzle_size.default_value,
+        extruderRDefinition?.settings.machine_nozzle_size.default_value,
+    ]);
 
     // Get active preset model
     useEffect(() => {
@@ -428,7 +444,7 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = (props) => {
             </div>
             {/* Create Preset Modal */}
             {
-                showCreatePresetModal && (
+                showCreatePresetModal && presetModel && (
                     <CreatePresetModal
                         createOrCopy="create"
                         presetModel={presetModel}
@@ -440,7 +456,7 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = (props) => {
             }
             {/* Copy Preset Modal */}
             {
-                showCopyPresetModal && (
+                showCopyPresetModal && presetModel && (
                     <CreatePresetModal
                         createOrCopy="copy"
                         presetModel={presetModel}
@@ -452,7 +468,7 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = (props) => {
             }
             {/* Reset Preset Modal */}
             {
-                showResetPresetModal && (
+                showResetPresetModal && presetModel && (
                     <ResetPresetModal
                         presetModel={presetModel}
                         presetActions={presetActions}
@@ -462,7 +478,7 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = (props) => {
             }
             {/* Delete Preset Modal */}
             {
-                showDeletePresetModal && (
+                showDeletePresetModal && presetModel && (
                     <DeletePresetModal
                         presetModel={presetModel}
                         presetActions={presetActions}

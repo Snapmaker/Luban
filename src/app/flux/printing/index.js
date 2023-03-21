@@ -34,13 +34,15 @@ import {
     EXTRUDER_REGEX,
 } from '../../constants';
 import { getMachineSeriesWithToolhead, isDualExtruder, MACHINE_SERIES, } from '../../constants/machines';
-import { isQualityPresetVisible } from '../../constants/preset';
+import { isQualityPresetVisible, PRESET_CATEGORY_CUSTOM } from '../../constants/preset';
+
 import { controller } from '../../lib/controller';
 import { logPritingSlice, logProfileChange, logToolBarOperation, logTransformOperation } from '../../lib/gaEvent';
 import i18n from '../../lib/i18n';
 import log from '../../lib/log';
 import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 import workerManager from '../../lib/manager/workerManager';
+
 import { ModelEvents } from '../../models/events';
 import ModelGroup from '../../models/ModelGroup';
 import PrimeTowerModel from '../../models/PrimeTowerModel';
@@ -630,9 +632,9 @@ export const actions = {
 
                 const newDefinition = {
                     definitionId: newDefinitionId,
-                    name: normalPresetModel.name,
+                    name: `${normalPresetModel.name} (${nozzleSize})`,
                     inherits: normalPresetModel.inherits,
-                    cateogry: normalPresetModel.category,
+                    cateogry: normalPresetModel.category || PRESET_CATEGORY_CUSTOM,
                     ownKeys: [...normalPresetModel.ownKeys],
                     metadata: {
                         ...normalPresetModel.metadata,
