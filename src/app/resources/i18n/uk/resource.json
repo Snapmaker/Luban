@@ -59,7 +59,11 @@
     "Bridge Wall Speed": "Швидкість друку стінок містка",
     "Brim": "Поле",
     "Brim Distance": "Зазор поля",
+<<<<<<< HEAD
     "Brim Inside Avoid Margin": "",
+=======
+    "Brim Inside Avoid Margin": "Відступ поля в середині",
+>>>>>>> 2e52773b3 (New translations resource.json (Ukrainian))
     "Brim Line Count": "Кількість ліній поля",
     "Brim Only on Outside": "Поле тільки з зовнішнього боку",
     "Brim Replaces Support": "Поле під підтримками",
@@ -209,7 +213,11 @@
     "Fuzzy Skin Thickness": "Товщина нечіткої оболонки",
     "G-code Flavor": "Різновид G-коду",
     "Gantry Height": "Висота рамки",
+<<<<<<< HEAD
     "Generate Interlocking Structure": "",
+=======
+    "Generate Interlocking Structure": "Створювати взаємоповʼязану структуру",
+>>>>>>> 2e52773b3 (New translations resource.json (Ukrainian))
     "Generate Support": "Створити опори",
     "Glass": "Скло",
     "Gradual Infill Step Height": "Висота кроку поступового заповнення",
@@ -287,11 +295,19 @@
     "Inner Wall(s) Flow": "Подача внутрішніх стінок",
     "Inner Wall(s) Line Width": "Ширина лінії внутрішніх стінок",
     "Inside To Outside": "З середини назовні",
+<<<<<<< HEAD
     "Interlocking Beam Layer Count": "",
     "Interlocking Beam Width": "",
     "Interlocking Boundary Avoidance": "",
     "Interlocking Depth": "",
     "Interlocking Structure Orientation": "",
+=======
+    "Interlocking Beam Layer Count": "Кількість шарів балки взаємоповʼязаної структури",
+    "Interlocking Beam Width": "Ширина балки взаємозвʼязаної структури",
+    "Interlocking Boundary Avoidance": "Межа для уникання взаємозвʼязаної структури",
+    "Interlocking Depth": "Глибина взаємозвʼязаної структури",
+    "Interlocking Structure Orientation": "Орієнтація взаємоповʼязаної структури",
+>>>>>>> 2e52773b3 (New translations resource.json (Ukrainian))
     "Iron Only Highest Layer": "Прасувати тільки найвищий шар",
     "Ironing Acceleration": "Прискорення прасування",
     "Ironing Flow": "Подача прасування",
@@ -617,7 +633,11 @@
     "Small Feature Max Length": "Макс. довжина мілких обʼєктів",
     "Small Feature Speed": "Швидкість для мілких обʼєктів",
     "Small Hole Max Size": "Макс. розмір мілких отворів",
+<<<<<<< HEAD
     "Small Layer Printing Temperature": "",
+=======
+    "Small Layer Printing Temperature": "Температура друку маленьких шарів",
+>>>>>>> 2e52773b3 (New translations resource.json (Ukrainian))
     "Smart Hiding": "Розумне приховування",
     "Smooth Spiralized Contours": "Гладкий спіральний контур",
     "Special Modes": "Спеціальний режим",
@@ -636,7 +656,11 @@
     "Support": "Опори",
     "Support Acceleration": "Прискорення опор",
     "Support Bottom Distance": "Зазор під опорами",
+<<<<<<< HEAD
     "Support Bottom Wall Line Count": "",
+=======
+    "Support Bottom Wall Line Count": "Кількість ліній низу стінки підтримки",
+>>>>>>> 2e52773b3 (New translations resource.json (Ukrainian))
     "Support Brim Line Count": "Кількість ліній поля опор",
     "Support Brim Width": "Ширина поля опор",
     "Support Chunk Line Count": "Кількість ліній у фрагменті опори",
@@ -677,7 +701,11 @@
     "Support Interface Resolution": "Роздільна здатність інтерфейсу підтримки",
     "Support Interface Speed": "Швидкість інтерфейсу підтримки",
     "Support Interface Thickness": "Товщина інтерфейсу підтримки",
+<<<<<<< HEAD
     "Support Interface Wall Line Count": "",
+=======
+    "Support Interface Wall Line Count": "Кількість ліній стінки інтерфейсу підтримки",
+>>>>>>> 2e52773b3 (New translations resource.json (Ukrainian))
     "Support Jerk": "Ривки опор",
     "Support Join Distance": "Зазор між опорами для їх злиття",
     "Support Line Distance": "Відстань між лініями опор",
@@ -699,7 +727,11 @@
     "Support Roof Pattern": "Візерунок даху опор",
     "Support Roof Speed": "Швидкість друку даху опор",
     "Support Roof Thickness": "Товщина даху опор",
+<<<<<<< HEAD
     "Support Roof Wall Line Count": "",
+=======
+    "Support Roof Wall Line Count": "Кількість ліній даху стінки підтримки",
+>>>>>>> 2e52773b3 (New translations resource.json (Ukrainian))
     "Support Speed": "Швидкість друку опор",
     "Support Stair Step Height": "Висота сходинок опор",
     "Support Stair Step Maximum Width": "Макс. ширина сходинок опор",
