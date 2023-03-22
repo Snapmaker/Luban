@@ -48,8 +48,9 @@ export function serverStartDevelopment(cb) {
                 "osascript -e 'display notification \"App restarted due to:\n'$FILENAME'\" with title \"nodemon\"'",
         },
         watch: [
-            'src/server/',
+            'packages/luban-platform/',
             'src/shared/',
+            'src/server/',
         ],
         env: {
             NODE_ENV: 'development',

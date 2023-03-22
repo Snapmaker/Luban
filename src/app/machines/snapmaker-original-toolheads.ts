@@ -1,5 +1,5 @@
-import type { ToolHead } from '../machine-definition';
-import { ToolHeadType } from '../machine-definition';
+import type { ToolHead } from '@snapmaker/luban-platform';
+import { ToolHeadType } from '@snapmaker/luban-platform';
 // import i18n from '../lib/i18n';
 
 export const SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL = 'singleExtruderToolheadForOriginal';

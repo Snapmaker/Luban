@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { PrintMode } from '../../../machine-definition';
+import { PrintMode } from '@snapmaker/luban-platform';
 
 import { actions as printingActions } from '../../../flux/printing';
 import i18n from '../../../lib/i18n';

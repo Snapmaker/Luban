@@ -1,5 +1,6 @@
-import type { Machine } from '../machine-definition';
-import { MachineType } from '../machine-definition';
+import type { Machine } from '@snapmaker/luban-platform';
+import { MachineType } from '@snapmaker/luban-platform';
+
 import {
     laser1600mWToolHeadOriginal,
     laserToolHeadOriginal,

@@ -1,12 +1,11 @@
-import { resolveParameterValues, applyParameterModifications } from '@snapmaker/luban-platform';
 import { cloneDeep, filter, find, includes, isNil } from 'lodash';
 import path from 'path';
 import * as THREE from 'three';
 import { Box3, Vector3 } from 'three';
 import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
+import { resolveParameterValues, applyParameterModifications, PrintMode } from '@snapmaker/luban-platform';
 
 import { timestamp } from '../../../shared/lib/random-utils';
-import { PrintMode } from '../../machine-definition';
 import api from '../../api';
 import {
     BLACK_COLOR, BOTH_EXTRUDER_MAP_NUMBER,

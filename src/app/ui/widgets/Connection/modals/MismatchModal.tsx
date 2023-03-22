@@ -2,13 +2,14 @@ import isElectron from 'is-electron';
 import React, { useCallback, useEffect, useState } from 'react';
 import { shallowEqual, useSelector } from 'react-redux';
 
+import type { Machine, ToolHead } from '@snapmaker/luban-platform';
+
 import { CONNECTION_TYPE_SERIAL } from '../../../../constants';
 import { findMachineByName, MACHINE_TOOL_HEADS } from '../../../../constants/machines';
 import { RootState } from '../../../../flux/index.def';
 import usePrevious from '../../../../lib/hooks/previous';
 import i18n from '../../../../lib/i18n';
 import UniApi from '../../../../lib/uni-api';
-import type { Machine, ToolHead } from '../../../../machine-definition';
 import Anchor from '../../../components/Anchor';
 import { Button } from '../../../components/Buttons';
 import Modal from '../../../components/Modal';

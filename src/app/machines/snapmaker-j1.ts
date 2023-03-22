@@ -1,5 +1,6 @@
-import type { Machine, ToolHead } from '../machine-definition';
-import { MachineType, ToolHeadType, PrintMode } from '../machine-definition';
+import type { Machine, ToolHead } from '@snapmaker/luban-platform';
+import { MachineType, ToolHeadType, PrintMode } from '@snapmaker/luban-platform';
+
 
 /**
  * J1 specific printing module.

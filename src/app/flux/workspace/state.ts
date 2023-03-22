@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import type { Machine, MachineToolHeadOptions, ToolHead } from '@snapmaker/luban-platform';
+
 import {
     CONNECTION_STATUS_IDLE,
     LEFT_EXTRUDER,
@@ -7,7 +9,6 @@ import {
 } from '../../constants';
 
 import { controller } from '../../lib/controller';
-import type { Machine, MachineToolHeadOptions, ToolHead } from '../../machine-definition';
 import FixedArray from '../machine/FixedArray';
 import History from '../machine/History';
 

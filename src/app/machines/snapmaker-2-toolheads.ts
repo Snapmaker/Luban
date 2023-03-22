@@ -1,5 +1,5 @@
-import type { ToolHead } from '../machine-definition';
-import { ToolHeadType } from '../machine-definition';
+import type { ToolHead } from '@snapmaker/luban-platform';
+import { ToolHeadType } from '@snapmaker/luban-platform';
 
 export const SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 = 'singleExtruderToolheadForSM2';
 export const DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 = 'dualExtruderToolheadForSM2';

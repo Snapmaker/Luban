@@ -2,6 +2,7 @@ import classNames from 'classnames';
 import { map } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+import type { Machine } from '@snapmaker/luban-platform';
 
 import {
     CONNECTION_STATUS_CONNECTED,
@@ -33,7 +34,6 @@ import { actions as workspaceActions } from '../../../flux/workspace';
 import { Server } from '../../../flux/workspace/Server';
 import usePrevious from '../../../lib/hooks/previous';
 import i18n from '../../../lib/i18n';
-import type { Machine } from '../../../machine-definition';
 
 import { Button } from '../../components/Buttons';
 import Modal from '../../components/Modal';
@@ -674,7 +674,7 @@ const NetworkConnection: React.FC = () => {
                             <SvgIcon
                                 className={classNames(
                                     'border-default-black-5 border-radius-left-8',
-                                    //className="border-default-black-5 border-radius-right-8"
+                                    // className="border-default-black-5 border-radius-right-8"
                                 )}
                                 name="Add"
                                 title={i18n._('key-Workspace/Connection-Add')}

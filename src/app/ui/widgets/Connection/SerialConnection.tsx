@@ -2,6 +2,7 @@ import classNames from 'classnames';
 import { isObject, map } from 'lodash';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import type { Machine } from '@snapmaker/luban-platform';
 
 import { WORKFLOW_STATE_IDLE, WORKFLOW_STATE_PAUSED, WORKFLOW_STATE_RUNNING } from '../../../constants';
 import {
@@ -18,7 +19,6 @@ import { actions as workspaceActions } from '../../../flux/workspace';
 import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
-import type { Machine } from '../../../machine-definition';
 import { highPower10WLaserToolHead, standardLaserToolHead } from '../../../machines/snapmaker-2-toolheads';
 import { laser1600mWToolHeadOriginal, laserToolHeadOriginal } from '../../../machines/snapmaker-original-toolheads';
 

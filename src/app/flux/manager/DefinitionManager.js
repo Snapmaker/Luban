@@ -1,8 +1,8 @@
 /* eslint-disable */
 import { cloneDeep, includes } from 'lodash';
 // import { resolveDefinition } from '../../../shared/lib/definition-resolver';
-import { resolveParameterValues, resetPresetsContext } from '@snapmaker/luban-platform';
-import { PrintMode } from '../../machine-definition';
+import { resolveParameterValues, resetPresetsContext, PrintMode } from '@snapmaker/luban-platform';
+
 import api from '../../api';
 import {
     HEAD_CNC,
