@@ -1,4 +1,6 @@
 import includes from 'lodash/includes';
+import type { Machine, ToolHead } from '@snapmaker/luban-platform';
+
 import {
     printToolHeadOriginal,
     laserToolHeadOriginal,
@@ -17,7 +19,6 @@ import {
     printToolHead as printToolHeadJ1,
 } from '../machines/snapmaker-j1';
 import i18n from '../lib/i18n';
-import type { Machine, ToolHead } from '../machine-definition';
 import {
     SnapmakerOriginalMachine,
     SnapmakerOriginalExtendedMachine,

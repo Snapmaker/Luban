@@ -1,4 +1,5 @@
-import { Machine, MachineType } from '../machine-definition';
+import { Machine, MachineType } from '@snapmaker/luban-platform';
+
 import {
     printToolHead,
     highPower10WLaserToolHead,

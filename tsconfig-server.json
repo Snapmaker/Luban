@@ -1,14 +1,4 @@
 {
-    "include": [
-        "./src/server/**/*",
-    ],
-    "exclude": [
-        "./output/",
-        "./src/app/**/*",
-        "babel.config.js",
-        "webpack.config.app-i18n.js",
-        "webpack.config.app.development.js"
-    ],
     "compilerOptions": {
         "module": "commonjs",
         "rootDir": ".",
@@ -22,6 +12,19 @@
         "noUnusedLocals": true,
         "esModuleInterop": true,
         "watch": false,
-        "skipLibCheck": true
-    }
+        "skipLibCheck": true,
+
+        "paths": {
+            "@snapmaker/luban-platform": [
+                "output/packages/luban-platform"
+            ]
+        }
+    },
+    "include": [
+        "src/server/**/*",
+        "node_modules/@snapmaker/luban-platform/**/*",
+    ],
+    "exclude": [
+        "./src/app/**/*",
+    ],
 }

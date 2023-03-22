@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import type { ToolHead } from '@snapmaker/luban-platform';
 
 import {
     findToolHead,
@@ -12,7 +13,6 @@ import { actions as workspaceActions } from '../../../../flux/workspace';
 import { ConnectionType } from '../../../../flux/workspace/state';
 import usePrevious from '../../../../lib/hooks/previous';
 import i18n from '../../../../lib/i18n';
-import type { ToolHead } from '../../../../machine-definition';
 import Anchor from '../../../components/Anchor';
 import { Button } from '../../../components/Buttons';
 import Modal from '../../../components/Modal';

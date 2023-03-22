@@ -1,4 +1,6 @@
 import { throttle } from 'lodash';
+import type { Machine, ToolHead } from '@snapmaker/luban-platform';
+
 import {
     BOTH_EXTRUDER_MAP_NUMBER,
     LEFT_EXTRUDER,
@@ -7,7 +9,6 @@ import {
     RIGHT_EXTRUDER_MAP_NUMBER
 } from '../constants';
 import { PresetModel } from '../preset-model';
-import type { Machine, ToolHead } from '../machine-definition';
 import { Size2D } from '../models/BaseModel';
 import { Model3D } from '../models/ModelGroup';
 import scene, { SceneEvent } from './Scene';

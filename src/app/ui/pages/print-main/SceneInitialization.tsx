@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import type { Machine } from '@snapmaker/luban-platform';
 
 import { MACHINE_TOOL_HEADS } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
 import log from '../../../lib/log';
-import type { Machine } from '../../../machine-definition';
 import sceneLogic from '../../../scene/scene.logic';
 
 

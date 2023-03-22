@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+import type { MachineToolHeadOptions } from '@snapmaker/luban-platform';
 
 import i18n from '../../../../lib/i18n';
 
 import { RootState } from '../../../../flux/index.def';
 import { actions as workspaceActions } from '../../../../flux/workspace';
 
-import type { MachineToolHeadOptions } from '../../../../machine-definition';
 import { Button } from '../../../components/Buttons';
 import Modal from '../../../components/Modal';
 
