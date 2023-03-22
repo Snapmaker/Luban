@@ -1,1 +1,5 @@
-export { resolveParameterValues, resetPresetsContext } from './src/parameter-resolver/common/parameter-resolver';
+export {
+    applyParameterModifications,
+    resolveParameterValues,
+    resetPresetsContext
+} from './src/parameter-resolver/common/parameter-resolver';

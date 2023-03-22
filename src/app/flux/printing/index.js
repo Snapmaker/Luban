@@ -1,4 +1,4 @@
-import { resolveParameterValues } from '@snapmaker/luban-platform';
+import { resolveParameterValues, applyParameterModifications } from '@snapmaker/luban-platform';
 import { cloneDeep, filter, find, includes, isNil } from 'lodash';
 import path from 'path';
 import * as THREE from 'three';
@@ -1474,15 +1474,7 @@ export const actions = {
 
         // extruder definition
         if (type === PRINTING_MANAGER_TYPE_EXTRUDER) {
-            resolveParameterValues(definitionModel, changedSettingArray);
-
-            dispatch(
-                actions.updateState({
-                    [definitionsKey]: definitionModel
-                })
-            );
-        } else if (type === PRINTING_MANAGER_TYPE_EXTRUDER) {
-            resolveParameterValues(definitionModel, changedSettingArray);
+            applyParameterModifications(definitionModel, changedSettingArray);
 
             dispatch(
                 actions.updateState({
