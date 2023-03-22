@@ -2,7 +2,7 @@ import { Dropdown } from 'antd';
 import { MenuProps } from 'antd/lib/menu';
 import classNames from 'classnames';
 import { includes, remove } from 'lodash';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { HEAD_PRINTING, LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
@@ -220,16 +220,16 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = (props) => {
 
     // stackId: LEFT_EXTRUDER or RIGHT_EXTRUDER
     // Maybe support a global stack later
-    function selectStack(stackId: string) {
+    const selectStack = useCallback((stackId: string) => {
         onSelectStack(stackId);
-    }
+    }, [onSelectStack]);
 
     /**
      * Toggle expansion of a preset category.
      *
      * @param presetCategory
      */
-    const togglePresetCategoryExpansion = (presetCategory: string) => {
+    const togglePresetCategoryExpansion = useCallback((presetCategory: string) => {
         const newCategories = [...expandedPresetCategories];
         if (includes(expandedPresetCategories, presetCategory)) {
             remove(newCategories, (item) => {
@@ -239,16 +239,16 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = (props) => {
             newCategories.push(presetCategory);
         }
         setExpandedPresetCategories(newCategories);
-    };
+    }, [expandedPresetCategories]);
 
     /**
      * Select preset for selected stack.
      *
      * @param presetId
      */
-    function selectPresetByPresetId(presetId: string) {
+    const selectPresetByPresetId = useCallback((presetId: string) => {
         onSelectPreset(presetId);
-    }
+    }, [onSelectPreset]);
 
     const [showCreatePresetModal, setShowCreatePresetModal] = useState(false);
     const [showCopyPresetModal, setShowCopyPresetModal] = useState(false);
@@ -336,6 +336,10 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = (props) => {
                         const categoryInfo = presetOptionsObj[presetCategory];
                         const options = categoryInfo.options;
 
+                        if (options.length === 0) {
+                            return null;
+                        }
+
                         return (
                             <li key={presetCategory}>
                                 <Anchor onClick={() => togglePresetCategoryExpansion(presetCategory)}>
@@ -348,67 +352,71 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = (props) => {
                                         <span>{categoryInfo.category}</span>
                                     </div>
                                 </Anchor>
-                                <ul style={{ listStyle: 'none', padding: '0' }}>
-                                    {
-                                        expanded && options.length > 0 && options.map(option => {
-                                            const isSelectedPreset = selectedPresetId === option.definitionId;
-                                            return (
-                                                <li
-                                                    key={option.definitionId}
-                                                    className={classNames(
-                                                        'display-block height-32',
-                                                        styles['preset-item'],
-                                                        {
-                                                            [styles.selected]: isSelectedPreset,
-                                                            'background-color-blue': isSelectedPreset,
-                                                        },
-                                                    )}
-                                                >
-                                                    <Anchor
-                                                        className={classNames(
-                                                            'width-percent-100',
-                                                            'text-overflow-ellipsis',
-                                                            'sm-flex',
-                                                            'justify-flex-end',
-                                                        )}
-                                                        onClick={() => selectPresetByPresetId(option.definitionId)}
-                                                    >
-                                                        <span className="sm-flex-width border-radius-4 height-32 padding-horizontal-24 text-overflow-ellipsis" style={{ minWidth: 0 }}>
-                                                            {option.label}
-                                                        </span>
-                                                        {
-                                                            isSelectedPreset && (
-                                                                <div className={classNames('width-32 height-32 margin-right-4', styles['preset-actions'])}>
-                                                                    <Dropdown
-                                                                        placement="bottomRight"
-                                                                        overlayClassName={classNames('border-radius-8', 'border-default-black-5')}
-                                                                        menu={getPresetItemDropdownMenuProps({
-                                                                            presetModel,
-                                                                            onCopyPreset: () => setShowCopyPresetModal(true),
-                                                                            onResetPreset: () => setShowResetPresetModal(true),
-                                                                            onExportPreset: () => actions.exportConfigFile(presetModel.definitionId),
-                                                                            onDeletePreset: () => setShowDeletePresetModal(true),
-                                                                            options: {
-                                                                                canReset: !isValuesAllDefaultValues,
-                                                                            }
-                                                                        })}
-                                                                    >
-                                                                        <SvgIcon
-                                                                            name="More"
-                                                                            size={24}
-                                                                            hoversize={24}
-                                                                            type={['static']}
-                                                                        />
-                                                                    </Dropdown>
-                                                                </div>
-                                                            )
-                                                        }
-                                                    </Anchor>
-                                                </li>
-                                            );
-                                        })
-                                    }
-                                </ul>
+                                {
+                                    expanded && (
+                                        <ul style={{ listStyle: 'none', padding: '0' }}>
+                                            {
+                                                expanded && options.length > 0 && options.map(option => {
+                                                    const isPresetSelected = selectedPresetId === option.definitionId;
+                                                    return (
+                                                        <li
+                                                            key={option.definitionId}
+                                                            className={classNames(
+                                                                'display-block height-32',
+                                                                styles['preset-item'],
+                                                                {
+                                                                    [styles.selected]: isPresetSelected,
+                                                                    'background-color-blue': isPresetSelected,
+                                                                },
+                                                            )}
+                                                        >
+                                                            <Anchor
+                                                                className={classNames(
+                                                                    'width-percent-100',
+                                                                    'text-overflow-ellipsis',
+                                                                    'sm-flex',
+                                                                    'justify-flex-end',
+                                                                )}
+                                                                onClick={() => selectPresetByPresetId(option.definitionId)}
+                                                            >
+                                                                <span className="sm-flex-width border-radius-4 height-32 padding-horizontal-24 text-overflow-ellipsis" style={{ minWidth: 0 }}>
+                                                                    {option.label}
+                                                                </span>
+                                                                {
+                                                                    isPresetSelected && (
+                                                                        <div className={classNames('width-32 height-32 margin-right-4', styles['preset-actions'])}>
+                                                                            <Dropdown
+                                                                                placement="bottomRight"
+                                                                                overlayClassName={classNames('border-radius-8', 'border-default-black-5')}
+                                                                                menu={getPresetItemDropdownMenuProps({
+                                                                                    presetModel,
+                                                                                    onCopyPreset: () => setShowCopyPresetModal(true),
+                                                                                    onResetPreset: () => setShowResetPresetModal(true),
+                                                                                    onExportPreset: () => actions.exportConfigFile(presetModel.definitionId),
+                                                                                    onDeletePreset: () => setShowDeletePresetModal(true),
+                                                                                    options: {
+                                                                                        canReset: !isValuesAllDefaultValues,
+                                                                                    }
+                                                                                })}
+                                                                            >
+                                                                                <SvgIcon
+                                                                                    name="More"
+                                                                                    size={24}
+                                                                                    hoversize={24}
+                                                                                    type={['static']}
+                                                                                />
+                                                                            </Dropdown>
+                                                                        </div>
+                                                                    )
+                                                                }
+                                                            </Anchor>
+                                                        </li>
+                                                    );
+                                                })
+                                            }
+                                        </ul>
+                                    )
+                                }
                             </li>
                         );
                     })
