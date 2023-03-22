@@ -1,4 +1,4 @@
-import { resolveParameterValues } from '@snapmaker/luban-platform';
+import { resolveParameterValues, applyParameterModifications } from '@snapmaker/luban-platform';
 import { cloneDeep, filter, find, includes, isNil } from 'lodash';
 import path from 'path';
 import * as THREE from 'three';
@@ -634,7 +634,7 @@ export const actions = {
                     definitionId: newDefinitionId,
                     name: `${normalPresetModel.name} (${nozzleSize})`,
                     inherits: normalPresetModel.inherits,
-                    cateogry: normalPresetModel.category || PRESET_CATEGORY_CUSTOM,
+                    category: normalPresetModel.category || PRESET_CATEGORY_CUSTOM,
                     ownKeys: [...normalPresetModel.ownKeys],
                     metadata: {
                         ...normalPresetModel.metadata,
@@ -1425,6 +1425,7 @@ export const actions = {
         if (definitionModel.settings[paramKey]) {
             definitionModel.settings[paramKey].default_value = paramValue;
         }
+        definitionManager.updateDefinition(definitionModel);
 
         // make change on machine definition
         if (machineDefinition.settings[paramKey]) {
@@ -1466,26 +1467,14 @@ export const actions = {
         }
     ) => (dispatch, getState) => {
         const printingState = getState().printing;
-        const { qualityDefinitions } = printingState;
-        const id = definitionModel?.definitionId;
-        let updatePresetModel = false;
+        // const { qualityDefinitions } = printingState;
 
-        // TODO: ?
+        // TODO: Refactor this
         const definitionsKey = definitionKeysWithDirection[direction][type];
 
         // extruder definition
-        if (['snapmaker_extruder_0', 'snapmaker_extruder_1'].includes(id)) {
-            if (id === 'snapmaker_extruder_0') {
-                updatePresetModel = true;
-            }
-            dispatch(
-                actions.updateState({
-                    [definitionsKey]: definitionModel
-                })
-            );
-        } else if (type === PRINTING_MANAGER_TYPE_EXTRUDER) {
-            updatePresetModel = true;
-            resolveParameterValues(definitionModel, changedSettingArray);
+        if (type === PRINTING_MANAGER_TYPE_EXTRUDER) {
+            applyParameterModifications(definitionModel, changedSettingArray);
 
             dispatch(
                 actions.updateState({
@@ -1493,8 +1482,6 @@ export const actions = {
                 })
             );
         } else {
-            updatePresetModel = true;
-
             resolveParameterValues(definitionModel, changedSettingArray);
 
             const definitions = printingState[definitionsKey];
@@ -1502,8 +1489,7 @@ export const actions = {
                 log.warn(`definitions for ${definitionsKey} is empty.`);
                 return;
             }
-            const index = definitions.findIndex((d) => d.definitionId === id);
-            definitions[index] = definitionModel;
+
             dispatch(
                 actions.updateState({
                     [definitionsKey]: [...definitions]
@@ -1515,10 +1501,8 @@ export const actions = {
 
         definitionManager.updateDefinition(definitionModel);
 
-        if (updatePresetModel) {
-            dispatch(actions.validateActiveQualityPreset(direction));
-            dispatch(actions.updateState({ qualityDefinitions: [...qualityDefinitions] }));
-        }
+        dispatch(actions.validateActiveQualityPreset(direction));
+        // dispatch(actions.updateState({ qualityDefinitions: [...qualityDefinitions] }));
 
         /*
         TODO: Check overstep for auto-generated meshes, including adhesion, prime tower, support.
@@ -2293,10 +2277,8 @@ export const actions = {
                     materialDefinition: materialDefinitions[indexL],
                 }
             );
-            definitionManager.updateDefinition({
-                ...newExtruderLDefinition,
-                definitionId: 'snapmaker_extruder_0'
-            });
+            newExtruderLDefinition.definitionId = 'snapmaker_extruder_0';
+            await definitionManager.updateDefinition(newExtruderLDefinition);
 
             dispatch(actions.updateState({
                 extruderLDefinition: newExtruderLDefinition,

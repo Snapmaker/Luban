@@ -78,9 +78,9 @@ const PresetInitialization: React.FC = () => {
                 presetModel = availablePresetModels.length > 0 && availablePresetModels[0];
 
                 if (presetModel) {
-                    setQualityPreset(LEFT_EXTRUDER, presetModel);
-
                     log.info(`Select Preset ${presetModel.definitionId} for left extruder..`);
+
+                    setQualityPreset(LEFT_EXTRUDER, presetModel);
                 }
             }
         }
@@ -106,9 +106,9 @@ const PresetInitialization: React.FC = () => {
                 presetModel = availablePresetModels.length > 0 && availablePresetModels[0];
 
                 if (presetModel) {
-                    setQualityPreset(RIGHT_EXTRUDER, presetModel);
-
                     log.info(`Select Preset ${presetModel.definitionId} for right extruder..`);
+
+                    setQualityPreset(RIGHT_EXTRUDER, presetModel);
                 }
             }
         }

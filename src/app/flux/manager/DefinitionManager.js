@@ -96,19 +96,20 @@ class DefinitionManager {
         // default profiles
         res = await api.profileDefinitions.getDefaultDefinitions(this.headType, this.configPathname);
 
-        this.defaultDefinitions = res.body.definitions.map((item) => {
-            item.isDefault = true;
-            if (item.i18nName) {
-                item.name = i18n._(item.i18nName);
+        this.defaultDefinitions = res.body.definitions.map((definition) => {
+            definition.isDefault = true;
+            if (definition.i18nName) {
+                definition.name = i18n._(definition.i18nName);
             }
-            if (item.i18nCategory) {
-                item.i18nCategory = i18n._(item.i18nCategory);
+            if (definition.i18nCategory) {
+                definition.i18nCategory = i18n._(definition.i18nCategory);
             }
+
             // Use a special context key, avoid to conflict with the config we are using
-            this.resolveMachineDefinition(item, {
-                contextKey: `DefaultConfig-${item.definitionId}`,
+            this.resolveMachineDefinition(definition, {
+                contextKey: `DefaultConfig-${definition.definitionId}`,
             });
-            return item;
+            return definition;
         });
 
         // extruder
@@ -140,11 +141,6 @@ class DefinitionManager {
                 this.extruderRDefinition = res;
             } else {
                 this.extruderRDefinition = null;
-            }
-
-            // TODO: Is this needed?
-            if (this.extruderLDefinition.settings.machine_nozzle_size) {
-                this.extruderLDefinition.settings.machine_nozzle_size.default_value = this.machineDefinition.settings.machine_nozzle_size.default_value;
             }
         } else {
             return {};

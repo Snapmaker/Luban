@@ -287,6 +287,12 @@ interface ParameterResolverOptions {
     contextKey?: string;
 }
 
+export function applyParameterModifications(definition, modifiedParameterItems: ModifyParameterItem[]) {
+    for (const [key, value] of modifiedParameterItems) {
+        definition.settings[key].default_value = value;
+    }
+}
+
 /**
  *
  * @param definition
@@ -297,11 +303,11 @@ export function resolveParameterValues(definition, modifiedParameterItems: Modif
 
     // update context before calculating
     for (const key of parameterMap.keys()) {
-        if (!definition.settings[key]) {
+        if (definition.settings[key]) {
+            context.context[key] = definition.settings[key].default_value;
+        } else {
             const parameterItem = parameterMap.get(key);
             context.context[key] = parameterItem.default_value;
-        } else {
-            context.context[key] = definition.settings[key].default_value;
         }
     }
 
@@ -333,6 +339,7 @@ export function resolveParameterValues(definition, modifiedParameterItems: Modif
         } catch (e) {
             console.warn(`Unable to resolve calculated values for key ${key} (${definition.definitionId})`);
             console.error(e);
+            return;
         }
     }
 

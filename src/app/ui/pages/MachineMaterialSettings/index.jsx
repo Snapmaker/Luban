@@ -19,14 +19,6 @@ const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
     const { series: connectSerial } = useSelector(state => state.workspace);
 
     const [selectTab, setSelectTab] = useState(MATERIAL_TAB);
-    const leftDiameter = useSelector(
-        (state) => state.printing?.extruderLDefinition?.settings?.machine_nozzle_size
-            ?.default_value
-    );
-    const rightDiameter = useSelector(
-        (state) => state.printing?.extruderRDefinition?.settings?.machine_nozzle_size
-            ?.default_value
-    );
 
     const [selectedMachineSeries, setSelectedMachineSeries] = useState(series);
     const [selectedToolMap, setSelectedToolMap] = useState(toolHead);
@@ -137,8 +129,6 @@ const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
                         toolMap={selectedToolMap}
                         connectSerial={connectSerial}
                         connectMachineName={server?.name}
-                        leftNozzleDiameter={leftDiameter}
-                        rightNozzleDiameter={rightDiameter}
                         setSeries={setSelectedMachineSeries}
                         setToolhead={setSelectedToolMap}
                     />
