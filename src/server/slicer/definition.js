@@ -233,12 +233,23 @@ export class DefinitionLoader {
                     if (setting.settable_per_extruder) {
                         extruderProfileArr.add(key);
                     }
+                    if (setting.limit_to_extruder) {
+                        extruderProfileArr.add(key);
+                    }
                     if (isUndefined(this.settings[key].zIndex)) {
                         this.settings[key].zIndex = zIndex;
                     }
                 }
-                if (setting.children && setting.visible !== 'false') {
-                    this.loadJSONSettings(definitionId, setting.children, zIndex, (setting.type === 'category' || setting.type === 'mainCategory') ? '' : key, mainCategory, smallCategory);
+
+                if (setting.children) {
+                    this.loadJSONSettings(
+                        definitionId,
+                        setting.children,
+                        zIndex,
+                        (setting.type === 'category' || setting.type === 'mainCategory') ? '' : key,
+                        mainCategory,
+                        smallCategory,
+                    );
                 }
             }
             zIndex--;

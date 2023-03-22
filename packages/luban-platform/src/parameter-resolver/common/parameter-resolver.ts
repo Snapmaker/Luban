@@ -339,6 +339,7 @@ export function resolveParameterValues(definition, modifiedParameterItems: Modif
         } catch (e) {
             console.warn(`Unable to resolve calculated values for key ${key} (${definition.definitionId})`);
             console.error(e);
+            return;
         }
     }
 

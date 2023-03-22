@@ -634,7 +634,7 @@ export const actions = {
                     definitionId: newDefinitionId,
                     name: `${normalPresetModel.name} (${nozzleSize})`,
                     inherits: normalPresetModel.inherits,
-                    cateogry: normalPresetModel.category || PRESET_CATEGORY_CUSTOM,
+                    category: normalPresetModel.category || PRESET_CATEGORY_CUSTOM,
                     ownKeys: [...normalPresetModel.ownKeys],
                     metadata: {
                         ...normalPresetModel.metadata,
@@ -2277,10 +2277,8 @@ export const actions = {
                     materialDefinition: materialDefinitions[indexL],
                 }
             );
-            definitionManager.updateDefinition({
-                ...newExtruderLDefinition,
-                definitionId: 'snapmaker_extruder_0'
-            });
+            newExtruderLDefinition.definitionId = 'snapmaker_extruder_0';
+            await definitionManager.updateDefinition(newExtruderLDefinition);
 
             dispatch(actions.updateState({
                 extruderLDefinition: newExtruderLDefinition,

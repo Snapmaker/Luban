@@ -1,6 +1,6 @@
 import { Menu, Spin } from 'antd';
 import classNames from 'classnames';
-import { cloneDeep, find, isNil, uniqWith } from 'lodash';
+import { cloneDeep, isNil, uniqWith } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -11,7 +11,7 @@ import {
     RIGHT_EXTRUDER
 } from '../../../constants';
 import { isDualExtruder } from '../../../constants/machines';
-import { DEFAULT_PRESET_IDS, PRESET_CATEGORY_DEFAULT } from '../../../constants/preset';
+import { PRESET_CATEGORY_DEFAULT } from '../../../constants/preset';
 
 import { RootState } from '../../../flux/index.def';
 import { actions as printingActions } from '../../../flux/printing';
@@ -193,7 +193,7 @@ const ConfigurationView: React.FC<{}> = () => {
             // refresh the scene on preset model changed
             displayModel();
         }
-    }, [selectedStackId, activePresetIds, qualityDefinitionModels]);
+    }, [selectedStackId, activePresetIds[selectedStackId], qualityDefinitionModels]);
 
 
     const i18nContent = {
@@ -489,17 +489,7 @@ const ConfigurationView: React.FC<{}> = () => {
                             )}
                         >
                             {
-                                DEFAULT_PRESET_IDS.map((presetId) => {
-                                    const options = presetOptionsObj[selectedPresetCategory].options;
-                                    if (!options) {
-                                        return null;
-                                    }
-
-                                    const optionItem = find(options, { definitionId: presetId });
-                                    if (!optionItem) {
-                                        return null;
-                                    }
-
+                                presetOptionsObj[selectedPresetCategory].options.map((optionItem) => {
                                     const isSelected = selectedPresetModel && selectedPresetModel.definitionId === optionItem.definitionId;
                                     // selectedPresetModel && selectedPresetModel.typeOfPrinting === optionItem.typeOfPrinting ?
 
