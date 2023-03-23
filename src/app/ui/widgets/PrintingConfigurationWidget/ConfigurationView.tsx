@@ -18,7 +18,7 @@ import { actions as printingActions } from '../../../flux/printing';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import modal from '../../../lib/modal';
-import type { MaterialPresetModel } from '../../../preset-model';
+import { MaterialPresetModel, QualityPresetModel } from '../../../preset-model';
 import { printingStore } from '../../../store/local-storage';
 import Anchor from '../../components/Anchor';
 import { Button } from '../../components/Buttons';
@@ -55,8 +55,6 @@ function checkIsAllDefault(definitionModelSettings, selectedModelDefaultSetting)
  * ConfigurationView is a minimized version of PresetModifier.
  */
 const ConfigurationView: React.FC<{}> = () => {
-    const dispatch = useDispatch();
-
     // machine
     const { toolHead: { printingToolhead } } = useSelector((state: RootState) => state.machine);
     const isDual = isDualExtruder(printingToolhead);
@@ -67,13 +65,14 @@ const ConfigurationView: React.FC<{}> = () => {
 
         // quality
         qualityDefinitions: qualityDefinitionModels,
-        activePresetIds,
 
         // material
         materialDefinitions,
         defaultMaterialId,
         defaultMaterialIdRight,
     } = useSelector((state: RootState) => state.printing);
+
+    const activePresetIds = useSelector((state: RootState) => state.printing.activePresetIds);
 
     const printingCustomConfigsWithCategory = useSelector((state: RootState) => state?.machine?.printingCustomConfigsWithCategory);
 
@@ -82,7 +81,7 @@ const ConfigurationView: React.FC<{}> = () => {
     // stack
     const [selectedStackId, setSelectedStackId] = useState(LEFT_EXTRUDER);
     // preset model
-    const [selectedPresetModel, setSelectedPresetModel] = useState(null);
+    // const [selectedPresetModel, setSelectedPresetModel] = useState(null);
 
     // preset category to display (for selection)
     const [selectedPresetCategory, setSelectedPresetCategory] = useState(PRESET_CATEGORY_DEFAULT);
@@ -123,7 +122,7 @@ const ConfigurationView: React.FC<{}> = () => {
         extruderRDefinition?.settings.machine_nozzle_size.default_value,
     ]);
 
-    const presetCategoryOptions = Object.values(presetOptionsObj).map((item) => {
+    const presetCategoryOptions = useMemo(() => Object.values(presetOptionsObj).map((item) => {
         return {
             // @ts-ignore
             value: item.category,
@@ -134,7 +133,7 @@ const ConfigurationView: React.FC<{}> = () => {
             // @ts-ignore
             i18nCategory: item.i18nCategory
         };
-    });
+    }), [presetOptionsObj]);
 
     /**
      * Select stack for display.
@@ -148,10 +147,11 @@ const ConfigurationView: React.FC<{}> = () => {
     }, []);
 
 
-    const displayModel = () => {
+    const dispatch = useDispatch();
+    const displayModel = useCallback(() => {
         dispatch(printingActions.destroyGcodeLine());
         dispatch(printingActions.displayModel());
-    };
+    }, [dispatch]);
 
     /**
      * Change quality preset.
@@ -159,12 +159,12 @@ const ConfigurationView: React.FC<{}> = () => {
      * @param stackId
      * @param presetModel
      */
-    const onChangePreset = (stackId, presetModel) => {
+    const onChangePreset = useCallback((stackId: string, presetModel: QualityPresetModel) => {
         if (presetModel) {
             dispatch(printingActions.updateActiveQualityPresetId(stackId, presetModel.definitionId));
             displayModel();
         }
-    };
+    }, [dispatch, displayModel]);
 
     // TODO: Move this logic to flux?
     useEffect(() => {
@@ -174,27 +174,28 @@ const ConfigurationView: React.FC<{}> = () => {
                 setInitialized(true);
             }
         }
-    }, [qualityDefinitionModels]);
+    }, [initialized, qualityDefinitionModels]);
+
+    const selectedPresetId = useMemo(() => {
+        return activePresetIds[selectedStackId];
+    }, [activePresetIds, selectedStackId]);
 
     // Update preset model
+    const selectedPresetModel = useMemo<QualityPresetModel | null>(() => {
+        return qualityDefinitionModels.find(p => p.definitionId === selectedPresetId) || null;
+    }, [selectedPresetId, qualityDefinitionModels]);
+
     useEffect(() => {
-        const presetId = activePresetIds[selectedStackId];
-        const presetModel = qualityDefinitionModels.find(p => p.definitionId === presetId);
-
-        // Update currently selected preset model
-        if (presetModel) {
-            setSelectedPresetModel(presetModel);
-
-            const defaultSettings = dispatch(printingActions.getDefaultDefinition(presetModel.definitionId));
+        if (selectedPresetModel) {
+            const defaultSettings = dispatch(printingActions.getDefaultDefinition(selectedPresetModel.definitionId));
             setSelectedSettingDefaultValue(defaultSettings);
 
-            setSelectedPresetCategory(presetModel.category);
+            setSelectedPresetCategory(selectedPresetModel.category);
 
             // refresh the scene on preset model changed
             displayModel();
         }
-    }, [selectedStackId, activePresetIds[selectedStackId], qualityDefinitionModels]);
-
+    }, [selectedPresetModel, dispatch, displayModel]);
 
     const i18nContent = {
         'quality.fast_print': i18n._('key-Luban/Preset/Prints in a fast mode. The printing time is short, but the outcome might be rough.'),

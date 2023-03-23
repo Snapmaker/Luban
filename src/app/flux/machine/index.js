@@ -6,17 +6,15 @@ import {
     HEAD_PRINTING, LEFT_EXTRUDER,
     RIGHT_EXTRUDER,
 } from '../../constants';
-
 import {
     findMachineByName,
-    getMachineSeriesWithToolhead,
+    getMachineToolOptions,
     LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
     MACHINE_SERIES,
     MACHINE_TOOL_HEADS,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
     STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL
 } from '../../constants/machines';
-
 import setting from '../../config/settings';
 import log from '../../lib/log';
 import { valueOf } from '../../lib/contants-utils';
@@ -299,10 +297,15 @@ export const actions = {
         const oldToolHead = getState().machine.toolHead;
         const oldSeries = getState().machine.series;
         if (oldSeries !== series || !_.isEqual(oldToolHead, toolHead)) {
-            dispatch(baseActions.updateState({ series, toolHead }));
+            dispatch(actions.updateMachineSeries(series));
+            dispatch(actions.updateMachineToolHead(toolHead, series));
 
-            const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
-            await definitionManager.init(HEAD_PRINTING, currentMachine.configPathname[HEAD_PRINTING]);
+            const machineToolOptions = getMachineToolOptions(series, toolHead[HEAD_PRINTING]);
+            if (!machineToolOptions) {
+                return;
+            }
+
+            await definitionManager.init(HEAD_PRINTING, machineToolOptions.configPath);
 
             const allMaterialDefinitions = await definitionManager.getDefinitionsByPrefixName(
                 'material'
@@ -373,8 +376,6 @@ export const actions = {
             || oldSeries !== series
             || headType
         ) {
-            // const currentMachine = getMachineSeriesWithToolhead(series, toolHead, headType);
-            // dispatch(baseActions.updateState({ currentMachine }));
             if (!_.isEqual(oldToolHead, toolHead)) {
                 dispatch(baseActions.updateState({ toolHead }));
             }

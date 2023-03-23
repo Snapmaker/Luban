@@ -12,6 +12,7 @@ import {
 } from '../../constants';
 import { PRESET_CATEGORY_CUSTOM } from '../../constants/preset';
 import i18n from '../../lib/i18n';
+import log from '../../lib/log';
 import { PresetModel } from '../../preset-model';
 import scene from '../../scene/Scene';
 
@@ -68,7 +69,7 @@ class DefinitionManager {
     // series = '';
 
     async init(headType, configPathname) {
-        console.log('DefinitionManager.init', headType, configPathname);
+        log.info('DefinitionManager.init', headType, configPathname);
 
         this.configPathname = configPathname;
         this.headType = headType;

@@ -27,7 +27,7 @@ const SceneInitialization: React.FC = () => {
             return;
         }
 
-        log.info('Active Machine =', activeMachine.identifier, activeMachine.fullName);
+        log.info(`Active Machine = ${activeMachine.identifier} (${activeMachine.fullName})`);
         log.info('Tool Head =', toolHead.identifier);
 
         // TODO: init buildVolume

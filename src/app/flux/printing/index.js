@@ -570,7 +570,7 @@ export const actions = {
         );
 
         // Create material on demand
-        dispatch(actions.ensurePresetModels());
+        await dispatch(actions.ensurePresetModels());
     },
 
     /**
@@ -657,11 +657,9 @@ export const actions = {
                 const createdDefinition = await definitionManager.createDefinition(newDefinition);
                 const newPresetModel = new QualityPresetModel(createdDefinition);
 
-                qualityDefinitions.push(newPresetModel);
-
-                dispatch(
+                await dispatch(
                     actions.updateState({
-                        qualityDefinitions: [...qualityDefinitions],
+                        qualityDefinitions: [...qualityDefinitions, newPresetModel],
                     })
                 );
             }
@@ -1447,7 +1445,7 @@ export const actions = {
         }));
 
         // Create material on demand
-        dispatch(actions.ensurePresetModels());
+        await dispatch(actions.ensurePresetModels());
 
         // TODO
         dispatch(actions.validateActiveQualityPreset(direction));
