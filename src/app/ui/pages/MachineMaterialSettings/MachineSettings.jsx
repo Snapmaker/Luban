@@ -91,8 +91,6 @@ const MachineSettings = forwardRef(({
             ?.default_value
     );
 
-    console.log('diameter =', defaultLeftDiameter, defaultRightDiameter);
-
     const dispatch = useDispatch();
 
     // head type

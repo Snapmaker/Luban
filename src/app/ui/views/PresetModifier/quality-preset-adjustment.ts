@@ -1,3 +1,10 @@
+import { cloneDeep } from 'lodash';
+import type { Machine } from '@snapmaker/luban-platform';
+
+import { MACHINE_SERIES } from '../../../constants/machines';
+import type { QualityPresetFilters } from '../../../constants/preset';
+
+
 type ParamsObjectOption = {
     [key: string]: {
         affect: {
@@ -706,7 +713,7 @@ export const DEFAULE_PARAMS_FOR_TPU = {
     }
 };
 
-export function getPresetQuickParamsCalculated({ nozzleSize = 0.4 }) {
+export function getQualityPresetAdjustmentsCalculated({ nozzleSize = 0.4 }) {
     return {
         'layer_height': {
             'options': {
@@ -843,4 +850,28 @@ export function getPresetQuickParamsCalculated({ nozzleSize = 0.4 }) {
             'default_value': 'None'
         }
     };
+}
+
+
+export function getQualityPresetAdjustments(machine: Machine, presetFilters: QualityPresetFilters) {
+    if (presetFilters.nozzleSize === 0.4) {
+        if (presetFilters.materialType === 'tpu') {
+            return cloneDeep(DEFAULE_PARAMS_FOR_TPU);
+        }
+
+        // ABS, PLA, PETG
+        if (presetFilters.materialType === 'abs') {
+            if (machine.identifier === MACHINE_SERIES.J1.identifier) {
+                return cloneDeep(DEFAULT_PARAMS_FAST);
+            } else if (machine.identifier === MACHINE_SERIES.A400.identifier) {
+                return cloneDeep(DEFAULT_PARAMS_MEDIUM);
+            } else {
+                return cloneDeep(DEFAULE_PARAMS_FOR_OTHERS);
+            }
+        }
+    }
+
+    return getQualityPresetAdjustmentsCalculated({
+        nozzleSize: presetFilters.nozzleSize,
+    });
 }

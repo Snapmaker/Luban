@@ -1,12 +1,7 @@
 import { isUndefined } from 'lodash';
 import { HEAD_PRINTING } from '../../constants';
 
-// import { DEFAULE_PARAMS_FOR_TPU, DEFAULE_PARAMS_FOR_OTHERS, getPresetQuickParamsCalculated } from './preset-changes';
-// import type { ParamsModelType } from './preset-changes';
-
 // const OTHER_MATERISL_TYPES = ['pla', 'abs', 'petg'];
-
-
 
 declare interface SettingItem {
     // eslint-disable-next-line camelcase

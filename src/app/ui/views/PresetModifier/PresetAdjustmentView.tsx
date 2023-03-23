@@ -1,28 +1,18 @@
 import { Segmented } from 'antd';
-import { cloneDeep } from 'lodash';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
-import { MACHINE_SERIES } from '../../../constants/machines';
-import i18n from '../../../lib/i18n';
-
-import {
-    PresetModel,
-    DEFAULE_PARAMS_FOR_OTHERS,
-    DEFAULE_PARAMS_FOR_TPU,
-    DEFAULT_PARAMS_FAST,
-    DEFAULT_PARAMS_MEDIUM,
-    getPresetQuickParamsCalculated,
-} from '../../../preset-model';
-
-import { actions as printingActions } from '../../../flux/printing';
-
+import type { QualityPresetFilters } from '../../../constants/preset';
 import { RootState } from '../../../flux/index.def';
+import { actions as printingActions } from '../../../flux/printing';
+import i18n from '../../../lib/i18n';
+import type { QualityPresetModel } from '../../../preset-model';
 import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
 import Tooltip from '../../components/Tooltip';
 
+import { getQualityPresetAdjustments } from './quality-preset-adjustment';
 
 const ALL_ICON_NAMES = {
     'layer_height': ['LayerHeightFine', 'LayerHeightMedium', 'LayerHeightRough'],
@@ -31,25 +21,6 @@ const ALL_ICON_NAMES = {
     'support_generate_type': ['SupportLine', 'SupportNone'],
     'adhesion_type': ['AdhesionSkirt', 'AdhesionBrim', 'AdhesionRaft']
 };
-
-function getPresetQuickParams(machine, presetModel) {
-    if (presetModel.qualityType === 'tpu') {
-        return cloneDeep(DEFAULE_PARAMS_FOR_TPU);
-    }
-
-    // ABS, PLA, PETG
-    if (presetModel.qualityType === 'abs') {
-        if (machine.identifier === MACHINE_SERIES.J1.identifier) {
-            return cloneDeep(DEFAULT_PARAMS_FAST);
-        } else if (machine.identifier === MACHINE_SERIES.A400.identifier) {
-            return cloneDeep(DEFAULT_PARAMS_MEDIUM);
-        } else {
-            return cloneDeep(DEFAULE_PARAMS_FOR_OTHERS);
-        }
-    }
-
-    return getPresetQuickParamsCalculated({});
-}
 
 function getDescription(paramName, displayName) {
     let descriptionDom = null;
@@ -208,17 +179,46 @@ function getDescription(paramName, displayName) {
 
 declare type TProps = {
     selectedStackId: string;
-    selectedPresetModel: PresetModel;
+    selectedPresetModel: QualityPresetModel;
     onChangePresetSettings: (key, value) => void;
 };
 
 // TODO: This component needs completely refactor ASAP.
-const ParametersQuickSettingsView: React.FC<TProps> = ({ selectedStackId, selectedPresetModel, onChangePresetSettings }) => {
+const PresetAdjustmentView: React.FC<TProps> = ({ selectedStackId, selectedPresetModel, onChangePresetSettings }) => {
     const dispatch = useDispatch();
 
     const activeMachine = useSelector((state: RootState) => state.machine.activeMachine);
 
-    const allParams = getPresetQuickParams(activeMachine, selectedPresetModel);
+    const {
+        extruderLDefinition,
+        extruderRDefinition,
+    } = useSelector((state: RootState) => state.printing);
+
+    const selectedNozzleSize = useMemo(() => {
+        if (selectedStackId === LEFT_EXTRUDER) {
+            return extruderLDefinition?.settings.machine_nozzle_size.default_value;
+        } else {
+            return extruderRDefinition?.settings.machine_nozzle_size.default_value;
+        }
+    }, [
+        selectedStackId,
+        extruderLDefinition?.settings.machine_nozzle_size.default_value,
+        extruderRDefinition?.settings.machine_nozzle_size.default_value,
+    ]);
+
+
+    const qualityPresetAdjustments = useMemo(() => {
+        const presetFilters: QualityPresetFilters = {
+            materialType: selectedPresetModel.qualityType,
+            nozzleSize: selectedNozzleSize,
+        };
+        return getQualityPresetAdjustments(activeMachine, presetFilters);
+    }, [
+        activeMachine,
+        selectedNozzleSize,
+        selectedPresetModel.qualityType,
+    ]);
+
     const selectedDefinitionSettings = selectedPresetModel.settings;
 
     const helpersExtruderConfig = useSelector((state: RootState) => state.printing.helpersExtruderConfig);
@@ -251,7 +251,7 @@ const ParametersQuickSettingsView: React.FC<TProps> = ({ selectedStackId, select
     return (
         <div>
             {
-                allParams && Object.entries(allParams).map(([paramName, paramSetting]) => {
+                Object.entries(qualityPresetAdjustments).map(([paramName, paramSetting]) => {
                     const actualOptions = paramSetting.options;
                     const allParamsName = [];
                     let iconName = '';
@@ -399,4 +399,4 @@ const ParametersQuickSettingsView: React.FC<TProps> = ({ selectedStackId, select
 };
 
 
-export default ParametersQuickSettingsView;
+export default PresetAdjustmentView;

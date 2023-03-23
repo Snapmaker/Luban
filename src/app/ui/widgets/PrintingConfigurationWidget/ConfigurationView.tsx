@@ -28,7 +28,7 @@ import SvgIcon from '../../components/SvgIcon';
 import Tooltip from '../../components/Tooltip';
 import { getPresetOptions } from '../../utils/profileManager';
 import DefinitionCreator from '../../views/DefinitionCreator';
-import ParametersQuickSettingsView from '../../views/PresetModifier/ParametersQuickSettingsView';
+import PresetAdjustmentView from '../../views/PresetModifier/PresetAdjustmentView';
 import PrintingManager from '../../views/PrintingManager';
 import SettingItem from '../../views/ProfileManager/SettingItem';
 
@@ -654,7 +654,7 @@ const ConfigurationView: React.FC<{}> = () => {
                     {
                         selectedPresetModel && configDisplayType === CONFIG_DISPLAY_TYPES[0] && (
                             <div>
-                                <ParametersQuickSettingsView
+                                <PresetAdjustmentView
                                     selectedStackId={selectedStackId}
                                     selectedPresetModel={selectedPresetModel}
                                     onChangePresetSettings={actions.onChangePresetSettings}
