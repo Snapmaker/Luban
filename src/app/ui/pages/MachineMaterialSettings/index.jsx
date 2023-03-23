@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import i18n from '../../../lib/i18n';
 import MaterialSettings from './materialSettings';
 import SvgIcon from '../../components/SvgIcon';
 import Anchor from '../../components/Anchor';
 import { getMachineSupportedTools, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants/machines';
-import { actions as machineActions } from '../../../flux/machine/index';
+// import { actions as machineActions } from '../../../flux/machine/index';
 import MachineSettings from './MachineSettings';
 
 
@@ -22,7 +22,7 @@ const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
 
     const [selectedMachineSeries, setSelectedMachineSeries] = useState(series);
     const [selectedToolMap, setSelectedToolMap] = useState(toolHead);
-    const dispatch = useDispatch();
+    // const dispatch = useDispatch();
 
     const [loading, setLoading] = useState(true);
 
@@ -76,10 +76,13 @@ const MachineMaterialSettings = ({ isPopup, onClose, onCallBack }) => {
         setLoading(true);
         onCallBack(selectedMachineSeries, selectedToolMap);
 
+        /*
         (async () => {
             await dispatch(machineActions.onChangeMachineSeries(selectedToolMap, selectedMachineSeries));
             setLoading(false);
         })();
+        */
+        setLoading(false);
     }, [selectedMachineSeries, selectedToolMap]);
 
     const ref = useRef(null);

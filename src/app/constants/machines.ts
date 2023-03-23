@@ -1,5 +1,5 @@
 import includes from 'lodash/includes';
-import type { Machine, ToolHead } from '@snapmaker/luban-platform';
+import type { Machine, MachineToolHeadOptions, ToolHead } from '@snapmaker/luban-platform';
 
 import {
     printToolHeadOriginal,
@@ -252,6 +252,7 @@ export function getWorkVolumeSize(machineIdentifier: string, toolHeadIdentifier:
     }
 }
 
+
 /**
  * Get additional info about pair of <machine series, toolhead>.
  *
@@ -306,6 +307,18 @@ export function getMachineSeriesWithToolhead(series: string, toolhead: { [key: s
         configPathname,
         workSize
     };
+}
+
+
+export function getMachineToolOptions(series: string, toolIdentifier: string): MachineToolHeadOptions | null {
+    const machine: Machine | null = findMachineByName(series);
+
+    const toolHeadOptions = machine.metadata.toolHeads.find(toolHeadOption => toolHeadOption.identifier === toolIdentifier);
+    if (!toolHeadOptions) {
+        return null;
+    }
+
+    return toolHeadOptions;
 }
 
 export const SACP_TYPE_SERIES_MAP = {

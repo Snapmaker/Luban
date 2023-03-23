@@ -1,10 +1,10 @@
 import { find } from 'lodash';
 
-import { LEFT_EXTRUDER, MACHINE_EXTRUDER_X, MACHINE_EXTRUDER_Y, RIGHT_EXTRUDER, } from '../../constants';
-import log from '../../lib/log';
-import baseActions from './actions-base';
-import sceneLogic, { PrimeTowerSettings } from '../../scene/scene.logic';
+import { LEFT_EXTRUDER, MACHINE_EXTRUDER_X, MACHINE_EXTRUDER_Y, RIGHT_EXTRUDER } from '../../constants';
 import { PresetModel } from '../../preset-model';
+import sceneLogic, { PrimeTowerSettings } from '../../scene/scene.logic';
+
+import baseActions from './actions-base';
 
 
 const render = () => (dispatch) => {
@@ -30,8 +30,6 @@ const getModelMaterialSettings = (model) => (dispatch, getState) => {
 };
 
 const applyPrintSettingsToModels = () => (dispatch, getState) => {
-    log.info('actions scene. applyPrintSettingsToModels');
-
     const {
         qualityDefinitions,
         activePresetIds,

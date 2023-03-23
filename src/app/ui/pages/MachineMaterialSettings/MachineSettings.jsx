@@ -303,8 +303,8 @@ const MachineSettings = forwardRef(({
 
     useImperativeHandle(ref, () => ({
         checkNozzleDiameter: () => {
-            checkNozzleDiameter(LEFT, leftNozzleDiameterList);
-            checkNozzleDiameter(RIGHT, rightNozzleDiameterList);
+            // checkNozzleDiameter(LEFT, leftNozzleDiameterList);
+            // checkNozzleDiameter(RIGHT, rightNozzleDiameterList);
         }
     }));
 
@@ -336,7 +336,7 @@ const MachineSettings = forwardRef(({
         }
     }, [selectedMachineSeries, selectedToolName]);
 
-    const machineOptions = getMachineOptions();
+    const machineOptions = useMemo(() => getMachineOptions(), []);
 
     // TODO: Make it a state?
     const availableToolOptions = useMemo(() => {
