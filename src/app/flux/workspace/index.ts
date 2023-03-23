@@ -497,8 +497,8 @@ export const actions = {
                 dispatch(actions.close(options, true));
             },
             'workflow:state': (options) => {
-                log.warn('REFACTOR workflow:state');
                 const { workflowState } = options;
+                log.warn('REFACTOR workflow:state =', workflowState);
                 dispatch(baseActions.updateState({
                     workflowStatus: workflowState
                 }));
@@ -990,7 +990,7 @@ export const actions = {
      * @returns {Promise}
      */
     loadGcode: (gcodeFile = null) => async (dispatch, getState) => {
-        const { connectionStatus, server } = getState().machine;
+        const { connectionStatus, server } = getState().workspace;
         gcodeFile = gcodeFile || getState().workspace.gcodeFile;
         if (
             connectionStatus !== CONNECTION_STATUS_CONNECTED
