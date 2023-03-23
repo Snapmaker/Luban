@@ -6,6 +6,7 @@ import pubsub from 'pubsub-js';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import * as THREE from 'three';
+
 import {
     CONNECTION_TYPE_SERIAL,
     HEAD_CNC,
@@ -25,7 +26,7 @@ import {
 } from '../../../constants';
 import { actions as workspaceActions, WORKSPACE_STAGE } from '../../../flux/workspace';
 import { controller } from '../../../lib/controller';
-
+import log from '../../../lib/log';
 import i18n from '../../../lib/i18n';
 import TargetPoint from '../../../three-extensions/TargetPoint';
 import modalSmallHOC from '../../components/Modal/modal-small';
@@ -266,8 +267,6 @@ class Visualizer extends PureComponent {
             return (this.props.headType === HEAD_LASER);
         },
         handleRun: () => {
-            console.log('handleRun');
-
             const {
                 server,
                 workflowStatus,
@@ -286,6 +285,7 @@ class Visualizer extends PureComponent {
             } = this.props;
 
             if (workflowStatus === WORKFLOW_STATUS_IDLE) {
+                log.info('Start to run G-code...');
                 server.startServerGcode({
                     headType,
                     workflowStatus,
