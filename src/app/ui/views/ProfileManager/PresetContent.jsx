@@ -15,7 +15,6 @@ import ParameterFiltersBar from '../PresetModifier/ParameterFiltersBar';
 import ParameterPicker from '../PresetModifier/ParameterPicker';
 import ParametersTableView from '../PresetModifier/ParametersTableView';
 
-// import ParamItem from '../ParamItem';
 import styles from './styles.styl';
 
 

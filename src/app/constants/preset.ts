@@ -1,6 +1,6 @@
 import { includes } from 'lodash';
 import log from '../lib/log';
-import type { QualityPresetModel } from '../preset-model';
+import type { QualityPresetFilters, QualityPresetModel } from '../preset-model';
 
 // export const STACK_LEFT = 'left';
 // export const STACK_RIGHT = 'right';
