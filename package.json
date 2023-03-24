@@ -297,7 +297,7 @@
     "html-webpack-inline-chunk-plugin": "1.1.1",
     "html-webpack-plugin": "4.5.2",
     "husky": "4.0.10",
-    "i18next-scanner": "4.1.0",
+    "i18next-scanner": "4.2.0",
     "imports-loader": "0.7.1",
     "json-loader": "0.5.7",
     "mini-css-extract-plugin": "0.4.5",

@@ -1,5 +1,8 @@
 import { tokenize } from 'esprima-next';
 import { cloneDeep, isNil, isUndefined } from 'lodash';
+
+import log from '../../lib/log';
+
 // We put with statement into an ES5 module
 import ParameterContext from './parameter-context.es5';
 
@@ -94,8 +97,7 @@ class DependencyGraph {
         }
 
         if (this.topologicalOrderedKeys.length !== keys.length) {
-            // TODO: Use log instead of console.log
-            console.error('Topological graph can not be calculated.');
+            log.error('Topological graph can not be calculated.');
 
             this.topologicalOrderedKeys = null;
         }
@@ -223,7 +225,7 @@ function getContext(definition, contextKey = '') {
     if (!valueGraph.getKeys().length) {
         calculateParameterTopologicalGraph();
 
-        console.log(`Load graph from definition ${definition.definitionId}`);
+        log.info(`Load graph from definition ${definition.definitionId}`);
 
         const keysHasDependencies = valueGraph.getKeys()
             .map(key => valueGraph.getDependencies(key))
@@ -233,7 +235,7 @@ function getContext(definition, contextKey = '') {
             .map(key => valueGraph.getDependencies(key))
             .reduce((s, deps) => (s + deps.length), 0);
 
-        console.log(`  [value] ${keysHasDependencies.length} parameters have deps, ${depCount} in total.`);
+        log.info(`  [value] ${keysHasDependencies.length} parameters have deps, ${depCount} in total.`);
 
 
         const keysHasDependencies2 = calculatedValueGraph.getKeys()
@@ -244,7 +246,7 @@ function getContext(definition, contextKey = '') {
             .map(key => calculatedValueGraph.getDependencies(key))
             .reduce((s, deps) => (s + deps.length), 0);
 
-        console.log(`  [visible] ${keysHasDependencies2.length} parameters have deps, ${depCount2} in total.`);
+        log.info(`  [visible] ${keysHasDependencies2.length} parameters have deps, ${depCount2} in total.`);
     }
 
     allContext[contextKey] = newContext;
@@ -337,16 +339,13 @@ export function resolveParameterValues(definition, modifiedParameterItems: Modif
                 definition.settings[key].mismatch = !isUndefined(calcValue) && calcValue !== defaultValue;
             }
         } catch (e) {
-            console.warn(`Unable to resolve calculated values for key ${key} (${definition.definitionId})`);
-            console.error(e);
+            log.warn(`Unable to resolve calculated values for key ${key} (${definition.definitionId})`);
+            log.error(e);
             return;
         }
     }
 
     const affectedParameters = getAffectedParameters(valueGraph, modifiedParameterItems.map(item => item[0]));
-
-    // console.log('modified =', modifiedParameterItems);
-    // console.log('affected =', affectedParameters);
 
     // calc value & default_value
     for (const key of affectedParameters) {
@@ -362,7 +361,7 @@ export function resolveParameterValues(definition, modifiedParameterItems: Modif
                         defaultValue = Number((calcValue).toFixed(3));
                     } catch (e) {
                         // invalid calculation value
-                        console.error(`Invalid calculation value for ${key}, error = ${e}`);
+                        log.error(`Invalid calculation value for ${key}, error = ${e}`);
                     }
                 } else {
                     defaultValue = calcValue;
@@ -404,8 +403,8 @@ export function resolveParameterValues(definition, modifiedParameterItems: Modif
                 }
             }
         } catch (e) {
-            console.error(e);
-            console.error(`key = ${key}`);
+            log.error(e);
+            log.error(`key = ${key}`);
         }
     }
 
@@ -421,7 +420,7 @@ export function resolveParameterValues(definition, modifiedParameterItems: Modif
                 definition.settings[key].visible = visibleValue;
             }
         } catch (e) {
-            console.error(`Failed to calculate visible for ${key}, error: ${e}`);
+            log.error(`Failed to calculate visible for ${key}, error: ${e}`);
         }
     }
 }
