@@ -16,7 +16,6 @@ import {
     IMAGE_WIFI_CONNECTING,
     IMAGE_WIFI_WAITING,
     LEFT_EXTRUDER,
-    PRINTING_MANAGER_TYPE_EXTRUDER,
     RIGHT_EXTRUDER,
     WORKFLOW_STATUS_IDLE,
     WORKFLOW_STATUS_PAUSED,
@@ -71,18 +70,14 @@ const CheckingNozzleSize: React.FC = () => {
     }, []);
 
     const setDiameter = useCallback((direction, value) => {
-        const def = direction === LEFT_EXTRUDER ? extruderLDefinition : extruderRDefinition;
         dispatch(
-            printingActions.updateCurrentDefinition({
-                managerDisplayType: PRINTING_MANAGER_TYPE_EXTRUDER,
+            printingActions.updateMachineDefinition({
                 direction,
-                definitionModel: def,
-                changedSettingArray: [
-                    ['machine_nozzle_size', value],
-                ],
+                paramKey: 'machine_nozzle_size',
+                paramValue: value,
             })
         );
-    }, [dispatch, extruderLDefinition, extruderRDefinition]);
+    }, [dispatch]);
 
     const nozzleSizeListJSON = useMemo(() => JSON.stringify(nozzleSizeList), [nozzleSizeList]);
 
@@ -118,17 +113,17 @@ const CheckingNozzleSize: React.FC = () => {
 
             if (isDualExtruder(toolHead)) {
                 let mismatch = false;
-                if (leftDiameter !== activeNozzleSize[0]) {
+                if (leftDiameter && leftDiameter !== activeNozzleSize[0]) {
                     mismatch = true;
                 }
-                if (rightDiameter !== activeNozzleSize[1]) {
+                if (rightDiameter && rightDiameter !== activeNozzleSize[1]) {
                     mismatch = true;
                 }
 
                 setshowNozzleModal(mismatch);
             } else {
                 let mismatch = false;
-                if (leftDiameter !== activeNozzleSize[0]) {
+                if (leftDiameter && leftDiameter !== activeNozzleSize[0]) {
                     mismatch = true;
                 }
                 setshowNozzleModal(mismatch);
