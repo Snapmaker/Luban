@@ -2,9 +2,9 @@ import { Radio } from 'antd';
 import _ from 'lodash';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
+
 import i18n from '../../../lib/i18n';
 import RepeatButton from '../../components/RepeatButton';
-import styles from './index.styl';
 
 class JogDistance extends PureComponent {
     static propTypes = {
@@ -87,7 +87,7 @@ class JogDistance extends PureComponent {
         const radioValue = isCustom ? 'custom' : value;
 
         return (
-            <div className={styles['jog-distance-control']}>
+            <div>
                 <Radio.Group
                     size="small"
                     defaultValue={radioValue}
