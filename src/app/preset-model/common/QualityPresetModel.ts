@@ -10,7 +10,7 @@ const QUALITY_SPECIFIC_KEYS = [
 
 class QualityPresetModel extends PresetModel {
     public nozzleSize: number = 0.4;
-    public qualityType: string = ''; // abs/tpu/other, TODO: refactor it
+    public qualityType: string = 'abs'; // abs/tpu/other, TODO: refactor it
     public typeOfPrinting = 'universal'; // universal/quik//fine/engineering
 
     public constructor(definition: object) {
