@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { shallowEqual, useSelector } from 'react-redux';
 
 import {
     HEAD_CNC,
@@ -7,9 +7,10 @@ import {
     HEAD_PRINTING
 } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
+import i18n from '../../../lib/i18n';
 import CNC from './CNC';
 import Laser from './Laser';
-import Printing from './Printing';
+import PrintToolControl from './PrintToolControl';
 
 
 declare interface WidgetActions {
@@ -24,18 +25,18 @@ export declare interface ToolControlViewProps {
 const ToolControlView: React.FC<ToolControlViewProps> = (props) => {
     const { widgetActions } = props;
 
-    const { isConnected, headType } = useSelector((state: RootState) => state.workspace);
+    const { isConnected, headType } = useSelector((state: RootState) => state.workspace, shallowEqual);
 
     const setTitle = useCallback((_headType) => {
         let title = 'Detecting...';
         if (_headType === HEAD_PRINTING) {
-            title = '3D Printer';
+            title = i18n._('3D Printer');
         }
         if (_headType === HEAD_LASER) {
-            title = 'key-unused-Laser';
+            title = i18n._('key-unused-Laser');
         }
         if (_headType === HEAD_CNC) {
-            title = 'CNC';
+            title = i18n._('CNC');
         }
         widgetActions.setTitle(title);
     }, [widgetActions]);
@@ -56,7 +57,7 @@ const ToolControlView: React.FC<ToolControlViewProps> = (props) => {
     return (
         <div>
             {
-                headType === HEAD_PRINTING && <Printing />
+                headType === HEAD_PRINTING && <PrintToolControl />
             }
             {
                 headType === HEAD_LASER && <Laser />

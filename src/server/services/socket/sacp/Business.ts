@@ -899,7 +899,6 @@ export default class Business extends Dispatcher {
             callback && callback();
         });
         return this.send(0x01, 0x05, PeerId.SCREEN, info, false).then(({ response, packet }) => {
-            console.log('wifiConnection', response, packet);
             // return res;
             return { response, packet };
         });

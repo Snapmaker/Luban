@@ -93,7 +93,7 @@ function getUnsupportedWidgets(machineIdentifier, toolHead) {
     }
 
     if (machineIdentifier === MACHINE_SERIES.A400.identifier) {
-        return ['console', 'macro'];
+        return ['macro'];
     }
 
     return [];
