@@ -9,7 +9,7 @@ import {
 import { RootState } from '../../../flux/index.def';
 import i18n from '../../../lib/i18n';
 import CNC from './CNC';
-import Laser from './Laser';
+import LaserToolControl from './LaserToolControl';
 import PrintToolControl from './PrintToolControl';
 
 
@@ -60,7 +60,7 @@ const ToolControlView: React.FC<ToolControlViewProps> = (props) => {
                 headType === HEAD_PRINTING && <PrintToolControl />
             }
             {
-                headType === HEAD_LASER && <Laser />
+                headType === HEAD_LASER && <LaserToolControl />
             }
             {
                 headType === HEAD_CNC && <CNC />
