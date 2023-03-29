@@ -197,31 +197,26 @@ const ConfigurationView: React.FC<{}> = () => {
         }
     }, [selectedPresetModel, dispatch, displayModel]);
 
-    const i18nContent = {
-        'quality.fast_print': i18n._('key-Luban/Preset/Prints in a fast mode. The printing time is short, but the outcome might be rough.'),
-        'quality.normal_quality': i18n._('key-Luban/Preset/Prints with general settings. The printing outcome has a standard quality.'),
-        'quality.normal_tpu_quality': i18n._('key-Luban/Preset/Prints with general settings. The printing outcome has a standard quality.'),
-        // eslint-disable-next-line max-len
-        'quality.normal_other_quality': i18n._('key-Luban/Preset/Prints with general settings. The printing outcome has a standard quality.'),
-        // eslint-disable-next-line max-len
-        'quality.high_quality': i18n._('key-Luban/Preset/Prints the surface of the model more meticulously. It takes longer  time but produces higher-quality surface for the print.'),
-        // eslint-disable-next-line max-len
-        'quality.engineering_print': i18n._('key-Luban/Preset/Enhances dimensional accuracy and overall strength of the model. It takes longer time, but produces robust prints with precise dimensions. This mode is suitable for printing precision machined parts.'),
-    };
+    const getPresetToolTip = useCallback((name, qualityOfPrinting) => {
+        const presetDescription = {
+            'quik': i18n._('key-Luban/Preset/Prints in a fast mode. The printing time is short, but the outcome might be rough.'),
+            'universal': i18n._('key-Luban/Preset/Prints with general settings. The printing outcome has a standard quality.'),
+            'fine': i18n._('key-Luban/Preset/Prints the surface of the model more meticulously. It takes longer  time but produces higher-quality surface for the print.'),
+            // eslint-disable-next-line max-len
+            'engineering': i18n._('key-Luban/Preset/Enhances dimensional accuracy and overall strength of the model. It takes longer time, but produces robust prints with precise dimensions. This mode is suitable for printing precision machined parts.'),
+        };
 
-    const getPresetToolTip = (definitionId, name) => {
         return (
             <div className="padding-vertical-16 padding-horizontal-16">
                 <div className="font-weight-bold padding-bottom-16 border-bottom-white">
                     {name}
                 </div>
                 <div className="margin-top-16">
-                    {i18nContent[definitionId]}
+                    {presetDescription[qualityOfPrinting]}
                 </div>
             </div>
         );
-    };
-
+    }, []);
 
     const actions = {
         getDefaultDefinition: (definitionId) => {
@@ -503,7 +498,7 @@ const ConfigurationView: React.FC<{}> = () => {
                                             })}
                                         >
                                             <Tooltip
-                                                title={getPresetToolTip(optionItem?.definitionId, optionItem.name)}
+                                                title={getPresetToolTip(optionItem.name, optionItem.typeOfPrinting)}
                                                 zIndex={10}
                                                 placement="left"
                                             >
@@ -519,7 +514,7 @@ const ConfigurationView: React.FC<{}> = () => {
                                                                 <Dropdown
                                                                     placement="bottomRight"
                                                                     style={{ maxWidth: '160px' }}
-                                                                    overlay={renderPresetMenu(selectedPresetCategory)}
+                                                                    overlay={renderPresetMenu()}
                                                                     trigger={['click']}
                                                                 >
                                                                     <SvgIcon
