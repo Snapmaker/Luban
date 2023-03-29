@@ -19,15 +19,15 @@ const AddMacro = (props) => {
 
     useEffect(() => {
         form.setFieldValue('name', modalParams.name || '');
-    }, [modalParams.name]);
+    }, [form, modalParams.name]);
 
     useEffect(() => {
         form.setFieldValue('content', modalParams.content || '');
-    }, [modalParams.content]);
+    }, [form, modalParams.content]);
 
     useEffect(() => {
         form.setFieldValue('repeat', modalParams.repeat || 1);
-    }, [modalParams.repeat]);
+    }, [form, modalParams.repeat]);
 
     const initialValues = {
         name: modalParams.name || '',

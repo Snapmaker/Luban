@@ -1,0 +1,131 @@
+import { includes } from 'lodash';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
+import { useSelector } from 'react-redux';
+
+import {
+    CONNECTION_SWITCH_CNC,
+    CONNECTION_UPDATE_TOOLHEAD_SPEED,
+    WORKFLOW_STATUS_PAUSED,
+    WORKFLOW_STATUS_PAUSING,
+    WORKFLOW_STATUS_RUNNING
+} from '../../../constants';
+import { LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, MACHINE_SERIES } from '../../../constants/machines';
+import { RootState } from '../../../flux/index.def';
+import { controller } from '../../../lib/controller';
+import i18n from '../../../lib/i18n';
+import EditComponent from '../../components/Edit';
+import Switch from '../../components/Switch';
+import ParamsWrapper from './ParamsWrapper';
+import WorkSpeed from './WorkSpeed';
+
+const CNC: React.FC = () => {
+    const { series, toolHead } = useSelector((state: RootState) => state.workspace);
+
+    const {
+        headStatus,
+        workflowStatus,
+
+        cncCurrentSpindleSpeed,
+        cncTargetSpindleSpeed,
+    } = useSelector((state: RootState) => state.workspace);
+
+    const [isHeadOn, setIsHeadOn] = useState(
+        toolHead === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2
+            ? cncCurrentSpindleSpeed > 0
+            : headStatus
+    );
+
+    const onClickToolHead = useCallback(() => {
+        controller.emitEvent(CONNECTION_SWITCH_CNC, {
+            headStatus: isHeadOn,
+            speed: cncTargetSpindleSpeed,
+            toolHead,
+        });
+        if (series !== MACHINE_SERIES.A400.identifier) {
+            setIsHeadOn((prev) => !prev);
+        }
+    }, [isHeadOn, cncTargetSpindleSpeed, toolHead, series]);
+
+    const updateToolHeadSpeed = useCallback((speed: number) => {
+        controller.emitEvent(CONNECTION_UPDATE_TOOLHEAD_SPEED, {
+            speed,
+        });
+    }, []);
+
+    const isPrinting = useMemo(() => {
+        return includes(
+            [WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_PAUSING],
+            workflowStatus
+        );
+    }, [workflowStatus]);
+
+    useEffect(() => {
+        if (headStatus !== undefined && headStatus !== isHeadOn) {
+            setIsHeadOn(headStatus);
+        }
+    }, [headStatus, isHeadOn]);
+
+    useEffect(() => {
+        if (toolHead === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2 && cncCurrentSpindleSpeed !== undefined) {
+            setIsHeadOn(cncCurrentSpindleSpeed > 0);
+        }
+    }, [toolHead, cncCurrentSpindleSpeed]);
+
+    const isLevelTwoCNC = toolHead === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2;
+
+    return (
+        <div>
+            {isPrinting && <WorkSpeed />}
+            {isPrinting && isLevelTwoCNC && (
+                <ParamsWrapper
+                    handleSubmit={(value) => {
+                        updateToolHeadSpeed(value);
+                    }}
+                    initValue={cncTargetSpindleSpeed}
+                    title={isLevelTwoCNC ? i18n._('key-Workspace/Marlin-Spindle Speed') : i18n._('key-unused-Toolhead')}
+                    suffix="rpm"
+                    inputMax={18000}
+                    inputMin={8000}
+                >
+                    <div className="width-44 sm-flex align-center margin-left-16 ">
+                        <span>{cncCurrentSpindleSpeed} rpm</span>
+                    </div>
+                </ParamsWrapper>
+            )}
+            {!isPrinting && (
+                <div className="sm-flex-overflow-visible margin-vertical-8 justify-space-between">
+                    <div className="height-32 width-176 display-inline text-overflow-ellipsis">{i18n._('key-unused-Toolhead')}</div>
+                    <div className="sm-flex margin-left-24 overflow-visible align-center">
+                        <Switch
+                            className="sm-flex-auto"
+                            style={{ order: 0 }}
+                            onClick={onClickToolHead}
+                            checked={headStatus}
+                            disabled={isPrinting}
+                        />
+
+                        {/* //  <div className="sm-flex align-center"> */}
+                        {isLevelTwoCNC && (
+                            <div className=" sm-flex sm-flex-direction-c  margin-right-16  margin-left-16">
+                                <span>{cncTargetSpindleSpeed}rpm</span>
+                            </div>
+                        )}
+                        {isLevelTwoCNC && (
+                            <EditComponent
+                                handleSubmit={(value) => {
+                                    updateToolHeadSpeed(value);
+                                }}
+                                initValue={cncTargetSpindleSpeed}
+                                suffix="rpm"
+                                inputMax={18000}
+                                inputMin={8000}
+                            />
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default CNC;

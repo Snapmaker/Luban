@@ -17,15 +17,15 @@ const EditMacro = (props) => {
     // name, content, repeat
     useEffect(() => {
         form.setFieldValue('name', modalParams.name);
-    }, [modalParams.name]);
+    }, [form, modalParams.name]);
 
     useEffect(() => {
         form.setFieldValue('content', modalParams.content);
-    }, [modalParams.content]);
+    }, [form, modalParams.content]);
 
     useEffect(() => {
         form.setFieldValue('repeat', modalParams.repeat);
-    }, [modalParams.repeat]);
+    }, [form, modalParams.repeat]);
 
     const initialValues = {
         name: modalParams.name,

@@ -16,7 +16,6 @@ import ConsoleWidget from '../../widgets/Console';
 import LaserParamsWidget from '../../widgets/LaserParams';
 import LaserTestFocusWidget from '../../widgets/LaserTestFocus';
 import MacroWidget from '../../widgets/Macro';
-import MarlinWidget from '../../widgets/Marlin';
 import PrintingMaterialWidget from '../../widgets/PrintingMaterial';
 import PrintingOutputWidget from '../../widgets/PrintingOutput';
 import PrintingVisualizer from '../../widgets/PrintingVisualizer';
@@ -30,7 +29,6 @@ const allWidgets = {
     'macro': MacroWidget,
     'macroPanel': MacroWidget,
     'purifier': PurifierWidget,
-    'marlin': MarlinWidget,
     'visualizer': VisualizerWidget,
     'webcam': WebcamWidget,
     'printing-visualizer': PrintingVisualizer,

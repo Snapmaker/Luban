@@ -2,10 +2,10 @@ import { Input, Radio, Space } from 'antd';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { includes } from 'lodash';
+
 import i18n from '../../../lib/i18n';
 import RepeatButton from '../../components/RepeatButton';
 import { DISTANCE_MAX, DISTANCE_MIN, DISTANCE_STEP } from './constants';
-import styles from './styles.styl';
 
 const JogDistance = (props) => {
     const { state, actions, workPosition } = props;
@@ -26,7 +26,7 @@ const JogDistance = (props) => {
 
     return (
         <div>
-            <div className={styles['jog-distance-control']}>
+            <div>
                 <p className="margin-vertical-8">{i18n._('key-Workspace/Control/JogDistance-XYZ Axis Travel Distance')}</p>
                 <Space direction="vertical" size={8}>
                     <Radio.Group
@@ -83,7 +83,7 @@ const JogDistance = (props) => {
                 </Space>
             </div>
             {workPosition.isFourAxis && (
-                <div className={styles['jog-distance-control']}>
+                <div>
                     <p className="margin-vertical-8">{i18n._('key-Workspace/Control/JogDistance-B Axis Rotation Angle')}</p>
                     <Space direction="vertical" size={8}>
                         <Radio.Group
