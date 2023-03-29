@@ -89,7 +89,9 @@ export function pickAvailableQualityPresetModels(presetModels: QualityPresetMode
  * }
  */
 export declare interface QualityPresetOptions {
+    definitionId: string;
     name: string;
+    typeOfPrinting: string;
 }
 
 export declare interface QualityPresetGroup {

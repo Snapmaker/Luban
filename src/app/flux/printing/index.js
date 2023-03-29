@@ -657,6 +657,18 @@ export const actions = {
                 const createdDefinition = await definitionManager.createDefinition(newDefinition);
                 const newPresetModel = new QualityPresetModel(createdDefinition);
 
+                // change and resolve
+                dispatch(actions.updateCurrentDefinition({
+                    definitionModel: newPresetModel,
+                    managerDisplayType: PRINTING_MANAGER_TYPE_QUALITY,
+                    direction: LEFT_EXTRUDER,
+                    changedSettingArray: [
+                        ['machine_nozzle_size', nozzleSize],
+                        ['layer_height', nozzleSize / 2],
+                        ['speed_print', 40],
+                    ],
+                }));
+
                 await dispatch(
                     actions.updateState({
                         qualityDefinitions: [...qualityDefinitions, newPresetModel],
