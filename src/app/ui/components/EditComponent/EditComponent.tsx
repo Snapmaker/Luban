@@ -78,7 +78,12 @@ const EditComponent: React.FC<EditComponentProps> = React.memo(({
             </div>
             {showOverlay && (
                 <div className="position-absolute bottom-0 right-1">
-                    <div className={classNames(styles.wrapper, hasSlider && styles['wrapper-with-slide'], 'border-radius-8 border-default-black-5 padding-horizontal-4 padding-vertical-4 background-color-white')}>
+                    <div
+                        className={classNames(
+                            styles.wrapper, hasSlider && styles['wrapper-with-slide'],
+                            'border-radius-8 border-default-black-5 padding-horizontal-4 padding-vertical-4 background-color-white',
+                        )}
+                    >
                         {hasSlider && (
                             <div className="height-32 margin-left-12">
                                 <Slider
