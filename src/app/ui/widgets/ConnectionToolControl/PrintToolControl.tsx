@@ -23,7 +23,7 @@ import i18n from '../../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { Button } from '../../components/Buttons';
 import JogDistance from './JogDistance';
-import ParamsWrapper from './ParamsWrapper';
+import AttributeContainer from './components/AttributeContainer';
 import WorkSpeed from './WorkSpeed';
 
 const PrintToolControl: React.FC = () => {
@@ -178,8 +178,9 @@ const PrintToolControl: React.FC = () => {
         activeNozzle: isDual,
 
         nozzleTempDisplay: !isDual,
+
         leftNozzleTempDisplay: isDual,
-        leftNozzleTempEditable: !isDual,
+        leftNozzleTempEditable: !isDual || true,
         rightNozzleTempDisplay: isDual,
         rightNozzleTempEditable: !isDual,
 
@@ -217,7 +218,7 @@ const PrintToolControl: React.FC = () => {
             {renderActiveNozzle()}
             {
                 uiConfig.nozzleTempDisplay && (
-                    <ParamsWrapper
+                    <AttributeContainer
                         handleSubmit={(value) => {
                             actions.updateNozzleTemp(LEFT_EXTRUDER_MAP_NUMBER, value);
                         }}
@@ -233,12 +234,12 @@ const PrintToolControl: React.FC = () => {
                             <span>{i18n._('key-Workspace/Marlin-Target Data Title')}</span>
                             <span>{Math.floor(leftNozzleTargetTemperature)}°C</span>
                         </div>
-                    </ParamsWrapper>
+                    </AttributeContainer>
                 )
             }
             {
                 uiConfig.leftNozzleTempDisplay && (
-                    <ParamsWrapper
+                    <AttributeContainer
                         editable={uiConfig.leftNozzleTempEditable}
                         handleSubmit={(value) => {
                             actions.updateNozzleTemp(LEFT_EXTRUDER_MAP_NUMBER, value);
@@ -255,7 +256,7 @@ const PrintToolControl: React.FC = () => {
                             <span>{i18n._('key-Workspace/Marlin-Target Data Title')}</span>
                             <span>{Math.floor(leftNozzleTargetTemperature)}°C</span>
                         </div>
-                    </ParamsWrapper>
+                    </AttributeContainer>
                 )
             }
 
@@ -289,7 +290,7 @@ const PrintToolControl: React.FC = () => {
 
             {
                 uiConfig.rightNozzleTempDisplay && (
-                    <ParamsWrapper
+                    <AttributeContainer
                         editable={uiConfig.rightNozzleTempEditable}
                         handleSubmit={(value) => {
                             actions.updateNozzleTemp(RIGHT_EXTRUDER_MAP_NUMBER, value);
@@ -306,7 +307,7 @@ const PrintToolControl: React.FC = () => {
                             <span>{i18n._('key-Workspace/Marlin-Target Data Title')}</span>
                             <span>{Math.floor(rightNozzleTargetTemperature)}°C</span>
                         </div>
-                    </ParamsWrapper>
+                    </AttributeContainer>
                 )
             }
             {
@@ -340,7 +341,7 @@ const PrintToolControl: React.FC = () => {
 
             {
                 uiConfig.bedTempDisplay && (
-                    <ParamsWrapper
+                    <AttributeContainer
                         editable={uiConfig.bedTempEditable}
                         handleSubmit={(value) => {
                             setHeatedBedTemperature(value);
@@ -357,7 +358,7 @@ const PrintToolControl: React.FC = () => {
                             <span>{i18n._('key-Workspace/Marlin-Target Data Title')}</span>
                             <span>{Math.floor(heatedBedTargetTemperature)}°C</span>
                         </div>
-                    </ParamsWrapper>
+                    </AttributeContainer>
                 )
             }
 

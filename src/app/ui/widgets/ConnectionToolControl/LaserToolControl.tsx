@@ -15,7 +15,7 @@ import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import SvgIcon from '../../components/SvgIcon';
 import Switch from '../../components/Switch';
-import ParamsWrapper from './ParamsWrapper';
+import AttributeContainer from './components/AttributeContainer';
 import WorkSpeed from './WorkSpeed';
 
 
@@ -80,7 +80,7 @@ const LaserToolControl: React.FC = () => {
     return (
         <div>
             {isPrintingValue && (
-                <ParamsWrapper
+                <AttributeContainer
                     handleSubmit={(value) => {
                         onSaveLaserPower(value);
                     }}
@@ -96,7 +96,7 @@ const LaserToolControl: React.FC = () => {
                     <div className="width-44 sm-flex sm-flex-direction-c margin-left-16">
                         <span>{localLaserPower}%</span>
                     </div>
-                </ParamsWrapper>
+                </AttributeContainer>
             )}
             {isPrintingValue && <WorkSpeed />}
 
