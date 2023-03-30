@@ -1,12 +1,27 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import Slider from '../Slider';
+import { noop } from 'lodash';
+import React, { useCallback, useEffect, useState } from 'react';
+
+
 import { NumberInput as Input } from '../Input';
+import Slider from '../Slider';
 import SvgIcon from '../SvgIcon';
 import styles from './styles.styl';
 
-const EditComponent = React.memo(({
+export interface EditComponentProps {
+    handleSubmit: (value: number) => void;
+    hasSlider?: boolean;
+    initValue: number;
+    suffix?: string;
+    sliderMax?: number;
+    sliderMin?: number;
+    sliderMarks?: Record<number, React.ReactNode>;
+    inputMax?: number;
+    inputMin?: number;
+    disabled?: boolean;
+}
+
+const EditComponent: React.FC<EditComponentProps> = React.memo(({
     handleSubmit,
     hasSlider,
     initValue,
@@ -27,12 +42,12 @@ const EditComponent = React.memo(({
         setInputValue(initValue);
     }, [initValue]);
 
-    const handleSliderChange = (value) => {
+    const handleSliderChange = (value: number) => {
         setSliderValue(value);
         setInputValue(value);
     };
 
-    const handleInputChange = (value) => {
+    const handleInputChange = (value: number) => {
         setInputValue(value);
     };
 
@@ -50,7 +65,7 @@ const EditComponent = React.memo(({
     }, [handleGlobalClick]);
 
     return (
-        <div className="position-re" onClick={e => e.nativeEvent.stopPropagation()} onKeyDown={() => { }} role="toolbar">
+        <div className="position-re" onClick={e => e.nativeEvent.stopPropagation()} onKeyDown={noop} role="toolbar">
             <div className="height-percent-100 sm-flex align-flex-end">
                 <SvgIcon
                     className="height-24 width-24 border-radius-4 overflow-x-hidden overflow-y-hidden"
@@ -115,18 +130,5 @@ const EditComponent = React.memo(({
 }, (prevProps, nextProps) => {
     return prevProps.initValue === nextProps.initValue;
 });
-
-EditComponent.propTypes = {
-    handleSubmit: PropTypes.func.isRequired,
-    hasSlider: PropTypes.bool,
-    initValue: PropTypes.number.isRequired,
-    suffix: PropTypes.string,
-    sliderMax: PropTypes.number,
-    sliderMin: PropTypes.number,
-    sliderMarks: PropTypes.object,
-    inputMax: PropTypes.number,
-    inputMin: PropTypes.number,
-    disabled: PropTypes.bool,
-};
 
 export default EditComponent;

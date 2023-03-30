@@ -19,8 +19,6 @@ const MismatchNozzleModal: React.FC = () => {
 
     const { toolHead, nozzleSizeList } = useSelector((state: RootState) => state.workspace, shallowEqual);
 
-    console.log('xxxx = ', nozzleSizeList);
-
     const {
         extruderLDefinition,
         extruderRDefinition,

@@ -13,9 +13,9 @@ import { LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, MACHINE_SERIES } from '../../../constan
 import { RootState } from '../../../flux/index.def';
 import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
-import EditComponent from '../../components/Edit';
+import EditComponent from '../../components/EditComponent';
 import Switch from '../../components/Switch';
-import ParamsWrapper from './ParamsWrapper';
+import AttributeContainer from './components/AttributeContainer';
 import WorkSpeed from './WorkSpeed';
 
 const CNC: React.FC = () => {
@@ -77,7 +77,7 @@ const CNC: React.FC = () => {
         <div>
             {isPrinting && <WorkSpeed />}
             {isPrinting && isLevelTwoCNC && (
-                <ParamsWrapper
+                <AttributeContainer
                     handleSubmit={(value) => {
                         updateToolHeadSpeed(value);
                     }}
@@ -90,7 +90,7 @@ const CNC: React.FC = () => {
                     <div className="width-44 sm-flex align-center margin-left-16 ">
                         <span>{cncCurrentSpindleSpeed} rpm</span>
                     </div>
-                </ParamsWrapper>
+                </AttributeContainer>
             )}
             {!isPrinting && (
                 <div className="sm-flex-overflow-visible margin-vertical-8 justify-space-between">
