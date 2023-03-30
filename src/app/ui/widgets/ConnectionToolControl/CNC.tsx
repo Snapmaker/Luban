@@ -13,7 +13,7 @@ import { LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, MACHINE_SERIES } from '../../../constan
 import { RootState } from '../../../flux/index.def';
 import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
-import EditComponent from '../../components/Edit';
+import EditComponent from '../../components/EditComponent';
 import Switch from '../../components/Switch';
 import AttributeContainer from './components/AttributeContainer';
 import WorkSpeed from './WorkSpeed';

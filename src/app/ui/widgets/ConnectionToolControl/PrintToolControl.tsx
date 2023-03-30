@@ -365,7 +365,7 @@ const PrintToolControl: React.FC = () => {
             {workflowStatus === 'running' && <WorkSpeed />}
 
             {/* Adjust left extruder Z offset, note that z offset for dual extruders are not supported */}
-            {isConnected && isPrinting() && !isDualExtruder(printingToolhead) && (
+            {isConnected && isPrinting() && !isDual && (
                 <div className="sm-flex-overflow-visible margin-vertical-8 justify-space-between">
                     <span className="display-inline-block height-32 sm-parameter-row__label">{i18n._('key-unused-Left Z Offset')}</span>
                     <Space size={8}>

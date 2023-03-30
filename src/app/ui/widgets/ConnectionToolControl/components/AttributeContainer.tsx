@@ -1,14 +1,14 @@
 import React, { ReactNode } from 'react';
 
-import EditComponent from '../../../components/Edit';
+import EditComponent, { EditComponentProps } from '../../../components/EditComponent';
 
-interface ParamsWrapperProps {
+declare type ParamsWrapperProps = {
     children?: ReactNode;
     title?: string;
     editable?: boolean;
     handleSubmit: (value: number) => void;
     initValue: number;
-}
+} & EditComponentProps;
 
 /**
  * Container to display attributes and their edit component.
@@ -23,6 +23,7 @@ const AttributeContainer: React.FC<ParamsWrapperProps> = (props) => {
         editable = true,
         initValue,
         handleSubmit,
+        ...rest
     } = props;
 
     return (
@@ -33,7 +34,7 @@ const AttributeContainer: React.FC<ParamsWrapperProps> = (props) => {
                 {
                     editable && (
                         <EditComponent
-                            {...props}
+                            {...rest}
                             handleSubmit={handleSubmit}
                             initValue={initValue}
                             disabled={!editable}
