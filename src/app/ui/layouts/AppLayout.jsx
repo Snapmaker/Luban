@@ -97,6 +97,7 @@ class AppLayout extends PureComponent {
         showArrangeModelsError: PropTypes.bool.isRequired,
         arrangeModelZIndex: PropTypes.number.isRequired,
         updateShowArrangeModelsError: PropTypes.func.isRequired,
+        wifiStatusTest: PropTypes.func.isRequired,
 
         // dev tools
         resetUserConfig: PropTypes.func.isRequired,
@@ -690,6 +691,9 @@ class AppLayout extends PureComponent {
             UniApi.Event.on('open-engine-test', (event, ...args) => {
                 UniApi.Event.emit('appbar-menu:open-engine-test', ...args);
             });
+            UniApi.Event.on('wifi-status-test', (event, ...args) => {
+                UniApi.Event.emit('appbar-menu:wifi-status-test', ...args);
+            });
 
             // Appbar
             UniApi.Event.on('appbar-menu:open-file', (file, arr) => {
@@ -942,6 +946,9 @@ class AppLayout extends PureComponent {
 
                 ipc.send('open-engine-test-path', p);
             });
+            UniApi.Event.on('appbar-menu:wifi-status-test', () => {
+                this.props.wifiStatusTest();
+            });
         }
     };
 
@@ -1042,6 +1049,7 @@ const mapDispatchToProps = (dispatch) => {
         longTermBackupConfig: () => dispatch(settingsActions.longTermBackupConfig()),
         updateSavedModal: (options) => dispatch(appGlobalActions.updateSavedModal(options)),
         updateShowArrangeModelsError: (options) => dispatch(appGlobalActions.updateShowArrangeModelsError(options)),
+        wifiStatusTest: () => dispatch(menuActions.wifiStatusTest()),
 
         // reset configurations
         resetUserConfig: () => dispatch(settingsActions.resetUserConfig()),

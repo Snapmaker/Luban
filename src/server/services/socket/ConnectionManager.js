@@ -851,6 +851,12 @@ M3`;
             }
         }
     };
+
+    wifiStatusTest = (socket, options) => {
+        if (this.connectionType === CONNECTION_TYPE_WIFI) {
+            socketHttp.wifiStatusTest(options);
+        }
+    }
 }
 
 const connectionManager = new ConnectionManager();
