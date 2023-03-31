@@ -1,7 +1,6 @@
+export * from './src/machine-definition';
 export {
-    applyParameterModifications,
-    resolveParameterValues,
-    resetPresetsContext
+    applyParameterModifications, getParameterItem, resetPresetsContext, resolveParameterValues
 } from './src/parameter-resolver';
 
-export * from './src/machine-definition';
+
