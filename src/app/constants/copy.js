@@ -131,6 +131,7 @@ i18n._('key-App/Menu-Beginners Guide');
 i18n._('key-App/Menu-Backup config');
 i18n._('key-App/Menu-Download Logs');
 i18n._('key-App/Menu-Run Engine Test');
+i18n._('key-App/Menu-Run Wifi Test');
 i18n._('key-App/Menu-Open Config Folder');
 
 // case lib
