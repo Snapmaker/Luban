@@ -77,6 +77,19 @@ export const sliceFailPopup = () => {
             body: (
                 <React.Fragment>
                     <p>{i18n._('key-Progress/3DP-Slice Failed reason')}</p>
+                    <p>
+                        <span className="display-inline-block margin-right-4">{i18n._('Document')}:</span>
+                        <a
+                            style={{
+                                'textDecoration': 'underline'
+                            }}
+                            href="https://wiki.snapmaker.com/Snapmaker_Luban/slice_failed_error"
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            Slice Failed Error
+                        </a>
+                    </p>
                 </React.Fragment>
             ),
             footer: (

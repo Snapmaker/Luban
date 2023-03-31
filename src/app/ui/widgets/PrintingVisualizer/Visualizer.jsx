@@ -478,6 +478,7 @@ class Visualizer extends PureComponent {
         }
 
         if (stage !== prevProps.stage) {
+            sliceFailPopup();
             if (promptTasks.length > 0) {
                 if (stage === STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE) {
                     promptTasks.filter(item => item.status === 'load-model-fail').forEach(item => {
