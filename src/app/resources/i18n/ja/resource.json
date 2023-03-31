@@ -1,5 +1,6 @@
 {
     "0 Gap": "",
+    "3D Printer": "",
     "ABS": "ABS",
     "ASA": "ASA",
     "Absolute Extruder Prime Position": "エクストルーダーの絶対位置",
@@ -72,6 +73,7 @@
     "Build Plate Temperature": "ビルドプレート温度",
     "Build Plate Temperature Initial Layer": "初期層のビルドプレート温度",
     "Build Volume Temperature": "ビルドボリューム温度",
+    "CNC": "",
     "Carving Tool": "加工ツール",
     "Center Object": "中心物体",
     "Coasting Speed": "コースティング速度",
@@ -905,6 +907,7 @@
     "key-App/Menu-Rename": "名前の変更",
     "key-App/Menu-Reset Configurations": "",
     "key-App/Menu-Run Engine Test": "",
+    "key-App/Menu-Run Wifi Test": "",
     "key-App/Menu-Save As": "名前を付けて保存",
     "key-App/Menu-Save Project": "プロジェクトを保存",
     "key-App/Menu-Select All": "すべてを選択",

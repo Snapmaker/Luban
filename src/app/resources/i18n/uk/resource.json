@@ -1,5 +1,6 @@
 {
     "0 Gap": "Без зазорів",
+    "3D Printer": "",
     "ABS": "ABS",
     "ASA": "ASA",
     "Absolute Extruder Prime Position": "Абсолютна позиція екструдера для праймера",
@@ -72,6 +73,7 @@
     "Build Plate Temperature": "Температура столу",
     "Build Plate Temperature Initial Layer": "Температура столу для початкового шару",
     "Build Volume Temperature": "Температура робочого простору",
+    "CNC": "",
     "Carving Tool": "Фреза",
     "Center Object": "Центрувати обʼєкт",
     "Coasting Speed": "Швидкість друку облицювання",
@@ -905,6 +907,7 @@
     "key-App/Menu-Rename": "Перейменувати",
     "key-App/Menu-Reset Configurations": "Скинути налаштування",
     "key-App/Menu-Run Engine Test": "Перевірка рушія",
+    "key-App/Menu-Run Wifi Test": "",
     "key-App/Menu-Save As": "Зберегти як",
     "key-App/Menu-Save Project": "Збереження проєкту",
     "key-App/Menu-Select All": "Виділити все",

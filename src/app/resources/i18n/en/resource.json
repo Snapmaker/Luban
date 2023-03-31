@@ -1,5 +1,6 @@
 {
     "0 Gap": "0 Gap",
+    "3D Printer": "3D Printer",
     "ABS": "ABS",
     "ASA": "ASA",
     "Absolute Extruder Prime Position": "Absolute Extruder Prime Position",
@@ -72,6 +73,7 @@
     "Build Plate Temperature": "Build Plate Temperature",
     "Build Plate Temperature Initial Layer": "Build Plate Temperature Initial Layer",
     "Build Volume Temperature": "Build Volume Temperature",
+    "CNC": "CNC",
     "Carving Tool": "Carving Tool",
     "Center Object": "Center Object",
     "Coasting Speed": "Coasting Speed",
@@ -905,6 +907,7 @@
     "key-App/Menu-Rename": "Rename",
     "key-App/Menu-Reset Configurations": "Reset Configurations",
     "key-App/Menu-Run Engine Test": "Run Engine Test",
+    "key-App/Menu-Run Wifi Test": "Run Wifi Test",
     "key-App/Menu-Save As": "Save As",
     "key-App/Menu-Save Project": "Save Project",
     "key-App/Menu-Select All": "Select All",
