@@ -710,6 +710,16 @@ class DefinitionManager {
         const extruderKeysAllowed = this.extruderProfileArr;
         const newSettings = {};
         for (const key of extruderKeysAllowed) {
+            // FIXME: This is a hot fix only, please correct extruder key later
+            // do not write to final config file
+            const settingItem = activeQualityDefinition.settings[key];
+            if (settingItem && !settingItem.settable_per_extruder && !settingItem.settable_per_mesh) {
+                // not in material
+                if (!includes(this.materialProfileArr, key)) {
+                    console.log('ignore key', key);
+                    continue;
+                }
+            }
             if (newExtruderDefinition.settings[key]) {
                 newSettings[key] = {
                     default_value: newExtruderDefinition.settings[key].default_value,

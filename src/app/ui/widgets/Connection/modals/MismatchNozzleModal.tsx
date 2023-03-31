@@ -53,11 +53,11 @@ const MismatchNozzleModal: React.FC = () => {
 
         const activeNozzleSize = JSON.parse(nozzleSizeListJSON);
 
-        if (leftDiameter !== activeNozzleSize[0]) {
+        if (activeNozzleSize[0] && leftDiameter !== activeNozzleSize[0]) {
             setDiameter(LEFT_EXTRUDER, activeNozzleSize[0]);
         }
 
-        if (rightDiameter !== activeNozzleSize[1]) {
+        if (activeNozzleSize[1] && rightDiameter !== activeNozzleSize[1]) {
             setDiameter(RIGHT_EXTRUDER, activeNozzleSize[1]);
         }
 
@@ -88,7 +88,8 @@ const MismatchNozzleModal: React.FC = () => {
                 setshowNozzleModal(mismatch);
             } else {
                 let mismatch = false;
-                if (leftDiameter && leftDiameter !== activeNozzleSize[0]) {
+                // For SM 2.0, activeNozzleSize is not available
+                if (leftDiameter && activeNozzleSize[0] && leftDiameter !== activeNozzleSize[0]) {
                     mismatch = true;
                 }
                 setshowNozzleModal(mismatch);
@@ -118,7 +119,7 @@ const MismatchNozzleModal: React.FC = () => {
                             {i18n._('key-Workspace/Mismatch-Synchronize_Nozzle_Diameter')}
                         </Modal.Header>
                         <Modal.Body style={{ maxWidth: '432px' }}>
-                            {i18n._('key-Workspace/Mismatch-The configured Nozzle Diameter ({{diameterInfo}}) is inconsistent with that of the connected machine ({{connectedDameterInfo}}). Luban has updated the configuration to be consistent with the machine nozzle.',
+                            {i18n._('key-Workspace/Mismatch-The configured Nozzle Diameter ({{diameterInfo}}) is inconsistent with that of the connected machine ({{connectedDameterInfo}}). Luban will update the configuration to be consistent with the machine nozzle.',
                                 {
                                     diameterInfo: isDualExtruder(toolHead) ? `L: ${leftNozzleSize}mm; R: ${rightNozzleSize}mm` : `L: ${leftNozzleSize}mm`,
                                     connectedDameterInfo: isDualExtruder(toolHead) ? `L: ${nozzleSizeList[0]}mm; R: ${nozzleSizeList[1]}mm` : `L: ${nozzleSizeList[0]}mm`,

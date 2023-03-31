@@ -90,7 +90,7 @@ const PrintToolControl: React.FC = () => {
 
     const [squeezing, setSqueezing] = useState(false);
 
-    const zOffsetMarks = useState([0.05, 0.1, 0.2]);
+    const zOffsetMarks = [0.05, 0.1, 0.2];
 
     const dispatch = useDispatch();
 

@@ -282,7 +282,7 @@ i18n._('key-default_name-PETG_Blue');
 i18n._('key-default_name-PETG_Red');
 i18n._('key-default_name-TPU_Black');
 i18n._('key-default_name-TPU_Yellow');
-i18n._('key-default_name-Support_White');
+i18n._('key-default_name-Breakaway Support-White');
 i18n._('key-default_name-PVA_White');
 i18n._('key-default_name-PC');
 i18n._('key-default_name-ASA');
