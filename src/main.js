@@ -8,8 +8,8 @@ import url from 'url';
 import fs from 'fs';
 import { debounce, isNull, isUndefined } from 'lodash';
 import path from 'path';
-import isReachable from 'is-reachable';
 import fetch from 'node-fetch';
+
 import { configureWindow } from './electron-app/window';
 import MenuBuilder, { addRecentFile, cleanAllRecentFiles } from './electron-app/Menu';
 import DataStorage from './DataStorage';
@@ -178,7 +178,11 @@ function updateHandle() {
         autoUpdater.downloadUpdate();
     });
     // Emitted when is ready to check for update
-    ipcMain.on('checkForUpdate', async () => {
+    ipcMain.on('checkForUpdate', async (event, autoUpdateProviderOptions) => {
+        console.log(`checkForUpdates, feed URL: ${autoUpdateProviderOptions.url} (${autoUpdateProviderOptions.provider})`);
+
+        autoUpdater.setFeedURL(autoUpdateProviderOptions);
+
         try {
             await autoUpdater.checkForUpdates();
         } catch (e) {
@@ -218,38 +222,12 @@ if (process.platform === 'win32') {
     }
 }
 
-const checkUpdateServer = () => {
-    if (process.platform === 'linux') {
-        return Promise.resolve('github');
-    }
-    const hosts = [
-        ['snapmaker.oss-cn-beijing.aliyuncs.com', 'aliyuncs'],
-        ['github.com', 'github']
-    ];
-    const promises = hosts.map(([host, flag]) => {
-        return new Promise((resolve) => {
-            isReachable(host).then(() => {
-                resolve(flag);
-            });
-        });
-    });
-    return Promise.race(promises);
-};
-
 const startToBegin = (data) => {
     serverData = data;
     const { address, port } = data;
     configureWindow(mainWindow);
 
-    checkUpdateServer().then((host) => {
-        if (host === 'aliyuncs') {
-            autoUpdater.setFeedURL({
-                provider: 'generic',
-                url: 'https://snapmaker.oss-cn-beijing.aliyuncs.com/snapmaker.com/download/luban'
-            });
-        }
-        updateHandle();
-    });
+    updateHandle();
 
     loadUrl = `http://${address}:${port}`;
     const filter = {

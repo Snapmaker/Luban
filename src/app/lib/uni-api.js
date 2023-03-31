@@ -1,13 +1,15 @@
-import isElectron from 'is-electron';
-import request from 'superagent';
-import FileSaver from 'file-saver';
-import { isNil } from 'lodash';
 import events from 'events';
+import FileSaver from 'file-saver';
+import i18next from 'i18next';
+import isElectron from 'is-electron';
+import { isNil } from 'lodash';
 import path from 'path';
-import i18n from './i18n';
+import request from 'superagent';
+
 import pkg from '../../../package.json';
 import { DATA_PATH } from '../constants';
 import Dialog from './dialog';
+import i18n from './i18n';
 
 class AppbarMenuEvent extends events.EventEmitter {
 }
@@ -61,15 +63,35 @@ const Event = {
     }
 };
 
+function getAutoUpdateProviderOptions() {
+    // Use aliyun as zh users' auto update server
+    if (i18next.language === 'zh-CN') {
+        return {
+            provider: 'generic',
+            url: 'https://snapmaker.oss-cn-beijing.aliyuncs.com/snapmaker.com/download/luban',
+        };
+    }
+
+    // Use Github as default auto update server
+    return {
+        provider: 'generic',
+        repo: 'https://github.com/Snapmaker/Luban',
+        url: 'https://github.com/Snapmaker/Luban/releases/latest/download',
+    };
+}
+
 /**
  *  Update control in electron
  */
 const Update = {
     checkForUpdate() {
-        if (isElectron()) {
-            const { ipcRenderer } = window.require('electron');
-            ipcRenderer.send('checkForUpdate');
+        if (!isElectron()) {
+            return;
         }
+
+        const providerOptions = getAutoUpdateProviderOptions();
+        const { ipcRenderer } = window.require('electron');
+        ipcRenderer.send('checkForUpdate', providerOptions);
     },
     // TODO: useless
     downloadUpdate(downloadInfo, oldVersion, shouldCheckForUpdate) {
