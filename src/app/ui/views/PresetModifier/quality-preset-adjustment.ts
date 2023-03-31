@@ -150,11 +150,6 @@ export const DEFAULT_PARAMS_FAST = {
             'Normal': {
                 'affect': {
                     'support_generate_type': 'normal',
-                    'support_roof_enable': true,
-                    'support_roof_height': 2,
-                    'support_roof_pattern': 'zigzag',
-                    'minimum_roof_area': 4,
-                    'support_roof_offset': 2
                 },
                 'value': 'normal',
                 'label': 'key-Luban/Preset/Support Type-Normal'
@@ -320,11 +315,6 @@ export const DEFAULT_PARAMS_MEDIUM = {
             'Normal': {
                 'affect': {
                     'support_generate_type': 'normal',
-                    'support_roof_enable': true,
-                    'support_roof_height': 2,
-                    'support_roof_pattern': 'zigzag',
-                    'minimum_roof_area': 4,
-                    'support_roof_offset': 2
                 },
                 'value': 'normal',
                 'label': 'key-Luban/Preset/Support Type-Normal'
@@ -492,11 +482,6 @@ export const DEFAULE_PARAMS_FOR_OTHERS = {
             'Normal': {
                 'affect': {
                     'support_generate_type': 'normal',
-                    'support_roof_enable': true,
-                    'support_roof_height': 2,
-                    'support_roof_pattern': 'zigzag',
-                    'minimum_roof_area': 4,
-                    'support_roof_offset': 2
                 },
                 'value': 'normal',
                 'label': 'key-Luban/Preset/Support Type-Normal'
@@ -664,11 +649,6 @@ export const DEFAULE_PARAMS_FOR_TPU = {
             'normal': {
                 'affect': {
                     'support_generate_type': 'normal',
-                    'support_roof_enable': true,
-                    'support_roof_height': 2,
-                    'support_roof_pattern': 'zigzag',
-                    'minimum_roof_area': 4,
-                    'support_roof_offset': 2
                 },
                 'value': 'normal',
                 'label': 'key-Luban/Preset/Support Type-Normal'
@@ -802,11 +782,6 @@ export function getQualityPresetAdjustmentsCalculated({ nozzleSize = 0.4 }) {
                 'Normal': {
                     'affect': {
                         'support_generate_type': 'normal',
-                        'support_roof_enable': true,
-                        'support_roof_height': 2,
-                        'support_roof_pattern': 'zigzag',
-                        'minimum_roof_area': 4,
-                        'support_roof_offset': 2
                     },
                     'value': 'normal',
                     'label': 'key-Luban/Preset/Support Type-Normal'
