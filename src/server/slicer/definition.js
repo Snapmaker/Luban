@@ -261,7 +261,7 @@ export class DefinitionLoader {
                     this.settings[key].from = definitionId;
                     this.settings[key].isLeave = (setting.children === undefined);
 
-                    if (definitionId === 'fdmprinter' || definitionId === 'fdmextruder') {
+                    if (definitionId === 'fdmextruder') {
                         const isMesh = setting.settable_per_mesh || false;
                         const isExtruder = setting.settable_per_extruder || false;
                         this.settings[key].settable_per_extruder = this.settings[key].settable_per_extruder || isExtruder;

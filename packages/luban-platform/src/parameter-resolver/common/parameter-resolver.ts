@@ -289,6 +289,15 @@ interface ParameterResolverOptions {
     contextKey?: string;
 }
 
+interface ParameterItem {
+    // eslint-disable-next-line camelcase
+    default_value: number | string | boolean;
+}
+
+export function getParameterItem(key: string): ParameterItem | undefined {
+    return parameterMap.get(key);
+}
+
 export function applyParameterModifications(definition, modifiedParameterItems: ModifyParameterItem[]) {
     for (const [key, value] of modifiedParameterItems) {
         definition.settings[key].default_value = value;
