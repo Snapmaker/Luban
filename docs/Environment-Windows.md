@@ -1,7 +1,7 @@
 ## Windows 10 / Windows 11
 
 - Install `Git` from https://git-scm.com/.
-- Install Node.js 12 from https://nodejs.org/dist/latest-v12.x/.
+- Install Node.js 16 from https://nodejs.org/dist/latest-v16.x/.
 - Install node-gyp compilation environment for the third-party denpendencies.
   - **Official:** You can follow [node-gyp installation instructions](https://github.com/nodejs/node-gyp#on-windows).
   - **Alternative:** Open `Git Bash` as administrator and follow the steps below. This will take about half an hour.
