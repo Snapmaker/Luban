@@ -1175,6 +1175,10 @@ class MarlinController {
                 if (!this.lastCmdType && this.sender.size() === 0 && !this.feeder.isPending()) {
                     this.feeder.next();
                 }
+
+                if (includes(commands, 'G28')) {
+                    this.controller.state.isHomed = true;
+                }
             },
             'watchdir:load': () => {
                 const [file, callback = noop] = args;
