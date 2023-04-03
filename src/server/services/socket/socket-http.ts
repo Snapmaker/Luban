@@ -680,6 +680,31 @@ class SocketHttp {
                 this.socket && this.socket.emit(eventName, _getResult(err, res));
             });
     };
+
+    public wifiStatusTest = (options: EventOptions) => {
+        const { host } = options;
+        const api = `${host}/api/v1/status`;
+        log.info(`the test api is: ${api}`);
+
+        const apiTest = (count) => {
+            if (count <= 0) {
+                return;
+            }
+            setTimeout(() => {
+                const time = new Date().getTime();
+                request
+                    .get(api)
+                    .timeout(3000)
+                    .end(() => {
+                        const costTime = (new Date().getTime() - time);
+                        log.info(`the test api time is: ${costTime} ms`);
+                        apiTest(count - 1);
+                    });
+            }, 1000);
+        };
+
+        apiTest(5);
+    }
 }
 
 const socketHttp = new SocketHttp();

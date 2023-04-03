@@ -15,9 +15,6 @@ import {
     IMAGE_WIFI_CONNECTED,
     IMAGE_WIFI_CONNECTING,
     IMAGE_WIFI_WAITING,
-    LEFT_EXTRUDER,
-    PRINTING_MANAGER_TYPE_EXTRUDER,
-    RIGHT_EXTRUDER,
     WORKFLOW_STATUS_IDLE,
     WORKFLOW_STATUS_PAUSED,
     WORKFLOW_STATUS_RUNNING,
@@ -29,14 +26,12 @@ import {
     LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
     LEVEL_TWO_POWER_LASER_FOR_SM2
 } from '../../../constants/machines';
-import { actions as printingActions } from '../../../flux/printing';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import { Server } from '../../../flux/workspace/Server';
 import usePrevious from '../../../lib/hooks/previous';
 import i18n from '../../../lib/i18n';
 
 import { Button } from '../../components/Buttons';
-import Modal from '../../components/Modal';
 import ModalSmall from '../../components/Modal/ModalSmall';
 import ModalSmallInput from '../../components/Modal/ModalSmallInput';
 import Select from '../../components/Select';
@@ -46,150 +41,11 @@ import { RootState } from '../../../flux/index.def';
 import { ConnectionType } from '../../../flux/workspace/state';
 import MachineModuleStatusBadge from './components/MachineModuleStatusBadge';
 import MismatchModal from './modals/MismatchModal';
+import MismatchNozzleModal from './modals/MismatchNozzleModal';
 import styles from './styles.styl';
 
 
-const CheckingNozzleSize: React.FC = () => {
-    // connected
-    const { isConnected } = useSelector((state: RootState) => state.workspace);
 
-    const { toolHead, nozzleSizeList } = useSelector((state: RootState) => state.workspace, shallowEqual);
-
-    const {
-        extruderLDefinition,
-        extruderRDefinition,
-    } = useSelector((state: RootState) => state.printing);
-
-    // const leftDiameter = extruderLDefinition?.settings.machine_nozzle_size.default_value;
-    // const rightDiameter = extruderRDefinition?.settings.machine_nozzle_size.default_value;
-
-    const [showNozzleModal, setshowNozzleModal] = useState(false);
-    const dispatch = useDispatch();
-
-    const hideNozzleModal = useCallback(() => {
-        setshowNozzleModal(false);
-    }, []);
-
-    const setDiameter = useCallback((direction, value) => {
-        const def = direction === LEFT_EXTRUDER ? extruderLDefinition : extruderRDefinition;
-        dispatch(
-            printingActions.updateCurrentDefinition({
-                managerDisplayType: PRINTING_MANAGER_TYPE_EXTRUDER,
-                direction,
-                definitionModel: def,
-                changedSettingArray: [
-                    ['machine_nozzle_size', value],
-                ],
-            })
-        );
-    }, [dispatch, extruderLDefinition, extruderRDefinition]);
-
-    const nozzleSizeListJSON = useMemo(() => JSON.stringify(nozzleSizeList), [nozzleSizeList]);
-
-    // Confirm the change
-    const onConfirmChange = useCallback(() => {
-        const leftDiameter = extruderLDefinition?.settings.machine_nozzle_size.default_value;
-        const rightDiameter = extruderRDefinition?.settings.machine_nozzle_size.default_value;
-
-        const activeNozzleSize = JSON.parse(nozzleSizeListJSON);
-
-        if (leftDiameter !== activeNozzleSize[0]) {
-            setDiameter(LEFT_EXTRUDER, activeNozzleSize[0]);
-        }
-
-        if (rightDiameter !== activeNozzleSize[1]) {
-            setDiameter(RIGHT_EXTRUDER, activeNozzleSize[1]);
-        }
-
-        hideNozzleModal();
-    }, [
-        extruderLDefinition?.settings.machine_nozzle_size.default_value,
-        extruderRDefinition?.settings.machine_nozzle_size.default_value,
-        nozzleSizeListJSON,
-        setDiameter, hideNozzleModal,
-    ]);
-
-    useEffect(() => {
-        if (isConnected) {
-            const leftDiameter = extruderLDefinition?.settings.machine_nozzle_size.default_value;
-            const rightDiameter = extruderRDefinition?.settings.machine_nozzle_size.default_value;
-
-            const activeNozzleSize = JSON.parse(nozzleSizeListJSON);
-
-            if (isDualExtruder(toolHead)) {
-                let mismatch = false;
-                if (leftDiameter !== activeNozzleSize[0]) {
-                    mismatch = true;
-                }
-                if (rightDiameter !== activeNozzleSize[1]) {
-                    mismatch = true;
-                }
-
-                setshowNozzleModal(mismatch);
-            } else {
-                let mismatch = false;
-                if (leftDiameter !== activeNozzleSize[0]) {
-                    mismatch = true;
-                }
-                setshowNozzleModal(mismatch);
-            }
-        }
-    }, [
-        extruderLDefinition?.settings.machine_nozzle_size.default_value,
-        extruderRDefinition?.settings.machine_nozzle_size.default_value,
-        isConnected,
-        toolHead, nozzleSizeListJSON,
-    ]);
-
-    const leftNozzleSize = extruderLDefinition?.settings.machine_nozzle_size.default_value;
-    const rightNozzleSize = extruderRDefinition?.settings.machine_nozzle_size.default_value;
-
-    return (
-        <div>
-            {
-                showNozzleModal && (
-                    <Modal
-                        onClose={hideNozzleModal}
-                        style={{
-                            borderRadius: '8px'
-                        }}
-                    >
-                        <Modal.Header>
-                            {i18n._('key-Workspace/Mismatch-Synchronize_Nozzle_Diameter')}
-                        </Modal.Header>
-                        <Modal.Body style={{ maxWidth: '432px' }}>
-                            {i18n._('key-Workspace/Mismatch-The configured Nozzle Diameter ({{diameterInfo}}) is inconsistent with that of the connected machine ({{connectedDameterInfo}}). Luban has updated the configuration to be consistent with the machine nozzle.',
-                                {
-                                    diameterInfo: isDualExtruder(toolHead) ? `L: ${leftNozzleSize}mm; R: ${rightNozzleSize}mm` : `L: ${leftNozzleSize}mm`,
-                                    connectedDameterInfo: isDualExtruder(toolHead) ? `L: ${nozzleSizeList[0]}mm; R: ${nozzleSizeList[1]}mm` : `L: ${nozzleSizeList[0]}mm`,
-                                })}
-                        </Modal.Body>
-                        <Modal.Footer>
-                            <Button
-                                type="default"
-                                priority="level-two"
-                                className="margin-left-8"
-                                width="96px"
-                                onClick={hideNozzleModal}
-                            >
-                                {i18n._('key-Modal/Common-Cancel')}
-                            </Button>
-                            <Button
-                                type="primary"
-                                priority="level-two"
-                                className="margin-left-8"
-                                width="96px"
-                                onClick={onConfirmChange}
-                            >
-                                {i18n._('key-Modal/Common-Confirm')}
-                            </Button>
-                        </Modal.Footer>
-                    </Modal>
-                )
-            }
-        </div>
-    );
-};
 
 const ICON_COLOR_GREEN = '#4CB518';
 const ICON_COLOR_RED = '#FF4D4F';
@@ -688,11 +544,6 @@ const NetworkConnection: React.FC = () => {
                 )
             }
             {
-                headType === HEAD_PRINTING && (
-                    <CheckingNozzleSize />
-                )
-            }
-            {
                 isConnected && server && connectedMachine && (
                     <div className="margin-bottom-16 margin-top-12">
                         <div
@@ -761,6 +612,12 @@ const NetworkConnection: React.FC = () => {
             </div>
             {/* Mismatch Modal */}
             <MismatchModal />
+            {/* Mismatch Nozzle Size Modal */}
+            {
+                headType === HEAD_PRINTING && (
+                    <MismatchNozzleModal />
+                )
+            }
             {
                 showConnectionMessage && (
                     <ModalSmall

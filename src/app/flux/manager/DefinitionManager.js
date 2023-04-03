@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { cloneDeep, includes } from 'lodash';
 // import { resolveDefinition } from '../../../shared/lib/definition-resolver';
-import { resolveParameterValues, resetPresetsContext, PrintMode } from '@snapmaker/luban-platform';
+import { resolveParameterValues, resetPresetsContext, PrintMode, getParameterItem } from '@snapmaker/luban-platform';
 
 import api from '../../api';
 import {
@@ -416,7 +416,7 @@ class DefinitionManager {
 
     _applyModelExtruderParameters(definition, qualityDefinition, extruderDefinition, limitToExtruderKeys) {
         for (const key of Object.keys(extruderDefinition.settings)) {
-            const settingItem = qualityDefinition.settings[key];
+            const settingItem = getParameterItem(key);
 
             if (settingItem && settingItem.settable_per_mesh && includes(limitToExtruderKeys, settingItem.limit_to_extruder)) {
                 if (!definition.settings[key]) {
@@ -710,6 +710,15 @@ class DefinitionManager {
         const extruderKeysAllowed = this.extruderProfileArr;
         const newSettings = {};
         for (const key of extruderKeysAllowed) {
+            // FIXME: This is a hot fix only, please correct extruder key later
+            // do not write to final config file
+            const settingItem = getParameterItem(key);
+            if (settingItem && !settingItem.settable_per_extruder && !settingItem.settable_per_mesh) {
+                // not in material
+                if (!includes(this.materialProfileArr, key)) {
+                    continue;
+                }
+            }
             if (newExtruderDefinition.settings[key]) {
                 newSettings[key] = {
                     default_value: newExtruderDefinition.settings[key].default_value,

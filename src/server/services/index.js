@@ -52,7 +52,8 @@ const connectionEventsObject = {
     'connection:setWorkOrigin': connectionManager.setWorkOrigin,
     'connection:updateToolHeadSpeed': connectionManager.updateToolHeadSpeed, // CNC, FOR NOW
     'connection:switchCNC': connectionManager.switchCNC, // CNC, FOR NOW
-    'connection:updateWorkNozzle': connectionManager.switchExtruder
+    'connection:updateWorkNozzle': connectionManager.switchExtruder,
+    'connection:wifiStatusTest': connectionManager.wifiStatusTest
 };
 
 function startServices(server) {

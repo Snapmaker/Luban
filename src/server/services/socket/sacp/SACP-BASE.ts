@@ -129,7 +129,10 @@ class SocketBASE {
             if (response.result === 0) {
                 this.subscribeLogCallback = (data) => {
                     const result = readString(data.response.data, 1).result;
-                    this.socket && this.socket.emit('serialport:read', { data: result });
+                    if (result === null) {
+                        log.warn('subscribed log is null');
+                    }
+                    // this.socket && this.socket.emit('serialport:read', { data: result });
                 };
                 this.sacpClient.subscribeLogFeedback({ interval: 60000 }, this.subscribeLogCallback);
             }
@@ -250,20 +253,52 @@ class SocketBASE {
         });
         this.subscribeNozzleCallback = (data) => {
             const nozzleInfo = new ExtruderInfo().fromBuffer(data.response.data);
-            const leftInfo = find(nozzleInfo.extruderList, { index: 0 });
 
-            const rightInfo = find(nozzleInfo.extruderList, { index: 1 }) || {};
+            if (nozzleInfo.extruderList.length === 1) {
+                const extruderInfo = nozzleInfo.extruderList[0];
+                const extruderIndex = nozzleInfo.key;
 
-            this.currentWorkNozzle = rightInfo.status === 1 ? 1 : 0;
-            stateData = {
-                ...stateData,
-                nozzleSizeList: [leftInfo.diameter, rightInfo.diameter],
-                nozzleTemperature: leftInfo.currentTemperature,
-                nozzleTargetTemperature: leftInfo.targetTemperature,
-                nozzleRightTargetTemperature: rightInfo?.targetTemperature || 0,
-                nozzleRightTemperature: rightInfo?.currentTemperature || 0,
-                currentWorkNozzle: this.currentWorkNozzle
-            };
+                const nozzleSizeList = stateData.nozzleSizeList || [];
+
+                if (extruderInfo.status === 1) {
+                    this.currentWorkNozzle = extruderIndex;
+                }
+                if (extruderInfo.diameter !== nozzleSizeList[extruderIndex]) {
+                    nozzleSizeList[extruderIndex] = extruderInfo.diameter;
+                }
+
+                if (extruderIndex === 0) {
+                    stateData = {
+                        ...stateData,
+                        nozzleSizeList,
+                        nozzleTemperature: extruderInfo.currentTemperature,
+                        nozzleTargetTemperature: extruderInfo.targetTemperature,
+                        currentWorkNozzle: this.currentWorkNozzle,
+                    };
+                } else {
+                    stateData = {
+                        ...stateData,
+                        nozzleSizeList,
+                        nozzleRightTargetTemperature: extruderInfo?.targetTemperature || 0,
+                        nozzleRightTemperature: extruderInfo?.currentTemperature || 0,
+                        currentWorkNozzle: this.currentWorkNozzle,
+                    };
+                }
+            } else if (nozzleInfo.extruderList.length === 2) {
+                const leftInfo = find(nozzleInfo.extruderList, { index: 0 });
+                const rightInfo = find(nozzleInfo.extruderList, { index: 1 }) || {};
+
+                this.currentWorkNozzle = rightInfo.status === 1 ? 1 : 0;
+                stateData = {
+                    ...stateData,
+                    nozzleSizeList: [leftInfo.diameter, rightInfo.diameter],
+                    nozzleTemperature: leftInfo.currentTemperature,
+                    nozzleTargetTemperature: leftInfo.targetTemperature,
+                    nozzleRightTargetTemperature: rightInfo?.targetTemperature || 0,
+                    nozzleRightTemperature: rightInfo?.currentTemperature || 0,
+                    currentWorkNozzle: this.currentWorkNozzle
+                };
+            }
         };
         this.sacpClient.subscribeNozzleInfo({ interval: 1000 }, this.subscribeNozzleCallback).then(res => {
             log.info(`subscribe nozzle success: ${res}`);
@@ -413,7 +448,7 @@ class SocketBASE {
             if (this.filamentAction && data === 0) {
                 const toolHead = this.moduleInfos
                     && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2] || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);
-                    // || this.moduleInfos[HEADT_BED_FOR_SM2]); //
+                // || this.moduleInfos[HEADT_BED_FOR_SM2]); //
                 if (this.filamentActionType === UNLOAD_FILAMENT) {
                     this.sacpClient.ExtruderMovement(toolHead.key, 0, 6, 200, 60, 150).then(({ response }) => {
                         if (response.result !== 0) {
@@ -567,7 +602,7 @@ class SocketBASE {
     public async loadFilament(extruderIndex, eventName) {
         const toolHead = this.moduleInfos
             && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2] || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);
-            // || this.moduleInfos[HEADT_BED_FOR_SM2]); //
+        // || this.moduleInfos[HEADT_BED_FOR_SM2]); //
         if (!toolHead) {
             log.error(`non-eixst toolHead, moduleInfos:${this.moduleInfos}`,);
             return;
@@ -633,7 +668,7 @@ class SocketBASE {
     public async updateNozzleOffset(extruderIndex, direction, distance) {
         const toolHead = this.moduleInfos
             && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2] || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);
-            // || this.moduleInfos[HEADT_BED_FOR_SM2]); //
+        // || this.moduleInfos[HEADT_BED_FOR_SM2]); //
         if (!toolHead) {
             log.error(`non-eixst toolHead 3dp, moduleInfos:${this.moduleInfos}`,);
             return;

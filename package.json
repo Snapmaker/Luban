@@ -1,6 +1,6 @@
 {
   "name": "snapmaker-luban",
-  "version": "4.7.1",
+  "version": "4.7.2",
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
   "homepage": "https://github.com/Snapmaker/Luban",
   "author": "Snapmaker Software Team",
@@ -18,7 +18,7 @@
   },
   "license": "AGPL-3.0-or-later",
   "engines": {
-    "node": ">=12"
+    "node": ">=16"
   },
   "os": [
     "darwin",
@@ -77,7 +77,7 @@
     "@babel/runtime": "7.12.18",
     "@electron/remote": "2.0.8",
     "@react-three/fiber": "5.3.15",
-    "@snapmaker/snapmaker-lunar": "1.3.4",
+    "@snapmaker/snapmaker-lunar": "1.3.5",
     "@trendmicro/react-breadcrumbs": "0.5.5",
     "@trendmicro/react-buttons": "1.3.1",
     "@trendmicro/react-checkbox": "3.4.1",
@@ -142,7 +142,6 @@
     "infinite-tree": "1.16.2",
     "intro.js": "5.1.0",
     "is-electron": "2.1.0",
-    "is-reachable": "^5.2.1",
     "jimp": "0.16.2",
     "jpeg-autorotate": "7.1.1",
     "jpeg-js": "0.4.4",
@@ -297,7 +296,7 @@
     "html-webpack-inline-chunk-plugin": "1.1.1",
     "html-webpack-plugin": "4.5.2",
     "husky": "4.0.10",
-    "i18next-scanner": "4.1.0",
+    "i18next-scanner": "4.2.0",
     "imports-loader": "0.7.1",
     "json-loader": "0.5.7",
     "mini-css-extract-plugin": "0.4.5",

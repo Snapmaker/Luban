@@ -25,6 +25,7 @@ import WorkspaceLayout from '../layouts/WorkspaceLayout';
 import { logPageView, renderWidgetList } from '../utils';
 import CNCPathWidget from '../widgets/CNCPath';
 import ConnectionWidget from '../widgets/Connection';
+import ConnectionToolControlWidget from '../widgets/ConnectionToolControl';
 import ConnectionControlWidget from '../widgets/ConnectionControl';
 import ConnectionFileTransferWidget from '../widgets/ConnectionFileTransfer';
 import ConsoleWidget from '../widgets/Console';
@@ -37,7 +38,6 @@ import LaserSetBackground from '../widgets/LaserSetBackground';
 import LaserTestFocusWidget from '../widgets/LaserTestFocus';
 import MachineSettingWidget from '../widgets/MachineSetting';
 import MacroWidget from '../widgets/Macro';
-import MarlinWidget from '../widgets/Marlin';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import PurifierWidget from '../widgets/Purifier';
 import WebcamWidget from '../widgets/Webcam';
@@ -53,7 +53,7 @@ const allWidgets = {
     'macro': MacroWidget,
     'macroPanel': MacroWidget,
     'purifier': PurifierWidget,
-    'marlin': MarlinWidget,
+    'marlin': ConnectionToolControlWidget,
     'visualizer': VisualizerWidget,
     'webcam': WebcamWidget,
     'printing-visualizer': PrintingVisualizer,
@@ -93,7 +93,7 @@ function getUnsupportedWidgets(machineIdentifier, toolHead) {
     }
 
     if (machineIdentifier === MACHINE_SERIES.A400.identifier) {
-        return ['console', 'macro'];
+        return ['macro'];
     }
 
     return [];

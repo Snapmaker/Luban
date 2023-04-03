@@ -45,6 +45,7 @@ export const CONNECTION_COORDINATE_MOVE = 'connection:coordinateMove';
 export const CONNECTION_SET_WORK_ORIGIN = 'connection:setWorkOrigin';
 export const CONNECTION_UPDATE_TOOLHEAD_SPEED = 'connection:updateToolHeadSpeed';
 export const CONNECTION_SWITCH_CNC = 'connection:switchCNC';
+export const CONNECTION_WIFI_STATUS_TEST = 'connection:wifiStatusTest';
 
 export const SVG_MOVE_MINI_DISTANCE = 1e-4;
 export const MINIMUM_WIDTH_AND_HEIGHT = 0.01;

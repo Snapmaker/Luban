@@ -32,7 +32,6 @@
         "packages/luban-platform/**/*.ts"
     ],
     "exclude": [
-        "./src/server/lib/SACP-SDK/tests/**/*",
-        "./src/server/services/socket/sacp/**/*"
+        "./src/server/lib/SACP-SDK/tests/**/*"
     ]
 }

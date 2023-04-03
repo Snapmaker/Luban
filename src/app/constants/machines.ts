@@ -1,4 +1,3 @@
-import includes from 'lodash/includes';
 import type { Machine, MachineToolHeadOptions, ToolHead } from '@snapmaker/luban-platform';
 
 import {
@@ -216,9 +215,16 @@ export function getMachineSupportedToolOptions(machineSeries, headType = undefin
     return options;
 }
 
-export function isDualExtruder(toolhead: string): boolean {
+export function isDualExtruder(identifier: string): boolean {
+    /*
     if (includes([MACHINE_TOOL_HEADS['Snapmaker J1 IDEX Tool Head'].value, DUAL_EXTRUDER_TOOLHEAD_FOR_SM2], toolhead)) {
         return true;
+    }
+    */
+
+    const tool = findToolHead(identifier);
+    if (tool && tool.metadata.headType === HEAD_PRINTING) {
+        return tool.metadata.numberOfExtruders === 2;
     }
 
     return false;

@@ -5,7 +5,7 @@ import _ from 'lodash';
 import i18n from '../../../lib/i18n';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import { CONNECTION_TYPE_WIFI, CONNECTION_WORKSPEED_FACTOR, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING } from '../../../constants';
-import ParamsWrapper from './ParamsWrapper';
+import AttributeContainer from './components/AttributeContainer';
 import { controller } from '../../../lib/controller';
 
 
@@ -42,7 +42,7 @@ class WorkSpeed extends PureComponent {
         const { workSpeedValue } = this.state;
         const actions = this.actions;
         return (
-            <ParamsWrapper
+            <AttributeContainer
                 handleSubmit={(value) => { actions.onClickWorkSpeed(value); }}
                 initValue={workSpeedValue}
                 title={i18n._('key-Workspace/Marlin-Work Speed')}
@@ -53,7 +53,7 @@ class WorkSpeed extends PureComponent {
                 <div className="width-44 sm-flex align-center margin-left-16 ">
                     <span>{workSpeedValue} %</span>
                 </div>
-            </ParamsWrapper>
+            </AttributeContainer>
         );
     }
 }

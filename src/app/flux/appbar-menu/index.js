@@ -4,6 +4,8 @@ import { getMenuItems } from '../../config/menu';
 import UniApi from '../../lib/uni-api';
 import { getCaseList } from '../../lib/caseLibrary';
 import i18n from '../../lib/i18n';
+import { CONNECTION_WIFI_STATUS_TEST } from '../../constants';
+import { controller } from '../../lib/controller';
 
 export const ACTION_UPDATE_STATE = 'appbar-menu/ACTION_UPDATE_STATE';
 const DEFAULT_IDS = [
@@ -301,6 +303,16 @@ export const actions = {
             state: {
                 menu: [...menu]
             }
+        });
+    },
+    wifiStatusTest: () => (dispatch, getState) => {
+        const { server } = getState().workspace;
+        if (!server) {
+            return;
+        }
+        const host = `http://${server.address}:8080`;
+        controller.emitEvent(CONNECTION_WIFI_STATUS_TEST, {
+            host
         });
     }
 };
