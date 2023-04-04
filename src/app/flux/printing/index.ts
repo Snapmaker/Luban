@@ -78,6 +78,7 @@ import SimplifyModelOperation from '../operation-history/SimplifyModelOperation'
 import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import VisibleOperation3D from '../operation-history/VisibleOperation3D';
 import sceneActions from './actions-scene';
+import { checkMeshes } from './actions-mesh';
 import { pickAvailableQualityPresetModels } from '../../ui/utils/profileManager';
 
 
@@ -4144,24 +4145,8 @@ export const actions = {
         let _progress = 0;
         const promptTasks = [];
 
-        const checkResultMap = new Map();
-        const checkPromises = modelNames.filter((item) => {
-            return !item.isGroup && ['.obj', '.stl'].includes(path.extname(item.uploadName)) && item.uploadName.indexOf('prime_tower_') !== 0;
-        }).map(async (item) => {
-            return controller.checkModel({
-                uploadName: item.uploadName
-            }, (data) => {
-                if (data.type === 'error') {
-                    checkResultMap.set(item.uploadName, {
-                        isDamage: true
-                    });
-                } else if (data.type === 'success') {
-                    checkResultMap.set(item.uploadName, {
-                        isDamage: false
-                    });
-                }
-            });
-        });
+        const checkMeshesPromise = checkMeshes(modelNames);
+
         const promises = modelNames.map(async (model) => {
             if (model.parentUploadName) {
                 dispatch(operationHistoryActions.excludeModelById(HEAD_PRINTING, model.modelID));
@@ -4352,7 +4337,7 @@ export const actions = {
             });
         });
 
-        await Promise.allSettled(checkPromises);
+        const checkResultMap = await checkMeshesPromise;
         await Promise.allSettled(promises);
 
         const newModels = modelGroup.models.filter(model => {
