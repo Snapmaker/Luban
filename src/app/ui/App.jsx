@@ -17,7 +17,7 @@ import { actions as textActions } from '../flux/text';
 import { actions as settingActions } from '../flux/setting';
 import HomePage from './pages/HomePage';
 import Workspace from './pages/Workspace';
-import Printing from './pages/Printing';
+import Printing from './pages/print-main/Printing';
 import Cnc from './pages/Cnc';
 import Laser from './pages/Laser';
 import Settings from './pages/Settings';

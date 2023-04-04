@@ -1,51 +1,36 @@
 import i18next from 'i18next';
-// import { Steps } from 'intro.js-react';
 import isElectron from 'is-electron';
-import { find, includes } from 'lodash';
+import { find } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { useHistory, withRouter } from 'react-router-dom';
 
-import { LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_MATERIAL } from '../../constants';
-import { HEAD_PRINTING, isDualExtruder, MACHINE_SERIES } from '../../constants/machines';
-import { actions as machineActions } from '../../flux/machine';
-import { actions as printingActions } from '../../flux/printing';
-import { actions as projectActions } from '../../flux/project';
-import i18n from '../../lib/i18n';
-import modal from '../../lib/modal';
-import { machineStore } from '../../store/local-storage';
-import '../../styles/introCustom.styl';
-import Dropzone from '../components/Dropzone';
-import Steps from '../components/Steps';
-import MainToolBar from '../layouts/MainToolBar';
-import ProjectLayout from '../layouts/ProjectLayout';
-import { logPageView, renderPopup, useUnsavedTitle } from '../utils';
-// import PrintingOutput from '../widgets/PrintingOutput';
-import PrintingManager from '../views/PrintingManager';
-import PrintingConfigurationsWidget, { PresetInitialization } from '../widgets/PrintingConfigurationWidget';
-import PrintingOutputWidget from '../widgets/PrintingOutput';
-import Thumbnail from '../widgets/PrintingOutput/Thumbnail';
-import PrintingVisualizer from '../widgets/PrintingVisualizer';
+import { LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_MATERIAL } from '../../../constants';
+import { HEAD_PRINTING, isDualExtruder, MACHINE_SERIES } from '../../../constants/machines';
+import { actions as machineActions } from '../../../flux/machine';
+import { actions as printingActions } from '../../../flux/printing';
+import { actions as projectActions } from '../../../flux/project';
+import i18n from '../../../lib/i18n';
+import modal from '../../../lib/modal';
+import { machineStore } from '../../../store/local-storage';
+import Dropzone from '../../components/Dropzone';
+import MainToolBar from '../../layouts/MainToolBar';
+import ProjectLayout from '../../layouts/ProjectLayout';
+import { logPageView, renderPopup, useUnsavedTitle } from '../../utils';
+import PrintingManager from '../../views/PrintingManager';
+import PrintingConfigurationsWidget, { PresetInitialization } from '../../widgets/PrintingConfigurationWidget';
+import PrintingOutputWidget from '../../widgets/PrintingOutput';
+import Thumbnail from '../../widgets/PrintingOutput/Thumbnail';
+import PrintingVisualizer from '../../widgets/PrintingVisualizer';
 
-import PrintingObjectListStyles from '../views/PrintingObjectList/styles.styl';
-
-import HomePage from './HomePage';
-import { CaseConfigGimbal, CaseConfigPenHolder, CaseConfigSM2Gimbal } from './HomePage/CaseConfig';
-import {
-    printIntroStepEight,
-    printIntroStepFive,
-    printIntroStepFour,
-    printIntroStepNine,
-    printIntroStepOne,
-    printIntroStepSeven,
-    printIntroStepThree,
-    getStepIntroFromText,
-} from './introContent';
-import MachineMaterialSettings from './MachineMaterialSettings';
-import { PageMode } from './PageMode';
-import Workspace from './Workspace';
-import SceneInitialization from './print-main/SceneInitialization';
+import HomePage from '../HomePage';
+import { CaseConfigGimbal, CaseConfigPenHolder, CaseConfigSM2Gimbal } from '../HomePage/CaseConfig';
+import MachineMaterialSettings from '../MachineMaterialSettings';
+import { PageMode } from '../PageMode';
+import Workspace from '../Workspace';
+import SceneInitialization from './SceneInitialization';
+import StarterGuide from './StarterGuide';
 
 export const openFolder = () => {
     if (isElectron()) {
@@ -58,6 +43,7 @@ const pageHeadType = HEAD_PRINTING;
 
 function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false) {
     const unSaved = useSelector(state => state?.project[pageHeadType]?.unSaved, shallowEqual);
+
     const { inProgress, simplifyType, simplifyPercent } = useSelector(state => state?.printing, shallowEqual);
     const enableShortcut = useSelector(state => state?.printing?.enableShortcut, shallowEqual);
     const canRedo = useSelector(state => state?.printing?.history?.canRedo, shallowEqual);
@@ -137,12 +123,11 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
      * Render main tool bar on the top.
      *
      * @param activeMachine
-     * @param machineInfo
      * @param materialInfo
      * @param isConnected
      * @returns {*}
      */
-    function renderMainToolBar(activeMachine, machineInfo, materialInfo, isConnected) {
+    function renderMainToolBar(activeMachine, materialInfo, isConnected) {
         //
         //
         //
@@ -380,13 +365,9 @@ function Printing({ location }) {
         isConnected,
     } = useSelector(state => state.workspace, shallowEqual);
 
-    const isOriginal = includes(series, 'Original');
     const isDual = isDualExtruder(printingToolhead);
 
     // const [isDraggingWidget, setIsDraggingWidget] = useState(false);
-    const [enabledIntro, setEnabledIntro] = useState(null);
-    const [initIndex, setInitIndex] = useState(0);
-    const [machineInfo, setMachineInfo] = useState({});
     const [materialInfo, setMaterialInfo] = useState({});
     // for simplify model, if true, visaulizerLeftbar and main tool bar can't be use
     const [pageMode, setPageMode] = useState(PageMode.Default);
@@ -398,7 +379,6 @@ function Printing({ location }) {
     ] = useRenderMainToolBar(pageMode, setPageMode, !!materialDefinitions.length);
     const modelGroup = useSelector(state => state.printing.modelGroup);
     const thumbnail = useRef();
-    const stepRef = useRef();
     useUnsavedTitle(pageHeadType);
 
     useEffect(() => {
@@ -420,10 +400,6 @@ function Printing({ location }) {
     }, []);
 
     useEffect(() => {
-        const newMachineInfo = {
-            series: series,
-            toolHead: printingToolhead
-        };
         const material = {
             leftExtruder: {
                 name: leftMaterial?.name,
@@ -438,9 +414,8 @@ function Printing({ location }) {
             };
         }
 
-        setMachineInfo(newMachineInfo);
         setMaterialInfo(material);
-        renderMainToolBar(activeMachine, newMachineInfo, material, isConnected);
+        renderMainToolBar(activeMachine, material, isConnected);
     }, [activeMachine, series, leftMaterial, rightMaterial, printingToolhead]);
 
     // Determine page mode
@@ -456,24 +431,8 @@ function Printing({ location }) {
     }, [activeMachine]);
 
     useEffect(() => {
-        renderMainToolBar(activeMachine, machineInfo, materialInfo, isConnected);
+        renderMainToolBar(activeMachine, materialInfo, isConnected);
     }, [isConnected]);
-
-    useEffect(() => {
-        if (location?.state?.shouldShowGuideTours) {
-            setEnabledIntro(true);
-        } else if (!location?.state?.shouldShowGuideTours && typeof (location?.state?.shouldShowGuideTours) === 'boolean') {
-            setEnabledIntro(false);
-        } else {
-            setEnabledIntro(null);
-        }
-    }, [location?.state?.shouldShowGuideTours]);
-
-    useEffect(() => {
-        if (typeof (enabledIntro) === 'boolean' && !enabledIntro) {
-            machineStore.set('guideTours.guideTours3dp', true);
-        }
-    }, [enabledIntro]);
 
     const onDropAccepted = useCallback(async (files) => {
         await dispatch(printingActions.uploadModel(files));
@@ -489,11 +448,11 @@ function Printing({ location }) {
         });
     }, []);
 
-    function renderModalView() {
+    const renderModalView = useCallback(() => {
         return (<PrintingManager />);
-    }
+    }, []);
 
-    const renderRightView = () => {
+    const renderRightView = useCallback(() => {
         return (
             <div className="sm-flex sm-flex-direction-c height-percent-100">
                 <PrintingConfigurationsWidget
@@ -502,28 +461,42 @@ function Printing({ location }) {
                 <PrintingOutputWidget />
             </div>
         );
-    };
-    // const onClickToUpload = () => {
-    //     UniApi.Event.emit('appbar-menu:open-file-in-browser');
-    // };
-    const handleGuideStepChange = async (nextIndex) => {
+    }, []);
+
+    // section - Starter Guide
+    const [starterGuideEnabled, setStarterGuideEnabled] = useState(false);
+
+    useEffect(() => {
+        if (location?.state?.shouldShowGuideTours) {
+            setStarterGuideEnabled(true);
+        } else {
+            setStarterGuideEnabled(false);
+        }
+    }, [location?.state?.shouldShowGuideTours]);
+
+    useEffect(() => {
+        if (typeof (starterGuideEnabled) === 'boolean' && !starterGuideEnabled) {
+            machineStore.set('guideTours.guideTours3dp', true);
+        }
+    }, [starterGuideEnabled]);
+
+    const onStarterGuideChange = useCallback(async (nextIndex) => {
         if (nextIndex === 1) {
-            setInitIndex(1);
+            // setInitIndex(1);
 
             const projectConfig = getStarterProject(series, isDual);
 
             dispatch(projectActions.openProject(projectConfig, history, true, true));
         }
-    };
+    }, [series, isDual, dispatch, history]);
 
-    const handleExit = () => {
-        // machineStore.set('guideTours.guideTours3dp', true); // mock   ---> true
-        setEnabledIntro(false);
-    };
+    const onStarterGuideExit = useCallback(() => {
+        setStarterGuideEnabled(false);
+    }, []);
 
     return (
         <ProjectLayout
-            renderMainToolBar={() => renderMainToolBar(activeMachine, machineInfo, materialInfo, isConnected)}
+            renderMainToolBar={() => renderMainToolBar(activeMachine, materialInfo, isConnected)}
             renderRightView={renderRightView}
             renderModalView={renderModalView}
         >
@@ -544,100 +517,12 @@ function Printing({ location }) {
                     pageMode={pageMode}
                     setPageMode={setPageMode}
                 />
-                {enabledIntro && (
-                    <Steps
-                        enabled={enabledIntro}
-                        initialStep={initIndex}
-                        onChange={handleGuideStepChange}
-                        ref={stepRef}
-                        options={{
-                            showBullets: false,
-                            keyboardNavigation: false,
-                            exitOnOverlayClick: false
-                        }}
-                        steps={[
-                            {
-                                element: '.print-tool-bar-open',
-                                intro: printIntroStepOne(i18n._('key-Printing/Page-Import an object, or drag an object to Luban.')),
-                                position: 'right',
-                                title: `${i18n._('key-Printing/Page-Import Object')} (1/9)`,
-                                disableInteraction: true,
-                                tooltipClass: 'printing-import-intro'
-                            },
-                            {
-                                element: `.${PrintingObjectListStyles['object-list-view']}`,
-                                intro: getStepIntroFromText(i18n._('key-Printing/Beginner Guide-Object List Introduction')),
-                                position: 'right',
-                                title: `${i18n._('key-Printing/ObjectList-Object List')} (2/9)`,
-                                disableInteraction: true,
-                                tooltipClass: 'printing-placement-intro'
-                            },
-                            {
-                                element: '.print-intro-three',
-                                intro: getStepIntroFromText(i18n._('key-Printing/Page-Place or transform the object using icons, including Move, Scale, Rotate, Mirror, and Manual Support.')),
-                                position: 'right',
-                                title: `${i18n._('key-Printing/Page-Placement')} (3/9)`,
-                                disableInteraction: true,
-                                tooltipClass: 'printing-placement-intro'
-                            }, {
-                                element: '.print-edit-model-intro',
-                                intro: printIntroStepThree(
-                                    i18n._('key-Printing/Page-Arrange and edit objects to achieve the intended 3D printing effect.')
-                                ),
-                                position: 'bottom',
-                                title: `${i18n._('key-Printing/Page-Edit Objects')} (4/9)`,
-                                disableInteraction: true,
-                                tooltipClass: 'printing-edit-model-intro'
-                            }, {
-                                element: '.print-machine-material-intro',
-                                intro: printIntroStepFour(
-                                    i18n._('key-Printing/Page-Select the machine model and the materials you use.')
-                                ),
-                                position: 'left',
-                                title: `${i18n._('key-Printing/Page-Select Machine and Materials')} (5/9)`,
-                                disableInteraction: true,
-                                tooltipClass: 'printing-machine-material-intro'
-                            }, {
-                                element: '.configuration-view',
-                                intro: printIntroStepFive(
-                                    i18n._('key-Printing/Page-Select a printing mode.'),
-                                    i18n._('key-Printing/Page-Unfold Printing Settings to adjust printing parameters.')
-                                ),
-                                position: 'left',
-                                title: `${i18n._('key-Printing/Page-Configure Parameters')} (6/9)`,
-                                disableInteraction: true,
-                                tooltipClass: 'printing-configure-parameters-intro'
-                            }, {
-                                element: '.print-output-intro',
-                                intro: printIntroStepSeven(
-                                    i18n._('key-Printing/Page-Slice and preview the object.'),
-                                    i18n._('key-Printing/Page-In Preview, you can see printing paths using features, including Line Type and Layer View.'),
-                                    isOriginal
-                                ),
-                                position: 'top',
-                                title: `${i18n._('key-Printing/Page-Generate G-code and Preview')} (7/9)`,
-                                disableInteraction: true,
-                                tooltipClass: 'printing-preview-intro'
-                            }, {
-                                element: '.print-output-intro',
-                                intro: printIntroStepEight(i18n._('key-Printing/Page-Export the G-code file to a local device or load it to Workspace. Use Touchscreen or Luban to start printing.')),
-                                position: 'top',
-                                title: `${i18n._('key-Printing/Page-Export and Print')} (8/9)`,
-                                disableInteraction: true,
-                                highlightClass: 'printing-export-highlight-part',
-                                tooltipClass: 'printing-export-intro'
-                            }, {
-                                element: '.printing-save-icon',
-                                intro: printIntroStepNine(i18n._('key-Printing/Page-Save the project to a local device for reuse.')),
-                                position: 'bottom',
-                                title: `${i18n._('key-Printing/Page-Save Project')} (9/9)`,
-                                disableInteraction: true,
-                                tooltipClass: 'printing-save-intro'
-                            }
-                        ]}
-                        onExit={handleExit}
-                    />
-                )}
+
+                <StarterGuide
+                    enabled={starterGuideEnabled}
+                    onChange={onStarterGuideChange}
+                    onExit={onStarterGuideExit}
+                />
             </Dropzone>
             {renderHomepage()}
             {renderWorkspace()}
@@ -655,4 +540,5 @@ function Printing({ location }) {
 Printing.propTypes = {
     location: PropTypes.object
 };
-export default (withRouter(Printing));
+
+export default withRouter(Printing);
