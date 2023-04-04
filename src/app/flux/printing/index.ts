@@ -1,9 +1,10 @@
-import { cloneDeep, filter, find, includes, isNil } from 'lodash';
+import { cloneDeep, filter, find, includes, isNil, noop } from 'lodash';
 import path from 'path';
 import * as THREE from 'three';
 import { Box3, Vector3 } from 'three';
 import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
 import { resolveParameterValues, applyParameterModifications, PrintMode } from '@snapmaker/luban-platform';
+import { Transfer } from 'threads';
 
 import { timestamp } from '../../../shared/lib/random-utils';
 import api from '../../api';
@@ -79,7 +80,6 @@ import VisibleOperation3D from '../operation-history/VisibleOperation3D';
 import sceneActions from './actions-scene';
 import { pickAvailableQualityPresetModels } from '../../ui/utils/profileManager';
 
-const { Transfer } = require('threads');
 
 let initEventFlag = false;
 // register methods for three-mesh-bvh
@@ -1538,7 +1538,7 @@ export const actions = {
         }));
     },
 
-    onUploadManagerDefinition: (file, type) => (dispatch, getState) => {
+    onUploadManagerDefinition: (file, type) => async (dispatch, getState) => {
         const state = getState().printing;
 
         return new Promise(resolve => {
@@ -2436,7 +2436,7 @@ export const actions = {
         controller.slice(params);
     },
 
-    prepareModel: () => (dispatch, getState) => {
+    prepareModel: () => async (dispatch, getState) => {
         return new Promise((resolve) => {
             const {
                 modelGroup,
@@ -4098,21 +4098,19 @@ export const actions = {
         modelGroup.defaultSupportSize = size;
     },
 
-    isModelsRepaired: () => (dispatch, getState) => {
+    isModelsRepaired: () => async (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const selectedModels = modelGroup.getSelectedModelArray();
         const repaired = selectedModels.every((model) => {
             return !model.needRepair;
         });
 
-        return new Promise(async (resolve) => {
-            if (repaired) {
-                resolve(true);
-            } else {
-                const { allPepaired } = await dispatch(actions.repairSelectedModels());
-                resolve(allPepaired);
-            }
-        });
+        if (repaired) {
+            return true;
+        } else {
+            const { allPepaired } = await dispatch(actions.repairSelectedModels());
+            return allPepaired;
+        }
     },
 
     generateModel: (
@@ -4164,11 +4162,11 @@ export const actions = {
                 }
             });
         });
-        const promises = modelNames.map((model) => {
+        const promises = modelNames.map(async (model) => {
             if (model.parentUploadName) {
                 dispatch(operationHistoryActions.excludeModelById(HEAD_PRINTING, model.modelID));
             }
-            return new Promise(async (resolve, reject) => {
+            return new Promise((resolve, reject) => {
                 _progress = modelNames.length === 1 ? 0.25 : 0.001;
                 dispatch(
                     actions.updateState({
@@ -4817,7 +4815,7 @@ export const actions = {
         controller.generateSupport(params);
     },
 
-    uploadModelsForSupport: (models, angle) => (dispatch, getState) => {
+    uploadModelsForSupport: (models, angle) => async (dispatch, getState) => {
         const { qualityDefinitions, activePresetIds } = getState().printing;
         const activeQualityDefinition = find(qualityDefinitions, {
             definitionId: activePresetIds[LEFT_EXTRUDER],
@@ -4907,7 +4905,7 @@ export const actions = {
         const { modelGroup, tmpSupportFaceMarks } = getState().printing;
         // use worker to load supports
         const operations = new Operations();
-        const promises = supportFilePaths.map((info) => {
+        const promises = supportFilePaths.map(async (info) => {
             return new Promise((resolve, reject) => {
                 const model = modelGroup.findModelByID(info.modelID);
                 const previousFaceMarks = tmpSupportFaceMarks[info.modelID];
@@ -4930,19 +4928,18 @@ export const actions = {
                             (geometry) => {
                                 const mesh = model.generateSupportMesh(geometry);
                                 operation.state.currentSupport = mesh;
-                                resolve();
+                                resolve(true);
                             },
-                            () => {
-                            },
+                            noop,
                             (err) => {
                                 reject(err);
                             }
                         );
                     } else {
-                        resolve();
+                        resolve(true);
                     }
                 } else {
-                    resolve();
+                    resolve(true);
                 }
             });
         });
@@ -5223,7 +5220,7 @@ export const actions = {
         const promptTasks = [];
         const { recovery } = modelGroup.unselectAllModels();
 
-        const promises = modelInfos.map((res) => {
+        const promises = modelInfos.map(async (res) => {
             const uploadPath = `${DATA_PREFIX}/${res.uploadName}`;
             const model = modelGroup.findModelByID(res.modelID);
             model.uploadName = res.uploadName;

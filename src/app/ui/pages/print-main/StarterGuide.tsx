@@ -4,6 +4,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 
 import i18n from '../../../lib/i18n';
+import '../../../styles/introCustom.styl';
 import Steps from '../../components/Steps';
 import {
     getStepIntroFromText, printIntroStepEight,

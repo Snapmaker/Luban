@@ -1,5 +1,4 @@
 import i18next from 'i18next';
-// import { Steps } from 'intro.js-react';
 import isElectron from 'is-electron';
 import { find } from 'lodash';
 import PropTypes from 'prop-types';
@@ -7,32 +6,31 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { useHistory, withRouter } from 'react-router-dom';
 
-import { LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_MATERIAL } from '../../constants';
-import { HEAD_PRINTING, isDualExtruder, MACHINE_SERIES } from '../../constants/machines';
-import { actions as machineActions } from '../../flux/machine';
-import { actions as printingActions } from '../../flux/printing';
-import { actions as projectActions } from '../../flux/project';
-import i18n from '../../lib/i18n';
-import modal from '../../lib/modal';
-import { machineStore } from '../../store/local-storage';
-import '../../styles/introCustom.styl';
-import Dropzone from '../components/Dropzone';
-import MainToolBar from '../layouts/MainToolBar';
-import ProjectLayout from '../layouts/ProjectLayout';
-import { logPageView, renderPopup, useUnsavedTitle } from '../utils';
-import PrintingManager from '../views/PrintingManager';
-import PrintingConfigurationsWidget, { PresetInitialization } from '../widgets/PrintingConfigurationWidget';
-import PrintingOutputWidget from '../widgets/PrintingOutput';
-import Thumbnail from '../widgets/PrintingOutput/Thumbnail';
-import PrintingVisualizer from '../widgets/PrintingVisualizer';
+import { LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_MATERIAL } from '../../../constants';
+import { HEAD_PRINTING, isDualExtruder, MACHINE_SERIES } from '../../../constants/machines';
+import { actions as machineActions } from '../../../flux/machine';
+import { actions as printingActions } from '../../../flux/printing';
+import { actions as projectActions } from '../../../flux/project';
+import i18n from '../../../lib/i18n';
+import modal from '../../../lib/modal';
+import { machineStore } from '../../../store/local-storage';
+import Dropzone from '../../components/Dropzone';
+import MainToolBar from '../../layouts/MainToolBar';
+import ProjectLayout from '../../layouts/ProjectLayout';
+import { logPageView, renderPopup, useUnsavedTitle } from '../../utils';
+import PrintingManager from '../../views/PrintingManager';
+import PrintingConfigurationsWidget, { PresetInitialization } from '../../widgets/PrintingConfigurationWidget';
+import PrintingOutputWidget from '../../widgets/PrintingOutput';
+import Thumbnail from '../../widgets/PrintingOutput/Thumbnail';
+import PrintingVisualizer from '../../widgets/PrintingVisualizer';
 
-import HomePage from './HomePage';
-import { CaseConfigGimbal, CaseConfigPenHolder, CaseConfigSM2Gimbal } from './HomePage/CaseConfig';
-import MachineMaterialSettings from './MachineMaterialSettings';
-import { PageMode } from './PageMode';
-import Workspace from './Workspace';
-import SceneInitialization from './print-main/SceneInitialization';
-import StarterGuide from './print-main/StarterGuide';
+import HomePage from '../HomePage';
+import { CaseConfigGimbal, CaseConfigPenHolder, CaseConfigSM2Gimbal } from '../HomePage/CaseConfig';
+import MachineMaterialSettings from '../MachineMaterialSettings';
+import { PageMode } from '../PageMode';
+import Workspace from '../Workspace';
+import SceneInitialization from './SceneInitialization';
+import StarterGuide from './StarterGuide';
 
 export const openFolder = () => {
     if (isElectron()) {
@@ -45,6 +43,7 @@ const pageHeadType = HEAD_PRINTING;
 
 function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false) {
     const unSaved = useSelector(state => state?.project[pageHeadType]?.unSaved, shallowEqual);
+
     const { inProgress, simplifyType, simplifyPercent } = useSelector(state => state?.printing, shallowEqual);
     const enableShortcut = useSelector(state => state?.printing?.enableShortcut, shallowEqual);
     const canRedo = useSelector(state => state?.printing?.history?.canRedo, shallowEqual);
@@ -541,4 +540,5 @@ function Printing({ location }) {
 Printing.propTypes = {
     location: PropTypes.object
 };
-export default (withRouter(Printing));
+
+export default withRouter(Printing);
