@@ -72,7 +72,7 @@ import ScaleOperation3D from '../operation-history/ScaleOperation3D';
 import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWithRotateOperation3D';
 import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import VisibleOperation3D from '../operation-history/VisibleOperation3D';
-import { checkMeshes, loadMeshFiles, MeshFileInfo } from './actions-mesh';
+import { checkMeshes, loadMeshFiles, LoadMeshFileOptions, MeshFileInfo } from './actions-mesh';
 import sceneActions from './actions-scene';
 
 // eslint-disable-next-line import/no-cycle
@@ -4119,10 +4119,14 @@ export const actions = {
     generateModel: (
         headType,
         {
-            loadFrom = LOAD_MODEL_FROM_INNER,
+            // information directly from mesh file
             files,
             originalName,
             uploadName,
+            children,
+
+            // additional information for model
+            loadFrom = LOAD_MODEL_FROM_INNER,
             sourceWidth,
             sourceHeight,
             mode,
@@ -4133,7 +4137,6 @@ export const actions = {
             isGroup = false,
             parentModelID = '',
             parentUploadName = '',
-            children,
             primeTowerTag,
             isGuideTours = false
         }
@@ -4147,10 +4150,10 @@ export const actions = {
         const meshFileInfos: MeshFileInfo[] = files || [{ originalName, uploadName, isGroup, parentUploadName, modelID, children }];
         // let _progress = 0;
 
-        const loadMeshFileOptions = {
+        const loadMeshFileOptions: LoadMeshFileOptions = {
             headType,
 
-            loadFrom,
+            loadFrom: loadFrom as (0 | 1), // type inferred as number
             size,
             mode,
 

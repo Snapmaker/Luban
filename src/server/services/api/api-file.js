@@ -108,7 +108,7 @@ export const set = async (req, res) => {
             if (!uploadName) {
                 uploadName = generateRandomPathName(originalName);
             }
-            uploadName = uploadName.toLowerCase();
+            uploadName = uploadName.toLowerCase(); // Use all lower case filename
             children.forEach((item) => {
                 item.parentUploadName = uploadName;
             });

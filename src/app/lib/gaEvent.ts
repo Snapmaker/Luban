@@ -32,7 +32,7 @@ const pageview = (pathname) => {
         title: `${pkg.name} ${pkg.version}`
     });
 };
-export function logPageView({ pathname, isRotate }: { pathname: string, isRotate: boolean }) {
+export function logPageView({ pathname, isRotate = false }: { pathname: string, isRotate?: boolean }) {
     const axis = isRotate ? '-4axis' : '-3axis';
 
     if (pathname) {

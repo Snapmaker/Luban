@@ -17,7 +17,7 @@ import { actions as textActions } from '../flux/text';
 import { actions as settingActions } from '../flux/setting';
 import HomePage from './pages/HomePage';
 import Workspace from './pages/Workspace';
-import Printing from './pages/print-main/Printing';
+import { PrintMainPage } from './pages/print-main';
 import Cnc from './pages/Cnc';
 import Laser from './pages/Laser';
 import Settings from './pages/Settings';
@@ -150,7 +150,7 @@ class App extends PureComponent {
                     <Switch>
                         <Route path="/" exact component={HomePage} />
                         <Route path="/workspace" component={Workspace} />
-                        <Route path="/printing" component={Printing} />
+                        <Route path="/printing" component={PrintMainPage} />
                         <Route path="/laser" component={Laser} />
                         <Route path="/cnc" component={Cnc} />
                         <Route path="/settings" component={Settings} />

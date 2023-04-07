@@ -84,12 +84,12 @@ const createLoadModelWorker = (uploadPath, onMessage) => {
     task.cbOnMessage.push(onMessage);
 };
 
-type LoadMeshFileOptions = {
+export type LoadMeshFileOptions = {
     onProgress?: (stage: number, progress: number) => void;
 
     headType: typeof HEAD_PRINTING;
 
-    loadFrom: 0 | 1;
+    loadFrom: 0 | 1; // 0 or 1
     size: TSize;
     mode?: string;
 
