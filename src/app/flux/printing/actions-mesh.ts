@@ -1,19 +1,20 @@
+import { noop } from 'lodash';
 import path from 'path';
 import * as THREE from 'three';
 
 import { DATA_PREFIX } from '../../constants';
 import { HEAD_PRINTING } from '../../constants/machines';
-import workerManager from '../../lib/manager/workerManager';
-import { TSize, ModelTransformation, ExtruderConfig } from '../../models/ThreeBaseModel';
 import { controller } from '../../lib/controller';
 import { STEP_STAGE } from '../../lib/manager/ProgressManager';
+import workerManager from '../../lib/manager/workerManager';
 import ModelGroup from '../../models/ModelGroup';
+import { ExtruderConfig, ModelTransformation, TSize } from '../../models/ThreeBaseModel';
 
 
 export declare interface MeshFileInfo {
     originalName: string; // file original name
     uploadName: string; // file upload name
-    modelName: string;
+    modelName?: string;
 
     isGroup: boolean;
 
@@ -85,15 +86,13 @@ const createLoadModelWorker = (uploadPath, onMessage) => {
 };
 
 export type LoadMeshFileOptions = {
-    onProgress?: (stage: number, progress: number) => void;
-
     headType: typeof HEAD_PRINTING;
 
     loadFrom: 0 | 1; // 0 or 1
-    size: TSize;
+    size?: TSize;
     mode?: string;
 
-    sourceType?: '3d',
+    sourceType: '3d',
     sourceWidth?: number;
     sourceHeight?: number;
 
@@ -102,6 +101,8 @@ export type LoadMeshFileOptions = {
     parentModelID?: string;
     primeTowerTag?: boolean;
     extruderConfig?: ExtruderConfig;
+
+    onProgress?: (stage: number, progress: number) => void;
 };
 
 export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: ModelGroup, options: LoadMeshFileOptions) => {
@@ -123,7 +124,7 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
         parentModelID,
         primeTowerTag,
 
-        onProgress,
+        onProgress = noop,
     } = options;
     let _progress = 0;
     const promptTasks = [];
@@ -133,7 +134,6 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
 
         onProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress);
 
-        const uploadPath = `${DATA_PREFIX}/${meshFileInfo.uploadName}`;
         if (meshFileInfo.isGroup) {
             await modelGroup.generateModel({
                 loadFrom,
@@ -163,6 +163,7 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
             }
             return true;
         } else {
+            const uploadPath = `${DATA_PREFIX}/${meshFileInfo.uploadName}`;
             return new Promise((resolve, reject) => {
                 const onMessage = async (data) => {
                     const { type } = data;
@@ -222,6 +223,7 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
                                 }
                                 resolve(true);
                             } catch (e) {
+                                console.log(e);
                                 promptTasks.push({
                                     status: 'load-model-fail',
                                     originalName: meshFileInfo.originalName
@@ -289,7 +291,7 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
                             }
                             // reject();
                             // break;
-                            reject(new Error('Failed to load mesh'));
+                            reject(new Error(`Failed to load mesh: ${data.err}`));
                             break;
                         }
                         default:

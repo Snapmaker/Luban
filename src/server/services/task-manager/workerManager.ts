@@ -5,6 +5,7 @@ import DataStorage from '../../DataStorage';
 if (process.env.NODE_ENV === 'production') {
     require('./Pool.worker');
 }
+
 export enum WorkerMethods {
     // LUBAN worker methods BEGIN
     cutModel = 'cutModel',

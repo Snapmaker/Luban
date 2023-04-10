@@ -14,6 +14,8 @@ import socketSlice from './socket/socket-slice';
 import system from './socket/system';
 import TaskManager from './task-manager';
 
+import * as meshHandlers from './channel-handlers/mesh';
+
 export {
     configstore,
     monitor
@@ -73,6 +75,8 @@ function startServices(server) {
     // repair model
     socketServer.registerChannel('repair-model', socketSlice.handleRepairModel);
     socketServer.registerChannel('check-model', socketSlice.handleCheckModel);
+    // split model
+    socketServer.registerChannel('mesh:split', meshHandlers.handleSplitMesh);
 
     // communication: http & serial port
     socketServer.registerEvent('machine:discover', connectionManager.refreshDevices);
@@ -91,7 +95,6 @@ function startServices(server) {
     socketServer.registerEvent('taskCommit:generateGcode', TaskManager.addGenerateGcodeTask);
     socketServer.registerEvent('taskCommit:processImage', TaskManager.addProcessImageTask);
     socketServer.registerEvent('taskCommit:cutModel', TaskManager.addCutModelTask);
-
     socketServer.registerEvent('taskCancel:cutModel', TaskManager.cancelTask);
 
     socketServer.registerChannel('get-free-memory', system.getSystemFreeMemorySize);

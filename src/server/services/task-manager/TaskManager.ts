@@ -1,10 +1,12 @@
-import logger from '../../lib/logger';
-import { EPS } from '../../constants';
-import Task, { TGcodeFile } from './Task';
 import { asyncFor } from '../../../shared/lib/array-async';
-import workerManager, { IWorkerManager } from './workerManager';
+import { EPS } from '../../constants';
+import logger from '../../lib/logger';
 import { parseLubanGcodeHeader } from '../../lib/parseGcodeHeader';
 
+import Task, { TGcodeFile } from './Task';
+import workerManager, { IWorkerManager } from './workerManager';
+
+const log = logger('service:TaskManager');
 
 // const TASK_STATUS_IDLE = 'idle';
 const TASK_STATUS_DEPRECATED = 'deprecated';
@@ -17,7 +19,16 @@ export const TASK_TYPE_GENERATE_GCODE = 'generateGcode';
 export const TASK_TYPE_PROCESS_IMAGE = 'processImage';
 export const TASK_TYPE_CUT_MODEL = 'cutModel';
 
-const log = logger('service:TaskManager');
+/**
+ * Task Type to Runner name (i.e. Runner file name).
+ */
+const TASK_TYPE_RUNNER_MAP = {
+    TASK_TYPE_GENERATE_TOOLPATH: 'generateToolPath',
+    TASK_TYPE_GENERATE_GCODE: 'generateGcode',
+    TASK_TYPE_GENERATE_VIEWPATH: 'generateViewPath',
+    TASK_TYPE_PROCESS_IMAGE: 'processImage',
+    TASK_TYPE_CUT_MODEL: 'cutModel',
+};
 
 type TPayload = {
     gcodeFile: {
@@ -77,6 +88,8 @@ class TaskManager {
             };
             task.stlInfo = stlFile;
             task.svgInfo = svgFiles;
+        } else {
+            task.result = res;
         }
 
         if (task.taskStatus !== TASK_STATUS_DEPRECATED) {
@@ -123,6 +136,12 @@ class TaskManager {
         task.data.taskAsyncFor = taskAsyncFor;
         onProgress(0.05);
 
+        const runnerName = TASK_TYPE_RUNNER_MAP[task.taskType];
+        if (runnerName) {
+            this.exec(runnerName, task);
+        }
+
+        /*
         if (task.taskType === TASK_TYPE_GENERATE_TOOLPATH) {
             this.exec('generateToolPath', task);
         } else if (task.taskType === TASK_TYPE_GENERATE_GCODE) {
@@ -134,6 +153,7 @@ class TaskManager {
         } else if (task.taskType === TASK_TYPE_CUT_MODEL) {
             this.exec('cutModel', task);
         }
+        */
     }
 
     public async addTask(task: Task) {

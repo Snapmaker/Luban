@@ -1,5 +1,5 @@
-import { throttle } from 'lodash';
 import type { Machine, ToolHead } from '@snapmaker/luban-platform';
+import { throttle } from 'lodash';
 
 import {
     BOTH_EXTRUDER_MAP_NUMBER,
@@ -8,9 +8,9 @@ import {
     RIGHT_EXTRUDER,
     RIGHT_EXTRUDER_MAP_NUMBER
 } from '../constants';
-import { PresetModel } from '../preset-model';
 import { Size2D } from '../models/BaseModel';
 import { Model3D } from '../models/ModelGroup';
+import { PresetModel } from '../preset-model';
 import scene, { SceneEvent } from './Scene';
 
 
@@ -63,6 +63,21 @@ class SceneLogic {
             size,
             {},
         );
+    }
+
+    public canSplit(): boolean {
+        const modelGroup = scene.getModelGroup();
+        if (!modelGroup) {
+            return false;
+        }
+
+        const selectedModels = modelGroup.selectedModelArray;
+        if (selectedModels.length !== 1) return false;
+
+        const targetModel = selectedModels[0];
+        if (!targetModel.visible) return false;
+
+        return true;
     }
 
     private _processPrimeTower(): void {
@@ -228,7 +243,7 @@ class SceneLogic {
         if (stackId === LEFT_EXTRUDER) {
             const primeTowerEnabled = preset.settings.prime_tower_enable?.default_value || false;
             if (primeTowerEnabled !== this.primeTowerEnabled) {
-                this.primeTowerEnabled = primeTowerEnabled;
+                this.primeTowerEnabled = primeTowerEnabled as boolean;
 
                 this.processPrimeTowerAsync();
             }
@@ -243,7 +258,7 @@ class SceneLogic {
             const supportEnabled = preset.settings.support_enable?.default_value || false;
 
             if (supportEnabled !== this.supportEnabled) {
-                this.supportEnabled = supportEnabled;
+                this.supportEnabled = supportEnabled as boolean;
                 this.processPrimeTowerAsync();
             }
         }

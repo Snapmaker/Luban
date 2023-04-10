@@ -272,6 +272,13 @@ class SerialPortClient {
         return socketController.channel('check-model', params, onMessage);
     }
 
+    /**
+     * Try split mesh.
+     */
+    splitMesh(options, onMessage) {
+        return socketController.channel('mesh:split', options, onMessage);
+    }
+
     getFreeMemory() {
         return new Promise((resolve) => {
             return socketController.channel('get-free-memory', null, resolve);

@@ -15,7 +15,7 @@ type Transformation = {
     support: 'auto' | 'edit_in' | 'edit_done' | 'clear'
 }
 
-type ToolName = 'save' | 'undo' | 'redo' | 'align' | 'group' | 'ungroup'
+type ToolName = 'save' | 'undo' | 'redo' | 'align' | 'group' | 'ungroup' | 'split'
     // laser /cnc
     | 'job_setup' | 'top' | 'bottom'
     // laser_special

@@ -24,6 +24,7 @@ import PrintingConfigurationsWidget, { PresetInitialization } from '../../widget
 import PrintingOutputWidget from '../../widgets/PrintingOutput';
 import Thumbnail from '../../widgets/PrintingOutput/Thumbnail';
 import PrintingVisualizer from '../../widgets/PrintingVisualizer';
+import sceneLogic from '../../../scene/scene.logic';
 
 import HomePage from '../HomePage';
 import { CaseConfigGimbal, CaseConfigPenHolder, CaseConfigSM2Gimbal } from '../HomePage/CaseConfig';
@@ -49,12 +50,18 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
 
     const { inProgress, simplifyType, simplifyPercent } = useSelector((state: RootState) => state.printing, shallowEqual);
     const enableShortcut = useSelector((state: RootState) => state.printing?.enableShortcut, shallowEqual);
+
+    // undo & redo
     const canRedo = useSelector((state: RootState) => state.printing?.history?.canRedo, shallowEqual);
     const canUndo = useSelector((state: RootState) => state.printing?.history?.canUndo, shallowEqual);
 
+    // group actions
     const canGroup = useSelector((state: RootState) => state.printing?.modelGroup?.canGroup());
-    const canMerge = useSelector((state: RootState) => state.printing?.modelGroup?.canMerge());
     const canUngroup = useSelector((state: RootState) => state.printing?.modelGroup?.canUngroup());
+    const canMerge = useSelector((state: RootState) => state.printing?.modelGroup?.canMerge());
+    const canSplit = sceneLogic.canSplit();
+
+    // simplify & repair
     const canSimplify = useSelector((state: RootState) => state.printing?.modelGroup?.canSimplify());
     const canRepair = useSelector((state: RootState) => state.printing?.modelGroup?.canRepair());
 
@@ -65,6 +72,7 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
     const toolHeadRef = useRef(toolHead);
     const [currentSeries, setCurrentSeries] = useState(series);
     const [currentToolhead, setCurrentToolHead] = useState(toolHead.printingToolhead);
+
 
     const dispatch = useDispatch();
 
@@ -198,6 +206,15 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
                         name: 'MainToolbarMerge',
                         action: () => {
                             dispatch(printingActions.groupAndAlign());
+                        }
+                    },
+                    {
+                        title: i18n._('key-3DP/MainToolBar-Split'),
+                        disabled: !canSplit || !enableShortcut,
+                        type: 'button',
+                        name: 'MainToolbarMerge',
+                        action: () => {
+                            dispatch(printingActions.splitSelected());
                         }
                     },
                     {

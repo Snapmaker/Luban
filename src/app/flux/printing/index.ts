@@ -1,5 +1,6 @@
 import { applyParameterModifications, PrintMode, resolveParameterValues } from '@snapmaker/luban-platform';
 import { cloneDeep, filter, find, includes, isNil, noop } from 'lodash';
+import { v4 as uuid } from 'uuid';
 import path from 'path';
 import { Transfer } from 'threads';
 import * as THREE from 'three';
@@ -1588,7 +1589,7 @@ export const actions = {
                 })
                 .catch((err) => {
                     // Ignore error
-                    console.error('err', err);
+                    log.error('err', err);
                 });
         });
     },
@@ -2098,10 +2099,10 @@ export const actions = {
         await dispatch(
             actions.generateModel(headType, {
                 files: meshFileInfos,
+                sourceType,
                 sourceWidth: width,
                 sourceHeight: height,
                 mode,
-                sourceType,
                 transformation: {}
             })
         );
@@ -4145,7 +4146,7 @@ export const actions = {
 
         const { progressStatesManager, modelGroup } = getState().printing;
         const { promptDamageModel } = getState().machine;
-        const { size } = getState().machine;
+
         const models = [...modelGroup.models];
         const meshFileInfos: MeshFileInfo[] = files || [{ originalName, uploadName, isGroup, parentUploadName, modelID, children }];
         // let _progress = 0;
@@ -4154,7 +4155,6 @@ export const actions = {
             headType,
 
             loadFrom: loadFrom as (0 | 1), // type inferred as number
-            size,
             mode,
 
             sourceType,
@@ -4223,6 +4223,7 @@ export const actions = {
         });
         modelGroup.childrenChanged();
 
+        // Append repair information
         newModels.forEach((model) => {
             if (model instanceof ThreeModel) {
                 modelGroup.initModelClipper(model);
@@ -4240,7 +4241,12 @@ export const actions = {
             } else {
                 model.needRepair = false;
             }
+        });
 
+        // Append scale to fit prompt
+        const { activeMachine } = getState().machine;
+        const size = activeMachine.metadata.size;
+        newModels.forEach((model) => {
             if (!model.parentUploadName) {
                 const modelSize = new Vector3();
                 model.boundingBox.getSize(modelSize);
@@ -4789,7 +4795,7 @@ export const actions = {
                     })
                 );
             })
-            .catch(console.error);
+            .catch(log.error);
     },
 
     startEditSupportArea: () => (dispatch, getState) => {
@@ -5160,6 +5166,98 @@ export const actions = {
         dispatch(actions.destroyGcodeLine());
     },
 
+    splitSelected: () => async (dispatch, getState) => {
+        logToolBarOperation(HEAD_PRINTING, 'split');
+
+        const { progressStatesManager } = getState().printing;
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SPLIT_MODEL);
+
+        const { modelGroup } = getState().printing;
+        if (!modelGroup) {
+            return false;
+        }
+
+        // only support split on one single model
+        const selectedModels = modelGroup.selectedModelArray;
+        if (selectedModels.length !== 1) return false;
+
+        // check visibility
+        const targetModel = selectedModels[0];
+        if (!targetModel.visible) return false;
+
+        const task = new Promise((resolve, reject) => {
+            controller.splitMesh({
+                uploadName: targetModel.uploadName,
+            }, (data) => {
+                const { type } = data;
+                switch (type) {
+                    case 'error':
+                        reject(new Error('Failed to split models.'));
+                        break;
+                    case 'success':
+                        resolve(data.result);
+                        break;
+                    default:
+                        break;
+                }
+            });
+        });
+
+        try {
+            const taskResult = await task as {
+                meshes: { uploadName: string }[]
+            };
+
+            const meshFileInfos: MeshFileInfo[] = [];
+            for (let i = 0; i < taskResult.meshes.length; i++) {
+                const mesh = taskResult.meshes[i];
+                const { uploadName } = mesh;
+
+                meshFileInfos.push({
+                    uploadName,
+                    originalName: uploadName,
+                    modelName: `Part ${i + 1}`,
+                    isGroup: false,
+                    modelID: uuid(),
+                    parentUploadName: targetModel.uploadName,
+                });
+            }
+
+            // append group
+            meshFileInfos.push({
+                uploadName: targetModel.uploadName,
+                originalName: 'virtual name',
+                isGroup: true,
+                modelID: uuid(),
+                children: meshFileInfos.slice(0),
+            });
+
+            const loadMeshFileOptions: LoadMeshFileOptions = {
+                headType: HEAD_PRINTING,
+                loadFrom: LOAD_MODEL_FROM_INNER,
+                sourceType: '3d',
+            };
+
+            // ignore prompt tasks
+            await loadMeshFiles(meshFileInfos, modelGroup, loadMeshFileOptions);
+
+            // on mesh file loaded, update state
+            const modelState = modelGroup.getState();
+            dispatch(actions.updateState(modelState));
+
+            dispatch(actions.displayModel());
+            dispatch(actions.destroyGcodeLine());
+        } catch (e) {
+            log.error('task failed, error =', e);
+            return false;
+        }
+
+        return true;
+    },
+
+    /**
+     * Repair selected models.
+     */
     repairSelectedModels: () => async (dispatch, getState) => {
         const { progressStatesManager } = getState().printing;
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
