@@ -363,7 +363,6 @@ const showMainWindow = async () => {
         }
     }
 
-
     window.on('close', (e) => {
         e.preventDefault();
         const bounds = window.getBounds();
@@ -408,6 +407,35 @@ const showMainWindow = async () => {
 
     ipcMain.on('open-recover-folder', () => {
         shell.openPath(`${userDataDir}/snapmaker-recover`);
+    });
+
+
+    mainWindow.webContents.session.on('will-download', (event, item, webContents) => {
+    // 无需对话框提示， 直接将文件保存到路径
+    // item.setSavePath('/tmp/save.pdf');
+
+        console.log(event);
+        console.log(webContents);
+
+        item.on('updated', (e, state) => {
+            if (state === 'interrupted') {
+                console.log('Download is interrupted but can be resumed');
+            } else if (state === 'progressing') {
+                if (item.isPaused()) {
+                    console.log('Download is paused');
+                } else {
+                    console.log(`Received bytes: ${item.getReceivedBytes()}, percent: ${item.getReceivedBytes() / item.getTotalBytes()}`);
+                }
+            }
+        });
+        item.once('done', (e, state) => {
+            if (state === 'completed') {
+                console.log('Download successfully');
+            } else {
+                console.log(`Download failed: ${state}`);
+            }
+            mainWindow.webContents.send('filedownload', JSON.stringify(item));
+        });
     });
 };
 
@@ -502,3 +530,4 @@ protocol.registerSchemesAsPrivileged([{ scheme: 'luban', privileges: { standard:
  * when ready
  */
 app.whenReady().then(showMainWindow);
+

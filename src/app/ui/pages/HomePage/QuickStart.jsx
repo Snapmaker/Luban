@@ -3,18 +3,22 @@ import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 // import { throttle } from 'lodash';
 import classNames from 'classnames';
+import Anchor from '../../components/Anchor';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import { getCaseList } from '../../../lib/caseLibrary';
 import { timestamp } from '../../../../shared/lib/random-utils';
 import { actions as projectActions } from '../../../flux/project';
 import styles from './styles.styl';
+import { renderPopup } from '../../utils';
+import CaseResource from '../CaseResource/index';
 
 const QuickStart = (props) => {
     const { history } = props;
     // useState
     const [caseConfig, setCaseConfig] = useState([]);
     const [caseConfigFourAxis, setCaseConfigFourAxis] = useState([]);
+    const [showCaseResources, setShowCaseResource] = useState(false);
 
     // redux correlation
     const series = useSelector(state => state?.machine?.series);
@@ -44,6 +48,20 @@ const QuickStart = (props) => {
         setCaseConfig(caseList);
         setCaseConfigFourAxis(caseListFourAxis);
     }, [series, toolHead]);
+
+    function renderCaseResources() {
+        const onClose = () => {
+            setShowCaseResource(false);
+            // logPageView({
+            //     pathname: '/printing'
+            // });
+        };
+        return showCaseResources && renderPopup({
+            onClose,
+            component: CaseResource,
+            key: 'homepage'
+        });
+    }
 
     return (
         <div className={styles['quick-start-container']}>
@@ -107,6 +125,18 @@ const QuickStart = (props) => {
                         </div>
                     );
                 })}
+                {/* <a className={classNames(styles['case-resource'])} href="http://45.79.80.155:8085/resource-list" target="_blank" rel="noopener noreferrer">
+                    <span className={classNames('heading-3-normal-with-hover')}>
+                        More {'>'}
+                    </span>
+                </a> */}
+                <Anchor onClick={() => setShowCaseResource(true) /* history.push('/case-resouces')*/} title={i18n._('key-HomePage/Begin-Workspace')} className={classNames(styles['case-resource'])}>
+                    <span className={classNames('heading-3-normal-with-hover')}>
+                        {/* {i18n._('key-HomePage/Begin-Forum')} */}
+                        More {'>'}
+                    </span>
+                </Anchor>
+                {renderCaseResources()}
             </div>
         </div>
     );

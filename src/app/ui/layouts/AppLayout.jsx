@@ -986,7 +986,7 @@ class AppLayout extends PureComponent {
                 {showDownloadUpdateModal ? this.actions.renderDownloadUpdateModal() : null}
                 {showSavedModal ? this.actions.renderSavedModal() : null}
                 {showArrangeModelsError ? this.actions.renderArrangeModelsError() : null}
-                <div className={isElectron() ? null : classNames(styles['app-content'])}>
+                <div className={isElectron() ? null : classNames(styles['app-content'])} style={{ border: 'solid 1px transparent' }}>
                     {this.props.children}
                 </div>
             </div>

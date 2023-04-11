@@ -213,7 +213,10 @@ export const uploadCaseFile = (req, res) => {
  * @param res
  */
 export const uploadGcodeFile = async (req, res) => {
-    const file = req.files.file;
+    let file = req.files.file;
+    if (!file && req.body && typeof req.body.file === 'string') {
+        file = JSON.parse(req.body.file);
+    }
     let originalName, uploadName, uploadPath, originalPath;
     if (file) {
         originalPath = file.path;
