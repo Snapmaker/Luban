@@ -51,7 +51,6 @@ const allWidgets = {
     'wifi-transport': ConnectionFileTransferWidget,
     'console': ConsoleWidget,
     'macro': MacroWidget,
-    'macroPanel': MacroWidget,
     'purifier': PurifierWidget,
     'marlin': ConnectionToolControlWidget,
     'visualizer': VisualizerWidget,

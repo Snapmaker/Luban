@@ -195,5 +195,5 @@ export default {
     handleGenerateSupport,
     handleSimplifyModel,
     handleRepairModel,
-    handleCheckModel
+    handleCheckModel,
 };

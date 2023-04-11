@@ -891,7 +891,6 @@ export const EXPERIMENTAL_IMAGE_TRACING_CNC = false;
 export const EXPERIMENTAL_PROFILE = true;
 
 export const PROTOCOL_TEXT = 'text';
-export const PROTOCOL_SCREEN = 'screen';
 
 export const MAX_LINE_POINTS = 300;
 export const TEMPERATURE_MIN = 0;

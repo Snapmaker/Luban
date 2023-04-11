@@ -389,6 +389,10 @@ i18n._('key-Progress/3DP-Repair model successfully.');
 i18n._('key-Progress/3DP-Failed to repair model.');
 i18n._('key-Progress/3DP-Simplify model...{{prgress}}%');
 
+i18n._('key-Progress/3DP-Splitting model...');
+i18n._('key-Progress/3DP-Split model successfully.');
+i18n._('key-Progress/3DP-Failed to split model.');
+
 
 // Machine Settings
 i18n._('key-App/Settings/MachineSettings-Single Extruder Toolhead');

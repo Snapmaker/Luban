@@ -26,7 +26,6 @@ import {
 import DataStorage from '../../DataStorage';
 import ScheduledTasks from '../../lib/ScheduledTasks';
 import { AUTO_STRING } from '../../../app/constants';
-// import SerialPortClient from '../../../app/lib/controller';
 
 const log = logger('lib:ConnectionManager');
 const ensureRange = (value, min, max) => {
