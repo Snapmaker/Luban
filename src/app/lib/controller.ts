@@ -1,13 +1,14 @@
-import noop from 'lodash/noop';
 import isEmpty from 'lodash/isEmpty';
+import noop from 'lodash/noop';
+
 import { MARLIN, PROTOCOL_TEXT, WORKFLOW_STATE_IDLE } from '../constants';
-import socketController from './socket-controller';
-import log from './log';
 import { machineStore } from '../store/local-storage';
 import { lubanVisit } from './gaEvent';
+import log from './log';
+import socketController from './socket-controller';
 
 class SerialPortClient {
-    callbacks = {
+    private callbacks = {
         //
         // Socket.IO Events
         //
@@ -91,9 +92,10 @@ class SerialPortClient {
         'daily:heartbeat': []
     };
 
-    dataSource = '';
+    private dataSource = '';
 
-    context = {
+    /*
+    private context = {
         xmin: 0,
         xmax: 0,
         ymin: 0,
@@ -101,24 +103,25 @@ class SerialPortClient {
         zmin: 0,
         zmax: 0
     };
+    */
 
-    port = '';
+    public port = '';
 
-    ports = [];
+    public ports = [];
 
-    workspacePort = '';
+    public workspacePort = '';
 
-    type = '';
+    public type = '';
 
-    state = {};
+    public state = {};
 
-    settings = {};
+    public settings = {};
 
-    workflowState = WORKFLOW_STATE_IDLE;
+    public workflowState = WORKFLOW_STATE_IDLE;
 
-    static map = new Map();
+    private static map = new Map();
 
-    static getController(dataSource) {
+    public static getController(dataSource) {
         const v = this.map.get(dataSource);
         if (v) {
             return v;
@@ -129,15 +132,15 @@ class SerialPortClient {
         }
     }
 
-    constructor(dataSource) {
+    public constructor(dataSource) {
         this.dataSource = dataSource;
     }
 
-    get connected() {
+    public get connected() {
         return socketController.connected;
     }
 
-    connect(next = noop) {
+    public connect(next = noop) {
         if (typeof next !== 'function') {
             next = noop;
         }
@@ -207,12 +210,12 @@ class SerialPortClient {
         });
     }
 
-    disconnect() {
+    public disconnect() {
         socketController.disconnect();
     }
 
     // Note: 'on' and 'off' function must be registered during initialization
-    on(eventName, callback) {
+    public on(eventName, callback) {
         const callbacks = this.callbacks[eventName];
         if (!callbacks) {
             log.error('Undefined event name:', eventName);
@@ -223,7 +226,7 @@ class SerialPortClient {
         }
     }
 
-    off(eventName, callback) {
+    public off(eventName, callback) {
         const callbacks = this.callbacks[eventName];
         if (!callbacks) {
             log.error('Undefined event name:', eventName);
@@ -234,83 +237,81 @@ class SerialPortClient {
         }
     }
 
-    listPorts() {
+    public listPorts() {
         socketController.emit('machine:discover', { dataSource: this.dataSource, connectionType: 'serial' });
     }
 
-    emitEvent(eventName, options = {}, callback) {
+    public emitEvent(eventName, options = {}, callback) {
         socketController.emit(eventName, { ...options, eventName }, callback);
         return socketController;
     }
 
     // Discover Wi-Fi enabled Snapmakers
-    listHTTPServers() {
+    public listHTTPServers() {
         socketController.emit('machine:discover', { connectionType: 'wifi' });
     }
 
-    slice(params) {
+    public slice(params) {
         socketController.emit('slice', params);
     }
 
-    commitToolPathTaskArray(taskArray) {
+    public commitToolPathTaskArray(taskArray) {
         socketController.emit('taskCommit:generateToolPath', taskArray);
     }
 
-    generateSupport(params) {
+    public generateSupport(params) {
         socketController.emit('generate-support', params);
     }
 
-    simplifyModel(params) {
+    public simplifyModel(params) {
         socketController.emit('simplify-model', params);
     }
 
-    repairModel(params, onMessage) {
+    public async repairModel(params, onMessage) {
         return socketController.channel('repair-model', params, onMessage);
     }
 
-    checkModel(params, onMessage) {
+    public async checkModel(params, onMessage) {
         return socketController.channel('check-model', params, onMessage);
     }
 
     /**
      * Try split mesh.
      */
-    splitMesh(options, onMessage) {
+    public async splitMesh(options, onMessage) {
         return socketController.channel('mesh:split', options, onMessage);
     }
 
-    getFreeMemory() {
-        return new Promise((resolve) => {
-            return socketController.channel('get-free-memory', null, resolve);
-        });
+    public async getFreeMemory() {
+        await socketController.channel('get-free-memory', null, noop);
     }
 
-    commitViewPathTask(task) {
+    public commitViewPathTask(task) {
         socketController.emit('taskCommit:generateViewPath', task);
     }
 
-    commitGcodeTask(task) {
+    public commitGcodeTask(task) {
         socketController.emit('taskCommit:generateGcode', task);
     }
 
-    commitProcessImage(task) {
+    public commitProcessImage(task) {
         socketController.emit('taskCommit:processImage', task);
     }
 
-    commitCutModelTask(task) {
+    public commitCutModelTask(task) {
         socketController.emit('taskCommit:cutModel', task);
     }
 
-    cancelCutModelTask(taskId) {
+    public cancelCutModelTask(taskId) {
         socketController.emit('taskCancel:cutModel', taskId);
     }
 
-    subscribeDiscover(bool) {
+    public subscribeDiscover(bool) {
         socketController.emit('subscribe:discover', bool);
     }
 
     // command(cmd, ...args) {
-    command(cmd, ...args) {
+    public command(cmd, ...args) {
         // const { port } = this;
         if (!this.workspacePort) {
             return;
@@ -324,7 +325,7 @@ class SerialPortClient {
     }
 
     // @param {object} [context] The associated context information.
-    writeln(data, context = {}) {
+    public writeln(data, context = {}) {
         // const { port } = this;
         if (!this.workspacePort) {
             return;
@@ -339,4 +340,5 @@ class SerialPortClient {
 }
 
 export const controller = SerialPortClient.getController(PROTOCOL_TEXT);
-export default SerialPortClient;
+
+export default controller;

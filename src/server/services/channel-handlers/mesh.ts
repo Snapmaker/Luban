@@ -103,6 +103,9 @@ function unionVerticesAndFaces(vertices: Vertex[], faces: Face[]) {
     return meshVertices;
 }
 
+/**
+ * Split mesh into several meshes.
+ */
 const handleSplitMesh = async (actions, options: SplitMeshOptions) => {
     actions.next({
         type: 'started',
@@ -119,11 +122,7 @@ const handleSplitMesh = async (actions, options: SplitMeshOptions) => {
 
     try {
         const meshProcess = new MeshProcess({ uploadName });
-
         const mesh = meshProcess.mesh as Mesh;
-
-        console.log('vertices =', mesh.vertices.length);
-        console.log('faces =', mesh.faces.length);
 
         const result = {
             meshes: [],

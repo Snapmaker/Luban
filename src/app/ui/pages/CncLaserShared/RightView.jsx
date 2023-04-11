@@ -27,7 +27,6 @@ const allWidgets = {
     'connection': ConnectionWidget,
     'console': ConsoleWidget,
     'macro': MacroWidget,
-    'macroPanel': MacroWidget,
     'purifier': PurifierWidget,
     'visualizer': VisualizerWidget,
     'webcam': WebcamWidget,
