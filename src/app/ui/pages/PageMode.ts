@@ -4,4 +4,7 @@ export enum PageMode {
     // 3D Printing
     ChangePrintMode = 'ChangePrintMode',
     Simplify = 'Simplify',
+
+    // Case Resource Download Manager
+    DownloadManager = 'DownloadManager',
 }

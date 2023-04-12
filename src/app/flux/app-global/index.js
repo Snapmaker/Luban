@@ -1,4 +1,5 @@
 import path from 'path';
+import isElectron from 'is-electron';
 import { EPSILON, HEAD_PRINTING, DATA_PREFIX, } from '../../constants';
 import { controller } from '../../lib/controller';
 import { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
@@ -12,6 +13,8 @@ import ThreeGroup from '../../models/ThreeGroup';
 import workerManager from '../../lib/manager/workerManager';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 
+import { downloadManagerStore } from '../../store/local-storage';
+
 const ACTION_UPDATE_STATE = 'app-global/ACTION_UPDATE_STATE';
 const DEFAULT_MODAL_ZINDEX = 9999;
 const DEFAULT_STATE = {
@@ -21,7 +24,8 @@ const DEFAULT_STATE = {
     savedModalZIndex: DEFAULT_MODAL_ZINDEX,
 
     showArrangeModelsError: false,
-    arrangeModelZIndex: DEFAULT_MODAL_ZINDEX
+    arrangeModelZIndex: DEFAULT_MODAL_ZINDEX,
+    downloadManangerSavedPath: !isElectron() ? '' : path.join(window.require('@electron/remote').app.getPath('userData'), 'downloadManager.json')
 };
 const SHOW_MODAL_TIME = 15000;
 let clearSavedModalTimer = null;
@@ -40,6 +44,12 @@ export const actions = {
                 type: ACTION_UPDATE_STATE,
                 state
             };
+        }
+    },
+    // Initialize app-global data, get downloadManangerSavedPath configurations from store file
+    init: () => (dispatch) => {
+        if (downloadManagerStore.get('downloadManangerSavedPath') !== DEFAULT_STATE.downloadManangerSavedPath) {
+            dispatch(actions.updateState({ downloadManangerSavedPath: downloadManagerStore.get('downloadManangerSavedPath') }));
         }
     },
 
@@ -237,6 +247,11 @@ export const actions = {
             allPepaired: promptTasks.length === 0,
             results
         };
+    },
+
+    updateDownloadManangerSavedPath: (downloadManangerSavedPath) => dispatch => {
+        downloadManagerStore.set('downloadManangerSavedPath', downloadManangerSavedPath);
+        dispatch(actions.updateState({ downloadManangerSavedPath }));
     }
 };
 export default function reducer(state = DEFAULT_STATE, action) {

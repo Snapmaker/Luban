@@ -1,6 +1,6 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
-import { app, BrowserWindow, ipcMain, Menu, powerSaveBlocker, protocol, screen, session, shell } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu, powerSaveBlocker, protocol, screen, session, shell } from 'electron';
 import { enable as electronEnable, initialize as electronRemoteMainInitialize } from '@electron/remote/main';
 import { autoUpdater } from 'electron-updater';
 import Store from 'electron-store';
@@ -425,6 +425,11 @@ const showMainWindow = async () => {
                     console.log('Download is paused');
                 } else {
                     console.log(`Received bytes: ${item.getReceivedBytes()}, percent: ${item.getReceivedBytes() / item.getTotalBytes()}`);
+                    mainWindow.webContents.send('filedownload', JSON.stringify({
+                        received: item.getReceivedBytes(),
+                        total: item.getTotalBytes(),
+                        percent: item.getReceivedBytes() / item.getTotalBytes()
+                    }));
                 }
             }
         });
@@ -436,6 +441,13 @@ const showMainWindow = async () => {
             }
             mainWindow.webContents.send('filedownload', JSON.stringify(item));
         });
+    });
+
+    ipcMain.on('select-directory', (event, data) => {
+        console.log(event, data);
+        dialog.showOpenDialog({ properties: ['openDirectory'] }).then(res => {
+            mainWindow.webContents.send('selected-directory', JSON.stringify(res));
+        }).catch(e => console.error(e));
     });
 };
 
