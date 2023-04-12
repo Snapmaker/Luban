@@ -1330,7 +1330,7 @@ export const actions = {
         );
     },
 
-    resetDefinitionById: (type, definitionId, shouldDestroyGcodeLine) => (
+    resetDefinitionById: (type, definitionId, shouldDestroyGcodeLine = false) => (
         dispatch,
         getState
     ) => {
@@ -1669,12 +1669,21 @@ export const actions = {
     duplicateDefinitionByType: (
         type,
         definition,
-        newDefinitionId,
-        newDefinitionName,
+        newDefinitionId = '',
+        newDefinitionName = '',
     ) => async (dispatch, getState) => {
         const state = getState().printing;
-        let name = newDefinitionName || definition.name;
+
+        // preset id
         let definitionId;
+        if (newDefinitionId) {
+            definitionId = newDefinitionId;
+        } else {
+            definitionId = `${type}.${timestamp()}`;
+        }
+
+        // preset name
+        let name = newDefinitionName || definition.name;
         if (
             type === PRINTING_MANAGER_TYPE_QUALITY
             && isDefaultQualityDefinition(definition.definitionId)
@@ -1682,11 +1691,7 @@ export const actions = {
             const machine = getState().machine;
             name = `${machine.series}-${name}`;
         }
-        if (newDefinitionId) {
-            definitionId = newDefinitionId;
-        } else {
-            definitionId = `${type}.${timestamp()}`;
-        }
+
         let metadata = definition.metadata;
         // newDefinitionId is the same as newDefinitionName
         if (isNil(newDefinitionId)) {

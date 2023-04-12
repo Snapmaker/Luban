@@ -1,4 +1,4 @@
-import { isUndefined } from 'lodash';
+import { cloneDeep, isUndefined } from 'lodash';
 
 import PresetModel from './PresetModel';
 
@@ -53,6 +53,49 @@ class QualityPresetModel extends PresetModel {
             ownKeys,
             settings
         };
+    }
+
+    public getRawData() {
+        return {
+            definitionId: this.definitionId,
+            name: this.name,
+            category: this.category,
+            inherits: this.inherits,
+            ownKeys: this.ownKeys,
+            metadata: this.metadata,
+            qualityType: this.qualityType,
+            typeOfPrinting: this.typeOfPrinting,
+            settings: this.settings,
+        };
+    }
+
+    public getSimplifiedData() {
+        const data = {
+            definitionId: this.definitionId,
+            name: this.name,
+            category: this.category,
+            inherits: this.inherits,
+            ownKeys: this.ownKeys,
+            metadata: this.metadata,
+            qualityType: this.qualityType,
+            typeOfPrinting: this.typeOfPrinting,
+            settings: {},
+        };
+
+        // simplify settings
+        for (const key of this.ownKeys) {
+            data.settings[key] = {
+                default_value: this.settings[key].default_value,
+            };
+        }
+
+        return data;
+    }
+
+    public clone() {
+        const data = cloneDeep(this.getRawData());
+
+        return new QualityPresetModel(data);
     }
 }
 
