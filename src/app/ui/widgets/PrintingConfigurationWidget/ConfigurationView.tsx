@@ -1,6 +1,6 @@
 import { Menu, Spin } from 'antd';
 import classNames from 'classnames';
-import { cloneDeep, isNil, uniqWith } from 'lodash';
+import { isNil, uniqWith } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -11,10 +11,10 @@ import {
     RIGHT_EXTRUDER
 } from '../../../constants';
 import { isDualExtruder } from '../../../constants/machines';
-import { PRESET_CATEGORY_DEFAULT } from '../../../constants/preset';
-
+import { PRESET_CATEGORY_CUSTOM, PRESET_CATEGORY_DEFAULT } from '../../../constants/preset';
 import { RootState } from '../../../flux/index.def';
 import { actions as printingActions } from '../../../flux/printing';
+import { createQualityPresetAction } from '../../../flux/printing/actions-preset';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import modal from '../../../lib/modal';
@@ -31,7 +31,6 @@ import DefinitionCreator from '../../views/DefinitionCreator';
 import PresetAdjustmentView from '../../views/PresetModifier/PresetAdjustmentView';
 import PrintingManager from '../../views/PrintingManager';
 import SettingItem from '../../views/ProfileManager/SettingItem';
-
 import styles from './styles.styl';
 
 
@@ -249,12 +248,12 @@ const ConfigurationView: React.FC<{}> = () => {
             );
         },
         showInputModal: () => {
-            const newSelectedDefinition = cloneDeep(selectedPresetModel.getSerializableDefinition());
+            const clonedPresetModel = selectedPresetModel.clone();
             const title = i18n._('key-Printing/ProfileManager-Copy Profile');
             const copyType = 'Item';
 
-            const copyCategoryName = newSelectedDefinition.category !== PRESET_CATEGORY_DEFAULT ? newSelectedDefinition.category : '';
-            const copyItemName = newSelectedDefinition.name;
+            const copyCategoryName = clonedPresetModel.category !== PRESET_CATEGORY_DEFAULT ? clonedPresetModel.category : PRESET_CATEGORY_CUSTOM;
+            const copyItemName = clonedPresetModel.name;
             const isCreate = false;
             let materialOptions = presetCategoryOptions
                 .filter((option) => {
@@ -303,19 +302,13 @@ const ConfigurationView: React.FC<{}> = () => {
                             const newName = data.itemName;
                             popupActions.close();
 
-                            newSelectedDefinition.name = newName;
-                            newSelectedDefinition.category = data.categoryName;
+                            clonedPresetModel.name = newName;
+                            clonedPresetModel.category = data.categoryName;
 
-                            // TODO: need update
-                            const createdDefinitionModel = await dispatch(
-                                printingActions.duplicateDefinitionByType(
-                                    PRINTING_MANAGER_TYPE_QUALITY,
-                                    newSelectedDefinition,
-                                    undefined,
-                                    newName
-                                )
+                            const newPresetModel = await dispatch(
+                                createQualityPresetAction(clonedPresetModel)
                             );
-                            onChangePreset(selectedStackId, createdDefinitionModel);
+                            onChangePreset(selectedStackId, newPresetModel);
                         }}
                     >
                         {i18n._('key-Printing/ProfileManager-Save')}
