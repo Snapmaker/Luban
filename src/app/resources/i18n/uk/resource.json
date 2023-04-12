@@ -1,6 +1,6 @@
 {
     "0 Gap": "Без зазорів",
-    "3D Printer": "",
+    "3D Printer": "3D друк",
     "ABS": "ABS",
     "ASA": "ASA",
     "Absolute Extruder Prime Position": "Абсолютна позиція екструдера для праймера",
@@ -865,7 +865,7 @@
     "key-3DP/MainToolBar-Group": "Згрупувати",
     "key-3DP/MainToolBar-Model Simplify": "Спростити",
     "key-3DP/MainToolBar-Model repair": "Полагодити",
-    "key-3DP/MainToolBar-Split": "",
+    "key-3DP/MainToolBar-Split": "Розділити",
     "key-3DP/MainToolBar-Ungroup": "Розгрупувати",
     "key-App/Learn more about release notes please checkout": "Дізнатись більше в інформації про випуск",
     "key-App/Menu-3-axis": "3-вісі",
