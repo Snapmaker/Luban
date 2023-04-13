@@ -1477,7 +1477,7 @@ export const actions = {
             changedSettingArray = [],
             direction = LEFT_EXTRUDER,
         }
-    ) => (dispatch, getState) => {
+    ) => async (dispatch, getState) => {
         const printingState = getState().printing;
         // const { qualityDefinitions } = printingState;
 
@@ -1511,7 +1511,7 @@ export const actions = {
             dispatch(actions.updateBoundingBox());
         }
 
-        definitionManager.updateDefinition(definitionModel);
+        await definitionManager.updateDefinition(definitionModel);
 
         dispatch(actions.validateActiveQualityPreset(direction));
         // dispatch(actions.updateState({ qualityDefinitions: [...qualityDefinitions] }));
@@ -1527,10 +1527,9 @@ export const actions = {
         }
         */
 
-        // TODO: why use setTimeout here? add comment describe the reason.
-        setTimeout(() => {
-            dispatch(actions.applyProfileToAllModels());
-        });
+        dispatch(actions.applyProfileToAllModels());
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
     },
 
     updateDefinition: ({ managerDisplayType, definitionModel, changedSettingArray }) => (dispatch) => {

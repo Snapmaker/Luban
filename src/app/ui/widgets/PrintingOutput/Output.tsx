@@ -3,27 +3,25 @@ import { noop } from 'lodash';
 import path from 'path';
 import React, { useEffect, useRef, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+
 import { HEAD_PRINTING } from '../../../constants';
+import type { RootState } from '../../../flux/index.def';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import { logGcodeExport } from '../../../lib/gaEvent';
-// import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import i18n from '../../../lib/i18n';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 import modal from '../../../lib/modal';
 import UniApi from '../../../lib/uni-api';
 import { Button } from '../../components/Buttons';
 import Dropdown from '../../components/Dropdown';
-// import PropTypes from 'prop-types';
 import Menu from '../../components/Menu';
 import SvgIcon from '../../components/SvgIcon';
 import { toast } from '../../components/Toast';
 import { ToastWapper } from '../../components/Toast/toastContainer';
-
 import Workspace from '../../pages/Workspace';
 import { renderPopup } from '../../utils';
-// import { actions as menuActions } from '../../../flux/appbar-menu';
 import Thumbnail from './Thumbnail';
 
 function useRenderWorkspace() {
@@ -43,14 +41,14 @@ function useRenderWorkspace() {
     };
 }
 
-function Output() {
+const Output: React.FC = () => {
     const stage = useSelector(state => state?.printing?.stage, shallowEqual);
     const modelGroup = useSelector(state => state?.printing?.modelGroup);
     const hasAnyModelVisible = useSelector(state => state?.printing?.modelGroup?.hasAnyModelVisible(), shallowEqual);
     const isAnyModelOverstepped = useSelector(state => state?.printing?.isAnyModelOverstepped, shallowEqual);
     const isGcodeOverstepped = useSelector(state => state?.printing?.isGcodeOverstepped, shallowEqual);
     const gcodeLine = useSelector(state => state?.printing?.gcodeLine);
-    const gcodeFile = useSelector(state => state?.printing?.gcodeFile);
+    const gcodeFile = useSelector((state: RootState) => state.printing?.gcodeFile);
     const displayedType = useSelector(state => state?.printing?.displayedType, shallowEqual);
     const defaultThumbnail = useSelector(state => state?.printing?.thumbnail);
     const leftBarOverlayVisible = useSelector(state => state?.printing?.leftBarOverlayVisible, shallowEqual);
@@ -211,6 +209,6 @@ function Output() {
             {renderWorkspace()}
         </div>
     );
-}
+};
 
 export default React.memo(Output);
