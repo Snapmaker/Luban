@@ -22,6 +22,7 @@
     },
     "include": [
         "src/server/**/*",
+        "src/shared/**/*",
         "node_modules/@snapmaker/luban-platform/**/*",
     ],
     "exclude": [
