@@ -1,27 +1,27 @@
 /* eslint-disable */
 
 import {
-	BufferAttribute,
-	BufferGeometry,
-	ClampToEdgeWrapping,
-	Color,
-	FileLoader,
-	Float32BufferAttribute,
-	Group,
-	LinearFilter,
-	LinearMipmapLinearFilter,
-	Loader,
-	LoaderUtils,
-	Matrix4,
-	Mesh,
-	MeshPhongMaterial,
-	MeshStandardMaterial,
-	MirroredRepeatWrapping,
-	NearestFilter,
-	RepeatWrapping,
-	TextureLoader,
-	sRGBEncoding,
-	Texture
+    BufferAttribute,
+    BufferGeometry,
+    ClampToEdgeWrapping,
+    Color,
+    FileLoader,
+    Float32BufferAttribute,
+    Group,
+    LinearFilter,
+    LinearMipmapLinearFilter,
+    Loader,
+    LoaderUtils,
+    Matrix4,
+    Mesh,
+    MeshPhongMaterial,
+    MeshStandardMaterial,
+    MirroredRepeatWrapping,
+    NearestFilter,
+    RepeatWrapping,
+    TextureLoader,
+    sRGBEncoding,
+    Texture
 } from 'three';
 import JSZip from 'jszip';
 import { DOMParser } from '@xmldom/xmldom';
@@ -44,1471 +44,1480 @@ import { DOMParser } from '@xmldom/xmldom';
  * - Metallic Display Properties (PBR)
  */
 
-var ThreeMFLoader = function ( manager ) {
+var ThreeMFLoader = function (manager) {
 
-	Loader.call( this, manager );
+    Loader.call(this, manager);
 
-	this.availableExtensions = [];
+    this.availableExtensions = [];
 
 };
 
-ThreeMFLoader.prototype = Object.assign( Object.create( Loader.prototype ), {
+ThreeMFLoader.prototype = Object.assign(Object.create(Loader.prototype), {
 
-	constructor: ThreeMFLoader,
+    constructor: ThreeMFLoader,
 
-	load: function ( url, onLoad, onProgress, onError ) {
+    load: function (url, onLoad, onProgress, onError) {
 
-		var scope = this;
-		var loader = new FileLoader( scope.manager );
-		loader.setPath( scope.path );
-		loader.setResponseType( 'arraybuffer' );
-		loader.setRequestHeader( scope.requestHeader );
-		loader.setWithCredentials( scope.withCredentials );
-		loader.load( url, async function ( buffer ) {
+        var scope = this;
+        var loader = new FileLoader(scope.manager);
+        loader.setPath(scope.path);
+        loader.setResponseType('arraybuffer');
+        loader.setRequestHeader(scope.requestHeader);
+        loader.setWithCredentials(scope.withCredentials);
+        loader.load(url, async function (buffer) {
 
-			try {
-				const result = await scope.parse( buffer, onProgress )
-				onLoad( result );
+            try {
+                const result = await scope.parse(buffer, onProgress)
+                onLoad(result);
 
-			} catch ( e ) {
+            } catch (e) {
 
-				if ( onError ) {
+                if (onError) {
 
-					onError( e );
+                    onError(e);
 
-				} else {
+                } else {
 
-					console.error( e );
+                    console.error(e);
 
-				}
+                }
 
-				scope.manager.itemError( url );
+                scope.manager.itemError(url);
 
-			}
+            }
 
-		}, null, onError );
+        }, null, onError);
 
-	},
+    },
 
-	loadFromBuffer: async function(buffer, onLoad, onError) {
-		var scope = this;
+    loadFromBuffer: async function (buffer, onLoad, onError) {
+        var scope = this;
 
-		try {
+        try {
 
-			const result = await scope.parse( buffer, function() {} );
-			onLoad( result );
+            const result = await scope.parse(buffer, function () { });
+            onLoad(result);
 
-		} catch ( e ) {
+        } catch (e) {
 
-			if ( onError ) {
+            if (onError) {
 
-				onError( e );
+                onError(e);
 
-			} else {
+            } else {
 
-				console.error( e );
+                console.error(e);
 
-			}
+            }
 
-			scope.manager.itemError( '3MFLoader.loadFromBuffer' );
+            scope.manager.itemError('3MFLoader.loadFromBuffer');
 
-		}
-	},
+        }
+    },
 
-	parse: async function ( data, onProgress ) {
+    parse: async function (data, onProgress) {
 
-		var scope = this;
-		var textureLoader = new TextureLoader( this.manager );
+        var scope = this;
+        var textureLoader = new TextureLoader(this.manager);
 
-		async function loadDocument( data ) {
+        async function loadDocument(data) {
 
-			var zip = null;
-			var file = null;
+            var zip = null;
+            var file = null;
 
-			var relsName;
-			var modelRelsName;
-			var modelPartNames = [];
-			var printTicketPartNames = [];
-			var texturesPartNames = [];
-			var otherPartNames = [];
+            var relsName;
+            var modelRelsName;
+            var modelPartNames = [];
+            var printTicketPartNames = [];
+            var texturesPartNames = [];
+            var otherPartNames = [];
 
-			var rels;
-			var modelRels;
-			var modelParts = {};
-			var printTicketParts = {};
-			var texturesParts = {};
-			var otherParts = {};
+            var rels;
+            var modelRels;
+            var modelParts = {};
+            var printTicketParts = {};
+            var texturesParts = {};
+            var otherParts = {};
 
-			try {
+            try {
 
-				zip = await JSZip.loadAsync( data ); // eslint-disable-line no-undef
+                zip = await JSZip.loadAsync(data); // eslint-disable-line no-undef
 
-			} catch ( e ) {
+            } catch (e) {
 
-				if ( e instanceof ReferenceError ) {
+                if (e instanceof ReferenceError) {
 
-					console.error( 'THREE.3MFLoader: jszip missing and file is compressed.' );
-					return null;
+                    console.error('THREE.3MFLoader: jszip missing and file is compressed.');
+                    return null;
 
-				}
+                }
 
-			}
-			onProgress(0.1);
-			for ( file in zip.files ) {
+            }
+            onProgress(0.1);
+            for (file in zip.files) {
 
-				if ( file.match( /\_rels\/.rels$/ ) ) {
+                if (file.match(/\_rels\/.rels$/)) {
 
-					relsName = file;
+                    relsName = file;
 
-				} else if ( file.match( /3D\/_rels\/.*\.model\.rels$/ ) ) {
+                } else if (file.match(/3D\/_rels\/.*\.model\.rels$/)) {
 
-					modelRelsName = file;
+                    modelRelsName = file;
 
-				} else if ( file.match( /^3D\/.*\.model$/ ) ) {
+                } else if (file.match(/^3D\/.*\.model$/)) {
 
-					modelPartNames.push( file );
+                    modelPartNames.push(file);
 
-				} else if ( file.match( /^3D\/Metadata\/.*\.xml$/ ) ) {
+                } else if (file.match(/^3D\/Metadata\/.*\.xml$/)) {
 
-					printTicketPartNames.push( file );
+                    printTicketPartNames.push(file);
 
-				} else if ( file.match( /^3D\/Textures?\/.*/ ) ) {
+                } else if (file.match(/^3D\/Textures?\/.*/)) {
 
-					texturesPartNames.push( file );
+                    texturesPartNames.push(file);
 
-				} else if ( file.match( /^3D\/Other\/.*/ ) ) {
+                } else if (file.match(/^3D\/Other\/.*/)) {
 
-					otherPartNames.push( file );
+                    otherPartNames.push(file);
 
-				}
+                }
 
-			}
+            }
 
-			//
+            //
 
-			var relsView = await zip.file( relsName ).async('uint8array');
-			var relsFileText = LoaderUtils.decodeText( relsView );
-			rels = parseRelsXml( relsFileText );
+            var relsView = await zip.file(relsName).async('uint8array');
+            var relsFileText = LoaderUtils.decodeText(relsView);
+            rels = parseRelsXml(relsFileText);
 
-			//
+            //
 
-			if ( modelRelsName ) {
+            if (modelRelsName) {
 
-				var relsView = await zip.file( modelRelsName ).async('uint8array');
-				console.log('modelRelsName relsView');
-				var relsFileText = LoaderUtils.decodeText( relsView );
-				console.log('after modelRelsName relsView');
-				modelRels = parseRelsXml( relsFileText );
+                var relsView = await zip.file(modelRelsName).async('uint8array');
 
-			}
+                var relsFileText = LoaderUtils.decodeText(relsView);
 
-			//
+                modelRels = parseRelsXml(relsFileText);
 
-			for ( var i = 0; i < modelPartNames.length; i ++ ) {
+            }
 
-				var modelPart = modelPartNames[ i ];
-				var view = await zip.file( modelPart ).async('uint8array');
+            //
 
-				var fileText = LoaderUtils.decodeText( view );
-				// remove namespaced label
-				fileText = fileText.replaceAll(/(<\/)\S+:(\S+>)/ig, '$1$2').replaceAll(/(<)\S+:(\S+)/ig, '$1$2');
-				var xmlData = new DOMParser().parseFromString( fileText, 'application/xml' );
+            for (var i = 0; i < modelPartNames.length; i++) {
 
-				if ( xmlData.documentElement.nodeName.toLowerCase() !== 'model' ) {
+                var modelPart = modelPartNames[i];
+                var view = await zip.file(modelPart).async('uint8array');
 
-					console.error( 'THREE.3MFLoader: Error loading 3MF - no 3MF document found: ', modelPart );
+                var fileText = LoaderUtils.decodeText(view);
+                // remove namespaced label
+                fileText = fileText.replaceAll(/(<\/)\S+:(\S+>)/ig, '$1$2').replaceAll(/(<)\S+:(\S+)/ig, '$1$2');
+                var xmlData = new DOMParser().parseFromString(fileText, 'application/xml');
 
-				}
+                if (xmlData.documentElement.nodeName.toLowerCase() !== 'model') {
 
-				var modelNode = xmlData.getElementsByTagName( 'model' )[0];
-				var extensions = {};
+                    console.error('THREE.3MFLoader: Error loading 3MF - no 3MF document found: ', modelPart);
 
-				for ( var i = 0; i < modelNode.attributes.length; i ++ ) {
+                }
 
-					var attr = modelNode.attributes[ i ];
-					if ( attr.name.match( /^xmlns:(.+)$/ ) ) {
+                var modelNode = xmlData.getElementsByTagName('model')[0];
+                var extensions = {};
 
-						extensions[ attr.value ] = RegExp.$1;
+                for (var i = 0; i < modelNode.attributes.length; i++) {
 
-					}
+                    var attr = modelNode.attributes[i];
+                    if (attr.name.match(/^xmlns:(.+)$/)) {
 
-				}
+                        extensions[attr.value] = RegExp.$1;
 
-				var modelData = parseModelNode( modelNode );
-				modelData[ 'xml' ] = modelNode;
+                    }
 
-				if ( 0 < Object.keys( extensions ).length ) {
+                }
 
-					modelData[ 'extensions' ] = extensions;
+                var modelData = parseModelNode(modelNode);
+                modelData['xml'] = modelNode;
 
-				}
+                if (0 < Object.keys(extensions).length) {
 
-				modelParts[ modelPart ] = modelData;
+                    modelData['extensions'] = extensions;
 
-			}
+                }
 
-			//
+                modelParts[modelPart] = modelData;
 
-			// for ( var i = 0; i < texturesPartNames.length; i ++ ) {
-			//
-			// 	var texturesPartName = texturesPartNames[ i ];
-			// 	texturesParts[ texturesPartName ] = await zip.file( texturesPartName ).async('arraybuffer');
-			//
-			// }
+            }
 
-			return {
-				rels: rels,
-				modelRels: modelRels,
-				model: modelParts,
-				printTicket: printTicketParts,
-				// texture: texturesParts,
-				other: otherParts
-			};
+            //
 
-		}
+            // for ( var i = 0; i < texturesPartNames.length; i ++ ) {
+            //
+            // 	var texturesPartName = texturesPartNames[ i ];
+            // 	texturesParts[ texturesPartName ] = await zip.file( texturesPartName ).async('arraybuffer');
+            //
+            // }
 
-		function parseRelsXml( relsFileText ) {
+            return {
+                rels: rels,
+                modelRels: modelRels,
+                model: modelParts,
+                printTicket: printTicketParts,
+                // texture: texturesParts,
+                other: otherParts
+            };
 
-			var relationships = [];
+        }
 
-			var relsXmlData = new DOMParser().parseFromString( relsFileText, 'application/xml' );
+        function parseRelsXml(relsFileText) {
 
-			var relsNodes = relsXmlData.getElementsByTagName( 'Relationship' );
+            var relationships = [];
 
-			for ( var i = 0; i < relsNodes.length; i ++ ) {
+            var relsXmlData = new DOMParser().parseFromString(relsFileText, 'application/xml');
 
-				var relsNode = relsNodes[ i ];
+            var relsNodes = relsXmlData.getElementsByTagName('Relationship');
 
-				var relationship = {
-					target: relsNode.getAttribute( 'Target' ), //required
-					id: relsNode.getAttribute( 'Id' ), //required
-					type: relsNode.getAttribute( 'Type' ) //required
-				};
+            for (var i = 0; i < relsNodes.length; i++) {
 
-				relationships.push( relationship );
+                var relsNode = relsNodes[i];
 
-			}
+                var relationship = {
+                    target: relsNode.getAttribute('Target'), //required
+                    id: relsNode.getAttribute('Id'), //required
+                    type: relsNode.getAttribute('Type') //required
+                };
 
-			return relationships;
+                relationships.push(relationship);
 
-		}
+            }
 
-		function parseMetadataNodes( metadataNodes ) {
+            return relationships;
 
-			var metadataData = {};
+        }
 
-			for ( var i = 0; i < metadataNodes.length; i ++ ) {
+        function parseMetadataNodes(metadataNodes) {
 
-				var metadataNode = metadataNodes[ i ];
-				var name = metadataNode.getAttribute( 'name' );
-				var validNames = [
-					'Title',
-					'Designer',
-					'Description',
-					'Copyright',
-					'LicenseTerms',
-					'Rating',
-					'CreationDate',
-					'ModificationDate'
-				];
+            var metadataData = {};
 
-				if ( 0 <= validNames.indexOf( name ) ) {
+            for (var i = 0; i < metadataNodes.length; i++) {
 
-					metadataData[ name ] = metadataNode.textContent;
+                var metadataNode = metadataNodes[i];
+                var name = metadataNode.getAttribute('name');
+                var validNames = [
+                    'Title',
+                    'Designer',
+                    'Description',
+                    'Copyright',
+                    'LicenseTerms',
+                    'Rating',
+                    'CreationDate',
+                    'ModificationDate'
+                ];
 
-				}
+                if (0 <= validNames.indexOf(name)) {
 
-			}
+                    metadataData[name] = metadataNode.textContent;
 
-			return metadataData;
+                }
 
-		}
+            }
 
-		function parseBasematerialsNode( basematerialsNode ) {
+            return metadataData;
 
-			var basematerialsData = {
-				id: basematerialsNode.getAttribute( 'id' ), // required
-				basematerials: []
-			};
+        }
 
-			var basematerialNodes = basematerialsNode.getElementsByTagName( 'base' );
+        function parseBasematerialsNode(basematerialsNode) {
 
-			for ( var i = 0; i < basematerialNodes.length; i ++ ) {
+            var basematerialsData = {
+                id: basematerialsNode.getAttribute('id'), // required
+                basematerials: []
+            };
 
-				var basematerialNode = basematerialNodes[ i ];
-				var basematerialData = parseBasematerialNode( basematerialNode );
-				basematerialData.index = i; // the order and count of the material nodes form an implicit 0-based index
-				basematerialsData.basematerials.push( basematerialData );
+            var basematerialNodes = basematerialsNode.getElementsByTagName('base');
 
-			}
+            for (var i = 0; i < basematerialNodes.length; i++) {
 
-			return basematerialsData;
+                var basematerialNode = basematerialNodes[i];
+                var basematerialData = parseBasematerialNode(basematerialNode);
+                basematerialData.index = i; // the order and count of the material nodes form an implicit 0-based index
+                basematerialsData.basematerials.push(basematerialData);
 
-		}
+            }
 
-		function parseTexture2DNode( texture2DNode ) {
+            return basematerialsData;
 
-			var texture2dData = {
-				id: texture2DNode.getAttribute( 'id' ), // required
-				path: texture2DNode.getAttribute( 'path' ), // required
-				contenttype: texture2DNode.getAttribute( 'contenttype' ), // required
-				tilestyleu: texture2DNode.getAttribute( 'tilestyleu' ),
-				tilestylev: texture2DNode.getAttribute( 'tilestylev' ),
-				filter: texture2DNode.getAttribute( 'filter' ),
-			};
+        }
 
-			return texture2dData;
+        function parseTexture2DNode(texture2DNode) {
 
-		}
+            var texture2dData = {
+                id: texture2DNode.getAttribute('id'), // required
+                path: texture2DNode.getAttribute('path'), // required
+                contenttype: texture2DNode.getAttribute('contenttype'), // required
+                tilestyleu: texture2DNode.getAttribute('tilestyleu'),
+                tilestylev: texture2DNode.getAttribute('tilestylev'),
+                filter: texture2DNode.getAttribute('filter'),
+            };
 
-		function parseTextures2DGroupNode( texture2DGroupNode ) {
+            return texture2dData;
 
-			var texture2DGroupData = {
-				id: texture2DGroupNode.getAttribute( 'id' ), // required
-				texid: texture2DGroupNode.getAttribute( 'texid' ), // required
-				displaypropertiesid: texture2DGroupNode.getAttribute( 'displaypropertiesid' )
-			};
+        }
 
-			var tex2coordNodes = texture2DGroupNode.getElementsByTagName( 'tex2coord' );
+        function parseTextures2DGroupNode(texture2DGroupNode) {
 
-			var uvs = [];
+            var texture2DGroupData = {
+                id: texture2DGroupNode.getAttribute('id'), // required
+                texid: texture2DGroupNode.getAttribute('texid'), // required
+                displaypropertiesid: texture2DGroupNode.getAttribute('displaypropertiesid')
+            };
 
-			for ( var i = 0; i < tex2coordNodes.length; i ++ ) {
+            var tex2coordNodes = texture2DGroupNode.getElementsByTagName('tex2coord');
 
-				var tex2coordNode = tex2coordNodes[ i ];
-				var u = tex2coordNode.getAttribute( 'u' );
-				var v = tex2coordNode.getAttribute( 'v' );
+            var uvs = [];
 
-				uvs.push( parseFloat( u ), parseFloat( v ) );
+            for (var i = 0; i < tex2coordNodes.length; i++) {
 
-			}
+                var tex2coordNode = tex2coordNodes[i];
+                var u = tex2coordNode.getAttribute('u');
+                var v = tex2coordNode.getAttribute('v');
 
-			texture2DGroupData[ 'uvs' ] = new Float32Array( uvs );
+                uvs.push(parseFloat(u), parseFloat(v));
 
-			return texture2DGroupData;
+            }
 
-		}
+            texture2DGroupData['uvs'] = new Float32Array(uvs);
 
-		function parseColorGroupNode( colorGroupNode ) {
+            return texture2DGroupData;
 
-			var colorGroupData = {
-				id: colorGroupNode.getAttribute( 'id' ), // required
-				displaypropertiesid: colorGroupNode.getAttribute( 'displaypropertiesid' )
-			};
+        }
 
-			var colorNodes = colorGroupNode.getElementsByTagName( 'color' );
+        function parseColorGroupNode(colorGroupNode) {
 
-			var colors = [];
-			var colorObject = new Color();
+            var colorGroupData = {
+                id: colorGroupNode.getAttribute('id'), // required
+                displaypropertiesid: colorGroupNode.getAttribute('displaypropertiesid')
+            };
 
-			for ( var i = 0; i < colorNodes.length; i ++ ) {
+            var colorNodes = colorGroupNode.getElementsByTagName('color');
 
-				var colorNode = colorNodes[ i ];
-				var color = colorNode.getAttribute( 'color' );
+            var colors = [];
+            var colorObject = new Color();
 
-				colorObject.setStyle( color.substring( 0, 7 ) );
-				colorObject.convertSRGBToLinear(); // color is in sRGB
+            for (var i = 0; i < colorNodes.length; i++) {
 
-				colors.push( colorObject.r, colorObject.g, colorObject.b );
+                var colorNode = colorNodes[i];
+                var color = colorNode.getAttribute('color');
 
-			}
+                colorObject.setStyle(color.substring(0, 7));
+                colorObject.convertSRGBToLinear(); // color is in sRGB
 
-			colorGroupData[ 'colors' ] = new Float32Array( colors );
+                colors.push(colorObject.r, colorObject.g, colorObject.b);
 
-			return colorGroupData;
+            }
 
-		}
+            colorGroupData['colors'] = new Float32Array(colors);
 
-		function parseMetallicDisplaypropertiesNode( metallicDisplaypropetiesNode ) {
+            return colorGroupData;
 
-			var metallicDisplaypropertiesData = {
-				id: metallicDisplaypropetiesNode.getAttribute( 'id' ) // required
-			};
+        }
 
-			var metallicNodes = metallicDisplaypropetiesNode.getElementsByTagName( 'pbmetallic' );
+        function parseMetallicDisplaypropertiesNode(metallicDisplaypropetiesNode) {
 
-			var metallicData = [];
+            var metallicDisplaypropertiesData = {
+                id: metallicDisplaypropetiesNode.getAttribute('id') // required
+            };
 
-			for ( var i = 0; i < metallicNodes.length; i ++ ) {
+            var metallicNodes = metallicDisplaypropetiesNode.getElementsByTagName('pbmetallic');
 
-				var metallicNode = metallicNodes[ i ];
+            var metallicData = [];
 
-				metallicData.push( {
-					name: metallicNode.getAttribute( 'name' ), // required
-					metallicness: parseFloat( metallicNode.getAttribute( 'metallicness' ) ), // required
-					roughness: parseFloat( metallicNode.getAttribute( 'roughness' ) ) // required
-				} );
+            for (var i = 0; i < metallicNodes.length; i++) {
 
-			}
+                var metallicNode = metallicNodes[i];
 
-			metallicDisplaypropertiesData.data = metallicData;
+                metallicData.push({
+                    name: metallicNode.getAttribute('name'), // required
+                    metallicness: parseFloat(metallicNode.getAttribute('metallicness')), // required
+                    roughness: parseFloat(metallicNode.getAttribute('roughness')) // required
+                });
 
-			return metallicDisplaypropertiesData;
+            }
 
-		}
+            metallicDisplaypropertiesData.data = metallicData;
 
-		function parseBasematerialNode( basematerialNode ) {
+            return metallicDisplaypropertiesData;
 
-			var basematerialData = {};
+        }
 
-			basematerialData[ 'name' ] = basematerialNode.getAttribute( 'name' ); // required
-			basematerialData[ 'displaycolor' ] = basematerialNode.getAttribute( 'displaycolor' ); // required
-			basematerialData[ 'displaypropertiesid' ] = basematerialNode.getAttribute( 'displaypropertiesid' );
+        function parseBasematerialNode(basematerialNode) {
 
-			return basematerialData;
+            var basematerialData = {};
 
-		}
+            basematerialData['name'] = basematerialNode.getAttribute('name'); // required
+            basematerialData['displaycolor'] = basematerialNode.getAttribute('displaycolor'); // required
+            basematerialData['displaypropertiesid'] = basematerialNode.getAttribute('displaypropertiesid');
 
-		function parseMeshNode( meshNode ) {
+            return basematerialData;
 
-			var meshData = {};
+        }
 
-			var vertices = [];
-			var verticesNode = meshNode.getElementsByTagName( 'vertices' )[0];
-			var vertexNodes = verticesNode.getElementsByTagName( 'vertex' );
+        function parseMeshNode(meshNode) {
 
-			for ( var i = 0; i < vertexNodes.length; i ++ ) {
+            var meshData = {};
 
-				var vertexNode = vertexNodes[ i ];
-				var x = vertexNode.getAttribute( 'x' );
-				var y = vertexNode.getAttribute( 'y' );
-				var z = vertexNode.getAttribute( 'z' );
+            var vertices = [];
+            var verticesNode = meshNode.getElementsByTagName('vertices')[0];
+            var vertexNodes = verticesNode.getElementsByTagName('vertex');
 
-				vertices.push( parseFloat( x ), parseFloat( y ), parseFloat( z ) );
+            for (var i = 0; i < vertexNodes.length; i++) {
 
-			}
+                var vertexNode = vertexNodes[i];
+                var x = vertexNode.getAttribute('x');
+                var y = vertexNode.getAttribute('y');
+                var z = vertexNode.getAttribute('z');
 
-			meshData[ 'vertices' ] = new Float32Array( vertices );
+                vertices.push(parseFloat(x), parseFloat(y), parseFloat(z));
 
-			var triangleProperties = [];
-			var triangles = [];
-			var trianglesNode = meshNode.getElementsByTagName( 'triangles' )[0];
-			var triangleNodes = trianglesNode.getElementsByTagName( 'triangle' );
+            }
 
-			for ( var i = 0; i < triangleNodes.length; i ++ ) {
+            meshData['vertices'] = new Float32Array(vertices);
 
-				var triangleNode = triangleNodes[ i ];
-				var v1 = triangleNode.getAttribute( 'v1' );
-				var v2 = triangleNode.getAttribute( 'v2' );
-				var v3 = triangleNode.getAttribute( 'v3' );
-				var p1 = triangleNode.getAttribute( 'p1' );
-				var p2 = triangleNode.getAttribute( 'p2' );
-				var p3 = triangleNode.getAttribute( 'p3' );
-				var pid = triangleNode.getAttribute( 'pid' );
+            var triangleProperties = [];
+            var triangles = [];
+            var trianglesNode = meshNode.getElementsByTagName('triangles')[0];
+            var triangleNodes = trianglesNode.getElementsByTagName('triangle');
 
-				var triangleProperty = {};
+            for (var i = 0; i < triangleNodes.length; i++) {
 
-				triangleProperty[ 'v1' ] = parseInt( v1, 10 );
-				triangleProperty[ 'v2' ] = parseInt( v2, 10 );
-				triangleProperty[ 'v3' ] = parseInt( v3, 10 );
+                var triangleNode = triangleNodes[i];
+                var v1 = triangleNode.getAttribute('v1');
+                var v2 = triangleNode.getAttribute('v2');
+                var v3 = triangleNode.getAttribute('v3');
+                var p1 = triangleNode.getAttribute('p1');
+                var p2 = triangleNode.getAttribute('p2');
+                var p3 = triangleNode.getAttribute('p3');
+                var pid = triangleNode.getAttribute('pid');
 
-				triangles.push( triangleProperty[ 'v1' ], triangleProperty[ 'v2' ], triangleProperty[ 'v3' ] );
+                var triangleProperty = {};
 
-				// optional
+                triangleProperty['v1'] = parseInt(v1, 10);
+                triangleProperty['v2'] = parseInt(v2, 10);
+                triangleProperty['v3'] = parseInt(v3, 10);
 
-				if ( p1 ) {
+                triangles.push(triangleProperty['v1'], triangleProperty['v2'], triangleProperty['v3']);
 
-					triangleProperty[ 'p1' ] = parseInt( p1, 10 );
+                // optional
 
-				}
+                if (p1) {
 
-				if ( p2 ) {
+                    triangleProperty['p1'] = parseInt(p1, 10);
 
-					triangleProperty[ 'p2' ] = parseInt( p2, 10 );
+                }
 
-				}
+                if (p2) {
 
-				if ( p3 ) {
+                    triangleProperty['p2'] = parseInt(p2, 10);
 
-					triangleProperty[ 'p3' ] = parseInt( p3, 10 );
+                }
 
-				}
+                if (p3) {
 
-				if ( pid ) {
+                    triangleProperty['p3'] = parseInt(p3, 10);
 
-					triangleProperty[ 'pid' ] = pid;
+                }
 
-				}
+                if (pid) {
 
-				if ( 0 < Object.keys( triangleProperty ).length ) {
+                    triangleProperty['pid'] = pid;
 
-					triangleProperties.push( triangleProperty );
+                }
 
-				}
+                if (0 < Object.keys(triangleProperty).length) {
 
-			}
+                    triangleProperties.push(triangleProperty);
 
-			meshData[ 'triangleProperties' ] = triangleProperties;
-			meshData[ 'triangles' ] = new Uint32Array( triangles );
+                }
 
-			// console.log('parseMeshNode', meshData[ 'triangleProperties' ], meshData[ 'triangles' ])
-			return meshData;
+            }
 
-		}
+            meshData['triangleProperties'] = triangleProperties;
+            meshData['triangles'] = new Uint32Array(triangles);
 
-		function parseComponentsNode( componentsNode ) {
+            // console.log('parseMeshNode', meshData[ 'triangleProperties' ], meshData[ 'triangles' ])
+            return meshData;
 
-			var components = [];
+        }
 
-			var componentNodes = componentsNode.getElementsByTagName( 'component' );
+        function parseComponentsNode(componentsNode) {
 
-			for ( var i = 0; i < componentNodes.length; i ++ ) {
+            var components = [];
 
-				var componentNode = componentNodes[ i ];
-				var componentData = parseComponentNode( componentNode );
-				components.push( componentData );
+            var componentNodes = componentsNode.getElementsByTagName('component');
 
-			}
+            for (var i = 0; i < componentNodes.length; i++) {
 
-			return components;
+                var componentNode = componentNodes[i];
+                var componentData = parseComponentNode(componentNode);
+                components.push(componentData);
 
-		}
+            }
 
-		function parseComponentNode( componentNode ) {
+            return components;
 
-			var componentData = {};
+        }
 
-			componentData[ 'objectId' ] = componentNode.getAttribute( 'objectid' ); // required
+        function parseComponentNode(componentNode) {
 
-			var transform = componentNode.getAttribute( 'transform' );
+            var componentData = {};
 
-			if ( transform ) {
+            componentData['objectId'] = componentNode.getAttribute('objectid'); // required
 
-				componentData[ 'transform' ] = parseTransform( transform );
+            var transform = componentNode.getAttribute('transform');
 
-			}
+            if (transform) {
 
-			return componentData;
+                componentData['transform'] = parseTransform(transform);
 
-		}
+            }
 
-		function parseTransform( transform ) {
+            return componentData;
 
-			var t = [];
-			transform.split( ' ' ).forEach( function ( s ) {
+        }
 
-				t.push( parseFloat( s ) );
+        function parseTransform(transform) {
 
-			} );
+            var t = [];
+            transform.split(' ').forEach(function (s) {
 
-			var matrix = new Matrix4();
-			matrix.set(
-				t[ 0 ], t[ 3 ], t[ 6 ], t[ 9 ],
-				t[ 1 ], t[ 4 ], t[ 7 ], t[ 10 ],
-				t[ 2 ], t[ 5 ], t[ 8 ], t[ 11 ],
-				 0.0, 0.0, 0.0, 1.0
-			);
+                t.push(parseFloat(s));
 
-			return matrix;
+            });
 
-		}
+            var matrix = new Matrix4();
+            matrix.set(
+                t[0], t[3], t[6], t[9],
+                t[1], t[4], t[7], t[10],
+                t[2], t[5], t[8], t[11],
+                0.0, 0.0, 0.0, 1.0
+            );
 
-		function parseObjectNode( objectNode ) {
+            return matrix;
 
-			var objectData = {
-				type: objectNode.getAttribute( 'type' )
-			};
+        }
 
-			var id = objectNode.getAttribute( 'id' );
+        function parseObjectNode(objectNode) {
 
-			if ( id ) {
+            var objectData = {
+                type: objectNode.getAttribute('type')
+            };
 
-				objectData[ 'id' ] = id;
+            var id = objectNode.getAttribute('id');
 
-			}
+            if (id) {
 
-			var pid = objectNode.getAttribute( 'pid' );
+                objectData['id'] = id;
 
-			if ( pid ) {
+            }
 
-				objectData[ 'pid' ] = pid;
+            var pid = objectNode.getAttribute('pid');
 
-			}
+            if (pid) {
 
-			var pindex = objectNode.getAttribute( 'pindex' );
+                objectData['pid'] = pid;
 
-			if ( pindex ) {
+            }
 
-				objectData[ 'pindex' ] = pindex;
+            var pindex = objectNode.getAttribute('pindex');
 
-			}
+            if (pindex) {
 
-			var thumbnail = objectNode.getAttribute( 'thumbnail' );
+                objectData['pindex'] = pindex;
 
-			if ( thumbnail ) {
+            }
 
-				objectData[ 'thumbnail' ] = thumbnail;
+            var thumbnail = objectNode.getAttribute('thumbnail');
 
-			}
+            if (thumbnail) {
 
-			var partnumber = objectNode.getAttribute( 'partnumber' );
+                objectData['thumbnail'] = thumbnail;
 
-			if ( partnumber ) {
+            }
 
-				objectData[ 'partnumber' ] = partnumber;
+            var partnumber = objectNode.getAttribute('partnumber');
 
-			}
+            if (partnumber) {
 
-			var name = objectNode.getAttribute( 'name' );
+                objectData['partnumber'] = partnumber;
 
-			if ( name ) {
+            }
 
-				objectData[ 'name' ] = name;
+            var name = objectNode.getAttribute('name');
 
-			}
+            if (name) {
 
-			var meshNode = objectNode.getElementsByTagName( 'mesh' )[0];
+                objectData['name'] = name;
 
-			if ( meshNode ) {
+            }
 
-				objectData[ 'mesh' ] = parseMeshNode( meshNode );
+            var meshNode = objectNode.getElementsByTagName('mesh')[0];
 
-			}
+            if (meshNode) {
 
-			var componentsNode = objectNode.getElementsByTagName( 'components' )[0];
+                objectData['mesh'] = parseMeshNode(meshNode);
 
-			if ( componentsNode ) {
+            }
 
-				objectData[ 'components' ] = parseComponentsNode( componentsNode );
+            var componentsNode = objectNode.getElementsByTagName('components')[0];
 
-			}
+            if (componentsNode) {
 
-			return objectData;
+                objectData['components'] = parseComponentsNode(componentsNode);
 
-		}
+            }
 
-		function parseResourcesNode( resourcesNode ) {
+            return objectData;
 
-			var resourcesData = {};
+        }
 
-			resourcesData[ 'basematerials' ] = {};
-			var basematerialsNodes = resourcesNode.getElementsByTagName( 'basematerials' );
+        function parseResourcesNode(resourcesNode) {
 
-			for ( var i = 0; i < basematerialsNodes.length; i ++ ) {
+            var resourcesData = {};
 
-				var basematerialsNode = basematerialsNodes[ i ];
-				var basematerialsData = parseBasematerialsNode( basematerialsNode );
-				resourcesData[ 'basematerials' ][ basematerialsData[ 'id' ] ] = basematerialsData;
+            resourcesData['basematerials'] = {};
+            var basematerialsNodes = resourcesNode.getElementsByTagName('basematerials');
 
-			}
+            for (var i = 0; i < basematerialsNodes.length; i++) {
 
-			//
+                var basematerialsNode = basematerialsNodes[i];
+                var basematerialsData = parseBasematerialsNode(basematerialsNode);
+                resourcesData['basematerials'][basematerialsData['id']] = basematerialsData;
 
-			resourcesData[ 'texture2d' ] = {};
-			var textures2DNodes = resourcesNode.getElementsByTagName( 'texture2d' );
+            }
 
-			for ( var i = 0; i < textures2DNodes.length; i ++ ) {
+            //
 
-				var textures2DNode = textures2DNodes[ i ];
-				var texture2DData = parseTexture2DNode( textures2DNode );
-				resourcesData[ 'texture2d' ][ texture2DData[ 'id' ] ] = texture2DData;
+            resourcesData['texture2d'] = {};
+            var textures2DNodes = resourcesNode.getElementsByTagName('texture2d');
 
-			}
+            for (var i = 0; i < textures2DNodes.length; i++) {
 
-			//
+                var textures2DNode = textures2DNodes[i];
+                var texture2DData = parseTexture2DNode(textures2DNode);
+                resourcesData['texture2d'][texture2DData['id']] = texture2DData;
 
-			resourcesData[ 'colorgroup' ] = {};
-			var colorGroupNodes = resourcesNode.getElementsByTagName( 'colorgroup' );
+            }
 
-			for ( var i = 0; i < colorGroupNodes.length; i ++ ) {
+            //
 
-				var colorGroupNode = colorGroupNodes[ i ];
-				var colorGroupData = parseColorGroupNode( colorGroupNode );
-				resourcesData[ 'colorgroup' ][ colorGroupData[ 'id' ] ] = colorGroupData;
+            resourcesData['colorgroup'] = {};
+            var colorGroupNodes = resourcesNode.getElementsByTagName('colorgroup');
 
-			}
+            for (var i = 0; i < colorGroupNodes.length; i++) {
 
-			//
+                var colorGroupNode = colorGroupNodes[i];
+                var colorGroupData = parseColorGroupNode(colorGroupNode);
+                resourcesData['colorgroup'][colorGroupData['id']] = colorGroupData;
 
-			resourcesData[ 'pbmetallicdisplayproperties' ] = {};
-			var pbmetallicdisplaypropertiesNodes = resourcesNode.getElementsByTagName( 'pbmetallicdisplayproperties' );
+            }
 
-			for ( var i = 0; i < pbmetallicdisplaypropertiesNodes.length; i ++ ) {
+            //
 
-				var pbmetallicdisplaypropertiesNode = pbmetallicdisplaypropertiesNodes[ i ];
-				var pbmetallicdisplaypropertiesData = parseMetallicDisplaypropertiesNode( pbmetallicdisplaypropertiesNode );
-				resourcesData[ 'pbmetallicdisplayproperties' ][ pbmetallicdisplaypropertiesData[ 'id' ] ] = pbmetallicdisplaypropertiesData;
+            resourcesData['pbmetallicdisplayproperties'] = {};
+            var pbmetallicdisplaypropertiesNodes = resourcesNode.getElementsByTagName('pbmetallicdisplayproperties');
 
-			}
+            for (var i = 0; i < pbmetallicdisplaypropertiesNodes.length; i++) {
 
-			//
+                var pbmetallicdisplaypropertiesNode = pbmetallicdisplaypropertiesNodes[i];
+                var pbmetallicdisplaypropertiesData = parseMetallicDisplaypropertiesNode(pbmetallicdisplaypropertiesNode);
+                resourcesData['pbmetallicdisplayproperties'][pbmetallicdisplaypropertiesData['id']] = pbmetallicdisplaypropertiesData;
 
-			resourcesData[ 'texture2dgroup' ] = {};
-			var textures2DGroupNodes = resourcesNode.getElementsByTagName( 'texture2dgroup' );
+            }
 
-			for ( var i = 0; i < textures2DGroupNodes.length; i ++ ) {
+            //
 
-				var textures2DGroupNode = textures2DGroupNodes[ i ];
-				var textures2DGroupData = parseTextures2DGroupNode( textures2DGroupNode );
-				resourcesData[ 'texture2dgroup' ][ textures2DGroupData[ 'id' ] ] = textures2DGroupData;
+            resourcesData['texture2dgroup'] = {};
+            var textures2DGroupNodes = resourcesNode.getElementsByTagName('texture2dgroup');
 
-			}
+            for (var i = 0; i < textures2DGroupNodes.length; i++) {
 
-			//
+                var textures2DGroupNode = textures2DGroupNodes[i];
+                var textures2DGroupData = parseTextures2DGroupNode(textures2DGroupNode);
+                resourcesData['texture2dgroup'][textures2DGroupData['id']] = textures2DGroupData;
 
-			resourcesData[ 'object' ] = {};
-			var objectNodes = resourcesNode.getElementsByTagName( 'object' );
+            }
 
-			for ( var i = 0; i < objectNodes.length; i ++ ) {
+            //
 
-				var objectNode = objectNodes[ i ];
-				var objectData = parseObjectNode( objectNode );
-				resourcesData[ 'object' ][ objectData[ 'id' ] ] = objectData;
-				onProgress(i / objectNodes.length * 0.4 + 0.1);
-			}
+            resourcesData['object'] = {};
+            var objectNodes = resourcesNode.getElementsByTagName('object');
 
-			return resourcesData;
+            for (var i = 0; i < objectNodes.length; i++) {
 
-		}
+                var objectNode = objectNodes[i];
+                var objectData = parseObjectNode(objectNode);
+                resourcesData['object'][objectData['id']] = objectData;
+                onProgress(i / objectNodes.length * 0.4 + 0.1);
+            }
 
-		function parseBuildNode( buildNode ) {
+            return resourcesData;
 
-			var buildData = [];
-			var itemNodes = buildNode.getElementsByTagName( 'item' );
+        }
 
-			for ( var i = 0; i < itemNodes.length; i ++ ) {
+        function parseBuildNode(buildNode) {
 
-				var itemNode = itemNodes[ i ];
-				var buildItem = {
-					objectId: itemNode.getAttribute( 'objectid' )
-				};
-				var transform = itemNode.getAttribute( 'transform' );
+            var buildData = [];
+            var itemNodes = buildNode.getElementsByTagName('item');
 
-				if ( transform ) {
+            for (var i = 0; i < itemNodes.length; i++) {
 
-					buildItem[ 'transform' ] = parseTransform( transform );
+                var itemNode = itemNodes[i];
+                var buildItem = {
+                    objectId: itemNode.getAttribute('objectid')
+                };
+                var transform = itemNode.getAttribute('transform');
 
-				}
+                if (transform) {
 
-				buildData.push( buildItem );
+                    buildItem['transform'] = parseTransform(transform);
 
-			}
+                }
 
-			return buildData;
+                buildData.push(buildItem);
 
-		}
+            }
 
-		function parseModelNode( modelNode ) {
+            return buildData;
 
-			var modelData = { unit: modelNode.getAttribute( 'unit' ) || 'millimeter' };
-			var metadataNodes = modelNode.getElementsByTagName( 'metadata' );
+        }
 
-			if ( metadataNodes ) {
+        function parseModelNode(modelNode) {
 
-				modelData[ 'metadata' ] = parseMetadataNodes( metadataNodes );
+            var modelData = { unit: modelNode.getAttribute('unit') || 'millimeter' };
+            var metadataNodes = modelNode.getElementsByTagName('metadata');
 
-			}
+            if (metadataNodes) {
 
-			var resourcesNode = modelNode.getElementsByTagName( 'resources' )[0];
+                modelData['metadata'] = parseMetadataNodes(metadataNodes);
 
-			if ( resourcesNode ) {
+            }
 
-				modelData[ 'resources' ] = parseResourcesNode( resourcesNode );
+            var resourcesNode = modelNode.getElementsByTagName('resources')[0];
 
-			}
+            if (resourcesNode) {
 
-			var buildNode = modelNode.getElementsByTagName( 'build' )[0];
+                modelData['resources'] = parseResourcesNode(resourcesNode);
 
-			if ( buildNode ) {
+            }
 
-				modelData[ 'build' ] = parseBuildNode( buildNode );
+            var buildNode = modelNode.getElementsByTagName('build')[0];
 
-			}
+            if (buildNode) {
 
-			return modelData;
+                modelData['build'] = parseBuildNode(buildNode);
 
-		}
+            }
 
-		function buildTexture( texture2dgroup, objects, modelData, textureData ) {
+            return modelData;
 
-			var texid = texture2dgroup.texid;
-			var texture2ds = modelData.resources.texture2d;
-			var texture2d = texture2ds[ texid ];
+        }
 
-			if ( texture2d ) {
+        function buildTexture(texture2dgroup, objects, modelData, textureData) {
 
-				// var data = textureData[ texture2d.path ];
-				// var type = texture2d.contenttype;
+            var texid = texture2dgroup.texid;
+            var texture2ds = modelData.resources.texture2d;
+            var texture2d = texture2ds[texid];
 
-				// var blob = new Blob( [ data ], { type: type } );
-				// var sourceURI = URL.createObjectURL( blob );
-				var texture = new Texture();
+            if (texture2d) {
 
-				// textureloader not support non-browser environment
-				// var texture = textureLoader.load( sourceURI, function () {
+                // var data = textureData[ texture2d.path ];
+                // var type = texture2d.contenttype;
 
-				// 	URL.revokeObjectURL( sourceURI );
+                // var blob = new Blob( [ data ], { type: type } );
+                // var sourceURI = URL.createObjectURL( blob );
+                var texture = new Texture();
 
-				// } );
+                // textureloader not support non-browser environment
+                // var texture = textureLoader.load( sourceURI, function () {
 
-				// texture.encoding = sRGBEncoding;
+                // 	URL.revokeObjectURL( sourceURI );
 
-				// // texture parameters
+                // } );
 
-				// switch ( texture2d.tilestyleu ) {
+                // texture.encoding = sRGBEncoding;
 
-				// 	case 'wrap':
-				// 		texture.wrapS = RepeatWrapping;
-				// 		break;
+                // // texture parameters
 
-				// 	case 'mirror':
-				// 		texture.wrapS = MirroredRepeatWrapping;
-				// 		break;
+                // switch ( texture2d.tilestyleu ) {
 
-				// 	case 'none':
-				// 	case 'clamp':
-				// 		texture.wrapS = ClampToEdgeWrapping;
-				// 		break;
+                // 	case 'wrap':
+                // 		texture.wrapS = RepeatWrapping;
+                // 		break;
 
-				// 	default:
-				// 		texture.wrapS = RepeatWrapping;
+                // 	case 'mirror':
+                // 		texture.wrapS = MirroredRepeatWrapping;
+                // 		break;
 
-				// }
+                // 	case 'none':
+                // 	case 'clamp':
+                // 		texture.wrapS = ClampToEdgeWrapping;
+                // 		break;
 
-				// switch ( texture2d.tilestylev ) {
+                // 	default:
+                // 		texture.wrapS = RepeatWrapping;
 
-				// 	case 'wrap':
-				// 		texture.wrapT = RepeatWrapping;
-				// 		break;
+                // }
 
-				// 	case 'mirror':
-				// 		texture.wrapT = MirroredRepeatWrapping;
-				// 		break;
+                // switch ( texture2d.tilestylev ) {
 
-				// 	case 'none':
-				// 	case 'clamp':
-				// 		texture.wrapT = ClampToEdgeWrapping;
-				// 		break;
+                // 	case 'wrap':
+                // 		texture.wrapT = RepeatWrapping;
+                // 		break;
 
-				// 	default:
-				// 		texture.wrapT = RepeatWrapping;
+                // 	case 'mirror':
+                // 		texture.wrapT = MirroredRepeatWrapping;
+                // 		break;
 
-				// }
+                // 	case 'none':
+                // 	case 'clamp':
+                // 		texture.wrapT = ClampToEdgeWrapping;
+                // 		break;
 
-				// switch ( texture2d.filter ) {
+                // 	default:
+                // 		texture.wrapT = RepeatWrapping;
 
-				// 	case 'auto':
-				// 		texture.magFilter = LinearFilter;
-				// 		texture.minFilter = LinearMipmapLinearFilter;
-				// 		break;
+                // }
 
-				// 	case 'linear':
-				// 		texture.magFilter = LinearFilter;
-				// 		texture.minFilter = LinearFilter;
-				// 		break;
+                // switch ( texture2d.filter ) {
 
-				// 	case 'nearest':
-				// 		texture.magFilter = NearestFilter;
-				// 		texture.minFilter = NearestFilter;
-				// 		break;
+                // 	case 'auto':
+                // 		texture.magFilter = LinearFilter;
+                // 		texture.minFilter = LinearMipmapLinearFilter;
+                // 		break;
 
-				// 	default:
-				// 		texture.magFilter = LinearFilter;
-				// 		texture.minFilter = LinearMipmapLinearFilter;
+                // 	case 'linear':
+                // 		texture.magFilter = LinearFilter;
+                // 		texture.minFilter = LinearFilter;
+                // 		break;
 
-				// }
+                // 	case 'nearest':
+                // 		texture.magFilter = NearestFilter;
+                // 		texture.minFilter = NearestFilter;
+                // 		break;
 
-				return texture;
+                // 	default:
+                // 		texture.magFilter = LinearFilter;
+                // 		texture.minFilter = LinearMipmapLinearFilter;
 
-			} else {
+                // }
 
-				return null;
+                return texture;
 
-			}
+            } else {
 
-		}
+                return null;
 
-		function buildBasematerialsMeshes( basematerials, triangleProperties, modelData, meshData, textureData, objectData ) {
+            }
 
-			var objectPindex = objectData.pindex;
+        }
 
-			var materialMap = {};
+        function buildBasematerialsMeshes(basematerials, triangleProperties, modelData, meshData, textureData, objectData) {
 
-			for ( var i = 0, l = triangleProperties.length; i < l; i ++ ) {
+            var objectPindex = objectData.pindex;
 
-				var triangleProperty = triangleProperties[ i ];
-				var pindex = ( triangleProperty.p1 !== undefined ) ? triangleProperty.p1 : objectPindex;
+            var materialMap = {};
 
-				if ( materialMap[ pindex ] === undefined ) materialMap[ pindex ] = [];
+            for (var i = 0, l = triangleProperties.length; i < l; i++) {
 
-				materialMap[ pindex ].push( triangleProperty );
+                var triangleProperty = triangleProperties[i];
+                var pindex = (triangleProperty.p1 !== undefined) ? triangleProperty.p1 : objectPindex;
 
-			}
+                if (materialMap[pindex] === undefined) materialMap[pindex] = [];
 
-			//
+                materialMap[pindex].push(triangleProperty);
 
-			var keys = Object.keys( materialMap );
-			var meshes = [];
+            }
 
-			for ( var i = 0, l = keys.length; i < l; i ++ ) {
+            //
 
-				var materialIndex = keys[ i ];
-				var trianglePropertiesProps = materialMap[ materialIndex ];
-				var basematerialData = basematerials.basematerials[ materialIndex ];
-				var material = getBuild( basematerialData, objects, modelData, textureData, objectData, buildBasematerial );
+            var keys = Object.keys(materialMap);
+            var meshes = [];
 
-				//
+            for (var i = 0, l = keys.length; i < l; i++) {
 
-				var geometry = new BufferGeometry();
+                var materialIndex = keys[i];
+                var trianglePropertiesProps = materialMap[materialIndex];
+                var basematerialData = basematerials.basematerials[materialIndex];
+                var material = getBuild(basematerialData, objects, modelData, textureData, objectData, buildBasematerial);
 
-				var positionData = [];
+                //
 
-				var vertices = meshData.vertices;
+                var geometry = new BufferGeometry();
 
-				for ( var j = 0, jl = trianglePropertiesProps.length; j < jl; j ++ ) {
+                var positionData = [];
 
-					var triangleProperty = trianglePropertiesProps[ j ];
+                var vertices = meshData.vertices;
 
-					positionData.push( vertices[ ( triangleProperty.v1 * 3 ) + 0 ] );
-					positionData.push( vertices[ ( triangleProperty.v1 * 3 ) + 1 ] );
-					positionData.push( vertices[ ( triangleProperty.v1 * 3 ) + 2 ] );
+                for (var j = 0, jl = trianglePropertiesProps.length; j < jl; j++) {
 
-					positionData.push( vertices[ ( triangleProperty.v2 * 3 ) + 0 ] );
-					positionData.push( vertices[ ( triangleProperty.v2 * 3 ) + 1 ] );
-					positionData.push( vertices[ ( triangleProperty.v2 * 3 ) + 2 ] );
+                    var triangleProperty = trianglePropertiesProps[j];
 
-					positionData.push( vertices[ ( triangleProperty.v3 * 3 ) + 0 ] );
-					positionData.push( vertices[ ( triangleProperty.v3 * 3 ) + 1 ] );
-					positionData.push( vertices[ ( triangleProperty.v3 * 3 ) + 2 ] );
+                    positionData.push(vertices[(triangleProperty.v1 * 3) + 0]);
+                    positionData.push(vertices[(triangleProperty.v1 * 3) + 1]);
+                    positionData.push(vertices[(triangleProperty.v1 * 3) + 2]);
 
+                    positionData.push(vertices[(triangleProperty.v2 * 3) + 0]);
+                    positionData.push(vertices[(triangleProperty.v2 * 3) + 1]);
+                    positionData.push(vertices[(triangleProperty.v2 * 3) + 2]);
 
-				}
+                    positionData.push(vertices[(triangleProperty.v3 * 3) + 0]);
+                    positionData.push(vertices[(triangleProperty.v3 * 3) + 1]);
+                    positionData.push(vertices[(triangleProperty.v3 * 3) + 2]);
 
-				geometry.setAttribute( 'position', new Float32BufferAttribute( positionData, 3 ) );
 
-				//
+                }
 
-				var mesh = new Mesh( geometry, material );
-				meshes.push( mesh );
+                geometry.setAttribute('position', new Float32BufferAttribute(positionData, 3));
 
-			}
+                //
 
-			return meshes;
+                var mesh = new Mesh(geometry, material);
+                meshes.push(mesh);
 
-		}
+            }
 
-		function buildTexturedMesh( texture2dgroup, triangleProperties, modelData, meshData, textureData, objectData ) {
+            return meshes;
 
-			// geometry
+        }
 
-			var geometry = new BufferGeometry();
+        function buildTexturedMesh(texture2dgroup, triangleProperties, modelData, meshData, textureData, objectData) {
 
-			var positionData = [];
-			var uvData = [];
+            // geometry
 
-			var vertices = meshData.vertices;
-			var uvs = texture2dgroup.uvs;
+            var geometry = new BufferGeometry();
 
-			for ( var i = 0, l = triangleProperties.length; i < l; i ++ ) {
+            var positionData = [];
+            var uvData = [];
 
-				var triangleProperty = triangleProperties[ i ];
+            var vertices = meshData.vertices;
+            var uvs = texture2dgroup.uvs;
 
-				positionData.push( vertices[ ( triangleProperty.v1 * 3 ) + 0 ] );
-				positionData.push( vertices[ ( triangleProperty.v1 * 3 ) + 1 ] );
-				positionData.push( vertices[ ( triangleProperty.v1 * 3 ) + 2 ] );
+            for (var i = 0, l = triangleProperties.length; i < l; i++) {
 
-				positionData.push( vertices[ ( triangleProperty.v2 * 3 ) + 0 ] );
-				positionData.push( vertices[ ( triangleProperty.v2 * 3 ) + 1 ] );
-				positionData.push( vertices[ ( triangleProperty.v2 * 3 ) + 2 ] );
+                var triangleProperty = triangleProperties[i];
 
-				positionData.push( vertices[ ( triangleProperty.v3 * 3 ) + 0 ] );
-				positionData.push( vertices[ ( triangleProperty.v3 * 3 ) + 1 ] );
-				positionData.push( vertices[ ( triangleProperty.v3 * 3 ) + 2 ] );
+                positionData.push(vertices[(triangleProperty.v1 * 3) + 0]);
+                positionData.push(vertices[(triangleProperty.v1 * 3) + 1]);
+                positionData.push(vertices[(triangleProperty.v1 * 3) + 2]);
 
-				//
+                positionData.push(vertices[(triangleProperty.v2 * 3) + 0]);
+                positionData.push(vertices[(triangleProperty.v2 * 3) + 1]);
+                positionData.push(vertices[(triangleProperty.v2 * 3) + 2]);
 
-				uvData.push( uvs[ ( triangleProperty.p1 * 2 ) + 0 ] );
-				uvData.push( uvs[ ( triangleProperty.p1 * 2 ) + 1 ] );
+                positionData.push(vertices[(triangleProperty.v3 * 3) + 0]);
+                positionData.push(vertices[(triangleProperty.v3 * 3) + 1]);
+                positionData.push(vertices[(triangleProperty.v3 * 3) + 2]);
 
-				uvData.push( uvs[ ( triangleProperty.p2 * 2 ) + 0 ] );
-				uvData.push( uvs[ ( triangleProperty.p2 * 2 ) + 1 ] );
+                //
 
-				uvData.push( uvs[ ( triangleProperty.p3 * 2 ) + 0 ] );
-				uvData.push( uvs[ ( triangleProperty.p3 * 2 ) + 1 ] );
+                uvData.push(uvs[(triangleProperty.p1 * 2) + 0]);
+                uvData.push(uvs[(triangleProperty.p1 * 2) + 1]);
 
-			}
+                uvData.push(uvs[(triangleProperty.p2 * 2) + 0]);
+                uvData.push(uvs[(triangleProperty.p2 * 2) + 1]);
 
-			geometry.setAttribute( 'position', new Float32BufferAttribute( positionData, 3 ) );
-			geometry.setAttribute( 'uv', new Float32BufferAttribute( uvData, 2 ) );
+                uvData.push(uvs[(triangleProperty.p3 * 2) + 0]);
+                uvData.push(uvs[(triangleProperty.p3 * 2) + 1]);
 
-			// material
+            }
 
-			var texture = getBuild( texture2dgroup, objects, modelData, textureData, objectData, buildTexture );
+            geometry.setAttribute('position', new Float32BufferAttribute(positionData, 3));
+            geometry.setAttribute('uv', new Float32BufferAttribute(uvData, 2));
 
-			var material = new MeshPhongMaterial( { map: texture, flatShading: true } );
+            // material
 
-			// mesh
+            var texture = getBuild(texture2dgroup, objects, modelData, textureData, objectData, buildTexture);
 
-			var mesh = new Mesh( geometry, material );
+            var material = new MeshPhongMaterial({ map: texture, flatShading: true });
 
-			return mesh;
+            // mesh
 
-		}
+            var mesh = new Mesh(geometry, material);
 
-		function buildVertexColorMesh( colorgroup, triangleProperties, modelData, meshData, objectData ) {
+            return mesh;
 
-			// geometry
+        }
 
-			var geometry = new BufferGeometry();
+        function buildVertexColorMesh(colorgroup, triangleProperties, modelData, meshData, objectData) {
 
-			var positionData = [];
-			var colorData = [];
+            // geometry
 
-			var vertices = meshData.vertices;
-			var colors = colorgroup.colors;
+            var geometry = new BufferGeometry();
 
-			for ( var i = 0, l = triangleProperties.length; i < l; i ++ ) {
+            var positionData = [];
+            var colorData = [];
 
-				var triangleProperty = triangleProperties[ i ];
+            var vertices = meshData.vertices;
+            var colors = colorgroup.colors;
 
-				var v1 = triangleProperty.v1;
-				var v2 = triangleProperty.v2;
-				var v3 = triangleProperty.v3;
+            for (var i = 0, l = triangleProperties.length; i < l; i++) {
 
-				positionData.push( vertices[ ( v1 * 3 ) + 0 ] );
-				positionData.push( vertices[ ( v1 * 3 ) + 1 ] );
-				positionData.push( vertices[ ( v1 * 3 ) + 2 ] );
+                var triangleProperty = triangleProperties[i];
 
-				positionData.push( vertices[ ( v2 * 3 ) + 0 ] );
-				positionData.push( vertices[ ( v2 * 3 ) + 1 ] );
-				positionData.push( vertices[ ( v2 * 3 ) + 2 ] );
+                var v1 = triangleProperty.v1;
+                var v2 = triangleProperty.v2;
+                var v3 = triangleProperty.v3;
 
-				positionData.push( vertices[ ( v3 * 3 ) + 0 ] );
-				positionData.push( vertices[ ( v3 * 3 ) + 1 ] );
-				positionData.push( vertices[ ( v3 * 3 ) + 2 ] );
+                positionData.push(vertices[(v1 * 3) + 0]);
+                positionData.push(vertices[(v1 * 3) + 1]);
+                positionData.push(vertices[(v1 * 3) + 2]);
 
-				//
+                positionData.push(vertices[(v2 * 3) + 0]);
+                positionData.push(vertices[(v2 * 3) + 1]);
+                positionData.push(vertices[(v2 * 3) + 2]);
 
-				var p1 = ( triangleProperty.p1 !== undefined ) ? triangleProperty.p1 : objectData.pindex;
-				var p2 = ( triangleProperty.p2 !== undefined ) ? triangleProperty.p2 : p1;
-				var p3 = ( triangleProperty.p3 !== undefined ) ? triangleProperty.p3 : p1;
+                positionData.push(vertices[(v3 * 3) + 0]);
+                positionData.push(vertices[(v3 * 3) + 1]);
+                positionData.push(vertices[(v3 * 3) + 2]);
 
-				colorData.push( colors[ ( p1 * 3 ) + 0 ] );
-				colorData.push( colors[ ( p1 * 3 ) + 1 ] );
-				colorData.push( colors[ ( p1 * 3 ) + 2 ] );
+                //
 
-				colorData.push( colors[ ( p2 * 3 ) + 0 ] );
-				colorData.push( colors[ ( p2 * 3 ) + 1 ] );
-				colorData.push( colors[ ( p2 * 3 ) + 2 ] );
+                var p1 = (triangleProperty.p1 !== undefined) ? triangleProperty.p1 : objectData.pindex;
+                var p2 = (triangleProperty.p2 !== undefined) ? triangleProperty.p2 : p1;
+                var p3 = (triangleProperty.p3 !== undefined) ? triangleProperty.p3 : p1;
 
-				colorData.push( colors[ ( p3 * 3 ) + 0 ] );
-				colorData.push( colors[ ( p3 * 3 ) + 1 ] );
-				colorData.push( colors[ ( p3 * 3 ) + 2 ] );
+                colorData.push(colors[(p1 * 3) + 0]);
+                colorData.push(colors[(p1 * 3) + 1]);
+                colorData.push(colors[(p1 * 3) + 2]);
 
-			}
+                colorData.push(colors[(p2 * 3) + 0]);
+                colorData.push(colors[(p2 * 3) + 1]);
+                colorData.push(colors[(p2 * 3) + 2]);
 
-			geometry.setAttribute( 'position', new Float32BufferAttribute( positionData, 3 ) );
-			geometry.setAttribute( 'color', new Float32BufferAttribute( colorData, 3 ) );
+                colorData.push(colors[(p3 * 3) + 0]);
+                colorData.push(colors[(p3 * 3) + 1]);
+                colorData.push(colors[(p3 * 3) + 2]);
 
-			// material
+            }
 
-			var material = new MeshPhongMaterial( { vertexColors: true, flatShading: true } );
+            geometry.setAttribute('position', new Float32BufferAttribute(positionData, 3));
+            geometry.setAttribute('color', new Float32BufferAttribute(colorData, 3));
 
-			// mesh
+            // material
 
-			var mesh = new Mesh( geometry, material );
+            var material = new MeshPhongMaterial({ vertexColors: true, flatShading: true });
 
-			return mesh;
+            // mesh
 
-		}
+            var mesh = new Mesh(geometry, material);
 
-		function buildDefaultMesh( meshData ) {
+            return mesh;
 
-			var geometry = new BufferGeometry();
-			geometry.setIndex( new BufferAttribute( meshData[ 'triangles' ], 1 ) );
-			geometry.setAttribute( 'position', new BufferAttribute( meshData[ 'vertices' ], 3 ) );
+        }
 
-			var material = new MeshPhongMaterial( { color: 0xaaaaff, flatShading: true } );
+        function buildDefaultMesh(modelData, meshData) {
 
-			var mesh = new Mesh( geometry, material );
+            var geometry = new BufferGeometry();
+            geometry.setIndex(new BufferAttribute(meshData['triangles'], 1));
+            geometry.setAttribute('position', new BufferAttribute(meshData['vertices'], 3));
 
-			return mesh;
+            // If model uses inch unit, scale geometry by 2.54
+            var unit = modelData['unit'];
+            if (unit === 'inch') {
+                var scaleTransform = new Matrix4().makeScale(2.54, 2.54, 2.54);
 
-		}
+                var bufferAttribute = geometry.getAttribute('position');
+                bufferAttribute.applyMatrix4(scaleTransform);
+            }
 
-		function buildMeshes( resourceMap, modelData, meshData, textureData, objectData ) {
+            var material = new MeshPhongMaterial({ color: 0xaaaaff, flatShading: true });
 
-			var keys = Object.keys( resourceMap );
-			var meshes = [];
+            var mesh = new Mesh(geometry, material);
 
-			for ( var i = 0, il = keys.length; i < il; i ++ ) {
+            return mesh;
 
-				var resourceId = keys[ i ];
-				var triangleProperties = resourceMap[ resourceId ];
-				var resourceType = getResourceType( resourceId, modelData );
+        }
 
-				switch ( resourceType ) {
+        function buildMeshes(resourceMap, modelData, meshData, textureData, objectData) {
 
-					case 'material':
-						var basematerials = modelData.resources.basematerials[ resourceId ];
-						var newMeshes = buildBasematerialsMeshes( basematerials, triangleProperties, modelData, meshData, textureData, objectData );
+            var keys = Object.keys(resourceMap);
+            var meshes = [];
 
-						for ( var j = 0, jl = newMeshes.length; j < jl; j ++ ) {
+            for (var i = 0, il = keys.length; i < il; i++) {
 
-							meshes.push( newMeshes[ j ] );
+                var resourceId = keys[i];
+                var triangleProperties = resourceMap[resourceId];
+                var resourceType = getResourceType(resourceId, modelData);
 
-						}
+                switch (resourceType) {
 
-						break;
+                    case 'material':
+                        var basematerials = modelData.resources.basematerials[resourceId];
+                        var newMeshes = buildBasematerialsMeshes(basematerials, triangleProperties, modelData, meshData, textureData, objectData);
 
-					case 'texture':
-						var texture2dgroup = modelData.resources.texture2dgroup[ resourceId ];
-						meshes.push( buildTexturedMesh( texture2dgroup, triangleProperties, modelData, meshData, textureData, objectData ) );
-						break;
+                        for (var j = 0, jl = newMeshes.length; j < jl; j++) {
 
-					case 'vertexColors':
-						var colorgroup = modelData.resources.colorgroup[ resourceId ];
-						meshes.push( buildVertexColorMesh( colorgroup, triangleProperties, modelData, meshData, objectData ) );
-						break;
+                            meshes.push(newMeshes[j]);
 
-					case 'default':
-						meshes.push( buildDefaultMesh( meshData ) );
-						break;
+                        }
 
-					default:
-						console.error( 'THREE.3MFLoader: Unsupported resource type.' );
+                        break;
 
-				}
+                    case 'texture':
+                        var texture2dgroup = modelData.resources.texture2dgroup[resourceId];
+                        meshes.push(buildTexturedMesh(texture2dgroup, triangleProperties, modelData, meshData, textureData, objectData));
+                        break;
 
-			}
+                    case 'vertexColors':
+                        var colorgroup = modelData.resources.colorgroup[resourceId];
+                        meshes.push(buildVertexColorMesh(colorgroup, triangleProperties, modelData, meshData, objectData));
+                        break;
 
-			return meshes;
+                    case 'default':
+                        meshes.push(buildDefaultMesh(modelData, meshData));
+                        break;
 
-		}
+                    default:
+                        console.error('THREE.3MFLoader: Unsupported resource type.');
 
-		function getResourceType( pid, modelData ) {
+                }
 
-			if ( modelData.resources.texture2dgroup[ pid ] !== undefined ) {
+            }
 
-				return 'texture';
+            return meshes;
 
-			} else if ( modelData.resources.basematerials[ pid ] !== undefined ) {
+        }
 
-				return 'material';
+        function getResourceType(pid, modelData) {
 
-			} else if ( modelData.resources.colorgroup[ pid ] !== undefined ) {
+            if (modelData.resources.texture2dgroup[pid] !== undefined) {
 
-				return 'vertexColors';
+                return 'texture';
 
-			} else if ( pid === 'default' ) {
+            } else if (modelData.resources.basematerials[pid] !== undefined) {
 
-				return 'default';
+                return 'material';
 
-			} else {
+            } else if (modelData.resources.colorgroup[pid] !== undefined) {
 
-				return undefined;
+                return 'vertexColors';
 
-			}
+            } else if (pid === 'default') {
 
-		}
+                return 'default';
 
-		function analyzeObject( modelData, meshData, objectData ) {
+            } else {
 
-			var resourceMap = {};
+                return undefined;
 
-			var triangleProperties = meshData[ 'triangleProperties' ];
+            }
 
-			var objectPid = objectData.pid;
+        }
 
-			for ( var i = 0, l = triangleProperties.length; i < l; i ++ ) {
+        function analyzeObject(modelData, meshData, objectData) {
 
-				var triangleProperty = triangleProperties[ i ];
-				var pid = ( triangleProperty.pid !== undefined ) ? triangleProperty.pid : objectPid;
+            var resourceMap = {};
 
-				if ( pid === undefined ) pid = 'default';
+            var triangleProperties = meshData['triangleProperties'];
 
-				if ( resourceMap[ pid ] === undefined ) resourceMap[ pid ] = [];
+            var objectPid = objectData.pid;
 
-				resourceMap[ pid ].push( triangleProperty );
+            for (var i = 0, l = triangleProperties.length; i < l; i++) {
 
-			}
+                var triangleProperty = triangleProperties[i];
+                var pid = (triangleProperty.pid !== undefined) ? triangleProperty.pid : objectPid;
 
-			return resourceMap;
+                if (pid === undefined) pid = 'default';
 
-		}
+                if (resourceMap[pid] === undefined) resourceMap[pid] = [];
 
-		function buildGroup( meshData, objects, modelData, textureData, objectData ) {
+                resourceMap[pid].push(triangleProperty);
 
-			var group = new Group();
+            }
 
-			var resourceMap = analyzeObject( modelData, meshData, objectData );
-			var meshes = buildMeshes( resourceMap, modelData, meshData, textureData, objectData );
+            return resourceMap;
 
-			for ( var i = 0, l = meshes.length; i < l; i ++ ) {
+        }
 
-				group.add( meshes[ i ] );
+        function buildGroup(meshData, objects, modelData, textureData, objectData) {
 
-			}
+            var group = new Group();
 
-			return group;
+            var resourceMap = analyzeObject(modelData, meshData, objectData);
+            var meshes = buildMeshes(resourceMap, modelData, meshData, textureData, objectData);
 
-		}
+            for (var i = 0, l = meshes.length; i < l; i++) {
 
-		function applyExtensions( extensions, meshData, modelXml ) {
+                group.add(meshes[i]);
 
-			if ( ! extensions ) {
+            }
 
-				return;
+            return group;
 
-			}
+        }
 
-			var availableExtensions = [];
-			var keys = Object.keys( extensions );
+        function applyExtensions(extensions, meshData, modelXml) {
 
-			for ( var i = 0; i < keys.length; i ++ ) {
+            if (!extensions) {
 
-				var ns = keys[ i ];
+                return;
 
-				for ( var j = 0; j < scope.availableExtensions.length; j ++ ) {
+            }
 
-					var extension = scope.availableExtensions[ j ];
+            var availableExtensions = [];
+            var keys = Object.keys(extensions);
 
-					if ( extension.ns === ns ) {
+            for (var i = 0; i < keys.length; i++) {
 
-						availableExtensions.push( extension );
+                var ns = keys[i];
 
-					}
+                for (var j = 0; j < scope.availableExtensions.length; j++) {
 
-				}
+                    var extension = scope.availableExtensions[j];
 
-			}
+                    if (extension.ns === ns) {
 
-			for ( var i = 0; i < availableExtensions.length; i ++ ) {
+                        availableExtensions.push(extension);
 
-				var extension = availableExtensions[ i ];
-				extension.apply( modelXml, extensions[ extension[ 'ns' ] ], meshData );
+                    }
 
-			}
+                }
 
-		}
+            }
 
-		function getBuild( data, objects, modelData, textureData, objectData, builder ) {
+            for (var i = 0; i < availableExtensions.length; i++) {
 
-			if ( data.build !== undefined ) return data.build;
+                var extension = availableExtensions[i];
+                extension.apply(modelXml, extensions[extension['ns']], meshData);
 
-			data.build = builder( data, objects, modelData, textureData, objectData );
+            }
 
-			return data.build;
+        }
 
-		}
+        function getBuild(data, objects, modelData, textureData, objectData, builder) {
 
-		function buildBasematerial( materialData, objects, modelData ) {
+            if (data.build !== undefined) return data.build;
 
-			var material;
+            data.build = builder(data, objects, modelData, textureData, objectData);
 
-			var displaypropertiesid = materialData.displaypropertiesid;
-			var pbmetallicdisplayproperties = modelData.resources.pbmetallicdisplayproperties;
+            return data.build;
 
-			if ( displaypropertiesid !== null && pbmetallicdisplayproperties[ displaypropertiesid ] !== undefined ) {
+        }
 
-				// metallic display property, use StandardMaterial
+        function buildBasematerial(materialData, objects, modelData) {
 
-				var pbmetallicdisplayproperty = pbmetallicdisplayproperties[ displaypropertiesid ];
-				var metallicData = pbmetallicdisplayproperty.data[ materialData.index ];
+            var material;
 
-				material = new MeshStandardMaterial( { flatShading: true, roughness: metallicData.roughness, metalness: metallicData.metallicness } );
+            var displaypropertiesid = materialData.displaypropertiesid;
+            var pbmetallicdisplayproperties = modelData.resources.pbmetallicdisplayproperties;
 
-			} else {
+            if (displaypropertiesid !== null && pbmetallicdisplayproperties[displaypropertiesid] !== undefined) {
 
-				// otherwise use PhongMaterial
+                // metallic display property, use StandardMaterial
 
-				material = new MeshPhongMaterial( { flatShading: true } );
+                var pbmetallicdisplayproperty = pbmetallicdisplayproperties[displaypropertiesid];
+                var metallicData = pbmetallicdisplayproperty.data[materialData.index];
 
-			}
+                material = new MeshStandardMaterial({ flatShading: true, roughness: metallicData.roughness, metalness: metallicData.metallicness });
 
-			material.name = materialData.name;
+            } else {
 
-			// displaycolor MUST be specified with a value of a 6 or 8 digit hexadecimal number, e.g. "#RRGGBB" or "#RRGGBBAA"
+                // otherwise use PhongMaterial
 
-			var displaycolor = materialData.displaycolor;
+                material = new MeshPhongMaterial({ flatShading: true });
 
-			var color = displaycolor.substring( 0, 7 );
-			material.color.setStyle( color );
-			material.color.convertSRGBToLinear(); // displaycolor is in sRGB
+            }
 
-			// process alpha if set
+            material.name = materialData.name;
 
-			if ( displaycolor.length === 9 ) {
+            // displaycolor MUST be specified with a value of a 6 or 8 digit hexadecimal number, e.g. "#RRGGBB" or "#RRGGBBAA"
 
-				material.opacity = parseInt( displaycolor.charAt( 7 ) + displaycolor.charAt( 8 ), 16 ) / 255;
+            var displaycolor = materialData.displaycolor;
 
-			}
+            var color = displaycolor.substring(0, 7);
+            material.color.setStyle(color);
+            material.color.convertSRGBToLinear(); // displaycolor is in sRGB
 
-			return material;
+            // process alpha if set
 
-		}
+            if (displaycolor.length === 9) {
 
-		function buildComposite( compositeData, objects, modelData, textureData ) {
+                material.opacity = parseInt(displaycolor.charAt(7) + displaycolor.charAt(8), 16) / 255;
 
-			var composite = new Group();
+            }
 
-			for ( var j = 0; j < compositeData.length; j ++ ) {
+            return material;
 
-				var component = compositeData[ j ];
-				var build = objects[ component.objectId ];
+        }
 
-				if ( build === undefined ) {
+        function buildComposite(compositeData, objects, modelData, textureData) {
 
-					buildObject( component.objectId, objects, modelData, textureData );
-					build = objects[ component.objectId ];
+            var composite = new Group();
 
-				}
+            for (var j = 0; j < compositeData.length; j++) {
 
-				var object3D = build.clone();
+                var component = compositeData[j];
+                var build = objects[component.objectId];
 
-				// apply component transform
+                if (build === undefined) {
 
-				var transform = component.transform;
+                    buildObject(component.objectId, objects, modelData, textureData);
+                    build = objects[component.objectId];
 
-				if ( transform ) {
+                }
 
-					object3D.applyMatrix4( transform );
+                var object3D = build.clone();
 
-				}
+                // apply component transform
 
-				composite.add( object3D );
+                var transform = component.transform;
 
-			}
+                if (transform) {
 
-			return composite;
+                    object3D.applyMatrix4(transform);
 
-		}
+                }
 
-		function buildObject( objectId, objects, modelData, textureData ) {
+                composite.add(object3D);
 
-			var objectData = modelData[ 'resources' ][ 'object' ][ objectId ];
+            }
 
-			if ( objectData[ 'mesh' ] ) {
+            return composite;
 
-				var meshData = objectData[ 'mesh' ];
+        }
 
-				var extensions = modelData[ 'extensions' ];
-				var modelXml = modelData[ 'xml' ];
+        function buildObject(objectId, objects, modelData, textureData) {
 
-				applyExtensions( extensions, meshData, modelXml );
+            var objectData = modelData['resources']['object'][objectId];
 
-				objects[ objectData.id ] = getBuild( meshData, objects, modelData, textureData, objectData, buildGroup );
+            if (objectData['mesh']) {
 
-			} else {
+                var meshData = objectData['mesh'];
 
-				var compositeData = objectData[ 'components' ];
+                var extensions = modelData['extensions'];
+                var modelXml = modelData['xml'];
 
-				objects[ objectData.id ] = getBuild( compositeData, objects, modelData, textureData, objectData, buildComposite );
+                applyExtensions(extensions, meshData, modelXml);
 
-			}
+                objects[objectData.id] = getBuild(meshData, objects, modelData, textureData, objectData, buildGroup);
 
-		}
+            } else {
 
-		function buildObjects( data3mf ) {
+                var compositeData = objectData['components'];
 
-			var modelsData = data3mf.model;
-			var modelRels = data3mf.modelRels;
-			var objects = {};
-			var modelsKeys = Object.keys( modelsData );
-			var textureData = {};
+                objects[objectData.id] = getBuild(compositeData, objects, modelData, textureData, objectData, buildComposite);
 
-			// evaluate model relationships to textures
+            }
 
-			if ( modelRels ) {
+        }
 
-				for ( var i = 0, l = modelRels.length; i < l; i ++ ) {
+        function buildObjects(data3mf) {
 
-					var modelRel = modelRels[ i ];
-					var textureKey = modelRel.target.substring( 1 );
+            var modelsData = data3mf.model;
+            var modelRels = data3mf.modelRels;
+            var objects = {};
+            var modelsKeys = Object.keys(modelsData);
+            var textureData = {};
 
-					if ( data3mf.texture[ textureKey ] ) {
+            // evaluate model relationships to textures
 
-						textureData[ modelRel.target ] = data3mf.texture[ textureKey ];
+            if (modelRels) {
 
-					}
+                for (var i = 0, l = modelRels.length; i < l; i++) {
 
-				}
+                    var modelRel = modelRels[i];
+                    var textureKey = modelRel.target.substring(1);
 
-			}
+                    if (data3mf.texture[textureKey]) {
 
-			// start build
+                        textureData[modelRel.target] = data3mf.texture[textureKey];
 
-			for ( var i = 0; i < modelsKeys.length; i ++ ) {
+                    }
 
-				var modelsKey = modelsKeys[ i ];
-				var modelData = modelsData[ modelsKey ];
+                }
 
-				var objectIds = Object.keys( modelData[ 'resources' ][ 'object' ] );
+            }
 
-				for ( var j = 0; j < objectIds.length; j ++ ) {
+            // start build
 
-					var objectId = objectIds[ j ];
+            for (var i = 0; i < modelsKeys.length; i++) {
 
-					buildObject( objectId, objects, modelData, textureData );
+                var modelsKey = modelsKeys[i];
+                var modelData = modelsData[modelsKey];
 
-				}
-				onProgress(i / modelsKeys.length * 0.3 + 0.5);
+                var objectIds = Object.keys(modelData['resources']['object']);
 
-			}
+                for (var j = 0; j < objectIds.length; j++) {
 
-			return objects;
+                    var objectId = objectIds[j];
 
-		}
+                    buildObject(objectId, objects, modelData, textureData);
 
-		function fetch3DModelPart( rels ) {
+                }
+                onProgress(i / modelsKeys.length * 0.3 + 0.5);
 
-			for ( var i = 0; i < rels.length; i ++ ) {
+            }
 
-				var rel = rels[ i ];
-				var extension = rel.target.split( '.' ).pop();
+            return objects;
 
-				if ( extension.toLowerCase() === 'model' ) return rel;
+        }
 
-			}
+        function fetch3DModelPart(rels) {
 
-		}
+            for (var i = 0; i < rels.length; i++) {
 
-		function build( objects, data3mf ) {
+                var rel = rels[i];
+                var extension = rel.target.split('.').pop();
 
-			var group = new Group();
+                if (extension.toLowerCase() === 'model') return rel;
 
-			var relationship = fetch3DModelPart( data3mf[ 'rels' ] );
-			var buildData = data3mf.model[ relationship[ 'target' ].substring( 1 ) ][ 'build' ];
+            }
 
-			for ( var i = 0; i < buildData.length; i ++ ) {
+        }
 
-				var buildItem = buildData[ i ];
-				var object3D = objects[ buildItem[ 'objectId' ] ];
+        function build(objects, data3mf) {
 
-				// apply transform
+            var group = new Group();
 
-				var transform = buildItem[ 'transform' ];
+            var relationship = fetch3DModelPart(data3mf['rels']);
+            var buildData = data3mf.model[relationship['target'].substring(1)]['build'];
 
-				if ( transform ) {
+            for (var i = 0; i < buildData.length; i++) {
 
-					object3D.applyMatrix4( transform );
+                var buildItem = buildData[i];
+                var object3D = objects[buildItem['objectId']];
 
-				}
+                // apply transform
 
-				group.add( object3D );
-				onProgress(i / buildData.length * 0.2 + 0.8);
+                var transform = buildItem['transform'];
 
-			}
-			onProgress(1);
+                if (transform) {
 
-			return group;
+                    object3D.applyMatrix4(transform);
 
-		}
+                }
 
-		var data3mf = await loadDocument( data );
-		onProgress(0.5);
-		var objects = buildObjects( data3mf );
-		onProgress(0.8);
-		return build( objects, data3mf );
+                group.add(object3D);
+                onProgress(i / buildData.length * 0.2 + 0.8);
 
-	},
+            }
+            onProgress(1);
 
-	addExtension: function ( extension ) {
+            return group;
 
-		this.availableExtensions.push( extension );
+        }
 
-	}
+        var data3mf = await loadDocument(data);
+        onProgress(0.5);
+        var objects = buildObjects(data3mf);
+        onProgress(0.8);
+        return build(objects, data3mf);
 
-} );
+    },
+
+    addExtension: function (extension) {
+
+        this.availableExtensions.push(extension);
+
+    }
+
+});
 
 export default ThreeMFLoader;
