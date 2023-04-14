@@ -42,10 +42,10 @@ function useRenderWorkspace() {
 }
 
 const Output: React.FC = () => {
-    const stage = useSelector(state => state?.printing?.stage, shallowEqual);
-    const modelGroup = useSelector(state => state?.printing?.modelGroup);
+    const stage = useSelector((state: RootState) => state.printing?.stage, shallowEqual);
+    const modelGroup = useSelector((state: RootState) => state.printing?.modelGroup);
     const hasAnyModelVisible = useSelector(state => state?.printing?.modelGroup?.hasAnyModelVisible(), shallowEqual);
-    const isAnyModelOverstepped = useSelector(state => state?.printing?.isAnyModelOverstepped, shallowEqual);
+    const isAnyModelOverstepped = useSelector((state: RootState) => state.printing.isAnyModelOverstepped, shallowEqual);
     const isGcodeOverstepped = useSelector(state => state?.printing?.isGcodeOverstepped, shallowEqual);
     const gcodeLine = useSelector(state => state?.printing?.gcodeLine);
     const gcodeFile = useSelector((state: RootState) => state.printing?.gcodeFile);

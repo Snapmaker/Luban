@@ -15,6 +15,15 @@ const render = () => (dispatch) => {
     );
 };
 
+const checkModelOverstep = () => {
+    return (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+
+        const isAnyModelOverstepped = modelGroup.getOverstepped();
+        dispatch(baseActions.updateState({ isAnyModelOverstepped }));
+    };
+};
+
 
 const getModelMaterialSettings = (model) => (dispatch, getState) => {
     const {
@@ -99,6 +108,7 @@ const applyPrintSettingsToModels = () => (dispatch, getState) => {
     const models = modelGroup.getModels();
     modelGroup.models = models.concat();
 
+    dispatch(checkModelOverstep());
     dispatch(render());
 };
 

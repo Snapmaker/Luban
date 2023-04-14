@@ -155,14 +155,20 @@ class ModelGroup extends EventEmitter {
 
         this.headType = headType;
         this.object = new Group();
+        this.object.name = 'Model Group';
+
         this.grayModeObject = new Group();
+        this.grayModeObject.name = 'Gray Group';
         this.models = [];
         this.primeTower = new PrimeTowerModel(0.01, this);
         this.primeTower.visible = false;
+
         this.selectedGroup = new Group();
+        this.selectedGroup.name = 'Selected Group';
         this.selectedGroup.uniformScalingState = true;
         this.selectedGroup.boundingBox = [];
         this.selectedGroup.shouldUpdateBoundingbox = true;
+
         this.object.add(this.selectedGroup);
         this.object.add(this.primeTower.meshObject);
         this.selectedModelArray = [];
@@ -1741,11 +1747,11 @@ class ModelGroup extends EventEmitter {
     }
 
     public _checkOverstepped(model: Model3D) {
-        let isOverstepped = false;
-        // TODO: Using 'computeBoundingBox' here will make it's boundingBox uncorrect
         // model.computeBoundingBox();
-        isOverstepped = this._bbox && model.boundingBox && !this._bbox.containsBox(model.boundingBox);
-        return isOverstepped;
+        if (!this._bbox || !model.boundingBox) {
+            return false;
+        }
+        return !this._bbox.containsBox(model.boundingBox);
     }
 
     public hasModel() {
