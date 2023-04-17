@@ -1120,9 +1120,38 @@ ThreeMFLoader.prototype = Object.assign(Object.create(Loader.prototype), {
 
             // If model uses inch unit, scale geometry by 2.54
             var unit = modelData['unit'];
-            if (unit === 'inch') {
-                var scaleTransform = new Matrix4().makeScale(2.54, 2.54, 2.54);
+            var unitScale = 1.0;
 
+            // ST_Unit
+            // https://github.com/3MFConsortium/lib3mf/blob/master/Tests/TestFiles/Schema/core_2015_02.xsd#L124
+            switch (unit) {
+                case 'micron': {
+                    unitScale = 0.001;
+                    break;
+                }
+                case 'millemeter':
+                    break;
+                case 'centimeter': {
+                    unitScale = 10;
+                    break;
+                }
+                case 'inch': {
+                    unitScale = 25.4;
+                    break;
+                }
+                case 'foot': {
+                    unitScale = 304.8;
+                    break;
+                }
+                case 'meter': {
+                    unitScale = 1000;
+                    break;
+                }
+                default:
+                    break;
+            }
+            if (unitScale !== 1.0) {
+                var scaleTransform = new Matrix4().makeScale(unitScale, unitScale, unitScale);
                 var bufferAttribute = geometry.getAttribute('position');
                 bufferAttribute.applyMatrix4(scaleTransform);
             }
