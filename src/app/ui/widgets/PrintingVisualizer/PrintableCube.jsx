@@ -1,17 +1,29 @@
 import {
-    Object3D, FrontSide,
-    PlaneGeometry, MeshBasicMaterial, Mesh,
-    Color, ShapeGeometry, Shape, LineBasicMaterial, Line, BufferGeometry, Float32BufferAttribute, LineSegments, MeshPhongMaterial, Group
+    BufferGeometry,
+    Color,
+    Float32BufferAttribute,
+    FrontSide,
+    Group,
+    Line,
+    LineBasicMaterial,
+    LineSegments,
+    Mesh,
+    MeshBasicMaterial,
+    MeshPhongMaterial,
+    Object3D,
+    PlaneGeometry,
+    Shape,
+    ShapeGeometry
 } from 'three';
 import { DEFAULT_LUBAN_HOST } from '../../../constants';
+import { findMachineByName } from '../../../constants/machines';
 import log from '../../../lib/log';
-import { MACHINE_SERIES } from '../../../constants/machines';
-import Rectangle from '../../../three-extensions/objects/Rectangle';
 import { FontLoader } from '../../../three-extensions/FontLoader';
 import STLLoader from '../../../three-extensions/STLLoader';
 import SVGLoader from '../../../three-extensions/SVGLoader';
 import ThreeUtils from '../../../three-extensions/ThreeUtils';
-import i18n from '../../../lib/i18n';
+import Rectangle from '../../../three-extensions/objects/Rectangle';
+// import i18n from '../../../lib/i18n';
 
 class PrintableCube extends Object3D {
     size = { x: 0, y: 0 };
@@ -92,8 +104,7 @@ class PrintableCube extends Object3D {
     _setupStopArea() {
         const { left, right, front, back } = this.stopArea;
         const { x, y } = this.size;
-        // front
-        const geometry1 = new PlaneGeometry(x, front);
+
         const material = new MeshBasicMaterial({
             color: '#DCDDDF',
             side: FrontSide,
@@ -105,31 +116,37 @@ class PrintableCube extends Object3D {
             polygonOffsetUnits: 3,
 
         });
+        // front
+        const geometry1 = new PlaneGeometry(x, Math.max(front, 0.01));
         const mesh1 = new Mesh(geometry1, material);
+        mesh1.name = 'Stop Area - Front';
         mesh1.position.set(0, -y / 2 + front / 2, 0);
         this.add(mesh1);
         mesh1.renderOrder = -4;
         this.stopAreaObjects.push(mesh1);
 
         // back
-        const geometry2 = new PlaneGeometry(x, back);
+        const geometry2 = new PlaneGeometry(x, Math.max(back, 0.01));
         const mesh2 = new Mesh(geometry2, material);
+        mesh2.name = 'Stop Area - Back';
         mesh2.position.set(0, y / 2 - back / 2, 0);
         this.add(mesh2);
         mesh2.renderOrder = -4;
         this.stopAreaObjects.push(mesh2);
 
         // left
-        const geometry3 = new PlaneGeometry(left, y - back - front);
+        const geometry3 = new PlaneGeometry(Math.max(left, 0.01), Math.max(y - back - front, 0.01));
         const mesh3 = new Mesh(geometry3, material);
+        mesh3.name = 'Stop Area - Left';
         mesh3.position.set(-x / 2 + left / 2, (front - back) / 2, 0);
         this.add(mesh3);
         mesh3.renderOrder = -4;
         this.stopAreaObjects.push(mesh3);
 
         // right
-        const geometry4 = new PlaneGeometry(right, y - back - front);
+        const geometry4 = new PlaneGeometry(Math.max(right, 0.01), Math.max(y - back - front, 0.01));
         const mesh4 = new Mesh(geometry4, material);
+        mesh4.name = 'Stop Area - Right';
         mesh4.position.set(x / 2 - right / 2, (front - back) / 2, 0);
         this.add(mesh4);
         mesh4.renderOrder = -4;
@@ -276,15 +293,9 @@ class PrintableCube extends Object3D {
 
             const fontSize = this.size.y * 0.025;
 
-            let machineText = '';
-            for (const key of Object.keys(MACHINE_SERIES)) {
-                const item = MACHINE_SERIES[key];
-                if (item.value === this.series) {
-                    machineText = i18n._(item.label);
-                    break;
-                }
-            }
-            machineText = machineText.replace(/^Snapmaker\s*(2\.0)?\s*/, '');
+            const machine = findMachineByName(this.series);
+            const machineText = machine.fullName;
+            // machineText = machineText.replace(/^Snapmaker\s*(2\.0)?\s*/, '');
 
             const shapes = font.generateShapes(machineText, fontSize);
             const geometry = new ShapeGeometry(shapes);
