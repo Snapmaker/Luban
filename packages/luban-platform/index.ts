@@ -4,3 +4,6 @@ export {
 } from './src/parameter-resolver';
 
 
+export {
+    checkSceneFaceless
+} from './src/three-extensions/common/mesh-utility';
