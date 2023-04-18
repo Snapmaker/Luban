@@ -191,12 +191,12 @@ const CaseResource = (props) => {
                 wrapID={mainToolBarId}
                 leftItems={[
                     {
-                        title: 'key-Workspace/Page-Back',
+                        title: i18n._('key-CaseResource/Page-Back'),
                         name: 'MainToolbarBack',
                         action: () => (props?.isPopup ? props.onClose() : props.history.push('/home')),
                     },
                     {
-                        title: i18n._('key-3DP/MainToolBar-Model Simplify'),
+                        title: i18n._('key-CaseResource/MainToolBar-DownloadManager Download'),
                         type: 'button',
                         name: 'MainToolbarDownloadManager',
                         action: async () => {

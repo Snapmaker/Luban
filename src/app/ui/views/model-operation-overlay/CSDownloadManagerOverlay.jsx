@@ -166,7 +166,7 @@ const ChangePrintModeOverlay = (props) => {
                         onKeyDown={() => onOpenProject(record)}
                         tabIndex={0}
                     >
-                        open
+                        {i18n._('key-CaseResource/DownloadManager Open')}
                     </div>
                 );
             }
@@ -179,8 +179,7 @@ const ChangePrintModeOverlay = (props) => {
                         onKeyDown={() => onOpenModel(record)}
                         tabIndex={0}
                     >
-                        import to Luban
-                        {/* {i18n._('key-App/Settings/import to Luban')} */}
+                        {i18n._('key-CaseResource/DownloadManager Import to Luban')}
                     </div>
                 );
             }
@@ -193,14 +192,14 @@ const ChangePrintModeOverlay = (props) => {
                         onKeyDown={() => onOpenFile(record.savePath)}
                         tabIndex={0}
                     >
-                        open file explor
+                        {i18n._('key-CaseResource/DownloadManager Open File Exploxer')}
                     </div>
                 );
             }
         }
     }
     function renderDownloadError() {
-        return <div>Network error, please download again</div>;
+        return <div>{i18n._('key-CaseResource/DownloadManager Error')}</div>;
     }
     function renderRecord(record) {
         if (!record) return '';
@@ -258,7 +257,7 @@ const ChangePrintModeOverlay = (props) => {
     return (
         <div className="position-absolute width-438 margin-left-72 border-default-grey-1 border-radius-8 background-color-white">
             <div className={classNames(styles['overlay-title-font'], 'border-bottom-normal padding-vertical-8 padding-horizontal-16')}>
-                {i18n._('Print Mode')} 1
+                {i18n._('key-CaseResource/DownloadManager Download')}
             </div>
             <div style={{ maxHeight: '60vh', flexFlow: 'column', overflow: 'auto' }} className="sm-flex sm-flex-direction-c justify-space-between padding-vertical-16 padding-horizontal-16">
                 {
@@ -304,7 +303,7 @@ const ChangePrintModeOverlay = (props) => {
                     type="default"
                     title="will not clear local files"
                 >
-                    {i18n._('key-Printing/Clear')}
+                    {i18n._('key-CaseResource/DownloadManager Clear')}
                 </Button>
                 <Button
                     onClick={onClose}
@@ -312,7 +311,8 @@ const ChangePrintModeOverlay = (props) => {
                     width="96px"
                     type="default"
                 >
-                    {i18n._('key-Printing/ProfileManager-Close')}
+
+                    {i18n._('key-CaseResource/DownloadManager Close')}
                 </Button>
                 <Button
                     onClick={onOpenFloder}
@@ -320,7 +320,7 @@ const ChangePrintModeOverlay = (props) => {
                     width="96px"
                     type="default"
                 >
-                    {i18n._('key-Printing/ProfileManager-Close')}open floder
+                    {i18n._('key-CaseResource/DownloadManager Open Folder')}
                 </Button>
             </div>
         </div>

@@ -133,8 +133,7 @@ const QuickStart = (props) => {
                 </a> */}
                 <Anchor onClick={() => { dispatch(appGlobalActions.updateState({ showCaseResource: true })); } /* history.push('/case-resouces')*/} title={i18n._('key-HomePage/Begin-Workspace')} className={classNames(styles['case-resource'])}>
                     <span className={classNames('heading-3-normal-with-hover')}>
-                        {/* {i18n._('key-HomePage/Begin-Forum')} */}
-                        More {'>'}
+                        {i18n._('key-HomePage/CaseResource-More')} {'>'}
                     </span>
                 </Anchor>
                 {renderCaseResources()}
