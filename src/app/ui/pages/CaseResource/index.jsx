@@ -1,47 +1,103 @@
-import React, { useState, useEffect } from 'react';
-import { useDispatch, connect } from 'react-redux';
-import { withRouter } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useDispatch, connect, } from 'react-redux';
+import { withRouter, useHistory } from 'react-router-dom';
 import isElectron from 'is-electron';
 import PropTypes from 'prop-types';
 import i18next from 'i18next';
-import { renderModal } from '../../utils';
 import i18n from '../../../lib/i18n';
 import { actions as projectActions } from '../../../flux/project';
-import { controller } from '../../../lib/controller';
-import { WORKFLOW_STATE_IDLE } from '../../../constants';
-import { actions as workspaceActions } from '../../../flux/workspace';
 import MainToolBar from '../../layouts/MainToolBar';
 import { PageMode } from '../PageMode';
+import CSDownloadManagerOverlay from '../../views/model-operation-overlay/CSDownloadManagerOverlay';
+import { db } from '../../../lib/indexDB/db';
 
 const resourceDomain = 'http://localhost:8085';
 // const resourceDomain = 'http://45.79.80.155:8085';
-let willMakeList = [];
-let willWorkspaceList = [];
-
 const CaseResource = (props) => {
-    const { history } = props;
-    const [isModalOpen, setIsModalOpen] = useState(false);
     // for simplify model, if true, visaulizerLeftbar and main tool bar can't be use
     const [pageMode, setPageMode] = useState(PageMode.Default);
-
     const dispatch = useDispatch();
+    const history = useHistory();
+    const caseResourceIframe = useRef();
+    const willMakedProjectFileItemRef = useRef({});
+    const willMakedModelFileItemRef = useRef([]);
+
+    // iframe adapt
     const handleResize = () => {
-        const iframe = document.querySelector('#resource-iframe');
-        window.addEventListener('resize', () => {
+        const iframe = caseResourceIframe.current; // document.querySelector('#resource-iframe');
+        console.log(caseResourceIframe);
+        const windowResize = () => {
             iframe.style.height = `calc(${window.innerHeight}px - 8px)`;
-        });
+        };
+        window.addEventListener('resize', windowResize);
+        return () => window.removeEventListener('resize', windowResize);
     };
+    function openProject(record) {
+        const { downloadUrl, fileName } = willMakedProjectFileItemRef.current;
+        const filename = `${record.name}${record.ext}`;
+        const isMakeTarget = record.downloadUrl === downloadUrl && filename === fileName;
+        console.log('compare', record, downloadUrl, fileName);
+        if (isMakeTarget) {
+            // reset
+            willMakedProjectFileItemRef.current = {};
+            willMakedModelFileItemRef.current = [];
+
+            // open project in printing page
+            console.log('match', record);
+            const { savePath, ext, name, fileNum } = record;
+            props.openProject(
+                {
+                    name: `${name}(${fileNum})${ext}`,
+                    path: savePath || '',
+                },
+                props.history
+            );
+        }
+    }
+    function openModel(record) {
+        const waitArr = willMakedModelFileItemRef.current;
+        console.log('compare arr', record, waitArr);
+        const targetIndex = waitArr.findIndex(item => item.downloadUrl === record.downloadUrl && item.fileName === `${record.name}${record.ext}`);
+        if (targetIndex !== -1) {
+            // reset
+            console.log('match, ', targetIndex);
+            waitArr.splice(targetIndex, 1);
+            willMakedProjectFileItemRef.current = {};
+
+            // open model in printing page
+            const { savePath, ext, name, fileNum } = record;
+            if (history.location?.pathname === '/printing') {
+                history.replace('/');
+                console.log(history);
+            }
+            const goToPrinting = () => history.replace({
+                pathname: '/printing',
+                state: {
+                    initialized: true,
+                    needOpenModel: true,
+                    fileName: `${name}(${fileNum})${ext}`,
+                    savePath
+                }
+            });
+            setTimeout(goToPrinting);
+        }
+    }
+    // get message from iframe
     const handleMessage = () => {
-        window.addEventListener('message', (event) => {
+        const msglistener = (event) => {
             if (event.origin === resourceDomain) {
                 console.log('get event from iframe:', event);
+                setPageMode(PageMode.DownloadManager);
                 switch (event.data.type) {
                     case 'make': {
-                        willMakeList.push(event.data.filename);
-                        break;
-                    }
-                    case 'workspace': {
-                        willWorkspaceList.push(event.data.filename);
+                        console.log('=========', dispatch);
+                        const isStl = fileName => fileName.slice(fileName.lastIndexOf('.')) === '.stl';
+                        if (!isStl(event.data.fileName)) {
+                            willMakedProjectFileItemRef.current = { fileName: event.data.fileName, downloadUrl: event.data.downloadUrl };
+                        } else {
+                            willMakedModelFileItemRef.current.push({ fileName: event.data.fileName, downloadUrl: event.data.downloadUrl });
+                        }
+                        console.log('make save:', { fileName: event.data.fileName, downloadUrl: event.data.downloadUrl });
                         break;
                     }
                     case 'download': {
@@ -51,93 +107,77 @@ const CaseResource = (props) => {
                     default:
                 }
             }
-        });
+        };
+        window.addEventListener('message', msglistener);
+
+        const iframe = caseResourceIframe.current;
+        iframe.onload = () => {
+            iframe.contentWindow.postMessage({
+                type: 'isElectron',
+                value: true
+            }, resourceDomain);
+        };
+        return () => window.removeEventListener('message', msglistener);
     };
     const handleDownloadFile = () => {
         if (!isElectron()) return;
         const { ipcRenderer } = window.require('electron');
-        ipcRenderer.on('filedownload', (event, args) => {
-            const path = JSON.parse(args).savePath;
-            const pathArr = path.split('\\');
-            const filename = pathArr[pathArr.length - 1];
-            console.log(args, pathArr, filename);
-            console.log(willMakeList);
-            console.log('download file finish:', filename);
-            if (willMakeList.some((v) => v === filename)) {
-                console.log('openProject by downloaded file:', filename);
-                props.openProject(
-                    {
-                        name: filename,
-                        path: path || '',
-                    },
-                    props.history
-                );
-                willMakeList = willMakeList.filter((v) => v !== filename);
-                console.log(willMakeList);
-            }
+        const newDownloadItem = (e, item) => {
+            // add a new record to db
+            db.downloadRecords.add(item);
+        };
+        ipcRenderer.on('new-download-item', newDownloadItem);
 
-            const canWorkspaceLoad = controller.workflowState === WORKFLOW_STATE_IDLE;
-            console.log(willWorkspaceList, filename);
-            console.log(
-                willWorkspaceList.some((v) => v === filename),
-                canWorkspaceLoad
-            );
-            if (
-                willWorkspaceList.some((v) => v === filename)
-                && canWorkspaceLoad
-            ) {
-                console.log('go to workspace by downloaded file:', filename);
-                dispatch(
-                    workspaceActions.uploadGcodeFile({
-                        path: path,
-                        name: filename,
-                        // size
-                    })
-                );
-                willWorkspaceList = willWorkspaceList.filter(
-                    (v) => v !== filename
-                );
-                history.push('/workspace');
-                console.log(willWorkspaceList);
+        // update progress of download manager
+        const updateRecordData = async (item) => {
+            const record = await db.downloadRecords.get({ startTime: item.startTime, savePath: item.savePath });
+            db.downloadRecords.update(record.id, item);
+            return record;
+        };
+        const downloadItemUpdate = (e, item) => { updateRecordData(item); };
+        ipcRenderer.on('download-item-updated', downloadItemUpdate);
+
+
+        // download done, update data to db
+        const downloadItemDone = async (e, downloadItem) => {
+            // update db
+            setTimeout(() => updateRecordData(downloadItem), 200);
+
+            // handle downloaded file by file's ext
+            const record = await db.downloadRecords.get({ startTime: downloadItem.startTime, savePath: downloadItem.savePath });
+            if (record.ext === '.snap3dp') {
+                openProject(record);
+            } else if (record.ext === '.stl') {
+                openModel(record);
             }
-        });
+        };
+        ipcRenderer.on('download-item-done', downloadItemDone);
+
+        // eslint-disable-next-line consistent-return
+        return () => {
+            ipcRenderer.removeListener('new-download-item', newDownloadItem);
+            ipcRenderer.removeListener('new-download-item', downloadItemUpdate);
+            ipcRenderer.removeListener('new-download-item', downloadItemDone);
+        };
     };
     useEffect(() => {
-        handleResize();
-        // setIsOk(true);
-        handleMessage();
+        const resizeOff = handleResize();
 
-        handleDownloadFile();
+        const msgOff = handleMessage();
+
+        const downloadOff = handleDownloadFile();
+
+        return () => {
+            resizeOff();
+            msgOff();
+            downloadOff();
+        };
     }, []);
 
-    const renderDevelopToolsModal = () => {
-        const onClose = () => setIsModalOpen(false);
-        return renderModal({
-            title: i18n._('key-App/Settings/FirmwareTool-Firmware Tool'),
-            renderBody: () => {
-                return <div>model~~</div>;
-            },
-            onClose,
-            actions: [
-                {
-                    name: i18n._('key-App/Settings/Preferences-Cancel'),
-                    onClick: () => {
-                        onClose();
-                    },
-                },
-                {
-                    name: i18n._(
-                        'key-App/Settings/FirmwareTool-Pack and Export'
-                    ),
-                    isPrimary: true,
-                    isAutoWidth: true,
-                    onClick: () => {
-                        onClose();
-                    },
-                },
-            ],
-        });
-    };
+    useEffect(() => {
+        console.log(pageMode);
+    }, [pageMode]);
+
 
     return (
         <>
@@ -146,7 +186,7 @@ const CaseResource = (props) => {
                     {
                         title: 'key-Workspace/Page-Back',
                         name: 'MainToolbarBack',
-                        action: () => (props?.isPopup ? props.onClose() : history.push('/home')),
+                        action: () => (props?.isPopup ? props.onClose() : props.history.push('/home')),
                     },
                     {
                         title: i18n._('key-3DP/MainToolBar-Model Simplify'),
@@ -154,11 +194,11 @@ const CaseResource = (props) => {
                         type: 'button',
                         name: 'MainToolbarDownloadManager',
                         action: async () => {
-                            if (pageMode === PageMode.Simplify) {
+                            if (pageMode === PageMode.DownloadManager) {
                                 // Click again will not exit simplify page mode
-                                // setPageMode(PageMode.Default);
+                                setPageMode(PageMode.Default);
                             } else {
-                                setPageMode(PageMode.Simplify);
+                                setPageMode(PageMode.DownloadManager);
                             }
                         }
                     },
@@ -167,9 +207,16 @@ const CaseResource = (props) => {
                 lang={i18next.language}
             />
             <div>
-                {isModalOpen ? renderDevelopToolsModal() : null}
+                {/* Change Print Mode */
+                    pageMode === PageMode.DownloadManager && (
+                        <CSDownloadManagerOverlay
+                            onClose={() => setPageMode(PageMode.Default)}
+                        />
+                    )
+                }
                 <iframe
                     id="resource-iframe"
+                    ref={caseResourceIframe}
                     style={{
                         width: '100%',
                         height: `calc(${window.innerHeight}px - 8px)`,
@@ -178,7 +225,6 @@ const CaseResource = (props) => {
                     frameBorder="0"
                     title="case-resource"
                 />
-                {/* <iframe style={{ width: '100%', height: `calc(${window.innerHeight}px - 8px)` }} src="http://45.79.80.155:8085/resource-list" frameBorder="0" title="case-resource" /> */}
             </div>
         </>
     );

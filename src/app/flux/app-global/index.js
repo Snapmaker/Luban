@@ -25,6 +25,7 @@ const DEFAULT_STATE = {
 
     showArrangeModelsError: false,
     arrangeModelZIndex: DEFAULT_MODAL_ZINDEX,
+
     downloadManangerSavedPath: !isElectron() ? '' : path.join(window.require('@electron/remote').app.getPath('userData'), 'downloadManager.json')
 };
 const SHOW_MODAL_TIME = 15000;
@@ -48,8 +49,15 @@ export const actions = {
     },
     // Initialize app-global data, get downloadManangerSavedPath configurations from store file
     init: () => (dispatch) => {
-        if (downloadManagerStore.get('downloadManangerSavedPath') !== DEFAULT_STATE.downloadManangerSavedPath) {
-            dispatch(actions.updateState({ downloadManangerSavedPath: downloadManagerStore.get('downloadManangerSavedPath') }));
+        const downloadManangerSavedPath = downloadManagerStore.get('downloadManangerSavedPath');
+        if (downloadManangerSavedPath !== DEFAULT_STATE.downloadManangerSavedPath) {
+            dispatch(actions.updateState({ downloadManangerSavedPath }));
+        }
+
+        // update download manager save path
+        if (isElectron()) {
+            const { ipcRenderer } = window.require('electron');
+            ipcRenderer.send('update-download-manager-save-path', JSON.stringify({ path: downloadManangerSavedPath }));
         }
     },
 
@@ -252,6 +260,12 @@ export const actions = {
     updateDownloadManangerSavedPath: (downloadManangerSavedPath) => dispatch => {
         downloadManagerStore.set('downloadManangerSavedPath', downloadManangerSavedPath);
         dispatch(actions.updateState({ downloadManangerSavedPath }));
+
+        // update download manager save path
+        if (isElectron()) {
+            const { ipcRenderer } = window.require('electron');
+            ipcRenderer.send('update-download-manager-save-path', JSON.stringify({ path: downloadManangerSavedPath }));
+        }
     }
 };
 export default function reducer(state = DEFAULT_STATE, action) {

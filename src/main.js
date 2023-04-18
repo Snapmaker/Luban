@@ -410,44 +410,124 @@ const showMainWindow = async () => {
     });
 
 
-    mainWindow.webContents.session.on('will-download', (event, item, webContents) => {
-    // 无需对话框提示， 直接将文件保存到路径
-    // item.setSavePath('/tmp/save.pdf');
+    // update download manager save path
+    ipcMain.on('update-download-manager-save-path', (_, data) => {
+        if (!data) return;
+        config.set('downloadSavePath', JSON.parse(data).path);
+    });
+    mainWindow.webContents.session.on('will-download', (event, downloadItem) => {
+        const fileName = downloadItem.getFilename();
+        const downloadUrl = downloadItem.getURL();
+        const startTime = downloadItem.getStartTime();
+        const initialState = downloadItem.getState();
 
-        console.log(event);
-        console.log(webContents);
+        let savePath = path.join(config.get('downloadSavePath'), fileName);
 
-        item.on('updated', (e, state) => {
-            if (state === 'interrupted') {
-                console.log('Download is interrupted but can be resumed');
-            } else if (state === 'progressing') {
-                if (item.isPaused()) {
-                    console.log('Download is paused');
-                } else {
-                    console.log(`Received bytes: ${item.getReceivedBytes()}, percent: ${item.getReceivedBytes() / item.getTotalBytes()}`);
-                    mainWindow.webContents.send('filedownload', JSON.stringify({
-                        received: item.getReceivedBytes(),
-                        total: item.getTotalBytes(),
-                        percent: item.getReceivedBytes() / item.getTotalBytes()
-                    }));
-                }
-            }
+        // avoid duplicate file name
+        let fileNum = 0;
+        const ext = path.extname(savePath);
+        const name = path.basename(savePath, ext);
+        const dir = path.dirname(savePath);
+        while (fs.existsSync(savePath)) {
+            fileNum += 1;
+            savePath = path.format({
+                dir,
+                ext,
+                name: `${name}(${fileNum})`,
+            });
+        }
+        savePath && downloadItem.setSavePath(savePath);
+
+        // send msg to renderer process, a new download start
+        mainWindow.webContents.send('new-download-item', {
+            savePath,
+            ext,
+            name,
+            fileNum,
+            downloadUrl,
+            startTime,
+            state: initialState,
+            paused: downloadItem.isPaused(),
+            totalBytes: downloadItem.getTotalBytes(),
+            receivedBytes: downloadItem.getReceivedBytes(),
         });
-        item.once('done', (e, state) => {
-            if (state === 'completed') {
-                console.log('Download successfully');
-            } else {
-                console.log(`Download failed: ${state}`);
-            }
-            mainWindow.webContents.send('filedownload', JSON.stringify(item));
+
+        // update download item status
+        downloadItem.on('updated', (e, state) => {
+            mainWindow.webContents.send('download-item-updated', {
+                startTime,
+                savePath,
+                ext,
+                name,
+                state,
+                totalBytes: downloadItem.getTotalBytes(),
+                receivedBytes: downloadItem.getReceivedBytes(),
+                paused: downloadItem.isPaused(),
+            });
+        });
+
+        // download done
+        downloadItem.on('done', (e, state) => {
+            mainWindow.webContents.send('download-item-done', {
+                savePath,
+                ext,
+                name,
+                startTime,
+                state,
+                totalBytes: downloadItem.getTotalBytes(),
+                receivedBytes: downloadItem.getReceivedBytes(),
+            });
         });
     });
 
-    ipcMain.on('select-directory', (event, data) => {
-        console.log(event, data);
-        dialog.showOpenDialog({ properties: ['openDirectory'] }).then(res => {
+    // open dialog for setting Download Manager default download path
+    ipcMain.on('select-directory', () => {
+        dialog.showOpenDialog({ title: '选择要保存位置', properties: ['openDirectory', 'createDirectory'] }).then(res => {
             mainWindow.webContents.send('selected-directory', JSON.stringify(res));
         }).catch(e => console.error(e));
+    });
+
+    // open download manager save path floder by sys file Explorer
+    ipcMain.on('open-download-save-path', (_, savePath) => {
+        shell.openPath(savePath);
+    });
+
+    // remove download manager file/files/folder
+    const rmDir = (dirPath, removeSelf = true) => {
+        let files;
+        try {
+            files = fs.readdirSync(dirPath);
+        } catch (e) {
+            console.error(`Read directory fail ${dirPath}`);
+            return;
+        }
+
+        if (files.length > 0) {
+            for (let i = 0; i < files.length; i++) {
+                const filePath = `${dirPath}/${files[i]}`;
+                if (fs.statSync(filePath).isFile()) {
+                    fs.unlinkSync(filePath);
+                } else {
+                    rmDir(filePath);
+                }
+            }
+        }
+        if (removeSelf) {
+            fs.rmdirSync(dirPath);
+        }
+    };
+    const clearPath = removePath => {
+        if (fs.existsSync(removePath)) {
+            if (fs.statSync(removePath).isFile()) {
+                fs.unlink(removePath, err => console.error(err));
+            } else {
+                rmDir(removePath, true);
+            }
+        }
+    };
+    ipcMain.on('download-manager-remove-file', (_, removePath) => clearPath(removePath));
+    ipcMain.on('clear-files', (_, removePaths) => {
+        removePaths.forEach(removePath => clearPath(removePath));
     });
 };
 

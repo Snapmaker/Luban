@@ -14,12 +14,15 @@ import UniApi from '../../../../lib/uni-api';
 
 function Download(props) {
     const [selectedFolder, setSelectedFolder] = useState(props.downloadManangerSavedPath);
-    // const { actions } = props;
-    // console.log(actions);
     console.log(props);
     const actions = {
-        onSave: () => { console.log('save download config'); },
-        onCancel: () => { console.log('cancel download config'); }
+        onSave: () => {
+            props.updateDownloadManangerSavedPath(selectedFolder);
+            console.log('save download config');
+        },
+        onCancel: () => {
+            console.log('cancel download config');
+        }
     };
 
     useEffect(() => {
@@ -36,7 +39,6 @@ function Download(props) {
 
     const savePath = path => {
         setSelectedFolder(path);
-        props.updateDownloadManangerSavedPath(path);
     };
 
     const handleFolderChange = (folder) => {

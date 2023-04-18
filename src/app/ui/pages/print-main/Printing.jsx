@@ -389,8 +389,15 @@ function Printing({ location }) {
         })();
 
         // Make sure execute 'initSocketEvent' after 'printingActions.init' on openning project
-        setTimeout(() => {
-            dispatch(printingActions.initSocketEvent());
+        setTimeout(async () => {
+            await dispatch(printingActions.initSocketEvent());
+            if (location.state && location.state.needOpenModel) {
+                const { fileName, savePath } = location.state;
+                dispatch(printingActions.uploadModel([JSON.stringify({
+                    name: fileName,
+                    path: savePath || '',
+                })],));
+            }
         }, 50);
         dispatch(printingActions.checkNewUser());
 
