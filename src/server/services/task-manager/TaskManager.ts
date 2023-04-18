@@ -23,11 +23,11 @@ export const TASK_TYPE_CUT_MODEL = 'cutModel';
  * Task Type to Runner name (i.e. Runner file name).
  */
 const TASK_TYPE_RUNNER_MAP = {
-    TASK_TYPE_GENERATE_TOOLPATH: 'generateToolPath',
-    TASK_TYPE_GENERATE_GCODE: 'generateGcode',
-    TASK_TYPE_GENERATE_VIEWPATH: 'generateViewPath',
-    TASK_TYPE_PROCESS_IMAGE: 'processImage',
-    TASK_TYPE_CUT_MODEL: 'cutModel',
+    [TASK_TYPE_GENERATE_TOOLPATH]: 'generateToolPath',
+    [TASK_TYPE_GENERATE_GCODE]: 'generateGcode',
+    [TASK_TYPE_GENERATE_VIEWPATH]: 'generateViewPath',
+    [TASK_TYPE_PROCESS_IMAGE]: 'processImage',
+    [TASK_TYPE_CUT_MODEL]: 'cutModel',
 };
 
 type TPayload = {
@@ -139,6 +139,8 @@ class TaskManager {
         const runnerName = TASK_TYPE_RUNNER_MAP[task.taskType];
         if (runnerName) {
             this.exec(runnerName, task);
+        } else {
+            log.warn(`task runner for ${task.taskType} no found`);
         }
 
         /*
