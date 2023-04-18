@@ -1,10 +1,10 @@
-// import isEqual from 'lodash/isEqual';
 import { isEqual, some } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
-import { Box3, Math as ThreeMath, Quaternion, Vector3 } from 'three';
+import { Box3, Quaternion, Math as ThreeMath, Vector3 } from 'three';
+
 import { EPSILON, HEAD_PRINTING, ROTATE_MODE, SCALE_MODE, TRANSLATE_MODE } from '../../../constants';
 import { isDualExtruder } from '../../../constants/machines';
 import { actions as machineActions } from '../../../flux/machine';
@@ -13,11 +13,9 @@ import { actions as printingActions } from '../../../flux/printing';
 import { actions as settingsActions } from '../../../flux/setting';
 import { logModelViewOperation } from '../../../lib/gaEvent';
 import i18n from '../../../lib/i18n';
-
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 import { priorities, shortcutActions, ShortcutManager } from '../../../lib/shortcut';
 import { ModelEvents } from '../../../models/events';
-
 import scene from '../../../scene/Scene';
 import ContextMenu from '../../components/ContextMenu';
 import ProgressBar from '../../components/ProgressBar';
@@ -40,7 +38,6 @@ import {
     sliceFailPopup,
 } from './VisualizerPopup';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
-// , MeshPhongMaterial, DoubleSide, Mesh, CylinderBufferGeometry
 
 const initQuaternion = new Quaternion();
 
@@ -119,8 +116,6 @@ class Visualizer extends PureComponent {
     printableArea = null;
 
     contextMenuRef = React.createRef();
-
-    visualizerRef = React.createRef();
 
     canvas = React.createRef();
 
@@ -297,14 +292,9 @@ class Visualizer extends PureComponent {
             this.props.destroyGcodeLine();
             this.actions.setTransformMode('support');
             this.canvas.current.startSupportMode();
-            // const model = this.props.selectedModelArray[0];
-            // model.setVertexColors();
         },
         stopSupportMode: () => {
-            // this.supportActions.saveSupport();
             this.canvas.current.stopSupportMode();
-            // const model = this.props.selectedModelArray[0];
-            // model && model.removeVertexColors();
         },
         moveSupport: (raycastResult) => {
             this.props.moveSupportBrush(raycastResult);
@@ -670,10 +660,7 @@ class Visualizer extends PureComponent {
         ]);
 
         return (
-            <div
-                className={styles['printing-visualizer']}
-                ref={this.visualizerRef}
-            >
+            <div>
                 <VisualizerLeftBar
                     fitViewIn={this.actions.fitViewIn}
                     updateBoundingBox={this.actions.updateBoundingBox}

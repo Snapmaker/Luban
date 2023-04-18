@@ -1,163 +1,172 @@
-@import "../styles.styl"
+@import '../styles.styl';
 
-$z-index-float = 500
-$visualizer-padding = 10px
-$left-bar-width = 58px
-$bottom-bar-height = 0
+.widget-container {
+    position: relative;
+    margin-bottom: 0;
+    padding: 0; // no padding
+    background-color: #f5f5f7;
+}
+
+$z-index-float = 500;
+$visualizer-padding = 10px;
+$left-bar-width = 58px;
+$bottom-bar-height = 0;
 
 .visualizer-top-left {
-    position: absolute
-    top: $visualizer-padding
-    left: $visualizer-padding
-    z-index: $z-index-float
+    position: absolute;
+    top: $visualizer-padding;
+    left: $visualizer-padding;
+    z-index: $z-index-float;
 
     .btn-top-left {
-        display: inline-block
-        position: relative
-        float: left
-        width: 60px
-        height: 30px
-        background-color: $background-color
-        margin-left: .5rem
-        padding: 0
-        border: 1px solid $border-color
-        border-radius: $border-radius
+        display: inline-block;
+        position: relative;
+        float: left;
+        width: 60px;
+        height: 30px;
+        background-color: $background-color;
+        margin-left: .5rem;
+        padding: 0;
+        border: 1px solid $border-color;
+        border-radius: $border-radius;
 
-        .btn-undo
-        .btn-redo
-        .btn-reset
-        .btn-remove {
-            width: 100%
-            height: 100%
-            background-repeat: no-repeat
-            background-position: center
+        .btn-undo, .btn-redo, .btn-reset, .btn-remove {
+            width: 100%;
+            height: 100%;
+            background-repeat: no-repeat;
+            background-position: center;
         }
 
         .btn-undo {
-            background-image: url("/resources/images/14x14/undo-normal-14x14.png")
+            background-image: url('/resources/images/14x14/undo-normal-14x14.png');
         }
 
         .btn-redo {
-            background-image: url("/resources/images/14x14/redo-normal-14x14.png")
+            background-image: url('/resources/images/14x14/redo-normal-14x14.png');
         }
 
         .btn-reset {
-            background-image: url("/resources/images/14x14/reset-normal-14x14.png")
+            background-image: url('/resources/images/14x14/reset-normal-14x14.png');
         }
 
         .btn-remove {
-            background-image: url("/resources/images/14x14/delete-normal-14x14.png")
+            background-image: url('/resources/images/14x14/delete-normal-14x14.png');
         }
 
         &:hover {
-            background-color: $btn-default-background-color-hover
+            background-color: $btn-default-background-color-hover;
 
             .btn-undo {
-                background-image: url("/resources/images/14x14/undo-hover-14x14.png")
+                background-image: url('/resources/images/14x14/undo-hover-14x14.png');
             }
 
             .btn-redo {
-                background-image: url("/resources/images/14x14/redo-hover-14x14.png")
+                background-image: url('/resources/images/14x14/redo-hover-14x14.png');
             }
 
             .btn-reset {
-                background-image: url("/resources/images/14x14/reset-hover-14x14.png")
+                background-image: url('/resources/images/14x14/reset-hover-14x14.png');
             }
 
             .btn-remove {
-                background-image: url("/resources/images/14x14/delete-hover-14x14.png")
+                background-image: url('/resources/images/14x14/delete-hover-14x14.png');
             }
         }
 
         &:disabled {
-            opacity(.5)
+            opacity(.5);
 
             .btn-undo {
-                background-image: url("/resources/images/14x14/undo-disabled-14x14.png")
+                background-image: url('/resources/images/14x14/undo-disabled-14x14.png');
             }
 
             .btn-redo {
-                background-image: url("/resources/images/14x14/redo-disabled-14x14.png")
+                background-image: url('/resources/images/14x14/redo-disabled-14x14.png');
             }
 
             .btn-reset {
-                background-image: url("/resources/images/14x14/reset-disabled-14x14.png")
+                background-image: url('/resources/images/14x14/reset-disabled-14x14.png');
             }
 
             .btn-remove {
-                background-image: url("/resources/images/14x14/delete-disabled-14x14.png")
+                background-image: url('/resources/images/14x14/delete-disabled-14x14.png');
             }
         }
     }
 }
 
+.visualizer-bottom-left {
+    z-index: $z-index-float;
+    position: absolute;
+    left: $visualizer-padding + $left-bar-width;
+    bottom: 16px;
 
-.visualizer-bottom-left
-    z-index: $z-index-float
-    position: absolute
-    left: $visualizer-padding + $left-bar-width
-    bottom: 16px
+    .camera-operation {
+        border: 1px solid $border-color;
 
-    .camera-operation
-        border: 1px solid $border-color
+        .turn-left, .turn-right, .turn-up, .turn-down {
+            width: 28px;
+            height: 28px;
+            line-height: 28px;
+            text-align: center;
+            vertical-align: middle;
+            background-color: $background-color;
+            border: 0;
 
-        .turn-left
-        .turn-right
-        .turn-up
-        .turn-down
-            width: 28px
-            height: 28px
-            line-height: 28px
-            text-align: center
-            vertical-align: middle
-            background-color: $background-color
-            border: 0
+            &:hover {
+                opacity(.5);
+            }
 
-            &:hover
-                opacity(.5)
-
-            &:active
-                opacity(.3)
-
-        .camera-reset
-            display: inline-block
-            width: 28px
-            height: 28px
-            text-align: center
-            vertical-align: middle
-            background-repeat: no-repeat
-            background-position: center
-            background-image: url("/resources/images/18x18/camera-reset-normal-18x18.png")
-            border: 0
-
-            &:hover
-                opacity(.5)
-
-            &:active
-                opacity(.3)
-
-    .view-switch
-        &:hover
-        &.active {
-            background: $grey-1 !important;
+            &:active {
+                opacity(.3);
+            }
         }
 
-.visualizer-preview-control
-    z-index: $z-index-float
-    position: absolute
-    right: $visualizer-padding - 5px
+        .camera-reset {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            text-align: center;
+            vertical-align: middle;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-image: url('/resources/images/18x18/camera-reset-normal-18x18.png');
+            border: 0;
+
+            &:hover {
+                opacity(.5);
+            }
+
+            &:active {
+                opacity(.3);
+            }
+        }
+    }
+
+    .view-switch {
+        &:hover, &.active {
+            background: $grey-1 !important;
+        }
+    }
+}
+
+.visualizer-preview-control {
+    z-index: $z-index-float;
+    position: absolute;
+    right: $visualizer-padding - 5px;
     // top: 160px
     top: 50%;
     transform: translateY(-50%);
-    width: 26px
+    width: 26px;
 
-    .vertical-slider
+    .vertical-slider {
         // position: absolute
         margin-top: 15px;
         margin-bottom: 10px;
         top: 55px;
         height: 380px;
         left: 1px;
+    }
 
     .layer-wrapper {
         display: flex;
@@ -165,107 +174,115 @@ $bottom-bar-height = 0
     }
 
     .vertical-handle {
-        position: absolute
-        width: 20px
-        height: 20px
-        line-height: 20px
-        text-align: center
-        transform: translate(0, 50%)
-        margin-left: -8px
-        color: white
-        background-color: $dark-color
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        line-height: 20px;
+        text-align: center;
+        transform: translate(0, 50%);
+        margin-left: -8px;
+        color: white;
+        background-color: $dark-color;
 
         &:hover {
-            opacity(.5)
+            opacity(.5);
         }
     }
 
-    .toggle-btn
-        display: block
-        width: 20px
-        height: 20px
-        line-height: 20px
-        text-align: center
-        margin-top: 15px
+    .toggle-btn {
+        display: block;
+        width: 20px;
+        height: 20px;
+        line-height: 20px;
+        text-align: center;
+        margin-top: 15px;
 
-        &:hover
-            opacity(.5)
+        &:hover {
+            opacity(.5);
+        }
 
-        &:active
-            opacity(.3)
+        &:active {
+            opacity(.3);
+        }
+    }
 
-    .layer-label
-        width: 100%
-        text-align: center
-        color: $desc-text-color
+    .layer-label {
+        width: 100%;
+        text-align: center;
+        color: $desc-text-color;
         font-size: 12px;
         margin-left: -4px;
-
-    .preview-panel {
-        display: block
-        position: absolute
-        top: 50%;
-        transform: translateY(-50%);
-        right: 40px
-
-        .preview-brick {
-            display: inline-block
-            width: 14px
-            height: 14px
-            margin-top: 5px
-            float: right
-        }
     }
 
+    .preview-panel {
+        display: block;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        right: 40px;
 
-.visualizer-model-transformation
-    z-index: $z-index-float
-    position: absolute
-    left: $visualizer-padding
-    //top: 50%
-    //transform: translate(0, -50%)
+        .preview-brick {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            margin-top: 5px;
+            float: right;
+        }
+    }
+}
 
-    .model-transformation__container
-        border: 1px solid $border-color
-        border-radius: $border-radius
+.visualizer-model-transformation {
+    z-index: $z-index-float;
+    position: absolute;
+    left: $visualizer-padding;
 
-        &.disabled
-            opacity(.5)
+    // top: 50%
+    // transform: translate(0, -50%)
+    .model-transformation__container {
+        border: 1px solid $border-color;
+        border-radius: $border-radius;
 
+        &.disabled {
+            opacity(.5);
+        }
+    }
+}
 
-.visualizer-left-bar
+.visualizer-left-bar {
     position: absolute;
     left: 8px;
     top: 8px;
     bottom: 8px;
     z-index: 501;
 
-    .leftbar
-        z-index: 99
-        position: absolute
-        left: 0
-        top: 0
-        bottom: 0
-        width: $left-bar-width
-        background-color: $sidebar-background-color
-        border-right: 1px solid $border-color
-        box-shadow: 1px 0 3px $shadow-color
+    .leftbar {
+        z-index: 99;
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: $left-bar-width;
+        background-color: $sidebar-background-color;
+        border-right: 1px solid $border-color;
+        box-shadow: 1px 0 3px $shadow-color;
+    }
 
-    .navbar
-        position: relative
+    .navbar {
+        position: relative;
+    }
 
-    .nav
-        padding-left: 0
-        margin-bottom: 0
-        list-style: none
+    .nav {
+        padding-left: 0;
+        margin-bottom: 0;
+        list-style: none;
         border-bottom: 1px solid $grey-1;
 
-        > li
-            display: block
-            position: relative
-            text-align: center
-            text-decoration: none
-            white-space: nowrap
+        > li {
+            display: block;
+            position: relative;
+            text-align: center;
+            text-decoration: none;
+            white-space: nowrap;
 
             .selected {
                 background-color: #E7F3FF !important;
@@ -274,262 +291,300 @@ $bottom-bar-height = 0
                     fill: #1890FF;
                 }
             }
+        }
 
-        > li > button
-            display: block
-            width: 56px
-            height: 64px
-            border: 0
-            padding: 0
-            background-color: $background-color
-            background-repeat: no-repeat
-            background-position: center
-            background-size: 48px 48px
-            color: #808080
+        > li > button {
+            display: block;
+            width: 56px;
+            height: 64px;
+            border: 0;
+            padding: 0;
+            background-color: $background-color;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 48px 48px;
+            color: #808080;
 
-            &:disabled
-                color: #E3E3E3
+            &:disabled {
+                color: #E3E3E3;
+            }
 
-            &.operation-add
-                background-image: url('/resources/images/224x224/toolbar_add_files.jpg')
+            &.operation-add {
+                background-image: url('/resources/images/224x224/toolbar_add_files.jpg');
 
-                &:disabled
-                    opacity(.2) // Todo: the same to others after change image
-                    background-image: url('/resources/images/224x224/toolbar_add_files.jpg')
+                &:disabled {
+                    opacity(.2);
+                    background-image: url('/resources/images/224x224/toolbar_add_files.jpg');
+                }
+            }
 
-            &.operation-mirror
-                background-image: url('/resources/images/224x224/toolbar_mirror_models.jpg')
+            &.operation-mirror {
+                background-image: url('/resources/images/224x224/toolbar_mirror_models.jpg');
 
-                &:disabled
-                    opacity(.2) // Todo: the same to others after change image
-                    background-image: url('/resources/images/224x224/toolbar_mirror_models.jpg')
+                &:disabled {
+                    opacity(.2);
+                    background-image: url('/resources/images/224x224/toolbar_mirror_models.jpg');
+                }
+            }
 
-            &.operation-arrange
-                background-image: url('/resources/images/224x224/toolbar_arrange_models.jpg')
+            &.operation-arrange {
+                background-image: url('/resources/images/224x224/toolbar_arrange_models.jpg');
 
-                &:disabled
-                    opacity(.2) // Todo: the same to others after change image
-                    background-image: url('/resources/images/224x224/toolbar_arrange_models.jpg')
+                &:disabled {
+                    opacity(.2);
+                    background-image: url('/resources/images/224x224/toolbar_arrange_models.jpg');
+                }
+            }
 
-            &.operation-move
-                border-top-left-radius: $border-radius
-                border-top-right-radius: $border-radius
-                background-image: url('/resources/images/48x48/icon-move-normal-48x48.png')
+            &.operation-move {
+                border-top-left-radius: $border-radius;
+                border-top-right-radius: $border-radius;
+                background-image: url('/resources/images/48x48/icon-move-normal-48x48.png');
 
-                &:disabled
-                    background-image: url('/resources/images/48x48/icon-move-disabled-48x48.png')
+                &:disabled {
+                    background-image: url('/resources/images/48x48/icon-move-disabled-48x48.png');
+                }
+            }
 
-            &.operation-scale
-                background-image: url('/resources/images/48x48/icon-scale-normal-48x48.png')
+            &.operation-scale {
+                background-image: url('/resources/images/48x48/icon-scale-normal-48x48.png');
 
-                &:disabled
-                    background-image: url('/resources/images/48x48/icon-scale-disabled-48x48.png')
+                &:disabled {
+                    background-image: url('/resources/images/48x48/icon-scale-disabled-48x48.png');
+                }
+            }
 
-            &.operation-rotate
-                background-image: url('/resources/images/48x48/icon-rotate-normal-48x48.png')
+            &.operation-rotate {
+                background-image: url('/resources/images/48x48/icon-rotate-normal-48x48.png');
 
-                &:disabled
-                    background-image: url('/resources/images/48x48/icon-rotate-disabled-48x48.png')
+                &:disabled {
+                    background-image: url('/resources/images/48x48/icon-rotate-disabled-48x48.png');
+                }
+            }
 
-            &.operation-support
-                border-bottom-left-radius: $border-radius
-                border-bottom-right-radius: $border-radius
-                background-image: url('/resources/images/48x48/icon-support-normal-48x48.png')
+            &.operation-support {
+                border-bottom-left-radius: $border-radius;
+                border-bottom-right-radius: $border-radius;
+                background-image: url('/resources/images/48x48/icon-support-normal-48x48.png');
 
-                &:disabled
-                    background-image: url('/resources/images/48x48/icon-support-disabled-48x48.png')
+                &:disabled {
+                    background-image: url('/resources/images/48x48/icon-support-disabled-48x48.png');
+                }
+            }
 
-            &:hover,
-            &.selected
-                background-color: $blue-color
-                color: #FAFAFA
+            &:hover, &.selected {
+                background-color: $blue-color;
+                color: #FAFAFA;
 
-                &.operation-add
-                    background-image: url('/resources/images/224x224/toolbar_add_files.jpg')
+                &.operation-add {
+                    background-image: url('/resources/images/224x224/toolbar_add_files.jpg');
+                }
 
-                &.operation-mirror
-                    background-image: url('/resources/images/224x224/toolbar_mirror_models.jpg')
+                &.operation-mirror {
+                    background-image: url('/resources/images/224x224/toolbar_mirror_models.jpg');
+                }
 
-                &.operation-arrange
-                    background-image: url('/resources/images/224x224/toolbar_arrange_models.jpg')
+                &.operation-arrange {
+                    background-image: url('/resources/images/224x224/toolbar_arrange_models.jpg');
+                }
 
-                &.operation-move
-                    background-image: url('/resources/images/48x48/icon-move-hover-48x48.png')
+                &.operation-move {
+                    background-image: url('/resources/images/48x48/icon-move-hover-48x48.png');
+                }
 
-                &.operation-scale
-                    background-image: url('/resources/images/48x48/icon-scale-hover-48x48.png')
+                &.operation-scale {
+                    background-image: url('/resources/images/48x48/icon-scale-hover-48x48.png');
+                }
 
-                &.operation-rotate
-                    background-image: url('/resources/images/48x48/icon-rotate-hover-48x48.png')
+                &.operation-rotate {
+                    background-image: url('/resources/images/48x48/icon-rotate-hover-48x48.png');
+                }
 
-                &.operation-support
-                    background-image: url('/resources/images/48x48/icon-support-hover-48x48.png')
+                &.operation-support {
+                    background-image: url('/resources/images/48x48/icon-support-hover-48x48.png');
+                }
+            }
+        }
 
-        > li > :hover
-            background-color: $white
+        > li > :hover {
+            background-color: $white;
 
-            > .icon.icon-invert
-                filter: invert(.5) sepia(1) saturate(3) hue-rotate(175deg)
+            > .icon.icon-invert {
+                filter: invert(.5) sepia(1) saturate(3) hue-rotate(175deg);
+            }
+        }
 
-        > li.active
-            > a,
-            > a:focus,
-            > a:hover
-                background-color: $white
+        > li.active {
+            > a, > a:focus, > a:hover {
+                background-color: $white;
 
-                > .icon.icon-invert
+                > .icon.icon-invert {
                     // Swapping Fill Color on Image Tag SVGs
                     // https://blog.union.io/code/2017/08/10/img-svg-fill/
-                    filter: invert(.5) sepia(1) saturate(5) hue-rotate(175deg)
+                    filter: invert(.5) sepia(1) saturate(5) hue-rotate(175deg);
+                }
+            }
+        }
+    }
 
-    > .panel
-        background-color: $background-color
-        display: block
-        //width: 280px
-        position: absolute
-        left: (56px + $visualizer-padding)
-        border: 1px solid $border-color
-        border-radius: $border-radius
-        opacity(.8)
+    > .panel {
+        background-color: $background-color;
+        display: block;
+        // width: 280px
+        position: absolute;
+        left: 56px + $visualizer-padding;
+        border: 1px solid $border-color;
+        border-radius: $border-radius;
+        opacity(.8);
 
-        .reset-button
-            background-color: #FFFFFF
+        .reset-button {
+            background-color: #FFFFFF;
             margin-left: 8px;
             width: 248px;
-            display: inline-block
-            border: 1px solid $grey-color2
-            border-radius: $border-radius
-            text-decoration: none
-            height: 30px
-            padding: 6px 9px
-            line-height: 1.4
+            display: inline-block;
+            border: 1px solid $grey-color2;
+            border-radius: $border-radius;
+            text-decoration: none;
+            height: 30px;
+            padding: 6px 9px;
+            line-height: 1.4;
+        }
 
-        .reset-button:hover
-            border: 1px solid $dark-blue-color
+        .reset-button:hover {
+            border: 1px solid $dark-blue-color;
+        }
 
-        &.move-panel
-            top: 0
-            width: 280px
-            transform: translate(0, 64px * 1.5 - 93px / 2)
+        &.move-panel {
+            top: 0;
+            width: 280px;
+            transform: translate(0, 64px * 1.5 - 93px / 2);
+        }
 
-        &.scale-panel, &.scale-panel-multi
-            top: 0
-            transform: translate(0, 64px * 2.5 - 133px / 2)
+        &.scale-panel, &.scale-panel-multi {
+            top: 0;
+            transform: translate(0, 64px * 2.5 - 133px / 2);
+            width: 130px;
 
-            width: 130px
-
-            .icon
-                display: inline-block
-                width: 30px
-                height: 30px
+            .icon {
+                display: inline-block;
+                width: 30px;
+                height: 30px;
                 background-repeat: no-repeat;
                 background-position: center;
                 vertical-align: middle;
 
-                &.icon-checked
-                    background-image: url("../../../resources/images/checked-on-14x14.png")
+                &.icon-checked {
+                    background-image: url('../../../resources/images/checked-on-14x14.png');
+                }
 
-                &.icon-unchecked
-                    background-image: url("../../../resources/images/checked-off-14x14.png")
+                &.icon-unchecked {
+                    background-image: url('../../../resources/images/checked-off-14x14.png');
+                }
+            }
+        }
 
-        &.scale-panel-multi
-            height: 138px
+        &.scale-panel-multi {
+            height: 138px;
+        }
 
-        &.rotate-panel
-            top: 0
-            width: 130px
-            transform: translate(0, 64px * 3.5 - 133px / 2)
+        &.rotate-panel {
+            top: 0;
+            width: 130px;
+            transform: translate(0, 64px * 3.5 - 133px / 2);
+        }
 
-        &.mirror-panel
-            top: 0
-            width: 235px
-            transform: translate(0, 64px * 4.5 - 133px / 2)
+        &.mirror-panel {
+            top: 0;
+            width: 235px;
+            transform: translate(0, 64px * 4.5 - 133px / 2);
+        }
 
-        &.support-panel
-            top: 0
-            width: 294px
-            transform: translate(0, 64px * 6.5 - 133px / 2)
+        &.support-panel {
+            top: 0;
+            width: 294px;
+            transform: translate(0, 64px * 6.5 - 133px / 2);
+        }
 
-        .title-mode
+        .title-mode {
             font-size: 16px;
             font-weight: 500;
             color: #272829;
             line-height: 22px;
+        }
 
+        .axis {
+            margin: 12px 0;
+            width: 100%;
+            position: relative;
+        }
 
-        .axis
-            margin: 12px 0
+        .axis-padding-left {
+            padding-left: 10px;
+        }
 
-            width: 100%
-            position: relative
+        .axis-green {
+            color: #22ac38;
+        }
 
-        .axis-padding-left
-            padding-left: 10px
+        .axis-red {
+            color: #e93100;
+        }
 
-        .axis-green
-            color: #22ac38
-
-        .axis-red
-            color: #e93100
-
-        .axis-blue
-            color: #00b7ee
+        .axis-blue {
+            color: #00b7ee;
+        }
 
         .axis-label {
-            display: inline-block
-            width: 30px
-            height: 30px
-            line-height: 34px
-            text-align: center
-            font-size: 16px
-            float: left
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            line-height: 34px;
+            text-align: center;
+            font-size: 16px;
+            float: left;
         }
 
         // move & rotate
         // axis-input-1 for move panel
-
         .axis-input-1 {
-            display: inline-block
+            display: inline-block;
 
             > input {
-                width: 80px
+                width: 80px;
             }
         }
 
         .input-container {
-            display: inline-block
-            margin: 0 5px
-            width: 60px
+            display: inline-block;
+            margin: 0 5px;
+            width: 60px;
 
             > .suffix {
-                display: inline-block
-                margin-left: -15px
+                display: inline-block;
+                margin-left: -15px;
             }
         }
 
-        .axis-unit-1
-        .axis-unit-2
-        .axis-unit-3 {
-            position: absolute
-            float: left
-            top: 6px
-            color: $grey-color
+        .axis-unit-1, .axis-unit-2, .axis-unit-3 {
+            position: absolute;
+            float: left;
+            top: 6px;
+            color: $grey-color;
         }
 
         // mm
-
         .axis-unit-1 {
-            left: 117px
+            left: 117px;
         }
 
         // %
-
         .axis-unit-2 {
-            left: 85px
+            left: 85px;
         }
 
         // °
-
         .axis-unit-3 {
-            left: 90px
+            left: 90px;
         }
+    }
+}

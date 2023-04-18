@@ -1835,7 +1835,7 @@ export const actions = {
             if (defaultMaterialId === definition.definitionId) {
                 dispatch(
                     actions.updateDefaultIdByType(
-                        type,
+                        PRINTING_MANAGER_TYPE_MATERIAL,
                         defintions[0].definitionId,
                         LEFT_EXTRUDER
                     )
@@ -1844,7 +1844,7 @@ export const actions = {
             if (defaultMaterialIdRight === definition.definitionId) {
                 dispatch(
                     actions.updateDefaultIdByType(
-                        type,
+                        PRINTING_MANAGER_TYPE_MATERIAL,
                         defintions[0].definitionId,
                         RIGHT_EXTRUDER
                     )
