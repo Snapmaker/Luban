@@ -492,6 +492,11 @@ const showMainWindow = async () => {
         shell.openPath(savePath);
     });
 
+    // open browser
+    ipcMain.on('open-browser', (_, browserUrl) => {
+        shell.openExternal(browserUrl);
+    });
+
     // remove download manager file/files/folder
     const rmDir = (dirPath, removeSelf = true) => {
         let files;
@@ -519,7 +524,7 @@ const showMainWindow = async () => {
     const clearPath = removePath => {
         if (fs.existsSync(removePath)) {
             if (fs.statSync(removePath).isFile()) {
-                fs.unlink(removePath, err => console.error(err));
+                fs.unlink(removePath, err => err && console.error(err));
             } else {
                 rmDir(removePath, true);
             }

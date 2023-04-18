@@ -3,23 +3,23 @@ import PropTypes from 'prop-types';
 import { withRouter, useHistory } from 'react-router-dom';
 import React, { useEffect, useRef, useState } from 'react';
 
-import isElectron from 'is-electron';
 import { connect, shallowEqual, useSelector } from 'react-redux';
 import { Progress } from 'antd';
 import { actions as projectActions } from '../../../flux/project';
+import { actions as appGlobalActions } from '../../../flux/app-global';
 import i18n from '../../../lib/i18n';
 import { Button } from '../../components/Buttons';
 import styles from './styles.styl';
 import SvgIcon from '../../components/SvgIcon';
 import { db } from '../../../lib/indexDB/db';
 import { KB, MB, RecordState } from '../../../constants/downloadManager';
-
+import uniApi from '../../../lib/uni-api';
 
 
 /**
  * Overlay that can be used to change print mode.
  */
-const ChangePrintModeOverlay = (props) => {
+const CSDownloadManagerOverlay = (props) => {
     const history = useHistory();
     const downloadManangerSavedPath = useSelector(state => state?.appGlobal?.downloadManangerSavedPath, shallowEqual);
     const [page, setPage] = useState(0);
@@ -39,27 +39,21 @@ const ChangePrintModeOverlay = (props) => {
     async function onClear() {
         // remove db
         db.downloadRecords.clear();
-        // ipcRenderer.send('clear-files', paths);
+        // uniApi.DownloadManager.emit('clear-files', paths);
     }
     function onClose() {
         console.log(props.onClose);
         props.onClose && props.onClose();
     }
     function onOpenFile(path) {
-        if (!isElectron()) return;
-        const { ipcRenderer } = window.require('electron');
-        ipcRenderer.send('open-download-save-path', path);
+        uniApi.DownloadManager.openFloder(path);
     }
     function onOpenFloder() {
-        if (!isElectron()) return;
-        const { ipcRenderer } = window.require('electron');
-        ipcRenderer.send('open-download-save-path', downloadManangerSavedPath);
+        uniApi.DownloadManager.openFloder(downloadManangerSavedPath);
     }
     function onRemove(record) {
-        if (!isElectron()) return;
-        const { ipcRenderer } = window.require('electron');
         // remove local file
-        ipcRenderer.send('download-manager-remove-file', record.savePath);
+        uniApi.DownloadManager.removeFile(record.savePath);
 
         // remove file msg in ui
         const recordsRefValue = recordsRef.current;
@@ -124,6 +118,7 @@ const ChangePrintModeOverlay = (props) => {
         record.lastReceivedBytes = record.receivedBytes;
     }
     function onOpenProject({ savePath, ext, name, fileNum }) {
+        props.toggleCaseResource(false);
         props.openProject(
             {
                 name: `${name}(${fileNum})${ext}`,
@@ -145,6 +140,7 @@ const ChangePrintModeOverlay = (props) => {
                 savePath
             }
         });
+        props.toggleCaseResource(false);
         setTimeout(goToPrinting);
     }
 
@@ -213,18 +209,14 @@ const ChangePrintModeOverlay = (props) => {
         console.log(nextPage, prePage, changePageSize);
         updateDataFromDB();
 
-        // update ui
-        if (!isElectron()) return;
-        const { ipcRenderer } = window.require('electron');
-
-        // start download item
+        // start download item for ui
         const newDownloadItemUI = (e, downloadItem) => {
             // add a new item for ui(no from db)
             const newRecords = [downloadItem, ...recordsRef.current];
             setRecords(newRecords);
             recordsRef.current = newRecords;
         };
-        ipcRenderer.on('new-download-item', newDownloadItemUI);
+        uniApi.DownloadManager.on('new-download-item', newDownloadItemUI);
 
         // update record data for ui
         const updateDataForUI = downloadItem => {
@@ -242,15 +234,14 @@ const ChangePrintModeOverlay = (props) => {
             recordsRef.current = updateRecords;
         };
         const updateDownloadItem = (e, downloadItem) => updateDataForUI(downloadItem);
-        ipcRenderer.on('download-item-updated', updateDownloadItem);
-        ipcRenderer.on('download-item-done', updateDownloadItem);
+        uniApi.DownloadManager.on('download-item-updated', updateDownloadItem);
+        uniApi.DownloadManager.on('download-item-done', updateDownloadItem);
 
         // eslint-disable-next-line consistent-return
         return () => {
-            // eslint-disable-next-line react-hooks/exhaustive-deps
-            ipcRenderer.removeListener('new-download-item', newDownloadItemUI);
-            ipcRenderer.removeListener('download-item-updated', updateDownloadItem);
-            ipcRenderer.removeListener('download-item-done', updateDownloadItem);
+            uniApi.DownloadManager.off('new-download-item', newDownloadItemUI);
+            uniApi.DownloadManager.off('download-item-updated', updateDownloadItem);
+            uniApi.DownloadManager.off('download-item-done', updateDownloadItem);
         };
     }, []);
 
@@ -327,8 +318,9 @@ const ChangePrintModeOverlay = (props) => {
     );
 };
 
-ChangePrintModeOverlay.propTypes = {
+CSDownloadManagerOverlay.propTypes = {
     openProject: PropTypes.func.isRequired,
+    toggleCaseResource: PropTypes.func.isRequired,
     history: PropTypes.object.isRequired,
     onClose: PropTypes.func,
 };
@@ -336,9 +328,10 @@ ChangePrintModeOverlay.propTypes = {
 const mapDispatchToProps = (dispatch) => {
     return {
         openProject: (file, history) => dispatch(projectActions.openProject(file, history)),
+        toggleCaseResource: (showCaseResource) => dispatch(appGlobalActions.updateState({ showCaseResource })),
     };
 };
 
 export default withRouter(connect(() => {
     return {};
-}, mapDispatchToProps)(ChangePrintModeOverlay));
+}, mapDispatchToProps)(CSDownloadManagerOverlay));

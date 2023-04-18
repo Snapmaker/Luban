@@ -11,15 +11,12 @@ import { timestamp } from '../../../../shared/lib/random-utils';
 import { actions as projectActions } from '../../../flux/project';
 import { actions as appGlobalActions } from '../../../flux/app-global';
 import styles from './styles.styl';
-import { renderPopup } from '../../utils';
-import CaseResource from '../CaseResource/index';
 
 const QuickStart = (props) => {
     const { history } = props;
     // useState
     const [caseConfig, setCaseConfig] = useState([]);
     const [caseConfigFourAxis, setCaseConfigFourAxis] = useState([]);
-    const [showCaseResources, setShowCaseResource] = useState(false);
 
     // redux correlation
     const series = useSelector(state => state?.machine?.series);
@@ -49,20 +46,6 @@ const QuickStart = (props) => {
         setCaseConfig(caseList);
         setCaseConfigFourAxis(caseListFourAxis);
     }, [series, toolHead]);
-
-    function renderCaseResources() {
-        const onClose = () => {
-            setShowCaseResource(false);
-            // logPageView({
-            //     pathname: '/printing'
-            // });
-        };
-        return showCaseResources && renderPopup({
-            onClose,
-            component: CaseResource,
-            key: 'homepage'
-        });
-    }
 
     return (
         <div className={styles['quick-start-container']}>
@@ -136,7 +119,6 @@ const QuickStart = (props) => {
                         {i18n._('key-HomePage/CaseResource-More')} {'>'}
                     </span>
                 </Anchor>
-                {renderCaseResources()}
             </div>
         </div>
     );

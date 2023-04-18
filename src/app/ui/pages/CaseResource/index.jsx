@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useDispatch, connect, } from 'react-redux';
+import { connect, } from 'react-redux';
 import { withRouter, useHistory } from 'react-router-dom';
-import isElectron from 'is-electron';
 import PropTypes from 'prop-types';
 import i18next from 'i18next';
 import i18n from '../../../lib/i18n';
@@ -10,19 +9,17 @@ import MainToolBar from '../../layouts/MainToolBar';
 import { PageMode } from '../PageMode';
 import CSDownloadManagerOverlay from '../../views/model-operation-overlay/CSDownloadManagerOverlay';
 import { db } from '../../../lib/indexDB/db';
+import uniApi from '../../../lib/uni-api';
 
 const resourceDomain = 'http://localhost:8085';
 // const resourceDomain = 'http://45.79.80.155:8085';
 const CaseResource = (props) => {
     // for simplify model, if true, visaulizerLeftbar and main tool bar can't be use
     const [pageMode, setPageMode] = useState(PageMode.Default);
-    const dispatch = useDispatch();
     const history = useHistory();
     const caseResourceIframe = useRef();
     const willMakedProjectFileItemRef = useRef({});
     const willMakedModelFileItemRef = useRef([]);
-
-    // iframe adapt
 
     function openProject(record) {
         const { downloadUrl, fileName } = willMakedProjectFileItemRef.current;
@@ -44,6 +41,7 @@ const CaseResource = (props) => {
                 },
                 props.history
             );
+            props.onClose();
         }
     }
     function openModel(record) {
@@ -71,9 +69,11 @@ const CaseResource = (props) => {
                     savePath
                 }
             });
+            props.onClose();
             setTimeout(goToPrinting);
         }
     }
+
     // iframe adapt
     const mainToolBarId = 'case-resource-main-tool-bar';
     const heightOffset = 8;
@@ -88,15 +88,15 @@ const CaseResource = (props) => {
         window.addEventListener('resize', windowResize);
         return () => window.removeEventListener('resize', windowResize);
     };
+
     // get message from iframe
     const handleMessage = () => {
         const msglistener = (event) => {
             if (event.origin === resourceDomain) {
                 console.log('get event from iframe:', event);
-                setPageMode(PageMode.DownloadManager);
                 switch (event.data.type) {
                     case 'make': {
-                        console.log('=========', dispatch);
+                        setPageMode(PageMode.DownloadManager);
                         const isStl = fileName => fileName.slice(fileName.lastIndexOf('.')) === '.stl';
                         if (!isStl(event.data.fileName)) {
                             willMakedProjectFileItemRef.current = { fileName: event.data.fileName, downloadUrl: event.data.downloadUrl };
@@ -107,7 +107,13 @@ const CaseResource = (props) => {
                         break;
                     }
                     case 'download': {
+                        setPageMode(PageMode.DownloadManager);
                         console.log('download');
+                        break;
+                    }
+                    case 'url': {
+                        if (!event.data.url) return;
+                        uniApi.DownloadManager.openUrl(event.data.url, '_blank');
                         break;
                     }
                     default:
@@ -126,13 +132,11 @@ const CaseResource = (props) => {
         return () => window.removeEventListener('message', msglistener);
     };
     const handleDownloadFile = () => {
-        if (!isElectron()) return;
-        const { ipcRenderer } = window.require('electron');
+        // add a new record to db
         const newDownloadItem = (e, item) => {
-            // add a new record to db
             db.downloadRecords.add(item);
         };
-        ipcRenderer.on('new-download-item', newDownloadItem);
+        uniApi.DownloadManager.on('new-download-item', newDownloadItem);
 
         // update progress of download manager
         const updateRecordData = async (item) => {
@@ -141,7 +145,7 @@ const CaseResource = (props) => {
             return record;
         };
         const downloadItemUpdate = (e, item) => { updateRecordData(item); };
-        ipcRenderer.on('download-item-updated', downloadItemUpdate);
+        uniApi.DownloadManager.on('download-item-updated', downloadItemUpdate);
 
 
         // download done, update data to db
@@ -157,13 +161,14 @@ const CaseResource = (props) => {
                 openModel(record);
             }
         };
-        ipcRenderer.on('download-item-done', downloadItemDone);
+        uniApi.DownloadManager.on('download-item-done', downloadItemDone);
+
 
         // eslint-disable-next-line consistent-return
         return () => {
-            ipcRenderer.removeListener('new-download-item', newDownloadItem);
-            ipcRenderer.removeListener('new-download-item', downloadItemUpdate);
-            ipcRenderer.removeListener('new-download-item', downloadItemDone);
+            uniApi.DownloadManager.off('new-download-item', newDownloadItem);
+            uniApi.DownloadManager.off('new-download-item', downloadItemUpdate);
+            uniApi.DownloadManager.off('new-download-item', downloadItemDone);
         };
     };
     useEffect(() => {
