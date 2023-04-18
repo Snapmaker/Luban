@@ -1,21 +1,18 @@
-import React from 'react';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
+import React from 'react';
+
 import i18n from '../../../lib/i18n';
-import Slider from '../../components/Slider';
 import Card from '../../components/Card';
+import Slider from '../../components/Slider';
 import SvgIcon from '../../components/SvgIcon';
 // import styles from './styles.styl';
-import { MIN_LASER_CNC_CANVAS_SCALE, MAX_LASER_CNC_CANVAS_SCALE } from '../../../constants';
+import { MAX_LASER_CNC_CANVAS_SCALE, MIN_LASER_CNC_CANVAS_SCALE } from '../../../constants';
 import CncLaserObjectList from '../CncLaserList/ObjectList';
-import Anchor from '../../components/Anchor';
 
 const VisualizerBottomLeft = ({ headType, toFront, zoomOut, zoomIn, scale, minScale, maxScale, updateScale }) => {
     return (
-        <Anchor
-            onClick={(event) => {
-                event.nativeEvent.stopImmediatePropagation();
-            }}
+        <div
             style={{
                 textDecoration: 'none',
                 cursor: 'auto',
@@ -61,7 +58,7 @@ const VisualizerBottomLeft = ({ headType, toFront, zoomOut, zoomIn, scale, minSc
                     onClick={zoomIn}
                 />
             </div>
-        </Anchor>
+        </div>
     );
 };
 

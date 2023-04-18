@@ -3,6 +3,8 @@ import path from 'path';
 import { v4 as uuid } from 'uuid';
 import { includes } from 'lodash';
 import { isInside } from 'overlap-area';
+
+import log from '../../lib/log';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as projectActions } from '../project';
 /* eslint-disable-next-line import/no-cycle */
@@ -266,18 +268,6 @@ export const actions = {
     __initOnControllerEvents: headType => {
         return (dispatch, getState) => {
             // task progress
-            controller.on('taskProgress:processImage', taskResult => {
-                if (headType !== taskResult.headType) {
-                    return;
-                }
-                const { progressStatesManager } = getState()[headType];
-                dispatch(
-                    actions.updateState(headType, {
-                        progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_PROCESSING_IMAGE, taskResult.progress)
-                    })
-                );
-            });
-
             controller.on('taskProgress:generateToolPath', taskResult => {
                 if (headType !== taskResult.headType) {
                     return;
@@ -315,6 +305,18 @@ export const actions = {
             });
 
             controller.on('taskProgress:cutModel', () => { });
+
+            controller.on('taskProgress:processImage', taskResult => {
+                if (headType !== taskResult.headType) {
+                    return;
+                }
+                const { progressStatesManager } = getState()[headType];
+                dispatch(
+                    actions.updateState(headType, {
+                        progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_PROCESSING_IMAGE, taskResult.progress)
+                    })
+                );
+            });
 
             // task completed
             controller.on('taskCompleted:processImage', taskResult => {
@@ -554,6 +556,7 @@ export const actions = {
                 );
             })
             .catch(err => {
+                log.error(err);
                 onError && onError(err);
                 dispatch(
                     actions.updateState(headType, {
