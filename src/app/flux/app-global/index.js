@@ -26,7 +26,8 @@ const DEFAULT_STATE = {
     showArrangeModelsError: false,
     arrangeModelZIndex: DEFAULT_MODAL_ZINDEX,
 
-    downloadManangerSavedPath: !isElectron() ? '' : path.join(window.require('@electron/remote').app.getPath('userData'), 'downloadManager.json')
+    downloadManangerSavedPath: !isElectron() ? '' : path.join(window.require('@electron/remote').app.getPath('userData'), 'downloadManager.json'),
+    showCaseResource: false,
 };
 const SHOW_MODAL_TIME = 15000;
 let clearSavedModalTimer = null;

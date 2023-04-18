@@ -9,6 +9,7 @@ import log from '../../../lib/log';
 import { getCaseList } from '../../../lib/caseLibrary';
 import { timestamp } from '../../../../shared/lib/random-utils';
 import { actions as projectActions } from '../../../flux/project';
+import { actions as appGlobalActions } from '../../../flux/app-global';
 import styles from './styles.styl';
 import { renderPopup } from '../../utils';
 import CaseResource from '../CaseResource/index';
@@ -130,7 +131,7 @@ const QuickStart = (props) => {
                         More {'>'}
                     </span>
                 </a> */}
-                <Anchor onClick={() => setShowCaseResource(true) /* history.push('/case-resouces')*/} title={i18n._('key-HomePage/Begin-Workspace')} className={classNames(styles['case-resource'])}>
+                <Anchor onClick={() => { dispatch(appGlobalActions.updateState({ showCaseResource: true })); } /* history.push('/case-resouces')*/} title={i18n._('key-HomePage/Begin-Workspace')} className={classNames(styles['case-resource'])}>
                     <span className={classNames('heading-3-normal-with-hover')}>
                         {/* {i18n._('key-HomePage/Begin-Forum')} */}
                         More {'>'}
