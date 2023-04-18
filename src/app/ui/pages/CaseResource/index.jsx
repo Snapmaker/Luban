@@ -23,15 +23,7 @@ const CaseResource = (props) => {
     const willMakedModelFileItemRef = useRef([]);
 
     // iframe adapt
-    const handleResize = () => {
-        const iframe = caseResourceIframe.current; // document.querySelector('#resource-iframe');
-        console.log(caseResourceIframe);
-        const windowResize = () => {
-            iframe.style.height = `calc(${window.innerHeight}px - 8px)`;
-        };
-        window.addEventListener('resize', windowResize);
-        return () => window.removeEventListener('resize', windowResize);
-    };
+
     function openProject(record) {
         const { downloadUrl, fileName } = willMakedProjectFileItemRef.current;
         const filename = `${record.name}${record.ext}`;
@@ -82,6 +74,20 @@ const CaseResource = (props) => {
             setTimeout(goToPrinting);
         }
     }
+    // iframe adapt
+    const mainToolBarId = 'case-resource-main-tool-bar';
+    const heightOffset = 8;
+    let mainToolBarHeight = 66;
+    const handleResize = () => {
+        const iframe = caseResourceIframe.current; // document.querySelector('#resource-iframe');
+        const mainToolBarEl = document.querySelector(mainToolBarId);
+        mainToolBarHeight = (mainToolBarEl && mainToolBarEl.innerHeight) || mainToolBarHeight;
+        const windowResize = () => {
+            iframe.style.height = `calc(${window.innerHeight}px - ${mainToolBarHeight}px - ${heightOffset}px)`;
+        };
+        window.addEventListener('resize', windowResize);
+        return () => window.removeEventListener('resize', windowResize);
+    };
     // get message from iframe
     const handleMessage = () => {
         const msglistener = (event) => {
@@ -182,6 +188,7 @@ const CaseResource = (props) => {
     return (
         <>
             <MainToolBar
+                wrapID={mainToolBarId}
                 leftItems={[
                     {
                         title: 'key-Workspace/Page-Back',
@@ -190,7 +197,6 @@ const CaseResource = (props) => {
                     },
                     {
                         title: i18n._('key-3DP/MainToolBar-Model Simplify'),
-                        // disabled: !canSimplify || !enableShortcut,
                         type: 'button',
                         name: 'MainToolbarDownloadManager',
                         action: async () => {
@@ -206,26 +212,24 @@ const CaseResource = (props) => {
                 mainBarClassName="background-transparent"
                 lang={i18next.language}
             />
-            <div>
-                {/* Change Print Mode */
-                    pageMode === PageMode.DownloadManager && (
-                        <CSDownloadManagerOverlay
-                            onClose={() => setPageMode(PageMode.Default)}
-                        />
-                    )
-                }
-                <iframe
-                    id="resource-iframe"
-                    ref={caseResourceIframe}
-                    style={{
-                        width: '100%',
-                        height: `calc(${window.innerHeight}px - 8px)`,
-                    }}
-                    src={`${resourceDomain}/resource-list`}
-                    frameBorder="0"
-                    title="case-resource"
-                />
-            </div>
+            {/* Change Print Mode */
+                pageMode === PageMode.DownloadManager && (
+                    <CSDownloadManagerOverlay
+                        onClose={() => setPageMode(PageMode.Default)}
+                    />
+                )
+            }
+            <iframe
+                id="resource-iframe"
+                ref={caseResourceIframe}
+                style={{
+                    width: '100%',
+                    height: `calc(${window.innerHeight}px - ${mainToolBarHeight}px - ${heightOffset}px)`,
+                }}
+                src={`${resourceDomain}/resource-list`}
+                frameBorder="0"
+                title="case-resource"
+            />
         </>
     );
 };

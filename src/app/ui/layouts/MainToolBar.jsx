@@ -21,7 +21,8 @@ class MainToolBar extends PureComponent {
         activeMachine: PropTypes.object, // currently active machine
         isConnected: PropTypes.bool,
         materialInfo: PropTypes.object,
-        setShowMachineMaterialSettings: PropTypes.func
+        setShowMachineMaterialSettings: PropTypes.func,
+        wrapID: PropTypes.string
     };
 
 
@@ -42,10 +43,12 @@ class MainToolBar extends PureComponent {
         const { setShowMachineMaterialSettings, leftItems, mainBarClassName, lang, headType, hasMachineSettings = false, isConnected, materialInfo } = this.props;
 
         const { activeMachine = null } = this.props;
+        const { wrapID } = this.props;
 
         let key = 0;
         return (
             <div
+                id={wrapID || ''}
                 className={classNames(
                     'clearfix',
                     styles['toolbar-container'],
