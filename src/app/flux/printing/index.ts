@@ -2879,7 +2879,7 @@ export const actions = {
     updateSelectedModelTransformation: (
         transformation,
         newUniformScalingState = undefined,
-        isAllRotate
+        isAllRotate = undefined,
     ) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         let transformMode;
@@ -2963,7 +2963,7 @@ export const actions = {
         dispatch(actions.updateState(modelState));
     },
 
-    hideSelectedModel: targetModel => (dispatch, getState) => {
+    hideSelectedModel: (targetModel = null) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         let targetModels;
         if (!targetModel) {
