@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/no-noninteractive-tabindex */
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import { withRouter, useHistory } from 'react-router-dom';
@@ -5,10 +6,11 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { connect, shallowEqual, useSelector } from 'react-redux';
 import { Progress } from 'antd';
+import Anchor from '../../components/Anchor';
 import { actions as projectActions } from '../../../flux/project';
 import { actions as appGlobalActions } from '../../../flux/app-global';
 import i18n from '../../../lib/i18n';
-import { Button } from '../../components/Buttons';
+// import { Button } from '../../components/Buttons';
 import styles from './styles.styl';
 import SvgIcon from '../../components/SvgIcon';
 import { db } from '../../../lib/indexDB/db';
@@ -22,13 +24,15 @@ import uniApi from '../../../lib/uni-api';
 const CSDownloadManagerOverlay = (props) => {
     const history = useHistory();
     const downloadManangerSavedPath = useSelector(state => state?.appGlobal?.downloadManangerSavedPath, shallowEqual);
-    const [page, setPage] = useState(0);
-    const [pageSize, setPageSize] = useState(50);
+    const page = 0;
+    const pageSize = 100;
+    // const [page, setPage] = useState(0);
+    // const [pageSize, setPageSize] = useState(50);
     const [records, setRecords] = useState([]);
     const recordsRef = useRef(records);
-    const nextPage = () => setPage(page + 1);
-    const prePage = () => setPage(page - 1);
-    const changePageSize = size => setPageSize(size);
+    // const nextPage = () => setPage(page + 1);
+    // const prePage = () => setPage(page - 1);
+    // const changePageSize = size => setPageSize(size);
     const isCompleted = (record) => record.state === RecordState.Completed || record.totalBytes === record.receivedBytes;
     const updateDataFromDB = async () => {
         const dbRescords = await db.downloadRecords.orderBy('startTime').reverse().limit(pageSize).offset(page * pageSize)
@@ -37,18 +41,54 @@ const CSDownloadManagerOverlay = (props) => {
         recordsRef.current = dbRescords;
     };
     async function onClear() {
-        // remove db
+        // remove db data
         db.downloadRecords.clear();
         // uniApi.DownloadManager.emit('clear-files', paths);
     }
     function onClose() {
-        console.log(props.onClose);
         props.onClose && props.onClose();
+    }
+    function outsideClick(selector, callback) {
+        let needClose = true;
+        const configEl = document.querySelector(selector);
+        const closeToggle = () => {
+            console.log(needClose);
+            needClose && callback();
+            needClose = true;
+        };
+        const preventClose = e => {
+            const target = e.target || e.srcElement;
+            if (configEl === target || configEl.contains(target)) {
+                needClose = false;
+            }
+            console.log('needClose', needClose);
+            console.log(e);
+        };
+        const msglistener = event => {
+            if (event.data.type === 'click') {
+                callback();
+            }
+        };
+        window.addEventListener('click', closeToggle);
+        window.addEventListener('message', msglistener);
+        configEl.addEventListener('click', preventClose);
+
+        // There is no bubbling when clicking on the iframe, modal open/close decide by mainWindow's focus/blur
+        // window.addEventListener('blur', () => {
+        //     callback();
+        // });
+        return () => {
+            window.removeEventListener('click', closeToggle);
+            window.removeEventListener('message', msglistener);
+            configEl.removeEventListener('click', preventClose);
+        };
     }
     function onOpenFile(path) {
         uniApi.DownloadManager.openFloder(path);
     }
-    function onOpenFloder() {
+    function onOpenFloder(e) {
+        e.preventDefault();
+        console.log('ok', e);
         uniApi.DownloadManager.openFloder(downloadManangerSavedPath);
     }
     function onRemove(record) {
@@ -205,8 +245,11 @@ const CSDownloadManagerOverlay = (props) => {
         return '';
     }
     useEffect(() => {
+        // click the `selector` outside will call `onClose`(close modal outsideclick)
+        const removeOutsideClick = outsideClick('#download-manager', onClose);
+
         console.log('open download manager');
-        console.log(nextPage, prePage, changePageSize);
+        // console.log(nextPage, prePage, changePageSize);
         updateDataFromDB();
 
         // start download item for ui
@@ -239,6 +282,7 @@ const CSDownloadManagerOverlay = (props) => {
 
         // eslint-disable-next-line consistent-return
         return () => {
+            removeOutsideClick();
             uniApi.DownloadManager.off('new-download-item', newDownloadItemUI);
             uniApi.DownloadManager.off('download-item-updated', updateDownloadItem);
             uniApi.DownloadManager.off('download-item-done', updateDownloadItem);
@@ -246,7 +290,11 @@ const CSDownloadManagerOverlay = (props) => {
     }, []);
 
     return (
-        <div className="position-absolute width-438 margin-left-72 border-default-grey-1 border-radius-8 background-color-white">
+        <div
+            id="download-manager"
+            className="position-absolute width-438 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
+            tabIndex={-1}
+        >
             <div className={classNames(styles['overlay-title-font'], 'border-bottom-normal padding-vertical-8 padding-horizontal-16')}>
                 {i18n._('key-CaseResource/DownloadManager Download')}
             </div>
@@ -283,36 +331,25 @@ const CSDownloadManagerOverlay = (props) => {
             <div
                 className={classNames(
                     'padding-horizontal-16 padding-vertical-8 border-radius-bottom-8',
-                    'sm-flex justify-flex-end',
+                    'sm-flex justify-space-between',
                     'background-grey-3',
                 )}
             >
-                <Button
-                    onClick={onClear}
-                    priority="level-two"
-                    width="96px"
-                    type="default"
-                    title="will not clear local files"
-                >
-                    {i18n._('key-CaseResource/DownloadManager Clear')}
-                </Button>
-                <Button
-                    onClick={onClose}
-                    priority="level-two"
-                    width="96px"
-                    type="default"
-                >
-
-                    {i18n._('key-CaseResource/DownloadManager Close')}
-                </Button>
-                <Button
-                    onClick={onOpenFloder}
-                    priority="level-two"
-                    width="96px"
-                    type="default"
-                >
-                    {i18n._('key-CaseResource/DownloadManager Open Folder')}
-                </Button>
+                <Anchor onClick={onClear}>
+                    <span className="color-blue-2 float-left">
+                        {i18n._('key-CaseResource/DownloadManager Clear')}
+                    </span>
+                </Anchor>
+                {/* <Anchor onClick={onClose}>
+                        <span className="color-blue-2 margin-right-16">
+                            {i18n._('key-CaseResource/DownloadManager Close')}
+                        </span>
+                    </Anchor> */}
+                <Anchor onClick={onOpenFloder}>
+                    <span className="color-blue-2">
+                        {i18n._('key-CaseResource/DownloadManager Open Folder')}
+                    </span>
+                </Anchor>
             </div>
         </div>
     );

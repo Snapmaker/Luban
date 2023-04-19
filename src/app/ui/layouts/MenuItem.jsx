@@ -12,8 +12,8 @@ import { longLangWithType } from '../../constants';
 function MenuItem({ menuItem, actions, lang, headType }) {
     const { type = 'button', name = 'Copy', iconClassName, title, inputInfo, disabled = false } = menuItem;
     const { customRender = noop } = menuItem;
-    function handleClick() {
-        actions.handleClick(menuItem.action);
+    function handleClick(e) {
+        actions.handleClick(menuItem.action, e);
     }
 
     const [itemType, setTtemType] = useState(type);
@@ -35,7 +35,7 @@ function MenuItem({ menuItem, actions, lang, headType }) {
                         disabled={disabled}
                         isHorizontal={false}
                         className={classNames(styles['bar-icon'], iconClassName, includes(longLangWithType[lang], headType) && styles['bar-icon-for-long'])}
-                        onClick={handleClick}
+                        onClick={(e) => handleClick(e)}
                         spanText={i18n._(title)}
                         spanClassName={classNames(includes(longLangWithType[lang], headType) && styles['action-title-for-long'])}
                         inputInfo={inputInfo}

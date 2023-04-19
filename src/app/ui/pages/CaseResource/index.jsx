@@ -204,11 +204,12 @@ const CaseResource = (props) => {
                         title: i18n._('key-CaseResource/MainToolBar-DownloadManager Download'),
                         type: 'button',
                         name: 'MainToolbarDownloadManager',
-                        action: async () => {
+                        action: async (e) => {
                             if (pageMode === PageMode.DownloadManager) {
                                 // Click again will not exit simplify page mode
                                 setPageMode(PageMode.Default);
                             } else {
+                                e.stopPropagation();
                                 setPageMode(PageMode.DownloadManager);
                             }
                         }

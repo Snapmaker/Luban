@@ -29,9 +29,9 @@ class MainToolBar extends PureComponent {
     state = {};
 
     actions = {
-        handleClick: (callback) => {
+        handleClick: (callback, event) => {
             try {
-                callback && callback();
+                callback && callback(event);
             } catch (e) {
                 console.error(e);
             }
