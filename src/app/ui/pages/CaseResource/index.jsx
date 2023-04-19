@@ -96,6 +96,8 @@ const CaseResource = (props) => {
                 console.log('get event from iframe:', event);
                 switch (event.data.type) {
                     case 'make': {
+                        console.log('make file', event.data);
+                        // download and open .stl or .snap3dp file in Luban
                         setPageMode(PageMode.DownloadManager);
                         const isStl = fileName => fileName.slice(fileName.lastIndexOf('.')) === '.stl';
                         if (!isStl(event.data.fileName)) {
@@ -107,11 +109,12 @@ const CaseResource = (props) => {
                         break;
                     }
                     case 'download': {
+                        // just download file(no open in Luban)
                         setPageMode(PageMode.DownloadManager);
-                        console.log('download');
                         break;
                     }
                     case 'url': {
+                        // open url by browser（for Copyright detail website)
                         if (!event.data.url) return;
                         uniApi.DownloadManager.openUrl(event.data.url, '_blank');
                         break;
@@ -134,14 +137,17 @@ const CaseResource = (props) => {
     const handleDownloadFile = () => {
         // add a new record to db
         const newDownloadItem = (e, item) => {
-            db.downloadRecords.add(item);
+            return db.downloadRecords.add(item);
         };
         uniApi.DownloadManager.on('new-download-item', newDownloadItem);
 
         // update progress of download manager
-        const updateRecordData = async (item) => {
-            const record = await db.downloadRecords.get({ startTime: item.startTime, savePath: item.savePath });
-            db.downloadRecords.update(record.id, item);
+        const updateRecordData = async (downloadItem) => {
+            let record = await db.downloadRecords.get({ startTime: downloadItem.startTime, savePath: downloadItem.savePath });
+            if (!record) {
+                record = await newDownloadItem(null, downloadItem);
+            }
+            db.downloadRecords.update(record.id, downloadItem);
             return record;
         };
         const downloadItemUpdate = (e, item) => { updateRecordData(item); };
@@ -154,11 +160,14 @@ const CaseResource = (props) => {
             setTimeout(() => updateRecordData(downloadItem), 200);
 
             // handle downloaded file by file's ext
-            const record = await db.downloadRecords.get({ startTime: downloadItem.startTime, savePath: downloadItem.savePath });
-            if (record.ext === '.snap3dp') {
-                openProject(record);
-            } else if (record.ext === '.stl') {
-                openModel(record);
+            let record = await db.downloadRecords.get({ startTime: downloadItem.startTime, savePath: downloadItem.savePath });
+            if (!record) {
+                record = await newDownloadItem(null, downloadItem);
+            }
+            if (downloadItem.ext === '.snap3dp') {
+                openProject(downloadItem);
+            } else if (downloadItem.ext === '.stl') {
+                openModel(downloadItem);
             }
         };
         uniApi.DownloadManager.on('download-item-done', downloadItemDone);
@@ -184,10 +193,6 @@ const CaseResource = (props) => {
             downloadOff();
         };
     }, []);
-
-    useEffect(() => {
-        console.log(pageMode);
-    }, [pageMode]);
 
 
     return (

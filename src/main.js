@@ -415,6 +415,8 @@ const showMainWindow = async () => {
         if (!data) return;
         config.set('downloadSavePath', JSON.parse(data).path);
     });
+
+    // download mananger
     mainWindow.webContents.session.on('will-download', (event, downloadItem) => {
         const fileName = downloadItem.getFilename();
         const downloadUrl = downloadItem.getURL();
@@ -455,14 +457,16 @@ const showMainWindow = async () => {
         // update download item status
         downloadItem.on('updated', (e, state) => {
             mainWindow.webContents.send('download-item-updated', {
-                startTime,
                 savePath,
                 ext,
                 name,
+                fileNum,
+                downloadUrl,
+                startTime,
                 state,
+                paused: downloadItem.isPaused(),
                 totalBytes: downloadItem.getTotalBytes(),
                 receivedBytes: downloadItem.getReceivedBytes(),
-                paused: downloadItem.isPaused(),
             });
         });
 
@@ -472,8 +476,11 @@ const showMainWindow = async () => {
                 savePath,
                 ext,
                 name,
+                fileNum,
+                downloadUrl,
                 startTime,
                 state,
+                paused: downloadItem.isPaused(),
                 totalBytes: downloadItem.getTotalBytes(),
                 receivedBytes: downloadItem.getReceivedBytes(),
             });

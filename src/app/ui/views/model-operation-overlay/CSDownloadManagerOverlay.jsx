@@ -34,19 +34,16 @@ const CSDownloadManagerOverlay = (props) => {
     // const prePage = () => setPage(page - 1);
     // const changePageSize = size => setPageSize(size);
     const isCompleted = (record) => record.state === RecordState.Completed || record.totalBytes === record.receivedBytes;
-    const updateDataFromDB = async () => {
-        const dbRescords = await db.downloadRecords.orderBy('startTime').reverse().limit(pageSize).offset(page * pageSize)
-            .toArray();
-        setRecords(dbRescords);
-        recordsRef.current = dbRescords;
-    };
+    function onClose() {
+        props.onClose && props.onClose();
+    }
     async function onClear() {
         // remove db data
         db.downloadRecords.clear();
+        const arr = [];
+        setRecords(arr);
+        recordsRef.current = arr;
         // uniApi.DownloadManager.emit('clear-files', paths);
-    }
-    function onClose() {
-        props.onClose && props.onClose();
     }
     function outsideClick(selector, callback) {
         let needClose = true;
@@ -248,9 +245,15 @@ const CSDownloadManagerOverlay = (props) => {
         // click the `selector` outside will call `onClose`(close modal outsideclick)
         const removeOutsideClick = outsideClick('#download-manager', onClose);
 
-        console.log('open download manager');
         // console.log(nextPage, prePage, changePageSize);
-        updateDataFromDB();
+        // init, get data from DB
+        const getDataFromDB = async () => {
+            const dbRescords = await db.downloadRecords.orderBy('startTime').reverse().limit(pageSize).offset(page * pageSize)
+                .toArray();
+            setRecords(dbRescords);
+            recordsRef.current = dbRescords;
+        };
+        getDataFromDB();
 
         // start download item for ui
         const newDownloadItemUI = (e, downloadItem) => {
@@ -263,18 +266,24 @@ const CSDownloadManagerOverlay = (props) => {
 
         // update record data for ui
         const updateDataForUI = downloadItem => {
+            let isUpdated = false;
             const recordsRefValue = recordsRef.current;
             const updateRecords = recordsRefValue.map(oldRecord => {
                 if (oldRecord.startTime === downloadItem.startTime && oldRecord.savePath === downloadItem.savePath) {
                     const newRecords = Object.assign({}, oldRecord, downloadItem);
                     calcDownloadSpeed(newRecords);
+                    isUpdated = true;
                     return newRecords;
                 } else {
                     return oldRecord;
                 }
             });
-            setRecords(updateRecords);
-            recordsRef.current = updateRecords;
+            if (!isUpdated) {
+                newDownloadItemUI(null, downloadItem);
+            } else {
+                setRecords(updateRecords);
+                recordsRef.current = updateRecords;
+            }
         };
         const updateDownloadItem = (e, downloadItem) => updateDataForUI(downloadItem);
         uniApi.DownloadManager.on('download-item-updated', updateDownloadItem);

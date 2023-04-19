@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 // import { throttle } from 'lodash';
+import isElectron from 'is-electron';
 import classNames from 'classnames';
 import Anchor from '../../components/Anchor';
 import i18n from '../../../lib/i18n';
@@ -33,6 +34,12 @@ const QuickStart = (props) => {
         log.info('Open project...');
         dispatch(projectActions.openProject(caseItem.pathConfig, history));
     }, [dispatch, openingProject, history]);
+    const goCaseResource = () => {
+        if (isElectron()) {
+            dispatch(appGlobalActions.updateState({ showCaseResource: true }));
+        }
+    };
+
 
     //  useEffect
     useEffect(() => {
@@ -109,16 +116,13 @@ const QuickStart = (props) => {
                         </div>
                     );
                 })}
-                {/* <a className={classNames(styles['case-resource'])} href="http://45.79.80.155:8085/resource-list" target="_blank" rel="noopener noreferrer">
-                    <span className={classNames('heading-3-normal-with-hover')}>
-                        More {'>'}
-                    </span>
-                </a> */}
-                <Anchor onClick={() => { dispatch(appGlobalActions.updateState({ showCaseResource: true })); } /* history.push('/case-resouces')*/} title={i18n._('key-HomePage/Begin-Workspace')} className={classNames(styles['case-resource'])}>
-                    <span className={classNames('heading-3-normal-with-hover')}>
-                        {i18n._('key-HomePage/CaseResource-More')} {'>'}
-                    </span>
-                </Anchor>
+                {isElectron() && (
+                    <Anchor onClick={goCaseResource} title={i18n._('key-HomePage/Begin-Workspace')} className={classNames(styles['case-resource'])}>
+                        <span className={classNames('heading-3-normal-with-hover')}>
+                            {i18n._('key-HomePage/CaseResource-More')} {'>'}
+                        </span>
+                    </Anchor>
+                )}
             </div>
         </div>
     );
