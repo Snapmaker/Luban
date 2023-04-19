@@ -11,6 +11,7 @@ import { HEAD_PRINTING, isDualExtruder, MACHINE_SERIES } from '../../../constant
 import { actions as machineActions } from '../../../flux/machine';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
+import { actions as appGlobalActions } from '../../../flux/app-global';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
 import { machineStore } from '../../../store/local-storage';
@@ -290,6 +291,32 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
             },
         ];
 
+        // no support browser for now
+        if (isElectron()) {
+            leftItems.push(
+                {
+                    type: 'separator',
+                    name: 'separator'
+                },
+                {
+                    title: i18n._('key-CaseResource/MainToolBar-DownloadManager Download'),
+                    type: 'button',
+                    name: 'MainToolbarModelRepository',
+                    action: async (e) => {
+                        e.stopPropagation();
+                        dispatch(appGlobalActions.updateState({ showCaseResource: true }));
+                        // if (pageMode === PageMode.DownloadManager) {
+                        //     // Click again will not exit simplify page mode
+                        //     setPageMode(PageMode.Default);
+                        // } else {
+                        //     e.stopPropagation();
+                        //     setPageMode(PageMode.DownloadManager);
+                        // }
+                    }
+                }
+            );
+        }
+
         return (
             <MainToolBar
                 leftItems={leftItems}
@@ -391,12 +418,20 @@ function Printing({ location }) {
         // Make sure execute 'initSocketEvent' after 'printingActions.init' on openning project
         setTimeout(async () => {
             await dispatch(printingActions.initSocketEvent());
+
+            // for download manager open stl
             if (location.state && location.state.needOpenModel) {
                 const { fileName, savePath } = location.state;
-                dispatch(printingActions.uploadModel([JSON.stringify({
-                    name: fileName,
-                    path: savePath || '',
-                })],));
+                dispatch(
+                    printingActions.uploadModel(
+                        [
+                            JSON.stringify({
+                                name: fileName,
+                                path: savePath || '',
+                            })
+                        ],
+                    )
+                );
             }
         }, 50);
         dispatch(printingActions.checkNewUser());

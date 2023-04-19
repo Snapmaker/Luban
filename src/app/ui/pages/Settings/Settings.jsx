@@ -47,7 +47,7 @@ class Settings extends PureComponent {
         isElectron() && {
             id: 'download',
             path: 'download',
-            title: i18n._('key-App/Settings/Settings-General'),
+            title: i18n._('key-App/Settings/Settings-Download'),
             component: (props) => <Download {...props} />
         }
         // {

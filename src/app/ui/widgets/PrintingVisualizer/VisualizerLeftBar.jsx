@@ -387,6 +387,13 @@ function VisualizerLeftBar(
                         />
                     )
                 }
+                {/* Case Resource Manager */
+                    // pageMode === PageMode.DownloadManager && (
+                    //     <CSDownloadManagerOverlay
+                    //         onClose={() => setPageMode(PageMode.Default)}
+                    //     />
+                    // )
+                }
             </div>
         </React.Fragment>
     );

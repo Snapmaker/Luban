@@ -4,11 +4,12 @@ import PropTypes from 'prop-types';
 import { withRouter, useHistory } from 'react-router-dom';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { connect, shallowEqual, useSelector } from 'react-redux';
+import { connect, shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { Progress } from 'antd';
 import Anchor from '../../components/Anchor';
 import { actions as projectActions } from '../../../flux/project';
 import { actions as appGlobalActions } from '../../../flux/app-global';
+import { actions as printingActions } from '../../../flux/printing';
 import i18n from '../../../lib/i18n';
 // import { Button } from '../../components/Buttons';
 import styles from './styles.styl';
@@ -23,7 +24,9 @@ import uniApi from '../../../lib/uni-api';
  */
 const CSDownloadManagerOverlay = (props) => {
     const history = useHistory();
+    const dispatch = useDispatch();
     const downloadManangerSavedPath = useSelector(state => state?.appGlobal?.downloadManangerSavedPath, shallowEqual);
+    const showCaseResource = useSelector(state => state?.appGlobal?.showCaseResource, shallowEqual);
     const page = 0;
     const pageSize = 100;
     // const [page, setPage] = useState(0);
@@ -165,6 +168,21 @@ const CSDownloadManagerOverlay = (props) => {
         );
     }
     function onOpenModel({ savePath, ext, name, fileNum }) {
+        if (!showCaseResource && history.location?.pathname === '/printing') {
+            console.log(JSON.stringify({
+                fileName: `${name}(${fileNum})${ext}`,
+                savePath
+            }));
+            dispatch(printingActions.uploadModel(
+                [
+                    JSON.stringify({
+                        name: `${name}(${fileNum})${ext}`,
+                        path: savePath || ''
+                    })
+                ]
+            ));
+            return;
+        }
         if (history.location?.pathname === '/printing') {
             history.replace('/');
         }

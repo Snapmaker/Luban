@@ -70,7 +70,7 @@ function Download(props) {
                     </div>
                     <div className="margin-top-16">
                         <div className="padding-bottom-4">
-                            <TextInput size="250px" value={selectedFolder} onChange={handleFolderChange} />
+                            <TextInput onClick={() => onClickToUpload()} disabled size="250px" value={selectedFolder} onChange={handleFolderChange} />
                             <SvgIcon
                                 type={['hoverSpecial', 'pressSpecial']}
                                 name="ToolbarOpen"

@@ -11,8 +11,8 @@ import CSDownloadManagerOverlay from '../../views/model-operation-overlay/CSDown
 import { db } from '../../../lib/indexDB/db';
 import uniApi from '../../../lib/uni-api';
 
-const resourceDomain = 'http://localhost:8085';
-// const resourceDomain = 'http://45.79.80.155:8085';
+// const resourceDomain = 'http://localhost:8085';
+const resourceDomain = 'http://45.79.80.155:8085';
 const CaseResource = (props) => {
     // for simplify model, if true, visaulizerLeftbar and main tool bar can't be use
     const [pageMode, setPageMode] = useState(PageMode.Default);
@@ -208,7 +208,7 @@ const CaseResource = (props) => {
                     {
                         title: i18n._('key-CaseResource/MainToolBar-DownloadManager Download'),
                         type: 'button',
-                        name: 'MainToolbarDownloadManager',
+                        name: 'MainToolbarDownloadFolderSetting',
                         action: async (e) => {
                             if (pageMode === PageMode.DownloadManager) {
                                 // Click again will not exit simplify page mode
@@ -223,7 +223,7 @@ const CaseResource = (props) => {
                 mainBarClassName="background-transparent"
                 lang={i18next.language}
             />
-            {/* Change Print Mode */
+            {/* Case Resource Download Manager */
                 pageMode === PageMode.DownloadManager && (
                     <CSDownloadManagerOverlay
                         onClose={() => setPageMode(PageMode.Default)}
