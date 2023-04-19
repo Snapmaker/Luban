@@ -1,31 +1,27 @@
-// import isEqual from 'lodash/isEqual';
 import { isEqual, some } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
-import { Box3, Math as ThreeMath, Quaternion, Vector3 } from 'three';
+import { Box3, Quaternion, Math as ThreeMath, Vector3 } from 'three';
+
 import { EPSILON, HEAD_PRINTING, ROTATE_MODE, SCALE_MODE, TRANSLATE_MODE } from '../../../constants';
-import { isDualExtruder } from '../../../constants/machines';
 import { actions as machineActions } from '../../../flux/machine';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as settingsActions } from '../../../flux/setting';
 import { logModelViewOperation } from '../../../lib/gaEvent';
-import i18n from '../../../lib/i18n';
-
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 import { priorities, shortcutActions, ShortcutManager } from '../../../lib/shortcut';
 import { ModelEvents } from '../../../models/events';
-
 import scene from '../../../scene/Scene';
-import ContextMenu from '../../components/ContextMenu';
 import ProgressBar from '../../components/ProgressBar';
 import Canvas from '../../components/SMCanvas';
 import { emitUpdateControlInputEvent } from '../../components/SMCanvas/TransformControls';
 import { PageMode } from '../../pages/PageMode';
 import { repairModelPopup } from '../../views/repair-model/repair-model-popup';
 
+import SceneContextMenu from './components/SceneContextMenu';
 import ModeToggleBtn from './ModeToggleBtn';
 import PrintableCube from './PrintableCube';
 import styles from './styles.styl';
@@ -40,15 +36,20 @@ import {
     sliceFailPopup,
 } from './VisualizerPopup';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
-// , MeshPhongMaterial, DoubleSide, Mesh, CylinderBufferGeometry
 
 const initQuaternion = new Quaternion();
 
+/**
+ * SceneView.
+ *
+ * FIXME:
+ *  1. Refactor sub-components
+ *  2. Change this component to functional component
+ */
 class Visualizer extends PureComponent {
     static propTypes = {
         isActive: PropTypes.bool.isRequired,
         series: PropTypes.string.isRequired,
-        toolHead: PropTypes.object.isRequired,
         size: PropTypes.object.isRequired,
         stage: PropTypes.number.isRequired,
         promptTasks: PropTypes.array.isRequired,
@@ -59,14 +60,12 @@ class Visualizer extends PureComponent {
         progress: PropTypes.number.isRequired,
         renderingTimestamp: PropTypes.number.isRequired,
         inProgress: PropTypes.bool.isRequired,
-        hasModel: PropTypes.bool.isRequired,
         leftBarOverlayVisible: PropTypes.bool.isRequired,
         displayedType: PropTypes.string,
         menuDisabledCount: PropTypes.number,
         enable3dpLivePreview: PropTypes.bool.isRequired,
         // allModel: PropTypes.array,
 
-        hideSelectedModel: PropTypes.func.isRequired,
         recordAddOperation: PropTypes.func.isRequired,
         recordModelBeforeTransform: PropTypes.func.isRequired,
         recordModelAfterTransform: PropTypes.func.isRequired,
@@ -118,9 +117,7 @@ class Visualizer extends PureComponent {
 
     printableArea = null;
 
-    contextMenuRef = React.createRef();
-
-    visualizerRef = React.createRef();
+    contextMenuRef2 = React.createRef();
 
     canvas = React.createRef();
 
@@ -297,14 +294,9 @@ class Visualizer extends PureComponent {
             this.props.destroyGcodeLine();
             this.actions.setTransformMode('support');
             this.canvas.current.startSupportMode();
-            // const model = this.props.selectedModelArray[0];
-            // model.setVertexColors();
         },
         stopSupportMode: () => {
-            // this.supportActions.saveSupport();
             this.canvas.current.stopSupportMode();
-            // const model = this.props.selectedModelArray[0];
-            // model && model.removeVertexColors();
         },
         moveSupport: (raycastResult) => {
             this.props.moveSupportBrush(raycastResult);
@@ -538,7 +530,9 @@ class Visualizer extends PureComponent {
     }
 
     showContextMenu = (event) => {
-        !this.props.leftBarOverlayVisible && this.contextMenuRef.current.show(event);
+        if (!this.props.leftBarOverlayVisible) {
+            this.contextMenuRef2.current.show(event);
+        }
     };
 
     handleCancelSimplify = () => {
@@ -563,117 +557,14 @@ class Visualizer extends PureComponent {
     };
 
     render() {
-        const { toolHead, size, selectedModelArray, modelGroup, gcodeLineGroup, inProgress, hasModel, displayedType, transformMode } = this.props; // transformMode
-
-        const isDual = isDualExtruder(toolHead.printingToolhead);
-        const isModelSelected = (selectedModelArray.length > 0);
-        const isModelHide = isModelSelected && !selectedModelArray[0].visible;
-        const isMultipleModel = selectedModelArray.length > 1;
+        const { size, selectedModelArray, modelGroup, gcodeLineGroup, inProgress, displayedType, transformMode } = this.props; // transformMode
 
         const notice = this.getNotice();
         const progress = this.props.progress;
-        const pasteDisabled = (modelGroup.clipboard.length === 0);
         const primeTowerSelected = selectedModelArray.length > 0 && some(selectedModelArray, { type: 'primeTower' });
 
-        const menuItems = [
-            {
-                type: 'item',
-                label: i18n._('key-Printing/ContextMenu-Cut'),
-                disabled: inProgress || !isModelSelected,
-                onClick: this.props.cut
-            },
-            {
-                type: 'item',
-                label: i18n._('key-Printing/ContextMenu-Copy'),
-                disabled: inProgress || !isModelSelected,
-                onClick: this.props.copy
-            },
-            {
-                type: 'item',
-                label: i18n._('key-Printing/ContextMenu-Paste'),
-                disabled: inProgress || pasteDisabled,
-                onClick: this.props.paste
-            },
-            {
-                type: 'item',
-                label: i18n._('key-Printing/ContextMenu-Duplicate'),
-                disabled: inProgress || !isModelSelected,
-                onClick: this.actions.duplicateSelectedModel
-            },
-            {
-                type: 'separator'
-            },
-            {
-                type: 'item',
-                label: i18n._('key-Printing/ContextMenu-FitViewIn'),
-                disabled: inProgress || !hasModel,
-                onClick: this.actions.fitViewIn
-            },
-            {
-                type: 'item',
-                label: i18n._('key-Printing/ContextMenu-Hide'),
-                disabled: inProgress || !isModelSelected,
-                onClick: this.props.hideSelectedModel
-            },
-        ];
-
-        if (isDual) {
-            menuItems.push(...[
-                {
-                    type: 'separator'
-                },
-                {
-                    type: 'item',
-                    label: i18n._('key-Printing/ContextMenu-Assign model to left extruder'),
-                    disabled: inProgress || !isModelSelected,
-                    onClick: () => this.actions.setSelectedModelsExtruder('0'),
-                },
-                {
-                    type: 'item',
-                    label: i18n._('key-Printing/ContextMenu-Assign model to right extruder'),
-                    disabled: inProgress || !isModelSelected,
-                    onClick: () => this.actions.setSelectedModelsExtruder('1'),
-                },
-            ]);
-        }
-
-        menuItems.push(...[
-            {
-                type: 'separator'
-            },
-            {
-                type: 'item',
-                label: i18n._('key-Printing/ContextMenu-Reset Model Transformation'),
-                disabled: inProgress || !isModelSelected,
-                onClick: this.actions.resetSelectedModelTransformation
-            },
-            {
-                type: 'item',
-                label: i18n._('key-Printing/ContextMenu-Center Models'),
-                disabled: inProgress || !isModelSelected,
-                onClick: this.actions.centerSelectedModel
-            },
-            {
-                type: 'item',
-                label: i18n._('key-Printing/ContextMenu-Auto Rotate'),
-                disabled: inProgress || !isModelSelected || isModelHide || isMultipleModel,
-                onClick: this.actions.autoRotateSelectedModel
-            },
-            {
-                type: 'item',
-                label: i18n._('key-Printing/ContextMenu-Auto Arrange'),
-                disabled: inProgress || !hasModel,
-                onClick: () => {
-                    this.actions.arrangeAllModels();
-                }
-            }
-        ]);
-
         return (
-            <div
-                className={styles['printing-visualizer']}
-                ref={this.visualizerRef}
-            >
+            <div>
                 <VisualizerLeftBar
                     fitViewIn={this.actions.fitViewIn}
                     updateBoundingBox={this.actions.updateBoundingBox}
@@ -733,10 +624,10 @@ class Visualizer extends PureComponent {
                         onControlInputTransform={this.actions.controlInputTransform}
                     />
                 </div>
-                <ContextMenu
-                    ref={this.contextMenuRef}
-                    id="3dp"
-                    menuItems={menuItems}
+
+                <SceneContextMenu
+                    ref={this.contextMenuRef2}
+                    canvas={this.canvas}
                 />
             </div>
         );
@@ -747,7 +638,7 @@ const mapStateToProps = (state, ownProps) => {
     const machine = state.machine;
     const { currentModalPath } = state.appbarMenu;
     const printing = state.printing;
-    const { size, series, enable3dpLivePreview, toolHead } = machine;
+    const { size, series, enable3dpLivePreview } = machine;
     const { menuDisabledCount } = state.appbarMenu;
     // TODO: be to organized
     const {
@@ -755,7 +646,6 @@ const mapStateToProps = (state, ownProps) => {
         stage,
         promptTasks,
         modelGroup,
-        hasModel,
         gcodeLineGroup,
         transformMode,
         progress,
@@ -781,7 +671,6 @@ const mapStateToProps = (state, ownProps) => {
 
     return {
         // machine
-        toolHead,
         stopArea,
         leftBarOverlayVisible,
         isActive,
@@ -792,7 +681,6 @@ const mapStateToProps = (state, ownProps) => {
         selectedModelArray: modelGroup.selectedModelArray,
         transformation: modelGroup.getSelectedModelTransformationForPrinting(),
         modelGroup,
-        hasModel,
         menuDisabledCount,
         gcodeLineGroup,
         transformMode,
@@ -812,7 +700,6 @@ const mapDispatchToProps = (dispatch) => ({
     recordModelAfterTransform: (transformMode, modelGroup, axis) => dispatch(printingActions.recordModelAfterTransform(transformMode, modelGroup, null, axis)),
     clearOperationHistory: () => dispatch(operationHistoryActions.clear(HEAD_PRINTING)),
 
-    hideSelectedModel: () => dispatch(printingActions.hideSelectedModel()),
     destroyGcodeLine: () => dispatch(printingActions.destroyGcodeLine()),
     offsetGcodeLayers: (offset) => dispatch(printingActions.offsetGcodeLayers(offset)),
     selectMultiModel: (intersect, selectEvent) => dispatch(printingActions.selectMultiModel(intersect, selectEvent)),

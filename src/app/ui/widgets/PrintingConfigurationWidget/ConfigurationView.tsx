@@ -316,21 +316,6 @@ const ConfigurationView: React.FC<{}> = () => {
                 )
             });
         },
-        onShowMaterialManager: () => {
-            dispatch(
-                printingActions.updateManagerDisplayType(
-                    PRINTING_MANAGER_TYPE_QUALITY
-                )
-            );
-            dispatch(printingActions.updateShowPrintingManager(true));
-        },
-
-        toggleShowCustomConfigPannel: () => {
-            dispatch(printingActions.updateManagerDisplayType(PRINTING_MANAGER_TYPE_QUALITY));
-            dispatch(printingActions.updateCustomMode(true));
-            dispatch(printingActions.updateProfileParamsType(PRINTING_MANAGER_TYPE_QUALITY, 'custom'));
-            dispatch(printingActions.updateShowPrintingManager(true));
-        },
 
         /**
          * Change quality preset by preset id.
@@ -630,15 +615,6 @@ const ConfigurationView: React.FC<{}> = () => {
                                 }}
                             />
                         </div>
-                        {
-                            configDisplayType === CONFIG_DISPLAY_TYPES[1] && (
-                                <SvgIcon
-                                    name="Manage"
-                                    size={24}
-                                    onClick={actions.toggleShowCustomConfigPannel}
-                                />
-                            )
-                        }
                     </div>
                     {
                         selectedPresetModel && configDisplayType === CONFIG_DISPLAY_TYPES[0] && (
@@ -693,16 +669,6 @@ const ConfigurationView: React.FC<{}> = () => {
                             {i18n._('More Settings')} {'>'}
                         </Anchor>
                     </div>
-                    {/*
-                    <div className="sm-flex justify-flex-end margin-top-16" style={{ marginBottom: '0' }}>
-                        <Anchor
-                            className={classNames('link-text', 'float-r')}
-                            onClick={actions.onShowMaterialManager}
-                        >
-                            More Settings (Classic)
-                        </Anchor>
-                    </div>
-                    */}
                 </div>
             </div>
         </div>

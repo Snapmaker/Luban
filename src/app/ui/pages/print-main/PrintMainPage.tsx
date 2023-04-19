@@ -377,19 +377,19 @@ declare interface PrintMainPageProps {
 }
 
 const Printing: React.FC<PrintMainPageProps> = ({ location }) => {
-    const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions);
-    const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId);
-    const defaultMaterialIdRight = useSelector(state => state?.printing?.defaultMaterialIdRight);
+    const materialDefinitions = useSelector((state: RootState) => state?.printing?.materialDefinitions);
+    const defaultMaterialId = useSelector((state: RootState) => state?.printing?.defaultMaterialId);
+    const defaultMaterialIdRight = useSelector((state: RootState) => state?.printing?.defaultMaterialIdRight);
     const leftMaterial = find(materialDefinitions, { definitionId: defaultMaterialId });
     const rightMaterial = find(materialDefinitions, { definitionId: defaultMaterialIdRight });
 
-    const series = useSelector(state => state?.machine?.series);
-    const { toolHead: { printingToolhead } } = useSelector(state => state.machine, shallowEqual);
-    const activeMachine = useSelector(state => state.machine.activeMachine);
+    const series = useSelector((state: RootState) => state?.machine?.series);
+    const { toolHead: { printingToolhead } } = useSelector((state: RootState) => state.machine, shallowEqual);
+    const activeMachine = useSelector((state: RootState) => state.machine.activeMachine);
 
     const {
         isConnected,
-    } = useSelector(state => state.workspace, shallowEqual);
+    } = useSelector((state: RootState) => state.workspace, shallowEqual);
 
     const isDual = isDualExtruder(printingToolhead);
 
@@ -403,7 +403,7 @@ const Printing: React.FC<PrintMainPageProps> = ({ location }) => {
     const [
         renderHomepage, renderMainToolBar, renderWorkspace, renderMachineMaterialSettings
     ] = useRenderMainToolBar(pageMode, setPageMode, !!materialDefinitions.length);
-    const modelGroup = useSelector(state => state.printing.modelGroup);
+    const modelGroup = useSelector((state: RootState) => state.printing.modelGroup);
     const thumbnail = useRef();
     useUnsavedTitle(pageHeadType);
 
@@ -539,7 +539,6 @@ const Printing: React.FC<PrintMainPageProps> = ({ location }) => {
                 onDropRejected={onDropRejected}
             >
                 <PrintingVisualizer
-                    widgetId="printingVisualizer"
                     pageMode={pageMode}
                     setPageMode={setPageMode}
                 />

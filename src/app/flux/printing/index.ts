@@ -1835,7 +1835,7 @@ export const actions = {
             if (defaultMaterialId === definition.definitionId) {
                 dispatch(
                     actions.updateDefaultIdByType(
-                        type,
+                        PRINTING_MANAGER_TYPE_MATERIAL,
                         defintions[0].definitionId,
                         LEFT_EXTRUDER
                     )
@@ -1844,7 +1844,7 @@ export const actions = {
             if (defaultMaterialIdRight === definition.definitionId) {
                 dispatch(
                     actions.updateDefaultIdByType(
-                        type,
+                        PRINTING_MANAGER_TYPE_MATERIAL,
                         defintions[0].definitionId,
                         RIGHT_EXTRUDER
                     )
@@ -2879,7 +2879,7 @@ export const actions = {
     updateSelectedModelTransformation: (
         transformation,
         newUniformScalingState = undefined,
-        isAllRotate
+        isAllRotate = undefined,
     ) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         let transformMode;
@@ -2963,7 +2963,7 @@ export const actions = {
         dispatch(actions.updateState(modelState));
     },
 
-    hideSelectedModel: targetModel => (dispatch, getState) => {
+    hideSelectedModel: (targetModel = null) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         let targetModels;
         if (!targetModel) {
