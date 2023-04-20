@@ -29,9 +29,10 @@ const SceneContextMenu: React.FC<SceneContextMenuProps> = forwardRef((props, ref
 
     const { modelGroup } = useSelector((state: RootState) => state.printing);
     const selectedModelArray = modelGroup.selectedModelArray;
+
     const isModelSelected = selectedModelArray.length > 0;
-    const isModelHide = isModelSelected && !selectedModelArray[0].visible;
-    const isMultipleModel = selectedModelArray.length > 1;
+    const isMultipleModelSelected = selectedModelArray.length > 1;
+    const isModelHidden = isModelSelected && !selectedModelArray[0].visible;
 
     const { inProgress, hasModel } = useSelector((state: RootState) => state.printing);
     const pasteDisabled = (modelGroup.clipboard.length === 0);
@@ -155,7 +156,7 @@ const SceneContextMenu: React.FC<SceneContextMenuProps> = forwardRef((props, ref
             {
                 type: 'item',
                 label: i18n._('key-Printing/ContextMenu-Auto Rotate'),
-                disabled: inProgress || !isModelSelected || isModelHide || isMultipleModel,
+                disabled: inProgress || !isModelSelected || isModelHidden || isMultipleModelSelected,
                 onClick: () => dispatch(printingActions.autoRotateSelectedModel()),
             },
             {
@@ -173,7 +174,7 @@ const SceneContextMenu: React.FC<SceneContextMenuProps> = forwardRef((props, ref
     }, [
         isDual,
         inProgress,
-        hasModel, isModelSelected, isModelHide, isMultipleModel,
+        hasModel, isModelSelected, isModelHidden, isMultipleModelSelected,
         pasteDisabled,
 
         // action functions

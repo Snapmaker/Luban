@@ -1,4 +1,5 @@
 import Mousetrap from 'mousetrap';
+
 import log from '../log';
 
 
@@ -34,7 +35,7 @@ class CShortcutManger {
      */
     register(handler) {
         if (Object.prototype.toString.call(handler) !== '[object Object]') {
-            console.error('ShortcutManger: handler should be an object!');
+            log.error('ShortcutManger: handler should be an object!');
             return;
         }
 
@@ -51,7 +52,7 @@ class CShortcutManger {
             const shortcut = handler.shortcuts[actionName];
             let comboKeys;
             if (!shortcut) {
-                console.error('ShortcutManger: shortcut ignored, can\'t find shortcut callback', actionName);
+                log.error('ShortcutManger: shortcut ignored, can\'t find shortcut callback', actionName);
                 continue;
             }
             if (shortcut.keys) {
@@ -60,7 +61,7 @@ class CShortcutManger {
                 comboKeys = actionKeys[actionName];
             }
             if (!comboKeys) {
-                console.error("ShortcutManger: shortcut ignored, can't find shortcut combokeys", actionName);
+                log.error("ShortcutManger: shortcut ignored, can't find shortcut combokeys", actionName);
                 continue;
             }
             comboKeys = parseCombokeys(comboKeys);
@@ -96,7 +97,7 @@ class CShortcutManger {
                 }
                 if (typeof actionName === 'symbol') actionName = actionName.toString();
 
-                console.info(`${handler.title}-P${handler.priority} ${actionName} [${comboKeys.join(' , ')}]`);
+                log.info(`${handler.title}-P${handler.priority} ${actionName} [${comboKeys.join(' , ')}]`);
             }
         }
     }
@@ -145,7 +146,6 @@ class CShortcutManger {
                     }
                 }
                 if (typeof callback === 'function') {
-                    // console.info('keyboard event trigger:', pressedKeys, matchedHandler.title, matched.actionName);
                     callback();
                     return false; // prevent default
                 }
