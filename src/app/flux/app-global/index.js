@@ -50,16 +50,17 @@ export const actions = {
     },
     // Initialize app-global data, get downloadManangerSavedPath configurations from store file
     init: () => (dispatch) => {
+        if (!isElectron()) {
+            return;
+        }
         const downloadManangerSavedPath = downloadManagerStore.get('downloadManangerSavedPath');
         if (downloadManangerSavedPath !== DEFAULT_STATE.downloadManangerSavedPath) {
             dispatch(actions.updateState({ downloadManangerSavedPath }));
         }
 
         // update download manager save path
-        if (isElectron()) {
-            const { ipcRenderer } = window.require('electron');
-            ipcRenderer.send('update-download-manager-save-path', JSON.stringify({ path: downloadManangerSavedPath }));
-        }
+        const { ipcRenderer } = window.require('electron');
+        ipcRenderer.send('update-download-manager-save-path', JSON.stringify({ path: downloadManangerSavedPath }));
     },
 
     // TODO: need to add an close function

@@ -45,10 +45,10 @@ export default {
             ipcRenderer.send('open-download-save-path', path);
         }
     },
-    removeFile: (path) => {
+    removeFile: (downloadItem) => {
         if (isElectron()) {
             const { ipcRenderer } = window.require('electron');
-            ipcRenderer.send('download-manager-remove-file', path);
+            ipcRenderer.send('download-manager-remove-file', downloadItem);
         }
     },
 };

@@ -93,7 +93,7 @@ const CSDownloadManagerOverlay = (props) => {
     }
     function onRemove(record) {
         // remove local file
-        uniApi.DownloadManager.removeFile(record.savePath);
+        uniApi.DownloadManager.removeFile(record);
 
         // remove file msg in ui
         const recordsRefValue = recordsRef.current;
@@ -284,6 +284,9 @@ const CSDownloadManagerOverlay = (props) => {
 
         // update record data for ui
         const updateDataForUI = downloadItem => {
+            if (downloadItem.state === 'cancelled') {
+                return;
+            }
             let isUpdated = false;
             const recordsRefValue = recordsRef.current;
             const updateRecords = recordsRefValue.map(oldRecord => {

@@ -156,6 +156,10 @@ const CaseResource = (props) => {
 
         // download done, update data to db
         const downloadItemDone = async (e, downloadItem) => {
+            if (downloadItem.state === 'cancelled') {
+                return;
+            }
+
             // update db
             setTimeout(() => updateRecordData(downloadItem), 200);
 

@@ -86,6 +86,19 @@ export const machineStore = getLocalStore('machine');
 export const printingStore = getLocalStore('printing');
 export const editorStore = getLocalStore('editor');
 export const downloadManagerStore = getLocalStore('downloadManager');
+// set a default saving path of download manager
+(async function () {
+    if (isElectron()) {
+        const fs = window.require('fs'); // Use window.require to require fs module in Electron
+        const os = window.require('os');
+        const homeDir = os.homedir();
+        const initSavePath = path.join(homeDir, 'Downloads');
+        if (!fs.existsSync(initSavePath) || !fs.statSync(initSavePath).isDirectory()) {
+            await fs.mkdir(initSavePath, { recursive: true }, err => console.error(err));
+        }
+        !downloadManagerStore.get('downloadManangerSavedPath') && downloadManagerStore.set('downloadManangerSavedPath', initSavePath);
+    }
+}());
 
 
 if (semver.gte(settings.version, '4.2.2')) {
@@ -103,14 +116,16 @@ const storeManager = {
     machineStore,
     printingStore,
     editorStore,
+    downloadManagerStore,
     clear: () => {
         machineStore.clear();
         widgetStore.clear();
         printingStore.clear();
         editorStore.clear();
+        downloadManagerStore.clear();
     },
     get: () => {
-        return _.merge(machineStore.get(), widgetStore.get(), printingStore.get(), editorStore.get());
+        return _.merge(machineStore.get(), widgetStore.get(), printingStore.get(), editorStore.get(), downloadManagerStore.get());
     }
 };
 export default storeManager;

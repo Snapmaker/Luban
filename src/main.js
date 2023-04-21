@@ -417,6 +417,7 @@ const showMainWindow = async () => {
     });
 
     // download mananger
+    const downloadingArr = [];
     mainWindow.webContents.session.on('will-download', (event, downloadItem) => {
         const fileName = downloadItem.getFilename();
         const downloadUrl = downloadItem.getURL();
@@ -439,6 +440,19 @@ const showMainWindow = async () => {
             });
         }
         savePath && downloadItem.setSavePath(savePath);
+
+        // record current download【for now, this just for stop/delete】
+        downloadingArr.push({
+            savePath,
+            ext,
+            name,
+            fileNum,
+            downloadUrl,
+            startTime,
+            state: initialState,
+            paused: downloadItem.isPaused(),
+            ref: downloadItem
+        });
 
         // send msg to renderer process, a new download start
         mainWindow.webContents.send('new-download-item', {
@@ -484,6 +498,10 @@ const showMainWindow = async () => {
                 totalBytes: downloadItem.getTotalBytes(),
                 receivedBytes: downloadItem.getReceivedBytes(),
             });
+
+            // remove finish downloadItem in downloading arr
+            const finishIndex = downloadingArr.findIndex(item => item.savePath === savePath && item.startTime === startTime);
+            downloadingArr.splice(finishIndex, 1);
         });
     });
 
@@ -537,7 +555,26 @@ const showMainWindow = async () => {
             }
         }
     };
-    ipcMain.on('download-manager-remove-file', (_, removePath) => clearPath(removePath));
+    ipcMain.on('download-manager-remove-file', (_, downloadItem) => {
+        const { savePath, startTime } = downloadItem;
+        const finishIndex = downloadingArr.findIndex(item => item.savePath === savePath && item.startTime === startTime);
+        // if is finished download item,
+        if (finishIndex === -1) {
+            // remove local file(for now not need to delete local file)
+            // clearPath(downloadItem.savePath);
+            return;
+        }
+
+        // if is downloading, cancel it
+        try {
+            const target = downloadingArr[finishIndex];
+            target.ref.cancel();
+        } catch (err) {
+            console.error(err);
+        }
+
+        downloadingArr.splice(finishIndex, 1);
+    });
     ipcMain.on('clear-files', (_, removePaths) => {
         removePaths.forEach(removePath => clearPath(removePath));
     });

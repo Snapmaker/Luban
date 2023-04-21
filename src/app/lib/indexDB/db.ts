@@ -1,22 +1,23 @@
 // db.ts
 import Dexie, { Table } from 'dexie';
 
+type downloadRecordState = 'progressing' | 'completed' | 'cancelled' | 'interrupted';
 export interface downloadRecord {
     id?: number;
     // name: string;
     // age: number;
 
-    savePath: string,
+    savePath: string;
     // fileName: string,
-    ext: string,
-    name: string,
-    fileNum: number,
-    downloadUrl: string,
-    startTime: Date,
-    state: ('progressing' | 'completed' | 'cancelled' | 'interrupted'),
-    paused: boolean,
-    totalBytes: number,
-    receivedBytes: number,
+    ext: string;
+    name: string;
+    fileNum: number;
+    downloadUrl: string;
+    startTime: Date;
+    state: downloadRecordState;
+    paused: boolean;
+    totalBytes: number;
+    receivedBytes: number;
 }
 
 export class MySubClassedDexie extends Dexie {
@@ -27,7 +28,7 @@ export class MySubClassedDexie extends Dexie {
     public constructor() {
         super('myDatabase');
         this.version(1).stores({
-            downloadRecords: '++id, [startTime+savePath], downloadUrl' // Primary key and indexed props
+            downloadRecords: '++id, [startTime+savePath], downloadUrl', // Primary key and indexed props
         });
     }
 }
