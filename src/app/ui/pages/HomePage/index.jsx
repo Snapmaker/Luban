@@ -14,7 +14,7 @@ import pkg from '../../../../package.json';
 // component
 import styles from './styles.styl';
 import Begin from './Begin';
-import QuickStart from './QuickStart';
+import Resources from './Resources';
 import MoreInfo from './MoreInfo';
 import SettingGuideModal from './SettingGuideModal';
 import MainToolBar from '../../layouts/MainToolBar';
@@ -60,7 +60,8 @@ const HomePage = (props) => { // Todo, what's the props ?
             )}
             <Begin {...props} />
             <div className={styles.secondLine}>
-                <QuickStart {...props} />
+                {/* <QuickStart {...props} /> */}
+                <Resources {...props} />
                 <MoreInfo />
             </div>
             {!modalShow && (props?.isPopup || printingModal || laserModal || cncModal)}

@@ -27,7 +27,6 @@ request.use(bearer);
 request.use(noCache);
 
 const taskQueue = new TaskQueue(4);
-
 // Default API factory that performs the request, and then convert its result to `Promise`.
 const defaultAPIFactory = (genRequest) => {
     return (...args) => new Promise((resolve, reject) => {
@@ -336,6 +335,10 @@ macros.update = defaultAPIFactory((id, options) => request.put(`/api/macros/${id
 
 macros.delete = defaultAPIFactory((id) => request.delete(`/api/macros/${id}`));
 
+// Case Resource
+const getCaseResourcesList = defaultAPIFactory(() => request.get('/api/case-resources/case-list'));
+
+
 export default {
     // version
     getLatestVersion,
@@ -397,5 +400,8 @@ export default {
     controllers, // Controllers
     // users, // Users
     macros,
-    watch // Watch Directory
+    watch, // Watch Directory
+
+    //
+    getCaseResourcesList,
 };
