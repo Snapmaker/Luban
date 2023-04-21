@@ -17,10 +17,10 @@ function parseCombokeys(comboKeys) {
     return Object.keys(keyMap);
 }
 
-class CShortcutManger {
-    _handlers = [];
+export class ShortcutManger {
+    private _handlers = [];
 
-    _comboKeyCallbackMap = {};
+    private _comboKeyCallbackMap = {};
 
     /**
      *
@@ -33,7 +33,7 @@ class CShortcutManger {
      *  }
      * } handler : readonly
      */
-    register(handler) {
+    public register(handler) {
         if (Object.prototype.toString.call(handler) !== '[object Object]') {
             log.error('ShortcutManger: handler should be an object!');
             return;
@@ -72,7 +72,7 @@ class CShortcutManger {
     // handler should be unregistered when parent component destroyed
 
     // TODO: class name changed after building
-    printList() {
+    public printList() {
         this._handlers.sort((a, b) => a.priority - b.priority);
         const titles = [];
         for (const handler of this._handlers) {
@@ -102,7 +102,7 @@ class CShortcutManger {
         }
     }
 
-    _bind(comboKeys, handler, actionName) {
+    private _bind(comboKeys, handler, actionName) {
         for (const comboKey of comboKeys) {
             if (!this._comboKeyCallbackMap[comboKey]) {
                 this._comboKeyCallbackMap[comboKey] = [];
@@ -160,5 +160,7 @@ class CShortcutManger {
     }
 }
 
-const manager = new CShortcutManger();
+// default is a singleton of ShortcutManager
+const manager = new ShortcutManger();
+
 export default manager;
