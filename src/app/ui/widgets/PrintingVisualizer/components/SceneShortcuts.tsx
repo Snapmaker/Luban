@@ -2,7 +2,8 @@ import React, { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 
 import { actions as printingActions } from '../../../../flux/printing';
-import { priorities, shortcutActions, ShortcutManager } from '../../../../lib/shortcut';
+import type { ShortcutHandler } from '../../../../lib/shortcut';
+import { ShortcutHandlerPriority, ShortcutManager, PREDEFINED_SHORTCUT_ACTIONS } from '../../../../lib/shortcut';
 
 /**
  * Add shortcut bindings to the scene.
@@ -11,29 +12,29 @@ const SceneShortcuts: React.FC = () => {
     const dispatch = useDispatch();
 
     useEffect(() => {
-        const handler = {
+        const handler: ShortcutHandler = {
             title: 'SceneView',
             isActive: () => {
-                return dispatch(printingActions.isShortcutActive());
+                return dispatch(printingActions.isShortcutActive()) as unknown as boolean;
             },
 
-            priority: priorities.VIEW,
+            priority: ShortcutHandlerPriority.View,
 
             shortcuts: {
                 // select
-                [shortcutActions.SELECTALL]: () => dispatch(printingActions.selectAllModels()),
-                [shortcutActions.UNSELECT]: () => dispatch(printingActions.unselectAllModels()),
-                [shortcutActions.DELETE]: () => dispatch(printingActions.removeSelectedModel()),
+                [PREDEFINED_SHORTCUT_ACTIONS.SELECTALL]: () => dispatch(printingActions.selectAllModels()),
+                [PREDEFINED_SHORTCUT_ACTIONS.UNSELECT]: () => dispatch(printingActions.unselectAllModels()),
+                [PREDEFINED_SHORTCUT_ACTIONS.DELETE]: () => dispatch(printingActions.removeSelectedModel()),
 
                 // copy/paste
-                [shortcutActions.COPY]: () => dispatch(printingActions.copy()),
-                [shortcutActions.CUT]: () => dispatch(printingActions.cut()),
-                [shortcutActions.PASTE]: () => dispatch(printingActions.paste()),
-                [shortcutActions.DUPLICATE]: () => dispatch(printingActions.duplicateSelectedModel()),
+                [PREDEFINED_SHORTCUT_ACTIONS.COPY]: () => dispatch(printingActions.copy()),
+                [PREDEFINED_SHORTCUT_ACTIONS.CUT]: () => dispatch(printingActions.cut()),
+                [PREDEFINED_SHORTCUT_ACTIONS.PASTE]: () => dispatch(printingActions.paste()),
+                [PREDEFINED_SHORTCUT_ACTIONS.DUPLICATE]: () => dispatch(printingActions.duplicateSelectedModel()),
 
                 // undo/redo
-                [shortcutActions.UNDO]: () => dispatch(printingActions.undo()),
-                [shortcutActions.REDO]: () => dispatch(printingActions.redo()),
+                [PREDEFINED_SHORTCUT_ACTIONS.UNDO]: () => dispatch(printingActions.undo()),
+                [PREDEFINED_SHORTCUT_ACTIONS.REDO]: () => dispatch(printingActions.redo()),
 
                 // preview
                 'SHOWGCODELAYERS_ADD': {
@@ -51,12 +52,10 @@ const SceneShortcuts: React.FC = () => {
             },
         };
 
-        console.error('register');
         ShortcutManager.register(handler);
 
         return () => {
-            // TOOD: unregister shortcuts?
-            console.error('unregister');
+            ShortcutManager.unregister(handler);
         };
     }, [dispatch]);
 

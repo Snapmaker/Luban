@@ -1,166 +1,220 @@
 import Mousetrap from 'mousetrap';
 
-import log from '../log';
+import { getLogger } from '../log';
+import { PREDEFINED_SHORTCUT_KEYS } from './constants';
 
 
-import { actionKeys, priorities } from './constants';
+const log = getLogger('ShortcutManager');
 
-function parseCombokeys(comboKeys) {
-    if (typeof comboKeys === 'string') {
-        comboKeys = [comboKeys];
+type ShortcutActionName = string | symbol;
+
+type ShortcutActionKeys = string | string[];
+
+type ShortcutCallback = () => void;
+
+type ShortcutAction = {
+    keys?: ShortcutActionKeys;
+    callback?: ShortcutCallback;
+    keyupCallback?: ShortcutCallback;
+};
+
+/**
+ * Priority for a handler.
+ */
+export enum ShortcutHandlerPriority {
+    App = 0,
+    Page = 1,
+    View = 2,
+}
+
+export interface ShortcutHandler {
+    // handler name
+    title?: string;
+
+    // priority of handler
+    priority: ShortcutHandlerPriority;
+
+    // function to check if shortcut is active
+    isActive: () => boolean;
+
+    // shortcuts
+    shortcuts: { [name: ShortcutActionName]: ShortcutCallback | ShortcutAction };
+
+    // callbacks
+    eventCallbacks?: { [key: string]: ShortcutCallback }
+}
+
+/**
+ * Unify action keys by convert them to lower case.
+ */
+function unifyActionKeys(keys: ShortcutActionKeys): ShortcutActionKeys {
+    if (typeof keys === 'string') {
+        keys = [keys];
     }
 
     const keyMap = {};
-    for (const comboKey of comboKeys) {
-        keyMap[comboKey.toLocaleLowerCase()] = true;
+    for (const key of keys) {
+        keyMap[key.toLocaleLowerCase()] = true;
     }
     return Object.keys(keyMap);
 }
 
-export class ShortcutManger {
-    private _handlers = [];
 
-    private _comboKeyCallbackMap = {};
+export class ShortcutManger {
+    // All handlers registered
+    private handlers: ShortcutHandler[] = [];
+
+    private checkShortcutKeys(actionName: ShortcutActionName, shortcutAction: ShortcutAction): void {
+        if (!shortcutAction.keys && actionName in PREDEFINED_SHORTCUT_KEYS) {
+            // Use pre-defined keys
+            shortcutAction.keys = PREDEFINED_SHORTCUT_KEYS[actionName];
+        }
+
+        shortcutAction.keys = unifyActionKeys(shortcutAction.keys);
+    }
+
+    private preprocess(handler: ShortcutHandler): void {
+        for (const actionName of Reflect.ownKeys(handler.shortcuts)) {
+            const maybeShortcut = handler.shortcuts[actionName];
+
+            let shortcutAction: ShortcutAction;
+            if (typeof maybeShortcut === 'function') {
+                shortcutAction = {
+                    keys: '',
+                    callback: maybeShortcut,
+                };
+            } else {
+                shortcutAction = maybeShortcut;
+            }
+
+            this.checkShortcutKeys(actionName, shortcutAction);
+
+            if (!shortcutAction.keys) {
+                log.error(`Shortcut ignored, can't find shortcut keys for ${actionName.toString()}`);
+                delete handler.shortcuts[actionName];
+                continue;
+            }
+
+            // replace shortcut action
+            handler.shortcuts[actionName] = shortcutAction;
+        }
+
+        // convert ShortcutAction to simple key -> callback mappings
+        handler.eventCallbacks = {};
+        for (const actionName of Reflect.ownKeys(handler.shortcuts)) {
+            const shortcutAction = handler.shortcuts[actionName] as ShortcutAction;
+
+            for (const key of shortcutAction.keys) {
+                if (shortcutAction.callback) {
+                    handler.eventCallbacks[`${key}:keydown`] = shortcutAction.callback;
+                }
+                if (shortcutAction.keyupCallback) {
+                    handler.eventCallbacks[`${key}:keyup`] = shortcutAction.keyupCallback;
+                }
+            }
+        }
+    }
 
     /**
-     *
-     * @param {
-     *  title: string(option),
-     *  priority: number,
-     *  isActive: function,
-     *  shortcuts:{
-     *      [actionName]:function || {keys,callback:function}
-     *  }
-     * } handler : readonly
+     * Register shortcut handler.
      */
-    public register(handler) {
-        if (Object.prototype.toString.call(handler) !== '[object Object]') {
-            log.error('ShortcutManger: handler should be an object!');
+    public register(handler: ShortcutHandler) {
+        this.preprocess(handler);
+
+        this.handlers.push(handler);
+
+        for (const eventKey of Object.keys(handler.eventCallbacks)) {
+            const [key, action] = eventKey.split(':');
+            this.bind(key, action);
+        }
+    }
+
+    /**
+     * Unregister shortcut handler.
+     */
+    public unregister(handler: ShortcutHandler) {
+        this.preprocess(handler);
+
+        const index = this.handlers.indexOf(handler);
+        if (index === -1) {
             return;
         }
 
-        if (!(handler.priority in Object.values(priorities))) {
-            log.warn(`ShortcutManger: handler(${handler.title || 'unNamed'}).priority not set!`);
-            handler.priority = -1;
-        }
-        if (typeof handler.isActive !== 'function') {
-            log.warn(`ShortcutManger: handler(${handler.title || 'unNamed'}).isActive not set!`);
-        }
-        this._handlers.push(handler);
+        this.handlers.splice(index, 1);
 
-        for (const actionName of Reflect.ownKeys(handler.shortcuts)) {
-            const shortcut = handler.shortcuts[actionName];
-            let comboKeys;
-            if (!shortcut) {
-                log.error('ShortcutManger: shortcut ignored, can\'t find shortcut callback', actionName);
-                continue;
-            }
-            if (shortcut.keys) {
-                comboKeys = shortcut.keys;
-            } else if (actionName in actionKeys) {
-                comboKeys = actionKeys[actionName];
-            }
-            if (!comboKeys) {
-                log.error("ShortcutManger: shortcut ignored, can't find shortcut combokeys", actionName);
-                continue;
-            }
-            comboKeys = parseCombokeys(comboKeys);
-            this._bind(comboKeys, handler, actionName);
+        for (const eventKey of Object.keys(handler.eventCallbacks)) {
+            const [key, action] = eventKey.split(':');
+            this.bind(key, action);
         }
     }
-    // TODO: unregister
-    // handler should be unregistered when parent component destroyed
+
+    /**
+     * Bind or re-bind mousetrap callback for key + action.
+     */
+    private bind(key: string, action: string) {
+        // re-create avaiable handlers whenever bind or unbind
+        const eventKey = `${key}:${action}`;
+        const avaiableHandlers = this.handlers
+            .filter((handler) => (handler.eventCallbacks[eventKey] !== undefined));
+
+        if (avaiableHandlers.length > 0) {
+            const mousetrapCallback = () => {
+                const targetHandler = avaiableHandlers.reduce((bestHandler, currentHandler) => {
+                    if (!currentHandler.isActive()) {
+                        return bestHandler;
+                    }
+
+                    if (!bestHandler) {
+                        return currentHandler;
+                    }
+
+                    if (currentHandler.priority === bestHandler.priority) {
+                        log.warn(`mousetrap [${key}:${action}] has multiple handlers with same priority`);
+                    }
+
+                    if (currentHandler.priority > bestHandler.priority) {
+                        return currentHandler;
+                    }
+
+                    return bestHandler;
+                }, null);
+
+                if (!targetHandler) {
+                    log.warn(`mousetrap [${key}:${action}] ignored, no active handler available.`);
+
+                    return true; // no prevent default
+                }
+
+                const callback = targetHandler.eventCallbacks[eventKey];
+                // execute the callback
+                callback();
+
+                return false; // prevent default
+            };
+
+            Mousetrap.bind(key, mousetrapCallback, action);
+        } else {
+            Mousetrap.unbind(key, action);
+        }
+    }
 
     // TODO: class name changed after building
     public printList() {
-        this._handlers.sort((a, b) => a.priority - b.priority);
-        const titles = [];
-        for (const handler of this._handlers) {
-            if (titles.indexOf(handler.title) === -1) {
-                titles.push(handler.title);
-            } else {
-                continue;
-            }
-            for (let actionName of Reflect.ownKeys(handler.shortcuts)) {
-                const shortcut = handler.shortcuts[actionName];
-                let comboKeys;
-                if (!shortcut) {
-                    continue;
-                }
-                if (shortcut.keys) {
-                    comboKeys = shortcut.keys;
-                } else if (actionName in actionKeys) {
-                    comboKeys = actionKeys[actionName];
-                }
-                if (!comboKeys) {
-                    continue;
-                }
-                if (typeof actionName === 'symbol') actionName = actionName.toString();
+        this.handlers.sort((a, b) => a.priority - b.priority);
 
-                log.info(`${handler.title}-P${handler.priority} ${actionName} [${comboKeys.join(' , ')}]`);
-            }
-        }
-    }
+        for (const handler of this.handlers) {
+            log.info(`${handler.title}-P${handler.priority}:`);
+            for (const actionName of Reflect.ownKeys(handler.shortcuts)) {
+                const shortcutAction = handler.shortcuts[actionName] as ShortcutAction;
 
-    private _bind(comboKeys, handler, actionName) {
-        for (const comboKey of comboKeys) {
-            if (!this._comboKeyCallbackMap[comboKey]) {
-                this._comboKeyCallbackMap[comboKey] = [];
-            }
-            const mapItem = this._comboKeyCallbackMap[comboKey];
-            if (mapItem.length && mapItem.find((item) => item.handler.priority !== handler.priority)) {
-                log.warn('ShortcutManger: same combokey exists in handlers of different priority', actionName);
-            }
-
-            mapItem.push({ handler, actionName });
-            const mousetrapCallback = (event) => {
-                const matched = mapItem.reduce((prev, current) => {
-                    if (!current.handler.isActive()) {
-                        return prev;
-                    }
-                    if (!prev) {
-                        return current;
-                    }
-                    if (prev.handler.priority <= current.handler.priority) {
-                        if (prev.handler.priority === current.handler.priority) {
-                            log.warn(`comboKey [${comboKey}] has multiple active handler with same priority`);
-                        }
-                        return current;
-                    }
-                    return prev;
-                }, null);
-                if (!matched) {
-                    // log.warn(`actionName [${actionName}] ignored, no matched active responser`);
-                    return true;
-                }
-                const matchedHandler = matched.handler;
-
-                let callback = matchedHandler.shortcuts[matched.actionName];
-                if (event.type === 'keydown') {
-                    if (typeof callback !== 'function' && typeof callback.callback === 'function') {
-                        callback = callback.callback;
-                    }
-                } else if (event.type === 'keyup') {
-                    if (typeof callback !== 'function' && typeof callback.keyupCallback === 'function') {
-                        callback = callback.keyupCallback;
-                    }
-                }
-                if (typeof callback === 'function') {
-                    callback();
-                    return false; // prevent default
-                }
-                log.warn(`actionName [${matched.actionName}] has no callback!`);
-                return true;
-            };
-            Mousetrap.bind(comboKey, mousetrapCallback); // default bind keydown
-            if ('keyupCallback' in handler.shortcuts[actionName]) {
-                Mousetrap.bind(comboKey, mousetrapCallback, 'keyup');
+                const keys = shortcutAction.keys as string[];
+                log.info(`* ${actionName.toString()}: [${keys.join(' , ')}]`);
             }
         }
     }
 }
 
 // default is a singleton of ShortcutManager
-const manager = new ShortcutManger();
+const shortcutManager = new ShortcutManger();
 
-export default manager;
+export default shortcutManager;
