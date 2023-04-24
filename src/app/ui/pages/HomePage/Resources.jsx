@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import isElectron from 'is-electron';
-import { Anchor } from 'antd';
+import { Anchor, Spin } from 'antd';
 import i18n from '../../../lib/i18n';
 import { timestamp } from '../../../../shared/lib/random-utils';
 import styles from './styles.styl';
@@ -21,6 +21,7 @@ const Resources = (props) => {
     const [showCaseResource, setShowCaseResource] = useState(false);
     const [caseConfig, setCaseConfig] = useState([]);
     const [showQuickStartModal, setShowQuickStartModal] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     // redux correlation
     const dispatch = useDispatch();
@@ -70,24 +71,27 @@ const Resources = (props) => {
     const loadData = () => {
         const isShow = canAccessInternet && isCaseResourceMachine(series, toolHead);
         setShowCaseResource(isShow);
-        isShow && api.getCaseResourcesList().then(
-            (res) => {
-                if (!res.body || !res.body.data || !Array.isArray(res.body.data)) {
-                    setShowCaseResource(false);
-                    return;
+        setIsLoading(isShow);
+        isShow && api.getCaseResourcesList()
+            .then(
+                (res) => {
+                    if (!res.body || !res.body.data || !Array.isArray(res.body.data)) {
+                        setShowCaseResource(false);
+                        return;
+                    }
+                    const caseList = res.body.data.map(caseItem => {
+                        const IMG_RESOURCE_BASE_URL = 'https://d3gw8b56b7j3w6.cloudfront.net/';
+                        return {
+                            id: caseItem.id,
+                            title: caseItem.name,
+                            author: caseItem.author || 'snapmaker',
+                            imgSrc: `${IMG_RESOURCE_BASE_URL}${caseItem.coverImageUrl}`
+                        };
+                    });
+                    setCaseConfig([CaseConfigQuickStart].concat(caseList));
                 }
-                const caseList = res.body.data.map(caseItem => {
-                    const IMG_RESOURCE_BASE_URL = 'https://d3gw8b56b7j3w6.cloudfront.net/';
-                    return {
-                        id: caseItem.id,
-                        title: caseItem.name,
-                        author: caseItem.author || 'snapmaker',
-                        imgSrc: `${IMG_RESOURCE_BASE_URL}${caseItem.coverImageUrl}`
-                    };
-                });
-                setCaseConfig([CaseConfigQuickStart].concat(caseList));
-            }
-        );
+            )
+            .finally(() => setIsLoading(false));
     };
     const goCaseResource = (id) => {
         if (isElectron()) {
@@ -128,40 +132,42 @@ const Resources = (props) => {
                         <div className={classNames(styles['title-label'], 'highlight-heading', 'margin-bottom-16')}>
                             {i18n._('key-HomePage/Resources Resources')}
                         </div>
-                        <div className={classNames(styles['case-list'], styles.smallList)}>
-                            {caseConfig.map((caseItem, index) => {
-                                const isLast = index === caseConfig.length - 1;
-                                return (
-                                    <div
-                                        key={caseItem.title + timestamp()}
-                                        className={styles['case-item']}
-                                        aria-hidden="true"
-                                        onClick={() => { onClick(caseItem, isLast); }}
-                                    >
-                                        <div className={styles.imgWrapper}>
-                                            <img className={styles['case-img']} src={caseItem.imgSrc} alt="" />
-                                            <div className={classNames(styles.caseText)}>
-                                                <div className={classNames(styles['case-author'])}>
-                                                    @{i18n._(caseItem.author)}
-                                                </div>
-                                                <div className={classNames(styles['case-title'])}>
-                                                    {i18n._(caseItem.title)}
+                        <Spin spinning={isLoading}>
+                            <div className={classNames(styles['case-list'], styles.smallList)}>
+                                {caseConfig.map((caseItem, index) => {
+                                    const isLast = index === caseConfig.length - 1;
+                                    return (
+                                        <div
+                                            key={caseItem.title + timestamp()}
+                                            className={styles['case-item']}
+                                            aria-hidden="true"
+                                            onClick={() => { onClick(caseItem, isLast); }}
+                                        >
+                                            <div className={styles.imgWrapper}>
+                                                <img className={styles['case-img']} src={caseItem.imgSrc} alt="" />
+                                                <div className={classNames(styles.caseText)}>
+                                                    <div className={classNames(styles['case-author'])}>
+                                                        @{i18n._(caseItem.author)}
+                                                    </div>
+                                                    <div className={classNames(styles['case-title'])}>
+                                                        {i18n._(caseItem.title)}
+                                                    </div>
                                                 </div>
                                             </div>
+                                            {isLast && (
+                                                <div className={classNames(styles['case-more'])}>
+                                                    <Anchor title={i18n._('key-HomePage/Begin-Workspace')} className={classNames(styles['case-resource'])}>
+                                                        <span className={classNames('color-blue-2 ', 'heading-3-normal-with-hover')}>
+                                                            {i18n._('key-HomePage/CaseResource-More')} {'>'}
+                                                        </span>
+                                                    </Anchor>
+                                                </div>
+                                            )}
                                         </div>
-                                        {isLast && (
-                                            <div className={classNames(styles['case-more'])}>
-                                                <Anchor title={i18n._('key-HomePage/Begin-Workspace')} className={classNames(styles['case-resource'])}>
-                                                    <span className={classNames('color-blue-2 ', 'heading-3-normal-with-hover')}>
-                                                        {i18n._('key-HomePage/CaseResource-More')} {'>'}
-                                                    </span>
-                                                </Anchor>
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
+                                    );
+                                })}
+                            </div>
+                        </Spin>
                     </div>
                 )}
             {!showCaseResource && <QuickStart history={props.history} />}
