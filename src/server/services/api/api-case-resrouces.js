@@ -1,5 +1,8 @@
-const superagent = require('superagent');
-const superagentUse = require('superagent-use');
+import superagent from 'superagent';
+import superagentUse from 'superagent-use';
+import logger from '../../lib/logger';
+
+const log = logger('api:commands');
 
 const agent = superagentUse(superagent);
 const addPrefix = (prefix) => {
@@ -24,11 +27,10 @@ export function getCaseList(req, res) {
             ...req.query
         })
         .then((result) => {
-            console.log('get case list:', result);
             res.status(200).send({
                 ...result.body
             });
         }).catch((err) => {
-            console.log('get case list err:', err);
+            log.error('get case list err:', JSON.stringify(err));
         });
 }

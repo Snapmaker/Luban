@@ -18,9 +18,10 @@ import { DetailModalState } from '../../../constants/downloadManager';
 const resourceDomain = 'http://127.0.0.1:8085';
 const CaseResource = (props) => {
     const dispatch = useDispatch();
+    const history = useHistory();
     // for simplify model, if true, visaulizerLeftbar and main tool bar can't be use
     const [pageMode, setPageMode] = useState(PageMode.Default);
-    const history = useHistory();
+    const [isIframeLoaded, setIsIframeLoaded] = useState(true);
     const caseResourceIframe = useRef();
     const willMakedProjectFileItemRef = useRef({});
     const willMakedModelFileItemRef = useRef([]);
@@ -78,14 +79,39 @@ const CaseResource = (props) => {
             setTimeout(goToPrinting);
         }
     }
-    const onIframeErr = (err) => {
-        console.log('iframe error', err);
-    };
 
     // iframe adapt
     const mainToolBarId = 'case-resource-main-tool-bar';
     const heightOffset = 8;
     let mainToolBarHeight = 66;
+    // test access of iframe src by path /access-test.css.
+    // Front end should provid this file in server
+    const accessTest = (cb) => {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = `${resourceDomain}/access-test.css`;
+        link.onerror = (e) => {
+            cb();
+            console.error(e);
+            setIsIframeLoaded(false);
+            document.body.removeChild(link);
+        };
+        document.body.appendChild(link);
+    };
+    const handleIframe = () => {
+        const iframe = caseResourceIframe.current;
+        const timerRef = setTimeout(() => {
+            setIsIframeLoaded(false);
+        }, 60 * 1000);
+        const handleLoaded = () => {
+            console.log('finish load iframe');
+            setIsIframeLoaded(true);
+            clearTimeout(timerRef);
+        };
+        iframe.addEventListener('load', handleLoaded);
+        accessTest(() => iframe.removeEventListener('load', handleLoaded));
+    };
     const handleResize = () => {
         const iframe = caseResourceIframe.current; // document.querySelector('#resource-iframe');
         const mainToolBarEl = document.querySelector(mainToolBarId);
@@ -96,8 +122,9 @@ const CaseResource = (props) => {
         window.addEventListener('resize', windowResize);
         return () => window.removeEventListener('resize', windowResize);
     };
-    const sendMsgToIframe = (data, iframeEl) => iframeEl && iframeEl.contentWindow.postMessage(data, resourceDomain);
+
     // get/send message from iframe
+    const sendMsgToIframe = (data, iframeEl) => iframeEl && iframeEl.contentWindow.postMessage(data, resourceDomain);
     const handleMessage = () => {
         const msglistener = (event) => {
             if (event.origin === resourceDomain) {
@@ -144,9 +171,10 @@ const CaseResource = (props) => {
                 id: caseResourceId
             });
         };
-        iframe.onerror = onIframeErr;
         return () => window.removeEventListener('message', msglistener);
     };
+
+    // get downloading msg from main process and save in db
     const handleDownloadFile = () => {
         // add a new record to db
         const newDownloadItem = (e, item) => {
@@ -197,8 +225,21 @@ const CaseResource = (props) => {
             uniApi.DownloadManager.off('new-download-item', downloadItemDone);
         };
     };
+
+    const reloadIframe = () => {
+        // caseResourceIframe.current.contentWindow.reload();
+        console.log('reload');
+        const iframe = caseResourceIframe.current;
+        const src = iframe.src;
+        iframe.src = 'about:blank';
+        requestAnimationFrame(() => {
+            iframe.src = src;
+            handleIframe();
+            handleMessage();
+        });
+    };
     useEffect(() => {
-        const iframeLoad = handleIframe();
+        handleIframe();
 
         const resizeOff = handleResize();
 
@@ -269,11 +310,20 @@ const CaseResource = (props) => {
                 style={{
                     width: '100%',
                     height: `calc(${window.innerHeight}px - ${mainToolBarHeight}px - ${heightOffset}px)`,
+                    display: isIframeLoaded ? '' : 'none'
                 }}
                 src={`${resourceDomain}/resource-list`}
                 frameBorder="0"
                 title="case-resource"
             />
+            {!isIframeLoaded && (
+                <div className="position-absolute-center sm-flex">
+                    loading page failed! please
+                    <span className="color-blue-2" onClick={() => reloadIframe()} onKeyPress={() => reloadIframe()} tabIndex="0" role="button">
+                        &nbsp;reload
+                    </span>.
+                </div>
+            )}
         </>
     );
 };
