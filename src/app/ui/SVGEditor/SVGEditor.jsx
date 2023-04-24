@@ -2,7 +2,7 @@ import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } f
 import PropTypes from 'prop-types';
 
 
-import { shortcutActions, priorities, ShortcutManager } from '../../lib/shortcut';
+import { PREDEFINED_SHORTCUT_ACTIONS, ShortcutHandlerPriority, ShortcutManager } from '../../lib/shortcut';
 import styles from './index.styl';
 import { SVG_EVENT_CONTEXTMENU } from './constants';
 import SVGCanvas from './SVGCanvas';
@@ -44,54 +44,54 @@ const SVGEditor = forwardRef((props, ref) => {
             title: 'SVGEditor',
             // TODO: unregister in case of component is destroyed
             isActive: () => props.isActive,
-            priority: priorities.VIEW,
+            priority: ShortcutHandlerPriority.View,
             shortcuts: {
-                [shortcutActions.UNDO]: () => {
+                [PREDEFINED_SHORTCUT_ACTIONS.UNDO]: () => {
                     if (!(menuDisabledCountRef.current > 0)) {
                         props.editorActions.undo();
                     }
                 },
-                [shortcutActions.REDO]: () => {
+                [PREDEFINED_SHORTCUT_ACTIONS.REDO]: () => {
                     if (!(menuDisabledCountRef.current > 0)) {
                         props.editorActions.redo();
                     }
                 },
-                [shortcutActions.SELECTALL]: () => {
+                [PREDEFINED_SHORTCUT_ACTIONS.SELECTALL]: () => {
                     if (!(menuDisabledCountRef.current > 0)) {
                         props.editorActions.selectAll();
                     }
                 },
-                [shortcutActions.UNSELECT]: () => {
+                [PREDEFINED_SHORTCUT_ACTIONS.UNSELECT]: () => {
                     if (!(menuDisabledCountRef.current > 0)) {
                         props.editorActions.unselectAll();
                     }
                 },
-                [shortcutActions.DELETE]: () => {
+                [PREDEFINED_SHORTCUT_ACTIONS.DELETE]: () => {
                     if (!(menuDisabledCountRef.current > 0)) {
                         props.editorActions.deleteSelectedModel(extRef.current.elem ? 'draw' : props.SVGCanvasMode);
                     }
                 },
-                [shortcutActions.COPY]: () => {
+                [PREDEFINED_SHORTCUT_ACTIONS.COPY]: () => {
                     if (!(menuDisabledCountRef.current > 0)) {
                         props.editorActions.copy();
                     }
                 },
-                [shortcutActions.PASTE]: () => {
+                [PREDEFINED_SHORTCUT_ACTIONS.PASTE]: () => {
                     if (!(menuDisabledCountRef.current > 0)) {
                         props.editorActions.paste();
                     }
                 },
-                [shortcutActions.DUPLICATE]: () => {
+                [PREDEFINED_SHORTCUT_ACTIONS.DUPLICATE]: () => {
                     if (!(menuDisabledCountRef.current > 0)) {
                         props.editorActions.duplicateSelectedModel();
                     }
                 },
-                [shortcutActions.CUT]: () => {
+                [PREDEFINED_SHORTCUT_ACTIONS.CUT]: () => {
                     if (!(menuDisabledCountRef.current > 0)) {
                         props.editorActions.cut();
                     }
                 },
-                [shortcutActions.ENTER]: () => {
+                [PREDEFINED_SHORTCUT_ACTIONS.ENTER]: () => {
                     if (!(menuDisabledCountRef.current > 0)) {
                         onStopDraw(true);
                     }

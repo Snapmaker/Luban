@@ -12,7 +12,6 @@ import { actions as printingActions } from '../../../flux/printing';
 import { actions as settingsActions } from '../../../flux/setting';
 import { logModelViewOperation } from '../../../lib/gaEvent';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
-import { priorities, shortcutActions, ShortcutManager } from '../../../lib/shortcut';
 import { ModelEvents } from '../../../models/events';
 import scene from '../../../scene/Scene';
 import ProgressBar from '../../components/ProgressBar';
@@ -21,10 +20,8 @@ import { emitUpdateControlInputEvent } from '../../components/SMCanvas/Transform
 import { PageMode } from '../../pages/PageMode';
 import { repairModelPopup } from '../../views/repair-model/repair-model-popup';
 
-import SceneContextMenu from './components/SceneContextMenu';
 import ModeToggleBtn from './ModeToggleBtn';
 import PrintableCube from './PrintableCube';
-import styles from './styles.styl';
 import VisualizerBottomLeft from './VisualizerBottomLeft';
 import VisualizerClippingControl from './VisualizerClippingControl';
 import VisualizerInfo from './VisualizerInfo';
@@ -36,6 +33,9 @@ import {
     sliceFailPopup,
 } from './VisualizerPopup';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
+import SceneContextMenu from './components/SceneContextMenu';
+import SceneShortcuts from './components/SceneShortcuts';
+import styles from './styles.styl';
 
 const initQuaternion = new Quaternion();
 
@@ -48,7 +48,6 @@ const initQuaternion = new Quaternion();
  */
 class Visualizer extends PureComponent {
     static propTypes = {
-        isActive: PropTypes.bool.isRequired,
         series: PropTypes.string.isRequired,
         size: PropTypes.object.isRequired,
         stage: PropTypes.number.isRequired,
@@ -62,7 +61,6 @@ class Visualizer extends PureComponent {
         inProgress: PropTypes.bool.isRequired,
         leftBarOverlayVisible: PropTypes.bool.isRequired,
         displayedType: PropTypes.string,
-        menuDisabledCount: PropTypes.number,
         enable3dpLivePreview: PropTypes.bool.isRequired,
         // allModel: PropTypes.array,
 
@@ -70,23 +68,19 @@ class Visualizer extends PureComponent {
         recordModelBeforeTransform: PropTypes.func.isRequired,
         recordModelAfterTransform: PropTypes.func.isRequired,
         clearOperationHistory: PropTypes.func.isRequired,
-        offsetGcodeLayers: PropTypes.func.isRequired,
+        // offsetGcodeLayers: PropTypes.func.isRequired,
         destroyGcodeLine: PropTypes.func.isRequired,
         selectMultiModel: PropTypes.func.isRequired,
         selectAllModels: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
-        cut: PropTypes.func.isRequired,
-        copy: PropTypes.func.isRequired,
-        paste: PropTypes.func.isRequired,
-        undo: PropTypes.func.isRequired,
-        redo: PropTypes.func.isRequired,
-        removeSelectedModel: PropTypes.func.isRequired,
+        // copy: PropTypes.func.isRequired,
+        // undo: PropTypes.func.isRequired,
+        // redo: PropTypes.func.isRequired,
         removeAllModels: PropTypes.func.isRequired,
         arrangeAllModels: PropTypes.func.isRequired,
         onModelTransform: PropTypes.func.isRequired,
         onModelAfterTransform: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
-        duplicateSelectedModel: PropTypes.func.isRequired,
         setTransformMode: PropTypes.func.isRequired,
         moveSupportBrush: PropTypes.func.isRequired,
         applySupportBrush: PropTypes.func.isRequired,
@@ -183,13 +177,6 @@ class Visualizer extends PureComponent {
             this.props.updateSelectedModelTransformation({ positionX: 0, positionY: 0 });
             this.actions.updateBoundingBox();
             this.props.onModelAfterTransform();
-        },
-
-        deleteSelectedModel: () => {
-            this.props.removeSelectedModel();
-        },
-        duplicateSelectedModel: () => {
-            this.props.duplicateSelectedModel();
         },
         resetSelectedModelTransformation: () => {
             this.props.resetSelectedModelTransformation();
@@ -306,67 +293,6 @@ class Visualizer extends PureComponent {
         }
     };
 
-
-    shortcutHandler = {
-        title: this.constructor.name,
-        isActive: () => this.props.isActive,
-
-        priority: priorities.VIEW,
-        shortcuts: {
-            [shortcutActions.SELECTALL]: this.props.selectAllModels,
-            [shortcutActions.UNSELECT]: this.props.unselectAllModels,
-            [shortcutActions.DELETE]: () => {
-                if (!this.props.inProgress && !(this.props.menuDisabledCount > 0)) {
-                    this.actions.deleteSelectedModel();
-                }
-            },
-            [shortcutActions.COPY]: () => {
-                if (!this.props.inProgress && !(this.props.menuDisabledCount > 0)) {
-                    this.props.copy();
-                }
-            },
-            [shortcutActions.PASTE]: () => {
-                if (!this.props.inProgress && !(this.props.menuDisabledCount > 0)) {
-                    this.props.paste();
-                }
-            },
-            [shortcutActions.DUPLICATE]: () => {
-                if (!this.props.inProgress && !(this.props.menuDisabledCount > 0)) {
-                    this.actions.duplicateSelectedModel();
-                }
-            },
-            [shortcutActions.UNDO]: () => {
-                if (!this.props.inProgress && !(this.props.menuDisabledCount > 0)) {
-                    this.props.undo();
-                }
-            },
-            [shortcutActions.REDO]: () => {
-                if (!this.props.inProgress && !(this.props.menuDisabledCount > 0)) {
-                    this.props.redo();
-                }
-            },
-            [shortcutActions.CUT]: () => {
-                if (!this.props.inProgress && !(this.props.menuDisabledCount > 0)) {
-                    this.props.cut();
-                }
-            },
-            // optimize: accelerate when continuous click
-            'SHOWGCODELAYERS_ADD': {
-                keys: ['alt+up'],
-                callback: () => {
-                    this.props.offsetGcodeLayers(1);
-                }
-            },
-            'SHOWGCODELAYERS_MINUS': {
-                keys: ['alt+down'],
-                callback: () => {
-                    this.props.offsetGcodeLayers(-1);
-                }
-            }
-        }
-    };
-
-
     constructor(props) {
         super(props);
         const size = props.size;
@@ -387,7 +313,6 @@ class Visualizer extends PureComponent {
         this.canvas.current.resizeWindow();
         this.canvas.current.enable3D();
         // this.setState({ defaultSupportSize: { x: 5, y: 5 } });
-        ShortcutManager.register(this.shortcutHandler);
         window.addEventListener(
             'hashchange',
             (event) => {
@@ -625,21 +550,23 @@ class Visualizer extends PureComponent {
                     />
                 </div>
 
+                {/* Context Menu */}
                 <SceneContextMenu
                     ref={this.contextMenuRef2}
                     canvas={this.canvas}
                 />
+
+                {/* Shortcuts */}
+                <SceneShortcuts />
             </div>
         );
     }
 }
 
-const mapStateToProps = (state, ownProps) => {
+const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { currentModalPath } = state.appbarMenu;
     const printing = state.printing;
     const { size, series, enable3dpLivePreview } = machine;
-    const { menuDisabledCount } = state.appbarMenu;
     // TODO: be to organized
     const {
         progressStatesManager,
@@ -652,28 +579,15 @@ const mapStateToProps = (state, ownProps) => {
         displayedType,
         renderingTimestamp,
         inProgress,
-        enableShortcut,
         leftBarOverlayVisible,
         stopArea,
         simplifyOriginModelInfo
     } = printing;
 
-    let isActive = true;
-    if (enableShortcut) {
-        if (!currentModalPath && ownProps.location.pathname.indexOf(HEAD_PRINTING) > 0) {
-            isActive = true;
-        } else {
-            isActive = false;
-        }
-    } else {
-        isActive = false;
-    }
-
     return {
         // machine
         stopArea,
         leftBarOverlayVisible,
-        isActive,
         stage,
         promptTasks,
         size,
@@ -681,7 +595,6 @@ const mapStateToProps = (state, ownProps) => {
         selectedModelArray: modelGroup.selectedModelArray,
         transformation: modelGroup.getSelectedModelTransformationForPrinting(),
         modelGroup,
-        menuDisabledCount,
         gcodeLineGroup,
         transformMode,
         progress,
@@ -701,16 +614,13 @@ const mapDispatchToProps = (dispatch) => ({
     clearOperationHistory: () => dispatch(operationHistoryActions.clear(HEAD_PRINTING)),
 
     destroyGcodeLine: () => dispatch(printingActions.destroyGcodeLine()),
-    offsetGcodeLayers: (offset) => dispatch(printingActions.offsetGcodeLayers(offset)),
+    // offsetGcodeLayers: (offset) => dispatch(printingActions.offsetGcodeLayers(offset)),
     selectMultiModel: (intersect, selectEvent) => dispatch(printingActions.selectMultiModel(intersect, selectEvent)),
     unselectAllModels: () => dispatch(printingActions.unselectAllModels()),
     selectAllModels: () => dispatch(printingActions.selectAllModels()),
-    cut: () => dispatch(printingActions.cut()),
-    copy: () => dispatch(printingActions.copy()),
-    paste: () => dispatch(printingActions.paste()),
-    undo: () => dispatch(printingActions.undo(HEAD_PRINTING)),
-    redo: () => dispatch(printingActions.redo(HEAD_PRINTING)),
-    removeSelectedModel: () => dispatch(printingActions.removeSelectedModel()),
+    // copy: () => dispatch(printingActions.copy()),
+    // undo: () => dispatch(printingActions.undo(HEAD_PRINTING)),
+    // redo: () => dispatch(printingActions.redo(HEAD_PRINTING)),
     removeAllModels: () => dispatch(printingActions.removeAllModels()),
     arrangeAllModels: (angle = 45, offset = 1, padding = 0) => dispatch(printingActions.arrangeAllModels(angle, offset, padding)),
     onModelTransform: () => dispatch(printingActions.onModelTransform()),
@@ -718,7 +628,6 @@ const mapDispatchToProps = (dispatch) => ({
     updateSelectedModelTransformation: (transformation, newUniformScalingState) => {
         return dispatch(printingActions.updateSelectedModelTransformation(transformation, newUniformScalingState));
     },
-    duplicateSelectedModel: () => dispatch(printingActions.duplicateSelectedModel()),
     layFlatSelectedModel: () => dispatch(printingActions.layFlatSelectedModel()),
     resetSelectedModelTransformation: () => dispatch(printingActions.resetSelectedModelTransformation()),
     autoRotateSelectedModel: () => dispatch(printingActions.autoRotateSelectedModel()),

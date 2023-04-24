@@ -1,11 +1,11 @@
 import { applyParameterModifications, PrintMode, resolveParameterValues } from '@snapmaker/luban-platform';
 import { cloneDeep, filter, find, includes, isNil, noop } from 'lodash';
-import { v4 as uuid } from 'uuid';
 import path from 'path';
 import { Transfer } from 'threads';
 import * as THREE from 'three';
 import { Box3, Vector3 } from 'three';
 import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
+import { v4 as uuid } from 'uuid';
 
 import { timestamp } from '../../../shared/lib/random-utils';
 import api from '../../api';
@@ -14,8 +14,8 @@ import {
     DATA_PREFIX,
     EPSILON,
     EXTRUDER_REGEX,
-    GCODEPREVIEWMODES,
     GCODE_VISIBILITY_TYPE,
+    GCODEPREVIEWMODES,
     HEAD_PRINTING,
     KEY_DEFAULT_CATEGORY_CUSTOM,
     LEFT_EXTRUDER,
@@ -44,6 +44,7 @@ import log from '../../lib/log';
 import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 import workerManager from '../../lib/manager/workerManager';
 
+import { getCurrentHeadType } from '../../lib/url-utils';
 import { ModelEvents } from '../../models/events';
 import ModelGroup from '../../models/ModelGroup';
 import PrimeTowerModel from '../../models/PrimeTowerModel';
@@ -57,6 +58,7 @@ import { pickAvailableQualityPresetModels } from '../../ui/utils/profileManager'
 import ModelExporter from '../../ui/widgets/PrintingVisualizer/ModelExporter';
 import ModelLoader from '../../ui/widgets/PrintingVisualizer/ModelLoader';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
+import type { RootState } from '../index.def';
 import definitionManager from '../manager/DefinitionManager';
 import AddOperation3D from '../operation-history/AddOperation3D';
 import AddSupportsOperation3D from '../operation-history/AddSupportsOperation3D';
@@ -73,7 +75,7 @@ import ScaleOperation3D from '../operation-history/ScaleOperation3D';
 import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWithRotateOperation3D';
 import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import VisibleOperation3D from '../operation-history/VisibleOperation3D';
-import { checkMeshes, loadMeshFiles, LoadMeshFileOptions, MeshFileInfo } from './actions-mesh';
+import { checkMeshes, LoadMeshFileOptions, loadMeshFiles, MeshFileInfo } from './actions-mesh';
 import sceneActions from './actions-scene';
 
 // eslint-disable-next-line import/no-cycle
@@ -3038,6 +3040,11 @@ export const actions = {
         dispatch(actions.render());
     },
     removeSelectedModel: () => (dispatch, getState) => {
+        const { inProgress } = getState().printing;
+        if (inProgress) {
+            return;
+        }
+
         const { modelGroup } = getState().printing;
         const operations = new Operations();
         const selectedModelArray = modelGroup.selectedModelArray.concat();
@@ -3610,18 +3617,33 @@ export const actions = {
         dispatch(actions.displayModel());
     },
 
-    cut: () => dispatch => {
+    cut: () => (dispatch, getState) => {
+        const { inProgress } = getState().printing;
+        if (inProgress) {
+            return;
+        }
+
         dispatch(actions.copy());
         dispatch(actions.removeSelectedModel());
     },
 
     copy: () => (dispatch, getState) => {
+        const { inProgress } = getState().printing;
+        if (inProgress) {
+            return;
+        }
+
         const { modelGroup } = getState().printing;
         modelGroup.copy();
         dispatch(actions.render());
     },
 
     paste: () => (dispatch, getState) => {
+        const { inProgress } = getState().printing;
+        if (inProgress) {
+            return;
+        }
+
         const { modelGroup } = getState().printing;
         const modelState = modelGroup.paste();
 
@@ -4000,6 +4022,11 @@ export const actions = {
 
     // uploadModel
     undo: () => (dispatch, getState) => {
+        const { inProgress } = getState().printing;
+        if (inProgress) {
+            return;
+        }
+
         const { history, displayedType } = getState().printing;
         const { canUndo } = history;
 
@@ -4018,6 +4045,11 @@ export const actions = {
     },
 
     redo: () => (dispatch, getState) => {
+        const { inProgress } = getState().printing;
+        if (inProgress) {
+            return;
+        }
+
         dispatch(actions.exitPreview());
         const { canRedo } = getState().printing.history;
         if (canRedo) {
@@ -5271,7 +5303,15 @@ export const actions = {
         await dispatch(actions.updateModelMesh(results, true));
 
         return { allPepaired };
-    }
+    },
+
+    isShortcutActive: () => (dispatch, getState: () => RootState) => {
+        const { enableShortcut } = getState().printing;
+        const { currentModalPath } = getState().appbarMenu;
+
+        const headType = getCurrentHeadType(window.location.href);
+        return enableShortcut && !currentModalPath && headType === HEAD_PRINTING;
+    },
 };
 
 export default function reducer(state = INITIAL_STATE, action) {
