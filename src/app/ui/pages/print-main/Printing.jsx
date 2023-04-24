@@ -305,13 +305,6 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
                     action: async (e) => {
                         e.stopPropagation();
                         dispatch(appGlobalActions.updateState({ showCaseResource: true }));
-                        // if (pageMode === PageMode.DownloadManager) {
-                        //     // Click again will not exit simplify page mode
-                        //     setPageMode(PageMode.Default);
-                        // } else {
-                        //     e.stopPropagation();
-                        //     setPageMode(PageMode.DownloadManager);
-                        // }
                     }
                 }
             );

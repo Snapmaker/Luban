@@ -516,7 +516,7 @@ export const CaseConfigSM2Gimbal = {
 
 
 export const CaseConfigQuickStart = {
-    title: 'Quick Start ',
+    title: 'Quick Start',
     author: 'snapmaker',
     imgSrc: '../../resources/images/user-case/quick-start.jpg',
     pathConfig: {

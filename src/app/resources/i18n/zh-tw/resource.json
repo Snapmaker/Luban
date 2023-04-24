@@ -1258,6 +1258,7 @@
     "key-HomePage/CaseLibrary_title-CNC": "",
     "key-HomePage/CaseLibrary_title-Laser": "",
     "key-HomePage/CaseResource-More": "",
+    "key-HomePage/Resources Resources": "",
     "key-Laser/CamaeraCapture-Adjust area": "",
     "key-Laser/CamaeraCapture-Align the four corners of the blue quadrilateral with the engraved square.": "",
     "key-Laser/CamaeraCapture-Fine-tune the position of the four corners": "",
@@ -2245,6 +2246,5 @@
     "key_menu_Quit": "",
     "key_menu_Services": "",
     "key_menu_Unhide": "",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "",
-    "material_no_category": ""
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": ""
 }

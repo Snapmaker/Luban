@@ -1258,6 +1258,7 @@
     "key-HomePage/CaseLibrary_title-CNC": "Фрезерування",
     "key-HomePage/CaseLibrary_title-Laser": "Лазер",
     "key-HomePage/CaseResource-More": "",
+    "key-HomePage/Resources Resources": "",
     "key-Laser/CamaeraCapture-Adjust area": "Вирівняти",
     "key-Laser/CamaeraCapture-Align the four corners of the blue quadrilateral with the engraved square.": "Вирівняйте чотири кути синього чотирикутника з вигравіюваним квадратом.",
     "key-Laser/CamaeraCapture-Fine-tune the position of the four corners": "Налаштуйте положення чотирьох кутів (після вибору точки точно налаштуйте положення за допомогою клавіатури), щоб стандартний прямокутник у полі попереднього перегляду вирівнявся з прямокутником на зображенні",
@@ -2245,6 +2246,5 @@
     "key_menu_Quit": "Вийти",
     "key_menu_Services": "Служби",
     "key_menu_Unhide": "Показати",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Трансформація",
-    "material_no_category": "Матеріал без категорії"
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Трансформація"
 }

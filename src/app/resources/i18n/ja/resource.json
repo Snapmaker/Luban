@@ -1258,6 +1258,7 @@
     "key-HomePage/CaseLibrary_title-CNC": "CNC",
     "key-HomePage/CaseLibrary_title-Laser": "レーザー",
     "key-HomePage/CaseResource-More": "",
+    "key-HomePage/Resources Resources": "",
     "key-Laser/CamaeraCapture-Adjust area": "調整エリア",
     "key-Laser/CamaeraCapture-Align the four corners of the blue quadrilateral with the engraved square.": "青い四辺の四隅を加工した角に合わせます。",
     "key-Laser/CamaeraCapture-Fine-tune the position of the four corners": "四隅の位置を微調整して（ポイントを選択した後、キーボードの方向を微調整する）、プレビュー ボックスの標準四角形と画像の四角形を一致するようにします。",
@@ -2245,6 +2246,5 @@
     "key_menu_Quit": "終了",
     "key_menu_Services": "サービス",
     "key_menu_Unhide": "表示",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "変換",
-    "material_no_category": "material_no_category"
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "変換"
 }

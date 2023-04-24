@@ -1258,6 +1258,7 @@
     "key-HomePage/CaseLibrary_title-CNC": "CNC",
     "key-HomePage/CaseLibrary_title-Laser": "激光",
     "key-HomePage/CaseResource-More": "",
+    "key-HomePage/Resources Resources": "",
     "key-Laser/CamaeraCapture-Adjust area": "定义框",
     "key-Laser/CamaeraCapture-Align the four corners of the blue quadrilateral with the engraved square.": "将蓝色四边形的四个角与雕刻的方框对齐。",
     "key-Laser/CamaeraCapture-Fine-tune the position of the four corners": "微调四个角的位置（选点后微调键盘的方向），使预览框中的标准矩形与图片中的矩形对齐",
@@ -2245,6 +2246,5 @@
     "key_menu_Quit": "退出",
     "key_menu_Services": "服务",
     "key_menu_Unhide": "取消隐藏",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "变换",
-    "material_no_category": "material_no_category"
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "变换"
 }

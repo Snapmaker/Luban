@@ -1258,6 +1258,7 @@
     "key-HomePage/CaseLibrary_title-CNC": "CNC",
     "key-HomePage/CaseLibrary_title-Laser": "Laser",
     "key-HomePage/CaseResource-More": "",
+    "key-HomePage/Resources Resources": "",
     "key-Laser/CamaeraCapture-Adjust area": "Bereich anpassen",
     "key-Laser/CamaeraCapture-Align the four corners of the blue quadrilateral with the engraved square.": "Richten Sie die vier Ecken des blauen Vierecks an dem eingravierten Quadrat aus.",
     "key-Laser/CamaeraCapture-Fine-tune the position of the four corners": "Die Position der vier Ecken einstellen (nach Auswahl des Punkts, Feintune die Richtung der Tastatur) so dass das Standard-Rechteck im Vorschaufeld mit dem Rechteck im Bild ausgerichtet ist",
@@ -2245,6 +2246,5 @@
     "key_menu_Quit": "Beenden",
     "key_menu_Services": "Dienstleistungen",
     "key_menu_Unhide": "Einblenden",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Umwandlung",
-    "material_no_category": "keine Kategorie"
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Umwandlung"
 }

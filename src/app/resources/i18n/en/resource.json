@@ -1258,6 +1258,7 @@
     "key-HomePage/CaseLibrary_title-CNC": "CNC",
     "key-HomePage/CaseLibrary_title-Laser": "Laser",
     "key-HomePage/CaseResource-More": "More",
+    "key-HomePage/Resources Resources": "Resources",
     "key-Laser/CamaeraCapture-Adjust area": "Adjust area",
     "key-Laser/CamaeraCapture-Align the four corners of the blue quadrilateral with the engraved square.": "Align the four corners of the blue quadrilateral with the engraved square.",
     "key-Laser/CamaeraCapture-Fine-tune the position of the four corners": "Fine-tune the position of the four corners (after selecting the point, fine-tune the direction of the keyboard), so that the standard rectangle in the preview box is aligned with the rectangle in the picture",
@@ -2245,6 +2246,5 @@
     "key_menu_Quit": "Quit",
     "key_menu_Services": "Services",
     "key_menu_Unhide": "Unhide",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Transformation",
-    "material_no_category": "material_no_category"
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Transformation"
 }
