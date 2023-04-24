@@ -1,25 +1,30 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { connect, } from 'react-redux';
+import { connect, shallowEqual, useSelector, useDispatch } from 'react-redux';
 import { withRouter, useHistory } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import i18next from 'i18next';
+import isElectron from 'is-electron';
 import i18n from '../../../lib/i18n';
 import { actions as projectActions } from '../../../flux/project';
+import { actions as appGlobalActions } from '../../../flux/app-global';
 import MainToolBar from '../../layouts/MainToolBar';
 import { PageMode } from '../PageMode';
 import CSDownloadManagerOverlay from '../../views/model-operation-overlay/CSDownloadManagerOverlay';
 import { db } from '../../../lib/indexDB/db';
 import uniApi from '../../../lib/uni-api';
+import { DetailModalState } from '../../../constants/downloadManager';
 
-// const resourceDomain = 'http://localhost:8085';
-const resourceDomain = 'http://45.79.80.155:8085';
+// const resourceDomain = 'http://45.79.80.155:8085';
+const resourceDomain = 'http://127.0.0.1:8085';
 const CaseResource = (props) => {
+    const dispatch = useDispatch();
     // for simplify model, if true, visaulizerLeftbar and main tool bar can't be use
     const [pageMode, setPageMode] = useState(PageMode.Default);
     const history = useHistory();
     const caseResourceIframe = useRef();
     const willMakedProjectFileItemRef = useRef({});
     const willMakedModelFileItemRef = useRef([]);
+    const caseResourceId = useSelector(state => state?.appGlobal?.caseResourceId, shallowEqual);
 
     function openProject(record) {
         const { downloadUrl, fileName } = willMakedProjectFileItemRef.current;
@@ -73,6 +78,9 @@ const CaseResource = (props) => {
             setTimeout(goToPrinting);
         }
     }
+    const onIframeErr = (err) => {
+        console.log('iframe error', err);
+    };
 
     // iframe adapt
     const mainToolBarId = 'case-resource-main-tool-bar';
@@ -88,8 +96,8 @@ const CaseResource = (props) => {
         window.addEventListener('resize', windowResize);
         return () => window.removeEventListener('resize', windowResize);
     };
-
-    // get message from iframe
+    const sendMsgToIframe = (data, iframeEl) => iframeEl && iframeEl.contentWindow.postMessage(data, resourceDomain);
+    // get/send message from iframe
     const handleMessage = () => {
         const msglistener = (event) => {
             if (event.origin === resourceDomain) {
@@ -127,11 +135,16 @@ const CaseResource = (props) => {
 
         const iframe = caseResourceIframe.current;
         iframe.onload = () => {
-            iframe.contentWindow.postMessage({
+            sendMsgToIframe({
                 type: 'isElectron',
                 value: true
-            }, resourceDomain);
+            }, iframe);
+            caseResourceId && sendMsgToIframe({
+                type: 'open-detail',
+                id: caseResourceId
+            });
         };
+        iframe.onerror = onIframeErr;
         return () => window.removeEventListener('message', msglistener);
     };
     const handleDownloadFile = () => {
@@ -185,6 +198,8 @@ const CaseResource = (props) => {
         };
     };
     useEffect(() => {
+        const iframeLoad = handleIframe();
+
         const resizeOff = handleResize();
 
         const msgOff = handleMessage();
@@ -197,6 +212,20 @@ const CaseResource = (props) => {
             downloadOff();
         };
     }, []);
+
+    useEffect(() => {
+        const isCaseResourceValid = caseResourceId > 0 || caseResourceId === DetailModalState.Close;
+        if (!isElectron() || !isCaseResourceValid) return;
+        console.log('luban open detail id,', caseResourceId);
+        const iframe = caseResourceIframe.current;
+        sendMsgToIframe({
+            type: 'open-detail',
+            id: caseResourceId
+        }, iframe);
+
+        // reset for next time open
+        dispatch(appGlobalActions.updateState({ caseResourceId: DetailModalState.Reset }));
+    }, [caseResourceId]);
 
 
     return (

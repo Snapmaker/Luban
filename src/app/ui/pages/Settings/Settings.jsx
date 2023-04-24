@@ -38,17 +38,17 @@ class Settings extends PureComponent {
             title: i18n._('key-App/Settings/Settings-General'),
             component: (props) => <General {...props} />
         },
-        {
-            id: 'machine',
-            path: 'machine',
-            title: i18n._('key-App/Settings/Settings-Machine Settings'),
-            component: (props) => <MachineSettings {...props} />
-        },
         isElectron() && {
             id: 'download',
             path: 'download',
             title: i18n._('key-App/Settings/Settings-Download'),
             component: (props) => <Download {...props} />
+        },
+        {
+            id: 'machine',
+            path: 'machine',
+            title: i18n._('key-App/Settings/Settings-Machine Settings'),
+            component: (props) => <MachineSettings {...props} />
         }
         // {
         //     id: 'config',

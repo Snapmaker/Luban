@@ -66,7 +66,7 @@ function Download(props) {
                             name="TitleSetting"
                             type={['static']}
                         />
-                        <span className="margin-left-4">{i18n._('key-App/Settings/General-Language')}</span>
+                        <span className="margin-left-4">{i18n._('key-App/Settings/Settings-Download')}</span>
                     </div>
                     <div className="margin-top-16">
                         <div className="padding-bottom-4">

@@ -14,6 +14,7 @@ import workerManager from '../../lib/manager/workerManager';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 
 import { downloadManagerStore } from '../../store/local-storage';
+import { DetailModalState } from '../../constants/downloadManager';
 
 const ACTION_UPDATE_STATE = 'app-global/ACTION_UPDATE_STATE';
 const DEFAULT_MODAL_ZINDEX = 9999;
@@ -28,6 +29,7 @@ const DEFAULT_STATE = {
 
     downloadManangerSavedPath: !isElectron() ? '' : path.join(window.require('@electron/remote').app.getPath('userData'), 'downloadManager.json'),
     showCaseResource: false,
+    caseResourceId: DetailModalState.Reset,
 };
 const SHOW_MODAL_TIME = 15000;
 let clearSavedModalTimer = null;

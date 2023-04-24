@@ -1,20 +1,16 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
-// import { throttle } from 'lodash';
-import isElectron from 'is-electron';
 import classNames from 'classnames';
-import Anchor from '../../components/Anchor';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import { getCaseList } from '../../../lib/caseLibrary';
 import { timestamp } from '../../../../shared/lib/random-utils';
 import { actions as projectActions } from '../../../flux/project';
-import { actions as appGlobalActions } from '../../../flux/app-global';
 import styles from './styles.styl';
 
 const QuickStart = (props) => {
-    const { history } = props;
+    const { history, noTitle } = props;
     // useState
     const [caseConfig, setCaseConfig] = useState([]);
     const [caseConfigFourAxis, setCaseConfigFourAxis] = useState([]);
@@ -34,11 +30,6 @@ const QuickStart = (props) => {
         log.info('Open project...');
         dispatch(projectActions.openProject(caseItem.pathConfig, history));
     }, [dispatch, openingProject, history]);
-    const goCaseResource = () => {
-        if (isElectron()) {
-            dispatch(appGlobalActions.updateState({ showCaseResource: true }));
-        }
-    };
 
 
     //  useEffect
@@ -56,9 +47,11 @@ const QuickStart = (props) => {
 
     return (
         <div className={styles['quick-start-container']}>
-            <div className={classNames(styles['title-label'], 'highlight-heading', 'margin-bottom-16')}>
-                {i18n._('key-HomePage/Begin-Case Library')}
-            </div>
+            {!noTitle && (
+                <div className={classNames(styles['title-label'], 'highlight-heading', 'margin-bottom-16')}>
+                    {i18n._('key-HomePage/Begin-Case Library')}
+                </div>
+            )}
             <div className={
                 classNames(
                     styles['case-list'],
@@ -116,20 +109,14 @@ const QuickStart = (props) => {
                         </div>
                     );
                 })}
-                {isElectron() && (
-                    <Anchor onClick={goCaseResource} title={i18n._('key-HomePage/Begin-Workspace')} className={classNames(styles['case-resource'])}>
-                        <span className={classNames('heading-3-normal-with-hover')}>
-                            {i18n._('key-HomePage/CaseResource-More')} {'>'}
-                        </span>
-                    </Anchor>
-                )}
             </div>
         </div>
     );
 };
 
 QuickStart.propTypes = {
-    history: PropTypes.object
+    history: PropTypes.object,
+    noTitle: PropTypes.bool
 };
 
 export default QuickStart;
