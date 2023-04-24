@@ -15,7 +15,7 @@ import i18n from '../../../lib/i18n';
 import styles from './styles.styl';
 import SvgIcon from '../../components/SvgIcon';
 import { db } from '../../../lib/indexDB/db';
-import { KB, MB, RecordState } from '../../../constants/downloadManager';
+import { KB, MB, ModelFileExt, ProjectFileExt, RecordState } from '../../../constants/downloadManager';
 import uniApi from '../../../lib/uni-api';
 
 
@@ -207,8 +207,9 @@ const CSDownloadManagerOverlay = (props) => {
         );
     }
     function renderDownloadDone(record) {
-        switch (record.ext) {
-            case '.snap3dp': {
+        if (!record.ext) return (<div>something went wrong...</div>);
+        switch (record.ext.toLowerCase()) {
+            case ProjectFileExt.snap3dp: {
                 return (
                     <div
                         className="font-size-small color-blue-2"
@@ -221,7 +222,10 @@ const CSDownloadManagerOverlay = (props) => {
                     </div>
                 );
             }
-            case '.stl': {
+            case ModelFileExt.stl:
+            case ModelFileExt.amf:
+            case ModelFileExt.obj:
+            case ModelFileExt['3mf']: {
                 return (
                     <div
                         className="font-size-small color-blue-2"

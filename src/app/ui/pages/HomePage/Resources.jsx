@@ -43,7 +43,7 @@ const Resources = (props) => {
         });
     };
     const linstenNetworkConnect = () => {
-        // TODO: it is better to handler in node by dns check, for now that is good
+        // TODO: it is better to handler in node by dns check
         setCanAccessInternet(window.navigator.onLine);
         const onlineHandler = () => setCanAccessInternet(true);
         const offlineHandler = () => setCanAccessInternet(false);

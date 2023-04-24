@@ -12,7 +12,7 @@ import { PageMode } from '../PageMode';
 import CSDownloadManagerOverlay from '../../views/model-operation-overlay/CSDownloadManagerOverlay';
 import { db } from '../../../lib/indexDB/db';
 import uniApi from '../../../lib/uni-api';
-import { DetailModalState } from '../../../constants/downloadManager';
+import { DetailModalState, ModelFileExt, ProjectFileExt } from '../../../constants/downloadManager';
 
 // const resourceDomain = 'http://45.79.80.155:8085';
 const resourceDomain = 'http://127.0.0.1:8085';
@@ -29,8 +29,8 @@ const CaseResource = (props) => {
 
     function openProject(record) {
         const { downloadUrl, fileName } = willMakedProjectFileItemRef.current;
-        const filename = `${record.name}${record.ext}`;
-        const isMakeTarget = record.downloadUrl === downloadUrl && filename === fileName;
+        const recordFileName = `${record.name}${record.ext}`;
+        const isMakeTarget = decodeURIComponent(record.downloadUrl) === downloadUrl && recordFileName === fileName;
         console.log('compare', record, downloadUrl, fileName);
         if (isMakeTarget) {
             // reset
@@ -53,7 +53,7 @@ const CaseResource = (props) => {
     function openModel(record) {
         const waitArr = willMakedModelFileItemRef.current;
         console.log('compare arr', record, waitArr);
-        const targetIndex = waitArr.findIndex(item => item.downloadUrl === record.downloadUrl && item.fileName === `${record.name}${record.ext}`);
+        const targetIndex = waitArr.findIndex(item => item.downloadUrl === decodeURIComponent(record.downloadUrl) && item.fileName === `${record.name}${record.ext}`);
         if (targetIndex !== -1) {
             // reset
             console.log('match, ', targetIndex);
@@ -126,20 +126,24 @@ const CaseResource = (props) => {
     // get/send message from iframe
     const sendMsgToIframe = (data, iframeEl) => iframeEl && iframeEl.contentWindow.postMessage(data, resourceDomain);
     const handleMessage = () => {
+        const makeFile = (fileName, downloadUrl) => {
+            const fileExt = fileName.substr(fileName.lastIndexOf('.') + 1);
+            console.log('fileExt', fileExt, ModelFileExt[fileExt], !!ModelFileExt[fileExt]);
+            if (fileExt && ModelFileExt[fileExt.toLowerCase()]) {
+                willMakedModelFileItemRef.current.push({ fileName, downloadUrl });
+            } else if (fileExt && ProjectFileExt[fileExt.toLowerCase()]) {
+                willMakedProjectFileItemRef.current = { fileName, downloadUrl };
+            }
+        };
         const msglistener = (event) => {
             if (event.origin === resourceDomain) {
                 console.log('get event from iframe:', event);
                 switch (event.data.type) {
                     case 'make': {
                         console.log('make file', event.data);
-                        // download and open .stl or .snap3dp file in Luban
+                        // download and open .stl/.obj/.3mf/.amf or .snap3dp file in Luban
                         setPageMode(PageMode.DownloadManager);
-                        const isStl = fileName => fileName.slice(fileName.lastIndexOf('.')) === '.stl';
-                        if (!isStl(event.data.fileName)) {
-                            willMakedProjectFileItemRef.current = { fileName: event.data.fileName, downloadUrl: event.data.downloadUrl };
-                        } else {
-                            willMakedModelFileItemRef.current.push({ fileName: event.data.fileName, downloadUrl: event.data.downloadUrl });
-                        }
+                        makeFile(event.data.fileName, event.data.downloadUrl);
                         console.log('make save:', { fileName: event.data.fileName, downloadUrl: event.data.downloadUrl });
                         break;
                     }
@@ -209,9 +213,12 @@ const CaseResource = (props) => {
             if (!record) {
                 record = await newDownloadItem(null, downloadItem);
             }
-            if (downloadItem.ext === '.snap3dp') {
+
+            console.log('downloadItem.ext', downloadItem.ext);
+            const isModelFile = Object.values(ModelFileExt).some(ext => downloadItem.ext && ext === downloadItem.ext.toLowerCase());
+            if (downloadItem.ext && ProjectFileExt.snap3dp === downloadItem.ext.toLowerCase()) {
                 openProject(downloadItem);
-            } else if (downloadItem.ext === '.stl') {
+            } else if (isModelFile) {
                 openModel(downloadItem);
             }
         };

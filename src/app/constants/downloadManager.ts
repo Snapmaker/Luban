@@ -13,3 +13,14 @@ export enum DetailModalState {
     Close = -1,
     Reset = -2,
 }
+
+export const ModelFileExt = {
+    stl: '.stl',
+    obj: '.obj',
+    '3mf': '.3mf',
+    amf: '.amf',
+};
+
+export const ProjectFileExt = {
+    snap3dp: '.snap3dp',
+};
