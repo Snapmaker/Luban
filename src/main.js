@@ -436,7 +436,7 @@ const showMainWindow = async () => {
             savePath = path.format({
                 dir,
                 ext,
-                name: `${name}(${fileNum})`,
+                name: `${name}${fileNum > 0 ? `(${fileNum})` : ''}`,
             });
         }
         savePath && downloadItem.setSavePath(savePath);

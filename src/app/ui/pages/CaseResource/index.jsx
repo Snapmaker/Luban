@@ -42,7 +42,7 @@ const CaseResource = (props) => {
             const { savePath, ext, name, fileNum } = record;
             props.openProject(
                 {
-                    name: `${name}(${fileNum})${ext}`,
+                    name: `${name}${fileNum > 0 ? `(${fileNum})` : ''}${ext}`,
                     path: savePath || '',
                 },
                 props.history
@@ -71,7 +71,7 @@ const CaseResource = (props) => {
                 state: {
                     initialized: true,
                     needOpenModel: true,
-                    fileName: `${name}(${fileNum})${ext}`,
+                    fileName: `${name}${fileNum > 0 ? `(${fileNum})` : ''}${ext}`,
                     savePath
                 }
             });

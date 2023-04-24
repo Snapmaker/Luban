@@ -170,13 +170,13 @@ const CSDownloadManagerOverlay = (props) => {
     function onOpenModel({ savePath, ext, name, fileNum }) {
         if (!showCaseResource && history.location?.pathname === '/printing') {
             console.log(JSON.stringify({
-                fileName: `${name}(${fileNum})${ext}`,
+                fileName: `${name}${fileNum > 0 ? `(${fileNum})` : ''}${ext}`,
                 savePath
             }));
             dispatch(printingActions.uploadModel(
                 [
                     JSON.stringify({
-                        name: `${name}(${fileNum})${ext}`,
+                        name: `${name}${fileNum > 0 ? `(${fileNum})` : ''}${ext}`,
                         path: savePath || ''
                     })
                 ]
@@ -191,10 +191,11 @@ const CSDownloadManagerOverlay = (props) => {
             state: {
                 initialized: true,
                 needOpenModel: true,
-                fileName: `${name}(${fileNum})${ext}`,
+                fileName: `${name}${fileNum > 0 ? `(${fileNum})` : ''}${ext}`,
                 savePath
             }
         });
+        console.log(`${name}${fileNum > 0 ? `(${fileNum})` : ''}${ext}`);
         props.toggleCaseResource(false);
         setTimeout(goToPrinting);
     }
@@ -337,7 +338,7 @@ const CSDownloadManagerOverlay = (props) => {
                     records.map(record => (
                         <div style={{ flex: '0 0 auto' }} className="sm-flex align-center padding-bottom-16 record-item" key={record.startTime} title={record.savePath}>
                             <div style={{ width: '100%', lineHeight: 1 }}>
-                                <div className="font-size-base color-black-3">{`${record.name}(${record.fileNum})${record.ext}`}</div>
+                                <div className="font-size-base color-black-3">{`${record.name}${record.fileNum > 0 ? `(${record.fileNum})` : ''}${record.ext}`}</div>
                                 {record.state === RecordState.Progressing && (
                                     <Progress
                                         style={{ lineHeight: 1 }}
