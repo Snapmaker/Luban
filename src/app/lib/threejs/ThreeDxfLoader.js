@@ -609,7 +609,6 @@ class ThreeDxfLoader {
             }
             this.normalizer(dxf, scale);
 
-
             const typeGeometries = {
                 CIRCLE: new THREE.Geometry(),
                 LINE: new THREE.Geometry(),

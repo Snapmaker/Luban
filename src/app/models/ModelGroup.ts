@@ -1691,16 +1691,6 @@ class ModelGroup extends EventEmitter {
                 }
             }
 
-            // {
-            //     const geometry = new Geometry();
-            //     for (const vector3 of checkPositions) {
-            //         geometry.vertices.push(vector3);
-            //     }
-            //     const material = new PointsMaterial({ color: 0xff0000 });
-            //     const points = new Points(geometry, material);
-            //     points.position.y = -1;
-            //     this.add(points);
-            // }
             for (const position of checkPositions) {
                 const modelBox3Clone = modelBox3.clone();
                 modelBox3Clone.translate(new Vector3(position.x, position.y, 0));

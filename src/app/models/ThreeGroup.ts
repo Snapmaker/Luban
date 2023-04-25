@@ -1,12 +1,13 @@
 import * as THREE from 'three';
 import { cloneDeep } from 'lodash';
+import { ConvexGeometry } from '@snapmaker/luban-platform';
+
 import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils';
 import BaseModel, { ModelTransformation, ModelInfo, TSize } from './ThreeBaseModel';
 import type ModelGroup from './ModelGroup';
 import type ThreeModel from './ThreeModel';
 import ThreeUtils from '../three-extensions/ThreeUtils';
 import { BOTH_EXTRUDER_MAP_NUMBER } from '../constants';
-import ConvexGeometry from '../three-extensions/ConvexGeometry';
 
 type traverseCallback = (mesh: ThreeModel) => void;
 
