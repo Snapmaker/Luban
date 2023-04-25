@@ -98,10 +98,10 @@ const cpFileToTmp = async (file, uploadName) => {
 
 export const set = async (req, res) => {
     let { uploadName } = req.body;
-    const file = req.files.file;
+    const file = req.files.file || JSON.parse(req.body.file);
     const headType = req.query.headType;
     try {
-        if (file) { // post blob file in web
+        if (file) { // post blob file/path string in web
             let filename = file.name, filePath = file.path, children = [];
             ({ filename, filePath, children = [] } = await convertFileToSTL(file, headType === 'printing'));
             const originalName = removeSpecialChars(path.basename(filename));
@@ -113,22 +113,31 @@ export const set = async (req, res) => {
                 item.parentUploadName = uploadName;
             });
 
-            const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
-            mv(filePath, uploadPath, (err) => {
-                if (err) {
-                    log.error(`Failed to upload file ${originalName}`);
-                    res.status(ERR_INTERNAL_SERVER_ERROR).send({
-                        msg: `Failed to upload file ${originalName}: ${err}`
-                    });
-                } else {
-                    res.send({
-                        originalName,
-                        uploadName,
-                        children
-                    });
-                    res.end();
-                }
-            });
+            if (!file.fieldName) { // get path string
+                await cpFileToTmp(file);
+                res.send({
+                    originalName,
+                    uploadName,
+                    children
+                });
+            } else { // get blob file
+                const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
+                mv(filePath, uploadPath, (err) => {
+                    if (err) {
+                        log.error(`Failed to upload file ${originalName}`);
+                        res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                            msg: `Failed to upload file ${originalName}: ${err}`
+                        });
+                    } else {
+                        res.send({
+                            originalName,
+                            uploadName,
+                            children
+                        });
+                        res.end();
+                    }
+                });
+            }
         } else { // post file pathname in electron
             const ret = await cpFileToTmp(JSON.parse(req.body.file));
             res.send(ret);
