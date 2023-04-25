@@ -60,7 +60,6 @@ const HomePage = (props) => { // Todo, what's the props ?
             )}
             <Begin {...props} />
             <div className={styles.secondLine}>
-                {/* <QuickStart {...props} /> */}
                 <Resources {...props} />
                 <MoreInfo />
             </div>

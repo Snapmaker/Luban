@@ -104,7 +104,7 @@ class AppLayout extends PureComponent {
         // dev tools
         resetUserConfig: PropTypes.func.isRequired,
 
-        //
+        // Case Resource
         showCaseResource: PropTypes.bool.isRequired,
         updateShowCaseReource: PropTypes.func.isRequired,
     };

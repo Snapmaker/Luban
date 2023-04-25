@@ -3,7 +3,6 @@ import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import { withRouter, useHistory } from 'react-router-dom';
 import React, { useEffect, useRef, useState } from 'react';
-
 import { connect, shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { Progress } from 'antd';
 import Anchor from '../../components/Anchor';
@@ -11,7 +10,6 @@ import { actions as projectActions } from '../../../flux/project';
 import { actions as appGlobalActions } from '../../../flux/app-global';
 import { actions as printingActions } from '../../../flux/printing';
 import i18n from '../../../lib/i18n';
-// import { Button } from '../../components/Buttons';
 import styles from './styles.styl';
 import SvgIcon from '../../components/SvgIcon';
 import { db } from '../../../lib/indexDB/db';
@@ -20,7 +18,7 @@ import uniApi from '../../../lib/uni-api';
 
 
 /**
- * Overlay that can be used to change print mode.
+ * Overlay that can be used to open DownloadManager modal.
  */
 const CSDownloadManagerOverlay = (props) => {
     const history = useHistory();
@@ -29,13 +27,8 @@ const CSDownloadManagerOverlay = (props) => {
     const showCaseResource = useSelector(state => state?.appGlobal?.showCaseResource, shallowEqual);
     const page = 0;
     const pageSize = 100;
-    // const [page, setPage] = useState(0);
-    // const [pageSize, setPageSize] = useState(50);
     const [records, setRecords] = useState([]);
     const recordsRef = useRef(records);
-    // const nextPage = () => setPage(page + 1);
-    // const prePage = () => setPage(page - 1);
-    // const changePageSize = size => setPageSize(size);
     const isCompleted = (record) => record.state === RecordState.Completed || record.totalBytes === record.receivedBytes;
     function onClose() {
         props.onClose && props.onClose();
@@ -46,13 +39,12 @@ const CSDownloadManagerOverlay = (props) => {
         const arr = [];
         setRecords(arr);
         recordsRef.current = arr;
-        // uniApi.DownloadManager.emit('clear-files', paths);
     }
+    // click the `selector` outside will call `callback` function
     function outsideClick(selector, callback) {
         let needClose = true;
         const configEl = document.querySelector(selector);
         const closeToggle = () => {
-            console.log(needClose);
             needClose && callback();
             needClose = true;
         };
@@ -61,16 +53,18 @@ const CSDownloadManagerOverlay = (props) => {
             if (configEl === target || configEl.contains(target)) {
                 needClose = false;
             }
-            console.log('needClose', needClose);
-            console.log(e);
         };
         const msglistener = event => {
             if (event.data.type === 'click') {
                 callback();
             }
         };
+
+        // target clicked, modal close/open
         window.addEventListener('click', closeToggle);
+        // target is in iframe so close modal
         window.addEventListener('message', msglistener);
+        // other click
         configEl.addEventListener('click', preventClose);
 
         // There is no bubbling when clicking on the iframe, modal open/close decide by mainWindow's focus/blur
@@ -88,7 +82,6 @@ const CSDownloadManagerOverlay = (props) => {
     }
     function onOpenFloder(e) {
         e.preventDefault();
-        console.log('ok', e);
         uniApi.DownloadManager.openFloder(downloadManangerSavedPath);
     }
     function onRemove(record) {
@@ -169,10 +162,6 @@ const CSDownloadManagerOverlay = (props) => {
     }
     function onOpenModel({ savePath, ext, name, fileNum }) {
         if (!showCaseResource && history.location?.pathname === '/printing') {
-            console.log(JSON.stringify({
-                fileName: `${name}${fileNum > 0 ? `(${fileNum})` : ''}${ext}`,
-                savePath
-            }));
             dispatch(printingActions.uploadModel(
                 [
                     JSON.stringify({
@@ -195,7 +184,6 @@ const CSDownloadManagerOverlay = (props) => {
                 savePath
             }
         });
-        console.log(`${name}${fileNum > 0 ? `(${fileNum})` : ''}${ext}`);
         props.toggleCaseResource(false);
         setTimeout(goToPrinting);
     }
@@ -265,10 +253,9 @@ const CSDownloadManagerOverlay = (props) => {
         return '';
     }
     useEffect(() => {
-        // click the `selector` outside will call `onClose`(close modal outsideclick)
+        // click the `selector` outside will call `onClose` function to close modal
         const removeOutsideClick = outsideClick('#download-manager', onClose);
 
-        // console.log(nextPage, prePage, changePageSize);
         // init, get data from DB
         const getDataFromDB = async () => {
             const dbRescords = await db.downloadRecords.orderBy('startTime').reverse().limit(pageSize).offset(page * pageSize)
@@ -280,7 +267,7 @@ const CSDownloadManagerOverlay = (props) => {
 
         // start download item for ui
         const newDownloadItemUI = (e, downloadItem) => {
-            // add a new item for ui(no from db)
+            // add a new item for ui(not from db)
             const newRecords = [downloadItem, ...recordsRef.current];
             setRecords(newRecords);
             recordsRef.current = newRecords;
@@ -356,7 +343,6 @@ const CSDownloadManagerOverlay = (props) => {
                                 name="Delete"
                                 size={24}
                                 title={i18n._('key-Workspace/Transport-Delete')}
-                                // disabled={!selectedFile}
                                 onClick={() => onRemove(record)}
                             />
                         </div>
@@ -375,11 +361,6 @@ const CSDownloadManagerOverlay = (props) => {
                         {i18n._('key-CaseResource/DownloadManager Clear')}
                     </span>
                 </Anchor>
-                {/* <Anchor onClick={onClose}>
-                        <span className="color-blue-2 margin-right-16">
-                            {i18n._('key-CaseResource/DownloadManager Close')}
-                        </span>
-                    </Anchor> */}
                 <Anchor onClick={onOpenFloder}>
                     <span className="color-blue-2">
                         {i18n._('key-CaseResource/DownloadManager Open Folder')}

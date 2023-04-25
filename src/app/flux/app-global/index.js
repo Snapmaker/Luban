@@ -15,6 +15,7 @@ import ThreeUtils from '../../three-extensions/ThreeUtils';
 
 import { downloadManagerStore } from '../../store/local-storage';
 import { DetailModalState } from '../../constants/downloadManager';
+import downloadMananger from '../../lib/download-mananger';
 
 const ACTION_UPDATE_STATE = 'app-global/ACTION_UPDATE_STATE';
 const DEFAULT_MODAL_ZINDEX = 9999;
@@ -265,11 +266,8 @@ export const actions = {
         downloadManagerStore.set('downloadManangerSavedPath', downloadManangerSavedPath);
         dispatch(actions.updateState({ downloadManangerSavedPath }));
 
-        // update download manager save path
-        if (isElectron()) {
-            const { ipcRenderer } = window.require('electron');
-            ipcRenderer.send('update-download-manager-save-path', JSON.stringify({ path: downloadManangerSavedPath }));
-        }
+        // update download manager save path to main process
+        downloadMananger.emit('update-download-manager-save-path', JSON.stringify({ path: downloadManangerSavedPath }));
     }
 };
 export default function reducer(state = DEFAULT_STATE, action) {

@@ -7,7 +7,7 @@ export default {
             ipcRenderer.send(type, data);
         } else {
             // TODO: most of that can be move to server
-            console.log('no such function');
+            console.warn('browser no such function');
         }
     },
     on: (type, listener) => {
@@ -17,7 +17,7 @@ export default {
             ipcRenderer.on(type, listener);
         } else {
             // TODO: most of that can be move to server
-            console.log('no such function');
+            console.warn('browser no such function');
         }
     },
     off: (type, listener) => {
@@ -28,7 +28,6 @@ export default {
         }
     },
     openUrl: (url, target) => {
-        console.log(url);
         if (isElectron()) {
             const { ipcRenderer } = window.require('electron');
             ipcRenderer.send('open-browser', url);

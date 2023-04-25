@@ -412,7 +412,7 @@ function Printing({ location }) {
         setTimeout(async () => {
             await dispatch(printingActions.initSocketEvent());
 
-            // for download manager open stl
+            // for download manager open model
             if (location.state && location.state.needOpenModel) {
                 const { fileName, savePath } = location.state;
                 dispatch(

@@ -14,11 +14,12 @@ import { db } from '../../../lib/indexDB/db';
 import uniApi from '../../../lib/uni-api';
 import { DetailModalState, ModelFileExt, ProjectFileExt } from '../../../constants/downloadManager';
 
-// const resourceDomain = 'http://45.79.80.155:8085';
-const resourceDomain = 'http://127.0.0.1:8085';
+const resourceDomain = 'http://45.79.80.155:8085';
+// const resourceDomain = 'http://127.0.0.1:8085';
 const CaseResource = (props) => {
     const dispatch = useDispatch();
     const history = useHistory();
+
     // for simplify model, if true, visaulizerLeftbar and main tool bar can't be use
     const [pageMode, setPageMode] = useState(PageMode.Default);
     const [isIframeLoaded, setIsIframeLoaded] = useState(true);
@@ -31,14 +32,12 @@ const CaseResource = (props) => {
         const { downloadUrl, fileName } = willMakedProjectFileItemRef.current;
         const recordFileName = `${record.name}${record.ext}`;
         const isMakeTarget = decodeURIComponent(record.downloadUrl) === downloadUrl && recordFileName === fileName;
-        console.log('compare', record, downloadUrl, fileName);
         if (isMakeTarget) {
             // reset
             willMakedProjectFileItemRef.current = {};
             willMakedModelFileItemRef.current = [];
 
             // open project in printing page
-            console.log('match', record);
             const { savePath, ext, name, fileNum } = record;
             props.openProject(
                 {
@@ -52,11 +51,9 @@ const CaseResource = (props) => {
     }
     function openModel(record) {
         const waitArr = willMakedModelFileItemRef.current;
-        console.log('compare arr', record, waitArr);
         const targetIndex = waitArr.findIndex(item => item.downloadUrl === decodeURIComponent(record.downloadUrl) && item.fileName === `${record.name}${record.ext}`);
         if (targetIndex !== -1) {
             // reset
-            console.log('match, ', targetIndex);
             waitArr.splice(targetIndex, 1);
             willMakedProjectFileItemRef.current = {};
 
@@ -64,7 +61,6 @@ const CaseResource = (props) => {
             const { savePath, ext, name, fileNum } = record;
             if (history.location?.pathname === '/printing') {
                 history.replace('/');
-                console.log(history);
             }
             const goToPrinting = () => history.replace({
                 pathname: '/printing',
@@ -105,7 +101,6 @@ const CaseResource = (props) => {
             setIsIframeLoaded(false);
         }, 60 * 1000);
         const handleLoaded = () => {
-            console.log('finish load iframe');
             setIsIframeLoaded(true);
             clearTimeout(timerRef);
         };
@@ -128,7 +123,6 @@ const CaseResource = (props) => {
     const handleMessage = () => {
         const makeFile = (fileName, downloadUrl) => {
             const fileExt = fileName.substr(fileName.lastIndexOf('.') + 1);
-            console.log('fileExt', fileExt, ModelFileExt[fileExt], !!ModelFileExt[fileExt]);
             if (fileExt && ModelFileExt[fileExt.toLowerCase()]) {
                 willMakedModelFileItemRef.current.push({ fileName, downloadUrl });
             } else if (fileExt && ProjectFileExt[fileExt.toLowerCase()]) {
@@ -137,14 +131,11 @@ const CaseResource = (props) => {
         };
         const msglistener = (event) => {
             if (event.origin === resourceDomain) {
-                console.log('get event from iframe:', event);
                 switch (event.data.type) {
                     case 'make': {
-                        console.log('make file', event.data);
                         // download and open .stl/.obj/.3mf/.amf or .snap3dp file in Luban
                         setPageMode(PageMode.DownloadManager);
                         makeFile(event.data.fileName, event.data.downloadUrl);
-                        console.log('make save:', { fileName: event.data.fileName, downloadUrl: event.data.downloadUrl });
                         break;
                     }
                     case 'download': {
@@ -214,7 +205,6 @@ const CaseResource = (props) => {
                 record = await newDownloadItem(null, downloadItem);
             }
 
-            console.log('downloadItem.ext', downloadItem.ext);
             const isModelFile = Object.values(ModelFileExt).some(ext => downloadItem.ext && ext === downloadItem.ext.toLowerCase());
             if (downloadItem.ext && ProjectFileExt.snap3dp === downloadItem.ext.toLowerCase()) {
                 openProject(downloadItem);
@@ -233,9 +223,8 @@ const CaseResource = (props) => {
         };
     };
 
+    // reload iframe when internet is offline
     const reloadIframe = () => {
-        // caseResourceIframe.current.contentWindow.reload();
-        console.log('reload');
         const iframe = caseResourceIframe.current;
         const src = iframe.src;
         iframe.src = 'about:blank';
@@ -245,6 +234,8 @@ const CaseResource = (props) => {
             handleMessage();
         });
     };
+
+
     useEffect(() => {
         handleIframe();
 
@@ -260,11 +251,9 @@ const CaseResource = (props) => {
             downloadOff();
         };
     }, []);
-
     useEffect(() => {
         const isCaseResourceValid = caseResourceId > 0 || caseResourceId === DetailModalState.Close;
         if (!isElectron() || !isCaseResourceValid) return;
-        console.log('luban open detail id,', caseResourceId);
         const iframe = caseResourceIframe.current;
         sendMsgToIframe({
             type: 'open-detail',

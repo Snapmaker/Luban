@@ -505,9 +505,9 @@ const showMainWindow = async () => {
         });
     });
 
-    // open dialog for setting Download Manager default download path
+    // open dialog for setting Download Manager default download path(save path)
     ipcMain.on('select-directory', () => {
-        dialog.showOpenDialog({ title: '选择要保存位置', properties: ['openDirectory', 'createDirectory'] }).then(res => {
+        dialog.showOpenDialog({ title: 'Select a location to save', properties: ['openDirectory', 'createDirectory'] }).then(res => {
             mainWindow.webContents.send('selected-directory', JSON.stringify(res));
         }).catch(e => console.error(e));
     });
@@ -560,7 +560,7 @@ const showMainWindow = async () => {
         const finishIndex = downloadingArr.findIndex(item => item.savePath === savePath && item.startTime === startTime);
         // if is finished download item,
         if (finishIndex === -1) {
-            // remove local file(for now not need to delete local file)
+            // remove local file(for now no need to delete local file)
             // clearPath(downloadItem.savePath);
             return;
         }
@@ -573,6 +573,7 @@ const showMainWindow = async () => {
             console.error(err);
         }
 
+        // remove curr downloadItem
         downloadingArr.splice(finishIndex, 1);
     });
     ipcMain.on('clear-files', (_, removePaths) => {

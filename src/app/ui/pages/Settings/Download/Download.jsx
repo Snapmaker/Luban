@@ -11,18 +11,32 @@ import i18n from '../../../../lib/i18n';
 import SvgIcon from '../../../components/SvgIcon';
 import { TextInput } from '../../../components/Input';
 import UniApi from '../../../../lib/uni-api';
+import downloadMananger from '../../../../lib/download-mananger';
 
 function Download(props) {
     const [selectedFolder, setSelectedFolder] = useState(props.downloadManangerSavedPath);
-    console.log(props);
+
     const actions = {
         onSave: () => {
             props.updateDownloadManangerSavedPath(selectedFolder);
-            console.log('save download config');
         },
         onCancel: () => {
-            console.log('cancel download config');
         }
+    };
+    const savePath = path => {
+        setSelectedFolder(path);
+    };
+    const handleFolderChange = (folder) => {
+        savePath(folder);
+    };
+    const onClickToUpload = () => {
+        if (!isElectron()) return;
+        downloadMananger.emit('select-directory');
+        downloadMananger.on('selected-directory', (event, data) => {
+            const { canceled, filePaths } = JSON.parse(data);
+            if (canceled) return;
+            savePath(filePaths[0]);
+        });
     };
 
     useEffect(() => {
@@ -37,25 +51,6 @@ function Download(props) {
         return cleanup;
     }, [actions.onSave, actions.onCancel]);
 
-    const savePath = path => {
-        setSelectedFolder(path);
-    };
-
-    const handleFolderChange = (folder) => {
-        savePath(folder);
-    };
-
-    const onClickToUpload = () => {
-        if (!isElectron()) return;
-        const { ipcRenderer } = window.require('electron');
-        ipcRenderer.send('select-directory');
-        ipcRenderer.on('selected-directory', (event, data) => {
-            console.log(event, data);
-            const { canceled, filePaths } = JSON.parse(data);
-            if (canceled) return;
-            savePath(filePaths[0]);
-        });
-    };
 
     return (
         <div>

@@ -21,12 +21,10 @@ export interface downloadRecord {
 }
 
 export class MySubClassedDexie extends Dexie {
-    // 'friends' is added by dexie when declaring the stores()
-    // We just tell the typing system this is the case
     public downloadRecords!: Table<downloadRecord>;
 
     public constructor() {
-        super('myDatabase');
+        super('snapmakerDatabase');
         this.version(1).stores({
             downloadRecords: '++id, [startTime+savePath], downloadUrl', // Primary key and indexed props
         });

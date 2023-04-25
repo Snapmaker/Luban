@@ -81,7 +81,6 @@ const cpFileToTmp = async (file, uploadName) => {
     const originalName = path.basename(file.name);
     uploadName = uploadName || originalName;
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
-
     return new Promise(resolve => {
         fs.copyFile(file.path, uploadPath, (err) => {
             if (err) {
@@ -114,7 +113,8 @@ export const set = async (req, res) => {
             });
 
             if (!file.fieldName) { // get path string
-                await cpFileToTmp(file);
+                const cpRes = await cpFileToTmp(file, uploadName);
+                uploadName = cpRes.uploadName;
                 res.send({
                     originalName,
                     uploadName,
