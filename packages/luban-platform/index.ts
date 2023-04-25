@@ -11,7 +11,7 @@ export {
 //
 // Geometry
 //
-export { default as ConvexGeometry } from './src/three-extensions/common/ConvexGeometry';
+export { ConvexGeometry } from './src/three-extensions/common/ConvexGeometry';
 export {
     checkSceneFaceless
 } from './src/three-extensions/common/mesh-utility';

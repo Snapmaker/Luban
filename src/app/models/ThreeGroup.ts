@@ -101,7 +101,7 @@ export default class ThreeGroup extends BaseModel {
      * Experimental
      * @returns THREE.BufferGeometry
      */
-    public mergeGeometriesInGroup() {
+    public mergeGeometriesInGroup(): THREE.BufferGeometry {
         let geometry = new THREE.BufferGeometry();
         if (this.children.length > 0) {
             geometry = BufferGeometryUtils.mergeBufferGeometries(this.children.map((model) => {
@@ -279,6 +279,7 @@ export default class ThreeGroup extends BaseModel {
             convexGeometry = null;
             this.convexGeometry.mergeVertices();
         } else {
+            console.error('setConvexGeometry, met Geometry!!');
             this.convexGeometry = convexGeometry;
         }
     }
@@ -454,13 +455,12 @@ export default class ThreeGroup extends BaseModel {
         const bufferGeometry = this.mergeGeometriesInGroup();
         const positions = bufferGeometry.getAttribute('position').array;
         // Calculate convex of model
-        const vertices = [];
+        const vertices: THREE.Vector3[] = [];
         for (let i = 0; i < positions.length; i += 3) {
             vertices.push(new THREE.Vector3(positions[i], positions[i + 1], positions[i + 2]));
         }
         const convexGeometry = new ConvexGeometry(vertices);
-
-        this.setConvexGeometry(convexGeometry as unknown as THREE.Geometry);
+        this.setConvexGeometry(convexGeometry);
     }
 
     // autoMarkSupportArea(): void {}

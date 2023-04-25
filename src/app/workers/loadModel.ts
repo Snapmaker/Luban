@@ -1,6 +1,6 @@
 import { ConvexGeometry } from '@snapmaker/luban-platform';
 import { Observable } from 'rxjs';
-import { BufferGeometry, Geometry, Group, Vector3 } from 'three';
+import { BufferGeometry, Group, Vector3 } from 'three';
 
 import ThreeUtils from '../three-extensions/ThreeUtils';
 import ModelLoader from '../ui/widgets/PrintingVisualizer/ModelLoader';
@@ -58,7 +58,7 @@ const loadModel = (uploadPath: string) => {
                     });
 
                     // Calculate convex of model
-                    const vertices = [];
+                    const vertices: Vector3[] = [];
                     for (let i = 0; i < positions.length; i += 3) {
                         vertices.push(
                             new Vector3(
@@ -68,13 +68,10 @@ const loadModel = (uploadPath: string) => {
                             )
                         );
                     }
-                    const convexGeometry = new ConvexGeometry(vertices) as Geometry;
-                    const convexBufferGeometry = new BufferGeometry().fromGeometry(
-                        convexGeometry
-                    );
-                    const convexPositions = convexBufferGeometry.getAttribute(
-                        'position'
-                    ).array;
+
+                    const convexGeometry = new ConvexGeometry(vertices);
+                    const convexPositions = convexGeometry.getAttribute('position').array;
+
                     observer.next({
                         type: 'LOAD_MODEL_CONVEX',
                         positions: convexPositions,
