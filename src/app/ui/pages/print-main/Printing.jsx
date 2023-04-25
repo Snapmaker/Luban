@@ -371,6 +371,7 @@ function getStarterProject(series, isDual) {
 }
 
 function Printing({ location }) {
+    const [isInitLoading, setIsInitLoading] = useState(false);
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions);
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId);
     const defaultMaterialIdRight = useSelector(state => state?.printing?.defaultMaterialIdRight);
@@ -398,22 +399,19 @@ function Printing({ location }) {
         renderHomepage, renderMainToolBar, renderWorkspace, renderMachineMaterialSettings
     ] = useRenderMainToolBar(pageMode, setPageMode, !!materialDefinitions.length);
     const modelGroup = useSelector(state => state.printing.modelGroup);
+    const { qualityDefinitions } = useSelector(state => state.printing);
     const thumbnail = useRef();
     useUnsavedTitle(pageHeadType);
 
     useEffect(() => {
         (async () => {
-            if (!location?.state?.initialized) {
+            if (!location?.state?.initialized || qualityDefinitions.length <= 0) {
+                setIsInitLoading(true);
                 await dispatch(printingActions.init());
+                setIsInitLoading(false);
             }
-        })();
-
-        // Make sure execute 'initSocketEvent' after 'printingActions.init' on openning project
-        setTimeout(async () => {
-            await dispatch(printingActions.initSocketEvent());
-
             // for download manager open model
-            if (location.state && location.state.needOpenModel) {
+            if (location?.state?.needOpenModel) {
                 const { fileName, savePath } = location.state;
                 dispatch(
                     printingActions.uploadModel(
@@ -426,6 +424,11 @@ function Printing({ location }) {
                     )
                 );
             }
+        })();
+
+        // Make sure execute 'initSocketEvent' after 'printingActions.init' on openning project
+        setTimeout(async () => {
+            await dispatch(printingActions.initSocketEvent());
         }, 50);
         dispatch(printingActions.checkNewUser());
 
@@ -534,6 +537,7 @@ function Printing({ location }) {
             renderMainToolBar={() => renderMainToolBar(activeMachine, materialInfo, isConnected)}
             renderRightView={renderRightView}
             renderModalView={renderModalView}
+            isContentLoading={isInitLoading}
         >
 
             {/* initialization of the scene */}
