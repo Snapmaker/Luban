@@ -2495,14 +2495,17 @@ class ModelGroup extends EventEmitter {
         });
         this.modelChanged();
 
+        // Render brush mesh as well
         if (this.brushMesh) {
             this.object.parent.add(this.brushMesh);
         }
     }
 
     public finishEditSupportArea(shouldApplyChanges: boolean) {
-        const models = this.getModelsAttachedSupport();
+        // Remove brush mesh
         this.object.parent.remove(this.brushMesh);
+
+        const models = this.getModelsAttachedSupport();
         models.forEach((model) => {
             if (shouldApplyChanges) {
                 const colors = model.meshObject.geometry.getAttribute('color').array as number[];

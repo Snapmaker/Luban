@@ -1,10 +1,11 @@
 import classNames from 'classnames';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { actions as menuActions } from '../../../flux/appbar-menu';
 import type { RootState } from '../../../flux/index.def';
 import { actions as printingActions } from '../../../flux/printing';
+import sceneActions from '../../../flux/printing/actions-scene';
 import i18n from '../../../lib/i18n';
 import { Button } from '../../components/Buttons';
 import { NumberInput as Input } from '../../components/Input';
@@ -16,81 +17,92 @@ interface MeshColoringOverlayProps {
     onClose: () => void;
 }
 
-let tmpDiameter;
+/**
+ * Note that here we re-use Support Brush to add marks to mesh, so
+ * function names are inconsistent with their actual purpose.
+ */
 const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) => {
-    const [diameter, setDiameter] = useState(5);
-    const supportBrushStatus = useSelector((state: RootState) => state.printing.supportBrushStatus);
     const dispatch = useDispatch();
 
-    const actions = {
-        finish: (shouldApplyChanges) => {
-            dispatch(printingActions.finishEditSupportArea(shouldApplyChanges));
-            onClose();
-        },
-        handleMousewheel: (e) => {
-            if (e.altKey) {
-                e.stopPropagation();
-                if (e.deltaY < 0) { // zoom in
-                    tmpDiameter++;
-                    if (tmpDiameter > 50) {
-                        tmpDiameter = 50;
-                    }
-                    setDiameter(tmpDiameter);
-                } else if (e.deltaY > 0) { // zoom out
-                    tmpDiameter--;
-                    if (tmpDiameter < 1) {
-                        tmpDiameter = 1;
-                    }
-                    setDiameter(tmpDiameter);
-                }
-            }
-        },
-        handleKeydown: (e) => {
-            if (e.keyCode === 27) { // ESC
-                e.stopPropagation();
-                actions.finish(false);
-            }
-        },
-        addSupport: () => {
-            dispatch(printingActions.setSupportBrushStatus('add'));
-        },
-        removeSupport: () => {
-            dispatch(printingActions.setSupportBrushStatus('remove'));
-        },
-        onCancel: () => {
-            actions.finish(false);
-        },
-        onConfirm: () => {
-            actions.finish(true);
-        }
-    };
+    /**
+     * Brush size changed.
+     */
+    const [brushSize, setBrushSize] = useState(5); // unit: mm
+    useEffect(() => {
+        dispatch(printingActions.setSupportBrushRadius(brushSize / 2));
+    }, [dispatch, brushSize]);
 
+    // brush status
+    const supportBrushStatus = useSelector((state: RootState) => state.printing.supportBrushStatus);
+    const addSupport = useCallback(() => {
+        dispatch(printingActions.setSupportBrushStatus('add'));
+    }, [dispatch]);
+
+    const removeSupport = useCallback(() => {
+        dispatch(printingActions.setSupportBrushStatus('remove'));
+    }, [dispatch]);
+
+    /**
+     * Cancel changes.
+     */
+    const onCancel = useCallback(() => {
+        dispatch(sceneActions.endMeshColoringMode(false));
+        onClose();
+    }, [dispatch, onClose]);
+
+    /**
+     * Confirm changes.
+     */
+    const onConfirm = useCallback(() => {
+        dispatch(sceneActions.endMeshColoringMode(true));
+        onClose();
+    }, [dispatch, onClose]);
+
+    // ESC = Cancel
+    const handleKeydown = useCallback((event: KeyboardEvent) => {
+        if (event.key === 'Escape') { // ESC
+            event.stopPropagation();
+            onCancel();
+        }
+    }, [onCancel]);
+
+    // Wheel to control brush size
+    const handleMousewheel = useCallback((event: WheelEvent) => {
+        if (event.altKey) {
+            event.stopPropagation();
+            if (event.deltaY < 0) { // zoom in
+                setBrushSize(prevDiameter => Math.min(prevDiameter + 1, 50));
+            } else if (event.deltaY > 0) { // zoom out
+                setBrushSize(prevDiameter => Math.max(prevDiameter - 1, 1));
+            }
+        }
+    }, []);
+
+    // Enter
     useEffect(() => {
         dispatch(printingActions.startEditSupportArea());
-        // Mousetrap doesn't support unbind specific shortcut callback, use native instead
-        window.addEventListener('keydown', actions.handleKeydown, true);
-        window.addEventListener('wheel', actions.handleMousewheel, true);
+
         dispatch(printingActions.setShortcutStatus(false));
         dispatch(printingActions.setLeftBarOverlayVisible(true));
         dispatch(menuActions.disableMenu());
+
+        window.addEventListener('keydown', handleKeydown, true);
+        window.addEventListener('wheel', handleMousewheel, true);
+
         return () => {
+            window.removeEventListener('keydown', handleKeydown, true);
+            window.removeEventListener('wheel', handleMousewheel, true);
+
             dispatch(printingActions.setShortcutStatus(true));
             dispatch(printingActions.setLeftBarOverlayVisible(false));
             dispatch(menuActions.enableMenu());
-            window.removeEventListener('keydown', actions.handleKeydown, true);
-            window.removeEventListener('wheel', actions.handleMousewheel, true);
         };
-    }, []);
-
-    useEffect(() => {
-        tmpDiameter = diameter;
-        dispatch(printingActions.setSupportBrushRadius(diameter / 2));
-    }, [diameter]);
+    }, [dispatch, handleKeydown, handleMousewheel]);
 
     return (
         <div className={classNames(styles['edit-support'])}>
             <header className={classNames(styles['overlay-sub-title-font'])}>
-                <span>{i18n._('key-Printing/LeftBar/EditSupport-Edit Support')}</span>
+                <span>{i18n._('key-Printing/MeshColoring-Mesh Coloring')}</span>
             </header>
             <section>
                 <div className={classNames(styles['support-btn-switchs'])}>
@@ -98,18 +110,28 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
                         name="SupportAdd"
                         size={24}
                         type={['static']}
-                        className={classNames(styles['support-btn-switch'], 'sm-tab', 'align-c', supportBrushStatus === 'add' ? styles.active : '')}
-                        onClick={() => { actions.addSupport(); }}
-                        spanText={i18n._('key-Printing/LeftBar/EditSupport-Add')}
+                        className={classNames(
+                            styles['support-btn-switch'], 'sm-tab', 'align-c',
+                            {
+                                [styles.active]: supportBrushStatus === 'add'
+                            }
+                        )}
+                        onClick={() => addSupport()}
+                        spanText={i18n._('Left Extruder')}
                         spanClassName={classNames(styles['action-title'])}
                     />
                     <SvgIcon
                         name="SupportDelete"
                         size={24}
                         type={['static']}
-                        className={classNames(styles['support-btn-switch'], 'sm-tab', 'align-c', supportBrushStatus === 'remove' ? styles.active : '')}
-                        onClick={() => { actions.removeSupport(); }}
-                        spanText={i18n._('key-Printing/LeftBar/EditSupport-Delete')}
+                        className={classNames(
+                            styles['support-btn-switch'], 'sm-tab', 'align-c',
+                            {
+                                [styles.active]: supportBrushStatus === 'remove'
+                            }
+                        )}
+                        onClick={() => removeSupport()}
+                        spanText={i18n._('Right Extruder')}
                         spanClassName={classNames(styles['action-title'])}
                     />
                 </div>
@@ -118,12 +140,12 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
                     <div className={classNames(styles['overflow-visible'], 'margin-top-8 sm-flex justify-space-between')}>
                         <Slider
                             className="border-radius-2"
-                            value={diameter}
+                            value={brushSize}
                             min={1}
                             max={50}
                             step={1}
                             onChange={(value) => {
-                                setDiameter(value);
+                                setBrushSize(value);
                             }}
                         />
                         <Input
@@ -131,9 +153,9 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
                             size="small"
                             min={1}
                             max={50}
-                            value={diameter}
+                            value={brushSize}
                             onChange={(value) => {
-                                setDiameter(value);
+                                setBrushSize(value);
                             }}
                         />
                     </div>
@@ -141,21 +163,21 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
             </section>
             <footer className="sm-flex justify-space-between">
                 <Button
-                    onClick={actions.onCancel}
-                    priority="level-two"
                     type="default"
+                    priority="level-two"
                     width="96px"
+                    onClick={onCancel}
                 >
-                    {i18n._('key-Printing/LeftBar/EditSupport-Cancel')}
+                    {i18n._('key-Modal/Common-Cancel')}
                 </Button>
                 <Button
                     type="primary"
-                    onClick={actions.onConfirm}
                     priority="level-two"
                     width="96px"
+                    onClick={onConfirm}
                     className="margin-left-8"
                 >
-                    {i18n._('key-Printing/LeftBar/EditSupport-Done')}
+                    {i18n._('key-Modal/Common-Done')}
                 </Button>
             </footer>
         </div>

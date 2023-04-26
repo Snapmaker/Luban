@@ -1459,6 +1459,7 @@
     "key-Modal/Common-Complete": "完了",
     "key-Modal/Common-Confirm": "確認",
     "key-Modal/Common-Do not ask me again": "二度と聞かないで",
+    "key-Modal/Common-Done": "",
     "key-Modal/Common-Ignore": "無視",
     "key-Modal/Common-Next": "次へ",
     "key-Modal/Common-OK": "OK",
@@ -1571,6 +1572,7 @@
     "key-Printing/LeftBar/Support-Yes": "はい",
     "key-Printing/MainToolBar-Materials": "フィラメント設定",
     "key-Printing/MainToolBar-Print Settings": "",
+    "key-Printing/MeshColoring-Mesh Coloring": "",
     "key-Printing/Modal-Backup Tip": "履歴データは、<1>バックアップフォルダ</1>に保存されます。",
     "key-Printing/No model(s).": "モデルが配置されていません。",
     "key-Printing/ObjectList-Object List": "オブジェクトリスト",
@@ -1690,6 +1692,7 @@
     "key-Progress/3DP-Failed to load model.": "モデルをロードできませんでした。",
     "key-Progress/3DP-Failed to preview G-code.": "Gコードをプレビューできませんでした。",
     "key-Progress/3DP-Failed to repair model.": "モデルの修復に失敗しました。",
+    "key-Progress/3DP-Failed to split model.": "",
     "key-Progress/3DP-Generated support successfully.": "サポートが正常に生成されました。",
     "key-Progress/3DP-Generating support... {{progress}}%": "サポートを生成しています... {{progress}}%",
     "key-Progress/3DP-GrayUnderTheTopFloor": "トップレイヤービュー",
@@ -1705,6 +1708,8 @@
     "key-Progress/3DP-SingleLayer": "単層ビュー",
     "key-Progress/3DP-Slice Failed": "スライスに失敗しました",
     "key-Progress/3DP-Slice Failed reason": "モデルが小さすぎ、スライスに失敗しました。",
+    "key-Progress/3DP-Split model successfully.": "",
+    "key-Progress/3DP-Splitting model...": "",
     "key-Progress/Laser-Failed to load model.": "モデルをロードできませんでした",
     "key-Progress/Laser-Loaded model successfully.": "モデルが正しくロードされました。",
     "key-Progress/Laser-Loading model...": "モデルをロード中...",
@@ -2234,6 +2239,5 @@
     "key_menu_Quit": "終了",
     "key_menu_Services": "サービス",
     "key_menu_Unhide": "表示",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "変換",
-    "material_no_category": "material_no_category"
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "変換"
 }

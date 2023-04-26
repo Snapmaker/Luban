@@ -24,6 +24,45 @@ const checkModelOverstep = () => {
     };
 };
 
+/**
+ * Set both transformMode and modelGroup's transform mode.
+ */
+const setTransformMode = (value: string) => {
+    return (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+
+        modelGroup.setTransformMode(value);
+        dispatch(baseActions.updateState({
+            transformMode: value
+        }));
+        dispatch(render());
+    };
+};
+
+const startMeshColoringMode = () => {
+    return (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.startEditSupportArea();
+        dispatch(setTransformMode('support-edit'));
+        // dispatch(actions.destroyGcodeLine());
+        dispatch(render());
+    };
+};
+
+const endMeshColoringMode = (shouldApplyChanges = false) => {
+    return (dispatch, getState) => {
+        dispatch(setTransformMode('support'));
+        const { modelGroup } = getState().printing;
+
+        if (shouldApplyChanges) {
+            modelGroup.finishEditSupportArea(true);
+        } else {
+            modelGroup.finishEditSupportArea(false);
+        }
+
+        dispatch(render());
+    };
+};
 
 const getModelMaterialSettings = (model) => (dispatch, getState) => {
     const {
@@ -201,9 +240,16 @@ const finalizeSceneSettings = (
 };
 
 export default {
+    // basic scene actions
     render,
 
+    // mesh coloring
+    startMeshColoringMode,
+    endMeshColoringMode,
+
+    // print settings -> scene
     applyPrintSettingsToModels,
 
+    // scene -> print settings
     finalizeSceneSettings,
 };
