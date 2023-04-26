@@ -18,15 +18,16 @@ import { CancelButton } from '../../widgets/PrintingVisualizer/VisualizerLeftBar
 
 
 interface SupportOverlayProps {
-    editSupport: () => void;
+    enterEditSupportPageMode: () => void;
     onClose?: () => void;
 }
 
 const SupportOverlay: React.FC<SupportOverlayProps> = (props) => {
-    const { editSupport, onClose = noop } = props;
+    const { enterEditSupportPageMode, onClose = noop } = props;
 
     const modelGroup = useSelector((state: RootState) => state.printing.modelGroup, shallowEqual);
     const supportOverhangAngle = useSelector((state: RootState) => state?.printing.supportOverhangAngle, shallowEqual);
+
     const [willOverrideSupport, setWillOverrideSupport] = useState(false);
     const dispatch = useDispatch();
 
@@ -52,15 +53,8 @@ const SupportOverlay: React.FC<SupportOverlayProps> = (props) => {
             dispatch(printingActions.clearAllManualSupport());
             logTransformOperation(HEAD_PRINTING, 'support', 'clear');
         },
-        editSupport() {
-            dispatch(printingActions.exitPreview());
-            // In preview mode, wait for modelGroup.object.parent recovery
-            setTimeout(() => {
-                editSupport();
-                logTransformOperation(HEAD_PRINTING, 'support', 'edit_in');
-            });
-        }
     };
+
     const renderGenerateSupportConfirm = () => {
         return willOverrideSupport && renderModal({
             title: i18n._('key-Printing/LeftBar/Support-Confirm'),
@@ -136,7 +130,7 @@ const SupportOverlay: React.FC<SupportOverlayProps> = (props) => {
                             type="primary"
                             priority="level-three"
                             width="120px"
-                            onClick={actions.editSupport}
+                            onClick={enterEditSupportPageMode}
                         >
                             {
                                 generateAutoSupportEnableForSelected

@@ -145,11 +145,18 @@ function VisualizerLeftBar(
     };
 
     const enterEditSupportPageMode = useCallback(() => {
-        // fit camera to target model
-        fitViewIn && fitViewIn();
+        dispatch(printingActions.exitPreview());
 
-        // show
-        setPageMode(PageMode.EditSupport);
+        // In preview mode, wait for modelGroup.object.parent recovery
+        setTimeout(() => {
+            // fit camera to target model
+            fitViewIn && fitViewIn();
+
+            // show
+            setPageMode(PageMode.EditSupport);
+
+            logTransformOperation(HEAD_PRINTING, 'support', 'edit_in');
+        });
     }, [fitViewIn]);
 
 
@@ -364,12 +371,8 @@ function VisualizerLeftBar(
                 {/* Support Config */
                     pageMode === PageMode.Support && (
                         <SupportOverlay
-                            editSupport={() => {
-                                enterEditSupportPageMode();
-                            }}
-                            onClose={() => {
-                                setPageMode(PageMode.Default);
-                            }}
+                            enterEditSupportPageMode={enterEditSupportPageMode}
+                            onClose={() => setPageMode(PageMode.Default)}
                         />
                     )
                 }
