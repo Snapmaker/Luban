@@ -13,4 +13,7 @@ export enum PageMode {
 
     // Edit Support mode: Draw area to generate support
     EditSupport = 'EditSupport',
+
+    // Mesh Coloring mode: Coloring mesh for multiple materials printing
+    MeshColoring = 'MeshColoring',
 }
