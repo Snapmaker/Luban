@@ -25,7 +25,7 @@ It's recommended to use a stable release version unless you want to do some modi
 For Linux distros (Debian for example), you may need to run following commands to install dependencies for Luban:
 
 ```Bashhist
-> sudo dpkg install snapmaker-luban-{version}-linux-amd64.deb
+> sudo dpkg --install snapmaker-luban-{version}-linux-amd64.deb
 > sudo apt install --fix-broken
 ```
 
