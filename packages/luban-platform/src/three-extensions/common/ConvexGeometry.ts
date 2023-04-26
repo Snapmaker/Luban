@@ -11,6 +11,7 @@ class ConvexGeometry extends BufferGeometry {
         const vertices = [];
         const normals = [];
 
+        // @ts-ignore
         const quickHull = new QuickHull().setFromPoints(points);
 
         // generate vertices and normals

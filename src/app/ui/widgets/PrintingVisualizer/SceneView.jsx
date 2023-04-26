@@ -202,8 +202,6 @@ class Visualizer extends PureComponent {
         setTransformMode: (value) => {
             this.props.setTransformMode(value);
             this.canvas.current.setTransformMode(value);
-            document.getElementById('control-input') && (document.getElementById('control-input').style.display = 'none');
-            document.getElementById('control-input-2') && (document.getElementById('control-input-2').style.display = 'none');
         },
         setHoverFace: (value) => {
             if (!this.props.selectedModelArray.length) return;

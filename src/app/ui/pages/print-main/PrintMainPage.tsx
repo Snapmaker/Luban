@@ -252,6 +252,8 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
                                 // setPageMode(PageMode.Default);
                             } else {
                                 setPageMode(PageMode.Simplify);
+
+                                // apply simplify immediately
                                 const repaired = await dispatch(printingActions.isModelsRepaired());
                                 if (repaired) {
                                     dispatch(printingActions.modelSimplify(simplifyType, simplifyPercent, true));

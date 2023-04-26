@@ -64,7 +64,6 @@ function VisualizerLeftBar(
     }, [qualityDefinitions]);
 
     const [showRotationAnalyzeModal, setShowRotationAnalyzeModal] = useState(false);
-    const [showEditSupportModal, setShowEditSupportModal] = useState(false);
 
     const dispatch = useDispatch();
     const fileInput = useRef(null);
@@ -123,10 +122,6 @@ function VisualizerLeftBar(
                 rotateFn && rotateFn();
             }
         },
-        editSupport: useCallback(() => {
-            fitViewIn && fitViewIn();
-            setShowEditSupportModal(true);
-        }, [setShowEditSupportModal, fitViewIn]),
         isNonUniformScaled: () => {
             if (selectedModelArray.length === 1) {
                 if (selectedModelArray[0] instanceof ThreeGroup) {
@@ -149,6 +144,15 @@ function VisualizerLeftBar(
         },
     };
 
+    const enterEditSupportPageMode = useCallback(() => {
+        // fit camera to target model
+        fitViewIn && fitViewIn();
+
+        // show
+        setPageMode(PageMode.EditSupport);
+    }, [fitViewIn]);
+
+
     useEffect(() => {
         UniApi.Event.on('appbar-menu:printing.import', actions.importFile);
         return () => {
@@ -160,13 +164,19 @@ function VisualizerLeftBar(
     const hasAnyVisableModels = models.some(model => model.visible);
 
     // const hasModels = modelGroup.getModels().some(model => !(model instanceof PrimeTowerModel));
-    const pageModeDisabled = [PageMode.Simplify].includes(pageMode);
 
-    const moveDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasAnyVisableModels || pageModeDisabled;
-    const scaleDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasAnyVisableModels || pageModeDisabled;
-    const rotateDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || pageModeDisabled;
-    const mirrorDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || pageModeDisabled;
-    const supportDisabled = showRotationAnalyzeModal || showEditSupportModal || !hasVisableModels || isPrimeTowerSelected || pageModeDisabled;
+    // In certain page mode, other operations are disabled
+    const pageModeDisabled = [
+        PageMode.Simplify,
+        PageMode.Support,
+        PageMode.EditSupport,
+    ].includes(pageMode);
+
+    const moveDisabled = showRotationAnalyzeModal || !hasAnyVisableModels || pageModeDisabled;
+    const scaleDisabled = showRotationAnalyzeModal || !hasAnyVisableModels || pageModeDisabled;
+    const rotateDisabled = showRotationAnalyzeModal || !hasVisableModels || isPrimeTowerSelected || pageModeDisabled;
+    const mirrorDisabled = showRotationAnalyzeModal || !hasVisableModels || isPrimeTowerSelected || pageModeDisabled;
+    const supportDisabled = showRotationAnalyzeModal || !hasVisableModels || isPrimeTowerSelected || pageModeDisabled;
 
     return (
         <React.Fragment>
@@ -275,20 +285,21 @@ function VisualizerLeftBar(
                                 </li>
                             </ul>
                             <ul className={classNames(styles.nav)}>
-                                <li
-                                    className="margin-vertical-4"
-                                >
+                                <li className="margin-vertical-4">
                                     <SvgIcon
                                         color="#545659"
                                         className={classNames(
-                                            { [styles.selected]: (!supportDisabled && transformMode === 'support') },
-                                            'padding-horizontal-4'
+                                            'padding-horizontal-4',
+                                            {
+                                                [styles.selected]: (!supportDisabled && pageMode === PageMode.Support)
+                                            },
                                         )}
-                                        type={[`${!supportDisabled && transformMode === 'support' ? 'hoverNoBackground' : 'hoverSpecial'}`, 'pressSpecial']}
+                                        type={[`${!supportDisabled && pageMode === PageMode.Support ? 'hoverNoBackground' : 'hoverSpecial'}`, 'pressSpecial']}
                                         name="ToolbarSupport"
                                         size={48}
                                         onClick={() => {
-                                            setTransformMode('support');
+                                            // setTransformMode('support');
+                                            setPageMode(PageMode.Support);
                                         }}
                                         disabled={supportDisabled}
                                     />
@@ -350,21 +361,25 @@ function VisualizerLeftBar(
                     )
                 }
 
-                {
-                    showEditSupportModal && (
-                        <EditSupportOverlay onClose={() => {
-                            setShowEditSupportModal(false);
-                        }}
+                {/* Support Config */
+                    pageMode === PageMode.Support && (
+                        <SupportOverlay
+                            editSupport={() => {
+                                enterEditSupportPageMode();
+                            }}
+                            onClose={() => {
+                                setPageMode(PageMode.Default);
+                            }}
                         />
                     )
                 }
 
-                {
-                    !supportDisabled && transformMode === 'support' && (
-                        <SupportOverlay
-                            setTransformMode={setTransformMode}
-                            editSupport={() => {
-                                actions.editSupport();
+                {/* Edit Support */
+                    pageMode === PageMode.EditSupport && (
+                        <EditSupportOverlay
+                            onClose={() => {
+                                // switch back to support mode
+                                setPageMode(PageMode.Support);
                             }}
                         />
                     )

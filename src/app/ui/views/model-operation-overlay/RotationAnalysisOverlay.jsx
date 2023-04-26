@@ -212,6 +212,7 @@ function RotationAnalysisOverlay({ onClose }) {
 
     useEffect(() => {
         columns = initColumns();
+
         // Mousetrap doesn't support unbind specific shortcut callback, use native instead
         window.addEventListener('keydown', actions.exitModal, true);
         dispatch(printingActions.startAnalyzeRotation());
@@ -220,6 +221,7 @@ function RotationAnalysisOverlay({ onClose }) {
         dispatch(printingActions.setShortcutStatus(false));
         dispatch(printingActions.setLeftBarOverlayVisible(true));
         dispatch(menuActions.disableMenu());
+
         return () => {
             dispatch(printingActions.setShortcutStatus(true));
             dispatch(printingActions.setLeftBarOverlayVisible(false));
@@ -268,7 +270,14 @@ function RotationAnalysisOverlay({ onClose }) {
                 </span>
             </header>
             <section>
-                <Table tableColumns={columns} data={data} setData={setData} selectedRow={selectedRow} onRowSelect={actions.onRowSelect} scrollToSelectedRow={scrollToSelectedRow} />
+                <Table
+                    tableColumns={columns}
+                    data={data}
+                    setData={setData}
+                    selectedRow={selectedRow}
+                    onRowSelect={actions.onRowSelect}
+                    scrollToSelectedRow={scrollToSelectedRow}
+                />
             </section>
             <footer>
                 <Button
