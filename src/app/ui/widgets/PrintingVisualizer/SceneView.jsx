@@ -283,7 +283,7 @@ class Visualizer extends PureComponent {
         stopSupportMode: () => {
             this.canvas.current.stopSupportMode();
         },
-        moveSupport: (raycastResult) => {
+        moveSupportBrush: (raycastResult) => {
             this.props.moveSupportBrush(raycastResult);
         },
         applyBrush: (raycastResult) => {

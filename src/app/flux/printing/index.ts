@@ -4719,8 +4719,7 @@ export const actions = {
                         < 0
                     ) {
                         mesh.geometry = mesh.geometry.clone();
-                        const positions = mesh.geometry.getAttribute('position')
-                            .array;
+                        const positions = mesh.geometry.getAttribute('position').array;
 
                         for (let i = 0; i < positions.length; i += 9) {
                             const tempX = positions[i + 0];
@@ -4738,14 +4737,8 @@ export const actions = {
                         mesh.geometry.computeFaceNormals();
                         mesh.geometry.computeVertexNormals();
                     }
-                    // add support_mark attribute for STL binary exporter
-                    mesh.geometry.setAttribute(
-                        'support_mark',
-                        new THREE.Float32BufferAttribute(
-                            model.supportFaceMarks.slice(0),
-                            1
-                        )
-                    );
+                    // Add byte_count attribute for STL binary exporter
+                    mesh.geometry.setAttribute('byte_count', new THREE.Float32BufferAttribute(model.supportFaceMarks.slice(0), 1));
 
                     const originalName = model.originalName;
                     const uploadPath = `${DATA_PREFIX}/${originalName}`;
@@ -4755,7 +4748,7 @@ export const actions = {
                     );
                     const stlFileName = `${basenameWithoutExt}.stl`;
                     const uploadResult = await uploadMesh(mesh, stlFileName);
-                    mesh.geometry.deleteAttribute('support_mark');
+                    mesh.geometry.deleteAttribute('byte_count');
 
                     params.data.push({
                         modelID: model.modelID,

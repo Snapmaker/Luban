@@ -215,7 +215,7 @@ class Controls extends EventEmitter {
 
     bindEventListeners() {
         this.domElement.addEventListener('mousedown', this.onMouseDown, false);
-        this.domElement.addEventListener('mousemove', this.onMouseHover, false);
+        this.domElement.addEventListener('mousemove', this.onMouseMove, false);
         this.domElement.addEventListener('wheel', this.onMouseWheel, false);
         this.domElement.addEventListener('click', this.onClick, false);
 
@@ -295,8 +295,7 @@ class Controls extends EventEmitter {
         // Prevent the browser from scrolling.
         // event.preventDefault();
         this.mouseDownPosition = this.getMouseCoord(event);
-        // mousedown on support mode
-        this.prevState = null;
+        // this.prevState = null;
         if (this.state === STATE.ROTATE_PLACEMENT) {
             this.prevState = STATE.ROTATE_PLACEMENT;
         }
@@ -310,7 +309,6 @@ class Controls extends EventEmitter {
                     this.ray.firstHitOnly = true;
                     const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
                     if (res.length) {
-                        // this.state = STATE.SUPPORT;
                         this.supportActions.applyBrush(res);
                         break;
                     }
@@ -323,7 +321,6 @@ class Controls extends EventEmitter {
                     this.ray.firstHitOnly = true;
                     const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
                     if (res.length) {
-                        // this.state = STATE.SUPPORT;
                         this.supportActions.applyBrush(res);
                         break;
                     }
@@ -378,7 +375,7 @@ class Controls extends EventEmitter {
         }
     };
 
-    onMouseHover = (event) => {
+    onMouseMove = (event) => {
         const coord = this.getMouseCoord(event);
         this.pointer.x = coord.x;
         this.pointer.y = coord.y;
@@ -390,10 +387,8 @@ class Controls extends EventEmitter {
             this.ray.firstHitOnly = true;
             const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
             if (res.length) {
-                this.supportActions.moveSupport(res);
+                this.supportActions.moveSupportBrush(res);
             }
-            // const mousePosition = new THREE.Vector3();
-            // this.ray.ray.intersectPlane(this.horizontalPlane, mousePosition);
             this.emit(EVENTS.UPDATE);
             return;
         }
@@ -496,9 +491,10 @@ class Controls extends EventEmitter {
             case STATE.SUPPORT:
                 this.prevState = STATE.SUPPORT;
                 break;
-            case STATE.MESH_COLORING:
+            case STATE.MESH_COLORING: {
                 this.prevState = STATE.MESH_COLORING;
                 break;
+            }
             default:
                 break;
         }
@@ -912,7 +908,7 @@ class Controls extends EventEmitter {
 
     dispose() {
         this.domElement.removeEventListener('mousedown', this.onMouseDown, false);
-        this.domElement.removeEventListener('mousemove', this.onMouseHover, false);
+        this.domElement.removeEventListener('mousemove', this.onMouseMove, false);
         this.domElement.removeEventListener('wheel', this.onMouseWheel, false);
 
         document.removeEventListener('mousemove', this.onDocumentMouseMove, false);

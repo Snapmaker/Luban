@@ -9,6 +9,7 @@ import {
     Float32BufferAttribute,
     FrontSide,
     Group,
+    Int16BufferAttribute,
     Intersection,
     LineBasicMaterial,
     LineSegments,
@@ -2567,6 +2568,7 @@ class ModelGroup extends EventEmitter {
 
     public applySupportBrush(raycastResult: Intersection[], flag: 'add' | 'remove') {
         this.moveSupportBrush(raycastResult);
+
         const target = raycastResult.find((result) => result.object.userData.canSupport);
         if (target) {
             const targetMesh = target.object as Mesh;
@@ -2616,10 +2618,13 @@ class ModelGroup extends EventEmitter {
                     }
                 });
                 const colorAttr = geometry.getAttribute('color');
+                const byteCountAttribute = geometry.getAttribute('byte_count');
                 const indexAttr = geometry.index;
                 let color;
+                let byteCount = 0;
                 if (flag === 'add') {
                     color = SUPPORT_ADD_AREA_COLOR;
+                    byteCount = 1;
                 } else if (flag === 'remove') {
                     color = SUPPORT_AVAIL_AREA_COLOR;
                 }
@@ -2633,6 +2638,10 @@ class ModelGroup extends EventEmitter {
                         colorAttr.setX(i2, color[0]);
                         colorAttr.setY(i2, color[1]);
                         colorAttr.setZ(i2, color[2]);
+                    }
+
+                    if (byteCountAttribute) {
+                        byteCountAttribute.setX(i / 3, byteCount);
                     }
                 }
                 colorAttr.needsUpdate = true;
@@ -3016,10 +3025,16 @@ class ModelGroup extends EventEmitter {
 
             // calculate face mark
             const count = model.meshObject.geometry.getAttribute('position').count;
+            const faceCount = count / 3;
 
             // Add color attribute
             const colorAttribute = model.meshObject.geometry.getAttribute('color');
             if (!colorAttribute) {
+                const byteCountAttribute = new Int16BufferAttribute(faceCount, 1);
+                for (let i = 0; i < faceCount; i++) {
+                    byteCountAttribute.setX(i, 0);
+                }
+
                 const colors = new Array(count * 3);
                 for (let i = 0; i < count; i++) {
                     colors[i * 3 + 0] = MESH_COLORING_DEFAULT_COLOR[0];
@@ -3028,6 +3043,7 @@ class ModelGroup extends EventEmitter {
                 }
                 const newColorAttribute = new Float32BufferAttribute(colors, 3);
                 model.meshObject.geometry.setAttribute('color', newColorAttribute);
+                model.meshObject.geometry.setAttribute('byte_count', byteCountAttribute);
                 model.meshObject.geometry.computeBoundsTree();
 
                 // flag for brush to render color
