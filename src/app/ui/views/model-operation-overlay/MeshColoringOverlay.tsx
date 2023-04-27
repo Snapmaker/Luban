@@ -80,7 +80,7 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
 
     // Enter
     useEffect(() => {
-        dispatch(printingActions.startEditSupportArea());
+        dispatch(sceneActions.startMeshColoringMode());
 
         dispatch(printingActions.setShortcutStatus(false));
         dispatch(printingActions.setLeftBarOverlayVisible(true));
