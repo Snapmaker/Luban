@@ -43,7 +43,7 @@ const startMeshColoringMode = () => {
     return (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.startMeshColoring();
-        dispatch(setTransformMode('support-edit'));
+        dispatch(setTransformMode('mesh-coloring'));
         // dispatch(actions.destroyGcodeLine());
         dispatch(render());
     };
@@ -51,7 +51,7 @@ const startMeshColoringMode = () => {
 
 const endMeshColoringMode = (shouldApplyChanges = false) => {
     return (dispatch, getState) => {
-        dispatch(setTransformMode('support'));
+        dispatch(setTransformMode(''));
         const { modelGroup } = getState().printing;
 
         if (shouldApplyChanges) {

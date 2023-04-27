@@ -335,15 +335,24 @@ class Visualizer extends PureComponent {
             size, stopArea, transformMode, selectedModelArray, renderingTimestamp, modelGroup, stage,
             promptTasks
         } = this.props;
+
+
         if (transformMode !== prevProps.transformMode) {
             this.canvas.current.setTransformMode(transformMode);
+
+            if (prevProps.transformMode === 'support-edit') {
+                this.canvas.current.stopSupportMode();
+            }
+            if (prevProps.transformMode === 'mesh-coloring') {
+                this.canvas.current.stopMeshColoringMode();
+            }
+
             if (transformMode === 'rotate-placement') {
                 this.canvas.current.setSelectedModelConvexMeshGroup(modelGroup.selectedModelConvexMeshGroup);
-            } else if (transformMode !== 'support-edit') {
-                // this.supportActions.stopSupportMode();
-                this.canvas.current.stopSupportMode();
             } else if (transformMode === 'support-edit') {
                 this.canvas.current.startSupportMode();
+            } else if (transformMode === 'mesh-coloring') {
+                this.canvas.current.startMeshColoringMode();
             }
         }
         if (selectedModelArray !== prevProps.selectedModelArray) {

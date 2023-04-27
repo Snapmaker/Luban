@@ -4935,12 +4935,12 @@ export const actions = {
         );
     },
 
-    moveSupportBrush: raycastResult => (dispatch, getState) => {
+    moveSupportBrush: (raycastResult) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.moveSupportBrush(raycastResult);
     },
 
-    applySupportBrush: raycastResult => (dispatch, getState) => {
+    applySupportBrush: (raycastResult) => (dispatch, getState) => {
         const { modelGroup, supportBrushStatus } = getState().printing;
         modelGroup.applySupportBrush(raycastResult, supportBrushStatus);
     },

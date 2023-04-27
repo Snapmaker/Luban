@@ -826,6 +826,18 @@ class Canvas extends React.PureComponent {
         }
     }
 
+    public startMeshColoringMode(): void {
+        if (this.controls) {
+            this.controls.startMeshColoringMode();
+        }
+    }
+
+    public stopMeshColoringMode(): void {
+        if (this.controls) {
+            this.controls.stopMeshColoringMode();
+        }
+    }
+
     public attach(objects) {
         if (this.controls) {
             this.controls.attach(objects);

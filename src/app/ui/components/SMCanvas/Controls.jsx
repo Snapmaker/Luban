@@ -22,7 +22,8 @@ const STATE = {
     PAN: 2,
     TRANSFORM: 3,
     SUPPORT: 4,
-    ROTATE_PLACEMENT: 5
+    ROTATE_PLACEMENT: 5,
+    MESH_COLORING: 6,
 };
 
 // Events sent by Controls
@@ -296,26 +297,38 @@ class Controls extends EventEmitter {
         this.mouseDownPosition = this.getMouseCoord(event);
         // mousedown on support mode
         this.prevState = null;
-        if (this.state === STATE.SUPPORT) {
-            this.prevState = STATE.SUPPORT;
-        }
         if (this.state === STATE.ROTATE_PLACEMENT) {
             this.prevState = STATE.ROTATE_PLACEMENT;
         }
 
         switch (event.button) {
             case THREE.MOUSE.LEFT: {
+                // Support
                 if (this.state === STATE.SUPPORT) {
                     const coord = this.getMouseCoord(event);
                     this.ray.setFromCamera(coord, this.camera);
                     this.ray.firstHitOnly = true;
                     const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
                     if (res.length) {
-                        this.state = STATE.SUPPORT;
+                        // this.state = STATE.SUPPORT;
                         this.supportActions.applyBrush(res);
                         break;
                     }
                 }
+
+                // Mesh coloring
+                if (this.state === STATE.MESH_COLORING) {
+                    const coord = this.getMouseCoord(event);
+                    this.ray.setFromCamera(coord, this.camera);
+                    this.ray.firstHitOnly = true;
+                    const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
+                    if (res.length) {
+                        // this.state = STATE.SUPPORT;
+                        this.supportActions.applyBrush(res);
+                        break;
+                    }
+                }
+
                 // Transform on selected object
                 if (this.selectedGroup && this.selectedGroup.children.length > 0) {
                     const coord = this.getMouseCoord(event);
@@ -372,7 +385,7 @@ class Controls extends EventEmitter {
 
         event.preventDefault();
         // model move with mouse no matter mousedown
-        if (this.state === STATE.SUPPORT) {
+        if (this.state === STATE.SUPPORT || this.state === STATE.MESH_COLORING) {
             this.ray.setFromCamera(coord, this.camera);
             this.ray.firstHitOnly = true;
             const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
@@ -384,6 +397,7 @@ class Controls extends EventEmitter {
             this.emit(EVENTS.UPDATE);
             return;
         }
+
         if (this.state === STATE.ROTATE_PLACEMENT) {
             // Let transform control deal with mouse move
             this.transformControl.onMouseHover(coord);
@@ -430,6 +444,20 @@ class Controls extends EventEmitter {
                     event.stopPropagation();
                 }
                 break;
+            case STATE.MESH_COLORING: {
+                if (this.isMouseDown) {
+                    const coord = this.getMouseCoord(event);
+                    this.ray.setFromCamera(coord, this.camera);
+                    this.ray.firstHitOnly = true;
+                    const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
+                    if (res.length) {
+                        this.supportActions.applyBrush(res);
+                    }
+                    this.emit(EVENTS.UPDATE);
+                    event.stopPropagation();
+                }
+                break;
+            }
             default:
                 break;
         }
@@ -467,6 +495,9 @@ class Controls extends EventEmitter {
                 break;
             case STATE.SUPPORT:
                 this.prevState = STATE.SUPPORT;
+                break;
+            case STATE.MESH_COLORING:
+                this.prevState = STATE.MESH_COLORING;
                 break;
             default:
                 break;
@@ -774,9 +805,20 @@ class Controls extends EventEmitter {
 
     startSupportMode() {
         this.state = STATE.SUPPORT;
+        this.prevState = STATE.SUPPORT;
     }
 
     stopSupportMode() {
+        this.state = STATE.NONE;
+        this.prevState = STATE.NONE;
+    }
+
+    startMeshColoringMode() {
+        this.state = STATE.MESH_COLORING;
+        this.prevState = STATE.MESH_COLORING;
+    }
+
+    stopMeshColoringMode() {
         this.state = STATE.NONE;
         this.prevState = STATE.NONE;
     }

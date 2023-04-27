@@ -62,9 +62,13 @@ const CUSTOM_EVENTS = {
 };
 
 const INDEXMARGIN = 0.02;
+
 const SUPPORT_AVAIL_AREA_COLOR = [0.5725490196078431, 0.32941176470588235, 0.8705882352941177];
 const SUPPORT_ADD_AREA_COLOR = [0.2980392156862745, 0, 0.5098039215686274];
 const SUPPORT_UNAVAIL_AREA_COLOR = [0.9, 0.9, 0.9];
+
+const MESH_COLORING_DEFAULT_COLOR = [0.8, 0.8, 0.8];
+
 const AVAIL = -1, NONE = 0, FACE = 1/* , POINT = 2, LINE = 3 */;
 export const PLANE_MAX_HEIGHT = 999;
 
@@ -2619,12 +2623,12 @@ class ModelGroup extends EventEmitter {
                 } else if (flag === 'remove') {
                     color = SUPPORT_AVAIL_AREA_COLOR;
                 }
-                console.log('color =', color);
                 for (let i = 0, l = indices.length; i < l; i++) {
                     const i2 = indexAttr.getX(indices[i]);
                     if (
                         Math.abs(colorAttr.getX(i2) - SUPPORT_AVAIL_AREA_COLOR[0]) < EPSILON
                         || Math.abs(colorAttr.getX(i2) - SUPPORT_ADD_AREA_COLOR[0]) < EPSILON
+                        || Math.abs(colorAttr.getX(i2) - MESH_COLORING_DEFAULT_COLOR[0]) < EPSILON
                     ) {
                         colorAttr.setX(i2, color[0]);
                         colorAttr.setY(i2, color[1]);
@@ -3004,58 +3008,23 @@ class ModelGroup extends EventEmitter {
 
             model.isEditingSupport = true;
 
-            // calculate face mark
-            const count = model.meshObject.geometry.getAttribute('position').count;
-            if (!model.supportFaceMarks || model.supportFaceMarks.length === 0) {
-                model.supportFaceMarks = new Array(count / 3).fill(0);
-
-                const bufferGeometry = model.meshObject.geometry;
-                const clone = bufferGeometry.clone();
-                clone.applyMatrix4(model.meshObject.matrixWorld.clone());
-                const normals = clone.getAttribute('normal').array;
-                const positions = clone.getAttribute('position').array;
-                const zUp = new Vector3(0, 0, 1);
-                for (let i = 0, j = 0; i < normals.length; i += 9, j++) {
-                    const normal = new Vector3(normals[i], normals[i + 1], normals[i + 2]);
-                    const angleN = normal.angleTo(zUp) / Math.PI * 180;
-                    const averageZOfFace = (positions[i + 2] + positions[i + 5] + positions[i + 8]) / 3;
-                    // prevent to add marks to the faces attached to XOY plane
-                    if (angleN > (90 + EPSILON) && averageZOfFace > 0.01) {
-                        model.supportFaceMarks[j] = model.supportFaceMarks[j] || AVAIL;
-                    }
-                }
-            }
-
             // Save original geometry
             if (!model.originalGeometry) {
                 // first time clone original geometry
                 model.originalGeometry = model.meshObject.geometry.clone();
             }
 
+            // calculate face mark
+            const count = model.meshObject.geometry.getAttribute('position').count;
+
             // Add color attribute
-            // Attach color attribute to the mesh
             const colorAttribute = model.meshObject.geometry.getAttribute('color');
             if (!colorAttribute) {
                 const colors = new Array(count * 3);
-                for (const [index, mark] of model.supportFaceMarks.entries()) {
-                    switch (mark) {
-                        case AVAIL: {
-                            for (let j = 0; j < 3; j++) {
-                                colors[index * 9 + j * 3 + 0] = SUPPORT_AVAIL_AREA_COLOR[0];
-                                colors[index * 9 + j * 3 + 1] = SUPPORT_AVAIL_AREA_COLOR[1];
-                                colors[index * 9 + j * 3 + 2] = SUPPORT_AVAIL_AREA_COLOR[2];
-                            }
-                            break;
-                        }
-                        default: {
-                            for (let j = 0; j < 3; j++) {
-                                colors[index * 9 + j * 3 + 0] = SUPPORT_UNAVAIL_AREA_COLOR[0];
-                                colors[index * 9 + j * 3 + 1] = SUPPORT_UNAVAIL_AREA_COLOR[1];
-                                colors[index * 9 + j * 3 + 2] = SUPPORT_UNAVAIL_AREA_COLOR[2];
-                            }
-                            break;
-                        }
-                    }
+                for (let i = 0; i < count; i++) {
+                    colors[i * 3 + 0] = MESH_COLORING_DEFAULT_COLOR[0];
+                    colors[i * 3 + 1] = MESH_COLORING_DEFAULT_COLOR[1];
+                    colors[i * 3 + 2] = MESH_COLORING_DEFAULT_COLOR[2];
                 }
                 const newColorAttribute = new Float32BufferAttribute(colors, 3);
                 model.meshObject.geometry.setAttribute('color', newColorAttribute);
