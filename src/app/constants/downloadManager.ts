@@ -24,3 +24,5 @@ export const ModelFileExt = {
 export const ProjectFileExt = {
     snap3dp: '.snap3dp',
 };
+
+export const resourcesDomain = 'https://resources.snapmaker.com';

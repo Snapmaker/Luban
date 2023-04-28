@@ -12,10 +12,8 @@ import { PageMode } from '../PageMode';
 import CSDownloadManagerOverlay from '../../views/model-operation-overlay/CSDownloadManagerOverlay';
 import { db } from '../../../lib/indexDB/db';
 import uniApi from '../../../lib/uni-api';
-import { DetailModalState, ModelFileExt, ProjectFileExt } from '../../../constants/downloadManager';
+import { DetailModalState, ModelFileExt, ProjectFileExt, resourcesDomain } from '../../../constants/downloadManager';
 
-const resourceDomain = 'http://45.79.80.155:8085';
-// const resourceDomain = 'http://127.0.0.1:8085';
 const CaseResource = (props) => {
     const dispatch = useDispatch();
     const history = useHistory();
@@ -86,7 +84,7 @@ const CaseResource = (props) => {
         const link = document.createElement('link');
         link.rel = 'stylesheet';
         link.type = 'text/css';
-        link.href = `${resourceDomain}/access-test.css`;
+        link.href = `${resourcesDomain}/access-test.css`;
         link.onerror = (e) => {
             cb();
             console.error(e);
@@ -119,7 +117,7 @@ const CaseResource = (props) => {
     };
 
     // get/send message from iframe
-    const sendMsgToIframe = (data, iframeEl) => iframeEl && iframeEl.contentWindow.postMessage(data, resourceDomain);
+    const sendMsgToIframe = (data, iframeEl) => iframeEl && iframeEl.contentWindow.postMessage(data, resourcesDomain);
     const handleMessage = () => {
         const makeFile = (fileName, downloadUrl) => {
             const fileExt = fileName.substr(fileName.lastIndexOf('.') + 1);
@@ -130,7 +128,7 @@ const CaseResource = (props) => {
             }
         };
         const msglistener = (event) => {
-            if (event.origin === resourceDomain) {
+            if (event.origin === resourcesDomain) {
                 switch (event.data.type) {
                     case 'make': {
                         // download and open .stl/.obj/.3mf/.amf or .snap3dp file in Luban
@@ -308,7 +306,7 @@ const CaseResource = (props) => {
                     height: `calc(${window.innerHeight}px - ${mainToolBarHeight}px - ${heightOffset}px)`,
                     display: isIframeLoaded ? '' : 'none'
                 }}
-                src={`${resourceDomain}/resource-list`}
+                src={`${resourcesDomain}/resource-list`}
                 frameBorder="0"
                 title="case-resource"
             />

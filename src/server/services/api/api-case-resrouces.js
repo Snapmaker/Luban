@@ -14,7 +14,7 @@ const addPrefix = (prefix) => {
         return request;
     };
 };
-agent.use(addPrefix('http://45.79.80.155:8100'));
+agent.use(addPrefix('https://api.snapmaker.com'));
 
 
 export function getCaseList(req, res) {
