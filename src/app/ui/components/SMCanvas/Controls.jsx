@@ -309,7 +309,7 @@ class Controls extends EventEmitter {
                     this.ray.firstHitOnly = true;
                     const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
                     if (res.length) {
-                        this.supportActions.applyBrush(res);
+                        this.supportActions.applySupportBrush(res);
                         break;
                     }
                 }
@@ -321,7 +321,7 @@ class Controls extends EventEmitter {
                     this.ray.firstHitOnly = true;
                     const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
                     if (res.length) {
-                        this.supportActions.applyBrush(res);
+                        this.supportActions.applyMeshColoringBrush(res);
                         break;
                     }
                 }
@@ -433,7 +433,7 @@ class Controls extends EventEmitter {
                     this.ray.firstHitOnly = true;
                     const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
                     if (res.length) {
-                        this.supportActions.applyBrush(res);
+                        this.supportActions.applySupportBrush(res);
                     }
                     this.emit(EVENTS.UPDATE);
                     event.stopPropagation();
@@ -446,7 +446,7 @@ class Controls extends EventEmitter {
                     this.ray.firstHitOnly = true;
                     const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
                     if (res.length) {
-                        this.supportActions.applyBrush(res);
+                        this.supportActions.applyMeshColoringBrush(res);
                     }
                     this.emit(EVENTS.UPDATE);
                     event.stopPropagation();
@@ -647,7 +647,8 @@ class Controls extends EventEmitter {
     }
 
     onMouseWheel = (event) => {
-        if (this.state === STATE.NONE || this.state === STATE.ROTATE_PLACEMENT || this.state === STATE.SUPPORT) {
+        const stateListAllowWheel = [STATE.NONE, STATE.ROTATE_PLACEMENT, STATE.SUPPORT, STATE.MESH_COLORING];
+        if (stateListAllowWheel.includes(this.state)) {
             event.preventDefault();
             event.stopPropagation();
 

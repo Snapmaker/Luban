@@ -31,6 +31,7 @@ import {
     Vector3
 } from 'three';
 import { CONTAINED, INTERSECTED, NOT_INTERSECTED } from 'three-mesh-bvh';
+import type { ExtendedTriangle } from 'three-mesh-bvh';
 import { v4 as uuid } from 'uuid';
 import { EPSILON, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, SELECTEVENT } from '../constants';
 import i18n from '../lib/i18n';
@@ -3015,7 +3016,7 @@ class ModelGroup extends EventEmitter {
             model.tmpSupportMesh = model.meshObject.children[0];
             model.meshObject.clear();
 
-            model.isEditingSupport = true;
+            model.isColored = true;
 
             // Save original geometry
             if (!model.originalGeometry) {
@@ -3087,11 +3088,81 @@ class ModelGroup extends EventEmitter {
                 model.tmpSupportMesh = null;
             }
 
-            model.isEditingSupport = false;
             model.setSelected();
         }
 
         this.modelChanged();
+    }
+
+    /**
+     * Apply brush, with extruder mark and corresponding color.
+     */
+    public applyMeshColoringBrush(raycastResult, faceExtruderMark: number, color: number[]): void {
+        this.moveSupportBrush(raycastResult);
+
+        const target = raycastResult.find((result) => result.object.userData.canSupport);
+        if (target) {
+            const targetMesh = target.object as Mesh;
+            const geometry = targetMesh.geometry as BufferGeometry;
+            const bvh = geometry.boundsTree;
+            if (bvh) {
+                const inverseMatrix = new Matrix4();
+                inverseMatrix.copy(targetMesh.matrixWorld).invert();
+
+                const sphere = new Sphere();
+                sphere.center.copy(this.brushMesh.position).applyMatrix4(inverseMatrix);
+                sphere.radius = this.brushMesh.geometry.parameters.radius;
+
+                const indices = [];
+                const tempVec = new Vector3();
+                bvh.shapecast({
+                    intersectsBounds: (box) => {
+                        const intersects = sphere.intersectsBox(box);
+                        const { min, max } = box;
+                        if (intersects) {
+                            for (let x = 0; x <= 1; x++) {
+                                for (let y = 0; y <= 1; y++) {
+                                    for (let z = 0; z <= 1; z++) {
+                                        tempVec.set(
+                                            x === 0 ? min.x : max.x,
+                                            y === 0 ? min.y : max.y,
+                                            z === 0 ? min.z : max.z
+                                        );
+                                        if (!sphere.containsPoint(tempVec)) {
+                                            return INTERSECTED;
+                                        }
+                                    }
+                                }
+                            }
+                            return CONTAINED;
+                        }
+                        return NOT_INTERSECTED;
+                    },
+                    intersectsTriangle: (triangle: ExtendedTriangle, triangleIndex: number, contained: boolean) => {
+                        if (contained || triangle.intersectsSphere(sphere)) {
+                            const i3 = triangleIndex * 3;
+                            indices.push(i3, i3 + 1, i3 + 2);
+                        }
+                        return false;
+                    }
+                });
+
+                const colorAttr = geometry.getAttribute('color');
+                const byteCountAttribute = geometry.getAttribute('byte_count');
+                const indexAttr = geometry.index;
+                for (let i = 0, l = indices.length; i < l; i++) {
+                    const index = indexAttr.getX(indices[i]);
+
+                    colorAttr.setXYZ(index, color[0], color[1], color[2]);
+
+                    if (byteCountAttribute) {
+                        const byteCount = byteCountAttribute.getX(index / 3);
+                        byteCountAttribute.setX(index / 3, (byteCount & 0xf9) | faceExtruderMark);
+                    }
+                }
+                colorAttr.needsUpdate = true;
+            }
+        }
     }
 }
 

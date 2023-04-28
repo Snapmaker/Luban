@@ -316,6 +316,8 @@ const INITIAL_STATE = {
     supportOverhangAngle: 50,
     supportBrushStatus: 'add', // add | remove
 
+    meshColoringBrushMark: LEFT_EXTRUDER, // LEFT_EXTRUDER | RIGHT_EXTRUDER
+
     gcodeEntity: {
         extruderLlineWidth0: 0,
         extruderLlineWidth: 0,

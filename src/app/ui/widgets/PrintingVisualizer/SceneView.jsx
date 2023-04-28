@@ -10,6 +10,7 @@ import { actions as machineActions } from '../../../flux/machine';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as settingsActions } from '../../../flux/setting';
+import sceneActions from '../../../flux/printing/actions-scene';
 import { logModelViewOperation } from '../../../lib/gaEvent';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 import { ModelEvents } from '../../../models/events';
@@ -84,6 +85,7 @@ class Visualizer extends PureComponent {
         setTransformMode: PropTypes.func.isRequired,
         moveSupportBrush: PropTypes.func.isRequired,
         applySupportBrush: PropTypes.func.isRequired,
+        applyMeshColoringBrush: PropTypes.func.isRequired,
         autoRotateSelectedModel: PropTypes.func.isRequired,
         layFlatSelectedModel: PropTypes.func.isRequired,
         scaleToFitSelectedModel: PropTypes.func.isRequired,
@@ -286,9 +288,11 @@ class Visualizer extends PureComponent {
         moveSupportBrush: (raycastResult) => {
             this.props.moveSupportBrush(raycastResult);
         },
-        applyBrush: (raycastResult) => {
+        applySupportBrush: (raycastResult) => {
             this.props.applySupportBrush(raycastResult);
-        }
+        },
+
+        applyMeshColoringBrush: (raycastResult) => this.props.applyMeshColoringBrush(raycastResult),
     };
 
     constructor(props) {
@@ -644,6 +648,7 @@ const mapDispatchToProps = (dispatch) => ({
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value)),
     moveSupportBrush: (raycastResult) => dispatch(printingActions.moveSupportBrush(raycastResult)),
     applySupportBrush: (raycastResult) => dispatch(printingActions.applySupportBrush(raycastResult)),
+    applyMeshColoringBrush: (raycastResult) => dispatch(sceneActions.applyMeshColoringBrush(raycastResult)),
     setRotationPlacementFace: (userData) => dispatch(printingActions.setRotationPlacementFace(userData)),
     displayModel: () => dispatch(printingActions.displayModel()),
     loadSimplifyModel: (modelID, modelOutputName, isCancelSimplify) => dispatch(printingActions.loadSimplifyModel({

@@ -2,6 +2,7 @@ import classNames from 'classnames';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
+import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
 import { actions as menuActions } from '../../../flux/appbar-menu';
 import type { RootState } from '../../../flux/index.def';
 import { actions as printingActions } from '../../../flux/printing';
@@ -33,13 +34,13 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
     }, [dispatch, brushSize]);
 
     // brush status
-    const supportBrushStatus = useSelector((state: RootState) => state.printing.supportBrushStatus);
-    const addSupport = useCallback(() => {
-        dispatch(printingActions.setSupportBrushStatus('add'));
+    const { meshColoringBrushMark } = useSelector((state: RootState) => state.printing);
+    const selectLeftExtruder = useCallback(() => {
+        dispatch(sceneActions.updateMeshColoringBrushMark(LEFT_EXTRUDER));
     }, [dispatch]);
 
-    const removeSupport = useCallback(() => {
-        dispatch(printingActions.setSupportBrushStatus('remove'));
+    const selectRightExtruder = useCallback(() => {
+        dispatch(sceneActions.updateMeshColoringBrushMark(RIGHT_EXTRUDER));
     }, [dispatch]);
 
     /**
@@ -113,10 +114,10 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
                         className={classNames(
                             styles['support-btn-switch'], 'sm-tab', 'align-c',
                             {
-                                [styles.active]: supportBrushStatus === 'add'
+                                [styles.active]: meshColoringBrushMark === LEFT_EXTRUDER
                             }
                         )}
-                        onClick={() => addSupport()}
+                        onClick={() => selectLeftExtruder()}
                         spanText={i18n._('Left Extruder')}
                         spanClassName={classNames(styles['action-title'])}
                     />
@@ -127,10 +128,10 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
                         className={classNames(
                             styles['support-btn-switch'], 'sm-tab', 'align-c',
                             {
-                                [styles.active]: supportBrushStatus === 'remove'
+                                [styles.active]: meshColoringBrushMark === RIGHT_EXTRUDER
                             }
                         )}
-                        onClick={() => removeSupport()}
+                        onClick={() => selectRightExtruder()}
                         spanText={i18n._('Right Extruder')}
                         spanClassName={classNames(styles['action-title'])}
                     />

@@ -64,6 +64,38 @@ const endMeshColoringMode = (shouldApplyChanges = false) => {
     };
 };
 
+const updateMeshColoringBrushMark = (mark: string) => {
+    return (dispatch) => {
+        if (![LEFT_EXTRUDER, RIGHT_EXTRUDER].includes(mark)) {
+            return;
+        }
+
+        dispatch(baseActions.updateState({
+            meshColoringBrushMark: mark
+        }));
+    };
+};
+
+/**
+ * Apply raycast result to mesh effect.
+ */
+const applyMeshColoringBrush = (raycastResult) => {
+    return (dispatch, getState) => {
+        const { modelGroup, meshColoringBrushMark } = getState().printing;
+
+        let faceMark = 0;
+        let color: number[];
+        if (meshColoringBrushMark === LEFT_EXTRUDER) {
+            faceMark = 1 << 1;
+            color = [1, 0, 0];
+        } else if (meshColoringBrushMark === RIGHT_EXTRUDER) {
+            faceMark = 1 << 2;
+            color = [0, 1, 0];
+        }
+        modelGroup.applyMeshColoringBrush(raycastResult, faceMark, color);
+    };
+};
+
 const getModelMaterialSettings = (model) => (dispatch, getState) => {
     const {
         materialDefinitions,
@@ -246,6 +278,8 @@ export default {
     // mesh coloring
     startMeshColoringMode,
     endMeshColoringMode,
+    updateMeshColoringBrushMark,
+    applyMeshColoringBrush,
 
     // print settings -> scene
     applyPrintSettingsToModels,

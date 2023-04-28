@@ -32,6 +32,7 @@ class ThreeModel extends BaseModel {
     declare public meshObject: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial | THREE.MeshLambertMaterial> & { uniformScalingState?: boolean };
 
     public isEditingSupport = false;
+    public isColored = false;
     public materialPrintTemperature: number;
 
     private geometry: THREE.BufferGeometry;
@@ -351,14 +352,18 @@ class ThreeModel extends BaseModel {
             this.meshObject.material = this.gcodeModeMaterial;
         } else {
             this.meshObject.material = this.modelModeMaterial;
+
+            // Special state: edit state
             if (this.isEditingSupport) {
                 // TODO: uniform material for setting triangle color and textures
                 this.meshObject.material.color.set(0xffffff);
             } else if (this.overstepped === true) {
-                // this.meshObject.material = this.meshObject.material;
+                // Mesh is overstepped
                 this.meshObject.material.color.set(materialOverstepped);
+            } else if (this.isColored) {
+                // Mesh is colored, use 0xfff to display its color
+                this.meshObject.material.color.set(0xffffff);
             } else if (this.isSelected === true) {
-                // this.meshObject.material = this.meshObject.material;
                 this.meshObject.material.color.set(this._materialSelected.clone());
             } else {
                 // this.meshObject.material = this.meshObject.material;
