@@ -865,6 +865,7 @@
     "key-3DP/MainToolBar-Group": "グループ化",
     "key-3DP/MainToolBar-Model Simplify": "モデル簡略化",
     "key-3DP/MainToolBar-Model repair": "モデルの修復",
+    "key-3DP/MainToolBar-Split": "",
     "key-3DP/MainToolBar-Ungroup": "グループ化解除",
     "key-App/Learn more about release notes please checkout": "更新の詳細については、以下をご参照ください。",
     "key-App/Menu-3-axis": "3軸",
@@ -2246,5 +2247,6 @@
     "key_menu_Quit": "終了",
     "key_menu_Services": "サービス",
     "key_menu_Unhide": "表示",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "変換"
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "変換",
+    "material_no_category": "material_no_category"
 }

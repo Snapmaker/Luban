@@ -865,6 +865,7 @@
     "key-3DP/MainToolBar-Group": "",
     "key-3DP/MainToolBar-Model Simplify": "",
     "key-3DP/MainToolBar-Model repair": "",
+    "key-3DP/MainToolBar-Split": "",
     "key-3DP/MainToolBar-Ungroup": "",
     "key-App/Learn more about release notes please checkout": "",
     "key-App/Menu-3-axis": "3축",
@@ -2246,5 +2247,6 @@
     "key_menu_Quit": "종료",
     "key_menu_Services": "서비스",
     "key_menu_Unhide": "숨김 해제",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "변형"
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "변형",
+    "material_no_category": ""
 }

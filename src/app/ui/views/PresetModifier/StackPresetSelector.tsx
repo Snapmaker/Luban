@@ -17,7 +17,7 @@ import Anchor from '../../components/Anchor';
 import { Button } from '../../components/Buttons';
 import SvgIcon from '../../components/SvgIcon';
 import { getPresetOptions } from '../../utils/profileManager';
-import CreatePresetModal from './CreatePresetModal';
+import CreatePresetModal from './modals/CreatePresetModal';
 import DeletePresetModal from './DeletePresetModal';
 import ResetPresetModal from './ResetPresetModal';
 import styles from './styles.styl';

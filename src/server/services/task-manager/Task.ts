@@ -54,6 +54,9 @@ class Task {
 
     public svgInfo = '';
 
+    // result object that encapsure result of task
+    public result = null;
+
     public terminateFn: () => void;
 
     public constructor(taskId: string, socket: Socket, data: {

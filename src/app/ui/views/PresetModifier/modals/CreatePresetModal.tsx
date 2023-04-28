@@ -1,23 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Divider } from 'antd';
-import { cloneDeep } from 'lodash';
 
-import { PRESET_CATEGORY_CUSTOM, PRESET_CATEGORY_DEFAULT } from '../../../constants/preset';
-import i18n from '../../../lib/i18n';
-import { TextInput } from '../../components/Input';
-import Select from '../../components/Select';
-import SvgIcon from '../../components/SvgIcon';
-import { Button } from '../../components/Buttons';
-import { ModalHOC } from '../../../lib/modal';
+import { PRESET_CATEGORY_CUSTOM, PRESET_CATEGORY_DEFAULT } from '../../../../constants/preset';
+import i18n from '../../../../lib/i18n';
+import { TextInput } from '../../../components/Input';
+import Select from '../../../components/Select';
+import SvgIcon from '../../../components/SvgIcon';
+import { Button } from '../../../components/Buttons';
+import { ModalHOC } from '../../../../lib/modal';
 
-import { PresetModel } from '../../../preset-model';
-import { PresetActionsType } from './usePresetActions';
+import type { QualityPresetModel } from '../../../../preset-model';
+import { PresetActionsType } from '../usePresetActions';
 
 
 declare type CreatePresetModalProps = {
     createOrCopy: 'create' | 'copy';
 
-    presetModel: PresetModel;
+    presetModel: QualityPresetModel;
 
     // existing categories
     categories: string[];
@@ -51,19 +50,24 @@ const CreatePresetModal: React.FC<CreatePresetModalProps> = (props) => {
             setPresetName('New Profile');
             setPresetCategory(PRESET_CATEGORY_CUSTOM);
         }
-    }, [presetModel]);
+    }, [presetModel, createOrCopy]);
 
     useEffect(() => {
         const newCategories = categories.filter(c => c !== PRESET_CATEGORY_DEFAULT);
+        if (!newCategories.includes(PRESET_CATEGORY_CUSTOM)) {
+            newCategories.push(PRESET_CATEGORY_CUSTOM);
+        }
         setAvailableCategories(newCategories);
     }, [categories]);
 
-    const categoryOptions = availableCategories.map(category => {
-        return {
-            label: category,
-            value: category,
-        };
-    });
+    const categoryOptions = useMemo(() => {
+        return availableCategories.map(category => {
+            return {
+                label: category,
+                value: category,
+            };
+        });
+    }, [availableCategories]);
 
     // popup
     let title;
@@ -137,11 +141,19 @@ const CreatePresetModal: React.FC<CreatePresetModalProps> = (props) => {
                     className="margin-left-8"
                     width="96px"
                     onClick={async () => {
+                        /*
                         const newDefinitionForManager = cloneDeep(presetModel.getSerializableDefinition());
                         newDefinitionForManager.category = presetCategory;
                         newDefinitionForManager.name = presetName;
 
                         const newPresetModel = await presetActions.onCreateManagerDefinition(newDefinitionForManager);
+                        */
+
+                        const clonedPresetModel = presetModel.clone();
+                        clonedPresetModel.name = presetName;
+                        clonedPresetModel.category = presetCategory;
+
+                        const newPresetModel = await presetActions.onCreateManagerDefinition(clonedPresetModel);
 
                         onClose();
 

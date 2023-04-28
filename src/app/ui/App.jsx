@@ -1,32 +1,32 @@
-import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import { HashRouter, Route, Switch } from 'react-router-dom';
+import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
+import { HashRouter, Route, Switch } from 'react-router-dom';
 
+import { actions as cncActions } from '../flux/cnc';
+import { actions as editorActions } from '../flux/editor';
+import { actions as laserActions } from '../flux/laser';
+import { actions as machineActions } from '../flux/machine';
+import { actions as printingActions } from '../flux/printing';
+import { actions as settingActions } from '../flux/setting';
+import { actions as textActions } from '../flux/text';
+import { actions as workspaceActions } from '../flux/workspace';
+import { actions as appGlobalActions } from '../flux/app-global';
+import { Server } from '../flux/workspace/Server';
 import { Canvas2dZoom } from '../lib/canvas2d-zoom/index';
-import { shortcutActions, priorities, ShortcutManager } from '../lib/shortcut';
+import { logErrorToGA } from '../lib/gaEvent';
+import { ShortcutHandlerPriority, ShortcutManager, PREDEFINED_SHORTCUT_ACTIONS } from '../lib/shortcut';
+import UniApi from '../lib/uni-api';
 
 import { ToastContainer } from './components/Toast';
-import { actions as machineActions } from '../flux/machine';
-import { actions as laserActions } from '../flux/laser';
-import { actions as editorActions } from '../flux/editor';
-import { actions as cncActions } from '../flux/cnc';
-import { actions as printingActions } from '../flux/printing';
-import { actions as workspaceActions } from '../flux/workspace';
-import { actions as textActions } from '../flux/text';
-import { actions as settingActions } from '../flux/setting';
-import { actions as appGlobalActions } from '../flux/app-global';
-import HomePage from './pages/HomePage';
-import Workspace from './pages/Workspace';
-import Printing from './pages/print-main/Printing';
+import AppLayout from './layouts/AppLayout';
 import Cnc from './pages/Cnc';
+import HomePage from './pages/HomePage';
 import Laser from './pages/Laser';
 import Settings from './pages/Settings';
+import Workspace from './pages/Workspace';
+import { PrintMainPage } from './pages/print-main';
 import CaseResource from './pages/CaseResource/index';
-import UniApi from '../lib/uni-api';
-import AppLayout from './layouts/AppLayout';
-import { Server } from '../flux/workspace/Server';
-import { logErrorToGA } from '../lib/gaEvent';
 
 Canvas2dZoom.register();
 
@@ -53,35 +53,35 @@ class App extends PureComponent {
         title: this.constructor.name,
         isActive: () => this.props.enableShortcut,
         // active: false,
-        priority: priorities.APP,
+        priority: ShortcutHandlerPriority.App,
         shortcuts: {
             // TODO: implement file menu actions
-            [shortcutActions.OPEN]: () => {
+            [PREDEFINED_SHORTCUT_ACTIONS.OPEN]: () => {
                 if (this.props.menuDisabledCount <= 0) {
                     UniApi.Event.emit('appbar-menu:open-file');
                 }
             },
-            [shortcutActions.SAVE]: () => {
+            [PREDEFINED_SHORTCUT_ACTIONS.SAVE]: () => {
                 if (this.props.menuDisabledCount <= 0) {
                     UniApi.Event.emit('appbar-menu:save');
                 }
             },
-            [shortcutActions.SAVE_AS]: () => {
+            [PREDEFINED_SHORTCUT_ACTIONS.SAVE_AS]: () => {
                 if (this.props.menuDisabledCount <= 0) {
                     UniApi.Event.emit('appbar-menu:save-as-file');
                 }
             },
-            [shortcutActions.IMPORT]: () => {
+            [PREDEFINED_SHORTCUT_ACTIONS.IMPORT]: () => {
                 if (this.props.menuDisabledCount <= 0) {
                     UniApi.Event.emit('appbar-menu:import');
                 }
             },
-            [shortcutActions.EXPORT_MODELS]: () => {
+            [PREDEFINED_SHORTCUT_ACTIONS.EXPORT_MODELS]: () => {
                 if (this.props.menuDisabledCount <= 0) {
                     UniApi.Event.emit('appbar-menu:export-model');
                 }
             },
-            [shortcutActions.EXPORT_GCODE]: () => {
+            [PREDEFINED_SHORTCUT_ACTIONS.EXPORT_GCODE]: () => {
                 if (this.props.menuDisabledCount <= 0) {
                     UniApi.Event.emit('appbar-menu:export-gcode');
                 }
@@ -154,7 +154,7 @@ class App extends PureComponent {
                     <Switch>
                         <Route path="/" exact component={HomePage} />
                         <Route path="/workspace" component={Workspace} />
-                        <Route path="/printing" component={Printing} />
+                        <Route path="/printing" component={PrintMainPage} />
                         <Route path="/laser" component={Laser} />
                         <Route path="/cnc" component={Cnc} />
                         <Route path="/settings" component={Settings} />

@@ -5,31 +5,32 @@
  * on top of OpenGL and handles user interactions.
  */
 
-import noop from 'lodash/noop';
-import React, { PureComponent } from 'react';
-import { isNil, throttle } from 'lodash';
-import {
-    Vector3,
-    PerspectiveCamera,
-    Scene,
-    Group,
-    AmbientLight,
-    PointLight,
-    HemisphereLight,
-    DirectionalLight,
-    Object3D
-} from 'three';
-import PropTypes from 'prop-types';
+import { checkSceneFaceless } from '@snapmaker/luban-platform';
 import TWEEN from '@tweenjs/tween.js';
+import { isNil, throttle } from 'lodash';
+import noop from 'lodash/noop';
+import PropTypes from 'prop-types';
+import React, { PureComponent } from 'react';
+import {
+    AmbientLight,
+    DirectionalLight,
+    Group,
+    HemisphereLight,
+    Object3D,
+    PerspectiveCamera,
+    PointLight,
+    Scene,
+    Vector3
+} from 'three';
 
-import Controls, { EVENTS } from './Controls';
+import { TRANSLATE_MODE } from '../../../constants';
+import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import Detector from '../../../three-extensions/Detector';
 import WebGLRendererWrapper from '../../../three-extensions/WebGLRendererWrapper';
-import { TRANSLATE_MODE } from '../../../constants';
 import { toast } from '../Toast';
 import { ToastWapper } from '../Toast/toastContainer';
-import i18n from '../../../lib/i18n';
+import Controls, { EVENTS } from './Controls';
 
 const ANIMATION_DURATION = 500;
 const DEFAULT_MODEL_POSITION = new Vector3(0, 0, 0);
@@ -997,6 +998,9 @@ class Canvas extends PureComponent {
             inputDOM && (inputDOM.style.display = 'none');
             inputDOM2 && (inputDOM2.style.display = 'none');
         }
+
+        checkSceneFaceless(this.scene);
+
         this.renderer.render(this.scene, this.camera);
         TWEEN.update();
     }

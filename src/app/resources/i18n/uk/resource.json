@@ -865,6 +865,7 @@
     "key-3DP/MainToolBar-Group": "Згрупувати",
     "key-3DP/MainToolBar-Model Simplify": "Спростити",
     "key-3DP/MainToolBar-Model repair": "Полагодити",
+    "key-3DP/MainToolBar-Split": "",
     "key-3DP/MainToolBar-Ungroup": "Розгрупувати",
     "key-App/Learn more about release notes please checkout": "Дізнатись більше в інформації про випуск",
     "key-App/Menu-3-axis": "3-вісі",
@@ -2246,5 +2247,6 @@
     "key_menu_Quit": "Вийти",
     "key_menu_Services": "Служби",
     "key_menu_Unhide": "Показати",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Трансформація"
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Трансформація",
+    "material_no_category": "Матеріал без категорії"
 }

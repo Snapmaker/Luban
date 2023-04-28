@@ -1,13 +1,14 @@
 import i18next from 'i18next';
 import isElectron from 'is-electron';
 import { find } from 'lodash';
-import PropTypes from 'prop-types';
+// import PropTypes from 'prop-types';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { useHistory, withRouter } from 'react-router-dom';
 
 import { LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_MATERIAL } from '../../../constants';
 import { HEAD_PRINTING, isDualExtruder, MACHINE_SERIES } from '../../../constants/machines';
+import { RootState } from '../../../flux/index.def';
 import { actions as machineActions } from '../../../flux/machine';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
@@ -24,6 +25,7 @@ import PrintingConfigurationsWidget, { PresetInitialization } from '../../widget
 import PrintingOutputWidget from '../../widgets/PrintingOutput';
 import Thumbnail from '../../widgets/PrintingOutput/Thumbnail';
 import PrintingVisualizer from '../../widgets/PrintingVisualizer';
+// import sceneLogic from '../../../scene/scene.logic';
 
 import HomePage from '../HomePage';
 import { CaseConfigGimbal, CaseConfigPenHolder, CaseConfigSM2Gimbal } from '../HomePage/CaseConfig';
@@ -43,26 +45,35 @@ export const openFolder = () => {
 const pageHeadType = HEAD_PRINTING;
 
 function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false) {
-    const unSaved = useSelector(state => state?.project[pageHeadType]?.unSaved, shallowEqual);
+    const unSaved = useSelector((state: RootState) => state.project[pageHeadType]?.unSaved, shallowEqual);
 
-    const { inProgress, simplifyType, simplifyPercent } = useSelector(state => state?.printing, shallowEqual);
-    const enableShortcut = useSelector(state => state?.printing?.enableShortcut, shallowEqual);
-    const canRedo = useSelector(state => state?.printing?.history?.canRedo, shallowEqual);
-    const canUndo = useSelector(state => state?.printing?.history?.canUndo, shallowEqual);
-    const canGroup = useSelector(state => state?.printing?.modelGroup?.canGroup());
-    const canMerge = useSelector(state => state?.printing?.modelGroup?.canMerge());
-    const canUngroup = useSelector(state => state?.printing?.modelGroup?.canUngroup());
-    // const toolHeadObj = useSelector(state => state?.machine?.toolHead);
-    const canSimplify = useSelector(state => state?.printing?.modelGroup?.canSimplify());
-    const canRepair = useSelector(state => state?.printing?.modelGroup?.canRepair());
+    const { series, toolHead } = useSelector((state: RootState) => state.machine);
+
+    const { inProgress, simplifyType, simplifyPercent } = useSelector((state: RootState) => state.printing, shallowEqual);
+    const enableShortcut = useSelector((state: RootState) => state.printing?.enableShortcut, shallowEqual);
+
+    // undo & redo
+    const canRedo = useSelector((state: RootState) => state.printing?.history?.canRedo, shallowEqual);
+    const canUndo = useSelector((state: RootState) => state.printing?.history?.canUndo, shallowEqual);
+
+    // group actions
+    const canGroup = useSelector((state: RootState) => state.printing?.modelGroup?.canGroup());
+    const canUngroup = useSelector((state: RootState) => state.printing?.modelGroup?.canUngroup());
+    const canMerge = useSelector((state: RootState) => state.printing?.modelGroup?.canMerge());
+    // const canSplit = sceneLogic.canSplit();
+
+    // simplify & repair
+    const canSimplify = useSelector((state: RootState) => state.printing?.modelGroup?.canSimplify());
+    const canRepair = useSelector((state: RootState) => state.printing?.modelGroup?.canRepair());
+
     const [showHomePage, setShowHomePage] = useState(false);
     const [showWorkspace, setShowWorkspace] = useState(false);
     const [showMachineMaterialSettings, setShowMachineMaterialSettings] = useState(false);
-    const { series, toolHead } = useSelector(state => state?.machine);
     const seriesRef = useRef(series);
     const toolHeadRef = useRef(toolHead);
     const [currentSeries, setCurrentSeries] = useState(series);
     const [currentToolhead, setCurrentToolHead] = useState(toolHead.printingToolhead);
+
 
     const dispatch = useDispatch();
 
@@ -198,6 +209,17 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
                             dispatch(printingActions.groupAndAlign());
                         }
                     },
+                    /*
+                    {
+                        title: i18n._('key-3DP/MainToolBar-Split'),
+                        disabled: !canSplit || !enableShortcut,
+                        type: 'button',
+                        name: 'MainToolbarMerge',
+                        action: () => {
+                            dispatch(printingActions.splitSelected());
+                        }
+                    },
+                    */
                     {
                         title: i18n._('key-3DP/MainToolBar-Group'),
                         disabled: !canGroup || !enableShortcut,
@@ -290,9 +312,21 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
                 },
             },
         ];
-
-        // no support browser for now
-        if (isElectron()) {
+        // no support browser and some machine/device for now
+        const isCaseResourceMachine = (currSeries, currToolHead) => {
+            const isDual = isDualExtruder(currToolHead.printingToolhead);
+            if (
+                (currSeries === MACHINE_SERIES.A150.identifier && isDual)
+                || (currSeries === MACHINE_SERIES.A250.identifier && isDual)
+                || (currSeries === MACHINE_SERIES.A350.identifier && isDual)
+                || currSeries === MACHINE_SERIES.A400.identifier || currSeries === MACHINE_SERIES.J1.identifier
+            ) {
+                return true;
+            } else {
+                return false;
+            }
+        };
+        if (isElectron() && isCaseResourceMachine(series, toolHead)) {
             leftItems.push(
                 {
                     type: 'separator',
@@ -370,21 +404,25 @@ function getStarterProject(series, isDual) {
     return pathConfig;
 }
 
-function Printing({ location }) {
+declare interface PrintMainPageProps {
+    location: object;
+}
+
+const Printing: React.FC<PrintMainPageProps> = ({ location }) => {
     const [isInitLoading, setIsInitLoading] = useState(false);
-    const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions);
-    const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId);
-    const defaultMaterialIdRight = useSelector(state => state?.printing?.defaultMaterialIdRight);
+    const materialDefinitions = useSelector((state: RootState) => state?.printing?.materialDefinitions);
+    const defaultMaterialId = useSelector((state: RootState) => state?.printing?.defaultMaterialId);
+    const defaultMaterialIdRight = useSelector((state: RootState) => state?.printing?.defaultMaterialIdRight);
     const leftMaterial = find(materialDefinitions, { definitionId: defaultMaterialId });
     const rightMaterial = find(materialDefinitions, { definitionId: defaultMaterialIdRight });
 
-    const series = useSelector(state => state?.machine?.series);
-    const { toolHead: { printingToolhead } } = useSelector(state => state.machine, shallowEqual);
-    const activeMachine = useSelector(state => state.machine.activeMachine);
+    const series = useSelector((state: RootState) => state?.machine?.series);
+    const { toolHead: { printingToolhead } } = useSelector((state: RootState) => state.machine, shallowEqual);
+    const activeMachine = useSelector((state: RootState) => state.machine.activeMachine);
 
     const {
         isConnected,
-    } = useSelector(state => state.workspace, shallowEqual);
+    } = useSelector((state: RootState) => state.workspace, shallowEqual);
 
     const isDual = isDualExtruder(printingToolhead);
 
@@ -398,8 +436,8 @@ function Printing({ location }) {
     const [
         renderHomepage, renderMainToolBar, renderWorkspace, renderMachineMaterialSettings
     ] = useRenderMainToolBar(pageMode, setPageMode, !!materialDefinitions.length);
-    const modelGroup = useSelector(state => state.printing.modelGroup);
-    const { qualityDefinitions } = useSelector(state => state.printing);
+    const modelGroup = useSelector((state: RootState) => state.printing.modelGroup);
+    const { qualityDefinitions } = useSelector((state: RootState) => state.printing);
     const thumbnail = useRef();
     useUnsavedTitle(pageHeadType);
 
@@ -552,7 +590,6 @@ function Printing({ location }) {
                 onDropRejected={onDropRejected}
             >
                 <PrintingVisualizer
-                    widgetId="printingVisualizer"
                     pageMode={pageMode}
                     setPageMode={setPageMode}
                 />
@@ -574,10 +611,6 @@ function Printing({ location }) {
             <PresetInitialization />
         </ProjectLayout>
     );
-}
-
-Printing.propTypes = {
-    location: PropTypes.object
 };
 
 export default withRouter(Printing);

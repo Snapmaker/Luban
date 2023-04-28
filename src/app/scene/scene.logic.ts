@@ -1,5 +1,5 @@
-import { throttle } from 'lodash';
 import type { Machine, ToolHead } from '@snapmaker/luban-platform';
+import { throttle } from 'lodash';
 
 import {
     BOTH_EXTRUDER_MAP_NUMBER,
@@ -8,9 +8,9 @@ import {
     RIGHT_EXTRUDER,
     RIGHT_EXTRUDER_MAP_NUMBER
 } from '../constants';
-import { PresetModel } from '../preset-model';
 import { Size2D } from '../models/BaseModel';
 import { Model3D } from '../models/ModelGroup';
+import { PresetModel } from '../preset-model';
 import scene, { SceneEvent } from './Scene';
 
 
@@ -65,6 +65,21 @@ class SceneLogic {
         );
     }
 
+    public canSplit(): boolean {
+        const modelGroup = scene.getModelGroup();
+        if (!modelGroup) {
+            return false;
+        }
+
+        const selectedModels = modelGroup.selectedModelArray;
+        if (selectedModels.length !== 1) return false;
+
+        const targetModel = selectedModels[0];
+        if (!targetModel.visible) return false;
+
+        return true;
+    }
+
     private _processPrimeTower(): void {
         const modelGroup = scene.getModelGroup();
         if (!modelGroup) {
@@ -94,8 +109,9 @@ class SceneLogic {
 
         // calculate the visibility of prime tower
         // 1. Dual extruder
-        // 2. At least extruders are actually used
-        if (this.primeTowerEnabled && extrudersUsed.size > 1) {
+        // 2. Has at least one mesh
+        // 3. Has at least 2 extruders actually being used
+        if (this.primeTowerEnabled && models.length > 0 && extrudersUsed.size > 1) {
             primeTower.visible = true;
             this._computePrimeTowerPosition();
             this._computePrimeTowerHeight();
@@ -182,12 +198,21 @@ class SceneLogic {
 
         let placed = false;
 
-        // Try place the prime tower on the back of models
-        const guessY = boundingBox.max.y + 15 + primeTowerSize / 2;
-        if (guessY + primeTowerSize / 2 + stopArea.back <= size.y / 2) {
-            primeTowerX = (boundingBox.min.x + boundingBox.max.x) / 2;
-            primeTowerY = guessY;
+        // If no meshes exist, Place prime tower in the top right corner
+        if (boundingBox.isEmpty()) {
+            primeTowerX = size.x / 2 - stopArea.right - 15;
+            primeTowerY = size.y / 2 - stopArea.back - 15;
             placed = true;
+        }
+
+        // Try place the prime tower on the back of models
+        if (!placed) {
+            const guessY = boundingBox.max.y + 15 + primeTowerSize / 2;
+            if (guessY + primeTowerSize / 2 + stopArea.back <= size.y / 2) {
+                primeTowerX = (boundingBox.min.x + boundingBox.max.x) / 2;
+                primeTowerY = guessY;
+                placed = true;
+            }
         }
 
         // Try place the prime tower on the right of models
@@ -228,7 +253,7 @@ class SceneLogic {
         if (stackId === LEFT_EXTRUDER) {
             const primeTowerEnabled = preset.settings.prime_tower_enable?.default_value || false;
             if (primeTowerEnabled !== this.primeTowerEnabled) {
-                this.primeTowerEnabled = primeTowerEnabled;
+                this.primeTowerEnabled = primeTowerEnabled as boolean;
 
                 this.processPrimeTowerAsync();
             }
@@ -243,7 +268,7 @@ class SceneLogic {
             const supportEnabled = preset.settings.support_enable?.default_value || false;
 
             if (supportEnabled !== this.supportEnabled) {
-                this.supportEnabled = supportEnabled;
+                this.supportEnabled = supportEnabled as boolean;
                 this.processPrimeTowerAsync();
             }
         }

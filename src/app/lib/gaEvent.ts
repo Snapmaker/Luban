@@ -15,7 +15,7 @@ type Transformation = {
     support: 'auto' | 'edit_in' | 'edit_done' | 'clear'
 }
 
-type ToolName = 'save' | 'undo' | 'redo' | 'align' | 'group' | 'ungroup'
+type ToolName = 'save' | 'undo' | 'redo' | 'align' | 'group' | 'ungroup' | 'split'
     // laser /cnc
     | 'job_setup' | 'top' | 'bottom'
     // laser_special
@@ -32,7 +32,7 @@ const pageview = (pathname) => {
         title: `${pkg.name} ${pkg.version}`
     });
 };
-export function logPageView({ pathname, isRotate }: { pathname: string, isRotate: boolean }) {
+export function logPageView({ pathname, isRotate = false }: { pathname: string, isRotate?: boolean }) {
     const axis = isRotate ? '-4axis' : '-3axis';
 
     if (pathname) {

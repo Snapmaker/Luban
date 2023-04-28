@@ -865,6 +865,7 @@
     "key-3DP/MainToolBar-Group": "",
     "key-3DP/MainToolBar-Model Simplify": "",
     "key-3DP/MainToolBar-Model repair": "",
+    "key-3DP/MainToolBar-Split": "",
     "key-3DP/MainToolBar-Ungroup": "",
     "key-App/Learn more about release notes please checkout": "",
     "key-App/Menu-3-axis": "3-axis",
@@ -2246,5 +2247,6 @@
     "key_menu_Quit": "Quit",
     "key_menu_Services": "Services",
     "key_menu_Unhide": "Unhide",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Transformation"
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Transformation",
+    "material_no_category": ""
 }

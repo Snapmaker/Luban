@@ -83,7 +83,8 @@ export const PROCESS_STAGE = {
     PRINTING_AUTO_ROTATE: 11,
     PRINTING_SCALE_TO_FIT_WITH_ROTATE: 12,
     PRINTING_SIMPLIFY_MODEL: 13,
-    PRINTING_REPAIRING_MODEL: 14
+    PRINTING_REPAIRING_MODEL: 14,
+    PRINTING_SPLIT_MODEL: 1015,
 };
 
 const _STATE = {
@@ -294,7 +295,8 @@ class ProgressStatesManager {
             'key-Progress/3DP-Simplify model...{{prgress}}%',
             'key-Progress/3DP-Simplify model successfully.',
             'key-Progress/3DP-Simplify model failed.');
-        this.push(PROCESS_STAGE.PRINTING_REPAIRING_MODEL,
+        this.push(
+            PROCESS_STAGE.PRINTING_REPAIRING_MODEL,
             [
                 {
                     stageID: STEP_STAGE.PRINTING_REPAIRING_MODEL,
@@ -303,7 +305,20 @@ class ProgressStatesManager {
             ],
             'key-Progress/3DP-Repairing model... {{progress}}%',
             'key-Progress/3DP-Repair model successfully.',
-            'key-Progress/3DP-Failed to repair model.');
+            'key-Progress/3DP-Failed to repair model.',
+        );
+        this.push(
+            PROCESS_STAGE.PRINTING_SPLIT_MODEL,
+            [
+                {
+                    stageID: STEP_STAGE.PRINTING_SPLIT_MODEL,
+                    percent: 1
+                }
+            ],
+            'key-Progress/3DP-Splitting model...',
+            'key-Progress/3DP-Split model successfully.',
+            'key-Progress/3DP-Failed to split model.'
+        );
     }
 
     push(processStageID, stages, notice, successNotice, failedNotice) {

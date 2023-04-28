@@ -1,15 +1,16 @@
 import classNames from 'classnames';
-import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import styles from './styles/maintoolbar.styl';
-import MenuItem from './MenuItem';
-import { Badge } from '../components/Badge';
+import React from 'react';
+
+import { HEAD_PRINTING } from '../../constants';
 import Anchor from '../components/Anchor';
-import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../constants';
+import { Badge } from '../components/Badge';
 import SvgIcon from '../components/SvgIcon';
+import MenuItem from './MenuItem';
+import styles from './styles/maintoolbar.styl';
 
 
-class MainToolBar extends PureComponent {
+class MainToolBar extends React.PureComponent {
     static propTypes = {
         leftItems: PropTypes.array,
         mainBarClassName: PropTypes.string,
@@ -25,7 +26,6 @@ class MainToolBar extends PureComponent {
         wrapID: PropTypes.string
     };
 
-
     state = {};
 
     actions = {
@@ -40,7 +40,16 @@ class MainToolBar extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { setShowMachineMaterialSettings, leftItems, mainBarClassName, lang, headType, hasMachineSettings = false, isConnected, materialInfo } = this.props;
+        const {
+            setShowMachineMaterialSettings,
+            leftItems,
+            mainBarClassName,
+            lang,
+            headType,
+            hasMachineSettings = false,
+            isConnected,
+            materialInfo
+        } = this.props;
 
         const { activeMachine = null } = this.props;
         const { wrapID } = this.props;
@@ -71,14 +80,28 @@ class MainToolBar extends PureComponent {
                                         {
                                             menuItem.children.map((childItem) => {
                                                 return (
-                                                    <MenuItem key={childItem.name + (key++)} menuItem={childItem} actions={actions} lang={lang} headType={headType} />
+                                                    <MenuItem
+                                                        key={childItem.name + (key++)}
+                                                        menuItem={childItem}
+                                                        actions={actions}
+                                                        lang={lang}
+                                                        headType={headType}
+                                                    />
                                                 );
                                             })
                                         }
                                     </span>
                                 );
                             } else if (menuItem) {
-                                return <MenuItem key={key++} menuItem={menuItem} actions={actions} lang={lang} headType={headType} />;
+                                return (
+                                    <MenuItem
+                                        key={key++}
+                                        menuItem={menuItem}
+                                        actions={actions}
+                                        lang={lang}
+                                        headType={headType}
+                                    />
+                                );
                             }
                             return null;
                         }))
@@ -108,7 +131,6 @@ class MainToolBar extends PureComponent {
                                         headType === HEAD_PRINTING && (
                                             <div className="width-192 sm-flex sm-flex-direction-c">
                                                 <div className="sm-flex">
-                                                    {/* <div className="height-24 width-24 border-default-grey-1" style={{ borderColor: `${materialInfo?.leftExtruder?.color}`, backgroundColor: `${materialInfo?.leftExtruder?.color}` }} /> */}
                                                     <div className="position-re">
                                                         <SvgIcon
                                                             name="Extruder"
@@ -138,20 +160,6 @@ class MainToolBar extends PureComponent {
                                                         </div>
                                                     )
                                                 }
-                                            </div>
-                                        )
-                                    }
-                                    {
-                                        (headType === HEAD_CNC || headType === HEAD_LASER) && (
-                                            <div className="width-192">
-                                                <div className="sm-flex">
-                                                    <SvgIcon
-                                                        name="Extruder"
-                                                        size={24}
-                                                        type={['static']}
-                                                    />
-                                                    {/* <span>{i18n._(`${MACHINE_TOOL_HEADS[machineInfo?.toolHead].label}`)}</span> */}
-                                                </div>
                                             </div>
                                         )
                                     }

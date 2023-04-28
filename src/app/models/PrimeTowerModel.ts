@@ -1,11 +1,11 @@
 import * as THREE from 'three';
 
-import ThreeModel from './ThreeModel';
 import ModelGroup from './ModelGroup';
 import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
+import ThreeModel from './ThreeModel';
 
 class PrimeTowerModel extends ThreeModel {
-     private size: number;
+    private size: number;
     private height: number;
 
     public constructor(initHeight: number, modelGroup: ModelGroup, transformation: ModelTransformation = {
@@ -71,6 +71,7 @@ class PrimeTowerModel extends ThreeModel {
     }
 
     public setHeight(height: number): void {
+        height = Math.max(0.01, height);
         this.height = height;
 
         this.updateTransformation({
@@ -86,6 +87,7 @@ class PrimeTowerModel extends ThreeModel {
         const scaleX = transformation?.scaleX;
         const scaleY = transformation?.scaleY;
 
+        height = Math.max(0.01, height);
         this.height = height;
 
         this.updateTransformation({

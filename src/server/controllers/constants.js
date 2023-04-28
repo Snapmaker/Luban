@@ -20,7 +20,6 @@ export const HEAD_TYPE_LASER = 'LASER';
 export const HEAD_TYPE_CNC = 'CNC';
 
 export const PROTOCOL_TEXT = 'text';
-export const PROTOCOL_SCREEN = 'screen';
 
 export const GCODE_REQUEST_EVENT_ID = 0x01;
 export const GCODE_RESPONSE_EVENT_ID = 0x02;

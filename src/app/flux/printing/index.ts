@@ -1,10 +1,11 @@
+import { applyParameterModifications, PrintMode, resolveParameterValues } from '@snapmaker/luban-platform';
 import { cloneDeep, filter, find, includes, isNil, noop } from 'lodash';
 import path from 'path';
+import { Transfer } from 'threads';
 import * as THREE from 'three';
 import { Box3, Vector3 } from 'three';
 import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
-import { resolveParameterValues, applyParameterModifications, PrintMode } from '@snapmaker/luban-platform';
-import { Transfer } from 'threads';
+import { v4 as uuid } from 'uuid';
 
 import { timestamp } from '../../../shared/lib/random-utils';
 import api from '../../api';
@@ -12,6 +13,7 @@ import {
     BLACK_COLOR, BOTH_EXTRUDER_MAP_NUMBER,
     DATA_PREFIX,
     EPSILON,
+    EXTRUDER_REGEX,
     GCODE_VISIBILITY_TYPE,
     GCODEPREVIEWMODES,
     HEAD_PRINTING,
@@ -19,6 +21,7 @@ import {
     LEFT_EXTRUDER,
     LEFT_EXTRUDER_MAP_NUMBER,
     LOAD_MODEL_FROM_INNER,
+    MATERIAL_REGEX,
     PRINTING_MANAGER_TYPE_EXTRUDER,
     PRINTING_MANAGER_TYPE_MATERIAL,
     PRINTING_MANAGER_TYPE_QUALITY,
@@ -26,14 +29,12 @@ import {
     PRINTING_MATERIAL_CONFIG_GROUP_SINGLE,
     PRINTING_QUALITY_CONFIG_GROUP_DUAL,
     PRINTING_QUALITY_CONFIG_GROUP_SINGLE,
+    QUALITY_REGEX,
     RIGHT_EXTRUDER,
     RIGHT_EXTRUDER_MAP_NUMBER,
-    WHITE_COLOR,
-    MATERIAL_REGEX,
-    QUALITY_REGEX,
-    EXTRUDER_REGEX,
+    WHITE_COLOR
 } from '../../constants';
-import { getMachineSeriesWithToolhead, isDualExtruder, MACHINE_SERIES, } from '../../constants/machines';
+import { getMachineSeriesWithToolhead, isDualExtruder, MACHINE_SERIES } from '../../constants/machines';
 import { isQualityPresetVisible, PRESET_CATEGORY_CUSTOM } from '../../constants/preset';
 
 import { controller } from '../../lib/controller';
@@ -43,23 +44,22 @@ import log from '../../lib/log';
 import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 import workerManager from '../../lib/manager/workerManager';
 
+import { getCurrentHeadType } from '../../lib/url-utils';
 import { ModelEvents } from '../../models/events';
 import ModelGroup from '../../models/ModelGroup';
 import PrimeTowerModel from '../../models/PrimeTowerModel';
 import ThreeGroup from '../../models/ThreeGroup';
 import ThreeModel from '../../models/ThreeModel';
+import { MaterialPresetModel, PresetModel, QualityPresetModel } from '../../preset-model';
 import scene from '../../scene/Scene';
 import { machineStore } from '../../store/local-storage';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
+import { pickAvailableQualityPresetModels } from '../../ui/utils/profileManager';
 import ModelExporter from '../../ui/widgets/PrintingVisualizer/ModelExporter';
 import ModelLoader from '../../ui/widgets/PrintingVisualizer/ModelLoader';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
-// eslint-disable-next-line import/no-cycle
-import { actions as appGlobalActions } from '../app-global';
+import type { RootState } from '../index.def';
 import definitionManager from '../manager/DefinitionManager';
-import { PresetModel, QualityPresetModel, MaterialPresetModel } from '../../preset-model';
-// eslint-disable-next-line import/no-cycle
-import { actions as operationHistoryActions } from '../operation-history';
 import AddOperation3D from '../operation-history/AddOperation3D';
 import AddSupportsOperation3D from '../operation-history/AddSupportsOperation3D';
 import ArrangeOperation3D from '../operation-history/ArrangeOperation3D';
@@ -73,12 +73,17 @@ import Operations from '../operation-history/Operations';
 import RotateOperation3D from '../operation-history/RotateOperation3D';
 import ScaleOperation3D from '../operation-history/ScaleOperation3D';
 import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWithRotateOperation3D';
-/* eslint-disable import/no-cycle */
-import SimplifyModelOperation from '../operation-history/SimplifyModelOperation';
 import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import VisibleOperation3D from '../operation-history/VisibleOperation3D';
+import { checkMeshes, LoadMeshFileOptions, loadMeshFiles, MeshFileInfo } from './actions-mesh';
 import sceneActions from './actions-scene';
-import { pickAvailableQualityPresetModels } from '../../ui/utils/profileManager';
+
+// eslint-disable-next-line import/no-cycle
+import { actions as appGlobalActions } from '../app-global';
+// eslint-disable-next-line import/no-cycle
+import { actions as operationHistoryActions } from '../operation-history';
+// eslint-disable-next-line import/no-cycle
+import SimplifyModelOperation from '../operation-history/SimplifyModelOperation';
 
 
 let initEventFlag = false;
@@ -1327,7 +1332,7 @@ export const actions = {
         );
     },
 
-    resetDefinitionById: (type, definitionId, shouldDestroyGcodeLine) => (
+    resetDefinitionById: (type, definitionId, shouldDestroyGcodeLine = false) => (
         dispatch,
         getState
     ) => {
@@ -1474,7 +1479,7 @@ export const actions = {
             changedSettingArray = [],
             direction = LEFT_EXTRUDER,
         }
-    ) => (dispatch, getState) => {
+    ) => async (dispatch, getState) => {
         const printingState = getState().printing;
         // const { qualityDefinitions } = printingState;
 
@@ -1508,7 +1513,7 @@ export const actions = {
             dispatch(actions.updateBoundingBox());
         }
 
-        definitionManager.updateDefinition(definitionModel);
+        await definitionManager.updateDefinition(definitionModel);
 
         dispatch(actions.validateActiveQualityPreset(direction));
         // dispatch(actions.updateState({ qualityDefinitions: [...qualityDefinitions] }));
@@ -1524,10 +1529,9 @@ export const actions = {
         }
         */
 
-        // TODO: why use setTimeout here? add comment describe the reason.
-        setTimeout(() => {
-            dispatch(actions.applyProfileToAllModels());
-        });
+        dispatch(actions.applyProfileToAllModels());
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
     },
 
     updateDefinition: ({ managerDisplayType, definitionModel, changedSettingArray }) => (dispatch) => {
@@ -1586,7 +1590,7 @@ export const actions = {
                 })
                 .catch((err) => {
                     // Ignore error
-                    console.error('err', err);
+                    log.error('err', err);
                 });
         });
     },
@@ -1666,12 +1670,21 @@ export const actions = {
     duplicateDefinitionByType: (
         type,
         definition,
-        newDefinitionId,
-        newDefinitionName,
+        newDefinitionId = '',
+        newDefinitionName = '',
     ) => async (dispatch, getState) => {
         const state = getState().printing;
-        let name = newDefinitionName || definition.name;
+
+        // preset id
         let definitionId;
+        if (newDefinitionId) {
+            definitionId = newDefinitionId;
+        } else {
+            definitionId = `${type}.${timestamp()}`;
+        }
+
+        // preset name
+        let name = newDefinitionName || definition.name;
         if (
             type === PRINTING_MANAGER_TYPE_QUALITY
             && isDefaultQualityDefinition(definition.definitionId)
@@ -1679,11 +1692,7 @@ export const actions = {
             const machine = getState().machine;
             name = `${machine.series}-${name}`;
         }
-        if (newDefinitionId) {
-            definitionId = newDefinitionId;
-        } else {
-            definitionId = `${type}.${timestamp()}`;
-        }
+
         let metadata = definition.metadata;
         // newDefinitionId is the same as newDefinitionName
         if (isNil(newDefinitionId)) {
@@ -1828,7 +1837,7 @@ export const actions = {
             if (defaultMaterialId === definition.definitionId) {
                 dispatch(
                     actions.updateDefaultIdByType(
-                        type,
+                        PRINTING_MANAGER_TYPE_MATERIAL,
                         defintions[0].definitionId,
                         LEFT_EXTRUDER
                     )
@@ -1837,7 +1846,7 @@ export const actions = {
             if (defaultMaterialIdRight === definition.definitionId) {
                 dispatch(
                     actions.updateDefaultIdByType(
-                        type,
+                        PRINTING_MANAGER_TYPE_MATERIAL,
                         defintions[0].definitionId,
                         RIGHT_EXTRUDER
                     )
@@ -2086,7 +2095,7 @@ export const actions = {
      *
      * @private
      */
-    __loadModel: (files) => async dispatch => {
+    __loadModel: (meshFileInfos) => async (dispatch) => {
         const headType = 'printing';
         const sourceType = '3d';
         const mode = '3d';
@@ -2095,11 +2104,11 @@ export const actions = {
 
         await dispatch(
             actions.generateModel(headType, {
-                files,
+                files: meshFileInfos,
+                sourceType,
                 sourceWidth: width,
                 sourceHeight: height,
                 mode,
-                sourceType,
                 transformation: {}
             })
         );
@@ -2117,7 +2126,8 @@ export const actions = {
             })
         );
 
-        const ps = Array.from(files).map(async file => {
+        // Upload mesh files
+        const ps = Array.from(files).map(async (file) => {
             // Notice user that model is being loading
             const formData = new FormData();
             formData.append('file', file);
@@ -2126,18 +2136,17 @@ export const actions = {
             return { originalName, uploadName, children };
         });
         const promiseResults = await Promise.allSettled(ps);
-        const fileNames = promiseResults.map((promiseTask, index) => {
-            let res = {};
-            if (promiseTask.value) {
-                res = promiseTask.value;
+        const meshFileInfos = promiseResults.map((promiseTask, index) => {
+            if (promiseTask.status === 'fulfilled') {
+                return promiseTask.value;
             } else {
-                promiseTask.originalName = files[index]?.name;
-                res = promiseTask;
+                return {
+                    originalName: files[index]?.name,
+                };
             }
-            return res;
         });
         const allChild = [];
-        fileNames.forEach((item) => {
+        meshFileInfos.forEach((item) => {
             if (item.children) {
                 if (item.children.length) {
                     item.isGroup = true;
@@ -2146,10 +2155,10 @@ export const actions = {
             }
         });
         if (allChild.length) {
-            allChild.push(...fileNames);
-            actions.__loadModel(allChild)(dispatch, getState);
+            allChild.push(...meshFileInfos);
+            actions.__loadModel(allChild)(dispatch);
         } else {
-            actions.__loadModel(fileNames)(dispatch, getState);
+            actions.__loadModel(meshFileInfos)(dispatch);
         }
     },
 
@@ -2872,7 +2881,7 @@ export const actions = {
     updateSelectedModelTransformation: (
         transformation,
         newUniformScalingState = undefined,
-        isAllRotate
+        isAllRotate = undefined,
     ) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         let transformMode;
@@ -2956,7 +2965,7 @@ export const actions = {
         dispatch(actions.updateState(modelState));
     },
 
-    hideSelectedModel: targetModel => (dispatch, getState) => {
+    hideSelectedModel: (targetModel = null) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         let targetModels;
         if (!targetModel) {
@@ -3031,6 +3040,11 @@ export const actions = {
         dispatch(actions.render());
     },
     removeSelectedModel: () => (dispatch, getState) => {
+        const { inProgress } = getState().printing;
+        if (inProgress) {
+            return;
+        }
+
         const { modelGroup } = getState().printing;
         const operations = new Operations();
         const selectedModelArray = modelGroup.selectedModelArray.concat();
@@ -3603,18 +3617,33 @@ export const actions = {
         dispatch(actions.displayModel());
     },
 
-    cut: () => dispatch => {
+    cut: () => (dispatch, getState) => {
+        const { inProgress } = getState().printing;
+        if (inProgress) {
+            return;
+        }
+
         dispatch(actions.copy());
         dispatch(actions.removeSelectedModel());
     },
 
     copy: () => (dispatch, getState) => {
+        const { inProgress } = getState().printing;
+        if (inProgress) {
+            return;
+        }
+
         const { modelGroup } = getState().printing;
         modelGroup.copy();
         dispatch(actions.render());
     },
 
     paste: () => (dispatch, getState) => {
+        const { inProgress } = getState().printing;
+        if (inProgress) {
+            return;
+        }
+
         const { modelGroup } = getState().printing;
         const modelState = modelGroup.paste();
 
@@ -3993,6 +4022,11 @@ export const actions = {
 
     // uploadModel
     undo: () => (dispatch, getState) => {
+        const { inProgress } = getState().printing;
+        if (inProgress) {
+            return;
+        }
+
         const { history, displayedType } = getState().printing;
         const { canUndo } = history;
 
@@ -4011,6 +4045,11 @@ export const actions = {
     },
 
     redo: () => (dispatch, getState) => {
+        const { inProgress } = getState().printing;
+        if (inProgress) {
+            return;
+        }
+
         dispatch(actions.exitPreview());
         const { canRedo } = getState().printing.history;
         if (canRedo) {
@@ -4113,13 +4152,18 @@ export const actions = {
         }
     },
 
+    // TODO: define types for function signature
     generateModel: (
         headType,
         {
-            loadFrom = LOAD_MODEL_FROM_INNER,
+            // information directly from mesh file
             files,
             originalName,
             uploadName,
+            children,
+
+            // additional information for model
+            loadFrom = LOAD_MODEL_FROM_INNER,
             sourceWidth,
             sourceHeight,
             mode,
@@ -4130,230 +4174,58 @@ export const actions = {
             isGroup = false,
             parentModelID = '',
             parentUploadName = '',
-            children,
             primeTowerTag,
             isGuideTours = false
         }
     ) => async (dispatch, getState) => {
         workerManager.stopClipper();
+
         const { progressStatesManager, modelGroup } = getState().printing;
         const { promptDamageModel } = getState().machine;
-        const { size } = getState().machine;
-        const models = [...modelGroup.models];
-        const modelNames = files || [{ originalName, uploadName, isGroup, parentUploadName, modelID, children }];
-        let _progress = 0;
-        const promptTasks = [];
 
-        const checkResultMap = new Map();
-        const checkPromises = modelNames.filter((item) => {
-            return !item.isGroup && ['.obj', '.stl'].includes(path.extname(item.uploadName)) && item.uploadName.indexOf('prime_tower_') !== 0;
-        }).map(async (item) => {
-            return controller.checkModel({
-                uploadName: item.uploadName
-            }, (data) => {
-                if (data.type === 'error') {
-                    checkResultMap.set(item.uploadName, {
-                        isDamage: true
-                    });
-                } else if (data.type === 'success') {
-                    checkResultMap.set(item.uploadName, {
-                        isDamage: false
-                    });
-                }
-            });
-        });
-        const promises = modelNames.map(async (model) => {
-            if (model.parentUploadName) {
-                dispatch(operationHistoryActions.excludeModelById(HEAD_PRINTING, model.modelID));
-            }
-            return new Promise((resolve, reject) => {
-                _progress = modelNames.length === 1 ? 0.25 : 0.001;
+        const models = [...modelGroup.models];
+        const meshFileInfos: MeshFileInfo[] = files || [{ originalName, uploadName, isGroup, parentUploadName, modelID, children }];
+        // let _progress = 0;
+
+        const loadMeshFileOptions: LoadMeshFileOptions = {
+            headType,
+
+            loadFrom: loadFrom as (0 | 1), // type inferred as number
+            mode,
+
+            sourceType,
+            sourceWidth,
+            sourceHeight,
+
+            transformation,
+
+            parentModelID,
+            primeTowerTag,
+            extruderConfig,
+
+            onProgress: (stage, progress) => {
+                // Update progress
                 dispatch(
                     actions.updateState({
-                        stage: STEP_STAGE.PRINTING_LOADING_MODEL,
-                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress)
+                        stage,
+                        progress: progressStatesManager.updateProgress(stage, progress),
                     })
                 );
-                // if (!model.uploadName) {
-                //     resolve();
-                // }
-                const uploadPath = `${DATA_PREFIX}/${model.uploadName}`;
-                if (model.isGroup) {
-                    modelGroup.generateModel({
-                        loadFrom,
-                        limitSize: size,
-                        headType,
-                        sourceType,
-                        originalName: model.originalName,
-                        uploadName: model.uploadName,
-                        modelName: model.modelName,
-                        mode: mode,
-                        sourceWidth,
-                        width: sourceWidth,
-                        sourceHeight,
-                        height: sourceHeight,
-                        geometry: null,
-                        material: null,
-                        transformation,
-                        modelID: model.modelID,
-                        extruderConfig,
-                        isGroup: model.isGroup,
-                        children: model.children,
-                    }).then(() => {
-                        const modelState = modelGroup.getState();
-                        dispatch(actions.updateState(modelState));
+            },
+        };
 
-                        dispatch(actions.displayModel());
-                        dispatch(actions.destroyGcodeLine());
-                        resolve();
-                    });
-                } else if (primeTowerTag) {
-                    modelGroup.primeTower && modelGroup.primeTower.updateTowerTransformation(transformation);
-                    resolve();
-                } else {
-                    const onMessage = async data => {
-                        const { type } = data;
-                        switch (type) {
-                            case 'LOAD_MODEL_POSITIONS': {
-                                let { positions, originalPosition } = data;
-                                const bufferGeometry = new THREE.BufferGeometry();
-                                const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
-                                const material = new THREE.MeshPhongMaterial({
-                                    side: THREE.DoubleSide,
-                                    color: 0xa0a0a0,
-                                    specular: 0xb0b0b0,
-                                    shininess: 0
-                                });
 
-                                bufferGeometry.setAttribute(
-                                    'position',
-                                    modelPositionAttribute
-                                );
+        const promptTasks = await loadMeshFiles(meshFileInfos, modelGroup, loadMeshFileOptions);
 
-                                bufferGeometry.computeVertexNormals();
+        // on mesh file loaded, update state
+        const modelState = modelGroup.getState();
+        dispatch(actions.updateState(modelState));
 
-                                modelGroup.generateModel(
-                                    {
-                                        loadFrom,
-                                        limitSize: size,
-                                        headType,
-                                        sourceType,
-                                        originalName: model.originalName,
-                                        uploadName: model.uploadName,
-                                        modelName: model.modelName,
-                                        mode: mode,
-                                        sourceWidth,
-                                        width: sourceWidth,
-                                        sourceHeight,
-                                        height: sourceHeight,
-                                        geometry: bufferGeometry,
-                                        material: material,
-                                        transformation,
-                                        originalPosition,
-                                        modelID: model.modelID,
-                                        extruderConfig,
-                                        parentModelID,
-                                        parentUploadName: model.parentUploadName
-                                    }
-                                ).then(() => {
-                                    const modelState = modelGroup.getState();
-                                    dispatch(actions.updateState(modelState));
-                                    dispatch(actions.applyProfileToAllModels());
-                                    dispatch(actions.displayModel());
-                                    dispatch(actions.destroyGcodeLine());
-                                    if (modelNames.length > 1) {
-                                        _progress += 1 / modelNames.length;
-                                        dispatch(
-                                            actions.updateState({
-                                                stage: STEP_STAGE.PRINTING_LOADING_MODEL,
-                                                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress)
-                                            })
-                                        );
-                                    }
-                                    resolve();
-                                }).catch(() => {
-                                    promptTasks.push({
-                                        status: 'load-model-fail',
-                                        originalName: model.originalName
-                                    });
-                                    if (modelNames.length > 1) {
-                                        _progress += 1 / modelNames.length;
-                                        dispatch(
-                                            actions.updateState({
-                                                stage: STEP_STAGE.PRINTING_LOADING_MODEL,
-                                                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress)
-                                            })
-                                        );
-                                    }
-                                    reject();
-                                });
-                                positions = null;
-                                originalPosition = null;
-                                break;
-                            }
-                            case 'LOAD_MODEL_CONVEX': {
-                                let { positions } = data;
+        dispatch(actions.displayModel());
+        dispatch(actions.destroyGcodeLine());
+        // await Promise.allSettled(promises);
 
-                                const convexGeometry = new THREE.BufferGeometry();
-                                const positionAttribute = new THREE.BufferAttribute(
-                                    positions,
-                                    3
-                                );
-                                convexGeometry.setAttribute(
-                                    'position',
-                                    positionAttribute
-                                );
-
-                                modelGroup.setConvexGeometry(
-                                    model.uploadName,
-                                    convexGeometry
-                                );
-                                positions = null;
-                                break;
-                            }
-                            case 'LOAD_MODEL_PROGRESS': {
-                                if (modelNames.length === 1) {
-                                    const state = getState().printing;
-                                    const progress = 0.25 + data.progress * 0.5;
-                                    if (progress - state.progress > 0.01 || progress > 0.75 - EPSILON) {
-                                        dispatch(
-                                            actions.updateState({
-                                                stage: STEP_STAGE.PRINTING_LOADING_MODEL,
-                                                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, progress)
-                                            })
-                                        );
-                                    }
-                                }
-                                break;
-                            }
-                            case 'LOAD_MODEL_FAILED': {
-                                promptTasks.push({
-                                    status: 'load-model-fail',
-                                    originalName: model.originalName
-                                });
-                                if (modelNames.length > 1) {
-                                    _progress += 1 / modelNames.length;
-                                    dispatch(
-                                        actions.updateState({
-                                            stage: STEP_STAGE.PRINTING_LOADING_MODEL,
-                                            progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress)
-                                        })
-                                    );
-                                }
-                                reject();
-                                break;
-                            }
-                            default:
-                                break;
-                        }
-                    };
-                    createLoadModelWorker(uploadPath, onMessage);
-                }
-            });
-        });
-
-        await Promise.allSettled(checkPromises);
-        await Promise.allSettled(promises);
+        const checkResultMap = await checkMeshes(meshFileInfos);
 
         const newModels = modelGroup.models.filter(model => {
             return !models.includes(model) && model;
@@ -4387,6 +4259,7 @@ export const actions = {
         });
         modelGroup.childrenChanged();
 
+        // Append repair information
         newModels.forEach((model) => {
             if (model instanceof ThreeModel) {
                 modelGroup.initModelClipper(model);
@@ -4404,7 +4277,12 @@ export const actions = {
             } else {
                 model.needRepair = false;
             }
+        });
 
+        // Append scale to fit prompt
+        const { activeMachine } = getState().machine;
+        const size = activeMachine.metadata.size;
+        newModels.forEach((model) => {
             if (!model.parentUploadName) {
                 const modelSize = new Vector3();
                 model.boundingBox.getSize(modelSize);
@@ -4420,8 +4298,8 @@ export const actions = {
         dispatch(actions.applyProfileToAllModels());
         modelGroup.models = modelGroup.models.concat();
 
-        if (modelNames.length === 1 && newModels.length === 0) {
-            if (!(modelNames[0]?.children?.length)) {
+        if (meshFileInfos.length === 1 && newModels.length === 0) {
+            if (!(meshFileInfos[0]?.children?.length)) {
                 progressStatesManager.finishProgress(false);
                 dispatch(
                     actions.updateState({
@@ -4953,7 +4831,7 @@ export const actions = {
                     })
                 );
             })
-            .catch(console.error);
+            .catch(log.error);
     },
 
     startEditSupportArea: () => (dispatch, getState) => {
@@ -5324,6 +5202,98 @@ export const actions = {
         dispatch(actions.destroyGcodeLine());
     },
 
+    splitSelected: () => async (dispatch, getState) => {
+        logToolBarOperation(HEAD_PRINTING, 'split');
+
+        const { progressStatesManager } = getState().printing;
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SPLIT_MODEL);
+
+        const { modelGroup } = getState().printing;
+        if (!modelGroup) {
+            return false;
+        }
+
+        // only support split on one single model
+        const selectedModels = modelGroup.selectedModelArray;
+        if (selectedModels.length !== 1) return false;
+
+        // check visibility
+        const targetModel = selectedModels[0];
+        if (!targetModel.visible) return false;
+
+        const task = new Promise((resolve, reject) => {
+            controller.splitMesh({
+                uploadName: targetModel.uploadName,
+            }, (data) => {
+                const { type } = data;
+                switch (type) {
+                    case 'error':
+                        reject(new Error('Failed to split models.'));
+                        break;
+                    case 'success':
+                        resolve(data.result);
+                        break;
+                    default:
+                        break;
+                }
+            });
+        });
+
+        try {
+            const taskResult = await task as {
+                meshes: { uploadName: string }[]
+            };
+
+            const meshFileInfos: MeshFileInfo[] = [];
+            for (let i = 0; i < taskResult.meshes.length; i++) {
+                const mesh = taskResult.meshes[i];
+                const { uploadName } = mesh;
+
+                meshFileInfos.push({
+                    uploadName,
+                    originalName: uploadName,
+                    modelName: `Part ${i + 1}`,
+                    isGroup: false,
+                    modelID: uuid(),
+                    parentUploadName: targetModel.uploadName,
+                });
+            }
+
+            // append group
+            meshFileInfos.push({
+                uploadName: targetModel.uploadName,
+                originalName: 'virtual name',
+                isGroup: true,
+                modelID: uuid(),
+                children: meshFileInfos.slice(0),
+            });
+
+            const loadMeshFileOptions: LoadMeshFileOptions = {
+                headType: HEAD_PRINTING,
+                loadFrom: LOAD_MODEL_FROM_INNER,
+                sourceType: '3d',
+            };
+
+            // ignore prompt tasks
+            await loadMeshFiles(meshFileInfos, modelGroup, loadMeshFileOptions);
+
+            // on mesh file loaded, update state
+            const modelState = modelGroup.getState();
+            dispatch(actions.updateState(modelState));
+
+            dispatch(actions.displayModel());
+            dispatch(actions.destroyGcodeLine());
+        } catch (e) {
+            log.error('task failed, error =', e);
+            return false;
+        }
+
+        return true;
+    },
+
+    /**
+     * Repair selected models.
+     */
     repairSelectedModels: () => async (dispatch, getState) => {
         const { progressStatesManager } = getState().printing;
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_LOAD_MODEL);
@@ -5333,7 +5303,15 @@ export const actions = {
         await dispatch(actions.updateModelMesh(results, true));
 
         return { allPepaired };
-    }
+    },
+
+    isShortcutActive: () => (dispatch, getState: () => RootState) => {
+        const { enableShortcut } = getState().printing;
+        const { currentModalPath } = getState().appbarMenu;
+
+        const headType = getCurrentHeadType(window.location.href);
+        return enableShortcut && !currentModalPath && headType === HEAD_PRINTING;
+    },
 };
 
 export default function reducer(state = INITIAL_STATE, action) {

@@ -1,10 +1,13 @@
+import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 
 import { PRINTING_MANAGER_TYPE_QUALITY } from '../../../constants';
 import log from '../../../lib/log';
 import { PresetModel } from '../../../preset-model';
+import type { QualityPresetModel } from '../../../preset-model';
 
 import { actions as printingActions } from '../../../flux/printing';
+import { createQualityPresetAction } from '../../../flux/printing/actions-preset';
 
 
 interface Definition {
@@ -12,7 +15,7 @@ interface Definition {
 }
 
 export declare type PresetActionsType = {
-    onSelectDefinitionById?: (definitionId: string) => void;
+    onSelectDefinitionById: (definitionId: string) => void;
 
     onCreateManagerDefinition: (definition: Definition) => Promise<PresetModel>;
 
@@ -35,9 +38,9 @@ const usePresetActions = (): PresetActionsType => {
     };
 
     // PresetModel
-    const onCreateManagerDefinition = (definition) => {
-        return dispatch(printingActions.duplicateDefinitionByType(PRINTING_MANAGER_TYPE_QUALITY, definition));
-    };
+    const onCreateManagerDefinition = useCallback(async (qualityPresetModel: QualityPresetModel) => {
+        return dispatch(createQualityPresetAction(qualityPresetModel));
+    }, [dispatch]);
 
     const onResetPresetModel = (presetModel) => {
         return dispatch(printingActions.resetDefinitionById(

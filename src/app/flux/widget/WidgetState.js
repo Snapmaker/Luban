@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-import { PROTOCOL_TEXT, PROTOCOL_SCREEN } from '../../constants';
+import { PROTOCOL_TEXT } from '../../constants';
 import { MACHINE_SERIES } from '../../constants/machines';
 
 const DEFAULT_STATE = {
@@ -39,16 +39,6 @@ const DEFAULT_STATE = {
             widgets: ['toolpath-list', 'cnc-path']
         }
     },
-    developerPanel: {
-        primary: {
-            widgets: [
-                'axesPanel', 'macroPanel'
-            ]
-        },
-        default: {
-            widgets: []
-        }
-    },
     widgets: {
         control: {
             minimized: false,
@@ -70,22 +60,6 @@ const DEFAULT_STATE = {
             },
             dataSource: PROTOCOL_TEXT
         },
-        axesPanel: {
-            minimized: false,
-            axes: ['x', 'y', 'z'],
-            jog: {
-                keypad: false,
-                selectedDistance: '1',
-                customDistance: 10
-            },
-            shuttle: {
-                feedrateMin: 500,
-                feedrateMax: 2000,
-                hertz: 10,
-                overshoot: 1
-            },
-            dataSource: PROTOCOL_SCREEN
-        },
         connection: {
             minimized: false,
             controller: {
@@ -102,10 +76,6 @@ const DEFAULT_STATE = {
         macro: {
             minimized: false,
             dataSource: PROTOCOL_TEXT
-        },
-        macroPanel: {
-            minimized: false,
-            dataSource: PROTOCOL_SCREEN
         },
         marlin: {
             minimized: false,
