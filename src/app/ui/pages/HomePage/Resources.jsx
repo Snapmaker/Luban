@@ -130,7 +130,7 @@ const Resources = (props) => {
                 && (
                     <div className={styles['resources-container']}>
                         <div className={classNames(styles['title-label'], 'highlight-heading', 'margin-bottom-16')}>
-                            {i18n._('key-HomePage/Resources Resources')}
+                            {i18n._('key-HomePage/CaseLibrary')}
                         </div>
                         <Spin spinning={isLoading}>
                             <div className={classNames(styles['case-list'], styles.smallList)}>

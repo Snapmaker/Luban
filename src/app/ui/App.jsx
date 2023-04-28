@@ -26,7 +26,6 @@ import Laser from './pages/Laser';
 import Settings from './pages/Settings';
 import Workspace from './pages/Workspace';
 import { PrintMainPage } from './pages/print-main';
-import CaseResource from './pages/CaseResource/index';
 
 Canvas2dZoom.register();
 
@@ -158,7 +157,6 @@ class App extends PureComponent {
                         <Route path="/laser" component={Laser} />
                         <Route path="/cnc" component={Cnc} />
                         <Route path="/settings" component={Settings} />
-                        <Route path="/case-resouces" component={CaseResource} />
                         <Route component={HomePage} />
                     </Switch>
                     <ToastContainer

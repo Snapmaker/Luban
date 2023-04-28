@@ -49,7 +49,7 @@ const QuickStart = (props) => {
         <div className={styles['quick-start-container']}>
             {!noTitle && (
                 <div className={classNames(styles['title-label'], 'highlight-heading', 'margin-bottom-16')}>
-                    {i18n._('key-HomePage/Begin-Case Library')}
+                    {i18n._('key-HomePage/CaseLibrary-Quick Start')}
                 </div>
             )}
             <div className={
