@@ -5,11 +5,11 @@ import {
     Box3,
     BufferAttribute,
     BufferGeometry,
+    Color,
     DynamicDrawUsage,
     Float32BufferAttribute,
     FrontSide,
     Group,
-    Int16BufferAttribute,
     Intersection,
     LineBasicMaterial,
     LineSegments,
@@ -33,6 +33,7 @@ import {
 import { CONTAINED, INTERSECTED, NOT_INTERSECTED } from 'three-mesh-bvh';
 import type { ExtendedTriangle } from 'three-mesh-bvh';
 import { v4 as uuid } from 'uuid';
+
 import { EPSILON, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, SELECTEVENT } from '../constants';
 import i18n from '../lib/i18n';
 import log from '../lib/log';
@@ -41,7 +42,6 @@ import { ModelInfo as SVGModelInfo, TMode, TSize } from './BaseModel';
 import SvgModel from './SvgModel';
 import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
 import ThreeModel from './ThreeModel';
-
 import { polyUnion } from '../../shared/lib/clipper/cLipper-adapter';
 import { PolygonsUtils } from '../../shared/lib/math/PolygonsUtils';
 import { THelperExtruderConfig, TSupportExtruderConfig } from '../constants/preset';
@@ -3016,43 +3016,23 @@ class ModelGroup extends EventEmitter {
             model.tmpSupportMesh = model.meshObject.children[0];
             model.meshObject.clear();
 
-            model.isColored = true;
+            // Ensure color and byte count attribute is present
+            model.ensureColorAttribute();
+            model.ensureByteCountAttribute();
 
-            // Save original geometry
+            model.meshObject.geometry.computeBoundsTree();
+
+            // Save geometry
             if (!model.originalGeometry) {
                 // first time clone original geometry
                 model.originalGeometry = model.meshObject.geometry.clone();
             }
 
-            // calculate face mark
-            const count = model.meshObject.geometry.getAttribute('position').count;
-            const faceCount = count / 3;
-
-            // Add color attribute
-            const colorAttribute = model.meshObject.geometry.getAttribute('color');
-            if (!colorAttribute) {
-                const byteCountAttribute = new Int16BufferAttribute(faceCount, 1);
-                for (let i = 0; i < faceCount; i++) {
-                    byteCountAttribute.setX(i, 0);
-                }
-
-                const colors = new Array(count * 3);
-                for (let i = 0; i < count; i++) {
-                    colors[i * 3 + 0] = MESH_COLORING_DEFAULT_COLOR[0];
-                    colors[i * 3 + 1] = MESH_COLORING_DEFAULT_COLOR[1];
-                    colors[i * 3 + 2] = MESH_COLORING_DEFAULT_COLOR[2];
-                }
-                const newColorAttribute = new Float32BufferAttribute(colors, 3);
-                model.meshObject.geometry.setAttribute('color', newColorAttribute);
-                model.meshObject.geometry.setAttribute('byte_count', byteCountAttribute);
-                model.meshObject.geometry.computeBoundsTree();
-
-                // flag for brush to render color
-                model.meshObject.userData = {
-                    ...model.meshObject.userData,
-                    canSupport: true,
-                };
-            }
+            // flag for brush to render color
+            model.meshObject.userData = {
+                ...model.meshObject.userData,
+                canSupport: true,
+            };
 
             model.setSelected();
         }
@@ -3097,7 +3077,7 @@ class ModelGroup extends EventEmitter {
     /**
      * Apply brush, with extruder mark and corresponding color.
      */
-    public applyMeshColoringBrush(raycastResult, faceExtruderMark: number, color: number[]): void {
+    public applyMeshColoringBrush(raycastResult, faceExtruderMark: number, color: Color): void {
         this.moveSupportBrush(raycastResult);
 
         const target = raycastResult.find((result) => result.object.userData.canSupport);
@@ -3153,7 +3133,7 @@ class ModelGroup extends EventEmitter {
                 for (let i = 0, l = indices.length; i < l; i++) {
                     const index = indexAttr.getX(indices[i]);
 
-                    colorAttr.setXYZ(index, color[0], color[1], color[2]);
+                    colorAttr.setXYZ(index, color.r, color.g, color.b);
 
                     if (byteCountAttribute) {
                         const byteCount = byteCountAttribute.getX(index / 3);

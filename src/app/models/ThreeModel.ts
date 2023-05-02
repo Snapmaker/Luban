@@ -1,11 +1,13 @@
 import { v4 as uuid } from 'uuid';
 import * as THREE from 'three';
 import noop from 'lodash/noop';
-import { DoubleSide, Geometry, Mesh, MeshBasicMaterial, MeshLambertMaterial, Object3D, ObjectLoader, Plane } from 'three';
-
 import {
-    LOAD_MODEL_FROM_INNER
-} from '../constants';
+    DoubleSide, Geometry, Mesh, MeshBasicMaterial, MeshLambertMaterial, Object3D, ObjectLoader, Plane, Color,
+    Int16BufferAttribute,
+    Float32BufferAttribute,
+} from 'three';
+
+import { LOAD_MODEL_FROM_INNER } from '../constants';
 import log from '../lib/log';
 import ThreeUtils from '../three-extensions/ThreeUtils';
 import ThreeGroup from './ThreeGroup';
@@ -14,7 +16,11 @@ import { machineStore } from '../store/local-storage';
 import type ModelGroup from './ModelGroup';
 import ClipperModel, { TClippingConfig } from './ClipperModel';
 
-const materialOverstepped = new THREE.Color(0xa80006);
+const OVERSTEPPED_COLOR = new THREE.Color(0xa80006);
+
+// const BYTE_COUNT_SUPPORT = 1 << 0;
+const BYTE_COUNT_LEFT_EXTRUDER = 1 << 1;
+const BYTE_COUNT_RIGHT_EXTRUDER = 1 << 2;
 
 class ThreeModel extends BaseModel {
     public isThreeModel = true;
@@ -32,14 +38,16 @@ class ThreeModel extends BaseModel {
     declare public meshObject: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial | THREE.MeshLambertMaterial> & { uniformScalingState?: boolean };
 
     public isEditingSupport = false;
-    public isColored = false;
     public materialPrintTemperature: number;
 
     private geometry: THREE.BufferGeometry;
 
     private processImageName: string;
-    private _materialNormal: THREE.Color;
-    private _materialSelected: THREE.Color;
+
+    // mesh is colored by 'color' attribute
+    public isColored = false;
+    // material color (used when isColored = false)
+    private materialColor: THREE.Color = null;
 
     public hasOversteppedHotArea: boolean;
 
@@ -231,10 +239,60 @@ class ThreeModel extends BaseModel {
         this.modelName = newName;
     }
 
-    public updateMaterialColor(color: string) {
-        this._materialNormal = new THREE.Color(color);
-        this._materialSelected = new THREE.Color(color);
-        this.setSelected(this.isSelected);
+    public getMaterialColor(): Color {
+        return this.materialColor;
+    }
+
+    public updateMaterialColor(color: string): void {
+        const newColor = new THREE.Color(color);
+        if (this.materialColor && this.materialColor.equals(newColor)) {
+            return;
+        }
+
+        this.materialColor = new THREE.Color(color);
+        this.setSelected();
+    }
+
+    public ensureColorAttribute(): void {
+        // Add color attribute
+        const colorAttribute = this.meshObject.geometry.getAttribute('color');
+        if (!colorAttribute) {
+            this.isColored = true;
+            const count = this.meshObject.geometry.getAttribute('position').count;
+            const materialColor = this.getMaterialColor();
+
+            const colors = new Array(count * 3);
+            for (let i = 0; i < count; i++) {
+                colors[i * 3 + 0] = materialColor.r;
+                colors[i * 3 + 1] = materialColor.g;
+                colors[i * 3 + 2] = materialColor.b;
+            }
+
+            const newColorAttribute = new Float32BufferAttribute(colors, 3);
+            this.meshObject.geometry.setAttribute('color', newColorAttribute);
+        }
+    }
+
+    public ensureByteCountAttribute(): void {
+        const count = this.meshObject.geometry.getAttribute('position').count;
+        const faceCount = count / 3;
+
+        let byteCountAttribute = this.meshObject.geometry.getAttribute('byte_count');
+        if (!byteCountAttribute) {
+            byteCountAttribute = new Int16BufferAttribute(faceCount, 1);
+            this.meshObject.geometry.setAttribute('byte_count', byteCountAttribute);
+        }
+
+        let byteCountMark;
+        if (this.extruderConfig.shell === '0') {
+            byteCountMark = BYTE_COUNT_LEFT_EXTRUDER;
+        } else {
+            byteCountMark = BYTE_COUNT_RIGHT_EXTRUDER;
+        }
+        for (let i = 0; i < faceCount; i++) {
+            const byteCount = byteCountAttribute.getX(i);
+            byteCountAttribute.setX(i, (byteCount & 0xf9) | byteCountMark);
+        }
     }
 
     public onTransform() {
@@ -359,15 +417,13 @@ class ThreeModel extends BaseModel {
                 this.meshObject.material.color.set(0xffffff);
             } else if (this.overstepped === true) {
                 // Mesh is overstepped
-                this.meshObject.material.color.set(materialOverstepped);
+                this.meshObject.material.color.set(OVERSTEPPED_COLOR);
             } else if (this.isColored) {
                 // Mesh is colored, use 0xfff to display its color
                 this.meshObject.material.color.set(0xffffff);
-            } else if (this.isSelected === true) {
-                this.meshObject.material.color.set(this._materialSelected.clone());
             } else {
-                // this.meshObject.material = this.meshObject.material;
-                this.meshObject.material.color.set(this._materialNormal.clone());
+                // Use material color
+                this.meshObject.material.color.set(this.materialColor);
             }
         }
 

@@ -1,7 +1,8 @@
 import { find } from 'lodash';
+import { Color } from 'three';
 
 import { LEFT_EXTRUDER, MACHINE_EXTRUDER_X, MACHINE_EXTRUDER_Y, RIGHT_EXTRUDER } from '../../constants';
-import { PresetModel } from '../../preset-model';
+import { MaterialPresetModel, PresetModel } from '../../preset-model';
 import sceneLogic, { PrimeTowerSettings } from '../../scene/scene.logic';
 
 import baseActions from './actions-base';
@@ -76,37 +77,65 @@ const updateMeshColoringBrushMark = (mark: string) => {
     };
 };
 
+const _getMaterialPresetModel = (materialPresetModels: MaterialPresetModel[], presetId: string): MaterialPresetModel => {
+    const index = materialPresetModels.findIndex((m) => m.definitionId === presetId);
+    if (index >= 0) {
+        return materialPresetModels[index];
+    } else {
+        return null;
+    }
+};
+
 /**
  * Apply raycast result to mesh effect.
  */
 const applyMeshColoringBrush = (raycastResult) => {
     return (dispatch, getState) => {
-        const { modelGroup, meshColoringBrushMark } = getState().printing;
+        const {
+            modelGroup,
+            meshColoringBrushMark,
 
-        let faceMark = 0;
-        let color: number[];
+            materialDefinitions,
+            defaultMaterialId,
+            defaultMaterialIdRight
+        } = getState().printing;
+
+        const materialPresetId = meshColoringBrushMark === LEFT_EXTRUDER ? defaultMaterialId : defaultMaterialIdRight;
+
+        const materialPresetModel = _getMaterialPresetModel(materialDefinitions, materialPresetId);
+        const colorString = materialPresetModel.settings.color.default_value as string;
+        const color = new Color(colorString);
+
+        let faceExtruderMark = 0;
+        // let color: number[];
         if (meshColoringBrushMark === LEFT_EXTRUDER) {
-            faceMark = 1 << 1;
-            color = [1, 0, 0];
+            faceExtruderMark = 1 << 1;
+            // color = [1, 0, 0];
         } else if (meshColoringBrushMark === RIGHT_EXTRUDER) {
-            faceMark = 1 << 2;
-            color = [0, 1, 0];
+            faceExtruderMark = 1 << 2;
+            // color = [0, 1, 0];
         }
-        modelGroup.applyMeshColoringBrush(raycastResult, faceMark, color);
+        modelGroup.applyMeshColoringBrush(raycastResult, faceExtruderMark, color);
     };
 };
 
-const getModelMaterialSettings = (model) => (dispatch, getState) => {
-    const {
-        materialDefinitions,
-        defaultMaterialId,
-        defaultMaterialIdRight
-    } = getState().printing;
-    const materialID = model.extruderConfig.shell === '0' ? defaultMaterialId : defaultMaterialIdRight;
-    const index = materialDefinitions.findIndex((d) => {
-        return d.definitionId === materialID;
-    });
-    return materialDefinitions[index] ? materialDefinitions[index].settings : materialDefinitions[0].settings;
+/**
+ * Return material preset model for model.
+ *
+ * We only take the material used to print shell.
+ */
+const getModelShellMaterialPresetModel = (model) => {
+    return (dispatch, getState) => {
+        const {
+            materialDefinitions,
+            defaultMaterialId,
+            defaultMaterialIdRight
+        } = getState().printing;
+
+        const materialID = model.extruderConfig.shell === '0' ? defaultMaterialId : defaultMaterialIdRight;
+        const index = materialDefinitions.findIndex((d) => d.definitionId === materialID);
+        return materialDefinitions[index] ? materialDefinitions[index] : materialDefinitions[0];
+    };
 };
 
 const applyPrintSettingsToModels = () => (dispatch, getState) => {
@@ -142,10 +171,13 @@ const applyPrintSettingsToModels = () => (dispatch, getState) => {
     }
 
     // update parameters for each model
-    if (leftPresetModel) {
+    if (leftPresetModel || rightPresetModel) {
         const globalSettings = leftPresetModel.settings;
         modelGroup.getThreeModels().forEach((model) => {
-            const materialSettings = dispatch(getModelMaterialSettings(model));
+            const materialPresetModel = dispatch(getModelShellMaterialPresetModel(model));
+            const materialSettings = materialPresetModel.settings;
+
+            // update material color
             model.updateMaterialColor(materialSettings.color.default_value);
 
             const layerHeight = globalSettings.layer_height.default_value;
