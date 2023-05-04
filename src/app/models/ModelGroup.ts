@@ -3132,15 +3132,17 @@ class ModelGroup extends EventEmitter {
                 const indexAttr = geometry.index;
                 for (let i = 0, l = indices.length; i < l; i++) {
                     const index = indexAttr.getX(indices[i]);
+                    const faceIndex = Math.floor(index / 3);
 
                     colorAttr.setXYZ(index, color.r, color.g, color.b);
 
                     if (byteCountAttribute) {
-                        const byteCount = byteCountAttribute.getX(index / 3);
-                        byteCountAttribute.setX(index / 3, (byteCount & BYTE_COUNT_COLOR_CLEAR_MASK) | faceExtruderMark);
+                        const byteCount = byteCountAttribute.getX(faceIndex);
+                        byteCountAttribute.setX(faceIndex, (byteCount & BYTE_COUNT_COLOR_CLEAR_MASK) | faceExtruderMark);
                     }
                 }
                 colorAttr.needsUpdate = true;
+                byteCountAttribute.needsUpdate = true;
             }
         }
     }

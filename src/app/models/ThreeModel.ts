@@ -20,9 +20,13 @@ const OVERSTEPPED_COLOR = new THREE.Color(0xa80006);
 
 // const BYTE_COUNT_SUPPORT = 1 << 0;
 
-export const BYTE_COUNT_COLOR_CLEAR_MASK = 0x00ff;
-export const BYTE_COUNT_LEFT_EXTRUDER = 0x0000;
-export const BYTE_COUNT_RIGHT_EXTRUDER = 0x0100;
+// Byte Count: Color
+export const BYTE_COUNT_COLOR_MASK = 0xff00;
+export const BYTE_COUNT_COLOR_CLEAR_MASK = (0xffff & ~BYTE_COUNT_COLOR_MASK);
+
+export const BYTE_COUNT_NO_COLOR = 0x0000;
+export const BYTE_COUNT_LEFT_EXTRUDER = 0x0100;
+export const BYTE_COUNT_RIGHT_EXTRUDER = 0x0200;
 
 class ThreeModel extends BaseModel {
     public isThreeModel = true;
@@ -256,23 +260,40 @@ class ThreeModel extends BaseModel {
     }
 
     public ensureColorAttribute(): void {
+        const count = this.meshObject.geometry.getAttribute('position').count;
+
         // Add color attribute
-        const colorAttribute = this.meshObject.geometry.getAttribute('color');
+        let colorAttribute = this.meshObject.geometry.getAttribute('color');
         if (!colorAttribute) {
             this.isColored = true;
-            const count = this.meshObject.geometry.getAttribute('position').count;
-            const materialColor = this.getMaterialColor();
 
-            const colors = new Array(count * 3);
-            for (let i = 0; i < count; i++) {
-                colors[i * 3 + 0] = materialColor.r;
-                colors[i * 3 + 1] = materialColor.g;
-                colors[i * 3 + 2] = materialColor.b;
-            }
-
-            const newColorAttribute = new Float32BufferAttribute(colors, 3);
-            this.meshObject.geometry.setAttribute('color', newColorAttribute);
+            colorAttribute = new Float32BufferAttribute(count * 3, 3);
+            this.meshObject.geometry.setAttribute('color', colorAttribute);
         }
+
+        // Set color attributes, in case material color is changed.
+        const byteCountAttribute = this.meshObject.geometry.getAttribute('byte_count');
+        const materialColor = this.getMaterialColor();
+        for (let i = 0; i < count; i++) {
+            if (byteCountAttribute) {
+                // Do nothing if byte count attribute is already used
+                /*
+                const faceIndex = Math.floor(i / 3);
+                const byteCount = byteCountAttribute.getX(faceIndex);
+                const byteCountColor = (byteCount & BYTE_COUNT_COLOR_MASK);
+                if (byteCountColor === BYTE_COUNT_LEFT_EXTRUDER) {
+                    colorAttribute.setXYZ(i, 1.0, 0, 0);
+                } else if (byteCountColor === BYTE_COUNT_RIGHT_EXTRUDER) {
+                    colorAttribute.setXYZ(i, 0.0, 1.0, 0);
+                } else {
+                    colorAttribute.setXYZ(i, 0, 1.0, 1.0);
+                }
+                */
+            } else {
+                colorAttribute.setXYZ(i, materialColor.r, materialColor.g, materialColor.b);
+            }
+        }
+        colorAttribute.needsUpdate = true;
     }
 
     public ensureByteCountAttribute(): void {
@@ -285,15 +306,20 @@ class ThreeModel extends BaseModel {
             this.meshObject.geometry.setAttribute('byte_count', byteCountAttribute);
         }
 
-        let byteCountMark;
-        if (this.extruderConfig.shell === '0') {
-            byteCountMark = BYTE_COUNT_LEFT_EXTRUDER;
-        } else {
-            byteCountMark = BYTE_COUNT_RIGHT_EXTRUDER;
-        }
-        for (let i = 0; i < faceCount; i++) {
-            const byteCount = byteCountAttribute.getX(i);
-            byteCountAttribute.setX(i, (byteCount & BYTE_COUNT_COLOR_CLEAR_MASK) | byteCountMark);
+        // initialize byte count with color if no color is present
+        const randomByteCount = byteCountAttribute.getX(0);
+        if ((randomByteCount & BYTE_COUNT_COLOR_MASK) === 0) {
+            let byteCountMark: number;
+            if (this.extruderConfig.shell === '0') {
+                byteCountMark = BYTE_COUNT_LEFT_EXTRUDER;
+            } else {
+                byteCountMark = BYTE_COUNT_RIGHT_EXTRUDER;
+            }
+            for (let i = 0; i < faceCount; i++) {
+                const byteCount = byteCountAttribute.getX(i);
+                byteCountAttribute.setX(i, (byteCount & BYTE_COUNT_COLOR_CLEAR_MASK) | byteCountMark);
+            }
+            byteCountAttribute.needsUpdate = true;
         }
     }
 
