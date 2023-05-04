@@ -41,7 +41,7 @@ import { checkVector3NaN } from '../lib/numeric-utils';
 import { ModelInfo as SVGModelInfo, TMode, TSize } from './BaseModel';
 import SvgModel from './SvgModel';
 import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
-import ThreeModel from './ThreeModel';
+import ThreeModel, { BYTE_COUNT_COLOR_CLEAR_MASK } from './ThreeModel';
 import { polyUnion } from '../../shared/lib/clipper/cLipper-adapter';
 import { PolygonsUtils } from '../../shared/lib/math/PolygonsUtils';
 import { THelperExtruderConfig, TSupportExtruderConfig } from '../constants/preset';
@@ -3137,7 +3137,7 @@ class ModelGroup extends EventEmitter {
 
                     if (byteCountAttribute) {
                         const byteCount = byteCountAttribute.getX(index / 3);
-                        byteCountAttribute.setX(index / 3, (byteCount & 0xf9) | faceExtruderMark);
+                        byteCountAttribute.setX(index / 3, (byteCount & BYTE_COUNT_COLOR_CLEAR_MASK) | faceExtruderMark);
                     }
                 }
                 colorAttr.needsUpdate = true;

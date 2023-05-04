@@ -6,6 +6,7 @@ import { MaterialPresetModel, PresetModel } from '../../preset-model';
 import sceneLogic, { PrimeTowerSettings } from '../../scene/scene.logic';
 
 import baseActions from './actions-base';
+import { BYTE_COUNT_LEFT_EXTRUDER, BYTE_COUNT_RIGHT_EXTRUDER } from '../../models/ThreeModel';
 
 
 const render = () => (dispatch) => {
@@ -107,13 +108,10 @@ const applyMeshColoringBrush = (raycastResult) => {
         const color = new Color(colorString);
 
         let faceExtruderMark = 0;
-        // let color: number[];
         if (meshColoringBrushMark === LEFT_EXTRUDER) {
-            faceExtruderMark = 1 << 1;
-            // color = [1, 0, 0];
+            faceExtruderMark = BYTE_COUNT_LEFT_EXTRUDER;
         } else if (meshColoringBrushMark === RIGHT_EXTRUDER) {
-            faceExtruderMark = 1 << 2;
-            // color = [0, 1, 0];
+            faceExtruderMark = BYTE_COUNT_RIGHT_EXTRUDER;
         }
         modelGroup.applyMeshColoringBrush(raycastResult, faceExtruderMark, color);
     };

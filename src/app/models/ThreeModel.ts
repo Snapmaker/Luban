@@ -19,8 +19,10 @@ import ClipperModel, { TClippingConfig } from './ClipperModel';
 const OVERSTEPPED_COLOR = new THREE.Color(0xa80006);
 
 // const BYTE_COUNT_SUPPORT = 1 << 0;
-const BYTE_COUNT_LEFT_EXTRUDER = 1 << 1;
-const BYTE_COUNT_RIGHT_EXTRUDER = 1 << 2;
+
+export const BYTE_COUNT_COLOR_CLEAR_MASK = 0x00ff;
+export const BYTE_COUNT_LEFT_EXTRUDER = 0x0000;
+export const BYTE_COUNT_RIGHT_EXTRUDER = 0x0100;
 
 class ThreeModel extends BaseModel {
     public isThreeModel = true;
@@ -291,7 +293,7 @@ class ThreeModel extends BaseModel {
         }
         for (let i = 0; i < faceCount; i++) {
             const byteCount = byteCountAttribute.getX(i);
-            byteCountAttribute.setX(i, (byteCount & 0xf9) | byteCountMark);
+            byteCountAttribute.setX(i, (byteCount & BYTE_COUNT_COLOR_CLEAR_MASK) | byteCountMark);
         }
     }
 
