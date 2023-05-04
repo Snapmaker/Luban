@@ -1459,6 +1459,7 @@
     "key-Modal/Common-Complete": "Завершити",
     "key-Modal/Common-Confirm": "Підтвердити",
     "key-Modal/Common-Do not ask me again": "Більше не питати",
+    "key-Modal/Common-Done": "",
     "key-Modal/Common-Ignore": "Ігнорувати",
     "key-Modal/Common-Next": "Далі",
     "key-Modal/Common-OK": "Так",
@@ -1571,6 +1572,7 @@
     "key-Printing/LeftBar/Support-Yes": "Так",
     "key-Printing/MainToolBar-Materials": "Матеріали",
     "key-Printing/MainToolBar-Print Settings": "Параметри",
+    "key-Printing/MeshColoring-Mesh Coloring": "",
     "key-Printing/Modal-Backup Tip": "Ваші історичні дані було збережено у <1>цій теці</1>.",
     "key-Printing/No model(s).": "Немає моделі(ей).",
     "key-Printing/ObjectList-Object List": "Обʼєкти",
@@ -1690,6 +1692,7 @@
     "key-Progress/3DP-Failed to load model.": "Збій завантаження моделі.",
     "key-Progress/3DP-Failed to preview G-code.": "Збій перегляду G-коду.",
     "key-Progress/3DP-Failed to repair model.": "Не вдалося виправити модель.",
+    "key-Progress/3DP-Failed to split model.": "",
     "key-Progress/3DP-Generated support successfully.": "Підтримки створено",
     "key-Progress/3DP-Generating support... {{progress}}%": "Створення підтримок… {{progress}}%",
     "key-Progress/3DP-GrayUnderTheTopFloor": "Тільки верхній шар",
@@ -1705,6 +1708,8 @@
     "key-Progress/3DP-SingleLayer": "Одиничний шар",
     "key-Progress/3DP-Slice Failed": "Збій нарізання",
     "key-Progress/3DP-Slice Failed reason": "Основна причина невдачі викликана внутрішніми помилками в алгоритмі слайсера. Будь ласка, спробуйте полагодити модель або перемістити її в інше місце на столі. У разі невдач, спричинених іншими причинами, будь ласка, зверніться до документа \"Проблеми слайсера\".",
+    "key-Progress/3DP-Split model successfully.": "",
+    "key-Progress/3DP-Splitting model...": "",
     "key-Progress/Laser-Failed to load model.": "Збій завантаження моделі",
     "key-Progress/Laser-Loaded model successfully.": "Модель завантажено.",
     "key-Progress/Laser-Loading model...": "Завантаження моделі…",
@@ -2234,6 +2239,5 @@
     "key_menu_Quit": "Вийти",
     "key_menu_Services": "Служби",
     "key_menu_Unhide": "Показати",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Трансформація",
-    "material_no_category": "Матеріал без категорії"
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Трансформація"
 }

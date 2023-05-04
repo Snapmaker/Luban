@@ -10,6 +10,7 @@ import { actions as machineActions } from '../../../flux/machine';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as settingsActions } from '../../../flux/setting';
+import sceneActions from '../../../flux/printing/actions-scene';
 import { logModelViewOperation } from '../../../lib/gaEvent';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 import { ModelEvents } from '../../../models/events';
@@ -84,6 +85,7 @@ class Visualizer extends PureComponent {
         setTransformMode: PropTypes.func.isRequired,
         moveSupportBrush: PropTypes.func.isRequired,
         applySupportBrush: PropTypes.func.isRequired,
+        applyMeshColoringBrush: PropTypes.func.isRequired,
         autoRotateSelectedModel: PropTypes.func.isRequired,
         layFlatSelectedModel: PropTypes.func.isRequired,
         scaleToFitSelectedModel: PropTypes.func.isRequired,
@@ -202,8 +204,6 @@ class Visualizer extends PureComponent {
         setTransformMode: (value) => {
             this.props.setTransformMode(value);
             this.canvas.current.setTransformMode(value);
-            document.getElementById('control-input') && (document.getElementById('control-input').style.display = 'none');
-            document.getElementById('control-input-2') && (document.getElementById('control-input-2').style.display = 'none');
         },
         setHoverFace: (value) => {
             if (!this.props.selectedModelArray.length) return;
@@ -285,12 +285,14 @@ class Visualizer extends PureComponent {
         stopSupportMode: () => {
             this.canvas.current.stopSupportMode();
         },
-        moveSupport: (raycastResult) => {
+        moveSupportBrush: (raycastResult) => {
             this.props.moveSupportBrush(raycastResult);
         },
-        applyBrush: (raycastResult) => {
+        applySupportBrush: (raycastResult) => {
             this.props.applySupportBrush(raycastResult);
-        }
+        },
+
+        applyMeshColoringBrush: (raycastResult) => this.props.applyMeshColoringBrush(raycastResult),
     };
 
     constructor(props) {
@@ -337,15 +339,24 @@ class Visualizer extends PureComponent {
             size, stopArea, transformMode, selectedModelArray, renderingTimestamp, modelGroup, stage,
             promptTasks
         } = this.props;
+
+
         if (transformMode !== prevProps.transformMode) {
             this.canvas.current.setTransformMode(transformMode);
+
+            if (prevProps.transformMode === 'support-edit') {
+                this.canvas.current.stopSupportMode();
+            }
+            if (prevProps.transformMode === 'mesh-coloring') {
+                this.canvas.current.stopMeshColoringMode();
+            }
+
             if (transformMode === 'rotate-placement') {
                 this.canvas.current.setSelectedModelConvexMeshGroup(modelGroup.selectedModelConvexMeshGroup);
-            } else if (transformMode !== 'support-edit') {
-                // this.supportActions.stopSupportMode();
-                this.canvas.current.stopSupportMode();
             } else if (transformMode === 'support-edit') {
                 this.canvas.current.startSupportMode();
+            } else if (transformMode === 'mesh-coloring') {
+                this.canvas.current.startMeshColoringMode();
             }
         }
         if (selectedModelArray !== prevProps.selectedModelArray) {
@@ -637,6 +648,7 @@ const mapDispatchToProps = (dispatch) => ({
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value)),
     moveSupportBrush: (raycastResult) => dispatch(printingActions.moveSupportBrush(raycastResult)),
     applySupportBrush: (raycastResult) => dispatch(printingActions.applySupportBrush(raycastResult)),
+    applyMeshColoringBrush: (raycastResult) => dispatch(sceneActions.applyMeshColoringBrush(raycastResult)),
     setRotationPlacementFace: (userData) => dispatch(printingActions.setRotationPlacementFace(userData)),
     displayModel: () => dispatch(printingActions.displayModel()),
     loadSimplifyModel: (modelID, modelOutputName, isCancelSimplify) => dispatch(printingActions.loadSimplifyModel({

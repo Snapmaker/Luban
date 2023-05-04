@@ -1,6 +1,5 @@
 import classNames from 'classnames';
 import { isUndefined, throttle } from 'lodash';
-import PropTypes from 'prop-types';
 import React, { useCallback, useEffect, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
@@ -434,10 +433,5 @@ const ModelScaleOverlay: React.FC<ModelScaleOverlayProps> = React.memo((props) =
         </div>
     );
 });
-
-ModelScaleOverlay.propTypes = {
-    setTransformMode: PropTypes.func.isRequired,
-    onModelAfterTransform: PropTypes.func.isRequired,
-};
 
 export default ModelScaleOverlay;

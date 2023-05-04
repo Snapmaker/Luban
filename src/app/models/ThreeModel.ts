@@ -1,11 +1,13 @@
 import { v4 as uuid } from 'uuid';
 import * as THREE from 'three';
 import noop from 'lodash/noop';
-import { DoubleSide, Geometry, Mesh, MeshBasicMaterial, MeshLambertMaterial, Object3D, ObjectLoader, Plane } from 'three';
-
 import {
-    LOAD_MODEL_FROM_INNER
-} from '../constants';
+    DoubleSide, Geometry, Mesh, MeshBasicMaterial, MeshLambertMaterial, Object3D, ObjectLoader, Plane, Color,
+    Int16BufferAttribute,
+    Float32BufferAttribute,
+} from 'three';
+
+import { LOAD_MODEL_FROM_INNER } from '../constants';
 import log from '../lib/log';
 import ThreeUtils from '../three-extensions/ThreeUtils';
 import ThreeGroup from './ThreeGroup';
@@ -14,7 +16,17 @@ import { machineStore } from '../store/local-storage';
 import type ModelGroup from './ModelGroup';
 import ClipperModel, { TClippingConfig } from './ClipperModel';
 
-const materialOverstepped = new THREE.Color(0xa80006);
+const OVERSTEPPED_COLOR = new THREE.Color(0xa80006);
+
+// const BYTE_COUNT_SUPPORT = 1 << 0;
+
+// Byte Count: Color
+export const BYTE_COUNT_COLOR_MASK = 0xff00;
+export const BYTE_COUNT_COLOR_CLEAR_MASK = (0xffff & ~BYTE_COUNT_COLOR_MASK);
+
+export const BYTE_COUNT_NO_COLOR = 0x0000;
+export const BYTE_COUNT_LEFT_EXTRUDER = 0x0100;
+export const BYTE_COUNT_RIGHT_EXTRUDER = 0x0200;
 
 class ThreeModel extends BaseModel {
     public isThreeModel = true;
@@ -37,8 +49,11 @@ class ThreeModel extends BaseModel {
     private geometry: THREE.BufferGeometry;
 
     private processImageName: string;
-    private _materialNormal: THREE.Color;
-    private _materialSelected: THREE.Color;
+
+    // mesh is colored by 'color' attribute
+    public isColored = false;
+    // material color (used when isColored = false)
+    private materialColor: THREE.Color = null;
 
     public hasOversteppedHotArea: boolean;
 
@@ -230,10 +245,82 @@ class ThreeModel extends BaseModel {
         this.modelName = newName;
     }
 
-    public updateMaterialColor(color: string) {
-        this._materialNormal = new THREE.Color(color);
-        this._materialSelected = new THREE.Color(color);
-        this.setSelected(this.isSelected);
+    public getMaterialColor(): Color {
+        return this.materialColor;
+    }
+
+    public updateMaterialColor(color: string): void {
+        const newColor = new THREE.Color(color);
+        if (this.materialColor && this.materialColor.equals(newColor)) {
+            return;
+        }
+
+        this.materialColor = new THREE.Color(color);
+        this.setSelected();
+    }
+
+    public ensureColorAttribute(): void {
+        const count = this.meshObject.geometry.getAttribute('position').count;
+
+        // Add color attribute
+        let colorAttribute = this.meshObject.geometry.getAttribute('color');
+        if (!colorAttribute) {
+            this.isColored = true;
+
+            colorAttribute = new Float32BufferAttribute(count * 3, 3);
+            this.meshObject.geometry.setAttribute('color', colorAttribute);
+        }
+
+        // Set color attributes, in case material color is changed.
+        const byteCountAttribute = this.meshObject.geometry.getAttribute('byte_count');
+        const materialColor = this.getMaterialColor();
+        for (let i = 0; i < count; i++) {
+            if (byteCountAttribute) {
+                // Do nothing if byte count attribute is already used
+                /*
+                const faceIndex = Math.floor(i / 3);
+                const byteCount = byteCountAttribute.getX(faceIndex);
+                const byteCountColor = (byteCount & BYTE_COUNT_COLOR_MASK);
+                if (byteCountColor === BYTE_COUNT_LEFT_EXTRUDER) {
+                    colorAttribute.setXYZ(i, 1.0, 0, 0);
+                } else if (byteCountColor === BYTE_COUNT_RIGHT_EXTRUDER) {
+                    colorAttribute.setXYZ(i, 0.0, 1.0, 0);
+                } else {
+                    colorAttribute.setXYZ(i, 0, 1.0, 1.0);
+                }
+                */
+            } else {
+                colorAttribute.setXYZ(i, materialColor.r, materialColor.g, materialColor.b);
+            }
+        }
+        colorAttribute.needsUpdate = true;
+    }
+
+    public ensureByteCountAttribute(): void {
+        const count = this.meshObject.geometry.getAttribute('position').count;
+        const faceCount = count / 3;
+
+        let byteCountAttribute = this.meshObject.geometry.getAttribute('byte_count');
+        if (!byteCountAttribute) {
+            byteCountAttribute = new Int16BufferAttribute(faceCount, 1);
+            this.meshObject.geometry.setAttribute('byte_count', byteCountAttribute);
+        }
+
+        // initialize byte count with color if no color is present
+        const randomByteCount = byteCountAttribute.getX(0);
+        if ((randomByteCount & BYTE_COUNT_COLOR_MASK) === 0) {
+            let byteCountMark: number;
+            if (this.extruderConfig.shell === '0') {
+                byteCountMark = BYTE_COUNT_LEFT_EXTRUDER;
+            } else {
+                byteCountMark = BYTE_COUNT_RIGHT_EXTRUDER;
+            }
+            for (let i = 0; i < faceCount; i++) {
+                const byteCount = byteCountAttribute.getX(i);
+                byteCountAttribute.setX(i, (byteCount & BYTE_COUNT_COLOR_CLEAR_MASK) | byteCountMark);
+            }
+            byteCountAttribute.needsUpdate = true;
+        }
     }
 
     public onTransform() {
@@ -351,18 +438,20 @@ class ThreeModel extends BaseModel {
             this.meshObject.material = this.gcodeModeMaterial;
         } else {
             this.meshObject.material = this.modelModeMaterial;
+
+            // Special state: edit state
             if (this.isEditingSupport) {
                 // TODO: uniform material for setting triangle color and textures
                 this.meshObject.material.color.set(0xffffff);
             } else if (this.overstepped === true) {
-                // this.meshObject.material = this.meshObject.material;
-                this.meshObject.material.color.set(materialOverstepped);
-            } else if (this.isSelected === true) {
-                // this.meshObject.material = this.meshObject.material;
-                this.meshObject.material.color.set(this._materialSelected.clone());
+                // Mesh is overstepped
+                this.meshObject.material.color.set(OVERSTEPPED_COLOR);
+            } else if (this.isColored) {
+                // Mesh is colored, use 0xfff to display its color
+                this.meshObject.material.color.set(0xffffff);
             } else {
-                // this.meshObject.material = this.meshObject.material;
-                this.meshObject.material.color.set(this._materialNormal.clone());
+                // Use material color
+                this.meshObject.material.color.set(this.materialColor);
             }
         }
 

@@ -1459,6 +1459,7 @@
     "key-Modal/Common-Complete": "Complete",
     "key-Modal/Common-Confirm": "Confirm",
     "key-Modal/Common-Do not ask me again": "",
+    "key-Modal/Common-Done": "",
     "key-Modal/Common-Ignore": "",
     "key-Modal/Common-Next": "Next",
     "key-Modal/Common-OK": "ОК",
@@ -1571,6 +1572,7 @@
     "key-Printing/LeftBar/Support-Yes": "",
     "key-Printing/MainToolBar-Materials": "",
     "key-Printing/MainToolBar-Print Settings": "",
+    "key-Printing/MeshColoring-Mesh Coloring": "",
     "key-Printing/Modal-Backup Tip": "Your historical data is backed up in the <1>here</1> folder.",
     "key-Printing/No model(s).": "",
     "key-Printing/ObjectList-Object List": "Object List",
@@ -1690,6 +1692,7 @@
     "key-Progress/3DP-Failed to load model.": "Failed to load model.",
     "key-Progress/3DP-Failed to preview G-code.": "Failed to preview G-code.",
     "key-Progress/3DP-Failed to repair model.": "",
+    "key-Progress/3DP-Failed to split model.": "",
     "key-Progress/3DP-Generated support successfully.": "",
     "key-Progress/3DP-Generating support... {{progress}}%": "",
     "key-Progress/3DP-GrayUnderTheTopFloor": "",
@@ -1705,6 +1708,8 @@
     "key-Progress/3DP-SingleLayer": "",
     "key-Progress/3DP-Slice Failed": "",
     "key-Progress/3DP-Slice Failed reason": "",
+    "key-Progress/3DP-Split model successfully.": "",
+    "key-Progress/3DP-Splitting model...": "",
     "key-Progress/Laser-Failed to load model.": "Failed to load model",
     "key-Progress/Laser-Loaded model successfully.": "Loaded model successfully.",
     "key-Progress/Laser-Loading model...": "Loading model...",
@@ -2234,6 +2239,5 @@
     "key_menu_Quit": "Quit",
     "key_menu_Services": "Services",
     "key_menu_Unhide": "Unhide",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Transformation",
-    "material_no_category": ""
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Transformation"
 }
