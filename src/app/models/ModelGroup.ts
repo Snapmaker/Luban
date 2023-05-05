@@ -115,6 +115,11 @@ type TAdhesionConfig = {
     raftMargin: number;
 }
 
+enum BrushType {
+    SphereBrush = 0,
+    SmartFillBrush,
+}
+
 
 class ModelGroup extends EventEmitter {
     public namesMap: Map<string, { number: number, count: number }> = new Map();
@@ -1861,6 +1866,8 @@ class ModelGroup extends EventEmitter {
                 modelInfo.transformation.positionZ = (modelLength + 1) * INDEXMARGIN;
             }
         }
+        console.log('modelInfo =', modelInfo);
+
         const model = this.newModel(modelInfo);
 
         model.computeBoundingBox();
@@ -3012,6 +3019,7 @@ class ModelGroup extends EventEmitter {
     public startMeshColoring(): void {
         const models = this.getModelsAttachedSupport();
         for (const model of models) {
+            console.log('startMeshColoring, model =', model);
             // Hide model support (its support mesh is the only child!)
             model.tmpSupportMesh = model.meshObject.children[0];
             model.meshObject.clear();
@@ -3021,6 +3029,7 @@ class ModelGroup extends EventEmitter {
             model.ensureByteCountAttribute();
 
             model.meshObject.geometry.computeBoundsTree();
+            model.meshObject.geometry.computeAdjacentFaces();
 
             // Save geometry
             if (!model.originalGeometry) {
@@ -3081,68 +3090,149 @@ class ModelGroup extends EventEmitter {
         this.moveSupportBrush(raycastResult);
 
         const target = raycastResult.find((result) => result.object.userData.canSupport);
+        if (!target) {
+            return;
+        }
+
+        // TODO: Add brush type switch
+        let brushType: BrushType = BrushType.SphereBrush;
+        if (raycastResult) {
+            brushType = BrushType.SmartFillBrush;
+        }
+
         if (target) {
             const targetMesh = target.object as Mesh;
             const geometry = targetMesh.geometry as BufferGeometry;
-            const bvh = geometry.boundsTree;
-            if (bvh) {
-                const inverseMatrix = new Matrix4();
-                inverseMatrix.copy(targetMesh.matrixWorld).invert();
 
-                const sphere = new Sphere();
-                sphere.center.copy(this.brushMesh.position).applyMatrix4(inverseMatrix);
-                sphere.radius = this.brushMesh.geometry.parameters.radius;
+            switch (brushType) {
+                case BrushType.SphereBrush: {
+                    const bvh = geometry.boundsTree;
+                    if (bvh) {
+                        const inverseMatrix = new Matrix4();
+                        inverseMatrix.copy(targetMesh.matrixWorld).invert();
 
-                const indices = [];
-                const tempVec = new Vector3();
-                bvh.shapecast({
-                    intersectsBounds: (box) => {
-                        const intersects = sphere.intersectsBox(box);
-                        const { min, max } = box;
-                        if (intersects) {
-                            for (let x = 0; x <= 1; x++) {
-                                for (let y = 0; y <= 1; y++) {
-                                    for (let z = 0; z <= 1; z++) {
-                                        tempVec.set(
-                                            x === 0 ? min.x : max.x,
-                                            y === 0 ? min.y : max.y,
-                                            z === 0 ? min.z : max.z
-                                        );
-                                        if (!sphere.containsPoint(tempVec)) {
-                                            return INTERSECTED;
+                        const sphere = new Sphere();
+                        sphere.center.copy(this.brushMesh.position).applyMatrix4(inverseMatrix);
+                        sphere.radius = this.brushMesh.geometry.parameters.radius;
+
+                        const indices = [];
+                        const tempVec = new Vector3();
+                        bvh.shapecast({
+                            intersectsBounds: (box) => {
+                                const intersects = sphere.intersectsBox(box);
+                                const { min, max } = box;
+                                if (intersects) {
+                                    for (let x = 0; x <= 1; x++) {
+                                        for (let y = 0; y <= 1; y++) {
+                                            for (let z = 0; z <= 1; z++) {
+                                                tempVec.set(
+                                                    x === 0 ? min.x : max.x,
+                                                    y === 0 ? min.y : max.y,
+                                                    z === 0 ? min.z : max.z
+                                                );
+                                                if (!sphere.containsPoint(tempVec)) {
+                                                    return INTERSECTED;
+                                                }
+                                            }
                                         }
                                     }
+                                    return CONTAINED;
+                                }
+                                return NOT_INTERSECTED;
+                            },
+                            intersectsTriangle: (triangle: ExtendedTriangle, triangleIndex: number, contained: boolean) => {
+                                if (contained || triangle.intersectsSphere(sphere)) {
+                                    const i3 = triangleIndex * 3;
+                                    indices.push(i3, i3 + 1, i3 + 2);
+                                }
+                                return false;
+                            }
+                        });
+
+                        const colorAttr = geometry.getAttribute('color');
+                        const byteCountAttribute = geometry.getAttribute('byte_count');
+                        const indexAttr = geometry.index;
+                        for (let i = 0, l = indices.length; i < l; i++) {
+                            const index = indexAttr.getX(indices[i]);
+                            const faceIndex = Math.floor(index / 3);
+
+                            colorAttr.setXYZ(index, color.r, color.g, color.b);
+
+                            if (byteCountAttribute) {
+                                const byteCount = byteCountAttribute.getX(faceIndex);
+                                byteCountAttribute.setX(faceIndex, (byteCount & BYTE_COUNT_COLOR_CLEAR_MASK) | faceExtruderMark);
+                            }
+                        }
+                        colorAttr.needsUpdate = true;
+                        byteCountAttribute.needsUpdate = true;
+                    }
+                    break;
+                }
+                case BrushType.SmartFillBrush: {
+                    const targetFaceIndex = target.faceIndex;
+                    if (targetFaceIndex < 0) {
+                        break;
+                    }
+
+                    const targetFaces = [];
+
+                    const indices = geometry.index;
+                    const colorAttr = geometry.getAttribute('color');
+                    const byteCountAttribute = geometry.getAttribute('byte_count');
+                    const normalAttribute = geometry.getAttribute('normal');
+
+                    const adjacentFaceGraph = geometry.adjcentFaceGraph;
+
+                    let index: number;
+                    const normal = new Vector3();
+
+                    index = indices ? indices.getX(targetFaceIndex * 3 + 0) : targetFaceIndex * 3 + 0;
+                    const targetNormal = new Vector3().fromBufferAttribute(normalAttribute, index);
+
+                    // traverse neighboring faces
+                    const queue: number[] = [targetFaceIndex];
+                    const visited: Set<number> = new Set();
+                    while (queue.length > 0) {
+                        const faceIndex = queue.shift();
+                        visited.add(faceIndex);
+
+                        index = indices ? indices.getX(faceIndex * 3 + 0) : faceIndex * 3 + 0;
+                        normal.fromBufferAttribute(normalAttribute, index);
+
+                        const angleRad = normal.angleTo(targetNormal);
+                        const angleDegree = angleRad * (180 / Math.PI);
+
+                        if (angleDegree < 5) {
+                            targetFaces.push(faceIndex);
+
+                            const neighborFaces = adjacentFaceGraph.getAdjacentFaces(faceIndex);
+                            for (const nextFaceIndex of neighborFaces) {
+                                if (!visited.has(nextFaceIndex)) {
+                                    queue.push(nextFaceIndex);
                                 }
                             }
-                            return CONTAINED;
                         }
-                        return NOT_INTERSECTED;
-                    },
-                    intersectsTriangle: (triangle: ExtendedTriangle, triangleIndex: number, contained: boolean) => {
-                        if (contained || triangle.intersectsSphere(sphere)) {
-                            const i3 = triangleIndex * 3;
-                            indices.push(i3, i3 + 1, i3 + 2);
+                    }
+
+                    // color target faces
+                    for (const faceIndex of targetFaces) {
+                        for (let k = 0; k < 3; k++) {
+                            index = indices ? indices.getX(faceIndex * 3 + k) : faceIndex * 3 + k;
+
+                            colorAttr.setXYZ(index, color.r, color.g, color.b);
+
+                            if (byteCountAttribute) {
+                                const byteCount = byteCountAttribute.getX(faceIndex);
+                                byteCountAttribute.setX(faceIndex, (byteCount & BYTE_COUNT_COLOR_CLEAR_MASK) | faceExtruderMark);
+                            }
                         }
-                        return false;
                     }
-                });
-
-                const colorAttr = geometry.getAttribute('color');
-                const byteCountAttribute = geometry.getAttribute('byte_count');
-                const indexAttr = geometry.index;
-                for (let i = 0, l = indices.length; i < l; i++) {
-                    const index = indexAttr.getX(indices[i]);
-                    const faceIndex = Math.floor(index / 3);
-
-                    colorAttr.setXYZ(index, color.r, color.g, color.b);
-
-                    if (byteCountAttribute) {
-                        const byteCount = byteCountAttribute.getX(faceIndex);
-                        byteCountAttribute.setX(faceIndex, (byteCount & BYTE_COUNT_COLOR_CLEAR_MASK) | faceExtruderMark);
-                    }
+                    colorAttr.needsUpdate = true;
+                    byteCountAttribute.needsUpdate = true;
+                    break;
                 }
-                colorAttr.needsUpdate = true;
-                byteCountAttribute.needsUpdate = true;
+                default:
+                    break;
             }
         }
     }

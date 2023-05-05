@@ -1,4 +1,4 @@
-import { applyParameterModifications, PrintMode, resolveParameterValues } from '@snapmaker/luban-platform';
+import { applyParameterModifications, PrintMode, resolveParameterValues, computeAdjacentFaces } from '@snapmaker/luban-platform';
 import { cloneDeep, filter, find, includes, isNil, noop } from 'lodash';
 import path from 'path';
 import { Transfer } from 'threads';
@@ -91,6 +91,7 @@ let initEventFlag = false;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
+THREE.BufferGeometry.prototype.computeAdjacentFaces = computeAdjacentFaces;
 
 const operationHistory = new OperationHistory();
 
