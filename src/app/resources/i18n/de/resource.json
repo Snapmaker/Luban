@@ -1459,6 +1459,7 @@
     "key-Modal/Common-Complete": "Vollständig",
     "key-Modal/Common-Confirm": "Bestätigen",
     "key-Modal/Common-Do not ask me again": "Nicht erneut nachfragen",
+    "key-Modal/Common-Done": "Done",
     "key-Modal/Common-Ignore": "Ignorieren",
     "key-Modal/Common-Next": "Weiter",
     "key-Modal/Common-OK": "OK",
@@ -1571,6 +1572,7 @@
     "key-Printing/LeftBar/Support-Yes": "Ja",
     "key-Printing/MainToolBar-Materials": "Filament",
     "key-Printing/MainToolBar-Print Settings": "Druck Einstell.",
+    "key-Printing/MeshColoring-Mesh Coloring": "Mesh Coloring",
     "key-Printing/Modal-Backup Tip": "Your historical data is backed up in the <1>here</1> folder.",
     "key-Printing/No model(s).": "Keine Modell(e).",
     "key-Printing/ObjectList-Object List": "Objektliste",
@@ -1690,6 +1692,7 @@
     "key-Progress/3DP-Failed to load model.": "Laden des Modells fehlgeschlagen.",
     "key-Progress/3DP-Failed to preview G-code.": "Vorschau des G-Code fehlgeschlagen.",
     "key-Progress/3DP-Failed to repair model.": "Fehler beim Reparieren des Modells.",
+    "key-Progress/3DP-Failed to split model.": "Failed to split model.",
     "key-Progress/3DP-Generated support successfully.": "Support erfolgreich generiert.",
     "key-Progress/3DP-Generating support... {{progress}}%": "Erstelle Support... {{progress}}%",
     "key-Progress/3DP-GrayUnderTheTopFloor": "Top Layer-Ansicht",
@@ -1705,6 +1708,8 @@
     "key-Progress/3DP-SingleLayer": "Einzel-Charakter-Ansicht",
     "key-Progress/3DP-Slice Failed": "Slice fehlgeschlagen",
     "key-Progress/3DP-Slice Failed reason": "Mögliche Gründe: 1. Die Slicing-Engine unterstützt Ihr System nicht, bitte überprüfen Sie, ob Ihr System unterstützt wird; 2. Abnormale Parametereinstellungen.",
+    "key-Progress/3DP-Split model successfully.": "key-Progress/3DP-Split model successfully.",
+    "key-Progress/3DP-Splitting model...": "key-Progress/3DP-Splitting model...",
     "key-Progress/Laser-Failed to load model.": "Laden des Modells fehlgeschlagen",
     "key-Progress/Laser-Loaded model successfully.": "Das Modell wurde erfolgreich geladen.",
     "key-Progress/Laser-Loading model...": "Modell wird geladen...",
@@ -2234,6 +2239,5 @@
     "key_menu_Quit": "Beenden",
     "key_menu_Services": "Dienstleistungen",
     "key_menu_Unhide": "Einblenden",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Umwandlung",
-    "material_no_category": "keine Kategorie"
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Umwandlung"
 }
