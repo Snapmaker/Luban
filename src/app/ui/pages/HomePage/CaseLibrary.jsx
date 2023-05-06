@@ -15,7 +15,7 @@ import { CaseConfigQuickStart } from './CaseConfig';
 import { renderModal } from '../../utils';
 import { DetailModalState } from '../../../constants/downloadManager';
 
-const Resources = (props) => {
+const CaseLibrary = (props) => {
     // useState
     const [canAccessInternet, setCanAccessInternet] = useState(false);
     const [showCaseResource, setShowCaseResource] = useState(false);
@@ -176,8 +176,8 @@ const Resources = (props) => {
     );
 };
 
-Resources.propTypes = {
+CaseLibrary.propTypes = {
     history: PropTypes.object
 };
 
-export default Resources;
+export default CaseLibrary;
