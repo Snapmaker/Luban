@@ -73,7 +73,7 @@ class ThreeModel extends BaseModel {
         super(modelInfo, modelGroup);
         const { width, height, processImageName } = modelInfo;
 
-        this.geometry = modelInfo.geometry || new THREE.PlaneGeometry(width, height) as unknown as THREE.BufferGeometry;
+        // this.geometry = modelInfo.geometry || new THREE.PlaneGeometry(width, height) as unknown as THREE.BufferGeometry;
         let material = modelInfo.material || new THREE.MeshStandardMaterial({ color: 0xe0e0e0, visible: false, side: THREE.DoubleSide });
 
         try {
@@ -114,6 +114,7 @@ class ThreeModel extends BaseModel {
         } catch (e) {
             log.warn('error', e);
         }
+
         if (modelInfo.geometry) {
             const clonedGeometry = modelInfo.geometry.clone();
             // share positions, normals, uvs, not geometry, so we can define colors for each geometry
@@ -298,7 +299,7 @@ class ThreeModel extends BaseModel {
 
     public ensureByteCountAttribute(): void {
         const count = this.meshObject.geometry.getAttribute('position').count;
-        const faceCount = count / 3;
+        const faceCount = Math.round(count / 3);
 
         let byteCountAttribute = this.meshObject.geometry.getAttribute('byte_count');
         if (!byteCountAttribute) {
