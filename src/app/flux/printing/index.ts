@@ -46,7 +46,7 @@ import workerManager from '../../lib/manager/workerManager';
 
 import { getCurrentHeadType } from '../../lib/url-utils';
 import { ModelEvents } from '../../models/events';
-import ModelGroup from '../../models/ModelGroup';
+import ModelGroup, { BrushType } from '../../models/ModelGroup';
 import PrimeTowerModel from '../../models/PrimeTowerModel';
 import ThreeGroup from '../../models/ThreeGroup';
 import ThreeModel from '../../models/ThreeModel';
@@ -313,12 +313,14 @@ const INITIAL_STATE = {
     primeTowerHeight: 0.1,
     isNewUser: true,
 
+    // brush
+    brushType: BrushType.SmartFillBrush,
+    meshColoringBrushMark: LEFT_EXTRUDER, // LEFT_EXTRUDER | RIGHT_EXTRUDER
     tmpSupportFaceMarks: {},
     supportOverhangAngle: 50,
     supportBrushStatus: 'add', // add | remove
 
-    meshColoringBrushMark: LEFT_EXTRUDER, // LEFT_EXTRUDER | RIGHT_EXTRUDER
-
+    // G-code
     gcodeEntity: {
         extruderLlineWidth0: 0,
         extruderLlineWidth: 0,
@@ -327,9 +329,12 @@ const INITIAL_STATE = {
         layerHeight0: 0,
         layerHeight: 0,
     },
+
+    // simpify
     simplifyType: 0, // 0: low-polygon, 1: length
     simplifyPercent: 80, // only for low polygon
     simplifyOriginModelInfo: {},
+
     // profile manager params type
     printingParamsType: 'basic',
     materialParamsType: 'basic',
@@ -474,14 +479,9 @@ export const actions = {
 
         const { toolHead } = getState().machine;
 
-        modelGroup.setDataChangedCallback(
-            () => {
-                dispatch(sceneActions.render());
-            },
-            height => {
-                dispatch(actions.updateState({ primeTowerHeight: height }));
-            }
-        );
+        modelGroup.setDataChangedCallback(() => {
+            dispatch(sceneActions.render());
+        });
 
         let { series } = getState().machine;
         series = getRealSeries(series);
@@ -4916,7 +4916,7 @@ export const actions = {
         }
     },
 
-    setSupportBrushRadius: radius => (dispatch, getState) => {
+    setSupportBrushRadius: (radius) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.setSupportBrushRadius(radius);
         dispatch(sceneActions.render());

@@ -30,34 +30,34 @@ import {
     Vector2,
     Vector3
 } from 'three';
-import { CONTAINED, INTERSECTED, NOT_INTERSECTED } from 'three-mesh-bvh';
 import type { ExtendedTriangle } from 'three-mesh-bvh';
+import { CONTAINED, INTERSECTED, NOT_INTERSECTED } from 'three-mesh-bvh';
 import { v4 as uuid } from 'uuid';
 
-import { EPSILON, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, SELECTEVENT } from '../constants';
-import i18n from '../lib/i18n';
-import log from '../lib/log';
-import { checkVector3NaN } from '../lib/numeric-utils';
-import { ModelInfo as SVGModelInfo, TMode, TSize } from './BaseModel';
-import SvgModel from './SvgModel';
-import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
-import ThreeModel, { BYTE_COUNT_COLOR_CLEAR_MASK } from './ThreeModel';
 import { polyUnion } from '../../shared/lib/clipper/cLipper-adapter';
 import { PolygonsUtils } from '../../shared/lib/math/PolygonsUtils';
+import { EPSILON, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, SELECTEVENT } from '../constants';
 import { THelperExtruderConfig, TSupportExtruderConfig } from '../constants/preset';
 import { bufferToPoint } from '../lib/buffer-utils';
+import i18n from '../lib/i18n';
+import log from '../lib/log';
 import workerManager, { WorkerEvents } from '../lib/manager/workerManager';
+import { checkVector3NaN } from '../lib/numeric-utils';
 import { calculateUvVector } from '../lib/threejs/ThreeStlCalculation';
 import ThreeUtils from '../three-extensions/ThreeUtils';
 import { emitUpdateScaleEvent } from '../ui/components/SMCanvas/TransformControls';
 import { IResult as TBrimResult } from '../workers/plateAdhesion/generateBrim';
 import { IResult as TRaftResult } from '../workers/plateAdhesion/generateRaft';
 import { IResult as TSkirtResult } from '../workers/plateAdhesion/generateSkirt';
+import { ModelInfo as SVGModelInfo, TMode, TSize } from './BaseModel';
 import { TPolygon } from './ClipperModel';
-import { ModelEvents } from './events';
 import PrimeTowerModel from './PrimeTowerModel';
+import SvgModel from './SvgModel';
+import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
 import ThreeGroup from './ThreeGroup';
-// import ConvexGeometry from '../three-extensions/ConvexGeometry';
+import ThreeModel, { BYTE_COUNT_COLOR_CLEAR_MASK } from './ThreeModel';
+import { ModelEvents } from './events';
+
 
 const CUSTOM_EVENTS = {
     UPDATE: { type: 'update' }
@@ -115,9 +115,14 @@ type TAdhesionConfig = {
     raftMargin: number;
 }
 
-enum BrushType {
+export enum BrushType {
     SphereBrush = 0,
     SmartFillBrush,
+}
+
+export interface SmartFillBrushOptions {
+    // angle in degree
+    angle: number;
 }
 
 
@@ -131,7 +136,6 @@ class ModelGroup extends EventEmitter {
     public primeTower: PrimeTowerModel;
     public materials: TMaterials;
     private groupsChildrenMap: Map<ThreeGroup, (string | ThreeModel)[]> = new Map();
-    private brushMesh: Mesh<SphereBufferGeometry, MeshStandardMaterial> = null;
     private sectionMesh: Mesh = null;
     private headType: THeadType;
     private clipboard: TModel[];
@@ -160,6 +164,13 @@ class ModelGroup extends EventEmitter {
 
     private helpersExtruderConfig: THelperExtruderConfig;
     private supportExtruderConfig: TSupportExtruderConfig;
+
+    // helper mesh
+    private brushType: BrushType = BrushType.SphereBrush;
+    private brushMesh: Mesh = null;
+    private brushOptions: SmartFillBrushOptions = {
+        angle: 5,
+    };
 
     public constructor(headType: THeadType) {
         super();
@@ -223,11 +234,8 @@ class ModelGroup extends EventEmitter {
         }
     }
 
-    public setDataChangedCallback(handler: () => void, update?: (height: number) => void) {
+    public setDataChangedCallback(handler: () => void): void {
         this.onDataChangedCallback = handler;
-        if (update) {
-            this.primeTowerHeightCallback = update;
-        }
     }
 
     public _getEmptyState() {
@@ -2565,7 +2573,7 @@ class ModelGroup extends EventEmitter {
             emissiveIntensity: 0.5
         });
         this.brushMesh = new Mesh(brushGeometry, brushMaterial);
-        this.brushMesh.name = 'brushMesh';
+        this.brushMesh.name = 'Brush Mesh';
         this.brushMesh.position.copy(position);
         this.object.parent.add(this.brushMesh);
     }
@@ -2588,7 +2596,7 @@ class ModelGroup extends EventEmitter {
 
                 const sphere = new Sphere();
                 sphere.center.copy(this.brushMesh.position).applyMatrix4(inverseMatrix);
-                sphere.radius = this.brushMesh.geometry.parameters.radius;
+                sphere.radius = (this.brushMesh.geometry as SphereBufferGeometry).parameters.radius;
 
                 const indices = [];
                 const tempVec = new Vector3();
@@ -3014,6 +3022,21 @@ class ModelGroup extends EventEmitter {
     }
 
     /**
+     * Set brush type.
+     */
+    public setBrushType(brushType: BrushType): void {
+        this.brushType = brushType;
+    }
+
+    /**
+     * Set Brush angle (Smart Fill)
+     */
+    public setSmartFillBrushAngle(angle: number): void {
+        const brushOptions: SmartFillBrushOptions = { angle };
+        this.brushOptions = brushOptions;
+    }
+
+    /**
      * Start mesh coloring.
      */
     public startMeshColoring(): void {
@@ -3094,17 +3117,11 @@ class ModelGroup extends EventEmitter {
             return;
         }
 
-        // TODO: Add brush type switch
-        let brushType: BrushType = BrushType.SphereBrush;
-        if (raycastResult) {
-            brushType = BrushType.SmartFillBrush;
-        }
-
         if (target) {
             const targetMesh = target.object as Mesh;
             const geometry = targetMesh.geometry as BufferGeometry;
 
-            switch (brushType) {
+            switch (this.brushType) {
                 case BrushType.SphereBrush: {
                     const bvh = geometry.boundsTree;
                     if (bvh) {
@@ -3113,7 +3130,7 @@ class ModelGroup extends EventEmitter {
 
                         const sphere = new Sphere();
                         sphere.center.copy(this.brushMesh.position).applyMatrix4(inverseMatrix);
-                        sphere.radius = this.brushMesh.geometry.parameters.radius;
+                        sphere.radius = (this.brushMesh.geometry as SphereBufferGeometry).parameters.radius;
 
                         const indices = [];
                         const tempVec = new Vector3();
@@ -3185,29 +3202,35 @@ class ModelGroup extends EventEmitter {
 
                     let index: number;
                     const normal = new Vector3();
+                    const currentNormal = new Vector3();
 
                     index = indices ? indices.getX(targetFaceIndex * 3 + 0) : targetFaceIndex * 3 + 0;
-                    const targetNormal = new Vector3().fromBufferAttribute(normalAttribute, index);
+                    const angle = this.brushOptions.angle;
 
                     // traverse neighboring faces
                     const queue: number[] = [targetFaceIndex];
                     const visited: Set<number> = new Set();
+
+                    targetFaces.push(targetFaceIndex);
+                    visited.add(targetFaceIndex);
                     while (queue.length > 0) {
                         const faceIndex = queue.shift();
-                        visited.add(faceIndex);
 
                         index = indices ? indices.getX(faceIndex * 3 + 0) : faceIndex * 3 + 0;
-                        normal.fromBufferAttribute(normalAttribute, index);
+                        currentNormal.fromBufferAttribute(normalAttribute, index);
 
-                        const angleRad = normal.angleTo(targetNormal);
-                        const angleDegree = angleRad * (180 / Math.PI);
+                        const neighborFaces = adjacentFaceGraph.getAdjacentFaces(faceIndex);
+                        for (const nextFaceIndex of neighborFaces) {
+                            if (!visited.has(nextFaceIndex)) {
+                                index = indices ? indices.getX(nextFaceIndex * 3 + 0) : nextFaceIndex * 3 + 0;
+                                normal.fromBufferAttribute(normalAttribute, index);
 
-                        if (angleDegree < 5) {
-                            targetFaces.push(faceIndex);
+                                const angleRad = normal.angleTo(currentNormal);
+                                const angleDegree = angleRad * (180 / Math.PI);
 
-                            const neighborFaces = adjacentFaceGraph.getAdjacentFaces(faceIndex);
-                            for (const nextFaceIndex of neighborFaces) {
-                                if (!visited.has(nextFaceIndex)) {
+                                if (angleDegree <= angle) {
+                                    targetFaces.push(nextFaceIndex);
+                                    visited.add(nextFaceIndex);
                                     queue.push(nextFaceIndex);
                                 }
                             }

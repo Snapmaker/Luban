@@ -7,6 +7,7 @@ import sceneLogic, { PrimeTowerSettings } from '../../scene/scene.logic';
 
 import baseActions from './actions-base';
 import { BYTE_COUNT_LEFT_EXTRUDER, BYTE_COUNT_RIGHT_EXTRUDER } from '../../models/ThreeModel';
+import { BrushType } from '../../models/ModelGroup';
 
 
 const render = () => (dispatch) => {
@@ -38,6 +39,28 @@ const setTransformMode = (value: string) => {
             transformMode: value
         }));
         dispatch(render());
+    };
+};
+
+/**
+ * Set brush type.
+ */
+const setBrushType = (brushType: BrushType) => {
+    return (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+
+        modelGroup.setBrushType(brushType);
+
+        dispatch(baseActions.updateState({
+            brushType
+        }));
+    };
+};
+
+const setSmartFillBrushAngle = (angle: number) => {
+    return (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.setSmartFillBrushAngle(angle);
     };
 };
 
@@ -304,6 +327,10 @@ const finalizeSceneSettings = (
 export default {
     // basic scene actions
     render,
+
+    // brush
+    setBrushType,
+    setSmartFillBrushAngle,
 
     // mesh coloring
     startMeshColoringMode,

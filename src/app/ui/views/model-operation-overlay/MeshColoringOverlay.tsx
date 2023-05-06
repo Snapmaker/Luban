@@ -1,3 +1,4 @@
+import { Radio } from 'antd';
 import classNames from 'classnames';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -8,6 +9,7 @@ import type { RootState } from '../../../flux/index.def';
 import { actions as printingActions } from '../../../flux/printing';
 import sceneActions from '../../../flux/printing/actions-scene';
 import i18n from '../../../lib/i18n';
+import { BrushType } from '../../../models/ModelGroup';
 import { Button } from '../../components/Buttons';
 import { NumberInput as Input } from '../../components/Input';
 import Slider from '../../components/Slider';
@@ -26,12 +28,37 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
     const dispatch = useDispatch();
 
     /**
-     * Brush size changed.
+     * Brush Type
      */
-    const [brushSize, setBrushSize] = useState(5); // unit: mm
+    const { brushType } = useSelector((state: RootState) => state.printing);
+    const onChangeBrushType = useCallback((newBrushType: BrushType) => {
+        dispatch(sceneActions.setBrushType(newBrushType));
+    }, [dispatch]);
+
+    // Brush angle (Smart Fill mode)
+    const [angle, setAngle] = useState(5);
+
+    // Brush size changed
+    const [brushSize, setBrushSize] = useState(3); // unit: mm
     useEffect(() => {
         dispatch(printingActions.setSupportBrushRadius(brushSize / 2));
     }, [dispatch, brushSize]);
+
+    const { modelGroup } = useSelector((state: RootState) => state.printing);
+    useEffect(() => {
+        if (brushType === BrushType.SmartFillBrush) {
+            const brushOptions = modelGroup.brushOptions;
+            setAngle(brushOptions.angle);
+            setBrushSize(1);
+        } else {
+            setBrushSize(3);
+        }
+    }, [brushType, modelGroup]);
+
+    const onChangeSmartFillAngle = useCallback((value: number) => {
+        setAngle(value);
+        dispatch(sceneActions.setSmartFillBrushAngle(value));
+    }, [dispatch]);
 
     // brush status
     const { meshColoringBrushMark } = useSelector((state: RootState) => state.printing);
@@ -137,30 +164,70 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
                     />
                 </div>
                 <div className="margin-top-10">
-                    <div>{i18n._('key-Printing/LeftBar/EditSupport-Brush Size')}</div>
-                    <div className={classNames(styles['overflow-visible'], 'margin-top-8 sm-flex justify-space-between')}>
-                        <Slider
-                            className="border-radius-2"
-                            value={brushSize}
-                            min={1}
-                            max={50}
-                            step={1}
-                            onChange={(value) => {
-                                setBrushSize(value);
-                            }}
-                        />
-                        <Input
-                            suffix="mm"
-                            size="small"
-                            min={1}
-                            max={50}
-                            value={brushSize}
-                            onChange={(value) => {
-                                setBrushSize(value);
-                            }}
-                        />
-                    </div>
+                    <p>Method</p>
+                    <Radio.Group
+                        value={brushType}
+                        onChange={(e) => onChangeBrushType(e.target.value)}
+                    >
+                        <Radio value={BrushType.SmartFillBrush}>Smart Fill</Radio>
+                        <Radio value={BrushType.SphereBrush}>Brush</Radio>
+                    </Radio.Group>
                 </div>
+                {brushType === BrushType.SmartFillBrush && (
+                    <div className="margin-top-10">
+                        <div>{i18n._('key-Printing/MeshEdit-Tolerance')}</div>
+                        <div className="margin-top-8 sm-flex justify-space-between">
+                            <Slider
+                                className="border-radius-2"
+                                value={angle}
+                                min={0}
+                                max={20}
+                                step={1}
+                                onChange={(value: number) => {
+                                    onChangeSmartFillAngle(value);
+                                }}
+                            />
+                            <Input
+                                suffix="°"
+                                size="small"
+                                min={0}
+                                max={20}
+                                value={angle}
+                                onChange={(value: number) => {
+                                    onChangeSmartFillAngle(value);
+                                }}
+                            />
+                        </div>
+                    </div>
+                )}
+                {/* Sphere Brush */}
+                {brushType === BrushType.SphereBrush && (
+                    <div className="margin-top-10">
+                        <div>{i18n._('key-Printing/LeftBar/EditSupport-Brush Size')}</div>
+                        <div className={classNames(styles['overflow-visible'], 'margin-top-8 sm-flex justify-space-between')}>
+                            <Slider
+                                className="border-radius-2"
+                                value={brushSize}
+                                min={1}
+                                max={50}
+                                step={1}
+                                onChange={(value) => {
+                                    setBrushSize(value);
+                                }}
+                            />
+                            <Input
+                                suffix="mm"
+                                size="small"
+                                min={1}
+                                max={50}
+                                value={brushSize}
+                                onChange={(value) => {
+                                    setBrushSize(value);
+                                }}
+                            />
+                        </div>
+                    </div>
+                )}
             </section>
             <footer className="sm-flex justify-space-between">
                 <Button

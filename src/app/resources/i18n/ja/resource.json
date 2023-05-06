@@ -1573,6 +1573,7 @@
     "key-Printing/MainToolBar-Materials": "フィラメント設定",
     "key-Printing/MainToolBar-Print Settings": "",
     "key-Printing/MeshColoring-Mesh Coloring": "",
+    "key-Printing/MeshEdit-Tolerance": "",
     "key-Printing/Modal-Backup Tip": "履歴データは、<1>バックアップフォルダ</1>に保存されます。",
     "key-Printing/No model(s).": "モデルが配置されていません。",
     "key-Printing/ObjectList-Object List": "オブジェクトリスト",
