@@ -7,13 +7,13 @@ import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
 import { actions as menuActions } from '../../../flux/appbar-menu';
 import type { RootState } from '../../../flux/index.def';
 import { actions as printingActions } from '../../../flux/printing';
+import { useMaterialPresetModel } from '../../../flux/printing/actions-preset';
 import sceneActions from '../../../flux/printing/actions-scene';
 import i18n from '../../../lib/i18n';
 import { BrushType } from '../../../models/ModelGroup';
 import { Button } from '../../components/Buttons';
 import { NumberInput as Input } from '../../components/Input';
 import Slider from '../../components/Slider';
-import SvgIcon from '../../components/SvgIcon';
 import styles from './styles.styl';
 
 interface MeshColoringOverlayProps {
@@ -38,7 +38,7 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
     // Brush angle (Smart Fill mode)
     const [angle, setAngle] = useState(5);
 
-    // Brush size changed
+    // Brush size
     const [brushSize, setBrushSize] = useState(3); // unit: mm
     useEffect(() => {
         dispatch(printingActions.setSupportBrushRadius(brushSize / 2));
@@ -56,19 +56,26 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
     }, [brushType, modelGroup]);
 
     const onChangeSmartFillAngle = useCallback((value: number) => {
+        // change both local state & redux state
         setAngle(value);
         dispatch(sceneActions.setSmartFillBrushAngle(value));
     }, [dispatch]);
 
-    // brush status
-    const { meshColoringBrushMark } = useSelector((state: RootState) => state.printing);
+    // brush stackId
+    const { brushStackId } = useSelector((state: RootState) => state.printing);
     const selectLeftExtruder = useCallback(() => {
-        dispatch(sceneActions.updateMeshColoringBrushMark(LEFT_EXTRUDER));
+        dispatch(sceneActions.setMeshStackId(LEFT_EXTRUDER));
+    }, [dispatch]);
+    const selectRightExtruder = useCallback(() => {
+        dispatch(sceneActions.setMeshStackId(RIGHT_EXTRUDER));
     }, [dispatch]);
 
-    const selectRightExtruder = useCallback(() => {
-        dispatch(sceneActions.updateMeshColoringBrushMark(RIGHT_EXTRUDER));
-    }, [dispatch]);
+    // brush color
+    const leftMaterialPresetModel = useMaterialPresetModel(LEFT_EXTRUDER);
+    const leftMaterialColor = (leftMaterialPresetModel?.settings.color.default_value || '#fff') as string;
+
+    const rightMaterialPresetModel = useMaterialPresetModel(RIGHT_EXTRUDER);
+    const rightMaterialColor = (rightMaterialPresetModel?.settings.color.default_value || '#fff') as string;
 
     /**
      * Cancel changes.
@@ -130,41 +137,71 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
     return (
         <div className={classNames(styles['edit-support'])}>
             <header className={classNames(styles['overlay-sub-title-font'])}>
-                <span>{i18n._('key-Printing/MeshColoring-Mesh Coloring')}</span>
+                <span>{i18n._('key-Printing/MeshEdit-Mesh Coloring')}</span>
             </header>
             <section>
-                <div className={classNames(styles['support-btn-switchs'])}>
-                    <SvgIcon
-                        name="SupportAdd"
-                        size={24}
-                        type={['static']}
-                        className={classNames(
-                            styles['support-btn-switch'], 'sm-tab', 'align-c',
-                            {
-                                [styles.active]: meshColoringBrushMark === LEFT_EXTRUDER
-                            }
-                        )}
-                        onClick={() => selectLeftExtruder()}
-                        spanText={i18n._('Left Extruder')}
-                        spanClassName={classNames(styles['action-title'])}
-                    />
-                    <SvgIcon
-                        name="SupportDelete"
-                        size={24}
-                        type={['static']}
-                        className={classNames(
-                            styles['support-btn-switch'], 'sm-tab', 'align-c',
-                            {
-                                [styles.active]: meshColoringBrushMark === RIGHT_EXTRUDER
-                            }
-                        )}
-                        onClick={() => selectRightExtruder()}
-                        spanText={i18n._('Right Extruder')}
-                        spanClassName={classNames(styles['action-title'])}
-                    />
+                <div className="margin-top-10">
+                    <div>{i18n._('key-Printing/MeshEdit-Color Select')}</div>
+                    <div className="margin-top-8 sm-flex justify-space-between">
+                        <Button
+                            type="default"
+                            width="120px"
+                            className={classNames(
+                                'height-32-button-with-border',
+                                'border-radius-8',
+                                {
+                                    'border-blue-2': brushStackId === LEFT_EXTRUDER,
+                                }
+                            )}
+                            onClick={selectLeftExtruder}
+                        >
+                            <span className="display-inline-block">
+                                <span
+                                    style={{
+                                        backgroundColor: leftMaterialColor,
+                                        verticalAlign: 'middle',
+                                    }}
+                                    className={classNames(
+                                        'display-inline-block width-16 height-16',
+                                        'border-radius-4 border-default-grey-1',
+                                        'margin-right-8',
+                                    )}
+                                />
+                                <span style={{ verticalAlign: 'middle' }}>{i18n._('Left')}</span>
+                            </span>
+                        </Button>
+                        <Button
+                            type="default"
+                            width="120px"
+                            className={classNames(
+                                'height-32-button-with-border',
+                                'border-radius-8',
+                                {
+                                    'border-blue-2': brushStackId === RIGHT_EXTRUDER,
+                                }
+                            )}
+                            onClick={selectRightExtruder}
+                        >
+                            <span className="display-inline-block">
+                                <span
+                                    style={{
+                                        backgroundColor: rightMaterialColor,
+                                        verticalAlign: 'middle',
+                                    }}
+                                    className={classNames(
+                                        'display-inline-block width-16 height-16',
+                                        'border-radius-4 border-default-grey-1',
+                                        'margin-right-8',
+                                    )}
+                                />
+                                <span style={{ verticalAlign: 'middle' }}>{i18n._('Right')}</span>
+                            </span>
+                        </Button>
+
+                    </div>
                 </div>
                 <div className="margin-top-10">
-                    <p>Method</p>
+                    <p>{i18n._('key-Printing/MeshEdit-Method')}</p>
                     <Radio.Group
                         value={brushType}
                         onChange={(e) => onChangeBrushType(e.target.value)}

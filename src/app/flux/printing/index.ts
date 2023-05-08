@@ -315,7 +315,7 @@ const INITIAL_STATE = {
 
     // brush
     brushType: BrushType.SmartFillBrush,
-    meshColoringBrushMark: LEFT_EXTRUDER, // LEFT_EXTRUDER | RIGHT_EXTRUDER
+    brushStackId: LEFT_EXTRUDER, // LEFT_EXTRUDER | RIGHT_EXTRUDER
     tmpSupportFaceMarks: {},
     supportOverhangAngle: 50,
     supportBrushStatus: 'add', // add | remove

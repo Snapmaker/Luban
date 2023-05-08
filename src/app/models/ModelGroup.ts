@@ -144,7 +144,6 @@ class ModelGroup extends EventEmitter {
     private selectedModelConvexMeshGroup: Group;
     private selectedToolPathModelIDs: string[];
     private onDataChangedCallback: () => void;
-    private primeTowerHeightCallback: (height: number) => void;
     private series: string;
     public materialPrintTemperature: number;
     private candidatePoints: {
@@ -166,7 +165,7 @@ class ModelGroup extends EventEmitter {
     private supportExtruderConfig: TSupportExtruderConfig;
 
     // helper mesh
-    private brushType: BrushType = BrushType.SphereBrush;
+    private brushType: BrushType = BrushType.SmartFillBrush;
     private brushMesh: Mesh = null;
     private brushOptions: SmartFillBrushOptions = {
         angle: 5,
@@ -3109,7 +3108,7 @@ class ModelGroup extends EventEmitter {
     /**
      * Apply brush, with extruder mark and corresponding color.
      */
-    public applyMeshColoringBrush(raycastResult, faceExtruderMark: number, color: Color): void {
+    public applyMeshColoringBrush(raycastResult: Intersection[], faceExtruderMark: number, color: Color): void {
         this.moveSupportBrush(raycastResult);
 
         const target = raycastResult.find((result) => result.object.userData.canSupport);
@@ -3117,147 +3116,157 @@ class ModelGroup extends EventEmitter {
             return;
         }
 
-        if (target) {
-            const targetMesh = target.object as Mesh;
-            const geometry = targetMesh.geometry as BufferGeometry;
+        switch (this.brushType) {
+            case BrushType.SphereBrush: {
+                this.applyMeshColoringBrushSphereBrush(target, faceExtruderMark, color);
+                break;
+            }
+            case BrushType.SmartFillBrush: {
+                this.applyMeshColoringBrushSmartFill(target, faceExtruderMark, color);
+                break;
+            }
+            default:
+                break;
+        }
+    }
 
-            switch (this.brushType) {
-                case BrushType.SphereBrush: {
-                    const bvh = geometry.boundsTree;
-                    if (bvh) {
-                        const inverseMatrix = new Matrix4();
-                        inverseMatrix.copy(targetMesh.matrixWorld).invert();
+    private applyMeshColoringBrushSphereBrush(intersection: Intersection, faceExtruderMark: number, color: Color): void {
+        const targetMesh = intersection.object as Mesh;
+        const geometry = targetMesh.geometry as BufferGeometry;
+        const bvh = geometry.boundsTree;
+        if (!bvh) {
+            return;
+        }
 
-                        const sphere = new Sphere();
-                        sphere.center.copy(this.brushMesh.position).applyMatrix4(inverseMatrix);
-                        sphere.radius = (this.brushMesh.geometry as SphereBufferGeometry).parameters.radius;
+        const inverseMatrix = new Matrix4();
+        inverseMatrix.copy(targetMesh.matrixWorld).invert();
 
-                        const indices = [];
-                        const tempVec = new Vector3();
-                        bvh.shapecast({
-                            intersectsBounds: (box) => {
-                                const intersects = sphere.intersectsBox(box);
-                                const { min, max } = box;
-                                if (intersects) {
-                                    for (let x = 0; x <= 1; x++) {
-                                        for (let y = 0; y <= 1; y++) {
-                                            for (let z = 0; z <= 1; z++) {
-                                                tempVec.set(
-                                                    x === 0 ? min.x : max.x,
-                                                    y === 0 ? min.y : max.y,
-                                                    z === 0 ? min.z : max.z
-                                                );
-                                                if (!sphere.containsPoint(tempVec)) {
-                                                    return INTERSECTED;
-                                                }
-                                            }
-                                        }
-                                    }
-                                    return CONTAINED;
+        const sphere = new Sphere();
+        sphere.center.copy(this.brushMesh.position).applyMatrix4(inverseMatrix);
+        sphere.radius = (this.brushMesh.geometry as SphereBufferGeometry).parameters.radius;
+
+        const indices = [];
+        const tempVec = new Vector3();
+        bvh.shapecast({
+            intersectsBounds: (box) => {
+                const intersects = sphere.intersectsBox(box);
+                const { min, max } = box;
+                if (intersects) {
+                    for (let x = 0; x <= 1; x++) {
+                        for (let y = 0; y <= 1; y++) {
+                            for (let z = 0; z <= 1; z++) {
+                                tempVec.set(
+                                    x === 0 ? min.x : max.x,
+                                    y === 0 ? min.y : max.y,
+                                    z === 0 ? min.z : max.z
+                                );
+                                if (!sphere.containsPoint(tempVec)) {
+                                    return INTERSECTED;
                                 }
-                                return NOT_INTERSECTED;
-                            },
-                            intersectsTriangle: (triangle: ExtendedTriangle, triangleIndex: number, contained: boolean) => {
-                                if (contained || triangle.intersectsSphere(sphere)) {
-                                    const i3 = triangleIndex * 3;
-                                    indices.push(i3, i3 + 1, i3 + 2);
-                                }
-                                return false;
-                            }
-                        });
-
-                        const colorAttr = geometry.getAttribute('color');
-                        const byteCountAttribute = geometry.getAttribute('byte_count');
-                        const indexAttr = geometry.index;
-                        for (let i = 0, l = indices.length; i < l; i++) {
-                            const index = indexAttr.getX(indices[i]);
-                            const faceIndex = Math.floor(index / 3);
-
-                            colorAttr.setXYZ(index, color.r, color.g, color.b);
-
-                            if (byteCountAttribute) {
-                                const byteCount = byteCountAttribute.getX(faceIndex);
-                                byteCountAttribute.setX(faceIndex, (byteCount & BYTE_COUNT_COLOR_CLEAR_MASK) | faceExtruderMark);
                             }
                         }
-                        colorAttr.needsUpdate = true;
-                        byteCountAttribute.needsUpdate = true;
                     }
-                    break;
+                    return CONTAINED;
                 }
-                case BrushType.SmartFillBrush: {
-                    const targetFaceIndex = target.faceIndex;
-                    if (targetFaceIndex < 0) {
-                        break;
-                    }
-
-                    const targetFaces = [];
-
-                    const indices = geometry.index;
-                    const colorAttr = geometry.getAttribute('color');
-                    const byteCountAttribute = geometry.getAttribute('byte_count');
-                    const normalAttribute = geometry.getAttribute('normal');
-
-                    const adjacentFaceGraph = geometry.adjcentFaceGraph;
-
-                    let index: number;
-                    const normal = new Vector3();
-                    const currentNormal = new Vector3();
-
-                    index = indices ? indices.getX(targetFaceIndex * 3 + 0) : targetFaceIndex * 3 + 0;
-                    const angle = this.brushOptions.angle;
-
-                    // traverse neighboring faces
-                    const queue: number[] = [targetFaceIndex];
-                    const visited: Set<number> = new Set();
-
-                    targetFaces.push(targetFaceIndex);
-                    visited.add(targetFaceIndex);
-                    while (queue.length > 0) {
-                        const faceIndex = queue.shift();
-
-                        index = indices ? indices.getX(faceIndex * 3 + 0) : faceIndex * 3 + 0;
-                        currentNormal.fromBufferAttribute(normalAttribute, index);
-
-                        const neighborFaces = adjacentFaceGraph.getAdjacentFaces(faceIndex);
-                        for (const nextFaceIndex of neighborFaces) {
-                            if (!visited.has(nextFaceIndex)) {
-                                index = indices ? indices.getX(nextFaceIndex * 3 + 0) : nextFaceIndex * 3 + 0;
-                                normal.fromBufferAttribute(normalAttribute, index);
-
-                                const angleRad = normal.angleTo(currentNormal);
-                                const angleDegree = angleRad * (180 / Math.PI);
-
-                                if (angleDegree <= angle) {
-                                    targetFaces.push(nextFaceIndex);
-                                    visited.add(nextFaceIndex);
-                                    queue.push(nextFaceIndex);
-                                }
-                            }
-                        }
-                    }
-
-                    // color target faces
-                    for (const faceIndex of targetFaces) {
-                        for (let k = 0; k < 3; k++) {
-                            index = indices ? indices.getX(faceIndex * 3 + k) : faceIndex * 3 + k;
-
-                            colorAttr.setXYZ(index, color.r, color.g, color.b);
-
-                            if (byteCountAttribute) {
-                                const byteCount = byteCountAttribute.getX(faceIndex);
-                                byteCountAttribute.setX(faceIndex, (byteCount & BYTE_COUNT_COLOR_CLEAR_MASK) | faceExtruderMark);
-                            }
-                        }
-                    }
-                    colorAttr.needsUpdate = true;
-                    byteCountAttribute.needsUpdate = true;
-                    break;
+                return NOT_INTERSECTED;
+            },
+            intersectsTriangle: (triangle: ExtendedTriangle, triangleIndex: number, contained: boolean) => {
+                if (contained || triangle.intersectsSphere(sphere)) {
+                    const i3 = triangleIndex * 3;
+                    indices.push(i3, i3 + 1, i3 + 2);
                 }
-                default:
-                    break;
+                return false;
+            }
+        });
+
+        const colorAttr = geometry.getAttribute('color');
+        const byteCountAttribute = geometry.getAttribute('byte_count');
+        const indexAttr = geometry.index;
+        for (let i = 0, l = indices.length; i < l; i++) {
+            const index = indexAttr.getX(indices[i]);
+            const faceIndex = Math.floor(index / 3);
+
+            colorAttr.setXYZ(index, color.r, color.g, color.b);
+
+            if (byteCountAttribute) {
+                const byteCount = byteCountAttribute.getX(faceIndex);
+                byteCountAttribute.setX(faceIndex, (byteCount & BYTE_COUNT_COLOR_CLEAR_MASK) | faceExtruderMark);
             }
         }
+        colorAttr.needsUpdate = true;
+        byteCountAttribute.needsUpdate = true;
+    }
+
+    private applyMeshColoringBrushSmartFill(intersection: Intersection, faceExtruderMark: number, color: Color): void {
+        const targetMesh = intersection.object as Mesh;
+        const geometry = targetMesh.geometry as BufferGeometry;
+
+        const targetFaceIndex = intersection.faceIndex;
+        if (targetFaceIndex < 0) {
+            return;
+        }
+
+        const targetFaces = [];
+
+        const indices = geometry.index;
+        const colorAttr = geometry.getAttribute('color');
+        const byteCountAttribute = geometry.getAttribute('byte_count');
+        const normalAttribute = geometry.getAttribute('normal');
+
+        const adjacentFaceGraph = geometry.adjcentFaceGraph;
+
+        let index: number;
+        const normal = new Vector3();
+        const currentNormal = new Vector3();
+
+        index = indices ? indices.getX(targetFaceIndex * 3 + 0) : targetFaceIndex * 3 + 0;
+        const angle = this.brushOptions.angle;
+
+        // traverse neighboring faces
+        const queue: number[] = [targetFaceIndex];
+        const visited: Set<number> = new Set();
+
+        targetFaces.push(targetFaceIndex);
+        visited.add(targetFaceIndex);
+        while (queue.length > 0) {
+            const faceIndex = queue.shift();
+
+            index = indices ? indices.getX(faceIndex * 3 + 0) : faceIndex * 3 + 0;
+            currentNormal.fromBufferAttribute(normalAttribute, index);
+
+            const neighborFaces = adjacentFaceGraph.getAdjacentFaces(faceIndex);
+            for (const nextFaceIndex of neighborFaces) {
+                if (!visited.has(nextFaceIndex)) {
+                    index = indices ? indices.getX(nextFaceIndex * 3 + 0) : nextFaceIndex * 3 + 0;
+                    normal.fromBufferAttribute(normalAttribute, index);
+
+                    const angleRad = normal.angleTo(currentNormal);
+                    const angleDegree = angleRad * (180 / Math.PI);
+
+                    if (angleDegree <= angle) {
+                        targetFaces.push(nextFaceIndex);
+                        visited.add(nextFaceIndex);
+                        queue.push(nextFaceIndex);
+                    }
+                }
+            }
+        }
+
+        // color target faces
+        for (const faceIndex of targetFaces) {
+            for (let k = 0; k < 3; k++) {
+                index = indices ? indices.getX(faceIndex * 3 + k) : faceIndex * 3 + k;
+
+                colorAttr.setXYZ(index, color.r, color.g, color.b);
+
+                if (byteCountAttribute) {
+                    const byteCount = byteCountAttribute.getX(faceIndex);
+                    byteCountAttribute.setX(faceIndex, (byteCount & BYTE_COUNT_COLOR_CLEAR_MASK) | faceExtruderMark);
+                }
+            }
+        }
+        colorAttr.needsUpdate = true;
+        byteCountAttribute.needsUpdate = true;
     }
 }
 

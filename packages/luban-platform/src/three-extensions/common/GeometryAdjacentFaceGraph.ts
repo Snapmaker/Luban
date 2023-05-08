@@ -30,7 +30,7 @@ class GeometryAdjacentFaceGraph {
         const vertexCount = indices ? indices.count : positions.count;
 
         // vertex hash to identify vertex
-        const tolerance = Math.max(1e-4, Number.EPSILON);
+        const tolerance = Math.max(1e-2, Number.EPSILON);
         const decimalShift = Math.log10(1 / tolerance);
         const shiftMultiplier = 10 ** decimalShift;
 
