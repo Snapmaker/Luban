@@ -137,7 +137,7 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
     return (
         <div className={classNames(styles['edit-support'])}>
             <header className={classNames(styles['overlay-sub-title-font'])}>
-                <span>{i18n._('key-Printing/MeshColoring-Mesh Coloring')}</span>
+                <span>{i18n._('key-Printing/MeshEdit-Mesh Coloring')}</span>
             </header>
             <section>
                 <div className="margin-top-10">
