@@ -49,12 +49,14 @@ const loadModel = (uploadPath: string) => {
                     );
                     // Send positions back to caller
                     const positions = geometry.getAttribute('position').array;
+                    const byteCountAttribute = geometry.getAttribute('byte_count');
                     // const uvs = geometry.getAttribute('uv')?.array || [];
                     // observer.next({ type: 'LOAD_MODEL_POSITIONS', positions, originalPosition, uvs });
                     observer.next({
                         type: 'LOAD_MODEL_POSITIONS',
                         positions,
                         originalPosition,
+                        byteCount: byteCountAttribute ? byteCountAttribute.array : null,
                     });
 
                     // Calculate convex of model

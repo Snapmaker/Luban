@@ -6,7 +6,7 @@ import { MaterialPresetModel, PresetModel } from '../../preset-model';
 import sceneLogic, { PrimeTowerSettings } from '../../scene/scene.logic';
 
 import baseActions from './actions-base';
-import { BYTE_COUNT_LEFT_EXTRUDER, BYTE_COUNT_RIGHT_EXTRUDER } from '../../models/ThreeModel';
+import ThreeModel, { BYTE_COUNT_LEFT_EXTRUDER, BYTE_COUNT_RIGHT_EXTRUDER } from '../../models/ThreeModel';
 import { BrushType } from '../../models/ModelGroup';
 
 
@@ -140,6 +140,11 @@ const applyMeshColoringBrush = (raycastResult) => {
     };
 };
 
+const getModelShellStackId = (model: ThreeModel): string => {
+    const useLeftExtruder = model.extruderConfig.shell === '0';
+    return useLeftExtruder ? LEFT_EXTRUDER : RIGHT_EXTRUDER;
+};
+
 /**
  * Return material preset model for model.
  *
@@ -161,6 +166,13 @@ const getModelShellMaterialPresetModel = (model) => {
 
 const applyPrintSettingsToModels = () => (dispatch, getState) => {
     const {
+        extruderLDefinition,
+        extruderRDefinition,
+
+        materialDefinitions,
+        defaultMaterialId,
+        defaultMaterialIdRight,
+
         qualityDefinitions,
         activePresetIds,
         modelGroup,
@@ -194,12 +206,38 @@ const applyPrintSettingsToModels = () => (dispatch, getState) => {
     // update parameters for each model
     if (leftPresetModel || rightPresetModel) {
         const globalSettings = leftPresetModel.settings;
-        modelGroup.getThreeModels().forEach((model) => {
-            const materialPresetModel = dispatch(getModelShellMaterialPresetModel(model));
-            const materialSettings = materialPresetModel.settings;
 
-            // update material color
-            model.updateMaterialColor(materialSettings.color.default_value);
+        const leftMaterialPresetModel = materialDefinitions.find((d) => d.definitionId === defaultMaterialId);
+        const rightMaterialPresetModel = materialDefinitions.find((d) => d.definitionId === defaultMaterialIdRight);
+
+        modelGroup.getThreeModels().forEach((model) => {
+            let lineWidth: number = extruderLDefinition.settings.machine_nozzle_size.default_value;
+
+            // Set color
+            if (model.isColored) {
+                const colors = [];
+                if (leftMaterialPresetModel) {
+                    colors.push(leftMaterialPresetModel.settings.color.default_value);
+                }
+                if (rightMaterialPresetModel) {
+                    colors.push(rightMaterialPresetModel.settings.color.default_value);
+                }
+
+                model.setExtruderColors(colors);
+            } else {
+                const shellStackId = getModelShellStackId(model);
+
+                lineWidth = shellStackId === LEFT_EXTRUDER
+                    ? extruderLDefinition.settings.machine_nozzle_size.default_value
+                    : extruderRDefinition.settings.machine_nozzle_size.default_value;
+
+                const materialPresetModel = dispatch(getModelShellMaterialPresetModel(model));
+                const materialSettings = materialPresetModel.settings;
+
+                // update material color
+                model.updateMaterialColor(materialSettings.color.default_value);
+            }
+
 
             const layerHeight = globalSettings.layer_height.default_value;
             const bottomThickness = globalSettings.bottom_thickness.default_value;
@@ -208,7 +246,7 @@ const applyPrintSettingsToModels = () => (dispatch, getState) => {
             const topLayers = Math.ceil(Math.round(topThickness / layerHeight));
 
             model.updateClipperConfig({
-                lineWidth: materialSettings.machine_nozzle_size.default_value,
+                lineWidth,
                 wallThickness: globalSettings.wall_thickness.default_value,
                 topLayers,
                 bottomLayers,
@@ -217,7 +255,6 @@ const applyPrintSettingsToModels = () => (dispatch, getState) => {
                 infillPattern: globalSettings.infill_pattern.default_value,
                 magicSpiralize: globalSettings.magic_spiralize.default_value,
             });
-            model.materialPrintTemperature = materialSettings.material_print_temperature.default_value;
         });
     }
 
