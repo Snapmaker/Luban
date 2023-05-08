@@ -169,7 +169,7 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
                     const { type } = data;
                     switch (type) {
                         case 'LOAD_MODEL_POSITIONS': {
-                            let { positions, originalPosition } = data;
+                            const { positions, originalPosition, byteCount } = data;
                             const bufferGeometry = new THREE.BufferGeometry();
                             const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
                             const material = new THREE.MeshPhongMaterial({
@@ -183,6 +183,10 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
                                 'position',
                                 modelPositionAttribute
                             );
+
+                            if (byteCount) {
+                                bufferGeometry.setAttribute('byte_count', new THREE.BufferAttribute(byteCount, 1));
+                            }
 
                             bufferGeometry.computeVertexNormals();
 
@@ -241,8 +245,6 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
                                 reject(new Error('Failed to load mesh'));
                                 // throw new Error('Failed to load mesh');
                             }
-                            positions = null;
-                            originalPosition = null;
                             break;
                         }
                         case 'LOAD_MODEL_CONVEX': {

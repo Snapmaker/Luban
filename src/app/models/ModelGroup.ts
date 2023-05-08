@@ -1873,7 +1873,6 @@ class ModelGroup extends EventEmitter {
                 modelInfo.transformation.positionZ = (modelLength + 1) * INDEXMARGIN;
             }
         }
-        console.log('modelInfo =', modelInfo);
 
         const model = this.newModel(modelInfo);
 
@@ -3041,14 +3040,14 @@ class ModelGroup extends EventEmitter {
     public startMeshColoring(): void {
         const models = this.getModelsAttachedSupport();
         for (const model of models) {
-            console.log('startMeshColoring, model =', model);
+            console.warn('startMeshColoring, model =', model);
             // Hide model support (its support mesh is the only child!)
             model.tmpSupportMesh = model.meshObject.children[0];
             model.meshObject.clear();
 
             // Ensure color and byte count attribute is present
-            model.ensureColorAttribute();
             model.ensureByteCountAttribute();
+            model.ensureColorAttribute();
 
             model.meshObject.geometry.computeBoundsTree();
             model.meshObject.geometry.computeAdjacentFaces();
@@ -3258,11 +3257,11 @@ class ModelGroup extends EventEmitter {
                 index = indices ? indices.getX(faceIndex * 3 + k) : faceIndex * 3 + k;
 
                 colorAttr.setXYZ(index, color.r, color.g, color.b);
+            }
 
-                if (byteCountAttribute) {
-                    const byteCount = byteCountAttribute.getX(faceIndex);
-                    byteCountAttribute.setX(faceIndex, (byteCount & BYTE_COUNT_COLOR_CLEAR_MASK) | faceExtruderMark);
-                }
+            if (byteCountAttribute) {
+                const byteCount = byteCountAttribute.getX(faceIndex);
+                byteCountAttribute.setX(faceIndex, (byteCount & BYTE_COUNT_COLOR_CLEAR_MASK) | faceExtruderMark);
             }
         }
         colorAttr.needsUpdate = true;
