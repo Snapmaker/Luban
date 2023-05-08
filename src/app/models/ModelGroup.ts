@@ -145,7 +145,6 @@ class ModelGroup extends EventEmitter {
     private selectedToolPathModelIDs: string[];
     private onDataChangedCallback: () => void;
     private series: string;
-    public materialPrintTemperature: number;
     private candidatePoints: {
         x: number;
         y: number;
