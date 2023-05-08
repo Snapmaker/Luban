@@ -89,14 +89,14 @@ const endMeshColoringMode = (shouldApplyChanges = false) => {
     };
 };
 
-const updateMeshColoringBrushMark = (mark: string) => {
+const setMeshStackId = (mark: string) => {
     return (dispatch) => {
         if (![LEFT_EXTRUDER, RIGHT_EXTRUDER].includes(mark)) {
             return;
         }
 
         dispatch(baseActions.updateState({
-            meshColoringBrushMark: mark
+            brushStackId: mark
         }));
     };
 };
@@ -117,23 +117,23 @@ const applyMeshColoringBrush = (raycastResult) => {
     return (dispatch, getState) => {
         const {
             modelGroup,
-            meshColoringBrushMark,
+            brushStackId,
 
             materialDefinitions,
             defaultMaterialId,
             defaultMaterialIdRight
         } = getState().printing;
 
-        const materialPresetId = meshColoringBrushMark === LEFT_EXTRUDER ? defaultMaterialId : defaultMaterialIdRight;
+        const materialPresetId = brushStackId === LEFT_EXTRUDER ? defaultMaterialId : defaultMaterialIdRight;
 
         const materialPresetModel = _getMaterialPresetModel(materialDefinitions, materialPresetId);
         const colorString = materialPresetModel.settings.color.default_value as string;
         const color = new Color(colorString);
 
         let faceExtruderMark = 0;
-        if (meshColoringBrushMark === LEFT_EXTRUDER) {
+        if (brushStackId === LEFT_EXTRUDER) {
             faceExtruderMark = BYTE_COUNT_LEFT_EXTRUDER;
-        } else if (meshColoringBrushMark === RIGHT_EXTRUDER) {
+        } else if (brushStackId === RIGHT_EXTRUDER) {
             faceExtruderMark = BYTE_COUNT_RIGHT_EXTRUDER;
         }
         modelGroup.applyMeshColoringBrush(raycastResult, faceExtruderMark, color);
@@ -335,7 +335,7 @@ export default {
     // mesh coloring
     startMeshColoringMode,
     endMeshColoringMode,
-    updateMeshColoringBrushMark,
+    setMeshStackId,
     applyMeshColoringBrush,
 
     // print settings -> scene
