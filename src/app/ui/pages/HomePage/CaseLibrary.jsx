@@ -146,9 +146,9 @@ const CaseLibrary = (props) => {
                                             <div className={styles.imgWrapper}>
                                                 <img className={styles['case-img']} src={caseItem.imgSrc} alt="" />
                                                 <div className={classNames(styles.caseText)}>
-                                                    <div className={classNames(styles['case-author'])}>
+                                                    {/* <div className={classNames(styles['case-author'])}>
                                                         @{i18n._(caseItem.author)}
-                                                    </div>
+                                                    </div> */}
                                                     <div className={classNames(styles['case-title'])}>
                                                         {i18n._(caseItem.title)}
                                                     </div>
