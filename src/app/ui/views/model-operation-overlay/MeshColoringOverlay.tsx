@@ -36,10 +36,10 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
     }, [dispatch]);
 
     // Brush angle (Smart Fill mode)
-    const [angle, setAngle] = useState(5);
+    const [angle, setAngle] = useState(15);
 
     // Brush size
-    const [brushSize, setBrushSize] = useState(3); // unit: mm
+    const [brushSize, setBrushSize] = useState(10); // unit: mm
     useEffect(() => {
         dispatch(printingActions.setSupportBrushRadius(brushSize / 2));
     }, [dispatch, brushSize]);
@@ -210,7 +210,7 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
                         <Radio value={BrushType.SphereBrush}>Brush</Radio>
                     </Radio.Group>
                 </div>
-                {brushType === BrushType.SmartFillBrush && (
+                {[BrushType.SmartFillBrush, BrushType.SphereBrush].includes(brushType) && (
                     <div className="margin-top-10">
                         <div>{i18n._('key-Printing/MeshEdit-Tolerance')}</div>
                         <div className="margin-top-8 sm-flex justify-space-between">
@@ -218,7 +218,7 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
                                 className="border-radius-2"
                                 value={angle}
                                 min={0}
-                                max={20}
+                                max={90}
                                 step={1}
                                 onChange={(value: number) => {
                                     onChangeSmartFillAngle(value);
@@ -228,7 +228,7 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
                                 suffix="°"
                                 size="small"
                                 min={0}
-                                max={20}
+                                max={90}
                                 value={angle}
                                 onChange={(value: number) => {
                                     onChangeSmartFillAngle(value);
