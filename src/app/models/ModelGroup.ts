@@ -3040,6 +3040,7 @@ class ModelGroup extends EventEmitter {
         const models = this.getModelsAttachedSupport();
         for (const model of models) {
             console.warn('startMeshColoring, model =', model);
+
             // Hide model support (its support mesh is the only child!)
             model.tmpSupportMesh = model.meshObject.children[0];
             model.meshObject.clear();
@@ -3195,37 +3196,97 @@ class ModelGroup extends EventEmitter {
         byteCountAttribute.needsUpdate = true;
     }
 
-    private applyMeshColoringBrushSmartFill(intersection: Intersection, faceExtruderMark: number, color: Color): void {
-        const targetMesh = intersection.object as Mesh;
-        const geometry = targetMesh.geometry as BufferGeometry;
+    private getFacesInSphere(mesh: Mesh, faceIndex: number, radius: number): number[] {
+        const targetFaces = [faceIndex];
 
-        const targetFaceIndex = intersection.faceIndex;
-        if (targetFaceIndex < 0) {
-            return;
+        const geometry = mesh.geometry as BufferGeometry;
+        const indices = geometry.index;
+        const normalAttribute = geometry.getAttribute('normal');
+        const bvh = geometry.boundsTree;
+        if (!bvh) {
+            log.warn('boundsTree was not built, ignored.');
+            return targetFaces;
         }
 
-        const targetFaces = [];
+        const inverseMatrix = new Matrix4();
+        inverseMatrix.copy(mesh.matrixWorld).invert();
 
+        const sphere = new Sphere();
+        sphere.center.copy(this.brushMesh.position).applyMatrix4(inverseMatrix);
+        sphere.radius = radius;
+
+        let index: number;
+        const normal = new Vector3();
+        const point = new Vector3();
+
+        index = indices ? indices.getX(faceIndex * 3 + 0) : faceIndex * 3 + 0;
+        const initialNormal = new Vector3().fromBufferAttribute(normalAttribute, index);
+
+        bvh.shapecast({
+            intersectsBounds: (box) => {
+                const intersects = sphere.intersectsBox(box);
+                const { min, max } = box;
+                if (intersects) {
+                    for (let x = 0; x <= 1; x++) {
+                        for (let y = 0; y <= 1; y++) {
+                            for (let z = 0; z <= 1; z++) {
+                                point.set(
+                                    x === 0 ? min.x : max.x,
+                                    y === 0 ? min.y : max.y,
+                                    z === 0 ? min.z : max.z
+                                );
+                                if (!sphere.containsPoint(point)) {
+                                    return INTERSECTED;
+                                }
+                            }
+                        }
+                    }
+                    return CONTAINED;
+                }
+                return NOT_INTERSECTED;
+            },
+            intersectsTriangle: (triangle: ExtendedTriangle, triangleIndex: number, contained: boolean) => {
+                if (contained || triangle.intersectsSphere(sphere)) {
+                    index = indices ? indices.getX(triangleIndex * 3) : triangleIndex * 3;
+                    normal.fromBufferAttribute(normalAttribute, index);
+
+                    const dot = normal.dot(initialNormal);
+                    if (dot >= 0) {
+                        targetFaces.push(triangleIndex);
+                    }
+                }
+                return false;
+            }
+        });
+
+        return targetFaces;
+    }
+
+    private getFacesConnectedSmoothly(mesh: Mesh, initialFaceIndices: number[], angle: number = 5): number[] {
+        const targetFaces = [...initialFaceIndices];
+
+        const geometry = mesh.geometry as BufferGeometry;
         const indices = geometry.index;
-        const colorAttr = geometry.getAttribute('color');
-        const byteCountAttribute = geometry.getAttribute('byte_count');
         const normalAttribute = geometry.getAttribute('normal');
 
         const adjacentFaceGraph = geometry.adjcentFaceGraph;
+        if (!adjacentFaceGraph) {
+            log.warn('adjacent face graph was not built, ignored.');
+            return targetFaces;
+        }
 
         let index: number;
         const normal = new Vector3();
         const currentNormal = new Vector3();
 
-        index = indices ? indices.getX(targetFaceIndex * 3 + 0) : targetFaceIndex * 3 + 0;
-        const angle = this.brushOptions.angle;
-
         // traverse neighboring faces
-        const queue: number[] = [targetFaceIndex];
+        const queue: number[] = [...initialFaceIndices];
         const visited: Set<number> = new Set();
 
-        targetFaces.push(targetFaceIndex);
-        visited.add(targetFaceIndex);
+        for (const faceIndex of queue) {
+            visited.add(faceIndex);
+        }
+
         while (queue.length > 0) {
             const faceIndex = queue.shift();
 
@@ -3250,7 +3311,32 @@ class ModelGroup extends EventEmitter {
             }
         }
 
+        return targetFaces;
+    }
+
+    private applyMeshColoringBrushSmartFill(intersection: Intersection, faceExtruderMark: number, color: Color): void {
+        const targetMesh = intersection.object as Mesh;
+        const geometry = targetMesh.geometry as BufferGeometry;
+
+        const targetFaceIndex = intersection.faceIndex;
+        if (targetFaceIndex < 0) {
+            return;
+        }
+
+        const angle = this.brushOptions.angle;
+
+        // output
+        // const targetFaces = [];
+
+        const indices = geometry.index;
+        const colorAttr = geometry.getAttribute('color');
+        const byteCountAttribute = geometry.getAttribute('byte_count');
+
+        const nearbyFaces = this.getFacesInSphere(targetMesh, targetFaceIndex, 0.2);
+        const targetFaces = this.getFacesConnectedSmoothly(targetMesh, nearbyFaces, angle);
+
         // color target faces
+        let index: number;
         for (const faceIndex of targetFaces) {
             for (let k = 0; k < 3; k++) {
                 index = indices ? indices.getX(faceIndex * 3 + k) : faceIndex * 3 + k;
