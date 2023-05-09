@@ -1472,6 +1472,7 @@
     "key-Modal/Common-Complete": "Complete",
     "key-Modal/Common-Confirm": "Confirm",
     "key-Modal/Common-Do not ask me again": "",
+    "key-Modal/Common-Done": "",
     "key-Modal/Common-Ignore": "",
     "key-Modal/Common-Next": "Next",
     "key-Modal/Common-OK": "ОК",
@@ -1584,6 +1585,10 @@
     "key-Printing/LeftBar/Support-Yes": "",
     "key-Printing/MainToolBar-Materials": "",
     "key-Printing/MainToolBar-Print Settings": "",
+    "key-Printing/MeshEdit-Color Select": "",
+    "key-Printing/MeshEdit-Mesh Coloring": "",
+    "key-Printing/MeshEdit-Method": "",
+    "key-Printing/MeshEdit-Tolerance": "",
     "key-Printing/Modal-Backup Tip": "Your historical data is backed up in the <1>here</1> folder.",
     "key-Printing/No model(s).": "",
     "key-Printing/ObjectList-Object List": "Object List",
@@ -1701,6 +1706,7 @@
     "key-Progress/3DP-Failed to calculate Rotation.": "Failed to calculate Rotation.",
     "key-Progress/3DP-Failed to generate support.": "",
     "key-Progress/3DP-Failed to load model.": "Failed to load model.",
+    "key-Progress/3DP-Failed to prepare mesh painting.": "",
     "key-Progress/3DP-Failed to preview G-code.": "Failed to preview G-code.",
     "key-Progress/3DP-Failed to repair model.": "",
     "key-Progress/3DP-Failed to split model.": "",
@@ -1710,6 +1716,8 @@
     "key-Progress/3DP-Loaded model successfully.": "Loaded model successfully.",
     "key-Progress/3DP-Loading model...{{progress}}%": "Loading model...{{progress}}%",
     "key-Progress/3DP-Ordinary": "",
+    "key-Progress/3DP-Prepare successfully.": "",
+    "key-Progress/3DP-Preparing Mesh Painting...": "",
     "key-Progress/3DP-Previewed G-code successfully.": "Previewed G-code successfully.",
     "key-Progress/3DP-Previewing G-code...{{progress}}%": "Previewing G-code...{{progress}}%",
     "key-Progress/3DP-Repair model successfully.": "",
@@ -2250,6 +2258,5 @@
     "key_menu_Quit": "Quit",
     "key_menu_Services": "Services",
     "key_menu_Unhide": "Unhide",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Transformation",
-    "material_no_category": ""
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Transformation"
 }

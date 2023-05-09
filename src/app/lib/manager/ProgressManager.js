@@ -59,7 +59,8 @@ export const STEP_STAGE = {
     PRINTING_SIMPLIFY_MODEL: 48,
     PRINTING_SIMPLIFY_MODEL_SUCCESS: 49,
     PRINTING_SIMPLIFY_MODEL_FAILED: 50,
-    PRINTING_REPAIRING_MODEL: 51
+    PRINTING_REPAIRING_MODEL: 51,
+    PRINTING_MESH_COLORING_PREPARE_SUCCESS: 10160,
 };
 
 export const PROCESS_STAGE = {
@@ -85,6 +86,7 @@ export const PROCESS_STAGE = {
     PRINTING_SIMPLIFY_MODEL: 13,
     PRINTING_REPAIRING_MODEL: 14,
     PRINTING_SPLIT_MODEL: 1015,
+    PRINTING_MESH_COLORING_PREPARE: 1016,
 };
 
 const _STATE = {
@@ -241,6 +243,20 @@ class ProgressStatesManager {
             'key-Progress/3DP-Calculating Rotation',
             'key-Progress/3DP-Calculated Rotation successfully.',
             'key-Progress/3DP-Failed to calculate Rotation.');
+
+        // Mesh coloring prepare
+        this.push(PROCESS_STAGE.PRINTING_MESH_COLORING_PREPARE,
+            [
+                {
+                    stageID: STEP_STAGE.PRINTING_MESH_COLORING_PREPARE_SUCCESS,
+                    percent: 1
+                }
+            ],
+            'key-Progress/3DP-Preparing Mesh Painting...',
+            'key-Progress/3DP-Prepare successfully.',
+            'key-Progress/3DP-Failed to prepare mesh painting.');
+
+        // Generate support
         this.push(PROCESS_STAGE.PRINTING_GENERATE_SUPPORT,
             [
                 {

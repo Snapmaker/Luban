@@ -22,7 +22,8 @@ const STATE = {
     PAN: 2,
     TRANSFORM: 3,
     SUPPORT: 4,
-    ROTATE_PLACEMENT: 5
+    ROTATE_PLACEMENT: 5,
+    MESH_COLORING: 6,
 };
 
 // Events sent by Controls
@@ -214,7 +215,7 @@ class Controls extends EventEmitter {
 
     bindEventListeners() {
         this.domElement.addEventListener('mousedown', this.onMouseDown, false);
-        this.domElement.addEventListener('mousemove', this.onMouseHover, false);
+        this.domElement.addEventListener('mousemove', this.onMouseMove, false);
         this.domElement.addEventListener('wheel', this.onMouseWheel, false);
         this.domElement.addEventListener('click', this.onClick, false);
 
@@ -294,32 +295,37 @@ class Controls extends EventEmitter {
         // Prevent the browser from scrolling.
         // event.preventDefault();
         this.mouseDownPosition = this.getMouseCoord(event);
-        // mousedown on support mode
-        this.prevState = null;
-        if (this.state === STATE.SUPPORT) {
-            this.prevState = STATE.SUPPORT;
-            // if (event.button === THREE.MOUSE.RIGHT) {
-            //     this.stopSupportMode();
-            // }
-            // return;
-        }
+        // this.prevState = null;
         if (this.state === STATE.ROTATE_PLACEMENT) {
             this.prevState = STATE.ROTATE_PLACEMENT;
         }
 
         switch (event.button) {
             case THREE.MOUSE.LEFT: {
+                // Support
                 if (this.state === STATE.SUPPORT) {
                     const coord = this.getMouseCoord(event);
                     this.ray.setFromCamera(coord, this.camera);
                     this.ray.firstHitOnly = true;
                     const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
                     if (res.length) {
-                        this.state = STATE.SUPPORT;
-                        this.supportActions.applyBrush(res);
+                        this.supportActions.applySupportBrush(res);
                         break;
                     }
                 }
+
+                // Mesh coloring
+                if (this.state === STATE.MESH_COLORING) {
+                    const coord = this.getMouseCoord(event);
+                    this.ray.setFromCamera(coord, this.camera);
+                    this.ray.firstHitOnly = true;
+                    const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
+                    if (res.length) {
+                        this.supportActions.applyMeshColoringBrush(res);
+                        break;
+                    }
+                }
+
                 // Transform on selected object
                 if (this.selectedGroup && this.selectedGroup.children.length > 0) {
                     const coord = this.getMouseCoord(event);
@@ -369,25 +375,24 @@ class Controls extends EventEmitter {
         }
     };
 
-    onMouseHover = (event) => {
+    onMouseMove = (event) => {
         const coord = this.getMouseCoord(event);
         this.pointer.x = coord.x;
         this.pointer.y = coord.y;
 
         event.preventDefault();
         // model move with mouse no matter mousedown
-        if (this.state === STATE.SUPPORT) {
+        if (this.state === STATE.SUPPORT || this.state === STATE.MESH_COLORING) {
             this.ray.setFromCamera(coord, this.camera);
             this.ray.firstHitOnly = true;
             const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
             if (res.length) {
-                this.supportActions.moveSupport(res);
+                this.supportActions.moveSupportBrush(res);
             }
-            // const mousePosition = new THREE.Vector3();
-            // this.ray.ray.intersectPlane(this.horizontalPlane, mousePosition);
             this.emit(EVENTS.UPDATE);
             return;
         }
+
         if (this.state === STATE.ROTATE_PLACEMENT) {
             // Let transform control deal with mouse move
             this.transformControl.onMouseHover(coord);
@@ -428,12 +433,26 @@ class Controls extends EventEmitter {
                     this.ray.firstHitOnly = true;
                     const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
                     if (res.length) {
-                        this.supportActions.applyBrush(res);
+                        this.supportActions.applySupportBrush(res);
                     }
                     this.emit(EVENTS.UPDATE);
                     event.stopPropagation();
                 }
                 break;
+            case STATE.MESH_COLORING: {
+                if (this.isMouseDown) {
+                    const coord = this.getMouseCoord(event);
+                    this.ray.setFromCamera(coord, this.camera);
+                    this.ray.firstHitOnly = true;
+                    const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
+                    if (res.length) {
+                        this.supportActions.applyMeshColoringBrush(res);
+                    }
+                    this.emit(EVENTS.UPDATE);
+                    event.stopPropagation();
+                }
+                break;
+            }
             default:
                 break;
         }
@@ -472,6 +491,10 @@ class Controls extends EventEmitter {
             case STATE.SUPPORT:
                 this.prevState = STATE.SUPPORT;
                 break;
+            case STATE.MESH_COLORING: {
+                this.prevState = STATE.MESH_COLORING;
+                break;
+            }
             default:
                 break;
         }
@@ -624,7 +647,8 @@ class Controls extends EventEmitter {
     }
 
     onMouseWheel = (event) => {
-        if (this.state === STATE.NONE || this.state === STATE.ROTATE_PLACEMENT || this.state === STATE.SUPPORT) {
+        const stateListAllowWheel = [STATE.NONE, STATE.ROTATE_PLACEMENT, STATE.SUPPORT, STATE.MESH_COLORING];
+        if (stateListAllowWheel.includes(this.state)) {
             event.preventDefault();
             event.stopPropagation();
 
@@ -778,9 +802,20 @@ class Controls extends EventEmitter {
 
     startSupportMode() {
         this.state = STATE.SUPPORT;
+        this.prevState = STATE.SUPPORT;
     }
 
     stopSupportMode() {
+        this.state = STATE.NONE;
+        this.prevState = STATE.NONE;
+    }
+
+    startMeshColoringMode() {
+        this.state = STATE.MESH_COLORING;
+        this.prevState = STATE.MESH_COLORING;
+    }
+
+    stopMeshColoringMode() {
         this.state = STATE.NONE;
         this.prevState = STATE.NONE;
     }
@@ -874,7 +909,7 @@ class Controls extends EventEmitter {
 
     dispose() {
         this.domElement.removeEventListener('mousedown', this.onMouseDown, false);
-        this.domElement.removeEventListener('mousemove', this.onMouseHover, false);
+        this.domElement.removeEventListener('mousemove', this.onMouseMove, false);
         this.domElement.removeEventListener('wheel', this.onMouseWheel, false);
 
         document.removeEventListener('mousemove', this.onDocumentMouseMove, false);

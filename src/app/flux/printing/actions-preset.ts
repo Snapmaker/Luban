@@ -1,10 +1,11 @@
 import { AnyAction } from 'redux';
 import { ThunkAction } from 'redux-thunk';
+import { useSelector } from 'react-redux';
 
 import { timestamp } from '../../../shared/lib/random-utils';
-import { PresetModel, QualityPresetModel } from '../../preset-model';
+import { MaterialPresetModel, PresetModel, QualityPresetModel } from '../../preset-model';
 import type { RootState } from '../index.def';
-import { KEY_DEFAULT_CATEGORY_CUSTOM } from '../../constants';
+import { KEY_DEFAULT_CATEGORY_CUSTOM, LEFT_EXTRUDER } from '../../constants';
 import definitionManager from '../manager/DefinitionManager';
 import baseActions from './actions-base';
 
@@ -69,4 +70,23 @@ export const createQualityPresetAction = (qualityPresetModel: QualityPresetModel
 
         return newPresetModel;
     };
+};
+
+
+// TODO: Move to other place
+export const useMaterialPresetModel = (stackId: string): MaterialPresetModel | null => {
+    const {
+        materialDefinitions,
+        defaultMaterialId,
+        defaultMaterialIdRight
+    } = useSelector((state: RootState) => state.printing);
+
+    const presetId = stackId === LEFT_EXTRUDER ? defaultMaterialId : defaultMaterialIdRight;
+
+    const index = materialDefinitions.findIndex((m: MaterialPresetModel) => m.definitionId === presetId);
+    if (index >= 0) {
+        return materialDefinitions[index];
+    } else {
+        return null;
+    }
 };

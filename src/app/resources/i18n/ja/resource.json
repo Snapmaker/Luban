@@ -1472,6 +1472,7 @@
     "key-Modal/Common-Complete": "完了",
     "key-Modal/Common-Confirm": "確認",
     "key-Modal/Common-Do not ask me again": "二度と聞かないで",
+    "key-Modal/Common-Done": "",
     "key-Modal/Common-Ignore": "無視",
     "key-Modal/Common-Next": "次へ",
     "key-Modal/Common-OK": "OK",
@@ -1584,6 +1585,10 @@
     "key-Printing/LeftBar/Support-Yes": "はい",
     "key-Printing/MainToolBar-Materials": "フィラメント設定",
     "key-Printing/MainToolBar-Print Settings": "",
+    "key-Printing/MeshEdit-Color Select": "",
+    "key-Printing/MeshEdit-Mesh Coloring": "",
+    "key-Printing/MeshEdit-Method": "",
+    "key-Printing/MeshEdit-Tolerance": "",
     "key-Printing/Modal-Backup Tip": "履歴データは、<1>バックアップフォルダ</1>に保存されます。",
     "key-Printing/No model(s).": "モデルが配置されていません。",
     "key-Printing/ObjectList-Object List": "オブジェクトリスト",
@@ -1701,6 +1706,7 @@
     "key-Progress/3DP-Failed to calculate Rotation.": "回転の計算ができませんでした。",
     "key-Progress/3DP-Failed to generate support.": "サポートの生成に失敗しました。",
     "key-Progress/3DP-Failed to load model.": "モデルをロードできませんでした。",
+    "key-Progress/3DP-Failed to prepare mesh painting.": "",
     "key-Progress/3DP-Failed to preview G-code.": "Gコードをプレビューできませんでした。",
     "key-Progress/3DP-Failed to repair model.": "モデルの修復に失敗しました。",
     "key-Progress/3DP-Failed to split model.": "",
@@ -1710,6 +1716,8 @@
     "key-Progress/3DP-Loaded model successfully.": "モデルが正しくロードされました。",
     "key-Progress/3DP-Loading model...{{progress}}%": "モデルをロード中...{{progress}}%",
     "key-Progress/3DP-Ordinary": "グローバルビュー",
+    "key-Progress/3DP-Prepare successfully.": "",
+    "key-Progress/3DP-Preparing Mesh Painting...": "",
     "key-Progress/3DP-Previewed G-code successfully.": "Gコードが正しくプレビューされました。",
     "key-Progress/3DP-Previewing G-code...{{progress}}%": "Gコードをプレビュー中...{{progress}}%",
     "key-Progress/3DP-Repair model successfully.": "モデルは正常に修復されました",
@@ -2250,6 +2258,5 @@
     "key_menu_Quit": "終了",
     "key_menu_Services": "サービス",
     "key_menu_Unhide": "表示",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "変換",
-    "material_no_category": "material_no_category"
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "変換"
 }

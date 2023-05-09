@@ -554,6 +554,8 @@ class AppLayout extends PureComponent {
                 format = filePath.split('.').pop();
             }
             const outputObject = new Group();
+
+            // Add all visible objects
             const modelGroup = this.props.modelGroup;
             modelGroup.models.forEach(item => {
                 if (item.visible) {
@@ -561,7 +563,8 @@ class AppLayout extends PureComponent {
                     outputObject.add(tempMeshObject);
                 }
             });
-            outputObject.add(cloneDeep(modelGroup.selectedGroup));
+            // outputObject.add(cloneDeep(modelGroup.selectedGroup));
+
             const output = new ModelExporter().parse(outputObject, format, isBinary);
             if (!output) {
                 // export error

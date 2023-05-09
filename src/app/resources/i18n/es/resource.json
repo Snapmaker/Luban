@@ -1472,6 +1472,7 @@
     "key-Modal/Common-Complete": "Completar",
     "key-Modal/Common-Confirm": "Confirmar",
     "key-Modal/Common-Do not ask me again": "",
+    "key-Modal/Common-Done": "",
     "key-Modal/Common-Ignore": "",
     "key-Modal/Common-Next": "Siguiente",
     "key-Modal/Common-OK": "Aceptar",
@@ -1584,6 +1585,10 @@
     "key-Printing/LeftBar/Support-Yes": "",
     "key-Printing/MainToolBar-Materials": "",
     "key-Printing/MainToolBar-Print Settings": "",
+    "key-Printing/MeshEdit-Color Select": "",
+    "key-Printing/MeshEdit-Mesh Coloring": "",
+    "key-Printing/MeshEdit-Method": "",
+    "key-Printing/MeshEdit-Tolerance": "",
     "key-Printing/Modal-Backup Tip": "Your historical data is backed up in the <1>here</1> folder.",
     "key-Printing/No model(s).": "",
     "key-Printing/ObjectList-Object List": "Lista de objetos",
@@ -1701,6 +1706,7 @@
     "key-Progress/3DP-Failed to calculate Rotation.": "Fallo al calcular de rotación.",
     "key-Progress/3DP-Failed to generate support.": "",
     "key-Progress/3DP-Failed to load model.": "Fallo al cargar modelo.",
+    "key-Progress/3DP-Failed to prepare mesh painting.": "",
     "key-Progress/3DP-Failed to preview G-code.": "Fallo al previsualizar el código G.",
     "key-Progress/3DP-Failed to repair model.": "",
     "key-Progress/3DP-Failed to split model.": "",
@@ -1710,6 +1716,8 @@
     "key-Progress/3DP-Loaded model successfully.": "Modelo cargado con éxito.",
     "key-Progress/3DP-Loading model...{{progress}}%": "Cargando modelo...{{progress}}%",
     "key-Progress/3DP-Ordinary": "",
+    "key-Progress/3DP-Prepare successfully.": "",
+    "key-Progress/3DP-Preparing Mesh Painting...": "",
     "key-Progress/3DP-Previewed G-code successfully.": "Código G previsualizado con éxito.",
     "key-Progress/3DP-Previewing G-code...{{progress}}%": "Previsualizando código G...{{progress}}%",
     "key-Progress/3DP-Repair model successfully.": "",
@@ -2250,6 +2258,5 @@
     "key_menu_Quit": "Salir",
     "key_menu_Services": "Servicios",
     "key_menu_Unhide": "Mostrar",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Transformación",
-    "material_no_category": ""
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Transformación"
 }

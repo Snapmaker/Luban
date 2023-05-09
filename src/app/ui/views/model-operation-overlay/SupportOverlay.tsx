@@ -1,21 +1,33 @@
+import classNames from 'classnames';
+import { noop } from 'lodash';
 import React, { useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
-import PropTypes from 'prop-types';
-import classNames from 'classnames';
+
+import { HEAD_PRINTING } from '../../../constants';
+import type { RootState } from '../../../flux/index.def';
+import { actions as printingActions } from '../../../flux/printing';
+import { logTransformOperation } from '../../../lib/gaEvent';
 import i18n from '../../../lib/i18n';
 import { Button } from '../../components/Buttons';
 import { NumberInput as Input } from '../../components/Input';
-import { actions as printingActions } from '../../../flux/printing';
-import styles from './styles.styl';
 import { renderModal } from '../../utils';
+import styles from './styles.styl';
+
 /* eslint-disable-next-line import/no-cycle */
 import { CancelButton } from '../../widgets/PrintingVisualizer/VisualizerLeftBar';
-import { HEAD_PRINTING } from '../../../constants';
-import { logTransformOperation } from '../../../lib/gaEvent';
 
-const SupportOverlay = ({ editSupport, setTransformMode }) => {
-    const modelGroup = useSelector(state => state?.printing?.modelGroup, shallowEqual);
-    const supportOverhangAngle = useSelector(state => state?.printing.supportOverhangAngle, shallowEqual);
+
+interface SupportOverlayProps {
+    enterEditSupportPageMode: () => void;
+    onClose?: () => void;
+}
+
+const SupportOverlay: React.FC<SupportOverlayProps> = (props) => {
+    const { enterEditSupportPageMode, onClose = noop } = props;
+
+    const modelGroup = useSelector((state: RootState) => state.printing.modelGroup, shallowEqual);
+    const supportOverhangAngle = useSelector((state: RootState) => state?.printing.supportOverhangAngle, shallowEqual);
+
     const [willOverrideSupport, setWillOverrideSupport] = useState(false);
     const dispatch = useDispatch();
 
@@ -41,15 +53,8 @@ const SupportOverlay = ({ editSupport, setTransformMode }) => {
             dispatch(printingActions.clearAllManualSupport());
             logTransformOperation(HEAD_PRINTING, 'support', 'clear');
         },
-        editSupport() {
-            dispatch(printingActions.exitPreview());
-            // In preview mode, wait for modelGroup.object.parent recovery
-            setTimeout(() => {
-                editSupport();
-                logTransformOperation(HEAD_PRINTING, 'support', 'edit_in');
-            });
-        }
     };
+
     const renderGenerateSupportConfirm = () => {
         return willOverrideSupport && renderModal({
             title: i18n._('key-Printing/LeftBar/Support-Confirm'),
@@ -87,9 +92,7 @@ const SupportOverlay = ({ editSupport, setTransformMode }) => {
             >
                 <div className={classNames(styles['overlay-title-font'], 'sm-flex justify-space-between border-bottom-normal padding-vertical-8 padding-horizontal-16 height-40')}>
                     {i18n._('key-Printing/LeftBar/Support-Support')}
-                    <CancelButton
-                        onClick={() => setTransformMode('')}
-                    />
+                    <CancelButton onClick={onClose} />
                 </div>
                 <div className="padding-bottom-16 padding-top-12 padding-horizontal-16">
                     <div className={classNames(styles['overlay-sub-title-font'], 'sm-flex')}>{i18n._('key-Printing/LeftBar/Support-Auto Support')}</div>
@@ -127,10 +130,12 @@ const SupportOverlay = ({ editSupport, setTransformMode }) => {
                             type="primary"
                             priority="level-three"
                             width="120px"
-                            onClick={actions.editSupport}
+                            onClick={enterEditSupportPageMode}
                         >
                             {
-                                generateAutoSupportEnableForSelected ? <span>{i18n._('key-Printing/LeftBar/Support-Edit')}</span> : <span>{i18n._('key-Printing/LeftBar/Support-Edit All')}</span>
+                                generateAutoSupportEnableForSelected
+                                    ? <span>{i18n._('key-Printing/LeftBar/Support-Edit')}</span>
+                                    : <span>{i18n._('key-Printing/LeftBar/Support-Edit All')}</span>
                             }
                         </Button>
                         <Button
@@ -141,7 +146,9 @@ const SupportOverlay = ({ editSupport, setTransformMode }) => {
                             onClick={actions.clearAllManualSupport}
                         >
                             {
-                                generateAutoSupportEnableForSelected ? <span>{i18n._('key-Printing/LeftBar/Support-Clear')}</span> : <span>{i18n._('key-Printing/LeftBar/Support-Clear All')}</span>
+                                generateAutoSupportEnableForSelected
+                                    ? <span>{i18n._('key-Printing/LeftBar/Support-Clear')}</span>
+                                    : <span>{i18n._('key-Printing/LeftBar/Support-Clear All')}</span>
                             }
                         </Button>
                     </div>
@@ -150,10 +157,6 @@ const SupportOverlay = ({ editSupport, setTransformMode }) => {
             {renderGenerateSupportConfirm()}
         </>
     );
-};
-SupportOverlay.propTypes = {
-    editSupport: PropTypes.func.isRequired,
-    setTransformMode: PropTypes.func.isRequired,
 };
 
 export default SupportOverlay;

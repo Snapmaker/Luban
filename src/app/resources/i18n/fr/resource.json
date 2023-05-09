@@ -1472,6 +1472,7 @@
     "key-Modal/Common-Complete": "Terminer",
     "key-Modal/Common-Confirm": "Confirmer",
     "key-Modal/Common-Do not ask me again": "",
+    "key-Modal/Common-Done": "",
     "key-Modal/Common-Ignore": "",
     "key-Modal/Common-Next": "Suivant",
     "key-Modal/Common-OK": "OK",
@@ -1584,6 +1585,10 @@
     "key-Printing/LeftBar/Support-Yes": "",
     "key-Printing/MainToolBar-Materials": "",
     "key-Printing/MainToolBar-Print Settings": "",
+    "key-Printing/MeshEdit-Color Select": "",
+    "key-Printing/MeshEdit-Mesh Coloring": "",
+    "key-Printing/MeshEdit-Method": "",
+    "key-Printing/MeshEdit-Tolerance": "",
     "key-Printing/Modal-Backup Tip": "Your historical data is backed up in the <1>here</1> folder.",
     "key-Printing/No model(s).": "",
     "key-Printing/ObjectList-Object List": "Liste d'objets",
@@ -1701,6 +1706,7 @@
     "key-Progress/3DP-Failed to calculate Rotation.": "Échec du calcul de la rotation.",
     "key-Progress/3DP-Failed to generate support.": "",
     "key-Progress/3DP-Failed to load model.": "Échec de chargement du modèle.",
+    "key-Progress/3DP-Failed to prepare mesh painting.": "",
     "key-Progress/3DP-Failed to preview G-code.": "Échec de prévisualisation du code G.",
     "key-Progress/3DP-Failed to repair model.": "",
     "key-Progress/3DP-Failed to split model.": "",
@@ -1710,6 +1716,8 @@
     "key-Progress/3DP-Loaded model successfully.": "Modèle chargé avec succès.",
     "key-Progress/3DP-Loading model...{{progress}}%": "Chargement du modèle...{{progress}}%",
     "key-Progress/3DP-Ordinary": "",
+    "key-Progress/3DP-Prepare successfully.": "",
+    "key-Progress/3DP-Preparing Mesh Painting...": "",
     "key-Progress/3DP-Previewed G-code successfully.": "code G prévisualisé avec succès.",
     "key-Progress/3DP-Previewing G-code...{{progress}}%": "Prévisualisation du code G...{{progression}}%",
     "key-Progress/3DP-Repair model successfully.": "",
@@ -2250,6 +2258,5 @@
     "key_menu_Quit": "Quitter",
     "key_menu_Services": "Services",
     "key_menu_Unhide": "Démasquer",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Transformation",
-    "material_no_category": ""
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Transformation"
 }

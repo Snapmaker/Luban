@@ -1472,6 +1472,7 @@
     "key-Modal/Common-Complete": "완료",
     "key-Modal/Common-Confirm": "확인",
     "key-Modal/Common-Do not ask me again": "",
+    "key-Modal/Common-Done": "",
     "key-Modal/Common-Ignore": "",
     "key-Modal/Common-Next": "다음",
     "key-Modal/Common-OK": "확인",
@@ -1584,6 +1585,10 @@
     "key-Printing/LeftBar/Support-Yes": "",
     "key-Printing/MainToolBar-Materials": "",
     "key-Printing/MainToolBar-Print Settings": "",
+    "key-Printing/MeshEdit-Color Select": "",
+    "key-Printing/MeshEdit-Mesh Coloring": "",
+    "key-Printing/MeshEdit-Method": "",
+    "key-Printing/MeshEdit-Tolerance": "",
     "key-Printing/Modal-Backup Tip": "Your historical data is backed up in the <1>here</1> folder.",
     "key-Printing/No model(s).": "",
     "key-Printing/ObjectList-Object List": "개체 목록",
@@ -1701,6 +1706,7 @@
     "key-Progress/3DP-Failed to calculate Rotation.": "회전을 계산하지 못했습니다.",
     "key-Progress/3DP-Failed to generate support.": "",
     "key-Progress/3DP-Failed to load model.": "모델 불러오기에 실패했습니다.",
+    "key-Progress/3DP-Failed to prepare mesh painting.": "",
     "key-Progress/3DP-Failed to preview G-code.": "G-코드 미리보기에 실패했습니다.",
     "key-Progress/3DP-Failed to repair model.": "",
     "key-Progress/3DP-Failed to split model.": "",
@@ -1710,6 +1716,8 @@
     "key-Progress/3DP-Loaded model successfully.": "모델 불러오기를 완료했습니다.",
     "key-Progress/3DP-Loading model...{{progress}}%": "모델 불러오는 중...{{progress}}%",
     "key-Progress/3DP-Ordinary": "",
+    "key-Progress/3DP-Prepare successfully.": "",
+    "key-Progress/3DP-Preparing Mesh Painting...": "",
     "key-Progress/3DP-Previewed G-code successfully.": "G-코드 미리보기를 완료했습니다.",
     "key-Progress/3DP-Previewing G-code...{{progress}}%": "G-코드 미리보기 중...{{progress}}%",
     "key-Progress/3DP-Repair model successfully.": "",
@@ -2250,6 +2258,5 @@
     "key_menu_Quit": "종료",
     "key_menu_Services": "서비스",
     "key_menu_Unhide": "숨김 해제",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "변형",
-    "material_no_category": ""
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "변형"
 }
