@@ -236,7 +236,7 @@ const CSDownloadManagerOverlay = (props) => {
                         onKeyDown={() => onOpenFile(record.savePath)}
                         tabIndex={0}
                     >
-                        {i18n._('key-CaseResource/DownloadManager Open File Exploxer')}
+                        {i18n._('key-CaseResource/DownloadManager Open File Explorer')}
                     </div>
                 );
             }

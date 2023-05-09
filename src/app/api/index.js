@@ -336,8 +336,17 @@ macros.update = defaultAPIFactory((id, options) => request.put(`/api/macros/${id
 macros.delete = defaultAPIFactory((id) => request.delete(`/api/macros/${id}`));
 
 // Case Resource
-const getCaseResourcesList = defaultAPIFactory(() => request.get('/api/case-resources/case-list'));
-
+const getCaseResourcesList = (() => {
+    // cache CaseResources data for once load
+    let data;
+    return async () => {
+        const getData = defaultAPIFactory(() => request.get('/api/case-resources/case-list'));
+        if (!data) {
+            data = getData();
+        }
+        return data;
+    };
+})();
 
 export default {
     // version
