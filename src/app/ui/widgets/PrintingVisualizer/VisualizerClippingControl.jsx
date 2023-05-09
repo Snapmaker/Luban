@@ -51,7 +51,7 @@ function VisualizerClippingControl() {
 
     const [isSpecialMode, setIsSpecialMode] = useState(false);
     useEffect(() => {
-        if (transformMode === 'rotate-placement' || transformMode === 'support-edit') {
+        if (transformMode === 'rotate-placement' || transformMode === 'support-edit' || transformMode === 'mesh-coloring') {
             workerManager.clipperWorkerEnable = false;
             setIsSpecialMode(true);
         } else {

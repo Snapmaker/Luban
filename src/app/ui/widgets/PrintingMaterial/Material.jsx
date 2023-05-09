@@ -55,11 +55,7 @@ function Material({ widgetActions }) {
     const dispatch = useDispatch();
 
     function onShowPrintingManager(direction = LEFT_EXTRUDER) {
-        dispatch(
-            printingActions.updateManagerDisplayType(
-                PRINTING_MANAGER_TYPE_MATERIAL
-            )
-        );
+        dispatch(printingActions.updateManagerDisplayType(PRINTING_MANAGER_TYPE_MATERIAL));
         dispatch(printingActions.updateShowPrintingManager(true, direction));
     }
 

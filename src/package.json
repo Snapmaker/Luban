@@ -1,6 +1,6 @@
 {
   "name": "snapmaker-luban",
-  "version": "4.7.2",
+  "version": "4.8.0",
   "description": "Snapmaker 3-in-1 Software for 3D Printing, Laser Engraving and CNC Cutting.",
   "homepage": "https://github.com/Snapmaker/Luban",
   "author": "Snapmaker Software Team",
@@ -79,6 +79,7 @@
     "spawn-default-shell": "2.0.0",
     "static-eval": "2.0.5",
     "superagent": "8.0.3",
+    "superagent-use": "0.1.0",
     "svgpath": "^2.5.0",
     "tar": "6.1.11",
     "three": "0.124.0",

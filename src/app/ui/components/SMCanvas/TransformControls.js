@@ -151,6 +151,7 @@ class TransformControls extends Object3D {
 
     createPeripheral(definitions) {
         const peripheral = new Object3D();
+        peripheral.name = 'Peripheral';
 
         for (const definition of definitions) {
             const [label, object, position, rotation, scale] = definition;
@@ -487,6 +488,7 @@ class TransformControls extends Object3D {
             ['Z', new Mesh(new OctahedronBufferGeometry(0.04, 0), defaults.MESH_MATERIAL_BLUE.clone()), [0, -0.99, 0], [0, 0, Math.PI / 2], [1, 3, 1]],
             ['XYZE', new Line(new ArcBufferGeometry(1, 64, Math.PI * 2), defaults.LINE_MATERIAL_GRAY.clone()), null, [0, 0, 0]]
         ]);
+        this.rotatePeripheral.name = 'Rotate Peripheral';
         this.add(this.rotatePeripheral);
 
         this.rotatePicker = this.createPeripheral([
@@ -494,6 +496,7 @@ class TransformControls extends Object3D {
             ['Y', new Mesh(defaults.ROTATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), null, [Math.PI / 2, 0, 0]],
             ['Z', new Mesh(defaults.ROTATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE)]
         ]);
+        this.rotatePicker.name = 'Rotate Picker';
         this.rotatePicker.visiable = false;
         this.add(this.rotatePicker);
         this.leftPlane = this.createPeripheral([

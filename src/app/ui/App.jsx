@@ -1,30 +1,31 @@
-import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import { HashRouter, Route, Switch } from 'react-router-dom';
+import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
+import { HashRouter, Route, Switch } from 'react-router-dom';
 
+import { actions as cncActions } from '../flux/cnc';
+import { actions as editorActions } from '../flux/editor';
+import { actions as laserActions } from '../flux/laser';
+import { actions as machineActions } from '../flux/machine';
+import { actions as printingActions } from '../flux/printing';
+import { actions as settingActions } from '../flux/setting';
+import { actions as textActions } from '../flux/text';
+import { actions as workspaceActions } from '../flux/workspace';
+import { actions as appGlobalActions } from '../flux/app-global';
+import { Server } from '../flux/workspace/Server';
 import { Canvas2dZoom } from '../lib/canvas2d-zoom/index';
-import { shortcutActions, priorities, ShortcutManager } from '../lib/shortcut';
+import { logErrorToGA } from '../lib/gaEvent';
+import { ShortcutHandlerPriority, ShortcutManager, PREDEFINED_SHORTCUT_ACTIONS } from '../lib/shortcut';
+import UniApi from '../lib/uni-api';
 
 import { ToastContainer } from './components/Toast';
-import { actions as machineActions } from '../flux/machine';
-import { actions as laserActions } from '../flux/laser';
-import { actions as editorActions } from '../flux/editor';
-import { actions as cncActions } from '../flux/cnc';
-import { actions as printingActions } from '../flux/printing';
-import { actions as workspaceActions } from '../flux/workspace';
-import { actions as textActions } from '../flux/text';
-import { actions as settingActions } from '../flux/setting';
-import HomePage from './pages/HomePage';
-import Workspace from './pages/Workspace';
-import { PrintMainPage } from './pages/print-main';
+import AppLayout from './layouts/AppLayout';
 import Cnc from './pages/Cnc';
+import HomePage from './pages/HomePage';
 import Laser from './pages/Laser';
 import Settings from './pages/Settings';
-import UniApi from '../lib/uni-api';
-import AppLayout from './layouts/AppLayout';
-import { Server } from '../flux/workspace/Server';
-import { logErrorToGA } from '../lib/gaEvent';
+import Workspace from './pages/Workspace';
+import { PrintMainPage } from './pages/print-main';
 
 Canvas2dZoom.register();
 
@@ -34,6 +35,7 @@ class App extends PureComponent {
         machineInit: PropTypes.func.isRequired,
         functionsInit: PropTypes.func.isRequired,
         textInit: PropTypes.func.isRequired,
+        appGlobalInit: PropTypes.func.isRequired,
         shouldCheckForUpdate: PropTypes.bool.isRequired,
         enableShortcut: PropTypes.bool.isRequired,
         updateMultipleEngine: PropTypes.func.isRequired,
@@ -50,35 +52,35 @@ class App extends PureComponent {
         title: this.constructor.name,
         isActive: () => this.props.enableShortcut,
         // active: false,
-        priority: priorities.APP,
+        priority: ShortcutHandlerPriority.App,
         shortcuts: {
             // TODO: implement file menu actions
-            [shortcutActions.OPEN]: () => {
+            [PREDEFINED_SHORTCUT_ACTIONS.OPEN]: () => {
                 if (this.props.menuDisabledCount <= 0) {
                     UniApi.Event.emit('appbar-menu:open-file');
                 }
             },
-            [shortcutActions.SAVE]: () => {
+            [PREDEFINED_SHORTCUT_ACTIONS.SAVE]: () => {
                 if (this.props.menuDisabledCount <= 0) {
                     UniApi.Event.emit('appbar-menu:save');
                 }
             },
-            [shortcutActions.SAVE_AS]: () => {
+            [PREDEFINED_SHORTCUT_ACTIONS.SAVE_AS]: () => {
                 if (this.props.menuDisabledCount <= 0) {
                     UniApi.Event.emit('appbar-menu:save-as-file');
                 }
             },
-            [shortcutActions.IMPORT]: () => {
+            [PREDEFINED_SHORTCUT_ACTIONS.IMPORT]: () => {
                 if (this.props.menuDisabledCount <= 0) {
                     UniApi.Event.emit('appbar-menu:import');
                 }
             },
-            [shortcutActions.EXPORT_MODELS]: () => {
+            [PREDEFINED_SHORTCUT_ACTIONS.EXPORT_MODELS]: () => {
                 if (this.props.menuDisabledCount <= 0) {
                     UniApi.Event.emit('appbar-menu:export-model');
                 }
             },
-            [shortcutActions.EXPORT_GCODE]: () => {
+            [PREDEFINED_SHORTCUT_ACTIONS.EXPORT_GCODE]: () => {
                 if (this.props.menuDisabledCount <= 0) {
                     UniApi.Event.emit('appbar-menu:export-gcode');
                 }
@@ -116,6 +118,7 @@ class App extends PureComponent {
 
         this.props.functionsInit();
         this.props.textInit();
+        this.props.appGlobalInit();
         UniApi.Window.initWindow();
         // auto update
         setTimeout(() => {
@@ -198,6 +201,7 @@ const mapDispatchToProps = (dispatch) => {
             dispatch(editorActions.initSelectedModelListener('laser'));
             dispatch(editorActions.initSelectedModelListener('cnc'));
         },
+        appGlobalInit: () => dispatch(appGlobalActions.init()),
         updateMultipleEngine: () => dispatch(machineActions.updateMultipleEngine())
     };
 };

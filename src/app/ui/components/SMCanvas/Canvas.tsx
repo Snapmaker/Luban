@@ -5,44 +5,46 @@
  * on top of OpenGL and handles user interactions.
  */
 
-import noop from 'lodash/noop';
-import React, { PureComponent } from 'react';
-import { isNil, throttle } from 'lodash';
-import {
-    Vector3,
-    PerspectiveCamera,
-    Scene,
-    Group,
-    AmbientLight,
-    PointLight,
-    HemisphereLight,
-    DirectionalLight,
-    Object3D
-} from 'three';
-import PropTypes from 'prop-types';
+import { checkSceneFaceless } from '@snapmaker/luban-platform';
 import TWEEN from '@tweenjs/tween.js';
+import { isNil } from 'lodash';
+import noop from 'lodash/noop';
+import PropTypes from 'prop-types';
+import React from 'react';
+import {
+    AmbientLight,
+    DirectionalLight,
+    Group,
+    HemisphereLight,
+    Light,
+    Object3D,
+    PerspectiveCamera,
+    PointLight,
+    Scene,
+    Vector3
+} from 'three';
+import type { Camera, WebGLRenderer } from 'three';
 
-import Controls, { EVENTS } from './Controls';
+import { TRANSLATE_MODE } from '../../../constants';
+import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import Detector from '../../../three-extensions/Detector';
 import WebGLRendererWrapper from '../../../three-extensions/WebGLRendererWrapper';
-import { TRANSLATE_MODE } from '../../../constants';
 import { toast } from '../Toast';
 import { ToastWapper } from '../Toast/toastContainer';
-import i18n from '../../../lib/i18n';
+import Controls, { EVENTS } from './Controls';
+import ModelGroup from '../../../models/ModelGroup';
 
 const ANIMATION_DURATION = 500;
 const DEFAULT_MODEL_POSITION = new Vector3(0, 0, 0);
 const EPS = 0.000001;
-const FPS = 60;
-const renderT = 1 / FPS;
+// const FPS = 60;
+// const renderT = 1 / FPS;
 let parentDOM = null;
 let inputDOM = null;
 let inputDOM2 = null; // translate has two input for X and Y axis
-class Canvas extends PureComponent {
-    node = React.createRef();
-
-    static propTypes = {
+class Canvas extends React.PureComponent {
+    public static propTypes = {
         backgroundGroup: PropTypes.object,
         modelGroup: PropTypes.object.isRequired,
         printableArea: PropTypes.object.isRequired,
@@ -81,29 +83,41 @@ class Canvas extends PureComponent {
         primeTowerSelected: PropTypes.bool
     };
 
-    static defaultProps = {
+    public static defaultProps = {
         canOperateModel: true
     };
 
-    controls = null;
+    // scene objects
+    private scene: Scene = null;
+    private renderer: WebGLRenderer | WebGLRendererWrapper = null;
+    private camera: Camera = null;
+    private light: Light = null;
 
-    animationCount = 0;
+    private group: Group = null;
+    private modelGroup: ModelGroup;
+    private toolPathGroupObject: Object3D = null;
+    private gcodeLineGroup: Object3D = null;
 
-    frameId = 0;
+    // scene helper objects
+    private transformSourceType: '2D' | '3D' = '3D';
+    private initialTarget = new Vector3();
+    private lastTarget = null;
+    private frameId = 0;
 
-    initialTarget = new Vector3();
 
-    lastTarget = null;
+    // otehrs
+    private node = React.createRef();
+    private controls = null;
+    private animationCount = 0;
 
-    renderSceneFn = () => { };
-
-    constructor(props) {
+    public constructor(props) {
         super(props);
 
+        // scene
+        this.modelGroup = props.modelGroup;
+
+        this.transformSourceType = props.transformSourceType || '3D'; // '3D' | '2D'
         // frozen
-        this.backgroundGroup = this.props.backgroundGroup;
-        this.modelGroup = this.props.modelGroup;
-        this.transformSourceType = this.props.transformSourceType || '3D'; // '3D' | '2D'
         this.toolPathGroupObject = this.props.toolPathGroupObject;
         this.gcodeLineGroup = this.props.gcodeLineGroup;
         this.cameraInitialPosition = this.props.cameraInitialPosition;
@@ -115,11 +129,6 @@ class Canvas extends PureComponent {
         this.onRotationPlacementSelect = this.props.onRotationPlacementSelect || noop;
 
         // threejs
-        this.camera = null;
-        this.renderer = null;
-        this.scene = null;
-        this.group = null;
-        this.light = null;
         this.controlFrontLeftTop = new Vector3();
         this.cloneRotatePeripheral = new Object3D();
         this.canvasWidthHalf = null;
@@ -127,62 +136,9 @@ class Canvas extends PureComponent {
         this.inputPositionTop = 0;
         this.inputPositionLeft = 0;
         this.inputLeftOffset = 0;
-
-        this.renderSceneFn = throttle(() => {
-            if (!this.isCanvasInitialized()) return;
-            if (this.transformSourceType === '2D') {
-                this.light.position.copy(this.camera.position);
-            }
-            if (this.transformSourceType === '3D' && this.controls.transformControl.mode !== 'mirror' && this.modelGroup?.selectedModelArray
-                && this.modelGroup.selectedModelArray[0]?.type !== 'primeTower') {
-                switch (this.controls.transformControl.mode) {
-                    case 'translate':
-                        this.cloneControlPeripheral = this.controls.transformControl.translatePeripheral.clone();
-                        break;
-                    case 'rotate':
-                        this.cloneControlPeripheral = this.controls.transformControl.rotatePeripheral.clone();
-                        break;
-                    case 'scale':
-                        this.cloneControlPeripheral = this.controls.transformControl.scalePeripheral.clone();
-                        break;
-                    default:
-                        this.cloneControlPeripheral = this.controls.transformControl.translatePeripheral.clone();
-                        break;
-                }
-                this.cloneControlPeripheral.updateMatrixWorld();
-                this.controlFrontLeftTop.setFromMatrixPosition(this.cloneControlPeripheral.matrixWorld);
-                this.controlFrontLeftTop.project(this.camera);
-                inputDOM = document.getElementById('control-input');
-                inputDOM2 = document.getElementById('control-input-2');
-                parentDOM = document.getElementById('smcanvas');
-                this.inputLeftOffset = inputDOM2 ? 104 : 48; // one input width is 96, if has inputDOM2, inputDOM has marginRight 16px
-                this.canvasWidthHalf = parentDOM.clientWidth * 0.5;
-                this.canvasHeightHalf = parentDOM.clientHeight * 0.5;
-                if (Math.abs(parseFloat(this.inputPositionLeft) - (this.controlFrontLeftTop.x * this.canvasWidthHalf + this.canvasWidthHalf - this.inputLeftOffset)) > 10
-                    || Math.abs(parseFloat(this.inputPositionTop) - (-(this.controlFrontLeftTop.y * this.canvasHeightHalf) + this.canvasHeightHalf - 220)) > 10
-                ) {
-                    this.inputPositionLeft = `${this.controlFrontLeftTop.x * this.canvasWidthHalf + this.canvasWidthHalf - this.inputLeftOffset}px`;
-                    this.inputPositionTop = `${-(this.controlFrontLeftTop.y * this.canvasHeightHalf) + this.canvasHeightHalf - 220}px`;
-                }
-                inputDOM && (inputDOM.style.top = this.inputPositionTop);
-                inputDOM && (inputDOM.style.left = this.inputPositionLeft);
-                if (this.controls.transformControl.mode === TRANSLATE_MODE && (this.controls.transformControl.axis === 'XY' || this.controls.transformControl.axis === null)) {
-                    inputDOM2 && (inputDOM2.style.top = this.inputPositionTop);
-                    inputDOM2 && (inputDOM2.style.left = `${parseFloat(this.inputPositionLeft) + 120}px`);
-                    inputDOM2 && this.controls.transformControl.dragging && (inputDOM2.style.display = 'block');
-                }
-                this.controls.transformControl.dragging && inputDOM && (inputDOM.style.display = 'block');
-            }
-            if (this.transformSourceType === '3D' && (!this.modelGroup.selectedModelArray?.length || !this.modelGroup.isSelectedModelAllVisible())) {
-                inputDOM && (inputDOM.style.display = 'none');
-                inputDOM2 && (inputDOM2.style.display = 'none');
-            }
-            this.renderer.render(this.scene, this.camera);
-            TWEEN.update();
-        }, renderT);
     }
 
-    componentDidMount() {
+    public componentDidMount() {
         if (!this.isCanvasInitialized()) {
             log.warn('Canvas is not initialized properly');
             return;
@@ -191,12 +147,12 @@ class Canvas extends PureComponent {
         this.setupScene();
         this.setupControls();
 
-        this.group.add(this.props.printableArea);
-        this.props.printableArea.addEventListener('update', () => this.renderScene()); // TODO: another way to trigger re-render
+        const { backgroundGroup, printableArea } = this.props;
 
-        this.modelGroup.object.addEventListener('update', () => {
-            this.renderScene();
-        }); // TODO: another way to trigger re-render
+        this.group.add(printableArea);
+        printableArea.addEventListener('update', () => this.renderScene());
+
+        this.modelGroup.object.addEventListener('update', () => this.renderScene());
 
         this.group.add(this.modelGroup.object);
         this.group.add(this.modelGroup.clippingGroup);
@@ -204,13 +160,14 @@ class Canvas extends PureComponent {
 
         this.toolPathGroupObject && this.group.add(this.toolPathGroupObject);
         this.gcodeLineGroup && this.group.add(this.gcodeLineGroup);
-        this.backgroundGroup && this.group.add(this.backgroundGroup);
+
+        if (backgroundGroup) {
+            this.group.add(backgroundGroup);
+        }
 
         if (this.controls && this.props.inProgress) {
             this.controls.setInProgress(this.props.inProgress);
         }
-        // TODO: Performance optimization test
-        // this.renderScene();
 
         window.addEventListener('resize', this.resizeWindow, false);
 
@@ -218,7 +175,7 @@ class Canvas extends PureComponent {
     }
 
     // just for laser and cnc, dont set scale prop for 3dp
-    componentWillReceiveProps(nextProps) {
+    public componentWillReceiveProps(nextProps) {
         if (nextProps.inProgress !== this.props.inProgress) {
             this.controls.setInProgress(nextProps.inProgress);
         }
@@ -290,7 +247,7 @@ class Canvas extends PureComponent {
         }
     }
 
-    componentWillUnmount() {
+    public componentWillUnmount() {
         if (this.controls) {
             this.controls.dispose();
         }
@@ -300,7 +257,7 @@ class Canvas extends PureComponent {
         }
     }
 
-    onScale = () => {
+    public onScale = () => {
         if (typeof this.props.updateScale !== 'function') {
             return;
         }
@@ -318,7 +275,7 @@ class Canvas extends PureComponent {
         }
     };
 
-    onChangeTarget = () => {
+    public onChangeTarget = () => {
         if (typeof this.props.updateTarget !== 'function') {
             return;
         }
@@ -327,17 +284,17 @@ class Canvas extends PureComponent {
         this.props.updateTarget(this.lastTarget);
     };
 
-    getVisibleWidth() {
+    public getVisibleWidth() {
         return this.node.current && this.node.current.parentElement.clientWidth;
     }
 
-    getVisibleHeight() {
+    public getVisibleHeight() {
         return (
             this.node.current && this.node.current.parentElement.clientHeight
         );
     }
 
-    setupScene() {
+    public setupScene() {
         const width = this.getVisibleWidth();
         const height = this.getVisibleHeight();
 
@@ -385,7 +342,7 @@ class Canvas extends PureComponent {
         this.node.current.appendChild(this.renderer.domElement);
     }
 
-    detectionLocation() {
+    public detectionLocation() {
         toast.dismiss();
 
         const avaiableModels = this.modelGroup.getSelectedModelsForHotZoneCheck();
@@ -426,7 +383,7 @@ class Canvas extends PureComponent {
         }
     }
 
-    setupControls() {
+    public setupControls() {
         this.initialTarget = this.props.cameraInitialTarget;
 
         const sourceType = this.props.transformSourceType === '2D' ? '2D' : '3D';
@@ -493,7 +450,7 @@ class Canvas extends PureComponent {
         });
     }
 
-    setTransformMode(mode) {
+    public setTransformMode(mode) {
         if (
             [
                 'translate',
@@ -509,16 +466,16 @@ class Canvas extends PureComponent {
         }
     }
 
-    setHoverFace(face) {
+    public setHoverFace(face) {
         this.controls && this.controls.transformControl.setHoverFace(face);
     }
 
-    animation = () => {
+    public animation = () => {
         this.frameId = window.requestAnimationFrame(this.animation);
         this.renderScene();
     };
 
-    setCamera = (position, target) => {
+    public setCamera = (position, target) => {
         if (!this.isCanvasInitialized()) return;
 
         this.camera.position.copy(position);
@@ -530,7 +487,7 @@ class Canvas extends PureComponent {
         }
     };
 
-    setCameraOnTop = () => {
+    public setCameraOnTop = () => {
         if (!this.isCanvasInitialized()) return;
 
         const dist = this.camera.position.distanceTo(this.controls.target);
@@ -539,11 +496,11 @@ class Canvas extends PureComponent {
         this.controls.updateCamera();
     };
 
-    setSelectedModelConvexMeshGroup = (group) => {
+    public setSelectedModelConvexMeshGroup = (group) => {
         this.controls.setSelectedModelConvexMeshGroup(group);
     };
 
-    resizeWindow = () => {
+    public resizeWindow = () => {
         if (!this.isCanvasInitialized()) return;
 
         const width = this.getVisibleWidth();
@@ -556,11 +513,11 @@ class Canvas extends PureComponent {
         this.renderScene();
     };
 
-    isCanvasInitialized() {
+    public isCanvasInitialized() {
         return !!this.node.current;
     }
 
-    zoomIn() {
+    public zoomIn() {
         const object = { nonce: 0 };
         const to = { nonce: 20 };
 
@@ -577,7 +534,7 @@ class Canvas extends PureComponent {
         this.startTween(tween);
     }
 
-    zoomOut() {
+    public zoomOut() {
         const object = { nonce: 0 };
         const to = { nonce: 20 };
 
@@ -594,7 +551,7 @@ class Canvas extends PureComponent {
         this.startTween(tween);
     }
 
-    autoFocus(model, isWorkspaceAutoFocus = false) {
+    public autoFocus(model, isWorkspaceAutoFocus = false) {
         const target = model ? model.position.clone() : this.initialTarget;
         // const target = model ? model.position.clone() : new Vector3();
         this.setCamera(
@@ -625,7 +582,7 @@ class Canvas extends PureComponent {
         this.startTween(tween);
     }
 
-    _getCameraPositionByRotation(positionStart, target, angleEW, angleNS) {
+    private _getCameraPositionByRotation(positionStart, target, angleEW, angleNS) {
         const positionRotateNS = {
             x: positionStart.x,
             y:
@@ -653,7 +610,7 @@ class Canvas extends PureComponent {
         return positionRotateEW;
     }
 
-    toTopFrontRight() {
+    public toTopFrontRight() {
         const positionStart = this.props.cameraInitialPosition;
         const target = { x: 0, y: 0, z: this.props.cameraInitialPosition.z };
         const position = this._getCameraPositionByRotation(
@@ -672,7 +629,7 @@ class Canvas extends PureComponent {
         this.renderScene();
     }
 
-    toFront() {
+    public toFront() {
         this.camera.position.x = this.props.cameraInitialPosition.x;
         this.camera.position.y = this.props.cameraInitialPosition.y;
         this.camera.position.z = this.props.cameraInitialPosition.z;
@@ -684,7 +641,7 @@ class Canvas extends PureComponent {
         this.renderScene();
     }
 
-    toLeft() {
+    public toLeft() {
         const positionStart = this.props.cameraInitialPosition;
         const target = { x: 0, y: 0, z: this.props.cameraInitialPosition.z };
         const position = this._getCameraPositionByRotation(
@@ -703,7 +660,7 @@ class Canvas extends PureComponent {
         this.renderScene();
     }
 
-    toRight() {
+    public toRight() {
         const positionStart = this.props.cameraInitialPosition;
         const target = { x: 0, y: 0, z: this.props.cameraInitialPosition.z };
         const position = this._getCameraPositionByRotation(
@@ -722,7 +679,7 @@ class Canvas extends PureComponent {
         this.renderScene();
     }
 
-    toTop() {
+    public toTop() {
         const positionStart = this.props.cameraInitialPosition;
         const target = { x: 0, y: 0, z: this.props.cameraInitialPosition.z };
         const position = this._getCameraPositionByRotation(
@@ -741,7 +698,7 @@ class Canvas extends PureComponent {
         this.renderScene();
     }
 
-    fitViewIn(center, selectedGroupBsphereRadius) {
+    public fitViewIn(center, selectedGroupBsphereRadius) {
         const r = selectedGroupBsphereRadius;
         const newTarget = {
             ...center
@@ -805,7 +762,7 @@ class Canvas extends PureComponent {
         }, ANIMATION_DURATION);
     }
 
-    toBottom() {
+    public toBottom() {
         this.camera.rotation.y = 0;
         this.camera.rotation.z = 0;
 
@@ -833,61 +790,73 @@ class Canvas extends PureComponent {
         this.startTween(tween);
     }
 
-    enable3D() {
+    public enable3D() {
         if (this.controls) {
             this.controls.enableRotate = true;
         }
     }
 
-    disable3D() {
+    public disable3D() {
         if (this.controls) {
             this.controls.enableRotate = false;
         }
     }
 
-    enableControls() {
+    public enableControls() {
         if (this.controls) {
             this.controls.enableClick();
         }
     }
 
-    disableControls() {
+    public disableControls() {
         if (this.controls) {
             this.controls.disableClick();
         }
     }
 
-    startSupportMode() {
+    public startSupportMode() {
         if (this.controls) {
             this.controls.startSupportMode();
         }
     }
 
-    stopSupportMode() {
+    public stopSupportMode() {
         if (this.controls) {
             this.controls.stopSupportMode();
         }
     }
 
-    attach(objects) {
+    public startMeshColoringMode(): void {
+        if (this.controls) {
+            this.controls.startMeshColoringMode();
+        }
+    }
+
+    public stopMeshColoringMode(): void {
+        if (this.controls) {
+            this.controls.stopMeshColoringMode();
+        }
+    }
+
+    public attach(objects) {
         if (this.controls) {
             this.controls.attach(objects);
         }
     }
 
-    detach() {
+    public detach() {
         if (this.controls) {
             this.controls.detach();
         }
     }
 
-    updateBoundingBox() {
+    public updateBoundingBox() {
         if (this.controls) {
             this.controls.updateBoundingBox();
         }
     }
 
-    startTween(tween) {
+    public startTween(tween) {
         tween.onComplete(() => {
             this.animationCount--;
             this.animationCount = Math.max(this.animationCount, 0); // TODO: tween bug that onComplete called twice
@@ -903,7 +872,7 @@ class Canvas extends PureComponent {
         }
     }
 
-    renderScene() {
+    public renderScene() {
         if (!this.isCanvasInitialized()) return;
         if (this.transformSourceType === '2D') {
             this.light.position.copy(this.camera.position);
@@ -997,14 +966,18 @@ class Canvas extends PureComponent {
             inputDOM && (inputDOM.style.display = 'none');
             inputDOM2 && (inputDOM2.style.display = 'none');
         }
+
+        checkSceneFaceless(this.scene);
+
         this.renderer.render(this.scene, this.camera);
         TWEEN.update();
     }
 
-    render() {
+    public render() {
         if (!Detector.isWebGLAvailable()) {
             return Detector.getWebGLErrorMessage();
         }
+
         return (
             <div
                 id="smcanvas"

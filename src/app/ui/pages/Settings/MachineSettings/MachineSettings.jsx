@@ -44,7 +44,6 @@ function MachineSettings() {
     // change options when new machine series selected
     useEffect(() => {
         const printingOptions = getMachineSupportedToolOptions(state.series, HEAD_PRINTING);
-        console.log('printingOptions =', printingOptions);
         setPrintingToolHeadOptions(printingOptions);
 
         if (printingOptions.length > 0) {

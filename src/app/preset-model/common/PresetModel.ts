@@ -38,6 +38,7 @@ class PresetModel {
     public category = '';
     public i18nName = '';
     public i18nCategory = '';
+    public metadata: { [key: string]: boolean | string | object };
     public settings: { [key: string]: SettingItem };
     public ownKeys: string[];
 

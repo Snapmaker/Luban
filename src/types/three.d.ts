@@ -14,5 +14,12 @@ declare module 'three' {
         public children: MyObject3D[]
         constructor();
     }
+}
 
+declare module 'three/src/core/BufferGeometry' {
+    export interface BufferGeometry {
+        adjcentFaceGraph?: AdjacentFaceGraph;
+        computeAdjacentFaces: typeof computeAdjacentFaces;
+        // disposeBoundsTree: typeof disposeBoundsTree;
+    }
 }

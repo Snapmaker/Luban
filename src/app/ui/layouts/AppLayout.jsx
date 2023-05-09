@@ -58,6 +58,8 @@ import AppBar from '../views/AppBar';
 // import Workspace from '../pages/Workspace';
 import ModelExporter from '../widgets/PrintingVisualizer/ModelExporter';
 import styles from './styles/appbar.styl';
+import Modal from '../components/Modal/tileModal';
+import CaseResource from '../pages/CaseResource/index';
 
 class AppLayout extends PureComponent {
     static propTypes = {
@@ -101,6 +103,10 @@ class AppLayout extends PureComponent {
 
         // dev tools
         resetUserConfig: PropTypes.func.isRequired,
+
+        // Case Resource
+        showCaseResource: PropTypes.bool.isRequired,
+        updateShowCaseReource: PropTypes.func.isRequired,
     };
 
     state = {
@@ -116,6 +122,7 @@ class AppLayout extends PureComponent {
     activeTab = '';
 
     downloadingRef = React.createRef(false);
+    caseResourceModalRef = React.createRef(null);
 
     actions = {
         renderSettingModal: () => {
@@ -288,6 +295,21 @@ class AppLayout extends PureComponent {
                 onClose,
                 actions: []
             });
+        },
+        renderCaseResource: () => {
+            const onClose = () => { this.props.updateShowCaseReource(false); };
+            const onCallBack = () => { };
+            return (
+                <Modal
+                    wrapClassName={this.props.showCaseResource ? 'display-block' : 'display-none'}
+                    closable={false}
+                    disableOverlay
+                    tile
+                    onClose={onClose}
+                >
+                    <CaseResource isPopup onClose={onClose} key="case-resource-popup" onCallBack={onCallBack} />
+                </Modal>
+            );
         },
         showCheckForUpdates: () => {
             this.setState({
@@ -532,6 +554,8 @@ class AppLayout extends PureComponent {
                 format = filePath.split('.').pop();
             }
             const outputObject = new Group();
+
+            // Add all visible objects
             const modelGroup = this.props.modelGroup;
             modelGroup.models.forEach(item => {
                 if (item.visible) {
@@ -539,7 +563,8 @@ class AppLayout extends PureComponent {
                     outputObject.add(tempMeshObject);
                 }
             });
-            outputObject.add(cloneDeep(modelGroup.selectedGroup));
+            // outputObject.add(cloneDeep(modelGroup.selectedGroup));
+
             const output = new ModelExporter().parse(outputObject, format, isBinary);
             if (!output) {
                 // export error
@@ -986,7 +1011,8 @@ class AppLayout extends PureComponent {
                 {showDownloadUpdateModal ? this.actions.renderDownloadUpdateModal() : null}
                 {showSavedModal ? this.actions.renderSavedModal() : null}
                 {showArrangeModelsError ? this.actions.renderArrangeModelsError() : null}
-                <div className={isElectron() ? null : classNames(styles['app-content'])}>
+                {this.actions.renderCaseResource()}
+                <div className={isElectron() ? null : classNames(styles['app-content'])} style={{ border: 'solid 1px transparent' }}>
                     {this.props.children}
                 </div>
             </div>
@@ -1005,7 +1031,8 @@ const mapStateToProps = (state) => {
         savedModalFilePath = '',
         savedModalZIndex,
         showArrangeModelsError,
-        arrangeModelZIndex
+        arrangeModelZIndex,
+        showCaseResource
     } = state.appGlobal;
     // const projectState = state.project;
     return {
@@ -1019,7 +1046,8 @@ const mapStateToProps = (state) => {
         savedModalFilePath,
         savedModalZIndex,
         showArrangeModelsError,
-        arrangeModelZIndex
+        arrangeModelZIndex,
+        showCaseResource
     };
 };
 
@@ -1053,6 +1081,8 @@ const mapDispatchToProps = (dispatch) => {
 
         // reset configurations
         resetUserConfig: () => dispatch(settingsActions.resetUserConfig()),
+
+        updateShowCaseReource: (showCaseResource) => dispatch(appGlobalActions.updateState({ showCaseResource }))
     };
 };
 

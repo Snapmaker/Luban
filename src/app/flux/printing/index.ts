@@ -1,11 +1,11 @@
-import { applyParameterModifications, PrintMode, resolveParameterValues } from '@snapmaker/luban-platform';
+import { applyParameterModifications, PrintMode, resolveParameterValues, computeAdjacentFaces } from '@snapmaker/luban-platform';
 import { cloneDeep, filter, find, includes, isNil, noop } from 'lodash';
-import { v4 as uuid } from 'uuid';
 import path from 'path';
 import { Transfer } from 'threads';
 import * as THREE from 'three';
 import { Box3, Vector3 } from 'three';
 import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
+import { v4 as uuid } from 'uuid';
 
 import { timestamp } from '../../../shared/lib/random-utils';
 import api from '../../api';
@@ -14,8 +14,8 @@ import {
     DATA_PREFIX,
     EPSILON,
     EXTRUDER_REGEX,
-    GCODEPREVIEWMODES,
     GCODE_VISIBILITY_TYPE,
+    GCODEPREVIEWMODES,
     HEAD_PRINTING,
     KEY_DEFAULT_CATEGORY_CUSTOM,
     LEFT_EXTRUDER,
@@ -44,8 +44,9 @@ import log from '../../lib/log';
 import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 import workerManager from '../../lib/manager/workerManager';
 
+import { getCurrentHeadType } from '../../lib/url-utils';
 import { ModelEvents } from '../../models/events';
-import ModelGroup from '../../models/ModelGroup';
+import ModelGroup, { BrushType } from '../../models/ModelGroup';
 import PrimeTowerModel from '../../models/PrimeTowerModel';
 import ThreeGroup from '../../models/ThreeGroup';
 import ThreeModel from '../../models/ThreeModel';
@@ -57,6 +58,7 @@ import { pickAvailableQualityPresetModels } from '../../ui/utils/profileManager'
 import ModelExporter from '../../ui/widgets/PrintingVisualizer/ModelExporter';
 import ModelLoader from '../../ui/widgets/PrintingVisualizer/ModelLoader';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
+import type { RootState } from '../index.def';
 import definitionManager from '../manager/DefinitionManager';
 import AddOperation3D from '../operation-history/AddOperation3D';
 import AddSupportsOperation3D from '../operation-history/AddSupportsOperation3D';
@@ -73,7 +75,7 @@ import ScaleOperation3D from '../operation-history/ScaleOperation3D';
 import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWithRotateOperation3D';
 import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import VisibleOperation3D from '../operation-history/VisibleOperation3D';
-import { checkMeshes, loadMeshFiles, LoadMeshFileOptions, MeshFileInfo } from './actions-mesh';
+import { checkMeshes, LoadMeshFileOptions, loadMeshFiles, MeshFileInfo } from './actions-mesh';
 import sceneActions from './actions-scene';
 
 // eslint-disable-next-line import/no-cycle
@@ -89,6 +91,7 @@ let initEventFlag = false;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
+THREE.BufferGeometry.prototype.computeAdjacentFaces = computeAdjacentFaces;
 
 const operationHistory = new OperationHistory();
 
@@ -310,10 +313,14 @@ const INITIAL_STATE = {
     primeTowerHeight: 0.1,
     isNewUser: true,
 
+    // brush
+    brushType: BrushType.SmartFillBrush,
+    brushStackId: LEFT_EXTRUDER, // LEFT_EXTRUDER | RIGHT_EXTRUDER
     tmpSupportFaceMarks: {},
     supportOverhangAngle: 50,
     supportBrushStatus: 'add', // add | remove
 
+    // G-code
     gcodeEntity: {
         extruderLlineWidth0: 0,
         extruderLlineWidth: 0,
@@ -322,9 +329,12 @@ const INITIAL_STATE = {
         layerHeight0: 0,
         layerHeight: 0,
     },
+
+    // simpify
     simplifyType: 0, // 0: low-polygon, 1: length
     simplifyPercent: 80, // only for low polygon
     simplifyOriginModelInfo: {},
+
     // profile manager params type
     printingParamsType: 'basic',
     materialParamsType: 'basic',
@@ -469,14 +479,9 @@ export const actions = {
 
         const { toolHead } = getState().machine;
 
-        modelGroup.setDataChangedCallback(
-            () => {
-                dispatch(sceneActions.render());
-            },
-            height => {
-                dispatch(actions.updateState({ primeTowerHeight: height }));
-            }
-        );
+        modelGroup.setDataChangedCallback(() => {
+            dispatch(sceneActions.render());
+        });
 
         let { series } = getState().machine;
         series = getRealSeries(series);
@@ -1330,7 +1335,7 @@ export const actions = {
         );
     },
 
-    resetDefinitionById: (type, definitionId, shouldDestroyGcodeLine) => (
+    resetDefinitionById: (type, definitionId, shouldDestroyGcodeLine = false) => (
         dispatch,
         getState
     ) => {
@@ -1477,7 +1482,7 @@ export const actions = {
             changedSettingArray = [],
             direction = LEFT_EXTRUDER,
         }
-    ) => (dispatch, getState) => {
+    ) => async (dispatch, getState) => {
         const printingState = getState().printing;
         // const { qualityDefinitions } = printingState;
 
@@ -1511,7 +1516,7 @@ export const actions = {
             dispatch(actions.updateBoundingBox());
         }
 
-        definitionManager.updateDefinition(definitionModel);
+        await definitionManager.updateDefinition(definitionModel);
 
         dispatch(actions.validateActiveQualityPreset(direction));
         // dispatch(actions.updateState({ qualityDefinitions: [...qualityDefinitions] }));
@@ -1527,10 +1532,9 @@ export const actions = {
         }
         */
 
-        // TODO: why use setTimeout here? add comment describe the reason.
-        setTimeout(() => {
-            dispatch(actions.applyProfileToAllModels());
-        });
+        dispatch(actions.applyProfileToAllModels());
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
     },
 
     updateDefinition: ({ managerDisplayType, definitionModel, changedSettingArray }) => (dispatch) => {
@@ -1669,12 +1673,21 @@ export const actions = {
     duplicateDefinitionByType: (
         type,
         definition,
-        newDefinitionId,
-        newDefinitionName,
+        newDefinitionId = '',
+        newDefinitionName = '',
     ) => async (dispatch, getState) => {
         const state = getState().printing;
-        let name = newDefinitionName || definition.name;
+
+        // preset id
         let definitionId;
+        if (newDefinitionId) {
+            definitionId = newDefinitionId;
+        } else {
+            definitionId = `${type}.${timestamp()}`;
+        }
+
+        // preset name
+        let name = newDefinitionName || definition.name;
         if (
             type === PRINTING_MANAGER_TYPE_QUALITY
             && isDefaultQualityDefinition(definition.definitionId)
@@ -1682,11 +1695,7 @@ export const actions = {
             const machine = getState().machine;
             name = `${machine.series}-${name}`;
         }
-        if (newDefinitionId) {
-            definitionId = newDefinitionId;
-        } else {
-            definitionId = `${type}.${timestamp()}`;
-        }
+
         let metadata = definition.metadata;
         // newDefinitionId is the same as newDefinitionName
         if (isNil(newDefinitionId)) {
@@ -1831,7 +1840,7 @@ export const actions = {
             if (defaultMaterialId === definition.definitionId) {
                 dispatch(
                     actions.updateDefaultIdByType(
-                        type,
+                        PRINTING_MANAGER_TYPE_MATERIAL,
                         defintions[0].definitionId,
                         LEFT_EXTRUDER
                     )
@@ -1840,7 +1849,7 @@ export const actions = {
             if (defaultMaterialIdRight === definition.definitionId) {
                 dispatch(
                     actions.updateDefaultIdByType(
-                        type,
+                        PRINTING_MANAGER_TYPE_MATERIAL,
                         defintions[0].definitionId,
                         RIGHT_EXTRUDER
                     )
@@ -2875,7 +2884,7 @@ export const actions = {
     updateSelectedModelTransformation: (
         transformation,
         newUniformScalingState = undefined,
-        isAllRotate
+        isAllRotate = undefined,
     ) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         let transformMode;
@@ -2959,7 +2968,7 @@ export const actions = {
         dispatch(actions.updateState(modelState));
     },
 
-    hideSelectedModel: targetModel => (dispatch, getState) => {
+    hideSelectedModel: (targetModel = null) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         let targetModels;
         if (!targetModel) {
@@ -3034,6 +3043,11 @@ export const actions = {
         dispatch(actions.render());
     },
     removeSelectedModel: () => (dispatch, getState) => {
+        const { inProgress } = getState().printing;
+        if (inProgress) {
+            return;
+        }
+
         const { modelGroup } = getState().printing;
         const operations = new Operations();
         const selectedModelArray = modelGroup.selectedModelArray.concat();
@@ -3606,18 +3620,33 @@ export const actions = {
         dispatch(actions.displayModel());
     },
 
-    cut: () => dispatch => {
+    cut: () => (dispatch, getState) => {
+        const { inProgress } = getState().printing;
+        if (inProgress) {
+            return;
+        }
+
         dispatch(actions.copy());
         dispatch(actions.removeSelectedModel());
     },
 
     copy: () => (dispatch, getState) => {
+        const { inProgress } = getState().printing;
+        if (inProgress) {
+            return;
+        }
+
         const { modelGroup } = getState().printing;
         modelGroup.copy();
         dispatch(actions.render());
     },
 
     paste: () => (dispatch, getState) => {
+        const { inProgress } = getState().printing;
+        if (inProgress) {
+            return;
+        }
+
         const { modelGroup } = getState().printing;
         const modelState = modelGroup.paste();
 
@@ -3996,6 +4025,11 @@ export const actions = {
 
     // uploadModel
     undo: () => (dispatch, getState) => {
+        const { inProgress } = getState().printing;
+        if (inProgress) {
+            return;
+        }
+
         const { history, displayedType } = getState().printing;
         const { canUndo } = history;
 
@@ -4014,6 +4048,11 @@ export const actions = {
     },
 
     redo: () => (dispatch, getState) => {
+        const { inProgress } = getState().printing;
+        if (inProgress) {
+            return;
+        }
+
         dispatch(actions.exitPreview());
         const { canRedo } = getState().printing.history;
         if (canRedo) {
@@ -4683,8 +4722,7 @@ export const actions = {
                         < 0
                     ) {
                         mesh.geometry = mesh.geometry.clone();
-                        const positions = mesh.geometry.getAttribute('position')
-                            .array;
+                        const positions = mesh.geometry.getAttribute('position').array;
 
                         for (let i = 0; i < positions.length; i += 9) {
                             const tempX = positions[i + 0];
@@ -4702,14 +4740,8 @@ export const actions = {
                         mesh.geometry.computeFaceNormals();
                         mesh.geometry.computeVertexNormals();
                     }
-                    // add support_mark attribute for STL binary exporter
-                    mesh.geometry.setAttribute(
-                        'support_mark',
-                        new THREE.Float32BufferAttribute(
-                            model.supportFaceMarks.slice(0),
-                            1
-                        )
-                    );
+                    // Add byte_count attribute for STL binary exporter
+                    mesh.geometry.setAttribute('byte_count', new THREE.Float32BufferAttribute(model.supportFaceMarks.slice(0), 1));
 
                     const originalName = model.originalName;
                     const uploadPath = `${DATA_PREFIX}/${originalName}`;
@@ -4719,7 +4751,7 @@ export const actions = {
                     );
                     const stlFileName = `${basenameWithoutExt}.stl`;
                     const uploadResult = await uploadMesh(mesh, stlFileName);
-                    mesh.geometry.deleteAttribute('support_mark');
+                    mesh.geometry.deleteAttribute('byte_count');
 
                     params.data.push({
                         modelID: model.modelID,
@@ -4884,7 +4916,7 @@ export const actions = {
         }
     },
 
-    setSupportBrushRadius: radius => (dispatch, getState) => {
+    setSupportBrushRadius: (radius) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.setSupportBrushRadius(radius);
         dispatch(sceneActions.render());
@@ -4899,12 +4931,12 @@ export const actions = {
         );
     },
 
-    moveSupportBrush: raycastResult => (dispatch, getState) => {
+    moveSupportBrush: (raycastResult) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.moveSupportBrush(raycastResult);
     },
 
-    applySupportBrush: raycastResult => (dispatch, getState) => {
+    applySupportBrush: (raycastResult) => (dispatch, getState) => {
         const { modelGroup, supportBrushStatus } = getState().printing;
         modelGroup.applySupportBrush(raycastResult, supportBrushStatus);
     },
@@ -5267,7 +5299,15 @@ export const actions = {
         await dispatch(actions.updateModelMesh(results, true));
 
         return { allPepaired };
-    }
+    },
+
+    isShortcutActive: () => (dispatch, getState: () => RootState) => {
+        const { enableShortcut } = getState().printing;
+        const { currentModalPath } = getState().appbarMenu;
+
+        const headType = getCurrentHeadType(window.location.href);
+        return enableShortcut && !currentModalPath && headType === HEAD_PRINTING;
+    },
 };
 
 export default function reducer(state = INITIAL_STATE, action) {

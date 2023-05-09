@@ -1,10 +1,14 @@
 import { find } from 'lodash';
+import { Color } from 'three';
 
 import { LEFT_EXTRUDER, MACHINE_EXTRUDER_X, MACHINE_EXTRUDER_Y, RIGHT_EXTRUDER } from '../../constants';
-import { PresetModel } from '../../preset-model';
+import { MaterialPresetModel, PresetModel } from '../../preset-model';
 import sceneLogic, { PrimeTowerSettings } from '../../scene/scene.logic';
 
 import baseActions from './actions-base';
+import ThreeModel, { BYTE_COUNT_LEFT_EXTRUDER, BYTE_COUNT_RIGHT_EXTRUDER } from '../../models/ThreeModel';
+import { BrushType } from '../../models/ModelGroup';
+import { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 
 
 const render = () => (dispatch) => {
@@ -15,22 +19,188 @@ const render = () => (dispatch) => {
     );
 };
 
+const checkModelOverstep = () => {
+    return (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
 
-const getModelMaterialSettings = (model) => (dispatch, getState) => {
-    const {
-        materialDefinitions,
-        defaultMaterialId,
-        defaultMaterialIdRight
-    } = getState().printing;
-    const materialID = model.extruderConfig.shell === '0' ? defaultMaterialId : defaultMaterialIdRight;
-    const index = materialDefinitions.findIndex((d) => {
-        return d.definitionId === materialID;
-    });
-    return materialDefinitions[index] ? materialDefinitions[index].settings : materialDefinitions[0].settings;
+        const isAnyModelOverstepped = modelGroup.getOverstepped();
+        dispatch(baseActions.updateState({ isAnyModelOverstepped }));
+    };
+};
+
+/**
+ * Set both transformMode and modelGroup's transform mode.
+ */
+const setTransformMode = (value: string) => {
+    return (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+
+        modelGroup.setTransformMode(value);
+        dispatch(baseActions.updateState({
+            transformMode: value
+        }));
+        dispatch(render());
+    };
+};
+
+/**
+ * Set brush type.
+ */
+const setBrushType = (brushType: BrushType) => {
+    return (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+
+        modelGroup.setBrushType(brushType);
+
+        dispatch(baseActions.updateState({
+            brushType
+        }));
+    };
+};
+
+const setSmartFillBrushAngle = (angle: number) => {
+    return (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.setSmartFillBrushAngle(angle);
+    };
+};
+
+const startMeshColoringMode = () => {
+    return (dispatch, getState) => {
+        const {
+            modelGroup,
+
+            // materialDefinitions,
+            // defaultMaterialId,
+            // defaultMaterialIdRight,
+
+            progressStatesManager,
+        } = getState().printing;
+
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_MESH_COLORING_PREPARE);
+        dispatch(
+            baseActions.updateState({
+                stage: STEP_STAGE.PRINTING_MESH_COLORING_PREPARE_SUCCESS,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_MESH_COLORING_PREPARE_SUCCESS, 0.25),
+            })
+        );
+
+        // Use setTimeout to display progress
+        setTimeout(() => {
+            modelGroup.startMeshColoring();
+            dispatch(setTransformMode('mesh-coloring'));
+
+            dispatch(
+                baseActions.updateState({
+                    stage: STEP_STAGE.PRINTING_MESH_COLORING_PREPARE_SUCCESS,
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_MESH_COLORING_PREPARE_SUCCESS, 1),
+                })
+            );
+            // dispatch(actions.destroyGcodeLine());
+            dispatch(render());
+        }, 10);
+    };
+};
+
+const endMeshColoringMode = (shouldApplyChanges = false) => {
+    return (dispatch, getState) => {
+        dispatch(setTransformMode(''));
+        const { modelGroup } = getState().printing;
+
+        if (shouldApplyChanges) {
+            modelGroup.finishMeshColoring();
+        } else {
+            modelGroup.finishMeshColoring(false);
+        }
+
+        dispatch(render());
+    };
+};
+
+const setMeshStackId = (mark: string) => {
+    return (dispatch) => {
+        if (![LEFT_EXTRUDER, RIGHT_EXTRUDER].includes(mark)) {
+            return;
+        }
+
+        dispatch(baseActions.updateState({
+            brushStackId: mark
+        }));
+    };
+};
+
+const _getMaterialPresetModel = (materialPresetModels: MaterialPresetModel[], presetId: string): MaterialPresetModel => {
+    const index = materialPresetModels.findIndex((m) => m.definitionId === presetId);
+    if (index >= 0) {
+        return materialPresetModels[index];
+    } else {
+        return null;
+    }
+};
+
+/**
+ * Apply raycast result to mesh effect.
+ */
+const applyMeshColoringBrush = (raycastResult) => {
+    return (dispatch, getState) => {
+        const {
+            modelGroup,
+            brushStackId,
+
+            materialDefinitions,
+            defaultMaterialId,
+            defaultMaterialIdRight
+        } = getState().printing;
+
+        const materialPresetId = brushStackId === LEFT_EXTRUDER ? defaultMaterialId : defaultMaterialIdRight;
+
+        const materialPresetModel = _getMaterialPresetModel(materialDefinitions, materialPresetId);
+        const colorString = materialPresetModel.settings.color.default_value as string;
+        const color = new Color(colorString);
+
+        let faceExtruderMark = 0;
+        if (brushStackId === LEFT_EXTRUDER) {
+            faceExtruderMark = BYTE_COUNT_LEFT_EXTRUDER;
+        } else if (brushStackId === RIGHT_EXTRUDER) {
+            faceExtruderMark = BYTE_COUNT_RIGHT_EXTRUDER;
+        }
+        modelGroup.applyMeshColoringBrush(raycastResult, faceExtruderMark, color);
+    };
+};
+
+const getModelShellStackId = (model: ThreeModel): string => {
+    const useLeftExtruder = model.extruderConfig.shell === '0';
+    return useLeftExtruder ? LEFT_EXTRUDER : RIGHT_EXTRUDER;
+};
+
+/**
+ * Return material preset model for model.
+ *
+ * We only take the material used to print shell.
+ */
+const getModelShellMaterialPresetModel = (model) => {
+    return (dispatch, getState) => {
+        const {
+            materialDefinitions,
+            defaultMaterialId,
+            defaultMaterialIdRight
+        } = getState().printing;
+
+        const materialID = model.extruderConfig.shell === '0' ? defaultMaterialId : defaultMaterialIdRight;
+        const index = materialDefinitions.findIndex((d) => d.definitionId === materialID);
+        return materialDefinitions[index] ? materialDefinitions[index] : materialDefinitions[0];
+    };
 };
 
 const applyPrintSettingsToModels = () => (dispatch, getState) => {
     const {
+        extruderLDefinition,
+        extruderRDefinition,
+
+        materialDefinitions,
+        defaultMaterialId,
+        defaultMaterialIdRight,
+
         qualityDefinitions,
         activePresetIds,
         modelGroup,
@@ -62,11 +232,39 @@ const applyPrintSettingsToModels = () => (dispatch, getState) => {
     }
 
     // update parameters for each model
-    if (leftPresetModel) {
+    if (leftPresetModel || rightPresetModel) {
         const globalSettings = leftPresetModel.settings;
+
+        const leftMaterialPresetModel = materialDefinitions.find((d) => d.definitionId === defaultMaterialId);
+        const rightMaterialPresetModel = materialDefinitions.find((d) => d.definitionId === defaultMaterialIdRight);
+
         modelGroup.getThreeModels().forEach((model) => {
-            const materialSettings = dispatch(getModelMaterialSettings(model));
+            let lineWidth: number = extruderLDefinition.settings.machine_nozzle_size.default_value;
+
+            // Set extruder color
+            const colors = [];
+            if (leftMaterialPresetModel) {
+                colors.push(leftMaterialPresetModel.settings.color.default_value);
+            }
+            if (rightMaterialPresetModel) {
+                colors.push(rightMaterialPresetModel.settings.color.default_value);
+            }
+
+            model.setExtruderColors(colors);
+
+            // Set shell color
+            const shellStackId = getModelShellStackId(model);
+
+            lineWidth = shellStackId === LEFT_EXTRUDER
+                ? extruderLDefinition.settings.machine_nozzle_size.default_value
+                : extruderRDefinition.settings.machine_nozzle_size.default_value;
+
+            const materialPresetModel = dispatch(getModelShellMaterialPresetModel(model));
+            const materialSettings = materialPresetModel.settings;
+
+            // update material color
             model.updateMaterialColor(materialSettings.color.default_value);
+
 
             const layerHeight = globalSettings.layer_height.default_value;
             const bottomThickness = globalSettings.bottom_thickness.default_value;
@@ -75,7 +273,7 @@ const applyPrintSettingsToModels = () => (dispatch, getState) => {
             const topLayers = Math.ceil(Math.round(topThickness / layerHeight));
 
             model.updateClipperConfig({
-                lineWidth: materialSettings.machine_nozzle_size.default_value,
+                lineWidth,
                 wallThickness: globalSettings.wall_thickness.default_value,
                 topLayers,
                 bottomLayers,
@@ -84,7 +282,6 @@ const applyPrintSettingsToModels = () => (dispatch, getState) => {
                 infillPattern: globalSettings.infill_pattern.default_value,
                 magicSpiralize: globalSettings.magic_spiralize.default_value,
             });
-            model.materialPrintTemperature = materialSettings.material_print_temperature.default_value;
         });
     }
 
@@ -99,6 +296,7 @@ const applyPrintSettingsToModels = () => (dispatch, getState) => {
     const models = modelGroup.getModels();
     modelGroup.models = models.concat();
 
+    dispatch(checkModelOverstep());
     dispatch(render());
 };
 
@@ -191,9 +389,22 @@ const finalizeSceneSettings = (
 };
 
 export default {
+    // basic scene actions
     render,
 
+    // brush
+    setBrushType,
+    setSmartFillBrushAngle,
+
+    // mesh coloring
+    startMeshColoringMode,
+    endMeshColoringMode,
+    setMeshStackId,
+    applyMeshColoringBrush,
+
+    // print settings -> scene
     applyPrintSettingsToModels,
 
+    // scene -> print settings
     finalizeSceneSettings,
 };

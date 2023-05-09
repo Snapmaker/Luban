@@ -1,7 +1,7 @@
+import { ConvexGeometry } from '@snapmaker/luban-platform';
 import { Observable } from 'rxjs';
-import { BufferGeometry, Geometry, Group, Vector3 } from 'three';
+import { BufferGeometry, Group, Vector3 } from 'three';
 
-import ConvexGeometry from '../three-extensions/ConvexGeometry';
 import ThreeUtils from '../three-extensions/ThreeUtils';
 import ModelLoader from '../ui/widgets/PrintingVisualizer/ModelLoader';
 
@@ -49,16 +49,18 @@ const loadModel = (uploadPath: string) => {
                     );
                     // Send positions back to caller
                     const positions = geometry.getAttribute('position').array;
+                    const byteCountAttribute = geometry.getAttribute('byte_count');
                     // const uvs = geometry.getAttribute('uv')?.array || [];
                     // observer.next({ type: 'LOAD_MODEL_POSITIONS', positions, originalPosition, uvs });
                     observer.next({
                         type: 'LOAD_MODEL_POSITIONS',
                         positions,
                         originalPosition,
+                        byteCount: byteCountAttribute ? byteCountAttribute.array : null,
                     });
 
                     // Calculate convex of model
-                    const vertices = [];
+                    const vertices: Vector3[] = [];
                     for (let i = 0; i < positions.length; i += 3) {
                         vertices.push(
                             new Vector3(
@@ -68,13 +70,10 @@ const loadModel = (uploadPath: string) => {
                             )
                         );
                     }
-                    const convexGeometry = new ConvexGeometry(vertices) as Geometry;
-                    const convexBufferGeometry = new BufferGeometry().fromGeometry(
-                        convexGeometry
-                    );
-                    const convexPositions = convexBufferGeometry.getAttribute(
-                        'position'
-                    ).array;
+
+                    const convexGeometry = new ConvexGeometry(vertices);
+                    const convexPositions = convexGeometry.getAttribute('position').array;
+
                     observer.next({
                         type: 'LOAD_MODEL_CONVEX',
                         positions: convexPositions,

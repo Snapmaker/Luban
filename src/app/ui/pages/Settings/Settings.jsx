@@ -7,6 +7,7 @@ import Uri from 'jsuri';
 import React, { PureComponent } from 'react';
 import { withRouter } from 'react-router-dom';
 // import { Link } from 'react-router-dom';
+import isElectron from 'is-electron';
 import settings from '../../../config/settings';
 import Anchor from '../../components/Anchor';
 import confirm from '../../../lib/confirm';
@@ -17,6 +18,7 @@ import General from './General';
 // import Workspace from './Workspace';
 import MachineSettings from './MachineSettings';
 import styles from './index.styl';
+import Download from './Download';
 
 const mapSectionPathToId = (path = '') => {
     return camelCase(path.split('/')[0] || '');
@@ -35,6 +37,12 @@ class Settings extends PureComponent {
             path: 'general',
             title: i18n._('key-App/Settings/Settings-General'),
             component: (props) => <General {...props} />
+        },
+        isElectron() && {
+            id: 'download',
+            path: 'download',
+            title: i18n._('key-App/Settings/Settings-Download'),
+            component: (props) => <Download {...props} />
         },
         {
             id: 'machine',
@@ -133,7 +141,11 @@ class Settings extends PureComponent {
         // About
         about: {},
         // Firmware
-        firmware: {}
+        firmware: {},
+        // download manager
+        download: {
+            onChangeFile: () => { }
+        }
     };
 
     getInitialState() {

@@ -12,6 +12,7 @@ import { RootState } from '../../../flux/index.def';
 import { actions as machineActions } from '../../../flux/machine';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
+import { actions as appGlobalActions } from '../../../flux/app-global';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
 import { machineStore } from '../../../store/local-storage';
@@ -24,7 +25,7 @@ import PrintingConfigurationsWidget, { PresetInitialization } from '../../widget
 import PrintingOutputWidget from '../../widgets/PrintingOutput';
 import Thumbnail from '../../widgets/PrintingOutput/Thumbnail';
 import PrintingVisualizer from '../../widgets/PrintingVisualizer';
-import sceneLogic from '../../../scene/scene.logic';
+// import sceneLogic from '../../../scene/scene.logic';
 
 import HomePage from '../HomePage';
 import { CaseConfigGimbal, CaseConfigPenHolder, CaseConfigSM2Gimbal } from '../HomePage/CaseConfig';
@@ -59,7 +60,7 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
     const canGroup = useSelector((state: RootState) => state.printing?.modelGroup?.canGroup());
     const canUngroup = useSelector((state: RootState) => state.printing?.modelGroup?.canUngroup());
     const canMerge = useSelector((state: RootState) => state.printing?.modelGroup?.canMerge());
-    const canSplit = sceneLogic.canSplit();
+    // const canSplit = sceneLogic.canSplit();
 
     // simplify & repair
     const canSimplify = useSelector((state: RootState) => state.printing?.modelGroup?.canSimplify());
@@ -208,6 +209,7 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
                             dispatch(printingActions.groupAndAlign());
                         }
                     },
+                    /*
                     {
                         title: i18n._('key-3DP/MainToolBar-Split'),
                         disabled: !canSplit || !enableShortcut,
@@ -217,6 +219,7 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
                             dispatch(printingActions.splitSelected());
                         }
                     },
+                    */
                     {
                         title: i18n._('key-3DP/MainToolBar-Group'),
                         disabled: !canGroup || !enableShortcut,
@@ -250,6 +253,8 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
                                 // setPageMode(PageMode.Default);
                             } else {
                                 setPageMode(PageMode.Simplify);
+
+                                // apply simplify immediately
                                 const repaired = await dispatch(printingActions.isModelsRepaired());
                                 if (repaired) {
                                     dispatch(printingActions.modelSimplify(simplifyType, simplifyPercent, true));
@@ -309,6 +314,37 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
                 },
             },
         ];
+        // no support browser and some machine/device for now
+        const isCaseResourceMachine = (currSeries, currToolHead) => {
+            const isDual = isDualExtruder(currToolHead.printingToolhead);
+            if (
+                (currSeries === MACHINE_SERIES.A150.identifier && isDual)
+                || (currSeries === MACHINE_SERIES.A250.identifier && isDual)
+                || (currSeries === MACHINE_SERIES.A350.identifier && isDual)
+                || currSeries === MACHINE_SERIES.A400.identifier || currSeries === MACHINE_SERIES.J1.identifier
+            ) {
+                return true;
+            } else {
+                return false;
+            }
+        };
+        if (isElectron() && isCaseResourceMachine(series, toolHead)) {
+            leftItems.push(
+                {
+                    type: 'separator',
+                    name: 'separator'
+                },
+                {
+                    title: i18n._('key-CaseResource/MainToolBar-DownloadManager Download'),
+                    type: 'button',
+                    name: 'MainToolbarModelRepository',
+                    action: async (e) => {
+                        e.stopPropagation();
+                        dispatch(appGlobalActions.updateState({ showCaseResource: true }));
+                    }
+                }
+            );
+        }
 
         return (
             <MainToolBar
@@ -375,19 +411,20 @@ declare interface PrintMainPageProps {
 }
 
 const Printing: React.FC<PrintMainPageProps> = ({ location }) => {
-    const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions);
-    const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId);
-    const defaultMaterialIdRight = useSelector(state => state?.printing?.defaultMaterialIdRight);
+    const [isInitLoading, setIsInitLoading] = useState(false);
+    const materialDefinitions = useSelector((state: RootState) => state?.printing?.materialDefinitions);
+    const defaultMaterialId = useSelector((state: RootState) => state?.printing?.defaultMaterialId);
+    const defaultMaterialIdRight = useSelector((state: RootState) => state?.printing?.defaultMaterialIdRight);
     const leftMaterial = find(materialDefinitions, { definitionId: defaultMaterialId });
     const rightMaterial = find(materialDefinitions, { definitionId: defaultMaterialIdRight });
 
-    const series = useSelector(state => state?.machine?.series);
-    const { toolHead: { printingToolhead } } = useSelector(state => state.machine, shallowEqual);
-    const activeMachine = useSelector(state => state.machine.activeMachine);
+    const series = useSelector((state: RootState) => state?.machine?.series);
+    const { toolHead: { printingToolhead } } = useSelector((state: RootState) => state.machine, shallowEqual);
+    const activeMachine = useSelector((state: RootState) => state.machine.activeMachine);
 
     const {
         isConnected,
-    } = useSelector(state => state.workspace, shallowEqual);
+    } = useSelector((state: RootState) => state.workspace, shallowEqual);
 
     const isDual = isDualExtruder(printingToolhead);
 
@@ -401,20 +438,37 @@ const Printing: React.FC<PrintMainPageProps> = ({ location }) => {
     const [
         renderHomepage, renderMainToolBar, renderWorkspace, renderMachineMaterialSettings
     ] = useRenderMainToolBar(pageMode, setPageMode, !!materialDefinitions.length);
-    const modelGroup = useSelector(state => state.printing.modelGroup);
+    const modelGroup = useSelector((state: RootState) => state.printing.modelGroup);
+    const { qualityDefinitions } = useSelector((state: RootState) => state.printing);
     const thumbnail = useRef();
     useUnsavedTitle(pageHeadType);
 
     useEffect(() => {
         (async () => {
-            if (!location?.state?.initialized) {
+            if (!location?.state?.initialized || qualityDefinitions.length <= 0) {
+                setIsInitLoading(true);
                 await dispatch(printingActions.init());
+                setIsInitLoading(false);
+            }
+            // for download manager open model
+            if (location?.state?.needOpenModel) {
+                const { fileName, savePath } = location.state;
+                dispatch(
+                    printingActions.uploadModel(
+                        [
+                            JSON.stringify({
+                                name: fileName,
+                                path: savePath || '',
+                            })
+                        ],
+                    )
+                );
             }
         })();
 
         // Make sure execute 'initSocketEvent' after 'printingActions.init' on openning project
-        setTimeout(() => {
-            dispatch(printingActions.initSocketEvent());
+        setTimeout(async () => {
+            await dispatch(printingActions.initSocketEvent());
         }, 50);
         dispatch(printingActions.checkNewUser());
 
@@ -523,6 +577,7 @@ const Printing: React.FC<PrintMainPageProps> = ({ location }) => {
             renderMainToolBar={() => renderMainToolBar(activeMachine, materialInfo, isConnected)}
             renderRightView={renderRightView}
             renderModalView={renderModalView}
+            isContentLoading={isInitLoading}
         >
 
             {/* initialization of the scene */}
@@ -537,7 +592,6 @@ const Printing: React.FC<PrintMainPageProps> = ({ location }) => {
                 onDropRejected={onDropRejected}
             >
                 <PrintingVisualizer
-                    widgetId="printingVisualizer"
                     pageMode={pageMode}
                     setPageMode={setPageMode}
                 />
