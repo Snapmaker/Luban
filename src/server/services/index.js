@@ -236,6 +236,9 @@ function registerApis(app) {
 
     // parameter
     app.get(urljoin(settings.route, 'api/parameter-document/:category/:key'), api.profileDefinitions.getParameterDoc);
+
+    // case resources
+    app.get(urljoin(settings.route, 'api/case-resources/case-list'), api.caseResrouces.getCaseList);
 }
 
 export {

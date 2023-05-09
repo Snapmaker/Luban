@@ -81,7 +81,6 @@ const cpFileToTmp = async (file, uploadName) => {
     const originalName = path.basename(file.name);
     uploadName = uploadName || originalName;
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
-
     return new Promise(resolve => {
         fs.copyFile(file.path, uploadPath, (err) => {
             if (err) {
@@ -98,10 +97,10 @@ const cpFileToTmp = async (file, uploadName) => {
 
 export const set = async (req, res) => {
     let { uploadName } = req.body;
-    const file = req.files.file;
+    const file = req.files.file || JSON.parse(req.body.file);
     const headType = req.query.headType;
     try {
-        if (file) { // post blob file in web
+        if (file) { // post blob file/path string in web
             let filename = file.name, filePath = file.path, children = [];
             ({ filename, filePath, children = [] } = await convertFileToSTL(file, headType === 'printing'));
             const originalName = removeSpecialChars(path.basename(filename));
@@ -113,22 +112,32 @@ export const set = async (req, res) => {
                 item.parentUploadName = uploadName;
             });
 
-            const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
-            mv(filePath, uploadPath, (err) => {
-                if (err) {
-                    log.error(`Failed to upload file ${originalName}`);
-                    res.status(ERR_INTERNAL_SERVER_ERROR).send({
-                        msg: `Failed to upload file ${originalName}: ${err}`
-                    });
-                } else {
-                    res.send({
-                        originalName,
-                        uploadName,
-                        children
-                    });
-                    res.end();
-                }
-            });
+            if (!file.fieldName) { // get path string
+                const cpRes = await cpFileToTmp(file, uploadName);
+                uploadName = cpRes.uploadName;
+                res.send({
+                    originalName,
+                    uploadName,
+                    children
+                });
+            } else { // get blob file
+                const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
+                mv(filePath, uploadPath, (err) => {
+                    if (err) {
+                        log.error(`Failed to upload file ${originalName}`);
+                        res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                            msg: `Failed to upload file ${originalName}: ${err}`
+                        });
+                    } else {
+                        res.send({
+                            originalName,
+                            uploadName,
+                            children
+                        });
+                        res.end();
+                    }
+                });
+            }
         } else { // post file pathname in electron
             const ret = await cpFileToTmp(JSON.parse(req.body.file));
             res.send(ret);
@@ -213,7 +222,10 @@ export const uploadCaseFile = (req, res) => {
  * @param res
  */
 export const uploadGcodeFile = async (req, res) => {
-    const file = req.files.file;
+    let file = req.files.file;
+    if (!file && req.body && typeof req.body.file === 'string') {
+        file = JSON.parse(req.body.file);
+    }
     let originalName, uploadName, uploadPath, originalPath;
     if (file) {
         originalPath = file.path;

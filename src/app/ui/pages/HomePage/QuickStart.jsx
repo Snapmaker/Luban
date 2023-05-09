@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
-// import { throttle } from 'lodash';
 import classNames from 'classnames';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
@@ -11,7 +10,7 @@ import { actions as projectActions } from '../../../flux/project';
 import styles from './styles.styl';
 
 const QuickStart = (props) => {
-    const { history } = props;
+    const { history, noTitle } = props;
     // useState
     const [caseConfig, setCaseConfig] = useState([]);
     const [caseConfigFourAxis, setCaseConfigFourAxis] = useState([]);
@@ -32,6 +31,7 @@ const QuickStart = (props) => {
         dispatch(projectActions.openProject(caseItem.pathConfig, history));
     }, [dispatch, openingProject, history]);
 
+
     //  useEffect
     useEffect(() => {
         const { caseList, caseListFourAxis } = getCaseList(series, toolHead);
@@ -47,9 +47,11 @@ const QuickStart = (props) => {
 
     return (
         <div className={styles['quick-start-container']}>
-            <div className={classNames(styles['title-label'], 'highlight-heading', 'margin-bottom-16')}>
-                {i18n._('key-HomePage/Begin-Case Library')}
-            </div>
+            {!noTitle && (
+                <div className={classNames(styles['title-label'], 'highlight-heading', 'margin-bottom-16')}>
+                    {i18n._('key-HomePage/CaseLibrary-Quick Start')}
+                </div>
+            )}
             <div className={
                 classNames(
                     styles['case-list'],
@@ -113,7 +115,8 @@ const QuickStart = (props) => {
 };
 
 QuickStart.propTypes = {
-    history: PropTypes.object
+    history: PropTypes.object,
+    noTitle: PropTypes.bool
 };
 
 export default QuickStart;

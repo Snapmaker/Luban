@@ -513,3 +513,15 @@ export const CaseConfigSM2Gimbal = {
         name: 'Case-SM2-Gimbal-DualColor.snap3dp',
     }
 };
+
+
+export const CaseConfigQuickStart = {
+    title: 'Quick Start',
+    author: 'snapmaker',
+    imgSrc: '../../resources/images/user-case/quick-start.jpg',
+    pathConfig: {
+        isDatastoragePath: false,
+        path: '',
+        name: '',
+    }
+};

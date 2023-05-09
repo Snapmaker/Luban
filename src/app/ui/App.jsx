@@ -11,6 +11,7 @@ import { actions as printingActions } from '../flux/printing';
 import { actions as settingActions } from '../flux/setting';
 import { actions as textActions } from '../flux/text';
 import { actions as workspaceActions } from '../flux/workspace';
+import { actions as appGlobalActions } from '../flux/app-global';
 import { Server } from '../flux/workspace/Server';
 import { Canvas2dZoom } from '../lib/canvas2d-zoom/index';
 import { logErrorToGA } from '../lib/gaEvent';
@@ -34,6 +35,7 @@ class App extends PureComponent {
         machineInit: PropTypes.func.isRequired,
         functionsInit: PropTypes.func.isRequired,
         textInit: PropTypes.func.isRequired,
+        appGlobalInit: PropTypes.func.isRequired,
         shouldCheckForUpdate: PropTypes.bool.isRequired,
         enableShortcut: PropTypes.bool.isRequired,
         updateMultipleEngine: PropTypes.func.isRequired,
@@ -116,6 +118,7 @@ class App extends PureComponent {
 
         this.props.functionsInit();
         this.props.textInit();
+        this.props.appGlobalInit();
         UniApi.Window.initWindow();
         // auto update
         setTimeout(() => {
@@ -198,6 +201,7 @@ const mapDispatchToProps = (dispatch) => {
             dispatch(editorActions.initSelectedModelListener('laser'));
             dispatch(editorActions.initSelectedModelListener('cnc'));
         },
+        appGlobalInit: () => dispatch(appGlobalActions.init()),
         updateMultipleEngine: () => dispatch(machineActions.updateMultipleEngine())
     };
 };

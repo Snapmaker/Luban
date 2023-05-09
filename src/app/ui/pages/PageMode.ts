@@ -8,6 +8,9 @@ export enum PageMode {
     // Simplify mode: Simplify selected models
     Simplify = 'Simplify',
 
+    // Case Resource Download Manager
+    DownloadManager = 'DownloadManager',
+
     // Support mode: Toggle between "Auto Support" and "Edit Support"
     Support = 'Support',
 

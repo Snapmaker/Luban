@@ -1,6 +1,6 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
-import { app, BrowserWindow, ipcMain, Menu, powerSaveBlocker, protocol, screen, session, shell } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu, powerSaveBlocker, protocol, screen, session, shell } from 'electron';
 import { enable as electronEnable, initialize as electronRemoteMainInitialize } from '@electron/remote/main';
 import { autoUpdater } from 'electron-updater';
 import Store from 'electron-store';
@@ -363,7 +363,6 @@ const showMainWindow = async () => {
         }
     }
 
-
     window.on('close', (e) => {
         e.preventDefault();
         const bounds = window.getBounds();
@@ -408,6 +407,177 @@ const showMainWindow = async () => {
 
     ipcMain.on('open-recover-folder', () => {
         shell.openPath(`${userDataDir}/snapmaker-recover`);
+    });
+
+
+    // update download manager save path
+    ipcMain.on('update-download-manager-save-path', (_, data) => {
+        if (!data) return;
+        config.set('downloadSavePath', JSON.parse(data).path);
+    });
+
+    // download mananger
+    const downloadingArr = [];
+    mainWindow.webContents.session.on('will-download', (event, downloadItem) => {
+        const fileName = downloadItem.getFilename();
+        const downloadUrl = downloadItem.getURL();
+        const startTime = downloadItem.getStartTime();
+        const initialState = downloadItem.getState();
+
+        let savePath = path.join(config.get('downloadSavePath'), fileName);
+
+        // avoid duplicate file name
+        let fileNum = 0;
+        const ext = path.extname(savePath);
+        const name = path.basename(savePath, ext);
+        const dir = path.dirname(savePath);
+        while (fs.existsSync(savePath)) {
+            fileNum += 1;
+            savePath = path.format({
+                dir,
+                ext,
+                name: `${name}${fileNum > 0 ? `(${fileNum})` : ''}`,
+            });
+        }
+        savePath && downloadItem.setSavePath(savePath);
+
+        // record current download【for now, this just for stop/delete】
+        downloadingArr.push({
+            savePath,
+            ext,
+            name,
+            fileNum,
+            downloadUrl,
+            startTime,
+            state: initialState,
+            paused: downloadItem.isPaused(),
+            ref: downloadItem
+        });
+
+        // send msg to renderer process, a new download start
+        mainWindow.webContents.send('new-download-item', {
+            savePath,
+            ext,
+            name,
+            fileNum,
+            downloadUrl,
+            startTime,
+            state: initialState,
+            paused: downloadItem.isPaused(),
+            totalBytes: downloadItem.getTotalBytes(),
+            receivedBytes: downloadItem.getReceivedBytes(),
+        });
+
+        // update download item status
+        downloadItem.on('updated', (e, state) => {
+            mainWindow.webContents.send('download-item-updated', {
+                savePath,
+                ext,
+                name,
+                fileNum,
+                downloadUrl,
+                startTime,
+                state,
+                paused: downloadItem.isPaused(),
+                totalBytes: downloadItem.getTotalBytes(),
+                receivedBytes: downloadItem.getReceivedBytes(),
+            });
+        });
+
+        // download done
+        downloadItem.on('done', (e, state) => {
+            mainWindow.webContents.send('download-item-done', {
+                savePath,
+                ext,
+                name,
+                fileNum,
+                downloadUrl,
+                startTime,
+                state,
+                paused: downloadItem.isPaused(),
+                totalBytes: downloadItem.getTotalBytes(),
+                receivedBytes: downloadItem.getReceivedBytes(),
+            });
+
+            // remove finish downloadItem in downloading arr
+            const finishIndex = downloadingArr.findIndex(item => item.savePath === savePath && item.startTime === startTime);
+            downloadingArr.splice(finishIndex, 1);
+        });
+    });
+
+    // open dialog for setting Download Manager default download path(save path)
+    ipcMain.on('select-directory', () => {
+        dialog.showOpenDialog({ title: 'Select a location to save', properties: ['openDirectory', 'createDirectory'] }).then(res => {
+            mainWindow.webContents.send('selected-directory', JSON.stringify(res));
+        }).catch(e => console.error(e));
+    });
+
+    // open download manager save path floder by sys file Explorer
+    ipcMain.on('open-download-save-path', (_, savePath) => {
+        shell.openPath(savePath);
+    });
+
+    // open browser
+    ipcMain.on('open-browser', (_, browserUrl) => {
+        shell.openExternal(browserUrl);
+    });
+
+    // remove download manager file/files/folder
+    const rmDir = (dirPath, removeSelf = true) => {
+        let files;
+        try {
+            files = fs.readdirSync(dirPath);
+        } catch (e) {
+            console.error(`Read directory fail ${dirPath}`);
+            return;
+        }
+
+        if (files.length > 0) {
+            for (let i = 0; i < files.length; i++) {
+                const filePath = `${dirPath}/${files[i]}`;
+                if (fs.statSync(filePath).isFile()) {
+                    fs.unlinkSync(filePath);
+                } else {
+                    rmDir(filePath);
+                }
+            }
+        }
+        if (removeSelf) {
+            fs.rmdirSync(dirPath);
+        }
+    };
+    const clearPath = removePath => {
+        if (fs.existsSync(removePath)) {
+            if (fs.statSync(removePath).isFile()) {
+                fs.unlink(removePath, err => err && console.error(err));
+            } else {
+                rmDir(removePath, true);
+            }
+        }
+    };
+    ipcMain.on('download-manager-remove-file', (_, downloadItem) => {
+        const { savePath, startTime } = downloadItem;
+        const finishIndex = downloadingArr.findIndex(item => item.savePath === savePath && item.startTime === startTime);
+        // if is finished download item,
+        if (finishIndex === -1) {
+            // remove local file(for now no need to delete local file)
+            // clearPath(downloadItem.savePath);
+            return;
+        }
+
+        // if is downloading, cancel it
+        try {
+            const target = downloadingArr[finishIndex];
+            target.ref.cancel();
+        } catch (err) {
+            console.error(err);
+        }
+
+        // remove curr downloadItem
+        downloadingArr.splice(finishIndex, 1);
+    });
+    ipcMain.on('clear-files', (_, removePaths) => {
+        removePaths.forEach(removePath => clearPath(removePath));
     });
 };
 
@@ -502,3 +672,4 @@ protocol.registerSchemesAsPrivileged([{ scheme: 'luban', privileges: { standard:
  * when ready
  */
 app.whenReady().then(showMainWindow);
+

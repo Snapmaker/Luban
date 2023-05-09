@@ -5,6 +5,7 @@ import classNames from 'classnames';
 // import i18next from 'i18next';
 // import { includes } from 'lodash';
 // import { longLang } from '../../constants';
+import { Spin } from 'antd';
 import styles from './styles/project.styl';
 
 class ProjectLayout extends PureComponent {
@@ -13,6 +14,7 @@ class ProjectLayout extends PureComponent {
         children: PropTypes.array,
         renderModalView: PropTypes.func,
         renderMainToolBar: PropTypes.func,
+        isContentLoading: PropTypes.bool
     };
 
     state = {};
@@ -48,38 +50,40 @@ class ProjectLayout extends PureComponent {
                         )
                     }
                 </div>
-                <div
-                    className={classNames(
-                        styles['content-flex'],
-                        // {
-                        //     [styles['long-lang-content-height']]: includes(longLang, i18next.language),
-                        // }
-                    )}
-                >
+                <Spin spinning={this.props.isContentLoading || false}>
                     <div
-                        ref={this.rightView}
-                        className={classNames(styles['configuration-panel'])}
+                        className={classNames(
+                            styles['content-flex'],
+                            // {
+                            //     [styles['long-lang-content-height']]: includes(longLang, i18next.language),
+                            // }
+                        )}
                     >
+                        <div
+                            ref={this.rightView}
+                            className={classNames(styles['configuration-panel'])}
+                        >
+                            {
+                                renderRightView && (
+                                    renderRightView()
+                                )
+                            }
+                        </div>
+
+                        <div
+                            ref={this.centerView}
+                            className={classNames(styles.visualizer)}
+                        >
+                            {children}
+                        </div>
+
                         {
-                            renderRightView && (
-                                renderRightView()
+                            renderModalView && (
+                                renderModalView()
                             )
                         }
                     </div>
-
-                    <div
-                        ref={this.centerView}
-                        className={classNames(styles.visualizer)}
-                    >
-                        {children}
-                    </div>
-
-                    {
-                        renderModalView && (
-                            renderModalView()
-                        )
-                    }
-                </div>
+                </Spin>
             </div>
         );
     }

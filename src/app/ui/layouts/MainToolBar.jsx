@@ -22,15 +22,16 @@ class MainToolBar extends React.PureComponent {
         activeMachine: PropTypes.object, // currently active machine
         isConnected: PropTypes.bool,
         materialInfo: PropTypes.object,
-        setShowMachineMaterialSettings: PropTypes.func
+        setShowMachineMaterialSettings: PropTypes.func,
+        wrapID: PropTypes.string
     };
 
     state = {};
 
     actions = {
-        handleClick: (callback) => {
+        handleClick: (callback, event) => {
             try {
-                callback && callback();
+                callback && callback(event);
             } catch (e) {
                 console.error(e);
             }
@@ -51,10 +52,12 @@ class MainToolBar extends React.PureComponent {
         } = this.props;
 
         const { activeMachine = null } = this.props;
+        const { wrapID } = this.props;
 
         let key = 0;
         return (
             <div
+                id={wrapID || ''}
                 className={classNames(
                     'clearfix',
                     styles['toolbar-container'],

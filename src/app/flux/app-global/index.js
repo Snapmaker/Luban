@@ -1,4 +1,5 @@
 import path from 'path';
+import isElectron from 'is-electron';
 import { EPSILON, HEAD_PRINTING, DATA_PREFIX, } from '../../constants';
 import { controller } from '../../lib/controller';
 import { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
@@ -12,6 +13,10 @@ import ThreeGroup from '../../models/ThreeGroup';
 import workerManager from '../../lib/manager/workerManager';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 
+import { downloadManagerStore } from '../../store/local-storage';
+import { DetailModalState } from '../../constants/downloadManager';
+import downloadMananger from '../../lib/download-mananger';
+
 const ACTION_UPDATE_STATE = 'app-global/ACTION_UPDATE_STATE';
 const DEFAULT_MODAL_ZINDEX = 9999;
 const DEFAULT_STATE = {
@@ -21,7 +26,11 @@ const DEFAULT_STATE = {
     savedModalZIndex: DEFAULT_MODAL_ZINDEX,
 
     showArrangeModelsError: false,
-    arrangeModelZIndex: DEFAULT_MODAL_ZINDEX
+    arrangeModelZIndex: DEFAULT_MODAL_ZINDEX,
+
+    downloadManangerSavedPath: !isElectron() ? '' : path.join(window.require('@electron/remote').app.getPath('userData'), 'downloadManager.json'),
+    showCaseResource: false,
+    caseResourceId: DetailModalState.Reset,
 };
 const SHOW_MODAL_TIME = 15000;
 let clearSavedModalTimer = null;
@@ -41,6 +50,20 @@ export const actions = {
                 state
             };
         }
+    },
+    // Initialize app-global data, get downloadManangerSavedPath configurations from store file
+    init: () => (dispatch) => {
+        if (!isElectron()) {
+            return;
+        }
+        const downloadManangerSavedPath = downloadManagerStore.get('downloadManangerSavedPath');
+        if (downloadManangerSavedPath !== DEFAULT_STATE.downloadManangerSavedPath) {
+            dispatch(actions.updateState({ downloadManangerSavedPath }));
+        }
+
+        // update download manager save path
+        const { ipcRenderer } = window.require('electron');
+        ipcRenderer.send('update-download-manager-save-path', JSON.stringify({ path: downloadManangerSavedPath }));
     },
 
     // TODO: need to add an close function
@@ -237,6 +260,14 @@ export const actions = {
             allPepaired: promptTasks.length === 0,
             results
         };
+    },
+
+    updateDownloadManangerSavedPath: (downloadManangerSavedPath) => dispatch => {
+        downloadManagerStore.set('downloadManangerSavedPath', downloadManangerSavedPath);
+        dispatch(actions.updateState({ downloadManangerSavedPath }));
+
+        // update download manager save path to main process
+        downloadMananger.emit('update-download-manager-save-path', JSON.stringify({ path: downloadManangerSavedPath }));
     }
 };
 export default function reducer(state = DEFAULT_STATE, action) {

@@ -10,6 +10,7 @@ import pkg from '../../../package.json';
 import { DATA_PATH } from '../constants';
 import Dialog from './dialog';
 import i18n from './i18n';
+import DownloadManager from './download-mananger';
 
 class AppbarMenuEvent extends events.EventEmitter {
 }
@@ -486,6 +487,7 @@ const APP = {
 };
 
 export default {
+    DownloadManager,
     Update,
     Event,
     Menu,

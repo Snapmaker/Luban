@@ -79,6 +79,7 @@
     "spawn-default-shell": "2.0.0",
     "static-eval": "2.0.5",
     "superagent": "8.0.3",
+    "superagent-use": "0.1.0",
     "svgpath": "^2.5.0",
     "tar": "6.1.11",
     "three": "0.124.0",
