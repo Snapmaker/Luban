@@ -163,7 +163,7 @@ function VisualizerLeftBar(
 
             logTransformOperation(HEAD_PRINTING, 'support', 'edit_in');
         });
-    }, [fitViewIn]);
+    }, [dispatch, fitViewIn, setPageMode]);
 
     /**
      * Enter "Mesh Coloring" page mode.
@@ -172,14 +172,16 @@ function VisualizerLeftBar(
         dispatch(printingActions.exitPreview());
 
         // In preview mode, wait for modelGroup.object.parent recovery
-        setTimeout(() => {
-            // fit camera to target model
-            fitViewIn && fitViewIn();
+        // setTimeout(() => {
+        // show
+        setPageMode(PageMode.MeshColoring);
 
-            // show
-            setPageMode(PageMode.MeshColoring);
-        });
-    }, [fitViewIn]);
+        // fit camera to target model
+        setTimeout(() => {
+            fitViewIn && fitViewIn();
+        }, 50);
+        // });
+    }, [dispatch, fitViewIn, setPageMode]);
 
 
     useEffect(() => {

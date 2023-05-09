@@ -10,6 +10,8 @@ import { actions as printingActions } from '../../../flux/printing';
 import { useMaterialPresetModel } from '../../../flux/printing/actions-preset';
 import sceneActions from '../../../flux/printing/actions-scene';
 import i18n from '../../../lib/i18n';
+import type { ShortcutHandler } from '../../../lib/shortcut';
+import { ShortcutHandlerPriority, ShortcutManager } from '../../../lib/shortcut';
 import { BrushType } from '../../../models/ModelGroup';
 import { Button } from '../../components/Buttons';
 import { NumberInput as Input } from '../../components/Input';
@@ -19,6 +21,9 @@ import styles from './styles.styl';
 interface MeshColoringOverlayProps {
     onClose: () => void;
 }
+
+const DEFAULT_SPHERE_BRUSH_SIZE = 10;
+const DEFAULT_SMART_FILL_BRUSH_SIZE = 1;
 
 /**
  * Note that here we re-use Support Brush to add marks to mesh, so
@@ -39,7 +44,7 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
     const [angle, setAngle] = useState(15);
 
     // Brush size
-    const [brushSize, setBrushSize] = useState(10); // unit: mm
+    const [brushSize, setBrushSize] = useState(DEFAULT_SPHERE_BRUSH_SIZE); // unit: mm
     useEffect(() => {
         dispatch(printingActions.setSupportBrushRadius(brushSize / 2));
     }, [dispatch, brushSize]);
@@ -49,9 +54,9 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
         if (brushType === BrushType.SmartFillBrush) {
             const brushOptions = modelGroup.brushOptions;
             setAngle(brushOptions.angle);
-            setBrushSize(1);
+            setBrushSize(DEFAULT_SMART_FILL_BRUSH_SIZE);
         } else {
-            setBrushSize(3);
+            setBrushSize(DEFAULT_SPHERE_BRUSH_SIZE);
         }
     }, [brushType, modelGroup]);
 
@@ -113,7 +118,7 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
         }
     }, []);
 
-    // Enter
+    // Enter / leave mode
     useEffect(() => {
         dispatch(sceneActions.startMeshColoringMode());
 
@@ -121,18 +126,48 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
         dispatch(printingActions.setLeftBarOverlayVisible(true));
         dispatch(menuActions.disableMenu());
 
+        const handler: ShortcutHandler = {
+            title: 'MeshColoring',
+            priority: ShortcutHandlerPriority.View,
+            isActive: () => {
+                return true;
+            },
+            shortcuts: {
+                'SWITCH_LEFT_EXTRUDER': {
+                    keys: ['1'],
+                    callback: () => {
+                        dispatch(sceneActions.setMeshStackId(LEFT_EXTRUDER));
+                    },
+                },
+                'SWITCH_RIGHT_EXTRUDER': {
+                    keys: ['2'],
+                    callback: () => {
+                        dispatch(sceneActions.setMeshStackId(RIGHT_EXTRUDER));
+                    },
+                }
+            }
+        };
+
+        ShortcutManager.register(handler);
+
+        return () => {
+            ShortcutManager.unregister(handler);
+
+            dispatch(printingActions.setShortcutStatus(true));
+            dispatch(printingActions.setLeftBarOverlayVisible(false));
+            dispatch(menuActions.enableMenu());
+        };
+    }, [dispatch]);
+
+    useEffect(() => {
         window.addEventListener('keydown', handleKeydown, true);
         window.addEventListener('wheel', handleMousewheel, true);
 
         return () => {
             window.removeEventListener('keydown', handleKeydown, true);
             window.removeEventListener('wheel', handleMousewheel, true);
-
-            dispatch(printingActions.setShortcutStatus(true));
-            dispatch(printingActions.setLeftBarOverlayVisible(false));
-            dispatch(menuActions.enableMenu());
         };
-    }, [dispatch, handleKeydown, handleMousewheel]);
+    }, [handleKeydown, handleMousewheel]);
 
     return (
         <div className={classNames(styles['edit-support'])}>
@@ -168,6 +203,7 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
                                     )}
                                 />
                                 <span style={{ verticalAlign: 'middle' }}>{i18n._('Left')}</span>
+                                <span style={{ verticalAlign: 'middle', fontSize: '12px', marginLeft: '4px' }}>(<i className="fa fa-keyboard-o" /> 1)</span>
                             </span>
                         </Button>
                         <Button
@@ -195,6 +231,7 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
                                     )}
                                 />
                                 <span style={{ verticalAlign: 'middle' }}>{i18n._('Right')}</span>
+                                <span style={{ verticalAlign: 'middle', fontSize: '12px', marginLeft: '4px' }}>(<i className="fa fa-keyboard-o" /> 2)</span>
                             </span>
                         </Button>
 

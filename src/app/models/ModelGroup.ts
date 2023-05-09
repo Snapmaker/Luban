@@ -3039,8 +3039,6 @@ class ModelGroup extends EventEmitter {
     public startMeshColoring(): void {
         const models = this.getModelsAttachedSupport();
         for (const model of models) {
-            console.warn('startMeshColoring, model =', model);
-
             // Hide model support (its support mesh is the only child!)
             model.tmpSupportMesh = model.meshObject.children[0];
             model.meshObject.clear();

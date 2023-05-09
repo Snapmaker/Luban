@@ -197,8 +197,6 @@ class STLLoader extends Loader {
             geometry.setAttribute('position', new BufferAttribute(vertices, 3));
             geometry.setAttribute('normal', new BufferAttribute(normals, 3));
 
-            console.log('hasColors =', hasColors);
-
             if (hasColors) {
                 geometry.setAttribute('byte_count', new BufferAttribute(colors, 1));
 
