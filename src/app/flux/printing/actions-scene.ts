@@ -8,6 +8,7 @@ import sceneLogic, { PrimeTowerSettings } from '../../scene/scene.logic';
 import baseActions from './actions-base';
 import ThreeModel, { BYTE_COUNT_LEFT_EXTRUDER, BYTE_COUNT_RIGHT_EXTRUDER } from '../../models/ThreeModel';
 import { BrushType } from '../../models/ModelGroup';
+import { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 
 
 const render = () => (dispatch) => {
@@ -66,11 +67,38 @@ const setSmartFillBrushAngle = (angle: number) => {
 
 const startMeshColoringMode = () => {
     return (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
-        modelGroup.startMeshColoring();
-        dispatch(setTransformMode('mesh-coloring'));
-        // dispatch(actions.destroyGcodeLine());
-        dispatch(render());
+        const {
+            modelGroup,
+
+            // materialDefinitions,
+            // defaultMaterialId,
+            // defaultMaterialIdRight,
+
+            progressStatesManager,
+        } = getState().printing;
+
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_MESH_COLORING_PREPARE);
+        dispatch(
+            baseActions.updateState({
+                stage: STEP_STAGE.PRINTING_MESH_COLORING_PREPARE_SUCCESS,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_MESH_COLORING_PREPARE_SUCCESS, 0.25),
+            })
+        );
+
+        // Use setTimeout to display progress
+        setTimeout(() => {
+            modelGroup.startMeshColoring();
+            dispatch(setTransformMode('mesh-coloring'));
+
+            dispatch(
+                baseActions.updateState({
+                    stage: STEP_STAGE.PRINTING_MESH_COLORING_PREPARE_SUCCESS,
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_MESH_COLORING_PREPARE_SUCCESS, 1),
+                })
+            );
+            // dispatch(actions.destroyGcodeLine());
+            dispatch(render());
+        }, 10);
     };
 };
 
@@ -213,30 +241,29 @@ const applyPrintSettingsToModels = () => (dispatch, getState) => {
         modelGroup.getThreeModels().forEach((model) => {
             let lineWidth: number = extruderLDefinition.settings.machine_nozzle_size.default_value;
 
-            // Set color
-            if (model.isColored) {
-                const colors = [];
-                if (leftMaterialPresetModel) {
-                    colors.push(leftMaterialPresetModel.settings.color.default_value);
-                }
-                if (rightMaterialPresetModel) {
-                    colors.push(rightMaterialPresetModel.settings.color.default_value);
-                }
-
-                model.setExtruderColors(colors);
-            } else {
-                const shellStackId = getModelShellStackId(model);
-
-                lineWidth = shellStackId === LEFT_EXTRUDER
-                    ? extruderLDefinition.settings.machine_nozzle_size.default_value
-                    : extruderRDefinition.settings.machine_nozzle_size.default_value;
-
-                const materialPresetModel = dispatch(getModelShellMaterialPresetModel(model));
-                const materialSettings = materialPresetModel.settings;
-
-                // update material color
-                model.updateMaterialColor(materialSettings.color.default_value);
+            // Set extruder color
+            const colors = [];
+            if (leftMaterialPresetModel) {
+                colors.push(leftMaterialPresetModel.settings.color.default_value);
             }
+            if (rightMaterialPresetModel) {
+                colors.push(rightMaterialPresetModel.settings.color.default_value);
+            }
+
+            model.setExtruderColors(colors);
+
+            // Set shell color
+            const shellStackId = getModelShellStackId(model);
+
+            lineWidth = shellStackId === LEFT_EXTRUDER
+                ? extruderLDefinition.settings.machine_nozzle_size.default_value
+                : extruderRDefinition.settings.machine_nozzle_size.default_value;
+
+            const materialPresetModel = dispatch(getModelShellMaterialPresetModel(model));
+            const materialSettings = materialPresetModel.settings;
+
+            // update material color
+            model.updateMaterialColor(materialSettings.color.default_value);
 
 
             const layerHeight = globalSettings.layer_height.default_value;
