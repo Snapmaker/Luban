@@ -153,7 +153,7 @@ function LaserStartModal({
     return (
         <Modal
             centered
-            visible={showStartModal}
+            open={showStartModal}
             onClose={onClose}
             style={{ width: '50%' }}
             width="40%"

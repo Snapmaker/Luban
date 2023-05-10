@@ -61,7 +61,6 @@ class ModalSmallHOC extends PureComponent {
         const text = this.props.text;
         const subtext = this.props.subtext;
         const title = this.props.title;
-        // const props = pick(this.props, Object.keys(Modal.propTypes));
 
         return (
             <Modal

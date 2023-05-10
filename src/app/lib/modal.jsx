@@ -112,7 +112,6 @@ export class ModalHOC extends PureComponent {
     render() {
         const { title, body, footer, footerLeft, size, type, cancelTitle, isConfirm, ...rest } = this.props;
         const { show, inputValue } = this.state;
-        // const props = pick(this.props, Object.keys(Modal.propTypes));
         const defalutCancelTitle = isConfirm ? i18n._('key-Modal/Common-Confirm') : i18n._('key-Modal/Common-Cancel');
         const newTitle = cancelTitle ? i18n._(cancelTitle) : defalutCancelTitle;
 

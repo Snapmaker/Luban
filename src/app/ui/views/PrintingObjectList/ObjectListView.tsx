@@ -250,7 +250,7 @@ const ObjectListView: React.FC = () => {
                             <div className="sm-flex align-center margin-top-8 margin-horizontal-8">
                                 <span className="display-block sm-flex-width text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-Adhesion')}</span>
                                 <Dropdown
-                                    placement="topRight"
+                                    placement="topLeft"
                                     overlay={getExtruderOverlayMenu('adhesion', helpersExtruderConfig.adhesion)}
                                     trigger={['click']}
                                 >
@@ -261,7 +261,7 @@ const ObjectListView: React.FC = () => {
                             <div className="sm-flex align-center margin-top-8 margin-horizontal-8">
                                 <span className="display-block sm-flex-width text-overflow-ellipsis margin-left-4">{i18n._('key-Printing/LeftBar-Support')}</span>
                                 <Dropdown
-                                    placement="right"
+                                    placement="topLeft"
                                     overlay={getSupportExtruderOverlayMenu()}
                                     trigger={['click']}
                                 >

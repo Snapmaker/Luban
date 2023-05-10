@@ -223,8 +223,8 @@ const ObjectListItem: React.FC<ObjectListItemProps> = (
                     </Anchor>
                     <div className="sm-flex">
                         <Dropdown
-                            placement="right"
-                            onVisibleChange={() => {
+                            placement="topLeft"
+                            onOpenChange={() => {
                                 if (!isSelected) {
                                     // if we select a unselected model, then cancel current selection and select it
                                     onSelect(model);
