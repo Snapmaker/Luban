@@ -301,8 +301,6 @@ class ThreeModel extends BaseModel {
      * 2) controlled by single extruder, all triagnle use the same extruder material color
      */
     public colorMesh(): void {
-        console.warn('colorMesh');
-
         const count = this.meshObject.geometry.getAttribute('position').count;
         const faceCount = Math.round(count / 3);
 
@@ -313,9 +311,6 @@ class ThreeModel extends BaseModel {
 
         const useByteCountColor = this.isColored && !!byteCountAttribute;
         const shellMaterialColor = this.getMaterialColor();
-
-        console.warn('colorMesh, extruderColors =', this.extruderColors);
-        console.warn('colorMesh, shellMaterialColor =', shellMaterialColor);
 
         let index: number;
         for (let faceIndex = 0; faceIndex < faceCount; faceIndex++) {

@@ -14,12 +14,10 @@ const SceneShortcuts: React.FC = () => {
     useEffect(() => {
         const handler: ShortcutHandler = {
             title: 'SceneView',
+            priority: ShortcutHandlerPriority.View,
             isActive: () => {
                 return dispatch(printingActions.isShortcutActive()) as unknown as boolean;
             },
-
-            priority: ShortcutHandlerPriority.View,
-
             shortcuts: {
                 // select
                 [PREDEFINED_SHORTCUT_ACTIONS.SELECTALL]: () => dispatch(printingActions.selectAllModels()),

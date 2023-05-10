@@ -3,6 +3,7 @@ import { Color } from 'three';
 
 import { LEFT_EXTRUDER, MACHINE_EXTRUDER_X, MACHINE_EXTRUDER_Y, RIGHT_EXTRUDER } from '../../constants';
 import { MaterialPresetModel, PresetModel } from '../../preset-model';
+import ThreeUtils from '../../three-extensions/ThreeUtils';
 import sceneLogic, { PrimeTowerSettings } from '../../scene/scene.logic';
 
 import baseActions from './actions-base';
@@ -11,12 +12,40 @@ import { BrushType } from '../../models/ModelGroup';
 import { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 
 
-const render = () => (dispatch) => {
+const renderScene = () => (dispatch) => {
     dispatch(
         baseActions.updateState({
             renderingTimestamp: +new Date()
         })
     );
+};
+
+const discardPreview = ({ render = true }) => {
+    return (dispatch, getState) => {
+        const { gcodeFile, modelGroup, gcodeLineGroup } = getState().printing;
+
+        // Remove preview
+        if (gcodeFile) {
+            ThreeUtils.dispose(gcodeLineGroup);
+            gcodeLineGroup.clear();
+            gcodeLineGroup.visible = false;
+        }
+
+        // display model group
+        modelGroup.object.visible = true;
+        modelGroup.setDisplayType('model');
+
+        dispatch(baseActions.updateState({
+            gcodeFile: null,
+            gcodeLine: null,
+            displayedType: 'model',
+            outOfMemoryForRenderGcode: false
+        }));
+
+        if (render) {
+            dispatch(renderScene());
+        }
+    };
 };
 
 const checkModelOverstep = () => {
@@ -39,7 +68,7 @@ const setTransformMode = (value: string) => {
         dispatch(baseActions.updateState({
             transformMode: value
         }));
-        dispatch(render());
+        dispatch(renderScene());
     };
 };
 
@@ -66,13 +95,9 @@ const setSmartFillBrushAngle = (angle: number) => {
 };
 
 const startMeshColoringMode = () => {
-    return (dispatch, getState) => {
+    return async (dispatch, getState) => {
         const {
             modelGroup,
-
-            // materialDefinitions,
-            // defaultMaterialId,
-            // defaultMaterialIdRight,
 
             progressStatesManager,
         } = getState().printing;
@@ -80,25 +105,31 @@ const startMeshColoringMode = () => {
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_MESH_COLORING_PREPARE);
         dispatch(
             baseActions.updateState({
-                stage: STEP_STAGE.PRINTING_MESH_COLORING_PREPARE_SUCCESS,
-                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_MESH_COLORING_PREPARE_SUCCESS, 0.25),
+                stage: STEP_STAGE.PRINTING_MESH_COLORING_PREPARE,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_MESH_COLORING_PREPARE, 0.25),
             })
         );
 
         // Use setTimeout to display progress
-        setTimeout(() => {
-            modelGroup.startMeshColoring();
-            dispatch(setTransformMode('mesh-coloring'));
+        const p = new Promise((resolve) => {
+            setTimeout(() => {
+                modelGroup.startMeshColoring();
+                resolve(undefined);
+            }, 50);
+        });
+        await p;
 
-            dispatch(
-                baseActions.updateState({
-                    stage: STEP_STAGE.PRINTING_MESH_COLORING_PREPARE_SUCCESS,
-                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_MESH_COLORING_PREPARE_SUCCESS, 1),
-                })
-            );
-            // dispatch(actions.destroyGcodeLine());
-            dispatch(render());
-        }, 10);
+        // modelGroup.startMeshColoring();
+        dispatch(setTransformMode('mesh-coloring'));
+
+        dispatch(
+            baseActions.updateState({
+                stage: STEP_STAGE.PRINTING_MESH_COLORING_PREPARE,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_MESH_COLORING_PREPARE, 1),
+            })
+        );
+
+        dispatch(discardPreview({ render: true }));
     };
 };
 
@@ -113,7 +144,7 @@ const endMeshColoringMode = (shouldApplyChanges = false) => {
             modelGroup.finishMeshColoring(false);
         }
 
-        dispatch(render());
+        dispatch(renderScene());
     };
 };
 
@@ -297,7 +328,7 @@ const applyPrintSettingsToModels = () => (dispatch, getState) => {
     modelGroup.models = models.concat();
 
     dispatch(checkModelOverstep());
-    dispatch(render());
+    dispatch(renderScene());
 };
 
 const finalizeSceneSettings = (
@@ -390,7 +421,9 @@ const finalizeSceneSettings = (
 
 export default {
     // basic scene actions
-    render,
+    render: renderScene,
+
+    discardPreview,
 
     // brush
     setBrushType,

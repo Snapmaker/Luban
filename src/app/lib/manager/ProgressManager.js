@@ -60,7 +60,7 @@ export const STEP_STAGE = {
     PRINTING_SIMPLIFY_MODEL_SUCCESS: 49,
     PRINTING_SIMPLIFY_MODEL_FAILED: 50,
     PRINTING_REPAIRING_MODEL: 51,
-    PRINTING_MESH_COLORING_PREPARE_SUCCESS: 10160,
+    PRINTING_MESH_COLORING_PREPARE: 10160,
 };
 
 export const PROCESS_STAGE = {
@@ -248,7 +248,7 @@ class ProgressStatesManager {
         this.push(PROCESS_STAGE.PRINTING_MESH_COLORING_PREPARE,
             [
                 {
-                    stageID: STEP_STAGE.PRINTING_MESH_COLORING_PREPARE_SUCCESS,
+                    stageID: STEP_STAGE.PRINTING_MESH_COLORING_PREPARE,
                     percent: 1
                 }
             ],
