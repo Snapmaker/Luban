@@ -343,12 +343,12 @@ class ThreeModel extends BaseModel {
     }
 
     public ensureColorAttribute(): void {
-        const count = this.meshObject.geometry.getAttribute('position').count;
+        this.isColored = true;
 
         // Add color attribute
         let colorAttribute = this.meshObject.geometry.getAttribute('color');
         if (!colorAttribute) {
-            this.isColored = true;
+            const count = this.meshObject.geometry.getAttribute('position').count;
 
             colorAttribute = new Float32BufferAttribute(count * 3, 3);
             this.meshObject.geometry.setAttribute('color', colorAttribute);
@@ -540,6 +540,7 @@ class ThreeModel extends BaseModel {
             ...this,
             loadFrom: LOAD_MODEL_FROM_INNER,
             material: this.meshObject.material,
+            isColored: this.isColored,
             clipper: null
         } as unknown as ModelInfo;
         const clone = new ThreeModel(modelInfo, modelGroup);
