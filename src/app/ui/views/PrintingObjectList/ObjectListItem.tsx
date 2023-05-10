@@ -31,7 +31,7 @@ export function getExtrudersUsed(numbers: string[]): string[] {
  * @param numbers
  * @param extruderColors
  */
-export function getColorsUsed(numbers: string[], extruderColors) {
+export function getColorsUsed(numbers: string[], extruderColors: string[]) {
     const extrudersUsed = getExtrudersUsed(numbers);
 
     const colors = [];
@@ -41,7 +41,7 @@ export function getColorsUsed(numbers: string[], extruderColors) {
     return colors;
 }
 
-export const renderExtruderIcon = (extrudersUsed, colorsUsed) => {
+export const renderExtruderIcon = (extrudersUsed: string[], colorsUsed: string[]) => {
     const useLeftExtruderOnly = extrudersUsed.length === 1 && extrudersUsed[0] === '0';
     const useRightExtruderOnly = extrudersUsed.length === 1 && extrudersUsed[0] === '1';
     // TODO: remove the ugly 2 for mixed colors
@@ -94,8 +94,19 @@ export const renderExtruderIcon = (extrudersUsed, colorsUsed) => {
     );
 };
 
+const renderBrushIcon = () => {
+    return (
+        <SvgIcon
+            name="ToolbarColorBrush"
+            size={24}
+            type={['static']}
+            color="#545659"
+        />
+    );
+};
+
 interface ObjectListItemProps {
-    depth: number;
+    depth?: number;
     disabled: boolean;
 
     // data
@@ -106,9 +117,9 @@ interface ObjectListItemProps {
     // model specific
     model: ThreeModel;
     isSelected: boolean;
-    onSelect: () => void;
-    onToggleVisible: () => void;
-    updateSelectedModelsExtruder: () => void;
+    onSelect: (model: ThreeModel, event) => void;
+    onToggleVisible: (model: ThreeModel) => void;
+    updateSelectedModelsExtruder: ({ key, direction }) => void;
 }
 
 const ObjectListItem: React.FC<ObjectListItemProps> = (
@@ -156,6 +167,8 @@ const ObjectListItem: React.FC<ObjectListItemProps> = (
             },
         });
     };
+
+    const isModelColored = model.isColored;
 
     const hasChildren = model.children && !!model.children?.length;
 
@@ -222,20 +235,27 @@ const ObjectListItem: React.FC<ObjectListItemProps> = (
                         </span>
                     </Anchor>
                     <div className="sm-flex">
-                        <Dropdown
-                            placement="topLeft"
-                            onOpenChange={() => {
-                                if (!isSelected) {
-                                    // if we select a unselected model, then cancel current selection and select it
-                                    onSelect(model);
-                                }
-                            }}
-                            overlay={getModelExtruderOverlayMenu()}
-                            trigger={['click']}
-                            disabled={extruderCount === 1}
-                        >
-                            {renderExtruderIcon(extrudersUsed, colorsUsed)}
-                        </Dropdown>
+                        {
+                            isModelColored && renderBrushIcon()
+                        }
+                        {
+                            !isModelColored && (
+                                <Dropdown
+                                    placement="topLeft"
+                                    onOpenChange={() => {
+                                        if (!isSelected) {
+                                            // if we select a unselected model, then cancel current selection and select it
+                                            onSelect(model);
+                                        }
+                                    }}
+                                    overlay={getModelExtruderOverlayMenu()}
+                                    trigger={['click']}
+                                    disabled={extruderCount === 1}
+                                >
+                                    {renderExtruderIcon(extrudersUsed, colorsUsed)}
+                                </Dropdown>
+                            )
+                        }
                         <SvgIcon
                             name={model.visible ? 'ShowNormal' : 'HideNormal'}
                             title={model.visible ? i18n._('key-PrintingCncLaser/ObjectList-Hide') : i18n._('key-PrintingCncLaser/ObjectList-Show')}
@@ -277,22 +297,5 @@ const ObjectListItem: React.FC<ObjectListItemProps> = (
         </div>
     );
 };
-
-/*
-ObjectListItem.propTypes = {
-    depth: PropTypes.number,
-    model: PropTypes.object.isRequired,
-    isSelected: PropTypes.bool.isRequired,
-    onSelect: PropTypes.func.isRequired,
-    onToggleVisible: PropTypes.func.isRequired,
-    disabled: PropTypes.bool,
-
-    // extruder related
-    extruderCount: PropTypes.number,
-    leftMaterialColor: PropTypes.string,
-    rightMaterialColor: PropTypes.string,
-    updateSelectedModelsExtruder: PropTypes.func
-};
-*/
 
 export default ObjectListItem;

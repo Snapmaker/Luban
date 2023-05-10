@@ -3039,6 +3039,12 @@ class ModelGroup extends EventEmitter {
     public startMeshColoring(): void {
         const models = this.getModelsAttachedSupport();
         for (const model of models) {
+            // Save geometry
+            if (!model.originalGeometry) {
+                // first time clone original geometry
+                model.originalGeometry = model.meshObject.geometry.clone();
+            }
+
             // Hide model support (its support mesh is the only child!)
             model.tmpSupportMesh = model.meshObject.children[0];
             model.meshObject.clear();
@@ -3049,12 +3055,6 @@ class ModelGroup extends EventEmitter {
 
             model.meshObject.geometry.computeBoundsTree();
             model.meshObject.geometry.computeAdjacentFaces();
-
-            // Save geometry
-            if (!model.originalGeometry) {
-                // first time clone original geometry
-                model.originalGeometry = model.meshObject.geometry.clone();
-            }
 
             // flag for brush to render color
             model.meshObject.userData = {
@@ -3088,6 +3088,8 @@ class ModelGroup extends EventEmitter {
                 // Restore original geometry
                 model.meshObject.geometry.disposeBoundsTree();
                 model.meshObject.geometry.copy(model.originalGeometry);
+
+                model.isColored = false;
             }
 
             // Restore original support mesh
