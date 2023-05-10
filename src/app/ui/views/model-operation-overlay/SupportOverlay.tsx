@@ -147,8 +147,8 @@ const SupportOverlay: React.FC<SupportOverlayProps> = (props) => {
                         >
                             {
                                 generateAutoSupportEnableForSelected
-                                    ? <span>{i18n._('key-Printing/LeftBar/Support-Clear')}</span>
-                                    : <span>{i18n._('key-Printing/LeftBar/Support-Clear All')}</span>
+                                    ? <span>{i18n._('key-Common/Clear')}</span>
+                                    : <span>{i18n._('key-Common/Clear All')}</span>
                             }
                         </Button>
                     </div>

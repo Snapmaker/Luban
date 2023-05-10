@@ -1,5 +1,5 @@
 /* eslint react/no-set-state: 0 */
-import pick from 'lodash/pick';
+// import pick from 'lodash/pick';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
@@ -50,13 +50,12 @@ class WarningModalHOC extends PureComponent {
     }
 
     render() {
-        const { title, bodyTitle, body, footer, size, iconSrc } = this.props;
+        const { title, bodyTitle, body, footer, size, iconSrc, ...rest } = this.props;
         const { show } = this.state;
-        const props = pick(this.props, Object.keys(Modal.propTypes));
 
         return (
             <Modal
-                {...props}
+                {...rest}
                 size={size || 'sm'}
                 show={show}
                 onClose={this.handleClose}

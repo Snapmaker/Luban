@@ -1,21 +1,21 @@
 import classNames from 'classnames';
-import PropTypes from 'prop-types';
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { BOTH_EXTRUDER_MAP_NUMBER } from '../../../constants';
 
 import i18n from '../../../lib/i18n';
 import { normalizeNameDisplay } from '../../../lib/normalize-range';
+import ThreeModel from '../../../models/ThreeModel';
 import Anchor from '../../components/Anchor';
 import Dropdown from '../../components/Dropdown';
 import SvgIcon from '../../components/SvgIcon';
 import TipTrigger from '../../components/TipTrigger';
-import { getModelExtruderOverlay } from './model-extruder-overlay';
 import ObjectSvgIcon from './ObjectSvgIcon';
+import { getModelExtruderOverlay } from './model-extruder-overlay';
 import styles from './styles.styl';
 
 export const whiteHex = '#ffffff';
 
-export function getExtrudersUsed(numbers) {
+export function getExtrudersUsed(numbers: string[]): string[] {
     const s = new Set(numbers);
     if (s.has(BOTH_EXTRUDER_MAP_NUMBER)) {
         s.delete(BOTH_EXTRUDER_MAP_NUMBER);
@@ -31,7 +31,7 @@ export function getExtrudersUsed(numbers) {
  * @param numbers
  * @param extruderColors
  */
-export function getColorsUsed(numbers, extruderColors) {
+export function getColorsUsed(numbers: string[], extruderColors: string[]) {
     const extrudersUsed = getExtrudersUsed(numbers);
 
     const colors = [];
@@ -41,7 +41,7 @@ export function getColorsUsed(numbers, extruderColors) {
     return colors;
 }
 
-export const renderExtruderIcon = (extrudersUsed, colorsUsed) => {
+export const renderExtruderIcon = (extrudersUsed: string[], colorsUsed: string[]) => {
     const useLeftExtruderOnly = extrudersUsed.length === 1 && extrudersUsed[0] === '0';
     const useRightExtruderOnly = extrudersUsed.length === 1 && extrudersUsed[0] === '1';
     // TODO: remove the ugly 2 for mixed colors
@@ -94,7 +94,35 @@ export const renderExtruderIcon = (extrudersUsed, colorsUsed) => {
     );
 };
 
-function ObjectListItem(
+const renderBrushIcon = () => {
+    return (
+        <SvgIcon
+            name="ToolbarColorBrush"
+            size={24}
+            type={['static']}
+            color="#545659"
+        />
+    );
+};
+
+interface ObjectListItemProps {
+    depth?: number;
+    disabled: boolean;
+
+    // data
+    extruderCount: number;
+    leftMaterialColor: string;
+    rightMaterialColor: string;
+
+    // model specific
+    model: ThreeModel;
+    isSelected: boolean;
+    onSelect: (model: ThreeModel, event) => void;
+    onToggleVisible: (model: ThreeModel) => void;
+    updateSelectedModelsExtruder: ({ key, direction }) => void;
+}
+
+const ObjectListItem: React.FC<ObjectListItemProps> = (
     {
         depth = 1,
         model,
@@ -107,7 +135,7 @@ function ObjectListItem(
         rightMaterialColor = whiteHex,
         updateSelectedModelsExtruder,
     }
-) {
+) => {
     const [tipVisible, setTipVisible] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
 
@@ -139,6 +167,8 @@ function ObjectListItem(
             },
         });
     };
+
+    const isModelColored = model.isColored;
 
     const hasChildren = model.children && !!model.children?.length;
 
@@ -205,20 +235,27 @@ function ObjectListItem(
                         </span>
                     </Anchor>
                     <div className="sm-flex">
-                        <Dropdown
-                            placement="right"
-                            onVisibleChange={() => {
-                                if (!isSelected) {
-                                    // if we select a unselected model, then cancel current selection and select it
-                                    onSelect(model);
-                                }
-                            }}
-                            overlay={getModelExtruderOverlayMenu()}
-                            trigger={['click']}
-                            disabled={extruderCount === 1}
-                        >
-                            {renderExtruderIcon(extrudersUsed, colorsUsed)}
-                        </Dropdown>
+                        {
+                            isModelColored && renderBrushIcon()
+                        }
+                        {
+                            !isModelColored && (
+                                <Dropdown
+                                    placement="topLeft"
+                                    onOpenChange={() => {
+                                        if (!isSelected) {
+                                            // if we select a unselected model, then cancel current selection and select it
+                                            onSelect(model);
+                                        }
+                                    }}
+                                    overlay={getModelExtruderOverlayMenu()}
+                                    trigger={['click']}
+                                    disabled={extruderCount === 1}
+                                >
+                                    {renderExtruderIcon(extrudersUsed, colorsUsed)}
+                                </Dropdown>
+                            )
+                        }
                         <SvgIcon
                             name={model.visible ? 'ShowNormal' : 'HideNormal'}
                             title={model.visible ? i18n._('key-PrintingCncLaser/ObjectList-Hide') : i18n._('key-PrintingCncLaser/ObjectList-Show')}
@@ -259,21 +296,6 @@ function ObjectListItem(
             }
         </div>
     );
-}
-
-ObjectListItem.propTypes = {
-    depth: PropTypes.number,
-    model: PropTypes.object.isRequired,
-    isSelected: PropTypes.bool.isRequired,
-    onSelect: PropTypes.func.isRequired,
-    onToggleVisible: PropTypes.func.isRequired,
-    disabled: PropTypes.bool,
-
-    // extruder related
-    extruderCount: PropTypes.number,
-    leftMaterialColor: PropTypes.string,
-    rightMaterialColor: PropTypes.string,
-    updateSelectedModelsExtruder: PropTypes.func
 };
 
 export default ObjectListItem;

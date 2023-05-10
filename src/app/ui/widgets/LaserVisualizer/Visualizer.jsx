@@ -650,7 +650,7 @@ class Visualizer extends Component {
                 />
                 {this.state.limitPicModalShow && (
                     <Modal
-                        visible={this.state.limitPicModalShow}
+                        open={this.state.limitPicModalShow}
                         onClose={() => {
                             this.setState({ limitPicModalShow: false });
                             this.actions.onClickLimitImage(false);

@@ -303,14 +303,14 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
                     </div>
                 )}
             </section>
-            <footer className="sm-flex justify-space-between">
+            <footer className="sm-flex justify-flex-end">
                 <Button
                     type="default"
                     priority="level-two"
                     width="96px"
                     onClick={onCancel}
                 >
-                    {i18n._('key-Modal/Common-Cancel')}
+                    {i18n._('key-Common/Clear')}
                 </Button>
                 <Button
                     type="primary"

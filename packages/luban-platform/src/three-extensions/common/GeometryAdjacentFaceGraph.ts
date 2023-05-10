@@ -99,5 +99,7 @@ class GeometryAdjacentFaceGraph {
 }
 
 export function computeAdjacentFaces(): void {
-    this.adjcentFaceGraph = new GeometryAdjacentFaceGraph(this);
+    if (!this.adjacentFaceGraph) {
+        this.adjcentFaceGraph = new GeometryAdjacentFaceGraph(this);
+    }
 }
