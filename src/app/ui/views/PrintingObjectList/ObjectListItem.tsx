@@ -1,21 +1,21 @@
 import classNames from 'classnames';
-import PropTypes from 'prop-types';
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { BOTH_EXTRUDER_MAP_NUMBER } from '../../../constants';
 
 import i18n from '../../../lib/i18n';
 import { normalizeNameDisplay } from '../../../lib/normalize-range';
+import ThreeModel from '../../../models/ThreeModel';
 import Anchor from '../../components/Anchor';
 import Dropdown from '../../components/Dropdown';
 import SvgIcon from '../../components/SvgIcon';
 import TipTrigger from '../../components/TipTrigger';
-import { getModelExtruderOverlay } from './model-extruder-overlay';
 import ObjectSvgIcon from './ObjectSvgIcon';
+import { getModelExtruderOverlay } from './model-extruder-overlay';
 import styles from './styles.styl';
 
 export const whiteHex = '#ffffff';
 
-export function getExtrudersUsed(numbers) {
+export function getExtrudersUsed(numbers: string[]): string[] {
     const s = new Set(numbers);
     if (s.has(BOTH_EXTRUDER_MAP_NUMBER)) {
         s.delete(BOTH_EXTRUDER_MAP_NUMBER);
@@ -31,7 +31,7 @@ export function getExtrudersUsed(numbers) {
  * @param numbers
  * @param extruderColors
  */
-export function getColorsUsed(numbers, extruderColors) {
+export function getColorsUsed(numbers: string[], extruderColors) {
     const extrudersUsed = getExtrudersUsed(numbers);
 
     const colors = [];
@@ -94,7 +94,24 @@ export const renderExtruderIcon = (extrudersUsed, colorsUsed) => {
     );
 };
 
-function ObjectListItem(
+interface ObjectListItemProps {
+    depth: number;
+    disabled: boolean;
+
+    // data
+    extruderCount: number;
+    leftMaterialColor: string;
+    rightMaterialColor: string;
+
+    // model specific
+    model: ThreeModel;
+    isSelected: boolean;
+    onSelect: () => void;
+    onToggleVisible: () => void;
+    updateSelectedModelsExtruder: () => void;
+}
+
+const ObjectListItem: React.FC<ObjectListItemProps> = (
     {
         depth = 1,
         model,
@@ -107,7 +124,7 @@ function ObjectListItem(
         rightMaterialColor = whiteHex,
         updateSelectedModelsExtruder,
     }
-) {
+) => {
     const [tipVisible, setTipVisible] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
 
@@ -259,8 +276,9 @@ function ObjectListItem(
             }
         </div>
     );
-}
+};
 
+/*
 ObjectListItem.propTypes = {
     depth: PropTypes.number,
     model: PropTypes.object.isRequired,
@@ -275,5 +293,6 @@ ObjectListItem.propTypes = {
     rightMaterialColor: PropTypes.string,
     updateSelectedModelsExtruder: PropTypes.func
 };
+*/
 
 export default ObjectListItem;

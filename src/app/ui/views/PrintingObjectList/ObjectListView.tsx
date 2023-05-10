@@ -1,17 +1,17 @@
 import classNames from 'classnames';
 import { find } from 'lodash';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
 import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
 import { isDualExtruder } from '../../../constants/machines';
-import log from '../../../lib/log';
 import { RootState } from '../../../flux/index.def';
 import { actions as printingActions } from '../../../flux/printing';
 import i18n from '../../../lib/i18n';
+import log from '../../../lib/log';
 import { machineStore } from '../../../store/local-storage';
 import Dropdown from '../../components/Dropdown';
-import ObjectListItem, { renderExtruderIcon, getExtrudersUsed, getColorsUsed, whiteHex } from './ObjectListItem';
+import ObjectListItem, { getColorsUsed, getExtrudersUsed, renderExtruderIcon, whiteHex } from './ObjectListItem';
 import { getExtruderConfigOverlay, getSupportExtruderOverlay } from './model-extruder-overlay';
 import styles from './styles.styl';
 
