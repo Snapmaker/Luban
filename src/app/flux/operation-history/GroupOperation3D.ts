@@ -1,4 +1,4 @@
-import Operation from './Operation';
+import Operation from '../../core/Operation';
 import ThreeModel from '../../models/ThreeModel';
 import ThreeGroup from '../../models/ThreeGroup';
 import type ModelGroup from '../../models/ModelGroup';

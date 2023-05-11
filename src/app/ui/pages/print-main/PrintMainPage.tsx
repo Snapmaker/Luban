@@ -11,6 +11,7 @@ import { actions as appGlobalActions } from '../../../flux/app-global';
 import { RootState } from '../../../flux/index.def';
 import { actions as machineActions } from '../../../flux/machine';
 import { actions as printingActions } from '../../../flux/printing';
+import sceneActions from '../../../flux/printing/actions-scene';
 import { actions as projectActions } from '../../../flux/project';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
@@ -25,7 +26,6 @@ import PrintingConfigurationsWidget, { PresetInitialization } from '../../widget
 import PrintingOutputWidget from '../../widgets/PrintingOutput';
 import Thumbnail from '../../widgets/PrintingOutput/Thumbnail';
 import PrintingVisualizer from '../../widgets/PrintingVisualizer';
-
 import HomePage from '../HomePage';
 import { CaseConfigGimbal, CaseConfigPenHolder, CaseConfigSM2Gimbal } from '../HomePage/CaseConfig';
 import MachineMaterialSettings from '../MachineMaterialSettings';
@@ -212,7 +212,7 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
                         title: i18n._('key-3DP/MainToolBar-Split'),
                         disabled: !canSplit || !enableShortcut,
                         type: 'button',
-                        name: 'MainToolbarMerge',
+                        name: 'MainToolbarModelSplit',
                         action: () => {
                             dispatch(printingActions.splitSelected());
                         }
@@ -223,7 +223,7 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
                         type: 'button',
                         name: 'MainToolbarGroup',
                         action: () => {
-                            dispatch(printingActions.group());
+                            dispatch(sceneActions.groupSelectedModels());
                         }
                     },
                     {
@@ -232,7 +232,7 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
                         type: 'button',
                         name: 'MainToolbarUngroup',
                         action: () => {
-                            dispatch(printingActions.ungroup());
+                            dispatch(sceneActions.ungroupSelectedModels());
                         }
                     },
                     {

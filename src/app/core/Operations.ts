@@ -1,29 +1,34 @@
-export default class Operations {
-    operations = [];
+import Operation from './Operation';
 
-    redoCallback = null;
 
-    undoCallback = null;
+type CallbackFunction = () => void;
 
-    callback = null;
+export default class Operations<T> {
+    private operations: Operation<T>[] = [];
 
-    push(...operations) {
+    private redoCallback: CallbackFunction | null = null;
+
+    private undoCallback: CallbackFunction | null = null;
+
+    private callback: CallbackFunction | null = null;
+
+    public push(...operations: Operation<T>[]) {
         this.operations.push(...(operations.filter(item => !!item)));
     }
 
-    getItem(i) {
+    public getItem(i: number) {
         return this.operations[i];
     }
 
-    removeItem(i) {
+    public removeItem(i: number) {
         this.operations.splice(i, 1);
     }
 
-    length() {
+    public length() {
         return this.operations.length;
     }
 
-    isEmpty() {
+    public isEmpty() {
         return this.operations.length === 0;
     }
 
@@ -33,7 +38,9 @@ export default class Operations {
      * @param {function} redoCallback
      * @param {function} undoCallback
      */
-    registerCallbackAll(callback, redoCallback = null, undoCallback = null) {
+    public registerCallbackAll(callback: CallbackFunction,
+        redoCallback: CallbackFunction = null,
+        undoCallback: CallbackFunction = null) {
         if (typeof redoCallback === 'function') {
             this.redoCallback = redoCallback;
         }
@@ -45,17 +52,13 @@ export default class Operations {
         }
     }
 
-    runRedoCallback() {
+    public runRedoCallback() {
         this.redoCallback && this.redoCallback();
         this.callback && this.callback();
     }
 
-    runUndoCallback() {
+    public runUndoCallback() {
         this.undoCallback && this.undoCallback();
         this.callback && this.callback();
-    }
-
-    mergePreviousOperation() {
-        throw new Error('NotImplementedException');
     }
 }

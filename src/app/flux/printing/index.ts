@@ -66,14 +66,12 @@ import ArrangeOperation3D from '../operation-history/ArrangeOperation3D';
 import DeleteOperation3D from '../operation-history/DeleteOperation3D';
 import DeleteSupportsOperation3D from '../operation-history/DeleteSupportsOperation3D';
 import GroupAlignOperation3D from '../operation-history/GroupAlignOperation3D';
-import GroupOperation3D from '../operation-history/GroupOperation3D';
 import MoveOperation3D from '../operation-history/MoveOperation3D';
 import OperationHistory from '../operation-history/OperationHistory';
-import Operations from '../operation-history/Operations';
+import Operations from '../../core/Operations';
 import RotateOperation3D from '../operation-history/RotateOperation3D';
 import ScaleOperation3D from '../operation-history/ScaleOperation3D';
 import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWithRotateOperation3D';
-import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import VisibleOperation3D from '../operation-history/VisibleOperation3D';
 import { checkMeshes, LoadMeshFileOptions, loadMeshFiles, MeshFileInfo } from './actions-mesh';
 import sceneActions from './actions-scene';
@@ -4526,112 +4524,6 @@ export const actions = {
         modelGroup.calaClippingMap();
         dispatch(actions.updateState(modelState));
         logToolBarOperation(HEAD_PRINTING, 'align');
-    },
-
-    group: () => (dispatch, getState) => {
-        dispatch(actions.exitPreview());
-
-        const { modelGroup } = getState().printing;
-        // Stores the model structure before the group operation, which is used for undo operation
-        const modelsBeforeGroup = modelGroup.getModels().slice(0);
-        const selectedModels = modelGroup.getSelectedModelArray().slice(0);
-        const operations = new Operations();
-        const { recovery } = modelGroup.unselectAllModels();
-        // Record the relationship between model and group
-        const modelsRelation = selectedModels.reduce((pre, selectd) => {
-            const groupModelID = selectd.parent?.modelID;
-            pre.set(selectd.modelID, {
-                groupModelID,
-                children:
-                    selectd instanceof ThreeGroup
-                        ? selectd.children.slice(0)
-                        : null,
-                modelTransformation: { ...selectd.transformation }
-            });
-            return pre;
-        }, new Map());
-        recovery();
-
-        const modelState = modelGroup.group();
-        // Stores the model structure after the group operation, which is used for redo operation
-        const modelsAfterGroup = modelGroup.getModels().slice(0);
-        const newGroup = modelGroup.getSelectedModelArray()[0];
-        const operation = new GroupOperation3D({
-            modelsBeforeGroup,
-            modelsAfterGroup,
-            selectedModels,
-            target: newGroup,
-            modelGroup,
-            modelsRelation
-        });
-        operations.push(operation);
-        operations.registerCallbackAll(() => {
-            dispatch(actions.updateState(modelGroup.getState()));
-            dispatch(actions.destroyGcodeLine());
-            dispatch(actions.displayModel());
-        });
-
-        dispatch(
-            operationHistoryActions.setOperations(
-                INITIAL_STATE.name,
-                operations
-            )
-        );
-        dispatch(actions.updateState(modelState));
-        logToolBarOperation(HEAD_PRINTING, 'group');
-    },
-
-    ungroup: () => (dispatch, getState) => {
-        dispatch(actions.exitPreview());
-
-        const { modelGroup } = getState().printing;
-
-        const groups = modelGroup
-            .getSelectedModelArray()
-            .filter((model) => model instanceof ThreeGroup);
-        const modelsBeforeUngroup = modelGroup.getModels().slice(0);
-        const groupChildrenMap = new Map();
-        groups.forEach((group) => {
-            groupChildrenMap.set(group, {
-                groupTransformation: { ...group.transformation },
-                subModelStates: group.children.map((model) => {
-                    return {
-                        target: model,
-                        transformation: { ...model.transformation }
-                    };
-                })
-            });
-        });
-        const operations = new Operations();
-
-        const modelState = modelGroup.ungroup();
-        modelGroup.calaClippingMap();
-
-        groups.forEach((group) => {
-            const operation = new UngroupOperation3D({
-                modelsBeforeUngroup,
-                target: group,
-                groupTransformation: groupChildrenMap.get(group)
-                    .groupTransformation,
-                subModelStates: groupChildrenMap.get(group).subModelStates,
-                modelGroup
-            });
-            operations.push(operation);
-        });
-        operations.registerCallbackAll(() => {
-            dispatch(actions.updateState(modelGroup.getState()));
-            dispatch(actions.destroyGcodeLine());
-            dispatch(actions.displayModel());
-        });
-
-        dispatch(
-            operationHistoryActions.setOperations(
-                INITIAL_STATE.name,
-                operations
-            )
-        );
-        dispatch(actions.updateState(modelState));
-        logToolBarOperation(HEAD_PRINTING, 'ungroup');
     },
 
     applyProfileToAllModels: () => (dispatch) => {
