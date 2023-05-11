@@ -480,7 +480,7 @@ export const actions = {
         const { toolHead } = getState().machine;
 
         modelGroup.setDataChangedCallback(() => {
-            dispatch(sceneActions.render());
+            dispatch(sceneActions.renderScene());
         });
 
         let { series } = getState().machine;
@@ -2994,7 +2994,7 @@ export const actions = {
             });
             operations.push(operation);
         }
-        operations.registCallbackAfterAll(() => {
+        operations.registerCallbackAll(() => {
             dispatch(actions.updateState(modelGroup.getState()));
             dispatch(actions.destroyGcodeLine());
             dispatch(actions.displayModel());
@@ -3021,7 +3021,7 @@ export const actions = {
         });
         const operations = new Operations();
         operations.push(operation);
-        operations.registCallbackAfterAll(() => {
+        operations.registerCallbackAll(() => {
             dispatch(actions.updateState(modelGroup.getState()));
             dispatch(actions.destroyGcodeLine());
             dispatch(actions.displayModel());
@@ -3059,7 +3059,7 @@ export const actions = {
             });
             operations.push(operation);
         }
-        operations.registCallbackAfterAll(() => {
+        operations.registerCallbackAll(() => {
             const modelState = modelGroup.getState();
             if (!modelState.hasModel) {
                 dispatch(
@@ -3106,7 +3106,7 @@ export const actions = {
             });
             operations.push(operation);
         }
-        operations.registCallbackAfterAll(() => {
+        operations.registerCallbackAll(() => {
             const modelState = modelGroup.getState();
             if (!modelState.hasModel) {
                 dispatch(
@@ -3369,7 +3369,7 @@ export const actions = {
                             });
                             operations.push(operation);
                         });
-                        operations.registCallbackAfterAll(() => {
+                        operations.registerCallbackAll(() => {
                             dispatch(actions.onModelAfterTransform());
                         });
                         dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
@@ -3602,7 +3602,7 @@ export const actions = {
             });
             operations.push(operation);
         }
-        operations.registCallbackAfterAll(() => {
+        operations.registerCallbackAll(() => {
             dispatch(actions.updateState(modelGroup.getState()));
             dispatch(actions.destroyGcodeLine());
             dispatch(actions.displayModel());
@@ -3658,7 +3658,7 @@ export const actions = {
             });
             operations.push(operation);
         }
-        operations.registCallbackAfterAll(() => {
+        operations.registerCallbackAll(() => {
             dispatch(actions.updateState(modelGroup.getState()));
             dispatch(actions.applyProfileToAllModels());
             dispatch(actions.destroyGcodeLine());
@@ -3976,7 +3976,7 @@ export const actions = {
                             })
                         );
                         dispatch(actions.updateState(modelState));
-                        operations.registCallbackAfterAll(() => {
+                        operations.registerCallbackAll(() => {
                             dispatch(actions.updateState(modelGroup.getState()));
                             dispatch(actions.destroyGcodeLine());
                             dispatch(actions.displayModel());
@@ -4335,7 +4335,7 @@ export const actions = {
             });
             const operations = new Operations();
             operations.push(operation);
-            operations.registCallbackAfterAll(() => {
+            operations.registerCallbackAll(() => {
                 const modelState = modelGroup.getState();
                 if (!modelState.hasModel) {
                     dispatch(
@@ -4511,7 +4511,7 @@ export const actions = {
             modelGroup
         });
         operations.push(operation);
-        operations.registCallbackAfterAll(() => {
+        operations.registerCallbackAll(() => {
             dispatch(actions.updateState(modelGroup.getState()));
             dispatch(actions.destroyGcodeLine());
             dispatch(actions.displayModel());
@@ -4565,7 +4565,7 @@ export const actions = {
             modelsRelation
         });
         operations.push(operation);
-        operations.registCallbackAfterAll(() => {
+        operations.registerCallbackAll(() => {
             dispatch(actions.updateState(modelGroup.getState()));
             dispatch(actions.destroyGcodeLine());
             dispatch(actions.displayModel());
@@ -4618,7 +4618,7 @@ export const actions = {
             });
             operations.push(operation);
         });
-        operations.registCallbackAfterAll(() => {
+        operations.registerCallbackAll(() => {
             dispatch(actions.updateState(modelGroup.getState()));
             dispatch(actions.destroyGcodeLine());
             dispatch(actions.displayModel());
@@ -4820,7 +4820,7 @@ export const actions = {
         Promise.all(promises)
             .then(() => {
                 dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
-                dispatch(sceneActions.render());
+                dispatch(sceneActions.renderScene());
                 dispatch(
                     actions.updateState({
                         tmpSupportFaceMarks: {}
@@ -4835,7 +4835,7 @@ export const actions = {
         modelGroup.startEditSupportArea();
         dispatch(actions.setTransformMode('support-edit'));
         dispatch(actions.destroyGcodeLine());
-        dispatch(sceneActions.render());
+        dispatch(sceneActions.renderScene());
     },
 
     finishEditSupportArea: (shouldApplyChanges = false) => (
@@ -4880,7 +4880,7 @@ export const actions = {
         }
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
-        dispatch(sceneActions.render());
+        dispatch(sceneActions.renderScene());
     },
 
     clearSupportInGroup: (combinedOperations, modelInGroup) => (
@@ -4919,7 +4919,7 @@ export const actions = {
     setSupportBrushRadius: (radius) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.setSupportBrushRadius(radius);
-        dispatch(sceneActions.render());
+        dispatch(sceneActions.renderScene());
     },
 
     // status: add | remove
@@ -4944,7 +4944,7 @@ export const actions = {
     clearAllSupport: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.clearAllSupport();
-        dispatch(sceneActions.render());
+        dispatch(sceneActions.renderScene());
     },
 
     computeAutoSupports: angle => (dispatch, getState) => {
@@ -4994,7 +4994,7 @@ export const actions = {
     updateClippingPlane: (height) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.updateClippingPlane(height);
-        dispatch(sceneActions.render());
+        dispatch(sceneActions.renderScene());
     },
 
     modelSimplify: (simplifyType = 0, simplifyPercent = 80, isFirstTime = false) => async (dispatch, getState) => {

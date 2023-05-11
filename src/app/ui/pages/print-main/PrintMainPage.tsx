@@ -1,20 +1,20 @@
 import i18next from 'i18next';
 import isElectron from 'is-electron';
 import { find } from 'lodash';
-// import PropTypes from 'prop-types';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { useHistory, withRouter } from 'react-router-dom';
 
 import { LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_MATERIAL } from '../../../constants';
-import { HEAD_PRINTING, isDualExtruder, MACHINE_SERIES } from '../../../constants/machines';
+import { HEAD_PRINTING, MACHINE_SERIES, isDualExtruder } from '../../../constants/machines';
+import { actions as appGlobalActions } from '../../../flux/app-global';
 import { RootState } from '../../../flux/index.def';
 import { actions as machineActions } from '../../../flux/machine';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
-import { actions as appGlobalActions } from '../../../flux/app-global';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
+import sceneLogic from '../../../scene/scene.logic';
 import { machineStore } from '../../../store/local-storage';
 import Dropzone from '../../components/Dropzone';
 import MainToolBar from '../../layouts/MainToolBar';
@@ -25,7 +25,6 @@ import PrintingConfigurationsWidget, { PresetInitialization } from '../../widget
 import PrintingOutputWidget from '../../widgets/PrintingOutput';
 import Thumbnail from '../../widgets/PrintingOutput/Thumbnail';
 import PrintingVisualizer from '../../widgets/PrintingVisualizer';
-// import sceneLogic from '../../../scene/scene.logic';
 
 import HomePage from '../HomePage';
 import { CaseConfigGimbal, CaseConfigPenHolder, CaseConfigSM2Gimbal } from '../HomePage/CaseConfig';
@@ -60,7 +59,7 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
     const canGroup = useSelector((state: RootState) => state.printing?.modelGroup?.canGroup());
     const canUngroup = useSelector((state: RootState) => state.printing?.modelGroup?.canUngroup());
     const canMerge = useSelector((state: RootState) => state.printing?.modelGroup?.canMerge());
-    // const canSplit = sceneLogic.canSplit();
+    const canSplit = sceneLogic.canSplit();
 
     // simplify & repair
     const canSimplify = useSelector((state: RootState) => state.printing?.modelGroup?.canSimplify());
@@ -209,7 +208,6 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
                             dispatch(printingActions.groupAndAlign());
                         }
                     },
-                    /*
                     {
                         title: i18n._('key-3DP/MainToolBar-Split'),
                         disabled: !canSplit || !enableShortcut,
@@ -219,7 +217,6 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
                             dispatch(printingActions.splitSelected());
                         }
                     },
-                    */
                     {
                         title: i18n._('key-3DP/MainToolBar-Group'),
                         disabled: !canGroup || !enableShortcut,

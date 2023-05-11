@@ -33,7 +33,7 @@ export default class Operations {
      * @param {function} redoCallback
      * @param {function} undoCallback
      */
-    registCallbackAfterAll(callback, redoCallback, undoCallback) {
+    registerCallbackAll(callback, redoCallback = null, undoCallback = null) {
         if (typeof redoCallback === 'function') {
             this.redoCallback = redoCallback;
         }

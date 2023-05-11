@@ -22,28 +22,30 @@ const renderScene = () => (dispatch) => {
 
 const discardPreview = ({ render = true }) => {
     return (dispatch, getState) => {
-        const { gcodeFile, modelGroup, gcodeLineGroup } = getState().printing;
+        const { displayedType, gcodeFile, modelGroup, gcodeLineGroup } = getState().printing;
 
-        // Remove preview
-        if (gcodeFile) {
-            ThreeUtils.dispose(gcodeLineGroup);
-            gcodeLineGroup.clear();
-            gcodeLineGroup.visible = false;
-        }
+        if (displayedType === 'gcode') {
+            // Remove preview
+            if (gcodeFile) {
+                ThreeUtils.dispose(gcodeLineGroup);
+                gcodeLineGroup.clear();
+                gcodeLineGroup.visible = false;
+            }
 
-        // display model group
-        modelGroup.object.visible = true;
-        modelGroup.setDisplayType('model');
+            // display model group
+            modelGroup.object.visible = true;
+            modelGroup.setDisplayType('model');
 
-        dispatch(baseActions.updateState({
-            gcodeFile: null,
-            gcodeLine: null,
-            displayedType: 'model',
-            outOfMemoryForRenderGcode: false
-        }));
+            dispatch(baseActions.updateState({
+                gcodeFile: null,
+                gcodeLine: null,
+                displayedType: 'model',
+                outOfMemoryForRenderGcode: false
+            }));
 
-        if (render) {
-            dispatch(renderScene());
+            if (render) {
+                dispatch(renderScene());
+            }
         }
     };
 };
@@ -323,9 +325,9 @@ const applyPrintSettingsToModels = () => (dispatch, getState) => {
         sceneLogic.onPresetParameterChanged(RIGHT_EXTRUDER, rightPresetModel);
     }
 
-    // TODO:
-    const models = modelGroup.getModels();
-    modelGroup.models = models.concat();
+    // TODO: ?
+    // const models = modelGroup.getModels();
+    // modelGroup.models = models.concat();
 
     dispatch(checkModelOverstep());
     dispatch(renderScene());
@@ -421,7 +423,7 @@ const finalizeSceneSettings = (
 
 export default {
     // basic scene actions
-    render: renderScene,
+    renderScene,
 
     discardPreview,
 
