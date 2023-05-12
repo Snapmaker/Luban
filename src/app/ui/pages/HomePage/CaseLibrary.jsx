@@ -13,7 +13,7 @@ import { MACHINE_SERIES, isDualExtruder } from '../../../constants/machines';
 import { actions as appGlobalActions } from '../../../flux/app-global';
 import { CaseConfigQuickStart } from './CaseConfig';
 import { renderModal } from '../../utils';
-import { DetailModalState } from '../../../constants/downloadManager';
+import { DetailModalState, resourcesDomain, IMG_RESOURCE_BASE_URL, AccessResourceWebState } from '../../../constants/downloadManager';
 
 const CaseLibrary = (props) => {
     // useState
@@ -22,13 +22,45 @@ const CaseLibrary = (props) => {
     const [caseConfig, setCaseConfig] = useState([]);
     const [showQuickStartModal, setShowQuickStartModal] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    // const [canAccessWeb, setCanAccessWeb] = useState(false);
+
 
     // redux correlation
     const dispatch = useDispatch();
     const series = useSelector(state => state?.machine?.series);
     const toolHead = useSelector(state => state?.machine?.toolHead);
+    const canAccessWeb = useSelector(state => state?.appGlobal?.canAccessWeb);
 
     //  method
+    // test access of iframe src by path /access-test.css.
+    // Front end should provid this file in server
+    const accessTest = async (cb) => new Promise((resolve) => {
+        if (canAccessWeb !== AccessResourceWebState.INITIAL) {
+            resolve(canAccessWeb);
+            return;
+        }
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = `${resourcesDomain}/access-test.css`;
+        link.onerror = () => {
+            cb && cb();
+            dispatch(appGlobalActions.updateState({ canAccessWeb: AccessResourceWebState.BLOCKED }));
+            resolve(AccessResourceWebState.BLOCKED);
+            document.head.removeChild(link);
+        };
+        link.onload = () => {
+            dispatch(appGlobalActions.updateState({ canAccessWeb: AccessResourceWebState.PASS }));
+            resolve(AccessResourceWebState.PASS);
+            document.head.removeChild(link);
+        };
+        document.head.appendChild(link);
+
+        // timeout
+        setTimeout(() => {
+            resolve(false);
+        }, 2000);
+    });
     const renderQuickStartModal = () => {
         const onClose = () => setShowQuickStartModal(false);
         return renderModal({
@@ -68,30 +100,24 @@ const CaseLibrary = (props) => {
             return false;
         }
     };
-    const loadData = () => {
-        const isShow = canAccessInternet && isCaseResourceMachine(series, toolHead);
-        setShowCaseResource(isShow);
-        setIsLoading(isShow);
-        isShow && api.getCaseResourcesList()
-            .then(
-                (res) => {
-                    if (!res.body || !res.body.data || !Array.isArray(res.body.data)) {
-                        setShowCaseResource(false);
-                        return;
-                    }
-                    const caseList = res.body.data.map(caseItem => {
-                        const IMG_RESOURCE_BASE_URL = 'https://d3gw8b56b7j3w6.cloudfront.net/';
-                        return {
-                            id: caseItem.id,
-                            title: caseItem.name,
-                            author: caseItem.author || 'snapmaker',
-                            imgSrc: `${IMG_RESOURCE_BASE_URL}${caseItem.coverImageUrl}`
-                        };
-                    });
-                    setCaseConfig([CaseConfigQuickStart].concat(caseList));
-                }
-            )
-            .finally(() => setIsLoading(false));
+    const loadData = async () => {
+        const isShow = canAccessInternet && isCaseResourceMachine(series, toolHead) && isElectron();
+        setIsLoading(true);
+        if (!isShow) return isShow;
+        const res = await api.getCaseResourcesList();
+        if (!res.body || !res.body.data || !Array.isArray(res.body.data)) {
+            return false;
+        }
+        const caseList = res.body.data.map(caseItem => {
+            return {
+                id: caseItem.id,
+                title: caseItem.name,
+                author: caseItem.author || 'snapmaker',
+                imgSrc: `${IMG_RESOURCE_BASE_URL}${caseItem.coverImageUrl}`
+            };
+        });
+        setCaseConfig([CaseConfigQuickStart].concat(caseList));
+        return true;
     };
     const goCaseResource = (id) => {
         if (isElectron()) {
@@ -116,13 +142,18 @@ const CaseLibrary = (props) => {
     //  useEffect
     useEffect(() => {
         const removelinstener = linstenNetworkConnect();
-        loadData();
+        Promise.all([accessTest(), loadData()])
+            .then(([accessedWeb, isShow]) => { setShowCaseResource(accessedWeb === AccessResourceWebState.PASS && isShow); })
+            .catch(err => console.error(err))
+            .finally(() => { setIsLoading(false); });
         return () => removelinstener();
     }, []);
 
     useEffect(() => {
-        loadData();
-    }, [series, toolHead, canAccessInternet]);
+        loadData()
+            .then((isShow) => setShowCaseResource(canAccessWeb === AccessResourceWebState.PASS && isShow))
+            .finally(() => { setIsLoading(false); });
+    }, [series, toolHead, canAccessInternet, canAccessWeb]);
 
     return (
         <>

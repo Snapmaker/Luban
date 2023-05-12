@@ -85,13 +85,12 @@ const CaseResource = (props) => {
         link.rel = 'stylesheet';
         link.type = 'text/css';
         link.href = `${resourcesDomain}/access-test.css`;
-        link.onerror = (e) => {
+        link.onerror = () => {
             cb();
-            console.error(e);
             setIsIframeLoaded(false);
-            document.body.removeChild(link);
+            document.head.removeChild(link);
         };
-        document.body.appendChild(link);
+        document.head.appendChild(link);
     };
     const handleIframe = () => {
         const iframe = caseResourceIframe.current;

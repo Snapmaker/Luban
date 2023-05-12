@@ -34,6 +34,7 @@ import { PageMode } from '../PageMode';
 import Workspace from '../Workspace';
 import SceneInitialization from './SceneInitialization';
 import StarterGuide from './StarterGuide';
+import { AccessResourceWebState } from '../../../constants/downloadManager';
 
 export const openFolder = () => {
     if (isElectron()) {
@@ -65,6 +66,9 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
     // simplify & repair
     const canSimplify = useSelector((state: RootState) => state.printing?.modelGroup?.canSimplify());
     const canRepair = useSelector((state: RootState) => state.printing?.modelGroup?.canRepair());
+
+    // download
+    const canAccessWeb = useSelector((state: RootState) => state.appGlobal?.canAccessWeb);
 
     const [showHomePage, setShowHomePage] = useState(false);
     const [showWorkspace, setShowWorkspace] = useState(false);
@@ -328,7 +332,7 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
                 return false;
             }
         };
-        if (isElectron() && isCaseResourceMachine(series, toolHead)) {
+        if (isElectron() && isCaseResourceMachine(series, toolHead) && canAccessWeb === AccessResourceWebState.PASS) {
             leftItems.push(
                 {
                     type: 'separator',
