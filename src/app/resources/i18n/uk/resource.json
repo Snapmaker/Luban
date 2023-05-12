@@ -1724,7 +1724,7 @@
     "key-Progress/3DP-Repairing model... {{progress}}%": "Виправлення моделі… {{progress}}%",
     "key-Progress/3DP-Scale to fit...{{progress}}%": "Автомасштабування… {{progress}}%",
     "key-Progress/3DP-Simplify model...{{prgress}}%": "Спрощення моделі… {{prgress}}%",
-    "key-Progress/3DP-SingleLayer": "Одиничний шар",
+    "key-Progress/3DP-SingleLayer": "Один шар",
     "key-Progress/3DP-Slice Failed": "Збій нарізання",
     "key-Progress/3DP-Slice Failed reason": "Основна причина невдачі викликана внутрішніми помилками в алгоритмі слайсера. Будь ласка, спробуйте полагодити модель або перемістити її в інше місце на столі. У разі невдач, спричинених іншими причинами, будь ласка, зверніться до документа \"Проблеми слайсера\".",
     "key-Progress/3DP-Split model successfully.": "Модель розділено.",
