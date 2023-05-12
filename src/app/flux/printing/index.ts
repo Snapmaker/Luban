@@ -67,8 +67,8 @@ import DeleteOperation3D from '../operation-history/DeleteOperation3D';
 import DeleteSupportsOperation3D from '../operation-history/DeleteSupportsOperation3D';
 import GroupAlignOperation3D from '../operation-history/GroupAlignOperation3D';
 import MoveOperation3D from '../operation-history/MoveOperation3D';
-import OperationHistory from '../operation-history/OperationHistory';
-import Operations from '../../core/Operations';
+import OperationHistory from '../../core/OperationHistory';
+import CompoundOperation from '../../core/CompoundOperation';
 import RotateOperation3D from '../operation-history/RotateOperation3D';
 import ScaleOperation3D from '../operation-history/ScaleOperation3D';
 import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWithRotateOperation3D';
@@ -2977,7 +2977,7 @@ export const actions = {
 
         const modelState = modelGroup.hideSelectedModel(targetModels);
 
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         // targetModels.forEach(model => {
         //     const operation = new VisibleOperation3D({
         //         target: model,
@@ -3017,7 +3017,7 @@ export const actions = {
             target: targetModel,
             visible: true
         });
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         operations.push(operation);
         operations.registerCallbackAll(() => {
             dispatch(actions.updateState(modelGroup.getState()));
@@ -3047,7 +3047,7 @@ export const actions = {
         }
 
         const { modelGroup } = getState().printing;
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         const selectedModelArray = modelGroup.selectedModelArray.concat();
         const { recovery } = modelGroup.unselectAllModels();
         for (const model of selectedModelArray) {
@@ -3096,7 +3096,7 @@ export const actions = {
 
     removeAllModels: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         for (const model of modelGroup.models) {
             const operation = new DeleteOperation3D({
                 target: model,
@@ -3233,7 +3233,7 @@ export const actions = {
         dispatch,
         getState
     ) => {
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         let operation;
         const froms = {};
 
@@ -3493,7 +3493,7 @@ export const actions = {
         if (combinedOperations) {
             operations = combinedOperations;
         } else {
-            operations = new Operations();
+            operations = new CompoundOperation();
             if (transformMode === 'rotate') {
                 dispatch(actions.clearAllManualSupport(operations));
             }
@@ -3557,7 +3557,7 @@ export const actions = {
             dispatch(actions.clearAllManualSupport(operations));
         }
 
-        operations.registCallbackAfterAll(() => {
+        operations.registerCallbackAll(() => {
             dispatch(actions.updateState(modelGroup.getState()));
             dispatch(actions.destroyGcodeLine());
             dispatch(actions.displayModel());
@@ -3592,7 +3592,7 @@ export const actions = {
     duplicateSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const modelState = modelGroup.duplicateSelectedModel();
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         for (const model of modelGroup.selectedModelArray) {
             const operation = new AddOperation3D({
                 target: model,
@@ -3648,7 +3648,7 @@ export const actions = {
         const { modelGroup } = getState().printing;
         const modelState = modelGroup.paste();
 
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         for (const model of modelGroup.getSelectedModelArray()) {
             const operation = new AddOperation3D({
                 target: model,
@@ -3690,7 +3690,7 @@ export const actions = {
 
     autoRotateSelectedModel: () => (dispatch, getState) => {
         const { modelGroup, progressStatesManager } = getState().printing;
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         dispatch(actions.clearAllManualSupport(operations));
         dispatch(actions.recordModelBeforeTransform(modelGroup));
 
@@ -3916,7 +3916,7 @@ export const actions = {
                 const { status, value } = payload;
                 switch (status) {
                     case 'FINISH': {
-                        const operations = new Operations();
+                        const operations = new CompoundOperation();
                         const originQuaternion = modelGroup.selectedGroup.quaternion.clone();
                         let operation;
                         const { rotateAngel, maxScale, offsetX } = value;
@@ -4021,45 +4021,56 @@ export const actions = {
         dispatch(actions.displayModel());
     },
 
-    // uploadModel
-    undo: () => (dispatch, getState) => {
-        const { inProgress } = getState().printing;
-        if (inProgress) {
-            return;
-        }
+    /**
+     * Undo operations.
+     */
+    undo: () => {
+        return (dispatch, getState) => {
+            const { inProgress } = getState().printing;
+            if (inProgress) {
+                return;
+            }
 
-        const { history, displayedType } = getState().printing;
-        const { canUndo } = history;
+            const { history } = getState().printing;
+            const { canUndo } = history;
+            if (!canUndo) {
+                return;
+            }
 
-        if (displayedType !== 'model') {
-            dispatch(actions.destroyGcodeLine());
-            dispatch(actions.displayModel());
-        }
+            dispatch(sceneActions.discardPreview({ render: false }));
 
-        if (canUndo) {
             logToolBarOperation(HEAD_PRINTING, 'undo');
             dispatch(operationHistoryActions.undo(INITIAL_STATE.name));
-            dispatch(actions.destroyGcodeLine());
-            dispatch(actions.displayModel());
-            dispatch(actions.render());
-        }
+            // dispatch(actions.destroyGcodeLine());
+            // dispatch(actions.displayModel());
+            dispatch(sceneActions.renderScene());
+        };
     },
 
-    redo: () => (dispatch, getState) => {
-        const { inProgress } = getState().printing;
-        if (inProgress) {
-            return;
-        }
+    /**
+     * Redo operations.
+     */
+    redo: () => {
+        return (dispatch, getState) => {
+            const { inProgress } = getState().printing;
+            if (inProgress) {
+                return;
+            }
 
-        dispatch(actions.exitPreview());
-        const { canRedo } = getState().printing.history;
-        if (canRedo) {
+            const { history } = getState().printing;
+            const { canRedo } = history;
+            if (!canRedo) {
+                return;
+            }
+
+            dispatch(sceneActions.discardPreview({ render: false }));
+
             logToolBarOperation(HEAD_PRINTING, 'redo');
             dispatch(operationHistoryActions.redo(INITIAL_STATE.name));
-            dispatch(actions.destroyGcodeLine());
-            dispatch(actions.displayModel());
+            // dispatch(actions.destroyGcodeLine());
+            // dispatch(actions.displayModel());
             dispatch(actions.render());
-        }
+        };
     },
 
     displayGcode: () => (dispatch, getState) => {
@@ -4109,7 +4120,7 @@ export const actions = {
             : modelGroup.getModelsAttachedSupport();
 
         if (availModels.length > 0) {
-            let operations = new Operations();
+            let operations = new CompoundOperation();
             if (combinedOperations) {
                 operations = combinedOperations;
             }
@@ -4331,7 +4342,7 @@ export const actions = {
                 target: model,
                 parent: null
             });
-            const operations = new Operations();
+            const operations = new CompoundOperation();
             operations.push(operation);
             operations.registerCallbackAll(() => {
                 const modelState = modelGroup.getState();
@@ -4369,7 +4380,7 @@ export const actions = {
 
     startAnalyzeRotation: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         dispatch(actions.clearAllManualSupport(operations));
         // record current rotation for undo & redo
         dispatch(actions.recordModelBeforeTransform(modelGroup));
@@ -4493,7 +4504,7 @@ export const actions = {
             recovery();
         });
         modelGroup.updateModelsPositionBaseFirstModel(selectedModels);
-        const operations = new Operations();
+        const operations = new CompoundOperation();
 
         const { newGroup, modelState } = modelGroup.group();
         const modelsafterGroup = modelGroup.getModels().slice(0);
@@ -4670,7 +4681,7 @@ export const actions = {
     loadSupports: supportFilePaths => (dispatch, getState) => {
         const { modelGroup, tmpSupportFaceMarks } = getState().printing;
         // use worker to load supports
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         const promises = supportFilePaths.map(async (info) => {
             return new Promise((resolve, reject) => {
                 const model = modelGroup.findModelByID(info.modelID);
@@ -4784,7 +4795,7 @@ export const actions = {
             modelInGroup.parent.children
         );
         if (modelsWithSupport.length > 0) {
-            let operations = new Operations();
+            let operations = new CompoundOperation();
             if (combinedOperations) {
                 operations = combinedOperations;
             }
@@ -4950,7 +4961,7 @@ export const actions = {
     recordSimplifyModel: () => (dispatch, getState) => {
         const { simplifyOriginModelInfo: { sourceSimplifyName, simplifyResultFimeName }, modelGroup } = getState().printing;
         const target = modelGroup.selectedModelArray[0];
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         const operation = new SimplifyModelOperation({
             target,
             sourceSimplify: sourceSimplifyName,

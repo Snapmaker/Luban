@@ -12,7 +12,7 @@ import sceneLogic, { PrimeTowerSettings } from '../../scene/scene.logic';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 import { actions as operationHistoryActions } from '../operation-history';
 import GroupOperation3D from '../operation-history/GroupOperation3D';
-import Operations from '../../core/Operations';
+import CompoundOperation from '../../core/CompoundOperation';
 import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import baseActions from './actions-base';
 
@@ -216,7 +216,7 @@ const groupSelectedModels = () => {
         const modelsBeforeGroup = modelGroup.getModels().slice(0);
         const selectedModels = modelGroup.getSelectedModelArray().slice(0);
 
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         const { recovery } = modelGroup.unselectAllModels();
 
         // Record the relationship between model and group
@@ -285,7 +285,7 @@ const ungroupSelectedModels = () => {
                 })
             });
         });
-        const operations = new Operations();
+        const operations = new CompoundOperation();
 
         const modelState = modelGroup.ungroup();
         modelGroup.calaClippingMap();

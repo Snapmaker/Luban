@@ -20,7 +20,7 @@ import {
 import definitionManager from '../manager/DefinitionManager';
 import ToolPathGroup from '../../toolpaths/ToolPathGroup';
 import ProgressStatesManager, { STEP_STAGE } from '../../lib/manager/ProgressManager';
-import OperationHistory from '../operation-history/OperationHistory';
+import OperationHistory from '../../core/OperationHistory';
 import { getMachineSeriesWithToolhead } from '../../constants/machines';
 
 const ACTION_CHANGE_TOOL_PARAMS = 'cnc/ACTION_CHANGE_TOOL_PARAMS';

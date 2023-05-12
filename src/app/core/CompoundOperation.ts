@@ -1,10 +1,14 @@
 import Operation from './Operation';
 
-
 type CallbackFunction = () => void;
 
-export default class Operations<T> {
-    private operations: Operation<T>[] = [];
+/**
+ * Compound Operation.
+ *
+ * A group of operations that need to execute together.
+ */
+class CompoundOperation {
+    public operations: Operation<object>[] = [];
 
     private redoCallback: CallbackFunction | null = null;
 
@@ -13,11 +17,15 @@ export default class Operations<T> {
     private callback: CallbackFunction | null = null;
 
     public push(...operations: Operation<T>[]) {
-        this.operations.push(...(operations.filter(item => !!item)));
+        this.operations.push(...operations);
     }
 
-    public getItem(i: number) {
-        return this.operations[i];
+    public getItem<O>(i: number): O | null {
+        if (this.operations[i]) {
+            return this.operations[i] as O;
+        } else {
+            return null;
+        }
     }
 
     public removeItem(i: number) {
@@ -62,3 +70,5 @@ export default class Operations<T> {
         this.callback && this.callback();
     }
 }
+
+export default CompoundOperation;
