@@ -202,7 +202,7 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
                                         'margin-right-8',
                                     )}
                                 />
-                                <span style={{ verticalAlign: 'middle' }}>{i18n._('Left')}</span>
+                                <span style={{ verticalAlign: 'middle' }}>{i18n._('Left Extruder')}</span>
                                 <span style={{ verticalAlign: 'middle', fontSize: '12px', marginLeft: '4px' }}>(<i className="fa fa-keyboard-o" /> 1)</span>
                             </span>
                         </Button>
@@ -230,7 +230,7 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
                                         'margin-right-8',
                                     )}
                                 />
-                                <span style={{ verticalAlign: 'middle' }}>{i18n._('Right')}</span>
+                                <span style={{ verticalAlign: 'middle' }}>{i18n._('Right Extruder')}</span>
                                 <span style={{ verticalAlign: 'middle', fontSize: '12px', marginLeft: '4px' }}>(<i className="fa fa-keyboard-o" /> 2)</span>
                             </span>
                         </Button>
