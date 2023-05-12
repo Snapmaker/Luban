@@ -1,6 +1,6 @@
 import type ThreeGroup from '../../models/ThreeGroup';
 import type ThreeModel from '../../models/ThreeModel';
-import Operation from './Operation';
+import Operation from '../../core/Operation';
 
 type VisibleState = {
     target: ThreeModel | ThreeGroup,

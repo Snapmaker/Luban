@@ -2,7 +2,7 @@ import type ModelGroup from '../../models/ModelGroup';
 import type ThreeGroup from '../../models/ThreeGroup';
 import type ThreeModel from '../../models/ThreeModel';
 import type { ModelTransformation } from '../../models/ThreeBaseModel';
-import Operation from './Operation';
+import Operation from '../../core/Operation';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 
 type ModelState = {

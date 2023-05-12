@@ -3,7 +3,7 @@ import type ModelGroup from '../../models/ModelGroup';
 import ThreeGroup from '../../models/ThreeGroup';
 import ThreeModel from '../../models/ThreeModel';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
-import Operation from './Operation';
+import Operation from '../../core/Operation';
 
 type AddOperationProp = {
     target: ThreeGroup | ThreeModel;

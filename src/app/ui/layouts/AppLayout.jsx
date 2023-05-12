@@ -4,7 +4,7 @@ import isElectron from 'is-electron';
 import { cloneDeep, throttle } from 'lodash';
 import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
-import React, { PureComponent } from 'react';
+import React from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import { Group } from 'three';
@@ -44,24 +44,21 @@ import { getCurrentHeadType } from '../../lib/url-utils';
 import Anchor from '../components/Anchor';
 import { Button } from '../components/Buttons';
 import Checkbox from '../components/Checkbox';
+import Modal from '../components/Modal/tileModal';
 import Space from '../components/Space';
 import SvgIcon from '../components/SvgIcon';
-
+import CaseResource from '../pages/CaseResource/index';
 import FirmwareTool from '../pages/Settings/FirmwareTool';
 import Settings from '../pages/Settings/Settings';
 import SoftwareUpdate from '../pages/Settings/SoftwareUpdate';
 import DownloadUpdate from '../pages/Settings/SoftwareUpdate/DownloadUpdate';
-
 import { renderModal } from '../utils';
-import AppBar from '../views/AppBar';
-// import HomePage from '../pages/HomePage';
-// import Workspace from '../pages/Workspace';
+import { AppBar } from '../views/AppBar';
 import ModelExporter from '../widgets/PrintingVisualizer/ModelExporter';
 import styles from './styles/appbar.styl';
-import Modal from '../components/Modal/tileModal';
-import CaseResource from '../pages/CaseResource/index';
 
-class AppLayout extends PureComponent {
+
+class AppLayout extends React.PureComponent {
     static propTypes = {
         modelGroup: PropTypes.object.isRequired,
         store: PropTypes.object.isRequired,

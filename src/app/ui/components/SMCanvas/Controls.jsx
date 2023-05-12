@@ -295,7 +295,6 @@ class Controls extends EventEmitter {
         // Prevent the browser from scrolling.
         // event.preventDefault();
         this.mouseDownPosition = this.getMouseCoord(event);
-        // this.prevState = null;
         if (this.state === STATE.ROTATE_PLACEMENT) {
             this.prevState = STATE.ROTATE_PLACEMENT;
         }

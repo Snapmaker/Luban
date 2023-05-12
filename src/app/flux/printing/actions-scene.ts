@@ -1,15 +1,20 @@
 import { find } from 'lodash';
 import { Color } from 'three';
 
-import { LEFT_EXTRUDER, MACHINE_EXTRUDER_X, MACHINE_EXTRUDER_Y, RIGHT_EXTRUDER } from '../../constants';
-import { MaterialPresetModel, PresetModel } from '../../preset-model';
-import ThreeUtils from '../../three-extensions/ThreeUtils';
-import sceneLogic, { PrimeTowerSettings } from '../../scene/scene.logic';
-
-import baseActions from './actions-base';
-import ThreeModel, { BYTE_COUNT_LEFT_EXTRUDER, BYTE_COUNT_RIGHT_EXTRUDER } from '../../models/ThreeModel';
-import { BrushType } from '../../models/ModelGroup';
+import { HEAD_PRINTING, LEFT_EXTRUDER, MACHINE_EXTRUDER_X, MACHINE_EXTRUDER_Y, RIGHT_EXTRUDER } from '../../constants';
+import { logToolBarOperation } from '../../lib/gaEvent';
 import { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
+import { BrushType } from '../../models/ModelGroup';
+import ThreeGroup from '../../models/ThreeGroup';
+import ThreeModel, { BYTE_COUNT_LEFT_EXTRUDER, BYTE_COUNT_RIGHT_EXTRUDER } from '../../models/ThreeModel';
+import { MaterialPresetModel, PresetModel } from '../../preset-model';
+import sceneLogic, { PrimeTowerSettings } from '../../scene/scene.logic';
+import ThreeUtils from '../../three-extensions/ThreeUtils';
+import { actions as operationHistoryActions } from '../operation-history';
+import GroupOperation3D from '../operation-history/GroupOperation3D';
+import CompoundOperation from '../../core/CompoundOperation';
+import UngroupOperation3D from '../operation-history/UngroupOperation3D';
+import baseActions from './actions-base';
 
 
 const renderScene = () => (dispatch) => {
@@ -22,28 +27,30 @@ const renderScene = () => (dispatch) => {
 
 const discardPreview = ({ render = true }) => {
     return (dispatch, getState) => {
-        const { gcodeFile, modelGroup, gcodeLineGroup } = getState().printing;
+        const { displayedType, gcodeFile, modelGroup, gcodeLineGroup } = getState().printing;
 
-        // Remove preview
-        if (gcodeFile) {
-            ThreeUtils.dispose(gcodeLineGroup);
-            gcodeLineGroup.clear();
-            gcodeLineGroup.visible = false;
-        }
+        if (displayedType === 'gcode') {
+            // Remove preview
+            if (gcodeFile) {
+                ThreeUtils.dispose(gcodeLineGroup);
+                gcodeLineGroup.clear();
+                gcodeLineGroup.visible = false;
+            }
 
-        // display model group
-        modelGroup.object.visible = true;
-        modelGroup.setDisplayType('model');
+            // display model group
+            modelGroup.object.visible = true;
+            modelGroup.setDisplayType('model');
 
-        dispatch(baseActions.updateState({
-            gcodeFile: null,
-            gcodeLine: null,
-            displayedType: 'model',
-            outOfMemoryForRenderGcode: false
-        }));
+            dispatch(baseActions.updateState({
+                gcodeFile: null,
+                gcodeLine: null,
+                displayedType: 'model',
+                outOfMemoryForRenderGcode: false
+            }));
 
-        if (render) {
-            dispatch(renderScene());
+            if (render) {
+                dispatch(renderScene());
+            }
         }
     };
 };
@@ -199,6 +206,117 @@ const applyMeshColoringBrush = (raycastResult) => {
     };
 };
 
+const groupSelectedModels = () => {
+    return (dispatch, getState) => {
+        // TODO: remove this
+        // dispatch(discardPreview({ render: false }));
+
+        const { modelGroup } = getState().printing;
+        // Stores the model structure before the group operation, which is used for undo operation
+        const modelsBeforeGroup = modelGroup.getModels().slice(0);
+        const selectedModels = modelGroup.getSelectedModelArray().slice(0);
+
+        const operations = new CompoundOperation();
+        const { recovery } = modelGroup.unselectAllModels();
+
+        // Record the relationship between model and group
+        const modelsRelation = selectedModels.reduce((pre, selectd) => {
+            const groupModelID = selectd.parent?.modelID;
+            pre.set(selectd.modelID, {
+                groupModelID,
+                children:
+                    selectd instanceof ThreeGroup
+                        ? selectd.children.slice(0)
+                        : null,
+                modelTransformation: { ...selectd.transformation }
+            });
+            return pre;
+        }, new Map());
+        recovery();
+
+        const modelState = modelGroup.group();
+
+        // Stores the model structure after the group operation, which is used for redo operation
+        const modelsAfterGroup = modelGroup.getModels().slice(0);
+        const newGroup = modelGroup.getSelectedModelArray()[0];
+        const operation = new GroupOperation3D({
+            modelsBeforeGroup,
+            modelsAfterGroup,
+            selectedModels,
+            target: newGroup,
+            modelGroup,
+            modelsRelation,
+        });
+
+        operations.push(operation);
+        operations.registerCallbackAll(() => {
+            dispatch(baseActions.updateState(modelGroup.getState()));
+            dispatch(renderScene());
+        });
+
+        dispatch(
+            operationHistoryActions.setOperations(
+                HEAD_PRINTING,
+                operations
+            )
+        );
+        dispatch(baseActions.updateState(modelState));
+        logToolBarOperation(HEAD_PRINTING, 'group');
+    };
+};
+
+const ungroupSelectedModels = () => {
+    return (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+
+        const groups = modelGroup
+            .getSelectedModelArray()
+            .filter((model) => model instanceof ThreeGroup);
+        const modelsBeforeUngroup = modelGroup.getModels().slice(0);
+        const groupChildrenMap = new Map();
+        groups.forEach((group) => {
+            groupChildrenMap.set(group, {
+                groupTransformation: { ...group.transformation },
+                subModelStates: group.children.map((model) => {
+                    return {
+                        target: model,
+                        transformation: { ...model.transformation }
+                    };
+                })
+            });
+        });
+        const operations = new CompoundOperation();
+
+        const modelState = modelGroup.ungroup();
+        modelGroup.calaClippingMap();
+
+        groups.forEach((group) => {
+            const operation = new UngroupOperation3D({
+                modelsBeforeUngroup,
+                target: group,
+                groupTransformation: groupChildrenMap.get(group)
+                    .groupTransformation,
+                subModelStates: groupChildrenMap.get(group).subModelStates,
+                modelGroup
+            });
+            operations.push(operation);
+        });
+        operations.registerCallbackAll(() => {
+            dispatch(baseActions.updateState(modelGroup.getState()));
+            dispatch(renderScene());
+        });
+
+        dispatch(
+            operationHistoryActions.setOperations(
+                HEAD_PRINTING,
+                operations
+            )
+        );
+        dispatch(baseActions.updateState(modelState));
+        logToolBarOperation(HEAD_PRINTING, 'ungroup');
+    };
+};
+
 const getModelShellStackId = (model: ThreeModel): string => {
     const useLeftExtruder = model.extruderConfig.shell === '0';
     return useLeftExtruder ? LEFT_EXTRUDER : RIGHT_EXTRUDER;
@@ -323,9 +441,9 @@ const applyPrintSettingsToModels = () => (dispatch, getState) => {
         sceneLogic.onPresetParameterChanged(RIGHT_EXTRUDER, rightPresetModel);
     }
 
-    // TODO:
-    const models = modelGroup.getModels();
-    modelGroup.models = models.concat();
+    // TODO: ?
+    // const models = modelGroup.getModels();
+    // modelGroup.models = models.concat();
 
     dispatch(checkModelOverstep());
     dispatch(renderScene());
@@ -421,7 +539,7 @@ const finalizeSceneSettings = (
 
 export default {
     // basic scene actions
-    render: renderScene,
+    renderScene,
 
     discardPreview,
 
@@ -434,6 +552,10 @@ export default {
     endMeshColoringMode,
     setMeshStackId,
     applyMeshColoringBrush,
+
+    // model operatoins
+    groupSelectedModels,
+    ungroupSelectedModels,
 
     // print settings -> scene
     applyPrintSettingsToModels,

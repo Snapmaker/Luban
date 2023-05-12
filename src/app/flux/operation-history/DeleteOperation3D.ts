@@ -4,7 +4,7 @@ import ThreeGroup from '../../models/ThreeGroup';
 import ThreeModel from '../../models/ThreeModel';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 import type { DispatchType } from '../index.def';
-import Operation from './Operation';
+import Operation from '../../core/Operation';
 
 type DeleteOperationProp = {
     target: ThreeGroup | ThreeModel,

@@ -14,7 +14,7 @@ import { actions as operationHistoryActions } from '../operation-history';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as projectActions } from '../project';
 import DeleteToolPathOperation from '../operation-history/DeleteToolPathOperation';
-import Operations from '../operation-history/Operations';
+import CompoundOperation from '../../core/CompoundOperation';
 import { timestamp } from '../../../shared/lib/random-utils';
 import definitionManager from '../manager/DefinitionManager';
 import api from '../../api';
@@ -314,7 +314,7 @@ export const processActions = {
     deleteToolPath: (headType, selectedToolPathIDArray) => (dispatch, getState) => {
         const { toolPathGroup, displayedType, modelGroup } = getState()[headType];
 
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         selectedToolPathIDArray.forEach(id => {
             const operation = new DeleteToolPathOperation({
                 target: toolPathGroup._getToolPath(id),

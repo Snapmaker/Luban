@@ -40,7 +40,7 @@ import AddOperation2D from '../operation-history/AddOperation2D';
 import DeleteOperation2D from '../operation-history/DeleteOperation2D';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as operationHistoryActions } from '../operation-history';
-import Operations from '../operation-history/Operations';
+import CompoundOperation from '../../core/CompoundOperation';
 import MoveOperation2D from '../operation-history/MoveOperation2D';
 import ScaleOperation2D from '../operation-history/ScaleOperation2D';
 import RotateOperation2D from '../operation-history/RotateOperation2D';
@@ -120,7 +120,7 @@ function shouldProcessModel(selectedModel) {
 function recordScaleActionsToHistory(scaleActionsFn, elements, SVGActions, headType, machine, dispatch) {
     if (typeof scaleActionsFn === 'function') {
         const tmpTransformationState = {};
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         for (const element of elements) {
             const svgModel = SVGActions.getSVGModelByElement(element);
             tmpTransformationState[element.id] = {
@@ -809,7 +809,7 @@ export const actions = {
             svgActions: SVGActions,
             target: model
         });
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         operations.push(operation);
 
         dispatch(operationHistoryActions.setOperations(headType, operations));
@@ -1045,7 +1045,7 @@ export const actions = {
 
         SVGActions.duplicateSelectedModel();
 
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         for (const svgModel of modelGroup.getSelectedModelArray()) {
             const operation = new AddOperation2D({
                 target: svgModel,
@@ -1129,7 +1129,7 @@ export const actions = {
 
     removeSelectedModel: headType => (dispatch, getState) => {
         const { modelGroup, SVGActions, toolPathGroup } = getState()[headType];
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         for (const svgModel of modelGroup.getSelectedModelArray()) {
             const operation = new DeleteOperation2D({
                 target: svgModel,
@@ -1318,7 +1318,7 @@ export const actions = {
             target: model,
             visible: false
         });
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         operations.push(operation);
 
         dispatch(operationHistoryActions.setOperations(headType, operations));
@@ -1344,7 +1344,7 @@ export const actions = {
             target: model,
             visible: true
         });
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         operations.push(operation);
 
         dispatch(operationHistoryActions.setOperations(headType, operations));
@@ -1397,7 +1397,7 @@ export const actions = {
                 svgActions: SVGActions,
                 target: newSVGModel
             });
-            const operations = new Operations();
+            const operations = new CompoundOperation();
             operations.push(operation);
             dispatch(operationHistoryActions.setOperations(headType, operations));
         }
@@ -1441,7 +1441,7 @@ export const actions = {
 
         SVGActions.paste();
 
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         for (const svgModel of modelGroup.getSelectedModelArray()) {
             const operation = new AddOperation2D({
                 target: svgModel,
@@ -1527,7 +1527,7 @@ export const actions = {
 
         SVGActions.moveElementsFinish(elements, options);
 
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         for (const element of elements) {
             const svgModel = SVGActions.getSVGModelByElement(element);
             if (whetherTransformed(tmpTransformationState[element.id], svgModel.transformation)) {
@@ -1562,7 +1562,7 @@ export const actions = {
 
         SVGActions.moveElementsImmediately(elements, options);
 
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         for (const element of elements) {
             const svgModel = SVGActions.getSVGModelByElement(element);
             if (whetherTransformed(tmpTransformationState[element.id], svgModel.transformation)) {
@@ -1838,7 +1838,7 @@ export const actions = {
 
         SVGActions.rotateElementsFinish(elements);
 
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         for (const element of elements) {
             const svgModel = SVGActions.getSVGModelByElement(element);
             if (whetherTransformed(tmpTransformationState[element.id], svgModel.transformation)) {
@@ -1873,7 +1873,7 @@ export const actions = {
 
         SVGActions.rotateElementsImmediately(elements, options);
 
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         for (const element of elements) {
             const svgModel = SVGActions.getSVGModelByElement(element);
             if (whetherTransformed(tmpTransformationState[element.id], svgModel.transformation)) {
@@ -2263,7 +2263,7 @@ export const actions = {
     drawLine: (headType, line, closedLoop) => (dispatch, getState) => {
         const { contentGroup, history } = getState()[headType];
 
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         const operation = new DrawLine({
             target: line,
             closedLoop,
@@ -2283,7 +2283,7 @@ export const actions = {
 
         const deletedLineEles = contentGroup.drawGroup.onDelete();
         if (deletedLineEles.length > 0) {
-            const operations = new Operations();
+            const operations = new CompoundOperation();
             const operation = new DrawDelete({
                 target: deletedLineEles,
                 drawGroup: contentGroup.drawGroup
@@ -2300,7 +2300,7 @@ export const actions = {
     drawTransform: (headType, before, after) => (dispatch, getState) => {
         const { contentGroup, history } = getState()[headType];
 
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         const operation = new DrawTransform({
             before,
             after,
@@ -2316,7 +2316,15 @@ export const actions = {
     },
     drawTransformComplete: (headType, elem, before, after) => (dispatch, getState) => {
         const { contentGroup, history, SVGActions } = getState()[headType];
-        history.clearDrawOperations();
+        history.filter((operations) => {
+            return !operations.operations.some(operation => {
+                return operation instanceof DrawLine
+                    || operation instanceof DrawDelete
+                    || operation instanceof DrawTransform
+                    || operation instanceof DrawStart;
+            });
+        });
+
         if (before !== after) {
             const model = SVGActions.getSVGModelByElement(elem);
             if (after === '') {
@@ -2326,7 +2334,7 @@ export const actions = {
                 dispatch(actions.removeSelectedModelsByCallback(headType, 'select'));
                 return;
             }
-            const operations = new Operations();
+            const operations = new CompoundOperation();
             const operation = new DrawTransformComplete({
                 svgModel: model,
                 before,
@@ -2355,7 +2363,7 @@ export const actions = {
         if (history.history[history.index]?.operations[0] instanceof DrawStart) {
             return;
         }
-        const operations = new Operations();
+        const operations = new CompoundOperation();
         const operation = new DrawStart({
             elemID: elem ? elem.getAttribute('id') : '',
             contentGroup
@@ -2372,7 +2380,14 @@ export const actions = {
         const { history } = getState()[headType];
 
         if (elem) {
-            history.clearDrawOperations();
+            history.filter((operations) => {
+                return !operations.operations.some(operation => {
+                    return operation instanceof DrawLine
+                        || operation instanceof DrawDelete
+                        || operation instanceof DrawTransform
+                        || operation instanceof DrawStart;
+                });
+            });
             dispatch(
                 actions.updateState(headType, {
                     history

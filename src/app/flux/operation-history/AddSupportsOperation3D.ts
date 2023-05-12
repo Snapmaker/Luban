@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import ThreeModel from '../../models/ThreeModel';
-import Operation from './Operation';
+import Operation from '../../core/Operation';
 
 type StateMap = {
     target: ThreeModel,

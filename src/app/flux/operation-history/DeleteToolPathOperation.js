@@ -1,4 +1,4 @@
-import Operation from './Operation';
+import Operation from '../../core/Operation';
 import { PROCESS_MODES_EXCEPT_VECTOR, PROCESS_MODE_VECTOR } from '../../constants';
 
 export default class DeleteToolPathOperation extends Operation {
