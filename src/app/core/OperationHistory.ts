@@ -31,10 +31,12 @@ class OperationHistory {
         }
 
         const compoundOperation = this.operations[this.index--];
-        for (const operation of compoundOperation.operations) {
-            operation.undo();
-        }
-        compoundOperation.runUndoCallback();
+        compoundOperation.undo();
+
+        // for (const operation of compoundOperation.operations) {
+        //     operation.undo();
+        // }
+        // compoundOperation.runUndoCallback();
 
         this._updateUndoRedo();
     }
@@ -45,10 +47,12 @@ class OperationHistory {
         }
 
         const compoundOperation = this.operations[++this.index];
-        for (const operation of compoundOperation.operations) {
-            operation.redo();
-        }
-        compoundOperation.runRedoCallback();
+        compoundOperation.redo();
+
+        // for (const operation of compoundOperation.operations) {
+        //     operation.redo();
+        // }
+        // compoundOperation.runRedoCallback();
 
         this._updateUndoRedo();
     }

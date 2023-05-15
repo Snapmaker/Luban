@@ -1,4 +1,4 @@
-import { applyParameterModifications, PrintMode, resolveParameterValues, computeAdjacentFaces } from '@snapmaker/luban-platform';
+import { applyParameterModifications, computeAdjacentFaces, PrintMode, resolveParameterValues } from '@snapmaker/luban-platform';
 import { cloneDeep, filter, find, includes, isNil, noop } from 'lodash';
 import path from 'path';
 import { Transfer } from 'threads';
@@ -44,6 +44,8 @@ import log from '../../lib/log';
 import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 import workerManager from '../../lib/manager/workerManager';
 
+import CompoundOperation from '../../core/CompoundOperation';
+import OperationHistory from '../../core/OperationHistory';
 import { getCurrentHeadType } from '../../lib/url-utils';
 import { ModelEvents } from '../../models/events';
 import ModelGroup, { BrushType } from '../../models/ModelGroup';
@@ -67,12 +69,9 @@ import DeleteOperation3D from '../operation-history/DeleteOperation3D';
 import DeleteSupportsOperation3D from '../operation-history/DeleteSupportsOperation3D';
 import GroupAlignOperation3D from '../operation-history/GroupAlignOperation3D';
 import MoveOperation3D from '../operation-history/MoveOperation3D';
-import OperationHistory from '../../core/OperationHistory';
-import CompoundOperation from '../../core/CompoundOperation';
 import RotateOperation3D from '../operation-history/RotateOperation3D';
 import ScaleOperation3D from '../operation-history/ScaleOperation3D';
 import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWithRotateOperation3D';
-import VisibleOperation3D from '../operation-history/VisibleOperation3D';
 import { checkMeshes, LoadMeshFileOptions, loadMeshFiles, MeshFileInfo } from './actions-mesh';
 import sceneActions from './actions-scene';
 
@@ -2966,75 +2965,6 @@ export const actions = {
         dispatch(actions.updateState(modelState));
     },
 
-    hideSelectedModel: (targetModel = null) => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
-        let targetModels;
-        if (!targetModel) {
-            targetModels = modelGroup.getSelectedModelArray();
-        } else {
-            targetModels = [targetModel];
-        }
-
-        const modelState = modelGroup.hideSelectedModel(targetModels);
-
-        const operations = new CompoundOperation();
-        // targetModels.forEach(model => {
-        //     const operation = new VisibleOperation3D({
-        //         target: model,
-        //         visible: false
-        //     });
-        //     operations.push(operation);
-        // });
-        for (const model of targetModels) {
-            const operation = new VisibleOperation3D({
-                target: model,
-                visible: false
-            });
-            operations.push(operation);
-        }
-        operations.registerCallbackAll(() => {
-            dispatch(actions.updateState(modelGroup.getState()));
-            dispatch(actions.destroyGcodeLine());
-            dispatch(actions.displayModel());
-        });
-
-        dispatch(
-            operationHistoryActions.setOperations(
-                INITIAL_STATE.name,
-                operations
-            )
-        );
-        dispatch(actions.updateState(modelState));
-        dispatch(actions.destroyGcodeLine());
-        dispatch(actions.displayModel());
-    },
-
-    showSelectedModel: targetModel => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
-        const modelState = modelGroup.showSelectedModel([targetModel]);
-
-        const operation = new VisibleOperation3D({
-            target: targetModel,
-            visible: true
-        });
-        const operations = new CompoundOperation();
-        operations.push(operation);
-        operations.registerCallbackAll(() => {
-            dispatch(actions.updateState(modelGroup.getState()));
-            dispatch(actions.destroyGcodeLine());
-            dispatch(actions.displayModel());
-        });
-
-        dispatch(
-            operationHistoryActions.setOperations(
-                INITIAL_STATE.name,
-                operations
-            )
-        );
-        dispatch(actions.updateState(modelState));
-        dispatch(actions.destroyGcodeLine());
-        dispatch(actions.displayModel());
-    },
     unselectAllModels: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.unselectAllModels();

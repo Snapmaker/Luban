@@ -393,8 +393,9 @@ class ModelGroup extends EventEmitter {
         return this.getModels<TModel>().some((model) => model.visible);
     }
 
-    public toggleModelsVisible(visible: boolean, models: TModel[]) {
+    public setModelVisibility(models: TModel[], visible: boolean) {
         this.plateAdhesion.clear();
+
         models.forEach((model) => {
             model.visible = visible;
             model.meshObject.visible = visible;
@@ -418,6 +419,7 @@ class ModelGroup extends EventEmitter {
                 model.parent.meshObject.visible = parentVisible;
             }
         });
+
         // Make the reference of 'models' change to re-render
         this.models = [...this.models];
         this.updatePlateAdhesion();
@@ -427,13 +429,13 @@ class ModelGroup extends EventEmitter {
 
     public hideSelectedModel(targetModels: TModel[] = null) {
         const models = targetModels || this.getSelectedModelArray();
-        return this.toggleModelsVisible(false, models);
+        return this.setModelVisibility(models, false);
     }
 
     public showSelectedModel(targetModels: TModel[] = null) {
         const models = targetModels || this.getSelectedModelArray();
 
-        return this.toggleModelsVisible(true, models);
+        return this.setModelVisibility(models, true);
     }
 
     public _removeSelectedModels() {

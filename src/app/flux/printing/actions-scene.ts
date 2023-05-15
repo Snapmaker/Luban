@@ -1,18 +1,25 @@
 import { find } from 'lodash';
 import { Color } from 'three';
 
-import { HEAD_PRINTING, LEFT_EXTRUDER, MACHINE_EXTRUDER_X, MACHINE_EXTRUDER_Y, RIGHT_EXTRUDER } from '../../constants';
+import {
+    HEAD_PRINTING,
+    LEFT_EXTRUDER,
+    MACHINE_EXTRUDER_X,
+    MACHINE_EXTRUDER_Y,
+    RIGHT_EXTRUDER
+} from '../../constants';
+import CompoundOperation from '../../core/CompoundOperation';
 import { logToolBarOperation } from '../../lib/gaEvent';
 import { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 import { BrushType } from '../../models/ModelGroup';
 import ThreeGroup from '../../models/ThreeGroup';
 import ThreeModel, { BYTE_COUNT_LEFT_EXTRUDER, BYTE_COUNT_RIGHT_EXTRUDER } from '../../models/ThreeModel';
 import { MaterialPresetModel, PresetModel } from '../../preset-model';
+import { VisibilityOperation } from '../../scene/operations';
 import sceneLogic, { PrimeTowerSettings } from '../../scene/scene.logic';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 import { actions as operationHistoryActions } from '../operation-history';
 import GroupOperation3D from '../operation-history/GroupOperation3D';
-import CompoundOperation from '../../core/CompoundOperation';
 import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import baseActions from './actions-base';
 
@@ -204,6 +211,60 @@ const applyMeshColoringBrush = (raycastResult) => {
         }
         modelGroup.applyMeshColoringBrush(raycastResult, faceExtruderMark, color);
     };
+};
+
+/**
+ * Set visibility of model / group, if no target set, selected model(s)
+ * will be the target.
+ */
+const setModelVisibility = (target: ThreeModel | ThreeGroup | null, visible: boolean) => {
+    return (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+
+        const targetModels = [];
+        if (target) {
+            targetModels.push(target);
+        } else {
+            targetModels.push(...modelGroup.getSelectedModelArray());
+        }
+
+        const compoundOperation = new CompoundOperation();
+        for (const model of targetModels) {
+            const operation = new VisibilityOperation({
+                target: model,
+                visible,
+            });
+            compoundOperation.push(operation);
+        }
+        compoundOperation.registerCallbackAll(() => {
+            dispatch(baseActions.updateState(modelGroup.getState()));
+            dispatch(discardPreview({ render: true }));
+        });
+        compoundOperation.redo();
+
+        dispatch(
+            operationHistoryActions.setOperations(
+                HEAD_PRINTING,
+                compoundOperation,
+            )
+        );
+    };
+};
+
+/**
+ * Set visibility of model / group to true, if no target set, selected model(s)
+ * will be the target.
+ */
+const showModels = (target: ThreeModel | ThreeGroup | null = null) => {
+    return setModelVisibility(target, true);
+};
+
+/**
+ * Set visibility of model / group to false, if no target set, selected model(s)
+ * will be the target.
+ */
+const hideModels = (target: ThreeModel | ThreeGroup | null = null) => {
+    return setModelVisibility(target, false);
 };
 
 const groupSelectedModels = () => {
@@ -553,7 +614,10 @@ export default {
     setMeshStackId,
     applyMeshColoringBrush,
 
-    // model operatoins
+    // model operations
+    setModelVisibility,
+    showModels,
+    hideModels,
     groupSelectedModels,
     ungroupSelectedModels,
 

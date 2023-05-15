@@ -40,6 +40,21 @@ class CompoundOperation {
         return this.operations.length === 0;
     }
 
+    public redo(): void {
+        for (const operation of this.operations) {
+            operation.redo();
+        }
+
+        this.runRedoCallback();
+    }
+
+    public undo(): void {
+        for (const operation of this.operations) {
+            operation.undo();
+        }
+        this.runUndoCallback();
+    }
+
     /**
      * regist callback that runs after redo or undo, this method can be used to restore flux state
      * @param {function} callback this function will run after redo and undo callback finished
