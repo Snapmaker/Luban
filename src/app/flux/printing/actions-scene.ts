@@ -15,11 +15,11 @@ import { BrushType } from '../../models/ModelGroup';
 import ThreeGroup from '../../models/ThreeGroup';
 import ThreeModel, { BYTE_COUNT_LEFT_EXTRUDER, BYTE_COUNT_RIGHT_EXTRUDER } from '../../models/ThreeModel';
 import { MaterialPresetModel, PresetModel } from '../../preset-model';
-import { VisibilityOperation } from '../../scene/operations';
+import { VisibilityOperation, GroupOperation } from '../../scene/operations';
+// import GroupOperation3D from '../../scene/operations/GroupOperation';
 import sceneLogic, { PrimeTowerSettings } from '../../scene/scene.logic';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 import { actions as operationHistoryActions } from '../operation-history';
-import GroupOperation3D from '../operation-history/GroupOperation3D';
 import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import baseActions from './actions-base';
 
@@ -277,7 +277,7 @@ const groupSelectedModels = () => {
         const modelsBeforeGroup = modelGroup.getModels().slice(0);
         const selectedModels = modelGroup.getSelectedModelArray().slice(0);
 
-        const operations = new CompoundOperation();
+        const compoundOperation = new CompoundOperation();
         const { recovery } = modelGroup.unselectAllModels();
 
         // Record the relationship between model and group
@@ -300,7 +300,7 @@ const groupSelectedModels = () => {
         // Stores the model structure after the group operation, which is used for redo operation
         const modelsAfterGroup = modelGroup.getModels().slice(0);
         const newGroup = modelGroup.getSelectedModelArray()[0];
-        const operation = new GroupOperation3D({
+        const operation = new GroupOperation({
             modelsBeforeGroup,
             modelsAfterGroup,
             selectedModels,
@@ -309,8 +309,8 @@ const groupSelectedModels = () => {
             modelsRelation,
         });
 
-        operations.push(operation);
-        operations.registerCallbackAll(() => {
+        compoundOperation.push(operation);
+        compoundOperation.registerCallbackAll(() => {
             dispatch(baseActions.updateState(modelGroup.getState()));
             dispatch(renderScene());
         });
@@ -318,7 +318,7 @@ const groupSelectedModels = () => {
         dispatch(
             operationHistoryActions.setOperations(
                 HEAD_PRINTING,
-                operations
+                compoundOperation
             )
         );
         dispatch(baseActions.updateState(modelState));
