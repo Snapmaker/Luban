@@ -14,7 +14,7 @@ export default class AlignGroupOperation extends Operation<State> {
 
     private target: Array<ThreeModel>;
 
-    private newGroup: ThreeGroup;
+    private newGroup: ThreeGroup | null;
 
     private selectedModelsPositionMap: Map<string, ModelTransformation>;
 
@@ -40,12 +40,15 @@ export default class AlignGroupOperation extends Operation<State> {
             recovery();
         });
 
-
         // this.state = {
         //     // selectedModelsPositionMap: new Map(),
         //     modelGroup: state.modelGroup,
         //     target: state.target,
         // };
+    }
+
+    public getNewGroup(): ThreeGroup | null {
+        return this.newGroup;
     }
 
     public redo() {

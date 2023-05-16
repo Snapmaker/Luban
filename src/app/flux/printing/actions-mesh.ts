@@ -9,6 +9,7 @@ import { STEP_STAGE } from '../../lib/manager/ProgressManager';
 import workerManager from '../../lib/manager/workerManager';
 import ModelGroup from '../../models/ModelGroup';
 import { ExtruderConfig, ModelTransformation, TSize } from '../../models/ThreeBaseModel';
+import ThreeModel from '../../models/ThreeModel';
 
 
 export declare interface MeshFileInfo {
@@ -105,7 +106,15 @@ export type LoadMeshFileOptions = {
     onProgress?: (stage: number, progress: number) => void;
 };
 
-export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: ModelGroup, options: LoadMeshFileOptions) => {
+interface LoadMeshFilesResult {
+    models: Array<ThreeModel>;
+    promptTasks: Array<{
+        status: string;
+        originalName: string;
+    }>;
+}
+
+export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: ModelGroup, options: LoadMeshFileOptions): Promise<LoadMeshFilesResult> => {
     const {
         headType,
 
@@ -126,6 +135,7 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
 
         onProgress = noop,
     } = options;
+
     let _progress = 0;
     const promptTasks = [];
 
@@ -135,7 +145,7 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
         onProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress);
 
         if (meshFileInfo.isGroup) {
-            await modelGroup.generateModel({
+            return modelGroup.generateModel({
                 loadFrom,
                 limitSize: size,
                 headType,
@@ -156,12 +166,11 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
                 isGroup: meshFileInfo.isGroup,
                 children: meshFileInfo.children,
             });
-            return true;
         } else if (primeTowerTag) {
             if (modelGroup.primeTower) {
                 modelGroup.primeTower.updateTowerTransformation(transformation);
             }
-            return true;
+            return modelGroup.primeTower;
         } else {
             const uploadPath = `${DATA_PREFIX}/${meshFileInfo.uploadName}`;
             return new Promise((resolve, reject) => {
@@ -191,7 +200,7 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
                             bufferGeometry.computeVertexNormals();
 
                             try {
-                                await modelGroup.generateModel(
+                                const model = await modelGroup.generateModel(
                                     {
                                         loadFrom,
                                         limitSize: size,
@@ -225,7 +234,7 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
                                         _progress,
                                     );
                                 }
-                                resolve(true);
+                                resolve(model);
                             } catch (e) {
                                 console.log(e);
                                 promptTasks.push({
@@ -305,9 +314,15 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
         }
     });
 
-    await Promise.allSettled(promises);
+    const promiseResults = await Promise.allSettled(promises) as PromiseSettledResult<ThreeModel>[];
+    const models = promiseResults
+        .filter((result) => result.status === 'fulfilled')
+        .map((result) => (result as PromiseFulfilledResult<ThreeModel>).value);
 
-    return promptTasks;
+    return {
+        models,
+        promptTasks,
+    };
 };
 
 export default {

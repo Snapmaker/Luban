@@ -73,6 +73,7 @@ import ScaleOperation3D from '../operation-history/ScaleOperation3D';
 import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWithRotateOperation3D';
 import { checkMeshes, LoadMeshFileOptions, loadMeshFiles, MeshFileInfo } from './actions-mesh';
 import sceneActions from './actions-scene';
+import baseActions from './actions-base';
 
 // eslint-disable-next-line import/no-cycle
 import { actions as appGlobalActions } from '../app-global';
@@ -80,6 +81,8 @@ import { actions as appGlobalActions } from '../app-global';
 import { actions as operationHistoryActions } from '../operation-history';
 // eslint-disable-next-line import/no-cycle
 import SimplifyModelOperation from '../operation-history/SimplifyModelOperation';
+import ReplaceSplittedOperation from '../../scene/operations/ReplaceSplittedOperation';
+import { AlignGroupOperation } from '../../scene/operations';
 
 
 let initEventFlag = false;
@@ -4156,7 +4159,7 @@ export const actions = {
         };
 
 
-        const promptTasks = await loadMeshFiles(meshFileInfos, modelGroup, loadMeshFileOptions);
+        const { promptTasks } = await loadMeshFiles(meshFileInfos, modelGroup, loadMeshFileOptions);
 
         // on mesh file loaded, update state
         const modelState = modelGroup.getState();
@@ -4987,7 +4990,7 @@ export const actions = {
         const { progressStatesManager } = getState().printing;
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SPLIT_MODEL);
 
-        const { modelGroup } = getState().printing;
+        const modelGroup = getState().printing.modelGroup as ModelGroup;
         if (!modelGroup) {
             return false;
         }
@@ -4997,7 +5000,7 @@ export const actions = {
         if (selectedModels.length !== 1) return false;
 
         // check visibility
-        const targetModel = selectedModels[0];
+        const targetModel = selectedModels[0] as ThreeModel;
         if (!targetModel.visible) return false;
 
         const task = new Promise((resolve, reject) => {
@@ -5039,6 +5042,7 @@ export const actions = {
             }
 
             // append group
+            /*
             meshFileInfos.push({
                 uploadName: targetModel.uploadName,
                 originalName: 'virtual name',
@@ -5046,6 +5050,7 @@ export const actions = {
                 modelID: uuid(),
                 children: meshFileInfos.slice(0),
             });
+            */
 
             const loadMeshFileOptions: LoadMeshFileOptions = {
                 headType: HEAD_PRINTING,
@@ -5054,14 +5059,51 @@ export const actions = {
             };
 
             // ignore prompt tasks
-            await loadMeshFiles(meshFileInfos, modelGroup, loadMeshFileOptions);
+            const loadMeshResult = await loadMeshFiles(meshFileInfos, modelGroup, loadMeshFileOptions);
 
-            // on mesh file loaded, update state
-            const modelState = modelGroup.getState();
-            dispatch(actions.updateState(modelState));
+            // construct group with splited models
+            modelGroup.addModelToSelectedGroup(...loadMeshResult.models);
+            const splittedModels = modelGroup.getSelectedModelArray<ThreeModel>().slice(0);
 
-            dispatch(actions.displayModel());
-            dispatch(actions.destroyGcodeLine());
+            // Align splitted models to construct a new group
+            const operation = new AlignGroupOperation({
+                modelGroup,
+                target: splittedModels,
+            });
+            operation.redo();
+
+            // unselect all
+            modelGroup.unselectAllModels();
+
+            // remove splitted group first
+            const newGroup = operation.getNewGroup();
+            ThreeUtils.removeObjectParent(newGroup.meshObject);
+            const index = modelGroup.models.findIndex((child) => child.modelID === newGroup.modelID);
+            if (index >= 0) {
+                modelGroup.models.splice(index, 1);
+            }
+
+            // replace original model with splitted group
+            const replaceOperation = new ReplaceSplittedOperation({
+                modelGroup,
+                model: targetModel,
+                splittedGroup: newGroup
+            });
+
+            const compoundOperation = new CompoundOperation();
+            compoundOperation.push(replaceOperation);
+            compoundOperation.registerCallbackAll(() => {
+                dispatch(baseActions.updateState(modelGroup.getState()));
+                dispatch(sceneActions.renderScene());
+            });
+            compoundOperation.redo();
+
+            dispatch(
+                operationHistoryActions.setOperations(
+                    HEAD_PRINTING,
+                    compoundOperation,
+                )
+            );
         } catch (e) {
             log.error('task failed, error =', e);
             return false;
