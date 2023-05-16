@@ -5031,26 +5031,25 @@ export const actions = {
                 const mesh = taskResult.meshes[i];
                 const { uploadName } = mesh;
 
-                meshFileInfos.push({
+                const modelInfo: MeshFileInfo = {
                     uploadName,
                     originalName: uploadName,
                     modelName: `Part ${i + 1}`,
                     isGroup: false,
                     modelID: uuid(),
                     parentUploadName: targetModel.uploadName,
-                });
-            }
+                };
 
-            // append group
-            /*
-            meshFileInfos.push({
-                uploadName: targetModel.uploadName,
-                originalName: 'virtual name',
-                isGroup: true,
-                modelID: uuid(),
-                children: meshFileInfos.slice(0),
-            });
-            */
+                const modelNameObj = modelGroup._createNewModelName({
+                    sourceType: '3d',
+                    originalName: modelInfo.originalName,
+                });
+
+                modelInfo.modelName = modelNameObj.name;
+                modelInfo.baseName = modelNameObj.baseName;
+
+                meshFileInfos.push(modelInfo);
+            }
 
             const loadMeshFileOptions: LoadMeshFileOptions = {
                 headType: HEAD_PRINTING,

@@ -22,6 +22,7 @@ export declare interface MeshFileInfo {
     modelID?: string;
     parentUploadName?: string;
     children?: object[];
+    baseName?: string;
 }
 
 /**
@@ -153,6 +154,7 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
                 originalName: meshFileInfo.originalName,
                 uploadName: meshFileInfo.uploadName,
                 modelName: meshFileInfo.modelName,
+                baseName: meshFileInfo.baseName,
                 mode: mode,
                 sourceWidth,
                 width: sourceWidth,
@@ -209,6 +211,7 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
                                         originalName: meshFileInfo.originalName,
                                         uploadName: meshFileInfo.uploadName,
                                         modelName: meshFileInfo.modelName,
+                                        baseName: meshFileInfo.baseName,
                                         mode: mode,
                                         sourceWidth,
                                         width: sourceWidth,
