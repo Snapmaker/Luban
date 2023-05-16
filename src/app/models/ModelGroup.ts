@@ -2321,6 +2321,7 @@ class ModelGroup extends EventEmitter {
         this.unselectAllModels();
 
         const group = new ThreeGroup({}, this);
+
         // check visible models or groups
         if (selectedModelArray.some((model) => model.visible)) {
             // insert group to the first model position in selectedModelArray

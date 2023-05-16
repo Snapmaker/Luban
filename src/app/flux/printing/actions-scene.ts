@@ -10,13 +10,17 @@ import {
 } from '../../constants';
 import CompoundOperation from '../../core/CompoundOperation';
 import { logToolBarOperation } from '../../lib/gaEvent';
+import log from '../../lib/log';
 import { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 import { BrushType } from '../../models/ModelGroup';
 import ThreeGroup from '../../models/ThreeGroup';
 import ThreeModel, { BYTE_COUNT_LEFT_EXTRUDER, BYTE_COUNT_RIGHT_EXTRUDER } from '../../models/ThreeModel';
 import { MaterialPresetModel, PresetModel } from '../../preset-model';
-import { VisibilityOperation, GroupOperation } from '../../scene/operations';
-// import GroupOperation3D from '../../scene/operations/GroupOperation';
+import {
+    AlignGroupOperation,
+    GroupOperation,
+    VisibilityOperation,
+} from '../../scene/operations';
 import sceneLogic, { PrimeTowerSettings } from '../../scene/scene.logic';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 import { actions as operationHistoryActions } from '../operation-history';
@@ -269,62 +273,75 @@ const hideModels = (target: ThreeModel | ThreeGroup | null = null) => {
 
 const groupSelectedModels = () => {
     return (dispatch, getState) => {
-        // TODO: remove this
-        // dispatch(discardPreview({ render: false }));
+        logToolBarOperation(HEAD_PRINTING, 'group');
 
         const { modelGroup } = getState().printing;
-        // Stores the model structure before the group operation, which is used for undo operation
-        const modelsBeforeGroup = modelGroup.getModels().slice(0);
         const selectedModels = modelGroup.getSelectedModelArray().slice(0);
 
-        const compoundOperation = new CompoundOperation();
-        const { recovery } = modelGroup.unselectAllModels();
-
-        // Record the relationship between model and group
-        const modelsRelation = selectedModels.reduce((pre, selectd) => {
-            const groupModelID = selectd.parent?.modelID;
-            pre.set(selectd.modelID, {
-                groupModelID,
-                children:
-                    selectd instanceof ThreeGroup
-                        ? selectd.children.slice(0)
-                        : null,
-                modelTransformation: { ...selectd.transformation }
-            });
-            return pre;
-        }, new Map());
-        recovery();
-
-        const modelState = modelGroup.group();
-
-        // Stores the model structure after the group operation, which is used for redo operation
-        const modelsAfterGroup = modelGroup.getModels().slice(0);
-        const newGroup = modelGroup.getSelectedModelArray()[0];
         const operation = new GroupOperation({
-            modelsBeforeGroup,
-            modelsAfterGroup,
-            selectedModels,
-            target: newGroup,
+            target: selectedModels,
             modelGroup,
-            modelsRelation,
         });
 
+        const compoundOperation = new CompoundOperation();
         compoundOperation.push(operation);
         compoundOperation.registerCallbackAll(() => {
             dispatch(baseActions.updateState(modelGroup.getState()));
             dispatch(renderScene());
         });
+        compoundOperation.redo();
 
         dispatch(
             operationHistoryActions.setOperations(
                 HEAD_PRINTING,
-                compoundOperation
+                compoundOperation,
             )
         );
-        dispatch(baseActions.updateState(modelState));
-        logToolBarOperation(HEAD_PRINTING, 'group');
     };
 };
+
+/**
+ * Align selected models, and add them to a new group.
+ */
+const alignGroupSelectedModels = () => {
+    return (dispatch, getState) => {
+        logToolBarOperation(HEAD_PRINTING, 'align');
+
+        const { modelGroup } = getState().printing;
+
+        const selectedModels = modelGroup.getSelectedModelArray().slice(0);
+        for (const model of selectedModels) {
+            if (!(model instanceof ThreeModel)) {
+                log.warn('Unable to process Align operation, not all models selected are of type ThreeModel');
+                return;
+            }
+        }
+
+        const operation = new AlignGroupOperation({
+            // selectedModelsPositionMap,
+            // selectedModels,
+            // newPosition: newGroup.transformation,
+            target: selectedModels as ThreeModel[],
+            modelGroup,
+        });
+
+        const compoundOperation = new CompoundOperation();
+        compoundOperation.push(operation);
+        compoundOperation.registerCallbackAll(() => {
+            dispatch(baseActions.updateState(modelGroup.getState()));
+            dispatch(renderScene());
+        });
+        compoundOperation.redo();
+
+        dispatch(
+            operationHistoryActions.setOperations(
+                HEAD_PRINTING,
+                compoundOperation,
+            )
+        );
+    };
+};
+
 
 const ungroupSelectedModels = () => {
     return (dispatch, getState) => {
@@ -619,6 +636,7 @@ export default {
     showModels,
     hideModels,
     groupSelectedModels,
+    alignGroupSelectedModels,
     ungroupSelectedModels,
 
     // print settings -> scene

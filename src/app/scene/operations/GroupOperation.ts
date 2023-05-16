@@ -1,107 +1,123 @@
 import Operation from '../../core/Operation';
-import ThreeModel from '../../models/ThreeModel';
-import ThreeGroup from '../../models/ThreeGroup';
 import type ModelGroup from '../../models/ModelGroup';
 import { ModelTransformation } from '../../models/ThreeBaseModel';
-import ThreeUtils from '../../three-extensions/ThreeUtils';
+import ThreeGroup from '../../models/ThreeGroup';
+import ThreeModel from '../../models/ThreeModel';
 
-type Model = ThreeGroup | ThreeModel
 
 type ModelSnapshot = {
-    groupModelID: string,
-    modelTransformation: ModelTransformation,
-    children?: ThreeModel[]
-}
+    groupModelID: string | null;
+    children: ThreeModel[] | null;
+    modelTransformation: ModelTransformation;
+};
 
-type GroupState = {
-    modelsBeforeGroup: Model[],
-    modelsAfterGroup: Model[],
-    selectedModels: Array<ThreeModel | ThreeGroup>,
-    target: ThreeGroup,
-    modelGroup: ModelGroup,
-    modelsRelation: Map<string, ModelSnapshot>
+type State = {
+    modelGroup: ModelGroup;
+    target: Array<ThreeModel | ThreeGroup>;
 };
 
 // Scenario 1: one or more models outside the group are selected
 // Scenario 2: one or more groups are selected
 // Scenario 3: multiple models in a group are selected. If all models in the group are selected, it is scenario 2
 // Scenario 4: both the model outside the group and the group are selected
-export default class GroupOperation3D extends Operation<GroupState> {
-    public constructor(state: GroupState) {
+export default class GroupOperation extends Operation<State> {
+    private modelGroup: ModelGroup;
+
+    private target: Array<ThreeModel | ThreeGroup>;
+
+    private newGroup: ThreeGroup;
+
+    private modelsRelation: Map<string, ModelSnapshot>;
+
+    public constructor(state: State) {
         super();
-        this.state = {
-            modelsBeforeGroup: state.modelsBeforeGroup || [],
-            modelsAfterGroup: state.modelsAfterGroup || [],
-            selectedModels: state.selectedModels || [],
-            target: state.target,
-            modelGroup: state.modelGroup,
-            modelsRelation: state.modelsRelation || new Map()
-        };
+
+        this.target = state.target;
+        this.modelGroup = state.modelGroup;
+        this.newGroup = null;
+
+        this.modelsRelation = new Map();
+
+        // construct model relations
+        const { recovery } = this.modelGroup.unselectAllModels();
+        this.target.forEach((model) => {
+            this.modelsRelation.set(
+                model.modelID,
+                {
+                    groupModelID: model.parent?.modelID,
+                    children:
+                        model instanceof ThreeGroup
+                            ? model.children.slice(0) as ThreeModel[]
+                            : null,
+                    modelTransformation: { ...model.transformation }
+                }
+            );
+        });
+        recovery();
+
+        // this.state = {
+        //     modelGroup: state.modelGroup,
+        //     target: state.target,
+        // };
     }
 
     public redo() {
-        const target = this.state.target;
-        const modelGroup = this.state.modelGroup;
+        const modelGroup = this.modelGroup;
 
+        // unselect everything
         modelGroup.unselectAllModels();
-        const modelsToGroup = [];
-        this.state.selectedModels.forEach((model) => {
-            if (model instanceof ThreeGroup) {
-                const children = (model as ThreeGroup).disassemble();
-                modelsToGroup.push(...children);
-            } else {
-                modelsToGroup.push(model);
-            }
-            const modelSnapshot = this.state.modelsRelation.get(model.modelID);
-            // If it is a sunModel, Remove it from the group
-            // After removal, there are always other models in the group
-            if (model.parent && model.parent instanceof ThreeGroup && modelSnapshot) {
-                const index = model.parent.children.findIndex((subModel) => subModel.modelID === model.modelID);
-                model.parent.children.splice(index, 1);
-                ThreeUtils.setObjectParent(model.meshObject, model.parent.meshObject.parent);
-                model.parent.updateGroupExtruder();
-            }
-        });
-        target.add(modelsToGroup);
-        modelGroup.object.add(target.meshObject);
-        modelGroup.models = [...this.state.modelsAfterGroup];
-        modelGroup.calaClippingMap();
-        modelGroup.childrenChanged();
+
+        // re-select target
+        modelGroup.addModelToSelectedGroup(...this.target);
+
+        // group selected
+        const { newGroup } = modelGroup.group();
+
+        // save new group
+        this.newGroup = newGroup;
     }
 
     public undo() {
-        const target = this.state.target;
-        const modelGroup = this.state.modelGroup;
+        const modelGroup = this.modelGroup;
 
+        // select group
         modelGroup.unselectAllModels();
-        modelGroup.addModelToSelectedGroup(target);
+        modelGroup.addModelToSelectedGroup(this.newGroup);
+
+        // ungroup the group
         modelGroup.ungroup({ autoStickToPlate: false });
         modelGroup.unselectAllModels();
-        modelGroup.object.remove(target.meshObject);
 
-        this.state.selectedModels.forEach((model) => {
-            const modelSnapshot = this.state.modelsRelation.get(model.modelID);
-            if (model instanceof ThreeModel && modelSnapshot) {
+        // remove the group from modelGroup
+        modelGroup.object.remove(this.newGroup.meshObject);
+        this.newGroup = null;
+
+        // restore target models
+        this.target.forEach((model) => {
+            const modelSnapshot = this.modelsRelation.get(model.modelID);
+            if (!modelSnapshot) {
+                return;
+            }
+
+            if (model instanceof ThreeModel) {
                 if (modelSnapshot.groupModelID) {
-                    // SubModel of the original group
+                    // model is a child of some group, then add the model to its original parent
                     const group = modelGroup.getModel(modelSnapshot.groupModelID) as ThreeGroup;
-                    // The original group will always exist
                     modelGroup.recoveryGroup(group, model);
                     group.stickToPlate();
                 } else {
-                    // update models which is not inside group
+                    // Use previous transformation
                     model.updateTransformation(modelSnapshot.modelTransformation);
                 }
             } else if (model instanceof ThreeGroup) {
                 model.add(modelSnapshot.children);
                 modelGroup.object.add(model.meshObject);
+
                 model.updateTransformation(modelSnapshot.modelTransformation);
-                model.updateGroupExtruder();
             }
         });
 
-        modelGroup.models = [...this.state.modelsBeforeGroup];
-        modelGroup.calaClippingMap();
-        modelGroup.childrenChanged();
+        // modelGroup.calaClippingMap();
+        // modelGroup.childrenChanged();
     }
 }

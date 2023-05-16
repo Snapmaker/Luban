@@ -67,7 +67,6 @@ import AddSupportsOperation3D from '../operation-history/AddSupportsOperation3D'
 import ArrangeOperation3D from '../operation-history/ArrangeOperation3D';
 import DeleteOperation3D from '../operation-history/DeleteOperation3D';
 import DeleteSupportsOperation3D from '../operation-history/DeleteSupportsOperation3D';
-import GroupAlignOperation3D from '../operation-history/GroupAlignOperation3D';
 import MoveOperation3D from '../operation-history/MoveOperation3D';
 import RotateOperation3D from '../operation-history/RotateOperation3D';
 import ScaleOperation3D from '../operation-history/ScaleOperation3D';
@@ -4416,55 +4415,6 @@ export const actions = {
                 leftBarOverlayVisible: visible
             })
         );
-    },
-    groupAndAlign: () => (dispatch, getState) => {
-        dispatch(actions.exitPreview());
-
-        const { modelGroup } = getState().printing;
-
-        const modelsbeforeGroup = modelGroup.getModels().slice(0);
-        const selectedModels = modelGroup.getSelectedModelArray().slice(0);
-        const selectedModelsPositionMap = new Map();
-        selectedModels.forEach((model) => {
-            const { recovery } = modelGroup.unselectAllModels();
-            modelGroup.selectModelById(model.modelID);
-            selectedModelsPositionMap.set(model.modelID, {
-                ...modelGroup.getSelectedModelTransformationForPrinting()
-            });
-            recovery();
-        });
-        modelGroup.updateModelsPositionBaseFirstModel(selectedModels);
-        const operations = new CompoundOperation();
-
-        const { newGroup, modelState } = modelGroup.group();
-        const modelsafterGroup = modelGroup.getModels().slice(0);
-
-        const operation = new GroupAlignOperation3D({
-            selectedModelsPositionMap,
-            // groupChildrenMap,
-            modelsbeforeGroup,
-            modelsafterGroup,
-            selectedModels,
-            newPosition: newGroup.transformation,
-            target: modelGroup.getSelectedModelArray()[0],
-            modelGroup
-        });
-        operations.push(operation);
-        operations.registerCallbackAll(() => {
-            dispatch(actions.updateState(modelGroup.getState()));
-            dispatch(actions.destroyGcodeLine());
-            dispatch(actions.displayModel());
-        });
-
-        dispatch(
-            operationHistoryActions.setOperations(
-                INITIAL_STATE.name,
-                operations
-            )
-        );
-        modelGroup.calaClippingMap();
-        dispatch(actions.updateState(modelState));
-        logToolBarOperation(HEAD_PRINTING, 'align');
     },
 
     applyProfileToAllModels: () => (dispatch) => {

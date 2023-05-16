@@ -205,7 +205,7 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
                         type: 'button',
                         name: 'MainToolbarMerge',
                         action: () => {
-                            dispatch(printingActions.groupAndAlign());
+                            dispatch(sceneActions.alignGroupSelectedModels());
                         }
                     },
                     {
