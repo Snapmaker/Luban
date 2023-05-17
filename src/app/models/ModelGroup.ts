@@ -1394,7 +1394,11 @@ class ModelGroup extends EventEmitter {
             const firstModel = models[0];
             const otherModels = models.filter((d) => d.meshObject !== firstModel.meshObject);
             this.selectModelById(firstModel.modelID);
-            this.updateSelectedGroupTransformation({ positionZ: firstModel.originalPosition.z });
+            this.updateSelectedGroupTransformation({
+                positionX: firstModel.transformation.positionX,
+                positionY: firstModel.transformation.positionY,
+                positionZ: firstModel.originalPosition.z,
+            });
             otherModels.forEach((model) => {
                 const newPosition = {
                     positionX: model.originalPosition.x - firstModel.originalPosition.x + firstModel.transformation.positionX,

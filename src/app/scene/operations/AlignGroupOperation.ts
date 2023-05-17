@@ -33,9 +33,9 @@ export default class AlignGroupOperation extends Operation<State> {
             const { recovery } = this.modelGroup.unselectAllModels();
 
             this.modelGroup.selectModelById(model.modelID);
-            this.selectedModelsPositionMap.set(model.modelID, {
-                ...this.modelGroup.getSelectedModelTransformationForPrinting()
-            });
+
+            const transformation = this.modelGroup.getSelectedModelTransformationForPrinting();
+            this.selectedModelsPositionMap.set(model.modelID, transformation);
 
             recovery();
         });
@@ -57,9 +57,6 @@ export default class AlignGroupOperation extends Operation<State> {
         // const newPosition = this.state.newPosition;
         // unselect everything
         modelGroup.unselectAllModels();
-
-        // re-select target
-        modelGroup.addModelToSelectedGroup(...this.target);
 
         // align models and group selected
         modelGroup.updateModelsPositionBaseFirstModel(this.target as ThreeModel[]);

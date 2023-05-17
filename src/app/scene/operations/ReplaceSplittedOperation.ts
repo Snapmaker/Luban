@@ -55,7 +55,7 @@ export default class ReplaceSplittedOperation extends Operation<State> {
         if (index === -1) {
             return;
         }
-        ThreeUtils.removeObjectParent(splittedGroup);
+        ThreeUtils.removeObjectParent(splittedGroup.meshObject);
         ThreeUtils.setObjectParent(model.meshObject, modelGroup.object);
         modelGroup.models.splice(index, 1, model);
 

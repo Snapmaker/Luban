@@ -4239,6 +4239,7 @@ export const actions = {
                 }
             }
         });
+        console.log('apply');
         dispatch(actions.applyProfileToAllModels());
         modelGroup.models = modelGroup.models.concat();
 
@@ -5034,7 +5035,7 @@ export const actions = {
                 const modelInfo: MeshFileInfo = {
                     uploadName,
                     originalName: uploadName,
-                    modelName: `Part ${i + 1}`,
+                    modelName: `${uploadName} Part ${i + 1}`,
                     isGroup: false,
                     modelID: uuid(),
                     parentUploadName: targetModel.uploadName,
@@ -5042,7 +5043,7 @@ export const actions = {
 
                 const modelNameObj = modelGroup._createNewModelName({
                     sourceType: '3d',
-                    originalName: modelInfo.originalName,
+                    originalName: modelInfo.modelName,
                 });
 
                 modelInfo.modelName = modelNameObj.name;
@@ -5086,7 +5087,7 @@ export const actions = {
             const replaceOperation = new ReplaceSplittedOperation({
                 modelGroup,
                 model: targetModel,
-                splittedGroup: newGroup
+                splittedGroup: newGroup,
             });
 
             const compoundOperation = new CompoundOperation();
