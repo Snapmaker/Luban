@@ -22,7 +22,6 @@ const CaseLibrary = (props) => {
     const [caseConfig, setCaseConfig] = useState([]);
     const [showQuickStartModal, setShowQuickStartModal] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-    // const [canAccessWeb, setCanAccessWeb] = useState(false);
 
 
     // redux correlation

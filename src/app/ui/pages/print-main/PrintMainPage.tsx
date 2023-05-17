@@ -333,11 +333,8 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
             }
         };
         if (isElectron() && isCaseResourceMachine(series, toolHead) && canAccessWeb === AccessResourceWebState.PASS) {
-            leftItems.push(
-                {
-                    type: 'separator',
-                    name: 'separator'
-                },
+            const separatorIndex = leftItems.findIndex(item => item.type === 'separator');
+            leftItems.splice(separatorIndex, 0,
                 {
                     title: i18n._('key-CaseResource/MainToolBar-DownloadManager Download'),
                     type: 'button',
@@ -346,8 +343,7 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
                         e.stopPropagation();
                         dispatch(appGlobalActions.updateState({ showCaseResource: true }));
                     }
-                }
-            );
+                });
         }
 
         return (
