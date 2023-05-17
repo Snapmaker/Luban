@@ -140,12 +140,16 @@ const CaseLibrary = (props) => {
 
     //  useEffect
     useEffect(() => {
+        let isMounted = true;
         const removelinstener = linstenNetworkConnect();
         Promise.all([accessTest(), loadData()])
-            .then(([accessedWeb, isShow]) => { setShowCaseResource(accessedWeb === AccessResourceWebState.PASS && isShow); })
+            .then(([accessedWeb, isShow]) => { isMounted && setShowCaseResource(accessedWeb === AccessResourceWebState.PASS && isShow); })
             .catch(err => console.error(err))
             .finally(() => { setIsLoading(false); });
-        return () => removelinstener();
+        return () => {
+            isMounted = false;
+            removelinstener();
+        };
     }, []);
 
     useEffect(() => {
