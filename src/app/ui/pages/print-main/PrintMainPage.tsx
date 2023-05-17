@@ -205,7 +205,7 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
                         type: 'button',
                         name: 'MainToolbarMerge',
                         action: () => {
-                            dispatch(printingActions.groupAndAlign());
+                            dispatch(sceneActions.alignGroupSelectedModels());
                         }
                     },
                     {
@@ -214,7 +214,7 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
                         type: 'button',
                         name: 'MainToolbarModelSplit',
                         action: () => {
-                            dispatch(printingActions.splitSelected());
+                            dispatch(sceneActions.splitSelectedModel());
                         }
                     },
                     {

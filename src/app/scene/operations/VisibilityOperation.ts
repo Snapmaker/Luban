@@ -1,13 +1,13 @@
+import Operation from '../../core/Operation';
 import type ThreeGroup from '../../models/ThreeGroup';
 import type ThreeModel from '../../models/ThreeModel';
-import Operation from '../../core/Operation';
 
 type VisibleState = {
     target: ThreeModel | ThreeGroup,
-    visible: boolean
+    visible: boolean,
 };
 
-export default class VisibleOperation3D extends Operation<VisibleState> {
+export default class VisibilityOperation extends Operation<VisibleState> {
     public constructor(state: VisibleState) {
         super();
         this.state = {
@@ -20,7 +20,7 @@ export default class VisibleOperation3D extends Operation<VisibleState> {
         const model = this.state.target;
         const modelGroup = model.modelGroup;
 
-        modelGroup.toggleModelsVisible(this.state.visible, [model]);
+        modelGroup.setModelVisibility([model], this.state.visible);
         modelGroup.modelChanged();
     }
 
@@ -28,7 +28,7 @@ export default class VisibleOperation3D extends Operation<VisibleState> {
         const model = this.state.target;
         const modelGroup = model.modelGroup;
 
-        modelGroup.toggleModelsVisible(!this.state.visible, [model]);
+        modelGroup.setModelVisibility([model], !this.state.visible);
         modelGroup.modelChanged();
     }
 }

@@ -3,9 +3,10 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { isDualExtruder } from '../../../../constants/machines';
 import type { RootState } from '../../../../flux/index.def';
+import { actions as printingActions } from '../../../../flux/printing';
+import sceneActions from '../../../../flux/printing/actions-scene';
 import i18n from '../../../../lib/i18n';
 import ContextMenu from '../../../components/ContextMenu';
-import { actions as printingActions } from '../../../../flux/printing';
 
 
 interface SceneContextMenuProps {
@@ -117,7 +118,7 @@ const SceneContextMenu: React.FC<SceneContextMenuProps> = forwardRef((props, ref
                 type: 'item',
                 label: i18n._('key-Printing/ContextMenu-Hide'),
                 disabled: inProgress || !isModelSelected,
-                onClick: () => dispatch(printingActions.hideSelectedModel()),
+                onClick: () => dispatch(sceneActions.hideModels()),
             },
         );
 

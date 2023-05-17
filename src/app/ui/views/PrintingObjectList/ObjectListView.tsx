@@ -7,6 +7,7 @@ import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../constants';
 import { isDualExtruder } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
 import { actions as printingActions } from '../../../flux/printing';
+import sceneActions from '../../../flux/printing/actions-scene';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import { machineStore } from '../../../store/local-storage';
@@ -57,9 +58,9 @@ const ObjectListView: React.FC = () => {
             const visible = targetModel.visible;
             actions.onClickModelNameBox(targetModel, { shiftKey: false });
             if (visible === true) {
-                dispatch(printingActions.hideSelectedModel(targetModel));
+                dispatch(sceneActions.hideModels(targetModel));
             } else {
-                dispatch(printingActions.showSelectedModel(targetModel));
+                dispatch(sceneActions.showModels(targetModel));
             }
         },
         updateMaterialColor(definition, direction) {

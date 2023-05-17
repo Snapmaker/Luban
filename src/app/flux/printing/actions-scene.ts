@@ -1,18 +1,34 @@
 import { find } from 'lodash';
 import { Color } from 'three';
+import { v4 as uuid } from 'uuid';
 
-import { HEAD_PRINTING, LEFT_EXTRUDER, MACHINE_EXTRUDER_X, MACHINE_EXTRUDER_Y, RIGHT_EXTRUDER } from '../../constants';
+import {
+    HEAD_PRINTING,
+    LEFT_EXTRUDER,
+    MACHINE_EXTRUDER_X,
+    MACHINE_EXTRUDER_Y,
+    LOAD_MODEL_FROM_INNER,
+    RIGHT_EXTRUDER
+} from '../../constants';
+import CompoundOperation from '../../core/CompoundOperation';
+import { controller } from '../../lib/controller';
 import { logToolBarOperation } from '../../lib/gaEvent';
+import log from '../../lib/log';
 import { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
-import { BrushType } from '../../models/ModelGroup';
+import ModelGroup, { BrushType } from '../../models/ModelGroup';
 import ThreeGroup from '../../models/ThreeGroup';
 import ThreeModel, { BYTE_COUNT_LEFT_EXTRUDER, BYTE_COUNT_RIGHT_EXTRUDER } from '../../models/ThreeModel';
 import { MaterialPresetModel, PresetModel } from '../../preset-model';
+import {
+    AlignGroupOperation,
+    GroupOperation,
+    VisibilityOperation,
+} from '../../scene/operations';
+import { LoadMeshFileOptions, loadMeshFiles, MeshFileInfo } from './actions-mesh';
+import ReplaceSplittedOperation from '../../scene/operations/ReplaceSplittedOperation';
 import sceneLogic, { PrimeTowerSettings } from '../../scene/scene.logic';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 import { actions as operationHistoryActions } from '../operation-history';
-import GroupOperation3D from '../operation-history/GroupOperation3D';
-import CompoundOperation from '../../core/CompoundOperation';
 import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import baseActions from './actions-base';
 
@@ -206,64 +222,131 @@ const applyMeshColoringBrush = (raycastResult) => {
     };
 };
 
-const groupSelectedModels = () => {
+/**
+ * Set visibility of model / group, if no target set, selected model(s)
+ * will be the target.
+ */
+const setModelVisibility = (target: ThreeModel | ThreeGroup | null, visible: boolean) => {
     return (dispatch, getState) => {
-        // TODO: remove this
-        // dispatch(discardPreview({ render: false }));
-
         const { modelGroup } = getState().printing;
-        // Stores the model structure before the group operation, which is used for undo operation
-        const modelsBeforeGroup = modelGroup.getModels().slice(0);
-        const selectedModels = modelGroup.getSelectedModelArray().slice(0);
 
-        const operations = new CompoundOperation();
-        const { recovery } = modelGroup.unselectAllModels();
+        const targetModels = [];
+        if (target) {
+            targetModels.push(target);
+        } else {
+            targetModels.push(...modelGroup.getSelectedModelArray());
+        }
 
-        // Record the relationship between model and group
-        const modelsRelation = selectedModels.reduce((pre, selectd) => {
-            const groupModelID = selectd.parent?.modelID;
-            pre.set(selectd.modelID, {
-                groupModelID,
-                children:
-                    selectd instanceof ThreeGroup
-                        ? selectd.children.slice(0)
-                        : null,
-                modelTransformation: { ...selectd.transformation }
+        const compoundOperation = new CompoundOperation();
+        for (const model of targetModels) {
+            const operation = new VisibilityOperation({
+                target: model,
+                visible,
             });
-            return pre;
-        }, new Map());
-        recovery();
-
-        const modelState = modelGroup.group();
-
-        // Stores the model structure after the group operation, which is used for redo operation
-        const modelsAfterGroup = modelGroup.getModels().slice(0);
-        const newGroup = modelGroup.getSelectedModelArray()[0];
-        const operation = new GroupOperation3D({
-            modelsBeforeGroup,
-            modelsAfterGroup,
-            selectedModels,
-            target: newGroup,
-            modelGroup,
-            modelsRelation,
-        });
-
-        operations.push(operation);
-        operations.registerCallbackAll(() => {
+            compoundOperation.push(operation);
+        }
+        compoundOperation.registerCallbackAll(() => {
             dispatch(baseActions.updateState(modelGroup.getState()));
-            dispatch(renderScene());
+            dispatch(discardPreview({ render: true }));
         });
+        compoundOperation.redo();
 
         dispatch(
             operationHistoryActions.setOperations(
                 HEAD_PRINTING,
-                operations
+                compoundOperation,
             )
         );
-        dispatch(baseActions.updateState(modelState));
-        logToolBarOperation(HEAD_PRINTING, 'group');
     };
 };
+
+/**
+ * Set visibility of model / group to true, if no target set, selected model(s)
+ * will be the target.
+ */
+const showModels = (target: ThreeModel | ThreeGroup | null = null) => {
+    return setModelVisibility(target, true);
+};
+
+/**
+ * Set visibility of model / group to false, if no target set, selected model(s)
+ * will be the target.
+ */
+const hideModels = (target: ThreeModel | ThreeGroup | null = null) => {
+    return setModelVisibility(target, false);
+};
+
+const groupSelectedModels = () => {
+    return (dispatch, getState) => {
+        logToolBarOperation(HEAD_PRINTING, 'group');
+
+        const { modelGroup } = getState().printing;
+        const selectedModels = modelGroup.getSelectedModelArray().slice(0);
+
+        const operation = new GroupOperation({
+            target: selectedModels,
+            modelGroup,
+        });
+
+        const compoundOperation = new CompoundOperation();
+        compoundOperation.push(operation);
+        compoundOperation.registerCallbackAll(() => {
+            dispatch(baseActions.updateState(modelGroup.getState()));
+            dispatch(renderScene());
+        });
+        compoundOperation.redo();
+
+        dispatch(
+            operationHistoryActions.setOperations(
+                HEAD_PRINTING,
+                compoundOperation,
+            )
+        );
+    };
+};
+
+/**
+ * Align selected models, and add them to a new group.
+ */
+const alignGroupSelectedModels = () => {
+    return (dispatch, getState) => {
+        logToolBarOperation(HEAD_PRINTING, 'align');
+
+        const { modelGroup } = getState().printing;
+
+        const selectedModels = modelGroup.getSelectedModelArray().slice(0);
+        for (const model of selectedModels) {
+            if (!(model instanceof ThreeModel)) {
+                log.warn('Unable to process Align operation, not all models selected are of type ThreeModel');
+                return;
+            }
+        }
+
+        const operation = new AlignGroupOperation({
+            // selectedModelsPositionMap,
+            // selectedModels,
+            // newPosition: newGroup.transformation,
+            target: selectedModels as ThreeModel[],
+            modelGroup,
+        });
+
+        const compoundOperation = new CompoundOperation();
+        compoundOperation.push(operation);
+        compoundOperation.registerCallbackAll(() => {
+            dispatch(baseActions.updateState(modelGroup.getState()));
+            dispatch(renderScene());
+        });
+        compoundOperation.redo();
+
+        dispatch(
+            operationHistoryActions.setOperations(
+                HEAD_PRINTING,
+                compoundOperation,
+            )
+        );
+    };
+};
+
 
 const ungroupSelectedModels = () => {
     return (dispatch, getState) => {
@@ -314,6 +397,138 @@ const ungroupSelectedModels = () => {
         );
         dispatch(baseActions.updateState(modelState));
         logToolBarOperation(HEAD_PRINTING, 'ungroup');
+    };
+};
+
+/**
+ * Split selected model (support exactly one model).
+ */
+const splitSelectedModel = () => {
+    return async (dispatch, getState) => {
+        logToolBarOperation(HEAD_PRINTING, 'split');
+
+        const { progressStatesManager } = getState().printing;
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SPLIT_MODEL);
+
+        const modelGroup = getState().printing.modelGroup as ModelGroup;
+        if (!modelGroup) {
+            return false;
+        }
+
+        // only support split on one single model
+        const selectedModels = modelGroup.selectedModelArray;
+        if (selectedModels.length !== 1) return false;
+
+        // check visibility
+        const targetModel = selectedModels[0] as ThreeModel;
+        if (!targetModel.visible) return false;
+
+        const task = new Promise((resolve, reject) => {
+            controller.splitMesh({
+                uploadName: targetModel.uploadName,
+            }, (data) => {
+                const { type } = data;
+                switch (type) {
+                    case 'error':
+                        reject(new Error('Failed to split models.'));
+                        break;
+                    case 'success':
+                        resolve(data.result);
+                        break;
+                    default:
+                        break;
+                }
+            });
+        });
+
+        try {
+            const taskResult = await task as {
+                meshes: { uploadName: string }[]
+            };
+
+            const meshFileInfos: MeshFileInfo[] = [];
+            for (let i = 0; i < taskResult.meshes.length; i++) {
+                const mesh = taskResult.meshes[i];
+                const { uploadName } = mesh;
+
+                const modelInfo: MeshFileInfo = {
+                    uploadName,
+                    originalName: uploadName,
+                    modelName: `${uploadName} Part ${i + 1}`,
+                    isGroup: false,
+                    modelID: uuid(),
+                    parentUploadName: targetModel.uploadName,
+                };
+
+                const modelNameObj = modelGroup._createNewModelName({
+                    sourceType: '3d',
+                    originalName: modelInfo.modelName,
+                });
+
+                modelInfo.modelName = modelNameObj.name;
+                modelInfo.baseName = modelNameObj.baseName;
+
+                meshFileInfos.push(modelInfo);
+            }
+
+            const loadMeshFileOptions: LoadMeshFileOptions = {
+                headType: HEAD_PRINTING,
+                loadFrom: LOAD_MODEL_FROM_INNER,
+                sourceType: '3d',
+            };
+
+            // ignore prompt tasks
+            const loadMeshResult = await loadMeshFiles(meshFileInfos, modelGroup, loadMeshFileOptions);
+
+            // construct group with splited models
+            modelGroup.addModelToSelectedGroup(...loadMeshResult.models);
+            const splittedModels = modelGroup.getSelectedModelArray<ThreeModel>().slice(0);
+
+            // Align splitted models to construct a new group
+            const operation = new AlignGroupOperation({
+                modelGroup,
+                target: splittedModels,
+            });
+            operation.redo();
+
+            // unselect all
+            modelGroup.unselectAllModels();
+
+            // remove splitted group first
+            const newGroup = operation.getNewGroup();
+            ThreeUtils.removeObjectParent(newGroup.meshObject);
+            const index = modelGroup.models.findIndex((child) => child.modelID === newGroup.modelID);
+            if (index >= 0) {
+                modelGroup.models.splice(index, 1);
+            }
+
+            // replace original model with splitted group
+            const replaceOperation = new ReplaceSplittedOperation({
+                modelGroup,
+                model: targetModel,
+                splittedGroup: newGroup,
+            });
+
+            const compoundOperation = new CompoundOperation();
+            compoundOperation.push(replaceOperation);
+            compoundOperation.registerCallbackAll(() => {
+                dispatch(baseActions.updateState(modelGroup.getState()));
+                dispatch(renderScene());
+            });
+            compoundOperation.redo();
+
+            dispatch(
+                operationHistoryActions.setOperations(
+                    HEAD_PRINTING,
+                    compoundOperation,
+                )
+            );
+        } catch (e) {
+            log.error('task failed, error =', e);
+            return false;
+        }
+
+        return true;
     };
 };
 
@@ -553,9 +768,14 @@ export default {
     setMeshStackId,
     applyMeshColoringBrush,
 
-    // model operatoins
+    // model operations
+    setModelVisibility,
+    showModels,
+    hideModels,
     groupSelectedModels,
+    alignGroupSelectedModels,
     ungroupSelectedModels,
+    splitSelectedModel,
 
     // print settings -> scene
     applyPrintSettingsToModels,
