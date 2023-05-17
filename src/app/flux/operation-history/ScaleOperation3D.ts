@@ -2,7 +2,7 @@ import type ModelGroup from '../../models/ModelGroup';
 import { ModelTransformation } from '../../models/ThreeBaseModel';
 import ThreeGroup from '../../models/ThreeGroup';
 import ThreeModel from '../../models/ThreeModel';
-import Operation from './Operation';
+import Operation from '../../core/Operation';
 
 type ScaleOperationProp = {
     target: ThreeGroup | ThreeModel,

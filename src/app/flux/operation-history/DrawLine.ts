@@ -1,5 +1,5 @@
 import type DrawGroup from '../../ui/SVGEditor/svg-content/DrawGroup';
-import Operation from './Operation';
+import Operation from '../../core/Operation';
 
 type DrawLineProp = {
     target: SVGPathElement;

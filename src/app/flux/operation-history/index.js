@@ -23,8 +23,8 @@ export const actions = {
     setOperations: (headType, operations) => (dispatch, getState) => {
         const { excludeModelIDs } = getState()[headType];
         for (let i = operations.length() - 1; i > -1; i--) {
-            const modelID = operations.getItem(i).state.target.modelID;
-            if (modelID in excludeModelIDs) {
+            const modelID = operations.getItem(i).state?.target?.modelID;
+            if (modelID && modelID in excludeModelIDs) {
                 delete excludeModelIDs[modelID];
                 operations.removeItem(i);
             }

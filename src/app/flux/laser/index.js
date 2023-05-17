@@ -11,7 +11,7 @@ import {
     // MACHINE_TOOL_HEADS,
     PAGE_EDITOR } from '../../constants';
 import ModelGroup from '../../models/ModelGroup';
-import OperationHistory from '../operation-history/OperationHistory';
+import OperationHistory from '../../core/OperationHistory';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
 
 import {

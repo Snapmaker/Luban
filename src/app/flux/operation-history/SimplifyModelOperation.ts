@@ -1,5 +1,5 @@
 import ThreeModel from '../../models/ThreeModel';
-import Operation from './Operation';
+import Operation from '../../core/Operation';
 /* eslint-disable import/no-cycle */
 import type { DispatchType } from '../index.def';
 import { actions as printingActions } from '../printing';

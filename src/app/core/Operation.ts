@@ -3,11 +3,6 @@ export default abstract class Operation<T> {
 
     protected state: T;
 
-
-    public mergePreviousOperation() {
-        throw new Error('NotImplementedException');
-    }
-
     public redo() {
         throw new Error('NotImplementedException');
     }
