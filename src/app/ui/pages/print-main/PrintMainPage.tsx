@@ -214,7 +214,7 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
                         type: 'button',
                         name: 'MainToolbarModelSplit',
                         action: () => {
-                            dispatch(printingActions.splitSelected());
+                            dispatch(sceneActions.splitSelectedModel());
                         }
                     },
                     {

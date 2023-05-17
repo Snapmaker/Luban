@@ -1,18 +1,21 @@
 import { find } from 'lodash';
 import { Color } from 'three';
+import { v4 as uuid } from 'uuid';
 
 import {
     HEAD_PRINTING,
     LEFT_EXTRUDER,
     MACHINE_EXTRUDER_X,
     MACHINE_EXTRUDER_Y,
+    LOAD_MODEL_FROM_INNER,
     RIGHT_EXTRUDER
 } from '../../constants';
 import CompoundOperation from '../../core/CompoundOperation';
+import { controller } from '../../lib/controller';
 import { logToolBarOperation } from '../../lib/gaEvent';
 import log from '../../lib/log';
 import { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
-import { BrushType } from '../../models/ModelGroup';
+import ModelGroup, { BrushType } from '../../models/ModelGroup';
 import ThreeGroup from '../../models/ThreeGroup';
 import ThreeModel, { BYTE_COUNT_LEFT_EXTRUDER, BYTE_COUNT_RIGHT_EXTRUDER } from '../../models/ThreeModel';
 import { MaterialPresetModel, PresetModel } from '../../preset-model';
@@ -21,6 +24,8 @@ import {
     GroupOperation,
     VisibilityOperation,
 } from '../../scene/operations';
+import { LoadMeshFileOptions, loadMeshFiles, MeshFileInfo } from './actions-mesh';
+import ReplaceSplittedOperation from '../../scene/operations/ReplaceSplittedOperation';
 import sceneLogic, { PrimeTowerSettings } from '../../scene/scene.logic';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 import { actions as operationHistoryActions } from '../operation-history';
@@ -395,6 +400,138 @@ const ungroupSelectedModels = () => {
     };
 };
 
+/**
+ * Split selected model (support exactly one model).
+ */
+const splitSelectedModel = () => {
+    return async (dispatch, getState) => {
+        logToolBarOperation(HEAD_PRINTING, 'split');
+
+        const { progressStatesManager } = getState().printing;
+        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SPLIT_MODEL);
+
+        const modelGroup = getState().printing.modelGroup as ModelGroup;
+        if (!modelGroup) {
+            return false;
+        }
+
+        // only support split on one single model
+        const selectedModels = modelGroup.selectedModelArray;
+        if (selectedModels.length !== 1) return false;
+
+        // check visibility
+        const targetModel = selectedModels[0] as ThreeModel;
+        if (!targetModel.visible) return false;
+
+        const task = new Promise((resolve, reject) => {
+            controller.splitMesh({
+                uploadName: targetModel.uploadName,
+            }, (data) => {
+                const { type } = data;
+                switch (type) {
+                    case 'error':
+                        reject(new Error('Failed to split models.'));
+                        break;
+                    case 'success':
+                        resolve(data.result);
+                        break;
+                    default:
+                        break;
+                }
+            });
+        });
+
+        try {
+            const taskResult = await task as {
+                meshes: { uploadName: string }[]
+            };
+
+            const meshFileInfos: MeshFileInfo[] = [];
+            for (let i = 0; i < taskResult.meshes.length; i++) {
+                const mesh = taskResult.meshes[i];
+                const { uploadName } = mesh;
+
+                const modelInfo: MeshFileInfo = {
+                    uploadName,
+                    originalName: uploadName,
+                    modelName: `${uploadName} Part ${i + 1}`,
+                    isGroup: false,
+                    modelID: uuid(),
+                    parentUploadName: targetModel.uploadName,
+                };
+
+                const modelNameObj = modelGroup._createNewModelName({
+                    sourceType: '3d',
+                    originalName: modelInfo.modelName,
+                });
+
+                modelInfo.modelName = modelNameObj.name;
+                modelInfo.baseName = modelNameObj.baseName;
+
+                meshFileInfos.push(modelInfo);
+            }
+
+            const loadMeshFileOptions: LoadMeshFileOptions = {
+                headType: HEAD_PRINTING,
+                loadFrom: LOAD_MODEL_FROM_INNER,
+                sourceType: '3d',
+            };
+
+            // ignore prompt tasks
+            const loadMeshResult = await loadMeshFiles(meshFileInfos, modelGroup, loadMeshFileOptions);
+
+            // construct group with splited models
+            modelGroup.addModelToSelectedGroup(...loadMeshResult.models);
+            const splittedModels = modelGroup.getSelectedModelArray<ThreeModel>().slice(0);
+
+            // Align splitted models to construct a new group
+            const operation = new AlignGroupOperation({
+                modelGroup,
+                target: splittedModels,
+            });
+            operation.redo();
+
+            // unselect all
+            modelGroup.unselectAllModels();
+
+            // remove splitted group first
+            const newGroup = operation.getNewGroup();
+            ThreeUtils.removeObjectParent(newGroup.meshObject);
+            const index = modelGroup.models.findIndex((child) => child.modelID === newGroup.modelID);
+            if (index >= 0) {
+                modelGroup.models.splice(index, 1);
+            }
+
+            // replace original model with splitted group
+            const replaceOperation = new ReplaceSplittedOperation({
+                modelGroup,
+                model: targetModel,
+                splittedGroup: newGroup,
+            });
+
+            const compoundOperation = new CompoundOperation();
+            compoundOperation.push(replaceOperation);
+            compoundOperation.registerCallbackAll(() => {
+                dispatch(baseActions.updateState(modelGroup.getState()));
+                dispatch(renderScene());
+            });
+            compoundOperation.redo();
+
+            dispatch(
+                operationHistoryActions.setOperations(
+                    HEAD_PRINTING,
+                    compoundOperation,
+                )
+            );
+        } catch (e) {
+            log.error('task failed, error =', e);
+            return false;
+        }
+
+        return true;
+    };
+};
+
 const getModelShellStackId = (model: ThreeModel): string => {
     const useLeftExtruder = model.extruderConfig.shell === '0';
     return useLeftExtruder ? LEFT_EXTRUDER : RIGHT_EXTRUDER;
@@ -638,6 +775,7 @@ export default {
     groupSelectedModels,
     alignGroupSelectedModels,
     ungroupSelectedModels,
+    splitSelectedModel,
 
     // print settings -> scene
     applyPrintSettingsToModels,

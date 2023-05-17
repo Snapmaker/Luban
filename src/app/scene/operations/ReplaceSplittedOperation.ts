@@ -12,6 +12,11 @@ interface OperationInput {
 
 type State = {};
 
+/**
+ * Replace Splitted Operation.
+ *
+ * We implemented undo/redo for mesh split, by replacing model with splitted group.
+ */
 export default class ReplaceSplittedOperation extends Operation<State> {
     private input: OperationInput;
 

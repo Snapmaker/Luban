@@ -5,7 +5,6 @@ import { Transfer } from 'threads';
 import * as THREE from 'three';
 import { Box3, Vector3 } from 'three';
 import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
-import { v4 as uuid } from 'uuid';
 
 import { timestamp } from '../../../shared/lib/random-utils';
 import api from '../../api';
@@ -73,7 +72,7 @@ import ScaleOperation3D from '../operation-history/ScaleOperation3D';
 import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWithRotateOperation3D';
 import { checkMeshes, LoadMeshFileOptions, loadMeshFiles, MeshFileInfo } from './actions-mesh';
 import sceneActions from './actions-scene';
-import baseActions from './actions-base';
+// import baseActions from './actions-base';
 
 // eslint-disable-next-line import/no-cycle
 import { actions as appGlobalActions } from '../app-global';
@@ -81,8 +80,6 @@ import { actions as appGlobalActions } from '../app-global';
 import { actions as operationHistoryActions } from '../operation-history';
 // eslint-disable-next-line import/no-cycle
 import SimplifyModelOperation from '../operation-history/SimplifyModelOperation';
-import ReplaceSplittedOperation from '../../scene/operations/ReplaceSplittedOperation';
-import { AlignGroupOperation } from '../../scene/operations';
 
 
 let initEventFlag = false;
@@ -4983,133 +4980,6 @@ export const actions = {
         dispatch(actions.applyProfileToAllModels());
         dispatch(actions.displayModel());
         dispatch(actions.destroyGcodeLine());
-    },
-
-    splitSelected: () => async (dispatch, getState) => {
-        logToolBarOperation(HEAD_PRINTING, 'split');
-
-        const { progressStatesManager } = getState().printing;
-        progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SPLIT_MODEL);
-
-        const modelGroup = getState().printing.modelGroup as ModelGroup;
-        if (!modelGroup) {
-            return false;
-        }
-
-        // only support split on one single model
-        const selectedModels = modelGroup.selectedModelArray;
-        if (selectedModels.length !== 1) return false;
-
-        // check visibility
-        const targetModel = selectedModels[0] as ThreeModel;
-        if (!targetModel.visible) return false;
-
-        const task = new Promise((resolve, reject) => {
-            controller.splitMesh({
-                uploadName: targetModel.uploadName,
-            }, (data) => {
-                const { type } = data;
-                switch (type) {
-                    case 'error':
-                        reject(new Error('Failed to split models.'));
-                        break;
-                    case 'success':
-                        resolve(data.result);
-                        break;
-                    default:
-                        break;
-                }
-            });
-        });
-
-        try {
-            const taskResult = await task as {
-                meshes: { uploadName: string }[]
-            };
-
-            const meshFileInfos: MeshFileInfo[] = [];
-            for (let i = 0; i < taskResult.meshes.length; i++) {
-                const mesh = taskResult.meshes[i];
-                const { uploadName } = mesh;
-
-                const modelInfo: MeshFileInfo = {
-                    uploadName,
-                    originalName: uploadName,
-                    modelName: `${uploadName} Part ${i + 1}`,
-                    isGroup: false,
-                    modelID: uuid(),
-                    parentUploadName: targetModel.uploadName,
-                };
-
-                const modelNameObj = modelGroup._createNewModelName({
-                    sourceType: '3d',
-                    originalName: modelInfo.modelName,
-                });
-
-                modelInfo.modelName = modelNameObj.name;
-                modelInfo.baseName = modelNameObj.baseName;
-
-                meshFileInfos.push(modelInfo);
-            }
-
-            const loadMeshFileOptions: LoadMeshFileOptions = {
-                headType: HEAD_PRINTING,
-                loadFrom: LOAD_MODEL_FROM_INNER,
-                sourceType: '3d',
-            };
-
-            // ignore prompt tasks
-            const loadMeshResult = await loadMeshFiles(meshFileInfos, modelGroup, loadMeshFileOptions);
-
-            // construct group with splited models
-            modelGroup.addModelToSelectedGroup(...loadMeshResult.models);
-            const splittedModels = modelGroup.getSelectedModelArray<ThreeModel>().slice(0);
-
-            // Align splitted models to construct a new group
-            const operation = new AlignGroupOperation({
-                modelGroup,
-                target: splittedModels,
-            });
-            operation.redo();
-
-            // unselect all
-            modelGroup.unselectAllModels();
-
-            // remove splitted group first
-            const newGroup = operation.getNewGroup();
-            ThreeUtils.removeObjectParent(newGroup.meshObject);
-            const index = modelGroup.models.findIndex((child) => child.modelID === newGroup.modelID);
-            if (index >= 0) {
-                modelGroup.models.splice(index, 1);
-            }
-
-            // replace original model with splitted group
-            const replaceOperation = new ReplaceSplittedOperation({
-                modelGroup,
-                model: targetModel,
-                splittedGroup: newGroup,
-            });
-
-            const compoundOperation = new CompoundOperation();
-            compoundOperation.push(replaceOperation);
-            compoundOperation.registerCallbackAll(() => {
-                dispatch(baseActions.updateState(modelGroup.getState()));
-                dispatch(sceneActions.renderScene());
-            });
-            compoundOperation.redo();
-
-            dispatch(
-                operationHistoryActions.setOperations(
-                    HEAD_PRINTING,
-                    compoundOperation,
-                )
-            );
-        } catch (e) {
-            log.error('task failed, error =', e);
-            return false;
-        }
-
-        return true;
     },
 
     /**
