@@ -110,7 +110,7 @@ class GcodeGenerator {
     }
 
     processGcodeMultiPass(gcodeLines, gcodeConfig) {
-        const { pathType, initialHeightOffset, multiPassEnabled, multiPasses, multiPassDepth } = gcodeConfig;
+        const { pathType, initialHeightOffset = 0, multiPassEnabled, multiPasses, multiPassDepth } = gcodeConfig;
         if (multiPassEnabled && multiPasses > 0) {
             let result = [];
             if (pathType === 'path' && initialHeightOffset) {
