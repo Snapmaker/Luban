@@ -24,7 +24,7 @@ import ToolPathGroup from '../../toolpaths/ToolPathGroup';
 import definitionManager from '../manager/DefinitionManager';
 import i18n from '../../lib/i18n';
 import { timestamp } from '../../../shared/lib/random-utils';
-import ProgressStatesManager, { STEP_STAGE } from '../../lib/manager/ProgressManager';
+import { STEP_STAGE, getProgressStateManagerInstance } from '../../lib/manager/ProgressManager';
 import { logToolBarOperation } from '../../lib/gaEvent';
 import { getMachineSeriesWithToolhead } from '../../constants/machines';
 
@@ -121,7 +121,7 @@ const INITIAL_STATE = {
     shouldGenerateGcodeCounter: 0,
 
     // ProgressStatesManager
-    progressStatesManager: new ProgressStatesManager(),
+    progressStatesManager: getProgressStateManagerInstance(),
 
     showImportStackedModelModal: false,
     cutModelInfo: {

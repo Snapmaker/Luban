@@ -40,7 +40,7 @@ import { controller } from '../../lib/controller';
 import { logPritingSlice, logProfileChange, logToolBarOperation, logTransformOperation } from '../../lib/gaEvent';
 import i18n from '../../lib/i18n';
 import log from '../../lib/log';
-import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
+import { PROCESS_STAGE, STEP_STAGE, getProgressStateManagerInstance } from '../../lib/manager/ProgressManager';
 import workerManager from '../../lib/manager/workerManager';
 
 import CompoundOperation from '../../core/CompoundOperation';
@@ -277,7 +277,7 @@ const INITIAL_STATE = {
     // check not to duplicated create event
 
     // progress states manager
-    progressStatesManager: new ProgressStatesManager(),
+    progressStatesManager: getProgressStateManagerInstance(),
 
     rotationAnalysisTable: [],
     rotationAnalysisSelectedRowId: -1,
@@ -1265,6 +1265,8 @@ export const actions = {
                     dispatch(actions.showGcodeLayers([0, layerCount - 1]));
                     dispatch(actions.displayGcode());
                 }
+
+                console.log('gcodeRenderingCallback', 'Preview succeed');
 
                 const { progressStatesManager } = getState().printing;
                 dispatch(actions.updateState({
