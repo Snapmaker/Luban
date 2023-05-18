@@ -40,7 +40,7 @@ import { controller } from '../../lib/controller';
 import { logPritingSlice, logProfileChange, logToolBarOperation, logTransformOperation } from '../../lib/gaEvent';
 import i18n from '../../lib/i18n';
 import log from '../../lib/log';
-import { PROCESS_STAGE, STEP_STAGE, getProgressStateManagerInstance } from '../../lib/manager/ProgressManager';
+import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE, getProgressStateManagerInstance } from '../../lib/manager/ProgressManager';
 import workerManager from '../../lib/manager/workerManager';
 
 import CompoundOperation from '../../core/CompoundOperation';
@@ -72,7 +72,7 @@ import ScaleOperation3D from '../operation-history/ScaleOperation3D';
 import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWithRotateOperation3D';
 import { checkMeshes, LoadMeshFileOptions, loadMeshFiles, MeshFileInfo } from './actions-mesh';
 import sceneActions from './actions-scene';
-// import baseActions from './actions-base';
+import baseActions from './actions-base';
 
 // eslint-disable-next-line import/no-cycle
 import { actions as appGlobalActions } from '../app-global';
@@ -4123,7 +4123,8 @@ export const actions = {
     ) => async (dispatch, getState) => {
         workerManager.stopClipper();
 
-        const { progressStatesManager, modelGroup } = getState().printing;
+        const progressStatesManager = getState().printing.progressStatesManager as ProgressStatesManager;
+        const { modelGroup } = getState().printing;
         const { promptDamageModel } = getState().machine;
 
         const models = [...modelGroup.models];
@@ -4146,12 +4147,13 @@ export const actions = {
             primeTowerTag,
             extruderConfig,
 
-            onProgress: (stage, progress) => {
-                // Update progress
+            onProgress: (progress) => {
+                const p = progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, progress);
+                console.log('onProgress - ', progress, p);
                 dispatch(
-                    actions.updateState({
-                        stage,
-                        progress: progressStatesManager.updateProgress(stage, progress),
+                    baseActions.updateState({
+                        stage: STEP_STAGE.PRINTING_LOADING_MODEL,
+                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, progress),
                     })
                 );
             },
@@ -4243,6 +4245,7 @@ export const actions = {
         modelGroup.models = modelGroup.models.concat();
 
         if (meshFileInfos.length === 1 && newModels.length === 0) {
+            /*
             if (!(meshFileInfos[0]?.children?.length)) {
                 progressStatesManager.finishProgress(false);
                 dispatch(
@@ -4254,6 +4257,7 @@ export const actions = {
                     })
                 );
             }
+            */
         } else {
             dispatch(
                 actions.updateState({
@@ -4904,25 +4908,17 @@ export const actions = {
                                     })
                                 );
                             }
-                            resolve();
+                            resolve(true);
                             break;
                         }
                         case 'LOAD_MODEL_CONVEX': {
                             const { positions } = data;
 
                             const convexGeometry = new THREE.BufferGeometry();
-                            const positionAttribute = new THREE.BufferAttribute(
-                                positions,
-                                3
-                            );
-                            convexGeometry.setAttribute(
-                                'position',
-                                positionAttribute
-                            );
-                            modelGroup.setConvexGeometry(
-                                model.uploadName,
-                                convexGeometry
-                            );
+                            const positionAttribute = new THREE.BufferAttribute(positions, 3);
+                            convexGeometry.setAttribute('position', positionAttribute);
+
+                            modelGroup.setConvexGeometry(model.uploadName, convexGeometry);
 
                             break;
                         }
