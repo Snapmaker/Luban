@@ -19,7 +19,7 @@ import {
     COORDINATE_MODE_BOTTOM_CENTER } from '../../constants';
 import definitionManager from '../manager/DefinitionManager';
 import ToolPathGroup from '../../toolpaths/ToolPathGroup';
-import ProgressStatesManager, { STEP_STAGE } from '../../lib/manager/ProgressManager';
+import { STEP_STAGE, getProgressStateManagerInstance } from '../../lib/manager/ProgressManager';
 import OperationHistory from '../../core/OperationHistory';
 import { getMachineSeriesWithToolhead } from '../../constants/machines';
 
@@ -120,7 +120,7 @@ const INITIAL_STATE = {
     shouldGenerateGcodeCounter: 0,
 
     // ProgressStatesManager
-    progressStatesManager: new ProgressStatesManager(),
+    progressStatesManager: getProgressStateManagerInstance(),
 
     enableShortcut: true,
     promptTasks: [],

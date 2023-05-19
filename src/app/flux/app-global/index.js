@@ -8,7 +8,7 @@ import { baseActions as editorActions } from '../editor/actions-base';
 // eslint-disable-next-line import/no-cycle
 import { actions as projectActions } from '../project';
 // eslint-disable-next-line import/no-cycle
-import { actions as printingActions, uploadMesh } from '../printing/index';
+import { actions as printingActions, uploadMesh } from '../printing';
 import ThreeGroup from '../../models/ThreeGroup';
 import workerManager from '../../lib/manager/workerManager';
 import ThreeUtils from '../../three-extensions/ThreeUtils';

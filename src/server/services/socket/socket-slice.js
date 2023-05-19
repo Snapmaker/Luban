@@ -12,7 +12,7 @@ const log = logger('socket-slice');
 
 const progressHandle = throttle((socket, topic, progress) => {
     return socket.emit(topic, progress);
-}, 300);
+}, 200);
 
 /**
  * Handle slicer request.
