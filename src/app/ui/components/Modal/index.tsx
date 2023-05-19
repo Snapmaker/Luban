@@ -51,7 +51,7 @@ const Modal: ModalType = React.memo((props) => {
         centered = true,
         wrapClassName = 'modal-wrapper',
         tile = false,
-        visible = true,
+        open = true,
         onClose,
         className = '',
         children,
@@ -90,7 +90,7 @@ const Modal: ModalType = React.memo((props) => {
         <AntdModal
             {...rest}
             width={width}
-            open={visible}
+            open={open}
             title={renderSection('modalTitle')}
             footer={renderSection('modalFooter')}
             onCancel={onClose}
