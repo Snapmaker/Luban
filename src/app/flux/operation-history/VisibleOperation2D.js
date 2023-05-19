@@ -1,4 +1,4 @@
-import Operation from './Operation';
+import Operation from '../../core/Operation';
 
 export default class VisibleOperation2D extends Operation {
     state = {};

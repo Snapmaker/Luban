@@ -1,6 +1,6 @@
 import type ModelGroup from '../../models/ModelGroup';
 import ThreeGroup from '../../models/ThreeGroup';
-import Operation from './Operation';
+import Operation from '../../core/Operation';
 import ThreeModel from '../../models/ThreeModel';
 
 type Positon = {

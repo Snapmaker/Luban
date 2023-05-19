@@ -496,6 +496,9 @@ export default class ThreeGroup extends BaseModel {
     }
 
     public updateGroupExtruder() {
+        if (this.children.length === 0) {
+            return;
+        }
         this.extruderConfig.shell = this.children[0].extruderConfig.shell;
         this.extruderConfig.infill = this.children[0].extruderConfig.infill;
 

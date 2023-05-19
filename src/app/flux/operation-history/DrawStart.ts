@@ -1,5 +1,5 @@
 import type ContentGroup from '../../ui/SVGEditor/svg-content/SVGContentGroup';
-import Operation from './Operation';
+import Operation from '../../core/Operation';
 
 type DrawStartProp = {
     elemID: string;

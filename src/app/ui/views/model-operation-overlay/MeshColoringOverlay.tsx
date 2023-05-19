@@ -202,7 +202,7 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
                                         'margin-right-8',
                                     )}
                                 />
-                                <span style={{ verticalAlign: 'middle' }}>{i18n._('Left')}</span>
+                                <span style={{ verticalAlign: 'middle' }}>{i18n._('Left Extruder')}</span>
                                 <span style={{ verticalAlign: 'middle', fontSize: '12px', marginLeft: '4px' }}>(<i className="fa fa-keyboard-o" /> 1)</span>
                             </span>
                         </Button>
@@ -230,7 +230,7 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
                                         'margin-right-8',
                                     )}
                                 />
-                                <span style={{ verticalAlign: 'middle' }}>{i18n._('Right')}</span>
+                                <span style={{ verticalAlign: 'middle' }}>{i18n._('Right Extruder')}</span>
                                 <span style={{ verticalAlign: 'middle', fontSize: '12px', marginLeft: '4px' }}>(<i className="fa fa-keyboard-o" /> 2)</span>
                             </span>
                         </Button>
@@ -243,8 +243,8 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
                         value={brushType}
                         onChange={(e) => onChangeBrushType(e.target.value)}
                     >
-                        <Radio value={BrushType.SmartFillBrush}>Smart Fill</Radio>
-                        <Radio value={BrushType.SphereBrush}>Brush</Radio>
+                        <Radio value={BrushType.SmartFillBrush}>{i18n._('key-Printing/MeshEdit-BrushType-SmartFillBrush')}</Radio>
+                        <Radio value={BrushType.SphereBrush}>{i18n._('key-Printing/MeshEdit-BrushType-SphereBrush')}</Radio>
                     </Radio.Group>
                 </div>
                 {[BrushType.SmartFillBrush, BrushType.SphereBrush].includes(brushType) && (

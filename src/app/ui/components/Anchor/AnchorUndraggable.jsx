@@ -1,11 +1,11 @@
 import PropTypes from 'prop-types';
-import React, { PureComponent } from 'react';
+import React from 'react';
 
 const isTrivialHref = (href) => {
     return (!href || href.trim() === '#');
 };
 
-class AnchorUndraggable extends PureComponent {
+class AnchorUndraggable extends React.PureComponent {
     static propTypes = {
         componentClass: PropTypes.oneOfType([
             PropTypes.func,
@@ -55,7 +55,6 @@ class AnchorUndraggable extends PureComponent {
         } = this.props;
         const {
             componentClass,
-            draggable = false,
             ...props
         } = this.props;
         const Component = componentClass || 'a';
@@ -76,7 +75,7 @@ class AnchorUndraggable extends PureComponent {
         return (
             <Component
                 {...props}
-                draggable={draggable}
+                draggable={false}
                 role={role}
                 href={href}
                 style={style}

@@ -393,8 +393,9 @@ class ModelGroup extends EventEmitter {
         return this.getModels<TModel>().some((model) => model.visible);
     }
 
-    public toggleModelsVisible(visible: boolean, models: TModel[]) {
+    public setModelVisibility(models: TModel[], visible: boolean) {
         this.plateAdhesion.clear();
+
         models.forEach((model) => {
             model.visible = visible;
             model.meshObject.visible = visible;
@@ -418,6 +419,7 @@ class ModelGroup extends EventEmitter {
                 model.parent.meshObject.visible = parentVisible;
             }
         });
+
         // Make the reference of 'models' change to re-render
         this.models = [...this.models];
         this.updatePlateAdhesion();
@@ -427,13 +429,13 @@ class ModelGroup extends EventEmitter {
 
     public hideSelectedModel(targetModels: TModel[] = null) {
         const models = targetModels || this.getSelectedModelArray();
-        return this.toggleModelsVisible(false, models);
+        return this.setModelVisibility(models, false);
     }
 
     public showSelectedModel(targetModels: TModel[] = null) {
         const models = targetModels || this.getSelectedModelArray();
 
-        return this.toggleModelsVisible(true, models);
+        return this.setModelVisibility(models, true);
     }
 
     public _removeSelectedModels() {
@@ -1392,7 +1394,11 @@ class ModelGroup extends EventEmitter {
             const firstModel = models[0];
             const otherModels = models.filter((d) => d.meshObject !== firstModel.meshObject);
             this.selectModelById(firstModel.modelID);
-            this.updateSelectedGroupTransformation({ positionZ: firstModel.originalPosition.z });
+            this.updateSelectedGroupTransformation({
+                positionX: firstModel.transformation.positionX,
+                positionY: firstModel.transformation.positionY,
+                positionZ: firstModel.originalPosition.z,
+            });
             otherModels.forEach((model) => {
                 const newPosition = {
                     positionX: model.originalPosition.x - firstModel.originalPosition.x + firstModel.transformation.positionX,
@@ -1860,7 +1866,7 @@ class ModelGroup extends EventEmitter {
             this.groupsChildrenMap.set(group, modelInfo.children.map((item) => {
                 return item.modelID;
             }));
-            resolve && resolve();
+            resolve && resolve(group);
 
             return group as ThreeGroup;
         }
@@ -1936,7 +1942,7 @@ class ModelGroup extends EventEmitter {
         this.emit(ModelEvents.AddModel, model);
         // refresh view
         this.modelChanged();
-        resolve && resolve();
+        resolve && resolve(model);
         return model;
     }
 
@@ -2319,6 +2325,7 @@ class ModelGroup extends EventEmitter {
         this.unselectAllModels();
 
         const group = new ThreeGroup({}, this);
+
         // check visible models or groups
         if (selectedModelArray.some((model) => model.visible)) {
             // insert group to the first model position in selectedModelArray
