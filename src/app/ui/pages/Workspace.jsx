@@ -88,7 +88,7 @@ function getUnsupportedWidgets(machineIdentifier, toolHead) {
     }
 
     if (machineIdentifier === MACHINE_SERIES.J1.identifier) {
-        return ['console', 'marlin', 'control', 'machineIdentifier'];
+        return ['control'];
     }
 
     if (machineIdentifier === MACHINE_SERIES.A400.identifier) {

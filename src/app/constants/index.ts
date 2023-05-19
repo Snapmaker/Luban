@@ -1182,14 +1182,6 @@ export const START_JOB_MISMATCH_GCODE_INFO = {
     [HEAD_CNC]: 'key-App/Settings/MachineSettings-CNC',
 };
 
-export const PRINTING_MODULE = [0, 13];
-export const LASER_MODULE = [2, 14];
-export const CNC_MODULE = [1, 15];
-export const EMERGENCY_STOP_BUTTON = [8, 517];
-export const ENCLOSURE_MODULES = [5, 16];
-export const ROTARY_MODULES = [6];
-export const AIR_PURIFIER_MODULES = [7];
-
 export const HEADT_BED_FOR_SM2 = 'heatBedForSM2';
 export const A400_HEADT_BED_FOR_SM2 = 'a400HeatBedForSM2';
 

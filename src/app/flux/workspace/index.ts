@@ -11,7 +11,7 @@ import {
     CONNECTION_HEAD_BEGIN_WORK,
     CONNECTION_STATUS_CONNECTED,
     CONNECTION_STATUS_IDLE,
-    EMERGENCY_STOP_BUTTON, EPSILON,
+    EPSILON,
     HEAD_CNC,
     HEAD_LASER,
     HEAD_PRINTING,
@@ -25,7 +25,10 @@ import {
     WORKFLOW_STATUS_UNKNOWN
 } from '../../constants';
 import {
-    findMachineByName, findToolHead, MACHINE_SERIES
+    findMachineByName,
+    findToolHead,
+    MACHINE_SERIES,
+    EMERGENCY_STOP_BUTTON,
 } from '../../constants/machines';
 import { valueOf } from '../../lib/contants-utils';
 import { controller } from '../../lib/controller';

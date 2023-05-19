@@ -180,9 +180,9 @@ const PrintToolControl: React.FC = () => {
         nozzleTempDisplay: !isDual,
 
         leftNozzleTempDisplay: isDual,
-        leftNozzleTempEditable: !isDual || true,
+        leftNozzleTempEditable: true,
         rightNozzleTempDisplay: isDual,
-        rightNozzleTempEditable: !isDual,
+        rightNozzleTempEditable: true,
 
         bedTempDisplay: true,
         bedTempEditable: !isDual,

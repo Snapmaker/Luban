@@ -1,30 +1,32 @@
-import net from 'net';
-import fs from 'fs';
-import readline from 'readline';
-import path from 'path';
 import crypto from 'crypto';
-import os from 'os';
+import fs from 'fs';
 import { includes } from 'lodash';
+import net from 'net';
+import os from 'os';
+import path from 'path';
+import readline from 'readline';
+
 import CalibrationInfo from 'snapmaker-sacp-sdk/models/CalibrationInfo';
 import CoordinateInfo, { Direction } from 'snapmaker-sacp-sdk/models/CoordinateInfo';
 import MovementInstruction, { MoveDirection } from 'snapmaker-sacp-sdk/models/MovementInstruction';
+import DataStorage from '../../../DataStorage';
+import { CONNECTION_TYPE_WIFI, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
+import logger from '../../../lib/logger';
 import wifiServerManager from '../WifiServerManager';
 import { ConnectedData, EventOptions } from '../types';
-import logger from '../../../lib/logger';
-import { CONNECTION_TYPE_WIFI, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
 import Business, { CoordinateType, RequestPhotoInfo, ToolHeadType } from './Business';
-import DataStorage from '../../../DataStorage';
 // import MovementInstruction, { MoveDirection } from '../../lib/SACP-SDK/SACP/business/models/MovementInstruction';
-import SocketBASE from './SACP-BASE';
 import {
-    CNC_MODULE,
+    CNC_HEAD_MODULE_IDS,
     EMERGENCY_STOP_BUTTON,
-    LASER_MODULE,
-    PRINTING_MODULE,
-    ROTARY_MODULES
-} from '../../../../app/constants';
-import { MODULEID_TOOLHEAD_MAP, SACP_TYPE_SERIES_MAP } from '../../../../app/constants/machines';
+    LASER_HEAD_MODULE_IDS,
+    MODULEID_TOOLHEAD_MAP,
+    PRINTING_HEAD_MODULE_IDS,
+    ROTARY_MODULES,
+    SACP_TYPE_SERIES_MAP,
+} from '../../../../app/constants/machines';
 import SocketServer from '../../../lib/SocketManager';
+import SocketBASE from './SACP-BASE';
 
 const log = logger('lib:SocketTCP');
 
@@ -82,21 +84,24 @@ class SocketTCP extends SocketBASE {
             this.socket && this.socket.emit('connection:open', {});
             const hostName = os.hostname();
             log.info(`os hostname: ${hostName}`);
-            setTimeout(() => {
-                this.sacpClient.wifiConnection(hostName, 'Luban', options.token, () => {
-                    this.client.destroy();
-                    if (this.client.destroyed) {
-                        log.info('TCP manually closed');
-                        const result = {
-                            code: 200,
-                            data: {},
-                            msg: '',
-                            text: ''
-                        };
-                        socket && socket.emit('connection:close', result);
-                    }
-                }).then(async ({ response }) => {
+            setTimeout(async () => {
+                try {
+                    const { response } = await this.sacpClient.wifiConnection(hostName, 'Luban', options.token, () => {
+                        this.client.destroy();
+                        if (this.client.destroyed) {
+                            log.info('TCP manually closed');
+                            const result = {
+                                code: 200,
+                                data: {},
+                                msg: '',
+                                text: ''
+                            };
+                            socket && socket.emit('connection:close', result);
+                        }
+                    });
+
                     if (response.result === 0) {
+                        // Connected
                         this.sacpClient.setLogger(log);
                         this.sacpClient.wifiConnectionHeartBeat();
                         this.setROTSubscribeApi();
@@ -104,6 +109,8 @@ class SocketTCP extends SocketBASE {
                             isHomed: true,
                             err: null
                         };
+
+                        // Get machine info
                         await this.sacpClient.getMachineInfo().then(({ data: machineInfos }) => {
                             state = {
                                 ...state,
@@ -111,27 +118,28 @@ class SocketTCP extends SocketBASE {
                             };
                             // log.debug(`serial, ${SERIAL_MAP_SACP[machineInfos.type]}`);
                         });
+
+                        // Get module infos
                         await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
                             const moduleListStatus = {
                                 emergencyStopButton: false,
-                                rotaryModule: false
+                                rotaryModule: false,
                             };
 
                             const toolHeadModules = [];
                             moduleInfos.forEach(module => {
                                 // let ariPurifier = false;
-                                if (includes(PRINTING_MODULE, module.moduleId)) {
+                                if (includes(PRINTING_HEAD_MODULE_IDS, module.moduleId)) {
                                     state.headType = HEAD_PRINTING;
                                     toolHeadModules.push(module);
-                                } else if (includes(LASER_MODULE, module.moduleId)) {
+                                } else if (includes(LASER_HEAD_MODULE_IDS, module.moduleId)) {
                                     state.headType = HEAD_LASER;
                                     toolHeadModules.push(module);
-                                } else if (includes(CNC_MODULE, module.moduleId)) {
+                                } else if (includes(CNC_HEAD_MODULE_IDS, module.moduleId)) {
                                     state.headType = HEAD_CNC;
                                     toolHeadModules.push(module);
-                                } else {
-                                    log.debug(`ModuleInfo: Unknown module ${module.moduleId}`);
                                 }
+
                                 if (includes(ROTARY_MODULES, module.moduleId)) {
                                     moduleListStatus.rotaryModule = true;
                                 }
@@ -189,7 +197,9 @@ class SocketTCP extends SocketBASE {
                             err: state?.err,
                             type: CONNECTION_TYPE_WIFI
                         });
-                        this.startHeartbeatBase(this.sacpClient, this.client);
+
+                        // TODO: Do not start heart beat automatically
+                        // this.startHeartbeatBase(this.sacpClient, this.client);
                     } else {
                         this.client.destroy();
                         if (this.client.destroyed) {
@@ -203,7 +213,9 @@ class SocketTCP extends SocketBASE {
                             this.socket && this.socket.emit('connection:close', result);
                         }
                     }
-                });
+                } catch (e) {
+                    log.error(e);
+                }
             }, 200);
         });
     };
