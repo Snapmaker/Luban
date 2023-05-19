@@ -14,6 +14,7 @@ import { actions as appGlobalActions } from '../../../flux/app-global';
 import { CaseConfigQuickStart } from './CaseConfig';
 import { renderModal } from '../../utils';
 import { DetailModalState, resourcesDomain, IMG_RESOURCE_BASE_URL, AccessResourceWebState } from '../../../constants/downloadManager';
+import { RootState } from '../../../flux/index.def';
 
 const CaseLibrary = (props) => {
     // useState
@@ -26,40 +27,10 @@ const CaseLibrary = (props) => {
 
     // redux correlation
     const dispatch = useDispatch();
-    const series = useSelector(state => state?.machine?.series);
-    const toolHead = useSelector(state => state?.machine?.toolHead);
-    const canAccessWeb = useSelector(state => state?.appGlobal?.canAccessWeb);
+    const series = useSelector((state: RootState) => state?.machine?.series);
+    const toolHead = useSelector((state: RootState) => state?.machine?.toolHead);
+    const canAccessWeb: AccessResourceWebState = useSelector((state: RootState) => state?.appGlobal?.canAccessWeb);
 
-    //  method
-    // test access of iframe src by path /access-test.css.
-    // Front end should provid this file in server
-    const accessTest = async (cb) => new Promise((resolve) => {
-        if (canAccessWeb !== AccessResourceWebState.INITIAL) {
-            resolve(canAccessWeb);
-            return;
-        }
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.type = 'text/css';
-        link.href = `${resourcesDomain}/access-test.css`;
-        link.onerror = () => {
-            cb && cb();
-            dispatch(appGlobalActions.updateState({ canAccessWeb: AccessResourceWebState.BLOCKED }));
-            resolve(AccessResourceWebState.BLOCKED);
-            document.head.removeChild(link);
-        };
-        link.onload = () => {
-            dispatch(appGlobalActions.updateState({ canAccessWeb: AccessResourceWebState.PASS }));
-            resolve(AccessResourceWebState.PASS);
-            document.head.removeChild(link);
-        };
-        document.head.appendChild(link);
-
-        // timeout
-        setTimeout(() => {
-            resolve(false);
-        }, 2000);
-    });
     const renderQuickStartModal = () => {
         const onClose = () => setShowQuickStartModal(false);
         return renderModal({
@@ -67,39 +38,25 @@ const CaseLibrary = (props) => {
             renderBody: () => {
                 return <QuickStart history={props.history} noTitle />;
             },
-            renderFooter: () => { },
             size: 'small',
             onClose,
             actions: []
         });
     };
-    const linstenNetworkConnect = () => {
-        // TODO: it is better to handler in node by dns check
-        setCanAccessInternet(window.navigator.onLine);
-        const onlineHandler = () => setCanAccessInternet(true);
-        const offlineHandler = () => setCanAccessInternet(false);
-        window.addEventListener('online', onlineHandler);
-        window.addEventListener('offline', offlineHandler);
-
-        return () => {
-            window.removeEventListener('online', onlineHandler);
-            window.removeEventListener('offline', offlineHandler);
-        };
-    };
-    const isCaseResourceMachine = (currSeries, currToolHead) => {
-        const isDual = isDualExtruder(currToolHead.printingToolhead);
-        if (
-            (currSeries === MACHINE_SERIES.A150.identifier && isDual)
-            || (currSeries === MACHINE_SERIES.A250.identifier && isDual)
-            || (currSeries === MACHINE_SERIES.A350.identifier && isDual)
-            || currSeries === MACHINE_SERIES.A400.identifier || currSeries === MACHINE_SERIES.J1.identifier
-        ) {
-            return true;
-        } else {
-            return false;
-        }
-    };
     const loadData = async () => {
+        const isCaseResourceMachine = (currSeries, currToolHead) => {
+            const isDual = isDualExtruder(currToolHead.printingToolhead);
+            if (
+                (currSeries === MACHINE_SERIES.A150.identifier && isDual)
+                || (currSeries === MACHINE_SERIES.A250.identifier && isDual)
+                || (currSeries === MACHINE_SERIES.A350.identifier && isDual)
+                || currSeries === MACHINE_SERIES.A400.identifier || currSeries === MACHINE_SERIES.J1.identifier
+            ) {
+                return true;
+            } else {
+                return false;
+            }
+        };
         const isShow = canAccessInternet && isCaseResourceMachine(series, toolHead) && isElectron();
         setIsLoading(true);
         if (!isShow) return isShow;
@@ -118,13 +75,15 @@ const CaseLibrary = (props) => {
         setCaseConfig([CaseConfigQuickStart].concat(caseList));
         return true;
     };
-    const goCaseResource = (id) => {
-        if (isElectron()) {
-            dispatch(appGlobalActions.updateState({ showCaseResource: true, caseResourceId: id }));
-        }
-    };
     const onClick = (caseItem, isLast) => {
         if (!caseItem) return;
+
+        const goCaseResource = (id) => {
+            if (isElectron()) {
+                dispatch(appGlobalActions.updateState({ showCaseResource: true, caseResourceId: id }));
+            }
+        };
+
         if (isLast) {
             goCaseResource(DetailModalState.Close);
             return;
@@ -133,7 +92,7 @@ const CaseLibrary = (props) => {
             // caseItem.id existing means this is a online case reources
             goCaseResource(caseItem.id);
         } else {
-            // or it just is quick (open locale case libary)
+            // or it just is quick start(open locale case libary)
             setShowQuickStartModal(true);
         }
     };
@@ -141,16 +100,62 @@ const CaseLibrary = (props) => {
     //  useEffect
     useEffect(() => {
         let isMounted = true;
-        const removelinstener = linstenNetworkConnect();
+
+        //  method
+        // test access of iframe src by path /access-test.css.
+        // Front end should provid this file in server
+        const accessTest = async (cb?: Function) => new Promise((resolve) => {
+            if (canAccessWeb !== AccessResourceWebState.INITIAL) {
+                resolve(canAccessWeb);
+                return;
+            }
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = `${resourcesDomain}/access-test.css`;
+            link.onerror = () => {
+                cb && cb();
+                dispatch(appGlobalActions.updateState({ canAccessWeb: AccessResourceWebState.BLOCKED }));
+                resolve(AccessResourceWebState.BLOCKED);
+                document.head.removeChild(link);
+            };
+            link.onload = () => {
+                dispatch(appGlobalActions.updateState({ canAccessWeb: AccessResourceWebState.PASS }));
+                resolve(AccessResourceWebState.PASS);
+                document.head.removeChild(link);
+            };
+            document.head.appendChild(link);
+
+            // timeout
+            setTimeout(() => {
+                document.head.removeChild(link);
+                resolve(false);
+            }, 2000);
+        });
+
         Promise.all([accessTest(), loadData()])
             .then(([accessedWeb, isShow]) => { isMounted && setShowCaseResource(accessedWeb === AccessResourceWebState.PASS && isShow); })
             .catch(err => console.error(err))
             .finally(() => { setIsLoading(false); });
         return () => {
             isMounted = false;
-            removelinstener();
         };
     }, []);
+
+    // test Internet status
+    useEffect(() => {
+        // TODO: it is better to handler in node by dns check
+        setCanAccessInternet(window.navigator.onLine);
+        const onlineHandler = () => setCanAccessInternet(true);
+        const offlineHandler = () => setCanAccessInternet(false);
+        window.addEventListener('online', onlineHandler);
+        window.addEventListener('offline', offlineHandler);
+
+        return () => {
+            window.removeEventListener('online', onlineHandler);
+            window.removeEventListener('offline', offlineHandler);
+        };
+    });
 
     useEffect(() => {
         loadData()
@@ -190,7 +195,7 @@ const CaseLibrary = (props) => {
                                             </div>
                                             {isLast && (
                                                 <div className={classNames(styles['case-more'])}>
-                                                    <Anchor title={i18n._('key-HomePage/Begin-Workspace')} className={classNames(styles['case-resource'])}>
+                                                    <Anchor className={classNames(styles['case-resource'])}>
                                                         <span className={classNames('color-blue-2 ', 'heading-3-normal-with-hover')}>
                                                             {i18n._('key-HomePage/CaseResource-More')} {'>'}
                                                         </span>
