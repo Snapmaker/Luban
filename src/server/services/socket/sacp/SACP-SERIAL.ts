@@ -1,23 +1,25 @@
-import { SerialPort } from 'serialport';
 import fs from 'fs';
+import { SerialPort } from 'serialport';
 // import path from 'path';
 import crypto from 'crypto';
 import { includes } from 'lodash';
-import logger from '../../../lib/logger';
-import Business from './Business';
-import SocketServer from '../../../lib/SocketManager';
-import SocketBASE from './SACP-BASE';
+
 import {
-    CNC_MODULE,
+    CNC_HEAD_MODULE_IDS,
     EMERGENCY_STOP_BUTTON,
-    LASER_MODULE,
-    PRINTING_MODULE,
-    ROTARY_MODULES
-} from '../../../../app/constants';
-import { MODULEID_TOOLHEAD_MAP, SACP_TYPE_SERIES_MAP } from '../../../../app/constants/machines';
-import { ConnectedData, EventOptions } from '../types';
-import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
+    LASER_HEAD_MODULE_IDS,
+    MODULEID_TOOLHEAD_MAP,
+    PRINTING_HEAD_MODULE_IDS,
+    ROTARY_MODULES,
+    SACP_TYPE_SERIES_MAP
+} from '../../../../app/constants/machines';
 import DataStorage from '../../../DataStorage';
+import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
+import SocketServer from '../../../lib/SocketManager';
+import logger from '../../../lib/logger';
+import { ConnectedData, EventOptions } from '../types';
+import Business from './Business';
+import SocketBASE from './SACP-BASE';
 
 const log = logger('lib:SocketSerial');
 
@@ -73,13 +75,13 @@ class SocketSerialNew extends SocketBASE {
                         };
                         moduleInfos.forEach(module => {
                             // let ariPurifier = false;
-                            if (includes(PRINTING_MODULE, module.moduleId)) {
+                            if (includes(PRINTING_HEAD_MODULE_IDS, module.moduleId)) {
                                 state.headType = HEAD_PRINTING;
                                 state.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
-                            } else if (includes(LASER_MODULE, module.moduleId)) {
+                            } else if (includes(LASER_HEAD_MODULE_IDS, module.moduleId)) {
                                 state.headType = HEAD_LASER;
                                 state.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
-                            } else if (includes(CNC_MODULE, module.moduleId)) {
+                            } else if (includes(CNC_HEAD_MODULE_IDS, module.moduleId)) {
                                 state.headType = HEAD_CNC;
                                 state.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
                             }
