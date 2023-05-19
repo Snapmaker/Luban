@@ -40,7 +40,7 @@ import { controller } from '../../lib/controller';
 import { logPritingSlice, logProfileChange, logToolBarOperation, logTransformOperation } from '../../lib/gaEvent';
 import i18n from '../../lib/i18n';
 import log from '../../lib/log';
-import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE, getProgressStateManagerInstance } from '../../lib/manager/ProgressManager';
+import ProgressStatesManager, { getProgressStateManagerInstance, PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 import workerManager from '../../lib/manager/workerManager';
 
 import CompoundOperation from '../../core/CompoundOperation';
@@ -70,9 +70,9 @@ import MoveOperation3D from '../operation-history/MoveOperation3D';
 import RotateOperation3D from '../operation-history/RotateOperation3D';
 import ScaleOperation3D from '../operation-history/ScaleOperation3D';
 import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWithRotateOperation3D';
+import baseActions from './actions-base';
 import { checkMeshes, LoadMeshFileOptions, loadMeshFiles, MeshFileInfo } from './actions-mesh';
 import sceneActions from './actions-scene';
-import baseActions from './actions-base';
 
 // eslint-disable-next-line import/no-cycle
 import { actions as appGlobalActions } from '../app-global';
@@ -834,7 +834,7 @@ export const actions = {
         if (!initEventFlag) {
             initEventFlag = true;
             controller.on('slice:started', () => {
-                const { progressStatesManager } = getState().printing;
+                const progressStatesManager = getState().printing.progressStatesManager as ProgressStatesManager;
                 progressStatesManager.startProgress(
                     PROCESS_STAGE.PRINTING_SLICE_AND_PREVIEW
                 );
@@ -858,7 +858,7 @@ export const actions = {
                     renderGcodeFileName,
                     gcodeHeader,
                 } = args;
-                const { progressStatesManager } = getState().printing;
+                const progressStatesManager = getState().printing.progressStatesManager as ProgressStatesManager;
 
                 // FIXME: why gcodeFile hard-coded?
                 dispatch(
@@ -892,7 +892,6 @@ export const actions = {
                         )
                     })
                 );
-                progressStatesManager.startNextStep();
 
                 modelGroup.unselectAllModels();
                 dispatch(actions.loadGcode(gcodeFilename));
@@ -900,11 +899,9 @@ export const actions = {
             });
             controller.on('slice:progress', progress => {
                 const state = getState().printing;
-                const { progressStatesManager } = state;
-                if (
-                    progress - state.progress > 0.01
-                    || progress > 1 - EPSILON
-                ) {
+                const progressStatesManager = getState().printing.progressStatesManager as ProgressStatesManager;
+
+                if (progress - state.progress > 0.01 || progress > 1 - EPSILON) {
                     dispatch(
                         actions.updateState({
                             progress: progressStatesManager.updateProgress(
@@ -1266,9 +1263,7 @@ export const actions = {
                     dispatch(actions.displayGcode());
                 }
 
-                console.log('gcodeRenderingCallback', 'Preview succeed');
-
-                const { progressStatesManager } = getState().printing;
+                const progressStatesManager = getState().printing.progressStatesManager as ProgressStatesManager;
                 dispatch(actions.updateState({
                     progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_PREVIEWING, 1)
                 }));
@@ -1279,12 +1274,12 @@ export const actions = {
                         outOfMemoryForRenderGcode
                     })
                 );
-                dispatch(actions.logGenerateGcode(layerCount));
+                dispatch(actions.logGenerateGcode());
                 break;
             }
             case 'progress': {
                 const state = getState().printing;
-                const { progressStatesManager } = state;
+                const progressStatesManager = getState().printing.progressStatesManager as ProgressStatesManager;
                 if (Math.abs(value - state.progress) > 0.01 || value > 1 - EPSILON) {
                     dispatch(
                         actions.updateState({
@@ -4018,15 +4013,19 @@ export const actions = {
         dispatch(actions.render());
     },
 
-    loadGcode: gcodeFilename => (dispatch, getState) => {
+    loadGcode: (gcodeFilename) => (dispatch, getState) => {
         const { progressStatesManager, extruderLDefinition, extruderRDefinition } = getState().printing;
+
+        // slice finished, start preview
         progressStatesManager.startNextStep();
         dispatch(
             actions.updateState({
                 stage: STEP_STAGE.PRINTING_PREVIEWING,
-                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SLICING, 0)
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_PREVIEWING, 0)
             })
         );
+
+        // Load G-code and render
         const extruderColors = {
             toolColor0:
                 extruderLDefinition?.settings?.color?.default_value
@@ -4035,7 +4034,8 @@ export const actions = {
                 extruderRDefinition?.settings?.color?.default_value
                 || BLACK_COLOR
         };
-        workerManager.gcodeToBufferGeometry({ func: '3DP', gcodeFilename, extruderColors }, data => {
+
+        workerManager.gcodeToBufferGeometry({ func: '3DP', gcodeFilename, extruderColors }, (data) => {
             dispatch(actions.gcodeRenderingCallback(data, extruderColors));
         });
     },
@@ -4148,8 +4148,6 @@ export const actions = {
             extruderConfig,
 
             onProgress: (progress) => {
-                const p = progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, progress);
-                console.log('onProgress - ', progress, p);
                 dispatch(
                     baseActions.updateState({
                         stage: STEP_STAGE.PRINTING_LOADING_MODEL,
@@ -4240,7 +4238,6 @@ export const actions = {
                 }
             }
         });
-        console.log('apply');
         dispatch(actions.applyProfileToAllModels());
         modelGroup.models = modelGroup.models.concat();
 

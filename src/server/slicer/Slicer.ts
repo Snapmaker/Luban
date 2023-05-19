@@ -1,15 +1,15 @@
+import { getPath } from '@snapmaker/snapmaker-lunar';
+import childProcess from 'child_process';
+import EventEmitter from 'events';
 import fs from 'fs';
 import path from 'path';
-import EventEmitter from 'events';
-import childProcess from 'child_process';
-import { getPath } from '@snapmaker/snapmaker-lunar';
 
-import { HEAD_PRINTING, PRINTING_CONFIG_SUBCATEGORY } from '../constants';
-import DataStorage from '../DataStorage';
-import logger from '../lib/logger';
 import { generateRandomPathName } from '../../shared/lib/random-utils';
-import { Metadata, SliceProgress, SliceResult } from './slicer-definitions';
+import DataStorage from '../DataStorage';
+import { HEAD_PRINTING, PRINTING_CONFIG_SUBCATEGORY } from '../constants';
+import logger from '../lib/logger';
 import { postProcessorV1, processGcodeHeaderAfterCuraEngine } from './post-processor';
+import { Metadata, SliceProgress, SliceResult } from './slicer-definitions';
 
 
 const log = logger('service:print3d-slice');
@@ -87,6 +87,8 @@ export default class Slicer extends EventEmitter {
 
     private metadata: Metadata;
 
+    private progress: number = 0; // 0...1
+
     public constructor() {
         super();
 
@@ -99,6 +101,8 @@ export default class Slicer extends EventEmitter {
 
         this.supportModels = [];
         // this.supportDefinition = '';
+
+        this.progress = 0;
     }
 
     public setVersion(version = 0) {
@@ -150,6 +154,21 @@ export default class Slicer extends EventEmitter {
         return true;
     }
 
+    private calculateProgress(progress: SliceProgress): number {
+        const layerPercent = Math.min(1.0, progress.layer / progress.layers);
+
+        return layerPercent * 0.3 + (progress.progressStatus - 1) * 0.3;
+    }
+
+    private updateProgress(progress: SliceProgress): void {
+        const newProgress = this.calculateProgress(progress);
+
+        if (newProgress - this.progress > 0.001) {
+            this.progress = newProgress;
+            this.emit('progress', newProgress);
+        }
+    }
+
     private _onSliceProcessData(sliceResult: SliceResult, data, progress: SliceProgress): void {
         const array = data.toString().split('\n');
 
@@ -177,7 +196,8 @@ export default class Slicer extends EventEmitter {
                     progress.layer = 0;
                 }
                 progress.layer++;
-                this.emit('progress', (progress.layer / progress.layers) * 0.3 + (progress.progressStatus - 1) * 0.3);
+
+                this.updateProgress(progress);
             } else if (item.indexOf('Processing skins and infill') !== -1) {
                 if (progress.progressStatus >= 3) {
                     return;
@@ -186,8 +206,10 @@ export default class Slicer extends EventEmitter {
                     progress.layers = parseFloat(item.slice(item.lastIndexOf('of') + 3));
                     progress.layer = 0;
                 }
+                // Note: sum of layers of objects, it may excceed number of layers
                 progress.layer++;
-                this.emit('progress', (progress.layer / progress.layers) * 0.3 + (progress.progressStatus - 1) * 0.3);
+
+                this.updateProgress(progress);
             } else if (item.indexOf('GcodeWriter processing') !== -1) {
                 if (progress.progressStatus >= 4) {
                     return;
@@ -197,7 +219,8 @@ export default class Slicer extends EventEmitter {
                     progress.layer = 0;
                 }
                 progress.layer++;
-                this.emit('progress', (progress.layer / progress.layers) * 0.3 + (progress.progressStatus - 1) * 0.3);
+
+                this.updateProgress(progress);
             } else if (item.indexOf(';Filament used:') === 0) {
                 // single extruder: ';Filament used: 0.139049m'
                 // dual extruders: ';Filament used: 0.139049m, 0m'
