@@ -33,6 +33,7 @@ import { PageMode } from '../PageMode';
 import Workspace from '../Workspace';
 import SceneInitialization from './SceneInitialization';
 import StarterGuide from './StarterGuide';
+import { AccessResourceWebState } from '../../../constants/downloadManager';
 
 export const openFolder = () => {
     if (isElectron()) {
@@ -64,6 +65,9 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
     // simplify & repair
     const canSimplify = useSelector((state: RootState) => state.printing?.modelGroup?.canSimplify());
     const canRepair = useSelector((state: RootState) => state.printing?.modelGroup?.canRepair());
+
+    // download
+    const canAccessWeb = useSelector((state: RootState) => state.appGlobal?.canAccessWeb);
 
     const [showHomePage, setShowHomePage] = useState(false);
     const [showWorkspace, setShowWorkspace] = useState(false);
@@ -325,12 +329,9 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
                 return false;
             }
         };
-        if (isElectron() && isCaseResourceMachine(series, toolHead)) {
-            leftItems.push(
-                {
-                    type: 'separator',
-                    name: 'separator'
-                },
+        if (isElectron() && isCaseResourceMachine(series, toolHead) && canAccessWeb === AccessResourceWebState.PASS) {
+            const separatorIndex = leftItems.findIndex(item => item.type === 'separator');
+            leftItems.splice(separatorIndex, 0,
                 {
                     title: i18n._('key-CaseResource/MainToolBar-DownloadManager Download'),
                     type: 'button',
@@ -339,8 +340,7 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
                         e.stopPropagation();
                         dispatch(appGlobalActions.updateState({ showCaseResource: true }));
                     }
-                }
-            );
+                });
         }
 
         return (
