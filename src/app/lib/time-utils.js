@@ -1,5 +1,5 @@
 function humanReadableTime(timeInSeconds) {
-    if (!timeInSeconds) {
+    if (timeInSeconds === undefined || timeInSeconds === null) {
         return '';
     }
 

@@ -14,14 +14,8 @@ const GcodeInfo = () => {
     const printTime = useSelector(state => state?.printing?.printTime, shallowEqual);
     const filamentLength = useSelector(state => state?.printing?.filamentLength, shallowEqual);
     const filamentWeight = useSelector(state => state?.printing?.filamentWeight, shallowEqual);
-    function getFilamentDes(index) {
-        if (!filamentLength || !filamentWeight || !filamentLength[index] || !filamentWeight[index]) {
-            return '';
-        }
-        return `${filamentLength[index].toFixed(1)} m / ${filamentWeight[index].toFixed(1)} g`;
-    }
-    let filamentLeftDes = getFilamentDes(0);
-    let filamentRightDes = getFilamentDes(1);
+    let filamentLeftDes = `${filamentLength[0].toFixed(1)} m / ${filamentWeight[0].toFixed(1)} g`;
+    let filamentRightDes = filamentLength[1] ? `${filamentLength[1].toFixed(1)} m / ${filamentWeight[1].toFixed(1)} g` : '';
 
     if (filamentRightDes) {
         filamentLeftDes += ' (L)';
