@@ -1,4 +1,4 @@
-import FixedArray from './FixedArray';
+import { FixedArray } from '../../lib/collections';
 
 class History {
     fixedArray = [];
