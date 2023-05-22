@@ -1,7 +1,7 @@
 /**
  * Fixed Length Array implemented in circular buffer.
  */
-export default class FixedArray<T> {
+export default class FixedCircularArray<T> {
     private maxLength: number = Infinity;
     private data: T[] = [];
     private start: number = 0;
@@ -11,6 +11,10 @@ export default class FixedArray<T> {
     public constructor(maxLength: number) {
         this.maxLength = maxLength && maxLength > 0 ? maxLength : 1000;
         this.data = new Array(this.maxLength);
+    }
+
+    public getMaxLength(): number {
+        return this.maxLength;
     }
 
     public push(value: T): void {
@@ -31,6 +35,10 @@ export default class FixedArray<T> {
             throw new Error('Index out of bounds');
         }
 
+        if (!this.isFull && index >= this.end) {
+            throw new Error('Index out of bounds');
+        }
+
         return this.data[(this.start + index) % this.maxLength];
     }
 
@@ -39,7 +47,19 @@ export default class FixedArray<T> {
             throw new Error('Index out of bounds');
         }
 
+        if (!this.isFull && index >= this.end) {
+            throw new Error('Index out of bounds');
+        }
+
         this.data[(this.start + index) % this.maxLength] = value;
+    }
+
+    public getStart(): number {
+        return this.start;
+    }
+
+    public getEnd(): number {
+        return this.end;
     }
 
     public clear() {

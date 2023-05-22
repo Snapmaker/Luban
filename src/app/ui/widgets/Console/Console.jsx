@@ -353,7 +353,8 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
         }
     }, [isDefault]);
 
-    const inputValue = terminalHistory.get(0) || '';
+    const inputValue = terminalHistory.getLength() > 0 ? terminalHistory.get(0) : '';
+
     return (
         <div>
             <Terminal

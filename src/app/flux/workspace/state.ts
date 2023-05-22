@@ -7,9 +7,9 @@ import {
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATUS_UNKNOWN
 } from '../../constants';
-import { FixedArray } from '../../lib/collections';
+import { CircularArray } from '../../lib/collections';
 import { controller } from '../../lib/controller';
-import History from '../machine/History';
+import History from '../../core/History';
 
 import { Server } from './Server';
 
@@ -262,7 +262,7 @@ export const initialState: WorkspaceState = {
     },
 
     // Console
-    terminalHistory: new FixedArray<string>(1000),
-    consoleHistory: new History(1000),
+    terminalHistory: new CircularArray<string>(1000),
+    consoleHistory: new History<string>(1000),
     consoleLogs: [],
 };

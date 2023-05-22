@@ -1,5 +1,5 @@
-import FixedArray from './FixedArray';
+import CircularArray from './CircularArray';
 
 export {
-    FixedArray,
+    CircularArray,
 };
