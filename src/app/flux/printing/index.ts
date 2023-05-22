@@ -52,6 +52,18 @@ import PrimeTowerModel from '../../models/PrimeTowerModel';
 import ThreeGroup from '../../models/ThreeGroup';
 import ThreeModel from '../../models/ThreeModel';
 import { MaterialPresetModel, PresetModel, QualityPresetModel } from '../../preset-model';
+import {
+    AddOperation3D,
+    AddSupportOperation3D,
+    ArrangeOperation3D,
+    DeleteOperation3D,
+    DeleteSupportsOperation3D,
+    MoveOperation3D,
+    RotateOperation3D,
+    ScaleOperation3D,
+    ScaleToFitWithRotateOperation3D
+} from '../../scene/operations';
+// import DeleteSupportsOperation3D from '../../scene/operations/DeleteSupportsOperation3D';
 import scene from '../../scene/Scene';
 import { machineStore } from '../../store/local-storage';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
@@ -61,15 +73,6 @@ import ModelLoader from '../../ui/widgets/PrintingVisualizer/ModelLoader';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import type { RootState } from '../index.def';
 import definitionManager from '../manager/DefinitionManager';
-import AddOperation3D from '../operation-history/AddOperation3D';
-import AddSupportsOperation3D from '../operation-history/AddSupportsOperation3D';
-import ArrangeOperation3D from '../operation-history/ArrangeOperation3D';
-import DeleteOperation3D from '../operation-history/DeleteOperation3D';
-import DeleteSupportsOperation3D from '../operation-history/DeleteSupportsOperation3D';
-import MoveOperation3D from '../operation-history/MoveOperation3D';
-import RotateOperation3D from '../operation-history/RotateOperation3D';
-import ScaleOperation3D from '../operation-history/ScaleOperation3D';
-import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWithRotateOperation3D';
 import baseActions from './actions-base';
 import { checkMeshes, LoadMeshFileOptions, loadMeshFiles, MeshFileInfo } from './actions-mesh';
 import sceneActions from './actions-scene';
@@ -79,7 +82,7 @@ import { actions as appGlobalActions } from '../app-global';
 // eslint-disable-next-line import/no-cycle
 import { actions as operationHistoryActions } from '../operation-history';
 // eslint-disable-next-line import/no-cycle
-import SimplifyModelOperation from '../operation-history/SimplifyModelOperation';
+import SimplifyModelOperation from '../../scene/operations/SimplifyModelOperation';
 
 
 let initEventFlag = false;
@@ -4571,7 +4574,7 @@ export const actions = {
                 const model = modelGroup.findModelByID(info.modelID);
                 const previousFaceMarks = tmpSupportFaceMarks[info.modelID];
                 if (model) {
-                    const operation = new AddSupportsOperation3D({
+                    const operation = new AddSupportOperation3D({
                         target: model,
                         currentFaceMarks: model.supportFaceMarks.slice(0),
                         currentSupport: null,

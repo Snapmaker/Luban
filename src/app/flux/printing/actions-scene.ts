@@ -5,9 +5,9 @@ import { v4 as uuid } from 'uuid';
 import {
     HEAD_PRINTING,
     LEFT_EXTRUDER,
+    LOAD_MODEL_FROM_INNER,
     MACHINE_EXTRUDER_X,
     MACHINE_EXTRUDER_Y,
-    LOAD_MODEL_FROM_INNER,
     RIGHT_EXTRUDER
 } from '../../constants';
 import CompoundOperation from '../../core/CompoundOperation';
@@ -22,15 +22,15 @@ import { MaterialPresetModel, PresetModel } from '../../preset-model';
 import {
     AlignGroupOperation,
     GroupOperation,
+    ReplaceSplittedOperation,
     VisibilityOperation,
 } from '../../scene/operations';
-import { LoadMeshFileOptions, loadMeshFiles, MeshFileInfo } from './actions-mesh';
-import ReplaceSplittedOperation from '../../scene/operations/ReplaceSplittedOperation';
+import UngroupOperation3D from '../../scene/operations/UngroupOperation3D';
 import sceneLogic, { PrimeTowerSettings } from '../../scene/scene.logic';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 import { actions as operationHistoryActions } from '../operation-history';
-import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import baseActions from './actions-base';
+import { LoadMeshFileOptions, MeshFileInfo, loadMeshFiles } from './actions-mesh';
 
 
 const renderScene = () => (dispatch) => {
