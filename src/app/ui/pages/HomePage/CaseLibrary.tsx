@@ -110,27 +110,30 @@ const CaseLibrary = (props) => {
                 return;
             }
             const link = document.createElement('link');
+            let isOver = false;
             link.rel = 'stylesheet';
             link.type = 'text/css';
             link.href = `${resourcesDomain}/access-test.css`;
-            link.onerror = () => {
+            const failedAccessHandle = () => {
+                if (isOver) return;
                 cb && cb();
                 dispatch(appGlobalActions.updateState({ canAccessWeb: AccessResourceWebState.BLOCKED }));
                 resolve(AccessResourceWebState.BLOCKED);
                 document.head.removeChild(link);
+                isOver = true;
             };
+            link.onerror = failedAccessHandle;
             link.onload = () => {
+                if (isOver) return;
                 dispatch(appGlobalActions.updateState({ canAccessWeb: AccessResourceWebState.PASS }));
                 resolve(AccessResourceWebState.PASS);
                 document.head.removeChild(link);
+                isOver = true;
             };
             document.head.appendChild(link);
 
             // timeout
-            setTimeout(() => {
-                document.head.removeChild(link);
-                resolve(false);
-            }, 2000);
+            setTimeout(failedAccessHandle, 2000);
         });
 
         Promise.all([accessTest(), loadData()])
