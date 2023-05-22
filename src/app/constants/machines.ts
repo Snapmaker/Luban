@@ -277,6 +277,16 @@ export function getWorkVolumeSize(machineIdentifier: string, toolHeadIdentifier:
     }
 }
 
+export function getMachineToolHeadConfigPath(machine: Machine, toolHeadIdentifier: string): string | null {
+    const toolHeadOptions = machine.metadata.toolHeads
+        .find(toolHeadOption => toolHeadOption.identifier === toolHeadIdentifier);
+    if (!toolHeadOptions) {
+        return null;
+    }
+
+    return toolHeadOptions.configPath || machine.identifier.toLowerCase();
+}
+
 
 /**
  * Get additional info about pair of <machine series, toolhead>.

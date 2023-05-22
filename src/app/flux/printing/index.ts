@@ -33,7 +33,7 @@ import {
     RIGHT_EXTRUDER_MAP_NUMBER,
     WHITE_COLOR
 } from '../../constants';
-import { getMachineSeriesWithToolhead, isDualExtruder, MACHINE_SERIES } from '../../constants/machines';
+import { getMachineToolHeadConfigPath, isDualExtruder, MACHINE_SERIES } from '../../constants/machines';
 import { isQualityPresetVisible, PRESET_CATEGORY_CUSTOM } from '../../constants/preset';
 
 import { controller } from '../../lib/controller';
@@ -63,7 +63,6 @@ import {
     ScaleOperation3D,
     ScaleToFitWithRotateOperation3D
 } from '../../scene/operations';
-// import DeleteSupportsOperation3D from '../../scene/operations/DeleteSupportsOperation3D';
 import scene from '../../scene/Scene';
 import { machineStore } from '../../store/local-storage';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
@@ -476,7 +475,7 @@ export const actions = {
         const { modelGroup, gcodeLineGroup } = printingState;
         scene.setModelGroup(modelGroup);
 
-        const { toolHead } = getState().machine;
+        const { activeMachine, toolHead } = getState().machine;
 
         modelGroup.setDataChangedCallback(() => {
             dispatch(sceneActions.renderScene());
@@ -485,8 +484,6 @@ export const actions = {
         let { series } = getState().machine;
         series = getRealSeries(series);
 
-        const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
-
         // model group
         dispatch(actions.updateBoundingBox());
 
@@ -494,12 +491,9 @@ export const actions = {
         const { size } = getState().machine;
         gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
 
-
         // init definition manager
-        await definitionManager.init(
-            CONFIG_HEADTYPE,
-            currentMachine.configPathname[CONFIG_HEADTYPE]
-        );
+        const configPath = getMachineToolHeadConfigPath(activeMachine, toolHead.printingToolhead);
+        await definitionManager.init(CONFIG_HEADTYPE, configPath);
 
         // Restore saved preset ids for active machine
         const savedPresetIds = getSavedMachinePresetIds(series);
