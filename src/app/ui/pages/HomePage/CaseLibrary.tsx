@@ -114,7 +114,7 @@ const CaseLibrary = (props) => {
             link.rel = 'stylesheet';
             link.type = 'text/css';
             link.href = `${resourcesDomain}/access-test.css`;
-            link.onerror = () => {
+            const failedAccessHandle = () => {
                 if (isOver) return;
                 cb && cb();
                 dispatch(appGlobalActions.updateState({ canAccessWeb: AccessResourceWebState.BLOCKED }));
@@ -122,6 +122,7 @@ const CaseLibrary = (props) => {
                 document.head.removeChild(link);
                 isOver = true;
             };
+            link.onerror = failedAccessHandle;
             link.onload = () => {
                 if (isOver) return;
                 dispatch(appGlobalActions.updateState({ canAccessWeb: AccessResourceWebState.PASS }));
@@ -132,12 +133,7 @@ const CaseLibrary = (props) => {
             document.head.appendChild(link);
 
             // timeout
-            setTimeout(() => {
-                if (isOver) return;
-                document.head.removeChild(link);
-                resolve(AccessResourceWebState.BLOCKED);
-                isOver = true;
-            }, 2000);
+            setTimeout(failedAccessHandle, 2000);
         });
 
         Promise.all([accessTest(), loadData()])
