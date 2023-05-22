@@ -110,26 +110,33 @@ const CaseLibrary = (props) => {
                 return;
             }
             const link = document.createElement('link');
+            let isOver = false;
             link.rel = 'stylesheet';
             link.type = 'text/css';
             link.href = `${resourcesDomain}/access-test.css`;
             link.onerror = () => {
+                if (isOver) return;
                 cb && cb();
                 dispatch(appGlobalActions.updateState({ canAccessWeb: AccessResourceWebState.BLOCKED }));
                 resolve(AccessResourceWebState.BLOCKED);
                 document.head.removeChild(link);
+                isOver = true;
             };
             link.onload = () => {
+                if (isOver) return;
                 dispatch(appGlobalActions.updateState({ canAccessWeb: AccessResourceWebState.PASS }));
                 resolve(AccessResourceWebState.PASS);
                 document.head.removeChild(link);
+                isOver = true;
             };
             document.head.appendChild(link);
 
             // timeout
             setTimeout(() => {
+                if (isOver) return;
                 document.head.removeChild(link);
-                resolve(false);
+                resolve(AccessResourceWebState.BLOCKED);
+                isOver = true;
             }, 2000);
         });
 
