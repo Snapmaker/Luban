@@ -1,4 +1,3 @@
-/* eslint import/no-dynamic-require: 0 */
 import { ConfigProvider } from 'antd';
 import 'antd/dist/antd.css';
 import series from 'async/series';
@@ -9,6 +8,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { initReactI18next } from 'react-i18next';
 import { Provider } from 'react-redux';
+
 import settings from './config/settings';
 import { controller } from './lib/controller';
 import { initialize } from './lib/gaEvent';

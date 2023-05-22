@@ -78,10 +78,10 @@ const MismatchNozzleModal: React.FC = () => {
 
             if (isDualExtruder(toolHead)) {
                 let mismatch = false;
-                if (leftDiameter && leftDiameter !== activeNozzleSize[0]) {
+                if (activeNozzleSize[0] && leftDiameter && leftDiameter !== activeNozzleSize[0]) {
                     mismatch = true;
                 }
-                if (rightDiameter && rightDiameter !== activeNozzleSize[1]) {
+                if (activeNozzleSize[1] && rightDiameter && rightDiameter !== activeNozzleSize[1]) {
                     mismatch = true;
                 }
 
@@ -89,7 +89,7 @@ const MismatchNozzleModal: React.FC = () => {
             } else {
                 let mismatch = false;
                 // For SM 2.0, activeNozzleSize is not available
-                if (leftDiameter && activeNozzleSize[0] && leftDiameter !== activeNozzleSize[0]) {
+                if (activeNozzleSize[0] && leftDiameter && leftDiameter !== activeNozzleSize[0]) {
                     mismatch = true;
                 }
                 setshowNozzleModal(mismatch);

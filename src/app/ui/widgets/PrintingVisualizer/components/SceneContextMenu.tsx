@@ -102,7 +102,7 @@ const SceneContextMenu: React.FC<SceneContextMenuProps> = forwardRef((props, ref
                 type: 'item',
                 label: i18n._('key-Printing/ContextMenu-Duplicate'),
                 disabled: inProgress || !isModelSelected,
-                onClick: () => dispatch(printingActions.duplicateSelectedModel()),
+                onClick: () => dispatch(sceneActions.duplicateSelectedModel()),
             },
         );
 

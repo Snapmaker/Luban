@@ -1,17 +1,17 @@
 /* eslint-disable import/no-cycle */
 import { combineReducers } from 'redux';
-import machine from './machine';
-import printing from './printing';
-import laser from './laser';
+
+import appGlobal from './app-global';
+import appbarMenu from './appbar-menu';
 import cnc from './cnc';
 import editor from './editor';
-import workspace from './workspace';
-import widget from './widget';
-import appGlobal from './app-global';
-// import models from './models';
-import text from './text';
+import laser from './laser';
+import machine from './machine';
+import printing from './printing';
 import project from './project';
-import appbarMenu from './appbar-menu';
+import text from './text';
+import widget from './widget';
+import workspace from './workspace';
 
 export default combineReducers({
     appGlobal,

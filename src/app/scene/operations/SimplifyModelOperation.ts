@@ -1,8 +1,8 @@
 import ThreeModel from '../../models/ThreeModel';
 import Operation from '../../core/Operation';
 /* eslint-disable import/no-cycle */
-import type { DispatchType } from '../index.def';
-import { actions as printingActions } from '../printing';
+import type { DispatchType } from '../../flux/index.def';
+import { actions as printingActions } from '../../flux/printing';
 
 type StateMap = {
     target: ThreeModel, // model finish simplify

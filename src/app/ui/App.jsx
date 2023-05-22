@@ -1,8 +1,9 @@
 import PropTypes from 'prop-types';
-import React, { PureComponent } from 'react';
+import React from 'react';
 import { connect } from 'react-redux';
 import { HashRouter, Route, Switch } from 'react-router-dom';
 
+import { actions as appGlobalActions } from '../flux/app-global';
 import { actions as cncActions } from '../flux/cnc';
 import { actions as editorActions } from '../flux/editor';
 import { actions as laserActions } from '../flux/laser';
@@ -11,13 +12,11 @@ import { actions as printingActions } from '../flux/printing';
 import { actions as settingActions } from '../flux/setting';
 import { actions as textActions } from '../flux/text';
 import { actions as workspaceActions } from '../flux/workspace';
-import { actions as appGlobalActions } from '../flux/app-global';
 import { Server } from '../flux/workspace/Server';
 import { Canvas2dZoom } from '../lib/canvas2d-zoom/index';
 import { logErrorToGA } from '../lib/gaEvent';
-import { ShortcutHandlerPriority, ShortcutManager, PREDEFINED_SHORTCUT_ACTIONS } from '../lib/shortcut';
+import { PREDEFINED_SHORTCUT_ACTIONS, ShortcutHandlerPriority, ShortcutManager } from '../lib/shortcut';
 import UniApi from '../lib/uni-api';
-
 import { ToastContainer } from './components/Toast';
 import AppLayout from './layouts/AppLayout';
 import Cnc from './pages/Cnc';
@@ -29,7 +28,7 @@ import { PrintMainPage } from './pages/print-main';
 
 Canvas2dZoom.register();
 
-class App extends PureComponent {
+class App extends React.PureComponent {
     static propTypes = {
         resetUserConfig: PropTypes.func.isRequired,
         machineInit: PropTypes.func.isRequired,

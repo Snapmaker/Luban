@@ -33,7 +33,7 @@ import {
     RIGHT_EXTRUDER_MAP_NUMBER,
     WHITE_COLOR
 } from '../../constants';
-import { getMachineSeriesWithToolhead, isDualExtruder, MACHINE_SERIES } from '../../constants/machines';
+import { getMachineToolHeadConfigPath, isDualExtruder, MACHINE_SERIES } from '../../constants/machines';
 import { isQualityPresetVisible, PRESET_CATEGORY_CUSTOM } from '../../constants/preset';
 
 import { controller } from '../../lib/controller';
@@ -52,6 +52,17 @@ import PrimeTowerModel from '../../models/PrimeTowerModel';
 import ThreeGroup from '../../models/ThreeGroup';
 import ThreeModel from '../../models/ThreeModel';
 import { MaterialPresetModel, PresetModel, QualityPresetModel } from '../../preset-model';
+import {
+    AddOperation3D,
+    AddSupportOperation3D,
+    ArrangeOperation3D,
+    DeleteOperation3D,
+    DeleteSupportsOperation3D,
+    MoveOperation3D,
+    RotateOperation3D,
+    ScaleOperation3D,
+    ScaleToFitWithRotateOperation3D
+} from '../../scene/operations';
 import scene from '../../scene/Scene';
 import { machineStore } from '../../store/local-storage';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
@@ -61,15 +72,6 @@ import ModelLoader from '../../ui/widgets/PrintingVisualizer/ModelLoader';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import type { RootState } from '../index.def';
 import definitionManager from '../manager/DefinitionManager';
-import AddOperation3D from '../operation-history/AddOperation3D';
-import AddSupportsOperation3D from '../operation-history/AddSupportsOperation3D';
-import ArrangeOperation3D from '../operation-history/ArrangeOperation3D';
-import DeleteOperation3D from '../operation-history/DeleteOperation3D';
-import DeleteSupportsOperation3D from '../operation-history/DeleteSupportsOperation3D';
-import MoveOperation3D from '../operation-history/MoveOperation3D';
-import RotateOperation3D from '../operation-history/RotateOperation3D';
-import ScaleOperation3D from '../operation-history/ScaleOperation3D';
-import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWithRotateOperation3D';
 import baseActions from './actions-base';
 import { checkMeshes, LoadMeshFileOptions, loadMeshFiles, MeshFileInfo } from './actions-mesh';
 import sceneActions from './actions-scene';
@@ -79,7 +81,7 @@ import { actions as appGlobalActions } from '../app-global';
 // eslint-disable-next-line import/no-cycle
 import { actions as operationHistoryActions } from '../operation-history';
 // eslint-disable-next-line import/no-cycle
-import SimplifyModelOperation from '../operation-history/SimplifyModelOperation';
+import SimplifyModelOperation from '../../scene/operations/SimplifyModelOperation';
 
 
 let initEventFlag = false;
@@ -473,7 +475,7 @@ export const actions = {
         const { modelGroup, gcodeLineGroup } = printingState;
         scene.setModelGroup(modelGroup);
 
-        const { toolHead } = getState().machine;
+        const { activeMachine, toolHead } = getState().machine;
 
         modelGroup.setDataChangedCallback(() => {
             dispatch(sceneActions.renderScene());
@@ -482,8 +484,6 @@ export const actions = {
         let { series } = getState().machine;
         series = getRealSeries(series);
 
-        const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
-
         // model group
         dispatch(actions.updateBoundingBox());
 
@@ -491,12 +491,9 @@ export const actions = {
         const { size } = getState().machine;
         gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
 
-
         // init definition manager
-        await definitionManager.init(
-            CONFIG_HEADTYPE,
-            currentMachine.configPathname[CONFIG_HEADTYPE]
-        );
+        const configPath = getMachineToolHeadConfigPath(activeMachine, toolHead.printingToolhead);
+        await definitionManager.init(CONFIG_HEADTYPE, configPath);
 
         // Restore saved preset ids for active machine
         const savedPresetIds = getSavedMachinePresetIds(series);
@@ -3515,35 +3512,6 @@ export const actions = {
         // }
     },
 
-    duplicateSelectedModel: () => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
-        const modelState = modelGroup.duplicateSelectedModel();
-        const operations = new CompoundOperation();
-        for (const model of modelGroup.selectedModelArray) {
-            const operation = new AddOperation3D({
-                target: model,
-                parent: null
-            });
-            operations.push(operation);
-        }
-        operations.registerCallbackAll(() => {
-            dispatch(actions.updateState(modelGroup.getState()));
-            dispatch(actions.destroyGcodeLine());
-            dispatch(actions.displayModel());
-        });
-        dispatch(
-            operationHistoryActions.setOperations(
-                INITIAL_STATE.name,
-                operations
-            )
-        );
-
-        dispatch(actions.updateState(modelState));
-        dispatch(actions.applyProfileToAllModels());
-        dispatch(actions.destroyGcodeLine());
-        dispatch(actions.displayModel());
-    },
-
     cut: () => (dispatch, getState) => {
         const { inProgress } = getState().printing;
         if (inProgress) {
@@ -4571,7 +4539,7 @@ export const actions = {
                 const model = modelGroup.findModelByID(info.modelID);
                 const previousFaceMarks = tmpSupportFaceMarks[info.modelID];
                 if (model) {
-                    const operation = new AddSupportsOperation3D({
+                    const operation = new AddSupportOperation3D({
                         target: model,
                         currentFaceMarks: model.supportFaceMarks.slice(0),
                         currentSupport: null,

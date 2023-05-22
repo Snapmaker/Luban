@@ -1,28 +1,30 @@
-/* eslint-disable import/no-cycle */
 import { cloneDeep } from 'lodash';
-import ModelGroup from '../../models/ModelGroup';
+
+import { timestamp } from '../../../shared/lib/random-utils';
+import {
+    COORDINATE_MODE_BOTTOM_CENTER,
+    COORDINATE_MODE_CENTER,
+    DISPLAYED_TYPE_MODEL,
+    HEAD_CNC,
+    PAGE_EDITOR
+} from '../../constants';
+import { getMachineToolHeadConfigPath } from '../../constants/machines';
+import OperationHistory from '../../core/OperationHistory';
 import i18n from '../../lib/i18n';
+import { STEP_STAGE, getProgressStateManagerInstance } from '../../lib/manager/ProgressManager';
+import ModelGroup from '../../models/ModelGroup';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
+import ToolPathGroup from '../../toolpaths/ToolPathGroup';
 import {
     ACTION_UPDATE_CONFIG,
     ACTION_UPDATE_STATE,
     ACTION_UPDATE_TRANSFORMATION
 } from '../actionType';
-import { timestamp } from '../../../shared/lib/random-utils';
 import { actions as editorActions } from '../editor';
 import { actions as machineActions } from '../machine';
-import {
-    PAGE_EDITOR,
-    HEAD_CNC,
-    DISPLAYED_TYPE_MODEL,
-    COORDINATE_MODE_CENTER,
-    COORDINATE_MODE_BOTTOM_CENTER } from '../../constants';
 import definitionManager from '../manager/DefinitionManager';
-import ToolPathGroup from '../../toolpaths/ToolPathGroup';
-import { STEP_STAGE, getProgressStateManagerInstance } from '../../lib/manager/ProgressManager';
-import OperationHistory from '../../core/OperationHistory';
-import { getMachineSeriesWithToolhead } from '../../constants/machines';
 
+// eslint-disable-next-line import/no-cycle
 const ACTION_CHANGE_TOOL_PARAMS = 'cnc/ACTION_CHANGE_TOOL_PARAMS';
 
 const initModelGroup = new ModelGroup('cnc');
@@ -133,11 +135,17 @@ export const actions = {
     // TODO: init should be  re-called
     init: () => async (dispatch, getState) => {
         dispatch(editorActions._init(HEAD_CNC));
-        const { toolHead, series } = getState().machine;
+
+        const { activeMachine, toolHead, series } = getState().machine;
+
         await dispatch(machineActions.updateMachineToolHead(toolHead, series, HEAD_CNC));
-        // const { currentMachine } = getState().machine;
-        const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
-        await definitionManager.init(HEAD_CNC, currentMachine.configPathname[HEAD_CNC]);
+
+        // init definition manager
+        const configPath = getMachineToolHeadConfigPath(activeMachine, toolHead.cncToolhead);
+        await definitionManager.init(HEAD_CNC, configPath);
+        // const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
+        // await definitionManager.init(HEAD_CNC, currentMachine.configPathname[HEAD_CNC]);
+
         dispatch(editorActions.updateState(HEAD_CNC, {
             toolDefinitions: await definitionManager.getConfigDefinitions(),
             activeToolListDefinition: definitionManager?.activeDefinition,
