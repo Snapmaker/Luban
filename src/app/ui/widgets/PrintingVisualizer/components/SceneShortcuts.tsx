@@ -2,8 +2,13 @@ import React, { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 
 import { actions as printingActions } from '../../../../flux/printing';
+import sceneActions from '../../../../flux/printing/actions-scene';
 import type { ShortcutHandler } from '../../../../lib/shortcut';
-import { ShortcutHandlerPriority, ShortcutManager, PREDEFINED_SHORTCUT_ACTIONS } from '../../../../lib/shortcut';
+import {
+    PREDEFINED_SHORTCUT_ACTIONS,
+    ShortcutHandlerPriority,
+    ShortcutManager
+} from '../../../../lib/shortcut';
 
 /**
  * Add shortcut bindings to the scene.
@@ -28,7 +33,7 @@ const SceneShortcuts: React.FC = () => {
                 [PREDEFINED_SHORTCUT_ACTIONS.COPY]: () => dispatch(printingActions.copy()),
                 [PREDEFINED_SHORTCUT_ACTIONS.CUT]: () => dispatch(printingActions.cut()),
                 [PREDEFINED_SHORTCUT_ACTIONS.PASTE]: () => dispatch(printingActions.paste()),
-                [PREDEFINED_SHORTCUT_ACTIONS.DUPLICATE]: () => dispatch(printingActions.duplicateSelectedModel()),
+                [PREDEFINED_SHORTCUT_ACTIONS.DUPLICATE]: () => dispatch(sceneActions.duplicateSelectedModel()),
 
                 // undo/redo
                 [PREDEFINED_SHORTCUT_ACTIONS.UNDO]: () => dispatch(printingActions.undo()),

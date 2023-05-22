@@ -3518,35 +3518,6 @@ export const actions = {
         // }
     },
 
-    duplicateSelectedModel: () => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
-        const modelState = modelGroup.duplicateSelectedModel();
-        const operations = new CompoundOperation();
-        for (const model of modelGroup.selectedModelArray) {
-            const operation = new AddOperation3D({
-                target: model,
-                parent: null
-            });
-            operations.push(operation);
-        }
-        operations.registerCallbackAll(() => {
-            dispatch(actions.updateState(modelGroup.getState()));
-            dispatch(actions.destroyGcodeLine());
-            dispatch(actions.displayModel());
-        });
-        dispatch(
-            operationHistoryActions.setOperations(
-                INITIAL_STATE.name,
-                operations
-            )
-        );
-
-        dispatch(actions.updateState(modelState));
-        dispatch(actions.applyProfileToAllModels());
-        dispatch(actions.destroyGcodeLine());
-        dispatch(actions.displayModel());
-    },
-
     cut: () => (dispatch, getState) => {
         const { inProgress } = getState().printing;
         if (inProgress) {
