@@ -73,7 +73,16 @@ class Thumbnail extends PureComponent {
             this.scene.remove(this.object);
         }
         this.object = new Group();
-        this.object.add(...this.props.modelGroup.getModels().map(d => d.clone().meshObject));
+
+        const models = this.props.modelGroup.getModels();
+
+        for (const model of models) {
+            if (!model.visible) {
+                continue;
+            }
+
+            this.object.add(model.clone().meshObject);
+        }
 
 
         // calculate center point

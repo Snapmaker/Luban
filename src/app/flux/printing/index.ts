@@ -33,14 +33,14 @@ import {
     RIGHT_EXTRUDER_MAP_NUMBER,
     WHITE_COLOR
 } from '../../constants';
-import { getMachineSeriesWithToolhead, isDualExtruder, MACHINE_SERIES } from '../../constants/machines';
+import { getMachineToolHeadConfigPath, isDualExtruder, MACHINE_SERIES } from '../../constants/machines';
 import { isQualityPresetVisible, PRESET_CATEGORY_CUSTOM } from '../../constants/preset';
 
 import { controller } from '../../lib/controller';
 import { logPritingSlice, logProfileChange, logToolBarOperation, logTransformOperation } from '../../lib/gaEvent';
 import i18n from '../../lib/i18n';
 import log from '../../lib/log';
-import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
+import ProgressStatesManager, { getProgressStateManagerInstance, PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 import workerManager from '../../lib/manager/workerManager';
 
 import CompoundOperation from '../../core/CompoundOperation';
@@ -52,6 +52,17 @@ import PrimeTowerModel from '../../models/PrimeTowerModel';
 import ThreeGroup from '../../models/ThreeGroup';
 import ThreeModel from '../../models/ThreeModel';
 import { MaterialPresetModel, PresetModel, QualityPresetModel } from '../../preset-model';
+import {
+    AddOperation3D,
+    AddSupportOperation3D,
+    ArrangeOperation3D,
+    DeleteOperation3D,
+    DeleteSupportsOperation3D,
+    MoveOperation3D,
+    RotateOperation3D,
+    ScaleOperation3D,
+    ScaleToFitWithRotateOperation3D
+} from '../../scene/operations';
 import scene from '../../scene/Scene';
 import { machineStore } from '../../store/local-storage';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
@@ -61,25 +72,16 @@ import ModelLoader from '../../ui/widgets/PrintingVisualizer/ModelLoader';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import type { RootState } from '../index.def';
 import definitionManager from '../manager/DefinitionManager';
-import AddOperation3D from '../operation-history/AddOperation3D';
-import AddSupportsOperation3D from '../operation-history/AddSupportsOperation3D';
-import ArrangeOperation3D from '../operation-history/ArrangeOperation3D';
-import DeleteOperation3D from '../operation-history/DeleteOperation3D';
-import DeleteSupportsOperation3D from '../operation-history/DeleteSupportsOperation3D';
-import MoveOperation3D from '../operation-history/MoveOperation3D';
-import RotateOperation3D from '../operation-history/RotateOperation3D';
-import ScaleOperation3D from '../operation-history/ScaleOperation3D';
-import ScaleToFitWithRotateOperation3D from '../operation-history/ScaleToFitWithRotateOperation3D';
+import baseActions from './actions-base';
 import { checkMeshes, LoadMeshFileOptions, loadMeshFiles, MeshFileInfo } from './actions-mesh';
 import sceneActions from './actions-scene';
-// import baseActions from './actions-base';
 
 // eslint-disable-next-line import/no-cycle
 import { actions as appGlobalActions } from '../app-global';
 // eslint-disable-next-line import/no-cycle
 import { actions as operationHistoryActions } from '../operation-history';
 // eslint-disable-next-line import/no-cycle
-import SimplifyModelOperation from '../operation-history/SimplifyModelOperation';
+import SimplifyModelOperation from '../../scene/operations/SimplifyModelOperation';
 
 
 let initEventFlag = false;
@@ -277,7 +279,7 @@ const INITIAL_STATE = {
     // check not to duplicated create event
 
     // progress states manager
-    progressStatesManager: new ProgressStatesManager(),
+    progressStatesManager: getProgressStateManagerInstance(),
 
     rotationAnalysisTable: [],
     rotationAnalysisSelectedRowId: -1,
@@ -473,7 +475,7 @@ export const actions = {
         const { modelGroup, gcodeLineGroup } = printingState;
         scene.setModelGroup(modelGroup);
 
-        const { toolHead } = getState().machine;
+        const { activeMachine, toolHead } = getState().machine;
 
         modelGroup.setDataChangedCallback(() => {
             dispatch(sceneActions.renderScene());
@@ -482,8 +484,6 @@ export const actions = {
         let { series } = getState().machine;
         series = getRealSeries(series);
 
-        const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
-
         // model group
         dispatch(actions.updateBoundingBox());
 
@@ -491,12 +491,9 @@ export const actions = {
         const { size } = getState().machine;
         gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
 
-
         // init definition manager
-        await definitionManager.init(
-            CONFIG_HEADTYPE,
-            currentMachine.configPathname[CONFIG_HEADTYPE]
-        );
+        const configPath = getMachineToolHeadConfigPath(activeMachine, toolHead.printingToolhead);
+        await definitionManager.init(CONFIG_HEADTYPE, configPath);
 
         // Restore saved preset ids for active machine
         const savedPresetIds = getSavedMachinePresetIds(series);
@@ -834,7 +831,7 @@ export const actions = {
         if (!initEventFlag) {
             initEventFlag = true;
             controller.on('slice:started', () => {
-                const { progressStatesManager } = getState().printing;
+                const progressStatesManager = getState().printing.progressStatesManager as ProgressStatesManager;
                 progressStatesManager.startProgress(
                     PROCESS_STAGE.PRINTING_SLICE_AND_PREVIEW
                 );
@@ -858,7 +855,7 @@ export const actions = {
                     renderGcodeFileName,
                     gcodeHeader,
                 } = args;
-                const { progressStatesManager } = getState().printing;
+                const progressStatesManager = getState().printing.progressStatesManager as ProgressStatesManager;
 
                 // FIXME: why gcodeFile hard-coded?
                 dispatch(
@@ -892,7 +889,6 @@ export const actions = {
                         )
                     })
                 );
-                progressStatesManager.startNextStep();
 
                 modelGroup.unselectAllModels();
                 dispatch(actions.loadGcode(gcodeFilename));
@@ -900,11 +896,9 @@ export const actions = {
             });
             controller.on('slice:progress', progress => {
                 const state = getState().printing;
-                const { progressStatesManager } = state;
-                if (
-                    progress - state.progress > 0.01
-                    || progress > 1 - EPSILON
-                ) {
+                const progressStatesManager = getState().printing.progressStatesManager as ProgressStatesManager;
+
+                if (progress - state.progress > 0.01 || progress > 1 - EPSILON) {
                     dispatch(
                         actions.updateState({
                             progress: progressStatesManager.updateProgress(
@@ -1266,7 +1260,7 @@ export const actions = {
                     dispatch(actions.displayGcode());
                 }
 
-                const { progressStatesManager } = getState().printing;
+                const progressStatesManager = getState().printing.progressStatesManager as ProgressStatesManager;
                 dispatch(actions.updateState({
                     progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_PREVIEWING, 1)
                 }));
@@ -1277,12 +1271,12 @@ export const actions = {
                         outOfMemoryForRenderGcode
                     })
                 );
-                dispatch(actions.logGenerateGcode(layerCount));
+                dispatch(actions.logGenerateGcode());
                 break;
             }
             case 'progress': {
                 const state = getState().printing;
-                const { progressStatesManager } = state;
+                const progressStatesManager = getState().printing.progressStatesManager as ProgressStatesManager;
                 if (Math.abs(value - state.progress) > 0.01 || value > 1 - EPSILON) {
                     dispatch(
                         actions.updateState({
@@ -3518,35 +3512,6 @@ export const actions = {
         // }
     },
 
-    duplicateSelectedModel: () => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
-        const modelState = modelGroup.duplicateSelectedModel();
-        const operations = new CompoundOperation();
-        for (const model of modelGroup.selectedModelArray) {
-            const operation = new AddOperation3D({
-                target: model,
-                parent: null
-            });
-            operations.push(operation);
-        }
-        operations.registerCallbackAll(() => {
-            dispatch(actions.updateState(modelGroup.getState()));
-            dispatch(actions.destroyGcodeLine());
-            dispatch(actions.displayModel());
-        });
-        dispatch(
-            operationHistoryActions.setOperations(
-                INITIAL_STATE.name,
-                operations
-            )
-        );
-
-        dispatch(actions.updateState(modelState));
-        dispatch(actions.applyProfileToAllModels());
-        dispatch(actions.destroyGcodeLine());
-        dispatch(actions.displayModel());
-    },
-
     cut: () => (dispatch, getState) => {
         const { inProgress } = getState().printing;
         if (inProgress) {
@@ -4016,15 +3981,19 @@ export const actions = {
         dispatch(actions.render());
     },
 
-    loadGcode: gcodeFilename => (dispatch, getState) => {
+    loadGcode: (gcodeFilename) => (dispatch, getState) => {
         const { progressStatesManager, extruderLDefinition, extruderRDefinition } = getState().printing;
+
+        // slice finished, start preview
         progressStatesManager.startNextStep();
         dispatch(
             actions.updateState({
                 stage: STEP_STAGE.PRINTING_PREVIEWING,
-                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_SLICING, 0)
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_PREVIEWING, 0)
             })
         );
+
+        // Load G-code and render
         const extruderColors = {
             toolColor0:
                 extruderLDefinition?.settings?.color?.default_value
@@ -4033,7 +4002,8 @@ export const actions = {
                 extruderRDefinition?.settings?.color?.default_value
                 || BLACK_COLOR
         };
-        workerManager.gcodeToBufferGeometry({ func: '3DP', gcodeFilename, extruderColors }, data => {
+
+        workerManager.gcodeToBufferGeometry({ func: '3DP', gcodeFilename, extruderColors }, (data) => {
             dispatch(actions.gcodeRenderingCallback(data, extruderColors));
         });
     },
@@ -4121,7 +4091,8 @@ export const actions = {
     ) => async (dispatch, getState) => {
         workerManager.stopClipper();
 
-        const { progressStatesManager, modelGroup } = getState().printing;
+        const progressStatesManager = getState().printing.progressStatesManager as ProgressStatesManager;
+        const { modelGroup } = getState().printing;
         const { promptDamageModel } = getState().machine;
 
         const models = [...modelGroup.models];
@@ -4144,12 +4115,11 @@ export const actions = {
             primeTowerTag,
             extruderConfig,
 
-            onProgress: (stage, progress) => {
-                // Update progress
+            onProgress: (progress) => {
                 dispatch(
-                    actions.updateState({
-                        stage,
-                        progress: progressStatesManager.updateProgress(stage, progress),
+                    baseActions.updateState({
+                        stage: STEP_STAGE.PRINTING_LOADING_MODEL,
+                        progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, progress),
                     })
                 );
             },
@@ -4236,11 +4206,11 @@ export const actions = {
                 }
             }
         });
-        console.log('apply');
         dispatch(actions.applyProfileToAllModels());
         modelGroup.models = modelGroup.models.concat();
 
         if (meshFileInfos.length === 1 && newModels.length === 0) {
+            /*
             if (!(meshFileInfos[0]?.children?.length)) {
                 progressStatesManager.finishProgress(false);
                 dispatch(
@@ -4252,6 +4222,7 @@ export const actions = {
                     })
                 );
             }
+            */
         } else {
             dispatch(
                 actions.updateState({
@@ -4568,7 +4539,7 @@ export const actions = {
                 const model = modelGroup.findModelByID(info.modelID);
                 const previousFaceMarks = tmpSupportFaceMarks[info.modelID];
                 if (model) {
-                    const operation = new AddSupportsOperation3D({
+                    const operation = new AddSupportOperation3D({
                         target: model,
                         currentFaceMarks: model.supportFaceMarks.slice(0),
                         currentSupport: null,
@@ -4902,25 +4873,17 @@ export const actions = {
                                     })
                                 );
                             }
-                            resolve();
+                            resolve(true);
                             break;
                         }
                         case 'LOAD_MODEL_CONVEX': {
                             const { positions } = data;
 
                             const convexGeometry = new THREE.BufferGeometry();
-                            const positionAttribute = new THREE.BufferAttribute(
-                                positions,
-                                3
-                            );
-                            convexGeometry.setAttribute(
-                                'position',
-                                positionAttribute
-                            );
-                            modelGroup.setConvexGeometry(
-                                model.uploadName,
-                                convexGeometry
-                            );
+                            const positionAttribute = new THREE.BufferAttribute(positions, 3);
+                            convexGeometry.setAttribute('position', positionAttribute);
+
+                            modelGroup.setConvexGeometry(model.uploadName, convexGeometry);
 
                             break;
                         }

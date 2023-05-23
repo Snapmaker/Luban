@@ -224,7 +224,7 @@ const NetworkConnection: React.FC = () => {
                 actualText = i18n._('key-Workspace/Connection-Connection timed out. Please check your network settings.');
                 break;
             case 403:
-                actualText = i18n._('key-Workspace/Connection-Connection failed. The machine has been connected to other device.');
+                actualText = i18n._('key-Workspace/Connection-Reason: The machine may be using an older version of firmware or may have other devices connected.');
                 break;
             case 404:
             case 'ECONNRESET':
@@ -239,7 +239,7 @@ const NetworkConnection: React.FC = () => {
         }
         setConnectionMessage({
             text: actualText,
-            title: i18n._('key-Workspace/Connection-Error'),
+            title: i18n._('key-Workspace/Connection-Connection Failed'),
             img: 'WarningTipsError',
             iconColor: ICON_COLOR_RED,
             onCancel: null,
@@ -284,7 +284,6 @@ const NetworkConnection: React.FC = () => {
 
     const closeServer = useCallback(() => {
         if (server) {
-            console.log('server =', server, typeof server);
             server.closeServer();
         }
     }, [server]);

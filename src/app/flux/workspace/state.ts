@@ -1,5 +1,5 @@
-import * as THREE from 'three';
 import type { Machine, MachineToolHeadOptions, ToolHead } from '@snapmaker/luban-platform';
+import * as THREE from 'three';
 
 import {
     CONNECTION_STATUS_IDLE,
@@ -7,10 +7,9 @@ import {
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATUS_UNKNOWN
 } from '../../constants';
-
+import { CircularArray } from '../../lib/collections';
 import { controller } from '../../lib/controller';
-import FixedArray from '../machine/FixedArray';
-import History from '../machine/History';
+import History from '../../core/History';
 
 import { Server } from './Server';
 
@@ -263,7 +262,7 @@ export const initialState: WorkspaceState = {
     },
 
     // Console
-    terminalHistory: new FixedArray(1000),
-    consoleHistory: new History(1000),
+    terminalHistory: new CircularArray<string>(1000),
+    consoleHistory: new History<string>(1000),
     consoleLogs: [],
 };

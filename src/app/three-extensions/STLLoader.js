@@ -206,7 +206,7 @@ class STLLoader extends Loader {
 
         function parseASCII(data) {
             const geometry = new BufferGeometry();
-            const patternSolid = /solid([\s\S]*?)endsolid/g;
+            const patternSolid = /solid([\s\S]*?)end\s?solid/g;
             const patternFace = /facet([\s\S]*?)endfacet/g;
             let faceCounter = 0;
 

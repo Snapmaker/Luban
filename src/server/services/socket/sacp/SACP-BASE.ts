@@ -10,55 +10,56 @@ import {
     ExtruderInfo,
     GcodeCurrentLine,
     GetHotBed,
+    ModuleInfo,
     LaserTubeState
 } from 'snapmaker-sacp-sdk/models';
 // import GetWorkSpeed from 'snapmaker-sacp-sdk/models/GetWorkSpeed';
 import { ResponseCallback } from 'snapmaker-sacp-sdk';
 import { Direction } from 'snapmaker-sacp-sdk/models/CoordinateInfo';
-import Business, { CoordinateType } from './Business';
-import SocketServer from '../../../lib/SocketManager';
-import logger from '../../../lib/logger';
 import {
     A400_HEADT_BED_FOR_SM2,
-    AIR_PURIFIER_MODULES,
-    CNC_MODULE,
     COORDINATE_AXIS,
-    EMERGENCY_STOP_BUTTON,
-    ENCLOSURE_MODULES,
     HEAD_CNC,
     HEAD_LASER,
     HEAD_PRINTING,
     HEADT_BED_FOR_SM2,
-    LASER_MODULE,
     LOAD_FIMAMENT,
-    PRINTING_MODULE,
-    ROTARY_MODULES,
     UNLOAD_FILAMENT,
     WORKFLOW_STATE_RUNNING,
     WORKFLOW_STATUS_MAP
 } from '../../../../app/constants';
 import {
     AIR_PURIFIER,
-    MODULEID_MAP,
-    ENCLOSURE_FOR_ARTISAN,
-    MODULEID_TOOLHEAD_MAP,
+    AIR_PURIFIER_MODULES,
+    CNC_HEAD_MODULE_IDS,
     DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
-    STANDARD_CNC_TOOLHEAD_FOR_SM2,
+    EMERGENCY_STOP_BUTTON,
+    ENCLOSURE_FOR_ARTISAN,
+    ENCLOSURE_FOR_SM2,
+    ENCLOSURE_MODULES,
+    isDualExtruder,
+    LASER_HEAD_MODULE_IDS,
     LEVEL_ONE_POWER_LASER_FOR_SM2,
     LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
-    ENCLOSURE_FOR_SM2,
-    isDualExtruder
+    MODULEID_MAP,
+    MODULEID_TOOLHEAD_MAP,
+    PRINTING_HEAD_MODULE_IDS,
+    ROTARY_MODULES,
+    STANDARD_CNC_TOOLHEAD_FOR_SM2
 } from '../../../../app/constants/machines';
+import logger from '../../../lib/logger';
+import SocketServer from '../../../lib/SocketManager';
+import Business, { CoordinateType } from './Business';
 
 
-import { EventOptions, MarlinStateData } from '../types';
 import {
     COMPLUTE_STATUS,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATE_PAUSED
 } from '../../../constants';
+import { EventOptions, MarlinStateData } from '../types';
 
 const log = logger('lib:SocketBASE');
 
@@ -182,14 +183,19 @@ class SocketBASE {
                 }
             });
         };
+
+        // Subscribe heart beat
         this.sacpClient.subscribeHeartbeat({ interval: 1000 }, this.subscribeHeartCallback).then((res) => {
             log.info(`subscribe heartbeat success: ${res.code}`);
         });
+
+        // Get module infos
         await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
             // log.info(`revice moduleInfo: ${data.response}`);
             stateData.airPurifier = false;
 
             const toolHeadModules = [];
+            this.moduleInfos = {};
 
             moduleInfos.forEach(module => {
                 if (includes(EMERGENCY_STOP_BUTTON, module.moduleId)) {
@@ -201,19 +207,20 @@ class SocketBASE {
                 if (includes(ROTARY_MODULES, module.moduleId)) {
                     moduleStatusList.rotaryModule = true;
                 }
+
                 if (includes(AIR_PURIFIER_MODULES, module.moduleId)) {
                     stateData.airPurifier = true;
                     // need to update airPurifier status
                 }
-                if (includes(PRINTING_MODULE, module.moduleId)) {
+                if (includes(PRINTING_HEAD_MODULE_IDS, module.moduleId)) {
                     stateData.headType = HEAD_PRINTING;
                     this.headType = HEAD_PRINTING;
                     toolHeadModules.push(module);
-                } else if (includes(LASER_MODULE, module.moduleId)) {
+                } else if (includes(LASER_HEAD_MODULE_IDS, module.moduleId)) {
                     stateData.headType = HEAD_LASER;
                     this.headType = HEAD_LASER;
                     toolHeadModules.push(module);
-                } else if (includes(CNC_MODULE, module.moduleId)) {
+                } else if (includes(CNC_HEAD_MODULE_IDS, module.moduleId)) {
                     stateData.headType = HEAD_CNC;
                     this.headType = HEAD_CNC;
                     toolHeadModules.push(module);
@@ -225,7 +232,17 @@ class SocketBASE {
                         this.moduleInfos = {};
                     }
                     // TODO: Consider more than one tool head modules
-                    this.moduleInfos[MODULEID_MAP[module.moduleId]] = module;
+                    if (!this.moduleInfos[MODULEID_MAP[module.moduleId]]) {
+                        this.moduleInfos[MODULEID_MAP[module.moduleId]] = module;
+                    } else {
+                        const modules = this.moduleInfos[MODULEID_MAP[module.moduleId]];
+                        if (Array.isArray(modules)) {
+                            modules.push(module);
+                        } else {
+                            // convert single item to list
+                            this.moduleInfos[MODULEID_MAP[module.moduleId]] = [modules, module];
+                        }
+                    }
                 }
             });
 
@@ -575,15 +592,43 @@ class SocketBASE {
         });
     };
 
-    public async switchExtruder(extruderIndex) {
-        const toolhead = this.moduleInfos && this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2];
-        if (!toolhead) {
-            log.error(`no match toolhead 3dp, moduleInfos:${this.moduleInfos}`,);
+    private getToolHeadModule(extruderIndex: number | string): { module: ModuleInfo, extruderIndex: number } {
+        extruderIndex = Number(extruderIndex);
+
+        const modules = this.moduleInfos && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2] || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);
+        if (!modules) {
+            return null;
+        }
+
+        let targetModule: ModuleInfo = null;
+        if (Array.isArray(modules)) {
+            extruderIndex = Number(extruderIndex);
+            for (const module of modules) {
+                if (module.moduleIndex === extruderIndex) {
+                    targetModule = module;
+                    extruderIndex = 0;
+                    break;
+                }
+            }
+        } else {
+            targetModule = modules;
+        }
+
+        return {
+            module: targetModule,
+            extruderIndex,
+        };
+    }
+
+    public async switchExtruder(extruderIndex: number | string) {
+        const { module, extruderIndex: newExtruderIndex } = this.getToolHeadModule(extruderIndex);
+        if (!module) {
+            log.error(`No matched print module for extruder ${extruderIndex}`);
             return;
         }
 
-        const key = toolhead && toolhead.key;
-        const response = await this.sacpClient.SwitchExtruder(key, extruderIndex);
+        // const key = toolhead && toolhead.key;
+        const response = await this.sacpClient.SwitchExtruder(module.key, newExtruderIndex);
         log.info(`SwitchExtruder to extruderIndex:${extruderIndex}, ${JSON.stringify(response)}`);
     }
 
@@ -593,9 +638,15 @@ class SocketBASE {
             log.error(`no match toolhead 3dp:[${toolhead}], moduleInfos:${this.moduleInfos}`,);
             return;
         }
-        const key = toolhead && toolhead.key;
-        this.sacpClient.SetExtruderTemperature(key, extruderIndex, temperature).then(({ response }) => {
-            log.info(`SetExtruderTemperature,key:[${key}], extruderIndex:[${extruderIndex}], temperature:[${temperature}] ${JSON.stringify(response)}`);
+
+        const { module, extruderIndex: newExtruderIndex } = this.getToolHeadModule(extruderIndex);
+        if (!module) {
+            log.error(`No matched print module for extruder ${extruderIndex}`);
+            return;
+        }
+
+        this.sacpClient.SetExtruderTemperature(module.key, newExtruderIndex, temperature).then(({ response }) => {
+            log.info(`SetExtruderTemperature,key:[${module.key}], extruderIndex:[${newExtruderIndex}], temperature:[${temperature}] ${JSON.stringify(response)}`);
         });
     };
 

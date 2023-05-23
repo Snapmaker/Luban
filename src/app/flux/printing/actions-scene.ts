@@ -5,9 +5,9 @@ import { v4 as uuid } from 'uuid';
 import {
     HEAD_PRINTING,
     LEFT_EXTRUDER,
+    LOAD_MODEL_FROM_INNER,
     MACHINE_EXTRUDER_X,
     MACHINE_EXTRUDER_Y,
-    LOAD_MODEL_FROM_INNER,
     RIGHT_EXTRUDER
 } from '../../constants';
 import CompoundOperation from '../../core/CompoundOperation';
@@ -20,17 +20,18 @@ import ThreeGroup from '../../models/ThreeGroup';
 import ThreeModel, { BYTE_COUNT_LEFT_EXTRUDER, BYTE_COUNT_RIGHT_EXTRUDER } from '../../models/ThreeModel';
 import { MaterialPresetModel, PresetModel } from '../../preset-model';
 import {
+    AddOperation3D,
     AlignGroupOperation,
     GroupOperation,
+    ReplaceSplittedOperation,
     VisibilityOperation,
 } from '../../scene/operations';
-import { LoadMeshFileOptions, loadMeshFiles, MeshFileInfo } from './actions-mesh';
-import ReplaceSplittedOperation from '../../scene/operations/ReplaceSplittedOperation';
+import UngroupOperation3D from '../../scene/operations/UngroupOperation3D';
 import sceneLogic, { PrimeTowerSettings } from '../../scene/scene.logic';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 import { actions as operationHistoryActions } from '../operation-history';
-import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 import baseActions from './actions-base';
+import { LoadMeshFileOptions, MeshFileInfo, loadMeshFiles } from './actions-mesh';
 
 
 const renderScene = () => (dispatch) => {
@@ -79,6 +80,139 @@ const checkModelOverstep = () => {
         dispatch(baseActions.updateState({ isAnyModelOverstepped }));
     };
 };
+
+const getModelShellStackId = (model: ThreeModel): string => {
+    const useLeftExtruder = model.extruderConfig.shell === '0';
+    return useLeftExtruder ? LEFT_EXTRUDER : RIGHT_EXTRUDER;
+};
+
+/**
+ * Return material preset model for model.
+ *
+ * We only take the material used to print shell.
+ */
+const getModelShellMaterialPresetModel = (model) => {
+    return (dispatch, getState) => {
+        const {
+            materialDefinitions,
+            defaultMaterialId,
+            defaultMaterialIdRight
+        } = getState().printing;
+
+        const materialID = model.extruderConfig.shell === '0' ? defaultMaterialId : defaultMaterialIdRight;
+        const index = materialDefinitions.findIndex((d) => d.definitionId === materialID);
+        return materialDefinitions[index] ? materialDefinitions[index] : materialDefinitions[0];
+    };
+};
+
+const applyPrintSettingsToModels = () => (dispatch, getState) => {
+    const {
+        extruderLDefinition,
+        extruderRDefinition,
+
+        materialDefinitions,
+        defaultMaterialId,
+        defaultMaterialIdRight,
+
+        qualityDefinitions,
+        activePresetIds,
+        modelGroup,
+    } = getState().printing;
+
+    const leftPresetModel = find(qualityDefinitions, {
+        definitionId: activePresetIds[LEFT_EXTRUDER],
+    });
+    const rightPresetModel = find(qualityDefinitions, {
+        definitionId: activePresetIds[RIGHT_EXTRUDER],
+    });
+
+    const helperExtruderConfig = modelGroup.getHelpersExtruderConfig();
+
+    // update global settings
+    const adhesionPresetModel = helperExtruderConfig.adhesion === '0' ? leftPresetModel : rightPresetModel;
+    if (adhesionPresetModel) {
+        const qualitySetting = adhesionPresetModel.settings;
+        modelGroup.updatePlateAdhesion({
+            adhesionType: qualitySetting.adhesion_type.default_value,
+            skirtLineCount: qualitySetting?.skirt_line_count?.default_value,
+            brimLineCount: qualitySetting?.brim_line_count?.default_value,
+            brimWidth: qualitySetting?.brim_width?.default_value,
+            skirtBrimLineWidth: qualitySetting?.skirt_brim_line_width?.default_value,
+            raftMargin: qualitySetting?.raft_margin?.default_value,
+            skirtGap: qualitySetting?.skirt_gap?.default_value,
+            brimGap: qualitySetting?.brim_gap?.default_value
+        });
+    }
+
+    // update parameters for each model
+    if (leftPresetModel || rightPresetModel) {
+        const globalSettings = leftPresetModel.settings;
+
+        const leftMaterialPresetModel = materialDefinitions.find((d) => d.definitionId === defaultMaterialId);
+        const rightMaterialPresetModel = materialDefinitions.find((d) => d.definitionId === defaultMaterialIdRight);
+
+        modelGroup.getThreeModels().forEach((model) => {
+            let lineWidth: number = extruderLDefinition.settings.machine_nozzle_size.default_value;
+
+            // Set extruder color
+            const colors = [];
+            if (leftMaterialPresetModel) {
+                colors.push(leftMaterialPresetModel.settings.color.default_value);
+            }
+            if (rightMaterialPresetModel) {
+                colors.push(rightMaterialPresetModel.settings.color.default_value);
+            }
+
+            model.setExtruderColors(colors);
+
+            // Set shell color
+            const shellStackId = getModelShellStackId(model);
+
+            lineWidth = shellStackId === LEFT_EXTRUDER
+                ? extruderLDefinition.settings.machine_nozzle_size.default_value
+                : extruderRDefinition.settings.machine_nozzle_size.default_value;
+
+            const materialPresetModel = dispatch(getModelShellMaterialPresetModel(model));
+            const materialSettings = materialPresetModel.settings;
+
+            // update material color
+            model.updateMaterialColor(materialSettings.color.default_value);
+
+
+            const layerHeight = globalSettings.layer_height.default_value;
+            const bottomThickness = globalSettings.bottom_thickness.default_value;
+            const bottomLayers = Math.ceil(Math.round(bottomThickness / layerHeight));
+            const topThickness = globalSettings.top_thickness.default_value;
+            const topLayers = Math.ceil(Math.round(topThickness / layerHeight));
+
+            model.updateClipperConfig({
+                lineWidth,
+                wallThickness: globalSettings.wall_thickness.default_value,
+                topLayers,
+                bottomLayers,
+                layerHeight,
+                infillSparseDensity: globalSettings.infill_sparse_density.default_value,
+                infillPattern: globalSettings.infill_pattern.default_value,
+                magicSpiralize: globalSettings.magic_spiralize.default_value,
+            });
+        });
+    }
+
+    if (leftPresetModel) {
+        sceneLogic.onPresetParameterChanged(LEFT_EXTRUDER, leftPresetModel);
+    }
+    if (rightPresetModel) {
+        sceneLogic.onPresetParameterChanged(RIGHT_EXTRUDER, rightPresetModel);
+    }
+
+    // TODO: ?
+    // const models = modelGroup.getModels();
+    // modelGroup.models = models.concat();
+
+    dispatch(checkModelOverstep());
+    dispatch(renderScene());
+};
+
 
 /**
  * Set both transformMode and modelGroup's transform mode.
@@ -274,6 +408,38 @@ const showModels = (target: ThreeModel | ThreeGroup | null = null) => {
  */
 const hideModels = (target: ThreeModel | ThreeGroup | null = null) => {
     return setModelVisibility(target, false);
+};
+
+const duplicateSelectedModel = () => {
+    return (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+
+        modelGroup.duplicateSelectedModel();
+
+        dispatch(baseActions.updateState(modelGroup.getState()));
+        dispatch(renderScene());
+        dispatch(applyPrintSettingsToModels());
+
+        const compoundOperation = new CompoundOperation();
+        for (const model of modelGroup.selectedModelArray) {
+            const operation = new AddOperation3D({
+                target: model,
+                parent: null,
+            });
+            compoundOperation.push(operation);
+        }
+        compoundOperation.registerCallbackAll(() => {
+            dispatch(baseActions.updateState(modelGroup.getState()));
+            dispatch(renderScene());
+            dispatch(applyPrintSettingsToModels());
+        });
+        dispatch(
+            operationHistoryActions.setOperations(
+                HEAD_PRINTING,
+                compoundOperation
+            )
+        );
+    };
 };
 
 const groupSelectedModels = () => {
@@ -532,138 +698,6 @@ const splitSelectedModel = () => {
     };
 };
 
-const getModelShellStackId = (model: ThreeModel): string => {
-    const useLeftExtruder = model.extruderConfig.shell === '0';
-    return useLeftExtruder ? LEFT_EXTRUDER : RIGHT_EXTRUDER;
-};
-
-/**
- * Return material preset model for model.
- *
- * We only take the material used to print shell.
- */
-const getModelShellMaterialPresetModel = (model) => {
-    return (dispatch, getState) => {
-        const {
-            materialDefinitions,
-            defaultMaterialId,
-            defaultMaterialIdRight
-        } = getState().printing;
-
-        const materialID = model.extruderConfig.shell === '0' ? defaultMaterialId : defaultMaterialIdRight;
-        const index = materialDefinitions.findIndex((d) => d.definitionId === materialID);
-        return materialDefinitions[index] ? materialDefinitions[index] : materialDefinitions[0];
-    };
-};
-
-const applyPrintSettingsToModels = () => (dispatch, getState) => {
-    const {
-        extruderLDefinition,
-        extruderRDefinition,
-
-        materialDefinitions,
-        defaultMaterialId,
-        defaultMaterialIdRight,
-
-        qualityDefinitions,
-        activePresetIds,
-        modelGroup,
-    } = getState().printing;
-
-    const leftPresetModel = find(qualityDefinitions, {
-        definitionId: activePresetIds[LEFT_EXTRUDER],
-    });
-    const rightPresetModel = find(qualityDefinitions, {
-        definitionId: activePresetIds[RIGHT_EXTRUDER],
-    });
-
-    const helperExtruderConfig = modelGroup.getHelpersExtruderConfig();
-
-    // update global settings
-    const adhesionPresetModel = helperExtruderConfig.adhesion === '0' ? leftPresetModel : rightPresetModel;
-    if (adhesionPresetModel) {
-        const qualitySetting = adhesionPresetModel.settings;
-        modelGroup.updatePlateAdhesion({
-            adhesionType: qualitySetting.adhesion_type.default_value,
-            skirtLineCount: qualitySetting?.skirt_line_count?.default_value,
-            brimLineCount: qualitySetting?.brim_line_count?.default_value,
-            brimWidth: qualitySetting?.brim_width?.default_value,
-            skirtBrimLineWidth: qualitySetting?.skirt_brim_line_width?.default_value,
-            raftMargin: qualitySetting?.raft_margin?.default_value,
-            skirtGap: qualitySetting?.skirt_gap?.default_value,
-            brimGap: qualitySetting?.brim_gap?.default_value
-        });
-    }
-
-    // update parameters for each model
-    if (leftPresetModel || rightPresetModel) {
-        const globalSettings = leftPresetModel.settings;
-
-        const leftMaterialPresetModel = materialDefinitions.find((d) => d.definitionId === defaultMaterialId);
-        const rightMaterialPresetModel = materialDefinitions.find((d) => d.definitionId === defaultMaterialIdRight);
-
-        modelGroup.getThreeModels().forEach((model) => {
-            let lineWidth: number = extruderLDefinition.settings.machine_nozzle_size.default_value;
-
-            // Set extruder color
-            const colors = [];
-            if (leftMaterialPresetModel) {
-                colors.push(leftMaterialPresetModel.settings.color.default_value);
-            }
-            if (rightMaterialPresetModel) {
-                colors.push(rightMaterialPresetModel.settings.color.default_value);
-            }
-
-            model.setExtruderColors(colors);
-
-            // Set shell color
-            const shellStackId = getModelShellStackId(model);
-
-            lineWidth = shellStackId === LEFT_EXTRUDER
-                ? extruderLDefinition.settings.machine_nozzle_size.default_value
-                : extruderRDefinition.settings.machine_nozzle_size.default_value;
-
-            const materialPresetModel = dispatch(getModelShellMaterialPresetModel(model));
-            const materialSettings = materialPresetModel.settings;
-
-            // update material color
-            model.updateMaterialColor(materialSettings.color.default_value);
-
-
-            const layerHeight = globalSettings.layer_height.default_value;
-            const bottomThickness = globalSettings.bottom_thickness.default_value;
-            const bottomLayers = Math.ceil(Math.round(bottomThickness / layerHeight));
-            const topThickness = globalSettings.top_thickness.default_value;
-            const topLayers = Math.ceil(Math.round(topThickness / layerHeight));
-
-            model.updateClipperConfig({
-                lineWidth,
-                wallThickness: globalSettings.wall_thickness.default_value,
-                topLayers,
-                bottomLayers,
-                layerHeight,
-                infillSparseDensity: globalSettings.infill_sparse_density.default_value,
-                infillPattern: globalSettings.infill_pattern.default_value,
-                magicSpiralize: globalSettings.magic_spiralize.default_value,
-            });
-        });
-    }
-
-    if (leftPresetModel) {
-        sceneLogic.onPresetParameterChanged(LEFT_EXTRUDER, leftPresetModel);
-    }
-    if (rightPresetModel) {
-        sceneLogic.onPresetParameterChanged(RIGHT_EXTRUDER, rightPresetModel);
-    }
-
-    // TODO: ?
-    // const models = modelGroup.getModels();
-    // modelGroup.models = models.concat();
-
-    dispatch(checkModelOverstep());
-    dispatch(renderScene());
-};
-
 const finalizeSceneSettings = (
     extruderDefinitions: object[],
     globalQualityPreset: PresetModel,
@@ -752,11 +786,15 @@ const finalizeSceneSettings = (
     }
 };
 
+
 export default {
     // basic scene actions
     renderScene,
 
     discardPreview,
+
+    // print settings -> scene
+    applyPrintSettingsToModels,
 
     // brush
     setBrushType,
@@ -772,13 +810,11 @@ export default {
     setModelVisibility,
     showModels,
     hideModels,
+    duplicateSelectedModel,
     groupSelectedModels,
     alignGroupSelectedModels,
     ungroupSelectedModels,
     splitSelectedModel,
-
-    // print settings -> scene
-    applyPrintSettingsToModels,
 
     // scene -> print settings
     finalizeSceneSettings,

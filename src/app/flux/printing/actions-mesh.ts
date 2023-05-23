@@ -1,11 +1,9 @@
-import { noop } from 'lodash';
 import path from 'path';
 import * as THREE from 'three';
 
 import { DATA_PREFIX } from '../../constants';
 import { HEAD_PRINTING } from '../../constants/machines';
 import { controller } from '../../lib/controller';
-import { STEP_STAGE } from '../../lib/manager/ProgressManager';
 import workerManager from '../../lib/manager/workerManager';
 import ModelGroup from '../../models/ModelGroup';
 import { ExtruderConfig, ModelTransformation, TSize } from '../../models/ThreeBaseModel';
@@ -104,7 +102,7 @@ export type LoadMeshFileOptions = {
     primeTowerTag?: boolean;
     extruderConfig?: ExtruderConfig;
 
-    onProgress?: (stage: number, progress: number) => void;
+    onProgress?: (progress: number) => void;
 };
 
 interface LoadMeshFilesResult {
@@ -134,7 +132,7 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
         parentModelID,
         primeTowerTag,
 
-        onProgress = noop,
+        onProgress,
     } = options;
 
     let _progress = 0;
@@ -143,7 +141,7 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
     const promises = meshFileInfos.map(async (meshFileInfo) => {
         _progress = meshFileInfos.length === 1 ? 0.25 : 0.001;
 
-        onProgress(STEP_STAGE.PRINTING_LOADING_MODEL, _progress);
+        onProgress && onProgress(_progress);
 
         if (meshFileInfo.isGroup) {
             return modelGroup.generateModel({
@@ -175,7 +173,7 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
             return modelGroup.primeTower;
         } else {
             const uploadPath = `${DATA_PREFIX}/${meshFileInfo.uploadName}`;
-            return new Promise((resolve, reject) => {
+            const newModel = await new Promise((resolve, reject) => {
                 const onMessage = async (data) => {
                     const { type } = data;
                     switch (type) {
@@ -190,10 +188,7 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
                                 shininess: 0
                             });
 
-                            bufferGeometry.setAttribute(
-                                'position',
-                                modelPositionAttribute
-                            );
+                            bufferGeometry.setAttribute('position', modelPositionAttribute);
 
                             if (byteCount) {
                                 bufferGeometry.setAttribute('byte_count', new THREE.BufferAttribute(byteCount, 1));
@@ -232,10 +227,7 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
                                 if (meshFileInfos.length > 1) {
                                     _progress += 1 / meshFileInfos.length;
 
-                                    onProgress(
-                                        STEP_STAGE.PRINTING_LOADING_MODEL,
-                                        _progress,
-                                    );
+                                    onProgress && onProgress(_progress);
                                 }
                                 resolve(model);
                             } catch (e) {
@@ -249,10 +241,7 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
                                 if (meshFileInfos.length > 1) {
                                     _progress += 1 / meshFileInfos.length;
 
-                                    onProgress(
-                                        STEP_STAGE.PRINTING_LOADING_MODEL,
-                                        _progress,
-                                    );
+                                    onProgress && onProgress(_progress);
                                 }
                                 reject(new Error('Failed to load mesh'));
                                 // throw new Error('Failed to load mesh');
@@ -282,10 +271,7 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
                         case 'LOAD_MODEL_PROGRESS': {
                             if (meshFileInfos.length === 1) {
                                 const progress = 0.25 + data.progress * 0.5;
-                                onProgress(
-                                    STEP_STAGE.PRINTING_LOADING_MODEL,
-                                    progress,
-                                );
+                                onProgress && onProgress(progress);
                             }
                             break;
                         }
@@ -298,10 +284,7 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
                             if (meshFileInfos.length > 1) {
                                 _progress += 1 / meshFileInfos.length;
 
-                                onProgress(
-                                    STEP_STAGE.PRINTING_LOADING_MODEL,
-                                    _progress,
-                                );
+                                onProgress && onProgress(_progress);
                             }
                             // reject();
                             // break;
@@ -314,6 +297,8 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
                 };
                 createLoadModelWorker(uploadPath, onMessage);
             });
+
+            return newModel;
         }
     });
 

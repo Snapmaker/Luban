@@ -1,32 +1,32 @@
 import type { Machine, MachineToolHeadOptions, ToolHead } from '@snapmaker/luban-platform';
 
-import {
-    printToolHeadOriginal,
-    laserToolHeadOriginal,
-    laser1600mWToolHeadOriginal,
-    cncToolHeadOriginal
-} from '../machines/snapmaker-original-toolheads';
-import {
-    printToolHead as printToolHeadSM2,
-    dualExtrusionPrintToolHead,
-    standardLaserToolHead as standardLaserToolHeadSM2,
-    highPower10WLaserToolHead as laser10WToolHeadSM2,
-    standardCNCToolHead as standardCNCToolHeadSM2,
-    highPower200WCNCToolHead as highPower200WCNCToolHeadSM2,
-} from '../machines/snapmaker-2-toolheads';
-import {
-    printToolHead as printToolHeadJ1,
-} from '../machines/snapmaker-j1';
 import i18n from '../lib/i18n';
 import {
-    SnapmakerOriginalMachine,
-    SnapmakerOriginalExtendedMachine,
     SnapmakerA150Machine,
     SnapmakerA250Machine,
     SnapmakerA350Machine,
     SnapmakerArtisanMachine,
-    SnapmakerJ1Machine
+    SnapmakerJ1Machine,
+    SnapmakerOriginalExtendedMachine,
+    SnapmakerOriginalMachine
 } from '../machines';
+import {
+    dualExtrusionPrintToolHead,
+    highPower200WCNCToolHead as highPower200WCNCToolHeadSM2,
+    highPower10WLaserToolHead as laser10WToolHeadSM2,
+    printToolHead as printToolHeadSM2,
+    standardCNCToolHead as standardCNCToolHeadSM2,
+    standardLaserToolHead as standardLaserToolHeadSM2,
+} from '../machines/snapmaker-2-toolheads';
+import {
+    printToolHead as printToolHeadJ1,
+} from '../machines/snapmaker-j1';
+import {
+    cncToolHeadOriginal,
+    laser1600mWToolHeadOriginal,
+    laserToolHeadOriginal,
+    printToolHeadOriginal
+} from '../machines/snapmaker-original-toolheads';
 
 
 export const SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL = 'singleExtruderToolheadForOriginal';
@@ -86,6 +86,41 @@ export const MACHINE_TOOL_HEADS = {
     [printToolHeadJ1.identifier]: printToolHeadJ1,
 };
 
+// Module IDs
+export const MODULEID_MAP = {
+    '0': SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
+    '1': STANDARD_CNC_TOOLHEAD_FOR_SM2,
+    '2': LEVEL_ONE_POWER_LASER_FOR_SM2,
+    '5': ENCLOSURE_FOR_SM2,
+    '7': AIR_PURIFIER,
+    '13': DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+    '14': LEVEL_TWO_POWER_LASER_FOR_SM2,
+    '15': LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
+    '16': ENCLOSURE_FOR_ARTISAN,
+    '512': HEADT_BED_FOR_SM2,
+    '513': SNAPMAKER_J1_HEATED_BED,
+    '514': SNAPMAKER_J1_LINEAR_MODULE,
+    '515': A400_HEADT_BED_FOR_SM2,
+};
+
+export const PRINTING_HEAD_MODULE_IDS = [
+    0, // Extruder
+    13, // Dual Extrusion Extruder
+];
+
+export const LASER_HEAD_MODULE_IDS = [
+    2, // 1.6W Laser Module
+    14, // 10W Laser Module
+];
+export const CNC_HEAD_MODULE_IDS = [
+    1, // Standard CNC Module
+    15, // High Power CNC Module
+];
+export const EMERGENCY_STOP_BUTTON = [8, 517];
+export const ENCLOSURE_MODULES = [5, 16];
+export const ROTARY_MODULES = [6];
+export const AIR_PURIFIER_MODULES = [7];
+
 export const MODULEID_TOOLHEAD_MAP = {
     '0': SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     '1': STANDARD_CNC_TOOLHEAD_FOR_SM2,
@@ -94,22 +129,6 @@ export const MODULEID_TOOLHEAD_MAP = {
     '14': LEVEL_TWO_POWER_LASER_FOR_SM2,
     '15': LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
     '00': printToolHeadJ1.identifier,
-};
-
-export const MODULEID_MAP = {
-    '0': SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
-    '1': STANDARD_CNC_TOOLHEAD_FOR_SM2,
-    '2': LEVEL_ONE_POWER_LASER_FOR_SM2,
-    '13': DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
-    '14': LEVEL_TWO_POWER_LASER_FOR_SM2,
-    '15': LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
-    '512': HEADT_BED_FOR_SM2,
-    '513': SNAPMAKER_J1_HEATED_BED,
-    '514': SNAPMAKER_J1_LINEAR_MODULE,
-    '515': A400_HEADT_BED_FOR_SM2,
-    '5': ENCLOSURE_FOR_SM2,
-    '16': ENCLOSURE_FOR_ARTISAN,
-    '7': AIR_PURIFIER
 };
 
 export function findMachineByName(name: string): Machine | null {
@@ -256,6 +275,16 @@ export function getWorkVolumeSize(machineIdentifier: string, toolHeadIdentifier:
     } else {
         return machine.metadata.size;
     }
+}
+
+export function getMachineToolHeadConfigPath(machine: Machine, toolHeadIdentifier: string): string | null {
+    const toolHeadOptions = machine.metadata.toolHeads
+        .find(toolHeadOption => toolHeadOption.identifier === toolHeadIdentifier);
+    if (!toolHeadOptions) {
+        return null;
+    }
+
+    return toolHeadOptions.configPath || machine.identifier.toLowerCase();
 }
 
 

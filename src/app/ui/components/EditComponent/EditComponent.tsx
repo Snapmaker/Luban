@@ -7,6 +7,7 @@ import { NumberInput as Input } from '../Input';
 import Slider from '../Slider';
 import SvgIcon from '../SvgIcon';
 import styles from './styles.styl';
+import usePrevious from '../../../lib/hooks/previous';
 
 export interface EditComponentProps {
     handleSubmit: (value: number) => void;
@@ -37,10 +38,15 @@ const EditComponent: React.FC<EditComponentProps> = React.memo(({
     const [sliderValue, setSliderValue] = useState(initValue);
     const [inputValue, setInputValue] = useState(initValue);
 
+    const previousShowOverlay = usePrevious(showOverlay);
+
+    // Use first init value
     useEffect(() => {
-        setSliderValue(initValue);
-        setInputValue(initValue);
-    }, [initValue]);
+        if (!previousShowOverlay && showOverlay) {
+            setSliderValue(initValue);
+            setInputValue(initValue);
+        }
+    }, [previousShowOverlay, showOverlay, initValue]);
 
     const handleSliderChange = (value: number) => {
         setSliderValue(value);

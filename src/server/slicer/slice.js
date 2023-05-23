@@ -275,7 +275,12 @@ export function checkModel(actions, params) {
         .end((err, res) => {
             if (err) {
                 log.error(`fail to check model: ${err}`);
-                actions.error(err);
+                actions.next({
+                    type: 'error',
+                    modelID,
+                    originUploadName: uploadName,
+                });
+                actions.complete();
             } else {
                 if (res.status === 0) {
                     actions.next({

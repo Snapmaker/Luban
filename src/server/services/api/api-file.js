@@ -2,9 +2,11 @@ import * as fs from 'fs-extra';
 import mv from 'mv';
 import path from 'path';
 import { v4 as uuid } from 'uuid';
+
 import { LEFT_EXTRUDER, RIGHT_EXTRUDER } from '../../../app/constants';
 import {
-    getMachineSeriesWithToolhead,
+    findMachineByName,
+    getMachineToolHeadConfigPath,
     isDualExtruder,
     LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
     LEVEL_ONE_POWER_LASER_FOR_SM2,
@@ -69,9 +71,10 @@ function getConfigDir(machineInfo) {
         const headType = machineInfo?.headType;
         const toolHead = machineInfo?.toolHead || (series === 'Original' ? INITIAL_TOOL_HEAD_FOR_ORIGINAL : INITIAL_TOOL_HEAD_FOR_SM2);
 
-        const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
-
-        configPath = currentMachine?.configPathname[headType];
+        const machine = findMachineByName(series);
+        if (machine) {
+            configPath = getMachineToolHeadConfigPath(machine, toolHead[`${headType}Toolhead`]);
+        }
     }
 
     return path.join(DataStorage.configDir, configPath);

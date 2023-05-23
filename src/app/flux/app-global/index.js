@@ -1,6 +1,7 @@
 import path from 'path';
 import isElectron from 'is-electron';
-import { EPSILON, HEAD_PRINTING, DATA_PREFIX, } from '../../constants';
+import { EPSILON, HEAD_PRINTING, DATA_PREFIX } from '../../constants';
+import { AccessResourceWebState, DetailModalState } from '../../constants/downloadManager';
 import { controller } from '../../lib/controller';
 import { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 
@@ -8,13 +9,12 @@ import { baseActions as editorActions } from '../editor/actions-base';
 // eslint-disable-next-line import/no-cycle
 import { actions as projectActions } from '../project';
 // eslint-disable-next-line import/no-cycle
-import { actions as printingActions, uploadMesh } from '../printing/index';
+import { actions as printingActions, uploadMesh } from '../printing';
 import ThreeGroup from '../../models/ThreeGroup';
 import workerManager from '../../lib/manager/workerManager';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 
 import { downloadManagerStore } from '../../store/local-storage';
-import { DetailModalState } from '../../constants/downloadManager';
 import downloadMananger from '../../lib/download-mananger';
 
 const ACTION_UPDATE_STATE = 'app-global/ACTION_UPDATE_STATE';
@@ -31,6 +31,7 @@ const DEFAULT_STATE = {
     downloadManangerSavedPath: !isElectron() ? '' : path.join(window.require('@electron/remote').app.getPath('userData'), 'downloadManager.json'),
     showCaseResource: false,
     caseResourceId: DetailModalState.Reset,
+    canAccessWeb: AccessResourceWebState.INITIAL, // 2 init, 4 canAccess
 };
 const SHOW_MODAL_TIME = 15000;
 let clearSavedModalTimer = null;

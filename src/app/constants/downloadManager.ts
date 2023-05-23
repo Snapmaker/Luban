@@ -26,3 +26,11 @@ export const ProjectFileExt = {
 };
 
 export const resourcesDomain = 'https://resources.snapmaker.com';
+
+export const IMG_RESOURCE_BASE_URL = 'https://d3gw8b56b7j3w6.cloudfront.net/';
+
+export enum AccessResourceWebState {
+    INITIAL,
+    PASS,
+    BLOCKED,
+}

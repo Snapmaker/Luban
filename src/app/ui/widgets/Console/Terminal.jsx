@@ -216,6 +216,8 @@ const TerminalWrapper = forwardRef(({ inputValue: inputValueProp, terminalHistor
         write
     }));
 
+    const command = terminalHistory.getLength() > 0 ? terminalHistory.get(0) : inputValue;
+
     return (
         <div
             className={isDefault ? styles['terminal-content-absolute'] : styles['terminal-content']}
@@ -237,7 +239,7 @@ const TerminalWrapper = forwardRef(({ inputValue: inputValueProp, terminalHistor
                 }}
                 type="text"
                 placeholder="Send Command"
-                value={terminalHistory.get(0) === undefined ? inputValue : terminalHistory.get(0)}
+                value={command}
                 onChange={actions.changeInputValue}
                 onKeyDown={(event) => {
                     setTerminalInput(event);
