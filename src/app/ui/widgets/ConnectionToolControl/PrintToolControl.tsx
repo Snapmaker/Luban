@@ -238,6 +238,35 @@ const PrintToolControl: React.FC = () => {
                 )
             }
             {
+                uiConfig.nozzleTempDisplay && !isPausingOrPrinting() && (
+                    <div className="sm-flex justify-flex-end margin-vertical-8">
+                        <div>
+                            <Button
+                                type="default"
+                                priority="level-three"
+                                width="96px"
+                                className="display-inline"
+                                disabled={squeezing || !leftNozzleReady}
+                                onClick={() => actions.onClickUnload(LEFT_EXTRUDER_MAP_NUMBER)}
+                            >
+                                {i18n._('key-unused-Unload')}
+                            </Button>
+                            <Button
+                                type="default"
+                                className="margin-left-4 display-inline"
+                                priority="level-three"
+                                width="96px"
+                                disabled={squeezing || !leftNozzleReady}
+                                onClick={() => actions.onClickLoad(LEFT_EXTRUDER_MAP_NUMBER)}
+                            >
+                                {i18n._('key-unused-Load')}
+                            </Button>
+                        </div>
+                    </div>
+                )
+            }
+
+            {
                 uiConfig.leftNozzleTempDisplay && (
                     <AttributeContainer
                         editable={uiConfig.leftNozzleTempEditable}
@@ -265,6 +294,7 @@ const PrintToolControl: React.FC = () => {
                     <div className="sm-flex justify-flex-end margin-vertical-8">
                         <div>
                             <Button
+                                type="default"
                                 priority="level-three"
                                 width="96px"
                                 className="display-inline"

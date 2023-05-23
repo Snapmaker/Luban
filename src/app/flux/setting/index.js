@@ -31,13 +31,13 @@ export const actions = {
         // api.removeElectronData();
         dispatch(projectActions.cleanAllRecentFiles());
         // remove recovery modelState
-        api.removeEnv({
+        api.env.removeEnv({
             headType: HEAD_CNC
         });
-        api.removeEnv({
+        api.env.removeEnv({
             headType: HEAD_LASER
         });
-        api.removeEnv({
+        api.env.removeEnv({
             headType: HEAD_PRINTING
         });
         // reset basic store

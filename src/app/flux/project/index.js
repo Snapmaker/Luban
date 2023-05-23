@@ -149,11 +149,11 @@ export const actions = {
         }
         const content = JSON.stringify(envObj);
         dispatch(actions.updateState(headType, { content, unSaved: true, initState: false }));
-        await api.saveEnv({ content });
+        await api.env.saveEnv({ content });
     },
 
     getLastEnvironment: (headType) => async (dispatch) => {
-        const { body: { content } } = await api.getEnv({ headType });
+        const { body: { content } } = await api.env.getEnv({ headType });
 
         if (content) {
             try {
@@ -169,7 +169,7 @@ export const actions = {
 
     clearSavedEnvironment: (headType) => async (dispatch) => {
         try {
-            await api.removeEnv({ headType });
+            await api.env.removeEnv({ headType });
         } catch (e) {
             console.log(e);
         }
@@ -239,7 +239,7 @@ export const actions = {
         if (backendRecover) {
             UniformToolpathConfig(envObj);
             content = JSON.stringify(envObj);
-            await api.recoverEnv({ content });
+            await api.env.recoverEnv({ content });
         }
         if (envObj?.machineInfo?.headType === HEAD_PRINTING && printingToolhead === SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2) {
             allModels.forEach((model) => {
@@ -394,7 +394,7 @@ export const actions = {
         const { unSaved, openedFile, targetFile } = getState().project[headType];
         let tmpFile, newTargetFile;
         if (unSaved || !openedFile) {
-            const { body: { targetFile: insideTargetFile } } = await api.packageEnv({ headType });
+            const { body: { targetFile: insideTargetFile } } = await api.env.packageEnv({ headType });
             newTargetFile = insideTargetFile;
             tmpFile = `/Tmp/${newTargetFile}`;
             dispatch(actions.updateState(headType, { targetFile: newTargetFile }));
@@ -473,7 +473,7 @@ export const actions = {
             return;
         }
 
-        const { body: { targetFile } } = await api.packageEnv({ headType });
+        const { body: { targetFile } } = await api.env.packageEnv({ headType });
         await dispatch(actions.updateState(headType, { targetFile }));
         const tmpFile = `/Tmp/${targetFile}`;
         await new Promise((resolve) => {
@@ -510,7 +510,7 @@ export const actions = {
                 file = JSON.stringify(file);
             }
             formData.append('file', file);
-            const { body: { content, projectPath } } = await api.recoverProjectFile(formData);
+            const { body: { content, projectPath } } = await api.env.recoverProjectFile(formData);
             let envObj;
             try {
                 envObj = JSON.parse(content);

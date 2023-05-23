@@ -316,7 +316,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
             gcodeFile: selectedFile,
             boundingBox: selectedFile?.boundingBox
         }));
-    }, [selectFileName, gcodeFiles]);
+    }, [dispatch, selectFileName, gcodeFiles]);
 
     const actions = {
         onChangeFile: async (event) => {
@@ -355,12 +355,10 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
             }
         },
         onStartToPrint: async () => {
-            console.log('onStartToPrint');
             if (selectFileType !== headType) {
                 setShowPreviewToRunJobModal(true);
                 return;
             }
-            console.log('startPrint');
             await actions.startPrint();
         },
 
@@ -415,7 +413,6 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
                 return;
             }
 
-            console.log('onCallBackRun');
             controlActions.onCallBackRun();
         },
 

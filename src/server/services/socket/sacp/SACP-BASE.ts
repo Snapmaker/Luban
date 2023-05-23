@@ -610,6 +610,8 @@ class SocketBASE {
                     break;
                 }
             }
+        } else {
+            targetModule = modules;
         }
 
         return {
