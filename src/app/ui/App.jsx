@@ -13,7 +13,7 @@ import { actions as settingActions } from '../flux/setting';
 import { actions as textActions } from '../flux/text';
 import { actions as workspaceActions } from '../flux/workspace';
 import { Server } from '../flux/workspace/Server';
-import { Canvas2dZoom } from '../lib/canvas2d-zoom/index';
+import { Canvas2dZoom } from '../lib/canvas2d-zoom';
 import { logErrorToGA } from '../lib/gaEvent';
 import { PREDEFINED_SHORTCUT_ACTIONS, ShortcutHandlerPriority, ShortcutManager } from '../lib/shortcut';
 import UniApi from '../lib/uni-api';
@@ -187,6 +187,7 @@ const mapStateToProps = (state) => {
         shouldCheckForUpdate
     };
 };
+
 const mapDispatchToProps = (dispatch) => {
     return {
         resetUserConfig: () => dispatch(settingActions.resetUserConfig()),
