@@ -1,5 +1,6 @@
 import { find, includes } from 'lodash';
 import net from 'net';
+import { ResponseCallback } from 'snapmaker-sacp-sdk';
 import { readString, readUint16, readUint8 } from 'snapmaker-sacp-sdk/helper';
 import {
     AirPurifierInfo,
@@ -10,12 +11,11 @@ import {
     ExtruderInfo,
     GcodeCurrentLine,
     GetHotBed,
-    ModuleInfo,
-    LaserTubeState
+    LaserTubeState,
+    ModuleInfo
 } from 'snapmaker-sacp-sdk/models';
-// import GetWorkSpeed from 'snapmaker-sacp-sdk/models/GetWorkSpeed';
-import { ResponseCallback } from 'snapmaker-sacp-sdk';
 import { Direction } from 'snapmaker-sacp-sdk/models/CoordinateInfo';
+
 import {
     A400_HEADT_BED_FOR_SM2,
     COORDINATE_AXIS,
@@ -46,21 +46,19 @@ import {
     MODULEID_TOOLHEAD_MAP,
     PRINTING_HEAD_MODULE_IDS,
     ROTARY_MODULES,
-    STANDARD_CNC_TOOLHEAD_FOR_SM2
+    SNAPMAKER_J1_HEATED_BED,
+    STANDARD_CNC_TOOLHEAD_FOR_SM2,
 } from '../../../../app/constants/machines';
-import logger from '../../../lib/logger';
-import SocketServer from '../../../lib/SocketManager';
-import Business, { CoordinateType } from './Business';
-
-
 import {
     COMPLUTE_STATUS,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATE_PAUSED
 } from '../../../constants';
+import logger from '../../../lib/logger';
+import SocketServer from '../../../lib/SocketManager';
 import { EventOptions, MarlinStateData } from '../types';
-import { SNAPMAKER_J1_HEATED_BED } from '../../../../app/constants/machines';
+import Business, { CoordinateType } from './Business';
 
 const log = logger('lib:SocketBASE');
 

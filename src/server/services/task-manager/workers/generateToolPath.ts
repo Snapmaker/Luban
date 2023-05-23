@@ -1,12 +1,13 @@
 import fs from 'fs';
 import { throttle } from 'lodash';
+
 import { generateRandomPathName } from '../../../../shared/lib/random-utils';
-import { editorProcess } from '../../../lib/editor/process';
 import { SOURCE_TYPE_RASTER, TOOLPATH_TYPE_VECTOR } from '../../../constants';
+import { editorProcess } from '../../../lib/editor/process';
 import slice from '../../../slicer/call-engine';
 import sendMessage from '../utils/sendMessage';
 
-const generateLaserToolPathFromEngine = (allTasks, onProgress) => {
+const generateLaserToolPathFromEngine = async (allTasks, onProgress) => {
     // const allResultPromise = [];
     const toolPathLength = allTasks?.length;
     const allResultPromise = allTasks.map(async task => {
@@ -68,7 +69,7 @@ const generateLaserToolPathFromEngine = (allTasks, onProgress) => {
     return Promise.all(allResultPromise);
 };
 
-const generateToolPath = allTasks => {
+const generateToolPath = async (allTasks) => {
     const { headType } = allTasks[0];
     if (!['laser', 'cnc'].includes(headType)) {
         return sendMessage({ status: 'fail', value: `Unsupported type: ${headType}` });
@@ -79,15 +80,12 @@ const generateToolPath = allTasks => {
         allTasks.length === 1 && sendMessage({ status: 'progress', value: num });
     }, 300);
 
-    return new Promise((resolve, reject) => {
-        generateLaserToolPathFromEngine(allTasks, onProgress)
-            .then(ret => {
-                resolve(sendMessage({ status: 'complete', value: ret }));
-            })
-            .catch(err => {
-                reject(sendMessage({ status: 'fail', value: err }));
-            });
-    });
+    try {
+        const ret = await generateLaserToolPathFromEngine(allTasks, onProgress);
+        return sendMessage({ status: 'complete', value: ret });
+    } catch (err) {
+        return sendMessage({ status: 'fail', value: err });
+    }
 };
 
 export default generateToolPath;
