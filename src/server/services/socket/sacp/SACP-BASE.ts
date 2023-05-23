@@ -60,6 +60,7 @@ import {
     WORKFLOW_STATE_PAUSED
 } from '../../../constants';
 import { EventOptions, MarlinStateData } from '../types';
+import { SNAPMAKER_J1_HEATED_BED } from '../../../../app/constants/machines';
 
 const log = logger('lib:SocketBASE');
 
@@ -705,14 +706,18 @@ class SocketBASE {
 
 
     public updateBedTemperature = (zoneIndex, temperature) => {
-        const heatBed = this.moduleInfos && (this.moduleInfos[A400_HEADT_BED_FOR_SM2] || this.moduleInfos[HEADT_BED_FOR_SM2]); //
-        if (!heatBed) {
-            log.error(`non-eixst heatBed, moduleInfos:${this.moduleInfos}`,);
+        const heatBedModule = this.moduleInfos && (
+            this.moduleInfos[A400_HEADT_BED_FOR_SM2]
+            || this.moduleInfos[HEADT_BED_FOR_SM2]
+            || this.moduleInfos[SNAPMAKER_J1_HEATED_BED]
+        ); //
+        if (!heatBedModule) {
+            log.error('Can not find heated bed module. Command ignored.');
             return;
         }
 
-        this.sacpClient.setHotBedTemperature(heatBed.key, zoneIndex, temperature).then(({ response }) => {
-            log.info(`updateBedTemperature, ${JSON.stringify(response)}`);
+        this.sacpClient.setHotBedTemperature(heatBedModule.key, zoneIndex, temperature).then(() => {
+            log.info(`SACP: Set heated bed target temperature to ${temperature}, module ID = ${heatBedModule.moduleId}`);
         });
     };
 

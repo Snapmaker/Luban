@@ -88,11 +88,13 @@ function getUnsupportedWidgets(machineIdentifier, toolHead) {
     }
 
     if (machineIdentifier === MACHINE_SERIES.J1.identifier) {
-        return ['control'];
+        // G-code execution need firmware upgrades
+        // Unsupported widgets: console, control, macro (v4.8)
+        return ['control', 'macro'];
     }
 
     if (machineIdentifier === MACHINE_SERIES.A400.identifier) {
-        return ['macro'];
+        return [];
     }
 
     return [];
