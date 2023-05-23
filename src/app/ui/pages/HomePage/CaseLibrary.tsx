@@ -3,8 +3,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import isElectron from 'is-electron';
+
 import { Anchor, Spin } from 'antd';
 import i18n from '../../../lib/i18n';
+import log from '../../../lib/log';
 import { timestamp } from '../../../../shared/lib/random-utils';
 import styles from './styles.styl';
 import QuickStart from './QuickStart';
@@ -138,7 +140,7 @@ const CaseLibrary = (props) => {
 
         Promise.all([accessTest(), loadData()])
             .then(([accessedWeb, isShow]) => { isMounted && setShowCaseResource(accessedWeb === AccessResourceWebState.PASS && isShow); })
-            .catch(err => console.error(err))
+            .catch(err => log.error(err))
             .finally(() => { setIsLoading(false); });
         return () => {
             isMounted = false;

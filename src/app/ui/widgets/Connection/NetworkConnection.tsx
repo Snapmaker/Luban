@@ -284,7 +284,6 @@ const NetworkConnection: React.FC = () => {
 
     const closeServer = useCallback(() => {
         if (server) {
-            console.log('server =', server, typeof server);
             server.closeServer();
         }
     }, [server]);
