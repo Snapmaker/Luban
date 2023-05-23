@@ -1,50 +1,7 @@
-import superagent from 'superagent';
-import superagentUse from 'superagent-use';
-import ensureArray from '../lib/ensure-array';
-import { machineStore } from '../store/local-storage';
-import TaskQueue from './TaskQueue';
+import { defaultAPIFactory, request } from './base';
 
-const bearer = (request) => {
-    const token = machineStore.get('session.token');
-    if (token) {
-        request.set('Authorization', `Bearer ${token}`);
-    }
-};
+import * as env from './api-environment';
 
-const noCache = (request) => {
-    const now = Date.now();
-    request.set('Cache-Control', 'no-cache');
-    request.set('X-Requested-With', 'XMLHttpRequest');
-
-    if (request.method === 'GET' || request.method === 'HEAD') {
-        request._query = ensureArray(request._query);
-        request._query.push(`_=${now}`);
-    }
-};
-
-const request = superagentUse(superagent);
-request.use(bearer);
-request.use(noCache);
-
-const taskQueue = new TaskQueue(4);
-// Default API factory that performs the request, and then convert its result to `Promise`.
-const defaultAPIFactory = (genRequest) => {
-    return (...args) => new Promise((resolve, reject) => {
-        taskQueue.push(
-            () => genRequest(...args),
-            (response, cb) => {
-                response.end((err, res) => {
-                    if (err) {
-                        reject(res);
-                    } else {
-                        resolve(res);
-                    }
-                    cb();
-                });
-            }
-        );
-    });
-};
 
 //
 // Authentication
@@ -81,12 +38,14 @@ const uploadImage = defaultAPIFactory((formdata) => request.post('/api/image').s
 //
 // Env
 //
+/*
 const saveEnv = defaultAPIFactory((data) => request.post('/api/file/saveEnv').send(data));
 const getEnv = defaultAPIFactory((data) => request.get('/api/file/getEnv').send(data));
 const recoverEnv = defaultAPIFactory((data) => request.post('/api/file/recoverEnv').send(data));
 const removeEnv = defaultAPIFactory((data) => request.post('/api/file/removeEnv').send(data));
 const packageEnv = defaultAPIFactory((data) => request.post('/api/file/packageEnv').send(data));
 const recoverProjectFile = defaultAPIFactory((data) => request.post('/api/file/recoverProjectFile').send(data));
+*/
 
 // Stock Remap
 // options
@@ -237,23 +196,6 @@ events.delete = defaultAPIFactory((id) => request.delete('/api/events/' + id));
 events.update = defaultAPIFactory((id, options) => request.put('/api/events/' + id).send(options));
 */
 
-// Commands
-/*
-const commands = {};
-
-commands.fetch = defaultAPIFactory((options) => request.get('/api/commands').query(options));
-
-commands.create = defaultAPIFactory((options) => request.post('/api/commands').send(options));
-
-commands.read = defaultAPIFactory((id) => request.get('/api/commands/' + id));
-
-commands.update = defaultAPIFactory((id, options) => request.put('/api/commands/' + id).send(options));
-
-commands.delete = defaultAPIFactory((id) => request.delete('/api/commands/' + id));
-
-commands.run = defaultAPIFactory((id) => request.post('/api/commands/run/' + id));
-*/
-
 // Watch Directory
 const watch = {};
 
@@ -355,17 +297,13 @@ export default {
     // utils
     utils,
 
+    env,
+
     uploadFile,
     uploadCaseFile,
     uploadGcodeFile,
     uploadUpdateFile,
     buildFirmwareFile,
-    saveEnv,
-    getEnv,
-    recoverEnv,
-    removeEnv,
-    packageEnv,
-    recoverProjectFile,
 
     uploadImage,
     stockRemapProcess,
@@ -406,7 +344,8 @@ export default {
 
     longTermBackupConfig,
     checkNewUser,
-    controllers, // Controllers
+
+    // controllers, // Controllers
     // users, // Users
     macros,
     watch, // Watch Directory

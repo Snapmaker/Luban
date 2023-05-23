@@ -1,9 +1,11 @@
-type Runner = <T>() => Promise<T>
+type Runner = <T>() => Promise<T>;
+
 type onMessage = <T>(data: T, cb: () => void) => void;
+
 type Task = {
     runner: Runner,
     onMessage,
-    label: string
+    label: string;
 }
 
 class TaskQueue {
