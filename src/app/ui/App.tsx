@@ -26,10 +26,22 @@ import Settings from './pages/Settings';
 import Workspace from './pages/Workspace';
 import { PrintMainPage } from './pages/print-main';
 
-Canvas2dZoom.register();
 
-class App extends React.PureComponent {
-    static propTypes = {
+// Register Canvas2dZoom with tag name '', it will defaults to <canvas2d-zoom>
+Canvas2dZoom.register('');
+
+
+interface AppProps {
+    enableShortcut: boolean;
+}
+
+interface AppState {
+    hasError: boolean;
+}
+
+
+class App extends React.PureComponent<AppProps, AppState> {
+    public static propTypes = {
         resetUserConfig: PropTypes.func.isRequired,
         machineInit: PropTypes.func.isRequired,
         functionsInit: PropTypes.func.isRequired,
@@ -43,11 +55,11 @@ class App extends React.PureComponent {
         workspaceInit: PropTypes.func.isRequired,
     };
 
-    state = { hasError: false };
+    public state = { hasError: false };
 
-    router = React.createRef();
+    private router = React.createRef();
 
-    shortcutHandler = {
+    private shortcutHandler = {
         title: this.constructor.name,
         isActive: () => this.props.enableShortcut,
         // active: false,
@@ -105,7 +117,7 @@ class App extends React.PureComponent {
         }
     };
 
-    componentDidMount() {
+    public componentDidMount() {
         // disable select text on document
         document.onselectstart = () => {
             return false;
@@ -130,17 +142,17 @@ class App extends React.PureComponent {
         Server.closeServerAfterWindowReload();
     }
 
-    static getDerivedStateFromError() {
+    public static getDerivedStateFromError() {
         // Update state so the next render will show the fallback UI.
         return { hasError: true };
     }
 
-    componentDidCatch(error, errorInfo) {
+    public componentDidCatch(error, errorInfo) {
         console.error('error', error, errorInfo);
         logErrorToGA(errorInfo);
     }
 
-    render() {
+    public render() {
         if (this.state.hasError) {
             // You can render any custom fallback UI
             return <h1>Something went wrong. Please reload the app</h1>;
