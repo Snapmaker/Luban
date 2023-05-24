@@ -9,7 +9,9 @@ import {
     CONNECTION_NOZZLE_TEMPERATURE,
     CONNECTION_UNLOAD_FILAMENT,
     CONNECTION_WORK_NOZZLE,
-    CONNECTION_Z_OFFSET, LEFT_EXTRUDER, LEFT_EXTRUDER_MAP_NUMBER,
+    CONNECTION_Z_OFFSET,
+    LEFT_EXTRUDER,
+    LEFT_EXTRUDER_MAP_NUMBER,
     RIGHT_EXTRUDER_MAP_NUMBER,
     WORKFLOW_STATUS_PAUSED,
     WORKFLOW_STATUS_PAUSING,
@@ -25,6 +27,7 @@ import { Button } from '../../components/Buttons';
 import JogDistance from './JogDistance';
 import AttributeContainer from './components/AttributeContainer';
 import WorkSpeed from './WorkSpeed';
+
 
 const PrintToolControl: React.FC = () => {
     const { isConnected } = useSelector((state: RootState) => state.workspace);
