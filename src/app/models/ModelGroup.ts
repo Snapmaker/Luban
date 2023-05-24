@@ -3092,11 +3092,10 @@ class ModelGroup extends EventEmitter {
                 // TODO:
                 // model.meshObject.geometry.disposeBoundsTree();
             } else {
-                // Restore original geometry
-                model.meshObject.geometry.disposeBoundsTree();
-                model.meshObject.geometry.copy(model.originalGeometry);
+                // Clear all colors
+                model.resetColors();
 
-                model.isColored = false;
+                model.meshObject.geometry.disposeBoundsTree();
             }
 
             // Restore original support mesh
