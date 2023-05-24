@@ -293,7 +293,7 @@ const startMeshColoringMode = () => {
 const endMeshColoringMode = (shouldApplyChanges = false) => {
     return (dispatch, getState) => {
         dispatch(setTransformMode(''));
-        const { modelGroup } = getState().printing;
+        const modelGroup = getState().printing.modelGroup as ModelGroup;
 
         if (shouldApplyChanges) {
             modelGroup.finishMeshColoring();

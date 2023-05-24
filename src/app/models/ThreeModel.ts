@@ -27,6 +27,7 @@ export const BYTE_COUNT_COLOR_CLEAR_MASK = (0xffff & ~BYTE_COUNT_COLOR_MASK);
 export const BYTE_COUNT_NO_COLOR = 0x0000;
 export const BYTE_COUNT_LEFT_EXTRUDER = 0x0100;
 export const BYTE_COUNT_RIGHT_EXTRUDER = 0x0200;
+export const BYTE_COUNT_MAX_COLOR = BYTE_COUNT_RIGHT_EXTRUDER;
 
 class ThreeModel extends BaseModel {
     public isThreeModel = true;
@@ -168,16 +169,7 @@ class ThreeModel extends BaseModel {
             }
         }
 
-
-        // Ensure color attribute align with byte count attribute
-        if (this.meshObject.geometry.getAttribute('byte_count')) {
-            const byteCountAttribute = this.meshObject.geometry.getAttribute('byte_count');
-            const randomByteCount = byteCountAttribute.getX(0);
-
-            if ((randomByteCount & BYTE_COUNT_COLOR_MASK) > 0) {
-                this.ensureColorAttribute();
-            }
-        }
+        this.formatByteCountAttribute();
 
         this.updateMaterialColor(modelInfo.color ?? '#cecece');
     }
@@ -357,6 +349,32 @@ class ThreeModel extends BaseModel {
         }
     }
 
+    private formatByteCountAttribute(): void {
+        // Ensure color attribute align with byte count attribute
+        if (!this.meshObject.geometry.getAttribute('byte_count')) {
+            return;
+        }
+
+        const byteCountAttribute = this.meshObject.geometry.getAttribute('byte_count');
+        const randomByteCount = byteCountAttribute.getX(0);
+        const colorFlag = randomByteCount & BYTE_COUNT_COLOR_MASK;
+
+        // If color flag is already colored, refresh byte count attribute to left extruder only
+        if (colorFlag > BYTE_COUNT_MAX_COLOR) {
+            const len = byteCountAttribute.count;
+            for (let i = 0; i < len; i++) {
+                const byteCount = byteCountAttribute.getX(i);
+                byteCountAttribute.setX(i, (byteCount & BYTE_COUNT_COLOR_CLEAR_MASK) | BYTE_COUNT_LEFT_EXTRUDER);
+            }
+        }
+
+        // Create Color attribute if no exists
+        const colorFlagNew = byteCountAttribute.getX(0) & BYTE_COUNT_COLOR_MASK;
+        if (colorFlagNew > 0) {
+            this.ensureColorAttribute();
+        }
+    }
+
     public ensureByteCountAttribute(): void {
         const count = this.meshObject.geometry.getAttribute('position').count;
         const faceCount = Math.round(count / 3);
@@ -382,6 +400,24 @@ class ThreeModel extends BaseModel {
             }
             byteCountAttribute.needsUpdate = true;
         }
+    }
+
+    public resetColors(): void {
+        const byteCountAttribute = this.meshObject.geometry.getAttribute('byte_count');
+
+        if (!byteCountAttribute) {
+            return;
+        }
+
+        const len = byteCountAttribute.count;
+        for (let i = 0; i < len; i++) {
+            const byteCount = byteCountAttribute.getX(i);
+            byteCountAttribute.setX(i, (byteCount & BYTE_COUNT_COLOR_CLEAR_MASK));
+        }
+
+        this.isColored = false;
+
+        this.colorMesh();
     }
 
     public onTransform() {

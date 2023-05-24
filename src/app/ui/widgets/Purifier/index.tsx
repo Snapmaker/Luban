@@ -1,3 +1,3 @@
 import Purifier from './Purifier';
 
-export default (Purifier);
+export default Purifier;

@@ -9,7 +9,7 @@ import {
     RIGHT_EXTRUDER_MAP_NUMBER
 } from '../constants';
 import { Size2D } from '../models/BaseModel';
-import { Model3D } from '../models/ModelGroup';
+import ThreeModel from '../models/ThreeModel';
 import { PresetModel } from '../preset-model';
 import scene, { SceneEvent } from './Scene';
 
@@ -37,6 +37,9 @@ class SceneLogic {
 
         scene.on(SceneEvent.ModelAttributesChanged, (attributeName) => {
             if (attributeName === 'extruderConfig') {
+                this.processPrimeTowerAsync();
+            }
+            if (attributeName === 'color') {
                 this.processPrimeTowerAsync();
             }
         });
@@ -89,10 +92,15 @@ class SceneLogic {
 
         // count extruders actually used
         const extrudersUsed = new Set();
-        const models = modelGroup.getModels<Model3D>();
+        const models = modelGroup.getModels<ThreeModel>();
         for (const model of models) {
-            extrudersUsed.add(model.extruderConfig.infill);
-            extrudersUsed.add(model.extruderConfig.shell);
+            if (model.isColored) {
+                extrudersUsed.add(LEFT_EXTRUDER_MAP_NUMBER);
+                extrudersUsed.add(RIGHT_EXTRUDER_MAP_NUMBER);
+            } else {
+                extrudersUsed.add(model.extruderConfig.infill);
+                extrudersUsed.add(model.extruderConfig.shell);
+            }
         }
 
         const supportExtruderConfig = modelGroup.getSupportExtruderConfig();
@@ -132,12 +140,20 @@ class SceneLogic {
 
         // max height of extruders
         const maxHeights: { [extruderNumber: string]: number } = {};
-        const models = modelGroup.getModels<Model3D>();
+        const models = modelGroup.getModels<ThreeModel>();
 
         for (const model of models) {
             const h = model.boundingBox.max.z;
 
-            const modelExtruders = new Set([model.extruderConfig.infill, model.extruderConfig.shell]);
+            const modelExtruders = new Set<string>();
+            if (model.isColored) {
+                modelExtruders.add(LEFT_EXTRUDER_MAP_NUMBER);
+                modelExtruders.add(RIGHT_EXTRUDER_MAP_NUMBER);
+            } else {
+                modelExtruders.add(model.extruderConfig.infill);
+                modelExtruders.add(model.extruderConfig.shell);
+            }
+
             if (modelExtruders.has(BOTH_EXTRUDER_MAP_NUMBER)) {
                 modelExtruders.delete(BOTH_EXTRUDER_MAP_NUMBER);
                 modelExtruders.add(LEFT_EXTRUDER_MAP_NUMBER);

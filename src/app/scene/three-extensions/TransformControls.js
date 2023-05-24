@@ -8,7 +8,7 @@
 
 import * as THREE from 'three';
 
-import log from '../lib/log';
+import log from '../../lib/log';
 
 const TransformControls = function (camera, domElement, boundingBox) {
     THREE.Object3D.call(this);
