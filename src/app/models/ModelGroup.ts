@@ -3108,6 +3108,9 @@ class ModelGroup extends EventEmitter {
         }
 
         this.modelChanged();
+
+        // Emit color changed
+        this.modelAttributesChanged('color');
     }
 
     /**
