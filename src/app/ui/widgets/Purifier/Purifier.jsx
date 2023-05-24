@@ -1,22 +1,20 @@
+import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
 import { shallowEqual, useSelector } from 'react-redux';
-import classNames from 'classnames';
-import Switch from '../../components/Switch';
-import styles from './index.styl';
+
 import {
-    SPEED_HIGH,
-    SPEED_MEDIUM,
-    SPEED_LOW,
     CONNECTION_FILTER_SWITCH,
-    CONNECTION_FILTER_WORKSPEED
+    CONNECTION_FILTER_WORKSPEED,
+    SPEED_HIGH,
+    SPEED_LOW,
+    SPEED_MEDIUM,
 } from '../../../constants';
-import {
-    MACHINE_SERIES
-} from '../../../constants/machines';
-import i18n from '../../../lib/i18n';
-// import log from '../../../lib/log';
+import { MACHINE_SERIES } from '../../../constants/machines';
 import { controller } from '../../../lib/controller';
+import i18n from '../../../lib/i18n';
+import Switch from '../../components/Switch';
+import styles from './styles.styl';
 
 function Purifier({ widgetActions }) {
     const {
