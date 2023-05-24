@@ -1,5 +1,6 @@
 import { find, includes } from 'lodash';
 import net from 'net';
+import { ResponseCallback } from 'snapmaker-sacp-sdk';
 import { readString, readUint16, readUint8 } from 'snapmaker-sacp-sdk/helper';
 import {
     AirPurifierInfo,
@@ -10,12 +11,11 @@ import {
     ExtruderInfo,
     GcodeCurrentLine,
     GetHotBed,
-    ModuleInfo,
-    LaserTubeState
+    LaserTubeState,
+    ModuleInfo
 } from 'snapmaker-sacp-sdk/models';
-// import GetWorkSpeed from 'snapmaker-sacp-sdk/models/GetWorkSpeed';
-import { ResponseCallback } from 'snapmaker-sacp-sdk';
 import { Direction } from 'snapmaker-sacp-sdk/models/CoordinateInfo';
+
 import {
     A400_HEADT_BED_FOR_SM2,
     COORDINATE_AXIS,
@@ -46,20 +46,19 @@ import {
     MODULEID_TOOLHEAD_MAP,
     PRINTING_HEAD_MODULE_IDS,
     ROTARY_MODULES,
-    STANDARD_CNC_TOOLHEAD_FOR_SM2
+    SNAPMAKER_J1_HEATED_BED,
+    STANDARD_CNC_TOOLHEAD_FOR_SM2,
 } from '../../../../app/constants/machines';
-import logger from '../../../lib/logger';
-import SocketServer from '../../../lib/SocketManager';
-import Business, { CoordinateType } from './Business';
-
-
 import {
     COMPLUTE_STATUS,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATE_PAUSED
 } from '../../../constants';
+import logger from '../../../lib/logger';
+import SocketServer from '../../../lib/SocketManager';
 import { EventOptions, MarlinStateData } from '../types';
+import Business, { CoordinateType } from './Business';
 
 const log = logger('lib:SocketBASE');
 
@@ -628,8 +627,8 @@ class SocketBASE {
         }
 
         // const key = toolhead && toolhead.key;
-        const response = await this.sacpClient.SwitchExtruder(module.key, newExtruderIndex);
-        log.info(`SwitchExtruder to extruderIndex:${extruderIndex}, ${JSON.stringify(response)}`);
+        await this.sacpClient.SwitchExtruder(module.key, newExtruderIndex);
+        log.info(`SACP: Switch extruder to module ${module.moduleId} [key: ${module.key}, extruderIndex: ${extruderIndex}]`);
     }
 
     public updateNozzleTemperature = (extruderIndex, temperature) => {
@@ -705,14 +704,18 @@ class SocketBASE {
 
 
     public updateBedTemperature = (zoneIndex, temperature) => {
-        const heatBed = this.moduleInfos && (this.moduleInfos[A400_HEADT_BED_FOR_SM2] || this.moduleInfos[HEADT_BED_FOR_SM2]); //
-        if (!heatBed) {
-            log.error(`non-eixst heatBed, moduleInfos:${this.moduleInfos}`,);
+        const heatBedModule = this.moduleInfos && (
+            this.moduleInfos[A400_HEADT_BED_FOR_SM2]
+            || this.moduleInfos[HEADT_BED_FOR_SM2]
+            || this.moduleInfos[SNAPMAKER_J1_HEATED_BED]
+        ); //
+        if (!heatBedModule) {
+            log.error('Can not find heated bed module. Command ignored.');
             return;
         }
 
-        this.sacpClient.setHotBedTemperature(heatBed.key, zoneIndex, temperature).then(({ response }) => {
-            log.info(`updateBedTemperature, ${JSON.stringify(response)}`);
+        this.sacpClient.setHotBedTemperature(heatBedModule.key, zoneIndex, temperature).then(() => {
+            log.info(`SACP: Set heated bed target temperature to ${temperature}, module ID = ${heatBedModule.moduleId}`);
         });
     };
 
