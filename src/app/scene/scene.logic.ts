@@ -145,7 +145,7 @@ class SceneLogic {
         for (const model of models) {
             const h = model.boundingBox.max.z;
 
-            const modelExtruders = new Set();
+            const modelExtruders = new Set<string>();
             if (model.isColored) {
                 modelExtruders.add(LEFT_EXTRUDER_MAP_NUMBER);
                 modelExtruders.add(RIGHT_EXTRUDER_MAP_NUMBER);

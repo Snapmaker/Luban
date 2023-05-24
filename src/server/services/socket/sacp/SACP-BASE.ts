@@ -93,6 +93,8 @@ class SocketBASE {
 
     private filamentActionType = 'load';
 
+    private filamentActionModule = null;
+
     private moduleInfos: {};
 
     public currentWorkNozzle: number;
@@ -272,13 +274,17 @@ class SocketBASE {
 
             if (nozzleInfo.extruderList.length === 1) {
                 const extruderInfo = nozzleInfo.extruderList[0];
+
+                // FIXME: Use key as extruderIndex is not accurate
                 const extruderIndex = nozzleInfo.key;
 
                 const nozzleSizeList = stateData.nozzleSizeList || [];
 
+                // FIXME: Use nozzleInfo to determine work nozzle is not accurate
                 if (extruderInfo.status === 1) {
                     this.currentWorkNozzle = extruderIndex;
                 }
+
                 if (extruderInfo.diameter !== nozzleSizeList[extruderIndex]) {
                     nozzleSizeList[extruderIndex] = extruderInfo.diameter;
                 }
@@ -303,6 +309,8 @@ class SocketBASE {
             } else if (nozzleInfo.extruderList.length === 2) {
                 const leftInfo = find(nozzleInfo.extruderList, { index: 0 });
                 const rightInfo = find(nozzleInfo.extruderList, { index: 1 }) || {};
+
+                console.log('leftInfo =', leftInfo, 'rightInfo =', rightInfo);
 
                 this.currentWorkNozzle = rightInfo.status === 1 ? 1 : 0;
                 stateData = {
@@ -460,23 +468,19 @@ class SocketBASE {
                 this.readyToWork = false;
             }
         });
-        this.sacpClient.handlerSwitchNozzleReturn((data) => {
+        this.sacpClient.handlerSwitchNozzleReturn(async (data) => {
             if (this.filamentAction && data === 0) {
-                const toolHead = this.moduleInfos
-                    && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2] || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);
-                // || this.moduleInfos[HEADT_BED_FOR_SM2]); //
+                const module = this.filamentActionModule;
                 if (this.filamentActionType === UNLOAD_FILAMENT) {
-                    this.sacpClient.ExtruderMovement(toolHead.key, 0, 6, 200, 60, 150).then(({ response }) => {
-                        if (response.result !== 0) {
-                            this.socket && this.socket.emit('connection:unloadFilament');
-                        }
-                    });
+                    const { response } = await this.sacpClient.ExtruderMovement(module.key, 0, 6, 200, 60, 150);
+                    if (response.result !== 0) {
+                        this.socket && this.socket.emit('connection:unloadFilament');
+                    }
                 } else {
-                    this.sacpClient.ExtruderMovement(toolHead.key, 0, 60, 200, 0, 0).then(({ response }) => {
-                        if (response.result !== 0) {
-                            this.socket && this.socket.emit('connection:loadFilament');
-                        }
-                    });
+                    const { response } = await this.sacpClient.ExtruderMovement(module.key, 0, 60, 200, 0, 0);
+                    if (response.result !== 0) {
+                        this.socket && this.socket.emit('connection:loadFilament');
+                    }
                 }
             } else {
                 this.socket && this.socket.emit(this.filamentActionType === LOAD_FIMAMENT ? 'connection:loadFilament' : 'connection:unloadFilament');
@@ -619,6 +623,9 @@ class SocketBASE {
         };
     }
 
+    /**
+     * Switch active extruder.
+     */
     public async switchExtruder(extruderIndex: number | string) {
         const { module, extruderIndex: newExtruderIndex } = this.getToolHeadModule(extruderIndex);
         if (!module) {
@@ -631,52 +638,51 @@ class SocketBASE {
         log.info(`SACP: Switch extruder to module ${module.moduleId} [key: ${module.key}, extruderIndex: ${extruderIndex}]`);
     }
 
-    public updateNozzleTemperature = (extruderIndex, temperature) => {
-        const toolhead = this.moduleInfos && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2] || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);
-        if (!toolhead) {
-            log.error(`no match toolhead 3dp:[${toolhead}], moduleInfos:${this.moduleInfos}`,);
-            return;
-        }
-
+    /**
+     * Set extruder temperature.
+     */
+    public updateNozzleTemperature = async (extruderIndex: number | string, temperature: number) => {
         const { module, extruderIndex: newExtruderIndex } = this.getToolHeadModule(extruderIndex);
         if (!module) {
             log.error(`No matched print module for extruder ${extruderIndex}`);
             return;
         }
 
-        this.sacpClient.SetExtruderTemperature(module.key, newExtruderIndex, temperature).then(({ response }) => {
-            log.info(`SetExtruderTemperature,key:[${module.key}], extruderIndex:[${newExtruderIndex}], temperature:[${temperature}] ${JSON.stringify(response)}`);
-        });
+        const { response } = await this.sacpClient.SetExtruderTemperature(module.key, newExtruderIndex, temperature);
+
+        if (response.result === 0) {
+            log.info(`SACP: Set extruder temperature to ${temperature} [key:[${module.key}], extruderIndex: ${extruderIndex}]`);
+        }
     };
 
-    public async loadFilament(extruderIndex, eventName) {
-        const toolHead = this.moduleInfos
-            && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2] || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);
-        // || this.moduleInfos[HEADT_BED_FOR_SM2]); //
-        if (!toolHead) {
-            log.error(`non-eixst toolHead, moduleInfos:${this.moduleInfos}`,);
+    public async loadFilament(extruderIndex: number | string, eventName: string) {
+        const { module, extruderIndex: newExtruderIndex } = this.getToolHeadModule(extruderIndex);
+        if (!module) {
+            log.error(`No matched print module for extruder ${extruderIndex}`);
             return;
         }
+
         if (Number(extruderIndex) === this.currentWorkNozzle) {
             this.filamentAction = true;
             this.filamentActionType = LOAD_FIMAMENT;
-            this.sacpClient.ExtruderMovement(toolHead.keys, 0, 60, 200, 0, 0);
+            this.filamentActionModule = module;
+            await this.sacpClient.ExtruderMovement(module.key, 0, 60, 200, 0, 0);
         } else {
-            this.sacpClient.SwitchExtruder(toolHead.key, extruderIndex).then(({ response }) => {
-                if (response.result === 0) {
-                    this.filamentAction = true;
-                    this.filamentActionType = LOAD_FIMAMENT;
-                } else {
-                    this.filamentAction = false;
-                    this.socket && this.socket.emit(eventName);
-                }
-            });
+            const { response } = await this.sacpClient.SwitchExtruder(module.key, newExtruderIndex);
+            if (response.result === 0) {
+                this.filamentAction = true;
+                this.filamentActionType = LOAD_FIMAMENT;
+                this.filamentActionModule = module;
+            } else {
+                this.filamentAction = false;
+                this.socket && this.socket.emit(eventName);
+            }
         }
     }
 
-    public async unloadFilament(extruderIndex, eventName) {
-        const toolHead = this.moduleInfos && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2] || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);
-        if (!toolHead) {
+    public async unloadFilament(extruderIndex: number | string, eventName: string) {
+        const { module, extruderIndex: newExtruderIndex } = this.getToolHeadModule(extruderIndex);
+        if (!module) {
             log.error(`non-eixst toolHead, moduleInfos:${this.moduleInfos}`,);
             return;
         }
@@ -684,24 +690,20 @@ class SocketBASE {
         if (Number(extruderIndex) === this.currentWorkNozzle) {
             this.filamentAction = true;
             this.filamentActionType = UNLOAD_FILAMENT;
-            this.sacpClient.ExtruderMovement(toolHead.keys, 0, 6, 200, 60, 150);
+            this.filamentActionModule = module;
+            this.sacpClient.ExtruderMovement(module.key, 0, 6, 200, 60, 150);
         } else {
-            this.sacpClient.SwitchExtruder(toolHead.key, extruderIndex).then(({ response }) => {
-                if (response.result === 0) {
-                    this.filamentAction = true;
-                    this.filamentActionType = UNLOAD_FILAMENT;
-                } else {
-                    this.filamentAction = false;
-                    this.socket && this.socket.emit(eventName);
-                }
-            });
+            const { response } = await this.sacpClient.SwitchExtruder(module.key, newExtruderIndex);
+            if (response.result === 0) {
+                this.filamentAction = true;
+                this.filamentActionType = UNLOAD_FILAMENT;
+                this.filamentActionModule = module;
+            } else {
+                this.filamentAction = false;
+                this.socket && this.socket.emit(eventName);
+            }
         }
-        // log.info(`unloadFilament SwitchExtruder:[${extruderIndex}], ${JSON.stringify(_)}`);
-        // const response = await this.sacpClient.ExtruderMovement(toolHead.key, 0, 6, 200, 60, 150);
-        // this.socket && this.socket.emit(eventName);
-        // log.info(`unloadFilament, ${JSON.stringify(response)}`);
     }
-
 
     public updateBedTemperature = (zoneIndex, temperature) => {
         const heatBedModule = this.moduleInfos && (
