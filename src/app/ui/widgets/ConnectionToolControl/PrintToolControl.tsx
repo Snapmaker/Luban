@@ -94,7 +94,9 @@ const PrintToolControl: React.FC = () => {
 
     const dispatch = useDispatch();
 
-    const addConsoleLogs = (gcode) => dispatch(workspaceActions.addConsoleLogs(gcode));
+    const addConsoleLogs = useCallback((gcode: string[]) => {
+        dispatch(workspaceActions.addConsoleLogs(gcode));
+    }, [dispatch]);
 
     // const nozzleTemperatureValue = useState(nozzleTargetTemperature);
     const actions = {
@@ -452,14 +454,5 @@ const PrintToolControl: React.FC = () => {
         </div>
     );
 };
-
-/*
-const mapDispatchToProps = (dispatch) => {
-    return {
-        addConsoleLogs: (gcode, context) => dispatch(workspaceActions.addConsoleLogs(gcode, context)),
-        executeGcode: (gcode, context, cmd) => dispatch(workspaceActions.executeGcode(gcode, context, cmd))
-    };
-};
-*/
 
 export default PrintToolControl;

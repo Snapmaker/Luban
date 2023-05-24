@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-// import PropTypes from 'prop-types';
 import { isUndefined } from 'lodash';
+import React, { useEffect, useState } from 'react';
 import { shallowEqual, useSelector } from 'react-redux';
+
 import {
     CONNECTION_DOOR_DETECTION, CONNECTION_ENCLOSURE_FAN, CONNECTION_ENCLOSURE_LIGHT
 } from '../../../constants';
@@ -9,23 +9,18 @@ import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import Switch from '../../components/Switch';
-import TipTrigger from '../../components/TipTrigger';
 
 function Enclosure() {
     const {
-        connectionType,
         isConnected,
 
-        headType,
         enclosureLight,
         enclosureFan,
         isDoorEnabled: doorEnabled,
-        series
     } = useSelector(state => state.workspace, shallowEqual);
 
     const [isLedReady, setIsLedReady] = useState(true);
     const [isFanReady, setIsFanReady] = useState(true);
-    const [isDoorEnabledReady, setIsDoorEnabledReady] = useState(true);
     const [isDoorEnabled, setIsDoorEnabled] = useState(isUndefined(doorEnabled) ? true : doorEnabled);
 
     const actions = {
@@ -44,7 +39,6 @@ function Enclosure() {
             });
         },
         onHandleDoorEnabled: () => {
-            setIsDoorEnabledReady(false);
             controller.emitEvent(CONNECTION_DOOR_DETECTION, {
                 enable: !isDoorEnabled
             }).once(CONNECTION_DOOR_DETECTION, ({ msg, data }) => {
@@ -69,7 +63,6 @@ function Enclosure() {
 
     useEffect(() => {
         setIsDoorEnabled(isUndefined(doorEnabled) ? true : doorEnabled);
-        setIsDoorEnabledReady(true);
     }, [doorEnabled]);
 
     return (
@@ -91,6 +84,7 @@ function Enclosure() {
                         disabled={(!isFanReady) || !isConnected}
                     />
                 </div>
+                {/* Disable adjustment for door detection
                 {(isConnected && connectionType === 'wifi' && headType !== '3dp' && series !== 'A400') && (
                     <TipTrigger
                         title={i18n._('key-Workspace/Enclosure-Door Detection')}
@@ -110,10 +104,12 @@ function Enclosure() {
                         </div>
                     </TipTrigger>
                 )}
+                */}
             </div>
         </div>
     );
 }
+
 Enclosure.propTypes = {
 };
 

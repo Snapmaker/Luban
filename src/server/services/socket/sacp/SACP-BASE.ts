@@ -627,8 +627,8 @@ class SocketBASE {
         }
 
         // const key = toolhead && toolhead.key;
-        const response = await this.sacpClient.SwitchExtruder(module.key, newExtruderIndex);
-        log.info(`SwitchExtruder to extruderIndex:${extruderIndex}, ${JSON.stringify(response)}`);
+        await this.sacpClient.SwitchExtruder(module.key, newExtruderIndex);
+        log.info(`SACP: Switch extruder to module ${module.moduleId} [key: ${module.key}, extruderIndex: ${extruderIndex}]`);
     }
 
     public updateNozzleTemperature = (extruderIndex, temperature) => {
