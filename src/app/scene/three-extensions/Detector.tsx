@@ -1,14 +1,14 @@
 import React from 'react';
 
-class Detector {
-    static __isWebGLAvailable = undefined;
+export default class Detector {
+    private static __isWebGLAvailable = undefined;
 
     // Method inspired by https://github.com/mrdoob/three.js/blob/dev/examples/js/WebGL.js
     // Note that this does not ensure that WebGL context can be created by WebGLRenderer.
     // From initialization of WebGLRenderer (src/renderers/WebGLRenderer.js), we know
     // context attributes should be considered too.
     // Here we only do a simple check to reflect when WebGL context completely can NOT be created.
-    static checkWebGLAvailable() {
+    public static checkWebGLAvailable() {
         try {
             const canvas = document.createElement('canvas');
             const context = window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'));
@@ -18,7 +18,7 @@ class Detector {
         }
     }
 
-    static isWebGLAvailable() {
+    public static isWebGLAvailable() {
         if (this.__isWebGLAvailable === undefined) {
             this.__isWebGLAvailable = this.checkWebGLAvailable();
         }
@@ -27,7 +27,7 @@ class Detector {
     }
 
     // from examples/js/Detector.js
-    static getWebGLErrorMessage() {
+    public static getWebGLErrorMessage() {
         return (
             <div
                 style={{
@@ -45,5 +45,3 @@ class Detector {
         );
     }
 }
-
-export default Detector;

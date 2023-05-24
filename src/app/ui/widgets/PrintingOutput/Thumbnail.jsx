@@ -3,8 +3,8 @@ import { Color, HemisphereLight, PerspectiveCamera, Scene, Vector3, Group } from
 // import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import PropTypes from 'prop-types';
 import * as THREE from 'three';
-import ThreeUtils from '../../../three-extensions/ThreeUtils';
-import WebGLRendererWrapper from '../../../three-extensions/WebGLRendererWrapper';
+import ThreeUtils from '../../../scene/three-extensions/ThreeUtils';
+import WebGLRendererWrapper from '../../../scene/three-extensions/WebGLRendererWrapper';
 
 class Thumbnail extends PureComponent {
     static propTypes = {
@@ -38,7 +38,7 @@ class Thumbnail extends PureComponent {
             antialias: true,
             preserveDrawingBuffer: true,
             alpha: true,
-            clearColor: [new Color(0xffffff), 0]
+            clearColor: new Color(0xffffff),
         });
         this.renderer.setSize(width, height);
         this.scene = new Scene();

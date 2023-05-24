@@ -1,8 +1,12 @@
+import type { WebGLRendererParameters } from 'three';
 import { Color, WebGLRenderer } from 'three';
 
-import log from '../lib/log';
-
+import log from '../../lib/log';
 import Detector from './Detector';
+
+type WebGLRendererOptions = WebGLRendererParameters & {
+    clearColor: Color;
+}
 
 /**
  * Simple wrapper of WebGLRenderer.
@@ -10,11 +14,13 @@ import Detector from './Detector';
  * Given basic renderer method mirrors and default configuration.
  */
 class WebGLRendererWrapper {
-    constructor(options) {
+    private renderer: WebGLRenderer;
+
+    public constructor(options: WebGLRendererOptions) {
         if (Detector.isWebGLAvailable()) {
             this.renderer = new WebGLRenderer(options);
             if (options.clearColor) {
-                this.renderer.setClearColor(...options.clearColor);
+                this.renderer.setClearColor(options.clearColor);
             } else {
                 this.renderer.setClearColor(new Color(0xF5F5F7), 1);
             }
@@ -25,31 +31,31 @@ class WebGLRendererWrapper {
         }
     }
 
-    isInitialized() {
+    public isInitialized(): boolean {
         return !!this.renderer;
     }
 
-    get domElement() {
+    public get domElement() {
         return this.renderer.domElement;
     }
 
-    setClearColor(...args) {
-        this.renderer.setClearColor(args);
+    public setClearColor(color: Color | string | number, alpha?: number): void {
+        this.renderer.setClearColor(color, alpha);
     }
 
-    setSize(width, height) {
+    public setSize(width: number, height: number): void {
         this.renderer && this.renderer.setSize(width, height);
     }
 
-    setSortObjects(bool) {
+    public setSortObjects(bool) {
         this.renderer.sortObjects = bool;
     }
 
-    render(scene, camera) {
+    public render(scene, camera) {
         this.renderer.render(scene, camera);
     }
 
-    dispose() {
+    public dispose() {
         if (!this.renderer) {
             return;
         }

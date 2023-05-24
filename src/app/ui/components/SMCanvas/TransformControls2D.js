@@ -2,7 +2,7 @@ import {
     Vector3, Quaternion,
     Object3D, Raycaster
 } from 'three';
-import ThreeUtils from '../../../three-extensions/ThreeUtils';
+import ThreeUtils from '../../../scene/three-extensions/ThreeUtils';
 import { isZero } from '../../../../shared/lib/utils';
 import Peripheral from './Peripheral';
 import { SELECTEVENT } from '../../../constants';

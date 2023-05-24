@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import { Matrix4, BufferGeometry, BufferAttribute, Vector3 } from 'three';
-import ThreeUtils from '../three-extensions/ThreeUtils';
+import ThreeUtils from '../scene/three-extensions/ThreeUtils';
 
 type ModelInfoData = {
     matrixWorld: Matrix4;

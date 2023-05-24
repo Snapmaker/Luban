@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import * as THREE from 'three';
-import RectangleGridHelper from '../../../../three-extensions/RectangleGridHelper';
-import WebGLRendererWrapper from '../../../../three-extensions/WebGLRendererWrapper';
-import Detector from '../../../../three-extensions/Detector';
+import RectangleGridHelper from '../../../../scene/objects/RectangleGridHelper';
+import WebGLRendererWrapper from '../../../../scene/three-extensions/WebGLRendererWrapper';
+import Detector from '../../../../scene/three-extensions/Detector';
 import { DEFAULT_LUBAN_HOST } from '../../../../constants';
 
 class PrintPreview extends Component {

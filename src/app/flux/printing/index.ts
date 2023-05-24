@@ -65,7 +65,7 @@ import {
 } from '../../scene/operations';
 import scene from '../../scene/Scene';
 import { machineStore } from '../../store/local-storage';
-import ThreeUtils from '../../three-extensions/ThreeUtils';
+import ThreeUtils from '../../scene/three-extensions/ThreeUtils';
 import { pickAvailableQualityPresetModels } from '../../ui/utils/profileManager';
 import ModelExporter from '../../ui/widgets/PrintingVisualizer/ModelExporter';
 import ModelLoader from '../../ui/widgets/PrintingVisualizer/ModelLoader';

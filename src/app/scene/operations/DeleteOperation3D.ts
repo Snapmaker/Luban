@@ -2,7 +2,7 @@ import ModelGroup from '../../models/ModelGroup';
 import { ModelTransformation } from '../../models/ThreeBaseModel';
 import ThreeGroup from '../../models/ThreeGroup';
 import ThreeModel from '../../models/ThreeModel';
-import ThreeUtils from '../../three-extensions/ThreeUtils';
+import ThreeUtils from '../three-extensions/ThreeUtils';
 import type { DispatchType } from '../../flux/index.def';
 import Operation from '../../core/Operation';
 

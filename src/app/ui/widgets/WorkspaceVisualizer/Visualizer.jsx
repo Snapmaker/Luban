@@ -28,7 +28,7 @@ import { actions as workspaceActions, WORKSPACE_STAGE } from '../../../flux/work
 import { controller } from '../../../lib/controller';
 import log from '../../../lib/log';
 import i18n from '../../../lib/i18n';
-import TargetPoint from '../../../three-extensions/TargetPoint';
+import TargetPoint from '../../../scene/three-extensions/TargetPoint';
 import modalSmallHOC from '../../components/Modal/modal-small';
 import ModalSmall from '../../components/Modal/ModalSmall';
 import ProgressBar from '../../components/ProgressBar';

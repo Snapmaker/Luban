@@ -2,7 +2,7 @@ import Operation from '../../core/Operation';
 import type ModelGroup from '../../models/ModelGroup';
 import ThreeGroup from '../../models/ThreeGroup';
 import type ThreeModel from '../../models/ThreeModel';
-import ThreeUtils from '../../three-extensions/ThreeUtils';
+import ThreeUtils from '../three-extensions/ThreeUtils';
 
 interface OperationInput {
     modelGroup: ModelGroup,

@@ -21,7 +21,7 @@ import {
 } from 'three';
 // import * as THREE from 'three';
 import { throttle } from 'lodash';
-import ThreeUtils from '../../../three-extensions/ThreeUtils';
+import ThreeUtils from '../../../scene/three-extensions/ThreeUtils';
 
 
 import { ArcBufferGeometry } from './ArcGeometry';

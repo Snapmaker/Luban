@@ -14,7 +14,7 @@ import { NumberInput as Input } from '../../components/Input';
 import { Button } from '../../components/Buttons';
 import SvgIcon from '../../components/SvgIcon';
 import { EPSILON, HEAD_PRINTING } from '../../../constants';
-import ThreeUtils from '../../../three-extensions/ThreeUtils';
+import ThreeUtils from '../../../scene/three-extensions/ThreeUtils';
 import { logTransformOperation } from '../../../lib/gaEvent';
 import styles from './styles.styl';
 

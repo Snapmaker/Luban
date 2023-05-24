@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Matrix4, MathUtils } from 'three';
 import { Observable } from 'rxjs';
-import ThreeUtils from '../three-extensions/ThreeUtils';
+import ThreeUtils from '../scene/three-extensions/ThreeUtils';
 
 type Vector3Number = {
     x: number;

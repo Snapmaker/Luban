@@ -1,12 +1,12 @@
 import { MeshBasicMaterial, Object3D, Group, Mesh, PlaneGeometry, DoubleSide, ShapeGeometry, Math as ThreeMath } from 'three';
 import each from 'lodash/each';
 
-import TextSprite from '../../../../three-extensions/TextSprite';
-import TargetPoint from '../../../../three-extensions/TargetPoint';
+import TextSprite from '../../../../scene/three-extensions/TextSprite';
+import TargetPoint from '../../../../scene/three-extensions/TargetPoint';
 
 import GridLine from './GridLine';
 import { COORDINATE_MODE_CENTER, DEFAULT_LUBAN_HOST, HEAD_CNC } from '../../../../constants';
-import SVGLoader from '../../../../three-extensions/SVGLoader';
+import SVGLoader from '../../../../scene/three-extensions/SVGLoader';
 
 const METRIC_GRID_SPACING = 10; // 10 mm
 const METRIC_GRID_BIG_SPACING = 50;

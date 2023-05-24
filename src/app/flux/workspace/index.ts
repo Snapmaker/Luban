@@ -36,7 +36,7 @@ import { logGcodeExport } from '../../lib/gaEvent';
 import log from '../../lib/log';
 import workerManager from '../../lib/manager/workerManager';
 import { machineStore } from '../../store/local-storage';
-import ThreeUtils from '../../three-extensions/ThreeUtils';
+import ThreeUtils from '../../scene/three-extensions/ThreeUtils';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import baseActions, { ACTION_UPDATE_STATE } from './action-base';
 import connectActions from './action-connect';

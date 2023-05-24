@@ -3,10 +3,10 @@ import PropTypes from 'prop-types';
 import * as THREE from 'three';
 import { DATA_PREFIX, DEFAULT_LUBAN_HOST } from '../../../../constants';
 import api from '../../../../api';
-import ExtractControls from '../../../../three-extensions/ExtractControls';
-import RectangleGridHelper from '../../../../three-extensions/RectangleGridHelper';
-import WebGLRendererWrapper from '../../../../three-extensions/WebGLRendererWrapper';
-import Detector from '../../../../three-extensions/Detector';
+import ExtractControls from '../../../../scene/three-extensions/ExtractControls';
+import RectangleGridHelper from '../../../../scene/objects/RectangleGridHelper';
+import WebGLRendererWrapper from '../../../../scene/three-extensions/WebGLRendererWrapper';
+import Detector from '../../../../scene/three-extensions/Detector';
 
 
 class ExtractPreview extends Component {

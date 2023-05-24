@@ -4,8 +4,8 @@ import PropTypes from 'prop-types';
 import TWEEN from '@tweenjs/tween.js';
 
 import Controls from './Controls';
-import Detector from '../../../../three-extensions/Detector';
-import WebGLRendererWrapper from '../../../../three-extensions/WebGLRendererWrapper';
+import Detector from '../../../../scene/three-extensions/Detector';
+import WebGLRendererWrapper from '../../../../scene/three-extensions/WebGLRendererWrapper';
 
 const ANIMATION_DURATION = 500;
 const DEFAULT_MODEL_POSITION = new Vector3(0, 0, 0);

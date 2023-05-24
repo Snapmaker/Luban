@@ -4,7 +4,7 @@ import {
     Color
 } from 'three';
 
-import log from '../lib/log';
+import log from '../../lib/log';
 
 /**
  * https://github.com/gkjohnson/ply-exporter-js
