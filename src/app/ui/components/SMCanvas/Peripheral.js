@@ -1,5 +1,5 @@
 import { Geometry, Line, LineBasicMaterial, Object3D, Quaternion, Vector3 } from 'three';
-import ThreeUtils from '../../../three-extensions/ThreeUtils';
+import ThreeUtils from '../../../scene/three-extensions/ThreeUtils';
 
 const BLUE = 0x00b7ee;
 

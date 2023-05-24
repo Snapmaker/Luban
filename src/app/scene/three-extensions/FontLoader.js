@@ -6,7 +6,7 @@ import {
 	ShapePath
 } from 'three';
 
-import log from '../lib/log';
+import log from '../../lib/log';
 
 class FontLoader extends Loader {
 

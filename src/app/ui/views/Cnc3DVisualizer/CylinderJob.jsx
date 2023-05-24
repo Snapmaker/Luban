@@ -3,8 +3,8 @@ import {
     PlaneGeometry, MeshBasicMaterial, Mesh,
     TextureLoader
 } from 'three';
-import Rectangle from '../../../three-extensions/objects/Rectangle';
-import Grid from '../../../three-extensions/objects/Grid';
+import Rectangle from '../../../scene/objects/Rectangle';
+import Grid from '../../../scene/objects/Grid';
 import { DEFAULT_LUBAN_HOST } from '../../../constants';
 // import RectangleHelper from '../../components/three-extensions/RectangleHelper';
 // import RectangleGridHelper from '../../components/three-extensions/RectangleGridHelper';

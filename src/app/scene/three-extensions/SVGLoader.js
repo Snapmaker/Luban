@@ -19,7 +19,7 @@ import {
 	Vector3
 } from 'three';
 
-import log from '../lib/log';
+import log from '../../lib/log';
 
 class SVGLoader extends Loader {
 	constructor(manager) {

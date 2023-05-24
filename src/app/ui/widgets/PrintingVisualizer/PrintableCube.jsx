@@ -18,11 +18,11 @@ import {
 import { DEFAULT_LUBAN_HOST } from '../../../constants';
 import { findMachineByName } from '../../../constants/machines';
 import log from '../../../lib/log';
-import { FontLoader } from '../../../three-extensions/FontLoader';
-import STLLoader from '../../../three-extensions/STLLoader';
-import SVGLoader from '../../../three-extensions/SVGLoader';
-import ThreeUtils from '../../../three-extensions/ThreeUtils';
-import Rectangle from '../../../three-extensions/objects/Rectangle';
+import { FontLoader } from '../../../scene/three-extensions/FontLoader';
+import STLLoader from '../../../scene/three-extensions/STLLoader';
+import SVGLoader from '../../../scene/three-extensions/SVGLoader';
+import ThreeUtils from '../../../scene/three-extensions/ThreeUtils';
+import Rectangle from '../../../scene/objects/Rectangle';
 // import i18n from '../../../lib/i18n';
 
 class PrintableCube extends Object3D {

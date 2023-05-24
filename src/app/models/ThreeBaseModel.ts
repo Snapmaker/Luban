@@ -6,7 +6,7 @@ import { SvgModelElement } from './BaseModel';
 import type ModelGroup from './ModelGroup';
 import ThreeGroup from './ThreeGroup';
 import { TDisplayedType } from './ModelGroup';
-import ThreeUtils from '../three-extensions/ThreeUtils';
+import ThreeUtils from '../scene/three-extensions/ThreeUtils';
 import workerManager from '../lib/manager/workerManager';
 /* eslint-disable-next-line */
 const { Transfer } = require('threads');

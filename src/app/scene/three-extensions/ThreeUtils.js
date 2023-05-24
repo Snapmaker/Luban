@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { EPS } from '../lib/numeric-utils';
+import { EPS } from '../../lib/numeric-utils';
 
 const ThreeUtils = {
     getQuaternionBetweenVector3(v1, v2) {

@@ -8,7 +8,7 @@ import generateLine from '../lib/generate-line';
 import { CLIPPING_LINE_COLOR, PLANE_MAX_HEIGHT } from './ModelGroup';
 import { bufferToPoint } from '../lib/buffer-utils';
 import workerManager from '../lib/manager/workerManager';
-import ThreeUtils from '../three-extensions/ThreeUtils';
+import ThreeUtils from '../scene/three-extensions/ThreeUtils';
 
 export type TPolygon = ArrayBuffer[]
 

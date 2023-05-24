@@ -3,7 +3,7 @@ import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { Spin } from 'antd';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import STLLoader from '../../../three-extensions/STLLoader';
+import STLLoader from '../../../scene/three-extensions/STLLoader';
 import { EPS, toFixed } from '../../../lib/numeric-utils';
 import { NumberInput as Input } from '../../components/Input';
 import i18n from '../../../lib/i18n';

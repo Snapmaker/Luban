@@ -2,7 +2,7 @@ import { ConvexGeometry } from '@snapmaker/luban-platform';
 import { Observable } from 'rxjs';
 import { BufferGeometry, Group, Vector3 } from 'three';
 
-import ThreeUtils from '../three-extensions/ThreeUtils';
+import ThreeUtils from '../scene/three-extensions/ThreeUtils';
 import ModelLoader from '../ui/widgets/PrintingVisualizer/ModelLoader';
 
 const loadModel = (uploadPath: string) => {

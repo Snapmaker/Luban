@@ -8,7 +8,7 @@ import TipTrigger from '../../../components/TipTrigger';
 import { DATA_PREFIX } from '../../../../constants';
 import { actions } from '../../../../flux/editor';
 import styles from '../styles.styl';
-import Detector from '../../../../three-extensions/Detector';
+import Detector from '../../../../scene/three-extensions/Detector';
 
 class TracePreview extends Component {
     static propTypes = {

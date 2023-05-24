@@ -28,7 +28,7 @@ import {
 } from '../../scene/operations';
 import UngroupOperation3D from '../../scene/operations/UngroupOperation3D';
 import sceneLogic, { PrimeTowerSettings } from '../../scene/scene.logic';
-import ThreeUtils from '../../three-extensions/ThreeUtils';
+import ThreeUtils from '../../scene/three-extensions/ThreeUtils';
 import { actions as operationHistoryActions } from '../operation-history';
 import baseActions from './actions-base';
 import { LoadMeshFileOptions, MeshFileInfo, loadMeshFiles } from './actions-mesh';

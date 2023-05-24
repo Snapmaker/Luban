@@ -9,7 +9,7 @@ import {
 
 import { LOAD_MODEL_FROM_INNER } from '../constants';
 import log from '../lib/log';
-import ThreeUtils from '../three-extensions/ThreeUtils';
+import ThreeUtils from '../scene/three-extensions/ThreeUtils';
 import ThreeGroup from './ThreeGroup';
 import BaseModel, { ModelInfo, TSize } from './ThreeBaseModel';
 import { machineStore } from '../store/local-storage';

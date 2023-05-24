@@ -44,7 +44,7 @@ import log from '../lib/log';
 import workerManager, { WorkerEvents } from '../lib/manager/workerManager';
 import { checkVector3NaN } from '../lib/numeric-utils';
 import { calculateUvVector } from '../lib/threejs/ThreeStlCalculation';
-import ThreeUtils from '../three-extensions/ThreeUtils';
+import ThreeUtils from '../scene/three-extensions/ThreeUtils';
 import { emitUpdateScaleEvent } from '../ui/components/SMCanvas/TransformControls';
 import { IResult as TBrimResult } from '../workers/plateAdhesion/generateBrim';
 import { IResult as TRaftResult } from '../workers/plateAdhesion/generateRaft';

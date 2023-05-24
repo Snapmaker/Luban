@@ -3,8 +3,8 @@ import each from 'lodash/each';
 import colornames from 'colornames';
 
 import { RED, GREEN } from '../../../../constants/colors';
-import TextSprite from '../../../../three-extensions/TextSprite';
-import TargetPoint from '../../../../three-extensions/TargetPoint';
+import TextSprite from '../../../../scene/three-extensions/TextSprite';
+import TargetPoint from '../../../../scene/three-extensions/TargetPoint';
 
 import GridLine from './GridLine';
 import CoordinateAxes from './CoordinateAxes';

@@ -2,7 +2,7 @@
 
 import * as THREE from "three";
 
-import log from '../lib/log';
+import log from '../../lib/log';
 /**
  * @author mrdoob / http://mrdoob.com/
  *

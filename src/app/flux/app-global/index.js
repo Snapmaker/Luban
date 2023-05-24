@@ -12,7 +12,7 @@ import { actions as projectActions } from '../project';
 import { actions as printingActions, uploadMesh } from '../printing';
 import ThreeGroup from '../../models/ThreeGroup';
 import workerManager from '../../lib/manager/workerManager';
-import ThreeUtils from '../../three-extensions/ThreeUtils';
+import ThreeUtils from '../../scene/three-extensions/ThreeUtils';
 
 import { downloadManagerStore } from '../../store/local-storage';
 import downloadMananger from '../../lib/download-mananger';
