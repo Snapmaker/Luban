@@ -16,6 +16,7 @@ import { BrushType } from '../../../models/ModelGroup';
 import { Button } from '../../components/Buttons';
 import { NumberInput as Input } from '../../components/Input';
 import Slider from '../../components/Slider';
+import Tooltip from '../../components/Tooltip';
 import styles from './styles.styl';
 
 interface MeshColoringOverlayProps {
@@ -170,7 +171,7 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
     }, [handleKeydown, handleMousewheel]);
 
     return (
-        <div className={classNames(styles['edit-support'])}>
+        <div className={classNames(styles['mesh-coloring-overlay'])}>
             <header className={classNames(styles['overlay-sub-title-font'])}>
                 <span>{i18n._('key-Printing/MeshEdit-Mesh Coloring')}</span>
             </header>
@@ -180,7 +181,7 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
                     <div className="margin-top-8 sm-flex justify-space-between">
                         <Button
                             type="default"
-                            width="120px"
+                            width="180px"
                             className={classNames(
                                 'height-32-button-with-border',
                                 'border-radius-8',
@@ -208,7 +209,7 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
                         </Button>
                         <Button
                             type="default"
-                            width="120px"
+                            width="180px"
                             className={classNames(
                                 'height-32-button-with-border',
                                 'border-radius-8',
@@ -238,14 +239,31 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
                     </div>
                 </div>
                 <div className="margin-top-10">
-                    <p>{i18n._('key-Printing/MeshEdit-Method')}</p>
-                    <Radio.Group
-                        value={brushType}
-                        onChange={(e) => onChangeBrushType(e.target.value)}
+                    <Tooltip
+                        placement="left"
+                        title={(
+                            <div className="padding-horizontal-16 padding-vertical-16">
+                                <div className="font-weight-bold padding-bottom-16 border-bottom-white">
+                                    {i18n._('key-Printing/MeshEdit-Mesh Coloring')}
+                                </div>
+                                <div className="font-size-small padding-top-16">
+                                    <p className="font-weight-bold">{i18n._('key-Printing/MeshEdit-BrushType-SmartFillBrush')}</p>
+                                    <p className="margin-left-16">{i18n._('key-Printing/MeshEdit-BrushType-SmartFill-Intro')}</p>
+                                    <p className="font-weight-bold">{i18n._('key-Printing/MeshEdit-BrushType-SphereBrush')}</p>
+                                    <p className="margin-left-16">{i18n._('key-Printing/MeshEdit-BrushType-SphereBrush-Intro')}</p>
+                                </div>
+                            </div>
+                        )}
                     >
-                        <Radio value={BrushType.SmartFillBrush}>{i18n._('key-Printing/MeshEdit-BrushType-SmartFillBrush')}</Radio>
-                        <Radio value={BrushType.SphereBrush}>{i18n._('key-Printing/MeshEdit-BrushType-SphereBrush')}</Radio>
-                    </Radio.Group>
+                        <p>{i18n._('key-Printing/MeshEdit-Method')}</p>
+                        <Radio.Group
+                            value={brushType}
+                            onChange={(e) => onChangeBrushType(e.target.value)}
+                        >
+                            <Radio value={BrushType.SmartFillBrush}>{i18n._('key-Printing/MeshEdit-BrushType-SmartFillBrush')}</Radio>
+                            <Radio value={BrushType.SphereBrush}>{i18n._('key-Printing/MeshEdit-BrushType-SphereBrush')}</Radio>
+                        </Radio.Group>
+                    </Tooltip>
                 </div>
                 {[BrushType.SmartFillBrush, BrushType.SphereBrush].includes(brushType) && (
                     <div className="margin-top-10">

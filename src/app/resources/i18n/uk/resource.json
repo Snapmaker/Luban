@@ -1588,6 +1588,8 @@
     "key-Printing/MainToolBar-Print Settings": "Параметри",
     "key-Printing/MeshEdit-BrushType-SmartFillBrush": "Автоматичне заповнення",
     "key-Printing/MeshEdit-BrushType-SphereBrush": "Пензель",
+    "key-Printing/MeshEdit-BrushType-SmartFill-Intro": "",
+    "key-Printing/MeshEdit-BrushType-SphereBrush-Intro": "",
     "key-Printing/MeshEdit-Color Select": "Виділення кольором",
     "key-Printing/MeshEdit-Mesh Coloring": "Розфарбовування сітки",
     "key-Printing/MeshEdit-Method": "Метод",

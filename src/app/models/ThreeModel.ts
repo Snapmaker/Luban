@@ -293,45 +293,58 @@ class ThreeModel extends BaseModel {
      * 2) controlled by single extruder, all triagnle use the same extruder material color
      */
     public colorMesh(): void {
-        const count = this.meshObject.geometry.getAttribute('position').count;
-        const faceCount = Math.round(count / 3);
+        if (this.isColored) {
+            // Mesh is colored, use 0xfff to display its color
+            this.meshObject.material.color.set(0xffffff);
 
-        // Set color attributes, in case material color is changed.
-        const byteCountAttribute = this.meshObject.geometry.getAttribute('byte_count');
-        const colorAttribute = this.meshObject.geometry.getAttribute('color');
-        const indices = this.meshObject.geometry.index;
+            const count = this.meshObject.geometry.getAttribute('position').count;
+            const faceCount = Math.round(count / 3);
 
-        const useByteCountColor = this.isColored && !!byteCountAttribute;
-        const shellMaterialColor = this.getMaterialColor();
+            // Set color attributes, in case material color is changed.
+            const byteCountAttribute = this.meshObject.geometry.getAttribute('byte_count');
+            const colorAttribute = this.meshObject.geometry.getAttribute('color');
+            const indices = this.meshObject.geometry.index;
 
-        let index: number;
-        for (let faceIndex = 0; faceIndex < faceCount; faceIndex++) {
-            for (let k = 0; k < 3; k++) {
-                index = indices ? indices.getX(faceIndex * 3 + k) : faceIndex * 3 + k;
+            const useByteCountColor = this.isColored && !!byteCountAttribute;
+            const shellMaterialColor = this.getMaterialColor();
 
-                if (useByteCountColor) {
-                    // Do nothing if byte count attribute is already used
-                    const byteCount = byteCountAttribute.getX(faceIndex);
-                    const byteCountColor = (byteCount & BYTE_COUNT_COLOR_MASK);
+            let index: number;
+            for (let faceIndex = 0; faceIndex < faceCount; faceIndex++) {
+                for (let k = 0; k < 3; k++) {
+                    index = indices ? indices.getX(faceIndex * 3 + k) : faceIndex * 3 + k;
 
-                    let materialColor;
-                    if (byteCountColor === BYTE_COUNT_LEFT_EXTRUDER) {
-                        materialColor = this.extruderColors[0];
-                    } else if (byteCountColor === BYTE_COUNT_RIGHT_EXTRUDER) {
-                        materialColor = this.extruderColors[1];
+                    if (useByteCountColor) {
+                        // Do nothing if byte count attribute is already used
+                        const byteCount = byteCountAttribute.getX(faceIndex);
+                        const byteCountColor = (byteCount & BYTE_COUNT_COLOR_MASK);
+
+                        let materialColor;
+                        if (byteCountColor === BYTE_COUNT_LEFT_EXTRUDER) {
+                            materialColor = this.extruderColors[0];
+                        } else if (byteCountColor === BYTE_COUNT_RIGHT_EXTRUDER) {
+                            materialColor = this.extruderColors[1];
+                        } else {
+                            materialColor = shellMaterialColor;
+                        }
+                        if (materialColor) {
+                            colorAttribute.setXYZ(index, materialColor.r, materialColor.g, materialColor.b);
+                        }
                     } else {
-                        materialColor = shellMaterialColor;
-                    }
-                    if (materialColor) {
+                        const materialColor = shellMaterialColor;
                         colorAttribute.setXYZ(index, materialColor.r, materialColor.g, materialColor.b);
                     }
-                } else {
-                    const materialColor = shellMaterialColor;
-                    colorAttribute.setXYZ(index, materialColor.r, materialColor.g, materialColor.b);
                 }
             }
+            colorAttribute.needsUpdate = true;
+        } else {
+            const colorAttribute = this.meshObject.geometry.getAttribute('color');
+            if (colorAttribute) {
+                this.meshObject.geometry.deleteAttribute('color');
+            }
+
+            // Use material color
+            this.meshObject.material.color.set(this.materialColor);
         }
-        colorAttribute.needsUpdate = true;
     }
 
     public ensureColorAttribute(): void {
@@ -416,7 +429,6 @@ class ThreeModel extends BaseModel {
         }
 
         this.isColored = false;
-
         this.colorMesh();
     }
 
