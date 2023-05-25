@@ -276,9 +276,11 @@ class SocketTCP extends SocketBASE {
     };
 
     public uploadFile = (options: EventOptions) => {
-        const { gcodePath, eventName } = options;
+        const { gcodePath, eventName, renderGcodeFileName = '' } = options;
+        const renderName = renderGcodeFileName || path.basename(gcodePath);
+
         const gcodeFullPath = `${DataStorage.tmpDir}${gcodePath}`;
-        this.sacpClient.uploadFile(path.resolve(gcodeFullPath)).then((res) => {
+        this.sacpClient.uploadFile(path.resolve(gcodeFullPath), renderName).then((res) => {
             const result = {
                 err: null,
                 text: ''

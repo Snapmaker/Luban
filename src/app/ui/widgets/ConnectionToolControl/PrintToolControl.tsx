@@ -9,12 +9,15 @@ import {
     CONNECTION_NOZZLE_TEMPERATURE,
     CONNECTION_UNLOAD_FILAMENT,
     CONNECTION_WORK_NOZZLE,
-    CONNECTION_Z_OFFSET, LEFT_EXTRUDER, LEFT_EXTRUDER_MAP_NUMBER,
+    CONNECTION_Z_OFFSET,
+    LEFT_EXTRUDER,
+    LEFT_EXTRUDER_MAP_NUMBER,
     RIGHT_EXTRUDER_MAP_NUMBER,
     WORKFLOW_STATUS_PAUSED,
     WORKFLOW_STATUS_PAUSING,
     WORKFLOW_STATUS_RUNNING
 } from '../../../constants';
+import { machine as SnapmakerJ1Machine } from '../../../machines/snapmaker-j1';
 import { isDualExtruder } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
 import { actions as workspaceActions } from '../../../flux/workspace';
@@ -26,12 +29,15 @@ import JogDistance from './JogDistance';
 import AttributeContainer from './components/AttributeContainer';
 import WorkSpeed from './WorkSpeed';
 
+
 const PrintToolControl: React.FC = () => {
     const { isConnected } = useSelector((state: RootState) => state.workspace);
 
     const {
         toolHead: toolIdentifer,
     } = useSelector((state: RootState) => state.workspace);
+
+    const machineIdentifier = useSelector((state: RootState) => state.workspace.machineIdentifier);
 
     const isDual = isDualExtruder(toolIdentifer);
 
@@ -176,8 +182,10 @@ const PrintToolControl: React.FC = () => {
     const leftNozzleReady = leftNozzleTargetTemperature && (leftNozzleTemperature - leftNozzleTargetTemperature >= -5);
     const rightNozzleReady = rightNozzleTargetTemperature && (rightNozzleTemperature - rightNozzleTargetTemperature >= -5);
 
+    const j1Disabled = machineIdentifier === SnapmakerJ1Machine.identifier;
+
     const uiConfig = useMemo(() => ({
-        activeNozzle: isDual,
+        activeNozzle: isDual && !j1Disabled,
 
         nozzleTempDisplay: !isDual,
 
@@ -292,7 +300,7 @@ const PrintToolControl: React.FC = () => {
             }
 
             {
-                uiConfig.leftNozzleTempDisplay && uiConfig.leftNozzleTempEditable && !isPausingOrPrinting() && (
+                uiConfig.leftNozzleTempDisplay && uiConfig.leftNozzleTempEditable && !j1Disabled && !isPausingOrPrinting() && (
                     <div className="sm-flex justify-flex-end margin-vertical-8">
                         <div>
                             <Button
@@ -343,7 +351,7 @@ const PrintToolControl: React.FC = () => {
                 )
             }
             {
-                uiConfig.rightNozzleTempDisplay && uiConfig.rightNozzleTempEditable && !isPausingOrPrinting() && (
+                uiConfig.rightNozzleTempDisplay && uiConfig.rightNozzleTempEditable && !j1Disabled && !isPausingOrPrinting() && (
                     <div className="sm-flex justify-flex-end margin-vertical-8">
                         <div>
                             <Button

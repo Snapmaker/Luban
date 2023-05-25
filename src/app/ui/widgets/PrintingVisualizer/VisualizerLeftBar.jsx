@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
 import { EPSILON, HEAD_PRINTING } from '../../../constants';
+import { isDualExtruder } from '../../../constants/machines';
 import { actions as printingActions } from '../../../flux/printing';
 import { logTransformOperation } from '../../../lib/gaEvent';
 import i18n from '../../../lib/i18n';
@@ -60,6 +61,10 @@ function VisualizerLeftBar(
     const isPrimeTowerSelected = useSelector(state => state?.printing?.modelGroup?.isPrimeTowerSelected());
     const transformMode = useSelector(state => state?.printing?.transformMode, shallowEqual);
     const enableShortcut = useSelector(state => state?.printing?.enableShortcut, shallowEqual);
+
+    const toolHead = useSelector((state) => state.machine.toolHead);
+    const { printingToolhead } = toolHead;
+    const isDual = isDualExtruder(printingToolhead);
 
     const qualityDefinitions = useSelector(state => state.printing.qualityDefinitions);
     const canOpenMeshFile = useMemo(() => {
@@ -209,6 +214,8 @@ function VisualizerLeftBar(
     const rotateDisabled = showRotationAnalyzeModal || !hasVisableModels || isPrimeTowerSelected || pageModeDisabled;
     const mirrorDisabled = showRotationAnalyzeModal || !hasVisableModels || isPrimeTowerSelected || pageModeDisabled;
     const supportDisabled = showRotationAnalyzeModal || !hasVisableModels || isPrimeTowerSelected || pageModeDisabled;
+
+    const meshColoringDisplay = isDual;
     const meshColoringDisabled = showRotationAnalyzeModal || !hasVisableModels || isPrimeTowerSelected || pageModeDisabled;
 
     return (
@@ -325,22 +332,26 @@ function VisualizerLeftBar(
                                     disabled={supportDisabled}
                                 />
                             </li>
-                            <li className="margin-vertical-4">
-                                <SvgIcon
-                                    name="ToolbarColorBrush"
-                                    color="#545659"
-                                    className={classNames(
-                                        'padding-horizontal-4',
-                                        {
-                                            [styles.selected]: (pageMode === PageMode.MeshColoring)
-                                        },
-                                    )}
-                                    type={[`${pageMode === PageMode.MeshColoring ? 'hoverNoBackground' : 'hoverSpecial'}`, 'pressSpecial']}
-                                    size={48}
-                                    onClick={enterMeshColoringPageMode}
-                                    disabled={meshColoringDisabled}
-                                />
-                            </li>
+                            {
+                                meshColoringDisplay && (
+                                    <li className="margin-vertical-4">
+                                        <SvgIcon
+                                            name="ToolbarColorBrush"
+                                            color="#545659"
+                                            className={classNames(
+                                                'padding-horizontal-4',
+                                                {
+                                                    [styles.selected]: (pageMode === PageMode.MeshColoring)
+                                                },
+                                            )}
+                                            type={[`${pageMode === PageMode.MeshColoring ? 'hoverNoBackground' : 'hoverSpecial'}`, 'pressSpecial']}
+                                            size={48}
+                                            onClick={enterMeshColoringPageMode}
+                                            disabled={meshColoringDisabled}
+                                        />
+                                    </li>
+                                )
+                            }
                         </ul>
                     </span>
                 </nav>

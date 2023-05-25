@@ -1,3 +1,4 @@
+import { isUndefined } from 'lodash';
 import type { WebGLRendererParameters } from 'three';
 import { Color, WebGLRenderer } from 'three';
 
@@ -5,7 +6,8 @@ import log from '../../lib/log';
 import Detector from './Detector';
 
 type WebGLRendererOptions = WebGLRendererParameters & {
-    clearColor: Color;
+    clearColor?: Color;
+    clearAlpha?: number;
 }
 
 /**
@@ -19,11 +21,17 @@ class WebGLRendererWrapper {
     public constructor(options: WebGLRendererOptions) {
         if (Detector.isWebGLAvailable()) {
             this.renderer = new WebGLRenderer(options);
+
             if (options.clearColor) {
                 this.renderer.setClearColor(options.clearColor);
             } else {
                 this.renderer.setClearColor(new Color(0xF5F5F7), 1);
             }
+
+            if (!isUndefined(options.clearAlpha)) {
+                this.setClearAlpha(options.clearAlpha);
+            }
+
             this.renderer.shadowMap.enabled = true;
             this.renderer.localClippingEnabled = true;
         } else {
@@ -41,6 +49,10 @@ class WebGLRendererWrapper {
 
     public setClearColor(color: Color | string | number, alpha?: number): void {
         this.renderer.setClearColor(color, alpha);
+    }
+
+    public setClearAlpha(alpha: number): void {
+        this.renderer.setClearAlpha(alpha);
     }
 
     public setSize(width: number, height: number): void {

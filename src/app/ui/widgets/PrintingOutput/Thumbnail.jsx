@@ -39,6 +39,7 @@ class Thumbnail extends PureComponent {
             preserveDrawingBuffer: true,
             alpha: true,
             clearColor: new Color(0xffffff),
+            clearAlpha: 0,
         });
         this.renderer.setSize(width, height);
         this.scene = new Scene();

@@ -1,4 +1,4 @@
-@import "../../../styles/global-var.styl"
+@import '../../../styles/global-var.styl';
 
 .rotation-analysis {
     background: $white;
@@ -56,8 +56,7 @@
                     overflow: hidden;
                     margin-left: 8px;
 
-                    &.asc::before,
-                    &.desc::after {
+                    &.asc::before, &.desc::after {
                         border-color: $blue-2;
                     }
 
@@ -88,8 +87,7 @@
             }
         }
 
-        & thead > tr > th,
-        & tbody > tr > td {
+        & thead > tr > th, & tbody > tr > td {
             padding: 6px 8px;
             white-space: nowrap;
         }
@@ -104,6 +102,7 @@
                     padding-right: 16px;
                 }
             }
+
             cursor: pointer;
             transition: background .3s;
 
@@ -148,10 +147,10 @@
 }
 
 .extruder-overlay .dashed-line {
-    width: calc(100% - 5px)
+    width: calc(100% - 5px);
 }
 
-.edit-support {
+.edit-support, .mesh-coloring-overlay {
     width: 280px;
     background: $white;
     box-shadow: rgb(134 134 139) 0 0 20px -10px;
@@ -201,10 +200,9 @@
                 border-radius: 0 8px 8px 0;
             }
 
-            &:hover
-            &.active {
+            &:hover, &.active {
                 color: #2A2C2E;
-                background #eeeff0 !important;
+                background: #eeeff0 !important;
             }
 
             & .action-title {
@@ -217,39 +215,45 @@
     }
 }
 
+.mesh-coloring-overlay {
+    width: 400px;
+}
+
 .extruder-item-disabled {
     background: #f5f5f5;
     cursor: not-allowed;
     color: rgba(0, 0, 0, .25);
 }
 
-
-.overlay-title-font
-.overlay-sub-title-font {
-    font-size: $font-size-middle
-    color: #545659
-    line-height: 24px
+.overlay-title-font, .overlay-sub-title-font {
+    font-size: $font-size-middle;
+    color: #545659;
+    line-height: 24px;
 }
 
-.overlay-title-font
-    font-weight: 700
+.overlay-title-font {
+    font-weight: 700;
+}
 
-.overlay-sub-title-font
-    font-weight: 500
+.overlay-sub-title-font {
+    font-weight: 500;
+}
 
-
-.rotate-svg
-    height: 30px
-    width: 30px
+.rotate-svg {
+    height: 30px;
+    width: 30px;
     text-align: center;
     line-height: 30px;
 
-    &:hover
-        background-color: #D5D6D9
+    &:hover {
+        background-color: #D5D6D9;
         border-radius: 3.75px;
+    }
+}
 
-.rotate-svg[disabled]:hover
-    background-color: transparent
+.rotate-svg[disabled]:hover {
+    background-color: transparent;
+}
 
 :global(.simplify-overlay-tip) {
     max-width: 300px;
@@ -257,17 +261,17 @@
 
 .extruder-overlay {
     .only-support-interface {
-        margin-left: 140px
+        margin-left: 140px;
     }
 }
 
-
 .record-item {
     :global(.ant-progress) {
-        line-height: 0
+        line-height: 0;
     }
+
     .link-button {
-        font-size: 12px
-        line-height: 1
+        font-size: 12px;
+        line-height: 1;
     }
 }
