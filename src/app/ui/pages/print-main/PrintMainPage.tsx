@@ -592,13 +592,12 @@ const Printing: React.FC<PrintMainPageProps> = ({ location }) => {
                     pageMode={pageMode}
                     setPageMode={setPageMode}
                 />
-
-                <StarterGuide
-                    enabled={starterGuideEnabled}
-                    onChange={onStarterGuideChange}
-                    onExit={onStarterGuideExit}
-                />
             </Dropzone>
+            <StarterGuide
+                enabled={starterGuideEnabled}
+                onChange={onStarterGuideChange}
+                onExit={onStarterGuideExit}
+            />
             {renderHomepage()}
             {renderWorkspace()}
             {renderMachineMaterialSettings()}

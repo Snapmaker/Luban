@@ -11,6 +11,7 @@ import { isNil } from 'lodash';
 import noop from 'lodash/noop';
 import PropTypes from 'prop-types';
 import React from 'react';
+import type { Camera, WebGLRenderer } from 'three';
 import {
     AmbientLight,
     DirectionalLight,
@@ -23,17 +24,16 @@ import {
     Scene,
     Vector3
 } from 'three';
-import type { Camera, WebGLRenderer } from 'three';
 
 import { TRANSLATE_MODE } from '../../../constants';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
+import ModelGroup from '../../../models/ModelGroup';
 import Detector from '../../../scene/three-extensions/Detector';
 import WebGLRendererWrapper from '../../../scene/three-extensions/WebGLRendererWrapper';
+import { SceneToast } from '../../views/toasts/SceneToast';
 import { toast } from '../Toast';
-import { ToastWapper } from '../Toast/toastContainer';
 import Controls, { EVENTS } from './Controls';
-import ModelGroup from '../../../models/ModelGroup';
 
 const ANIMATION_DURATION = 500;
 const DEFAULT_MODEL_POSITION = new Vector3(0, 0, 0);
@@ -352,7 +352,12 @@ class Canvas extends React.PureComponent {
 
         // Check overstep
         if (hasOverstepped) {
-            toast(ToastWapper(i18n._('key-Printing/This is the non printable area'), 'WarningTipsWarning', '#FFA940'));
+            toast(
+                <SceneToast
+                    type="warning"
+                    text={i18n._('key-Printing/This is the non printable area')}
+                />
+            );
             return;
         }
 
@@ -377,7 +382,12 @@ class Canvas extends React.PureComponent {
                     }
                 });
                 if (hasOversteppedHotArea) {
-                    toast(ToastWapper(i18n._('key-Printing/Place the model within the High-temperature Zone to get a temperature higher than 80℃.'), 'WarningTipsWarning', '#1890FF'));
+                    toast(
+                        <SceneToast
+                            type="info"
+                            text={i18n._('key-Printing/Place the model within the High-temperature Zone to get a temperature higher than 80℃.')}
+                        />
+                    );
                 }
             }
         }

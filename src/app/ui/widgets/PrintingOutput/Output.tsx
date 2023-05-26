@@ -19,7 +19,7 @@ import Dropdown from '../../components/Dropdown';
 import Menu from '../../components/Menu';
 import SvgIcon from '../../components/SvgIcon';
 import { toast } from '../../components/Toast';
-import { ToastWapper } from '../../components/Toast/toastContainer';
+import { SceneToast } from '../../views/toasts/SceneToast';
 import Workspace from '../../pages/Workspace';
 import { renderPopup } from '../../utils';
 import Thumbnail from './Thumbnail';
@@ -113,7 +113,12 @@ const Output: React.FC = () => {
                 if (toastRef.current) {
                     toast.dismiss(toastRef.current);
                 }
-                toastRef.current = toast(ToastWapper(i18n._('key-Printing/Out of memory.Failed to load preview.'), 'WarningTipsWarning', '#FFA940'));
+                toastRef.current = toast(
+                    <SceneToast
+                        type="warning"
+                        text={i18n._('key-Printing/Out of memory.Failed to load preview.')}
+                    />
+                );
             });
         } else {
             if (toastRef.current) {

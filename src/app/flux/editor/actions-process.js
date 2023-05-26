@@ -1,24 +1,26 @@
-import { v4 as uuid } from 'uuid';
 import _ from 'lodash';
+import { v4 as uuid } from 'uuid';
 import { baseActions } from './actions-base';
-import { controller } from '../../lib/controller';
-import { STEP_STAGE, PROCESS_STAGE } from '../../lib/manager/ProgressManager';
-import { DISPLAYED_TYPE_MODEL, DISPLAYED_TYPE_TOOLPATH, HEAD_CNC, HEAD_LASER, SELECTEVENT } from '../../constants';
-import { getToolPathType } from '../../toolpaths/utils';
 
-import { toast } from '../../ui/components/Toast';
-import { ToastWapper } from '../../ui/components/Toast/toastContainer';
+import { timestamp } from '../../../shared/lib/random-utils';
+import api from '../../api';
+import { DISPLAYED_TYPE_MODEL, DISPLAYED_TYPE_TOOLPATH, HEAD_CNC, HEAD_LASER, SELECTEVENT } from '../../constants';
+import CompoundOperation from '../../core/CompoundOperation';
+import { controller } from '../../lib/controller';
+import { logSvgSlice } from '../../lib/gaEvent';
 import i18n from '../../lib/i18n';
+import { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
+import { getToolPathType } from '../../toolpaths/utils';
+import { toast } from '../../ui/components/Toast';
+import { makeSceneToast } from '../../ui/views/toasts/SceneToast';
+import definitionManager from '../manager/DefinitionManager';
+import DeleteToolPathOperation from '../operation-history/DeleteToolPathOperation';
+
+
 /* eslint-disable-next-line import/no-cycle */
 import { actions as operationHistoryActions } from '../operation-history';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as projectActions } from '../project';
-import DeleteToolPathOperation from '../operation-history/DeleteToolPathOperation';
-import CompoundOperation from '../../core/CompoundOperation';
-import { timestamp } from '../../../shared/lib/random-utils';
-import definitionManager from '../manager/DefinitionManager';
-import api from '../../api';
-import { logSvgSlice } from '../../lib/gaEvent';
 
 let toastId;
 export const processActions = {
@@ -176,7 +178,7 @@ export const processActions = {
                 if (getToolPathType([...selectedModels, model]).length !== 1) {
                     if (!toastId || !toast.isActive(toastId)) {
                         // toastId = toast(i18n._('key-CncLaser/Toast-Failed to generate a toolpath. Selected objects should be of the same type.'));
-                        toastId = toast(ToastWapper(text1, 'WarningTipsTips', '#1890ff'));
+                        toastId = toast(makeSceneToast('warning', text1));
                     }
                 } else if (selectedModels.findIndex(m => m === model) === -1) {
                     modelGroup.addSelectedToolPathModelIDs([model.modelID]);
@@ -202,8 +204,7 @@ export const processActions = {
         const text1 = i18n._('key-CncLaser/Toast-Failed to generate a toolpath. Selected objects should be of the same type.');
         if (getToolPathType(selectedModels).length !== 1) {
             if (!toastId || !toast.isActive(toastId)) {
-                // toastId = toast(i18n._('key-CncLaser/Toast-Failed to generate a toolpath. Selected objects should be of the same type.'));
-                toastId = toast(ToastWapper(text1, 'WarningTipsTips', '#1890ff'));
+                toastId = toast(makeSceneToast('warning', text1));
             }
             return null;
         }
@@ -561,7 +562,7 @@ export const processActions = {
             const text1 = i18n._('key-CncLaser/Toast-Moving objects to this area may cause a machine collision.');
             if (svgSelectedGroupBoundingBox.y < ChunkAreaY) {
                 if (!toastId || !toast.isActive(toastId)) {
-                    toastId = toast(ToastWapper(text1, 'WarningTipsWarning', '#FFA940'));
+                    toastId = toast(makeSceneToast('warning', text1));
                 }
             }
         }
