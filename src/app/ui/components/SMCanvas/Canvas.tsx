@@ -985,7 +985,21 @@ class Canvas extends React.PureComponent {
 
     public render() {
         if (!Detector.isWebGLAvailable()) {
-            return Detector.getWebGLErrorMessage();
+            return (
+                <div
+                    style={{
+                        background: 'fff',
+                        textAlign: 'center',
+                        width: '400px',
+                        margin: '0 auto 5em',
+                        padding: '10em 1.5em'
+                    }}
+                >
+                    Your graphics card does not seem to support <b>WebGL</b>.
+                    <br />
+                    Find out how to get it <a href="http://get.webgl.org/" style={{ color: '#28a7e1' }}>here</a>.
+                </div>
+            );
         }
 
         return (
