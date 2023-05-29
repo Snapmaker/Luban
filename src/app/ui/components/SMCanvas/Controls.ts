@@ -1,17 +1,16 @@
 /**
  * Controls for canvas based on OrbitControls.
- * Update part of OrbitControls
- * Reference:
- * - https://github.com/mrdoob/three.js/blob/master/examples/js/controls/OrbitControls.js
+ *
+ * Reference: [OrbitControls](https://github.com/mrdoob/three.js/blob/master/examples/js/controls/OrbitControls.js)
  */
-import * as THREE from 'three';
 import EventEmitter from 'events';
 import { isUndefined, throttle } from 'lodash';
-import TransformControls from './TransformControls';
-import TransformControls2D from './TransformControls2D';
-// const EPSILON = 0.000001;
+import * as THREE from 'three';
+
 import { SELECTEVENT } from '../../../constants';
 import { CLIPPING_LINE_COLOR } from '../../../models/ModelGroup';
+import TransformControls from './TransformControls';
+import TransformControls2D from './TransformControls2D';
 
 const EPS = 0.000001;
 
@@ -44,95 +43,108 @@ let inputDOM = null;
 let inputDOM2 = null; // translate has two input for X and Y axis
 
 class Controls extends EventEmitter {
-    camera = null;
+    private camera = null;
 
-    group = null;
+    private group = null;
 
-    domElement = null;
+    private domElement = null;
 
-    transformControl = null;
+    private transformControl = null;
 
-    state = STATE.NONE;
-
-    prevState = null;
+    private state = STATE.NONE;
+    private prevState = null;
 
     // "target" is where the camera orbits around
-    target = new THREE.Vector3();
+    private target = new THREE.Vector3();
 
-    lastPosition = new THREE.Vector3();
+    private lastPosition = new THREE.Vector3();
 
-    lastQuaternion = new THREE.Quaternion();
+    private lastQuaternion = new THREE.Quaternion();
 
-    minDistance = 10;
+    private minDistance = 10;
 
     // calculation temporary variables
     // spherical rotation
-    enableRotate = true;
+    private enableRotate = true;
 
-    maxDistance = 3500;
+    private maxDistance = 3500;
 
-    spherical = new THREE.Spherical();
-
-    sphericalDelta = new THREE.Spherical();
-
-    rotateStart = new THREE.Vector2();
-
-    rotateMoved = false;
+    // rotate
+    private spherical = new THREE.Spherical();
+    private sphericalDelta = new THREE.Spherical();
+    private rotateStart = new THREE.Vector2();
+    private rotateMoved = false;
 
     // pan
-    panOffset = new THREE.Vector3();
-
-    panPosition = new THREE.Vector2();
-
-    panMoved = false;
+    private panOffset = new THREE.Vector3();
+    private panPosition = new THREE.Vector2();
+    private panMoved = false;
+    private panScale = 1; // pan zoom factor, when distance is 700, the init panScale is 1
 
     // scale
-    scale = 1;
-
-    scaleRate = 0.90;
-
-    // pan zoom factor, when distance is 700, the init panScale is 1
-    panScale = 1;
+    private scale = 1;
+    private scaleRate = 0.90;
+    private minScale: number;
+    private maxScale: number;
+    private scaleSize: number;
 
     // calculation only
-    offset = new THREE.Vector3();
+    private offset = new THREE.Vector3();
 
     // detection
-    selectableObjects = null;
-    highlightableObjects = null;
-    highlightLine = null;
-    pointer = new THREE.Vector2();
+    private selectableObjects = null;
+    private highlightableObjects = null;
+    private highlightLine = null;
+    private pointer = new THREE.Vector2();
 
-    shouldForbidSelect = false;
+    private shouldForbidSelect = false;
 
-    modelGroup = null;
+    private modelGroup = null;
 
-    selectedGroup = null;
+    private selectedGroup = null;
 
     // Set to true to zoom to cursor ,panning may have to be enabled
-    zoomToCursor = false;
+    private zoomToCursor = false;
 
-    mouse3D = new THREE.Vector3();
+    private mouse3D = new THREE.Vector3();
 
-    ray = new THREE.Raycaster();
+    private ray = new THREE.Raycaster();
 
-    horizontalPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+    private horizontalPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
 
     // Track if mouse moved during "mousedown" to "mouseup".
-    mouseDownPosition = null;
+    private mouseDownPosition = null;
 
-    clickEnabled = true;
+    private clickEnabled = true;
 
-    isMouseDown = false;
+    private isMouseDown = false;
 
-    isClickOnPeripheral = false;
+    private isClickOnPeripheral = false;
 
-    highLightOnMouseMove = throttle(() => {
+    private highLightOnMouseMove = throttle(() => {
         this.hoverLine();
     }, 300);
 
-    constructor(
-        sourceType, displayedType, camera, group, domElement, onScale, onPan, supportActions, minScale = undefined, maxScale = undefined, scaleSize = undefined
+    // TODO: Refactor this
+    private sourceType: string;
+    private displayedType: string;
+    private onScale: () => void;
+    private onPan: () => void;
+    private supportActions: object;
+    private isPrimeTower: boolean;
+
+    public constructor(
+        sourceType,
+        displayedType,
+        camera,
+        group,
+        domElement,
+        onScale,
+        onPan,
+        supportActions,
+        minScale = undefined,
+        maxScale = undefined,
+        scaleSize = undefined
     ) {
         super();
 
@@ -157,8 +169,7 @@ class Controls extends EventEmitter {
         this.ray.params.Line.threshold = 0.5;
     }
 
-
-    initTransformControls() {
+    private initTransformControls() {
         if (this.sourceType === '3D') {
             this.transformControl = new TransformControls(this.camera);
         } else {
@@ -170,15 +181,15 @@ class Controls extends EventEmitter {
         this.props?.displayedType !== 'gcode' && this.group.add(this.transformControl);
     }
 
-    removeTransformControls() {
+    public removeTransformControls() {
         this.group.remove(this.transformControl);
     }
 
-    getTransformControls() {
+    public getTransformControls() {
         return this.transformControl;
     }
 
-    recoverTransformControls(_isPrimeTower = false, mode) {
+    public recoverTransformControls(_isPrimeTower = false, mode) {
         if (_isPrimeTower) {
             this.transformControl = new TransformControls(this.camera, _isPrimeTower);
         } else {
@@ -191,29 +202,29 @@ class Controls extends EventEmitter {
         this.group.add(this.transformControl);
     }
 
-    setTransformMode(mode) {
+    public setTransformMode(mode) {
         if (this.transformControl) {
             this.transformControl.mode = mode;
         }
     }
 
-    setInProgress(inProgress) {
+    public setInProgress(inProgress) {
         if (this.transformControl) {
             this.transformControl.inProgress = inProgress;
         }
     }
 
-    setTarget(target) {
+    public setTarget(target) {
         this.target = target;
 
         this.updateCamera();
     }
 
-    setPrimeTower(value) {
+    public setPrimeTower(value) {
         this.isPrimeTower = value;
     }
 
-    bindEventListeners() {
+    public bindEventListeners() {
         this.domElement.addEventListener('mousedown', this.onMouseDown, false);
         this.domElement.addEventListener('mousemove', this.onMouseMove, false);
         this.domElement.addEventListener('wheel', this.onMouseWheel, false);
@@ -222,34 +233,34 @@ class Controls extends EventEmitter {
         document.addEventListener('contextmenu', this.onDocumentContextMenu, { capture: true });
     }
 
-    rotateLeft(angle) {
+    public rotateLeft(angle) {
         this.sphericalDelta.theta -= angle;
     }
 
-    rotateUp(angle) {
+    public rotateUp(angle) {
         this.sphericalDelta.phi -= angle;
     }
 
-    rotate(deltaX, deltaY) {
+    public rotate(deltaX, deltaY) {
         const elem = this.domElement === document ? document.body : this.domElement;
 
         this.rotateLeft(2 * Math.PI * deltaX / elem.clientHeight); // yes, height
         this.rotateUp(2 * Math.PI * deltaY / elem.clientHeight);
     }
 
-    panLeft(distance, matrix) {
+    public panLeft(distance, matrix) {
         const v = new THREE.Vector3().setFromMatrixColumn(matrix, 0); // Get X column
         v.multiplyScalar(-distance);
         this.panOffset.add(v);
     }
 
-    panUp(distance, matrix) {
+    public panUp(distance, matrix) {
         const v = new THREE.Vector3().setFromMatrixColumn(matrix, 1); // Get Y column
         v.multiplyScalar(distance);
         this.panOffset.add(v);
     }
 
-    pan(deltaX, deltaY) {
+    public pan(deltaX, deltaY) {
         const elem = this.domElement === document ? document.body : this.domElement;
 
         this.offset.copy(this.camera.position).sub(this.target);
@@ -267,21 +278,21 @@ class Controls extends EventEmitter {
         this.panUp(upDistance, this.camera.matrix);
     }
 
-    setScale(scale) {
+    public setScale(scale) {
         this.scale = scale;
     }
 
-    dollyIn = () => {
+    public dollyIn = () => {
         this.scale *= this.scaleRate;
     };
 
-    dollyOut = () => {
+    public dollyOut = () => {
         this.scale /= this.scaleRate;
     };
 
     // Normalize mouse / touch pointer and remap to view space
     // Ref: https://github.com/mrdoob/three.js/blob/master/examples/js/controls/TransformControls.js#L515
-    getMouseCoord(event) {
+    public getMouseCoord(event) {
         const rect = this.domElement.getBoundingClientRect();
         // TODO: The result is not correct, change all the clientX/clientY as offsetX/offsetY
         return {
@@ -290,7 +301,7 @@ class Controls extends EventEmitter {
         };
     }
 
-    onMouseDown = (event) => {
+    public onMouseDown = (event) => {
         this.isMouseDown = true;
         // Prevent the browser from scrolling.
         // event.preventDefault();
@@ -374,7 +385,7 @@ class Controls extends EventEmitter {
         }
     };
 
-    onMouseMove = (event) => {
+    public onMouseMove = (event) => {
         const coord = this.getMouseCoord(event);
         this.pointer.x = coord.x;
         this.pointer.y = coord.y;
@@ -407,7 +418,7 @@ class Controls extends EventEmitter {
         this.transformControl.onMouseHover(coord);
     };
 
-    onDocumentMouseMove = (event) => {
+    public onDocumentMouseMove = (event) => {
         event.preventDefault();
 
         switch (this.state) {
@@ -457,7 +468,7 @@ class Controls extends EventEmitter {
         }
     };
 
-    onDocumentMouseUp = (event) => {
+    public onDocumentMouseUp = (event) => {
         switch (this.state) {
             case STATE.PAN:
                 if (!this.panMoved) {
@@ -505,14 +516,14 @@ class Controls extends EventEmitter {
         this.isMouseDown = false;
     };
 
-    disableClick() {
+    public disableClick() {
         this.clickEnabled = false;
 
         this.transformControl.detach();
         this.emit(EVENTS.SELECT_OBJECTS, null, SELECTEVENT.UNSELECT);
     }
 
-    enableClick() {
+    public enableClick() {
         this.clickEnabled = true;
     }
 
@@ -521,7 +532,7 @@ class Controls extends EventEmitter {
      *
      * @param event
      */
-    onClick = (event, isRightClick = false) => {
+    private onClick = (event, isRightClick = false) => {
         if (this.state === STATE.SUPPORT) {
             return;
         }
@@ -635,7 +646,7 @@ class Controls extends EventEmitter {
         }
     };
 
-    isObjectInSelectedGroup(object) {
+    private isObjectInSelectedGroup(object) {
         let found = false;
         this.selectedGroup.traverse((object3d) => {
             if (object3d === object) {
@@ -645,7 +656,7 @@ class Controls extends EventEmitter {
         return found;
     }
 
-    onMouseWheel = (event) => {
+    private onMouseWheel = (event) => {
         const stateListAllowWheel = [STATE.NONE, STATE.ROTATE_PLACEMENT, STATE.SUPPORT, STATE.MESH_COLORING];
         if (stateListAllowWheel.includes(this.state)) {
             event.preventDefault();
@@ -655,16 +666,16 @@ class Controls extends EventEmitter {
         }
     };
 
-    onDocumentContextMenu = (event) => {
+    private onDocumentContextMenu = (event) => {
         event.preventDefault();
         event.stopPropagation();
     };
 
-    handleMouseDownRotate = (event) => {
+    private handleMouseDownRotate = (event) => {
         this.rotateStart.set(event.clientX, event.clientY);
     };
 
-    handleMouseMoveRotate = (event) => {
+    private handleMouseMoveRotate = (event) => {
         if (!this.enableRotate) {
             return;
         }
@@ -673,22 +684,22 @@ class Controls extends EventEmitter {
         this.updateCamera();
     };
 
-    handleMouseMovePan = (event) => {
+    private handleMouseMovePan = (event) => {
         this.pan(event.clientX - this.panPosition.x, event.clientY - this.panPosition.y);
         this.panPosition.set(event.clientX, event.clientY);
         this.updateCamera();
     };
 
-    handleMouseDownPan = (event) => {
+    private handleMouseDownPan = (event) => {
         this.panPosition.set(event.clientX, event.clientY);
     };
 
-    resetPanScale = () => {
+    public resetPanScale = () => {
         this.panScale = 1;
         this.emit(EVENTS.PAN_SCALE, 1);
     };
 
-    updatePanScale = () => {
+    public updatePanScale = () => {
         const v = new THREE.Vector3();
 
         const distanceAll = v.copy(this.target).sub(this.camera.position).length();
@@ -700,31 +711,31 @@ class Controls extends EventEmitter {
     };
 
     // update mouse 3D position
-    updateMouse3D = (() => {
-        const scope = this;
+    private updateMouse3D = (() => {
+        // const scope = this;
         const v = new THREE.Vector3();
         const v1 = new THREE.Vector3();
         return (event) => {
-            const element = scope.domElement === document ? scope.domElement.body : scope.domElement;
+            const element = this.domElement === document ? this.domElement.body : this.domElement;
             // Conversion screen coordinates to world coordinates and calculate distance
             // Calculate mouse relative position, use event.offsetY or event.clientY in different situations
             v.set((event.offsetX / element.clientWidth) * 2 - 1, -(event.offsetY / element.clientHeight) * 2 + 1, 0.5);
 
-            v.unproject(scope.camera);
+            v.unproject(this.camera);
 
-            v.sub(scope.camera.position).normalize();
+            v.sub(this.camera.position).normalize();
             // now v is Vector3 which is from mouse position camera position
-            const distanceAll = v1.copy(scope.target).sub(scope.camera.position).length();
+            const distanceAll = v1.copy(this.target).sub(this.camera.position).length();
             this.panScale = Math.round((
                 Math.log(distanceAll / 355.5)
                 / Math.log(this.scaleRate)
             ) * 10) / 10;
-            scope.mouse3D.copy(scope.camera.position).add(v.multiplyScalar(distanceAll));
+            this.mouse3D.copy(this.camera.position).add(v.multiplyScalar(distanceAll));
             this.emit(EVENTS.PAN_SCALE, this.panScale);
         };
     })();
 
-    handleMouseWheel = (event) => {
+    private handleMouseWheel = (event) => {
         this.updateMouse3D(event);
         if (event.deltaY < 0) {
             this.dollyIn();
@@ -735,18 +746,18 @@ class Controls extends EventEmitter {
         this.updateCamera(true);
     };
 
-    setSelectableObjects(objects) {
+    public setSelectableObjects(objects) {
         this.selectableObjects = objects;
     }
 
-    clearHighlight() {
+    private clearHighlight() {
         if (this.highlightLine) {
             this.highlightLine.material.color.set(CLIPPING_LINE_COLOR);
             this.highlightLine = null;
         }
     }
 
-    hoverLine() {
+    private hoverLine() {
         if (this.highlightableObjects && this.highlightableObjects.children.length) {
             const lines = this.highlightableObjects.children.reduce((p, c) => {
                 p.push(...c.children.filter((mesh) => {
@@ -777,7 +788,7 @@ class Controls extends EventEmitter {
         }
     }
 
-    setHighlightableObjects(objects) {
+    public setHighlightableObjects(objects) {
         this.highlightableObjects = objects;
     }
     //
@@ -786,40 +797,40 @@ class Controls extends EventEmitter {
     //     // this.transformControl.updateFramePeripheralVisible(!shouldForbidSelect);
     // }
 
-    updateBoundingBox() {
+    public updateBoundingBox() {
         this.transformControl.updateBoundingBox();
     }
 
-    attach(objects, selectEvent) {
+    public attach(objects, selectEvent) {
         this.selectedGroup = objects;
         this.transformControl.attach(objects, selectEvent);
     }
 
-    detach() {
+    public detach() {
         this.transformControl.detach();
     }
 
-    startSupportMode() {
+    public startSupportMode() {
         this.state = STATE.SUPPORT;
         this.prevState = STATE.SUPPORT;
     }
 
-    stopSupportMode() {
+    public stopSupportMode() {
         this.state = STATE.NONE;
         this.prevState = STATE.NONE;
     }
 
-    startMeshColoringMode() {
+    public startMeshColoringMode() {
         this.state = STATE.MESH_COLORING;
         this.prevState = STATE.MESH_COLORING;
     }
 
-    stopMeshColoringMode() {
+    public stopMeshColoringMode() {
         this.state = STATE.NONE;
         this.prevState = STATE.NONE;
     }
 
-    updateCamera(shouldUpdateTarget = false) {
+    private updateCamera(shouldUpdateTarget = false) {
         this.offset.copy(this.camera.position).sub(this.target);
         // const vector = new THREE.Vector3(0, 0, 0);
         // this.offset.copy(this.camera.position).sub(vector);
@@ -906,7 +917,7 @@ class Controls extends EventEmitter {
         // this
     }
 
-    dispose() {
+    public dispose() {
         this.domElement.removeEventListener('mousedown', this.onMouseDown, false);
         this.domElement.removeEventListener('mousemove', this.onMouseMove, false);
         this.domElement.removeEventListener('wheel', this.onMouseWheel, false);
@@ -916,7 +927,7 @@ class Controls extends EventEmitter {
         document.removeEventListener('contextmenu', this.onDocumentContextMenu, false);
     }
 
-    setSelectedModelConvexMeshGroup(group) {
+    public setSelectedModelConvexMeshGroup(group) {
         this.state = STATE.ROTATE_PLACEMENT;
         this.transformControl.setObjectConvexMeshGroup(group);
     }
