@@ -9,6 +9,7 @@ import { NumberInput as Input } from '../../components/Input';
 import SvgIcon from '../../components/SvgIcon';
 import Slider from '../../components/Slider';
 import { actions as printingActions } from '../../../flux/printing';
+import sceneActions from '../../../flux/printing/actions-scene';
 import { actions as menuActions } from '../../../flux/appbar-menu';
 import { HEAD_PRINTING } from '../../../constants';
 import { logTransformOperation } from '../../../lib/gaEvent';
@@ -22,7 +23,7 @@ const EditSupportOverlay = ({ onClose }) => {
     const actions = {
         finish: (shouldApplyChanges) => {
             logTransformOperation(HEAD_PRINTING, 'support', 'edit_done');
-            dispatch(printingActions.finishEditSupportArea(shouldApplyChanges));
+            dispatch(sceneActions.finishEditSupportArea(shouldApplyChanges));
             onClose();
         },
         handleMousewheel: (e) => {
@@ -64,7 +65,8 @@ const EditSupportOverlay = ({ onClose }) => {
     };
 
     useEffect(() => {
-        dispatch(printingActions.startEditSupportArea());
+        dispatch(sceneActions.startEditSupportMode());
+
         // Mousetrap doesn't support unbind specific shortcut callback, use native instead
         window.addEventListener('keydown', actions.handleKeydown, true);
         window.addEventListener('wheel', actions.handleMousewheel, true);

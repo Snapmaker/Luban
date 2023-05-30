@@ -338,14 +338,6 @@ class Visualizer extends PureComponent {
 
     // all support related actions used in VisualizerModelTransformation & canvas.controls & contextmenu
     supportActions = {
-        startSupportMode: () => {
-            this.props.destroyGcodeLine();
-            this.actions.setTransformMode('support');
-            this.canvas.current.startSupportMode();
-        },
-        stopSupportMode: () => {
-            this.canvas.current.stopSupportMode();
-        },
         moveSupportBrush: (raycastResult) => {
             this.props.moveSupportBrush(raycastResult);
         },
@@ -456,9 +448,6 @@ class Visualizer extends PureComponent {
             // Re-position model group
             gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
             this.canvas.current.setCamera(new Vector3(0, -Math.max(size.x, size.y, size.z) * 2, size.z / 2), new Vector3(0, 0, size.z / 2));
-            if (transformMode !== 'rotate-placement') {
-                this.supportActions.stopSupportMode();
-            }
         }
         if (!isEqual(stopArea, prevProps.stopArea)) {
             this.printableArea.updateStopArea(stopArea);
@@ -592,7 +581,6 @@ class Visualizer extends PureComponent {
                     fitViewIn={this.actions.fitViewIn}
                     updateBoundingBox={this.actions.updateBoundingBox}
                     setTransformMode={this.actions.setTransformMode}
-                    supportActions={this.supportActions}
                     autoRotateSelectedModel={this.actions.autoRotateSelectedModel}
                     setHoverFace={this.actions.setHoverFace}
                     arrangeAllModels={this.actions.arrangeAllModels}

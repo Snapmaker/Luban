@@ -1,6 +1,7 @@
 import { find } from 'lodash';
-import { Color } from 'three';
+import { Color, Float32BufferAttribute } from 'three';
 import { v4 as uuid } from 'uuid';
+import path from 'path';
 
 import {
     HEAD_PRINTING,
@@ -8,6 +9,7 @@ import {
     LOAD_MODEL_FROM_INNER,
     MACHINE_EXTRUDER_X,
     MACHINE_EXTRUDER_Y,
+    DATA_PREFIX,
     RIGHT_EXTRUDER
 } from '../../constants';
 import CompoundOperation from '../../core/CompoundOperation';
@@ -31,7 +33,7 @@ import sceneLogic, { PrimeTowerSettings } from '../../scene/scene.logic';
 import ThreeUtils from '../../scene/three-extensions/ThreeUtils';
 import { actions as operationHistoryActions } from '../operation-history';
 import baseActions from './actions-base';
-import { LoadMeshFileOptions, MeshFileInfo, loadMeshFiles } from './actions-mesh';
+import { MeshHelper, LoadMeshFileOptions, MeshFileInfo, loadMeshFiles } from './actions-mesh';
 
 
 const renderScene = () => (dispatch) => {
@@ -251,6 +253,9 @@ const setSmartFillBrushAngle = (angle: number) => {
     };
 };
 
+/**
+ * Start mesh coloring mode.
+ */
 const startMeshColoringMode = () => {
     return async (dispatch, getState) => {
         const {
@@ -355,6 +360,224 @@ const applyMeshColoringBrush = (raycastResult) => {
         modelGroup.applyMeshColoringBrush(raycastResult, faceExtruderMark, color);
     };
 };
+
+const uploadModelsForSupport = (models, angle) => {
+    return async (dispatch, getState) => {
+        const { qualityDefinitions, activePresetIds } = getState().printing;
+        const activeQualityDefinition = find(qualityDefinitions, {
+            definitionId: activePresetIds[LEFT_EXTRUDER],
+        });
+        return new Promise((resolve) => {
+            // upload model stl
+            setTimeout(async () => {
+                const params = {
+                    data: []
+                };
+                for (const model of models) {
+                    const mesh = model.meshObject.clone(false);
+                    mesh.clear();
+                    model.meshObject.parent.updateMatrixWorld();
+                    mesh.applyMatrix4(model.meshObject.parent.matrixWorld);
+
+                    // negative scale flips normals, just flip them back by changing the winding order of faces
+                    // https://stackoverflow.com/questions/16469270/transforming-vertex-normals-in-three-js/16469913#16469913
+                    if (
+                        model.transformation.scaleX
+                        * model.transformation.scaleY
+                        * model.transformation.scaleZ
+                        < 0
+                    ) {
+                        mesh.geometry = mesh.geometry.clone();
+                        const positions = mesh.geometry.getAttribute('position').array;
+
+                        for (let i = 0; i < positions.length; i += 9) {
+                            const tempX = positions[i + 0];
+                            const tempY = positions[i + 1];
+                            const tempZ = positions[i + 2];
+
+                            positions[i + 0] = positions[i + 6];
+                            positions[i + 1] = positions[i + 7];
+                            positions[i + 2] = positions[i + 8];
+
+                            positions[i + 6] = tempX;
+                            positions[i + 7] = tempY;
+                            positions[i + 8] = tempZ;
+                        }
+                        mesh.geometry.computeFaceNormals();
+                        mesh.geometry.computeVertexNormals();
+                    }
+                    // Add byte_count attribute for STL binary exporter
+                    mesh.geometry.setAttribute('byte_count', new Float32BufferAttribute(model.supportFaceMarks.slice(0), 1));
+
+                    const originalName = model.originalName;
+                    const uploadPath = `${DATA_PREFIX}/${originalName}`;
+                    const basenameWithoutExt = path.basename(
+                        uploadPath,
+                        path.extname(uploadPath)
+                    );
+                    const stlFileName = `${basenameWithoutExt}.stl`;
+                    const uploadResult = await MeshHelper.uploadMesh(mesh, stlFileName);
+                    mesh.geometry.deleteAttribute('byte_count');
+
+                    params.data.push({
+                        modelID: model.modelID,
+                        uploadName: uploadResult.body.uploadName,
+                        // specify generated support name
+                        supportStlFilename: uploadResult.body.uploadName.replace(
+                            /\.stl$/,
+                            `_support_${Date.now()}.stl`
+                        ),
+                        config: {
+                            support_angle: angle,
+                            layer_height_0:
+                                activeQualityDefinition.settings.layer_height_0
+                                    .default_value,
+                            support_mark_area: false // tell engine to use marks in binary STL file
+                        }
+                    });
+                }
+                resolve(params);
+            }, 50);
+        });
+    };
+};
+
+const generateSupports = (models, angle) => {
+    return async (dispatch, getState) => {
+        const { progressStatesManager } = getState().printing;
+        const { size } = getState().machine;
+
+        if (!models || models.length === 0) {
+            return;
+        }
+
+        if (!progressStatesManager.inProgress()) {
+            progressStatesManager.startProgress(
+                PROCESS_STAGE.PRINTING_GENERATE_SUPPORT,
+                [1]
+            );
+        } else {
+            progressStatesManager.startNextStep();
+        }
+        dispatch(
+            baseActions.updateState({
+                stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_MODEL,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_MODEL, 0)
+            })
+        );
+
+        const params = await dispatch(
+            uploadModelsForSupport(models, angle)
+        );
+        params.size = size;
+        controller.generateSupport(params);
+    };
+};
+
+const computeAutoSupports = (angle) => {
+    return (dispatch, getState) => {
+        const { modelGroup, progressStatesManager } = getState().printing;
+
+        // record previous support face marks for undo&redo
+        const tmpSupportFaceMarks = {};
+        // Give priority to the selected supporting models, Second, apply all models
+        const selectedAvailModels = modelGroup.getModelsAttachedSupport(false);
+        const availModels = selectedAvailModels.length > 0
+            ? selectedAvailModels
+            : modelGroup.getModelsAttachedSupport();
+
+        if (availModels.length > 0) {
+            progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_GENERATE_SUPPORT, [1, 1]);
+            dispatch(
+                baseActions.updateState({
+                    stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA,
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA, 0.25)
+                })
+            );
+
+            availModels.forEach((model) => {
+                tmpSupportFaceMarks[model.modelID] = model.supportFaceMarks;
+            });
+            dispatch(
+                baseActions.updateState({
+                    tmpSupportFaceMarks
+                })
+            );
+
+            const models = modelGroup.computeSupportArea(availModels, angle);
+
+            dispatch(
+                baseActions.updateState({
+                    stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA,
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA, 1)
+                })
+            );
+            if (models.length > 0) {
+                dispatch(generateSupports(models, angle));
+            }
+
+            dispatch(renderScene());
+        }
+    };
+};
+
+const startEditSupportMode = () => {
+    return (dispatch, getState) => {
+        const modelGroup = getState().printing.modelGroup as ModelGroup;
+
+        modelGroup.startEditSupportArea();
+
+        dispatch(setTransformMode('support-edit'));
+
+        dispatch(discardPreview({ render: true }));
+    };
+};
+
+const finishEditSupportArea = (shouldApplyChanges = false) => {
+    return (dispatch, getState) => {
+        const { modelGroup, progressStatesManager } = getState().printing;
+
+        if (shouldApplyChanges) {
+            progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_GENERATE_SUPPORT, [1, 1]);
+            dispatch(
+                baseActions.updateState({
+                    stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA,
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA, 0.25)
+                })
+            );
+
+            // record previous support face marks for undo&redo
+            const tmpSupportFaceMarks = {};
+            const availModels = modelGroup.getModelsAttachedSupport();
+            availModels.forEach((model) => {
+                tmpSupportFaceMarks[model.modelID] = model.supportFaceMarks;
+            });
+            dispatch(
+                baseActions.updateState({
+                    tmpSupportFaceMarks
+                })
+            );
+
+            const models = modelGroup.finishEditSupportArea(true);
+
+            dispatch(
+                baseActions.updateState({
+                    stage: STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA,
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_GENERATE_SUPPORT_AREA, 1)
+                })
+            );
+
+            dispatch(generateSupports(models, 0));
+        } else {
+            modelGroup.finishEditSupportArea(false);
+        }
+
+        // Set back to support mode
+        dispatch(setTransformMode('support'));
+        dispatch(renderScene());
+    };
+};
+
 
 /**
  * Set visibility of model / group, if no target set, selected model(s)
@@ -800,11 +1023,16 @@ export default {
     setBrushType,
     setSmartFillBrushAngle,
 
-    // mesh coloring
+    // mesh - mesh coloring
     startMeshColoringMode,
     endMeshColoringMode,
     setMeshStackId,
     applyMeshColoringBrush,
+
+    // mesh - edit support
+    computeAutoSupports,
+    startEditSupportMode,
+    finishEditSupportArea,
 
     // model operations
     setModelVisibility,

@@ -472,11 +472,7 @@ class Controls extends EventEmitter {
         switch (this.state) {
             case STATE.PAN:
                 if (!this.panMoved) {
-                    if (this.prevState === STATE.SUPPORT) {
-                        // stop support mode on right click
-                        this.prevState = null;
-                        this.supportActions.stopSupportMode();
-                    } else if (this.prevState === STATE.ROTATE_PLACEMENT) {
+                    if (this.prevState === STATE.ROTATE_PLACEMENT) {
                         break;
                     } else {
                         // check if any model selected

@@ -6,6 +6,7 @@ import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { HEAD_PRINTING } from '../../../constants';
 import type { RootState } from '../../../flux/index.def';
 import { actions as printingActions } from '../../../flux/printing';
+import sceneActions from '../../../flux/printing/actions-scene';
 import { logTransformOperation } from '../../../lib/gaEvent';
 import i18n from '../../../lib/i18n';
 import { Button } from '../../components/Buttons';
@@ -35,7 +36,7 @@ const SupportOverlay: React.FC<SupportOverlayProps> = (props) => {
 
     const actions = {
         generateAutoSupport(angle) {
-            dispatch(printingActions.computeAutoSupports(angle));
+            dispatch(sceneActions.computeAutoSupports(angle));
             setWillOverrideSupport(false);
             logTransformOperation(HEAD_PRINTING, 'support', 'auto');
         },
