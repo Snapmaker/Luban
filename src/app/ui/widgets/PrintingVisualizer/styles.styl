@@ -1,5 +1,3 @@
-@import '../styles.styl';
-
 .widget-container {
     position: relative;
     margin-bottom: 0;
@@ -11,6 +9,27 @@ $z-index-float = 500;
 $visualizer-padding = 10px;
 $left-bar-width = 58px;
 $bottom-bar-height = 0;
+
+.canvas-container {
+    height: calc(100vh - 66px);
+    position: relative;
+}
+
+.visualizer-info {
+    z-index: $z-index-float
+    position: absolute
+    right: 12px
+    bottom: 16px
+
+    p {
+        text-align: right
+        margin: 0 0 4px
+        max-width: 280px
+        white-space: nowrap
+        overflow: hidden
+        text-overflow: ellipsis
+    }
+}
 
 .visualizer-top-left {
     position: absolute;

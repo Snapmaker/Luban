@@ -47,7 +47,7 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
     // Brush size
     const [brushSize, setBrushSize] = useState(DEFAULT_SPHERE_BRUSH_SIZE); // unit: mm
     useEffect(() => {
-        dispatch(printingActions.setSupportBrushRadius(brushSize / 2));
+        dispatch(sceneActions.setSupportBrushRadius(brushSize / 2));
     }, [dispatch, brushSize]);
 
     const { modelGroup } = useSelector((state: RootState) => state.printing);

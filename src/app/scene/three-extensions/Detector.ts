@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default class Detector {
     private static __isWebGLAvailable = undefined;
 
@@ -24,24 +22,5 @@ export default class Detector {
         }
 
         return this.__isWebGLAvailable;
-    }
-
-    // from examples/js/Detector.js
-    public static getWebGLErrorMessage() {
-        return (
-            <div
-                style={{
-                    background: 'fff',
-                    textAlign: 'center',
-                    width: '400px',
-                    margin: '0 auto 5em',
-                    padding: '10em 1.5em'
-                }}
-            >
-                Your graphics card does not seem to support <b>WebGL</b>.
-                <br />
-                Find out how to get it <a href="http://get.webgl.org/" style={{ color: '#28a7e1' }}>here</a>.
-            </div>
-        );
     }
 }

@@ -1,21 +1,22 @@
 import path from 'path';
 import isElectron from 'is-electron';
+
 import { EPSILON, HEAD_PRINTING, DATA_PREFIX } from '../../constants';
 import { AccessResourceWebState, DetailModalState } from '../../constants/downloadManager';
 import { controller } from '../../lib/controller';
 import { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
-
 import { baseActions as editorActions } from '../editor/actions-base';
-// eslint-disable-next-line import/no-cycle
-import { actions as projectActions } from '../project';
-// eslint-disable-next-line import/no-cycle
-import { actions as printingActions, uploadMesh } from '../printing';
 import ThreeGroup from '../../models/ThreeGroup';
 import workerManager from '../../lib/manager/workerManager';
 import ThreeUtils from '../../scene/three-extensions/ThreeUtils';
-
 import { downloadManagerStore } from '../../store/local-storage';
 import downloadMananger from '../../lib/download-mananger';
+import { MeshHelper } from '../printing/actions-mesh';
+
+// eslint-disable-next-line import/no-cycle
+import { actions as projectActions } from '../project';
+// eslint-disable-next-line import/no-cycle
+import { actions as printingActions } from '../printing';
 
 const ACTION_UPDATE_STATE = 'app-global/ACTION_UPDATE_STATE';
 const DEFAULT_MODAL_ZINDEX = 9999;
@@ -170,7 +171,7 @@ export const actions = {
                         );
                         const sourceRepairName = `${basenameWithoutExt}.stl`;
 
-                        const uploadResult = await uploadMesh(mesh, sourceRepairName);
+                        const uploadResult = await MeshHelper.uploadMesh(mesh, sourceRepairName);
                         uploadName = uploadResult?.body?.uploadName;
 
                         ThreeUtils.dispose(mesh);

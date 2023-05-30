@@ -1,6 +1,7 @@
 import path from 'path';
 import * as THREE from 'three';
 
+import api from '../../api';
 import { DATA_PREFIX } from '../../constants';
 import { HEAD_PRINTING } from '../../constants/machines';
 import { controller } from '../../lib/controller';
@@ -8,7 +9,7 @@ import workerManager from '../../lib/manager/workerManager';
 import ModelGroup from '../../models/ModelGroup';
 import { ExtruderConfig, ModelTransformation, TSize } from '../../models/ThreeBaseModel';
 import ThreeModel from '../../models/ThreeModel';
-
+import ModelExporter from '../../ui/widgets/PrintingVisualizer/ModelExporter';
 
 export declare interface MeshFileInfo {
     originalName: string; // file original name
@@ -22,6 +23,20 @@ export declare interface MeshFileInfo {
     children?: object[];
     baseName?: string;
 }
+
+/**
+ * Upload Mesh object.
+ */
+const uploadMesh = async (mesh, fileName, fileType = 'stl') => {
+    const stl = new ModelExporter().parse(mesh, fileType, true);
+    const blob = new Blob([stl], { type: 'text/plain' });
+    const fileOfBlob = new File([blob], fileName);
+
+    const formData = new FormData();
+    formData.append('file', fileOfBlob);
+    const uploadResult = await api.uploadFile(formData, HEAD_PRINTING);
+    return uploadResult;
+};
 
 /**
  * Check integrity of meshes.
@@ -311,6 +326,10 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
         models,
         promptTasks,
     };
+};
+
+export const MeshHelper = {
+    uploadMesh,
 };
 
 export default {

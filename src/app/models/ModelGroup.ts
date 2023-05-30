@@ -55,7 +55,7 @@ import PrimeTowerModel from './PrimeTowerModel';
 import SvgModel from './SvgModel';
 import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
 import ThreeGroup from './ThreeGroup';
-import ThreeModel, { BYTE_COUNT_COLOR_CLEAR_MASK } from './ThreeModel';
+import ThreeModel, { BYTE_COUNT_COLOR_CLEAR_MASK, BYTE_COUNT_SUPPORT_CLEAR_MASK } from './ThreeModel';
 import { ModelEvents } from './events';
 
 
@@ -2465,100 +2465,6 @@ class ModelGroup extends EventEmitter {
         });
     }
 
-    public startEditSupportArea() {
-        const models = this.getModelsAttachedSupport();
-        models.forEach((model) => {
-            model.tmpSupportMesh = model.meshObject.children[0];
-            model.meshObject.clear();
-            // change color
-            model.isEditingSupport = true;
-            if (!model.supportFaceMarks || model.supportFaceMarks.length === 0) {
-                const count = model.meshObject.geometry.getAttribute('position').count;
-                model.supportFaceMarks = new Array(count / 3).fill(0);
-            }
-
-            const bufferGeometry = model.meshObject.geometry;
-            const clone = bufferGeometry.clone();
-            clone.applyMatrix4(model.meshObject.matrixWorld.clone());
-            const normals = clone.getAttribute('normal').array;
-            const positions = clone.getAttribute('position').array;
-            const zUp = new Vector3(0, 0, 1);
-            for (let i = 0, j = 0; i < normals.length; i += 9, j++) {
-                const normal = new Vector3(normals[i], normals[i + 1], normals[i + 2]);
-                const angleN = normal.angleTo(zUp) / Math.PI * 180;
-                const averageZOfFace = (positions[i + 2] + positions[i + 5] + positions[i + 8]) / 3;
-                // prevent to add marks to the faces attached to XOY plane
-                if (angleN > (90 + EPSILON) && averageZOfFace > 0.01) {
-                    model.supportFaceMarks[j] = model.supportFaceMarks[j] || AVAIL;
-                }
-            }
-
-            const colors = [];
-            model.supportFaceMarks.forEach((mark) => {
-                switch (mark) {
-                    case NONE:
-                        colors.push(...SUPPORT_UNAVAIL_AREA_COLOR, ...SUPPORT_UNAVAIL_AREA_COLOR, ...SUPPORT_UNAVAIL_AREA_COLOR);
-                        break;
-                    case FACE:
-                        colors.push(...SUPPORT_ADD_AREA_COLOR, ...SUPPORT_ADD_AREA_COLOR, ...SUPPORT_ADD_AREA_COLOR);
-                        break;
-                    case AVAIL:
-                        colors.push(...SUPPORT_AVAIL_AREA_COLOR, ...SUPPORT_AVAIL_AREA_COLOR, ...SUPPORT_AVAIL_AREA_COLOR);
-                        break;
-                    default:
-                        break;
-                }
-            });
-            model.meshObject.geometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
-            model.originalGeometry = model.meshObject.geometry.clone();
-            // this function call produce side effects on geometry, need to reset geometry, otherwise support will be incorrect
-            model.meshObject.geometry.computeBoundsTree();
-            model.meshObject.userData = {
-                ...model.meshObject.userData,
-                canSupport: true
-            };
-            model.setSelected();
-        });
-        this.modelChanged();
-
-        // Add brush mesh as well
-        if (this.brushMesh) {
-            this.object.parent.add(this.brushMesh);
-        }
-    }
-
-    public finishEditSupportArea(shouldApplyChanges: boolean) {
-        // Remove brush mesh
-        this.object.parent.remove(this.brushMesh);
-
-        const models = this.getModelsAttachedSupport();
-        models.forEach((model) => {
-            if (shouldApplyChanges) {
-                const colors = model.meshObject.geometry.getAttribute('color').array as number[];
-                const supportFaceMarks = [];
-                for (let i = 0, j = 0; i < colors.length; i += 9, j++) {
-                    // determine the support face by checking RGB value
-                    const isSupportArea = colors.slice(i, i + 9).some((color) => {
-                        return Math.abs(color - SUPPORT_ADD_AREA_COLOR[0]) < EPSILON;
-                    });
-                    supportFaceMarks[j] = isSupportArea ? FACE : NONE;
-                }
-                model.supportFaceMarks = supportFaceMarks;
-            } else {
-                // show original support mesh
-                model.meshObject.add(model.tmpSupportMesh);
-                model.tmpSupportMesh = null;
-            }
-            model.meshObject.geometry.disposeBoundsTree();
-            model.meshObject.geometry.copy(model.originalGeometry);
-            model.meshObject.geometry.deleteAttribute('color');
-            model.isEditingSupport = false;
-            model.setSelected();
-        });
-        this.modelChanged();
-        return models;
-    }
-
     public setSupportBrushRadius(radius: number) {
         let position = new Vector3(0, 0, 0);
         if (this.brushMesh) {
@@ -2582,91 +2488,8 @@ class ModelGroup extends EventEmitter {
         this.object.parent.add(this.brushMesh);
     }
 
-    public moveSupportBrush(raycastResult: Intersection[]) {
+    public moveBrush(raycastResult: Intersection[]) {
         this.brushMesh.position.copy(raycastResult[0].point);
-    }
-
-    public applySupportBrush(raycastResult: Intersection[], flag: 'add' | 'remove') {
-        this.moveSupportBrush(raycastResult);
-
-        const target = raycastResult.find((result) => result.object.userData.canSupport);
-        if (target) {
-            const targetMesh = target.object as Mesh;
-            const geometry = targetMesh.geometry as BufferGeometry;
-            const bvh = geometry.boundsTree;
-            if (bvh) {
-                const inverseMatrix = new Matrix4();
-                inverseMatrix.copy(targetMesh.matrixWorld).invert();
-
-                const sphere = new Sphere();
-                sphere.center.copy(this.brushMesh.position).applyMatrix4(inverseMatrix);
-                sphere.radius = (this.brushMesh.geometry as SphereBufferGeometry).parameters.radius;
-
-                const indices = [];
-                const tempVec = new Vector3();
-                bvh.shapecast({
-                    intersectsBounds: (box) => {
-                        const intersects = sphere.intersectsBox(box);
-                        const { min, max } = box;
-                        if (intersects) {
-                            for (let x = 0; x <= 1; x++) {
-                                for (let y = 0; y <= 1; y++) {
-                                    for (let z = 0; z <= 1; z++) {
-                                        tempVec.set(
-                                            x === 0 ? min.x : max.x,
-                                            y === 0 ? min.y : max.y,
-                                            z === 0 ? min.z : max.z
-                                        );
-                                        if (!sphere.containsPoint(tempVec)) {
-                                            return INTERSECTED;
-                                        }
-                                    }
-                                }
-                            }
-                            return CONTAINED;
-                        }
-                        return intersects ? INTERSECTED : NOT_INTERSECTED;
-                    },
-                    intersectsTriangle: (tri, i, contained) => {
-                        if (contained || (tri as unknown as {
-                            intersectsSphere: (sphere: Sphere) => boolean
-                        }).intersectsSphere(sphere)) {
-                            const i3 = 3 * i;
-                            indices.push(i3, i3 + 1, i3 + 2);
-                        }
-                        return false;
-                    }
-                });
-                const colorAttr = geometry.getAttribute('color');
-                const byteCountAttribute = geometry.getAttribute('byte_count');
-                const indexAttr = geometry.index;
-                let color;
-                let byteCount = 0;
-                if (flag === 'add') {
-                    color = SUPPORT_ADD_AREA_COLOR;
-                    byteCount = 1;
-                } else if (flag === 'remove') {
-                    color = SUPPORT_AVAIL_AREA_COLOR;
-                }
-                for (let i = 0, l = indices.length; i < l; i++) {
-                    const i2 = indexAttr.getX(indices[i]);
-                    if (
-                        Math.abs(colorAttr.getX(i2) - SUPPORT_AVAIL_AREA_COLOR[0]) < EPSILON
-                        || Math.abs(colorAttr.getX(i2) - SUPPORT_ADD_AREA_COLOR[0]) < EPSILON
-                        || Math.abs(colorAttr.getX(i2) - MESH_COLORING_DEFAULT_COLOR[0]) < EPSILON
-                    ) {
-                        colorAttr.setX(i2, color[0]);
-                        colorAttr.setY(i2, color[1]);
-                        colorAttr.setZ(i2, color[2]);
-                    }
-
-                    if (byteCountAttribute) {
-                        byteCountAttribute.setX(i / 3, byteCount);
-                    }
-                }
-                colorAttr.needsUpdate = true;
-            }
-        }
     }
 
     public checkIfOverrideSupport() {
@@ -3071,6 +2894,7 @@ class ModelGroup extends EventEmitter {
 
             model.setSelected();
         }
+
         this.modelChanged();
 
         // Add brush mesh as well
@@ -3117,7 +2941,7 @@ class ModelGroup extends EventEmitter {
      * Apply brush, with extruder mark and corresponding color.
      */
     public applyMeshColoringBrush(raycastResult: Intersection[], faceExtruderMark: number, color: Color): void {
-        this.moveSupportBrush(raycastResult);
+        this.moveBrush(raycastResult);
 
         const target = raycastResult.find((result) => result.object.userData.canSupport);
         if (!target) {
@@ -3378,6 +3202,187 @@ class ModelGroup extends EventEmitter {
                 byteCountAttribute.setX(faceIndex, (byteCount & BYTE_COUNT_COLOR_CLEAR_MASK) | faceExtruderMark);
             }
         }
+        colorAttr.needsUpdate = true;
+        byteCountAttribute.needsUpdate = true;
+    }
+
+    public startEditSupportMode() {
+        const models = this.getModelsAttachedSupport();
+
+        models.forEach((model) => {
+            // Hide model support (its support mesh is the only child!)
+            model.tmpSupportMesh = model.meshObject.children[0];
+            model.meshObject.clear();
+
+            // mark is editing support
+            model.isEditingSupport = true;
+            if (!model.supportFaceMarks || model.supportFaceMarks.length === 0) {
+                const count = model.meshObject.geometry.getAttribute('position').count;
+                const faceCount = Math.round(count / 3);
+                model.supportFaceMarks = new Array(faceCount).fill(0);
+            }
+
+            // Mark faces facing down
+            const bufferGeometry = model.meshObject.geometry;
+            const clone = bufferGeometry.clone();
+            clone.applyMatrix4(model.meshObject.matrixWorld.clone());
+            const normals = clone.getAttribute('normal').array;
+            const positions = clone.getAttribute('position').array;
+
+            const zUp = new Vector3(0, 0, 1);
+            for (let i = 0, j = 0; i < normals.length; i += 9, j++) {
+                const normal = new Vector3(normals[i], normals[i + 1], normals[i + 2]);
+                const angleN = normal.angleTo(zUp) / Math.PI * 180;
+                const averageZOfFace = (positions[i + 2] + positions[i + 5] + positions[i + 8]) / 3;
+                // prevent to add marks to the faces attached to XOY plane
+                if (angleN > (90 + EPSILON) && averageZOfFace > 0.01) {
+                    model.supportFaceMarks[j] = model.supportFaceMarks[j] || AVAIL;
+                }
+            }
+
+            const colors = [];
+            model.supportFaceMarks.forEach((mark) => {
+                switch (mark) {
+                    case NONE:
+                        colors.push(...SUPPORT_UNAVAIL_AREA_COLOR, ...SUPPORT_UNAVAIL_AREA_COLOR, ...SUPPORT_UNAVAIL_AREA_COLOR);
+                        break;
+                    case FACE:
+                        colors.push(...SUPPORT_ADD_AREA_COLOR, ...SUPPORT_ADD_AREA_COLOR, ...SUPPORT_ADD_AREA_COLOR);
+                        break;
+                    case AVAIL:
+                        colors.push(...SUPPORT_AVAIL_AREA_COLOR, ...SUPPORT_AVAIL_AREA_COLOR, ...SUPPORT_AVAIL_AREA_COLOR);
+                        break;
+                    default:
+                        break;
+                }
+            });
+
+            // FIXME: No override colors
+            if (model.meshObject.geometry.getAttribute('color')) {
+                model.originalColorAttribute = model.meshObject.geometry.getAttribute('color') as Float32BufferAttribute;
+            }
+            model.meshObject.geometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
+
+            model.originalGeometry = model.meshObject.geometry.clone(); // clone current state
+
+            // Ensure byte count attribute is present
+            model.ensureByteCountAttribute();
+
+            model.meshObject.geometry.computeBoundsTree();
+
+            // flag for brush to render color
+            model.meshObject.userData = {
+                ...model.meshObject.userData,
+                canSupport: true
+            };
+
+            model.setSelected();
+        });
+
+        this.modelChanged();
+
+        // Add brush mesh as well
+        if (this.brushMesh) {
+            this.object.parent.add(this.brushMesh);
+        }
+    }
+
+    public finishEditSupportArea(shouldApplyChanges: boolean = true) {
+        // Remove brush mesh
+        this.object.parent.remove(this.brushMesh);
+
+        const models = this.getModelsAttachedSupport();
+        models.forEach((model) => {
+            if (shouldApplyChanges) {
+                const colors = model.meshObject.geometry.getAttribute('color').array as number[];
+                const supportFaceMarks = [];
+                for (let i = 0, j = 0; i < colors.length; i += 9, j++) {
+                    // determine the support face by checking RGB value
+                    const isSupportArea = colors.slice(i, i + 9).some((color) => {
+                        return Math.abs(color - SUPPORT_ADD_AREA_COLOR[0]) < EPSILON;
+                    });
+                    supportFaceMarks[j] = isSupportArea ? FACE : NONE;
+                }
+                model.supportFaceMarks = supportFaceMarks;
+            } else {
+                // use original support mesh
+                if (model.tmpSupportMesh) {
+                    model.meshObject.add(model.tmpSupportMesh);
+                    model.tmpSupportMesh = null;
+                }
+            }
+
+            model.isEditingSupport = false;
+
+            // Remove bounds tree
+            model.meshObject.geometry.disposeBoundsTree();
+            // model.meshObject.geometry.copy(model.originalGeometry);
+
+            // Use previous attribute
+            if (model.originalColorAttribute) {
+                model.meshObject.geometry.setAttribute('color', model.originalColorAttribute);
+            } else {
+                model.meshObject.geometry.deleteAttribute('color');
+            }
+
+            model.setSelected();
+        });
+        this.modelChanged();
+        return models;
+    }
+
+    public applySupportBrush(intersections: Intersection[], flag: 'add' | 'remove') {
+        this.moveBrush(intersections);
+
+        const intersection = intersections.find((result) => result.object.userData.canSupport);
+        if (!intersection) {
+            return;
+        }
+
+        const targetMesh = intersection.object as Mesh;
+        const geometry = targetMesh.geometry as BufferGeometry;
+
+        const targetFaceIndex = intersection.faceIndex;
+        if (targetFaceIndex < 0) {
+            return;
+        }
+
+        const radius = (this.brushMesh.geometry as SphereBufferGeometry).parameters.radius;
+        const nearbyFaces = this.getFacesInSphere(targetMesh, targetFaceIndex, radius);
+
+        const colorAttr = geometry.getAttribute('color');
+        const byteCountAttribute = geometry.getAttribute('byte_count');
+        const indexAttr = geometry.index;
+
+        let color;
+        let mark = 0;
+        if (flag === 'add') {
+            color = SUPPORT_ADD_AREA_COLOR;
+            mark = 1;
+        } else if (flag === 'remove') {
+            color = SUPPORT_AVAIL_AREA_COLOR;
+        }
+
+        for (const faceIndex of nearbyFaces) {
+            for (let k = 0; k < 3; k++) {
+                const i2 = indexAttr ? indexAttr.getX(faceIndex * 3 + k) : faceIndex * 3 + k;
+                if (
+                    Math.abs(colorAttr.getX(i2) - SUPPORT_AVAIL_AREA_COLOR[0]) < EPSILON
+                    || Math.abs(colorAttr.getX(i2) - SUPPORT_ADD_AREA_COLOR[0]) < EPSILON
+                    || Math.abs(colorAttr.getX(i2) - MESH_COLORING_DEFAULT_COLOR[0]) < EPSILON
+                ) {
+                    colorAttr.setX(i2, color[0]);
+                    colorAttr.setY(i2, color[1]);
+                    colorAttr.setZ(i2, color[2]);
+                }
+            }
+
+            if (byteCountAttribute) {
+                const byteCount = byteCountAttribute.getX(faceIndex);
+                byteCountAttribute.setX(faceIndex, (byteCount & BYTE_COUNT_SUPPORT_CLEAR_MASK) | mark);
+            }
+        }
+
         colorAttr.needsUpdate = true;
         byteCountAttribute.needsUpdate = true;
     }

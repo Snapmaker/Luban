@@ -6,6 +6,7 @@ import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { HEAD_PRINTING } from '../../../constants';
 import type { RootState } from '../../../flux/index.def';
 import { actions as printingActions } from '../../../flux/printing';
+import sceneActions from '../../../flux/printing/actions-scene';
 import { logTransformOperation } from '../../../lib/gaEvent';
 import i18n from '../../../lib/i18n';
 import { Button } from '../../components/Buttons';
@@ -35,7 +36,7 @@ const SupportOverlay: React.FC<SupportOverlayProps> = (props) => {
 
     const actions = {
         generateAutoSupport(angle) {
-            dispatch(printingActions.computeAutoSupports(angle));
+            dispatch(sceneActions.computeAutoSupports(angle));
             setWillOverrideSupport(false);
             logTransformOperation(HEAD_PRINTING, 'support', 'auto');
         },
@@ -85,12 +86,22 @@ const SupportOverlay: React.FC<SupportOverlayProps> = (props) => {
     return (
         <>
             <div
-                className={classNames(styles['support-overlay'], 'position-absolute width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white')}
+                className={classNames(
+                    styles['support-overlay'],
+                    'width-280 position-absolute margin-left-72',
+                    'border-default-grey-1 border-radius-8 background-color-white',
+                )}
                 style={{
                     marginTop: '268px'
                 }}
             >
-                <div className={classNames(styles['overlay-title-font'], 'sm-flex justify-space-between border-bottom-normal padding-vertical-8 padding-horizontal-16 height-40')}>
+                <div
+                    className={classNames(
+                        styles['overlay-title-font'],
+                        'sm-flex justify-space-between',
+                        'border-bottom-normal padding-horizontal-16 height-40',
+                    )}
+                >
                     {i18n._('key-Printing/LeftBar/Support-Support')}
                     <CancelButton onClick={onClose} />
                 </div>
@@ -117,7 +128,7 @@ const SupportOverlay: React.FC<SupportOverlayProps> = (props) => {
                                 max={90}
                                 value={supportOverhangAngle}
                                 onChange={(value) => {
-                                    dispatch(printingActions.updateSupportOverhangAngle(value));
+                                    dispatch(sceneActions.setSupportOverhangAngle(value));
                                 }}
                             />
                         </div>

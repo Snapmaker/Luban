@@ -178,7 +178,7 @@ class Controls extends EventEmitter {
         this.transformControl.addEventListener('update', () => {
             this.emit(EVENTS.UPDATE);
         });
-        this.props?.displayedType !== 'gcode' && this.group.add(this.transformControl);
+        this.group.add(this.transformControl);
     }
 
     public removeTransformControls() {
@@ -397,7 +397,7 @@ class Controls extends EventEmitter {
             this.ray.firstHitOnly = true;
             const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
             if (res.length) {
-                this.supportActions.moveSupportBrush(res);
+                this.supportActions.moveBrush(res);
             }
             this.emit(EVENTS.UPDATE);
             return;
@@ -472,11 +472,7 @@ class Controls extends EventEmitter {
         switch (this.state) {
             case STATE.PAN:
                 if (!this.panMoved) {
-                    if (this.prevState === STATE.SUPPORT) {
-                        // stop support mode on right click
-                        this.prevState = null;
-                        this.supportActions.stopSupportMode();
-                    } else if (this.prevState === STATE.ROTATE_PLACEMENT) {
+                    if (this.prevState === STATE.ROTATE_PLACEMENT) {
                         break;
                     } else {
                         // check if any model selected

@@ -184,10 +184,6 @@ class Controls extends EventEmitter {
         this.prevState = null;
         if (this.state === STATE.SUPPORT) {
             this.prevState = STATE.SUPPORT;
-            // if (event.button === THREE.MOUSE.RIGHT) {
-            //     this.stopSupportMode();
-            // }
-            // return;
         }
 
         switch (event.button) {

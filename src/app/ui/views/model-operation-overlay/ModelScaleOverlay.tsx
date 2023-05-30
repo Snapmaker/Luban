@@ -283,7 +283,7 @@ const ModelScaleOverlay: React.FC<ModelScaleOverlayProps> = React.memo((props) =
                 className={classNames(
                     styles['overlay-title-font'],
                     'sm-flex justify-space-between',
-                    'border-bottom-normal padding-vertical-8 padding-horizontal-16 height-40',
+                    'border-bottom-normal padding-horizontal-16 height-40',
                 )}
             >
                 {i18n._('key-Printing/LeftBar-Scale')}

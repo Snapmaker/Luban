@@ -48,10 +48,18 @@ CancelButton.propTypes = {
 
 function VisualizerLeftBar(
     {
-        pageMode, setPageMode,
-        setTransformMode, supportActions, updateBoundingBox,
-        autoRotateSelectedModel, arrangeAllModels, setHoverFace, fitViewIn, handleApplySimplify,
-        handleCancelSimplify, handleUpdateSimplifyConfig, handleCheckModelLocation
+        pageMode,
+        setPageMode,
+        setTransformMode,
+        updateBoundingBox,
+        autoRotateSelectedModel,
+        arrangeAllModels,
+        setHoverFace,
+        fitViewIn,
+        handleApplySimplify,
+        handleCancelSimplify,
+        handleUpdateSimplifyConfig,
+        handleCheckModelLocation,
     }
 ) {
     const size = useSelector(state => state?.machine?.size, shallowEqual);
@@ -109,7 +117,6 @@ function VisualizerLeftBar(
             }
         },
         rotateWithAnalysis: () => {
-            supportActions.stopSupportMode();
             actions.rotateOnlyForUniformScale(() => {
                 dispatch(printingActions.startAnalyzeRotationProgress());
                 setTimeout(() => {
@@ -177,7 +184,6 @@ function VisualizerLeftBar(
         dispatch(printingActions.exitPreview());
 
         // In preview mode, wait for modelGroup.object.parent recovery
-        // setTimeout(() => {
         // show
         setPageMode(PageMode.MeshColoring);
 
@@ -185,7 +191,6 @@ function VisualizerLeftBar(
         setTimeout(() => {
             fitViewIn && fitViewIn();
         }, 50);
-        // });
     }, [dispatch, fitViewIn, setPageMode]);
 
 
@@ -462,7 +467,6 @@ function VisualizerLeftBar(
 }
 
 VisualizerLeftBar.propTypes = {
-    supportActions: PropTypes.object,
     autoRotateSelectedModel: PropTypes.func.isRequired,
     setTransformMode: PropTypes.func.isRequired,
     updateBoundingBox: PropTypes.func.isRequired,

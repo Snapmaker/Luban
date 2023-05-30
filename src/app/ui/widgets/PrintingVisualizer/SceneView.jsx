@@ -9,18 +9,20 @@ import { EPSILON, HEAD_PRINTING, ROTATE_MODE, SCALE_MODE, TRANSLATE_MODE } from 
 import { actions as machineActions } from '../../../flux/machine';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import { actions as printingActions } from '../../../flux/printing';
-import { actions as settingsActions } from '../../../flux/setting';
 import sceneActions from '../../../flux/printing/actions-scene';
+import { actions as settingsActions } from '../../../flux/setting';
 import { logModelViewOperation } from '../../../lib/gaEvent';
+import i18n from '../../../lib/i18n';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 import { ModelEvents } from '../../../models/events';
 import scene from '../../../scene/Scene';
 import ProgressBar from '../../components/ProgressBar';
 import Canvas from '../../components/SMCanvas';
 import { emitUpdateControlInputEvent } from '../../components/SMCanvas/TransformControls';
+import { toast } from '../../components/Toast';
 import { PageMode } from '../../pages/PageMode';
 import { repairModelPopup } from '../../views/repair-model/repair-model-popup';
-
+import { SceneToast } from '../../views/toasts/SceneToast';
 import ModeToggleBtn from './ModeToggleBtn';
 import PrintableCube from './PrintableCube';
 import VisualizerBottomLeft from './VisualizerBottomLeft';
@@ -83,7 +85,7 @@ class Visualizer extends PureComponent {
         onModelAfterTransform: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         setTransformMode: PropTypes.func.isRequired,
-        moveSupportBrush: PropTypes.func.isRequired,
+        moveBrush: PropTypes.func.isRequired,
         applySupportBrush: PropTypes.func.isRequired,
         applyMeshColoringBrush: PropTypes.func.isRequired,
         autoRotateSelectedModel: PropTypes.func.isRequired,
@@ -250,17 +252,8 @@ class Visualizer extends PureComponent {
             }
         },
 
-        onAddModel: (model) => {
-            this.props.recordAddOperation(model);
 
-            // Call detection once model added
-            // TODO: Refactor this function to printable area logic
-            this.canvas.current.detectionLocation();
-        },
 
-        onMeshPositionChanged: () => {
-            this.canvas.current.detectionLocation();
-        },
 
         /**
          * Set selected model(s) extruder to extruderId ('0' or '1').
@@ -275,18 +268,78 @@ class Visualizer extends PureComponent {
         },
     };
 
+    /**
+     * 1) Check if any model go out of bounds, toast to notify user.
+     */
+    checkModelsOutOfHeatedBedBounds = () => {
+        // toast.dismiss();
+
+        const modelGroup = this.props.modelGroup;
+
+        const avaiableModels = modelGroup.getSelectedModelsForHotZoneCheck();
+
+        // Check if any model(s) excceeds heated bed zone
+        const hasOverstepped = avaiableModels.some((model) => {
+            return model.overstepped;
+        });
+
+        if (hasOverstepped) {
+            toast(
+                <SceneToast
+                    type="warning"
+                    text={i18n._('key-Printing/This is the non printable area')}
+                />
+            );
+            return;
+        }
+
+        // Check if any model(s) excceeds hot zone
+        const printableArea = this.printableArea;
+        if (printableArea.isPointInShape) {
+            if (avaiableModels.length > 0) {
+                let hasOversteppedHotArea = false;
+                avaiableModels.forEach((model) => {
+                    const bbox = model.boundingBox;
+                    const points = [
+                        bbox.max,
+                        bbox.min,
+                        new Vector3(bbox.max.x, bbox.min.y, 0),
+                        new Vector3(bbox.min.x, bbox.max.y, 0),
+                    ];
+                    const inHotArea = points.every((point) => {
+                        return printableArea.isPointInShape(point);
+                    });
+                    model.hasOversteppedHotArea = !inHotArea;
+                    if (!inHotArea) {
+                        hasOversteppedHotArea = true;
+                    }
+                });
+                if (hasOversteppedHotArea) {
+                    toast(
+                        <SceneToast
+                            type="info"
+                            text={i18n._('key-Printing/Place the model within the High-temperature Zone to get a temperature higher than 80℃.')}
+                        />
+                    );
+                }
+            }
+        }
+    };
+
+    onAddModel = (model) => {
+        this.props.recordAddOperation(model);
+
+        this.checkModelsOutOfHeatedBedBounds();
+    };
+
+    onMeshPositionChanged = () => {
+        this.checkModelsOutOfHeatedBedBounds();
+    };
+
     // all support related actions used in VisualizerModelTransformation & canvas.controls & contextmenu
     supportActions = {
-        startSupportMode: () => {
-            this.props.destroyGcodeLine();
-            this.actions.setTransformMode('support');
-            this.canvas.current.startSupportMode();
-        },
-        stopSupportMode: () => {
-            this.canvas.current.stopSupportMode();
-        },
-        moveSupportBrush: (raycastResult) => {
-            this.props.moveSupportBrush(raycastResult);
+        moveBrush: (raycastResult) => {
+            this.props.moveBrush(raycastResult);
         },
         applySupportBrush: (raycastResult) => {
             this.props.applySupportBrush(raycastResult);
@@ -312,6 +365,7 @@ class Visualizer extends PureComponent {
 
     componentDidMount() {
         this.props.clearOperationHistory();
+
         this.canvas.current.resizeWindow();
         this.canvas.current.enable3D();
         // this.setState({ defaultSupportSize: { x: 5, y: 5 } });
@@ -330,8 +384,9 @@ class Visualizer extends PureComponent {
             this.actions.fitViewIn,
             false
         );
-        this.props.modelGroup.on(ModelEvents.AddModel, this.actions.onAddModel);
-        this.props.modelGroup.on(ModelEvents.MeshPositionChanged, this.actions.onMeshPositionChanged);
+
+        this.props.modelGroup.on(ModelEvents.AddModel, this.onAddModel);
+        this.props.modelGroup.on(ModelEvents.MeshPositionChanged, this.onMeshPositionChanged);
     }
 
     componentDidUpdate(prevProps) {
@@ -393,9 +448,6 @@ class Visualizer extends PureComponent {
             // Re-position model group
             gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
             this.canvas.current.setCamera(new Vector3(0, -Math.max(size.x, size.y, size.z) * 2, size.z / 2), new Vector3(0, 0, size.z / 2));
-            if (transformMode !== 'rotate-placement') {
-                this.supportActions.stopSupportMode();
-            }
         }
         if (!isEqual(stopArea, prevProps.stopArea)) {
             this.printableArea.updateStopArea(stopArea);
@@ -455,8 +507,8 @@ class Visualizer extends PureComponent {
 
     componentWillUnmount() {
         this.props.clearOperationHistory();
-        this.props.modelGroup.off(ModelEvents.AddModel, this.actions.onAddModel);
-        this.props.modelGroup.off(ModelEvents.MeshPositionChanged, this.actions.onMeshPositionChanged);
+        this.props.modelGroup.off(ModelEvents.AddModel, this.onAddModel);
+        this.props.modelGroup.off(ModelEvents.MeshPositionChanged, this.onMeshPositionChanged);
         window.removeEventListener('fit-view-in', this.actions.fitViewIn, false);
     }
 
@@ -501,43 +553,7 @@ class Visualizer extends PureComponent {
 
         return (
             <div>
-                <VisualizerLeftBar
-                    fitViewIn={this.actions.fitViewIn}
-                    updateBoundingBox={this.actions.updateBoundingBox}
-                    setTransformMode={this.actions.setTransformMode}
-                    supportActions={this.supportActions}
-                    autoRotateSelectedModel={this.actions.autoRotateSelectedModel}
-                    setHoverFace={this.actions.setHoverFace}
-                    arrangeAllModels={this.actions.arrangeAllModels}
-                    pageMode={this.props.pageMode}
-                    setPageMode={this.props.setPageMode}
-                    handleApplySimplify={this.handleApplySimplify}
-                    handleCancelSimplify={this.handleCancelSimplify}
-                    handleUpdateSimplifyConfig={this.handleUpdateSimplifyConfig}
-                    handleCheckModelLocation={this.checkoutModelsLocation}
-                />
-                <div className={styles['visualizer-bottom-left']}>
-                    <VisualizerBottomLeft actions={this.actions} />
-                </div>
-
-                <div className={styles['visualizer-preview-control']}>
-                    <VisualizerPreviewControl />
-                    {
-                        this.props.enable3dpLivePreview && (
-                            <VisualizerClippingControl />
-                        )
-                    }
-                </div>
-
-                <ModeToggleBtn />
-
-                <div className={styles['visualizer-info']}>
-                    <VisualizerInfo />
-                </div>
-
-                <ProgressBar tips={notice} progress={progress * 100} />
-
-                <div className={styles['canvas-wrapper']} style={{ position: 'relative' }}>
+                <div className={styles['canvas-container']}>
                     <Canvas
                         ref={this.canvas}
                         inProgress={inProgress}
@@ -560,6 +576,43 @@ class Visualizer extends PureComponent {
                         onControlInputTransform={this.actions.controlInputTransform}
                     />
                 </div>
+
+                <VisualizerLeftBar
+                    fitViewIn={this.actions.fitViewIn}
+                    updateBoundingBox={this.actions.updateBoundingBox}
+                    setTransformMode={this.actions.setTransformMode}
+                    autoRotateSelectedModel={this.actions.autoRotateSelectedModel}
+                    setHoverFace={this.actions.setHoverFace}
+                    arrangeAllModels={this.actions.arrangeAllModels}
+                    pageMode={this.props.pageMode}
+                    setPageMode={this.props.setPageMode}
+                    handleApplySimplify={this.handleApplySimplify}
+                    handleCancelSimplify={this.handleCancelSimplify}
+                    handleUpdateSimplifyConfig={this.handleUpdateSimplifyConfig}
+                    handleCheckModelLocation={this.checkoutModelsLocation}
+                />
+
+                <div className={styles['visualizer-bottom-left']}>
+                    <VisualizerBottomLeft actions={this.actions} />
+                </div>
+
+                <div className={styles['visualizer-info']}>
+                    <VisualizerInfo />
+                </div>
+
+                <div className={styles['visualizer-preview-control']}>
+                    <VisualizerPreviewControl />
+                    {
+                        this.props.enable3dpLivePreview && (
+                            <VisualizerClippingControl />
+                        )
+                    }
+                </div>
+
+                <ModeToggleBtn />
+
+
+                <ProgressBar tips={notice} progress={progress * 100} />
 
                 {/* Context Menu */}
                 <SceneContextMenu
@@ -646,8 +699,8 @@ const mapDispatchToProps = (dispatch) => ({
     repairSelectedModels: () => dispatch(printingActions.repairSelectedModels()),
     updatePromptDamageModel: (bool) => dispatch(machineActions.updatePromptDamageModel(bool)),
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value)),
-    moveSupportBrush: (raycastResult) => dispatch(printingActions.moveSupportBrush(raycastResult)),
-    applySupportBrush: (raycastResult) => dispatch(printingActions.applySupportBrush(raycastResult)),
+    moveBrush: (raycastResult) => dispatch(sceneActions.moveBrush(raycastResult)),
+    applySupportBrush: (raycastResult) => dispatch(sceneActions.applySupportBrush(raycastResult)),
     applyMeshColoringBrush: (raycastResult) => dispatch(sceneActions.applyMeshColoringBrush(raycastResult)),
     setRotationPlacementFace: (userData) => dispatch(printingActions.setRotationPlacementFace(userData)),
     displayModel: () => dispatch(printingActions.displayModel()),

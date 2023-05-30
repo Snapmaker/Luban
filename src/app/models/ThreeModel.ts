@@ -29,6 +29,9 @@ export const BYTE_COUNT_LEFT_EXTRUDER = 0x0100;
 export const BYTE_COUNT_RIGHT_EXTRUDER = 0x0200;
 export const BYTE_COUNT_MAX_COLOR = BYTE_COUNT_RIGHT_EXTRUDER;
 
+export const BYTE_COUNT_SUPPORT_MASK = 0x0001;
+export const BYTE_COUNT_SUPPORT_CLEAR_MASK = (0xffff & ~BYTE_COUNT_SUPPORT_MASK);
+
 class ThreeModel extends BaseModel {
     public isThreeModel = true;
     public localPlane: Plane;
@@ -39,6 +42,7 @@ class ThreeModel extends BaseModel {
     public convexGeometry: THREE.Geometry;
 
     public originalGeometry: THREE.BufferGeometry;
+    public originalColorAttribute: Float32BufferAttribute;
     public tmpSupportMesh: Object3D;
 
     // declare public meshObject: THREE.Mesh;
