@@ -425,6 +425,9 @@ const uploadModelsForSupport = (models, angle) => {
                         mesh.geometry.computeVertexNormals();
                     }
                     // Add byte_count attribute for STL binary exporter
+
+                    // replace byte count attribute
+                    const originalByteCountAttribute = mesh.geometry.getAttribute('byte_count');
                     mesh.geometry.setAttribute('byte_count', new Float32BufferAttribute(model.supportFaceMarks.slice(0), 1));
 
                     const originalName = model.originalName;
@@ -435,7 +438,11 @@ const uploadModelsForSupport = (models, angle) => {
                     );
                     const stlFileName = `${basenameWithoutExt}.stl`;
                     const uploadResult = await MeshHelper.uploadMesh(mesh, stlFileName);
-                    mesh.geometry.deleteAttribute('byte_count');
+
+                    // restore byte count attribute
+                    if (originalByteCountAttribute) {
+                        mesh.geometry.setAttribute('byte_count', originalByteCountAttribute);
+                    }
 
                     params.data.push({
                         modelID: model.modelID,
@@ -447,9 +454,7 @@ const uploadModelsForSupport = (models, angle) => {
                         ),
                         config: {
                             support_angle: angle,
-                            layer_height_0:
-                                activeQualityDefinition.settings.layer_height_0
-                                    .default_value,
+                            layer_height_0: activeQualityDefinition.settings.layer_height_0.default_value,
                             support_mark_area: false // tell engine to use marks in binary STL file
                         }
                     });
@@ -543,7 +548,7 @@ const startEditSupportMode = () => {
     return (dispatch, getState) => {
         const modelGroup = getState().printing.modelGroup as ModelGroup;
 
-        modelGroup.startEditSupportArea();
+        modelGroup.startEditSupportMode();
 
         dispatch(setTransformMode('support-edit'));
 
@@ -596,7 +601,7 @@ const finishEditSupportMode = (shouldApplyChanges = false) => {
     };
 };
 
-const setSupportOverhangAngle = (angle: number) => {
+const updateSupportOverhangAngle = (angle: number) => {
     return (dispatch) => {
         dispatch(
             baseActions.updateState({
@@ -1078,7 +1083,7 @@ export default {
     computeAutoSupports,
     startEditSupportMode,
     finishEditSupportMode,
-    setSupportOverhangAngle,
+    updateSupportOverhangAngle,
     setSupportBrushRadius,
     applySupportBrush,
 
