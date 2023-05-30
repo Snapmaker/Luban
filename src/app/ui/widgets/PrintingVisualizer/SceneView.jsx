@@ -501,43 +501,7 @@ class Visualizer extends PureComponent {
 
         return (
             <div>
-                <VisualizerLeftBar
-                    fitViewIn={this.actions.fitViewIn}
-                    updateBoundingBox={this.actions.updateBoundingBox}
-                    setTransformMode={this.actions.setTransformMode}
-                    supportActions={this.supportActions}
-                    autoRotateSelectedModel={this.actions.autoRotateSelectedModel}
-                    setHoverFace={this.actions.setHoverFace}
-                    arrangeAllModels={this.actions.arrangeAllModels}
-                    pageMode={this.props.pageMode}
-                    setPageMode={this.props.setPageMode}
-                    handleApplySimplify={this.handleApplySimplify}
-                    handleCancelSimplify={this.handleCancelSimplify}
-                    handleUpdateSimplifyConfig={this.handleUpdateSimplifyConfig}
-                    handleCheckModelLocation={this.checkoutModelsLocation}
-                />
-                <div className={styles['visualizer-bottom-left']}>
-                    <VisualizerBottomLeft actions={this.actions} />
-                </div>
-
-                <div className={styles['visualizer-preview-control']}>
-                    <VisualizerPreviewControl />
-                    {
-                        this.props.enable3dpLivePreview && (
-                            <VisualizerClippingControl />
-                        )
-                    }
-                </div>
-
-                <ModeToggleBtn />
-
-                <div className={styles['visualizer-info']}>
-                    <VisualizerInfo />
-                </div>
-
-                <ProgressBar tips={notice} progress={progress * 100} />
-
-                <div className={styles['canvas-wrapper']} style={{ position: 'relative' }}>
+                <div className={styles['canvas-container']}>
                     <Canvas
                         ref={this.canvas}
                         inProgress={inProgress}
@@ -560,6 +524,44 @@ class Visualizer extends PureComponent {
                         onControlInputTransform={this.actions.controlInputTransform}
                     />
                 </div>
+
+                <VisualizerLeftBar
+                    fitViewIn={this.actions.fitViewIn}
+                    updateBoundingBox={this.actions.updateBoundingBox}
+                    setTransformMode={this.actions.setTransformMode}
+                    supportActions={this.supportActions}
+                    autoRotateSelectedModel={this.actions.autoRotateSelectedModel}
+                    setHoverFace={this.actions.setHoverFace}
+                    arrangeAllModels={this.actions.arrangeAllModels}
+                    pageMode={this.props.pageMode}
+                    setPageMode={this.props.setPageMode}
+                    handleApplySimplify={this.handleApplySimplify}
+                    handleCancelSimplify={this.handleCancelSimplify}
+                    handleUpdateSimplifyConfig={this.handleUpdateSimplifyConfig}
+                    handleCheckModelLocation={this.checkoutModelsLocation}
+                />
+
+                <div className={styles['visualizer-bottom-left']}>
+                    <VisualizerBottomLeft actions={this.actions} />
+                </div>
+
+                <div className={styles['visualizer-info']}>
+                    <VisualizerInfo />
+                </div>
+
+                <div className={styles['visualizer-preview-control']}>
+                    <VisualizerPreviewControl />
+                    {
+                        this.props.enable3dpLivePreview && (
+                            <VisualizerClippingControl />
+                        )
+                    }
+                </div>
+
+                <ModeToggleBtn />
+
+
+                <ProgressBar tips={notice} progress={progress * 100} />
 
                 {/* Context Menu */}
                 <SceneContextMenu

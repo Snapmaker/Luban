@@ -104,9 +104,8 @@ class Canvas extends React.PureComponent {
     private lastTarget = null;
     private frameId = 0;
 
-
     // otehrs
-    private node = React.createRef();
+    private node = React.createRef<HTMLDivElement>();
     private controls = null;
     private animationCount = 0;
 

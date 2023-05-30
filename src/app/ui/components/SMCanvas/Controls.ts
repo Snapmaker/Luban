@@ -178,7 +178,7 @@ class Controls extends EventEmitter {
         this.transformControl.addEventListener('update', () => {
             this.emit(EVENTS.UPDATE);
         });
-        this.props?.displayedType !== 'gcode' && this.group.add(this.transformControl);
+        this.group.add(this.transformControl);
     }
 
     public removeTransformControls() {
