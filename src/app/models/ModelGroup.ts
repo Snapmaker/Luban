@@ -2582,12 +2582,12 @@ class ModelGroup extends EventEmitter {
         this.object.parent.add(this.brushMesh);
     }
 
-    public moveSupportBrush(raycastResult: Intersection[]) {
+    public moveBrush(raycastResult: Intersection[]) {
         this.brushMesh.position.copy(raycastResult[0].point);
     }
 
     public applySupportBrush(raycastResult: Intersection[], flag: 'add' | 'remove') {
-        this.moveSupportBrush(raycastResult);
+        this.moveBrush(raycastResult);
 
         const target = raycastResult.find((result) => result.object.userData.canSupport);
         if (target) {
@@ -3117,7 +3117,7 @@ class ModelGroup extends EventEmitter {
      * Apply brush, with extruder mark and corresponding color.
      */
     public applyMeshColoringBrush(raycastResult: Intersection[], faceExtruderMark: number, color: Color): void {
-        this.moveSupportBrush(raycastResult);
+        this.moveBrush(raycastResult);
 
         const target = raycastResult.find((result) => result.object.userData.canSupport);
         if (!target) {

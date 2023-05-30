@@ -397,7 +397,7 @@ class Controls extends EventEmitter {
             this.ray.firstHitOnly = true;
             const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
             if (res.length) {
-                this.supportActions.moveSupportBrush(res);
+                this.supportActions.moveBrush(res);
             }
             this.emit(EVENTS.UPDATE);
             return;

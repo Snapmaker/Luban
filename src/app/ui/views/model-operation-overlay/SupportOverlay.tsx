@@ -128,7 +128,7 @@ const SupportOverlay: React.FC<SupportOverlayProps> = (props) => {
                                 max={90}
                                 value={supportOverhangAngle}
                                 onChange={(value) => {
-                                    dispatch(printingActions.updateSupportOverhangAngle(value));
+                                    dispatch(sceneActions.setSupportOverhangAngle(value));
                                 }}
                             />
                         </div>

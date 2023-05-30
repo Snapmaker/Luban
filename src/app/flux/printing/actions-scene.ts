@@ -246,10 +246,28 @@ const setBrushType = (brushType: BrushType) => {
     };
 };
 
+const moveBrush = (raycastResult) => {
+    return (dispatch, getState) => {
+        const modelGroup = getState().printing.modelGroup as ModelGroup;
+        modelGroup.moveBrush(raycastResult);
+    };
+};
+
 const setSmartFillBrushAngle = (angle: number) => {
     return (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.setSmartFillBrushAngle(angle);
+    };
+};
+
+// status: add | remove
+const setSupportBrushStatus = (status: 'add' | 'remove') => {
+    return (dispatch) => {
+        dispatch(
+            baseActions.updateState({
+                supportBrushStatus: status
+            })
+        );
     };
 };
 
@@ -533,7 +551,7 @@ const startEditSupportMode = () => {
     };
 };
 
-const finishEditSupportArea = (shouldApplyChanges = false) => {
+const finishEditSupportMode = (shouldApplyChanges = false) => {
     return (dispatch, getState) => {
         const { modelGroup, progressStatesManager } = getState().printing;
 
@@ -578,6 +596,31 @@ const finishEditSupportArea = (shouldApplyChanges = false) => {
     };
 };
 
+const setSupportOverhangAngle = (angle: number) => {
+    return (dispatch) => {
+        dispatch(
+            baseActions.updateState({
+                supportOverhangAngle: angle
+            })
+        );
+    };
+};
+
+const setSupportBrushRadius = (radius: number) => {
+    return (dispatch, getState) => {
+        const modelGroup = getState().printing.modelGroup as ModelGroup;
+        modelGroup.setSupportBrushRadius(radius);
+        dispatch(renderScene());
+    };
+};
+
+const applySupportBrush = (raycastResult) => {
+    return (dispatch, getState) => {
+        const modelGroup = getState().printing.modelGroup as ModelGroup;
+        const { supportBrushStatus } = getState().printing;
+        modelGroup.applySupportBrush(raycastResult, supportBrushStatus);
+    };
+};
 
 /**
  * Set visibility of model / group, if no target set, selected model(s)
@@ -1021,7 +1064,9 @@ export default {
 
     // brush
     setBrushType,
+    moveBrush,
     setSmartFillBrushAngle,
+    setSupportBrushStatus,
 
     // mesh - mesh coloring
     startMeshColoringMode,
@@ -1032,7 +1077,10 @@ export default {
     // mesh - edit support
     computeAutoSupports,
     startEditSupportMode,
-    finishEditSupportArea,
+    finishEditSupportMode,
+    setSupportOverhangAngle,
+    setSupportBrushRadius,
+    applySupportBrush,
 
     // model operations
     setModelVisibility,

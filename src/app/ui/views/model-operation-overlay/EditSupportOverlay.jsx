@@ -23,7 +23,7 @@ const EditSupportOverlay = ({ onClose }) => {
     const actions = {
         finish: (shouldApplyChanges) => {
             logTransformOperation(HEAD_PRINTING, 'support', 'edit_done');
-            dispatch(sceneActions.finishEditSupportArea(shouldApplyChanges));
+            dispatch(sceneActions.finishEditSupportMode(shouldApplyChanges));
             onClose();
         },
         handleMousewheel: (e) => {
@@ -51,10 +51,10 @@ const EditSupportOverlay = ({ onClose }) => {
             }
         },
         addSupport: () => {
-            dispatch(printingActions.setSupportBrushStatus('add'));
+            dispatch(sceneActions.setSupportBrushStatus('add'));
         },
         removeSupport: () => {
-            dispatch(printingActions.setSupportBrushStatus('remove'));
+            dispatch(sceneActions.setSupportBrushStatus('remove'));
         },
         onCancel: () => {
             actions.finish(false);
@@ -84,7 +84,7 @@ const EditSupportOverlay = ({ onClose }) => {
 
     useEffect(() => {
         tmpDiameter = diameter;
-        dispatch(printingActions.setSupportBrushRadius(diameter / 2));
+        dispatch(sceneActions.setSupportBrushRadius(diameter / 2));
     }, [diameter]);
 
     return (

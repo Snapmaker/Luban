@@ -85,7 +85,7 @@ class Visualizer extends PureComponent {
         onModelAfterTransform: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         setTransformMode: PropTypes.func.isRequired,
-        moveSupportBrush: PropTypes.func.isRequired,
+        moveBrush: PropTypes.func.isRequired,
         applySupportBrush: PropTypes.func.isRequired,
         applyMeshColoringBrush: PropTypes.func.isRequired,
         autoRotateSelectedModel: PropTypes.func.isRequired,
@@ -338,8 +338,8 @@ class Visualizer extends PureComponent {
 
     // all support related actions used in VisualizerModelTransformation & canvas.controls & contextmenu
     supportActions = {
-        moveSupportBrush: (raycastResult) => {
-            this.props.moveSupportBrush(raycastResult);
+        moveBrush: (raycastResult) => {
+            this.props.moveBrush(raycastResult);
         },
         applySupportBrush: (raycastResult) => {
             this.props.applySupportBrush(raycastResult);
@@ -699,8 +699,8 @@ const mapDispatchToProps = (dispatch) => ({
     repairSelectedModels: () => dispatch(printingActions.repairSelectedModels()),
     updatePromptDamageModel: (bool) => dispatch(machineActions.updatePromptDamageModel(bool)),
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value)),
-    moveSupportBrush: (raycastResult) => dispatch(printingActions.moveSupportBrush(raycastResult)),
-    applySupportBrush: (raycastResult) => dispatch(printingActions.applySupportBrush(raycastResult)),
+    moveBrush: (raycastResult) => dispatch(sceneActions.moveBrush(raycastResult)),
+    applySupportBrush: (raycastResult) => dispatch(sceneActions.applySupportBrush(raycastResult)),
     applyMeshColoringBrush: (raycastResult) => dispatch(sceneActions.applyMeshColoringBrush(raycastResult)),
     setRotationPlacementFace: (userData) => dispatch(printingActions.setRotationPlacementFace(userData)),
     displayModel: () => dispatch(printingActions.displayModel()),

@@ -4398,67 +4398,61 @@ export const actions = {
             });
     },
 
-    updateSupportOverhangAngle: angle => dispatch => {
-        dispatch(
-            actions.updateState({
-                supportOverhangAngle: angle
-            })
-        );
-    },
+    loadSupports: (supportFilePaths) => {
+        return (dispatch, getState) => {
+            const { modelGroup, tmpSupportFaceMarks } = getState().printing;
+            // use worker to load supports
+            const operations = new CompoundOperation();
+            const promises = supportFilePaths.map(async (info) => {
+                return new Promise((resolve, reject) => {
+                    const model = modelGroup.findModelByID(info.modelID);
+                    const previousFaceMarks = tmpSupportFaceMarks[info.modelID];
+                    if (model) {
+                        const operation = new AddSupportOperation3D({
+                            target: model,
+                            currentFaceMarks: model.supportFaceMarks.slice(0),
+                            currentSupport: null,
+                            previousSupport:
+                                model.meshObject.children[0]
+                                || model.tmpSupportMesh,
+                            previousFaceMarks
+                        });
+                        model.meshObject.clear();
+                        operations.push(operation);
 
-    loadSupports: supportFilePaths => (dispatch, getState) => {
-        const { modelGroup, tmpSupportFaceMarks } = getState().printing;
-        // use worker to load supports
-        const operations = new CompoundOperation();
-        const promises = supportFilePaths.map(async (info) => {
-            return new Promise((resolve, reject) => {
-                const model = modelGroup.findModelByID(info.modelID);
-                const previousFaceMarks = tmpSupportFaceMarks[info.modelID];
-                if (model) {
-                    const operation = new AddSupportOperation3D({
-                        target: model,
-                        currentFaceMarks: model.supportFaceMarks.slice(0),
-                        currentSupport: null,
-                        previousSupport:
-                            model.meshObject.children[0]
-                            || model.tmpSupportMesh,
-                        previousFaceMarks
-                    });
-                    model.meshObject.clear();
-                    operations.push(operation);
-
-                    if (info.supportStlFilename) {
-                        new ModelLoader().load(
-                            `${DATA_PREFIX}/${info.supportStlFilename}`,
-                            (geometry) => {
-                                const mesh = model.generateSupportMesh(geometry);
-                                operation.state.currentSupport = mesh;
-                                resolve(true);
-                            },
-                            noop,
-                            (err) => {
-                                reject(err);
-                            }
-                        );
+                        if (info.supportStlFilename) {
+                            new ModelLoader().load(
+                                `${DATA_PREFIX}/${info.supportStlFilename}`,
+                                (geometry) => {
+                                    const mesh = model.generateSupportMesh(geometry);
+                                    operation.state.currentSupport = mesh;
+                                    resolve(true);
+                                },
+                                noop,
+                                (err) => {
+                                    reject(err);
+                                }
+                            );
+                        } else {
+                            resolve(true);
+                        }
                     } else {
                         resolve(true);
                     }
-                } else {
-                    resolve(true);
-                }
+                });
             });
-        });
-        Promise.all(promises)
-            .then(() => {
-                dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
-                dispatch(sceneActions.renderScene());
-                dispatch(
-                    actions.updateState({
-                        tmpSupportFaceMarks: {}
-                    })
-                );
-            })
-            .catch(log.error);
+            Promise.all(promises)
+                .then(() => {
+                    dispatch(operationHistoryActions.setOperations(INITIAL_STATE.name, operations));
+                    dispatch(sceneActions.renderScene());
+                    dispatch(
+                        actions.updateState({
+                            tmpSupportFaceMarks: {}
+                        })
+                    );
+                })
+                .catch(log.error);
+        };
     },
 
     clearSupportInGroup: (combinedOperations, modelInGroup) => (
@@ -4492,31 +4486,6 @@ export const actions = {
                 );
             }
         }
-    },
-
-    setSupportBrushRadius: (radius) => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
-        modelGroup.setSupportBrushRadius(radius);
-        dispatch(sceneActions.renderScene());
-    },
-
-    // status: add | remove
-    setSupportBrushStatus: (status) => (dispatch) => {
-        dispatch(
-            actions.updateState({
-                supportBrushStatus: status
-            })
-        );
-    },
-
-    moveSupportBrush: (raycastResult) => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
-        modelGroup.moveSupportBrush(raycastResult);
-    },
-
-    applySupportBrush: (raycastResult) => (dispatch, getState) => {
-        const { modelGroup, supportBrushStatus } = getState().printing;
-        modelGroup.applySupportBrush(raycastResult, supportBrushStatus);
     },
 
     clearAllSupport: () => (dispatch, getState) => {
