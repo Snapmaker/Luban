@@ -147,7 +147,13 @@ const TranslateOverlay = React.memo(({
                 marginTop: '60px'
             }}
         >
-            <div className={classNames(styles['overlay-title-font'], 'sm-flex justify-space-between border-bottom-normal padding-vertical-8 padding-horizontal-16 height-40')}>
+            <div
+                className={classNames(
+                    styles['overlay-title-font'],
+                    'sm-flex justify-space-between',
+                    'border-bottom-normal padding-horizontal-16 height-40',
+                )}
+            >
                 {i18n._('key-Printing/LeftBar-Move')}
                 <CancelButton
                     onClick={() => setTransformMode('')}

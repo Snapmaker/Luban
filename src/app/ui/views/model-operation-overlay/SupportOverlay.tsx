@@ -86,12 +86,22 @@ const SupportOverlay: React.FC<SupportOverlayProps> = (props) => {
     return (
         <>
             <div
-                className={classNames(styles['support-overlay'], 'position-absolute width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white')}
+                className={classNames(
+                    styles['support-overlay'],
+                    'width-280 position-absolute margin-left-72',
+                    'border-default-grey-1 border-radius-8 background-color-white',
+                )}
                 style={{
                     marginTop: '268px'
                 }}
             >
-                <div className={classNames(styles['overlay-title-font'], 'sm-flex justify-space-between border-bottom-normal padding-vertical-8 padding-horizontal-16 height-40')}>
+                <div
+                    className={classNames(
+                        styles['overlay-title-font'],
+                        'sm-flex justify-space-between',
+                        'border-bottom-normal padding-horizontal-16 height-40',
+                    )}
+                >
                     {i18n._('key-Printing/LeftBar/Support-Support')}
                     <CancelButton onClick={onClose} />
                 </div>
