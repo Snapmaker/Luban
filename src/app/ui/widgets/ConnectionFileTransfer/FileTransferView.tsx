@@ -103,7 +103,7 @@ const PreviewModal: React.FC<PreviewModalProps> = (props) => {
     return (
         <Modal
             centered
-            visible
+            open
             onClose={closeModal}
         >
             <Modal.Header>

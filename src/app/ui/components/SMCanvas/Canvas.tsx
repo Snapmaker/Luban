@@ -26,13 +26,10 @@ import {
 } from 'three';
 
 import { TRANSLATE_MODE } from '../../../constants';
-import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import ModelGroup from '../../../models/ModelGroup';
 import Detector from '../../../scene/three-extensions/Detector';
 import WebGLRendererWrapper from '../../../scene/three-extensions/WebGLRendererWrapper';
-import { SceneToast } from '../../views/toasts/SceneToast';
-import { toast } from '../Toast';
 import Controls, { EVENTS } from './Controls';
 
 const ANIMATION_DURATION = 500;
@@ -43,7 +40,14 @@ const EPS = 0.000001;
 let parentDOM = null;
 let inputDOM = null;
 let inputDOM2 = null; // translate has two input for X and Y axis
-class Canvas extends React.PureComponent {
+
+
+interface CanvasProps {
+    minScale?: number;
+    maxScale?: number;
+}
+
+class Canvas extends React.PureComponent<CanvasProps> {
     public static propTypes = {
         backgroundGroup: PropTypes.object,
         modelGroup: PropTypes.object.isRequired,
@@ -100,8 +104,8 @@ class Canvas extends React.PureComponent {
 
     // scene helper objects
     private transformSourceType: '2D' | '3D' = '3D';
-    private initialTarget = new Vector3();
-    private lastTarget = null;
+    private initialTarget: Vector3 = new Vector3();
+    private lastTarget: Vector3 = null;
     private frameId = 0;
 
     // otehrs
@@ -341,57 +345,6 @@ class Canvas extends React.PureComponent {
         this.node.current.appendChild(this.renderer.domElement);
     }
 
-    public detectionLocation() {
-        toast.dismiss();
-
-        const avaiableModels = this.modelGroup.getSelectedModelsForHotZoneCheck();
-        const hasOverstepped = avaiableModels.some((model) => {
-            return model.overstepped;
-        });
-
-        // Check overstep
-        if (hasOverstepped) {
-            toast(
-                <SceneToast
-                    type="warning"
-                    text={i18n._('key-Printing/This is the non printable area')}
-                />
-            );
-            return;
-        }
-
-        // Check hot area
-        if (this.props.printableArea.isPointInShape) {
-            if (avaiableModels.length > 0) {
-                let hasOversteppedHotArea = false;
-                avaiableModels.forEach((model) => {
-                    const bbox = model.boundingBox;
-                    const points = [
-                        bbox.max,
-                        bbox.min,
-                        new Vector3(bbox.max.x, bbox.min.y, 0),
-                        new Vector3(bbox.min.x, bbox.max.y, 0),
-                    ];
-                    const inHotArea = points.every((point) => {
-                        return this.props.printableArea.isPointInShape(point);
-                    });
-                    model.hasOversteppedHotArea = !inHotArea;
-                    if (!inHotArea) {
-                        hasOversteppedHotArea = true;
-                    }
-                });
-                if (hasOversteppedHotArea) {
-                    toast(
-                        <SceneToast
-                            type="info"
-                            text={i18n._('key-Printing/Place the model within the High-temperature Zone to get a temperature higher than 80℃.')}
-                        />
-                    );
-                }
-            }
-        }
-    }
-
     public setupControls() {
         this.initialTarget = this.props.cameraInitialTarget;
 
@@ -436,7 +389,6 @@ class Canvas extends React.PureComponent {
                 this.controls.transformControl.mode,
                 this.controls.transformControl.axis
             );
-            // this.detectionLocation();
         });
         this.controls.on(EVENTS.SELECT_PLACEMENT_FACE, (userData) => {
             this.onRotationPlacementSelect(userData);
@@ -883,9 +835,11 @@ class Canvas extends React.PureComponent {
 
     public renderScene() {
         if (!this.isCanvasInitialized()) return;
+
         if (this.transformSourceType === '2D') {
             this.light.position.copy(this.camera.position);
         }
+
         if (
             this.transformSourceType === '3D'
             && this.controls.transformControl.mode !== 'mirror'

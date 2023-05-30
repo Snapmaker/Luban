@@ -9,18 +9,20 @@ import { EPSILON, HEAD_PRINTING, ROTATE_MODE, SCALE_MODE, TRANSLATE_MODE } from 
 import { actions as machineActions } from '../../../flux/machine';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import { actions as printingActions } from '../../../flux/printing';
-import { actions as settingsActions } from '../../../flux/setting';
 import sceneActions from '../../../flux/printing/actions-scene';
+import { actions as settingsActions } from '../../../flux/setting';
 import { logModelViewOperation } from '../../../lib/gaEvent';
+import i18n from '../../../lib/i18n';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 import { ModelEvents } from '../../../models/events';
 import scene from '../../../scene/Scene';
 import ProgressBar from '../../components/ProgressBar';
 import Canvas from '../../components/SMCanvas';
 import { emitUpdateControlInputEvent } from '../../components/SMCanvas/TransformControls';
+import { toast } from '../../components/Toast';
 import { PageMode } from '../../pages/PageMode';
 import { repairModelPopup } from '../../views/repair-model/repair-model-popup';
-
+import { SceneToast } from '../../views/toasts/SceneToast';
 import ModeToggleBtn from './ModeToggleBtn';
 import PrintableCube from './PrintableCube';
 import VisualizerBottomLeft from './VisualizerBottomLeft';
@@ -250,17 +252,8 @@ class Visualizer extends PureComponent {
             }
         },
 
-        onAddModel: (model) => {
-            this.props.recordAddOperation(model);
 
-            // Call detection once model added
-            // TODO: Refactor this function to printable area logic
-            this.canvas.current.detectionLocation();
-        },
 
-        onMeshPositionChanged: () => {
-            this.canvas.current.detectionLocation();
-        },
 
         /**
          * Set selected model(s) extruder to extruderId ('0' or '1').
@@ -273,6 +266,74 @@ class Visualizer extends PureComponent {
                 infill: extruderId,
             });
         },
+    };
+
+    /**
+     * 1) Check if any model go out of bounds, toast to notify user.
+     */
+    checkModelsOutOfHeatedBedBounds = () => {
+        // toast.dismiss();
+
+        const modelGroup = this.props.modelGroup;
+
+        const avaiableModels = modelGroup.getSelectedModelsForHotZoneCheck();
+
+        // Check if any model(s) excceeds heated bed zone
+        const hasOverstepped = avaiableModels.some((model) => {
+            return model.overstepped;
+        });
+
+        if (hasOverstepped) {
+            toast(
+                <SceneToast
+                    type="warning"
+                    text={i18n._('key-Printing/This is the non printable area')}
+                />
+            );
+            return;
+        }
+
+        // Check if any model(s) excceeds hot zone
+        const printableArea = this.printableArea;
+        if (printableArea.isPointInShape) {
+            if (avaiableModels.length > 0) {
+                let hasOversteppedHotArea = false;
+                avaiableModels.forEach((model) => {
+                    const bbox = model.boundingBox;
+                    const points = [
+                        bbox.max,
+                        bbox.min,
+                        new Vector3(bbox.max.x, bbox.min.y, 0),
+                        new Vector3(bbox.min.x, bbox.max.y, 0),
+                    ];
+                    const inHotArea = points.every((point) => {
+                        return printableArea.isPointInShape(point);
+                    });
+                    model.hasOversteppedHotArea = !inHotArea;
+                    if (!inHotArea) {
+                        hasOversteppedHotArea = true;
+                    }
+                });
+                if (hasOversteppedHotArea) {
+                    toast(
+                        <SceneToast
+                            type="info"
+                            text={i18n._('key-Printing/Place the model within the High-temperature Zone to get a temperature higher than 80℃.')}
+                        />
+                    );
+                }
+            }
+        }
+    };
+
+    onAddModel = (model) => {
+        this.props.recordAddOperation(model);
+
+        this.checkModelsOutOfHeatedBedBounds();
+    };
+
+    onMeshPositionChanged = () => {
+        this.checkModelsOutOfHeatedBedBounds();
     };
 
     // all support related actions used in VisualizerModelTransformation & canvas.controls & contextmenu
@@ -312,6 +373,7 @@ class Visualizer extends PureComponent {
 
     componentDidMount() {
         this.props.clearOperationHistory();
+
         this.canvas.current.resizeWindow();
         this.canvas.current.enable3D();
         // this.setState({ defaultSupportSize: { x: 5, y: 5 } });
@@ -330,8 +392,9 @@ class Visualizer extends PureComponent {
             this.actions.fitViewIn,
             false
         );
-        this.props.modelGroup.on(ModelEvents.AddModel, this.actions.onAddModel);
-        this.props.modelGroup.on(ModelEvents.MeshPositionChanged, this.actions.onMeshPositionChanged);
+
+        this.props.modelGroup.on(ModelEvents.AddModel, this.onAddModel);
+        this.props.modelGroup.on(ModelEvents.MeshPositionChanged, this.onMeshPositionChanged);
     }
 
     componentDidUpdate(prevProps) {
@@ -455,8 +518,8 @@ class Visualizer extends PureComponent {
 
     componentWillUnmount() {
         this.props.clearOperationHistory();
-        this.props.modelGroup.off(ModelEvents.AddModel, this.actions.onAddModel);
-        this.props.modelGroup.off(ModelEvents.MeshPositionChanged, this.actions.onMeshPositionChanged);
+        this.props.modelGroup.off(ModelEvents.AddModel, this.onAddModel);
+        this.props.modelGroup.off(ModelEvents.MeshPositionChanged, this.onMeshPositionChanged);
         window.removeEventListener('fit-view-in', this.actions.fitViewIn, false);
     }
 
